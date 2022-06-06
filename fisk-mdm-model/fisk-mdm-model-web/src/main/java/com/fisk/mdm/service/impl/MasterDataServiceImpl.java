@@ -208,6 +208,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
         return getMasterData(dto, response);
     }
 
+    /**
+     * 查询实体视图数据
+     *
+     * @param dto
+     * @param response
+     * @return
+     */
     public ResultObjectVO getMasterData(MasterDataQueryDTO dto, HttpServletResponse response) {
         //准备返回对象
         ResultObjectVO resultObjectVO = new ResultObjectVO();
@@ -250,6 +257,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         List<Integer> attributeIds = viwGroupVO.getGroupDetailsList().stream()
                 .map(e -> e.getAttributeId()).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(attributeIds)) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("id", attributeIds);
@@ -274,23 +282,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         List<ResultAttributeGroupVO> attributeGroupVoList = new ArrayList<>();
         if (!CollectionUtils.isEmpty(dto.getAttributeGroups())) {
             for (Integer id : dto.getAttributeGroups()) {
-                List<Integer> attributes = attributeGroupService.getAttributeGroupAttribute(id, dto.getEntityId());
-                //获取属性组名称
-                AttributeGroupDTO attributeGroup = attributeGroupService.getAttributeGroup(id);
-                ResultAttributeGroupVO attributeGroupVo = new ResultAttributeGroupVO();
-                attributeGroupVo.setName(attributeGroup.getName());
-                List<AttributeColumnVO> collect = attributeColumnVoList.stream()
-                        .filter(e -> attributes.contains(e.getId())).collect(Collectors.toList());
-                collect.stream().map(e -> {
-                    AttributePO attributePo = attributeMapper.selectById(e.getId());
-                    if (attributePo == null) {
-                        throw new FkException(ResultEnum.DATA_NOTEXISTS);
-                    }
-                    e.setDisplayName(attributePo.getDisplayName());
-                    return e;
-                }).collect(Collectors.toList());
-                attributeGroupVo.setAttributes(collect);
-                attributeGroupVoList.add(attributeGroupVo);
+                attributeGroupVoList.add(setAttributeGroup(id, dto.getEntityId(), attributeColumnVoList));
             }
             List<Integer> attributeGroupIds = new ArrayList<>();
             //获取所有实体属性id集合
@@ -337,40 +329,18 @@ public class MasterDataServiceImpl implements IMasterDataService {
         //将查询到的属性集合添加装入结果对象
         List<AttributeColumnVO> attributeColumnVoList = AttributeMap.INSTANCES.dtoListToVoList(attributeInfos);
         List<ResultAttributeGroupVO> attributeGroupVoList = new ArrayList<>();
+        //组装属性组数据
         for (Integer id : dto.getAttributeGroups()) {
-            List<Integer> attributes = attributeGroupService.getAttributeGroupAttribute(id, dto.getEntityId());
-            //获取属性组名称
-            AttributeGroupDTO attributeGroup = attributeGroupService.getAttributeGroup(id);
-            ResultAttributeGroupVO attributeGroupVo = new ResultAttributeGroupVO();
-            attributeGroupVo.setName(attributeGroup.getName());
-            List<AttributeColumnVO> collect = attributeColumnVoList.stream()
-                    .filter(e -> attributes.contains(e.getId())).collect(Collectors.toList());
-            //获得业务字段名
-            List<AttributeColumnVO> newColumnList = new ArrayList<>();
-            for (AttributeColumnVO attributeColumnVo : collect) {
-                newColumnList.add(attributeColumnVo);
-                //域字段添加编码和名称表头
-                if (attributeColumnVo.getDataType().equals(DataTypeEnum.DOMAIN.getName())) {
-                    newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.DOMAIN));
-                } else if (attributeColumnVo.getDataType().equals(DataTypeEnum.FILE.getName())) {
-                    newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.FILE));
-                } else if (attributeColumnVo.getDataType().equals(DataTypeEnum.LATITUDE_COORDINATE.getName())) {
-                    newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.LATITUDE_COORDINATE));
-                    newColumnList.add(getCodeAndName(attributeColumnVo));
-                }
-            }
-            collect = newColumnList;
-            attributeGroupVo.setAttributes(collect);
-            attributeGroupVoList.add(attributeGroupVo);
+            attributeGroupVoList.add(setAttributeGroup(id, dto.getEntityId(), attributeColumnVoList));
         }
-        List<Integer> attributeIds = new ArrayList<>();
-        //获取所有实体属性id集合
+        List<Integer> attributeIdList = new ArrayList<>();
+        //获取属性组实体属性id集合
         attributeGroupVoList.stream().forEach(e ->
-                attributeIds.addAll(e.getAttributes()
+                attributeIdList.addAll(e.getAttributes()
                         .stream().map(p -> p.getId()).collect(Collectors.toList())));
-        if (!CollectionUtils.isEmpty(attributeIds)) {
+        if (!CollectionUtils.isEmpty(attributeIdList)) {
             attributeColumnVoList = attributeColumnVoList.stream()
-                    .filter(e -> attributeIds.contains(e.getId()))
+                    .filter(e -> attributeIdList.contains(e.getId()))
                     .collect(Collectors.toList());
         }
         resultObjectVO.setAttributes(attributeGroupVoList);
@@ -388,41 +358,21 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 .map(e -> e.dataTypeEnDisplay = DataTypeEnum.getValue(e.getDataType()).name())
                 .collect(Collectors.toList());
         //获得业务字段名
-        List<AttributeColumnVO> newColumnList = new ArrayList<>();
-        for (AttributeColumnVO attributeColumnVo : attributeColumnVoList) {
-            newColumnList.add(attributeColumnVo);
-            //域字段添加编码和名称表头
-            if (attributeColumnVo.getDataType().equals(DataTypeEnum.DOMAIN.getName())) {
-                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.DOMAIN));
-                attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateDomainCodeDisplayName(attributeColumnVo.getDisplayName()));
-                attributeColumnVo.setName(TableNameGenerateUtils.generateDomainCode(attributeColumnVo.getName()));
-            }
-            //文件类型
-            else if (attributeColumnVo.getDataType().equals(DataTypeEnum.FILE.getName())) {
-                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.FILE));
-                attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateComplexTypeFileName(attributeColumnVo.getDisplayName(), false));
-                attributeColumnVo.setName(TableNameGenerateUtils.generateComplexTypeFileName(attributeColumnVo.getName(), true));
-            }
-            //经纬度
-            else if (attributeColumnVo.getDataType().equals(DataTypeEnum.LATITUDE_COORDINATE.getName())) {
-                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.LATITUDE_COORDINATE));
-                attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateComplexTypeLng(attributeColumnVo.getDisplayName(), false));
-                attributeColumnVo.setName(TableNameGenerateUtils.generateComplexTypeLng(attributeColumnVo.getName(), true));
-                newColumnList.add(getCodeAndName(attributeColumnVo));
-            }
-        }
-        attributeColumnVoList = newColumnList;
+        List<AttributeColumnVO> newColumnList = queryAttributeData(attributeColumnVoList);
         if (resultObjectVO.getAttributes().size() == 1 && StringUtils.isEmpty(resultObjectVO.getAttributes().get(0).getName())) {
-            resultObjectVO.getAttributes().get(0).setAttributes(attributeColumnVoList);
+            resultObjectVO.getAttributes().get(0).setAttributes(newColumnList);
         }
         //准备主数据集合
         List<Map<String, Object>> data;
         //查询字段
-        String businessColumnName = StringUtils.join(attributeColumnVoList.stream()
+        String businessColumnName = StringUtils.join(newColumnList.stream()
                 .map(e -> e.getName()).collect(Collectors.toList()), ",");
         try {
             //拼接筛选条件
-            String conditions = getOperatorCondition(dto.getFilterQuery());
+            String conditions = "";
+            if (!CollectionUtils.isEmpty(dto.getFilterQuery())) {
+                conditions = getOperatorCondition(dto.getFilterQuery());
+            }
             //获取总条数
             int rowCount = 0;
             IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
@@ -504,6 +454,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         vo.setEnableRequired(attributeColumnVo.getEnableRequired());
         vo.setSortWieght(attributeColumnVo.getSortWieght());
         vo.setDisplayWidth(attributeColumnVo.getDisplayWidth());
+        vo.setEntityId(attributeColumnVo.getEntityId());
         return vo;
     }
 
@@ -517,6 +468,65 @@ public class MasterDataServiceImpl implements IMasterDataService {
         vo.setSortWieght(attributeColumnVo.getSortWieght());
         vo.setDisplayWidth(attributeColumnVo.getDisplayWidth());
         return vo;
+    }
+
+    public ResultAttributeGroupVO setAttributeGroup(Integer attributeGroupId,
+                                                    Integer entity,
+                                                    List<AttributeColumnVO> attributeColumnVoList) {
+        List<Integer> attributes = attributeGroupService.getAttributeGroupAttribute(attributeGroupId, entity);
+        //获取属性组名称
+        AttributeGroupDTO attributeGroup = attributeGroupService.getAttributeGroup(attributeGroupId);
+        ResultAttributeGroupVO attributeGroupVo = new ResultAttributeGroupVO();
+        attributeGroupVo.setName(attributeGroup.getName());
+        List<AttributeColumnVO> collect = attributeColumnVoList.stream()
+                .filter(e -> attributes.contains(e.getId())).collect(Collectors.toList());
+        //获得业务字段名
+        List<AttributeColumnVO> newColumnList = new ArrayList<>();
+        for (AttributeColumnVO attributeColumnVo : collect) {
+            newColumnList.add(attributeColumnVo);
+            //域字段添加编码和名称表头
+            if (attributeColumnVo.getDataType().equals(DataTypeEnum.DOMAIN.getName())) {
+                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.DOMAIN));
+            }
+            //文件类型
+            else if (attributeColumnVo.getDataType().equals(DataTypeEnum.FILE.getName())) {
+                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.FILE));
+            }
+            //经纬度类型
+            else if (attributeColumnVo.getDataType().equals(DataTypeEnum.LATITUDE_COORDINATE.getName())) {
+                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.LATITUDE_COORDINATE));
+                newColumnList.add(getCodeAndName(attributeColumnVo));
+            }
+        }
+        attributeGroupVo.setAttributes(newColumnList);
+        return attributeGroupVo;
+    }
+
+    public List<AttributeColumnVO> queryAttributeData(List<AttributeColumnVO> attributeColumnVoList) {
+        List<AttributeColumnVO> newColumnList = new ArrayList<>();
+        for (AttributeColumnVO attributeColumnVo : attributeColumnVoList) {
+            newColumnList.add(attributeColumnVo);
+            //域字段添加编码和名称表头
+            if (attributeColumnVo.getDataType().equals(DataTypeEnum.DOMAIN.getName())) {
+                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.DOMAIN));
+                attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateDomainCodeDisplayName(attributeColumnVo.getDisplayName()));
+                attributeColumnVo.setName(TableNameGenerateUtils.generateDomainCode(attributeColumnVo.getName()));
+            }
+            //文件类型
+            else if (attributeColumnVo.getDataType().equals(DataTypeEnum.FILE.getName())) {
+                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.FILE));
+                attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateComplexTypeFileName(attributeColumnVo.getDisplayName(), false));
+                attributeColumnVo.setName(TableNameGenerateUtils.generateComplexTypeFileName(attributeColumnVo.getName(), true));
+            }
+            //经纬度
+            else if (attributeColumnVo.getDataType().equals(DataTypeEnum.LATITUDE_COORDINATE.getName())) {
+                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.LATITUDE_COORDINATE));
+                attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateComplexTypeLng(attributeColumnVo.getDisplayName(), false));
+                attributeColumnVo.setName(TableNameGenerateUtils.generateComplexTypeLng(attributeColumnVo.getName(), true));
+                newColumnList.add(getCodeAndName(attributeColumnVo));
+            }
+        }
+        return newColumnList;
     }
 
     /**
@@ -1097,7 +1107,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
     }
 
     /**
-     * 获取stg表code数据集合
+     * 获取表指定列名数据
      *
      * @param tableName
      * @return

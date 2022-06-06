@@ -29,4 +29,9 @@ public class GeographyVO {
 
     private Long create_user;
 
+    /**
+     * 版本id
+     */
+    private Integer fidata_version_id;
+
 }

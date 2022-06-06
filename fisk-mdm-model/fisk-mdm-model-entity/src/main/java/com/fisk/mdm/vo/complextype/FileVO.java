@@ -18,4 +18,6 @@ public class FileVO {
 
     private Long create_user;
 
+    private Integer fidata_version_id;
+
 }

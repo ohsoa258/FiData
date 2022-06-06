@@ -24,4 +24,9 @@ public class GeographyDTO {
      */
     private Integer mapType;
 
+    /**
+     * 版本id
+     */
+    private Integer versionId;
+
 }

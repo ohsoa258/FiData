@@ -4,8 +4,10 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
+import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.complextype.GeographyDTO;
 import com.fisk.mdm.service.IComplexType;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +18,7 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
+@Api(tags = {SwaggerConfig.TAG_8})
 @RestController
 @RequestMapping("/complexType")
 public class ComplexTypeController {
@@ -34,8 +37,8 @@ public class ComplexTypeController {
     @PostMapping("/uploadFile")
     @ResponseBody
     @ControllerAOPConfig(printParams = false)
-    public ResultEntity<Object> uploadFile(@RequestParam("file") MultipartFile file) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.uploadFile(file));
+    public ResultEntity<Object> uploadFile(Integer versionId, @RequestParam("file") MultipartFile file) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.uploadFile(versionId, file));
     }
 
 }

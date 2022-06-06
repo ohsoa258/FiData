@@ -20,9 +20,10 @@ public interface IComplexType {
     /**
      * 上传文件
      *
+     * @param versionId
      * @param file
      * @return
      */
-    Integer uploadFile(MultipartFile file);
+    Integer uploadFile(Integer versionId, MultipartFile file);
 
 }

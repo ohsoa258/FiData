@@ -73,7 +73,7 @@ public class ComplexTypeServiceImpl implements IComplexType {
     }
 
     @Override
-    public Integer uploadFile(MultipartFile file) {
+    public Integer uploadFile(Integer versionId, MultipartFile file) {
         try {
             String fileName = file.getOriginalFilename();
             Date date = new Date();
@@ -93,6 +93,7 @@ public class ComplexTypeServiceImpl implements IComplexType {
             FileVO data = new FileVO();
             data.setFile_name(fileName);
             data.setFile_path(filePath);
+            data.setFidata_version_id(versionId);
             return addFile(data);
         } catch (IOException e) {
             log.error("uploadFile:", e);
