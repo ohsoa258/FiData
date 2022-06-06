@@ -14,6 +14,7 @@ import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaQueryTableDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaTableDetailDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -249,7 +250,7 @@ public interface DataModelClient {
      * @return
      */
     @PostMapping("/business/getBusinessAreaTableDetail")
-    ResultEntity<Page<PipelineTableLogVO>> getBusinessAreaTableDetail(@RequestBody BusinessAreaQueryTableDTO dto);
+    ResultEntity<BusinessAreaTableDetailDTO> getBusinessAreaTableDetail(@RequestBody BusinessAreaQueryTableDTO dto);
 
 
 }
