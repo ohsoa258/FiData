@@ -453,7 +453,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 ResultEnum updateResult = ResultEnum.SUCCESS;
                 if (CollectionUtils.isNotEmpty(dtoPramsList) && StringUtils.isNotEmpty(dtoPramsList.get(1))) {
                     String tableName = getSqlField(dataSourceType, dto.tableName);
-                    updateResult = UpdateTableDataToSuccess_Sync(connection, dtoPramsList, tableName);
+                    updateResult = UpdateTableDataToSuccess_Sync(connection, dataSourceType, dtoPramsList, tableName);
                 }
                 return ResultEntityBuild.buildData(updateResult, null);
             }
@@ -650,12 +650,19 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params tableName
      */
     @Transactional(rollbackFor = Exception.class)
-    public ResultEnum UpdateTableDataToSuccess_Sync(Connection connection, List<String> dtoPramsList, String tableName) {
+    public ResultEnum UpdateTableDataToSuccess_Sync(Connection connection, DataSourceTypeEnum dataSourceType, List<String> dtoPramsList, String tableName) {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
         try {
             StringBuilder builder_UpdateSql = new StringBuilder();
+            String updateSetSql = dtoPramsList.get(1);
+            if (StringUtils.isNotEmpty(dtoPramsList.get(4))) {
+                if (StringUtils.isNotEmpty(updateSetSql)) {
+                    updateSetSql += ",";
+                }
+                updateSetSql += getSqlMsgField(dataSourceType, dtoPramsList.get(4), "未配置校验规则，默认校验通过");
+            }
             if (StringUtils.isNotEmpty(dtoPramsList.get(1))) {
-                builder_UpdateSql.append(String.format("UPDATE %s SET %s WHERE 1=1 %s; \n\n", tableName, dtoPramsList.get(1), dtoPramsList.get(0)));
+                builder_UpdateSql.append(String.format("UPDATE %s SET %s WHERE 1=1 %s; \n\n", tableName, updateSetSql, dtoPramsList.get(0)));
             }
             Statement st = null;
             if (builder_UpdateSql != null && builder_UpdateSql.toString().length() > 0) {
