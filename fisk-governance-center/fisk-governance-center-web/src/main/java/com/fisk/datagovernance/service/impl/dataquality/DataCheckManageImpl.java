@@ -654,14 +654,17 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         ResultEnum resultEnum = ResultEnum.SUCCESS;
         try {
             StringBuilder builder_UpdateSql = new StringBuilder();
-            String updateSetSql = dtoPramsList.get(1);
+            String updateSetSql = "";
+            if (StringUtils.isNotEmpty(dtoPramsList.get(1))) {
+                updateSetSql = dtoPramsList.get(1);
+            }
             if (StringUtils.isNotEmpty(dtoPramsList.get(4))) {
                 if (StringUtils.isNotEmpty(updateSetSql)) {
                     updateSetSql += ",";
                 }
                 updateSetSql += getSqlMsgField(dataSourceType, dtoPramsList.get(4), "未配置校验规则，默认校验通过");
             }
-            if (StringUtils.isNotEmpty(dtoPramsList.get(1))) {
+            if (StringUtils.isNotEmpty(updateSetSql)) {
                 builder_UpdateSql.append(String.format("UPDATE %s SET %s WHERE 1=1 %s; \n\n", tableName, updateSetSql, dtoPramsList.get(0)));
             }
             Statement st = null;
