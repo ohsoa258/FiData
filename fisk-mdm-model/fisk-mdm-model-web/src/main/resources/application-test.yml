@@ -44,3 +44,6 @@ ocr:
   aliyun:
     url: https://gjbsb.market.alicloudapi.com/ocrservice/advanced
     appCode: be40b237d6fe470d84590b5a42934596
+
+file:
+  uploadurl: /root/nginx/app/file/mdm/
