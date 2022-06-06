@@ -98,7 +98,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                 }
             } else if (OlapTableEnum.FACT.getValue() == tableType || OlapTableEnum.DIMENSION.getValue() == tableType) {
                 businessAreaQueryTable.businessId = appId;
-                businessAreaQueryTable.tableEnum = OlapTableEnum.FACT;
+                businessAreaQueryTable.tableEnum = OlapTableEnum.getNameByValue(tableType);
                 businessAreaQueryTable.tableId = tableId;
                 ResultEntity<BusinessAreaTableDetailDTO> businessAreaTableDetail = dataModelClient.getBusinessAreaTableDetail(businessAreaQueryTable);
                 if (businessAreaTableDetail.code == ResultEnum.SUCCESS.getCode() && Objects.nonNull(businessAreaTableDetail.data)) {
