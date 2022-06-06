@@ -7,7 +7,7 @@ import com.fisk.common.server.ocr.dto.OcrResult;
 /**
  * @author gy
  * @version 1.0
- * @description OCR功能抽象1
+ * @description OCR功能抽象
  * @date 2022/5/31 15:31
  */
 public interface IOcrHelper {
