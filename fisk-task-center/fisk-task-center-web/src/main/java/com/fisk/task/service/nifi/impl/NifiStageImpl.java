@@ -9,15 +9,23 @@ import com.davis.client.model.BulletinEntity;
 import com.davis.client.model.ProcessGroupEntity;
 import com.davis.client.model.ProcessorEntity;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.app.LogMessageFilterVO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
+import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaQueryTableDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaTableDetailDTO;
 import com.fisk.task.dto.nifi.NifiStageMessageDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
+import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.entity.NifiStagePO;
 import com.fisk.task.entity.PipelineTableLogPO;
 import com.fisk.task.enums.NifiStageTypeEnum;
+import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.map.NifiStageMap;
 import com.fisk.task.map.NifiStageMapImpl;
 import com.fisk.task.mapper.NifiStageMapper;
@@ -53,18 +61,49 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
     DataFactoryClient dataFactoryClient;
     @Resource
     PipelineTableLogMapper pipelineTableLog;
+    @Resource
+    DataAccessClient dataAccessClient;
+    @Resource
+    DataModelClient dataModelClient;
 
 
     @Override
     public List<NifiStageDTO> getNifiStage(List<NifiCustomWorkflowDetailDTO> list) {
         List<NifiStageDTO> nifiStages = new ArrayList<>();
+        PipelineTableQueryDTO pipelineTableQuery = new PipelineTableQueryDTO();
+        BusinessAreaQueryTableDTO businessAreaQueryTable = new BusinessAreaQueryTableDTO();
         for (NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetail : list) {
             QueryWrapper<NifiStagePO> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda().eq(NifiStagePO::getComponentId, nifiCustomWorkflowDetail.id);
             List<NifiStagePO> nifiStagePos = nifiStageMapper.selectList(queryWrapper);
             if (CollectionUtils.isNotEmpty(nifiStagePos)) {
-                List<NifiStageDTO> nifiStageDTOS1 = NifiStageMap.INSTANCES.listPoToDto(nifiStagePos);
-                nifiStages.addAll(nifiStageDTOS1);
+                List<NifiStageDTO> nifiStageDtos = NifiStageMap.INSTANCES.listPoToDto(nifiStagePos);
+                nifiStages.addAll(nifiStageDtos);
+            }
+        }
+        for (NifiStageDTO nifiStage : nifiStages) {
+            Integer pipelineTableLogId = nifiStage.pipelineTableLogId;
+            PipelineTableLogPO pipelineTableLogPO = pipelineTableLog.selectById(pipelineTableLogId);
+            Integer tableId = pipelineTableLogPO.tableId;
+            Integer appId = pipelineTableLogPO.appId;
+            Integer tableType = pipelineTableLogPO.tableType;
+            if (OlapTableEnum.PHYSICS.getValue() == tableType) {
+                pipelineTableQuery.apiId = Long.valueOf(tableId);
+                pipelineTableQuery.appId = appId;
+                ResultEntity<List<LogMessageFilterVO>> tableNames = dataAccessClient.getTableNameListByAppIdAndApiId(pipelineTableQuery);
+                if (tableNames.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(tableNames.data)) {
+                    LogMessageFilterVO logMessage = tableNames.data.get(0);
+                    String tableName = logMessage.tableName;
+                    nifiStage.tableName = tableName;
+                }
+            } else if (OlapTableEnum.FACT.getValue() == tableType || OlapTableEnum.DIMENSION.getValue() == tableType) {
+                businessAreaQueryTable.businessId = appId;
+                businessAreaQueryTable.tableEnum = OlapTableEnum.FACT;
+                businessAreaQueryTable.tableId = tableId;
+                ResultEntity<BusinessAreaTableDetailDTO> businessAreaTableDetail = dataModelClient.getBusinessAreaTableDetail(businessAreaQueryTable);
+                if (businessAreaTableDetail.code == ResultEnum.SUCCESS.getCode() && Objects.nonNull(businessAreaTableDetail.data)) {
+                    nifiStage.tableName = businessAreaTableDetail.data.tableName;
+                }
             }
         }
         //通过组件id查到nifi阶段
@@ -158,6 +197,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
             pipelineTableLogPO.componentId = nifiStagePO.componentId;
             pipelineTableLogPO.tableId = tableAccessId;
             pipelineTableLogPO.tableType = type;
+            pipelineTableLogPO.appId = appId;
             if (Objects.equals(nifiStagePO.insertPhase, NifiStageTypeEnum.RUN_FAILED.getValue()) ||
                     Objects.equals(nifiStagePO.queryPhase, NifiStageTypeEnum.RUN_FAILED.getValue()) ||
                     Objects.equals(nifiStagePO.transitionPhase, NifiStageTypeEnum.RUN_FAILED.getValue())) {
