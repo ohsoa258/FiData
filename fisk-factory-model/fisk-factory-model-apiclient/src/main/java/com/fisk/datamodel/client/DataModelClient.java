@@ -1,18 +1,25 @@
 package com.fisk.datamodel.client;
 
-import com.fisk.chartvisual.dto.IndicatorDTO;
-import com.fisk.chartvisual.dto.IndicatorFeignDTO;
-import com.fisk.chartvisual.dto.IsDimensionDTO;
-import com.fisk.chartvisual.dto.TableDataDTO;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.chartvisual.dto.chartvisual.IndicatorDTO;
+import com.fisk.chartvisual.dto.chartvisual.IndicatorFeignDTO;
+import com.fisk.chartvisual.dto.chartvisual.IsDimensionDTO;
+import com.fisk.chartvisual.dto.chartvisual.TableDataDTO;
 import com.fisk.chartvisual.enums.DataDoFieldTypeEnum;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
-import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
+import com.fisk.datafactory.dto.components.ChannelDataDTO;
+import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaQueryTableDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaTableDetailDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
+import com.fisk.task.dto.pipeline.PipelineTableLogVO;
+import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -210,11 +217,40 @@ public interface DataModelClient {
 
 
     /**
-     *根据事实id获取事实字段及其关联详情(nifi)
+     * 根据事实id获取事实字段及其关联详情(nifi)
+     *
      * @param factId
      * @return
-     * */
+     */
     @GetMapping("/factAttribute/selectAttributeList")
     ResultEntity<List<ModelPublishFieldDTO>> selectAttributeList(@RequestParam("factId") int factId);
+
+    /**
+     * 根据不同类型获取数仓对应的表
+     *
+     * @param dto dto
+     * @return 结果
+     */
+    @PostMapping("/DataFactory/getTableId")
+    ResultEntity<List<ChannelDataDTO>> getTableId(@RequestBody NifiComponentsDTO dto);
+
+    /**
+     * 获取业务域下维度/事实表
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/business/getBusinessAreaTable")
+    ResultEntity<Page<PipelineTableLogVO>> getBusinessAreaTable(@RequestBody PipelineTableQueryDTO dto);
+
+    /**
+     * 根据业务id、表类型、表id,获取表详情
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/business/getBusinessAreaTableDetail")
+    ResultEntity<BusinessAreaTableDetailDTO> getBusinessAreaTableDetail(@RequestBody BusinessAreaQueryTableDTO dto);
+
 
 }

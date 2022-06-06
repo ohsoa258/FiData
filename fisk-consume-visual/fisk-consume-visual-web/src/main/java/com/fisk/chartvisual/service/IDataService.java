@@ -1,9 +1,9 @@
 package com.fisk.chartvisual.service;
 
-import com.fisk.chartvisual.dto.ChartQueryObject;
-import com.fisk.chartvisual.dto.ChartQueryObjectSsas;
-import com.fisk.chartvisual.dto.SlicerQueryObject;
-import com.fisk.chartvisual.dto.SlicerQuerySsasObject;
+import com.fisk.chartvisual.dto.chartvisual.ChartQueryObject;
+import com.fisk.chartvisual.dto.chartvisual.ChartQueryObjectSsas;
+import com.fisk.chartvisual.dto.chartvisual.SlicerQueryObject;
+import com.fisk.chartvisual.dto.chartvisual.SlicerQuerySsasObject;
 import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 

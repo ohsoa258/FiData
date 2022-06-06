@@ -190,7 +190,7 @@
 <div>
     <div>
         <div>
-            <p style="font-weight: bold;">1.&nbsp;&nbsp;文档概述</p>
+            <p style="font-weight: bold;">一.&nbsp;&nbsp;文档概述</p>
         </div>
     </div>
     <div>
@@ -209,89 +209,89 @@
             <p style="text-indent: 2em;font-size: 12px">${readers}</p>
         </div>
     </div>
-    <div>
-        <div>
-            <p style="font-weight: bold;">1.3.&nbsp;&nbsp;相关联系人</p>
-        </div>
-        <div>
-            <table style="border-collapse: collapse; margin: auto; border: 1px solid #c6c6c6;width: 100%">
-                <thead>
-                <tr>
-                    <th style="border-collapse: collapse;
-            border: 1px solid #c6c6c6;
-            background-color: #ddeeff;
-            padding: 8px 9px;
-            font-size: 14px;
-            font-weight: normal;
-            text-align: center;">类别
-                    </th>
-                    <th style="border-collapse: collapse;
-            border: 1px solid #c6c6c6;
-            background-color: #ddeeff;
-            padding: 8px 9px;
-            font-size: 14px;
-            font-weight: normal;
-            text-align: center;">所属部门\公司
-                    </th>
-                    <th style="border-collapse: collapse;
-            border: 1px solid #c6c6c6;
-            background-color: #ddeeff;
-            padding: 8px 9px;
-            font-size: 14px;
-            font-weight: normal;
-            text-align: center;">姓名
-                    </th>
-                    <th style="border-collapse: collapse;
-            border: 1px solid #c6c6c6;
-            background-color: #ddeeff;
-            padding: 8px 9px;
-            font-size: 14px;
-            font-weight: normal;
-            text-align: center;">联系方式（email）
-                    </th>
-                </tr>
-                </thead>
-                <tbody>
-                <#list apiContactsDTOS as apiContactsItem>
-                    <tr style="${apiContactsItem.trStyle}">
-                        <td style="border-collapse: collapse;
-            border: 1px solid #c6c6c6;
-            padding: 8px 9px;
-            font-size: 12px;
-            font-weight: normal;
-            text-align: center;
-            word-break: break-all;">${apiContactsItem.category}
-                        </td>
-                        <td style="border-collapse: collapse;
-            border: 1px solid #c6c6c6;
-            padding: 8px 9px;
-            font-size: 12px;
-            font-weight: normal;
-            text-align: center;
-            word-break: break-all;">${apiContactsItem.company}
-                        </td>
-                        <td style="border-collapse: collapse;
-            border: 1px solid #c6c6c6;
-            padding: 8px 9px;
-            font-size: 12px;
-            font-weight: normal;
-            text-align: center;
-            word-break: break-all;">${apiContactsItem.fullName}
-                        </td>
-                        <td style="border-collapse: collapse;
-            border: 1px solid #c6c6c6;
-            padding: 8px 9px;
-            font-size: 12px;
-            font-weight: normal;
-            text-align: center;
-            word-break: break-all;">${apiContactsItem.mailbox}
-                        </td>
-                    </tr>
-                </#list>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <#--    <div>-->
+    <#--        <div>-->
+    <#--            <p style="font-weight: bold;">1.3.&nbsp;&nbsp;相关联系人</p>-->
+    <#--        </div>-->
+    <#--        <div>-->
+    <#--            <table style="border-collapse: collapse; margin: auto; border: 1px solid #c6c6c6;width: 100%">-->
+    <#--                <thead>-->
+    <#--                <tr>-->
+    <#--                    <th style="border-collapse: collapse;-->
+    <#--            border: 1px solid #c6c6c6;-->
+    <#--            background-color: #ddeeff;-->
+    <#--            padding: 8px 9px;-->
+    <#--            font-size: 14px;-->
+    <#--            font-weight: normal;-->
+    <#--            text-align: center;">类别-->
+    <#--                    </th>-->
+    <#--                    <th style="border-collapse: collapse;-->
+    <#--            border: 1px solid #c6c6c6;-->
+    <#--            background-color: #ddeeff;-->
+    <#--            padding: 8px 9px;-->
+    <#--            font-size: 14px;-->
+    <#--            font-weight: normal;-->
+    <#--            text-align: center;">所属部门\公司-->
+    <#--                    </th>-->
+    <#--                    <th style="border-collapse: collapse;-->
+    <#--            border: 1px solid #c6c6c6;-->
+    <#--            background-color: #ddeeff;-->
+    <#--            padding: 8px 9px;-->
+    <#--            font-size: 14px;-->
+    <#--            font-weight: normal;-->
+    <#--            text-align: center;">姓名-->
+    <#--                    </th>-->
+    <#--                    <th style="border-collapse: collapse;-->
+    <#--            border: 1px solid #c6c6c6;-->
+    <#--            background-color: #ddeeff;-->
+    <#--            padding: 8px 9px;-->
+    <#--            font-size: 14px;-->
+    <#--            font-weight: normal;-->
+    <#--            text-align: center;">联系方式（email）-->
+    <#--                    </th>-->
+    <#--                </tr>-->
+    <#--                </thead>-->
+    <#--                <tbody>-->
+    <#--                <#list apiContactsDTOS as apiContactsItem>-->
+    <#--                    <tr style="${apiContactsItem.trStyle}">-->
+    <#--                        <td style="border-collapse: collapse;-->
+    <#--            border: 1px solid #c6c6c6;-->
+    <#--            padding: 8px 9px;-->
+    <#--            font-size: 12px;-->
+    <#--            font-weight: normal;-->
+    <#--            text-align: center;-->
+    <#--            word-break: break-all;">${apiContactsItem.category}-->
+    <#--                        </td>-->
+    <#--                        <td style="border-collapse: collapse;-->
+    <#--            border: 1px solid #c6c6c6;-->
+    <#--            padding: 8px 9px;-->
+    <#--            font-size: 12px;-->
+    <#--            font-weight: normal;-->
+    <#--            text-align: center;-->
+    <#--            word-break: break-all;">${apiContactsItem.company}-->
+    <#--                        </td>-->
+    <#--                        <td style="border-collapse: collapse;-->
+    <#--            border: 1px solid #c6c6c6;-->
+    <#--            padding: 8px 9px;-->
+    <#--            font-size: 12px;-->
+    <#--            font-weight: normal;-->
+    <#--            text-align: center;-->
+    <#--            word-break: break-all;">${apiContactsItem.fullName}-->
+    <#--                        </td>-->
+    <#--                        <td style="border-collapse: collapse;-->
+    <#--            border: 1px solid #c6c6c6;-->
+    <#--            padding: 8px 9px;-->
+    <#--            font-size: 12px;-->
+    <#--            font-weight: normal;-->
+    <#--            text-align: center;-->
+    <#--            word-break: break-all;">${apiContactsItem.mailbox}-->
+    <#--                        </td>-->
+    <#--                    </tr>-->
+    <#--                </#list>-->
+    <#--                </tbody>-->
+    <#--            </table>-->
+    <#--        </div>-->
+    <#--    </div>-->
 </div>
 <span style="page-break-after:always;"></span>
 <!---文档介绍 end-->
@@ -301,7 +301,7 @@
 <div>
     <div>
         <div>
-            <p style="font-weight: bold;">2.&nbsp;&nbsp;Restful API接口</p>
+            <p style="font-weight: bold;">二.&nbsp;&nbsp;Restful API接口</p>
         </div>
     </div>
     <div>
@@ -323,14 +323,14 @@
     </div>
     <div>
         <div>
-            <p style="font-weight: bold;">2.3.&nbsp;&nbsp;环境信息</p>
+            <p style="font-weight: bold;">2.3.&nbsp;&nbsp;接口地址</p>
         </div>
         <div>
             <p style="text-indent: 2em;font-size: 12px">${uatAddress}</p>
         </div>
-        <div>
-            <p style="text-indent: 2em;font-size: 12px">${prdAddress}</p>
-        </div>
+        <#--        <div>-->
+        <#--            <p style="text-indent: 2em;font-size: 12px">${prdAddress}</p>-->
+        <#--        </div>-->
     </div>
     <#list apiBasicInfoDTOS as apiBasicItem>
         <div>
@@ -599,6 +599,22 @@
             font-weight: normal;
             text-align: center;">说明
                         </th>
+                        <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">推送规则
+                        </th>
+                        <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">推送示例
+                        </th>
                     </tr>
                     </thead>
                     <tbody>
@@ -635,6 +651,22 @@
             font-weight: normal;
             text-align: center;
             word-break: break-all;">${pushDataItem.parmDesc!}
+                            </td>
+                            <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${pushDataItem.parmPushRule!}
+                            </td>
+                            <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${pushDataItem.parmPushExample!}
                             </td>
                         </tr>
                     </#list>
@@ -751,11 +783,38 @@
 <span style="page-break-after:always;"></span>
 <!---Restful API end-->
 
+<!---Restful API C# 调用示例 start-->
+<div>
+    <div>
+        <p style="font-weight: bold;">三.&nbsp;&nbsp;C#代码调用示例</p>
+    </div>
+    <div style="width: 100%;padding-left: 20px;">
+        <pre id="out_pre_apiCodeExamples_net" style="word-wrap: break-word; white-space: pre-wrap;">
+          ${apiCodeExamplesNet?html}
+        </pre>
+    </div>
+</div>
+<span style="page-break-after:always;"></span>
+<!---Restful API C# 调用示例 end-->
+
+<!---Restful API java 调用示例 start-->
+<div>
+    <div>
+        <p style="font-weight: bold;">四.&nbsp;&nbsp;java代码调用示例</p>
+    </div>
+    <div style="width: 100%;padding-left: 20px;">
+        <pre id="out_pre_apiCodeExamples_java" style="word-wrap: break-word; white-space: pre-wrap;">
+          ${apiCodeExamplesJava?html}
+        </pre>
+    </div>
+</div>
+<span style="page-break-after:always;"></span>
+<!---Restful API java 调用示例 end-->
 
 <!---错误代码示例 start-->
 <div>
     <div>
-        <p style="font-weight: bold;">3.&nbsp;&nbsp;API返回代码示例</p>
+        <p style="font-weight: bold;">五.&nbsp;&nbsp;API返回代码示例</p>
     </div>
     <div>
         <table style="border-collapse: collapse; margin: auto; border: 1px solid #c6c6c6;width: 100%">

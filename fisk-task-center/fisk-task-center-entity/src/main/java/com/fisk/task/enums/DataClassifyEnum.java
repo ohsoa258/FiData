@@ -8,8 +8,10 @@ public enum DataClassifyEnum  implements BaseEnum {
      */
     DATAMODELING(0,"数据建模-维度事实"),
     DATAACCESS(1,"数据接入"),
+    DATAACCESS_API(11,"数据接入-非实时api"),
     DATAMODELKPL(2,"数据建模-指标"),
     DATAMODELWIDETABLE(9,"数据建模-宽表"),
+    UNIFIEDCONTROL(10,"统一调度"),
     //管道服务
     CUSTOMWORKDATAMODELING(3,"管道服务-数据建模-维度事实"),
     CUSTOMWORKDATAMODELDIMENSIONKPL(4,"管道服务-数据建模-维度指标"),
@@ -17,7 +19,11 @@ public enum DataClassifyEnum  implements BaseEnum {
     CUSTOMWORKDATAACCESS(5,"管道服务-数据接入"),
     CUSTOMWORKSTRUCTURE(6,"结构层级"),
     //scheduling component
-    CUSTOMWORKSCHEDULINGCOMPONENT(7,"管道服务-调度组件");
+    CUSTOMWORKSCHEDULINGCOMPONENT(7,"管道服务-调度组件"),
+    DATACHECK_MODULE(100, "数据校验"),
+    BIZCHECK_MODULE(200, "业务清洗"),
+    LIFECYCLE_MODULE(300, "生命周期"),
+    WARNNOTICE_MODULE(400, "告警通知");
 
     private final String name;
     private final int value;

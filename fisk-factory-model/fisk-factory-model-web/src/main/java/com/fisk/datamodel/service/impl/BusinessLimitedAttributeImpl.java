@@ -40,10 +40,7 @@ public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
         {
             return ResultEnum.DATA_EXISTS;
         }
-        po.calculationLogic=dto.calculationLogic;
-        po.calculationValue=dto.calculationValue;
-        po.factAttributeId=dto.factAttributeId;
-        return businessLimitedAttributeMapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        return businessLimitedAttributeMapper.updateById(BusinessLimitedAttributeMap.INSTANCES.dtoToPo(dto))>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override

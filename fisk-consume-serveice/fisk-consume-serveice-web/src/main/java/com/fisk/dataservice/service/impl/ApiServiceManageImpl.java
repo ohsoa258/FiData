@@ -111,15 +111,15 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
 
             UserInfo userInfo = userHelper.getLoginUserInfo();
             if (userInfo == null) {
-                resultEnum = ResultEnum.AUTH_TOKEN_IS_NOTNULL;
-                return ResultEntityBuild.buildData(ResultEnum.AUTH_TOKEN_IS_NOTNULL, responseVO);
+                resultEnum = ResultEnum.AUTH_LOGIN_INFO_INVALID;
+                return ResultEntityBuild.buildData(ResultEnum.AUTH_LOGIN_INFO_INVALID, responseVO);
             }
 
             // 第一步：验证是否已进行授权认证
             appAccount = userInfo.username;
             if (appAccount == null || appAccount.isEmpty()) {
-                resultEnum = ResultEnum.AUTH_JWT_ERROR;
-                return ResultEntityBuild.buildData(ResultEnum.AUTH_JWT_ERROR, responseVO);
+                resultEnum = ResultEnum.AUTH_LOGIN_INFO_INVALID;
+                return ResultEntityBuild.buildData(ResultEnum.AUTH_LOGIN_INFO_INVALID, responseVO);
             }
 
             // 第二步：验证当前应用（下游系统）是否有效
@@ -213,6 +213,9 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             } else if (dataSourceConPO.getConType() == DataSourceTypeEnum.SQLSERVER.getValue()) {
                 conn = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
                 typeEnum = DataSourceTypeEnum.SQLSERVER;
+            }else if (dataSourceConPO.getConType() == DataSourceTypeEnum.POSTGRE.getValue()){
+                conn = getStatement(DataSourceTypeEnum.POSTGRE.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
+                typeEnum = DataSourceTypeEnum.POSTGRE;
             }
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             assert st != null;

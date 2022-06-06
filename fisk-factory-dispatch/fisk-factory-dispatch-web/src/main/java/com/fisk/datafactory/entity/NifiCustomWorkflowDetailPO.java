@@ -18,6 +18,7 @@ public class NifiCustomWorkflowDetailPO extends BasePO {
     public Integer componentsId;
     public String appId;
     public String tableId;
+    public Integer tableOrder;
     /**
      * 常规: 名称
      */

@@ -24,10 +24,8 @@ public interface LifecycleMap {
      * @return target
      */
     @Mappings({
-            @Mapping(source = "datasourceType.value", target = "datasourceType"),
             @Mapping(source = "tableState.value", target = "tableState"),
-            @Mapping(source = "moduleState.value", target = "moduleState")
-            //@Mapping(target = "componentNotificationDTOS", ignore = true)
+            @Mapping(source = "ruleState.value", target = "ruleState")
     })
     LifecyclePO dtoToPo(LifecycleDTO dto);
 
@@ -38,10 +36,8 @@ public interface LifecycleMap {
      * @return target
      */
     @Mappings({
-            @Mapping(source = "datasourceType.value", target = "datasourceType"),
             @Mapping(source = "tableState.value", target = "tableState"),
-            @Mapping(source = "moduleState.value", target = "moduleState")
-            //@Mapping(target = "componentNotificationDTOS", ignore = true)
+            @Mapping(source = "ruleState.value", target = "ruleState")
     })
     LifecyclePO dtoToPo_Edit(LifecycleEditDTO dto);
 }

@@ -11,4 +11,5 @@ public class ResultEntity<T> {
     public int code;
     public String msg;
     public T data;
+    public String traceId;
 }

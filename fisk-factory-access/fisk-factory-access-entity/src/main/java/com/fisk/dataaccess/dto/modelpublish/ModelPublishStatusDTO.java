@@ -12,7 +12,7 @@ public class ModelPublishStatusDTO {
     /**
      * api_id
      */
-    public long apiId;
+    public Long apiId;
     /**
      * 物理表id
      */

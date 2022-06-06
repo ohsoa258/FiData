@@ -5,9 +5,11 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.datasecurity.TablesecurityConfigDTO;
+import com.fisk.datagovernance.dto.datasecurity.datamasking.DataSourceIdDTO;
 import com.fisk.datagovernance.service.datasecurity.TableSecurityConfigService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -34,11 +36,11 @@ public class TableSecurityConfigController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
     }
 
-    @GetMapping("/getList")
+    @PostMapping("/getList")
     @ApiOperation(value = "获取表级安全列表")
-    public ResultEntity<List<TablesecurityConfigDTO>> getList() {
+    public ResultEntity<List<TablesecurityConfigDTO>> getList(@Validated @RequestBody DataSourceIdDTO dto) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getList());
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getList(dto));
     }
 
     @PostMapping("/add")

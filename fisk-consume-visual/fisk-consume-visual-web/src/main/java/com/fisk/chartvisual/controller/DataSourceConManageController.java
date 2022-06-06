@@ -2,10 +2,10 @@ package com.fisk.chartvisual.controller;
 
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.chartvisual.dto.DataSourceConDTO;
-import com.fisk.chartvisual.dto.DataSourceConEditDTO;
-import com.fisk.chartvisual.dto.DataSourceConQuery;
-import com.fisk.chartvisual.dto.TestConnectionDTO;
+import com.fisk.chartvisual.dto.datasource.DataSourceConDTO;
+import com.fisk.chartvisual.dto.datasource.DataSourceConEditDTO;
+import com.fisk.chartvisual.dto.datasource.DataSourceConQuery;
+import com.fisk.chartvisual.dto.datasource.TestConnectionDTO;
 import com.fisk.chartvisual.service.IDataSourceConManageService;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
@@ -69,7 +69,7 @@ public class DataSourceConManageController {
 
     @GetMapping("/getSSASDataStructure")
     @ApiOperation("根据数据源连接获取数据域")
-    public ResultEntity<List<DataDomainVO>> getSSASDataStructure(int id) {
-        return service.SSASDataStructure(id);
+    public ResultEntity<List<DataDomainVO>> getSsasDataStructure(int id) {
+        return service.ssasDataStructure(id);
     }
 }

@@ -22,12 +22,21 @@ public class KeywordServiceImpl extends ServiceImpl<KeywordMapper, KeywordPO> im
 
         QueryWrapper<KeywordPO> queryWrapper = new QueryWrapper<>();
 
-        dto.keywordType.forEach(item -> queryWrapper.lambda().eq(KeywordPO::getKeywordType,item).or().select(KeywordPO::getKeyword));
+        dto.keywordType.forEach(item -> queryWrapper.lambda().eq(KeywordPO::getKeywordType, item).or().select(KeywordPO::getKeyword));
 
         List<KeywordPO> poList = baseMapper.selectList(queryWrapper);
         List<String> list = new ArrayList<>();
         poList.forEach(e -> list.add(e.keyword));
 
         return list;
+    }
+
+    @Override
+    public boolean judgeKeyWord(KeywordTypeDTO dto) {
+        QueryWrapper<KeywordPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().select(KeywordPO::getKeyword);
+        List<KeywordPO> poList = baseMapper.selectList(queryWrapper);
+
+        return poList.stream().anyMatch(e -> e.keyword.equalsIgnoreCase(dto.field));
     }
 }

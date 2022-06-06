@@ -35,8 +35,6 @@ public class ClientRegisterDTO {
 
     @ApiModelProperty(value = "过期时间(yyyy-MM-dd)",required = true)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", timezone = "GMT+8")
-//     必须是未来时间
-//    @Future
     public Date expireTime;
 
     @ApiModelProperty(value = "过期时间戳(单位: seconds),用户设置的时间减去当前时间,再转换成秒",required = true)

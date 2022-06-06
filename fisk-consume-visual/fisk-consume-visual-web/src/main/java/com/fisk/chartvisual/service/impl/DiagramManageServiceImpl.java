@@ -4,9 +4,9 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.fisk.chartvisual.dto.ChartPropertyEditDTO;
-import com.fisk.chartvisual.dto.ChildvisualDTO;
-import com.fisk.chartvisual.dto.ReleaseChart;
+import com.fisk.chartvisual.dto.chartvisual.ChartPropertyEditDTO;
+import com.fisk.chartvisual.dto.contentsplit.ChildvisualDTO;
+import com.fisk.chartvisual.dto.chartvisual.ReleaseChart;
 import com.fisk.chartvisual.entity.ChartOptionPO;
 import com.fisk.chartvisual.entity.ChartPO;
 import com.fisk.chartvisual.entity.DraftChartPO;
@@ -140,10 +140,10 @@ public class DiagramManageServiceImpl implements DiagramManageService {
                 DraftChartPO po=  draftChartMapper.selectById(id);
                 return DraftChartMap.INSTANCES.poToVo(po);
             case RELEASE:
-                ChartPO chartPO = chartMapper.selectById((id));
+                ChartPO chartPo = chartMapper.selectById((id));
                 String content = this.assemblySplicing(id);
-                chartPO.setContent(content);
-                return ChartMap.INSTANCES.poToVo(chartPO);
+                chartPo.setContent(content);
+                return ChartMap.INSTANCES.poToVo(chartPo);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

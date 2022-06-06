@@ -3,9 +3,9 @@ package com.fisk.dataaccess.test;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.dataaccess.enums.DriverTypeEnum;
 import com.fisk.dataaccess.controller.Home;
 import com.fisk.dataaccess.dto.json.JsonTableData;
+import com.fisk.dataaccess.enums.DriverTypeEnum;
 import com.microsoft.sqlserver.jdbc.SQLServerBulkCopy;
 import com.microsoft.sqlserver.jdbc.SQLServerBulkCopyOptions;
 import com.sun.rowset.CachedRowSetImpl;
@@ -97,8 +97,37 @@ public class APITest {
             "\t}]\n" +
             "}";
 
+    private String jsonStr2 = "{\"data\":[{\"role\":[{\"roleId\":1,\"roleName\":\"role1\",\"menus\":[{\"menuSrc\":\"menu1\",\"roleId\":1,\"menuName\":\"menu1\"},{\"menuSrc\":\"menu2\",\"roleId\":1,\"menuName\":\"menu2\"},{\"menuSrc\":\"menu3\",\"roleId\":1,\"menuName\":\"menu3\"}],\"userId\":1},{\"roleId\":2,\"roleName\":\"role2\",\"menus\":[{\"menuSrc\":\"menu21\",\"roleId\":2,\"menuName\":\"menu21\"},{\"menuSrc\":\"menu22\",\"roleId\":2,\"menuName\":\"menu22\"},{\"menuSrc\":\"menu23\",\"roleId\":2,\"menuName\":\"menu23\"}],\"userId\":1},{\"roleId\":3,\"roleName\":\"role3\",\"userId\":1}],\"createTime\":\"2022-1-22 12:00:00\",\"name\":\"张三\",\"id\":1,\"age\":16},{\"role\":[{\"roleId\":4,\"roleName\":\"role4\",\"userId\":2},{\"roleId\":5,\"roleName\":\"role5\",\"userId\":2},{\"roleId\":6,\"roleName\":\"role6\",\"userId\":2}],\"createTime\":\"2022-1-22 12:30:00\",\"name\":\"李四\",\"id\":2,\"age\":17}]}\n";
+
+    private String jsonStr3 = "{\n" +
+            "  \"data\": [\n" +
+            "    {\n" +
+            "      \"menus\":[\"str1\",\"str2\"],\n" +
+            "      \"role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 1,\n" +
+            "          \"roleName\": \"role1\",\n" +
+            "          \"userId\": 1\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"createTime\": \"2022-1-22 12:00:00\",\n" +
+            "      \"name\": \"张三\",\n" +
+            "      \"id\": 1,\n" +
+            "      \"age\": 16\n" +
+            "    }\n" +
+            "  ]\n" +
+            "}";
+
     @Resource
     private Home home;
+
+    @Test
+    public void TestAPI() throws Exception {
+        JSONObject json = JSON.parseObject(jsonStr2);
+//        System.out.println("json: \n" + json);
+        List<JsonTableData> res = home.get(json);
+//        res.forEach(System.out::println);
+    }
 
     @Test
     public void Test() throws Exception {
@@ -110,6 +139,8 @@ public class APITest {
         //PreparedStatement statement = con.prepareStatement("insert into student(id,`name`,age) values(?,?,?)");
         JSONObject json = JSON.parseObject(jsonStr);
         List<JsonTableData> res = home.get(json);
+
+        int a = 1 / 0;
         try {
             for (JsonTableData re : res) {
                 String tableName = re.table;

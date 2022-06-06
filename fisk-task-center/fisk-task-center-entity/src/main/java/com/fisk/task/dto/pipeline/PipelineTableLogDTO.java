@@ -25,4 +25,8 @@ public class PipelineTableLogDTO extends BasePO {
     public Date endTime;
     @ApiModelProperty(value = "总条数")
     public int counts;
+    @ApiModelProperty(value = "调用类型")
+    public int dispatchType;
+    @ApiModelProperty(value = "应用id")
+    public Integer appId;
 }

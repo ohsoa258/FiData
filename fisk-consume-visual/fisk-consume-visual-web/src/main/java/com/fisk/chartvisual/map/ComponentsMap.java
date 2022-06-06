@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.map;
 
-import com.fisk.chartvisual.dto.*;
+import com.fisk.chartvisual.dto.components.*;
 import com.fisk.chartvisual.entity.ComponentsClassPO;
 import com.fisk.chartvisual.entity.ComponentsOptionPO;
 import com.fisk.chartvisual.entity.ComponentsPO;
@@ -46,6 +46,8 @@ public interface ComponentsMap {
     /**
      * dto => po
      * @param dto
+     * @param componentId
+     * @param uploadAddress
      * @return
      */
     @Mappings({
@@ -61,9 +63,35 @@ public interface ComponentsMap {
      * @return
      */
     @Mappings({
-            @Mapping(source = "uploadAddress",target = "path")
+            @Mapping(source = "uploadAddress",target = "path"),
+            @Mapping(source = "dto.id",target = "componentId"),
+            @Mapping(target = "id",ignore = true)
     })
     ComponentsOptionPO optionDtoToPo(SaveComponentsOptionDTO dto,String uploadAddress);
+
+    /**
+     * dto => po
+     * @param dto
+     * @return
+     */
+    @Mappings({
+            @Mapping(source = "componentId",target = "id"),
+            @Mapping(target = "componentId",ignore = true)
+    })
+    ComponentsOptionPO optionEditDtoToPo(SaveComponentsOptionDTO dto);
+
+    /**
+     * dto => po
+     * @param dto
+     * @param uploadAddress
+     * @return
+     */
+    @Mappings({
+            @Mapping(source = "uploadAddress",target = "path"),
+            @Mapping(source = "dto.componentId",target = "id"),
+            @Mapping(target = "componentId",ignore = true)
+    })
+    ComponentsOptionPO optionEditDtoToPo(SaveComponentsOptionDTO dto,String uploadAddress);
 
     /**
      * dto => po

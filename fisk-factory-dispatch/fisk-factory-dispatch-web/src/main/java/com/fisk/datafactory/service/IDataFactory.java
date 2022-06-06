@@ -26,5 +26,5 @@ public interface IDataFactory {
      * @param dto dto
      * @return 查询结果
      */
-    ResultEntity<NifiPortsHierarchyDTO> getNIfiPortHierarchy(NifiGetPortHierarchyDTO dto);
+    ResultEntity<NifiPortsHierarchyDTO> getNifiPortHierarchy(NifiGetPortHierarchyDTO dto);
 }

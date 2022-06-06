@@ -3,43 +3,13 @@ datamodeldorisconstr:
   password: Password01!
   url: jdbc:mysql://192.168.11.134:9030/dmp_olap?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
   username: root
-eureka:
-  client:
-    service-url:
-      defaultZone: http://127.0.0.1:8082/eureka
+
 external-table-link: '"host" = "192.168.1.250","port" = "5432","user" = "postgres","password"
   = "Password01!","database" = "dmp_dw"'
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 10000
-        readTimeout: 600000
-logging:
-  config: classpath:logback-spring.xml
-  level:
-    com:
-      fisk:
-        chartvisual:
-          mapper: debug
-    org:
-      springframework:
-        orm:
-          jpa: debug
-mybatis-plus:
-  configuration:
-    default-enum-type-handler: com.fisk.common.framework.mybatis.config.BaseEnumTypeHandler
-  global-config:
-    db-config:
-      id-type: auto
-      insert-strategy: not_null
-      logic-delete-field: del_flag
-      logic-delete-value: 0
-      logic-not-delete-value: 1
-      update-strategy: not_null
-  mapper-locations: classpath:mapper/*.xml
+
 nifi:
   basePath: http://192.168.11.130:9090/nifi-api
+  token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJkMjc2Mjk3N2U4YjU0YTQ0YjYyZGU2ODlmZTk0OTRjNiIsInVzZXIiOiJ7XCJpZFwiOjE4LFwidXNlckFjY291bnRcIjpcImNma1wifSIsImlkIjoiMTgifQ.SRkIbNgKrvo1TI-WSufy4mZGLst6ed0Y6Fs0QoQ8m_g
   pipeline:
     topicName: my-topic
     waitTime: 20
@@ -52,11 +22,18 @@ pgsql-datainput:
   password: Password01!
   url: jdbc:postgresql://192.168.1.250:5432/dmp_ods?stringtype=unspecified
   username: postgres
+  ip: 192.168.1.250
+  dbName: dmp_ods
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
   password: Password01!
   url: jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified
   username: postgres
+pgsql-mdm:
+  password: Password01!
+  url: jdbc:postgresql://192.168.1.250:5432/dmp_mdm?stringtype=unspecified
+  username: postgres
+  type: PG
 server:
   port: 8099
 spring:

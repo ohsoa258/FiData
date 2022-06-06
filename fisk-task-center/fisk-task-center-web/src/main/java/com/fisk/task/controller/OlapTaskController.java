@@ -5,12 +5,13 @@ import com.fisk.common.core.enums.task.TaskTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
-import com.fisk.task.consumer.olap.BuildModelTaskListener;
-import com.fisk.task.consumer.olap.BuildWideTableTaskListener;
+import com.fisk.task.dto.task.UnifiedControlDTO;
 import com.fisk.task.entity.OlapPO;
+import com.fisk.task.listener.olap.BuildModelTaskListener;
+import com.fisk.task.listener.olap.BuildWideTableTaskListener;
+import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.task.IBuildKfkTaskService;
 import com.fisk.task.service.task.IBuildTaskService;
-import com.fisk.task.service.nifi.IOlap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -62,6 +63,20 @@ public class OlapTaskController {
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_OLAP_WIDE_TABLE_FLOW,
                 wideTableFieldConfigTaskDTO);
+    }
+
+    /**
+     * 统一调度
+     *
+     * @param unifiedControlDTO unifiedControlDTO
+     * @return
+     */
+    @PostMapping("/publishBuildunifiedControlTask")
+    public ResultEntity<Object> publishBuildunifiedControlTask(@RequestBody UnifiedControlDTO unifiedControlDTO) {
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW,
+                unifiedControlDTO);
     }
 
     /**

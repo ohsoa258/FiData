@@ -2,6 +2,7 @@ package com.fisk.dataservice.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.dataservice.dto.datasource.DataSourceConDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConEditDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConQuery;
@@ -16,12 +17,14 @@ import java.util.List;
 
 /**
  * 数据源接口
+ *
  * @author dick
  */
 public interface IDataSourceConManageService extends IService<DataSourceConPO> {
 
     /**
      * 获取权限内所有的数据源
+     *
      * @param query 查询参数
      * @return 查询结果
      */
@@ -29,6 +32,7 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
 
     /**
      * 保存数据
+     *
      * @param dto dto
      * @return 执行结果
      */
@@ -36,6 +40,7 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
 
     /**
      * 更新数据
+     *
      * @param dto dto
      * @return 执行结果
      */
@@ -43,6 +48,7 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
 
     /**
      * 删除数据
+     *
      * @param id id
      * @return 执行结果
      */
@@ -50,6 +56,7 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
 
     /**
      * 测试数据库连接
+     *
      * @param dto 连接信息
      * @return 是否连接成功
      */
@@ -57,14 +64,24 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
 
     /**
      * 获取全部数据源
+     *
      * @return 查询结果
      */
     List<DataSourceConVO> getAll();
 
     /**
      * 获取数据源下的表
+     *
      * @param datasourceId 数据源id
      * @return 查询结果
      */
-    DataSourceVO getMeta(int datasourceId) throws SQLException;
+    ResultEntity<DataSourceVO> getTableAll(int datasourceId);
+
+    /**
+     * 重载数据源
+     *
+     * @param datasourceId 数据源id
+     * @return 查询结果
+     */
+    ResultEntity<Object> reloadDataSource(int datasourceId);
 }

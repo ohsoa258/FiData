@@ -2,7 +2,7 @@ package com.fisk.chartvisual.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.fisk.chartvisual.dto.*;
+import com.fisk.chartvisual.dto.components.*;
 import com.fisk.chartvisual.entity.ComponentsClassPO;
 import com.fisk.chartvisual.entity.ComponentsOptionPO;
 import com.fisk.chartvisual.entity.ComponentsPO;
@@ -11,7 +11,7 @@ import com.fisk.chartvisual.mapper.ComponentsClassMapper;
 import com.fisk.chartvisual.mapper.ComponentsMapper;
 import com.fisk.chartvisual.mapper.ComponentsOptionMapper;
 import com.fisk.chartvisual.service.ComponentsService;
-import com.fisk.chartvisual.util.dbhelper.IOCloseUtil;
+import com.fisk.chartvisual.util.dbhelper.IoCloseUtil;
 import com.fisk.chartvisual.util.dbhelper.zip.ZipHelper;
 import com.fisk.chartvisual.util.dbhelper.zip.ZipUtils;
 import com.fisk.common.framework.exception.FkException;
@@ -168,7 +168,11 @@ public class ComponentsServiceImpl implements ComponentsService {
             return ResultEnum.DATA_EXISTS.getMsg();
         }
 
-        String uploadAddress = this.uploadZip(file);
+        if (this.queryFileName(dto.getOption().getFileName()) == false){
+            return ResultEnum.FILENAME_EXISTS.getMsg();
+        }
+
+        String uploadAddress = this.uploadZip(file,dto.getOption().getFileName());
         // 保存组件表
         ComponentsPO po = ComponentsMap.INSTANCES.compDtoToPo(dto);
         componentsMapper.insert(po);
@@ -264,26 +268,68 @@ public class ComponentsServiceImpl implements ComponentsService {
         // 判断组件是否存在
         QueryWrapper<ComponentsPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(ComponentsPO::getId,dto.getComponentId());
+                .eq(ComponentsPO::getId,dto.getId());
         ComponentsPO componentsPo = componentsMapper.selectOne(queryWrapper);
         if (componentsPo == null){
             return ResultEnum.DATA_NOTEXISTS.getMsg();
         }
 
+        if (this.queryFileName(dto.getFileName()) == false){
+            return ResultEnum.FILENAME_EXISTS.getMsg();
+        }
+
         // 判断组件配置表是否有重复数据
         QueryWrapper<ComponentsOptionPO> query = new QueryWrapper<>();
         query.lambda()
-                .eq(ComponentsOptionPO::getComponentId,dto.getComponentId())
+                .eq(ComponentsOptionPO::getComponentId,dto.getId())
                 .eq(ComponentsOptionPO::getVersion,dto.getVersion())
                 .last("limit 1");
         ComponentsOptionPO optionPo = optionMapper.selectOne(query);
+
+        String uploadAddress = null;
         if (optionPo != null){
-            return ResultEnum.DATA_EXISTS.getMsg();
+            // 修改组件
+
+            ComponentsOptionPO optionPo1 = null;
+            if (file == null){
+                optionPo1 = ComponentsMap.INSTANCES.optionEditDtoToPo(dto);
+            }else {
+                uploadAddress = this.uploadZip(file,dto.getFileName());
+                optionPo1 = ComponentsMap.INSTANCES.optionEditDtoToPo(dto,uploadAddress);
+            }
+            optionMapper.updateById(optionPo1);
+        }else {
+            // 保存组件
+            uploadAddress = this.uploadZip(file,dto.getFileName());
+            optionMapper.insert(ComponentsMap.INSTANCES.optionDtoToPo(dto,uploadAddress));
         }
 
-        String uploadAddress = this.uploadZip(file);
-        optionMapper.insert(ComponentsMap.INSTANCES.optionDtoToPo(dto,uploadAddress));
         return uploadAddress;
+    }
+
+    @Override
+    public ComponentsDTO selectComponentById(Integer id) {
+        QueryWrapper<ComponentsPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(ComponentsPO::getId,id);
+        ComponentsPO componentsPo = componentsMapper.selectOne(queryWrapper);
+        if (componentsPo == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        // 查询子版本信息
+        List<ComponentsOptionDTO> optionData = this.getOptionData((int) componentsPo.getId());
+
+        ComponentsDTO dto = new ComponentsDTO();
+        dto.setId((int) componentsPo.getId());
+        dto.setClassId(componentsPo.getClassId().intValue());
+        dto.setName(componentsPo.getName());
+        dto.setIcon(componentsPo.getIcon());
+        if (CollectionUtils.isNotEmpty(optionData)) {
+            dto.setOptionList(optionData);
+        }
+
+        return dto;
     }
 
     /**
@@ -322,8 +368,8 @@ public class ComponentsServiceImpl implements ComponentsService {
      * @return
      */
     public boolean isExistComponentsClass(Integer id){
-        ComponentsClassPO classPO = classMapper.selectById(id);
-        if (classPO == null){
+        ComponentsClassPO classPo = classMapper.selectById(id);
+        if (classPo == null){
             return false;
         }
 
@@ -358,7 +404,7 @@ public class ComponentsServiceImpl implements ComponentsService {
         } catch (Exception e) {
             e.printStackTrace();
         }finally {
-            IOCloseUtil.close(bos, out);
+            IoCloseUtil.close(bos, out);
         }
     }
 
@@ -367,7 +413,7 @@ public class ComponentsServiceImpl implements ComponentsService {
      * @param zipFile
      * @return
      */
-    public String uploadZip(MultipartFile zipFile){
+    public String uploadZip(MultipartFile zipFile,String fileName){
         boolean zip = isZip(zipFile);
         if (zip){
             File file = new File(uploadPath);
@@ -375,14 +421,14 @@ public class ComponentsServiceImpl implements ComponentsService {
             if (!file.exists()) {
                 file.mkdir();
             }
-            String uuid = UUID.randomUUID().toString().replaceAll("-", "");
+
             //获取文件名（包括后缀）
             String filename = zipFile.getOriginalFilename();
-            String pathName = uploadPath + uuid + "-" + filename;
+            String pathName = uploadPath + fileName + "-" + filename;
             try {
                 File dest = new File(pathName);
                 zipFile.transferTo(dest);
-                String destDirPath = uploadPath + uuid;
+                String destDirPath = uploadPath + fileName;
                 // 解压文件
                 ZipUtils.unZip(dest, destDirPath);
                 // 删除临时文件
@@ -391,10 +437,28 @@ public class ComponentsServiceImpl implements ComponentsService {
                 e.printStackTrace();
             }
 
-            String address = accessAddress + uuid;
+            String address = accessAddress + fileName;
             return address;
         }
 
         return null;
+    }
+
+    /**
+     * 查询文件名称是否存在
+     * @param fileName
+     * @return
+     */
+    public boolean queryFileName(String fileName){
+        QueryWrapper<ComponentsOptionPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(ComponentsOptionPO::getFileName,fileName)
+                .last("limit 1");
+        ComponentsOptionPO optionPo = optionMapper.selectOne(queryWrapper);
+        if (optionPo != null){
+            return false;
+        }
+
+        return true;
     }
 }

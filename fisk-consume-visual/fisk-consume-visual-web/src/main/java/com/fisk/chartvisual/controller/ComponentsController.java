@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.controller;
 
-import com.fisk.chartvisual.dto.*;
+import com.fisk.chartvisual.dto.components.*;
 import com.fisk.chartvisual.service.ComponentsService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -84,10 +84,18 @@ public class ComponentsController {
         return ResultEntityBuild.build(componentsService.deleteComponentsClass(id));
     }
 
-    @ApiOperation("保存组件不同版本信息")
-    @PostMapping("/saveComponentsOption")
+    @ApiOperation("上传或修改版本组件")
+    @PostMapping("/uploadNewVersion")
     @ResponseBody
-    public ResultEntity<String> saveComponentsOption( SaveComponentsOptionDTO dto, @RequestParam("file") MultipartFile file) {
+    public ResultEntity<String> uploadNewVersion( SaveComponentsOptionDTO dto,
+                                                  @RequestParam(value = "file" , required = false) MultipartFile file) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,componentsService.saveComponentsOption(dto,file));
+    }
+
+    @ApiOperation("根据id查询组件版本信息")
+    @GetMapping("/selectComponentById")
+    @ResponseBody
+    public ResultEntity<ComponentsDTO> selectComponentById(Integer id) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,componentsService.selectComponentById(id));
     }
 }

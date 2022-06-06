@@ -4,7 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
-import com.fisk.dataaccess.dto.TableAccessNonDTO;
+import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.service.ITableAccess;
 import io.swagger.annotations.Api;
@@ -35,7 +35,7 @@ public class TableAccessController {
     @ApiOperation(value = "添加")
     public ResultEntity<Object> addTableAccessData(@RequestBody TbTableAccessDTO dto) {
 
-        return ResultEntityBuild.build(service.addTableAccessData(dto));
+        return service.addTableAccessData(dto);
     }
 
     /**

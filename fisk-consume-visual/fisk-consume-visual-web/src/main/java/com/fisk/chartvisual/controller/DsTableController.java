@@ -1,6 +1,8 @@
 package com.fisk.chartvisual.controller;
 
-import com.fisk.chartvisual.dto.*;
+import com.fisk.chartvisual.dto.chartvisual.ObtainTableDataDTO;
+import com.fisk.chartvisual.dto.chartvisual.TableInfoDTO;
+import com.fisk.chartvisual.dto.dstable.*;
 import com.fisk.chartvisual.service.DsTableService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;

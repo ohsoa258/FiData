@@ -1,17 +1,21 @@
 package com.fisk.dataaccess.client;
 
 import com.fisk.common.core.response.ResultEntity;
-import com.fisk.dataaccess.dto.AppRegistrationDTO;
-import com.fisk.dataaccess.dto.NifiAccessDTO;
-import com.fisk.dataaccess.dto.TableAccessDTO;
+import com.fisk.dataaccess.dto.access.NifiAccessDTO;
+import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
+import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
+import com.fisk.dataaccess.dto.app.LogMessageFilterVO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
+import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -160,6 +164,9 @@ public interface DataAccessClient {
     @GetMapping("/dataAccessTree/getTableId")
     public ResultEntity<List<ChannelDataDTO>> getTableId();
 
+    @PostMapping("/dataAccessTree/getTableId")
+    public ResultEntity<List<ChannelDataDTO>> getTableId(@RequestBody NifiComponentsDTO dto);
+
     /**
      * 封装参数给nifi
      *
@@ -198,7 +205,32 @@ public interface DataAccessClient {
     @GetMapping("/dataAccessTree/getDataAccessMetaData")
     public ResultEntity<List<DataAccessSourceTableDTO>> getDataAccessMetaData();
 
+    /**
+     * 修改api发布状态
+     *
+     * @param dto dto
+     */
     @ApiOperation("修改api发布状态")
     @PutMapping("/apiConfig/updateApiPublishStatus")
     public void updateApiPublishStatus(@RequestBody ModelPublishStatusDTO dto);
+
+    /**
+     * 调度调用第三方api,接收数据,并导入到FiData平台
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    @PostMapping("/apiConfig/importData")
+    @ApiOperation(value = "调度调用第三方api,接收数据,并导入到FiData平台")
+    public ResultEntity<Object> importData(@RequestBody ApiImportDataDTO dto);
+
+    /**
+     * 通过appId和apiId查询表名集合
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    @PostMapping("/appRegistration/getTableNameListByAppIdAndApiId")
+    @ApiOperation(value = "通过appId和apiId查询表名集合")
+    public ResultEntity<List<LogMessageFilterVO>> getTableNameListByAppIdAndApiId(@RequestBody PipelineTableQueryDTO dto);
 }

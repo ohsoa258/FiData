@@ -1,9 +1,9 @@
 package com.fisk.dataaccess.utils.sql;
 
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.dataaccess.dto.DataBaseViewDTO;
-import com.fisk.dataaccess.dto.TablePyhNameDTO;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.dataaccess.dto.table.DataBaseViewDTO;
+import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +52,6 @@ public class MysqlConUtils {
                 tablePyhNameDTO.setFields(colNames);
 
                 tag++;
-                //tablePyhNameDTO.setTag(tag);
 
                 list.add(tablePyhNameDTO);
 
@@ -70,6 +69,7 @@ public class MysqlConUtils {
     }
 
     /**
+     * @return java.util.List<com.fisk.dataaccess.table.DataBaseViewDTO>
      * @description 加载视图详情
      * @author Lock
      * @date 2021/12/31 17:46
@@ -79,7 +79,6 @@ public class MysqlConUtils {
      * @params user
      * @params password
      * @params dbName
-     * @return java.util.List<com.fisk.dataaccess.dto.DataBaseViewDTO>
      */
     public List<DataBaseViewDTO> loadViewDetails(DriverTypeEnum driverTypeEnum, String url, String user, String password,String dbName) {
 

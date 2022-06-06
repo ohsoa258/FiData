@@ -18,5 +18,7 @@ public interface IKeywordService extends IService<KeywordPO> {
      * @return 返回值
      */
     List<String> getList(KeywordTypeDTO dto);
+
+    boolean judgeKeyWord(KeywordTypeDTO dto);
 }
 

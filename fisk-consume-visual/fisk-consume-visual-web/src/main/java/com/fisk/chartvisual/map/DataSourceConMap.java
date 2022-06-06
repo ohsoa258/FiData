@@ -1,10 +1,8 @@
 package com.fisk.chartvisual.map;
 
-import com.fisk.chartvisual.dto.DataSourceConDTO;
-import com.fisk.chartvisual.dto.DataSourceConEditDTO;
+import com.fisk.chartvisual.dto.datasource.DataSourceConDTO;
+import com.fisk.chartvisual.dto.datasource.DataSourceConEditDTO;
 import com.fisk.chartvisual.entity.DataSourceConPO;
-import com.fisk.chartvisual.entity.HierarchyPO;
-import com.fisk.chartvisual.vo.HierarchyVO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 

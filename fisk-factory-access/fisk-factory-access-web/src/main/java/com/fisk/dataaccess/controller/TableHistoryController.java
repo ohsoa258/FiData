@@ -4,7 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
-import com.fisk.dataaccess.dto.TableHistoryDTO;
+import com.fisk.dataaccess.dto.table.TableHistoryDTO;
 import com.fisk.dataaccess.service.ITableHistory;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

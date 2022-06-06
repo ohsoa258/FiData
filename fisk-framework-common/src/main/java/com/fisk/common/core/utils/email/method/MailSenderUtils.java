@@ -4,9 +4,11 @@ import com.fisk.common.core.utils.email.dto.MailSenderDTO;
 import com.fisk.common.core.utils.email.dto.MailServeiceDTO;
 import com.sun.mail.util.MailSSLSocketFactory;
 
+import javax.activation.DataHandler;
+import javax.activation.FileDataSource;
 import javax.mail.*;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
+import javax.mail.internet.*;
+import java.io.File;
 import java.util.Date;
 import java.util.Properties;
 
@@ -31,7 +33,20 @@ public class MailSenderUtils {
         props.setProperty("mail.host", serveiceDTO.getHost());
         // 发送邮件协议名称
         props.setProperty("mail.transport.protocol", serveiceDTO.getProtocol());
-        if (serveiceDTO.isOpenSsl()) {
+        if (serveiceDTO.getPort() == 465 || serveiceDTO.getPort() == 587) {
+            // PS: 某些邮箱服务器要求 SMTP 连接需要使用 SSL 安全认证 (为了提高安全性, 邮箱支持SSL连接, 也可以自己开启),
+            // 如果无法连接邮件服务器, 仔细查看控制台打印的 log, 如果有有类似 “连接失败, 要求 SSL 安全连接” 等错误,
+            // 打开下面 注释代码, 开启 SSL 安全连接。
+
+            // SMTP 服务器的端口 (非 SSL 连接的端口一般默认为 25, 可以不添加, 如果开启了 SSL 连接,
+            // 需要改为对应邮箱的 SMTP 服务器的端口, 具体可查看对应邮箱服务的帮助, QQ邮箱的SMTP(SLL)端口为465或587,
+            // 其他邮箱自行去查看)
+            final String smtpPort = String.valueOf(serveiceDTO.getPort());
+            props.setProperty("mail.smtp.port", smtpPort);
+            props.setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+            props.setProperty("mail.smtp.socketFactory.fallback", "false");
+            props.setProperty("mail.smtp.socketFactory.port", smtpPort);
+
             // 配置ssl加密工厂
             MailSSLSocketFactory sf = new MailSSLSocketFactory();
             sf.setTrustAllHosts(true);
@@ -75,6 +90,24 @@ public class MailSenderUtils {
         mimeMessage.setSubject(senderDTO.getSubject());
         // 7. 设置邮件正文
         mimeMessage.setText(senderDTO.getBody());
+
+        if (senderDTO.sendAttachment
+                && senderDTO.getAttachmentName() != null && !senderDTO.getAttachmentName().isEmpty()
+                && senderDTO.getAttachmentPath() != null && !senderDTO.getAttachmentPath().isEmpty()) {
+            File tmpFile = new File(senderDTO.getAttachmentPath());
+            if (tmpFile.exists()) {
+                MimeMultipart multipart = new MimeMultipart();
+                MimeBodyPart file1 = new MimeBodyPart();
+                DataHandler handler = new DataHandler(new FileDataSource(tmpFile.getPath()));
+                file1.setDataHandler(handler);
+                //对文件名进行编码，防止出现乱码
+                String fileName = MimeUtility.encodeWord(tmpFile.getName(), "utf-8", "B");
+                file1.setFileName(fileName);
+                multipart.addBodyPart(file1);
+                mimeMessage.setContent(multipart);
+            }
+        }
+
         // 8. 设置发件时间
         mimeMessage.setSentDate(new Date());
         // 9. 保存上面的所有设置

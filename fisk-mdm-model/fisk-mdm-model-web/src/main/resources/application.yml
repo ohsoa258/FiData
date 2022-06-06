@@ -9,3 +9,47 @@ spring:
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss
+fk:
+  jwt:
+    key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
+# 授权中心
+  auth:
+    clientId: mdmmodel-service
+    secret: 1234
+  encoder:
+    crypt:
+      secret: ${random.uuid}
+      strength: 6
+
+# 注册中心
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:8082/eureka
+  instance:
+    lease-expiration-duration-in-seconds: 5
+    lease-renewal-interval-in-seconds: 5
+
+# feign接口超时
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 10000
+        readTimeout: 30000
+
+# mybatis-plus 配置
+mybatis-plus:
+  configuration:
+    #log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    default-enum-type-handler: com.fisk.common.framework.mybatis.config.BaseEnumTypeHandler
+  global-config:
+    db-config:
+      id-type: auto
+      insert-strategy: not_null
+      logic-delete-field: del_flag
+      logic-delete-value: 0
+      logic-not-delete-value: 1
+      update-strategy: not_null
+  mapper-locations: classpath:mapper/*.xml
+  type-enums-package: com.fisk.mdm.enums

@@ -3,11 +3,15 @@ package com.fisk.datafactory.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datafactory.dto.components.ChannelDataDTO;
+import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
+
+import java.util.List;
 
 /**
  * @author Lock
@@ -20,6 +24,22 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
      * @return 执行结果
      */
     NifiCustomWorkflowDetailDTO addData(NifiCustomWorkflowDetailDTO dto);
+
+    /**
+     * 添加管道组件集合
+     *
+     * @param list list
+     * @return 执行结果
+     */
+    List<NifiCustomWorkflowDetailDTO> addDataList(List<NifiCustomWorkflowDetailDTO> list);
+
+    /**
+     * 修改管道组件集合
+     *
+     * @param list list
+     * @return 执行结果
+     */
+    ResultEnum editDataList(List<NifiCustomWorkflowDetailDTO> list);
 
     /**
      * 回显数据
@@ -60,4 +80,20 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
      * @return 执行结果
      */
     ResultEnum deleteDataList(WorkflowTaskGroupDTO dto);
+
+    /**
+     * 根据不同的类型,获取不同tree
+     *
+     * @param dto dto
+     * @return tree
+     */
+    List<ChannelDataDTO> getTableIds(NifiComponentsDTO dto);
+
+    /**
+     * 查询当前任务下的组件详情集合
+     *
+     * @param id id
+     * @return 执行结果
+     */
+    List<NifiCustomWorkflowDetailDTO> getComponentList(long id);
 }

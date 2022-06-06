@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
@@ -7,8 +8,12 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
-import com.fisk.dataaccess.dto.*;
+import com.fisk.dataaccess.dto.app.AppNameDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.dataaccess.dto.table.TableAccessDTO;
+import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
+import com.fisk.dataaccess.dto.table.TableAccessQueryDTO;
+import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
@@ -233,6 +238,7 @@ public class PhysicalTableController {
                 return dto;
             }).collect(Collectors.toList());
         }
+        log.info("删表对象信息: " + JSON.toJSONString(pgsqlDelTableDTO));
         // 删除pg库对应的表
         ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
 

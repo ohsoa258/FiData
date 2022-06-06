@@ -26,6 +26,16 @@ public class ApiConfigPO extends BasePO {
     public String apiName;
 
     /**
+     * api地址
+     */
+    public String apiAddress;
+
+    /**
+     * api请求方式(0: 空;  1: get;  2:post)
+     */
+    public Integer apiRequestType;
+
+    /**
      * api描述
      */
     public String apiDes;
@@ -34,4 +44,14 @@ public class ApiConfigPO extends BasePO {
      * 0: 未发布  1: 发布成功  2: 发布失败  3: 正在发布
      */
     public Integer publish;
+
+    /**
+     * json解析的根节点
+     */
+    public String jsonKey;
+
+    /**
+     * 实时api的json结构示例
+     */
+    public String pushData;
 }

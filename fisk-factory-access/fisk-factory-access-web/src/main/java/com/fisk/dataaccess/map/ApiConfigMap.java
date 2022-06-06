@@ -1,7 +1,10 @@
 package com.fisk.dataaccess.map;
 
 import com.fisk.dataaccess.dto.api.ApiConfigDTO;
+import com.fisk.dataaccess.dto.api.ApiSelectChildDTO;
+import com.fisk.dataaccess.dto.api.ApiSelectDTO;
 import com.fisk.dataaccess.entity.ApiConfigPO;
+import com.fisk.dataaccess.entity.AppRegistrationPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
@@ -49,4 +52,20 @@ public interface ApiConfigMap {
      * @return target
      */
     List<ApiConfigPO> listDtoToPo(List<ApiConfigDTO> list);
+
+    /**
+     * list po->dto
+     *
+     * @param list source
+     * @return target
+     */
+    List<ApiSelectDTO> listPoToApiSelectDto(List<AppRegistrationPO> list);
+
+    /**
+     * list po->dto
+     *
+     * @param list source
+     * @return target
+     */
+    List<ApiSelectChildDTO> listPoToApiSelectChildDto(List<ApiConfigPO> list);
 }

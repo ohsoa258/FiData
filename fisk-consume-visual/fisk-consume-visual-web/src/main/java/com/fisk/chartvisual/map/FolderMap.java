@@ -1,7 +1,7 @@
 package com.fisk.chartvisual.map;
 
-import com.fisk.chartvisual.dto.FolderDTO;
-import com.fisk.chartvisual.dto.FolderEditDTO;
+import com.fisk.chartvisual.dto.folder.FolderDTO;
+import com.fisk.chartvisual.dto.folder.FolderEditDTO;
 import com.fisk.chartvisual.entity.FolderPO;
 import com.fisk.chartvisual.vo.FolderVO;
 import org.mapstruct.*;

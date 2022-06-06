@@ -1,0 +1,44 @@
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    org:
+      springframework:
+        orm:
+          jpa: debug
+management:
+  endpoint:
+    health:
+      show-details: always
+    shutdown:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+# spring配置
+spring:
+  application:
+    name: mdmmodel-service
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://100.102.201.107:3307/dmp_mdm_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+    username: root
+    password: .FdF_r&tj4)+
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  redis:
+    host: 10.220.108.140
+    port: 16380
+    password: test123456
+
+# pg数仓
+pgsql-mdm:
+  password: .FdF_r&tj4)+
+  url: jdbc:postgresql://100.102.201.107:5433/dmp_mdm?stringtype=unspecified
+  username: adminuser
+  type: PG
+
+file:
+  uploadurl: /root/nginx/app/file/mdm/

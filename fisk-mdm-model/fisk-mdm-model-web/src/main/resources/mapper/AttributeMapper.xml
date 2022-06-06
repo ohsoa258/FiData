@@ -1,0 +1,72 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.mdm.mapper.AttributeMapper">
+    <select id="getAll" resultType="com.fisk.mdm.vo.attribute.AttributeVO">
+        select attribute.id,
+               entity_id,
+               attribute.name,
+               display_name,
+               attribute.desc,
+               status,
+               sync_status,
+               error_msg,
+               data_type,
+               data_type_length,
+               data_type_decimal_length,
+               data_type_format_id,
+               display_width,
+               form_promp_content,
+               sort_wieght,
+               enable_attribute_log,
+               enable_readonly,
+               enable_required,
+               mdm_type,
+               domain_id,
+               create_user,
+               create_time,
+               update_user,
+               update_time
+        from tb_attribute as attribute
+        where attribute.del_flag=1
+        <if test="query.keyword !=null and query.keyword.length()>0 ">
+            and attribute.name like concat('%', #{query.keyword}, '%')
+        </if>
+        order by sort_wieght asc
+    </select>
+
+    <select id="getER" resultMap="entityMap">
+        select entity.id,
+               entity.model_id,
+               entity.name,
+               entity.display_name,
+               attribute.id as aId,
+               attribute.entity_id as entityId,
+               attribute.name as aName,
+               attribute.display_name as aDisplayName,
+               attribute.data_type,
+               attribute.domain_id
+        from tb_attribute as attribute
+        right join tb_entity as entity on entity.id = attribute.entity_id
+        where attribute.del_flag=1 and entity.del_flag=1
+    </select>
+    <resultMap id="entityMap" type="com.fisk.mdm.vo.entity.EntityMsgVO">
+        <result property="id" column="id"/>
+        <result property="modelId" column="model_id"/>
+        <result property="name" column="name"/>
+        <result property="displayName" column="display_name"/>
+        <collection property="attributeMsg" ofType="com.fisk.mdm.vo.attribute.AttributeMsgVO">
+            <result property="id" column="aId"/>
+            <result property="entityId" column="entityId"/>
+            <result property="name" column="aName"/>
+            <result property="displayName" column="aDisplayName"/>
+            <result property="dataType" column="data_type"/>
+            <result property="domainId" column="domain_id"/>
+        </collection>
+    </resultMap>
+
+    <update id="deleteAttribute">
+        update tb_attribute set status = 3 , sync_status = 2  where del_flag=1 and id = #{id}
+    </update>
+
+</mapper>

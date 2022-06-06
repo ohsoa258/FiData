@@ -25,8 +25,7 @@ public interface NoticeMap {
      */
     @Mappings({
             @Mapping(source = "noticeType.value", target = "noticeType"),
-            @Mapping(source = "moduleState.value", target = "moduleState")
-           // @Mapping(target = "componentNotificationDTOS", ignore = true)
+            @Mapping(source = "noticeState.value", target = "noticeState")
     })
     NoticePO dtoToPo(NoticeDTO dto);
 
@@ -38,8 +37,7 @@ public interface NoticeMap {
      */
     @Mappings({
             @Mapping(source = "noticeType.value", target = "noticeType"),
-            @Mapping(source = "moduleState.value", target = "moduleState")
-            //@Mapping(target = "componentNotificationDTOS", ignore = true)
+            @Mapping(source = "noticeState.value", target = "noticeState")
     })
     NoticePO dtoToPo_Edit(NoticeEditDTO dto);
 }

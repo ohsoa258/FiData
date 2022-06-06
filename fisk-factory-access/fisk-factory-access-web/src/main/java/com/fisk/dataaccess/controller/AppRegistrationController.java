@@ -8,7 +8,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
-import com.fisk.dataaccess.dto.*;
+import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.impl.TableAccessImpl;
@@ -21,6 +21,8 @@ import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
+import com.fisk.task.dto.pipeline.PipelineTableLogVO;
+import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import io.swagger.annotations.Api;
@@ -259,4 +261,15 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.getDataAccessQueryList(query));
     }
 
+    @PostMapping("/logMessageFilter")
+    @ApiOperation(value = "日志分页筛选器")
+    public ResultEntity<Page<PipelineTableLogVO>> logMessageFilter(@RequestBody PipelineTableQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.logMessageFilter(dto));
+    }
+
+    @PostMapping("/getTableNameListByAppIdAndApiId")
+    @ApiOperation(value = "通过appId和apiId查询表名集合")
+    public ResultEntity<List<LogMessageFilterVO>> getTableNameListByAppIdAndApiId(@RequestBody PipelineTableQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableNameListByAppIdAndApiId(dto));
+    }
 }

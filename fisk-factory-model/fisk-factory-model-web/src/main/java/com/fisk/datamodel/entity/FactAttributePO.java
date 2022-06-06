@@ -37,7 +37,7 @@ public class FactAttributePO extends BasePO {
      */
     public String factFieldEnName;
     /**
-     * 属性类型：1、事实属性,2、关联维度,3、度量
+     * 属性类型：0:退化维度，1:维度建，2:度量字段
      */
     public int attributeType;
     /**

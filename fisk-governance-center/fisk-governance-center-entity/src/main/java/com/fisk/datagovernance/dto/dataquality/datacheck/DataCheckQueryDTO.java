@@ -18,6 +18,12 @@ public class DataCheckQueryDTO {
     public String keyword;
 
     /**
+     * 数据源id
+     */
+    @ApiModelProperty(value = "数据源id")
+    public int datasourceId;
+
+    /**
      * 表名称
      */
     @ApiModelProperty(value = "表名称")

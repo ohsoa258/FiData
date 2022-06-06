@@ -1,5 +1,5 @@
 package com.fisk.chartvisual.util.dbhelper.buildmdx;
-import com.fisk.chartvisual.dto.ColumnDetailsSsas;
+import com.fisk.chartvisual.dto.chartvisual.ColumnDetailsSsas;
 import com.fisk.chartvisual.vo.DataServiceResult;
 import org.olap4j.Cell;
 import org.olap4j.CellSet;
@@ -51,14 +51,14 @@ public class BuildTableMdx extends BaseBuildMdx {
         List<Map<String,Object>> columnList=new ArrayList<>();
         int index=0;
         for (Position row :cellSet.getAxes().get(1)){
-            Map<String,Object> map=new HashMap<>();
+            Map<String,Object> map=new HashMap<>(16);
             //行成员
             for (Member member : row.getMembers()) {
                 String columnName= member.getHierarchy().getName();
                 String value=member.getName();
                 //添加表头
                 if (index==0){
-                    Map<String,Object> columnHead=new HashMap<>();
+                    Map<String,Object> columnHead=new HashMap<>(16);
                     columnHead.put("name",columnName);
                     columnList.add(columnHead);
                 }
@@ -73,7 +73,7 @@ public class BuildTableMdx extends BaseBuildMdx {
                 }
                 //添加表头
                 if (index==0){
-                    Map<String,Object> columnHead=new HashMap<>();
+                    Map<String,Object> columnHead=new HashMap<>(16);
                     columnHead.put("name",columnName);
                     columnList.add(columnHead);
                 }

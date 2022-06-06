@@ -1,25 +1,27 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
     <!-- 定义变量，下方可通过${}引用 -->
-    <property name="LOG_HOME" value="./logs/fisk-consume-serveice" />
-    <property name="appName" value="fisk-consume-serveice" />
+    <property name="LOG_HOME" value="./logs/fisk-consume-serveice"/>
+    <property name="appName" value="fisk-consume-serveice"/>
     <contextName>${appName}</contextName>
 
     <!-- Print the log to the console -->
     <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%yellow(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%thread] %highlight(%-5level) %green(%logger{50}) %highlight([%file:%line]) - %msg %n</pattern>
+            <pattern>%yellow(%d{yyyy-MM-dd HH:mm:ss.SSS}) [TraceID: %X{TraceID}] [App_LogType: %X{App_LogType}]
+                [%thread] [%highlight(%-5level)] [%green(%logger{50})] [%highlight([%file:%line])] - %msg %n
+            </pattern>
         </encoder>
     </appender>
 
-    <!-- INFO级别日志 -->
-    <appender name="AppInfo" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <!-- 文件日志 -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <!-- 日志文件名 -->
-        <file>${LOG_HOME}/${appName}-info.log</file>
+        <file>${LOG_HOME}/${appName}.log</file>
         <!-- 日志文件滚动策略，按日期和大小分片 -->
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- 日志文件名格式 -->
-            <fileNamePattern>${LOG_HOME}/${appName}-info-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <fileNamePattern>${LOG_HOME}/${appName}-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
             <!-- 日志保留最大日期 -->
             <MaxHistory>30</MaxHistory>
             <!-- 单个文件最大大小 -->
@@ -39,56 +41,11 @@
             %msg 日志信息
             %n 换行符
             -->
-            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} [%file:%line] - %msg%n</Pattern>
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [TraceID: %X{TraceID}] [App_LogType: %X{App_LogType}]
+                [ThreadID: %thread] [LogLevel: %-5level] [Logger: %logger{50}] [File: %file:%line] - %msg%n
+            </Pattern>
         </encoder>
-        <!-- 过滤级别 -->
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>INFO</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
     </appender>
-
-    <!-- ERROR级别日志 -->
-    <appender name="AppError" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_HOME}/${appName}-error.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_HOME}/${appName}-error-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
-            <MaxHistory>30</MaxHistory>
-            <maxFileSize>100MB</maxFileSize>
-            <totalSizeCap>3GB</totalSizeCap>
-        </rollingPolicy>
-
-        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} [%file:%line] - %msg%n</Pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>ERROR</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-    </appender>
-
-    <!-- WARN级别日志 -->
-    <appender name="AppWarn" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_HOME}/${appName}-warn.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_HOME}/${appName}-warn-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
-            <MaxHistory>30</MaxHistory>
-            <maxFileSize>100MB</maxFileSize>
-            <totalSizeCap>1GB</totalSizeCap>
-        </rollingPolicy>
-
-        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} [%file:%line] - %msg%n</Pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>WARN</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-    </appender>
-
     <!-- ELK
     通过TCP的方式连接Logstash
     <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
@@ -122,11 +79,13 @@
         <!--
         logger: 指定java包的输出级别
         -->
+
         <logger name="org" level="info">
             <appender-ref ref="Console"/>
         </logger>
 
-        <logger name="com.fisk" level="info">
+        <logger name="com.fisk">
+            <level value="DEBUG"/>
             <appender-ref ref="Console"/>
         </logger>
 
@@ -139,18 +98,18 @@
         -->
     </springProfile>
 
-    <springProfile name="uat,test">
+    <springProfile name="uat,test,pd">
         <logger name="org" level="info">
-            <appender-ref ref="AppInfo"/>
             <appender-ref ref="Console"/>
+            <appender-ref ref="FILE"/>
         </logger>
 
-        <logger name="com.fisk" level="info">
+        <logger name="com.fisk">
+            <level value="DEBUG"/>
             <appender-ref ref="Console"/>
-            <appender-ref ref="AppInfo"/>
-            <appender-ref ref="AppWarn"/>
-            <appender-ref ref="AppError"/>
+            <appender-ref ref="FILE"/>
         </logger>
+
     </springProfile>
 
 </configuration>

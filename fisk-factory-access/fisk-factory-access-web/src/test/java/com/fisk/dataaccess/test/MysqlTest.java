@@ -1,5 +1,8 @@
 package com.fisk.dataaccess.test;
 
+import com.fisk.common.core.utils.CronUtils;
+import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
+import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,6 +24,17 @@ import java.util.Map;
 @RunWith(SpringRunner.class)
 public class MysqlTest {
 
+    @Test
+    public  void testpg(){
+        String cronExpress = CronUtils.getCronExpress("0 0 6 * * ?");
+//        PostgresConUtils p4 ostgresConUtils = new PostgresConUtils();
+//        List<TablePyhNameDTO> postgres = postgresConUtils.getTableNameAndColumns("jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified",
+//                "postgres", "Password01!", "org.postgresql.Driver");
+//        List<TablePyhNameDTO> postgres_ods = postgresConUtils.getTableNameAndColumns("jdbc:postgresql://192.168.1.250:5432/dmp_ods?stringtype=unspecified",
+//                "postgres", "Password01!", "org.postgresql.Driver");
+        int code=200;
+    }
+    
     @Test
     public void test() throws ClassNotFoundException, SQLException {
         Class.forName("com.mysql.jdbc.Driver");

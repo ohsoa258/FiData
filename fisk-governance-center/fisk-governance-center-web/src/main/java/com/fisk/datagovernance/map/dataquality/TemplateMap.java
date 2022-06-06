@@ -13,16 +13,4 @@ import org.mapstruct.factory.Mappers;
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface TemplateMap {
     TemplateMap INSTANCES = Mappers.getMapper(TemplateMap.class);
-
-    /**
-     * list集合 po -> vo
-     *
-     * @param list source
-     * @return target
-     */
-//    @Mappings({
-//            @Mapping(source = "templateModules", target = "templateModules.value"),
-//            @Mapping(source = "templateType", target = "templateType.value")
-//    })
-//    List<TemplateVO> listPoToVo(List<TemplatePO> list);
 }

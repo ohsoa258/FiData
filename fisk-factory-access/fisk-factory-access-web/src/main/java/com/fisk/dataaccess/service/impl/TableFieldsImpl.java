@@ -1,17 +1,24 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
-import com.fisk.dataaccess.dto.*;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.dataaccess.dto.access.OperateMsgDTO;
+import com.fisk.dataaccess.dto.access.OperateTableDTO;
+import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewPageDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
+import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
+import com.fisk.dataaccess.dto.table.TableBusinessDTO;
+import com.fisk.dataaccess.dto.table.TableFieldsDTO;
+import com.fisk.dataaccess.dto.table.TableSyncmodeDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.map.TableBusinessMap;
@@ -125,7 +132,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         Long tableAccessId = listPo.get(0).tableAccessId;
         TableSyncmodePO syncmodePo = syncmodeDto.toEntity(TableSyncmodePO.class);
         syncmodePo.id = tableAccessId;
-        success = syncmodeImpl.save(syncmodePo);
+        success = syncmodeImpl.saveOrUpdate(syncmodePo);
 
         TableAccessPO accessPo = tableAccessImpl.query().eq("id", tableAccessId).one();
         if (accessPo == null) {
@@ -167,18 +174,18 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
         // 保存tb_table_fields
         boolean success;
-//        for (TableFieldsDTO tableFieldsDTO : list) {
-//            // 0: 未操作的数据  1: 新增  2: 编辑
-//            int funcType = tableFieldsDTO.getFuncType();
-//            if (funcType == 2) {
-//                TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
-//                success = this.updateById(modelField);
-//            } else if (funcType == 1) {
-//                TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
-//                modelField.delFlag = 1;
-//                success = this.save(modelField);
-//            }
-//        }
+////        for (TableFieldsDTO tableFieldsDTO : list) {
+////            // 0: 未操作的数据  1: 新增  2: 编辑
+////            int funcType = tableFieldsDTO.getFuncType();
+////            if (funcType == 2) {
+////                TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
+////                success = this.updateById(modelField);
+////            } else if (funcType == 1) {
+////                TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
+////                modelField.delFlag = 1;
+////                success = this.save(modelField);
+////            }
+////        }
         success = this.saveOrUpdateBatch(TableFieldsMap.INSTANCES.listDtoToPo(list));
         if (!success) {
             return ResultEnum.UPDATE_DATA_ERROR;
@@ -315,28 +322,32 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             // 版本号入库、调用存储存储过程  
             List<TableFieldsPO> list = this.query().eq("table_access_id", accessId).list();
             AppRegistrationPO registration = iAppRegistration.getById(appId);
-            AppDataSourcePO dataSourcePO = dataSourceImpl.query().eq("app_id", appId).one();
+            AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("app_id", appId).one();
             String odsTableName = "ods_" + registration.appAbbreviation + "_" + tableName;
             data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
 
             // 执行发布
             try {
-                // 实时--RestfulAPI类型
-                if (registration.appType == 0 && DataSourceTypeEnum.RestfulAPI.getName().equals(dataSourcePO.driveType)) {
+                // 实时--RestfulAPI类型  or  非实时--api类型
+                if ((registration.appType == 0 && DataSourceTypeEnum.RestfulAPI.getName().equals(dataSourcePo.driveType)) || (registration.appType == 1 && DataSourceTypeEnum.API.getName().equals(dataSourcePo.driveType))) {
                     // 传入apiId和api下所有表
-                    TableAccessPO accessPO = tableAccessImpl.query().eq("id", accessId).one();
-                    List<TableAccessPO> tablePoList = tableAccessImpl.query().eq("api_id", accessPO.apiId).list();
+                    TableAccessPO accessPo = tableAccessImpl.query().eq("id", accessId).one();
+                    List<TableAccessPO> tablePoList = tableAccessImpl.query().eq("api_id", accessPo.apiId).list();
                     // api下所有表
                     data.apiTableNames = tablePoList.stream().map(e -> registration.appAbbreviation + "_" + e.tableName).collect(Collectors.toList());
                     data.appType = registration.appType;
-                    data.apiId = accessPO.apiId;
+                    data.apiId = accessPo.apiId;
                     // 创建表流程
                     publishTaskClient.publishBuildPhysicsTableTask(data);
                 } else if (registration.appType == 1) {
                     // 非实时物理表发布
                     // 创建表流程
                     publishTaskClient.publishBuildPhysicsTableTask(data);
+                    if (DataSourceTypeEnum.FTP.getName().equals(dataSourcePo.driveType)) {
+                        data.excelFlow = true;
+                    }
                     // 生成nifi流程
+                    log.info(JSON.toJSONString(data));
                     publishTaskClient.publishBuildAtlasTableTask(data);
                 }
             } catch (Exception e) {
@@ -366,6 +377,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             fieldDTO.fieldEnName = po.fieldName;
             fieldDTO.fieldType = po.fieldType;
             fieldDTO.fieldLength = Math.toIntExact(po.fieldLength);
+            fieldDTO.isPrimaryKey=po.isPrimarykey;
             fieldList.add(fieldDTO);
         });
 

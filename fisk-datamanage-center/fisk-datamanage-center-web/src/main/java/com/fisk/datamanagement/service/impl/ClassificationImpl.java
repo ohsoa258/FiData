@@ -9,6 +9,7 @@ import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDefContentDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDelAssociatedEntityDTO;
+import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.service.IClassification;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
@@ -52,9 +53,9 @@ public class ClassificationImpl implements IClassification {
         ClassificationDefsDTO data=new ClassificationDefsDTO();
         try {
             ResultDataDTO<String> result = atlasClient.get(typedefs + "?type=classification");
-            if (result.code != ResultEnum.REQUEST_SUCCESS)
+            if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
             {
-                throw new FkException(result.code);
+                throw new FkException(ResultEnum.BAD_REQUEST);
             }
             JSONObject jsonObj = JSON.parseObject(result.data);
             String classificationDefs=jsonObj.getString("classificationDefs");
@@ -78,7 +79,7 @@ public class ClassificationImpl implements IClassification {
     {
         String jsonParameter=JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.put(typedefs + "?type=classification", jsonParameter);
-        return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
+        return result.code==AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
     }
 
     @Override
@@ -98,7 +99,7 @@ public class ClassificationImpl implements IClassification {
                 .collect(Collectors.toList());
         String jsonParameter=JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.post(typedefs + "?type=classification", jsonParameter);
-        return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
+        return result.code==AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
     }
 
     @Override

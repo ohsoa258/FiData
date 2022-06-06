@@ -3,8 +3,51 @@ server:
 spring:
   application:
     name: dataservice-service
+  # 日志输入环境
   profiles:
     active: dev
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss
+
+# 数据库访问工具
+mybatis-plus:
+  configuration:
+    default-enum-type-handler: com.fisk.common.framework.mybatis.config.BaseEnumTypeHandler
+    #log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      insert-strategy: not_null
+      logic-delete-field: del_flag
+      logic-delete-value: 0
+      logic-not-delete-value: 1
+      update-strategy: not_null
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.fisk.dataservice.entity
+
+# 注册中心
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:8082/eureka
+
+# feign接口超时配置
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 20000
+        readTimeout: 60000
+
+# 授权
+fk:
+  jwt:
+    key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
+  auth:
+    clientId: dataservice-service
+    secret: 1234
+  encoder:
+    crypt:
+      secret: ${random.uuid}
+      strength: 6

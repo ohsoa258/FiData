@@ -9,11 +9,13 @@ import com.fisk.common.core.enums.BaseEnum;
  */
 public enum DbTypeEnum implements BaseEnum {
 
-    sqlserver(0,"sqlserver"),
-    mysql(1,"mysql"),
-    postgresql(2,"postgresql"),
-    oracle(3,"oracle"),
-    RestfulAPI(4,"RestfulAPI");
+    sqlserver(0, "sqlserver"),
+    mysql(1, "mysql"),
+    postgresql(2, "postgresql"),
+    oracle(3, "oracle"),
+    RestfulAPI(4, "RestfulAPI"),
+    ftp(5, "ftp"),
+    api(6, "api");
 
     DbTypeEnum(int value, String name) {
         this.value = value;

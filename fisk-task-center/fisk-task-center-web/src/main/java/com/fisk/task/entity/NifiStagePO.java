@@ -10,9 +10,10 @@ import lombok.Data;
 @Data
 @TableName("tb_nifi_stage")
 public class NifiStagePO extends BasePO {
-    public int componentId;
+    public Integer componentId;
     public int queryPhase;
     public int transitionPhase;
     public int insertPhase;
     public String comment;
+    public Integer pipelineTableLogId;
 }

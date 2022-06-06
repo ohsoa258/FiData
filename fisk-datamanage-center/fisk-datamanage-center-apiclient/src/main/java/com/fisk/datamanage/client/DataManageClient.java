@@ -1,0 +1,54 @@
+package com.fisk.datamanage.client;
+
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.datamanagement.dto.datamasking.DataMaskingSourceDTO;
+import com.fisk.datamanagement.dto.datamasking.DataMaskingTargetDTO;
+import com.fisk.datamanagement.dto.datamasking.SourceTableDataDTO;
+import com.fisk.datamanagement.dto.dataquality.DataQualityDTO;
+import com.fisk.datamanagement.dto.dataquality.UpperLowerBloodParameterDTO;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+/**
+ * @author JianWenYang
+ */
+@FeignClient("datamanagement-service")
+public interface DataManageClient {
+
+    /**
+     * 数据源是否存在atlas
+     * @param dto
+     * @return
+     */
+    @PostMapping("/DataQuality/existAtlas")
+    ResultEntity<Object> existAtlas(@Validated @RequestBody DataQualityDTO dto);
+
+    /**
+     * 是否存在上下血缘
+     * @param dto
+     * @return
+     */
+    @PostMapping("/DataQuality/existUpperLowerBlood")
+    ResultEntity<Object> existUpperLowerBlood(@Validated @RequestBody UpperLowerBloodParameterDTO dto);
+
+    /**
+     * 数据脱敏，根据guid提供数据源信息
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/DataMasking/getSourceDataConfig")
+    ResultEntity<DataMaskingTargetDTO> getSourceDataConfig(@Validated @RequestBody DataMaskingSourceDTO dto);
+
+    /**
+     * 根据guid获取数据工厂表信息
+     * @param dto
+     * @return
+     */
+    @PostMapping("/DataMasking/getTableData")
+    ResultEntity<Object> getTableData(@Validated @RequestBody SourceTableDataDTO dto);
+
+
+}

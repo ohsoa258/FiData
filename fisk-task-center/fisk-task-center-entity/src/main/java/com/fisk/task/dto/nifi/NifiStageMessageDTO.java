@@ -1,5 +1,6 @@
 package com.fisk.task.dto.nifi;
 
+import com.fisk.task.dto.pipeline.NifiStageDTO;
 import lombok.Data;
 
 import java.util.Date;
@@ -14,5 +15,7 @@ public class NifiStageMessageDTO {
     public String groupId;
     public Date startTime;
     public Date endTime;
-    public int counts;
+    public Integer counts;
+    public NifiStageDTO nifiStageDTO;
+
 }

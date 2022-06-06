@@ -1,6 +1,6 @@
 package com.fisk.task.dto.daconfig;
 
-import com.fisk.dataaccess.dto.TableBusinessDTO;
+import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import lombok.Data;
 
@@ -51,7 +51,14 @@ public class DataAccessConfigDTO {
     public String businessKeyAppend;
 
     /*
-    * 建模字段详情list
-    * */
+     * 建模字段详情list
+     * */
     public List<ModelPublishFieldDTO> modelPublishFieldDTOList;
+
+    /*
+     * ftp配置信息
+     * */
+    public FtpConfig ftpConfig;
+
+
 }

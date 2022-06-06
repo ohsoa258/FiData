@@ -20,5 +20,9 @@ public class NifiStageDTO extends BasePO {
     public int insertPhase;
     @ApiModelProperty(value = "日志")
     public String comment;
+    @ApiModelProperty(value = "pipelineTableLogId")
+    public Integer pipelineTableLogId;
+    @ApiModelProperty(value = "表名称")
+    public String tableName;
 
 }

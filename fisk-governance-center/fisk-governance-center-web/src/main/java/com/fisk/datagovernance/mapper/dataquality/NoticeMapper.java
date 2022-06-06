@@ -12,7 +12,7 @@ import org.apache.ibatis.annotations.Param;
 /**
  * @author dick
  * @version 1.0
- * @description 告警通知
+ * @description 通知
  * @date 2022/3/23 12:42
  */
 @Mapper
@@ -32,6 +32,6 @@ public interface NoticeMapper extends FKBaseMapper<NoticePO> {
      * @return 执行结果
      */
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
-    @Insert("INSERT INTO tb_notice_module(`template_id`, `email_server_id`, `module_name`, `notice_type`, `email_subject`, `email_consignee`, `email_cc`, `body`, `module_state`, `create_time`, `create_user`, `del_flag`) VALUES (#{templateId}, #{emailServerId}, #{moduleName}, #{noticeType}, #{emailSubject}, #{emailConsignee}, #{emailCc}, #{body}, #{moduleState}, #{createTime}, #{createUser},1);")
+    @Insert("INSERT INTO tb_notice_rule(`template_id`, `notice_name`, `notice_type`, `email_server_id`, `email_subject`, `email_consignee`, `email_cc`, `body`,`run_time_cron`, `notice_state`, `create_time`, `create_user`, `del_flag`) VALUES (#{templateId}, #{noticeName}, #{noticeType}, #{emailServerId}, #{emailSubject}, #{emailConsignee}, #{emailCc}, #{body}, #{runTimeCron}, #{noticeState}, #{createTime}, #{createUser},1);")
     int insertOne(NoticePO po);
 }

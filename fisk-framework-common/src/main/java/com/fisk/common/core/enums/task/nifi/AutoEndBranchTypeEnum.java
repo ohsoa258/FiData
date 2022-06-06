@@ -20,7 +20,12 @@ public enum AutoEndBranchTypeEnum implements BaseEnum {
     MATCHED(6, "matched"),
     MERGED(7, "merged"),
     SPLIT(8,"split"),
-    EXPIRED(9,"expired");
+    EXPIRED(9,"expired"),
+    COMMSFAILURE(10,"comms.failure"),
+    NOTFOUND(11,"not.found"),
+    PERMISSIONDENIED(12,"permission.denied"),
+    NO_RETRY(13, "no retry"),
+    RESPONSE(14, "Response");
 
     AutoEndBranchTypeEnum(int value, String name) {
         this.value = value;

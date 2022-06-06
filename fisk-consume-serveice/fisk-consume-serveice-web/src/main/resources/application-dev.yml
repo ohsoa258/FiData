@@ -1,60 +1,27 @@
 dataservice:
   pdf:
+    # pdf文档模板路径
+    #path: /root/java/fisk-consume-serveice/pdf
     path: D:/Work/java/Fisk.DMP.Project/fisk-consume-serveice/fisk-consume-serveice-web/target/classes
-eureka:
-  client:
-    service-url:
-      defaultZone: http://127.0.0.1:8082/eureka
-  instance:
-    lease-expiration-duration-in-seconds: 5
-    lease-renewal-interval-in-seconds: 5
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 20000
-        readTimeout: 60000
-fk:
-  auth:
-    clientId: dataservice-service
-    secret: 1234
-  encoder:
-    crypt:
-      secret: ${random.uuid}
-      strength: 6
-management:
-  endpoint:
-    health:
-      show-details: always
-    shutdown:
-      enabled: true
-  endpoints:
-    web:
-      exposure:
-        include: '*'
-mybatis-plus:
-  configuration:
-    default-enum-type-handler: com.fisk.common.framework.mybatis.config.BaseEnumTypeHandler
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-  global-config:
-    db-config:
-      id-type: auto
-      insert-strategy: not_null
-      logic-delete-field: del_flag
-      logic-delete-value: 0
-      logic-not-delete-value: 1
-      update-strategy: not_null
-  mapper-locations: classpath:mapper/*.xml
-server:
-  port: 8091
+    # 接口文档中的环境信息
+    api_address: http://192.168.11.130:8083
+  datasource:
+    # redis key
+    metadataentity_key: DataService_MetaDataKey
+    # 执行时间 凌晨12点半
+    schedule: 0 30 0 * * ?
+    # 是否启用
+    enabled: true
 spring:
-  application:
-    name: dataservice-service
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
     password: root123
     url: jdbc:mysql://192.168.11.130:3306/dmp_dataservice_db?uuseUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
+  # redis 获取用户需要使用到
+  redis:
+    host: 192.168.11.130
+  # 防止模板报空错误
   freemarker:
     settings:
       classic_compatible: true

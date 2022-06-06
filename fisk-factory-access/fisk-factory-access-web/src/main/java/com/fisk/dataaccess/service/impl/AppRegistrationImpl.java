@@ -1,22 +1,23 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.baseObject.dto.PageDTO;
-import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
-import com.fisk.common.service.pageFilter.utils.GenerateCondition;
-import com.fisk.common.service.pageFilter.utils.GetMetadata;
-import com.fisk.common.framework.mdc.TraceType;
-import com.fisk.common.framework.mdc.TraceTypeEnum;
+import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
-import com.fisk.dataaccess.dto.*;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.mdc.TraceType;
+import com.fisk.common.framework.mdc.TraceTypeEnum;
+import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.common.service.pageFilter.utils.GetMetadata;
+import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
 import com.fisk.dataaccess.map.AppDataSourceMap;
@@ -29,6 +30,10 @@ import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.pgsql.TableListVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
+import com.fisk.task.dto.pipeline.PipelineTableLogVO;
+import com.fisk.task.dto.query.PipelineTableQueryDTO;
+import com.fisk.task.enums.DbTypeEnum;
+import com.fisk.task.enums.OlapTableEnum;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -111,18 +116,18 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             return ResultEntityBuild.build(ResultEnum.DATAACCESS_APPABBREVIATION_SUCCESS);
         }
 
-        // 保存tb_app_registration数据
-        boolean save = this.save(po);
-        if (!save) {
-            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
-        }
-
         //
         List<String> realtimeAccountList = appDataSourceMapper.getRealtimeAccountList();
         AppDataSourceDTO datasourceDTO = appRegistrationDTO.getAppDatasourceDTO();
         // 当前为实时应用
         if (po.appType == 0 && realtimeAccountList.contains(datasourceDTO.realtimeAccount)) {
             return ResultEntityBuild.build(ResultEnum.REALTIME_ACCOUNT_ISEXIST);
+        }
+
+        // 保存tb_app_registration数据
+        boolean save = this.save(po);
+        if (!save) {
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
         AppDataSourcePO modelDataSource = AppDataSourceMap.INSTANCES.dtoToPo(datasourceDTO);
@@ -232,8 +237,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (po.appType == 0) {
             QueryWrapper<AppDataSourcePO> wrapper = new QueryWrapper<>();
             wrapper.lambda().eq(AppDataSourcePO::getRealtimeAccount, appDatasourceDTO.realtimeAccount);
-            AppDataSourcePO appDataSourcePO = appDataSourceMapper.selectOne(wrapper);
-            if (appDataSourcePO != null && appDataSourcePO.id != appDatasourceDTO.id) {
+            AppDataSourcePO appDataSourcePo = appDataSourceMapper.selectOne(wrapper);
+            if (appDataSourcePo != null && appDataSourcePo.id != appDatasourceDTO.id) {
                 return ResultEnum.REALTIME_ACCOUNT_ISEXIST;
             }
         }
@@ -301,13 +306,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (!CollectionUtils.isEmpty(accessList)) {
             // 删表之前,要将所有的数据提前查出来,不然会导致空指针异常
             tableIdList = accessList.stream().map(TableAccessPO::getId).collect(Collectors.toList());
-//            List<String> atlasTableIdList = accessList.stream().map(TableAccessPO::getAtlasTableId).collect(Collectors.toList());
+////            List<String> atlasTableIdList = accessList.stream().map(TableAccessPO::getAtlasTableId).collect(Collectors.toList());
 
             for (Long tableId : tableIdList) {
                 TableListVO tableVO = new TableListVO();
                 TableAccessPO po = tableAccessImpl.query().eq("id", tableId).eq("del_flag", 1).one();
-//                tableVO.tableAtlasId = po.atlasTableId;
-                tableVO.tableName = po.tableName;
+////                tableVO.tableAtlasId = po.atlasTableId;
+                tableVO.tableName = model.appAbbreviation + "_" + po.tableName;
                 tableList.add(tableVO);
             }
 
@@ -601,5 +606,97 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         DataAccessNumDTO dto = new DataAccessNumDTO();
         dto.num = query().list().size();
         return dto;
+    }
+
+    @Override
+    public Page<PipelineTableLogVO> logMessageFilter(PipelineTableQueryDTO dto) {
+
+        AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", dto.appId).one();
+        if (appDataSourcePo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        List<LogMessageFilterVO> sourcePage = new ArrayList<>();
+
+        // 实时api
+        if (DbTypeEnum.RestfulAPI.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
+            sourcePage = baseMapper.logMessageFilterByRestApi(Long.valueOf(dto.appId), dto.keyword, null);
+            // 非实时api
+        } else if (DbTypeEnum.api.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
+            sourcePage = baseMapper.logMessageFilterByApi(Long.valueOf(dto.appId), dto.keyword, null);
+            // 物理表
+        } else {
+            sourcePage = baseMapper.logMessageFilterByTable(Long.valueOf(dto.appId), dto.keyword, null);
+        }
+
+        log.info("接入库中的查询数据: " + JSON.toJSONString(sourcePage));
+
+        Page<PipelineTableLogVO> targetPage = new Page<>();
+        List<LogMessageFilterVO> records = sourcePage;
+        List<PipelineTableLogVO> list = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(records)) {
+            for (LogMessageFilterVO record : records) {
+                PipelineTableLogVO vo = new PipelineTableLogVO();
+                vo.appId = record.appId;
+                vo.tableId = record.tableId == null ? record.apiId : record.tableId;
+                vo.tableName = record.tableName == null ? record.apiName : record.tableName;
+                if (record.appType == 0) {
+                    vo.tableType = OlapTableEnum.PHYSICS_RESTAPI;
+                } else if (record.appType == 1 && record.apiId != null) {
+                    vo.tableType = OlapTableEnum.PHYSICS_API;
+                } else if (record.appType == 1 && record.tableId != null) {
+                    vo.tableType = OlapTableEnum.PHYSICS;
+                }
+                list.add(vo);
+            }
+        }
+
+
+        log.info("接入组装后的数据: " + JSON.toJSONString(list));
+        // 接入日志完善 对list进行改造,添加task日志信息
+        try {
+            ResultEntity<List<PipelineTableLogVO>> pipelineTableLogs = publishTaskClient.getPipelineTableLog(JSON.toJSONString(list), JSON.toJSONString(dto));
+            List<PipelineTableLogVO> data = pipelineTableLogs.data;
+
+            // 每页条数
+            targetPage.setSize(dto.page.getSize());
+            // 当前页
+            targetPage.setCurrent(dto.page.getCurrent());
+            // 总条数
+            targetPage.setTotal(data.size());
+            // steam流给list分页
+            targetPage.setRecords(data.stream().skip((targetPage.getCurrent() - 1) * targetPage.getSize()).limit(targetPage.getSize()).collect(Collectors.toList()));
+        } catch (Exception e) {
+            targetPage.setRecords(null);
+            targetPage.setTotal(0);
+        }
+        return targetPage;
+    }
+
+
+    @Override
+    public List<LogMessageFilterVO> getTableNameListByAppIdAndApiId(PipelineTableQueryDTO dto) {
+
+        AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", dto.appId).one();
+        if (appDataSourcePo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        List<LogMessageFilterVO> sourcePage = new ArrayList<>();
+
+        // 实时api
+        if (DbTypeEnum.RestfulAPI.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
+//            sourcePage = baseMapper.logMessageFilterByRestApi(dto.page, Long.valueOf(dto.appId), dto.keyword, dto.apiId);
+            // 非实时api
+        } else if (DbTypeEnum.api.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
+            sourcePage = baseMapper.logMessageFilterByApi(Long.valueOf(dto.appId), dto.keyword, dto.apiId);
+            // 物理表
+        } else {
+            sourcePage = baseMapper.logMessageFilterByTable(Long.valueOf(dto.appId), dto.keyword, dto.apiId);
+        }
+
+        log.info("接入库中的查询数据: " + JSON.toJSONString(sourcePage));
+
+        return sourcePage;
     }
 }

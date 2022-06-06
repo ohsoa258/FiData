@@ -23,14 +23,26 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    public static final String TAG_1 = "Test-Controller";
+    public static final String TAG_1 = "Entity-Controller";
+    public static final String TAG_2 = "Model-Controller";
+    public static final String TAG_3 = "Attribute-Controller";
+    public static final String TAG_4 = "ModelVersion-Controller";
+    public static final String TAG_5 = "MasterData-Controller";
+    public static final String TAG_6 = "AttributeGroup-Controller";
+    public static final String TAG_7 = "ViwGroup-Controller";
 
     @Bean
     public Docket createRestApi() {
         String basePck = FiskMdmModelApplication.class.getPackage().getName();
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
-                .tags(new Tag(TAG_1, "应用注册"))
+                .tags(new Tag(TAG_1, "实体管理API"))
+                .tags(new Tag(TAG_2,"模型管理API"))
+                .tags(new Tag(TAG_3,"属性管理API"))
+                .tags(new Tag(TAG_4,"模型版本管理API"))
+                .tags(new Tag(TAG_5,"主数据管理API"))
+                .tags(new Tag(TAG_6,"属性组管理API"))
+                .tags(new Tag(TAG_7,"自定义视图管理API"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())
@@ -72,4 +84,7 @@ public class SwaggerConfig {
                 .version("1.0.0测试版")
                 .build();
     }
+
+
+
 }

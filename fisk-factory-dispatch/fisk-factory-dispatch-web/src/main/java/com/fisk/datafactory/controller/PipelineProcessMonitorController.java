@@ -41,7 +41,7 @@ public class PipelineProcessMonitorController {
 
     @PostMapping("/getNifiStage")
     @ApiOperation(value = "查询当前表的运行轨迹")
-    public ResultEntity<NifiStageDTO> getNifiStage(@RequestBody NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO) {
+    public ResultEntity<List<NifiStageDTO>> getNifiStage(@RequestBody NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getNifiStage(nifiCustomWorkflowDetailDTO));
     }
 

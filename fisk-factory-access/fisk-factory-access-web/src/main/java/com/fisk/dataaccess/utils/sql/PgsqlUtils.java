@@ -1,10 +1,14 @@
 package com.fisk.dataaccess.utils.sql;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.json.JsonTableData;
+import com.fisk.dataaccess.dto.pgsqlmetadata.ApiSqlResultDTO;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +18,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -80,11 +85,13 @@ public class PgsqlUtils {
      * @params sqlList sql集合
      * @params flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
      */
-    public void stgToOds(List<String> sqlList, int flag) throws SQLException {
+    public ResultEnum stgToOds(List<String> sqlList, int flag) throws SQLException {
         Connection pgConn = getPgConn();
         Statement statement = pgConn.createStatement();
         try {
             // 执行sql
+            System.out.println("操作类型AE86: 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods;  " + flag);
+            System.out.println("pg推送数据的函数: " + sqlList.get(flag));
             statement.executeUpdate(sqlList.get(flag));
 
             statement.close();
@@ -93,8 +100,10 @@ public class PgsqlUtils {
             log.error("批量执行SQL异常: {}", e.getMessage());
             statement.close();
             pgConn.close();
-            throw new FkException(ResultEnum.STG_TO_ODS_ERROR);
+            return ResultEnum.STG_TO_ODS_ERROR;
         }
+
+        return ResultEnum.SUCCESS;
     }
 
     /**
@@ -108,20 +117,22 @@ public class PgsqlUtils {
      * @params jsonStr json字符串
      * @params tablePrefixName pg中的物理表前缀名
      */
-    public void executeBatchPgsql(String tablePrefixName, List<JsonTableData> res) throws Exception {
+    public ResultEntity<Object> executeBatchPgsql(String tablePrefixName, List<JsonTableData> res) throws Exception {
         Connection con = getPgConn();
         Statement statement = con.createStatement();
         //这里必须设置为false，我们手动批量提交
         con.setAutoCommit(false);
         //这里需要注意，SQL语句的格式必须是预处理的这种，就是values(?,?,...,?)，否则批处理不起作用
-        //PreparedStatement statement = con.prepareStatement("insert into student(id,`name`,age) values(?,?,?)");
+        ////PreparedStatement statement = con.prepareStatement("insert into student(id,`name`,age) values(?,?,?)");
 
-        /*JSONObject json = JSON.parseObject(jsonStr);
         // TODO 调用JsonUtils获取表对象集合
-        List<JsonTableData> res = home.get(json);*/
         int countSql = 0;
+        List<ApiSqlResultDTO> list = new ArrayList<>();
         try {
             for (JsonTableData re : res) {
+
+                ApiSqlResultDTO apiSqlResultDto = new ApiSqlResultDTO();
+
                 String tableName = re.table;
                 JSONArray data = re.data;
                 for (Object datum : data) {
@@ -139,11 +150,20 @@ public class PgsqlUtils {
                     insertSqlIndex = insertSqlIndex.substring(0, insertSqlIndex.lastIndexOf(",")) + ") values";
                     insertSqlLast = insertSqlLast.substring(0, insertSqlLast.lastIndexOf(",")) + ")";
                     inserSql = insertSqlIndex + insertSqlLast;
-                    System.out.println(inserSql);
+                    log.info("数据推送到stg的sql为: " + inserSql);
                     countSql++;
                     statement.addBatch(inserSql);
                 }
+                // 批量执行sql
                 statement.executeBatch();
+
+                // 保存本次信息
+                apiSqlResultDto.setCount(countSql);
+                // stg表名
+                apiSqlResultDto.setTableName(tablePrefixName + tableName);
+                apiSqlResultDto.setMsg("成功");
+
+                list.add(apiSqlResultDto);
             }
             System.out.println("本次添加的sql个数为: " + countSql);
             // 提交要执行的批处理，防止 JDBC 执行事务处理
@@ -155,8 +175,16 @@ public class PgsqlUtils {
             log.error("批量执行SQL异常: {}", e.getMessage());
             statement.close();
             con.close();
-            throw new FkException(ResultEnum.PUSH_DATA_ERROR);
+            // 执行sql异常,重置记录的条数
+            countSql = 0;
+            ApiSqlResultDTO apiSqlResultDto = new ApiSqlResultDTO();
+            apiSqlResultDto.setMsg("失败");
+            apiSqlResultDto.setCount(0);
+            list.add(apiSqlResultDto);
+            return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR, list);
         }
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, JSON.toJSONString(list));
     }
 
 }

@@ -9,9 +9,8 @@ import com.fisk.common.core.enums.BaseEnum;
  * @date 2022/3/22 14:03
  */
 public enum NoticeTypeEnum implements BaseEnum {
-    /**
-     * 表状态
-     */
+
+    NONE(0, "空"),
     EMAIL_NOTICE(1,"邮件通知"),
     SYSTEM_NOTICE(2,"站内通知");
 
@@ -31,5 +30,13 @@ public enum NoticeTypeEnum implements BaseEnum {
     @Override
     public String getName() {
         return name;
+    }
+
+    public static NoticeTypeEnum  getEnum(int value){
+        for (NoticeTypeEnum e:NoticeTypeEnum.values()) {
+            if(e.getValue() == value)
+                return e;
+        }
+        return NoticeTypeEnum.NONE;
     }
 }

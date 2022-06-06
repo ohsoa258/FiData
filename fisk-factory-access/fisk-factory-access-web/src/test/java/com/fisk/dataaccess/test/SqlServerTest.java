@@ -1,10 +1,11 @@
 package com.fisk.dataaccess.test;
 
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.dataaccess.dto.TablePyhNameDTO;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
+import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.service.impl.AppDataSourceImpl;
 import com.fisk.dataaccess.service.impl.AppRegistrationImpl;
 import com.fisk.dataaccess.utils.sql.MysqlConUtils;
@@ -148,6 +149,34 @@ public class SqlServerTest {
     }
 
     @Test
+    public  void  getView(){
+
+        try {
+            String driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+            String url = "jdbc:sqlserver://192.168.1.35:1433;DatabaseName=DWC_MDS;";
+            String username = "sa";
+            String password = "password01!";
+
+            Class.forName(driver);
+            Connection conn = DriverManager.getConnection(url, username, password);
+            // 获取指定模式下所有表名和视图名
+            ResultSet tables = conn.getMetaData().getTables(null, "mdm", null, new String[]{"VIEW"});
+            while (tables.next()) {
+                System.out.println(tables.getString(3));
+                // 获取表及视图名称
+//                System.out.println(tables.getString(1)+","+
+//                        tables.getString(2)+","+
+//                        tables.getString(3)+","+
+//                        tables.getString(4)+","+
+//                        tables.getString(5));
+            }
+            conn.close();
+        } catch (Exception e) {
+
+        }
+    }
+
+    @Test
     public void testTableFields() {
 
         String appName1 = "NonRealTime";
@@ -187,4 +216,18 @@ public class SqlServerTest {
 
     }
 
+    @Test
+    public void loadDataSourceMeta() {
+        try {
+            List<AppDataSourcePO> dataSourcePoList = appDataSourceImpl.query()
+                    .eq("drive_type", DataSourceTypeEnum.MYSQL.getName())
+                    .or()
+                    .eq("drive_type", DataSourceTypeEnum.SQLSERVER.getName())
+                    .or()
+                    .eq("drive_type", DataSourceTypeEnum.ORACLE.getName())
+                    .list();
+        } catch (Exception e) {
+            throw new FkException(ResultEnum.LOAD_DATASOURCE_META, e);
+        }
+    }
 }

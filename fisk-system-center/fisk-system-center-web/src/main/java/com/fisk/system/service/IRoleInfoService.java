@@ -18,6 +18,7 @@ public interface IRoleInfoService{
 
     /**
      * 获取角色列表
+     * @param query
      * @return 查询结果
      */
     Page<RoleInfoDTO> listRoleData(RoleInfoQueryDTO query);

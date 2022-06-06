@@ -3,6 +3,7 @@ package com.fisk.common.framework.exception;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.mdc.MDCHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -22,8 +23,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 public abstract class AbstractGlobalExceptionHandler {
 
-    //TODO: 缺少日志记录
-
     /**
      * 模型验证报错
      *
@@ -32,6 +31,7 @@ public abstract class AbstractGlobalExceptionHandler {
      */
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     public ResultEntity<Object> handle1(MethodArgumentNotValidException ex) {
+        ResultEntity<Object> res;
         BeanPropertyBindingResult bindingResult = (BeanPropertyBindingResult) ex.getBindingResult();
         if (bindingResult.hasErrors()) {
             StringBuilder str = new StringBuilder();
@@ -39,10 +39,13 @@ public abstract class AbstractGlobalExceptionHandler {
                 str.append("字段：【").append(allError.getField()).append("】，").append("错误信息：【").append(allError.getDefaultMessage()).append("】。");
             }
             log.error(str.toString());
-            return ResultEntityBuild.build(ResultEnum.SAVE_VERIFY_ERROR, str.toString());
+            res = ResultEntityBuild.build(ResultEnum.SAVE_VERIFY_ERROR, str.toString());
         } else {
-            return ResultEntityBuild.build(ResultEnum.ERROR, ex.toString());
+            res = ResultEntityBuild.build(ResultEnum.ERROR, ex.toString());
         }
+        res.traceId = MDCHelper.getTraceId();
+        MDCHelper.clear();
+        return res;
     }
 
     /**
@@ -53,11 +56,18 @@ public abstract class AbstractGlobalExceptionHandler {
      */
     @ExceptionHandler(value = FkException.class)
     public ResultEntity<Object> handle1(FkException ex) {
-        log.error(ex.getErrorMsg());
+        String traceId = MDCHelper.getTraceId();
+        log.error("全局异常拦截：" + ex.toString());
+        ex.printStackTrace();
+        MDCHelper.clear();
         if (StringUtils.isNotEmpty(ex.getErrorMsg())) {
-            return ResultEntityBuild.build(ex.getResultEnum(), ex.getErrorMsg());
+            ResultEntity<Object> res = ResultEntityBuild.build(ex.getResultEnum(), ex.getErrorMsg());
+            res.traceId = traceId;
+            return res;
         }
-        return ResultEntityBuild.build(ex.getResultEnum());
+        ResultEntity<Object> res = ResultEntityBuild.build(ex.getResultEnum());
+        res.traceId = traceId;
+        return res;
     }
 
     /**
@@ -68,8 +78,13 @@ public abstract class AbstractGlobalExceptionHandler {
      */
     @ExceptionHandler(value = Exception.class)
     public ResultEntity<Object> handle1(Exception ex) {
-        log.error(ex.toString());
-        return ResultEntityBuild.build(ResultEnum.ERROR, ex.toString());
+        String traceId = MDCHelper.getTraceId();
+        log.error("全局异常拦截：" + ex.toString());
+        ex.printStackTrace();
+        MDCHelper.clear();
+        ResultEntity<Object> res = ResultEntityBuild.build(ResultEnum.ERROR, ex.getMessage());
+        res.traceId = traceId;
+        return res;
     }
 
 }

@@ -2,12 +2,15 @@ package com.fisk.datagovernance.service.dataquality;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckDTO;
-import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckEditDTO;
-import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckQueryDTO;
+import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.entity.dataquality.DataCheckPO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckTypeV0;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
+
+import java.util.List;
 
 /**
  * @author dick
@@ -46,4 +49,25 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
      * @return 执行结果
      */
     ResultEnum deleteData(int id);
+
+    /**
+     * 界面/接口验证
+     *
+     * @return 执行结果
+     */
+    ResultEntity<List<DataCheckResultVO>> interfaceCheckData(DataCheckWebDTO dto);
+
+    /**
+     * 同步验证
+     *
+     * @return 执行结果
+     */
+    ResultEntity<List<DataCheckResultVO>> syncCheckData(DataCheckSyncDTO dto);
+
+    /**
+     * 获取校验类型
+     *
+     * @return 结果
+     */
+    List<DataCheckTypeV0> getDataCheckTypeList();
 }

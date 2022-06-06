@@ -1,3 +1,14 @@
+dataquality:
+  excel:
+    # excel保存路径
+    path: /root/java/fisk-governance-center/dataquality/excel
+dataops:
+  # pg数据库元数据对应 redis key
+  pg_metadataentity_key: DataOps_PGMetaDataEntityKey
+  # 执行时间 凌晨12点半
+  schedule: 0 30 0 * * ?
+  # 是否启用
+  enabled: true
 spring:
   application:
     name: datagovernance-service
@@ -8,31 +19,31 @@ spring:
     driver-class-name: com.mysql.jdbc.Driver
   redis:
     host: 192.168.11.130
-
-mybatis-plus:
-  configuration:
-    default-enum-type-handler: com.fisk.common.framework.mybatis.config.BaseEnumTypeHandler
-  global-config:
-    db-config:
-      id-type: auto
-      insert-strategy: not_null
-      logic-delete-field: del_flag
-      logic-delete-value: 0
-      logic-not-delete-value: 1
-      update-strategy: not_null
-  mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.fisk.datagovernance.entity
-
-fk:
-  auth:
-    clientId: datagovernance-service
-    secret: 1234
-  encoder:
-    crypt:
-      secret: ${random.uuid}
-      strength: 6
-
-eureka:
-  client:
-    service-url:
-      defaultZone: http://127.0.0.1:8082/eureka
+# pg数据源配置
+pgsql-dw:
+  id: 1
+  ip: 192.168.1.250
+  port: 5432
+  dbName: dmp_dw
+  url: jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified #&connectTimeout=60&socketTimeout=60超时等待60s
+  username: postgres
+  password: Password01!
+  driverClassName: org.postgresql.Driver
+pgsql-ods:
+  id: 2
+  ip: 192.168.1.250
+  port: 5432
+  dbName: dmp_ods
+  url: jdbc:postgresql://192.168.1.250:5432/dmp_ods?stringtype=unspecified #&connectTimeout=60&socketTimeout=60超时等待60s
+  username: postgres
+  password: Password01!
+  driverClassName: org.postgresql.Driver
+pgsql-mdm:
+  id: 3
+  ip: 192.168.1.250
+  port: 5432
+  dbName: dmp_mdm
+  url: jdbc:postgresql://192.168.1.250:5432/dmp_mdm?stringtype=unspecified #&connectTimeout=60&socketTimeout=60超时等待60s
+  username: postgres
+  password: Password01!
+  driverClassName: org.postgresql.Driver

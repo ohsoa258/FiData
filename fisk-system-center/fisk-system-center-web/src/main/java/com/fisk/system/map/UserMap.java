@@ -3,6 +3,7 @@ package com.fisk.system.map;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.system.dto.userinfo.UserDTO;
+import com.fisk.system.dto.userinfo.UserDropDTO;
 import com.fisk.system.dto.userinfo.UserPowerDTO;
 import com.fisk.system.entity.UserPO;
 import org.mapstruct.Mapper;
@@ -57,5 +58,13 @@ public interface UserMap {
      * @return
      */
     List<UserPowerDTO> poToPageDto(List<UserPO> po);
+
+    /**
+     * po==>DropDto
+     * @param po
+     * @return
+     */
+    List<UserDropDTO> poToDropDto(List<UserPO> po);
+
 
 }

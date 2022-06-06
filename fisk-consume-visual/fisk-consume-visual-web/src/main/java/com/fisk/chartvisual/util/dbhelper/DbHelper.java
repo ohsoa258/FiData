@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.util.dbhelper;
 
-import com.fisk.chartvisual.dto.ChartQueryObject;
+import com.fisk.chartvisual.dto.chartvisual.ChartQueryObject;
 import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
 import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.chartvisual.vo.DataSourceConVO;

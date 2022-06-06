@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.service;
 
-import com.fisk.chartvisual.dto.ChinaMapDTO;
+import com.fisk.chartvisual.dto.contentsplit.ChinaMapDTO;
 
 import java.util.List;
 
@@ -10,5 +10,9 @@ import java.util.List;
  */
 public interface ChinaMapService {
 
+    /**
+     * 获取中国地图省信息
+     * @return
+     */
     List<ChinaMapDTO> getAll();
 }

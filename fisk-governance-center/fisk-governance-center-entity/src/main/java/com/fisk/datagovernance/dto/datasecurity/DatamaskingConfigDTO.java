@@ -3,6 +3,8 @@ package com.fisk.datagovernance.dto.datasecurity;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * <p>
  * 数据脱敏字段配置表
@@ -25,10 +27,11 @@ public class DatamaskingConfigDTO {
     public String tableId;
 
     @ApiModelProperty(value = "脱敏字段", required = true)
+    @NotNull
     public String fieldName;
 
     @ApiModelProperty(value = "脱敏类型(0: 保留  1:值加密)", required = true)
-    public Long maskingType;
+    public Integer maskingType;
 
     @ApiModelProperty(value = "保留前几位文本", required = true)
     public Long numberDigits;
@@ -44,4 +47,10 @@ public class DatamaskingConfigDTO {
 
     @ApiModelProperty(value = "是否有效(添加时默认有效)", required = true)
     public Boolean valid;
+
+    @ApiModelProperty(value = "true: 保存&立即生效此配置  false: 仅保存操作", required = true)
+    public boolean publishFlag;
+
+    @ApiModelProperty(value = "数据脱敏配置sql")
+    public String dataMaskingSql;
 }

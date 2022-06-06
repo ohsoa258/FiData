@@ -3,6 +3,7 @@ package com.fisk.datamanagement.utils.atlas;
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import com.fisk.datamanagement.vo.ResultErrorDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +39,7 @@ public class AtlasClient {
     public ResultDataDTO<String> get(String url)
     {
         ResultDataDTO<String> resultDataDTO=new ResultDataDTO<String>();
-        resultDataDTO.code=ResultEnum.UNKNOWN;
+        resultDataDTO.code=AtlasResultEnum.UNKNOWN;
         CloseableHttpClient httpClient = null;
         CloseableHttpResponse httpResponse = null;
         try {
@@ -55,7 +56,7 @@ public class AtlasClient {
             // 执行get请求得到返回对象
             httpResponse = httpClient.execute(httpGet);
             //获取返回状态码
-            resultDataDTO.code = ResultEnum.getEnum(httpResponse.getStatusLine().getStatusCode());
+            resultDataDTO.code = AtlasResultEnum.getEnum(httpResponse.getStatusLine().getStatusCode());
             // 通过返回对象获取返回数据
             HttpEntity entity = httpResponse.getEntity();
             // 通过EntityUtils中的toString方法将结果转换为字符串
@@ -91,7 +92,7 @@ public class AtlasClient {
     public ResultDataDTO<String> post(String url, String parameter)
     {
         ResultDataDTO<String> resultDataDTO=new ResultDataDTO<String>();
-        resultDataDTO.code=ResultEnum.UNKNOWN;
+        resultDataDTO.code=AtlasResultEnum.UNKNOWN;
         CloseableHttpClient httpClient = null;
         CloseableHttpResponse httpResponse = null;
         String result = "";
@@ -119,10 +120,10 @@ public class AtlasClient {
         try {
             // httpClient对象执行post请求,并返回响应参数对象
             httpResponse = httpClient.execute(httpPost);
-            resultDataDTO.code = ResultEnum.getEnum(httpResponse.getStatusLine().getStatusCode());
+            resultDataDTO.code = AtlasResultEnum.getEnum(httpResponse.getStatusLine().getStatusCode());
             // 从响应对象中获取响应内容
             HttpEntity entity = httpResponse.getEntity();
-            if (resultDataDTO.code !=ResultEnum.NO_CONTENT)
+            if (resultDataDTO.code != AtlasResultEnum.NO_CONTENT)
             {
                 resultDataDTO.data = EntityUtils.toString(entity);
             }
@@ -173,9 +174,9 @@ public class AtlasClient {
         }
         try {
             httpResponse = httpClient.execute(httpPut);
-            resultDataDTO.code = ResultEnum.getEnum(httpResponse.getStatusLine().getStatusCode());
+            resultDataDTO.code = AtlasResultEnum.getEnum(httpResponse.getStatusLine().getStatusCode());
             HttpEntity entity = httpResponse.getEntity();
-            if (resultDataDTO.code !=ResultEnum.NO_CONTENT)
+            if (resultDataDTO.code !=AtlasResultEnum.NO_CONTENT)
             {
                 resultDataDTO.data = EntityUtils.toString(entity);
             }
@@ -205,7 +206,7 @@ public class AtlasClient {
     public ResultDataDTO<String> delete(String url)
     {
         ResultDataDTO<String> resultDataDTO=new ResultDataDTO<String>();
-        resultDataDTO.code=ResultEnum.UNKNOWN;
+        resultDataDTO.code=AtlasResultEnum.UNKNOWN;
         CloseableHttpClient httpClient = HttpClients.createDefault();
         String newUrl=requestIp+url;
         HttpDelete httpDelete = new HttpDelete(newUrl);
@@ -218,8 +219,8 @@ public class AtlasClient {
         try {
             httpResponse = httpClient.execute(httpDelete);
             HttpEntity entity = httpResponse.getEntity();
-            resultDataDTO.code = ResultEnum.getEnum(httpResponse.getStatusLine().getStatusCode());
-            if (resultDataDTO.code !=ResultEnum.NO_CONTENT)
+            resultDataDTO.code = AtlasResultEnum.getEnum(httpResponse.getStatusLine().getStatusCode());
+            if (resultDataDTO.code !=AtlasResultEnum.NO_CONTENT)
             {
                 resultDataDTO.data = EntityUtils.toString(entity);
             }
@@ -278,7 +279,7 @@ public class AtlasClient {
     public ResultEnum newResultEnum(ResultDataDTO<String> result)
     {
         String error="";
-        if (result.code.getCode() ==ResultEnum.NO_CONTENT.getCode())
+        if (result.code.getValue() ==AtlasResultEnum.NO_CONTENT.getValue())
         {
             return ResultEnum.SUCCESS;
         }
@@ -289,9 +290,8 @@ public class AtlasClient {
         catch (Exception e)
         {
             e.printStackTrace();
-            return result.code;
         }
-        throw new FkException(ResultEnum.BAD_REQUEST,error);
+        throw new FkException(ResultEnum.ERROR,error);
     }
 
 }

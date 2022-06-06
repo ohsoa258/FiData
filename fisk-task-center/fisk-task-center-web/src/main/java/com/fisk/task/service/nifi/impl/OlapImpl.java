@@ -311,40 +311,33 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
     }
 
     @Override
-    public OlapPO selectOlapPO(int id, int type) {
+    public OlapPO selectOlapPO(int id) {
         HashMap<String, Object> conditionHashMap = new HashMap<>();
         OlapPO olapPO = new OlapPO();
         conditionHashMap.put("del_flag", 1);
         conditionHashMap.put("id", id);
-        if (Objects.equals(type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL)) {
-            conditionHashMap.put("type", 1);
-        } else {
-            conditionHashMap.put("type", 0);
-        }
         List<OlapPO> olapPOS = mapper.selectByMap(conditionHashMap);
         if (olapPOS.size() > 0) {
             olapPO = olapPOS.get(0);
         } else {
-            log.error("未找到对应指标表" + type + "表id" + id);
+            log.error("未找到对应指标表,id" + id);
         }
         return olapPO;
     }
 
     @Override
-    public NifiGetPortHierarchyDTO getNifiGetPortHierarchy(String pipelineName,int type,String tableName,int tableAccessId) {
+    public NifiGetPortHierarchyDTO getNifiGetPortHierarchy(String pipelineId,int type,String tableName,int tableAccessId) {
         NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = new NifiGetPortHierarchyDTO();
-        nifiGetPortHierarchyDTO.workflowName = pipelineName;
+        nifiGetPortHierarchyDTO.workflowId = pipelineId;
         OlapTableEnum nameByValue = OlapTableEnum.getNameByValue(type);
         switch (nameByValue) {
             case KPI:
-                if (tableName.contains("dim")) {
+                OlapPO olapPO = this.query().eq("id", tableAccessId).one();
+                nifiGetPortHierarchyDTO.tableId = String.valueOf(olapPO.tableId);
+                if (olapPO.tableName.contains("dim")) {
                     nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_DIMENSION_TASK;
-                    OlapPO olapPO = this.query().eq("id", tableAccessId).one();
-                    nifiGetPortHierarchyDTO.tableId = String.valueOf(olapPO.tableId);
                 } else {
                     nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_FACT_TASK;
-                    OlapPO olapPO = this.query().eq("id", tableAccessId).one();
-                    nifiGetPortHierarchyDTO.tableId = String.valueOf(olapPO.tableId);
                 }
                 break;
             case DIMENSION:
@@ -357,6 +350,14 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
                 break;
             case PHYSICS:
                 nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DATALAKE_TASK;
+                nifiGetPortHierarchyDTO.tableId = String.valueOf(tableAccessId);
+                break;
+            case WIDETABLE:
+                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_WIDETABLE_TASK;
+                nifiGetPortHierarchyDTO.tableId = String.valueOf(tableAccessId);
+                break;
+            case PHYSICS_API:
+                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DATALAKE_API_TASK;
                 nifiGetPortHierarchyDTO.tableId = String.valueOf(tableAccessId);
                 break;
             default:

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.datamodel.dto.businessLimited.*;
+import com.fisk.datamodel.dto.businesslimited.*;
 import com.fisk.datamodel.entity.BusinessLimitedAttributePO;
 import com.fisk.datamodel.entity.BusinessLimitedPO;
 import com.fisk.datamodel.map.BusinessLimitedAttributeMap;

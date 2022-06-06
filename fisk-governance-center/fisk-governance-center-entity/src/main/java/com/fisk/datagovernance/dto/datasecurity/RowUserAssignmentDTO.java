@@ -39,4 +39,6 @@ public class RowUserAssignmentDTO {
     @ApiModelProperty(value = "权限(0: 空  1: 只读  2: 编辑)", required = true)
     public Long permission;
 
+    @ApiModelProperty(value = "用户(组)名称")
+    public String name;
 }

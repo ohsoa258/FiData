@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -33,14 +34,17 @@ public class Home {
         // 获取目标表
         List<JsonTableData> targetTable = getTargetTable(tableNameList);
         System.out.println("json = " + data);
+        System.out.println("===================================");
         targetTable.forEach(System.out::println);
+        System.out.println("===================================");
         // 获取Json的schema信息
         List<JsonSchema> schemas = getJsonSchema();
 //        schemas.forEach(System.out::println);
         // json根节点处理
         rootNodeHandler(schemas, data, targetTable);
         targetTable.forEach(System.out::println);
-        int a = 1 / 0;
+        System.out.println("===================================");
+//        int a = 1 / 0;
         return targetTable;
     }
 
@@ -61,7 +65,10 @@ public class Home {
             if (schema.type == JsonSchema.TypeEnum.ARRAY) {
                 JSONArray arr = data.getJSONArray(schema.name);
                 // json数据节点处理（递归处理所有节点）
-                dataNodeHandler(schema.children, arr, targetTable);
+//                String guid = UUID.randomUUID().toString();
+                schema.guid = UUID.randomUUID().toString();
+                dataNodeHandler(schema.children, arr, targetTable, schema.guid);
+//                dataNodeHandler(schema.children, arr, targetTable);
             }
         }
     }
@@ -78,9 +85,16 @@ public class Home {
      * @params data json数据
      * @params targetTable 最终处理结果
      */
-    private void dataNodeHandler(List<JsonSchema> schemas, JSONArray data, List<JsonTableData> targetTable) throws Exception {
-        if (data == null)
+    private void dataNodeHandler(List<JsonSchema> schemas, JSONArray data, List<JsonTableData> targetTable, String guid) throws Exception {
+        if (data == null) {
             return;
+        }
+
+//        String guid = UUID.randomUUID().toString();
+
+//        String s = guid == null ? null : UUID.randomUUID().toString();
+//        String s = guid == null ? UUID.randomUUID().toString() : null;
+
         for (JsonTableData item : targetTable) {
             List<JsonSchema> tableSchema = schemas.stream()
                     .filter(e -> StringUtils.hasLength(e.targetTableName) && e.targetTableName.equals(item.table))
@@ -89,7 +103,11 @@ public class Home {
                 for (Object rowData : data) {
                     JSONObject jsonRowData = (JSONObject) rowData;
                     JSONObject model = new JSONObject();
+
+
+                    String s = UUID.randomUUID().toString();
                     for (JsonSchema columnSchema : schemas) {
+
                         switch (columnSchema.type) {
                             case INT:
                                 model.put(columnSchema.name, jsonRowData.getInteger(columnSchema.name));
@@ -100,9 +118,18 @@ public class Home {
                             case DATETIME:
                                 model.put(columnSchema.name, jsonRowData.getDate(columnSchema.name));
                                 break;
+                            case TYPE:
+//                                model.put(columnSchema.targetTableName + "_code", guid);
+//                                columnSchema.guid = UUID.randomUUID().toString();
+                                model.put(columnSchema.name + "_code", guid);
+                                break;
                             case ARRAY:
+//                                model.put(columnSchema.name, jsonRowData.getString(targetTable+"_code"));
+//                                model.put("code", guid);
+//                                model.put(columnSchema.targetTableName + "_code", guid);
+                                columnSchema.guid = s;
                                 // json数据节点处理（递归处理所有节点）
-                                dataNodeHandler(columnSchema.children, jsonRowData.getJSONArray(columnSchema.name), targetTable);
+                                dataNodeHandler(columnSchema.children, jsonRowData.getJSONArray(columnSchema.name), targetTable, guid);
                                 break;
                             default:
                                 throw new Exception("未知类型");
@@ -158,6 +185,11 @@ public class Home {
                 .targetTableName("tb_user")
                 .build());
         userDataSchema.add(JsonSchema.builder()
+                .name("master_code")
+                .type(JsonSchema.TypeEnum.TYPE)
+                .targetTableName("tb_user")
+                .build());
+        userDataSchema.add(JsonSchema.builder()
                 .name("role")
                 .type(JsonSchema.TypeEnum.ARRAY)
                 .targetTableName("tb_user")
@@ -179,6 +211,12 @@ public class Home {
                 .type(JsonSchema.TypeEnum.STRING)
                 .targetTableName("tb_role")
                 .build());
+        // 逻辑外键
+        roleDataSchema.add(JsonSchema.builder()
+                .name("tb_user")
+                .type(JsonSchema.TypeEnum.TYPE)
+                .targetTableName("tb_role")
+                .build());
         roleDataSchema.add(JsonSchema.builder()
                 .name("menus")
                 .type(JsonSchema.TypeEnum.ARRAY)
@@ -193,6 +231,12 @@ public class Home {
         menuDataSchema.add(JsonSchema.builder()
                 .name("menuName")
                 .type(JsonSchema.TypeEnum.STRING)
+                .targetTableName("tb_menu")
+                .build());
+        // 逻辑外键
+        menuDataSchema.add(JsonSchema.builder()
+                .name("tb_role")
+                .type(JsonSchema.TypeEnum.TYPE)
                 .targetTableName("tb_menu")
                 .build());
         menuDataSchema.add(JsonSchema.builder()

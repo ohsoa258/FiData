@@ -22,7 +22,7 @@ public class ColumnUserAssignmentPO extends BasePO {
     /**
      * tb_rowsecurity_config表  id
      */
-    public long rowsecurityId;
+    public long columnSecurityId;
 
     /**
      * 类型: 0: 用户组  1: 用户

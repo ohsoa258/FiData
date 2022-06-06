@@ -3,6 +3,7 @@ package com.fisk.datagovernance.service.datasecurity;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.datasecurity.DatamaskingConfigDTO;
+import com.fisk.datagovernance.dto.datasecurity.datamasking.DataSourceIdDTO;
 import com.fisk.datagovernance.entity.datasecurity.DatamaskingConfigPO;
 
 import java.util.List;
@@ -51,6 +52,6 @@ public interface DatamaskingConfigService extends IService<DatamaskingConfigPO> 
      *
      * @return list
      */
-    List<DatamaskingConfigDTO> getList();
+    List<DatamaskingConfigDTO> getList(DataSourceIdDTO dto);
 }
 

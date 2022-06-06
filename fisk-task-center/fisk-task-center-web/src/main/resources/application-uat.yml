@@ -3,43 +3,13 @@ datamodeldorisconstr:
   password: DsPassword01!
   url: jdbc:mysql://192.168.21.13:9030/dmp_olap?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
   username: root
-eureka:
-  client:
-    service-url:
-      defaultZone: http://127.0.0.1:8082/eureka
+
 external-table-link: '"host" = "192.168.21.13","port" = "5432","user" = "postgres","password"
   = "PgPassword01!","database" = "dmp_dw_UAT"'
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 10000
-        readTimeout: 600000
-logging:
-  config: classpath:logback-spring.xml
-  level:
-    com:
-      fisk:
-        chartvisual:
-          mapper: debug
-    org:
-      springframework:
-        orm:
-          jpa: debug
-mybatis-plus:
-  configuration:
-    default-enum-type-handler: com.fisk.common.framework.mybatis.config.BaseEnumTypeHandler
-  global-config:
-    db-config:
-      id-type: auto
-      insert-strategy: not_null
-      logic-delete-field: del_flag
-      logic-delete-value: 0
-      logic-not-delete-value: 1
-      update-strategy: not_null
-  mapper-locations: classpath:mapper/*.xml
+
 nifi:
   basePath: http://192.168.21.13:8080/nifi-api
+  token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiI5YjNkMjY3NjExNDc0NWU2ODg3MDlkODkzNmUzYmQ4MiIsInVzZXIiOiJ7XCJpZFwiOjE5LFwidXNlckFjY291bnRcIjpcInRhc2vkuJPnlKh0b2tlblwifSIsImlkIjoiMTkifQ.d5g6oMU3a_XsjpOouZu1R1YlVO_E_ZjwUUJROR1XbRo
   pipeline:
     topicName: my-topic2
     waitTime: 20
@@ -52,11 +22,19 @@ pgsql-datainput:
   password: PgPassword01!
   url: jdbc:postgresql://192.168.21.13:5432/dmp_ods_UAT?stringtype=unspecified
   username: postgres
+  ip: 192.168.21.13
+  dbName: dmp_ods_UAT
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
   password: PgPassword01!
   url: jdbc:postgresql://192.168.21.13:5432/dmp_dw_UAT?stringtype=unspecified
   username: postgres
+pgsql-mdm:
+  driverClassName: org.postgresql.Driver
+  password: PgPassword01!
+  url: jdbc:postgresql://192.168.21.13:5432/dmp_mdm_UAT?stringtype=unspecified
+  username: postgres
+  type: PG
 server:
   port: 8099
 spring:

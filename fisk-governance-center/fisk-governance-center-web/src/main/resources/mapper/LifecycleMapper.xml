@@ -4,31 +4,41 @@
 <mapper namespace="com.fisk.datagovernance.mapper.dataquality.LifecycleMapper">
     <select id="getAll" resultType="com.fisk.datagovernance.vo.dataquality.lifecycle.LifecycleVO">
         SELECT
-        id,
-        template_id,
-        datasource_id,
-        datasource_type,
-        module_name,
-        table_name,
-        field_name,
-        recovery_date,
-        remind_date,
-        is_backup,
-        check_emptytb_day,
-        check_refreshtb_day,
-        check_consanguinity_day,
-        run_time_cron,
-        table_state,
-        module_state,
-        create_time,
-        create_user
+        t1.id,
+        t1.template_id,
+        t1.datasource_id,
+        t1.rule_name,
+        t1.table_name,
+        t1.recovery_date,
+        t1.continued_number,
+        t1.is_backup,
+        t1.consanguinity_range,
+        t1.field_name,
+        t1.table_state,
+        t1.create_rule,
+        t1.rule_state,
+        t2.module_type,
+        t2.module_name,
+        t2.template_scene,
+        t2.scene_name,
+        t2.scene_desc,
+        t2.template_type,
+        t2.templaten_name,
+        t2.template_desc,
+        t1.create_time,
+        t1.create_user
         FROM
-        tb_lifecycle_module
+        tb_lifecycle_rule t1
+        LEFT JOIN tb_template_config t2 ON t1.template_id = t2.id
+        LEFT JOIN tb_datasource_config t3 ON t1.datasource_id = t3.id
         WHERE
-        del_flag = 1
+        t1.del_flag = 1
+        AND t2.del_flag = 1
+        AND t3.del_flag = 1
+        AND t3.id = #{datasourceId}
         AND table_name = #{tableName,jdbcType=VARCHAR}
         <if test="keyword != null and keyword != '' ">
-            AND module_name LIKE concat('%', #{keyword}, '%')
+            AND rule_name LIKE concat('%', #{keyword}, '%')
         </if>
     </select>
 </mapper>

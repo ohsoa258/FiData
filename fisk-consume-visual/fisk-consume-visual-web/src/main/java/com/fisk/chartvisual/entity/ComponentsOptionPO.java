@@ -15,5 +15,6 @@ public class ComponentsOptionPO extends BasePO {
     private Integer componentId;
     private String description;
     private String version;
+    private String fileName;
     private String path;
 }

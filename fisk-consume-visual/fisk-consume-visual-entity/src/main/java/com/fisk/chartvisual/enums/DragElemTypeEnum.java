@@ -9,6 +9,10 @@ import com.fisk.common.core.enums.BaseEnum;
  */
 
 public enum DragElemTypeEnum implements BaseEnum {
+
+    /**
+     * 字段类型
+     */
     ROW(1,"行"),
     COLUMN(2,"列"),
     VALUE(3,"值"),

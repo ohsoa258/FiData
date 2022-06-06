@@ -22,7 +22,11 @@ import org.springframework.context.ConfigurableApplicationContext;
         "com.fisk.common.framework.actuators"},
         exclude = {RabbitAutoConfiguration.class})
 @MapperScan("com.fisk.task.mapper")
-@EnableFeignClients(basePackages = {"com.fisk.dataaccess.client","com.fisk.datamodel.client","com.fisk.datafactory.client"})
+@EnableFeignClients(basePackages = {
+        "com.fisk.dataaccess.client",
+        "com.fisk.datamodel.client",
+        "com.fisk.datafactory.client",
+        "com.fisk.mdm.client"})
 @EnableApolloConfig
 public class FkTaskApplication {
     public static void main(String[] args) {

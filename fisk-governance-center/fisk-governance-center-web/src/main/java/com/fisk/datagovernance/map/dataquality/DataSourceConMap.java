@@ -21,7 +21,8 @@ public interface DataSourceConMap {
      * @return target
      */
     @Mappings({
-            @Mapping(source = "conType.value", target = "conType")
+            @Mapping(source = "conType.value", target = "conType"),
+            @Mapping(source = "datasourceType.value", target = "datasourceType")
     })
     DataSourceConPO dtoToPo(DataSourceConDTO dto);
 
@@ -34,7 +35,8 @@ public interface DataSourceConMap {
      */
     @Mappings({
             @Mapping(target = "id", ignore = true),
-            @Mapping(source = "conType.value", target = "conType")
+            @Mapping(source = "conType.value", target = "conType"),
+            @Mapping(source = "datasourceType.value", target = "datasourceType")
     })
     void editDtoToPo(DataSourceConEditDTO dto, @MappingTarget DataSourceConPO po);
 }

@@ -1,5 +1,6 @@
 package com.fisk.common.core.utils.email.dto;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -39,4 +40,19 @@ public class MailSenderDTO {
      * 邮件正文
      */
     public String body;
+
+    /**
+     * 是否发送附件
+     */
+    public boolean sendAttachment;
+
+    /**
+     * 附件名称
+     */
+    public String attachmentName;
+
+    /**
+     * 附件地址
+     */
+    public String attachmentPath;
 }

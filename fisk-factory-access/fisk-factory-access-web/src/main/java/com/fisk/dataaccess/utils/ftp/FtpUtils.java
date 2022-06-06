@@ -1,7 +1,7 @@
 package com.fisk.dataaccess.utils.ftp;
 
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelPropertyDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
@@ -371,7 +371,7 @@ public class FtpUtils {
 
         // 获取excel内容
         InputStream inputStream = getInputStreamByName(ftpClient, "/Windows/二级/", "tb_app_registration.csv");
-//        List<ExcelDTO> xlsx = ExcelUtils.readExcelFromInputStream(inputStream, ".xlsx");
+////        List<ExcelDTO> xlsx = ExcelUtils.readExcelFromInputStream(inputStream, ".xlsx");
         List<ExcelDTO> xlsx = ExcelUtils.readCsvFromInputStream(inputStream, "tb_app_registration");
         System.out.println("*************************************");
         System.out.println("文件流对象: ");

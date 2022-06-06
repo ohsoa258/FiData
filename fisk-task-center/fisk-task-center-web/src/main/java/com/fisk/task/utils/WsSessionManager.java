@@ -3,9 +3,9 @@ package com.fisk.task.utils;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.enums.task.MessageLevelEnum;
 import com.fisk.common.core.enums.task.MessageStatusEnum;
+import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.common.framework.mdc.MDCHelper;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
-import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.task.entity.MessageLogPO;
 import com.fisk.task.mapper.MessageLogMapper;
 import com.fisk.task.vo.WsMessageLogVO;
@@ -177,8 +177,6 @@ public class WsSessionManager {
      * @param msg     msg
      */
     private static void sendMsg(Session session, String msg, Long id, MessageLevelEnum level) {
-        MDCHelper.setClass(WsSessionManager.class.getName());
-        MDCHelper.setFunction("sendMsg");
         MDCHelper.setAppLogType(TraceTypeEnum.TASK_WS_SEND_MESSAGE);
 
         //记录日志
@@ -208,5 +206,6 @@ public class WsSessionManager {
                 log.error("ws消息发送失败，接收者id【" + id + "】，发送时间【" + DateTimeUtils.getNow() + "】，错误信息：", e);
             }
         }
+        MDCHelper.removeLogType();
     }
 }

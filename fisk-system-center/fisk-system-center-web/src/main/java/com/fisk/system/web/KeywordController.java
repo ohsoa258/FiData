@@ -8,6 +8,7 @@ import com.fisk.system.dto.KeywordTypeDTO;
 import com.fisk.system.service.IKeywordService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,4 +41,9 @@ public class KeywordController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getList(dto));
     }
 
+    @PostMapping("/judgeKeyWord")
+    @ApiOperation(value = "根据输入的字符串判断是否为关键字")
+    public ResultEntity<Object> judgeKeyWord(@Validated @RequestBody KeywordTypeDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.judgeKeyWord(dto));
+    }
 }

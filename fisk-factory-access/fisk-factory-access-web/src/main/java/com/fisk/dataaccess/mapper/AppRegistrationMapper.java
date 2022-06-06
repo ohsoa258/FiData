@@ -2,10 +2,11 @@ package com.fisk.dataaccess.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
-import com.fisk.dataaccess.dto.AppNameDTO;
-import com.fisk.dataaccess.dto.AppRegistrationPageDTO;
-import com.fisk.dataaccess.dto.DataAccessTreeDTO;
-import com.fisk.dataaccess.dto.RepeatNameDTO;
+import com.fisk.dataaccess.dto.access.DataAccessTreeDTO;
+import com.fisk.dataaccess.dto.app.AppNameDTO;
+import com.fisk.dataaccess.dto.app.AppRegistrationPageDTO;
+import com.fisk.dataaccess.dto.app.LogMessageFilterVO;
+import com.fisk.dataaccess.dto.app.RepeatNameDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import org.apache.ibatis.annotations.Mapper;
@@ -70,6 +71,37 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
      * @return 查询结果
      */
     Page<AppRegistrationVO> filter(Page<AppRegistrationVO> page, @Param("query") AppRegistrationPageDTO query);
+
+    /**
+     * 日志分页筛选器--非实时api
+     *
+     * @param appId   应用id
+     * @param apiId   apiId
+     * @param keyword 搜索框
+     * @return 分页结果
+     */
+    List<LogMessageFilterVO> logMessageFilterByApi(@Param("appId") Long appId, @Param("keyword") String keyword, @Param("apiId") Long apiId);
+
+    /**
+     * 日志分页筛选器--实时api
+     *
+     * @param appId   应用id
+     * @param apiId   apiId
+     * @param keyword 搜索框
+     * @return 分页结果
+     */
+    List<LogMessageFilterVO> logMessageFilterByRestApi(@Param("appId") Long appId, @Param("keyword") String keyword, @Param("apiId") Long apiId);
+
+    /**
+     * 日志分页筛选器--物理表
+     *
+     * @param appId   应用id
+     * @param apiId   物理表id
+     * @param keyword 搜索框
+     * @return 分页结果
+     */
+    List<LogMessageFilterVO> logMessageFilterByTable(@Param("appId") Long appId, @Param("keyword") String keyword, @Param("apiId") Long apiId);
+
 
     /**
      * 获取应用注册名称和id

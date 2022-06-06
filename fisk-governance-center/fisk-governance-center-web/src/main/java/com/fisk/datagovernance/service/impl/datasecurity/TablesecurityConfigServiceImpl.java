@@ -1,15 +1,23 @@
 package com.fisk.datagovernance.service.impl.datasecurity;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datagovernance.dto.datasecurity.TablesecurityConfigDTO;
+import com.fisk.datagovernance.dto.datasecurity.datamasking.DataSourceIdDTO;
 import com.fisk.datagovernance.entity.datasecurity.TablesecurityConfigPO;
+import com.fisk.datagovernance.entity.datasecurity.UserGroupInfoPO;
 import com.fisk.datagovernance.map.datasecurity.TableSecurityConfigMap;
 import com.fisk.datagovernance.mapper.datasecurity.PermissionManagementMapper;
 import com.fisk.datagovernance.mapper.datasecurity.TablesecurityConfigMapper;
 import com.fisk.datagovernance.service.datasecurity.TableSecurityConfigService;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.userinfo.UserDropDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +30,7 @@ import java.util.List;
  * @date 2022-03-28 15:47:33
  */
 @Service
+@Slf4j
 public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityConfigMapper, TablesecurityConfigPO> implements TableSecurityConfigService {
 
     @Resource
@@ -29,6 +38,12 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
 
     @Resource
     private PermissionManagementMapper permissionManagementMapper;
+
+    @Resource
+    private UserGroupInfoServiceImpl userGroupInfoServiceImpl;
+
+    @Resource
+    private UserClient userClient;
 
     @Override
     public TablesecurityConfigDTO getData(long id) {
@@ -41,6 +56,7 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
         // po -> dto
         TablesecurityConfigDTO dto = TableSecurityConfigMap.INSTANCES.poToDto(po);
         // TODO 根据访问类型和用户(组)id,查询用户(组)名称
+        dto.name = getUserGroupNameOrUserName(dto.accessType, dto.userGroupId);
         return dto;
     }
 
@@ -54,8 +70,66 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
+        // 同一用户(组)只允许选择一个权限
+        ResultEnum usergroupPermissionOnly = validateTableUserGroupPermissonOnlyByAdd(dto);
+        if (usergroupPermissionOnly != null) {
+            return usergroupPermissionOnly;
+        }
+
         // 保存主表数据
         return this.save(model) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    /**
+     * 校验表级用户(组)权限是否唯一
+     *
+     * @return com.fisk.common.core.response.ResultEnum
+     * @description 校验表级用户(组)权限是否唯一
+     * @author Lock
+     * @date 2022/4/8 17:44
+     * @version v1.0
+     * @params dto 前端入参
+     */
+    private ResultEnum validateTableUserGroupPermissonOnlyByAdd(TablesecurityConfigDTO dto) {
+        QueryWrapper<TablesecurityConfigPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(TablesecurityConfigPO::getDatasourceId, dto.datasourceId).eq(TablesecurityConfigPO::getTableId, dto.tableId)
+                .select(TablesecurityConfigPO::getAccessType, TablesecurityConfigPO::getUserGroupId, TablesecurityConfigPO::getId);
+        List<TablesecurityConfigPO> tablesecurityConfigPoList = baseMapper.selectList(queryWrapper);
+        if (CollectionUtils.isNotEmpty(tablesecurityConfigPoList)) {
+            for (TablesecurityConfigPO e : tablesecurityConfigPoList) {
+                if (e.accessType == dto.accessType && e.userGroupId == dto.userGroupId) {
+                    return ResultEnum.USERGROUP_PERMISSION_ONLY;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 校验表级用户(组)权限是否唯一
+     *
+     * @return com.fisk.common.core.response.ResultEnum
+     * @description 校验表级用户(组)权限是否唯一
+     * @author Lock
+     * @date 2022/4/8 17:44
+     * @version v1.0
+     * @params dto 前端入参
+     */
+    private ResultEnum validateTableUserGroupPermissonOnlyByEdit(TablesecurityConfigDTO dto) {
+        QueryWrapper<TablesecurityConfigPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(TablesecurityConfigPO::getDatasourceId, dto.datasourceId).eq(TablesecurityConfigPO::getTableId, dto.tableId)
+                .select(TablesecurityConfigPO::getAccessType, TablesecurityConfigPO::getUserGroupId, TablesecurityConfigPO::getId);
+        List<TablesecurityConfigPO> tablesecurityConfigPoList = baseMapper.selectList(queryWrapper);
+        if (CollectionUtils.isNotEmpty(tablesecurityConfigPoList)) {
+            for (TablesecurityConfigPO e : tablesecurityConfigPoList) {
+                if (e.accessType == dto.accessType && e.userGroupId == dto.userGroupId && e.id != dto.id) {
+                    return ResultEnum.USERGROUP_PERMISSION_ONLY;
+                }
+            }
+        }
+        return null;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -67,6 +141,13 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+
+        // 同一用户(组)只允许选择一个权限
+        ResultEnum usergroupPermissionOnly = validateTableUserGroupPermissonOnlyByEdit(dto);
+        if (usergroupPermissionOnly != null) {
+            return usergroupPermissionOnly;
+        }
+
         // dto -> po
         // 执行修改
         return this.updateById(TableSecurityConfigMap.INSTANCES.dtoToPo(dto)) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
@@ -85,14 +166,16 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
     }
 
     @Override
-    public List<TablesecurityConfigDTO> getList() {
+    public List<TablesecurityConfigDTO> getList(DataSourceIdDTO dto) {
         // 根据创建时间倒叙
-        List<TablesecurityConfigPO> listPo = this.query().orderByDesc("create_time").list();
+        List<TablesecurityConfigPO> listPo = this.query()
+                .eq("datasource_id", dto.datasourceId)
+                .eq("table_id", dto.tableId)
+                .orderByDesc("create_time").list();
         List<TablesecurityConfigDTO> list = TableSecurityConfigMap.INSTANCES.listPoToDto(listPo);
 
-        for (TablesecurityConfigDTO dto : list) {
-            // TODO 根据访问类型和用户(组)id,查询用户(组)名称
-        }
+        // TODO 根据访问类型和用户(组)id,查询用户(组)名称
+        list.forEach(e -> e.name = getUserGroupNameOrUserName(e.accessType, e.userGroupId));
 
         return list;
     }
@@ -104,5 +187,40 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
         // 修改表中default_config这一列的数据
         updateWrapper.set("default_config", defaultConfig);
         return baseMapper.update(null, updateWrapper) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    /**
+     * 根据访问类型和用户(组)id,获取用户(组)名称
+     *
+     * @return java.lang.String 用户(组)名称
+     * @description
+     * @author Lock
+     * @date 2022/4/2 17:44
+     * @version v1.0
+     * @params accessType 访问类型 0: 空  1:用户组  2: 用户
+     * @params userGroupId 用户(组)id
+     */
+    public String getUserGroupNameOrUserName(Long accessType, Long userGroupId) {
+
+        // 用户组
+        if (accessType == 1) {
+            UserGroupInfoPO userGroupInfoPo = userGroupInfoServiceImpl.query().eq("id", userGroupId).one();
+            return userGroupInfoPo == null ? "当前用户组不存在" : userGroupInfoPo.userGroupName;
+            // 用户
+        } else if (accessType == 2) {
+            try {
+                ResultEntity<List<UserDropDTO>> result = userClient.listUserDrops();
+                List<UserDropDTO> data = result.data;
+                for (UserDropDTO e : data) {
+                    if (e.id == userGroupId) {
+                        return e.username;
+                    }
+                }
+            } catch (Exception e) {
+                log.error("远程调用失败，方法名：【user-service:listUserDrops】");
+                return "当前用户不存在";
+            }
+        }
+        return null;
     }
 }

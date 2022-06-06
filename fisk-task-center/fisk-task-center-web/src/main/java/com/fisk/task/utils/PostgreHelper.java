@@ -2,6 +2,8 @@ package com.fisk.task.utils;
 
 import com.alibaba.fastjson.JSONArray;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -152,6 +154,7 @@ public class PostgreHelper {
         } catch (Exception e) {
             //捕捉错误
             log.error(e.getMessage());
+            throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
         } finally {
             //关闭操作对象
             PostgreHelper.closeStatement(stmt);

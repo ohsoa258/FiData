@@ -17,30 +17,60 @@ import java.io.InputStream;
  */
 public class FtpToExcel {
 
-    //该方法判断excel版本
+    private static final String XLSX = ".xlsx";
+
+    /**
+     * 该方法判断excel版本
+     *
+     * @return org.apache.poi.ss.usermodel.Workbook
+     * @description 该方法判断excel版本
+     * @author Lock
+     * @date 2022/4/7 11:21
+     * @version v1.0
+     * @params in 输入流
+     * @params filename 文件名
+     */
     static Workbook openWorkbook(InputStream in, String filename) throws IOException {
         Workbook wb = null;
-        if (filename.endsWith(".xlsx")) {
-            wb = new XSSFWorkbook(in);//Excel 2007
+        if (filename.endsWith(XLSX)) {
+            // Excel 2007
+            wb = new XSSFWorkbook(in);
         } else {
-            wb = (Workbook) new HSSFWorkbook(in);//Excel 2003
+            // Excel 2003
+            wb = (Workbook) new HSSFWorkbook(in);
         }
         return wb;
     }
 
-    //该方法处理excel的数据
+    /**
+     * 该方法处理excel的数据
+     *
+     * @return void
+     * @description 该方法处理excel的数据
+     * @author Lock
+     * @date 2022/4/7 11:21
+     * @version v1.0
+     * @params fileName 文件名
+     */
     public static void setExcelData(String fileName) throws Exception {
-        InputStream in = new FileInputStream(fileName);    //创建输入流
-        Workbook wb = openWorkbook(in, fileName);// 获取Excel文件对象
-        Sheet sheet = wb.getSheetAt(0);// 获取文件的指定工作表m 默认的第一个Row row = null;
-        int totalRows = sheet.getLastRowNum();    // 总行数
-        int totalCells = sheet.getRow(0).getLastCellNum();//总列数，根据第一行得来的
+        // 创建输入流
+        InputStream in = new FileInputStream(fileName);
+        // 获取Excel文件对象
+        Workbook wb = openWorkbook(in, fileName);
+        // 获取文件的指定工作表m 默认的第一个Row row = null;
+        Sheet sheet = wb.getSheetAt(0);
+        // 总行数
+        int totalRows = sheet.getLastRowNum();
+        // 总列数，根据第一行得来的
+        int totalCells = sheet.getRow(0).getLastCellNum();
         System.out.println("列数:" + totalCells + " 行数：" + totalRows);
 
         //依次获取每一行
         for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-            XSSFRow row = (XSSFRow) sheet.getRow(i);// 获取行对象
-            if (row == null) {// 如果为空，不处理
+            // 获取行对象
+            XSSFRow row = (XSSFRow) sheet.getRow(i);
+            // 如果为空，不处理
+            if (row == null) {
                 continue;
             }
 

@@ -15,5 +15,5 @@ public class TableTopicDTO  extends BasePO {
     public int tableType;
     public String topicName;
     public int topicType;
-    public int componentId;
+    public Integer componentId;
 }

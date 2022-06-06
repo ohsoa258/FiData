@@ -2,6 +2,9 @@ package com.fisk.dataaccess.enums;
 
 import com.fisk.common.core.enums.BaseEnum;
 
+/**
+ * @author cfk
+ */
 public enum syncModeTypeEnum implements BaseEnum {
     /**
      * 同步类型

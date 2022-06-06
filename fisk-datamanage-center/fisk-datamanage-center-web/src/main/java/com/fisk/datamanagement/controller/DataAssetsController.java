@@ -32,13 +32,21 @@ public class DataAssetsController {
     @Resource
     IDataAssets service;
 
+    /**
+     * 基于构造器注入
+     */
+    private final HttpServletResponse response;
+    public DataAssetsController(HttpServletResponse response) {
+        this.response = response;
+    }
+
     @ApiOperation("获取表数据")
     @PostMapping("/getDataAssetsList")
-    public ResultEntity<Object> getDataAssetsList(@Validated @RequestBody DataAssetsParameterDTO dto, HttpServletResponse response)throws IOException {
+    public ResultEntity<Object> getDataAssetsList(@Validated @RequestBody DataAssetsParameterDTO dto){
         DataAssetsResultDTO result = service.getDataAssetsTableList(dto);
         if (dto.export)
         {
-            exportTable(result,dto.tableName,response);
+            exportTable(result,dto.tableName);
             return ResultEntityBuild.build(ResultEnum.SUCCESS);
         }
         return ResultEntityBuild.build(ResultEnum.SUCCESS,result);
@@ -50,7 +58,7 @@ public class DataAssetsController {
      * @param tableName
      * @throws IOException
      */
-    public void exportTable( DataAssetsResultDTO result,String tableName,HttpServletResponse response) throws IOException {
+    public void exportTable( DataAssetsResultDTO result,String tableName) {
         HSSFWorkbook workbook = new HSSFWorkbook();
         HSSFSheet sheet = workbook.createSheet("sheet1");
         HSSFRow row1 = sheet.createRow(0);

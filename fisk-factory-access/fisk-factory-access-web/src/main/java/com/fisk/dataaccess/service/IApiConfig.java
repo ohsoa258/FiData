@@ -3,10 +3,7 @@ package com.fisk.dataaccess.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.dataaccess.dto.api.ApiConfigDTO;
-import com.fisk.dataaccess.dto.api.ApiUserDTO;
-import com.fisk.dataaccess.dto.api.GenerateDocDTO;
-import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
+import com.fisk.dataaccess.dto.api.*;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.entity.ApiConfigPO;
 
@@ -91,7 +88,7 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum pushData(ReceiveDataDTO dto);
+    ResultEntity<Object> pushData(ReceiveDataDTO dto);
 
     /**
      * 获取实时api的临时token
@@ -115,6 +112,29 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @param response response
      * @return 执行结果
      */
-    ResultEnum generateAppPDFDoc(List<GenerateDocDTO> list, HttpServletResponse response);
+    ResultEnum generateAppPdfDoc(List<GenerateDocDTO> list, HttpServletResponse response);
+
+    /**
+     * 调度调用第三方api,接收数据,并导入到FiData平台
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum importData(ApiImportDataDTO dto);
+
+    /**
+     * api复制: 保存功能
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum copyApi(CopyApiDTO dto);
+
+    /**
+     * api复制: 获取下拉列表数据
+     *
+     * @return list
+     */
+    List<ApiSelectDTO> getAppAndApiList(int appType);
 }
 

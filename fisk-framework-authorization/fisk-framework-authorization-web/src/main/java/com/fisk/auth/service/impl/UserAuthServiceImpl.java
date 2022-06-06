@@ -7,14 +7,14 @@ import com.fisk.auth.dto.UserDetail;
 import com.fisk.auth.service.UserAuthService;
 import com.fisk.auth.utils.JwtUtils;
 import com.fisk.common.core.constants.SystemConstants;
-import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.framework.redis.RedisKeyBuild;
-import com.fisk.common.framework.redis.RedisKeyEnum;
-import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.redis.RedisKeyBuild;
+import com.fisk.common.framework.redis.RedisKeyEnum;
+import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
 import org.springframework.stereotype.Service;
@@ -66,7 +66,8 @@ public class UserAuthServiceImpl implements UserAuthService {
         String token = SystemConstants.AUTH_TOKEN_HEADER + jwtUtils.createJwt(userDetail);
         UserInfo userInfo = UserInfo.of(userDTO.getId(), userDTO.getUserAccount(), token);
 
-        if (userInfo.id == 102) {
+        int permanentToken = 102;
+        if (userInfo.id == permanentToken) {
             redis.set(RedisKeyBuild.buildLoginUserInfo(userInfo.id), userInfo, -1);
         } else {
             boolean res = redis.set(RedisKeyBuild.buildLoginUserInfo(userInfo.id), userInfo, RedisKeyEnum.AUTH_USERINFO.getValue());

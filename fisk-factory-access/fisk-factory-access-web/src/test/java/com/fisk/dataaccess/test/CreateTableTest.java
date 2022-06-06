@@ -1,15 +1,16 @@
 package com.fisk.dataaccess.test;
 
-import com.baomidou.mybatisplus.extension.api.R;
-import com.fisk.dataaccess.dto.TableAccessDTO;
-import com.fisk.dataaccess.dto.TableFieldsDTO;
+import com.fisk.dataaccess.dto.table.TableAccessDTO;
+import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.sql.*;
-import java.util.ArrayList;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 
 /**

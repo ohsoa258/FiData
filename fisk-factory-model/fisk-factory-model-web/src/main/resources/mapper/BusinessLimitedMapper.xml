@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.fisk.datamodel.mapper.BusinessLimitedMapper">
 
-    <select id="queryList" resultType="com.fisk.datamodel.dto.businessLimited.BusinessLimitedDTO">
+    <select id="queryList" resultType="com.fisk.datamodel.dto.businesslimited.BusinessLimitedDTO">
         SELECT
         bl.id,
         bl.limited_des,
@@ -24,7 +24,7 @@
         </if>
     </select>
     <insert id="insertBusinessLimited" useGeneratedKeys="true" keyProperty="id" keyColumn="id"
-            parameterType="com.fisk.datamodel.dto.businessLimited.BusinessLimitedDTO">
+            parameterType="com.fisk.datamodel.dto.businesslimited.BusinessLimitedDTO">
         insert into tb_business_limited (limited_name,limited_des,fact_id,del_flag) values
         (#{businessLimitedDto.limitedName},#{businessLimitedDto.limitedDes},#{businessLimitedDto.factId},1)
     </insert>

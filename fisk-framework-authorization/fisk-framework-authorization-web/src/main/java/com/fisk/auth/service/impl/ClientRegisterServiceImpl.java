@@ -15,14 +15,14 @@ import com.fisk.auth.utils.JwtUtils;
 import com.fisk.auth.vo.ClientRegisterVO;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.constants.SystemConstants;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.redis.RedisKeyBuild;
+import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
-import com.fisk.common.framework.redis.RedisKeyBuild;
-import com.fisk.common.framework.redis.RedisUtil;
-import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.core.user.UserInfo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,10 +91,10 @@ public class ClientRegisterServiceImpl extends ServiceImpl<ClientRegisterMapper,
         // TODO 过期时间待会修改
         redis.set(RedisKeyBuild.buildClientInfo(model.id), userInfo, dto.expireTimestamp);
         // 2.将token更新到添加的这一条数据上
-        ClientRegisterPO clientRegisterPO = this.query().eq("id", model.id).one();
-        clientRegisterPO.tokenValue = token;
+        ClientRegisterPO clientRegisterPo = this.query().eq("id", model.id).one();
+        clientRegisterPo.tokenValue = token;
         // 3.入mysql库
-        return this.updateById(clientRegisterPO) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return this.updateById(clientRegisterPo) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Transactional(rollbackFor = Exception.class)

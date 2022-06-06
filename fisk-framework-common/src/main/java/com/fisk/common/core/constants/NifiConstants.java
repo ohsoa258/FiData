@@ -49,7 +49,7 @@ public class NifiConstants {
         public static final String END_TIME="end_time";
         public static final String TABLE_ID="table_id";
         public static final String TABLE_TYPE="table_type";
-        public static final String FI_BATCH_CODE="fi_batch_code";
+        public static final String FIDATA_BATCH_CODE="fidata_batch_code";
         public static final String KAFKA_TOPIC="kafka.topic";
         public static final String INITIAL_TIME="0000-01-01";
 

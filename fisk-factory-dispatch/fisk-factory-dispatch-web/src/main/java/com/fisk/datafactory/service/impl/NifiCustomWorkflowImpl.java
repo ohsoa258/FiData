@@ -6,12 +6,12 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
-import com.fisk.common.core.response.ResultEntity;
-import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
@@ -32,6 +32,7 @@ import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.task.NifiCustomWorkListDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -110,6 +111,9 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         if (CollectionUtils.isNotEmpty(dtoList)) {
             for (NifiCustomWorkflowDetailDTO e : dtoList) {
                 ChannelDataEnum channelDataEnum = ChannelDataEnum.getValue(e.componentType);
+                if (channelDataEnum == null) {
+                    return vo;
+                }
                 switch (channelDataEnum) {
                     // 数据湖表任务
                     case DATALAKE_TASK:
@@ -262,22 +266,27 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         // 参数校验
         NifiCustomWorkflowPO model = this.getById(id);
         if (model == null) {
-            return ResultEnum.DATA_NOTEXISTS;
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         // 执行删除
         int i = mapper.deleteByIdWithFill(model);
         if (i <= 0) {
-            return ResultEnum.SAVE_DATA_ERROR;
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
         List<NifiCustomWorkflowDetailPO> list = customWorkflowDetailImpl.query().eq("workflow_id", model.workflowId).list();
         try {
             if (CollectionUtils.isNotEmpty(list)) {
                 List<Integer> collect = list.stream().map(e -> detailMapper.deleteByIdWithFill(e)).collect(Collectors.toList());
+                //删除topic
                 publishTaskClient.deleteTableTopicByComponentId(collect);
+                NifiCustomWorkListDTO nifiCustomWorkList = new NifiCustomWorkListDTO();
+                nifiCustomWorkList.nifiCustomWorkflowId = model.workflowId;
+                //删除nifi组件
+                publishTaskClient.deleteCustomWorkNifiFlow(nifiCustomWorkList);
             }
         } catch (Exception e) {
-            return ResultEnum.SAVE_DATA_ERROR;
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
         return ResultEnum.SUCCESS;

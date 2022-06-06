@@ -27,6 +27,11 @@ public class TableFieldsPO extends BasePO {
     public String sourceFieldName;
 
     /**
+     * 源字段类型
+     */
+    public String sourceFieldType;
+
+    /**
      * 字段名称
      */
     public String fieldName;
@@ -45,6 +50,16 @@ public class TableFieldsPO extends BasePO {
      * 字段长度
      */
     public Long fieldLength;
+
+    /**
+     * 字段推送规则
+     */
+    public String fieldPushRule;
+
+    /**
+     * 字段推送示例
+     */
+    public String fieldPushExample;
 
     /**
      * 1是主键，0非主键

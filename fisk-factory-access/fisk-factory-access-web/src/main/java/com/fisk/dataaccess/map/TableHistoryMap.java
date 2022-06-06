@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.map;
 
-import com.fisk.dataaccess.dto.TableHistoryDTO;
+import com.fisk.dataaccess.dto.table.TableHistoryDTO;
 import com.fisk.dataaccess.entity.TableHistoryPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;

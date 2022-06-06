@@ -3,12 +3,9 @@ package com.fisk.datagovernance.service.dataquality;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConDTO;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConEditDTO;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConQuery;
-import com.fisk.datagovernance.dto.dataquality.datasource.TestConnectionDTO;
+import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
-import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
+import com.fisk.datagovernance.vo.dataquality.datasource.DataExampleSourceVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceVO;
 
@@ -56,20 +53,20 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
     ResultEnum testConnection(TestConnectionDTO dto);
 
     /**
-     * 获取全部数据源
+     * 获取FiData数据源
      * @return 查询结果
      */
-    //List<DataSourceConVO> getAll();
+    List<DataSourceConVO> getSystemAll();
 
     /**
      * 获取数据源下的表
      * @return 查询结果
      */
-    List<DataSourceVO> getMeta(String tableName);
+    List<DataExampleSourceVO> getTableAll();
 
     /**
-     * 获取元数据资产管理下的表信息
+     * 获取表字段信息
      * @return 查询结果
      */
-    DataSourceVO getTableFieldAll(int datasourceId, ModuleDataSourceTypeEnum datasourceTyoe, String tableName,String tableFramework);
+    DataSourceVO getTableFieldAll(TableFieldQueryDTO dto);
 }

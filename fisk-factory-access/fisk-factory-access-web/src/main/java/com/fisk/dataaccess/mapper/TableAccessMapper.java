@@ -2,11 +2,11 @@ package com.fisk.dataaccess.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
-import com.fisk.dataaccess.dto.TableAccessPageDTO;
-import com.fisk.dataaccess.dto.TableNameDTO;
-import com.fisk.dataaccess.dto.TableNameTreeDTO;
 import com.fisk.dataaccess.dto.datafactory.TableIdAndNameDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.dataaccess.dto.table.TableAccessPageDTO;
+import com.fisk.dataaccess.dto.table.TableNameDTO;
+import com.fisk.dataaccess.dto.table.TableNameTreeDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.TableNameVO;
@@ -76,7 +76,7 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
      *
      * @return 查询结果
      */
-    @Select("select app_id,table_name from tb_table_access where del_flag=1")
+    @Select("select app_id,api_id,table_name from tb_table_access where del_flag=1")
     List<TableNameVO> getAppIdAndTableName();
 
     /**

@@ -1,8 +1,10 @@
 package com.fisk.datafactory.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
 import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
@@ -14,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,12 +37,32 @@ public class NifiCustomWorkflowDetailController {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.addData(dto));
     }
 
+    @ApiOperation("添加管道组件集合")
+    @PostMapping("/addList")
+    public ResultEntity<List<NifiCustomWorkflowDetailDTO>> addDataList(@RequestBody List<NifiCustomWorkflowDetailDTO> list) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.addDataList(list));
+    }
+
+    @ApiOperation("修改管道组件集合")
+    @PostMapping("/editList")
+    public ResultEntity<Object> editDataList(@RequestBody List<NifiCustomWorkflowDetailDTO> list) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.editDataList(list));
+    }
+
+    @GetMapping("/getComponentList/{id}")
+    @ApiOperation(value = "查询当前任务下的组件详情集合")
+    public ResultEntity<List<NifiCustomWorkflowDetailDTO>> getComponentList(@PathVariable("id") long id) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getComponentList(id));
+    }
+
     @GetMapping("/get/{id}")
     @ApiOperation(value = "查询单个管道组件")
     public ResultEntity<NifiCustomWorkflowDetailDTO> getData(@PathVariable("id") long id) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
     }
+
 
     @PutMapping("/edit")
     @ApiOperation(value = "修改管道详情")
@@ -56,11 +79,12 @@ public class NifiCustomWorkflowDetailController {
             log.info("nifi: 管道开始创建");
             Map<Map, Map> externalStructure = workListDTO.externalStructure;
             Map<Map, Map> structure = workListDTO.structure;
-            workListDTO.externalStructure1=externalStructure.toString();
-            workListDTO.structure1=structure.toString();
+            workListDTO.externalStructure1 = externalStructure.toString();
+            workListDTO.structure1 = structure.toString();
             publishTaskClient.publishBuildNifiCustomWorkFlowTask(workListDTO);
+            log.info(JSON.toJSONString(workListDTO));
             log.info("nifi: 管道创建成功");
-        }//
+        }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, workListDTO);
     }
@@ -84,5 +108,16 @@ public class NifiCustomWorkflowDetailController {
     public ResultEntity<Object> deleteDataList(@RequestBody WorkflowTaskGroupDTO dto) {
 
         return ResultEntityBuild.build(service.deleteDataList(dto));
+    }
+
+    /**
+     * 根据不同类型获取数仓对应的表
+     *
+     * @param dto dto
+     * @return 结果
+     */
+    @PostMapping("/getTableId")
+    public ResultEntity<Object> getTableId(@RequestBody NifiComponentsDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableIds(dto));
     }
 }

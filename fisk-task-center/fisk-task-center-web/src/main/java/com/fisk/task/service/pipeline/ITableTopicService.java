@@ -55,5 +55,5 @@ public interface ITableTopicService {
      * @param id
      * @return Integer
      */
-    TableTopicDTO getTableTopicDTOByComponentId(Integer id);
+    TableTopicDTO getTableTopicDTOByComponentId(Integer id,Integer tableId,Integer tableType);
 }

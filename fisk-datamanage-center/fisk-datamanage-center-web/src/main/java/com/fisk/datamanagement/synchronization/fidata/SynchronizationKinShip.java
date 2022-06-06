@@ -17,6 +17,7 @@ import com.fisk.datamanagement.dto.entity.EntityTypeDTO;
 import com.fisk.datamanagement.dto.process.*;
 import com.fisk.datamanagement.dto.relationship.RelationshipDTO;
 import com.fisk.datamanagement.entity.MetadataMapAtlasPO;
+import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.DataTypeEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.enums.TableTypeEnum;
@@ -111,7 +112,7 @@ public class SynchronizationKinShip {
     {
         //获取实体详情
         ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + po.atlasGuid);
-        if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
+        if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS)
         {
             return;
         }
@@ -181,7 +182,7 @@ public class SynchronizationKinShip {
                 String atlasGuid=data.get().atlasGuid;
                 //获取实体详情
                 ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + atlasGuid);
-                if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
+                if (getDetail.code !=AtlasResultEnum.REQUEST_SUCCESS)
                 {
                     return;
                 }
@@ -264,7 +265,7 @@ public class SynchronizationKinShip {
             List<EntityIdAndTypeDTO> inputColumnList = getDorisInputColumnList(sourceTable, field);
             //获取实体详情
             ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + po.atlasGuid);
-            if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
+            if (getDetail.code !=AtlasResultEnum.REQUEST_SUCCESS)
             {
                 continue;
             }
@@ -377,7 +378,7 @@ public class SynchronizationKinShip {
                 String atlasGuid=data.get().atlasGuid;
                 //获取实体详情
                 ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + atlasGuid);
-                if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
+                if (getDetail.code !=AtlasResultEnum.REQUEST_SUCCESS)
                 {
                     return;
                 }
@@ -435,7 +436,7 @@ public class SynchronizationKinShip {
         data.typeName=EntityTypeEnum.RDBMS_TABLE.getName();
         list.add(data);
         List<Integer> associateIdList;
-        if (dto.type==3)
+        if (dto.type==TableTypeEnum.DORIS_DIMENSION.getValue())
         {
             associateIdList=dto.fieldList.stream().filter(e->e.associatedDim==true).map(e->e.getAssociatedDimId()).collect(Collectors.toList());
         }else {
@@ -515,7 +516,7 @@ public class SynchronizationKinShip {
             }
             //获取实体详情
             ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + po.atlasGuid);
-            if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
+            if (getDetail.code !=AtlasResultEnum.REQUEST_SUCCESS)
             {
                 continue;
             }
@@ -696,7 +697,7 @@ public class SynchronizationKinShip {
         String jsonParameter= JSONArray.toJSON(entityDTO).toString();
         //调用atlas添加血缘
         ResultDataDTO<String> addResult = atlasClient.post(entity, jsonParameter);
-        if (addResult.code!=ResultEnum.REQUEST_SUCCESS)
+        if (addResult.code!=AtlasResultEnum.REQUEST_SUCCESS)
         {
             return;
         }
@@ -752,7 +753,7 @@ public class SynchronizationKinShip {
             }
             //获取process详情
             ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + processGuid);
-            if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
+            if (getDetail.code !=AtlasResultEnum.REQUEST_SUCCESS)
             {
                 return;
             }
@@ -875,7 +876,7 @@ public class SynchronizationKinShip {
         String jsonParameter= JSONArray.toJSON(dto).toString();
         //调用atlas添加血缘关系连线
         ResultDataDTO<String> addResult = atlasClient.post(relationship, jsonParameter);
-        if (addResult.code !=ResultEnum.REQUEST_SUCCESS)
+        if (addResult.code !=AtlasResultEnum.REQUEST_SUCCESS)
         {
             return "";
         }

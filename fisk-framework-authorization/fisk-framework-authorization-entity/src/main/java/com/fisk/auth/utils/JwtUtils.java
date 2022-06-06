@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fisk.auth.dto.Payload;
 import com.fisk.auth.dto.UserDetail;
 import com.fisk.common.core.constants.SystemConstants;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
-import com.fisk.common.core.user.UserInfo;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtParser;
@@ -146,11 +146,11 @@ public class JwtUtils {
         UserInfo userInfo = (UserInfo) redis.get(RedisKeyBuild.buildClientInfo(payload.getId()));
         // 3.3.比较
         if (userInfo == null || StringUtils.isEmpty(userInfo.token)) {
-            throw new RuntimeException("token失效，请联系管理员!");
+            throw new RuntimeException("token失效，请重新登录!");
         }
         if (!userInfo.token.replace(SystemConstants.AUTH_TOKEN_HEADER, "").equals(jwt)) {
-            // 有token，但是不是当前jwt，说明token已过期
-            throw new RuntimeException("token失效，请联系管理员!");
+            // 有token，但是不是当前jwt，说明token已过期，或者用户重新登录，token有变化
+            throw new RuntimeException("token失效，请重新登录!");
         }
         return payload;
     }

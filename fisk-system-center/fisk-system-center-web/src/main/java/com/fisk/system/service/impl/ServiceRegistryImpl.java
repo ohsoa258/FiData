@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.dto.ServiceRegistryDTO;
 import com.fisk.system.dto.ServiceRegistryDataDTO;
 import com.fisk.system.entity.ServiceRegistryPO;
+import com.fisk.system.enums.ServiceTypeEnum;
 import com.fisk.system.map.ServiceRegistryMap;
 import com.fisk.system.mapper.ServiceRegistryMapper;
 import com.fisk.system.service.IServiceRegistryService;
@@ -86,7 +87,8 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
                 return ResultEnum.DATA_NOTEXISTS;
             }
             //判断是否为一级菜单
-            if ("1".equals(model.parentServeCode))
+            String parentType=ServiceTypeEnum.PARENT_LEVEL.getValue()+"";
+            if (parentType.equals(model.parentServeCode))
             {
                QueryWrapper<ServiceRegistryPO> queryWrapper=new QueryWrapper<>();
                queryWrapper.lambda().eq(ServiceRegistryPO::getParentServeCode,model.serveCode);

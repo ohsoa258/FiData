@@ -145,7 +145,7 @@ public class DimensionImpl implements IDimension {
      */
     public String buildTableSql(String dimensionTabName)
     {
-        DataBaseTypeEnum dataBaseTypeEnum = DataBaseTypeEnum.getValue(typeName);
+        DataBaseTypeEnum dataBaseTypeEnum = DataBaseTypeEnum.getValue(typeName.toLowerCase());
         String sql="CREATE TABLE "+dimensionTabName +"("
                 +"FullDateAlternateKey date not null,"
                 +"DayNumberOfWeek int not null,"
@@ -377,20 +377,21 @@ public class DimensionImpl implements IDimension {
                 "MonthNumberOfYear", "CalendarQuarter", "CalendarYear"};
         String[] columnDataTypeList={"DATE","INT","VARCHAR","INT","INT","INT","VARCHAR","INT","INT","INT"};
         String[] columnDataTypeLengthList={"0","0","10","0","0","0","10","0","0","0"};
-        switch (typeName.toLowerCase())
+        DataBaseTypeEnum dataBaseTypeEnum = DataBaseTypeEnum.getValue(typeName.toLowerCase());
+        switch (dataBaseTypeEnum)
         {
-            case "mysql":
+            case MYSQL:
                 break;
-            case "oracle":
+            case ORACLE:
                 columnDataTypeList=new String[]{"DATE","NUMBER","VARCHAR2","NUMBER","NUMBER","NUMBER","VARCHAR2","NUMBER","NUMBER","NUMBER"};
                 break;
-            case "sqlserver":
+            case SQL_SERVER:
                 columnDataTypeList=new String[]{"DATE","INT","VARCHAR","INT","INT","INT","VARCHAR","INT","INT","INT"};
                 break;
-            case "postgresql":
+            case POSTGRESQL:
                 columnDataTypeList=new String[]{"DATE","INT2","VARCHAR","INT2","INT2","INT2","VARCHAR","INT2","INT2","INT2"};
                 break;
-            case "doris":
+            case DORIS:
                 break;
             default:
         }
@@ -423,7 +424,7 @@ public class DimensionImpl implements IDimension {
             Class.forName(driver);
             conn = DriverManager.getConnection(url, username, password);
         } catch (Exception e) {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,e);
         }
         return conn;
     }

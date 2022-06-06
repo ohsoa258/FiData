@@ -8,6 +8,10 @@ import com.fisk.common.core.enums.BaseEnum;
 public enum TableTypeEnum implements BaseEnum {
 
     /**
+     * ods物理表
+     */
+    PHYSICS(0,"ods物理表"),
+    /**
      * dw维度
      */
     DW_DIMENSION(1,"dw_dimension"),
@@ -31,6 +35,15 @@ public enum TableTypeEnum implements BaseEnum {
     @Override
     public String getName() {
         return name;
+    }
+
+    public static TableTypeEnum getEnum(int code) {
+        for (TableTypeEnum enums : TableTypeEnum.values()) {
+            if (enums.getValue() == code) {
+                return enums;
+            }
+        }
+        return TableTypeEnum.PHYSICS;
     }
 
 }

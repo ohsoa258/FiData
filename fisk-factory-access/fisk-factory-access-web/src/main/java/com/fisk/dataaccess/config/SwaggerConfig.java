@@ -34,6 +34,7 @@ public class SwaggerConfig {
     public static final String FTP = "ftp-controller";
     public static final String TABLE_HISTORY = "table-history-controller";
     public static final String API_CONFIG = "api-config-controller";
+    public static final String API_PARAMETER = "api-parameter-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -50,7 +51,8 @@ public class SwaggerConfig {
                 .tags(new Tag(TAG_8, "首页API"))
                 .tags(new Tag(FTP, "FTP数据源"))
                 .tags(new Tag(TABLE_HISTORY, "表发布历史"))
-                .tags(new Tag(API_CONFIG, "实时api配置"))
+                .tags(new Tag(API_CONFIG, "api配置"))
+                .tags(new Tag(API_PARAMETER, "非实时api请求参数"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

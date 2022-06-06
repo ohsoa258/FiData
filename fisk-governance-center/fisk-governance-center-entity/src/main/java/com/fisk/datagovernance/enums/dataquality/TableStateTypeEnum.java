@@ -9,9 +9,6 @@ import com.fisk.common.core.enums.BaseEnum;
  * @date 2022/3/22 14:02
  */
 public enum TableStateTypeEnum implements BaseEnum {
-    /**
-     * 表状态
-     */
     NORMAL(1,"正常"),
     RECGCLED(0,"已回收");
 

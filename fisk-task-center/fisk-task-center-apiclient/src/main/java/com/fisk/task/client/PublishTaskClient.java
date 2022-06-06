@@ -10,13 +10,13 @@ import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.model.EntityDTO;
+import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
-import com.fisk.task.dto.task.BuildNifiFlowDTO;
-import com.fisk.task.dto.task.BuildPhysicalTableDTO;
-import com.fisk.task.dto.task.BuildTableNifiSettingDTO;
-import com.fisk.task.dto.task.NifiCustomWorkListDTO;
+import com.fisk.task.dto.pipeline.PipelineTableLogVO;
+import com.fisk.task.dto.task.*;
 import com.fisk.task.po.TableNifiSettingPO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -204,11 +204,11 @@ public interface PublishTaskClient {
     /**
      * 获取nifi阶段信息
      *
-     * @param nifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO
+     * @param list list
      * @return 返回值
      */
     @PostMapping("/pipeline/getNifiStage")
-    public ResultEntity<NifiStageDTO> getNifiStage(@RequestBody NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
+    public ResultEntity<List<NifiStageDTO>> getNifiStage(@RequestBody List<NifiCustomWorkflowDetailDTO> list);
 
     /**
      * 创建宽表
@@ -221,10 +221,77 @@ public interface PublishTaskClient {
 
     /**
      * 立即重启
+     *
      * @param buildTableNifiSettingDTO
      * @return
      */
     @PostMapping("/immediatelyStart")
     public ResultEntity<Object> immediatelyStart(@RequestBody BuildTableNifiSettingDTO buildTableNifiSettingDTO);
 
+    /**
+     * 统一调度
+     *
+     * @param unifiedControlDTO unifiedControlDTO
+     * @return
+     */
+    @PostMapping("/publishBuildunifiedControlTask")
+    public ResultEntity<Object> publishBuildunifiedControlTask(@RequestBody UnifiedControlDTO unifiedControlDTO);
+
+    /**
+     * 创建属性日志表
+     *
+     * @param data
+     * @return
+     */
+    @PostMapping("/publishTask/pushModelByName")
+    public ResultEntity<Object> pushModelByName(@RequestBody ModelDTO data);
+
+    /**
+     * 创建任务后台表
+     *
+     * @param data
+     * @return
+     */
+    @PostMapping("/publishTask/createBackendTable")
+    public ResultEntity<Object> createBackendTable(@RequestBody EntityDTO data);
+
+    /**
+     * consumer
+     *
+     * @return
+     */
+    @PostMapping("/pipeline/consumer")
+    public void consumer(@RequestBody List<String> arrMessage);
+
+    /**
+     * updateTableTopicByComponentId
+     *
+     * @return
+     */
+    @PostMapping("/pipeline/updateTableTopicByComponentId")
+    public void updateTableTopicByComponentId(@RequestBody TableTopicDTO tableTopicDTO);
+
+    /**
+     * saveNifiStage
+     *
+     * @return
+     */
+    @PostMapping("/pipeline/saveNifiStage")
+    public void saveNifiStage(@RequestParam String data);
+
+    /**
+     * 删除nifi管道
+     *
+     * @return
+     */
+    @PostMapping("/nifi/deleteCustomWorkNifiFlow")
+    public void deleteCustomWorkNifiFlow(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO);
+
+    /**
+     * 接入日志完善
+     *
+     * @return
+     */
+    @PostMapping("/pipeline/getPipelineTableLog")
+    public ResultEntity<List<PipelineTableLogVO>> getPipelineTableLog(@RequestParam("data") String data, @RequestParam("pipelineTableQuery") String pipelineTableQuery);
 }

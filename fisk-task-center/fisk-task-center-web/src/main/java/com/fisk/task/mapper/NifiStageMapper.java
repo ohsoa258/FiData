@@ -22,6 +22,6 @@ public interface NifiStageMapper extends FKBaseMapper<NifiStagePO> {
      * @param componentId 组件id
      * @return 返回值
      */
-    @Update("update tb_nifi_stage set query_phase=3,transition_phase=3,insert_phase=3 where component_id=#{componentId} and del_flag=1")
-    Long updateByComponentId(@Param("componentId") int componentId);
+    @Update("update tb_nifi_stage set query_phase=3,transition_phase=3,insert_phase=3 where component_id=#{componentId} and pipeline_table_log_id=#{pipelineTableLogId} and del_flag=1")
+    Long updateByComponentId(@Param("componentId") int componentId,@Param("pipelineTableLogId")Long pipelineTableLogId);
 }

@@ -2,14 +2,15 @@ package com.fisk.dataaccess.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.dataaccess.dto.*;
+import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.dataaccess.dto.access.DataAccessTreeDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
+import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
@@ -18,6 +19,7 @@ import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
+import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
@@ -204,6 +206,13 @@ public interface ITableAccess extends IService<TableAccessPO> {
     List<FieldNameDTO> getTableFieldId(int id);
 
     /**
+     * 根据不同的类型获取相应的物理表id
+     *
+     * @return list
+     */
+    List<ChannelDataDTO> getTableId(NifiComponentsDTO dto);
+
+    /**
      * 获取所有物理表id
      *
      * @return list
@@ -223,7 +232,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum addTableAccessData(TbTableAccessDTO dto);
+    ResultEntity<Object> addTableAccessData(TbTableAccessDTO dto);
 
     /**
      * 物理表单表回显

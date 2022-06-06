@@ -5,12 +5,14 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.config.SwaggerConfig;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConDTO;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConEditDTO;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConQuery;
-import com.fisk.datagovernance.dto.dataquality.datasource.TestConnectionDTO;
-import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
+import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
+import com.fisk.datagovernance.dto.dataquality.datasource.*;
+import com.fisk.datagovernance.service.dataops.IDataOpsDataSourceManageService;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
+import com.fisk.datagovernance.vo.dataops.DataOpsSourceVO;
+import com.fisk.datagovernance.vo.dataops.DataOpsTableFieldVO;
+import com.fisk.datagovernance.vo.dataops.ExecuteResultVO;
+import com.fisk.datagovernance.vo.dataquality.datasource.DataExampleSourceVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceVO;
 import io.swagger.annotations.Api;
@@ -27,12 +29,16 @@ import java.util.List;
  * @description 数据源配置
  * @date 2022/3/22 16:14
  */
-@Api(tags = {SwaggerConfig.TAG_3})
+@Api(tags = {SwaggerConfig.DATASOURCE_CONTROLLER})
 @RestController
 @RequestMapping("/datasource")
 public class DataSourceController {
+
     @Resource
     private IDataSourceConManageService service;
+
+    @Resource
+    private IDataOpsDataSourceManageService dataOpsDataSourceManageService;
 
     @PostMapping("/page")
     @ApiOperation("获取所有数据源连接信息")
@@ -64,22 +70,43 @@ public class DataSourceController {
         return ResultEntityBuild.build(service.testConnection(dto));
     }
 
-//    @GetMapping("/getAll")
-//    @ApiOperation("获取所有数据源连接信息")
-//    public ResultEntity<List<DataSourceConVO>> getAll() {
-//        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAll());
-//    }
+    @GetMapping("/getSystemAll")
+    @ApiOperation("获取FiData数据源")
+    public ResultEntity<List<DataSourceConVO>> getSystemAll() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getSystemAll());
+    }
 
     @GetMapping("/getTableAll")
-    @ApiOperation("获取全部表字段信息")
-    public ResultEntity<List<DataSourceVO>> getTableAll(String tableName) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMeta(tableName));
+    @ApiOperation("获取全部表信息")
+    public ResultEntity<List<DataExampleSourceVO>> getTableAll() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableAll());
     }
 
-    @GetMapping("/getTableFieldAll")
+    @PostMapping("/getTableFieldAll")
     @ApiOperation("获取表字段信息")
-    public ResultEntity<DataSourceVO> getTableFieldAll(int datasourceId, ModuleDataSourceTypeEnum datasourceTyoe,
-                                                       String tableName,String tableFramework) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldAll(datasourceId,datasourceTyoe,tableName,tableFramework));
+    public ResultEntity<DataSourceVO> getTableFieldAll(@Validated @RequestBody TableFieldQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldAll(dto));
     }
+
+    /*数据运维数据源*/
+    @PostMapping("/getDataOpsDataSource")
+    @ApiOperation("获取数据运维数据源信息")
+    public ResultEntity<List<DataOpsSourceVO>> getDataOpsDataSource() {
+        return dataOpsDataSourceManageService.getDataOpsDataSource();
+    }
+
+    @PostMapping("/reloadDataOpsDataSource")
+    @ApiOperation("pg数据库信息同步到redis")
+    public ResultEntity<Object> reloadDataOpsDataSource() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataOpsDataSourceManageService.reloadDataOpsDataSource());
+    }
+
+
+    @PostMapping("/executeDataOpsSql")
+    @ApiOperation("执行sql")
+    public ResultEntity<ExecuteResultVO> executeDataOpsSql(@Validated @RequestBody ExecuteDataOpsSqlDTO dto) {
+        return dataOpsDataSourceManageService.executeDataOpsSql(dto);
+    }
+    /*数据运维数据源*/
+
 }

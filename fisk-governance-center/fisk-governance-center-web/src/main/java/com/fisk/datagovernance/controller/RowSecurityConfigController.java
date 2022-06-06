@@ -5,12 +5,15 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.datasecurity.RowSecurityConfigDTO;
+import com.fisk.datagovernance.dto.datasecurity.datamasking.DataSourceIdDTO;
 import com.fisk.datagovernance.service.datasecurity.RowSecurityConfigService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author lock
@@ -33,6 +36,13 @@ public class RowSecurityConfigController {
     public ResultEntity<RowSecurityConfigDTO> getData(@PathVariable("id") long id) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
+    }
+
+    @PostMapping("/getList")
+    @ApiOperation(value = "获取行级安全列表")
+    public ResultEntity<List<RowSecurityConfigDTO>> getList(@Validated @RequestBody DataSourceIdDTO dto) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getList(dto));
     }
 
     /**

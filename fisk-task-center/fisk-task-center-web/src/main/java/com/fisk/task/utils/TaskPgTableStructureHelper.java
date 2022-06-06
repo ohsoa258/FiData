@@ -150,6 +150,7 @@ public class TaskPgTableStructureHelper
             }
             //执行存储过程
             String sql = execProcedure(version,type);
+            log.info("查看执行表结构方法,sql: {}, version: {},type: {}",sql,version,type);
             //判断是否有修改语句
             return updatePgTableStructure(sql,version,dto.createType);
         }

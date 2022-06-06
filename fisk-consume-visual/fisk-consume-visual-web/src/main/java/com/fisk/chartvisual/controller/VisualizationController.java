@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.controller;
 
-import com.fisk.chartvisual.dto.DataSourceDTO;
+import com.fisk.chartvisual.dto.datasource.DataSourceDTO;
 import com.fisk.chartvisual.service.VisualizationService;
 import com.fisk.chartvisual.vo.ChartQueryObjectVO;
 import com.fisk.chartvisual.vo.DataDomainVO;
@@ -20,6 +20,7 @@ import java.util.List;
 /**
  * @author WangYan
  * @date 2022/1/10 16:26
+ * 可视化 2.0
  */
 @RestController
 @RequestMapping("/visual")

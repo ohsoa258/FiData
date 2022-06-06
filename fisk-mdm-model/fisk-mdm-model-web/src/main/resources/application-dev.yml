@@ -1,39 +1,6 @@
-server:
-  port: 9001
-
-# 注册中心
-eureka:
-  client:
-    service-url:
-      defaultZone: http://127.0.0.1:8082/eureka
-  instance:
-    lease-expiration-duration-in-seconds: 5
-    lease-renewal-interval-in-seconds: 5
-
-# feign接口超时
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 10000
-        readTimeout: 30000
-
-# 授权中心
-fk:
-  auth:
-    clientId: mdmmodel-service
-    secret: 1234
-  encoder:
-    crypt:
-      secret: ${random.uuid}
-      strength: 6
-
 logging:
   config: classpath:logback-spring.xml
   level:
-    com:
-      fisk:
-        chartvisual: debug
     org:
       springframework:
         orm:
@@ -49,21 +16,6 @@ management:
       exposure:
         include: '*'
 
-# mybatis-plus 配置
-mybatis-plus:
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-    default-enum-type-handler: com.fisk.common.framework.mybatis.config.BaseEnumTypeHandler
-  global-config:
-    db-config:
-      id-type: auto
-      insert-strategy: not_null
-      logic-delete-field: del_flag
-      logic-delete-value: 0
-      logic-not-delete-value: 1
-      update-strategy: not_null
-  mapper-locations: classpath:mapper/*.xml
-
 # spring配置
 spring:
   application:
@@ -78,3 +30,19 @@ spring:
     time-zone: GMT+8
   redis:
     host: 192.168.11.130
+
+# pg数仓
+pgsql-mdm:
+  password: Password01!
+  url: jdbc:postgresql://192.168.1.250:5432/dmp_mdm?stringtype=unspecified
+  username: postgres
+  type: PG
+
+# 阿里云ocr参数配置
+ocr:
+  aliyun:
+    url: https://gjbsb.market.alicloudapi.com/ocrservice/advanced
+    appCode: be40b237d6fe470d84590b5a42934596
+
+file:
+  uploadurl: /root/nginx/app/file/mdm/

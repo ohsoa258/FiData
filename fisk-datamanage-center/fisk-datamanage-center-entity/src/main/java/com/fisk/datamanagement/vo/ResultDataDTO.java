@@ -1,6 +1,7 @@
 package com.fisk.datamanagement.vo;
 
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datamanagement.enums.AtlasResultEnum;
 import lombok.Data;
 
 /**
@@ -8,6 +9,6 @@ import lombok.Data;
  */
 @Data
 public class ResultDataDTO<T> {
-    public ResultEnum code;
+    public AtlasResultEnum code;
     public T data;
 }

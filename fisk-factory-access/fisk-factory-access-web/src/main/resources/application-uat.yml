@@ -23,30 +23,9 @@ spring:
 dataservice:
   pdf:
     path: /root/java/fisk-factory-access/pdf
-
-#授权
-fk:
-  auth:
-    clientId: dataAccess-service
-    secret: 1234
-  encoder:
-    crypt:
-      secret: ${random.uuid}
-      strength: 6
-
-mybatis-plus:
-  configuration:
-    default-enum-type-handler: com.fisk.common.framework.mybatis.config.BaseEnumTypeHandler
-  global-config:
-    db-config:
-      id-type: auto
-      insert-strategy: not_null
-      logic-delete-field: del_flag
-      logic-delete-value: 0
-      logic-not-delete-value: 1
-      update-strategy: not_null
-  mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.fisk.dataaccess.entity
+    # 接口文档中的环境信息
+    uat_address: http://192.168.21.13:8083
+    prd_address: https://prdHost
 
 # pg数据源配置
 pgsql-datamodel:
@@ -59,17 +38,7 @@ pgsql-ods:
   username: postgres
   password: PgPassword01!
 
-
-#注册中心
-eureka:
-  client:
-    service-url:
-      defaultZone: http://127.0.0.1:8082/eureka
-
-#feign接口超时配置
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 10000
-        readTimeout: 12000
+# 数据质量校验的信息(ip: pg数据源的ip地址; dbName: 连接的ods库)
+Data-quality-check:
+  ip: 192.168.21.13
+  db-name: dmp_ods_UAT

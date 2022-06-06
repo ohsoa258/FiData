@@ -2,13 +2,12 @@ package com.fisk.dataaccess.utils.json;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.dataaccess.dto.TableFieldsDTO;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.json.ApiTableDTO;
-import com.fisk.dataaccess.dto.json.ApiTableDTO02;
 import com.fisk.dataaccess.dto.json.JsonSchema;
 import com.fisk.dataaccess.dto.json.JsonTableData;
+import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.enums.FieldTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -67,177 +66,6 @@ public class JsonUtils {
 //    }
 
     /**
-     * 手动设置数据库参数
-     *
-     * @return list
-     */
-    public List<ApiTableDTO> getApiTableDtoList01() {
-
-        List<ApiTableDTO> list = new ArrayList<>();
-
-        ApiTableDTO apiTableDTO1 = new ApiTableDTO();
-        apiTableDTO1.tableName = "tb_user";
-        apiTableDTO1.pid = 0;
-
-        List<TableFieldsDTO> fieldsDTOS1 = new ArrayList<>();
-        TableFieldsDTO tableFieldsDTO1 = new TableFieldsDTO();
-        tableFieldsDTO1.fieldName = "id";
-        tableFieldsDTO1.fieldType = "INT";
-        TableFieldsDTO tableFieldsDTO2 = new TableFieldsDTO();
-        tableFieldsDTO2.fieldName = "age";
-        tableFieldsDTO2.fieldType = "INT";
-        TableFieldsDTO tableFieldsDTO3 = new TableFieldsDTO();
-        tableFieldsDTO3.fieldName = "name";
-        tableFieldsDTO3.fieldType = "VARCHAR";
-        TableFieldsDTO tableFieldsDTO4 = new TableFieldsDTO();
-        tableFieldsDTO4.fieldName = "createTime";
-        tableFieldsDTO4.fieldType = "VARCHAR";
-        fieldsDTOS1.add(tableFieldsDTO1);
-        fieldsDTOS1.add(tableFieldsDTO2);
-        fieldsDTOS1.add(tableFieldsDTO3);
-        fieldsDTOS1.add(tableFieldsDTO4);
-        apiTableDTO1.list = fieldsDTOS1;
-        List<String> ch = new ArrayList<>();
-        ch.add("tb_role");
-//        ch.add("tb_menu");
-        apiTableDTO1.childTableName = ch;
-
-
-        ApiTableDTO apiTableDTO2 = new ApiTableDTO();
-        apiTableDTO2.tableName = "tb_role";
-        apiTableDTO2.pid = 1;
-
-        List<TableFieldsDTO> fieldsDTOS2 = new ArrayList<>();
-        TableFieldsDTO tableFieldsDTO5 = new TableFieldsDTO();
-        tableFieldsDTO5.fieldName = "roleId";
-        tableFieldsDTO5.fieldType = "INT";
-        TableFieldsDTO tableFieldsDTO6 = new TableFieldsDTO();
-        tableFieldsDTO6.fieldName = "roleName";
-        tableFieldsDTO6.fieldType = "VARCHAR";
-        TableFieldsDTO tableFieldsDTO7 = new TableFieldsDTO();
-        tableFieldsDTO7.fieldName = "userId";
-        tableFieldsDTO7.fieldType = "INT";
-        fieldsDTOS2.add(tableFieldsDTO5);
-        fieldsDTOS2.add(tableFieldsDTO6);
-        fieldsDTOS2.add(tableFieldsDTO7);
-        apiTableDTO2.list = fieldsDTOS2;
-        List<String> ch2 = new ArrayList<>();
-        ch2.add("tb_menu");
-        apiTableDTO2.childTableName = ch2;
-
-        ApiTableDTO apiTableDTO3 = new ApiTableDTO();
-        apiTableDTO3.tableName = "tb_menu";
-        apiTableDTO3.pid = 1;
-        List<TableFieldsDTO> fieldsDTOS3 = new ArrayList<>();
-        TableFieldsDTO tableFieldsDTO8 = new TableFieldsDTO();
-        tableFieldsDTO8.fieldName = "menuSrc";
-        tableFieldsDTO8.fieldType = "VARCHAR";
-        TableFieldsDTO tableFieldsDTO9 = new TableFieldsDTO();
-        tableFieldsDTO9.fieldName = "roleId";
-        tableFieldsDTO9.fieldType = "INT";
-        TableFieldsDTO tableFieldsDTO10 = new TableFieldsDTO();
-        tableFieldsDTO10.fieldName = "menuName";
-        tableFieldsDTO10.fieldType = "VARCHAR";
-        fieldsDTOS3.add(tableFieldsDTO8);
-        fieldsDTOS3.add(tableFieldsDTO9);
-        fieldsDTOS3.add(tableFieldsDTO10);
-        apiTableDTO3.list = fieldsDTOS3;
-        apiTableDTO3.childTableName = null;
-
-
-        list.add(apiTableDTO1);
-        list.add(apiTableDTO2);
-        list.add(apiTableDTO3);
-        return list;
-    }
-
-    public  List<ApiTableDTO02> getApiTableDtoList02() {
-
-        List<ApiTableDTO02> list = new ArrayList<>();
-        List<ApiTableDTO02> list2 = new ArrayList<>();
-        List<ApiTableDTO02> list3 = new ArrayList<>();
-
-        ApiTableDTO02 apiTableDTO1 = new ApiTableDTO02();
-        apiTableDTO1.tableName = "tb_user";
-        apiTableDTO1.pid = true;
-
-        List<TableFieldsDTO> fieldsDTOS1 = new ArrayList<>();
-        TableFieldsDTO tableFieldsDTO1 = new TableFieldsDTO();
-        tableFieldsDTO1.fieldName = "id";
-        tableFieldsDTO1.fieldType = "INT";
-        TableFieldsDTO tableFieldsDTO2 = new TableFieldsDTO();
-        tableFieldsDTO2.fieldName = "age";
-        tableFieldsDTO2.fieldType = "INT";
-        TableFieldsDTO tableFieldsDTO3 = new TableFieldsDTO();
-        tableFieldsDTO3.fieldName = "name";
-        tableFieldsDTO3.fieldType = "VARCHAR";
-        TableFieldsDTO tableFieldsDTO4 = new TableFieldsDTO();
-        tableFieldsDTO4.fieldName = "createTime";
-        tableFieldsDTO4.fieldType = "VARCHAR";
-        fieldsDTOS1.add(tableFieldsDTO1);
-        fieldsDTOS1.add(tableFieldsDTO2);
-        fieldsDTOS1.add(tableFieldsDTO3);
-        fieldsDTOS1.add(tableFieldsDTO4);
-        apiTableDTO1.list = fieldsDTOS1;
-        List<String> ch = new ArrayList<>();
-        ch.add("tb_role");
-        ch.add("tb_menu");
-//        apiTableDTO1.childTableName = ch;
-
-
-        ApiTableDTO02 apiTableDTO2 = new ApiTableDTO02();
-        apiTableDTO2.tableName = "tb_role";
-        apiTableDTO2.pid = false;
-
-        List<TableFieldsDTO> fieldsDTOS2 = new ArrayList<>();
-        TableFieldsDTO tableFieldsDTO5 = new TableFieldsDTO();
-        tableFieldsDTO5.fieldName = "roleId";
-        tableFieldsDTO5.fieldType = "INT";
-        TableFieldsDTO tableFieldsDTO6 = new TableFieldsDTO();
-        tableFieldsDTO6.fieldName = "roleName";
-        tableFieldsDTO6.fieldType = "VARCHAR";
-        TableFieldsDTO tableFieldsDTO7 = new TableFieldsDTO();
-        tableFieldsDTO7.fieldName = "userId";
-        tableFieldsDTO7.fieldType = "INT";
-        fieldsDTOS2.add(tableFieldsDTO5);
-        fieldsDTOS2.add(tableFieldsDTO6);
-        fieldsDTOS2.add(tableFieldsDTO7);
-        apiTableDTO2.list = fieldsDTOS2;
-        List<String> ch2 = new ArrayList<>();
-        ch2.add("tb_menu");
-//        apiTableDTO2.childTableName = ch2;
-
-        ApiTableDTO02 apiTableDTO3 = new ApiTableDTO02();
-        apiTableDTO3.tableName = "tb_menu";
-        apiTableDTO3.pid = false;
-        List<TableFieldsDTO> fieldsDTOS3 = new ArrayList<>();
-        TableFieldsDTO tableFieldsDTO8 = new TableFieldsDTO();
-        tableFieldsDTO8.fieldName = "menuSrc";
-        tableFieldsDTO8.fieldType = "VARCHAR";
-        TableFieldsDTO tableFieldsDTO9 = new TableFieldsDTO();
-        tableFieldsDTO9.fieldName = "roleId";
-        tableFieldsDTO9.fieldType = "INT";
-        TableFieldsDTO tableFieldsDTO10 = new TableFieldsDTO();
-        tableFieldsDTO10.fieldName = "menuName";
-        tableFieldsDTO10.fieldType = "VARCHAR";
-        fieldsDTOS3.add(tableFieldsDTO8);
-        fieldsDTOS3.add(tableFieldsDTO9);
-        fieldsDTOS3.add(tableFieldsDTO10);
-        apiTableDTO3.list = fieldsDTOS3;
-//        apiTableDTO3.childTableName = null;
-
-        list3.add(apiTableDTO3);
-        list2.add(apiTableDTO2);
-        apiTableDTO2.childTable = list3;
-        apiTableDTO1.childTable = list2;
-//        list.add(apiTableDTO2);
-//        list.add(apiTableDTO3);
-        list.add(apiTableDTO1);
-
-        return list;
-    }
-
-    /**
      * json根节点处理
      *
      * @return void
@@ -271,8 +99,9 @@ public class JsonUtils {
      * @params targetTable 最终处理结果
      */
     public void dataNodeHandler(List<JsonSchema> schemas, JSONArray data, List<JsonTableData> targetTable) throws Exception {
-        if (data == null)
+        if (data == null) {
             return;
+        }
         for (JsonTableData item : targetTable) {
             List<JsonSchema> tableSchema = schemas.stream()
                     .filter(e -> StringUtils.hasLength(e.targetTableName) && e.targetTableName.equals(item.table))
@@ -313,20 +142,20 @@ public class JsonUtils {
      * @author gy
      * @date 2022/1/20 14:16
      * @version v1.0
-     * @params
+     * @params jsonKey json解析的根节点
      */
-    public List<JsonSchema> getJsonSchema(List<ApiTableDTO> apiTableDtoList) {
+    public List<JsonSchema> getJsonSchema(List<ApiTableDTO> apiTableDtoList, String jsonKey) {
         List<JsonSchema> root = new ArrayList<>();
         try {
             Map<String, List<JsonSchema>> map = getSchemaDetail(apiTableDtoList);
-//            System.out.println("map = " + map);
+////            System.out.println("map = " + map);
             for (ApiTableDTO apiTableDTO : apiTableDtoList) {
-//                List<JsonSchema> dataSchema = test02(apiTableDTO);
+////                List<JsonSchema> dataSchema = test02(apiTableDTO);
                 List<JsonSchema> mySchema = map.get(apiTableDTO.tableName);
                 // 当前为父级
-                if (apiTableDTO.pid==0) {
+                if (apiTableDTO.pid == 0) {
                     JsonSchema jsonSchema = JsonSchema.builder()
-                            .name("data")
+                            .name(jsonKey)
                             .type(JsonSchema.TypeEnum.ARRAY)
                             .children(mySchema)
                             .build();
@@ -388,7 +217,7 @@ public class JsonUtils {
      * @params apiTableDtoList
      */
     public Map<String, List<JsonSchema>> getSchemaDetail(List<ApiTableDTO> apiTableDtoList) {
-        Map<String, List<JsonSchema>> map = new HashMap();
+        Map<String, List<JsonSchema>> map = new HashMap(1000);
 
         for (ApiTableDTO apiTableDTO : apiTableDtoList) {
             List<JsonSchema> dataSchema = getSchemaField(apiTableDTO);

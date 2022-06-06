@@ -1,7 +1,7 @@
 package com.fisk.chartvisual.map;
 
-import com.fisk.chartvisual.dto.ChartPropertyDTO;
-import com.fisk.chartvisual.dto.ChartPropertyEditDTO;
+import com.fisk.chartvisual.dto.chartvisual.ChartPropertyDTO;
+import com.fisk.chartvisual.dto.chartvisual.ChartPropertyEditDTO;
 import com.fisk.chartvisual.entity.BaseChartProperty;
 import com.fisk.chartvisual.entity.DraftChartPO;
 import com.fisk.chartvisual.vo.ChartPropertyVO;

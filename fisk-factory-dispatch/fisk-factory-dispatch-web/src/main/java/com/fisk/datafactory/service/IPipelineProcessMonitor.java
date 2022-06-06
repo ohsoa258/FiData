@@ -22,9 +22,10 @@ public interface IPipelineProcessMonitor {
     List<PipelineTableLogDTO> getPipelineMonitorLogs(String workflowId);
 
     /**
+     * 查询当前表的运行轨迹
      *
      * @param nifiCustomWorkflowDetailDTO 组件dto
      * @return 组件运行状态dto
      */
-    NifiStageDTO getNifiStage(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
+    List<NifiStageDTO> getNifiStage(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
 }

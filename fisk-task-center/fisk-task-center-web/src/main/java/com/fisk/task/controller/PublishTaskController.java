@@ -5,13 +5,19 @@ import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.TaskTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
-import com.fisk.task.consumer.atlas.BuildAtlasTableAndColumnTaskListener;
-import com.fisk.task.consumer.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
+import com.fisk.task.dto.daconfig.ApiImportDataDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
+import com.fisk.task.dto.model.EntityDTO;
+import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
-import com.fisk.task.dto.task.*;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.dto.task.BuildPhysicalTableDTO;
+import com.fisk.task.dto.task.BuildTableNifiSettingDTO;
+import com.fisk.task.dto.task.NifiCustomWorkListDTO;
+import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
+import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.service.task.IBuildKfkTaskService;
 import com.fisk.task.service.task.IBuildTaskService;
 import io.swagger.annotations.ApiOperation;
@@ -208,5 +214,33 @@ public class PublishTaskController {
                 MqConstants.QueueConstants.BUILD_IMMEDIATELYSTART_FLOW,
                 buildTableNifiSettingDTO);
     }
+
+
+    @PostMapping("/pushModelByName")
+    @ApiOperation(value = "创建属性日志表")
+    public ResultEntity<Object> pushModelByName(@RequestBody ModelDTO dto){
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.CREATE_ATTRIBUTE_TABLE_LOG.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_MDM_MODEL_DATA,
+                dto);
+    }
+
+    @PostMapping("/createBackendTable")
+    @ApiOperation(value = "创建任务后台表")
+    public ResultEntity<Object> createBackendTable(@RequestBody EntityDTO dto){
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BACKGROUND_TABLE_TASK_CREATION.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_MDM_ENTITY_DATA,
+                dto);
+    }
+
+    @PostMapping("/importData")
+    @ApiOperation(value = "调度调用第三方api,接收数据,并导入到FiData平台")
+    public ResultEntity<Object> importData(@RequestBody ApiImportDataDTO dto){
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_ACCESS_API_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW,
+                dto);}
+
 
 }

@@ -29,6 +29,7 @@ import com.fisk.dataservice.service.IApiRegisterManageService;
 import com.fisk.dataservice.vo.api.*;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,20 +81,21 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     public Page<ApiConfigVO> getAll(ApiRegisterQueryDTO query) {
         Page<ApiConfigVO> all = baseMapper.getAll(query.page, query);
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
-            List<Long> userIds = all.getRecords().stream().map(ApiConfigVO::getCreateUser).map(x -> Long.valueOf(x)).distinct().collect(Collectors.toList());
+            List<Long> userIds = all.getRecords().stream()
+                    .filter(x -> StringUtils.isNotEmpty(x.createUser))
+                    .map(x -> Long.valueOf(x.createUser))
+                    .distinct()
+                    .collect(Collectors.toList());
             ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
-            if (userListByIds != null) {
-                List<UserDTO> userDTOS = userListByIds.getData();
-                if (CollectionUtils.isNotEmpty(userDTOS)) {
-                    all.getRecords().forEach(e -> {
-                        Optional<UserDTO> first = userDTOS.stream().filter(item -> item.getId().toString().equals(e.createUser)).findFirst();
-                        if (first.isPresent()) {
-                            UserDTO userDTO = first.get();
-                            if (userDTO != null)
-                                e.createUser = userDTO.userAccount;
-                        }
-                    });
-                }
+            if (userListByIds.code == ResultEnum.SUCCESS.getCode()
+                    && CollectionUtils.isNotEmpty(userListByIds.getData())) {
+                all.getRecords().forEach(e -> {
+                    userListByIds.getData()
+                            .stream()
+                            .filter(user -> user.getId().toString().equals(e.createUser))
+                            .findFirst()
+                            .ifPresent(user -> e.createUser = user.userAccount);
+                });
             }
         }
         return all;
@@ -109,29 +111,31 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             List<AppApiPO> subscribeListByAppId = appApiMapper.getSubscribeListByAppId(dto.appId);
             if (CollectionUtils.isNotEmpty(subscribeListByAppId)) {
                 apiSubVOS.forEach(e -> {
-                    Optional<AppApiPO> first = subscribeListByAppId.stream().filter(item -> item.getApiId() == e.id).findFirst();
-                    if (first.isPresent()) {
-                        e.apiSubState = 1;
-                    }
+                    subscribeListByAppId
+                            .stream()
+                            .filter(item -> item.getApiId() == e.id)
+                            .findFirst()
+                            .ifPresent(user -> e.apiSubState = 1);
                 });
             }
             pageDTO.setTotal(Long.valueOf(apiSubVOS.size()));
             dto.current = dto.current - 1;
             apiSubVOS = apiSubVOS.stream().sorted(Comparator.comparing(ApiSubVO::getApiSubState).reversed()).skip((dto.current - 1 + 1) * dto.size).limit(dto.size).collect(Collectors.toList());
-            List<Long> userIds = apiSubVOS.stream().map(ApiSubVO::getCreateUser).map(x -> Long.valueOf(x)).distinct().collect(Collectors.toList());
+            List<Long> userIds = apiSubVOS.stream()
+                    .filter(x -> StringUtils.isNotEmpty(x.createUser))
+                    .map(x -> Long.valueOf(x.createUser))
+                    .distinct()
+                    .collect(Collectors.toList());
             ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
-            if (userListByIds != null) {
-                List<UserDTO> userDTOS = userListByIds.getData();
-                if (CollectionUtils.isNotEmpty(userDTOS)) {
-                    apiSubVOS.forEach(e -> {
-                        Optional<UserDTO> first = userDTOS.stream().filter(item -> item.getId().toString().equals(e.createUser)).findFirst();
-                        if (first.isPresent()) {
-                            UserDTO userDTO = first.get();
-                            if (userDTO != null)
-                                e.createUser = userDTO.userAccount;
-                        }
-                    });
-                }
+            if (userListByIds.code == ResultEnum.SUCCESS.getCode()
+                    && CollectionUtils.isNotEmpty(userListByIds.getData())) {
+                apiSubVOS.forEach(e -> {
+                    userListByIds.getData()
+                            .stream()
+                            .filter(user -> user.getId().toString().equals(e.createUser))
+                            .findFirst()
+                            .ifPresent(user -> e.createUser = user.userAccount);
+                });
             }
         }
         pageDTO.setItems(apiSubVOS);
@@ -153,8 +157,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         String apiCode = UUID.randomUUID().toString().replace("-", "").toLowerCase();
         apiConfigPO.setApiCode(apiCode);
         apiConfigPO.setCreateTime(LocalDateTime.now());
-        //apiConfigPO.setCreateUser("lijiawen");
-        apiConfigPO.setCreateUser(String.valueOf(userHelper.getLoginUserInfo().getId()));
+        Long userId = userHelper.getLoginUserInfo().getId();
+        apiConfigPO.setCreateUser(userId.toString());
         isInsert = baseMapper.insertOne(apiConfigPO) > 0;
         if (!isInsert)
             return ResultEnum.SAVE_DATA_ERROR;
@@ -374,6 +378,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                 conn = getStatement(DataSourceTypeEnum.MYSQL.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
             } else if (dataSourceConPO.getConType() == DataSourceTypeEnum.SQLSERVER.getValue()) {
                 conn = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
+            } else if (dataSourceConPO.getConType() == DataSourceTypeEnum.POSTGRE.getValue()) {
+                conn = getStatement(DataSourceTypeEnum.POSTGRE.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
             }
             /*
                 以流的形式 TYPE_FORWARD_ONLY: 只可向前滚动查询 CONCUR_READ_ONLY: 指定不可以更新 ResultSet
@@ -391,7 +397,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             apiPreviewVO = resultSetToJsonArray(conn, dataSourceConPO, rs, dto);
             rs.close();
         } catch (Exception e) {
-            throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR,e.getMessage());
+            throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR, e.getMessage());
         }
         return apiPreviewVO;
     }
@@ -612,6 +618,11 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                         "\tAND f.minor_id= 0\n" +
                         "\tWHERE d.name = '%s'", tableNames.get(0));
                 break;
+            case POSTGRE:
+                sql = String.format("SELECT c.relname as originalTableName,a.attname as originalFieldName,col_description(a.attrelid,a.attnum) as originalFieldDesc,'' AS originalFramework \n" +
+                        "FROM pg_class as c,pg_attribute as a inner join pg_type on pg_type.oid = a.atttypid\n" +
+                        "where c.relname in  (SELECT tablename FROM pg_tables ) and a.attrelid = c.oid and a.attnum>0\n" +
+                        "and c.relname ='%s'", tableNames.get(0));
         }
         if (sql == null || sql.isEmpty())
             return fieldlist;

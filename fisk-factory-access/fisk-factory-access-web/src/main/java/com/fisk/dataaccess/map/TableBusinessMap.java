@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.map;
 
-import com.fisk.dataaccess.dto.TableBusinessDTO;
+import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.entity.TableBusinessPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;

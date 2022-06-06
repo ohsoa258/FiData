@@ -1,8 +1,12 @@
 package com.fisk.task.service.nifi;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
+import com.fisk.task.dto.pipeline.PipelineTableLogVO;
+import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.entity.PipelineTableLogPO;
 
 import java.util.List;
@@ -10,7 +14,7 @@ import java.util.List;
 /**
  * @author cfk
  */
-public interface IPipelineTableLog {
+public interface IPipelineTableLog extends IService<PipelineTableLogPO> {
 
     /**
      * 获取一张表的日志与状态
@@ -18,7 +22,7 @@ public interface IPipelineTableLog {
      * @param nifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO
      * @return PipelineTableLogPO
      */
-    PipelineTableLogDTO getPipelineTableLog(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
+    List<PipelineTableLogDTO> getPipelineTableLog(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
 
 
     /**
@@ -45,6 +49,13 @@ public interface IPipelineTableLog {
      * @return NifiStagePO
      */
     List<NifiCustomWorkflowVO> getNifiCustomWorkflowDetails(List<NifiCustomWorkflowVO> nifiCustomWorkflows);
+
+    /**
+     * 分页查询
+     *
+     * @return 日志列表
+     */
+    List<PipelineTableLogVO> getPipelineTableLogs(String data, String pipelineTableQuery);
 
 
 }

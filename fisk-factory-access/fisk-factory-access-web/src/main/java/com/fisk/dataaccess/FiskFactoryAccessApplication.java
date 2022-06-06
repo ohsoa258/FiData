@@ -4,6 +4,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  * @author Lock
@@ -27,8 +28,10 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.auth.client",
         "com.fisk.task.client",
         "com.fisk.datamodel.client",
-        "com.fisk.datafactory.client"
+        "com.fisk.datafactory.client",
+        "com.fisk.datagovernance.client"
 })
+@EnableTransactionManagement
 public class FiskFactoryAccessApplication {
 
     public static void main(String[] args) {

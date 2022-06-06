@@ -25,6 +25,7 @@ import com.fisk.dataservice.service.IAppRegisterManageService;
 import com.fisk.dataservice.vo.app.AppApiParmVO;
 import com.fisk.dataservice.vo.app.AppApiSubVO;
 import com.fisk.dataservice.vo.app.AppRegisterVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +37,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.fisk.common.core.constants.ApiConstants.DATASERVICE_APIBASICINFO;
+import static com.fisk.common.core.constants.ApiConstants.*;
 
 /**
  * 应用接口实现类
@@ -44,6 +45,7 @@ import static com.fisk.common.core.constants.ApiConstants.DATASERVICE_APIBASICIN
  * @author dick
  */
 @Service
+@Slf4j
 public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppConfigPO> implements IAppRegisterManageService {
 
     @Resource
@@ -70,11 +72,10 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
     @Resource
     private ApiFieldMapper apiFieldMapper;
 
-//    @Autowired
-//    private ConfigUtil configUtil;
-
     @Value("${dataservice.pdf.path}")
     private String templatePath;
+    @Value("${dataservice.pdf.api_address}")
+    private String api_address;
 
     @Override
     public Integer getAppCount() {
@@ -315,7 +316,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 //        }
         String fileName = "APIServiceDoc" + v + ".pdf";
         OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl",
-                templatePath, fileName, "菲斯科FiData接口文档", docDTO, response);
+                templatePath, fileName, "接口文档", docDTO, response);
         try {
             outputStream.flush();
             outputStream.close();
@@ -417,10 +418,15 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                                    List<BuiltinParmPO> builtinParmList,
                                    List<FieldConfigPO> fieldList) {
         ApiDocDTO apiDocDTO = new ApiDocDTO();
-
         // API文档基础信息
-        String jsonResult = DATASERVICE_APIBASICINFO;
+        String jsonResult = DATASERVICE_APIBASICINFO.replace("{api_prd_address}", api_address);
+        // log.info("createDocDTO jsonInfo："+jsonResult);
         apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
+        // API文档代码示例 c#
+        apiDocDTO.apiCodeExamples_net=DATASERVICE_APICODEEXAMPLES_NET.replace("{api_prd_address}", api_address);
+        // API文档代码示例 java
+        apiDocDTO.apiCodeExamples_java=DATASERVICE_APICODEEXAMPLES_JAVA.replace("{api_prd_address}", api_address);
+
         apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
                 "&nbsp;&nbsp; \"appAccount\": \"xxx\",\n" +
                 "&nbsp;&nbsp; \"appPassword\": \"xxx\"\n" +
@@ -443,7 +449,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
             apiCatalogueDTO.grade = 3;
             apiCatalogueDTO.catalogueIndex = addIndex + ".";
             apiCatalogueDTO.catalogueName = apiConfigPO.apiName;
-            apiDocDTO.apiCatalogueDTOS.add(apiDocDTO.apiCatalogueDTOS.size() - 1, apiCatalogueDTO);
+            apiDocDTO.apiCatalogueDTOS.add(apiDocDTO.apiCatalogueDTOS.size() - 3, apiCatalogueDTO);
             catalogueIndex = addIndex;
             /* 设置目录 end */
 
@@ -459,21 +465,33 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 
             /* 设置API请求参数 start */
             List<ApiRequestDTO> apiRequestDTOS = new ArrayList<>();
+            final int[] trReqIndex = {1};
+
+            // 请求参数新增api标识
+            ApiRequestDTO requestDTO = new ApiRequestDTO();
+            requestDTO.parmName = "apiCode";
+            requestDTO.isRequired = "是";
+            requestDTO.parmType = "String"; //String特指这个类型，string适用于引用对象
+            requestDTO.parmDesc = String.format("API标识(parmList中忽略): %s (真实数据)", apiConfigPO.getApiCode());
+            requestDTO.trStyle = trReqIndex[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
+            apiRequestDTOS.add(requestDTO);
+            trReqIndex[0]++;
+
             if (CollectionUtils.isNotEmpty(parmList)) {
-                final int[] trIndex = {1};
                 List<ParmConfigPO> collect = parmList.stream().filter(item -> item.apiId == apiConfigPO.id).collect(Collectors.toList());
                 if (CollectionUtils.isNotEmpty(collect)) {
                     collect.forEach(e -> {
                         Optional<BuiltinParmPO> builtinParmOptional = builtinParmList.stream().filter(item -> item.getParmId() == e.id).findFirst();
+                        // 不是内置参数，在文档中体现
                         if (!builtinParmOptional.isPresent()) {
                             ApiRequestDTO apiRequestDTO = new ApiRequestDTO();
                             apiRequestDTO.parmName = e.parmName;
                             apiRequestDTO.isRequired = "是";
                             apiRequestDTO.parmType = "String"; //String特指这个类型，string适用于引用对象
                             apiRequestDTO.parmDesc = e.parmDesc;
-                            apiRequestDTO.trStyle = trIndex[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
+                            apiRequestDTO.trStyle = trReqIndex[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
                             apiRequestDTOS.add(apiRequestDTO);
-                            trIndex[0]++;
+                            trReqIndex[0]++;
                         }
                     });
                 }

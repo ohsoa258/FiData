@@ -27,7 +27,14 @@ public enum ProcessorTypeEnum implements BaseEnum {
     WAIT(13,"org.apache.nifi.processors.standard.Wait"),
     UPDATERECORD(14,"org.apache.nifi.processors.standard.UpdateRecord"),
     ConsumeKafka(15,"org.apache.nifi.processors.kafka.pubsub.ConsumeKafka_2_6"),
-    PublishKafka(16,"org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6");
+    PublishKafka(16,"org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6"),
+    GETFTP(17,"org.apache.nifi.processors.standard.GetFTP"),
+    ConvertExcelToCSV(18,"org.apache.nifi.processors.poi.ConvertExcelToCSVProcessor"),
+    CONVERTRECORD(19,"org.apache.nifi.processors.standard.ConvertRecord"),
+    FETCHFTP(20,"org.apache.nifi.processors.standard.FetchFTP"),
+    GENERATEFLOWFILE(21,"org.apache.nifi.processors.standard.GenerateFlowFile"),
+    INVOKEHTTP(22,"org.apache.nifi.processors.standard.InvokeHTTP");
+
 
 
     ProcessorTypeEnum(int value, String name) {

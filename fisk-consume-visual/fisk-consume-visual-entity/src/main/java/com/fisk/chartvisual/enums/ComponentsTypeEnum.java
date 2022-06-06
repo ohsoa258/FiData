@@ -10,6 +10,9 @@ import com.fisk.common.core.enums.BaseEnum;
 public enum ComponentsTypeEnum implements BaseEnum {
 
 
+    /**
+     * 组件类型
+     */
     MENU(0,"菜单"),
 
     COMPONENTS(1,"组件");

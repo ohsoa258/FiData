@@ -4,12 +4,10 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
-import com.fisk.dataaccess.dto.api.ApiConfigDTO;
-import com.fisk.dataaccess.dto.api.ApiUserDTO;
-import com.fisk.dataaccess.dto.api.GenerateDocDTO;
-import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
+import com.fisk.dataaccess.dto.api.*;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.service.IApiConfig;
+import com.fisk.task.client.PublishTaskClient;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -17,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 
@@ -32,6 +31,17 @@ public class ApiConfigController {
 
     @Resource
     private IApiConfig service;
+    @Resource
+    private PublishTaskClient publishTaskClient;
+
+    /**
+     * 基于构造器注入
+     */
+    private final HttpServletResponse response;
+
+    public ApiConfigController(HttpServletResponse response) {
+        this.response = response;
+    }
 
     @GetMapping("/get/{id}")
     @ApiOperation(value = "回显: 根据id查询数据")
@@ -85,22 +95,22 @@ public class ApiConfigController {
 
     @PostMapping("/generatePDFDocument")
     @ApiOperation(value = "生成api文档(以api为单位)")
-    public ResultEntity<Object> generateDoc(@Validated @RequestBody GenerateDocDTO dto, HttpServletResponse response) {
+    public ResultEntity<Object> generateDoc(@Validated @RequestBody GenerateDocDTO dto) {
         return ResultEntityBuild.build(service.generateDoc(dto, response));
     }
 
 
     @PostMapping("/generateAppPDFDocument")
     @ApiOperation(value = "生成api文档(以应用为单位)")
-    public ResultEntity<Object> generateAppPDFDoc(@Validated @RequestBody List<GenerateDocDTO> list, HttpServletResponse response) {
-        return ResultEntityBuild.build(service.generateAppPDFDoc(list, response));
+    public ResultEntity<Object> generateAppPdfDoc(@Validated @RequestBody List<GenerateDocDTO> list) {
+        return ResultEntityBuild.build(service.generateAppPdfDoc(list, response));
     }
 
 
     @PostMapping("/pushdata")
     @ApiOperation(value = "推送api数据")
     public ResultEntity<Object> pushData(@RequestBody ReceiveDataDTO dto) {
-        return ResultEntityBuild.build(service.pushData(dto));
+        return service.pushData(dto);
     }
 
     @PostMapping("/getToken")
@@ -111,7 +121,25 @@ public class ApiConfigController {
 
     @ApiOperation("修改api发布状态")
     @PutMapping("/updateApiPublishStatus")
-    public void updateApiPublishStatus(@RequestBody ModelPublishStatusDTO dto){
+    public void updateApiPublishStatus(@RequestBody ModelPublishStatusDTO dto) {
         service.updateApiPublishStatus(dto);
+    }
+
+    @PostMapping("/importData")
+    @ApiOperation(value = "调度调用第三方api,接收数据,并导入到FiData平台")
+    public ResultEntity<Object> importData(@NotNull @RequestBody ApiImportDataDTO dto) {
+        return ResultEntityBuild.build(service.importData(dto));
+    }
+
+    @GetMapping("/getAppListByAppType/{appType}")
+    @ApiOperation(value = "api复制功能: 根据应用类型获取下拉的应用列表")
+    public ResultEntity<List<ApiSelectDTO>> getAppAndApiList(@PathVariable("appType") int appType) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppAndApiList(appType));
+    }
+
+    @PostMapping("/copyApi")
+    @ApiOperation(value = "api复制功能: 保存")
+    public ResultEntity<Object> copyApi(@NotNull @RequestBody CopyApiDTO dto) {
+        return ResultEntityBuild.build(service.copyApi(dto));
     }
 }

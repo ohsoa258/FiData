@@ -1,6 +1,9 @@
 package com.fisk.chartvisual.vo;
 
-import com.fisk.chartvisual.dto.*;
+import com.fisk.chartvisual.dto.chartvisual.ChartDrillDown;
+import com.fisk.chartvisual.dto.chartvisual.ChartQueryFilterDTO;
+import com.fisk.chartvisual.dto.chartvisual.FieldDataDTO;
+import com.fisk.chartvisual.dto.chartvisual.PaginationQueryDTO;
 import com.fisk.chartvisual.enums.GraphicTypeEnum;
 import com.fisk.chartvisual.enums.StorageEngineTypeEnum;
 import com.fisk.common.core.enums.chartvisual.InteractiveTypeEnum;

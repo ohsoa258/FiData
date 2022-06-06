@@ -24,4 +24,8 @@ public class BusinessLimitedAttributeDataDTO {
      *计算值
      */
     public String calculationValue;
+    /**
+     * 连接条件
+     */
+    public String joinCondition;
 }

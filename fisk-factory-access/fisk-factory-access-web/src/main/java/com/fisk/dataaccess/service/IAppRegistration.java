@@ -3,15 +3,17 @@ package com.fisk.dataaccess.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.baseObject.dto.PageDTO;
-import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.dataaccess.dto.*;
+import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
+import com.fisk.task.dto.pipeline.PipelineTableLogVO;
+import com.fisk.task.dto.query.PipelineTableQueryDTO;
 
 import java.util.List;
 
@@ -160,4 +162,20 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return dto
      */
     DataAccessNumDTO getDataAccessNum();
+
+    /**
+     * 日志分页筛选器
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    Page<PipelineTableLogVO> logMessageFilter(PipelineTableQueryDTO dto);
+
+    /**
+     * 通过appId和apiId查询表名集合
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    List<LogMessageFilterVO> getTableNameListByAppIdAndApiId(PipelineTableQueryDTO dto);
 }

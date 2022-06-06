@@ -98,6 +98,16 @@ public class ApiDocDTO {
     public List<ApiResponseDTO> pushDataDtos;
 
     /**
+     * 调用API C#代码示例
+     */
+    public String apiCodeExamples_net;
+
+    /**
+     * 调用API JAVA代码示例
+     */
+    public String apiCodeExamples_java;
+
+    /**
      * API返回代码示例
      */
     public List<ApiResponseCodeDTO> apiResponseCodeDTOS;

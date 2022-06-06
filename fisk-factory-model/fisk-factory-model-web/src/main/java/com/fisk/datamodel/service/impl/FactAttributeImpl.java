@@ -2,17 +2,19 @@ package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.dataaccess.dto.FieldNameDTO;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.dataaccess.dto.table.FieldNameDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.fact.FactAttributeDetailDTO;
 import com.fisk.datamodel.dto.factattribute.*;
 import com.fisk.datamodel.entity.*;
-import com.fisk.datamodel.enums.*;
+import com.fisk.datamodel.enums.PublicStatusEnum;
+import com.fisk.datamodel.enums.SyncModeEnum;
+import com.fisk.datamodel.enums.TableHistoryTypeEnum;
 import com.fisk.datamodel.map.FactAttributeMap;
 import com.fisk.datamodel.map.SyncModeMap;
 import com.fisk.datamodel.map.TableBusinessMap;
@@ -107,7 +109,7 @@ public class FactAttributeImpl
                 }
             }
         }
-        //添加事实字段
+        // TODO 添加事实字段(新增了config_details字段,用于存维度key的json连线配置信息)
         List<FactAttributePO> poList=FactAttributeMap.INSTANCES.addDtoToPoList(dto.list);
         poList.stream().map(e->e.factId=dto.factId).collect(Collectors.toList());
         if (!this.saveOrUpdateBatch(poList))
