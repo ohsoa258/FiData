@@ -39,6 +39,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -321,7 +323,11 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
             if (CollectionUtils.isNotEmpty(filter.getRecords())) {
                 // 分页对象添加子表组件id集合
                 // TODO 调用task feign接口,查询呼吸灯状态
+                Instant late = Instant.now();
                 ResultEntity<List<NifiCustomWorkflowVO>> result = publishTaskClient.getNifiCustomWorkflowDetails(buildRecords(filter.getRecords()));
+                Instant now = Instant.now();
+                log.info("呼吸灯时间(秒): "+ Duration.between(late, now).getSeconds());
+                log.info("呼吸灯时间(毫秒): "+ Duration.between(late, now).toMillis());
                 if (result.code == ResultEnum.SUCCESS.getCode()) {
                     filter.setRecords(result.data);
                     return filter;
