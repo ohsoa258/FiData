@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeAddDTO;
+import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDropQueryDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
 import com.fisk.datamodel.service.IFactAttribute;
@@ -99,5 +100,21 @@ public class FactAttributeController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactAttribute(id));
     }
 
+    @ApiOperation("根据事实字段id获取事实字段配置详情")
+    @GetMapping("/getConfigDetailsByFactAttributeId/{id}")
+    public ResultEntity<Object> getConfigDetailsByFactAttributeId(@PathVariable("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getConfigDetailsByFactAttributeId(id));
+    }
 
+    @ApiOperation("添加单个事实字段")
+    @PostMapping("/addFactField")
+    public ResultEntity<Object> addFactField(@Validated @RequestBody FactAttributeDTO dto) {
+        return ResultEntityBuild.build(service.addFactField(dto));
+    }
+
+    @ApiOperation("根据业务域id,获取业务域下的维度表详情和共享维度表详情(表名+字段)")
+    @GetMapping("/getDimensionDetailByBusinessId/{id}")
+    public ResultEntity<Object> getDimensionDetailByBusinessId(@PathVariable("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionDetailByBusinessId(id));
+    }
 }

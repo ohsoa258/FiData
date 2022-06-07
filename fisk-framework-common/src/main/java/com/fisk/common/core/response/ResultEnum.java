@@ -163,6 +163,7 @@ public enum ResultEnum {
     BUSINESS_AREA_EXISTS_ASSOCIATED(8010,"业务域中维度存在其他关联"),
     PUBLISH_NOTSUCCESS(8011, "请发布成功后再获取分析指标语句"),
     NOT_SUPPORT_FULL_JOIN(8012,"MySql暂不支持全连接"),
+    FACT_FIELD_EXIST(8013, "当前设置的目标英文名称已存在,请重新设置"),
 
     /**
      * 数据工厂

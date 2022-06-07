@@ -56,4 +56,9 @@ public class FactAttributePO extends BasePO {
      * 源字段名称
      */
     public String sourceFieldName;
+
+    /**
+     * 配置详情(维度key的json配置详情)
+     */
+    public String configDetails;
 }

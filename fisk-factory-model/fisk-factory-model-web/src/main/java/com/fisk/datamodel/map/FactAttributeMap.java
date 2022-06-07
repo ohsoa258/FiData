@@ -27,6 +27,14 @@ public interface FactAttributeMap {
     FactAttributePO dtoToPo(FactAttributeDTO dto);
 
     /**
+     * po -> dto
+     *
+     * @param po source
+     * @return target
+     */
+    FactAttributeDTO poToDto(FactAttributePO po);
+
+    /**
      * poDrop==>dto
      * @param po
      * @return

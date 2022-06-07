@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimension.DimensionListDTO;
+import com.fisk.datamodel.dto.dimension.DimensionSelectDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionMetaDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionSourceDTO;
 import com.fisk.datamodel.entity.DataAreaPO;
@@ -70,4 +71,11 @@ public interface DimensionMap {
      */
     List<DimensionMetaDTO> poToListNameDto(List<DimensionPO> po);
 
+    /**
+     * po==>SelectDtoList
+     *
+     * @param po source
+     * @return target
+     */
+    List<DimensionSelectDTO> listPoToListSelectDto(List<DimensionPO> po);
 }

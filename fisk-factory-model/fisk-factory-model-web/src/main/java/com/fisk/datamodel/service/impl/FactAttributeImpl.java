@@ -8,6 +8,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.table.FieldNameDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
+import com.fisk.datamodel.dto.dimension.DimensionSelectDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.fact.FactAttributeDetailDTO;
 import com.fisk.datamodel.dto.factattribute.*;
@@ -15,9 +16,7 @@ import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.enums.SyncModeEnum;
 import com.fisk.datamodel.enums.TableHistoryTypeEnum;
-import com.fisk.datamodel.map.FactAttributeMap;
-import com.fisk.datamodel.map.SyncModeMap;
-import com.fisk.datamodel.map.TableBusinessMap;
+import com.fisk.datamodel.map.*;
 import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IFactAttribute;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -309,6 +308,65 @@ public class FactAttributeImpl
         queryWrapper.lambda().eq(FactAttributePO::getFactId,factId);
         List<FactAttributePO> list=mapper.selectList(queryWrapper);
         return FactAttributeMap.INSTANCES.poDetailToDtoList(list);
+    }
+
+    @Override
+    public FactAttributeDTO getConfigDetailsByFactAttributeId(int id) {
+
+        //Preparing: SELECT * FROM tb_fact_attribute WHERE id=? AND del_flag=1
+        return FactAttributeMap.INSTANCES.poToDto(baseMapper.selectById(id));
+    }
+
+    @Override
+    public ResultEnum addFactField(FactAttributeDTO dto) {
+
+        // 根据事实id获取所有的事实字段
+        // SELECT fact_field_en_name FROM tb_fact_attribute WHERE del_flag=1 AND (fact_id = ?)
+        List<String> factFieldEnNameList = this.query()
+                .eq("fact_id", dto.factId)
+                .select("fact_field_en_name")
+                .list()
+                .stream().map(e -> e.factFieldEnName).collect(Collectors.toList());
+        // 判断字段唯一
+        for (String s : factFieldEnNameList) {
+            if (s.equalsIgnoreCase(dto.factFieldEnName)) {
+                return ResultEnum.FACT_FIELD_EXIST;
+            }
+        }
+        return this.save(FactAttributeMap.INSTANCES.dtoToPo(dto)) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public List<DimensionSelectDTO> getDimensionDetailByBusinessId(int id) {
+
+        QueryWrapper<DimensionPO> queryWrapper1 = new QueryWrapper<>();
+        // 根据业务域id查询的是不共享的
+        queryWrapper1.lambda()
+                .eq(DimensionPO::getBusinessId, id)
+                .eq(DimensionPO::getShare, false)
+                .eq(DimensionPO::getIsPublish,1)
+                .select(DimensionPO::getId, DimensionPO::getDimensionTabName, DimensionPO::getShare);
+        List<DimensionPO> dimensionPoList = dimensionMapper.selectList(queryWrapper1);
+
+        QueryWrapper<DimensionPO> queryWrapper2 = new QueryWrapper<>();
+
+        queryWrapper2.lambda()
+                .eq(DimensionPO::getShare, true)
+                .eq(DimensionPO::getIsPublish,1)
+                .select(DimensionPO::getId, DimensionPO::getDimensionTabName, DimensionPO::getShare);
+        dimensionPoList.addAll(dimensionMapper.selectList(queryWrapper2));
+
+        List<DimensionSelectDTO> dimensionSelectDtoList = DimensionMap.INSTANCES.listPoToListSelectDto(dimensionPoList);
+        for (DimensionSelectDTO dto : dimensionSelectDtoList) {
+
+            QueryWrapper<DimensionAttributePO> queryWrapper3 = new QueryWrapper<>();
+            queryWrapper3.lambda()
+                    .eq(DimensionAttributePO::getDimensionId, dto.getId())
+                    .select(DimensionAttributePO::getId, DimensionAttributePO::getDimensionFieldEnName);
+            dto.setList(DimensionAttributeMap.INSTANCES.listPoToListSelectDto(dimensionAttributeMapper.selectList(queryWrapper3)));
+        }
+
+        return dimensionSelectDtoList;
     }
 
 }
