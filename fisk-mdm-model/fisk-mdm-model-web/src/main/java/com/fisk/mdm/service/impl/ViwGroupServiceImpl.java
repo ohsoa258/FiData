@@ -237,11 +237,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         EntityQueryDTO attributeInfo = this.getAttributeInfo(dto.getEntityId(),attributeIds,dto.getGroupId());
 
         // 获取出选中属性的id
-        List<ViwGroupCheckDTO> checkedIds = new ArrayList<>();
-        for (EntityQueryDTO child : attributeInfo.getChildren()) {
-            List<ViwGroupCheckDTO> dtoList = this.getCheckedIds(child);
-            checkedIds.addAll(dtoList);
-        }
+        List<ViwGroupCheckDTO> checkedIds = this.getCheckedIds(attributeInfo);
 
         List<EntityQueryDTO> relationList = new ArrayList<>();
         relationList.add(attributeInfo);
@@ -259,15 +255,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     public List<ViwGroupCheckDTO> getCheckedIds(EntityQueryDTO child){
         List<ViwGroupCheckDTO> checkIds = new ArrayList<>();
 
-        // 获取同级
-        if (child.getType().equals(ObjectTypeEnum.ATTRIBUTES.getName()) && child.getIsCheck().equals(1)){
-            ViwGroupCheckDTO dto = new ViwGroupCheckDTO();
-            dto.setId(child.getId());
-            dto.setAliasName(child.getAliasName());
-            checkIds.add(dto);
-        }
-
-        // 获取子级
+        // 获取数据
         List<EntityQueryDTO> children = child.getChildren();
         if (CollectionUtils.isNotEmpty(children)){
             children.stream().filter(e -> e.getType().equals(ObjectTypeEnum.ATTRIBUTES.getName()) && e.getIsCheck().equals(1))
@@ -277,6 +265,13 @@ public class ViwGroupServiceImpl implements ViwGroupService {
                         dto.setAliasName(e.getAliasName());
                         checkIds.add(dto);
                     });
+        }
+
+        if (CollectionUtils.isNotEmpty(child.getChildren())){
+            for (EntityQueryDTO childChild : child.getChildren()) {
+                List<ViwGroupCheckDTO> checkedIds = this.getCheckedIds(childChild);
+                checkIds.addAll(checkedIds);
+            }
         }
 
         return checkIds;
