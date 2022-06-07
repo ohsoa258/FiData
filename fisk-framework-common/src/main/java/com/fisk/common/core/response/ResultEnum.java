@@ -164,6 +164,8 @@ public enum ResultEnum {
     PUBLISH_NOTSUCCESS(8011, "请发布成功后再获取分析指标语句"),
     NOT_SUPPORT_FULL_JOIN(8012,"MySql暂不支持全连接"),
     FACT_FIELD_EXIST(8013, "当前设置的目标英文名称已存在,请重新设置"),
+    QUERY_CONDITION_NOTNULL(8014, "表关联关系不能为空"),
+    FACT_NAME_NOTNULL(8015, "操作的事实表名不允许为空"),
 
     /**
      * 数据工厂
