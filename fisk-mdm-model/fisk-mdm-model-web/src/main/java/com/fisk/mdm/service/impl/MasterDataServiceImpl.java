@@ -99,6 +99,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
     AttributeGroupServiceImpl attributeGroupService;
     @Resource
     ViwGroupServiceImpl viwGroupService;
+    @Resource
+    MasterDataLogServiceImpl masterDataLogService;
 
     @Resource
     AttributeMapper attributeMapper;
@@ -982,7 +984,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
             List<Map<String, Object>> maps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, maps.get(0).get("fidata_error_msg").toString());
         }
-        return ResultEnum.SUCCESS;
+        //添加日志表数据
+        return masterDataLogService.addMasterDataLog(dto.getMembers(), tableName);
     }
 
     /**

@@ -6,6 +6,7 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.common.service.mdmBEBuild.BuildFactoryHelper;
+import com.fisk.common.service.mdmBEBuild.CommonMethods;
 import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.mdm.dto.complextype.GeographyDTO;
 import com.fisk.mdm.map.ComplexTypeMap;
@@ -20,13 +21,10 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author JianWenYang
@@ -48,27 +46,13 @@ public class ComplexTypeServiceImpl implements IComplexType {
     @Value("${file.uploadurl}")
     private String uploadUrl;
 
-    public static Map beanToMap(Object object) {
-        try {
-            Map<String, Object> map = new HashMap<>();
-            Field[] fields = object.getClass().getDeclaredFields();
-            for (Field field : fields) {
-                field.setAccessible(true);
-                map.put(field.getName(), field.get(object));
-            }
-            return map;
-        } catch (IllegalAccessException e) {
-            return null;
-        }
-    }
-
     @Override
     public Integer addGeography(GeographyDTO dto) {
         GeographyVO geographyVO = ComplexTypeMap.INSTANCES.dtoToVo(dto);
         geographyVO.setCreate_user(userHelper.getLoginUserInfo().id);
         geographyVO.setCreate_time(LocalDateTime.now());
         IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
-        String sql = buildSqlCommand.buildInsertSingleData(beanToMap(geographyVO), "tb_geography");
+        String sql = buildSqlCommand.buildInsertSingleData(CommonMethods.beanToMap(geographyVO), "tb_geography");
         return AbstractDbHelper.executeSqlReturnKey(sql, getConnection());
     }
 
@@ -105,7 +89,7 @@ public class ComplexTypeServiceImpl implements IComplexType {
         data.setCreate_user(userHelper.getLoginUserInfo().id);
         data.setCreate_time(LocalDateTime.now());
         IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
-        String sql = buildSqlCommand.buildInsertSingleData(beanToMap(data), "tb_file");
+        String sql = buildSqlCommand.buildInsertSingleData(CommonMethods.beanToMap(data), "tb_file");
         return AbstractDbHelper.executeSqlReturnKey(sql, getConnection());
     }
 
