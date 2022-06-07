@@ -7,6 +7,8 @@ import com.fisk.datamodel.dto.dimension.DimensionSelectDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.fact.FactAttributeDetailDTO;
 import com.fisk.datamodel.dto.factattribute.*;
+import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigDTO;
+import com.fisk.datamodel.dto.widetableconfig.WideTableQueryPageDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 
 import java.util.List;
@@ -114,4 +116,12 @@ public interface IFactAttribute {
      * @return 查询结果
      */
     List<DimensionSelectDTO> getDimensionDetailByBusinessId(int id);
+
+    /**
+     * 查询事实表关联数据
+     *
+     * @param dto 查询条件
+     * @return 查询结果
+     */
+    WideTableQueryPageDTO executeWideTableSql(WideTableFieldConfigDTO dto);
 }

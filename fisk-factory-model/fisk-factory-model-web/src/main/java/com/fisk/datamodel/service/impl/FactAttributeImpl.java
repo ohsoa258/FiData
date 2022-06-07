@@ -6,12 +6,17 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.table.FieldNameDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSelectDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.fact.FactAttributeDetailDTO;
 import com.fisk.datamodel.dto.factattribute.*;
+import com.fisk.datamodel.dto.widetableconfig.WideTableAliasDTO;
+import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigDTO;
+import com.fisk.datamodel.dto.widetableconfig.WideTableQueryPageDTO;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.enums.SyncModeEnum;
@@ -20,8 +25,10 @@ import com.fisk.datamodel.map.*;
 import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IFactAttribute;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -54,6 +61,10 @@ public class FactAttributeImpl
     SyncModeImpl syncMode;
     @Resource
     TableBusinessImpl tableBusiness;
+    @Resource
+    WideTableImpl wideTableImpl;
+    @Resource
+    DataAccessClient dataAccessClient;
 
     @Override
     public List<FactAttributeListDTO> getFactAttributeList(int factId)
@@ -367,6 +378,45 @@ public class FactAttributeImpl
         }
 
         return dimensionSelectDtoList;
+    }
+
+    @Override
+    public WideTableQueryPageDTO executeWideTableSql(WideTableFieldConfigDTO dto) {
+        if (CollectionUtils.isEmpty(dto.entity) || CollectionUtils.isEmpty(dto.relations)) {
+            throw new FkException(ResultEnum.QUERY_CONDITION_NOTNULL);
+        }
+        StringBuilder appendSql = new StringBuilder();
+        appendSql.append("select ");
+        //拼接查询字段
+        WideTableAliasDTO wideTableAliasDTO = wideTableImpl.appendField(dto.entity);
+        appendSql.append(wideTableAliasDTO.sql);
+        //拼接关联表
+        appendSql.append(wideTableImpl.appendRelateTable(dto.relations));
+        // TODO 执行sql语句,封装结果集
+        // WideTableQueryPageDTO wideTableData = wideTableImpl.getWideTableData(appendSql.toString(), dto.pageSize);
+        // 1.根据前端的来源sql,查询主表的前十条数据
+        OdsQueryDTO queryDto = new OdsQueryDTO();
+        queryDto.querySql = dto.factTableSourceSql;
+        queryDto.pageIndex = 1;
+        queryDto.pageSize = 10;
+        queryDto.tableName = dto.factTableName;
+        try {
+            ResultEntity<Object> result = dataAccessClient.getTableAccessQueryList(queryDto);
+            if (result.code == ResultEnum.SUCCESS.getCode()) {
+//                result.data
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (StringUtils.isBlank(dto.factTableName)) {
+            throw new FkException(ResultEnum.FACT_NAME_NOTNULL);
+        }
+        WideTableQueryPageDTO wideTableData = new WideTableQueryPageDTO();
+        wideTableData.updateSqlScript = "update set " + dto.factTableName + "Key = " + wideTableData.sqlScript;
+        dto.entity = wideTableAliasDTO.entity;
+        wideTableData.configDTO = dto;
+        return wideTableData;
     }
 
 }

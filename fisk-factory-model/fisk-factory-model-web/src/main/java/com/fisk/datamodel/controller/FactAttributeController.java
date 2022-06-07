@@ -9,6 +9,7 @@ import com.fisk.datamodel.dto.factattribute.FactAttributeAddDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDropQueryDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
+import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigDTO;
 import com.fisk.datamodel.service.IFactAttribute;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import io.swagger.annotations.Api;
@@ -112,9 +113,15 @@ public class FactAttributeController {
         return ResultEntityBuild.build(service.addFactField(dto));
     }
 
-    @ApiOperation("根据业务域id,获取业务域下的维度表详情和共享维度表详情(表名+字段)")
+    @ApiOperation("根据业务域id,获取业务域下的维度表详情和共享维度表详情(表名+字段),查询的都是已发布的表")
     @GetMapping("/getDimensionDetailByBusinessId/{id}")
     public ResultEntity<Object> getDimensionDetailByBusinessId(@PathVariable("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionDetailByBusinessId(id));
+    }
+
+    @ApiOperation("查询事实表关联数据")
+    @PostMapping("/executeFactTableSql")
+    public ResultEntity<Object> executeWideTableSql(@Validated @RequestBody WideTableFieldConfigDTO dto){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.executeWideTableSql(dto));
     }
 }
