@@ -7,6 +7,7 @@ import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.app.LogMessageFilterVO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
@@ -233,4 +234,13 @@ public interface DataAccessClient {
     @PostMapping("/appRegistration/getTableNameListByAppIdAndApiId")
     @ApiOperation(value = "通过appId和apiId查询表名集合")
     public ResultEntity<List<LogMessageFilterVO>> getTableNameListByAppIdAndApiId(@RequestBody PipelineTableQueryDTO dto);
+
+    /**
+     * 根据sql语句,获取字段列表(数据建模)
+     *
+     * @param query 查询条件
+     * @return 查询结果
+     */
+    @PostMapping("/appRegistration/getTableAccessQueryList")
+    public ResultEntity<Object> getTableAccessQueryList(@RequestBody OdsQueryDTO query);
 }
