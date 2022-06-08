@@ -570,7 +570,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         List<AttributeInfoDTO> attributeList = entityInfoVo.getAttributeList();
         List<EntityQueryDTO> collect = attributeList.stream().filter(e -> e.getDomainId() == null).map(e -> {
             // 判断是否在视图组中存在
-            if (attributeIds.contains(e.getId()) && !e.getName().equals("code")){
+            if (attributeIds.contains(e.getId())){
                 EntityQueryDTO dto1 = new EntityQueryDTO();
                 dto1.setId(e.getId());
                 dto1.setName(e.getName());
@@ -595,7 +595,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         // 域字段递归
         List<EntityQueryDTO> doMainList = attributeList.stream().filter(e -> e.getDomainId() != null).map(e -> {
             AttributeVO data = attributeService.getById(e.getDomainId()).getData();
-            EntityQueryDTO attributeInfo = this.getAttributeInfo(data.getEntityId(),attributeIds,groupId);
+            EntityQueryDTO attributeInfo = this.getRelationAttributeInfo(data.getEntityId(),attributeIds,groupId);
             return attributeInfo;
         }).collect(Collectors.toList());
         collect.addAll(doMainList);
