@@ -369,10 +369,11 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         AtomicInteger count = new AtomicInteger(0);
         int secondaryCount = count.incrementAndGet();
         String mainName = mainDetailsList.stream().map(e -> {
-            String columnName = attributeService.getById(e.getAttributeId()).getData().getColumnName();
+            AttributeVO data = attributeService.getById(e.getAttributeId()).getData();
+            EntityVO entityVo = entityService.getDataById(data.getEntityId());
             String alias = ALIAS_MARK + secondaryCount;
-            String name = alias + "." + columnName + " AS " + e.getAliasName();
-            aliasMap.put(columnName,alias);
+            String name = alias + "." + data.getColumnName() + " AS " + entityVo.getName()  + "_" + e.getName();
+            aliasMap.put(data.getColumnName(),alias);
             return name;
         }).collect(Collectors.joining(","));
 
@@ -385,10 +386,11 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         for (Integer entityIdKey : secondaryMap.keySet()) {
             List<ViwGroupDetailsDTO> detailsList = secondaryMap.get(entityIdKey);
             String collect = detailsList.stream().map(e -> {
-                String columnName = attributeService.getById(e.getAttributeId()).getData().getColumnName();
+                AttributeVO data = attributeService.getById(e.getAttributeId()).getData();
+                EntityVO entityVo = entityService.getDataById(data.getEntityId());
                 String alias = ALIAS_MARK + count.incrementAndGet();
-                String name = alias + "." + columnName + " AS " + e.getAliasName();
-                aliasMap.put(columnName,alias);
+                String name = alias + "." + data.getColumnName() + " AS " + entityVo.getName() + "_" + e.getName();
+                aliasMap.put(data.getColumnName(),alias);
                 return name;
             }).collect(Collectors.joining(","));
 
