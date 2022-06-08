@@ -212,7 +212,15 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         detailsDto.setGroupId(dto.getGroupId());
         dto.getDetailsNameList().stream().forEach(e -> {
             detailsDto.setAttributeId(e.getAttributeId());
-            detailsDto.setAliasName(e.getAliasName());
+
+            // 用户没输,默认使用属性显示名称
+            if (StringUtils.isBlank(e.getAliasName())){
+                AttributeVO data = attributeService.getById(e.getAttributeId()).getData();
+                detailsDto.setAliasName(data.getDisplayName());
+            }else {
+                detailsDto.setAliasName(e.getAliasName());
+            }
+
             ViwGroupDetailsPO detailsPo = ViwGroupMap.INSTANCES.detailsDtoToDto(detailsDto);
             int res = detailsMapper.insert(detailsPo);
             if (res <= 0){
