@@ -123,5 +123,5 @@ public interface IFactAttribute {
      * @param dto 查询条件
      * @return 查询结果
      */
-    WideTableQueryPageDTO executeWideTableSql(WideTableFieldConfigDTO dto);
+    WideTableQueryPageDTO executeFactTableSql(WideTableFieldConfigDTO dto);
 }

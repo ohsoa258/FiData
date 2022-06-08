@@ -381,38 +381,64 @@ public class FactAttributeImpl
     }
 
     @Override
-    public WideTableQueryPageDTO executeWideTableSql(WideTableFieldConfigDTO dto) {
+    public WideTableQueryPageDTO executeFactTableSql(WideTableFieldConfigDTO dto) {
         if (CollectionUtils.isEmpty(dto.entity) || CollectionUtils.isEmpty(dto.relations)) {
             throw new FkException(ResultEnum.QUERY_CONDITION_NOTNULL);
         }
         StringBuilder appendSql = new StringBuilder();
-        appendSql.append("select ");
+        appendSql.append("SELECT ");
         //拼接查询字段
         WideTableAliasDTO wideTableAliasDTO = wideTableImpl.appendField(dto.entity);
         appendSql.append(wideTableAliasDTO.sql);
         //拼接关联表
         appendSql.append(wideTableImpl.appendRelateTable(dto.relations));
         // TODO 执行sql语句,封装结果集
-        // WideTableQueryPageDTO wideTableData = wideTableImpl.getWideTableData(appendSql.toString(), dto.pageSize);
+//         WideTableQueryPageDTO wideTableData = wideTableImpl.getWideTableData(appendSql.toString(), dto.pageSize);
+        WideTableQueryPageDTO wideTableData = new WideTableQueryPageDTO();
         // 1.根据前端的来源sql,查询主表的前十条数据
         OdsQueryDTO queryDto = new OdsQueryDTO();
         queryDto.querySql = dto.factTableSourceSql;
         queryDto.pageIndex = 1;
         queryDto.pageSize = 10;
         queryDto.tableName = dto.factTableName;
-        try {
-            ResultEntity<Object> result = dataAccessClient.getTableAccessQueryList(queryDto);
-            if (result.code == ResultEnum.SUCCESS.getCode()) {
-//                result.data
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+//        try {
+//            ResultEntity<OdsResultDTO> result = dataAccessClient.getTableAccessQueryList(queryDto);
+//            if (result.code == ResultEnum.SUCCESS.getCode()) {
+//                OdsResultDTO data = result.data;
+//                JSONArray dataArray = data.dataArray;
+//                // 主表查询出来的结果集不为空
+//                if (dataArray != null) {
+//
+//                    StringBuilder str = new StringBuilder();
+//                    List<WideTableQueryPageDTO> queryPageDtoList = new ArrayList<>();
+//                    // SELECT * FROM 目标表名 WHERE
+//                    str.append("SELECT * FROM ").append(dto.relations.get(0).targetTable).append(" WHERE ");
+//                    for (int i = 0; i < dataArray.size(); i++) {
+//                        JSONObject jsonObject = (JSONObject) dataArray.get(i);
+//
+//                        for (WideTableSourceRelationsDTO relation : dto.relations) {
+//
+//                            // 源字段的值
+//                            String targetColumnValue = jsonObject.getString(relation.sourceColumn);
+//                            str.append(relation.targetColumn).append(" = ").append(targetColumnValue == null ? "" : targetColumnValue).append(" AND ");
+//                        }
+//                        // 去掉最后的 AND
+//                        str.delete(str.length() - 4, str.length());
+//                        WideTableQueryPageDTO queryPageDto = wideTableImpl.getWideTableData(str.toString(), 10);
+////                        queryPageDtoList.add(queryPageDto);
+//
+//                    }
+//
+//
+//                }
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
 
         if (StringUtils.isBlank(dto.factTableName)) {
             throw new FkException(ResultEnum.FACT_NAME_NOTNULL);
         }
-        WideTableQueryPageDTO wideTableData = new WideTableQueryPageDTO();
         wideTableData.updateSqlScript = "update set " + dto.factTableName + "Key = " + wideTableData.sqlScript;
         dto.entity = wideTableAliasDTO.entity;
         wideTableData.configDTO = dto;

@@ -121,7 +121,7 @@ public class FactAttributeController {
 
     @ApiOperation("查询事实表关联数据")
     @PostMapping("/executeFactTableSql")
-    public ResultEntity<Object> executeWideTableSql(@Validated @RequestBody WideTableFieldConfigDTO dto){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.executeWideTableSql(dto));
+    public ResultEntity<Object> executeFactTableSql(@Validated @RequestBody WideTableFieldConfigDTO dto){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.executeFactTableSql(dto));
     }
 }
