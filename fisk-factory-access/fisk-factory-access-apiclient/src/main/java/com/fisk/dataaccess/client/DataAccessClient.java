@@ -8,6 +8,7 @@ import com.fisk.dataaccess.dto.app.LogMessageFilterVO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
@@ -242,5 +243,5 @@ public interface DataAccessClient {
      * @return 查询结果
      */
     @PostMapping("/appRegistration/getTableAccessQueryList")
-    public ResultEntity<Object> getTableAccessQueryList(@RequestBody OdsQueryDTO query);
+    public ResultEntity<OdsResultDTO> getTableAccessQueryList(@RequestBody OdsQueryDTO query);
 }

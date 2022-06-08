@@ -10,6 +10,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.impl.TableAccessImpl;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
@@ -251,7 +252,7 @@ public class AppRegistrationController {
 
     @ApiOperation(value = "根据sql语句,获取字段列表(数据建模)")
     @PostMapping("/getTableAccessQueryList")
-    public ResultEntity<Object> getTableAccessQueryList(@RequestBody OdsQueryDTO query) {
+    public ResultEntity<OdsResultDTO> getTableAccessQueryList(@RequestBody OdsQueryDTO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.getTableFieldByQuery(query));
     }
 
