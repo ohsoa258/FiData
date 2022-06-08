@@ -153,7 +153,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 1.stg表删了重新生成
             this.updateStgTable(abstractDbHelper, connection, sqlBuilder, entityInfoVo, noSubmitAttributeList);
             EntityInfoVO data = mdmClient.getAttributeById(entityId).getData();
-            // 2.mdm表更新
+            // 2.mdm表更新、log表更新
             List<AttributeStatusDTO> dtoList = this.updateMdmTable(abstractDbHelper, connection, sqlBuilder, data.getAttributeList());
             // 3.viw视图重新生成
             this.createViwTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
@@ -306,11 +306,13 @@ public class BuildModelListenerImpl implements BuildModelListener {
         // 表名
         AttributeInfoDTO dto = attributeList.get(0);
         String tableName = generateMdmTableName(dto.getModelId(),dto.getEntityId());
+        String logTableName = generateLogTableName(dto.getModelId(),dto.getEntityId());
 
         List<AttributeStatusDTO> dtoList = new ArrayList<>();
         for (AttributeInfoDTO infoDto : attributeList) {
 
             String sql = null;
+            String logTableSql = null;
             AttributeStatusDTO status = new AttributeStatusDTO();
             status.setId(infoDto.getId());
             status.setColumnName("column_" + infoDto.getEntityId() + "_" + infoDto.getId());
@@ -332,24 +334,34 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
                     // 1.构建Sql
                     sql = sqlBuilder.addColumn(tableName, infoDto.getColumnName(), filedType + required);
+                    logTableSql = sqlBuilder.addColumn(logTableName, infoDto.getName(), filedType + required);
                     // 2.执行Sql
                     PreparedStatement statement = connection.prepareStatement(sql);
+                    PreparedStatement statementLog = connection.prepareStatement(logTableSql);
                     statement.execute();
+                    statementLog.execute();
                 } else if (infoDto.getStatus().equals(UPDATE.getName())) {
                     // 修改字段
                     String filedType = this.getDataType(infoDto.getDataType(), infoDto.getDataTypeLength());
 
                     // 1.修改字段类型
                     sql = sqlBuilder.modifyFieldType(tableName, infoDto.getColumnName(), filedType);
+                    logTableSql = sqlBuilder.modifyFieldType(logTableName, infoDto.getName(), filedType);
                     // 2.执行Sql
                     PreparedStatement statement = connection.prepareStatement(sql);
+                    PreparedStatement statementLog = connection.prepareStatement(logTableSql);
                     statement.execute();
+                    statementLog.execute();
+
                     // 2.修改字段长度
                     if (infoDto.getDataType().equals("文本")) {
                         sql = sqlBuilder.modifyFieldLength(tableName, infoDto.getColumnName(), filedType);
+                        logTableSql = sqlBuilder.modifyFieldLength(logTableName, infoDto.getName(), filedType);
                         // 2.执行Sql
                         PreparedStatement statement1 = connection.prepareStatement(sql);
+                        PreparedStatement statementLog1 = connection.prepareStatement(logTableSql);
                         statement1.execute();
+                        statementLog1.execute();
                     }
 
                     // 3.修改字段是否必填
@@ -357,17 +369,24 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     Boolean enableRequired = infoDto.getEnableRequired();
                     if (enableRequired == true) {
                         sql = sqlBuilder.notNullable(tableName, infoDto.getColumnName());
+                        logTableSql = sqlBuilder.notNullable(logTableName, infoDto.getName());
                     } else {
                         sql = sqlBuilder.nullable(tableName, infoDto.getColumnName());
+                        logTableSql = sqlBuilder.notNullable(logTableName, infoDto.getName());
                     }
                     // 2.执行Sql
                     preparedStatement = connection.prepareStatement(sql);
+                    PreparedStatement statementLog1 = connection.prepareStatement(logTableSql);
                     preparedStatement.execute();
+                    statementLog1.execute();
                 } else if (infoDto.getStatus().equals(DELETE.getName())) {
                     // 删除字段
                     sql = sqlBuilder.deleteFiled(tableName, infoDto.getColumnName());
+                    logTableSql = sqlBuilder.deleteFiled(logTableName, infoDto.getName());
                     PreparedStatement statement = connection.prepareStatement(sql);
+                    PreparedStatement statementLog = connection.prepareStatement(logTableSql);
                     statement.execute();
+                    statementLog.execute();
                     mdmClient.delete(infoDto.getId());
                 }
 
