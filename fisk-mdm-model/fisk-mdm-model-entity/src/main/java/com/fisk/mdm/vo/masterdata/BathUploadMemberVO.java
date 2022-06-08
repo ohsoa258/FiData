@@ -12,28 +12,28 @@ import java.util.Map;
 @Data
 public class BathUploadMemberVO {
 
-    public int addCount;
+    private Integer addCount;
 
-    public int count;
+    private Integer count;
 
-    public int entityId;
+    private Integer entityId;
 
-    public String entityName;
+    private String entityName;
 
-    public int errorCount;
+    private Integer errorCount;
 
-    public int successCount;
+    private Integer successCount;
 
-    public int updateCount;
+    private Integer updateCount;
 
-    public int submitSuccessCount;
+    private Integer submitSuccessCount;
 
-    public int submitErrorCount;
+    private Integer submitErrorCount;
 
-    public int versionId;
+    private Integer versionId;
 
-    public List<AttributeInfoDTO> attribute;
+    private List<AttributeInfoDTO> attribute;
 
-    public List<Map<String, Object>> members;
+    private List<Map<String, Object>> members;
 
 }

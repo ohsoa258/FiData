@@ -4,6 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
+import com.fisk.mdm.dto.masterdata.MasterDataDTO;
 import com.fisk.mdm.dto.masterdatalog.MasterDataLogQueryDTO;
 import com.fisk.mdm.service.IMasterDataLog;
 import com.fisk.mdm.vo.masterdatalog.MasterDataLogPageVO;
@@ -32,6 +33,12 @@ public class MasterDataLogController {
     @PostMapping("/listMasterDataLog")
     public ResultEntity<MasterDataLogPageVO> listMasterDataLog(@Validated @RequestBody MasterDataLogQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listMasterDataLog(dto));
+    }
+
+    @ApiOperation("主数据维护日志回滚")
+    @PostMapping("/rollBackMasterData")
+    public ResultEntity<ResultEnum> rollBackMasterData(@Validated @RequestBody MasterDataDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.rollBackMasterData(dto));
     }
 
 }

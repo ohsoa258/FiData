@@ -9,8 +9,8 @@ import lombok.Data;
 @Data
 public class ImportDataSubmitDTO {
 
-    public String key;
+    private String key;
 
-    public int entityId;
+    private Integer entityId;
 
 }

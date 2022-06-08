@@ -1,6 +1,7 @@
 package com.fisk.mdm.service;
 
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.mdm.dto.masterdata.MasterDataDTO;
 import com.fisk.mdm.dto.masterdatalog.MasterDataLogQueryDTO;
 import com.fisk.mdm.vo.masterdatalog.MasterDataLogPageVO;
 
@@ -27,5 +28,13 @@ public interface IMasterDataLog {
      * @return
      */
     MasterDataLogPageVO listMasterDataLog(MasterDataLogQueryDTO dto);
+
+    /**
+     * 主数据维护日志回滚
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum rollBackMasterData(MasterDataDTO dto);
 
 }

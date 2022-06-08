@@ -10,9 +10,12 @@ import com.fisk.common.service.mdmBEBuild.BuildFactoryHelper;
 import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.common.service.mdmBEBuild.dto.MasterDataPageDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
+import com.fisk.mdm.dto.masterdata.MasterDataDTO;
 import com.fisk.mdm.dto.masterdatalog.MasterDataLogQueryDTO;
+import com.fisk.mdm.enums.EventTypeEnum;
 import com.fisk.mdm.map.AttributeMap;
 import com.fisk.mdm.service.IMasterDataLog;
+import com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils;
 import com.fisk.mdm.vo.attribute.AttributeColumnVO;
 import com.fisk.mdm.vo.masterdatalog.MasterDataLogPageVO;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +40,8 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
 
     @Resource
     AttributeServiceImpl attributeService;
+    @Resource
+    MasterDataServiceImpl masterDataService;
 
     @Resource
     UserHelper userHelper;
@@ -65,9 +70,10 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
     public ResultEnum addMasterDataLog(Map<String, Object> data, String tableName) {
         data.put("fidata_create_user", userHelper.getLoginUserInfo().id);
         data.put("fidata_create_time", LocalDateTime.now());
+        data.put("fidata_del_flag", 1);
         IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
         String sql = buildSqlCommand.buildInsertSingleData(data, tableName);
-        log.info("执行新增日志表sql: 【" + sql + "】");
+        log.info("执行新增主数据维护日志sql: 【" + sql + "】");
         return AbstractDbHelper.executeSqlReturnKey(sql, getConnection()) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -81,12 +87,12 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
         }
         List<AttributeColumnVO> attributeColumnVoList = AttributeMap.INSTANCES.dtoListToVoList(attributeInfos);
         data.setAttributes(attributeColumnVoList);
-        String tableName = "";
+        String tableName = TableNameGenerateUtils.generateLogTableName(dto.getModelId(), dto.getEntityId());
         //获取总条数
         int rowCount = 0;
         IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
         //获取总条数sql
-        String count = buildSqlCommand.buildQueryCount(tableName, null);
+        String count = buildSqlCommand.buildQueryCount(tableName, " and fidata_version_id='" + dto.getVersionId() + "'");
         List<Map<String, Object>> columnCount = AbstractDbHelper.execQueryResultMaps(count, getConnection());
         if (!CollectionUtils.isEmpty(columnCount)) {
             rowCount = Integer.valueOf(columnCount.get(0).get("totalnum").toString()).intValue();
@@ -103,7 +109,7 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
         dataPageDTO.setPageSize(dto.getPageSize());
         dataPageDTO.setTableName(tableName);
         dataPageDTO.setExport(false);
-        dataPageDTO.setConditions(" and code='" + dto.getCode() + "' ");
+        dataPageDTO.setConditions(" and code='" + dto.getCode() + "'");
         IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
         String sql = sqlBuilder.buildMasterDataPage(dataPageDTO);
         //执行sql，获得结果集
@@ -111,6 +117,11 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
         List<Map<String, Object>> resultMaps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
         data.setResultData(resultMaps);
         return data;
+    }
+
+    @Override
+    public ResultEnum rollBackMasterData(MasterDataDTO dto) {
+        return masterDataService.OperateMasterData(dto, EventTypeEnum.ROLLBACK);
     }
 
 }

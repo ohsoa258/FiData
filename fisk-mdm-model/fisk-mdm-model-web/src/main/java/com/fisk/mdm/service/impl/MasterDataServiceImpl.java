@@ -587,13 +587,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
     @Override
     public ResultEnum importDataSubmit(ImportDataSubmitDTO dto) {
 
-        EntityPO entityPO = entityMapper.selectById(dto.entityId);
+        EntityPO entityPO = entityMapper.selectById(dto.getEntityId());
         if (entityPO == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         String tableName = TableNameGenerateUtils.generateStgTableName(entityPO.getModelId(), dto.getEntityId());
         //where条件
-        String queryConditions = " and fidata_batch_code ='" + dto.key + "' and fidata_status=" + SyncStatusTypeEnum.UPLOADED_FAILED.getValue();
+        String queryConditions = " and fidata_batch_code ='" + dto.getKey() + "' and fidata_status=" + SyncStatusTypeEnum.UPLOADED_FAILED.getValue();
         IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
         //查询提交数据是否存在错误数据
         String sql = buildSqlCommand.buildQueryCount(tableName, queryConditions);
@@ -601,7 +601,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (!CollectionUtils.isEmpty(maps) && Integer.valueOf(maps.get(0).get("totalnum").toString()).intValue() > 0) {
             throw new FkException(ResultEnum.EXISTS_INCORRECT_DATA);
         }
-        return dataSynchronizationUtils.stgDataSynchronize(dto.entityId, dto.key);
+        return dataSynchronizationUtils.stgDataSynchronize(dto.getEntityId(), dto.getKey());
     }
 
     @Override
@@ -611,8 +611,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         BathUploadMemberVO vo = new BathUploadMemberVO();
-        vo.entityName = entityPO.getDisplayName();
-        vo.entityId = dto.getEntityId();
+        vo.setEntityName(entityPO.getDisplayName());
+        vo.setEntityId(dto.getEntityId());
         List<AttributeInfoDTO> attributeInfos = attributeService.listPublishedAttribute(dto.getEntityId());
         if (CollectionUtils.isEmpty(attributeInfos)) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -633,13 +633,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
             String countSql = buildSqlCommand.buildExportDataCount(tableName, conditions.toString());
             List<Map<String, Object>> resultMaps = AbstractDbHelper.execQueryResultMaps(countSql, getConnection());
             if (!CollectionUtils.isEmpty(resultMaps)) {
-                vo.count = Integer.valueOf(resultMaps.get(0).get("totalnum").toString()).intValue();
-                vo.updateCount = Integer.valueOf(resultMaps.get(0).get("updatecount").toString()).intValue();
-                vo.addCount = Integer.valueOf(resultMaps.get(0).get("addcount").toString()).intValue();
-                vo.successCount = Integer.valueOf(resultMaps.get(0).get("successcount").toString()).intValue();
-                vo.errorCount = Integer.valueOf(resultMaps.get(0).get("errorcount").toString()).intValue();
-                vo.submitSuccessCount = Integer.valueOf(resultMaps.get(0).get("submitsuccesscount").toString()).intValue();
-                vo.submitErrorCount = Integer.valueOf(resultMaps.get(0).get("submiterrorcount").toString()).intValue();
+                vo.setCount(Integer.valueOf(resultMaps.get(0).get("totalnum").toString()).intValue());
+                vo.setUpdateCount(Integer.valueOf(resultMaps.get(0).get("updatecount").toString()).intValue());
+                vo.setAddCount(Integer.valueOf(resultMaps.get(0).get("addcount").toString()).intValue());
+                vo.setSuccessCount(Integer.valueOf(resultMaps.get(0).get("successcount").toString()).intValue());
+                vo.setErrorCount(Integer.valueOf(resultMaps.get(0).get("errorcount").toString()).intValue());
+                vo.setSubmitSuccessCount(Integer.valueOf(resultMaps.get(0).get("submitsuccesscount").toString()).intValue());
+                vo.setSubmitErrorCount(Integer.valueOf(resultMaps.get(0).get("submiterrorcount").toString()).intValue());
             }
             ImportDataPageDTO pageDataDTO = new ImportDataPageDTO();
             pageDataDTO.setPageIndex(dto.getPageIndex());
@@ -652,12 +652,12 @@ public class MasterDataServiceImpl implements IMasterDataService {
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             String sql = sqlBuilder.buildImportDataPage(pageDataDTO);
             List<Map<String, Object>> resultPageMaps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
-            vo.attribute = attributeInfos;
             AttributeInfoDTO infoDTO = new AttributeInfoDTO();
             infoDTO.setName("fidata_new_code");
             infoDTO.setDisplayName("新编码");
-            vo.attribute.add(1, infoDTO);
-            vo.members = resultPageMaps;
+            attributeInfos.add(1, infoDTO);
+            vo.setAttribute(attributeInfos);
+            vo.setMembers(resultPageMaps);
         } catch (Exception e) {
             log.error("importDataQuery:", e);
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e);
@@ -681,9 +681,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
         }
         BathUploadMemberListVO listVo = new BathUploadMemberListVO();
         BathUploadMemberVO result = new BathUploadMemberVO();
-        result.versionId = dto.getVersionId();
-        result.entityId = dto.getEntityId();
-        result.entityName = po.getDisplayName();
+        result.setVersionId(dto.getVersionId());
+        result.setEntityId(dto.getEntityId());
+        result.setEntityName(po.getDisplayName());
         String tableName = TableNameGenerateUtils.generateStgTableName(dto.getModelId(), dto.getEntityId());
         //获取mdm表code数据列表
         Optional<AttributeInfoDTO> codeColumn = list.stream().filter(e -> e.getName().equals(MdmTypeEnum.CODE.getName())).findFirst();
@@ -736,8 +736,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
             if (list.size() != columnNum - 1) {
                 throw new FkException(ResultEnum.CHECK_TEMPLATE_IMPORT_FAILURE);
             }
-            result.attribute = attributePoList;
-            result.count += rowNum - 1;
+            result.setAttribute(attributePoList);
+            result.setCount(rowNum - 1);
             //每个线程执行条数
             final int threadHandleNumber = MdmConstants.THREAD_EXECUTE_NUMBER;
             //线程数
@@ -768,7 +768,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                                         value = cellDataDTO.getValue();
                                         errorMsg += cellDataDTO.getSuccess() ? "" : cellDataDTO.getErrorMsg();
                                     }
-                                    jsonObj.put(attributePoList.get(col).getName(), dto.removeSpace ? value.trim() : value);
+                                    jsonObj.put(attributePoList.get(col).getName(), dto.getRemoveSpace() ? value.trim() : value);
                                 }
                                 //验证code
                                 ImportDataVerifyDTO verifyDTO = MasterDataFormatVerifyUtils.verifyCode(jsonObj);
@@ -812,19 +812,19 @@ public class MasterDataServiceImpl implements IMasterDataService {
             countDownLatch.await();
             int flatCount = 0;
             if (!CollectionUtils.isEmpty(objectArrayList)) {
-                flatCount = templateDataSubmitStg(objectArrayList, tableName, batchNumber, dto.getVersionId(), userId, ImportTypeEnum.EXCEL_IMPORT,false);
+                flatCount = templateDataSubmitStg(objectArrayList, tableName, batchNumber, dto.getVersionId(), userId, ImportTypeEnum.EXCEL_IMPORT, false);
             }
             //添加批次
-            setStgBatch(batchNumber, dto.getEntityId(), dto.getVersionId(), result.count, result.count - flatCount, addCount.get(), updateCount.get(), flatCount > 0 ? 0 : 1);
+            setStgBatch(batchNumber, dto.getEntityId(), dto.getVersionId(), result.getCount(), result.getCount() - flatCount, addCount.get(), updateCount.get(), flatCount > 0 ? 0 : 1);
             //校验重复code
             verifyRepeatCode(tableName, batchNumber);
-            result.members = objectArrayList;
-            result.addCount = addCount.get();
-            result.updateCount = updateCount.get();
+            result.setMembers(objectArrayList);
+            result.setAddCount(addCount.get());
+            result.setUpdateCount(updateCount.get());
             List<BathUploadMemberVO> bathUploadMemberVOList = new ArrayList<>();
             bathUploadMemberVOList.add(result);
-            listVo.key = batchNumber;
-            listVo.list = bathUploadMemberVOList;
+            listVo.setKey(batchNumber);
+            listVo.setList(bathUploadMemberVOList);
             return listVo;
         } catch (Exception e) {
             log.error("importTemplateData", e);
@@ -943,33 +943,35 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (entityPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        Map<String, Object> mapData = new HashMap<>();
+        mapData.putAll(dto.getMembers());
         String tableName = TableNameGenerateUtils.generateStgTableName(dto.getModelId(), dto.getEntityId());
         if (eventTypeEnum == EventTypeEnum.SAVE) {
             //校验code
-            ImportDataVerifyDTO verifyResult = MasterDataFormatVerifyUtils.verifyCode(dto.getMembers());
+            ImportDataVerifyDTO verifyResult = MasterDataFormatVerifyUtils.verifyCode(mapData);
             if (!verifyResult.getSuccess()) {
                 throw new FkException(ResultEnum.SAVE_DATA_ERROR, verifyResult.getErrorMsg());
             }
-            dto.getMembers().put("fidata_status", SyncStatusTypeEnum.UPLOADED_SUCCESSFULLY.getValue());
-            dto.getMembers().put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
-            if (StringUtils.isEmpty(dto.getMembers().get("code").toString())) {
+            mapData.put("fidata_status", SyncStatusTypeEnum.UPLOADED_SUCCESSFULLY.getValue());
+            mapData.put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
+            if (StringUtils.isEmpty(mapData.get("code").toString())) {
                 //code生成规则
                 IBuildCodeCommand buildCodeCommand = BuildCodeHelper.getCodeCommand();
-                dto.getMembers().put("code", buildCodeCommand.createCode());
+                mapData.put("code", buildCodeCommand.createCode());
             } else {
                 //获取code列名
                 String columnName = getEntityCodeName(dto.getEntityId());
                 //code是否验证已存在
                 List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), columnName);
-                if (codeList.contains(dto.getMembers().get("code"))) {
-                    dto.getMembers().put("fidata_syncy_type", SyncTypeStatusEnum.UPDATE.getValue());
+                if (codeList.contains(mapData.get("code"))) {
+                    mapData.put("fidata_syncy_type", SyncTypeStatusEnum.UPDATE.getValue());
                 }
             }
         }
         //生成批次号
         String batchNumber = UUID.randomUUID().toString();
         List<Map<String, Object>> members = new ArrayList<>();
-        members.add(dto.getMembers());
+        members.add(mapData);
         boolean delete = eventTypeEnum == EventTypeEnum.DELETE ? true : false;
         int flat = templateDataSubmitStg(members, tableName, batchNumber, dto.getVersionId(), userHelper.getLoginUserInfo().id, ImportTypeEnum.MANUALLY_ENTER, delete);
         if (flat == 0) {
@@ -985,7 +987,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, maps.get(0).get("fidata_error_msg").toString());
         }
         //添加日志表数据
-        return masterDataLogService.addMasterDataLog(dto.getMembers(), tableName);
+        dto.getMembers().put("fidata_version_id", dto.getVersionId());
+        return masterDataLogService.addMasterDataLog(dto.getMembers(), TableNameGenerateUtils.generateLogTableName(dto.getModelId(), dto.getEntityId()));
     }
 
     /**
