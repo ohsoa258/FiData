@@ -23,9 +23,9 @@ public class WideTableFieldConfigDTO {
      */
     public List<WideTableSourceRelationsDTO> relations;
 
-    @ApiModelProperty(value = "当前操作的事实表名")
+    @ApiModelProperty(value = "当前操作的事实表名", required = true)
     public String factTableName;
 
-    @ApiModelProperty(value = "事实表数据的来源sql")
+    @ApiModelProperty(value = "事实表数据的来源sql", required = true)
     public String factTableSourceSql;
 }
