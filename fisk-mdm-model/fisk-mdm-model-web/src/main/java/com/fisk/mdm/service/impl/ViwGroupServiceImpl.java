@@ -304,6 +304,24 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         return ResultEnum.SUCCESS;
     }
 
+    @Override
+    public List<EntityQueryDTO> getRelationDataById(ViwGroupQueryDTO dto) {
+        List<EntityQueryDTO> list = new ArrayList<>();
+        // 查询出视图组中的属性
+        QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(ViwGroupDetailsPO::getGroupId,dto.getGroupId());
+        List<ViwGroupDetailsPO> detailsPoList = detailsMapper.selectList(queryWrapper);
+        // 视图组id集合
+        List<Integer> attributeIds = detailsPoList.stream().filter(e -> e.getAttributeId() != null).map(e -> e.getAttributeId()).collect(Collectors.toList());
+
+        // 查询出域字段关联的实体
+        EntityQueryDTO attributeInfo = this.getRelationAttributeInfo(dto.getEntityId(),attributeIds,dto.getGroupId());
+        list.add(attributeInfo);
+
+        return list;
+    }
+
     /**
      * 拼接自定义视图Sql
      * @param viwGroupVo
@@ -523,6 +541,55 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             }
 
             return dto1;
+        }).collect(Collectors.toList());
+
+        // 域字段递归
+        List<EntityQueryDTO> doMainList = attributeList.stream().filter(e -> e.getDomainId() != null).map(e -> {
+            AttributeVO data = attributeService.getById(e.getDomainId()).getData();
+            EntityQueryDTO attributeInfo = this.getAttributeInfo(data.getEntityId(),attributeIds,groupId);
+            return attributeInfo;
+        }).collect(Collectors.toList());
+        collect.addAll(doMainList);
+        dto.setChildren(collect);
+
+        return dto;
+    }
+
+    public EntityQueryDTO getRelationAttributeInfo(Integer entityId,List<Integer> attributeIds,Integer groupId){
+        EntityInfoVO entityInfoVo = entityService.getAttributeById(entityId);
+        if (entityInfoVo == null){
+            return null;
+        }
+
+        EntityQueryDTO dto = new EntityQueryDTO();
+        dto.setId(entityInfoVo.getId());
+        dto.setName(entityInfoVo.getName());
+        dto.setType(ObjectTypeEnum.ENTITY.getName());
+
+        // 属性信息
+        List<AttributeInfoDTO> attributeList = entityInfoVo.getAttributeList();
+        List<EntityQueryDTO> collect = attributeList.stream().filter(e -> e.getDomainId() == null).map(e -> {
+            // 判断是否在视图组中存在
+            if (attributeIds.contains(e.getId()) && !e.getName().equals("code")){
+                EntityQueryDTO dto1 = new EntityQueryDTO();
+                dto1.setId(e.getId());
+                dto1.setName(e.getName());
+                dto1.setType(ObjectTypeEnum.ATTRIBUTES.getName());
+
+                // 查询别名
+                QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
+                queryWrapper.lambda()
+                        .eq(ViwGroupDetailsPO::getGroupId,groupId)
+                        .eq(ViwGroupDetailsPO::getAttributeId,e.getId());
+                ViwGroupDetailsPO detailsPo = detailsMapper.selectOne(queryWrapper);
+                if (detailsPo != null){
+                    dto1.setAliasName(detailsPo.getAliasName());
+                }
+
+                return dto1;
+            }
+
+            return null;
         }).collect(Collectors.toList());
 
         // 域字段递归

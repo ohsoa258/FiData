@@ -91,4 +91,11 @@ public class ViwGroupController {
     public ResultEntity<ResultEnum> createCustomView(Integer id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,viwGroupService.createCustomView(id));
     }
+
+    @ApiOperation("查询视图组属性关系(根据视图组id)")
+    @PostMapping("/getRelationDataById")
+    @ResponseBody
+    public ResultEntity<List<EntityQueryDTO>> getRelationDataById(@RequestBody ViwGroupQueryDTO dto) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,viwGroupService.getRelationDataById(dto));
+    }
 }

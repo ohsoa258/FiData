@@ -76,4 +76,11 @@ public interface ViwGroupService {
      * @return
      */
     ResultEnum createCustomView(Integer id);
+
+    /**
+     * 根据视图组id查询,通过关联关系展示出来
+     * @param dto
+     * @return
+     */
+    List<EntityQueryDTO> getRelationDataById(ViwGroupQueryDTO dto);
 }
