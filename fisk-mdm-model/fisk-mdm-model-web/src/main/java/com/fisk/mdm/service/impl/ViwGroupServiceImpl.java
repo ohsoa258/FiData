@@ -555,6 +555,13 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         return dto;
     }
 
+    /**
+     * 查询每个属性的实体
+     * @param entityId
+     * @param attributeIds
+     * @param groupId
+     * @return
+     */
     public EntityQueryDTO getRelationAttributeInfo(Integer entityId,List<Integer> attributeIds,Integer groupId){
         EntityInfoVO entityInfoVo = entityService.getAttributeById(entityId);
         if (entityInfoVo == null){
@@ -599,7 +606,9 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             return attributeInfo;
         }).collect(Collectors.toList());
         collect.addAll(doMainList);
-        dto.setChildren(collect);
+
+        List<EntityQueryDTO> collect1 = collect.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        dto.setChildren(collect1);
 
         return dto;
     }
