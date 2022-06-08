@@ -1016,7 +1016,10 @@ public class BuildModelListenerImpl implements BuildModelListener {
         // 追加复杂类型字段
         if (StringUtils.isNotBlank(complexTypeField)){
             str.append(complexTypeField);
+        }else{
+            str.deleteCharAt(str.length()-1);
         }
+
         str.append(" FROM " + "mdm_" + infoDto.getModelId() + "_" + infoDto.getEntityId());
 
         // 复杂数据类型 left join
