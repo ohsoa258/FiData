@@ -470,6 +470,8 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 3.创建日志表
             String logTableName = generateLogTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
             sql = this.createLogTable(sqlBuilder,entityInfoVo,logTableName);
+            PreparedStatement stemLog = connection.prepareStatement(sql);
+            stemLog.execute();
 
             // 3.回写columnName
             this.writableColumnName(entityInfoVo.getAttributeList());
@@ -1011,12 +1013,14 @@ public class BuildModelListenerImpl implements BuildModelListener {
         AttributeInfoDTO infoDto = noForeignList.get(1);
         // 追加业务字段
         str.append(collect).append(",");
-        // 追加基础字段
-        str.append(buildPgCommand.createViw());
-        // 追加复杂类型字段
+
         if (StringUtils.isNotBlank(complexTypeField)){
+            // 追加基础字段
+            str.append(buildPgCommand.createViw(true));
+            // 追加复杂类型字段
             str.append(complexTypeField);
         }else{
+            str.append(buildPgCommand.createViw(false));
             str.deleteCharAt(str.length()-1);
         }
 
