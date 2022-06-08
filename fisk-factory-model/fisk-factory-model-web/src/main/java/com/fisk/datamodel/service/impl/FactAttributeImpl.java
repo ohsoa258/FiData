@@ -410,13 +410,15 @@ public class FactAttributeImpl
             if (result.code == ResultEnum.SUCCESS.getCode()) {
                 OdsResultDTO data = result.data;
                 JSONArray dataArray = data.dataArray;
+                JSONArray jsonArray = new JSONArray();
+                JSONArray wideTableDataDataArray = new JSONArray();
                 // 主表查询出来的结果集不为空
                 if (dataArray != null) {
 
-                    List<WideTableQueryPageDTO> queryPageDtoList = new ArrayList<>();
-                    JSONArray targetArray = new JSONArray();
+
                     // SELECT * FROM 目标表名 WHERE
                     for (int i = 0; i < dataArray.size(); i++) {
+
                         StringBuilder str = new StringBuilder();
                         str.append("SELECT * FROM ").append(dto.relations.get(0).targetTable).append(" WHERE ");
                         JSONObject jsonObject = dataArray.getJSONObject(i);
@@ -438,25 +440,39 @@ public class FactAttributeImpl
                         for (WideTableSourceRelationsDTO relation : dto.relations) {
                             if (queryPageDto.dataArray != null) {
                                 for (int j = 0; j < queryPageDto.dataArray.size(); j++) {
-
                                     JSONObject object = queryPageDto.dataArray.getJSONObject(j);
 
-                                    jsonObject.put(relation.sourceColumn, object.getString(relation.targetColumn));
+                                    JSONObject newJosn = new JSONObject();
+//                                    jsonObject.put(relation.sourceColumn, object.getString(relation.targetColumn));
+                                    newJosn.put(relation.sourceColumn, object.getString(relation.targetColumn));
+//                                    dataArray.add(queryPageDto.dataArray);
+                                    if (queryPageDto.dataArray!=null) {
+                                        jsonArray.addAll(queryPageDto.dataArray);
+                                    }
                                 }
-
                             }
-
                         }
+                    }
+//                    dataArray.addAll(jsonArray);
+//                    wideTableData.dataArray = dataArray;
+                    for (int i = 0; i < dataArray.size(); i++) {
+//                        JSONObject jsonObject = dataArray.getJSONObject(i);
+//
+//                        JSONObject jsonObject1 = jsonArray.getJSONObject(i);
+//                        jsonObject = jsonObject1;
 
-
+                        String note = dataArray.getJSONObject(i).toString()+ jsonArray.getJSONObject(i);
+                        if(note.contains("}{")){
+                            note = note.replace("}{", ",");
+                        }
+                        JSONObject jsonObject = JSONObject.parseObject(note);
+                        wideTableDataDataArray.add(jsonObject);
                     }
 
 
-
-
+                    wideTableData.dataArray = wideTableDataDataArray;
                 }
 
-                wideTableData.dataArray = dataArray;
             }
         } catch (Exception e) {
             e.printStackTrace();
