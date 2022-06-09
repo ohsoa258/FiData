@@ -110,7 +110,7 @@ public class BuildDataInputPgTableListener {
                 modelPublishStatusDTO.apiId = buildPhysicalTableDTO.apiId;
                 String selectTable = "select count(*) from pg_class where ";
                 for (String tableName : buildPhysicalTableDTO.apiTableNames) {
-                    selectTable += " relname='ods_" + tableName + "' or";
+                    selectTable += " relname='ods_" + tableName.toLowerCase() + "' or";
                 }
                 selectTable = selectTable.substring(0, selectTable.length() - 2);
                 BusinessResult businessResult = pg.postgreQuery(selectTable, BusinessTypeEnum.DATAINPUT);
