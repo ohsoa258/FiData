@@ -29,6 +29,7 @@ import javax.annotation.Resource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -152,22 +153,31 @@ public class WideTableImpl implements IWideTable {
                 throw new FkException(ResultEnum.NOT_SUPPORT_FULL_JOIN);
             }
         }
-        WideTableSourceRelationsDTO firstTable = relations.get(0);
         StringBuilder appendSql = new StringBuilder();
-        appendSql.append(" from " + prefixTable(firstTable.sourceTable) + " ");
-        appendSql.append(firstTable.joinType + " " + prefixTable(firstTable.targetTable));
-        appendSql.append(" on " + prefixTable(firstTable.sourceTable) + "." + firstTable.sourceColumn);
-        appendSql.append(" = ");
-        appendSql.append(prefixTable(firstTable.targetTable) + "." + firstTable.targetColumn);
-        if (relations.size() > 1) {
-            //Map<String, List<WideTableSourceRelationsDTO>> collect = relations.stream().collect(Collectors.groupingBy(WideTableSourceRelationsDTO::getSourceTable));
-            for (int i = 1; i < relations.size(); i++) {
+        Map<String, List<WideTableSourceRelationsDTO>> groupMap = relations.stream().collect(Collectors.groupingBy(WideTableSourceRelationsDTO::getSourceTable));
+        for (int i = 0; i < relations.size(); i++) {
+            if (i == 0) {
+                appendSql.append(" from " + prefixTable(relations.get(i).sourceTable) + " ");
+                appendSql.append(relations.get(i).joinType + " " + prefixTable(relations.get(i).targetTable));
+                appendSql.append(" on " + prefixTable(relations.get(i).sourceTable) + "." + relations.get(i).sourceColumn);
+                appendSql.append(" = ");
+                appendSql.append(prefixTable(relations.get(i).targetTable) + "." + relations.get(i).targetColumn);
+            } else {
                 WideTableSourceRelationsDTO attribute = relations.get(i);
                 appendSql.append(" " + attribute.joinType + " ");
                 appendSql.append(prefixTable(attribute.targetTable));
-                if (!RelateTableTypeEnum.CROSS_JOIN.getName().equals(firstTable.joinType)) {
-                    appendSql.append(" on " + prefixTable(attribute.sourceTable) + "." + attribute.sourceColumn + " = ");
-                    appendSql.append(prefixTable(attribute.targetTable) + "." + attribute.targetColumn + " ");
+                appendSql.append(" on " + prefixTable(attribute.sourceTable) + "." + attribute.sourceColumn + " = ");
+                appendSql.append(prefixTable(attribute.targetTable) + "." + attribute.targetColumn + " ");
+            }
+            //判断on后面关联条件是否存在多个
+            for (Map.Entry<String, List<WideTableSourceRelationsDTO>> map : groupMap.entrySet()) {
+                for (WideTableSourceRelationsDTO item : map.getValue()) {
+                    if (relations.get(i) != item && item.targetTable.equals(relations.get(i).targetTable)) {
+                        appendSql.append(" and " + prefixTable(item.sourceTable) + "." + item.sourceColumn);
+                        appendSql.append(" = ");
+                        appendSql.append(prefixTable(item.targetTable) + "." + item.targetColumn);
+                        relations.remove(item);
+                    }
                 }
             }
         }
