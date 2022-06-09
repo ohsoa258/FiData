@@ -12,6 +12,7 @@ import com.fisk.mdm.vo.modelVersion.ModelVersionDropDownVO;
 import com.fisk.mdm.vo.modelVersion.ModelVersionVO;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 
@@ -20,6 +21,10 @@ import java.util.List;
  */
 @Service
 public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, ModelVersionPO> implements IModelVersionService {
+
+
+    @Resource
+    ModelVersionMapper modelVersionMapper;
 
     /**
      * 新增模型版本

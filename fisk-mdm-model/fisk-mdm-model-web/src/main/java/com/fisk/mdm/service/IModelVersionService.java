@@ -12,6 +12,7 @@ import java.util.List;
  * @author ChenYa
  */
 public interface IModelVersionService extends IService<ModelVersionPO> {
+
     /**
      * 新增模型版本
      * @param dto
@@ -19,5 +20,11 @@ public interface IModelVersionService extends IService<ModelVersionPO> {
      */
     ResultEnum addData(ModelVersionDTO dto);
 
+    /**
+     * 根据模型id查看模型版本
+     * @param modelId
+     * @return
+     */
     List<ModelVersionVO> getByModelId(Integer modelId);
+
 }
