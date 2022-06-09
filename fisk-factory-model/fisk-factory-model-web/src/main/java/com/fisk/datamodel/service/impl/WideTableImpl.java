@@ -3,36 +3,39 @@ package com.fisk.datamodel.service.impl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
-import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.widetableconfig.*;
 import com.fisk.datamodel.entity.WideTableConfigPO;
-import com.fisk.datamodel.enums.*;
+import com.fisk.datamodel.enums.CreateTypeEnum;
+import com.fisk.datamodel.enums.DataBaseTypeEnum;
+import com.fisk.datamodel.enums.PublicStatusEnum;
+import com.fisk.datamodel.enums.RelateTableTypeEnum;
 import com.fisk.datamodel.map.WideTableMap;
 import com.fisk.datamodel.mapper.WideTableMapper;
 import com.fisk.datamodel.service.IWideTable;
 import com.fisk.task.client.PublishTaskClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.sql.Connection;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.sql.*;
 import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
  */
 @Service
+@Slf4j
 public class WideTableImpl implements IWideTable {
 
     @Resource
@@ -121,8 +124,8 @@ public class WideTableImpl implements IWideTable {
                 //判断字段名称是否重复
                 if (fieldList.contains(field.fieldName))
                 {
-                    field.alias=item.tableName+"_"+field.fieldName;
-                    str.append("external_"+item.tableName+"."+field.fieldName+" as "+item.tableName+"_"+field.fieldName+",");
+                    field.alias = item.tableName + "_" + field.fieldName;
+                    str.append("external_" + item.tableName + "." + field.fieldName + " as " + field.alias + ",");
                 }
                 else {
                     str.append("external_"+item.tableName+"."+field.fieldName+",");
@@ -141,55 +144,62 @@ public class WideTableImpl implements IWideTable {
      * @param relations
      * @return
      */
-    public StringBuilder appendRelateTable(List<WideTableSourceRelationsDTO> relations){
+    public StringBuilder appendRelateTable(List<WideTableSourceRelationsDTO> relations) {
         DataBaseTypeEnum value = DataBaseTypeEnum.getValue(typeName.toLowerCase());
-        if (value.getValue()==DataBaseTypeEnum.MYSQL.getValue())
-        {
+        if (value.getValue() == DataBaseTypeEnum.MYSQL.getValue()) {
             List<WideTableSourceRelationsDTO> fullJoin = relations.stream().filter(e -> RelateTableTypeEnum.FULL_JOIN.getName().equals(e.joinType)).collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(fullJoin))
-            {
+            if (!CollectionUtils.isEmpty(fullJoin)) {
                 throw new FkException(ResultEnum.NOT_SUPPORT_FULL_JOIN);
             }
         }
         WideTableSourceRelationsDTO firstTable = relations.get(0);
-        StringBuilder appendSql=new StringBuilder();
-        appendSql.append(" from "+"external_"+firstTable.sourceTable+" "
-                +firstTable.joinType+" "+"external_"+firstTable.targetTable
-        );
-        RelateTableTypeEnum relateTableTypeEnum = RelateTableTypeEnum.getValue(firstTable.joinType);
-        if (!relateTableTypeEnum.name().equals(firstTable.joinType))
-        {
-            appendSql.append(" on "+"external_"+firstTable.sourceTable+"."+firstTable.sourceColumn
-                    +" = "+"external_"+firstTable.targetTable+"."+firstTable.targetColumn
-            );
-        }
-        if (relations.size()>1)
-        {
-            for (int i=1;i<relations.size();i++)
-            {
-                WideTableSourceRelationsDTO attribute=relations.get(i);
-                appendSql.append(" "+attribute.joinType+" ");
-                appendSql.append("external_"+attribute.targetTable);
-                if (!RelateTableTypeEnum.CROSS_JOIN.getName().equals(firstTable.joinType))
-                {
-                    appendSql.append(" on "+"external_"+attribute.sourceTable+"."+attribute.sourceColumn+" = ");
-                    appendSql.append("external_"+attribute.targetTable+"."+attribute.targetColumn+" ");
+        StringBuilder appendSql = new StringBuilder();
+        appendSql.append(" from " + prefixTable(firstTable.sourceTable) + " ");
+        appendSql.append(firstTable.joinType + " " + prefixTable(firstTable.targetTable));
+        appendSql.append(" on " + prefixTable(firstTable.sourceTable) + "." + firstTable.sourceColumn);
+        appendSql.append(" = ");
+        appendSql.append(prefixTable(firstTable.targetTable) + "." + firstTable.targetColumn);
+        if (relations.size() > 1) {
+            //Map<String, List<WideTableSourceRelationsDTO>> collect = relations.stream().collect(Collectors.groupingBy(WideTableSourceRelationsDTO::getSourceTable));
+            for (int i = 1; i < relations.size(); i++) {
+                WideTableSourceRelationsDTO attribute = relations.get(i);
+                appendSql.append(" " + attribute.joinType + " ");
+                appendSql.append(prefixTable(attribute.targetTable));
+                if (!RelateTableTypeEnum.CROSS_JOIN.getName().equals(firstTable.joinType)) {
+                    appendSql.append(" on " + prefixTable(attribute.sourceTable) + "." + attribute.sourceColumn + " = ");
+                    appendSql.append(prefixTable(attribute.targetTable) + "." + attribute.targetColumn + " ");
                 }
             }
         }
         return appendSql;
     }
 
-    public WideTableQueryPageDTO getWideTableData(String sql,int pageSize) {
-        WideTableQueryPageDTO data=new WideTableQueryPageDTO();
+    /**
+     * 表名添加前缀
+     *
+     * @param tableName
+     * @return
+     */
+    public String prefixTable(String tableName) {
+        return "external_" + tableName;
+    }
+
+    /**
+     * 查询关联表数据
+     *
+     * @param sql
+     * @param pageSize
+     * @return
+     */
+    public WideTableQueryPageDTO getWideTableData(String sql, int pageSize) {
+        WideTableQueryPageDTO data = new WideTableQueryPageDTO();
         try {
-            String newSql=sql.replace("external_","");
+            String newSql = sql.replace("external_", "");
             Connection conn = dimensionImpl.getStatement(driver, url, userName, password);
             Statement st = conn.createStatement();
-            switch (typeName.toLowerCase())
-            {
+            switch (typeName.toLowerCase()) {
                 case "mysql":
-                    newSql=newSql+" limit "+pageSize;
+                    newSql = newSql + " limit " + pageSize;
                     break;
                 case "postgresql":
                     newSql=newSql+" limit  "+pageSize;
@@ -227,6 +237,63 @@ public class WideTableImpl implements IWideTable {
             List<String> columnList=new ArrayList<>();
             for (int i = 1; i <= columnCount; i++) {
                 columnList.add(metaData.getColumnLabel(i));
+            }
+            data.columnList=columnList;
+        } catch (SQLException e) {
+            log.error("getWideTableData:", e);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e.getMessage());
+        }
+        return data;
+    }
+
+
+    public WideTableQueryPageDTO getWideTableData(String sql,int pageSize,String aliasName) {
+        WideTableQueryPageDTO data=new WideTableQueryPageDTO();
+        try {
+            String newSql=sql.replace("external_","");
+            Connection conn = dimensionImpl.getStatement(driver, url, userName, password);
+            Statement st = conn.createStatement();
+            switch (typeName.toLowerCase())
+            {
+                case "mysql":
+                    newSql=newSql+" limit "+pageSize;
+                    break;
+                case "postgresql":
+                    newSql=newSql+" limit  "+pageSize;
+                    break;
+                case "doris":
+                    newSql=newSql+"  limit "+pageSize;
+                    break;
+                case "sqlserver":
+                    newSql="select top "+pageSize+" * from ("+sql+") as tabInfo";
+                    break;
+                default:
+                    throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            }
+
+            ResultSet rs = st.executeQuery(newSql);
+            // json数组
+            JSONArray array = new JSONArray();
+            // 获取列数
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            while (rs.next()) {
+                JSONObject jsonObj = new JSONObject();
+                // 遍历每一列
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = metaData.getColumnLabel(i);
+                    //获取sql查询数据集合
+                    String value = rs.getString(columnName);
+                    jsonObj.put(aliasName+columnName, value==null?"":value);
+                }
+                array.add(jsonObj);
+            }
+            data.dataArray=array;
+            data.sqlScript=sql;
+            //获取列名
+            List<String> columnList=new ArrayList<>();
+            for (int i = 1; i <= columnCount; i++) {
+                columnList.add(aliasName+metaData.getColumnLabel(i));
             }
             data.columnList=columnList;
         } catch (SQLException e) {
