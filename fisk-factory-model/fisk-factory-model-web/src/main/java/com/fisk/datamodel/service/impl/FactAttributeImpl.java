@@ -415,6 +415,9 @@ public class FactAttributeImpl
                 // 主表查询出来的结果集不为空
                 if (dataArray != null) {
 
+                    List<String> columnList = new ArrayList<>();
+
+                    wideTableData.columnList=dataArray.getJSONObject(0).entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
 
                     // SELECT * FROM 目标表名 WHERE
                     for (int i = 0; i < dataArray.size(); i++) {
@@ -435,7 +438,12 @@ public class FactAttributeImpl
                         str.delete(str.length() - 4, str.length());
                         System.out.println("生成的sql: " + str);
                         // 在dw库中查询出的子表结果
-                        WideTableQueryPageDTO queryPageDto = wideTableImpl.getWideTableData(str.toString(), 10);
+                        WideTableQueryPageDTO queryPageDto = wideTableImpl.getWideTableData(str.toString(), 10,"dw_");
+//                        columnList = queryPageDto.columnList;
+
+                        columnList = queryPageDto.columnList;
+
+                        System.out.println("columnList = " + columnList);
 
                         for (WideTableSourceRelationsDTO relation : dto.relations) {
                             if (queryPageDto.dataArray != null) {
@@ -453,22 +461,28 @@ public class FactAttributeImpl
                         }
                     }
                     JSONObject jsonObject = new JSONObject();
+
                     for (int i = 0; i < dataArray.size(); i++) {
                         // 合并两个JsonObject
-                        String note = dataArray.getJSONObject(i).toString()+ jsonArray.getJSONObject(i);
-                        if(note.contains("}{")){
-                            note = note.replace("}{", ",");
+                        String note;
+                        if (CollectionUtils.isEmpty(jsonArray)) {
+                            StringBuffer str = new StringBuffer();
+                            note =  str.append(dataArray.getJSONObject(i).toString()).toString();
+//                            note = dataArray.getJSONObject(i).toString();
+                            jsonObject = JSONObject.parseObject(note);
+                        } else {
+                            StringBuffer str = new StringBuffer();
+                            note = str.append(dataArray.getJSONObject(i).toString()).append(jsonArray.getJSONObject(i).toString()).toString();
                         }
-                        jsonObject = JSONObject.parseObject(note);
+                        if (note.contains("}{")) {
+                            note = note.replace("}{", ",");
+                            jsonObject = JSONObject.parseObject(note);
+                        }
                         wideTableDataDataArray.add(jsonObject);
                     }
 
-                    wideTableData.columnList = jsonObject.entrySet().stream().map(e -> e.getKey()).collect(Collectors.toList());
-
+                    wideTableData.columnList.addAll(columnList);
                     wideTableData.dataArray = wideTableDataDataArray;
-
-
-
                 }
 
             }

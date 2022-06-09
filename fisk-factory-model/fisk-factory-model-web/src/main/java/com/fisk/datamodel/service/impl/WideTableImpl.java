@@ -246,6 +246,62 @@ public class WideTableImpl implements IWideTable {
         return data;
     }
 
+
+    public WideTableQueryPageDTO getWideTableData(String sql,int pageSize,String aliasName) {
+        WideTableQueryPageDTO data=new WideTableQueryPageDTO();
+        try {
+            String newSql=sql.replace("external_","");
+            Connection conn = dimensionImpl.getStatement(driver, url, userName, password);
+            Statement st = conn.createStatement();
+            switch (typeName.toLowerCase())
+            {
+                case "mysql":
+                    newSql=newSql+" limit "+pageSize;
+                    break;
+                case "postgresql":
+                    newSql=newSql+" limit  "+pageSize;
+                    break;
+                case "doris":
+                    newSql=newSql+"  limit "+pageSize;
+                    break;
+                case "sqlserver":
+                    newSql="select top "+pageSize+" * from ("+sql+") as tabInfo";
+                    break;
+                default:
+                    throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            }
+
+            ResultSet rs = st.executeQuery(newSql);
+            // json数组
+            JSONArray array = new JSONArray();
+            // 获取列数
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            while (rs.next()) {
+                JSONObject jsonObj = new JSONObject();
+                // 遍历每一列
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = metaData.getColumnLabel(i);
+                    //获取sql查询数据集合
+                    String value = rs.getString(columnName);
+                    jsonObj.put(aliasName+columnName, value==null?"":value);
+                }
+                array.add(jsonObj);
+            }
+            data.dataArray=array;
+            data.sqlScript=sql;
+            //获取列名
+            List<String> columnList=new ArrayList<>();
+            for (int i = 1; i <= columnCount; i++) {
+                columnList.add(aliasName+metaData.getColumnLabel(i));
+            }
+            data.columnList=columnList;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return data;
+    }
+
     @Override
     public ResultEnum addWideTable(WideTableConfigDTO dto)
     {
