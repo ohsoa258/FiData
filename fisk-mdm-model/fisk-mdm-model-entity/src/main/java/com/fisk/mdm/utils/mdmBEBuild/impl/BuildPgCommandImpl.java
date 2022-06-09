@@ -299,7 +299,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     @Override
     public String queryData(String tableName) {
         StringBuilder str = new StringBuilder();
-        str.append("SELECT * FROM " + PUBLIC + "." + tableName);
+        str.append("SELECT * FROM " + PUBLIC + "." + tableName + " LIMIT 1 ");
         return str.toString();
     }
 

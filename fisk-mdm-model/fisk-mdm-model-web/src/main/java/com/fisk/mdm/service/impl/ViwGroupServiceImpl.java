@@ -18,6 +18,8 @@ import com.fisk.mdm.mapper.ViwGroupMapper;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.ViwGroupService;
+import com.fisk.mdm.utils.mdmBEBuild.BuildFactoryHelper;
+import com.fisk.mdm.utils.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.vo.entity.EntityVO;
@@ -163,8 +165,8 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum deleteGroupById(Integer id) {
-        boolean existViwGroup = this.isExistViwGroup(id);
-        if (existViwGroup == false){
+        ViwGroupPO viwGroupPo = viwGroupMapper.selectById(id);
+        if (viwGroupPo == null){
             return ResultEnum.DATA_NOTEXISTS;
         }
 
@@ -179,7 +181,61 @@ public class ViwGroupServiceImpl implements ViwGroupService {
                 .eq(ViwGroupDetailsPO::getGroupId,id);
         detailsMapper.delete(queryWrapper);
 
+        // 删除后台视图
+        this.deleteView(viwGroupPo.getName());
+
         return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 删除后台视图
+     * @param viwName
+     */
+    public void deleteView(String viwName){
+
+        String sql = null;
+        try{
+
+            // 声明工厂
+            IBuildSqlCommand sqlCommand = BuildFactoryHelper.getDBCommand(type);
+
+            // 创建连接对象
+            AbstractDbHelper dbHelper = new AbstractDbHelper();
+            Connection connection = dbHelper.connection(connectionStr, acc,
+                    pwd,type);
+
+            // 判断视图是否存在
+            boolean exits = this.isExits(sqlCommand, dbHelper, connection, viwName);
+            if (exits == true) {
+                // 1.创建Sql(删除视图Sql)
+                sql = sqlCommand.dropViw(viwName);
+
+                // 2.执行SQL
+                dbHelper.executeSql(sql, connection);
+            }
+        }catch (SQLException ex){
+            log.error("【删除自定义视图Sql】:" + sql + "【删除自定义视图失败,异常信息】:" + ex);
+            ex.printStackTrace();
+        }
+    }
+
+    /**
+     * 判断表是否存在
+     *
+     * @param sqlBuilder
+     * @param tableName
+     * @return
+     */
+    public boolean isExits(IBuildSqlCommand sqlBuilder, AbstractDbHelper abstractDbHelper,
+                           Connection connection, String tableName) {
+        try {
+            // 1.查询表是否存在
+            String querySql = sqlBuilder.queryData(tableName);
+            abstractDbHelper.executeSql(querySql, connection);
+            return true;
+        } catch (SQLException ex) {
+            return false;
+        }
     }
 
     @Override
@@ -227,6 +283,17 @@ public class ViwGroupServiceImpl implements ViwGroupService {
                 throw new FkException(ResultEnum.SAVE_DATA_ERROR);
             }
         });
+
+
+        ViwGroupPO viwGroupPO = viwGroupMapper.selectById(dto.getGroupId());
+        if (viwGroupPO != null){
+
+            // 1.删除视图
+            this.deleteView(viwGroupPO.getName());
+
+            // 2.创建视图
+            viwGroupService.createCustomView((int) viwGroupPO.getId());
+        }
 
         return ResultEnum.SUCCESS;
     }
