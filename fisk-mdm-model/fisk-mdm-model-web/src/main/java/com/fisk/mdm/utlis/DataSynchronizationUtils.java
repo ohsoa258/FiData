@@ -199,7 +199,7 @@ public class DataSynchronizationUtils {
 
         // 获取唯一键
         String columnName = codeAssociationCondition.get(0).getColumnName();
-        str.append(" ON CONFLICT ( " + columnName +") DO UPDATE ");
+        str.append(" ON CONFLICT ( " + columnName + "," + MARK + "version_id" +") DO UPDATE ");
         str.append(" SET ");
         str.append(MARK + "new_code = " + "excluded." + MARK + "new_code").append(",");
         str.append(MARK + "version_id = " + "excluded." + MARK + "version_id").append(",");

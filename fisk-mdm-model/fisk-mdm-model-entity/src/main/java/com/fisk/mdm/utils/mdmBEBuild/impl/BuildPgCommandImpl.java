@@ -337,6 +337,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append(MARK + "lock_tag int4 NULL").append(",");
         str.append(MARK + "new_code varchar(100) NULL").append(",");
         str.append("constraint pk_"+ tableName + "_code_" + pk +" unique(" + code +")").append(",");
+        str.append("constraint pk_"+ tableName + "_versionId_" + pk +" unique(" + MARK + "version_id" +")").append(",");
         str.append(this.commonBaseField());
 
         return str.toString();
