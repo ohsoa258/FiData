@@ -27,7 +27,7 @@ public class ApiImportDataDTO {
     public String workflowId;
 
     @ApiModelProperty(value = "管道id_apiid", required = true)
-    public String workflowIdAppIdApiId;
+    public String pipelApiDispatch;
 
     public long userId;
 

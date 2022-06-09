@@ -576,16 +576,14 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     @Override
     public ResultEnum importData(ApiImportDataDTO dto) {
         // task根据调度配置调用
-        if (dto.workflowIdAppIdApiId != null && dto.workflowIdAppIdApiId != "") {
-            String[] split = dto.workflowIdAppIdApiId.split(",");
-            for (int i = 0; i < split.length; i++) {
+        List<PipelApiDispatchDTO> pipelApiDispatchs = JSON.parseArray(dto.pipelApiDispatch, PipelApiDispatchDTO.class);
+        if (!CollectionUtils.isEmpty(pipelApiDispatchs)) {
+            for (PipelApiDispatchDTO pipelApiDispatch : pipelApiDispatchs) {
                 List<String> kafkaReceives = new ArrayList<>();
                 KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
-                String workflowIdApiId = split[i];
-                String[] s = workflowIdApiId.split("_");
-                dto.workflowId = s[0];
-                dto.appId = Long.parseLong(s[1]);
-                dto.apiId = Long.parseLong(s[2]);
+                dto.workflowId = pipelApiDispatch.workflowId;
+                dto.appId = pipelApiDispatch.appId;
+                dto.apiId = pipelApiDispatch.appId;
                 syncData(dto);
                 kafkaReceiveDTO.tableId = Math.toIntExact(dto.apiId);
                 kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();

@@ -12,4 +12,5 @@ public class KafkaReceiveDTO {
     public Integer numbers;
     public String topic;
     public Date endTime;
+    public String pipelApiDispatch;
 }

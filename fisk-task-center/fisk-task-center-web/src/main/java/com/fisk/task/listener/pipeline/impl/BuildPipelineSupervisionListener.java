@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
@@ -20,10 +21,12 @@ import com.fisk.task.mapper.NifiStageMapper;
 import com.fisk.task.mapper.PipelineTableLogMapper;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.pipeline.ITableTopicService;
+import com.fisk.task.utils.KafkaTemplateHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -50,6 +53,8 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
     NifiStageMapper nifiStageMapper;
     @Resource
     PipelineTableLogMapper pipelineTableLogMapper;
+    @Resource
+    KafkaTemplateHelper kafkaTemplateHelper;
 
     @Override
     public void msg(List<String> arrMessage, Acknowledgment acke) {
@@ -66,6 +71,17 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                     String[] split1 = topicName.split("\\.");
                     if (split1.length == 6) {
                         continue;
+                    } else if (split1.length == 4) {
+                        //  这个时候可能是api的topic,可能是管道直接调度的topic
+                        if (StringUtils.isEmpty(kafkaReceiveDTO.pipelApiDispatch)) {
+                            //管道开始,job开始,task开始
+                            kafkaTemplateHelper.sendMessageAsync(topicName, "发布调度第一步流程");
+                        } else {
+                            ApiImportDataDTO apiImportData = new ApiImportDataDTO();
+                            apiImportData.pipelApiDispatch = kafkaReceiveDTO.pipelApiDispatch;
+                            kafkaTemplateHelper.sendMessageAsync(topicName, JSON.toJSONString(apiImportData));
+                        }
+                        break;
                     }
                     String pipelineId = split1[3];
                     //请求接口得到对象,条件--管道名称,表名称,表类别,表id,topic_name(加表名table_name)
@@ -112,13 +128,13 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                     TableTopicDTO topicSelf = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort.id),
                             Integer.valueOf(nifiGetPortHierarchyDTO.tableId), kafkaReceiveDTO.tableType);
                     //能走到最后说明这一批次走成功了
-                    pipelineTableLogMapper.updateByComponentId(Math.toIntExact(itselfPort.id),Integer.valueOf(nifiGetPortHierarchyDTO.tableId), kafkaReceiveDTO.tableType);
+                    pipelineTableLogMapper.updateByComponentId(Math.toIntExact(itselfPort.id), Integer.valueOf(nifiGetPortHierarchyDTO.tableId), kafkaReceiveDTO.tableType);
                     QueryWrapper<PipelineTableLogPO> Wrapper = new QueryWrapper<>();
                     Wrapper.lambda().eq(PipelineTableLogPO::getComponentId, itselfPort.id)
-                    .eq(PipelineTableLogPO::getTableId,nifiGetPortHierarchyDTO.tableId)
-                    .eq(PipelineTableLogPO::getTableType,kafkaReceiveDTO.tableType);
+                            .eq(PipelineTableLogPO::getTableId, nifiGetPortHierarchyDTO.tableId)
+                            .eq(PipelineTableLogPO::getTableType, kafkaReceiveDTO.tableType);
                     PipelineTableLogPO pipelineTableLogPO = pipelineTableLogMapper.selectOne(Wrapper);
-                    nifiStageMapper.updateByComponentId(Math.toIntExact(itselfPort.id),pipelineTableLogPO.id);
+                    nifiStageMapper.updateByComponentId(Math.toIntExact(itselfPort.id), pipelineTableLogPO.id);
                     //本节点topic
                     String topicName1 = topicSelf.topicName;
                     //下一级
@@ -131,7 +147,7 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                         NifiCustomWorkflowDetailDTO itselfPort1 = nifiPortsHierarchyNextDTO.itselfPort;
                         ChannelDataEnum channel = ChannelDataEnum.getValue(itselfPort1.componentType);
                         OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(channel.getValue());
-                        log.info("表类别:",olapTableEnum);
+                        log.info("表类别:", olapTableEnum);
                         //下一级所有的上一级
                         List<NifiCustomWorkflowDetailDTO> upPortList = nifiPortsHierarchyNextDTO.upPortList;
                         //判断redis里面有没有这个key    itselfPort1(key,很关键,tnnd)

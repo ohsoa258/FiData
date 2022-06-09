@@ -14,6 +14,7 @@ import com.fisk.common.core.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.dataaccess.dto.api.PipelApiDispatchDTO;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
@@ -80,6 +81,8 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
     private String redisHost;
     @Value("${spring.kafka.producer.bootstrap-servers}")
     public String KafkaBrokers;
+    @Value("${nifi.pipeline.topicName}")
+    public String pipelineTopicName;
     @Resource
     private DataFactoryClient dataFactoryClient;
     @Resource
@@ -544,6 +547,8 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     boolean commonTask = false;
                     boolean fapi = false;
                     String queryApiSql = "";
+                    List<PipelApiDispatchDTO> pipelApiDispatchs = new ArrayList<>();
+                    PipelApiDispatchDTO pipelApiDispatch = new PipelApiDispatchDTO();
                     for (BuildNifiCustomWorkFlowDTO buildNifiCustomWorkFlowDTO : outputDucts) {
                         if (!Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.DATAACCESS_API)) {
                             TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(buildNifiCustomWorkFlowDTO);
@@ -554,7 +559,10 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                             commonTask = true;
                         } else {
                             fapi = true;
-                            queryApiSql += buildNifiCustomWorkFlowDTO.workflowDetailId + "_" + buildNifiCustomWorkFlowDTO.appId + "_" + buildNifiCustomWorkFlowDTO.tableId + ",";
+                            pipelApiDispatch.workflowId = String.valueOf(buildNifiCustomWorkFlowDTO.workflowDetailId);
+                            pipelApiDispatch.appId = buildNifiCustomWorkFlowDTO.appId;
+                            pipelApiDispatch.apiId = Long.parseLong(buildNifiCustomWorkFlowDTO.tableId);
+                            pipelApiDispatchs.add(pipelApiDispatch);
                         }
 
                     }
@@ -564,10 +572,10 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     querySqlDto.name = nifiNode.nifiCustomWorkflowName;
                     querySqlDto.details = nifiNode.nifiCustomWorkflowName;
                     querySqlDto.groupId = groupStructure;
-                    if (queryApiSql.length() == 0) {
-                        querySqlDto.querySql = "select count(1) as nums from tb_etl_Incremental";
+                    if (pipelApiDispatchs.size() == 0) {
+                        querySqlDto.querySql = "select '" + TopicName + "' as topic from tb_etl_Incremental limit 1";
                     } else {
-                        querySqlDto.querySql = "select '" + queryApiSql.substring(0, queryApiSql.length() - 1) + "' as workflowIdAppIdApiId  from tb_etl_Incremental limit 1";
+                        querySqlDto.querySql = "select '" + JSON.toJSONString(pipelApiDispatchs) + "' as pipelApiDispatch ,'" + MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW + "' as topic from tb_etl_Incremental limit 1";
                     }
 
                     //配置库
@@ -611,7 +619,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                         buildPublishKafkaProcessorDTO.details = "PublishKafka";
                         buildPublishKafkaProcessorDTO.UseTransactions = "false";
                         buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
-                        buildPublishKafkaProcessorDTO.TopicName = TopicName;
+                        buildPublishKafkaProcessorDTO.TopicName = pipelineTopicName;
                         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
                         componentsBuild.buildConnectProcessors(groupStructure, toJsonRes.data.getId(), processorEntityBusinessResult.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
                     }
@@ -624,7 +632,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                         buildPublishKafkaProcessorDTO.details = "PublishKafka";
                         buildPublishKafkaProcessorDTO.UseTransactions = "false";
                         buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
-                        buildPublishKafkaProcessorDTO.TopicName = MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW;
+                        buildPublishKafkaProcessorDTO.TopicName = pipelineTopicName;
                         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
                         componentsBuild.buildConnectProcessors(groupStructure, toJsonRes.data.getId(), processorEntityBusinessResult.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
 
