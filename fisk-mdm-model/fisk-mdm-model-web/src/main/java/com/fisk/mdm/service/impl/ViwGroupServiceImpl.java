@@ -459,11 +459,12 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         // 所有从表字段的集合,统一拼接
         List<String> list = new ArrayList<>();
         for (Integer entityIdKey : secondaryMap.keySet()) {
+
+            String alias = ALIAS_MARK + count.incrementAndGet();
             List<ViwGroupDetailsDTO> detailsList = secondaryMap.get(entityIdKey);
             String collect = detailsList.stream().map(e -> {
                 AttributeVO data = attributeService.getById(e.getAttributeId()).getData();
                 EntityVO entityVo = entityService.getDataById(data.getEntityId());
-                String alias = ALIAS_MARK + count.incrementAndGet();
                 String name = alias + "." + data.getColumnName() + " AS " + entityVo.getName() + "_" + e.getName();
                 aliasMap.put(data.getColumnName(),alias);
                 return name;

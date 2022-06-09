@@ -33,11 +33,15 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
      */
     @Override
     public ResultEnum addData(ModelVersionDTO dto) {
-
-        if(baseMapper.insert(ModelVersionMap.INSTANCES.dtoToPo(dto)) <= 0){
-            return ResultEnum.SAVE_DATA_ERROR;
+        QueryWrapper<ModelVersionPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(ModelVersionPO::getName,dto.getName());
+        ModelVersionPO modelVersionPo = modelVersionMapper.selectOne(queryWrapper);
+        if (modelVersionPo != null){
+            return ResultEnum.DATA_EXISTS;
         }
-        return ResultEnum.SUCCESS;
+
+        return modelVersionMapper.insert(ModelVersionMap.INSTANCES.dtoToPo(dto)) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -60,5 +64,4 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
         List<ModelVersionPO> list=baseMapper.selectList(queryWrapper);
         return ModelVersionMap.INSTANCES.poListToDropDownVoList(list);
     }
-
 }
