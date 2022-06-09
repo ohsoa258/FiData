@@ -92,10 +92,8 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append("CREATE TABLE " + PUBLIC + ".");
         str.append(tableName).append("(");
 
-        // 拼接mdm表基础字段拼接
-        str.append(this.splicingMdmTable(tableName,code));
         // 拼接日志表基础字段
-        str.append(this.splicingLogTable());
+        str.append(this.splicingLogTable(tableName));
 
         // 字段sql
         String fieldSql = entityInfoVo.getAttributeList().stream().filter(e -> e.getStatus().equals(INSERT.getName()))
@@ -346,10 +344,19 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
 
     /**
      * 日志表基础字段
+     * @param tableName
      * @return
      */
-    public String splicingLogTable(){
+    public String splicingLogTable(String tableName){
+        int pk = (int)(Math.random()*8999)+1000+1;
+
         StringBuilder str = new StringBuilder();
+        str.append(MARK + "id serial NOT NULL").append(",");
+        str.append("constraint pk_"+ tableName + "_id_" + pk +" primary key(" + MARK + "id)").append(",");
+        str.append(MARK + "version_id int4 NULL").append(",");
+        str.append(MARK + "lock_tag int4 NULL").append(",");
+        str.append(MARK + "new_code varchar(100) NULL").append(",");
+        str.append(this.commonBaseField());
         str.append(MARK + "old_name varchar(100) NULL").append(",");
 
         return str.toString();
