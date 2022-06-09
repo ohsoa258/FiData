@@ -436,14 +436,14 @@ public class FactAttributeImpl
                         }
                         // 去掉最后的 AND
                         str.delete(str.length() - 4, str.length());
-                        System.out.println("生成的sql: " + str);
+//                        System.out.println("生成的sql: " + str);
                         // 在dw库中查询出的子表结果
                         WideTableQueryPageDTO queryPageDto = wideTableImpl.getWideTableData(str.toString(), 10,"dw_");
 //                        columnList = queryPageDto.columnList;
 
                         columnList = queryPageDto.columnList;
 
-                        System.out.println("columnList = " + columnList);
+//                        System.out.println("columnList = " + columnList);
 
                         for (WideTableSourceRelationsDTO relation : dto.relations) {
                             if (queryPageDto.dataArray != null) {
