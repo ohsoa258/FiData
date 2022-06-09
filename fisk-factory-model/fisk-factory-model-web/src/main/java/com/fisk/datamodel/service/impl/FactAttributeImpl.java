@@ -443,7 +443,6 @@ public class FactAttributeImpl
                                     JSONObject object = queryPageDto.dataArray.getJSONObject(j);
 
                                     JSONObject newJosn = new JSONObject();
-//                                    jsonObject.put(relation.sourceColumn, object.getString(relation.targetColumn));
                                     newJosn.put(relation.sourceColumn, object.getString(relation.targetColumn));
 //                                    dataArray.add(queryPageDto.dataArray);
                                     if (queryPageDto.dataArray!=null) {
@@ -453,24 +452,23 @@ public class FactAttributeImpl
                             }
                         }
                     }
-//                    dataArray.addAll(jsonArray);
-//                    wideTableData.dataArray = dataArray;
+                    JSONObject jsonObject = new JSONObject();
                     for (int i = 0; i < dataArray.size(); i++) {
-//                        JSONObject jsonObject = dataArray.getJSONObject(i);
-//
-//                        JSONObject jsonObject1 = jsonArray.getJSONObject(i);
-//                        jsonObject = jsonObject1;
-
+                        // 合并两个JsonObject
                         String note = dataArray.getJSONObject(i).toString()+ jsonArray.getJSONObject(i);
                         if(note.contains("}{")){
                             note = note.replace("}{", ",");
                         }
-                        JSONObject jsonObject = JSONObject.parseObject(note);
+                        jsonObject = JSONObject.parseObject(note);
                         wideTableDataDataArray.add(jsonObject);
                     }
 
+                    wideTableData.columnList = jsonObject.entrySet().stream().map(e -> e.getKey()).collect(Collectors.toList());
 
                     wideTableData.dataArray = wideTableDataDataArray;
+
+
+
                 }
 
             }
