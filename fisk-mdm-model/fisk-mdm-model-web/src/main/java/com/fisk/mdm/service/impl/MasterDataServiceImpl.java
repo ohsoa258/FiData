@@ -986,9 +986,12 @@ public class MasterDataServiceImpl implements IMasterDataService {
             List<Map<String, Object>> maps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, maps.get(0).get("fidata_error_msg").toString());
         }
-        //添加日志表数据
-        dto.getMembers().put("fidata_version_id", dto.getVersionId());
-        return masterDataLogService.addMasterDataLog(dto.getMembers(), TableNameGenerateUtils.generateLogTableName(dto.getModelId(), dto.getEntityId()));
+        //添加维护日志表数据
+        if (entityServiceImpl.getEnableMemberLog(dto.getEntityId())) {
+            dto.getMembers().put("fidata_version_id", dto.getVersionId());
+            return masterDataLogService.addMasterDataLog(dto.getMembers(), TableNameGenerateUtils.generateLogTableName(dto.getModelId(), dto.getEntityId()));
+        }
+        return ResultEnum.SUCCESS;
     }
 
     /**
