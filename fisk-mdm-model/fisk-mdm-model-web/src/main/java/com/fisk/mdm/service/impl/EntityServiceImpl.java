@@ -401,4 +401,18 @@ public class EntityServiceImpl implements EntityService {
         return EntityMap.INSTANCES.poListToDropDownVoList(list);
     }
 
+    /**
+     * 实体是否开启成员日志
+     *
+     * @param entityId
+     * @return
+     */
+    public boolean getEnableMemberLog(Integer entityId) {
+        EntityPO entityPo = entityMapper.selectById(entityId);
+        if (entityPo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return entityPo.getEnableMemberLog() == 0 ? false : true;
+    }
+
 }
