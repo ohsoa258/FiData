@@ -262,7 +262,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("id", attributeIds);
+        queryWrapper.in("id", attributeIds).orderByAsc("entity_id").orderByAsc("sort_wieght");
         List<AttributePO> poList = attributeMapper.selectList(queryWrapper);
         List<AttributeInfoDTO> attributeInfos = AttributeMap.INSTANCES.poToDtoList(poList);
         for (AttributeInfoDTO item : attributeInfos) {
