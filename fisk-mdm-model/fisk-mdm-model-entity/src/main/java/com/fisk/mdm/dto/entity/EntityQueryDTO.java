@@ -18,6 +18,7 @@ public class EntityQueryDTO {
     private String name;
     private String type;
     private String dataType;
+    private String displayName;
     private String aliasName;
     /**
      * 是否选中 0:未选中 1:选中

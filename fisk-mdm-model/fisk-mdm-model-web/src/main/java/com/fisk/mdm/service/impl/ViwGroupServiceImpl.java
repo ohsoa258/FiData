@@ -660,6 +660,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
                 dto1.setName(e.getName());
                 dto1.setType(ObjectTypeEnum.ATTRIBUTES.getName());
                 dto1.setDataType(e.getDataType());
+                dto1.setDisplayName(e.getDisplayName());
 
                 // 查询别名
                 QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
