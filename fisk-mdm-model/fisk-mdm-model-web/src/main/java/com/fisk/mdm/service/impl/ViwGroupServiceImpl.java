@@ -9,10 +9,12 @@ import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.entity.EntityQueryDTO;
 import com.fisk.mdm.dto.viwGroup.*;
+import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.ViwGroupDetailsPO;
 import com.fisk.mdm.entity.ViwGroupPO;
 import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.ViwGroupMap;
+import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.mapper.ViwGroupDetailsMapper;
 import com.fisk.mdm.mapper.ViwGroupMapper;
 import com.fisk.mdm.service.AttributeService;
@@ -43,6 +45,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.closeConnection;
+import static com.fisk.mdm.utils.mdmBEBuild.impl.BuildPgCommandImpl.MARK;
 import static com.fisk.mdm.utils.mdmBEBuild.impl.BuildPgCommandImpl.PUBLIC;
 
 /**
@@ -73,6 +76,8 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     EntityService entityService;
     @Resource
     AttributeService attributeService;
+    @Resource
+    AttributeMapper attributeMapper;
     @Resource
     UserClient userClient;
 
@@ -464,6 +469,8 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         // 追加主表属性
         str.append(mainName);
         str.append(",");
+        // 主表基础字段
+        str.append(baseField("a1"));
 
         // 所有从表字段的集合,统一拼接
         List<String> list = new ArrayList<>();
@@ -537,6 +544,26 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             secondaryStr.append(" ON ");
             secondaryStr.append(aliasReduce + "." + "fidata_version_id = " + aliasAdd + "." + "fidata_version_id");
 
+            // 1.根据实体查询出该实体的code，得到属性id
+            QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda()
+                    .eq(AttributePO::getEntityId,e)
+                    .eq(AttributePO::getName,"code");
+            int attributeId = (int) attributeMapper.selectOne(queryWrapper).getId();
+
+            // 2.根据attributeId匹配到域属性
+            QueryWrapper<AttributePO> queryWrapper1 = new QueryWrapper<>();
+            queryWrapper1.lambda()
+                    .eq(AttributePO::getDomainId,attributeId)
+                    .last(" limit 1");
+            String columnName = attributeMapper.selectOne(queryWrapper1).getColumnName();
+
+            // 查询属性
+            secondaryStr.append(" AND ");
+            secondaryStr.append(aliasReduce + "." + columnName);
+            secondaryStr.append(" = ");
+            secondaryStr.append(aliasAdd + "." + "fidata_id");
+
             return secondaryStr.toString();
         }).collect(Collectors.joining(" LEFT JOIN "));
 
@@ -582,6 +609,22 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             str.append(leftJoinDoMain);
         }
 
+        return str.toString();
+    }
+
+    /**
+     * 自定义视图基础字段
+     * @return
+     */
+    public String baseField(String alias){
+        StringBuilder str = new StringBuilder();
+        str.append(alias + "." + MARK + "id").append(",");
+        str.append(alias + "." + MARK + "version_id").append(",");
+        str.append(alias + "." + MARK + "create_time").append(",");
+        str.append(alias + "." + MARK + "create_user").append(",");
+        str.append(alias + "." + MARK + "update_time").append(",");
+        str.append(alias + "." + MARK + "update_user").append(",");
+        str.append(alias + "." + MARK + "del_flag");
         return str.toString();
     }
 
