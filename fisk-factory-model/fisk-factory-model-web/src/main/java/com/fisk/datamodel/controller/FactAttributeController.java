@@ -113,6 +113,12 @@ public class FactAttributeController {
         return ResultEntityBuild.build(service.addFactField(dto));
     }
 
+    @ApiOperation("修改单个事实字段")
+    @PutMapping("/editFactField")
+    public ResultEntity<Object> editFactField(@Validated @RequestBody FactAttributeDTO dto) {
+        return ResultEntityBuild.build(service.editFactField(dto));
+    }
+
     @ApiOperation("根据业务域id,获取业务域下的维度表详情和共享维度表详情(表名+字段),查询的都是已发布的表")
     @GetMapping("/getDimensionDetailByBusinessId/{id}")
     public ResultEntity<Object> getDimensionDetailByBusinessId(@PathVariable("id") int id) {

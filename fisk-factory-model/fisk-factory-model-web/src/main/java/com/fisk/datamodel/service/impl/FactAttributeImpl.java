@@ -497,6 +497,30 @@ public class FactAttributeImpl
         return wideTableData;
     }
 
+    @Override
+    public ResultEnum editFactField(FactAttributeDTO dto) {
+
+        // 根据事实id获取所有的事实字段
+        // SELECT fact_field_en_name FROM tb_fact_attribute WHERE del_flag=1 AND (fact_id = ?)
+        List<String> factFieldEnNameList = this.query()
+                .eq("fact_id", dto.factId)
+                .select("fact_field_en_name")
+                .list()
+                .stream().map(e -> e.factFieldEnName).collect(Collectors.toList());
+        // 判断字段唯一
+        for (String s : factFieldEnNameList) {
+            if (s.equalsIgnoreCase(dto.factFieldEnName)) {
+                return ResultEnum.FACT_FIELD_EXIST;
+            }
+        }
+
+        FactAttributePO model = this.getById(dto.id);
+        if (model == null) {
+            return ResultEnum.DATA_EXISTS;
+        }
+        return this.updateById(FactAttributeMap.INSTANCES.dtoToPo(dto)) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
     public String buildFactUpdateSql(int factId) {
 
         Map<String, String> configDetailsMap = this.query()
@@ -523,7 +547,7 @@ public class FactAttributeImpl
                     WideTableSourceRelationsDTO relationsDto = relations.get(0);
                     str.append("update ").append(relationsDto.sourceTable)
                             .append(" set ")
-                            .append(relationsDto.sourceTable).append(".").append(entry.getKey())
+                            /*.append(relationsDto.sourceTable).append(".")*/.append(entry.getKey())
                             .append(" = ")
                             .append(relationsDto.targetTable).append(".").append(entry.getKey())
                             .append(" from ")

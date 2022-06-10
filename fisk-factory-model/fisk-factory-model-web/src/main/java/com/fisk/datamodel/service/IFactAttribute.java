@@ -124,4 +124,12 @@ public interface IFactAttribute {
      * @return 查询结果
      */
     WideTableQueryPageDTO executeFactTableSql(WideTableFieldConfigDTO dto);
+
+    /**
+     * 修改单个事实字段
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum editFactField(FactAttributeDTO dto);
 }
