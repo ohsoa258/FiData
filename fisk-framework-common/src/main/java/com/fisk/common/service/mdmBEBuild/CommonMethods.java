@@ -1,9 +1,15 @@
 package com.fisk.common.service.mdmBEBuild;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -87,6 +93,29 @@ public class CommonMethods {
             return map;
         } catch (IllegalAccessException e) {
             return map;
+        }
+    }
+
+    /**
+     * 对象深拷贝
+     *
+     * @param src
+     * @param <T>
+     * @return
+     */
+    public static <T> List<T> deepCopy(List<T> src) {
+        try {
+            ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+            ObjectOutputStream out = new ObjectOutputStream(byteOut);
+            out.writeObject(src);
+
+            ByteArrayInputStream byteIn = new ByteArrayInputStream(byteOut.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(byteIn);
+            @SuppressWarnings("unchecked")
+            List<T> dest = (List<T>) in.readObject();
+            return dest;
+        } catch (Exception e) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e);
         }
     }
 

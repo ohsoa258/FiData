@@ -2,6 +2,8 @@ package com.fisk.mdm.vo.attribute;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 /**
  * 属性列名vo
  *
@@ -9,7 +11,7 @@ import lombok.Data;
  * @date 2022/04/28
  */
 @Data
-public class AttributeColumnVO {
+public class AttributeColumnVO implements Serializable {
 
     /**
      * 实体id

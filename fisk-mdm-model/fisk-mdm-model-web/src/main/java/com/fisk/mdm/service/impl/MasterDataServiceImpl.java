@@ -10,6 +10,7 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.common.service.mdmBEBuild.BuildFactoryHelper;
+import com.fisk.common.service.mdmBEBuild.CommonMethods;
 import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.common.service.mdmBEBuild.dto.ImportDataPageDTO;
 import com.fisk.common.service.mdmBEBuild.dto.InsertImportDataDTO;
@@ -156,7 +157,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
     /**
      * 连接Connection
      *
-     * @return {@link Connection}
+     * @return
      */
     public Connection getConnection() {
         AbstractDbHelper dbHelper = new AbstractDbHelper();
@@ -190,15 +191,16 @@ public class MasterDataServiceImpl implements IMasterDataService {
             return ResultEnum.DATA_NOTEXISTS;
         }
         columnList.add(1, "新编码");
-        vo.setHeaderList(columnList);
+        vo.setHeaderDisplayList(columnList);
         vo.setFileName(entityPo.getDisplayName());
         return exportExcel(vo, response);
     }
 
     /**
-     * 根据实体id查询主数据
-     *
-     * @param dto 实体id
+     * 属性组、自定义视图查看主数据数据
+     * @param dto
+     * @param response
+     * @return
      */
     @Override
     public ResultObjectVO getMasterDataPage(MasterDataQueryDTO dto, HttpServletResponse response) {
@@ -226,7 +228,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         }
         //获得主数据表名
         String tableName = TableNameGenerateUtils.generateViwTableName(entityVo.getModelId(), dto.getEntityId());
-        //查询该实体下发布的属性
+        //查询该实体下已发布的属性
         List<AttributeInfoDTO> attributeInfos = attributeService.listPublishedAttribute(dto.getEntityId());
         if (attributeInfos.isEmpty()) {
             throw new FkException(ResultEnum.ATTRIBUTE_NOT_EXIST);
@@ -283,8 +285,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
         List<AttributeColumnVO> attributeColumnVoList = AttributeMap.INSTANCES.dtoListToVoList(attributeInfos);
         List<ResultAttributeGroupVO> attributeGroupVoList = new ArrayList<>();
         if (!CollectionUtils.isEmpty(dto.getAttributeGroups())) {
+            List<AttributeColumnVO> newAttributeColumnVoList = CommonMethods.deepCopy(attributeColumnVoList);
             for (Integer id : dto.getAttributeGroups()) {
-                attributeGroupVoList.add(setAttributeGroup(id, dto.getEntityId(), attributeColumnVoList));
+                attributeGroupVoList.add(setAttributeGroup(id, dto.getEntityId(), newAttributeColumnVoList));
             }
             List<Integer> attributeGroupIds = new ArrayList<>();
             //获取所有实体属性id集合
@@ -332,8 +335,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
         List<AttributeColumnVO> attributeColumnVoList = AttributeMap.INSTANCES.dtoListToVoList(attributeInfos);
         List<ResultAttributeGroupVO> attributeGroupVoList = new ArrayList<>();
         //组装属性组数据
+        List<AttributeColumnVO> newAttributeColumnVoList = CommonMethods.deepCopy(attributeColumnVoList);
         for (Integer id : dto.getAttributeGroups()) {
-            attributeGroupVoList.add(setAttributeGroup(id, dto.getEntityId(), attributeColumnVoList));
+            attributeGroupVoList.add(setAttributeGroup(id, dto.getEntityId(), newAttributeColumnVoList));
         }
         List<Integer> attributeIdList = new ArrayList<>();
         //获取属性组实体属性id集合
@@ -409,12 +413,12 @@ public class MasterDataServiceImpl implements IMasterDataService {
             //是否导出
             if (dto.getExport()) {
                 ExportResultVO vo = new ExportResultVO();
-                List<String> nameList = attributeColumnVoList.stream().map(e -> e.getName()).collect(Collectors.toList());
-                List<String> nameDisplayList = attributeColumnVoList.stream().map(e -> e.getDisplayName()).collect(Collectors.toList());
+                List<String> nameList = newColumnList.stream().map(e -> e.getName()).collect(Collectors.toList());
+                List<String> nameDisplayList = newColumnList.stream().map(e -> e.getDisplayName()).collect(Collectors.toList());
                 vo.setHeaderList(nameList);
                 vo.setDataArray(data);
                 vo.setHeaderDisplayList(nameDisplayList);
-                vo.setFileName("");
+                vo.setFileName(tableName);
                 exportExcel(vo, response);
                 return resultObjectVO;
             }
@@ -472,6 +476,14 @@ public class MasterDataServiceImpl implements IMasterDataService {
         return vo;
     }
 
+    /**
+     * 获取属性组以及属性组下实体属性
+     *
+     * @param attributeGroupId
+     * @param entity
+     * @param attributeColumnVoList
+     * @return
+     */
     public ResultAttributeGroupVO setAttributeGroup(Integer attributeGroupId,
                                                     Integer entity,
                                                     List<AttributeColumnVO> attributeColumnVoList) {
@@ -483,31 +495,19 @@ public class MasterDataServiceImpl implements IMasterDataService {
         List<AttributeColumnVO> collect = attributeColumnVoList.stream()
                 .filter(e -> attributes.contains(e.getId())).collect(Collectors.toList());
         //获得业务字段名
-        List<AttributeColumnVO> newColumnList = new ArrayList<>();
-        for (AttributeColumnVO attributeColumnVo : collect) {
-            newColumnList.add(attributeColumnVo);
-            //域字段添加编码和名称表头
-            if (attributeColumnVo.getDataType().equals(DataTypeEnum.DOMAIN.getName())) {
-                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.DOMAIN));
-            }
-            //文件类型
-            else if (attributeColumnVo.getDataType().equals(DataTypeEnum.FILE.getName())) {
-                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.FILE));
-            }
-            //经纬度类型
-            else if (attributeColumnVo.getDataType().equals(DataTypeEnum.LATITUDE_COORDINATE.getName())) {
-                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.LATITUDE_COORDINATE));
-                newColumnList.add(getCodeAndName(attributeColumnVo));
-            }
-        }
-        attributeGroupVo.setAttributes(newColumnList);
+        attributeGroupVo.setAttributes(queryAttributeData(collect));
         return attributeGroupVo;
     }
 
+    /**
+     * 不同实体属性类型，需添加默认字段
+     *
+     * @param attributeColumnVoList
+     * @return
+     */
     public List<AttributeColumnVO> queryAttributeData(List<AttributeColumnVO> attributeColumnVoList) {
         List<AttributeColumnVO> newColumnList = new ArrayList<>();
         for (AttributeColumnVO attributeColumnVo : attributeColumnVoList) {
-            newColumnList.add(attributeColumnVo);
             //域字段添加编码和名称表头
             if (attributeColumnVo.getDataType().equals(DataTypeEnum.DOMAIN.getName())) {
                 newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.DOMAIN));
@@ -527,6 +527,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 attributeColumnVo.setName(TableNameGenerateUtils.generateComplexTypeLng(attributeColumnVo.getName(), true));
                 newColumnList.add(getCodeAndName(attributeColumnVo));
             }
+            newColumnList.add(attributeColumnVo);
         }
         return newColumnList;
     }
@@ -1024,17 +1025,12 @@ public class MasterDataServiceImpl implements IMasterDataService {
         XSSFWorkbook workbook = new XSSFWorkbook();
         XSSFSheet sheet = workbook.createSheet("sheet1");
         XSSFRow row1 = sheet.createRow(0);
-        if (CollectionUtils.isEmpty(vo.getHeaderList())) {
-            ResultEntityBuild.build(ResultEnum.VISUAL_QUERY_ERROR);
+        if (CollectionUtils.isEmpty(vo.getHeaderDisplayList())) {
+            ResultEntityBuild.build(ResultEnum.CODE_NOT_EXIST);
         }
-        if (!CollectionUtils.isEmpty(vo.getHeaderDisplayList())) {
-            for (int i = 0; i < vo.getHeaderDisplayList().size(); i++) {
-                row1.createCell(i).setCellValue(vo.getHeaderDisplayList().get(i));
-            }
-        } else {
-            for (int i = 0; i < vo.getHeaderList().size(); i++) {
-                row1.createCell(i).setCellValue(vo.getHeaderList().get(i));
-            }
+        //添加表头
+        for (int i = 0; i < vo.getHeaderDisplayList().size(); i++) {
+            row1.createCell(i).setCellValue(vo.getHeaderDisplayList().get(i));
         }
         if (!CollectionUtils.isEmpty(vo.getDataArray())) {
             for (int i = 0; i < vo.getDataArray().size(); i++) {
@@ -1055,8 +1051,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
             workbook.write(output);
             output.close();
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new FkException(ResultEnum.SQL_ANALYSIS, e);
+            log.error("export excel error:", e);
+            throw new FkException(ResultEnum.SQL_ANALYSIS);
         }
         return ResultEnum.SUCCESS;
     }
