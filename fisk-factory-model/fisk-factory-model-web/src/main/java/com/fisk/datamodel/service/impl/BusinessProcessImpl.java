@@ -250,7 +250,10 @@ public class BusinessProcessImpl
                 }
 
                 // 维度键没有源字段,暂时将目标字段赋值给源字段
-                fieldList.stream().filter(e -> e.attributeType == 1).forEachOrdered(e -> e.sourceFieldName = e.fieldEnName);
+                fieldList.stream().filter(e -> e.attributeType == 1).forEachOrdered(e -> {
+                    e.sourceFieldName = e.fieldEnName;
+                    e.fieldLength = 200;
+                });
 
                 pushDto.fieldList=fieldList;
                 factList.add(pushDto);
