@@ -172,6 +172,7 @@ public class BuildDataModelDorisTableListener
                 bfd.queryEndTime = modelPublishTableDTO.queryEndTime;
                 bfd.appName = inpData.businessAreaName;
                 bfd.openTransmission = inpData.openTransmission;
+                bfd.updateSql = modelPublishTableDTO.factUpdateSql;
                 if (modelPublishTableDTO.createType == 0) {
                     //类型为物理表
                     bfd.type = OlapTableEnum.DIMENSION;
@@ -387,7 +388,8 @@ public class BuildDataModelDorisTableListener
         });
 
         String sql1 = sql.toString();
-        String associatedKey = associatedConditions(fieldList);
+        //String associatedKey = associatedConditions(fieldList);
+        String associatedKey = "";
         String sql2 = sqlFileds.toString() + associatedKey;
         sql2 += "fi_createtime varchar(50),fi_updatetime varchar(50)";
         String sql3 = sqlFileds1.toString();

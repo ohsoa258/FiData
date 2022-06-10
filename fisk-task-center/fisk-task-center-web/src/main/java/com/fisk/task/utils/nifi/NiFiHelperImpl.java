@@ -26,6 +26,7 @@ import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.nifi.FunnelDTO;
 import com.fisk.task.dto.nifi.ProcessorRunStatusEntity;
 import com.fisk.task.dto.nifi.*;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.TableNifiSettingDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.enums.OlapTableEnum;
@@ -2012,20 +2013,25 @@ public class NiFiHelperImpl implements INiFiHelper {
     public List<String> getSqlForPgOds(DataAccessConfigDTO config) {
         List<String> SqlForPgOds = new ArrayList<>();
         String name = config.processorConfig.targetTableName;
-        String deleteSql = assemblySql(config, SynchronousTypeEnum.TOPGODS, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName());
+        String deleteSql = assemblySql(config, SynchronousTypeEnum.TOPGODS, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName(), null);
         config.processorConfig.targetTableName = "stg_" + name;
-        String toOdaSql = assemblySql(config, SynchronousTypeEnum.TOPGODS, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName());
+        String toOdaSql = assemblySql(config, SynchronousTypeEnum.TOPGODS, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName(), null);
         SqlForPgOds.add(deleteSql);
         SqlForPgOds.add(toOdaSql);
         return SqlForPgOds;
     }
 
     @Override
-    public String assemblySql(DataAccessConfigDTO config, SynchronousTypeEnum synchronousTypeEnum, String funcName) {
+    public String assemblySql(DataAccessConfigDTO config, SynchronousTypeEnum synchronousTypeEnum, String funcName, BuildNifiFlowDTO buildNifiFlow) {
         TableBusinessDTO business = config.businessDTO;
         String targetTableName = config.processorConfig.targetTableName;
         String sql = "";
-        sql += "call public." + funcName + "('";
+        if (buildNifiFlow != null) {
+            sql += "call public." + funcName + "('" + buildNifiFlow.updateSql + "','";
+        } else {
+            sql += "call public." + funcName + "('";
+        }
+
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
                 sql += "stg_" + targetTableName + "'";
@@ -2080,7 +2086,8 @@ public class NiFiHelperImpl implements INiFiHelper {
         }
         if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName())) {
             if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
-                String s = associatedConditions(config);
+                //String s = associatedConditions(config);
+                String s = null;
                 sql = sql.substring(0, sql.length() - 1);
                 if (s == null && s.length() < 2) {
                     sql += ",'')";
@@ -2092,6 +2099,7 @@ public class NiFiHelperImpl implements INiFiHelper {
                 sql += ",'')";
             }
         }
+        log.info("函数语句:" + sql);
         return sql;
     }
 
