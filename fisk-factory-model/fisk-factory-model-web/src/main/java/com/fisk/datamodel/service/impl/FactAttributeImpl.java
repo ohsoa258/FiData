@@ -1,5 +1,6 @@
 package com.fisk.datamodel.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -35,10 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -493,10 +491,56 @@ public class FactAttributeImpl
         if (StringUtils.isBlank(dto.factTableName)) {
             throw new FkException(ResultEnum.FACT_NAME_NOTNULL);
         }
-        wideTableData.updateSqlScript = "update set " + dto.factTableName + "Key = " + wideTableData.sqlScript;
+        wideTableData.updateSqlScript = buildFactUpdateSql(dto.entity.get(0).tableId);
         dto.entity = wideTableAliasDTO.entity;
         wideTableData.configDTO = dto;
         return wideTableData;
     }
 
+    public String buildFactUpdateSql(int factId) {
+
+        Map<String, String> configDetailsMap = this.query()
+                .eq("fact_id", factId)
+                .eq("attribute_type", 1)
+                .select("config_details", "fact_field_en_name")
+                .list()
+                .stream()
+                .filter(Objects::nonNull)
+                .filter(e -> StringUtils.isNotBlank(e.configDetails))
+                .collect(Collectors.toMap(FactAttributePO::getFactFieldEnName, FactAttributePO::getConfigDetails));
+
+        StringBuilder str = new StringBuilder();
+        if (!CollectionUtils.isEmpty(configDetailsMap)) {
+
+
+            for (Map.Entry<String, String> entry : configDetailsMap.entrySet()) {
+
+                // 当前维度key关联关系
+                WideTableFieldConfigDTO dto = JSON.parseObject(entry.getValue(), WideTableFieldConfigDTO.class);
+                List<WideTableSourceRelationsDTO> relations = dto.relations;
+                if (!CollectionUtils.isEmpty(relations)) {
+                    // 先做单连线
+                    WideTableSourceRelationsDTO relationsDto = relations.get(0);
+                    str.append("update ").append(relationsDto.sourceTable)
+                            .append(" set ")
+                            .append(relationsDto.sourceTable).append(".").append(entry.getKey())
+                            .append(" = ")
+                            .append(relationsDto.targetTable).append(".").append(entry.getKey())
+                            .append(" from ")
+                            .append(relationsDto.targetTable)
+                            .append(" where ")
+                            .append(relationsDto.sourceTable).append(".").append(relationsDto.sourceColumn)
+                            .append(" = ")
+                            .append(relationsDto.targetTable).append(".").append(relationsDto.targetColumn)
+                            .append(";");
+                }
+            }
+        }
+
+        if (StringUtils.isNotBlank(str.toString())) {
+            return str.toString();
+        } else {
+            return null;
+        }
+    }
 }

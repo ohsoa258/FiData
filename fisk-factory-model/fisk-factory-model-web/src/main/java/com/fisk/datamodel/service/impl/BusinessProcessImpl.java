@@ -216,6 +216,7 @@ public class BusinessProcessImpl
             addTableHistory(dto);
             for (FactPO item:factPoList)
             {
+                // 封装的事实字段表集合
                 ModelPublishTableDTO pushDto=new ModelPublishTableDTO();
                 pushDto.tableId=Integer.parseInt(String.valueOf(item.id));
                 pushDto.tableName=item.factTabName;
@@ -225,6 +226,9 @@ public class BusinessProcessImpl
                 pushDto.queryEndTime = data1.get(SystemVariableTypeEnum.END_TIME.getValue());
                 pushDto.sqlScript = data1.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
                 pushDto.queryStartTime = data1.get(SystemVariableTypeEnum.START_TIME.getValue());
+
+                pushDto.factUpdateSql = factAttribute.buildFactUpdateSql(Math.toIntExact(item.id));
+
                 //获取事实表同步方式
                 if (dto.syncMode !=0)
                 {
@@ -248,8 +252,8 @@ public class BusinessProcessImpl
                 factList.add(pushDto);
                 data.dimensionList=factList;
                 data.openTransmission=dto.openTransmission;
-                //发送消息
-                log.info(JSON.toJSONString(data));
+                //发送消息,建表
+                log.info("数据建模发布表任务json: "+JSON.toJSONString(data));
                 publishTaskClient.publishBuildAtlasDorisTableTask(data);
             }
         } catch (FkException ex) {
