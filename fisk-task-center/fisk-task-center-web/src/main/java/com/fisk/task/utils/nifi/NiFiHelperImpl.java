@@ -2090,7 +2090,7 @@ public class NiFiHelperImpl implements INiFiHelper {
                 String s = "";
                 sql = sql.substring(0, sql.length() - 1);
                 //预先留住这个判断  s == null && s.length() < 2
-                if (Objects.isNull(s)) {
+                if (StringUtils.isEmpty(s)) {
                     sql += ",'')";
                 } else {
                     sql += ",'{\"AssociatedConditionDTO\":" + s + "}')";
