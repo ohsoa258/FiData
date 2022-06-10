@@ -2087,9 +2087,10 @@ public class NiFiHelperImpl implements INiFiHelper {
         if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName())) {
             if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
                 //String s = associatedConditions(config);
-                String s = null;
+                String s = "";
                 sql = sql.substring(0, sql.length() - 1);
-                if (s == null && s.length() < 2) {
+                //预先留住这个判断  s == null && s.length() < 2
+                if (Objects.isNull(s)) {
                     sql += ",'')";
                 } else {
                     sql += ",'{\"AssociatedConditionDTO\":" + s + "}')";
