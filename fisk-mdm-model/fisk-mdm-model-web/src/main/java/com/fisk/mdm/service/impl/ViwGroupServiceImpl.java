@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.closeConnection;
 import static com.fisk.mdm.utils.mdmBEBuild.impl.BuildPgCommandImpl.PUBLIC;
 
 /**
@@ -193,6 +194,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
      */
     public void deleteView(String viwName){
 
+        Connection connection = null;
         String sql = null;
         try{
 
@@ -201,7 +203,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
 
             // 创建连接对象
             AbstractDbHelper dbHelper = new AbstractDbHelper();
-            Connection connection = dbHelper.connection(connectionStr, acc,
+            connection = dbHelper.connection(connectionStr, acc,
                     pwd,type);
 
             // 判断视图是否存在
@@ -216,6 +218,9 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         }catch (SQLException ex){
             log.error("【删除自定义视图Sql】:" + sql + "【删除自定义视图失败,异常信息】:" + ex);
             ex.printStackTrace();
+        }finally {
+            // 关闭数据库连接
+            closeConnection(connection);
         }
     }
 
@@ -359,6 +364,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
+        Connection connection = null;
         String sql = null;
         try {
             // 1.拼接自定义视图Sql
@@ -366,7 +372,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
 
             // 2.连接对象
             AbstractDbHelper dbHelper = new AbstractDbHelper();
-            Connection connection = dbHelper.connection(connectionStr, acc,
+            connection = dbHelper.connection(connectionStr, acc,
                     pwd,type);
 
             // 3.执行Sql
@@ -374,6 +380,9 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         }catch (SQLException ex){
             log.error("【创建自定义视图Sql】:" + sql + "【创建自定义视图失败,异常信息】:" + ex);
             ex.printStackTrace();
+        }finally {
+            // 关闭数据库连接
+            closeConnection(connection);
         }
 
         return ResultEnum.SUCCESS;

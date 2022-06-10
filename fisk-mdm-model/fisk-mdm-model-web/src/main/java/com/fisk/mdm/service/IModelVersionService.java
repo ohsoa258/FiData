@@ -2,7 +2,9 @@ package com.fisk.mdm.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.mdm.dto.modelVersion.ModelCopyDTO;
 import com.fisk.mdm.dto.modelVersion.ModelVersionDTO;
+import com.fisk.mdm.dto.modelVersion.ModelVersionUpdateDTO;
 import com.fisk.mdm.entity.ModelVersionPO;
 import com.fisk.mdm.vo.modelVersion.ModelVersionVO;
 
@@ -27,4 +29,24 @@ public interface IModelVersionService extends IService<ModelVersionPO> {
      */
     List<ModelVersionVO> getByModelId(Integer modelId);
 
+    /**
+     * 修改模型版本信息
+     * @param dto
+     * @return
+     */
+    ResultEnum updateData(ModelVersionUpdateDTO dto);
+
+    /**
+     * 根据id删除版本信息
+     * @param id
+     * @return
+     */
+    ResultEnum deleteDataById(Integer id);
+
+    /**
+     * 复制数据
+     * @param dto
+     * @return
+     */
+    ResultEnum copyDataByModelId(ModelCopyDTO dto);
 }
