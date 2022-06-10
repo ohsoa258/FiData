@@ -225,7 +225,7 @@ public interface PublishTaskClient {
      * @param buildTableNifiSettingDTO
      * @return
      */
-    @PostMapping("/immediatelyStart")
+    @PostMapping("/publishTask/immediatelyStart")
     public ResultEntity<Object> immediatelyStart(@RequestBody BuildTableNifiSettingDTO buildTableNifiSettingDTO);
 
     /**

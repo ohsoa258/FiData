@@ -2099,7 +2099,7 @@ public class NiFiHelperImpl implements INiFiHelper {
     public void immediatelyStart(TableNifiSettingDTO tableNifiSettingDTO) {
         try {
             TableNifiSettingPO tableNifiSetting = tableNifiSettingService.getByTableId(tableNifiSettingDTO.tableAccessId, tableNifiSettingDTO.type);
-            ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(tableNifiSetting.publishKafkaProcessorId);
+            ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(tableNifiSetting.dispatchComponentId);
             enabledProcessor(tableNifiSetting.tableComponentId, processor);
             com.davis.client.model.ProcessorRunStatusEntity processorRunStatusEntity = new com.davis.client.model.ProcessorRunStatusEntity();
             processorRunStatusEntity.setDisconnectedNodeAcknowledged(false);
