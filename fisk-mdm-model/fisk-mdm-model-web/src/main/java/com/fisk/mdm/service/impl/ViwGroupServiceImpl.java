@@ -469,8 +469,6 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         // 追加主表属性
         str.append(mainName);
         str.append(",");
-        // 主表基础字段
-        str.append(baseField("a1"));
 
         // 所有从表字段的集合,统一拼接
         List<String> list = new ArrayList<>();
@@ -492,6 +490,8 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         // 追加从表属性
         String secondaryFields = list.stream().collect(Collectors.joining(","));
         str.append(secondaryFields);
+        // 主表基础字段
+        str.append(this.baseField("a1"));
 
         // 主表表名称
         AtomicInteger count1 = new AtomicInteger(0);
