@@ -139,7 +139,14 @@ public class DimensionAttributeImpl
             fieldDTO.fieldLength=attributePo.dimensionFieldLength;
             fieldDTO.attributeType=attributePo.attributeType;
             fieldDTO.isPrimaryKey=attributePo.isPrimaryKey;
-            fieldDTO.sourceFieldName=attributePo.sourceFieldName;
+
+            if (attributePo.attributeType == 1) {
+                fieldDTO.sourceFieldName = attributePo.dimensionFieldEnName;
+            } else {
+                fieldDTO.sourceFieldName = attributePo.sourceFieldName;
+            }
+
+//            fieldDTO.sourceFieldName=attributePo.sourceFieldName;
             fieldDTO.associateDimensionId=attributePo.associateDimensionId;
             fieldDTO.associateDimensionFieldId=attributePo.associateDimensionFieldId;
             //判断是否关联维度

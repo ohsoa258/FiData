@@ -297,7 +297,13 @@ public class FactAttributeImpl
             fieldDTO.fieldType=attributePo.factFieldType;
             fieldDTO.fieldLength=attributePo.factFieldLength;
             fieldDTO.attributeType=attributePo.attributeType;
-            fieldDTO.sourceFieldName=attributePo.sourceFieldName;
+
+            if (attributePo.attributeType == 1) {
+                fieldDTO.sourceFieldName = attributePo.factFieldEnName;
+            } else {
+                fieldDTO.sourceFieldName = attributePo.sourceFieldName;
+            }
+
             fieldDTO.associateDimensionId=attributePo.associateDimensionId;
             fieldDTO.associateDimensionFieldId=attributePo.associateDimensionFieldId;
             //判断是否关联维度
