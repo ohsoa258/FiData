@@ -248,6 +248,10 @@ public class BusinessProcessImpl
                 {
                     fieldList.add(pushField(attributePo));
                 }
+
+                // 维度键没有源字段,暂时将目标字段赋值给源字段
+                fieldList.stream().filter(e -> e.attributeType == 1).forEachOrdered(e -> e.sourceFieldName = e.fieldEnName);
+
                 pushDto.fieldList=fieldList;
                 factList.add(pushDto);
                 data.dimensionList=factList;
