@@ -85,12 +85,12 @@ ribbon:
     enabled: true
     clients: datamodel-service,dataaccess-service
 
-  hystrix:
-    command:
-    default:
-      isolation:
-        thread:
-          timeoutInMilliseconds:  30000
-      execution:
-        timeout:
-          enabled: true
+hystrix:
+  command:
+  default:
+    isolation:
+      thread:
+        timeoutInMilliseconds:  30000
+    execution:
+      timeout:
+        enabled: true

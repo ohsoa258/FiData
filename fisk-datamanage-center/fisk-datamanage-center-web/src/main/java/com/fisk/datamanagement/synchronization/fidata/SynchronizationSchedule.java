@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.synchronization.fidata;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.TriggerContext;
@@ -17,6 +18,7 @@ import java.util.Date;
  */
 @EnableScheduling
 @Component
+@Slf4j
 public class SynchronizationSchedule implements SchedulingConfigurer {
 
     @Resource
@@ -38,12 +40,12 @@ public class SynchronizationSchedule implements SchedulingConfigurer {
             @Override
             public void run() {
                 // 业务逻辑
-               if (enabled)
-               {
+               if (enabled) {
+                   log.info("同步任务开始执行");
                    //同步元数据对象
                    synchronizationData.synchronizationPgData();
-                   //同步元数据对象血缘
-                   synchronizationPgKinShip.synchronizationKinShip();
+                   /*//同步元数据对象血缘
+                   synchronizationPgKinShip.synchronizationKinShip();*/
                }
             }
         };

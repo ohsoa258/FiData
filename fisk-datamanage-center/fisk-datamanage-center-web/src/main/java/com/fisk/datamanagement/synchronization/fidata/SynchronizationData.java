@@ -118,21 +118,20 @@ public class SynchronizationData {
             String[] hostPort=fiDataPort.split(",");
             for (int i=0;i<hostName.length;i++)
             {
-                String newHostName=hostName[i]+":"+hostPort[i];
-                queryWrapper.lambda().eq(MetadataMapAtlasPO::getQualifiedName,newHostName);
-                MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
-                String instanceGuid="";
+                //查询实例qualifiedName是否已存在
+                String hostNameQualifiedName = hostName[i] + ":" + hostPort[i];
+                queryWrapper.lambda().eq(MetadataMapAtlasPO::getQualifiedName, hostNameQualifiedName);
+                MetadataMapAtlasPO po = metadataMapAtlasMapper.selectOne(queryWrapper);
+                String instanceGuid = "";
                 //判断实例是否已存在
-                if (po ==null)
-                {
-                    String addResult = addEntity(EntityTypeEnum.RDBMS_INSTANCE,null,"",null,null,i);
-                    if (addResult=="")
-                    {
+                if (po == null) {
+                    String addResult = addEntity(EntityTypeEnum.RDBMS_INSTANCE, null, "", null, null, i);
+                    if (addResult == "") {
                         return;
                     }
-                    //向MetadataMapAtlas表添加数据
+                    //向MetadataMapAtlas配置表添加数据
                     instanceGuid = addMetadataMapAtlas(addResult,
-                            EntityTypeEnum.RDBMS_INSTANCE, newHostName,
+                            EntityTypeEnum.RDBMS_INSTANCE, hostNameQualifiedName,
                             0,
                             0,
                             0,
@@ -154,9 +153,7 @@ public class SynchronizationData {
         }
         catch (Exception e)
         {
-            e.printStackTrace();
             log.error("synchronizationInstance ex:",e);
-            return;
         }
     }
 
@@ -181,30 +178,26 @@ public class SynchronizationData {
             queryWrapper1.lambda().eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_DB.getValue());
             List<MetadataMapAtlasPO> mapAtlasDbPoList =metadataMapAtlasMapper.selectList(queryWrapper1);
             int index=0;
-            for (int i=0;i<dbList.length;i++)
-            {
-                index+=1;
-                int j=i;
+            for (int i = 0; i < dbList.length; i++) {
+                index += 1;
+                int j = i;
                 int finalIndex = index;
-                String newHostName=instanceList[i]+":"+hostPort[i];
+                String newHostName = instanceList[i] + ":" + hostPort[i];
                 Optional<MetadataMapAtlasPO> instancePo = poList.stream().filter(e -> e.qualifiedName.equals(newHostName)).findFirst();
-                if (!instancePo.isPresent())
-                {
+                if (!instancePo.isPresent()) {
                     continue;
                 }
-                String dbQualifiedName=instancePo.get().qualifiedName+"_"+dbList[i];
-                String dbGuid="";
+                String dbQualifiedName = instancePo.get().qualifiedName + "_" + dbList[i];
+                String dbGuid = "";
                 List<MetadataMapAtlasPO> dbPo= mapAtlasDbPoList.stream()
                         .filter(e->e.dbNameType== finalIndex).collect(Collectors.toList());
                 //存在,判断是否修改
-                if (!CollectionUtils.isEmpty(dbPo))
-                {
-                    dbGuid=dbPo.get(0).atlasGuid;
-                    updateEntity(EntityTypeEnum.RDBMS_DB,dbPo.get(0),dbList[i],dbQualifiedName,null,null);
-                }else {
-                    String addResult = addEntity(EntityTypeEnum.RDBMS_DB, instancePo.get(), dbList[i],null,null,0);
-                    if (addResult !="")
-                    {
+                if (!CollectionUtils.isEmpty(dbPo)) {
+                    dbGuid = dbPo.get(0).atlasGuid;
+                    updateEntity(EntityTypeEnum.RDBMS_DB, dbPo.get(0), dbList[i], dbQualifiedName, null, null);
+                } else {
+                    String addResult = addEntity(EntityTypeEnum.RDBMS_DB, instancePo.get(), dbList[i], null, null, 0);
+                    if (addResult != "") {
                         dbGuid = addMetadataMapAtlas(addResult,
                                 EntityTypeEnum.RDBMS_DB,
                                 dbQualifiedName,
@@ -225,9 +218,7 @@ public class SynchronizationData {
         }
         catch (Exception e)
         {
-            e.printStackTrace();
             log.error("synchronizationDb ex:",e);
-            return;
         }
     }
 
@@ -237,24 +228,21 @@ public class SynchronizationData {
     public void synchronizationOds()
     {
         ResultEntity<List<DataAccessSourceTableDTO>> result = dataAccessClient.getDataAccessMetaData();
-        if (result.code!=ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(result.data))
-        {
+        if (result.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(result.data)) {
             return;
         }
         List<SourceTableDTO> list=new ArrayList<>();
-        for (DataAccessSourceTableDTO item:result.data)
-        {
+        for (DataAccessSourceTableDTO item : result.data) {
             SourceTableDTO dto = MetadataMapAtlasMap.INSTANCES.dtoToDto(item);
-            dto.fieldList=MetadataMapAtlasMap.INSTANCES.fieldToDto(item.list);
-            dto.fieldList=dto.fieldList.stream().distinct().collect(Collectors.toList());
+            dto.fieldList = MetadataMapAtlasMap.INSTANCES.fieldToDto(item.list);
+            dto.fieldList = dto.fieldList.stream().distinct().collect(Collectors.toList());
             list.add(dto);
         }
         ////list=list.stream().filter(e->e.tableName.contains("timingTask_Favorite")).collect(Collectors.toList());
         QueryWrapper<MetadataMapAtlasPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(MetadataMapAtlasPO::getDbNameType,DataTypeEnum.DATA_INPUT.getValue());
         MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
-        if (po==null)
-        {
+        if (po == null) {
             return;
         }
         //同步ods元数据对象
@@ -440,9 +428,7 @@ public class SynchronizationData {
         }
         catch (Exception e)
         {
-            e.printStackTrace();
             log.error("synchronizationData ex",e);
-            return;
         }
     }
 
@@ -709,15 +695,15 @@ public class SynchronizationData {
         jsonObj.put("entity",entityObject);
         String jsonParameter=JSONArray.toJSON(jsonObj).toString();
         ResultDataDTO<String> result = atlasClient.post(entity, jsonParameter);
-        if (result.code !=AtlasResultEnum.REQUEST_SUCCESS)
-        {
+        if (result.code != AtlasResultEnum.REQUEST_SUCCESS) {
             return;
         }
         metadataMapAtlasMapper.updateById(po);
     }
 
     /**
-     * MetadataMapAtlas表添加数据
+     * MetadataMapAtlas配置表添加数据
+     *
      * @param jsonStr
      * @param entityTypeEnum
      * @param qualifiedName
@@ -729,27 +715,24 @@ public class SynchronizationData {
      * @return
      */
     public String addMetadataMapAtlas(String jsonStr,
-                                    EntityTypeEnum entityTypeEnum,
-                                    String qualifiedName,
-                                    int dataType,
-                                    long tableId,
-                                    long columnId,
-                                    int tableType,
-                                    int dbNameType,
-                                    String parentGuid,
+                                      EntityTypeEnum entityTypeEnum,
+                                      String qualifiedName,
+                                      int dataType,
+                                      long tableId,
+                                      long columnId,
+                                      int tableType,
+                                      int dbNameType,
+                                      String parentGuid,
                                       String dimensionKey,
-                                      int attributeType)
-    {
+                                      int attributeType) {
         try {
             JSONObject jsonObj = JSON.parseObject(jsonStr);
             JSONObject mutatedEntities = JSON.parseObject(jsonObj.getString("mutatedEntities"));
             String strMutatedEntities = mutatedEntities.toString();
             JSONArray jsonArray;
-            if (strMutatedEntities.indexOf("CREATE")>-1)
-            {
-                 jsonArray=mutatedEntities.getJSONArray("CREATE");
-            }
-            else {
+            if (strMutatedEntities.indexOf("CREATE")>-1) {
+                jsonArray=mutatedEntities.getJSONArray("CREATE");
+            } else {
                 jsonArray=mutatedEntities.getJSONArray("UPDATE");
             }
             MetadataMapAtlasPO metadataMapAtlasPo =new MetadataMapAtlasPO();
@@ -765,22 +748,24 @@ public class SynchronizationData {
             metadataMapAtlasPo.attributeType=attributeType;
             metadataMapAtlasPo.dimensionKey=dimensionKey;
             int flat = metadataMapAtlasMapper.insert(metadataMapAtlasPo);
-            return flat>0? metadataMapAtlasPo.atlasGuid:"";
-        }
-        catch (Exception e)
-        {
+            return flat > 0 ? metadataMapAtlasPo.atlasGuid : "";
+        } catch (Exception e) {
+            log.error("addMetadataMapAtlas ex:", e);
             return "";
         }
     }
 
-    public void setRedis(String guid)
-    {
+    /**
+     * 存储Redis
+     *
+     * @param guid
+     */
+    public void setRedis(String guid) {
         ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + guid);
-        if (getDetail.code !=AtlasResultEnum.REQUEST_SUCCESS)
-        {
+        if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS) {
             return;
         }
-        redisTemplate.opsForValue().set("metaDataEntityData:"+guid,getDetail.data);
+        redisTemplate.opsForValue().set("metaDataEntityData:" + guid, getDetail.data);
     }
 
 }
