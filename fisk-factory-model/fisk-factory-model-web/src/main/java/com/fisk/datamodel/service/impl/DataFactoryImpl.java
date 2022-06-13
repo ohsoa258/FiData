@@ -185,7 +185,7 @@ public class DataFactoryImpl implements IDataFactory {
         {
             DimensionPO dimensionPo=dimensionMapper.selectById(dto.tableId);
             componentIdDTO.tableName=dimensionPo==null?"":dimensionPo.dimensionTabName;
-        }else if (dto.flag==DataFactoryEnum.ANALYSIS_DIMENSION.getValue() || dto.flag==DataFactoryEnum.ANALYSIS_FACT.getValue()){
+        }else if (dto.flag==DataFactoryEnum.NUMBER_FACT.getValue() || dto.flag==DataFactoryEnum.ANALYSIS_FACT.getValue()){
             FactPO factPo=factMapper.selectById(dto.tableId);
             componentIdDTO.tableName=factPo==null?"":factPo.factTabName;
         }
