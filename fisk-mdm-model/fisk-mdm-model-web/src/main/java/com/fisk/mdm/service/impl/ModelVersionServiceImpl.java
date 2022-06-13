@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.modelVersion.ModelCopyDTO;
@@ -159,7 +160,7 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
             dbHelper.executeSql(sql, connection);
         }catch (SQLException ex){
             log.error("【版本复制数据Sql】:" + sql + "【版本复制数据失败,异常信息】:" + ex);
-            ex.printStackTrace();
+            throw new FkException(ResultEnum.DATA_REPLICATION_FAILED);
         }finally {
             // 关闭数据库连接
             closeConnection(connection);
