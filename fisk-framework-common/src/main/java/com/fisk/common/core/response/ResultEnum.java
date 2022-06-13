@@ -43,6 +43,8 @@ public enum ResultEnum {
     CLIENT_ISEMPTY(1019, "客户端已删除"),
     FILENAME_EXISTS(1020, "文件名称已存在"),
     SYSTEM_PARAMS_ISEMPTY(1021, "系统参数为空"),
+    DATASOURCE_CONNECTERROR(1022, "数据源连接建立异常"),
+    DATASOURCE_CONNECTCLOSEERROR(1022, "数据源连接关闭异常"),
 
     /**
      * 报表可视化服务，错误码从2000开始

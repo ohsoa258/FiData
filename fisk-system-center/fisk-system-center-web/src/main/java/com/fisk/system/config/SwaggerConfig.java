@@ -30,6 +30,7 @@ public class SwaggerConfig {
     public static final String USER = "user-controller";
     public static final String KEYWORD = "keywords-controller";
     public static final String UPLOAD = "upload-controller";
+    public static final String DATASOURCE = "datasource-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -47,6 +48,7 @@ public class SwaggerConfig {
                 .tags(new Tag(DATAVIEW,"视图过滤"))
                 .tags(new Tag(KEYWORD,"SQL关键字管理"))
                 .tags(new Tag(UPLOAD,"上传管理"))
+                .tags(new Tag(DATASOURCE,"FiData数据源管理"))
                 .securitySchemes(apiKey())
                 .securityContexts(securityContexts());
 

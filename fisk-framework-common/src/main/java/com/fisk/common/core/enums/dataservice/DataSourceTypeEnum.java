@@ -13,7 +13,6 @@ public enum DataSourceTypeEnum implements BaseEnum {
     /**
      * 支持的所有数据源类型
      */
-
     MYSQL(0, "MYSQL", "com.mysql.jdbc.Driver"),
 
     SQLSERVER(1, "SQLSERVER", "com.microsoft.sqlserver.jdbc.SQLServerDriver"),
@@ -22,7 +21,9 @@ public enum DataSourceTypeEnum implements BaseEnum {
 
     TABULAR(3,"TABULAR","org.olap4j.driver.xmla.XmlaOlap4jDriver"),
 
-    POSTGRE(4, "POSTGRE", "org.postgresql.Driver");
+    POSTGRE(4, "POSTGRE", "org.postgresql.Driver"),
+
+    DORIS(5, "DORIS", "com.mysql.jdbc.Driver");
 
     DataSourceTypeEnum(int value, String name, String driverName) {
         this.driverName = driverName;
@@ -46,5 +47,13 @@ public enum DataSourceTypeEnum implements BaseEnum {
     @Override
     public int getValue() {
         return value;
+    }
+
+    public static DataSourceTypeEnum  getEnum(int value){
+        for (DataSourceTypeEnum e:DataSourceTypeEnum.values()) {
+            if(e.getValue() == value)
+                return e;
+        }
+        return DataSourceTypeEnum.MYSQL;
     }
 }
