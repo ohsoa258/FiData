@@ -1838,11 +1838,26 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public ResultEntity<ComponentIdDTO> getAppNameAndTableName(DataAccessIdsDTO dto) {
 
         AppRegistrationPO registrationPo = appRegistrationImpl.query().eq("id", dto.appId).one();
-        TableAccessPO accessPo = this.query().eq("id", dto.tableId).one();
 
         ComponentIdDTO componentIdDTO = new ComponentIdDTO();
         componentIdDTO.appName = registrationPo == null ? "" : registrationPo.appName;
-        componentIdDTO.tableName = accessPo == null ? "" : accessPo.tableName;
+
+        switch (dto.flag) {
+            // 数据湖表任务
+            case 3:
+                // 数据湖ftp任务
+            case 9:
+                TableAccessPO accessPo = this.query().eq("id", dto.tableId).one();
+                componentIdDTO.tableName = accessPo == null ? "" : accessPo.tableName;
+                break;
+            // 数据湖非实时api任务
+            case 10:
+                ApiConfigPO apiConfigPo = this.apiConfigImpl.query().eq("id", dto.tableId).one();
+                componentIdDTO.tableName = apiConfigPo == null ? "" : apiConfigPo.apiName;
+                break;
+            default:
+                break;
+        }
         return ResultEntityBuild.build(ResultEnum.SUCCESS, componentIdDTO);
     }
 
