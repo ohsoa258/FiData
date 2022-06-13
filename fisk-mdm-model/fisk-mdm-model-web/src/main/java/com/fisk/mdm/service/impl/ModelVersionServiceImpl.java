@@ -131,7 +131,7 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
 
             list.stream().forEach(e -> {
                 // 复制数据
-                this.entityDataCopy(e,(int)versionPo.getId());
+                this.entityDataCopy(e,(int)versionPo.getId(),dto.getId());
             });
         }
 
@@ -141,9 +141,10 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
     /**
      * 复制数据
      * @param entityVo
-     * @param versionId
+     * @param newVersionId
+     * @param oldVersionId
      */
-    public void entityDataCopy(EntityVO entityVo,Integer versionId){
+    public void entityDataCopy(EntityVO entityVo,Integer newVersionId,Integer oldVersionId){
 
         Connection connection = null;
         String sql = null;
@@ -154,7 +155,7 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
                     pwd,type);
 
             // 1.生成Sql
-            sql = this.buildDataCopySql(entityVo, versionId);
+            sql = this.buildDataCopySql(entityVo, newVersionId,oldVersionId);
 
             // 2.执行Sql
             dbHelper.executeSql(sql, connection);
@@ -172,7 +173,7 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
      * @param entityVo
      * @param versionId
      */
-    public String buildDataCopySql(EntityVO entityVo,Integer versionId){
+    public String buildDataCopySql(EntityVO entityVo,Integer versionId,Integer oldVersionId){
         String tableName = entityVo.getTableName();
 
         StringBuilder str = new StringBuilder();
@@ -188,6 +189,7 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
         str.append(this.field(entityVo.getId()));
 
         str.append(" FROM " + tableName);
+        str.append(" WHERE fidata_version_id ='" + oldVersionId).append("'");
         return str.toString();
     }
 
