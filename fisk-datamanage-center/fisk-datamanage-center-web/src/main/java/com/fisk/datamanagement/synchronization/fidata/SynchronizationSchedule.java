@@ -44,8 +44,8 @@ public class SynchronizationSchedule implements SchedulingConfigurer {
                    log.info("同步任务开始执行");
                    //同步元数据对象
                    synchronizationData.synchronizationPgData();
-                   /*//同步元数据对象血缘
-                   synchronizationPgKinShip.synchronizationKinShip();*/
+                   //同步元数据对象血缘
+                   synchronizationPgKinShip.synchronizationKinShip();
                }
             }
         };

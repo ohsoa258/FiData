@@ -285,7 +285,8 @@ public enum ResultEnum {
     EMPTY_FORM(151021, "空白xlsx文件"),
     CODE_NOT_EXIST(151022, "编码列不存在"),
     ATTRIBUTE_GROUP_NOT_EXIST(151023, "属性组不存在"),
-    DATA_REPLICATION_FAILED(151024, "数据复制失败");
+    DATA_REPLICATION_FAILED(151024, "数据复制失败"),
+    CODE_EXIST(151025, "编码已存在");
 
     ResultEnum(int code, String msg) {
         this.code = code;

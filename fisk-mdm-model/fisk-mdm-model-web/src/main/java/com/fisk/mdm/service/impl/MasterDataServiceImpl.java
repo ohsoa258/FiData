@@ -965,7 +965,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 //code是否验证已存在
                 List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), columnName);
                 if (codeList.contains(mapData.get("code"))) {
-                    mapData.put("fidata_syncy_type", SyncTypeStatusEnum.UPDATE.getValue());
+                    return ResultEnum.CODE_EXIST;
                 }
             }
         }
