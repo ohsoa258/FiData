@@ -240,12 +240,12 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             //5. 创建组件
 
             List<ProcessorEntity> processors = buildProcessorVersion2(groupEntity.getId(), configDTO, taskGroupEntity.getId(), sourceId, dbPool.get(1).getId(), cfgDbPool.getId(), appNifiSettingPO, dto);
-            Thread.sleep(1000);
-            enabledProcessor(taskGroupEntity.getId(), processors.subList(0, processors.size()));
+            enabledProcessor(taskGroupEntity.getId(), processors.subList(0, processors.size() - 1));
             //7. 如果是接入,同步一次,然后把调度组件停掉
             if (dto.groupStructureId == null && dto.openTransmission) {
                 enabledProcessor(taskGroupEntity.getId(), processors.subList(processors.size() - 1, processors.size()));
             }
+            Thread.sleep(1000);
             ProcessorEntity processorEntity = processors.get(processors.size() - 1);
             ProcessorRunStatusEntity processorRunStatusEntity = new ProcessorRunStatusEntity();
             processorRunStatusEntity.setDisconnectedNodeAcknowledged(false);
@@ -901,7 +901,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 //-----------------------------------
             }
 
-            processorEntity1 = CallDbProcedure(config, groupId, targetDbPoolId, synchronousTypeEnum,dto);
+            processorEntity1 = CallDbProcedure(config, groupId, targetDbPoolId, synchronousTypeEnum, dto);
             tableNifiSettingPO.odsToStgProcessorId = processorEntity1.getId();
             //连接器
             if (invokeHTTP.getId() != null) {
@@ -1632,7 +1632,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         return processorEntityBusinessResult.data;
     }
 
-    private ProcessorEntity CallDbProcedure(DataAccessConfigDTO config, String groupId, String targetDbPoolId, SynchronousTypeEnum synchronousTypeEnum,BuildNifiFlowDTO buildNifiFlow) {
+    private ProcessorEntity CallDbProcedure(DataAccessConfigDTO config, String groupId, String targetDbPoolId, SynchronousTypeEnum synchronousTypeEnum, BuildNifiFlowDTO buildNifiFlow) {
         BuildCallDbProcedureProcessorDTO callDbProcedureProcessorDTO = new BuildCallDbProcedureProcessorDTO();
         callDbProcedureProcessorDTO.name = "CallDbProcedure";
         callDbProcedureProcessorDTO.details = "insert_phase";
@@ -1641,7 +1641,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         config.processorConfig.targetTableName = "stg_" + config.processorConfig.targetTableName;
         String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
         log.info("同步类型为:" + syncMode + config.targetDsConfig.syncMode);
-        executsql = componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName(),buildNifiFlow);
+        executsql = componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName(), buildNifiFlow);
         //callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
         callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
         callDbProcedureProcessorDTO.executsql = executsql;
@@ -1786,7 +1786,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         querySqlDto.name = "Exec Target Delete";
         querySqlDto.details = "query_phase";
         querySqlDto.groupId = groupId;
-        querySqlDto.querySql = componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName(),null);
+        querySqlDto.querySql = componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName(), null);
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             querySqlDto.querySql = "TRUNCATE table " + config.processorConfig.targetTableName;
         }
