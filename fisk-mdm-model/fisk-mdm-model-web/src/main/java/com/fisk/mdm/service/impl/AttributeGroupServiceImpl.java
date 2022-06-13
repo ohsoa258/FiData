@@ -366,9 +366,6 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
      * @return
      */
     public List<Integer> getAttributeGroupIdByAttributeId(Integer attributeId) {
-        if (attributeId == null) {
-            return new ArrayList<>();
-        }
         QueryWrapper<AttributeGroupDetailsPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.orderByDesc("create_time").select("group_id")
                 .lambda()
