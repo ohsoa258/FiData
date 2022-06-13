@@ -359,4 +359,19 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
         return AttributeGroupMap.INSTANCES.poToDto(po);
     }
 
+    /**
+     * 根据属性id,获取属性组id集合
+     *
+     * @param attributeId
+     * @return
+     */
+    public List<Integer> getAttributeGroupIdByAttributeId(Integer attributeId) {
+        QueryWrapper<AttributeGroupDetailsPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderByDesc("create_time").select("group_id")
+                .lambda()
+                .eq(AttributeGroupDetailsPO::getAttributeId, attributeId);
+        List<Integer> groupId = (List) detailsMapper.selectObjs(queryWrapper);
+        return groupId;
+    }
+
 }

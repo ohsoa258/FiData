@@ -235,6 +235,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
         }
         //将查询到的属性集合添加装入结果对象
         List<AttributeColumnVO> attributeColumnVoList = AttributeMap.INSTANCES.dtoListToVoList(attributeInfos);
+        attributeColumnVoList.stream().map(e -> e.attributeGroupIds = attributeGroupService.getAttributeGroupIdByAttributeId(e.getId()))
+                .collect(Collectors.toList());
         List<ResultAttributeGroupVO> attributeGroupVoList = new ArrayList<>();
         ResultAttributeGroupVO attributeGroupVo = new ResultAttributeGroupVO();
         attributeGroupVo.setName("");
@@ -283,6 +285,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
             item.setDisplayName(first.get().getAliasName());
         }
         List<AttributeColumnVO> attributeColumnVoList = AttributeMap.INSTANCES.dtoListToVoList(attributeInfos);
+        attributeColumnVoList.stream().map(e -> e.attributeGroupIds = attributeGroupService.getAttributeGroupIdByAttributeId(e.getId()))
+                .collect(Collectors.toList());
         List<ResultAttributeGroupVO> attributeGroupVoList = new ArrayList<>();
         if (!CollectionUtils.isEmpty(dto.getAttributeGroups())) {
             List<AttributeColumnVO> newAttributeColumnVoList = CommonMethods.deepCopy(attributeColumnVoList);
@@ -494,6 +498,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
         attributeGroupVo.setName(attributeGroup.getName());
         List<AttributeColumnVO> collect = attributeColumnVoList.stream()
                 .filter(e -> attributes.contains(e.getId())).collect(Collectors.toList());
+        collect.stream().map(e -> e.attributeGroupIds = attributeGroupService.getAttributeGroupIdByAttributeId(e.getId()))
+                .collect(Collectors.toList());
         //获得业务字段名
         attributeGroupVo.setAttributes(queryAttributeData(collect));
         return attributeGroupVo;
