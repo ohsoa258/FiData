@@ -41,8 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -119,41 +118,29 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                 switch (channelDataEnum) {
                     // 数据湖表任务
                     case DATALAKE_TASK:
+                        // 数据湖非实时api任务
+                    case DATALAKE_API_TASK:
+                        // 数据湖ftp任务
+                    case DATALAKE_FTP_TASK:
                         if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
                             break;
                         }
-                        getDataAccessIdsDtoAccess(e, 3);
+                        getDataAccessIdsDtoAccess(e, channelDataEnum.getValue());
                         break;
                     // 数仓维度表任务组
                     case DW_DIMENSION_TASK:
-                        if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
-                            break;
-                        }
-                        getDataAccessIdsDtoModel(e, 4);
-                        break;
-                    // 数仓事实表任务组
+                        // 数仓事实表任务组
                     case DW_FACT_TASK:
-                        if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
-                            break;
-                        }
-                        getDataAccessIdsDtoModel(e, 5);
-                        break;
-                    // 分析模型维度表任务组
-                    case OLAP_DIMENSION_TASK:
-                        if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
-                            break;
-                        }
-                        getDataAccessIdsDtoModel(e, 6);
-                        break;
-                    //分析模型事实表任务
+                        //分析模型事实表任务
                     case OLAP_FACT_TASK:
+                        // 分析模型维度表任务
+                    case OLAP_DIMENSION_TASK:
+                        // 分析模型宽表任务
+                    case OLAP_WIDETABLE_TASK:
                         if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
                             break;
                         }
-                        getDataAccessIdsDtoModel(e, 7);
-                        break;
-                    case OLAP_WIDETABLE_TASK:
-                        getDataAccessIdsDtoModel(e, 8);
+                        getDataAccessIdsDtoModel(e, channelDataEnum.getValue());
                         break;
                     default:
                         break;
@@ -326,8 +313,8 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                 Instant late = Instant.now();
                 ResultEntity<List<NifiCustomWorkflowVO>> result = publishTaskClient.getNifiCustomWorkflowDetails(buildRecords(filter.getRecords()));
                 Instant now = Instant.now();
-                log.info("呼吸灯时间(秒): "+ Duration.between(late, now).getSeconds());
-                log.info("呼吸灯时间(毫秒): "+ Duration.between(late, now).toMillis());
+                log.info("呼吸灯时间(秒): " + Duration.between(late, now).getSeconds());
+                log.info("呼吸灯时间(毫秒): " + Duration.between(late, now).toMillis());
                 if (result.code == ResultEnum.SUCCESS.getCode()) {
                     filter.setRecords(result.data);
                     return filter;
@@ -386,5 +373,16 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
             model.status = dto.status;
             baseMapper.updateById(model);
         }
+    }
+
+    @Override
+    public List<String> getTableListById(Long id) {
+
+        NifiCustomWorkflowDetailVO data = getData(id);
+
+        return data.list.stream()
+                .filter(e -> e.appId != null && !"".equals(e.appId) && e.tableId != null && !"".equals(e.tableId))
+                .map(e -> e.tableName)
+                .collect(Collectors.toList());
     }
 }
