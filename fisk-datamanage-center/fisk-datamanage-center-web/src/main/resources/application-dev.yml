@@ -2,7 +2,7 @@ spring:
   metadataentity: MetaDataEntity
   schedule: 0 0 1 * * ?
   datasource:
-    url: jdbc:mysql://192.168.11.130:3306/dmp_datagovern_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://192.168.11.130:3306/dmp_datamanagement_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: root123
     driver-class-name: com.mysql.jdbc.Driver

@@ -105,6 +105,7 @@ public class ClassificationImpl implements IClassification {
         List<ClassificationTreeDTO> childList = new ArrayList<>();
         for (ClassificationDefContentDTO item : data) {
             if (item.superTypes.contains(pNode.name)) {
+                data.remove(pNode);
                 childList.add(buildChildTree(ClassificationMap.INSTANCES.poToDto(item), data));
             }
         }
