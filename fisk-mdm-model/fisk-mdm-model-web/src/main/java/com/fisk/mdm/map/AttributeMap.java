@@ -3,6 +3,7 @@ package com.fisk.mdm.map;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.mdm.dto.attribute.*;
 import com.fisk.mdm.dto.attributelog.AttributeLogSaveDTO;
+import com.fisk.mdm.entity.AttributeLogPO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.utlis.TypeConversionUtils;
@@ -100,6 +101,13 @@ public interface AttributeMap {
      * @return
      */
     AttributeLogSaveDTO poToLogDto(AttributePO po);
+
+    /**
+     * po => po
+     * @param po
+     * @return
+     */
+    AttributePO poToLogPo(AttributeLogPO po);
 
     /**
      * poList => DtoList

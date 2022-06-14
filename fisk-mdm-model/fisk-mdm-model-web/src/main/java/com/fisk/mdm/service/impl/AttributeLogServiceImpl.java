@@ -5,9 +5,14 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.attributelog.AttributeLogDTO;
 import com.fisk.mdm.dto.attributelog.AttributeLogSaveDTO;
+import com.fisk.mdm.dto.attributelog.AttributeRollbackDTO;
 import com.fisk.mdm.entity.AttributeLogPO;
+import com.fisk.mdm.entity.AttributePO;
+import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.map.AttributeLogMap;
+import com.fisk.mdm.map.AttributeMap;
 import com.fisk.mdm.mapper.AttributeLogMapper;
+import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.service.AttributeLogService;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
@@ -27,6 +32,8 @@ public class AttributeLogServiceImpl implements AttributeLogService {
 
     @Resource
     AttributeLogMapper logMapper;
+    @Resource
+    AttributeMapper attributeMapper;
     @Resource
     UserClient userClient;
 
@@ -84,6 +91,20 @@ public class AttributeLogServiceImpl implements AttributeLogService {
             ReplenishUserInfo.replenishUserName(dtoList, userClient, UserFieldEnum.USER_ACCOUNT);
 
             return dtoList;
+        }
+        return null;
+    }
+
+    @Override
+    public ResultEnum rollbackData(AttributeRollbackDTO dto) {
+        AttributePO attributePo = attributeMapper.selectById(dto.getAttributeId());
+        AttributeStatusEnum status = attributePo.getStatus();
+        if (status.equals(AttributeStatusEnum.UPDATE)){
+            // 需要回滚的日志表数据
+            AttributeLogPO attributeLogPo = logMapper.selectById(dto.getId());
+            AttributePO attribute = AttributeMap.INSTANCES.poToLogPo(attributeLogPo);
+            int res = attributeMapper.updateById(attribute);
+            return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         }
         return null;
     }
