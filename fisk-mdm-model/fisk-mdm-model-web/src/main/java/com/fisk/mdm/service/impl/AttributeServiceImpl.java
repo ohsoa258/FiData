@@ -10,6 +10,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.mdm.dto.attribute.*;
+import com.fisk.mdm.dto.attributelog.AttributeLogSaveDTO;
 import com.fisk.mdm.entity.AttributeGroupDetailsPO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
@@ -19,6 +20,7 @@ import com.fisk.mdm.map.EntityMap;
 import com.fisk.mdm.mapper.AttributeGroupDetailsMapper;
 import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.mapper.EntityMapper;
+import com.fisk.mdm.service.AttributeLogService;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.EventLogService;
@@ -63,6 +65,9 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
     @Resource
     AttributeGroupDetailsMapper groupDetailsMapper;
+
+    @Resource
+    AttributeLogService attributeLogService;
 
     @Override
     public ResultEntity<AttributeVO> getById(Integer id) {
@@ -159,6 +164,11 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
                             groupDetailsMapper.insert(detailsPo);
                         });
 
+        // 添加到属性日志表
+        AttributeLogSaveDTO attributeLogSaveDto = AttributeMap.INSTANCES.poToLogDto(attributePo);
+        attributeLogSaveDto.setAttributeId((int)attributePo.getId());
+        attributeLogService.saveAttributeLog(attributeLogSaveDto);
+
         // 记录日志
         String desc = "新增一个属性,id:" + attributePo.getId();
         logService.saveEventLog((int) attributePo.getId(), ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.SAVE, desc);
@@ -177,6 +187,11 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     @Override
     public ResultEnum editData(AttributeUpdateDTO attributeUpdateDTO) {
         AttributePO attributePo = baseMapper.selectById(attributeUpdateDTO.getId());
+
+        // 添加到属性日志表
+        AttributeLogSaveDTO attributeLogSaveDto = AttributeMap.INSTANCES.poToLogDto(attributePo);
+        attributeLogSaveDto.setAttributeId((int)attributePo.getId());
+        attributeLogService.saveAttributeLog(attributeLogSaveDto);
 
         //判断数据是否存在
         if (attributePo == null) {
@@ -431,6 +446,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
      * @return {@link ResultEnum}
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum deleteDataById(Integer id) {
         if(id == null){
             return ResultEnum.DATA_NOTEXISTS;
@@ -443,6 +459,10 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         if (baseMapper.deleteById(id) <= 0) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+
+        // 删除属性日志表记录
+        attributeLogService.deleteDataByAttributeId(id);
+
         // 记录日志
         String desc = "删除一个属性,id:" + id;
         logService.saveEventLog(id, ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.DELETE, desc);

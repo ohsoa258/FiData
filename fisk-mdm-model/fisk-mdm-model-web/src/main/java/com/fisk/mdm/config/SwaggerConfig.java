@@ -32,6 +32,7 @@ public class SwaggerConfig {
     public static final String TAG_7 = "ViwGroup-Controller";
     public static final String TAG_8 = "ComplexType-Controller";
     public static final String TAG_9 = "MasterDataLog-Controller";
+    public static final String TAG_10 = "AttributeLog-Controller";
 
     @Bean
     public Docket createRestApi() {
@@ -47,6 +48,7 @@ public class SwaggerConfig {
                 .tags(new Tag(TAG_7, "自定义视图管理API"))
                 .tags(new Tag(TAG_8, "复杂数据类型"))
                 .tags(new Tag(TAG_9, "主数据维护日志"))
+                .tags(new Tag(TAG_10, "属性日志管理API"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

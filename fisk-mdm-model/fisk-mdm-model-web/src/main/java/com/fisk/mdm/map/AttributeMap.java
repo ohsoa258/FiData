@@ -2,6 +2,7 @@ package com.fisk.mdm.map;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.mdm.dto.attribute.*;
+import com.fisk.mdm.dto.attributelog.AttributeLogSaveDTO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.utlis.TypeConversionUtils;
@@ -92,6 +93,13 @@ public interface AttributeMap {
             @Mapping(source = "syncStatus" ,target = "syncStatus")
     })
     AttributeInfoDTO poToInfoDto(AttributePO po);
+
+    /**
+     * po => dto
+     * @param po
+     * @return
+     */
+    AttributeLogSaveDTO poToLogDto(AttributePO po);
 
     /**
      * poList => DtoList
