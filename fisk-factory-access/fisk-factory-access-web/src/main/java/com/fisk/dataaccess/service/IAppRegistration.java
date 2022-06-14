@@ -7,10 +7,12 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.dataaccess.dto.app.*;
+import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
@@ -178,4 +180,12 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return 执行结果
      */
     List<LogMessageFilterVO> getTableNameListByAppIdAndApiId(PipelineTableQueryDTO dto);
+
+    /**
+     * 跳转页面: 查询出当前(表、api、ftp)具体在哪个管道中使用,并给跳转页面提供数据
+     *
+     * @param dto dto
+     * @return list
+     */
+    List<DispatchRedirectDTO> redirect(AccessRedirectDTO dto);
 }

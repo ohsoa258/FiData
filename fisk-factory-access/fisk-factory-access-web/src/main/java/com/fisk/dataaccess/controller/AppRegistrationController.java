@@ -9,6 +9,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.app.*;
+import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
@@ -272,5 +273,11 @@ public class AppRegistrationController {
     @ApiOperation(value = "通过appId和apiId查询表名集合")
     public ResultEntity<List<LogMessageFilterVO>> getTableNameListByAppIdAndApiId(@RequestBody PipelineTableQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableNameListByAppIdAndApiId(dto));
+    }
+
+    @PostMapping("/redirect")
+    @ApiOperation(value = "跳转页面: 查询出当前(表、api、ftp)具体在哪个管道中使用,并给跳转页面提供数据")
+    public ResultEntity<Object> redirect(@Validated @RequestBody AccessRedirectDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.redirect(dto));
     }
 }

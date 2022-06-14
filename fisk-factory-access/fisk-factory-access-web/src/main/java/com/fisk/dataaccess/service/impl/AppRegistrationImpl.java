@@ -18,7 +18,9 @@ import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataaccess.dto.app.*;
+import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.entity.*;
+import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
 import com.fisk.dataaccess.map.AppDataSourceMap;
 import com.fisk.dataaccess.map.AppRegistrationMap;
@@ -28,6 +30,10 @@ import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.pgsql.TableListVO;
+import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
+import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
+import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
@@ -84,6 +90,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     private TableFieldsImpl tableFieldsImpl;
     @Resource
     private ApiConfigMapper apiConfigMapper;
+    @Resource
+    private DataFactoryClient dataFactoryClient;
 
     /**
      * 添加应用
@@ -698,5 +706,40 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         log.info("接入库中的查询数据: " + JSON.toJSONString(sourcePage));
 
         return sourcePage;
+    }
+
+    @Override
+    public List<DispatchRedirectDTO> redirect(AccessRedirectDTO dto) {
+
+        // 根据driveType对应管道的具体组件
+        NifiCustomWorkflowDetailDTO detailDto = new NifiCustomWorkflowDetailDTO();
+        detailDto.appId = String.valueOf(dto.getAppId());
+
+        // 物理表
+        if (dto.getDriveType().equalsIgnoreCase(DataSourceTypeEnum.MYSQL.getName()) ||
+                dto.getDriveType().equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName()) ||
+                dto.getDriveType().equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName())) {
+            detailDto.componentType = ChannelDataEnum.DATALAKE_TASK.getName();
+            detailDto.tableId = String.valueOf(dto.getTableId());
+            // 非实时api
+        } else if (dto.getDriveType().equalsIgnoreCase(DataSourceTypeEnum.API.getName())) {
+            detailDto.componentType = ChannelDataEnum.DATALAKE_API_TASK.getName();
+            detailDto.tableId = String.valueOf(dto.getApiId());
+            // ftp
+        } else if (dto.getDriveType().equalsIgnoreCase(DataSourceTypeEnum.FTP.getName())) {
+            detailDto.componentType = ChannelDataEnum.DATALAKE_FTP_TASK.getName();
+            detailDto.tableId = String.valueOf(dto.getApiId());
+        }
+
+        try {
+            ResultEntity<List<DispatchRedirectDTO>> result = dataFactoryClient.redirect(detailDto);
+            if (result.code == ResultEnum.SUCCESS.getCode()) {
+                return result.data;
+            }
+        } catch (Exception e) {
+            log.error("远程调用失败,方法名: 【data-factory:redirect】");
+            return null;
+        }
+        return null;
     }
 }
