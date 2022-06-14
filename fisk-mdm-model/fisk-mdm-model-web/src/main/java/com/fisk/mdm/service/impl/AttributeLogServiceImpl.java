@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.attributelog.AttributeLogDTO;
 import com.fisk.mdm.dto.attributelog.AttributeLogSaveDTO;
+import com.fisk.mdm.dto.attributelog.AttributeLogUpdateDTO;
 import com.fisk.mdm.dto.attributelog.AttributeRollbackDTO;
 import com.fisk.mdm.entity.AttributeLogPO;
 import com.fisk.mdm.entity.AttributePO;
@@ -107,5 +108,16 @@ public class AttributeLogServiceImpl implements AttributeLogService {
             return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         }
         return null;
+    }
+
+    @Override
+    public ResultEnum updateAttributeLog(AttributeLogUpdateDTO dto) {
+        AttributeLogPO attributeLogPo = logMapper.selectById(dto.getId());
+        if (attributeLogPo == null){
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        int res = logMapper.updateById(AttributeLogMap.INSTANCES.dtoToUpdatePo(dto));
+        return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 }

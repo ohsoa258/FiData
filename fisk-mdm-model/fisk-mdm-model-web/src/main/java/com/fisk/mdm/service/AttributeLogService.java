@@ -3,6 +3,7 @@ package com.fisk.mdm.service;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.attributelog.AttributeLogDTO;
 import com.fisk.mdm.dto.attributelog.AttributeLogSaveDTO;
+import com.fisk.mdm.dto.attributelog.AttributeLogUpdateDTO;
 import com.fisk.mdm.dto.attributelog.AttributeRollbackDTO;
 
 import java.util.List;
@@ -48,4 +49,11 @@ public interface AttributeLogService {
      * @return
      */
     ResultEnum rollbackData(AttributeRollbackDTO dto);
+
+    /**
+     * 属性日志修改接口
+     * @param dto
+     * @return
+     */
+    ResultEnum updateAttributeLog(AttributeLogUpdateDTO dto);
 }

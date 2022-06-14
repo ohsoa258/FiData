@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.attributelog.AttributeLogDTO;
 import com.fisk.mdm.dto.attributelog.AttributeLogSaveDTO;
+import com.fisk.mdm.dto.attributelog.AttributeLogUpdateDTO;
 import com.fisk.mdm.dto.attributelog.AttributeRollbackDTO;
 import com.fisk.mdm.service.AttributeLogService;
 import io.swagger.annotations.Api;
@@ -61,5 +62,12 @@ public class AttributeLogController {
     @ResponseBody
     public ResultEntity<ResultEnum> rollbackData(@RequestBody AttributeRollbackDTO dto) {
         return ResultEntityBuild.build(logService.rollbackData(dto));
+    }
+
+    @ApiOperation("属性日志修改接口")
+    @PostMapping("/updateAttributeLog")
+    @ResponseBody
+    public ResultEntity<ResultEnum> updateAttributeLog(@RequestBody AttributeLogUpdateDTO dto) {
+        return ResultEntityBuild.build(logService.updateAttributeLog(dto));
     }
 }

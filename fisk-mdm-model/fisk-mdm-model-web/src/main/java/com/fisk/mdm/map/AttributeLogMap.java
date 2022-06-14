@@ -2,6 +2,7 @@ package com.fisk.mdm.map;
 
 import com.fisk.mdm.dto.attributelog.AttributeLogDTO;
 import com.fisk.mdm.dto.attributelog.AttributeLogSaveDTO;
+import com.fisk.mdm.dto.attributelog.AttributeLogUpdateDTO;
 import com.fisk.mdm.entity.AttributeLogPO;
 import com.fisk.mdm.utlis.TypeConversionUtils;
 import org.mapstruct.Mapper;
@@ -26,6 +27,13 @@ public interface AttributeLogMap {
      * @return
      */
     AttributeLogPO dtoToPo(AttributeLogSaveDTO dto);
+
+    /**
+     * dto => po
+     * @param dto
+     * @return
+     */
+    AttributeLogPO dtoToUpdatePo(AttributeLogUpdateDTO dto);
 
     /**
      * po => dto
