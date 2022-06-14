@@ -465,6 +465,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         vo.setSortWieght(attributeColumnVo.getSortWieght());
         vo.setDisplayWidth(attributeColumnVo.getDisplayWidth());
         vo.setEntityId(attributeColumnVo.getEntityId());
+        vo.setAttributeGroupIds(new ArrayList<>());
         return vo;
     }
 
@@ -477,6 +478,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         vo.setEnableRequired(attributeColumnVo.getEnableRequired());
         vo.setSortWieght(attributeColumnVo.getSortWieght());
         vo.setDisplayWidth(attributeColumnVo.getDisplayWidth());
+        vo.setAttributeGroupIds(new ArrayList<>());
         return vo;
     }
 
