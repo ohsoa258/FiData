@@ -1,18 +1,17 @@
 package com.fisk.datafactory.controller;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
 import com.fisk.datafactory.service.IDataFactory;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author Lock
@@ -39,5 +38,12 @@ public class DatafactoryController {
     public ResultEntity<NifiPortsHierarchyDTO> getNifiPortHierarchy(@Validated @RequestBody NifiGetPortHierarchyDTO dto) {
 
         return service.getNifiPortHierarchy(dto);
+    }
+
+    @GetMapping("/getNifiPortTaskListById/{id}")
+    @ApiOperation(value = "根据管道主键id查询管道内第一批任务")
+    public ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskListById(@PathVariable("id") Long id) {
+
+        return service.getNifiPortTaskListById(id);
     }
 }

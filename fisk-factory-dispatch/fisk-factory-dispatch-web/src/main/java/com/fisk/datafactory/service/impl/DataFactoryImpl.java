@@ -11,6 +11,7 @@ import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyNextDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
+import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
 import com.fisk.datafactory.service.IDataFactory;
@@ -21,7 +22,9 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Lock
@@ -60,7 +63,19 @@ public class DataFactoryImpl implements IDataFactory {
     @Override
     public ResultEntity<NifiPortsHierarchyDTO> getNifiPortHierarchy(NifiGetPortHierarchyDTO dto) {
         if (dto.nifiCustomWorkflowDetailId != null) {
-            return ResultEntityBuild.build(ResultEnum.SUCCESS, buildNifiPortsHierarchyDTO(dto.nifiCustomWorkflowDetailId));
+
+            // 获取当前组件的层级关系
+            NifiPortsHierarchyDTO nifiPortsHierarchyDto = buildNifiPortsHierarchyDTO(dto.nifiCustomWorkflowDetailId);
+
+            NifiCustomWorkflowDetailPO detailPo = nifiCustomWorkflowDetailImpl.query().eq("id", dto.nifiCustomWorkflowDetailId).one();
+            if (detailPo == null) {
+                return null;
+            }
+
+            // 封装当前组件的其他属性(componentFirstFlag、componentEndFlag、pipeEndFlag、pipeEndDto)
+            buildNifiOtherPorts(detailPo, nifiPortsHierarchyDto);
+
+            return ResultEntityBuild.build(ResultEnum.SUCCESS, nifiPortsHierarchyDto);
         } else {
             NifiCustomWorkflowPO customWorkflowPo = nifiCustomWorkflowImpl.query().eq("id", dto.workflowId).one();
             if (customWorkflowPo == null) {
@@ -88,10 +103,109 @@ public class DataFactoryImpl implements IDataFactory {
             }
             // 原则上同一管道下,物理表只允许绑定一次,即newList里的参数只有一个
             NifiCustomWorkflowDetailPO detailPo = newList.get(0);
-            return ResultEntityBuild.build(ResultEnum.SUCCESS, buildNifiPortsHierarchyDTO(detailPo.id));
+
+            // 获取当前组件的层级关系
+            NifiPortsHierarchyDTO nifiPortsHierarchyDto = buildNifiPortsHierarchyDTO(detailPo.id);
+
+            // 封装当前组件的其他属性(componentFirstFlag、componentEndFlag、pipeEndFlag、pipeEndDto)
+            buildNifiOtherPorts(detailPo, nifiPortsHierarchyDto);
+
+            return ResultEntityBuild.build(ResultEnum.SUCCESS, nifiPortsHierarchyDto);
         }
 
     }
+
+    @Override
+    public ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskListById(Long id) {
+
+        NifiCustomWorkflowPO nifiCustomWorkflowPo = nifiCustomWorkflowImpl.query().eq("id", id).select("workflow_id").one();
+        if (nifiCustomWorkflowPo == null || StringUtils.isBlank(nifiCustomWorkflowPo.workflowId)) {
+            return ResultEntityBuild.build(ResultEnum.SUCCESS, null);
+        }
+
+        NifiCustomWorkflowDetailPO scheduleTask = nifiCustomWorkflowDetailImpl.query()
+                .eq("workflow_id", nifiCustomWorkflowPo.workflowId)
+                .eq("component_name", ChannelDataEnum.SCHEDULE_TASK.getName())
+                .one();
+
+        List<NifiCustomWorkflowDetailDTO> list = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(nifiCustomWorkflowDetailImpl.query()
+                .eq("workflow_id", nifiCustomWorkflowPo.workflowId)
+                .list()
+                .stream()
+                // 过滤掉不绑定表的任务
+                .filter(e -> e.appId != null && !"".equals(e.appId) && e.tableId != null && !"".equals(e.tableId) && e.tableOrder != null)
+                // 过滤没有inport上游的
+                .filter(e -> StringUtils.isNotBlank(e.inport))
+                // 当前组件的pid是开始组件的id
+                .filter(e -> e.inport.equalsIgnoreCase(String.valueOf(scheduleTask.id)))
+                .collect(Collectors.toList()));
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, list);
+    }
+
+    /**
+     * 封装当前组件的其他属性(componentFirstFlag、componentEndFlag、pipeEndFlag、pipeEndDto)
+     *
+     * @return void
+     * @description 封装当前组件的其他属性(componentFirstFlag 、 componentEndFlag 、 pipeEndFlag 、 pipeEndDto)
+     * @author Lock
+     * @date 2022/6/14 10:00
+     * @version v1.0
+     * @params detailPo
+     * @params nifiPortsHierarchyDto
+     */
+    private void buildNifiOtherPorts(NifiCustomWorkflowDetailPO detailPo, NifiPortsHierarchyDTO nifiPortsHierarchyDto) {
+        try {
+            // 判断出当前组件是否为所属组件中的第一个任务
+            List<NifiCustomWorkflowDetailPO> ascList = nifiCustomWorkflowDetailImpl.query()
+                    .eq("pid", detailPo.pid)
+                    .eq("component_name", detailPo.componentName)
+                    .list()
+                    .stream()
+                    // 过滤掉不绑定表的任务
+                    .filter(e -> e.appId != null && !"".equals(e.appId) && e.tableId != null && !"".equals(e.tableId) && e.tableOrder != null)
+                    // 根据table_order升序
+                    .sorted(Comparator.comparing(NifiCustomWorkflowDetailPO::getTableOrder).reversed())
+                    .collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(ascList) && ascList.get(0).id == detailPo.id) {
+                nifiPortsHierarchyDto.componentFirstFlag = true;
+            }
+
+            // 判断出当前组件是否为所属组件中的最后一个任务
+            List<NifiCustomWorkflowDetailPO> descList = nifiCustomWorkflowDetailImpl.query()
+                    .eq("pid", detailPo.pid)
+                    .eq("component_name", detailPo.componentName)
+                    .list()
+                    .stream()
+                    // 过滤掉不绑定表的任务
+                    .filter(e -> e.appId != null && !"".equals(e.appId) && e.tableId != null && !"".equals(e.tableId) && e.tableOrder != null)
+                    // 根据table_order降序
+                    .sorted(Comparator.comparing(NifiCustomWorkflowDetailPO::getTableOrder, Comparator.reverseOrder()))
+                    .collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(descList) && descList.get(0).id == detailPo.id) {
+                nifiPortsHierarchyDto.componentFirstFlag = true;
+            }
+
+            // 判断出当前组件是否为管道内最后一个任务
+            NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPo = nifiCustomWorkflowDetailImpl.query()
+                    .eq("id", detailPo.pid)
+                    .one();
+            // 有inport,没有outport,即最后一个组件
+            if (nifiCustomWorkflowDetailPo != null && StringUtils.isNotBlank(nifiCustomWorkflowDetailPo.inport) && StringUtils.isBlank(nifiCustomWorkflowDetailPo.outport)) {
+                nifiPortsHierarchyDto.pipeEndFlag = true;
+                // 当前管道流程最后一批执行的组件集合
+                nifiPortsHierarchyDto.pipeEndDto = NifiCustomWorkflowDetailMap.INSTANCES
+                        .listPoToDto(nifiCustomWorkflowDetailImpl.query().eq("workflow_id", detailPo.workflowId).list()
+                                .stream()
+                                .filter(e -> StringUtils.isNotBlank(e.inport) && StringUtils.isBlank(e.outport))
+                                .collect(Collectors.toList()));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("封装当前组件的其他属性报错: " + e);
+        }
+    }
+
 
     /**
      * 获取当前组件的层级关系
