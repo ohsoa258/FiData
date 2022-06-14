@@ -33,6 +33,12 @@ public class ClassificationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getClassificationList());
     }
 
+    @ApiOperation("获取业务类型树形列表")
+    @GetMapping("/getClassificationTree")
+    public ResultEntity<Object> getClassificationTree() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getClassificationTree());
+    }
+
     @ApiOperation("修改业务类型以及业务属性")
     @PutMapping("/updateClassification")
     public ResultEntity<Object> updateClassification(@Validated @RequestBody ClassificationDefsDTO dto) {

@@ -3,13 +3,12 @@ package com.fisk.datamanagement.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.common.framework.exception.FkException;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
-import com.fisk.datamanagement.dto.classification.ClassificationDefContentDTO;
-import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
-import com.fisk.datamanagement.dto.classification.ClassificationDelAssociatedEntityDTO;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
+import com.fisk.datamanagement.map.ClassificationMap;
 import com.fisk.datamanagement.service.IClassification;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
@@ -19,8 +18,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -64,22 +65,58 @@ public class ClassificationImpl implements IClassification {
             data.classificationDefs.sort(Comparator.comparing(ClassificationDefContentDTO::getCreateTime));
             //反转
             Collections.reverse(data.classificationDefs);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            log.error("getClassificationList ex:"+e);
+        } catch (Exception e) {
+            log.error("getClassificationList ex:" + e);
             throw new FkException(ResultEnum.SQL_ANALYSIS);
         }
         return data;
     }
 
     @Override
-    public ResultEnum updateClassification(ClassificationDefsDTO dto)
-    {
-        String jsonParameter=JSONArray.toJSON(dto).toString();
+    public List<ClassificationTreeDTO> getClassificationTree() {
+        ClassificationDefsDTO data = getClassificationList();
+        if (data == null || CollectionUtils.isEmpty(data.classificationDefs)) {
+            return new ArrayList<>();
+        }
+        //获取第一级
+        List<ClassificationDefContentDTO> firstLevel =
+                data.classificationDefs
+                        .stream()
+                        .filter(e -> e.superTypes.size() == 0)
+                        .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(firstLevel)) {
+            return new ArrayList<>();
+        }
+        List<ClassificationTreeDTO> dto = ClassificationMap.INSTANCES.poListToDtoList(firstLevel);
+        for (ClassificationTreeDTO item : dto) {
+            buildChildTree(item, data.classificationDefs);
+        }
+        return dto;
+    }
+
+    /**
+     * 递归拼接tree
+     *
+     * @param pNode
+     * @param data
+     * @return
+     */
+    public ClassificationTreeDTO buildChildTree(ClassificationTreeDTO pNode, List<ClassificationDefContentDTO> data) {
+        List<ClassificationTreeDTO> childList = new ArrayList<>();
+        for (ClassificationDefContentDTO item : data) {
+            if (item.superTypes.contains(pNode.name)) {
+                childList.add(buildChildTree(ClassificationMap.INSTANCES.poToDto(item), data));
+            }
+        }
+        pNode.child = childList;
+        return pNode;
+    }
+
+    @Override
+    public ResultEnum updateClassification(ClassificationDefsDTO dto) {
+        String jsonParameter = JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.put(typedefs + "?type=classification", jsonParameter);
-        return result.code==AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
+        return result.code == AtlasResultEnum.REQUEST_SUCCESS ? ResultEnum.SUCCESS : ResultEnum.BAD_REQUEST;
     }
 
     @Override

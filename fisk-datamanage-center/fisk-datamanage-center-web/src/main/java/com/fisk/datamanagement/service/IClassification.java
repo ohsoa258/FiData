@@ -4,6 +4,9 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDelAssociatedEntityDTO;
+import com.fisk.datamanagement.dto.classification.ClassificationTreeDTO;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -12,12 +15,21 @@ public interface IClassification {
 
     /**
      * 获取业务分类列表
+     *
      * @return
      */
     ClassificationDefsDTO getClassificationList();
 
     /**
+     * 获取业务分类属性结构
+     *
+     * @return
+     */
+    List<ClassificationTreeDTO> getClassificationTree();
+
+    /**
      * 更改业务分类
+     *
      * @param dto
      * @return
      */
