@@ -140,10 +140,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 
         // 修改发布状态
-        if (dto.flag == 1) {
-            accessPo.publish = 3;
-            tableAccessImpl.updateById(accessPo);
-        }
+        accessPo.publish = 0;
+        tableAccessImpl.updateById(accessPo);
 
         // 发布
         publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission);
@@ -377,7 +375,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             fieldDTO.fieldEnName = po.fieldName;
             fieldDTO.fieldType = po.fieldType;
             fieldDTO.fieldLength = Math.toIntExact(po.fieldLength);
-            fieldDTO.isPrimaryKey=po.isPrimarykey;
+            fieldDTO.isPrimaryKey = po.isPrimarykey;
             fieldList.add(fieldDTO);
         });
 
