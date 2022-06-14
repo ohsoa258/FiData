@@ -118,6 +118,8 @@ public class DataFactoryImpl implements IDataFactory {
     @Override
     public ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskListById(Long id) {
 
+        List<NifiCustomWorkflowDetailDTO> list = new ArrayList<>();
+
         NifiCustomWorkflowPO nifiCustomWorkflowPo = nifiCustomWorkflowImpl.query().eq("id", id).select("workflow_id").one();
         if (nifiCustomWorkflowPo == null || StringUtils.isBlank(nifiCustomWorkflowPo.workflowId)) {
             return ResultEntityBuild.build(ResultEnum.SUCCESS, null);
@@ -128,7 +130,8 @@ public class DataFactoryImpl implements IDataFactory {
                 .eq("component_name", ChannelDataEnum.SCHEDULE_TASK.getName())
                 .one();
 
-        List<NifiCustomWorkflowDetailDTO> list = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(nifiCustomWorkflowDetailImpl.query()
+        // 绑定的所有表(接入+建模)
+        List<NifiCustomWorkflowDetailDTO> listAll = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(nifiCustomWorkflowDetailImpl.query()
                 .eq("workflow_id", nifiCustomWorkflowPo.workflowId)
                 .list()
                 .stream()
@@ -138,7 +141,40 @@ public class DataFactoryImpl implements IDataFactory {
                 .filter(e -> StringUtils.isNotBlank(e.inport))
                 // 当前组件的pid是开始组件的id
                 .filter(e -> e.inport.equalsIgnoreCase(String.valueOf(scheduleTask.id)))
+//                .filter(e -> e.componentName.equalsIgnoreCase(ChannelDataEnum.DATALAKE_TASK.getName()))
+//                 根据table_order升序
+//                .sorted(Comparator.comparing(NifiCustomWorkflowDetailPO::getTableOrder).reversed())
                 .collect(Collectors.toList()));
+
+        // 数据湖任务
+        List<NifiCustomWorkflowDetailDTO> datalakeTaskDtoList = listAll.stream()
+                .filter(e -> e.componentName.equalsIgnoreCase(ChannelDataEnum.DATALAKE_TASK.getName()))
+                // 根据table_order升序
+                .sorted(Comparator.comparing(NifiCustomWorkflowDetailDTO::getTableOrder).reversed())
+                .collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(datalakeTaskDtoList)) {
+            list.add(datalakeTaskDtoList.get(0));
+        }
+
+        // 数仓表任务
+        List<NifiCustomWorkflowDetailDTO> dwDimensionTaskDtoList = listAll.stream()
+                .filter(e -> e.componentName.equalsIgnoreCase(ChannelDataEnum.DW_DIMENSION_TASK.getName()))
+                // 根据table_order升序
+                .sorted(Comparator.comparing(NifiCustomWorkflowDetailDTO::getTableOrder).reversed())
+                .collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(dwDimensionTaskDtoList)) {
+            list.add(dwDimensionTaskDtoList.get(0));
+        }
+
+        // 分析模型任务
+        List<NifiCustomWorkflowDetailDTO> olapTaskDtoList = listAll.stream()
+                .filter(e -> e.componentName.equalsIgnoreCase(ChannelDataEnum.OLAP_TASK.getName()))
+                // 根据table_order升序
+                .sorted(Comparator.comparing(NifiCustomWorkflowDetailDTO::getTableOrder).reversed())
+                .collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(olapTaskDtoList)) {
+            list.add(olapTaskDtoList.get(0));
+        }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, list);
     }
