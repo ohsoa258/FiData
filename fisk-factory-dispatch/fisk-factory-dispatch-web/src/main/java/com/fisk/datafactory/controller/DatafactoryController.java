@@ -2,6 +2,7 @@ package com.fisk.datafactory.controller;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
+import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
@@ -45,5 +46,12 @@ public class DatafactoryController {
     public ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskListById(@PathVariable("id") Long id) {
 
         return service.getNifiPortTaskListById(id);
+    }
+
+    @PostMapping("/redirect")
+    @ApiOperation(value = "根据componentType,appId,tableId查询出表具体在哪些管道,哪些组件中使用")
+    public ResultEntity<List<DispatchRedirectDTO>> redirect(@RequestBody NifiCustomWorkflowDetailDTO dto) {
+
+        return service.redirect(dto);
     }
 }

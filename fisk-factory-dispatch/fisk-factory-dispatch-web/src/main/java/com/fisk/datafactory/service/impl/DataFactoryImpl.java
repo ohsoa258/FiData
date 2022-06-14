@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
+import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
@@ -13,6 +14,7 @@ import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
+import com.fisk.datafactory.map.NifiCustomWorkflowMap;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
 import com.fisk.datafactory.service.IDataFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -203,6 +205,38 @@ public class DataFactoryImpl implements IDataFactory {
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, Objects.requireNonNull(list.stream().distinct().collect(Collectors.toList())));
+    }
+
+    @Override
+    public ResultEntity<List<DispatchRedirectDTO>> redirect(NifiCustomWorkflowDetailDTO dto) {
+
+        List<DispatchRedirectDTO> list = new ArrayList<>();
+
+        // 查询出符合条件的所有组件
+        List<NifiCustomWorkflowDetailPO> detailPoList = nifiCustomWorkflowDetailImpl.query()
+                .eq("component_type", dto.componentType)
+                .eq("app_id", dto.appId)
+                .eq("table_id", dto.tableId)
+                .list();
+
+        if (!CollectionUtils.isEmpty(detailPoList)) {
+            detailPoList.forEach(po -> {
+                DispatchRedirectDTO dispatchRedirectDto = new DispatchRedirectDTO();
+                // 查询出当前组件所属哪个管道
+                NifiCustomWorkflowPO workflowPo = nifiCustomWorkflowImpl.query().eq("workflow_id", po.workflowId).one();
+                dispatchRedirectDto.setPipeDto(NifiCustomWorkflowMap.INSTANCES.poToDto(workflowPo));
+                List<NifiCustomWorkflowDetailPO> collect = detailPoList.stream()
+                        // 过滤出同一管道下的组件
+                        .filter(e -> e.workflowId.equalsIgnoreCase(workflowPo.workflowId))
+                        .collect(Collectors.toList());
+                if (!CollectionUtils.isEmpty(collect)) {
+                    dispatchRedirectDto.setComponentList(NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(collect));
+                }
+                list.add(dispatchRedirectDto);
+            });
+        }
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, list.stream().distinct().collect(Collectors.toList()));
     }
 
     /**
