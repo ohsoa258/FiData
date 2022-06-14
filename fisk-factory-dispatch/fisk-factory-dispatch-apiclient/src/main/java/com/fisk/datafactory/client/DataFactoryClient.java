@@ -48,10 +48,22 @@ public interface DataFactoryClient {
     @ApiOperation(value = "判断物理表是否在管道使用")
     boolean loadDepend(@RequestBody LoadDependDTO dto);
 
+    /**
+     * 获取管道层级关系
+     *
+     * @param dto dto
+     * @return 查询结果
+     */
     @PostMapping("/dataFactory/getNIfiPortHierarchy")
     @ApiOperation(value = "获取管道层级关系")
     ResultEntity<NifiPortsHierarchyDTO> getNifiPortHierarchy(@Validated @RequestBody NifiGetPortHierarchyDTO dto);
 
+    /**
+     * 根据管道主键id查询管道内第一批任务
+     *
+     * @param id 管道主键id
+     * @return 查询结果集合
+     */
     @GetMapping("/dataFactory/getNifiPortTaskListById/{id}")
     @ApiOperation(value = "根据管道主键id查询管道内第一批任务")
     ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskListById(@PathVariable("id") Long id);
