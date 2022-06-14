@@ -139,8 +139,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             return ResultEnum.TABLE_NOT_EXIST;
         }
 
-        // 修改发布状态
-        accessPo.publish = 0;
         tableAccessImpl.updateById(accessPo);
 
         // 发布
@@ -172,18 +170,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
         // 保存tb_table_fields
         boolean success;
-////        for (TableFieldsDTO tableFieldsDTO : list) {
-////            // 0: 未操作的数据  1: 新增  2: 编辑
-////            int funcType = tableFieldsDTO.getFuncType();
-////            if (funcType == 2) {
-////                TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
-////                success = this.updateById(modelField);
-////            } else if (funcType == 1) {
-////                TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
-////                modelField.delFlag = 1;
-////                success = this.save(modelField);
-////            }
-////        }
+
         success = this.saveOrUpdateBatch(TableFieldsMap.INSTANCES.listDtoToPo(list));
         if (!success) {
             return ResultEnum.UPDATE_DATA_ERROR;
@@ -205,20 +192,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         } catch (Exception e) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }
-////        // 全删全插
-////        try {
-////            List<TableFieldsPO> list = this.query().eq("table_access_id", dto.id).list();
-////            if (!CollectionUtils.isEmpty(list)) {
-////                list.forEach(e -> baseMapper.deleteByIdWithFill(e));
-////            }
-////            // list: dto -> po
-////            List<TableFieldsPO> listPo = TableFieldsMap.INSTANCES.listDtoToPo(dto.list);
-////            this.saveBatch(listPo);
-////        } catch (Exception e) {
-////            return ResultEnum.UPDATE_DATA_ERROR;
-////        }
-
-////        boolean success = true;
         TableBusinessDTO businessDto = dto.businessDTO;
         // 保存tb_table_business
         int businessMode = 4;
@@ -235,10 +208,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         success = syncmodeImpl.updateById(modelSync);
 
         // 修改发布状态
-        if (dto.flag == 1) {
-            model.publish = 3;
-            tableAccessImpl.updateById(model);
-        }
+        model.publish = 0;
+        tableAccessImpl.updateById(model);
 
         // 发布
         publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission);
