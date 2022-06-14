@@ -140,14 +140,14 @@ public class DataFactoryImpl implements IDataFactory {
                 .list()
                 .stream()
                 // 过滤出主任务
-                .filter(e -> (e.appId != null && !"".equals(e.appId)) || e.tableId == null || "".equals(e.tableId))
+                .filter(e -> e.appId != null && !"".equals(e.appId) && (e.tableId == null || "".equals(e.tableId)))
                 // 过滤没有inport上游的
                 .filter(e -> StringUtils.isNotBlank(e.inport))
                 // 当前组件的pid是开始组件的id
                 .filter(e -> e.inport.equalsIgnoreCase(String.valueOf(scheduleTask.id)))
                 .collect(Collectors.toList()));
 
-        // 过滤出所有表(接入+建模)
+        // 过滤出所有表任务(接入+建模)
         List<NifiCustomWorkflowDetailDTO> listAllTable = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(nifiCustomWorkflowDetailImpl.query()
                 .eq("workflow_id", nifiCustomWorkflowPo.workflowId)
                 .list()
@@ -179,7 +179,7 @@ public class DataFactoryImpl implements IDataFactory {
                     // 确保在同一个数仓表任务下
                     .filter(e -> e.appId.equalsIgnoreCase(dto.appId))
                     // 过滤出数仓表任务下的表
-                    .filter(e -> e.componentName.equalsIgnoreCase(ChannelDataEnum.DW_DIMENSION_TASK.getName()))
+                    .filter(e -> e.componentName.equalsIgnoreCase(ChannelDataEnum.DW_TASK.getName()))
                     // 根据table_order升序
                     .sorted(Comparator.comparing(NifiCustomWorkflowDetailDTO::getTableOrder))
                     .collect(Collectors.toList());
