@@ -285,6 +285,7 @@ public class DataFactoryImpl implements IDataFactory {
             List<NifiCustomWorkflowDetailDTO> datalakeTaskDtoList = listAllTable.stream()
                     .filter(Objects::nonNull)
                     // 确保在同一个数据湖任务下
+                    .filter(e -> e.pid == dto.id)
                     .filter(e -> e.appId.equalsIgnoreCase(dto.appId))
                     // 过滤出数据湖任务下的表
                     .filter(e -> e.componentName.equalsIgnoreCase(ChannelDataEnum.DATALAKE_TASK.getName()))
@@ -299,6 +300,7 @@ public class DataFactoryImpl implements IDataFactory {
             List<NifiCustomWorkflowDetailDTO> dwDimensionTaskDtoList = listAllTable.stream()
                     .filter(Objects::nonNull)
                     // 确保在同一个数仓表任务下
+                    .filter(e -> e.pid == dto.id)
                     .filter(e -> e.appId.equalsIgnoreCase(dto.appId))
                     // 过滤出数仓表任务下的表
                     .filter(e -> e.componentName.equalsIgnoreCase(ChannelDataEnum.DW_TASK.getName()))
@@ -313,6 +315,7 @@ public class DataFactoryImpl implements IDataFactory {
             List<NifiCustomWorkflowDetailDTO> olapTaskDtoList = listAllTable.stream()
                     .filter(Objects::nonNull)
                     // 确保在同一个分析模型任务下
+                    .filter(e -> e.pid == dto.id)
                     .filter(e -> e.appId.equalsIgnoreCase(dto.appId))
                     // 过滤出分析模型任务下的表
                     .filter(e -> e.componentName.equalsIgnoreCase(ChannelDataEnum.OLAP_TASK.getName()))
