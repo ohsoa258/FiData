@@ -320,15 +320,19 @@ public class EntityServiceImpl implements EntityService {
                     if(codeAttribute != null){
                         //根据code属性的entity_id查询到实体
                         EntityPO domainEntityPo = entityMapper.selectById(codeAttribute.getEntityId());
-                        if(domainEntityPo != null){
+                        if (domainEntityPo != null) {
                             //为”关联实体名“赋值
-                            attributeInfoDTO.setDomainEntityId((int)domainEntityPo.getId());
+                            attributeInfoDTO.setDomainEntityId((int) domainEntityPo.getId());
                             //为”关联实体名“赋值
                             attributeInfoDTO.setDomainName(domainEntityPo.getName());
                         }
                     }
                 }
             }
+            dtoList.stream().map(e -> {
+                e.setDataTypeEnDisplay(DataTypeEnum.getValue(e.getDataType()).name());
+                return e;
+            }).collect(Collectors.toList());
             entityInfoVo.setAttributeList(dtoList);
             return entityInfoVo;
         }
