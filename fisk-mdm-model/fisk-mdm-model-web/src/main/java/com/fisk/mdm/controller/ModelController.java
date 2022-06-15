@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.service.IModelService;
@@ -17,6 +18,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author chenYa
@@ -65,6 +67,13 @@ public class ModelController {
     @ResponseBody
     public ResultEntity<ModelInfoVO> getEntityById(Integer id){
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getEntityById(id));
+    }
+
+    @ApiOperation("获取主数据结构")
+    @GetMapping("/getDataStructure")
+    @ResponseBody
+    public ResultEntity<List<FiDataMetaDataDTO>> getDataStructure(){
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getDataStructure());
     }
 
 }

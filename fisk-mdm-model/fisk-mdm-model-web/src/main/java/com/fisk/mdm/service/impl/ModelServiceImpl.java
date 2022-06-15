@@ -2,49 +2,50 @@ package com.fisk.mdm.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
+import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.dto.modelVersion.ModelVersionDTO;
+import com.fisk.mdm.dto.viwGroup.ViwGroupDetailsDTO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.entity.ModelVersionPO;
-import com.fisk.mdm.enums.EventTypeEnum;
-import com.fisk.mdm.enums.ModelVersionStatusEnum;
-import com.fisk.mdm.enums.ModelVersionTypeEnum;
-import com.fisk.mdm.enums.ObjectTypeEnum;
+import com.fisk.mdm.enums.*;
 import com.fisk.mdm.map.EntityMap;
 import com.fisk.mdm.map.ModelMap;
 import com.fisk.mdm.map.ModelVersionMap;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.mapper.ModelMapper;
-import com.fisk.mdm.service.EntityService;
-import com.fisk.mdm.service.EventLogService;
-import com.fisk.mdm.service.IModelService;
+import com.fisk.mdm.service.*;
 import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelQueryDTO;
-import com.fisk.mdm.service.IModelVersionService;
+import com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils;
 import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.model.ModelInfoVO;
 import com.fisk.mdm.vo.model.ModelVO;
+import com.fisk.mdm.vo.viwGroup.ViwGroupVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
 import com.fisk.task.client.PublishTaskClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.fisk.system.dto.userinfo.UserDTO;
 
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -70,6 +71,15 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
     @Resource
     private UserHelper userHelper;
+
+    @Resource
+    IModelService modelService;
+
+    @Resource
+    EntityService entityService;
+
+    @Resource
+    ViwGroupService viwGroupService;
 
 
     /**
@@ -260,5 +270,148 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         //最终返回
         modelInfoVO.setEntityVOList(entityVos);
         return modelInfoVO;
+    }
+
+    @Override
+    public List<FiDataMetaDataDTO> getDataStructure() {
+        List<FiDataMetaDataDTO> list = new ArrayList<>();
+        FiDataMetaDataDTO dto = new FiDataMetaDataDTO();
+        dto.setDataSourceId(1);
+
+        // 第一层id
+        String uuid = UUID.randomUUID().toString();
+        List<FiDataMetaDataTreeDTO> dataTreeList = new ArrayList<>();
+        FiDataMetaDataTreeDTO dataTree = new FiDataMetaDataTreeDTO();
+        dataTree.setId(uuid);
+        dataTree.setParentId("-1");
+        dataTree.setLabel("dmp_mdm");
+        dataTree.setLabelAlias("dmp_mdm");
+        dataTree.setLevelType(LevelTypeEnum.FOLDER);
+        // 获取模型数据
+        dataTree.setChildren(this.getModelData(uuid));
+        dataTreeList.add(dataTree);
+
+        dto.setChildren(dataTreeList);
+        list.add(dto);
+        return list;
+    }
+
+    /**
+     * 获取模型、实体、属性 数据结构Tree
+     * @param id
+     * @return
+     */
+    public List<FiDataMetaDataTreeDTO> getModelData(String id){
+        List<ModelPO> modelPoList = baseMapper.selectList(null);
+        List<FiDataMetaDataTreeDTO> modelDataList = modelPoList.stream().filter(Objects::nonNull)
+                .map(e -> {
+                    // 模型层级
+                    String modelUuid = UUID.randomUUID().toString();
+                    FiDataMetaDataTreeDTO dto = new FiDataMetaDataTreeDTO();
+                    dto.setId(modelUuid);
+                    dto.setParentId(id);
+                    dto.setLabel(e.getName());
+                    dto.setLabelAlias(e.getDisplayName());
+                    dto.setLevelType(LevelTypeEnum.FOLDER);
+
+                    List<FiDataMetaDataTreeDTO> dataList = new ArrayList<>();
+
+                    List<EntityVO> entityVoList = modelService.getEntityById((int) e.getId()).getEntityVOList();
+                    // 获取模型下的实体
+                    List<FiDataMetaDataTreeDTO> entityDataList = entityVoList.stream().filter(Objects::nonNull)
+                            .map(item -> {
+
+                                // 实体层级
+                                String entityUuid = UUID.randomUUID().toString();
+                                FiDataMetaDataTreeDTO entityDto = new FiDataMetaDataTreeDTO();
+                                entityDto.setId(entityUuid);
+                                entityDto.setParentId(modelUuid);
+                                entityDto.setLabel(item.getName());
+                                entityDto.setLabelAlias(item.getDisplayName());
+                                entityDto.setLevelType(LevelTypeEnum.TABLE);
+
+                                // 获取实体下的属性
+                                List<AttributeInfoDTO> attributeList = entityService.getAttributeById(item.getId()).getAttributeList();
+                                List<FiDataMetaDataTreeDTO> attributeDataList = attributeList.stream().filter(Objects::nonNull)
+                                        .map(iter -> {
+
+                                            // 属性层级
+                                            String attributeUuid = UUID.randomUUID().toString();
+                                            FiDataMetaDataTreeDTO attributeDto = new FiDataMetaDataTreeDTO();
+                                            attributeDto.setId(attributeUuid);
+                                            attributeDto.setParentId(entityUuid);
+                                            attributeDto.setLabel(iter.getName());
+                                            attributeDto.setLabelAlias(iter.getDisplayName());
+                                            attributeDto.setLevelType(LevelTypeEnum.FIELD);
+                                            String syncStatus = iter.getSyncStatus();
+                                            if (syncStatus.equals(AttributeSyncStatusEnum.SUCCESS.getName())) {
+                                                attributeDto.setPublishState("1");
+                                            } else {
+                                                attributeDto.setPublishState("0");
+                                            }
+                                            // 字段信息
+                                            Integer dataTypeLength = iter.getDataTypeLength();
+                                            if (dataTypeLength != null){
+                                                attributeDto.setLabelLength(dataTypeLength.toString());
+                                            }
+                                            attributeDto.setLabelType(iter.getDataType());
+                                            attributeDto.setLabel(iter.getDesc());
+                                            return attributeDto;
+                                        }).collect(Collectors.toList());
+
+                                entityDto.setChildren(attributeDataList);
+                                return entityDto;
+                            }).collect(Collectors.toList());
+                    dataList.addAll(entityDataList);
+
+                    // 获取模型下实体的视图
+                    List<FiDataMetaDataTreeDTO> viwDataList = entityVoList.stream().filter(Objects::nonNull)
+                            .map(item -> {
+
+                                // 视图层级
+                                String viwName = TableNameGenerateUtils.generateViwTableName((int) e.getId(), item.getId());
+                                String entityUuid = UUID.randomUUID().toString();
+                                FiDataMetaDataTreeDTO entityDto = new FiDataMetaDataTreeDTO();
+                                entityDto.setId(entityUuid);
+                                entityDto.setParentId(modelUuid);
+                                entityDto.setLabel(viwName);
+                                entityDto.setLabelAlias(viwName);
+                                entityDto.setLevelType(LevelTypeEnum.VIEW);
+                                return entityDto;
+                            }).collect(Collectors.toList());
+                    dataList.addAll(viwDataList);
+
+                    // 获取模型下自定义视图组的视图
+                    List<FiDataMetaDataTreeDTO> viwGroupDataList = new ArrayList<>();
+                    entityVoList.stream().filter(Objects::nonNull)
+                                    .forEach(item -> {
+
+                                        // 自定义视图组
+                                        List<ViwGroupVO> viwGroupList = viwGroupService.getDataByEntityId(item.getId());
+                                        if (viwGroupList == null){
+                                            return;
+                                        }
+
+                                        viwGroupList.stream().filter(Objects::nonNull)
+                                                .forEach(iter -> {
+
+                                                    // 自定义视图
+                                                    String entityUuid = UUID.randomUUID().toString();
+                                                    FiDataMetaDataTreeDTO entityDto = new FiDataMetaDataTreeDTO();
+                                                    entityDto.setId(entityUuid);
+                                                    entityDto.setParentId(modelUuid);
+                                                    entityDto.setLabel(iter.getName());
+                                                    entityDto.setLabelAlias(iter.getDetails());
+                                                    entityDto.setLevelType(LevelTypeEnum.VIEW);
+                                                    viwGroupDataList.add(entityDto);
+                                                });
+                                    });
+                    dataList.addAll(viwGroupDataList);
+
+                    dto.setChildren(dataList);
+                    return dto;
+                }).collect(Collectors.toList());
+
+        return modelDataList;
     }
 }
