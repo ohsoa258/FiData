@@ -189,7 +189,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         AttributePO attributePo = baseMapper.selectById(attributeUpdateDTO.getId());
 
         // 添加到属性日志表
-        AttributeLogSaveDTO attributeLogSaveDto = AttributeMap.INSTANCES.poToLogDto(attributePo);
+        AttributeLogSaveDTO attributeLogSaveDto = AttributeMap.INSTANCES.dtoToLogDto(attributeUpdateDTO);
         attributeLogSaveDto.setAttributeId((int)attributePo.getId());
         attributeLogService.saveAttributeLog(attributeLogSaveDto);
 

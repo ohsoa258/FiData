@@ -103,6 +103,14 @@ public interface AttributeMap {
     AttributeLogSaveDTO poToLogDto(AttributePO po);
 
     /**
+     * dto => dto
+     * @param dto
+     * @return
+     */
+    AttributeLogSaveDTO dtoToLogDto(AttributeUpdateDTO dto);
+
+
+    /**
      * po => po
      * @param po
      * @return
