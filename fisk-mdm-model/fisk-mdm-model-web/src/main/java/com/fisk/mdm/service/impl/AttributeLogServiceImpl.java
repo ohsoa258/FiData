@@ -104,6 +104,7 @@ public class AttributeLogServiceImpl implements AttributeLogService {
             // 需要回滚的日志表数据
             AttributeLogPO attributeLogPo = logMapper.selectById(dto.getId());
             AttributePO attribute = AttributeMap.INSTANCES.poToLogPo(attributeLogPo);
+            attribute.setId(dto.getAttributeId());
             int res = attributeMapper.updateById(attribute);
             return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         }
