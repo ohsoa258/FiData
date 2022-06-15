@@ -982,6 +982,14 @@ public class MasterDataServiceImpl implements IMasterDataService {
         List<Map<String, Object>> members = new ArrayList<>();
         members.add(mapData);
         boolean delete = eventTypeEnum == EventTypeEnum.DELETE ? true : false;
+        if (delete) {
+            members.get(0).remove("fidata_id");
+            members.get(0).remove("fidata_version_id");
+            members.get(0).remove("fidata_create_time");
+            members.get(0).remove("fidata_create_user");
+            members.get(0).remove("fidata_update_time");
+            members.get(0).remove("fidata_update_user");
+        }
         int flat = templateDataSubmitStg(members, tableName, batchNumber, dto.getVersionId(), userHelper.getLoginUserInfo().id, ImportTypeEnum.MANUALLY_ENTER, delete);
         if (flat == 0) {
             return ResultEnum.SAVE_DATA_ERROR;
