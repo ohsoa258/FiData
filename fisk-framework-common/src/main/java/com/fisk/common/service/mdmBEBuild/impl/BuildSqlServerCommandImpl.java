@@ -110,8 +110,9 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     public String buildQueryCount(String tableName, String queryConditions) {
         StringBuilder str = new StringBuilder();
         str.append("SELECT COUNT(*) AS totalNum FROM " + tableName);
+        str.append(" WHERE fidata_del_flag=1 ");
         if (!StringUtils.isEmpty(queryConditions)) {
-            str.append(" WHERE 1=1 " + queryConditions);
+            str.append(queryConditions);
         }
         return str.toString();
     }
