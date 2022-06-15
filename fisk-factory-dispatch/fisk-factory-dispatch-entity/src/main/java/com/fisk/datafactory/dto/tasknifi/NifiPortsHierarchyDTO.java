@@ -35,7 +35,7 @@ public class NifiPortsHierarchyDTO {
     public List<NifiPortsHierarchyNextDTO> nextList;
 
     /**
-     * 当前任务的上一级绑定表的任务集合
+     * 当前任务的上一级主任务中的最后一个表任务集合
      */
     public List<NifiCustomWorkflowDetailDTO> inportList;
 }
