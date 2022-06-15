@@ -22,7 +22,9 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @MapperScan("com.fisk.datamodel.mapper")
 @EnableFeignClients(basePackages = {"com.fisk.auth.client",
         "com.fisk.task.client",
-        "com.fisk.dataaccess.client"})
+        "com.fisk.dataaccess.client",
+        "com.fisk.datafactory.client"
+})
 public class FkDataModelApplication {
 
     public static void main(String[] args) {

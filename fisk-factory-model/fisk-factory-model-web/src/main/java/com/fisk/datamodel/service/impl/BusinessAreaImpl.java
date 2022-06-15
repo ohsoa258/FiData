@@ -14,6 +14,10 @@ import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
+import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
+import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
+import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamodel.dto.GetConfigDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
@@ -22,6 +26,7 @@ import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.dto.webindex.WebIndexDTO;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.CreateTypeEnum;
+import com.fisk.datamodel.enums.DataFactoryEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.BusinessAreaMap;
 import com.fisk.datamodel.mapper.*;
@@ -88,6 +93,8 @@ public class BusinessAreaImpl
     BusinessProcessMapper businessProcessMapper;
     @Resource
     WideTableImpl wideTable;
+    @Resource
+    private DataFactoryClient dataFactoryClient;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -508,6 +515,52 @@ public class BusinessAreaImpl
             data.tableName = factPO == null ? "" : factPO.factTabName;
         }
         return data;
+    }
+
+    @Override
+    public List<DispatchRedirectDTO> redirect(ModelRedirectDTO dto) {
+
+        NifiCustomWorkflowDetailDTO detailDto = new NifiCustomWorkflowDetailDTO();
+        detailDto.appId = String.valueOf(dto.getBusinessId());
+        detailDto.tableId = String.valueOf(dto.getTableId());
+        // 根据tableType对应具体的管道组件
+        DataFactoryEnum dataFactoryEnum = DataFactoryEnum.getName(dto.getTableType());
+        switch (dataFactoryEnum) {
+            // 数仓维度
+            case NUMBER_DIMENSION:
+                detailDto.componentType = ChannelDataEnum.DW_DIMENSION_TASK.getName();
+                break;
+            // 数仓事实
+            case NUMBER_FACT:
+                detailDto.componentType = ChannelDataEnum.DW_FACT_TASK.getName();
+                break;
+            // 分析维度
+            case ANALYSIS_DIMENSION:
+                detailDto.componentType = ChannelDataEnum.OLAP_DIMENSION_TASK.getName();
+                break;
+            // 分析事实
+            case ANALYSIS_FACT:
+                detailDto.componentType = ChannelDataEnum.OLAP_FACT_TASK.getName();
+                break;
+            // 宽表
+            case WIDE_TABLE:
+                detailDto.componentType = ChannelDataEnum.OLAP_WIDETABLE_TASK.getName();
+                break;
+            default:
+                break;
+        }
+
+        try {
+            ResultEntity<List<DispatchRedirectDTO>> result = dataFactoryClient.redirect(detailDto);
+            if (result.code == ResultEnum.SUCCESS.getCode()) {
+                return result.data;
+            }
+        } catch (Exception e) {
+            log.error("远程调用失败,方法名: 【data-factory:redirect】");
+            return null;
+        }
+
+        return null;
     }
 
 }

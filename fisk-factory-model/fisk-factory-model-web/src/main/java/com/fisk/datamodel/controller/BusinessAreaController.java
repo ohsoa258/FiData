@@ -13,6 +13,7 @@ import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -97,4 +98,9 @@ public class BusinessAreaController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessAreaTableDetail(dto));
     }
 
+    @PostMapping("/redirect")
+    @ApiOperation(value = "跳转页面: 查询出当前表具体在哪个管道中使用,并给跳转页面提供数据")
+    public ResultEntity<Object> redirect(@Validated @RequestBody ModelRedirectDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.redirect(dto));
+    }
 }
