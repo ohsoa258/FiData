@@ -65,7 +65,7 @@ public class AttributeLogController {
     }
 
     @ApiOperation("属性日志修改接口")
-    @PostMapping("/updateAttributeLog")
+    @PutMapping("/updateAttributeLog")
     @ResponseBody
     public ResultEntity<ResultEnum> updateAttributeLog(@RequestBody AttributeLogUpdateDTO dto) {
         return ResultEntityBuild.build(logService.updateAttributeLog(dto));
