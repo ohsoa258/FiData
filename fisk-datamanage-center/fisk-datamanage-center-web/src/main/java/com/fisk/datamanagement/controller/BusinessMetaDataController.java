@@ -48,4 +48,10 @@ public class BusinessMetaDataController {
         return ResultEntityBuild.build(service.deleteBusinessMetaData(businessMetaDataName));
     }
 
+    @ApiOperation("同步业务元数据")
+    @GetMapping("/synchronousBusinessMetaData")
+    public ResultEntity<Object> synchronousBusinessMetaData() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.synchronousBusinessMetaData());
+    }
+
 }

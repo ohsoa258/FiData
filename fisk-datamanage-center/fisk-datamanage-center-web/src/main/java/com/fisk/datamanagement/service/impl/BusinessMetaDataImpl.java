@@ -2,21 +2,27 @@ package com.fisk.datamanagement.service.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.common.framework.exception.FkException;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.datamanagement.dto.businessmetadata.BusinessMetaDataAttributeDefsDTO;
 import com.fisk.datamanagement.dto.businessmetadata.BusinessMetaDataDTO;
+import com.fisk.datamanagement.dto.businessmetadata.BusinessMetaDataOptionsDTO;
 import com.fisk.datamanagement.dto.businessmetadata.BusinessMetadataDefsDTO;
+import com.fisk.datamanagement.entity.BusinessMetadataConfigPO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
+import com.fisk.datamanagement.mapper.BusinessMetadataConfigMapper;
 import com.fisk.datamanagement.service.IBusinessMetaData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -27,6 +33,8 @@ public class BusinessMetaDataImpl implements IBusinessMetaData {
 
     @Resource
     AtlasClient atlasClient;
+    @Resource
+    BusinessMetadataConfigMapper mapper;
 
     @Value("${atlas.typedefs}")
     private String typedefs;
@@ -34,8 +42,7 @@ public class BusinessMetaDataImpl implements IBusinessMetaData {
     private String delTypeDefs;
 
     @Override
-    public BusinessMetaDataDTO getBusinessMetaDataList()
-    {
+    public BusinessMetaDataDTO getBusinessMetaDataList() {
         BusinessMetaDataDTO data;
         try {
             ResultDataDTO<String> result = atlasClient.get(typedefs + "?type=business_metadata");
@@ -71,10 +78,60 @@ public class BusinessMetaDataImpl implements IBusinessMetaData {
     }
 
     @Override
-    public ResultEnum deleteBusinessMetaData(String businessMetaDataName)
-    {
+    public ResultEnum deleteBusinessMetaData(String businessMetaDataName) {
         ResultDataDTO<String> result = atlasClient.delete(delTypeDefs + "/" + businessMetaDataName);
         return atlasClient.newResultEnum(result);
+    }
+
+    @Override
+    public ResultEnum synchronousBusinessMetaData() {
+        //获取数据列表
+        QueryWrapper<BusinessMetadataConfigPO> queryWrapper = new QueryWrapper<>();
+        List<BusinessMetadataConfigPO> list = mapper.selectList(queryWrapper);
+
+        BusinessMetaDataDTO dto = new BusinessMetaDataDTO();
+        List<BusinessMetadataDefsDTO> businessMetadataDefs = new ArrayList<>();
+
+        Map<String, List<BusinessMetadataConfigPO>> collect = list.stream()
+                .collect(Collectors.groupingBy(BusinessMetadataConfigPO::getBusinessMetadataCnName));
+        for (String businessMetaDataName : collect.keySet()) {
+            BusinessMetadataDefsDTO data = new BusinessMetadataDefsDTO();
+            List<BusinessMetadataConfigPO> attributeList = collect.get(businessMetaDataName);
+            data.name = businessMetaDataName;
+            data.description = attributeList.get(0).businessMetadataCnName;
+            data.category = "BUSINESS_METADATA";
+            List<BusinessMetaDataAttributeDefsDTO> attributeDefs = new ArrayList<>();
+            for (BusinessMetadataConfigPO item : attributeList) {
+                BusinessMetaDataAttributeDefsDTO attribute = new BusinessMetaDataAttributeDefsDTO();
+                attribute.cardinality = "SINGLE";
+                attribute.name = item.attributeName;
+                attribute.isIndexable = true;
+                attribute.isOptional = true;
+                attribute.isUnique = false;
+                String[] split = item.suitableType.split(",");
+                JSONArray jsonArray = new JSONArray(Arrays.asList(split));
+                attribute.typeName = item.attributeType;
+                attribute.multiValueSelect = item.multipleValued;
+                attribute.searchWeight = "5";
+                attribute.options = new BusinessMetaDataOptionsDTO();
+                attribute.options.applicableEntityTypes = jsonArray.toString();
+                attribute.options.maxStrLength = "100";
+                attributeDefs.add(attribute);
+            }
+            data.attributeDefs = attributeDefs;
+            businessMetadataDefs.add(data);
+        }
+        dto.businessMetadataDefs = businessMetadataDefs;
+        return addBusinessMetaData(dto);
+    }
+
+    @Test
+    public void test() {
+        String str = "rdbms_db,rdbms_table,rdbms_column";
+        String[] split = str.split(",");
+        JSONArray jsonArray = new JSONArray(Arrays.asList(split));
+        String aa = jsonArray.toString();
+        String bb = "";
     }
 
 }
