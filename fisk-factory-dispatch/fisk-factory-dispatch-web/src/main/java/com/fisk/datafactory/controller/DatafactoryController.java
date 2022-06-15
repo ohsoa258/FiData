@@ -41,11 +41,18 @@ public class DatafactoryController {
         return service.getNifiPortHierarchy(dto);
     }
 
-    @GetMapping("/getNifiPortTaskListById/{id}")
+    @GetMapping("/getNifiPortTaskFirstListById/{id}")
     @ApiOperation(value = "根据管道主键id查询管道内第一批任务")
-    public ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskListById(@PathVariable("id") Long id) {
+    public ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskFirstListById(@PathVariable("id") Long id) {
 
-        return service.getNifiPortTaskListById(id);
+        return service.getNifiPortTaskFirstListById(id);
+    }
+
+    @GetMapping("/getNifiPortTaskLastListById/{id}")
+    @ApiOperation(value = "根据管道主键id查询管道内最后一批任务")
+    public ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskLastListById(@PathVariable("id") Long id) {
+
+        return service.getNifiPortTaskLastListById(id);
     }
 
     @PostMapping("/redirect")

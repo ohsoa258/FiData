@@ -65,9 +65,19 @@ public interface DataFactoryClient {
      * @param id 管道主键id
      * @return 查询结果集合
      */
-    @GetMapping("/dataFactory/getNifiPortTaskListById/{id}")
+    @GetMapping("/dataFactory/getNifiPortTaskFirstListById/{id}")
     @ApiOperation(value = "根据管道主键id查询管道内第一批任务")
-    ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskListById(@PathVariable("id") Long id);
+    ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskFirstListById(@PathVariable("id") Long id);
+
+    /**
+     * 根据管道主键id查询管道内最后一批任务
+     *
+     * @param id 管道主键id
+     * @return list
+     */
+    @GetMapping("/dataFactory/getNifiPortTaskLastListById/{id}")
+    @ApiOperation(value = "根据管道主键id查询管道内最后一批任务")
+    ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskLastListById(@PathVariable("id") Long id);
 
     /**
      * 根据componentType,appId,tableId查询出表具体在哪些管道,哪些组件中使用

@@ -188,7 +188,9 @@ public class DataFactoryImpl implements IDataFactory {
         for (NifiCustomWorkflowDetailDTO dto : listAllTask) {
             // 数据湖任务
             List<NifiCustomWorkflowDetailDTO> datalakeTaskDtoList = listAllTable.stream()
+                    .filter(Objects::nonNull)
                     // 确保在同一个数据湖任务下
+                    .filter(e -> e.pid == dto.id)
                     .filter(e -> e.appId.equalsIgnoreCase(dto.appId))
                     // 过滤出数据湖任务下的表
                     .filter(e -> e.componentName.equalsIgnoreCase(ChannelDataEnum.DATALAKE_TASK.getName()))
@@ -201,7 +203,9 @@ public class DataFactoryImpl implements IDataFactory {
 
             // 数仓表任务
             List<NifiCustomWorkflowDetailDTO> dwDimensionTaskDtoList = listAllTable.stream()
+                    .filter(Objects::nonNull)
                     // 确保在同一个数仓表任务下
+                    .filter(e -> e.pid == dto.id)
                     .filter(e -> e.appId.equalsIgnoreCase(dto.appId))
                     // 过滤出数仓表任务下的表
                     .filter(e -> e.componentName.equalsIgnoreCase(ChannelDataEnum.DW_TASK.getName()))
@@ -214,7 +218,9 @@ public class DataFactoryImpl implements IDataFactory {
 
             // 分析模型任务
             List<NifiCustomWorkflowDetailDTO> olapTaskDtoList = listAllTable.stream()
+                    .filter(Objects::nonNull)
                     // 确保在同一个分析模型任务下
+                    .filter(e -> e.pid == dto.id)
                     .filter(e -> e.appId.equalsIgnoreCase(dto.appId))
                     // 过滤出分析模型任务下的表
                     .filter(e -> e.componentName.equalsIgnoreCase(ChannelDataEnum.OLAP_TASK.getName()))
@@ -228,7 +234,7 @@ public class DataFactoryImpl implements IDataFactory {
     }
 
     @Override
-    public ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskListById(Long id) {
+    public ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskFirstListById(Long id) {
 
         List<NifiCustomWorkflowDetailDTO> list = new ArrayList<>();
 
@@ -251,6 +257,7 @@ public class DataFactoryImpl implements IDataFactory {
                 .eq("workflow_id", nifiCustomWorkflowPo.workflowId)
                 .list()
                 .stream()
+                .filter(Objects::nonNull)
                 // 过滤出主任务
                 .filter(e -> e.appId != null && !"".equals(e.appId) && (e.tableId == null || "".equals(e.tableId)))
                 // 过滤没有inport上游的
@@ -264,6 +271,7 @@ public class DataFactoryImpl implements IDataFactory {
                 .eq("workflow_id", nifiCustomWorkflowPo.workflowId)
                 .list()
                 .stream()
+                .filter(Objects::nonNull)
                 // 过滤掉不绑定表的任务
                 .filter(e -> e.appId != null && !"".equals(e.appId) && e.tableId != null && !"".equals(e.tableId) && e.tableOrder != null)
                 // 过滤没有inport上游的
@@ -275,6 +283,7 @@ public class DataFactoryImpl implements IDataFactory {
         for (NifiCustomWorkflowDetailDTO dto : listAllTask) {
             // 数据湖任务
             List<NifiCustomWorkflowDetailDTO> datalakeTaskDtoList = listAllTable.stream()
+                    .filter(Objects::nonNull)
                     // 确保在同一个数据湖任务下
                     .filter(e -> e.appId.equalsIgnoreCase(dto.appId))
                     // 过滤出数据湖任务下的表
@@ -288,6 +297,7 @@ public class DataFactoryImpl implements IDataFactory {
 
             // 数仓表任务
             List<NifiCustomWorkflowDetailDTO> dwDimensionTaskDtoList = listAllTable.stream()
+                    .filter(Objects::nonNull)
                     // 确保在同一个数仓表任务下
                     .filter(e -> e.appId.equalsIgnoreCase(dto.appId))
                     // 过滤出数仓表任务下的表
@@ -301,6 +311,7 @@ public class DataFactoryImpl implements IDataFactory {
 
             // 分析模型任务
             List<NifiCustomWorkflowDetailDTO> olapTaskDtoList = listAllTable.stream()
+                    .filter(Objects::nonNull)
                     // 确保在同一个分析模型任务下
                     .filter(e -> e.appId.equalsIgnoreCase(dto.appId))
                     // 过滤出分析模型任务下的表
@@ -335,6 +346,7 @@ public class DataFactoryImpl implements IDataFactory {
                 NifiCustomWorkflowPO workflowPo = nifiCustomWorkflowImpl.query().eq("workflow_id", po.workflowId).one();
                 dispatchRedirectDto.setPipeDto(NifiCustomWorkflowMap.INSTANCES.poToDto(workflowPo));
                 List<NifiCustomWorkflowDetailPO> collect = detailPoList.stream()
+                        .filter(Objects::nonNull)
                         // 过滤出同一管道下的组件
                         .filter(e -> e.workflowId.equalsIgnoreCase(workflowPo.workflowId))
                         .collect(Collectors.toList());
@@ -346,6 +358,12 @@ public class DataFactoryImpl implements IDataFactory {
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, list.stream().distinct().collect(Collectors.toList()));
+    }
+
+    @Override
+    public ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskLastListById(Long id) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, buildPipeEndDto(id));
     }
 
     /**
@@ -367,6 +385,7 @@ public class DataFactoryImpl implements IDataFactory {
                     .eq("component_name", detailPo.componentName)
                     .list()
                     .stream()
+                    .filter(Objects::nonNull)
                     // 过滤掉不绑定表的任务
                     .filter(e -> e.appId != null && !"".equals(e.appId) && e.tableId != null && !"".equals(e.tableId) && e.tableOrder != null)
                     // 根据table_order升序
@@ -382,6 +401,7 @@ public class DataFactoryImpl implements IDataFactory {
                     .eq("component_name", detailPo.componentName)
                     .list()
                     .stream()
+                    .filter(Objects::nonNull)
                     // 过滤掉不绑定表的任务
                     .filter(e -> e.appId != null && !"".equals(e.appId) && e.tableId != null && !"".equals(e.tableId) && e.tableOrder != null)
                     // 根据table_order降序
@@ -443,12 +463,13 @@ public class DataFactoryImpl implements IDataFactory {
                 .eq("workflow_id", nifiCustomWorkflowPo.workflowId)
                 .list()
                 .stream()
+                .filter(Objects::nonNull)
                 // 过滤出主任务
                 .filter(e -> e.appId != null && !"".equals(e.appId) && (e.tableId == null || "".equals(e.tableId)))
                 // 过滤没有inport上游的
                 .filter(e -> StringUtils.isNotBlank(e.inport))
                 // 当前组件的pid是开始组件的id
-                .filter(e -> e.inport.equalsIgnoreCase(String.valueOf(scheduleTask.id)))
+//                .filter(e -> e.inport.equalsIgnoreCase(String.valueOf(scheduleTask.id)))
                 .collect(Collectors.toList()));
 
         // 过滤出所有表任务(接入+建模)
@@ -456,12 +477,13 @@ public class DataFactoryImpl implements IDataFactory {
                 .eq("workflow_id", nifiCustomWorkflowPo.workflowId)
                 .list()
                 .stream()
+                .filter(Objects::nonNull)
                 // 过滤掉不绑定表的任务
                 .filter(e -> e.appId != null && !"".equals(e.appId) && e.tableId != null && !"".equals(e.tableId) && e.tableOrder != null)
                 // 过滤没有inport上游的
                 .filter(e -> StringUtils.isNotBlank(e.inport))
                 // 当前组件的pid是开始组件的id
-                .filter(e -> e.inport.equalsIgnoreCase(String.valueOf(scheduleTask.id)))
+//                .filter(e -> e.inport.equalsIgnoreCase(String.valueOf(scheduleTask.id)))
                 .collect(Collectors.toList()));
 
         matchingDetailDtoList(list, listAllTask, listAllTable);

@@ -38,7 +38,7 @@ public interface IDataFactory {
      * @param id 管道主键id
      * @return list
      */
-    ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskListById(Long id);
+    ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskFirstListById(Long id);
 
     /**
      * 根据componentType,appId,tableId查询出表具体在哪些管道,哪些组件中使用
@@ -47,4 +47,12 @@ public interface IDataFactory {
      * @return 执行结果
      */
     ResultEntity<List<DispatchRedirectDTO>> redirect(NifiCustomWorkflowDetailDTO dto);
+
+    /**
+     * 根据管道主键id查询管道内最后一批任务
+     *
+     * @param id 管道主键id
+     * @return list
+     */
+    ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskLastListById(Long id);
 }
