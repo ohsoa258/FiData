@@ -16,7 +16,6 @@ import com.fisk.datamanagement.service.IBusinessMetaData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -85,7 +84,7 @@ public class BusinessMetaDataImpl implements IBusinessMetaData {
 
     @Override
     public ResultEnum synchronousBusinessMetaData() {
-        //获取数据列表
+        //获取配置数据列表
         QueryWrapper<BusinessMetadataConfigPO> queryWrapper = new QueryWrapper<>();
         List<BusinessMetadataConfigPO> list = mapper.selectList(queryWrapper);
 
@@ -93,7 +92,7 @@ public class BusinessMetaDataImpl implements IBusinessMetaData {
         List<BusinessMetadataDefsDTO> businessMetadataDefs = new ArrayList<>();
 
         Map<String, List<BusinessMetadataConfigPO>> collect = list.stream()
-                .collect(Collectors.groupingBy(BusinessMetadataConfigPO::getBusinessMetadataCnName));
+                .collect(Collectors.groupingBy(BusinessMetadataConfigPO::getBusinessMetadataName));
         for (String businessMetaDataName : collect.keySet()) {
             BusinessMetadataDefsDTO data = new BusinessMetadataDefsDTO();
             List<BusinessMetadataConfigPO> attributeList = collect.get(businessMetaDataName);
@@ -123,15 +122,6 @@ public class BusinessMetaDataImpl implements IBusinessMetaData {
         }
         dto.businessMetadataDefs = businessMetadataDefs;
         return addBusinessMetaData(dto);
-    }
-
-    @Test
-    public void test() {
-        String str = "rdbms_db,rdbms_table,rdbms_column";
-        String[] split = str.split(",");
-        JSONArray jsonArray = new JSONArray(Arrays.asList(split));
-        String aa = jsonArray.toString();
-        String bb = "";
     }
 
 }

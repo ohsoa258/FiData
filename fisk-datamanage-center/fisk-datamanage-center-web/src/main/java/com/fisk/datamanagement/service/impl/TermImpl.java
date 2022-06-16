@@ -3,8 +3,8 @@ package com.fisk.datamanagement.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.term.TermAssignedEntities;
 import com.fisk.datamanagement.dto.term.TermDTO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
@@ -46,7 +46,7 @@ public class TermImpl implements ITerm {
     @Override
     public TermDTO getTerm(String guid)
     {
-        TermDTO dto=new TermDTO();
+        TermDTO dto;
         ResultDataDTO<String> result = atlasClient.get(term + "/" + guid);
         if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
         {
