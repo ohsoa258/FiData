@@ -161,8 +161,14 @@ public class DataFactoryImpl implements IDataFactory {
                         .filter(e -> e.appId != null && !"".equals(e.appId) && e.tableId != null && !"".equals(e.tableId) && e.tableOrder != null)
                         .collect(Collectors.toList()));
 
-                // 匹配
-                matchingDetailDtoList(inportList, listAllTask, listAllTable);
+                if (detailPo.tableOrder == 1) {
+                    // 匹配
+                    matchingDetailDtoList(inportList, listAllTask, listAllTable);
+                } else {
+                    NifiCustomWorkflowDetailPO one = nifiCustomWorkflowDetailImpl.query().eq("pid", detailPo.pid).eq("table_order", detailPo.tableOrder - 1).one();
+                    inportList.add(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(one));
+                }
+
             });
 
             nifiPortsHierarchyDto.inportList = inportList;

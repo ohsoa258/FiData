@@ -202,13 +202,16 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                     TableTopicDTO topicSelf = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort.id),
                             Integer.valueOf(nifiGetPortHierarchyDTO.tableId), kafkaReceiveDTO.tableType);
                     //能走到最后说明这一批次走成功了
-                    pipelineTableLogMapper.updateByComponentId(Math.toIntExact(itselfPort.id), Integer.valueOf(nifiGetPortHierarchyDTO.tableId), kafkaReceiveDTO.tableType);
+                   /* pipelineTableLogMapper.updateByComponentId(Math.toIntExact(itselfPort.id), Integer.valueOf(nifiGetPortHierarchyDTO.tableId), kafkaReceiveDTO.tableType);
                     QueryWrapper<PipelineTableLogPO> Wrapper = new QueryWrapper<>();
                     Wrapper.lambda().eq(PipelineTableLogPO::getComponentId, itselfPort.id)
                             .eq(PipelineTableLogPO::getTableId, nifiGetPortHierarchyDTO.tableId)
-                            .eq(PipelineTableLogPO::getTableType, kafkaReceiveDTO.tableType);
-                    PipelineTableLogPO pipelineTableLogPO = pipelineTableLogMapper.selectOne(Wrapper);
-                    nifiStageMapper.updateByComponentId(Math.toIntExact(itselfPort.id), pipelineTableLogPO.id);
+                            .eq(PipelineTableLogPO::getTableType, kafkaReceiveDTO.tableType).orderByDesc();
+                    List<PipelineTableLogPO> pipelineTableLogs = pipelineTableLogMapper.selectList(Wrapper);
+                    for (PipelineTableLogPO pipelineTableLog:pipelineTableLogs) {
+                        nifiStageMapper.updateByComponentId(Math.toIntExact(itselfPort.id), pipelineTableLog.id);
+                    }*/
+
                     //本节点topic
                     String topicName1 = topicSelf.topicName;
                     //下一级
