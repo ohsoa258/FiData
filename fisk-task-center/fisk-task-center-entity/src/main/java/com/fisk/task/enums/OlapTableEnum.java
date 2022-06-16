@@ -58,6 +58,10 @@ public enum OlapTableEnum implements BaseEnum {
                 return CUSTOMWORKPHYSICS;
             case 8:
                 return CUSTOMWORKFACTKPI;
+            case 9:
+                return WIDETABLE;
+            case 10:
+                return PHYSICS_API;
             default:
                 return null;
         }

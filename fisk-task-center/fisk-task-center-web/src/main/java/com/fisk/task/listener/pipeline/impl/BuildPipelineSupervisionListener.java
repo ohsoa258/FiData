@@ -81,7 +81,9 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
 
                 KafkaReceiveDTO kafkaReceiveDTO = JSON.parseObject(mapString, KafkaReceiveDTO.class);
                 //管道总的pipelTraceId
-                kafkaReceiveDTO.pipelTraceId = UUID.randomUUID().toString();
+                if (Objects.isNull(kafkaReceiveDTO.pipelTraceId)) {
+                    kafkaReceiveDTO.pipelTraceId = UUID.randomUUID().toString();
+                }
                 if (kafkaReceiveDTO.topic != null && kafkaReceiveDTO.topic != "") {
                     String topicName = kafkaReceiveDTO.topic;
                     String[] split1 = topicName.split("\\.");
@@ -90,7 +92,7 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                         //卡夫卡的内容在发布时就定义好了
                         log.info("打印topic内容:" + JSON.toJSONString(kafkaReceiveDTO));
                         if (kafkaReceiveDTO.ifDown) {
-                            log.info("发送的topic1:{},内容:{}",topicName,mapString);
+                            log.info("发送的topic1:{},内容:{}", topicName, mapString);
                             kafkaTemplateHelper.sendMessageAsync(topicName, mapString);
                         }
                         redisUtil.set("hand" + kafkaReceiveDTO.pipelTaskTraceId + "," + topicName, topicName, 30);
@@ -114,7 +116,7 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                                 kafkaReceiveDTO.pipelTaskTraceId = UUID.randomUUID().toString();
                                 kafkaReceiveDTO.topic = topic.topicName;
                                 String[] split = topic.topicName.split("\\.");
-                                log.info("发送的topic2:{},内容:{}",topic.topicName,JSON.toJSONString(kafkaReceiveDTO));
+                                log.info("发送的topic2:{},内容:{}", topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
                                 kafkaTemplateHelper.sendMessageAsync(topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
                                 //-----------------------------------------------------
                                 String pipelTraceId = kafkaReceiveDTO.pipelTraceId;
@@ -149,7 +151,7 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                                 apiImportData.pipelJobTraceId = UUID.randomUUID().toString();
                                 apiImportData.pipelTaskTraceId = UUID.randomUUID().toString();
                                 apiImportData.pipelStageTraceId = UUID.randomUUID().toString();
-                                log.info("发送的topic3:{},内容:{}",topicName,JSON.toJSONString(apiImportData));
+                                log.info("发送的topic3:{},内容:{}", topicName, JSON.toJSONString(apiImportData));
                                 kafkaTemplateHelper.sendMessageAsync(topicName, JSON.toJSONString(apiImportData));
                             }
 
@@ -271,7 +273,7 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                         Object key = redisUtil.get(topic);
                         if (key == null) {
                             if (upPortList.size() == 1) {
-                                log.info("存入redis即将调用的节点1:" + topicDTO.topicName);
+                                log.info("存入redis即将调用的节点1:" + topic);
                                 redisUtil.set(topic, topicSelf.topicName, Long.parseLong(waitTime));
                             } else {
                                 redisUtil.set(topic, topicSelf.topicName, 3000L);
@@ -283,10 +285,10 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                             if (split.length != upPortList.size()) {
                                 if (upPortList.size() - split.length <= 1) {
                                     if (topicContent.contains(topicSelf.topicName)) {
-                                        log.info("存入redis即将调用的节点2:" + topicDTO.topicName);
+                                        log.info("存入redis即将调用的节点2:" + topic);
                                         redisUtil.expire(topic, Long.parseLong(waitTime));
                                     } else {
-                                        log.info("存入redis即将调用的节点3:" + topicDTO.topicName);
+                                        log.info("存入redis即将调用的节点3:" + topic);
                                         redisUtil.set(topic, topicContent + "," + topicSelf.topicName, Long.parseLong(waitTime));
                                     }
                                 } else {
@@ -297,7 +299,7 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                                     }
                                 }
                             } else {
-                                log.info("存入redis即将调用的节点4:" + topicDTO.topicName);
+                                log.info("存入redis即将调用的节点4:" + topic);
                                 redisUtil.expire(topic, Long.parseLong(waitTime));
                             }
                         }

@@ -77,7 +77,14 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
             String pipelTraceId = split1[1];
             boolean ifEndJob = false;
             //查找所有的上一级
-            NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(split[3], Integer.valueOf(split[4]), null, Integer.valueOf(split[6]));
+            NifiGetPortHierarchyDTO nifiGetPortHierarchy=new NifiGetPortHierarchyDTO();
+            if(!Objects.equals(Integer.valueOf(split[4]),OlapTableEnum.PHYSICS_API.getValue())){
+                 nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(split[3], Integer.valueOf(split[4]), null, Integer.valueOf(split[6]));
+            }else{
+                nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(null, Integer.valueOf(split[4]), null, Integer.valueOf(split[6]));
+                nifiGetPortHierarchy.nifiCustomWorkflowDetailId= Long.valueOf(split[3]);
+            }
+
             ResultEntity<NifiPortsHierarchyDTO> nifiPortHierarchy =
                     dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchy);
             NifiPortsHierarchyDTO data = nifiPortHierarchy.data;
