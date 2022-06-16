@@ -355,7 +355,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                                 attributeDto.setLabelLength(dataTypeLength.toString());
                                             }
                                             attributeDto.setLabelType(iter.getDataType());
-                                            attributeDto.setLabel(iter.getDesc());
+                                            attributeDto.setLabelDesc(iter.getDesc());
                                             return attributeDto;
                                         }).collect(Collectors.toList());
 
