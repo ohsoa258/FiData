@@ -924,6 +924,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
     public String complexTypeJoin(AtomicInteger amount1,List<AttributeInfoDTO> fileList,List<AttributeInfoDTO> longitudeList){
         StringBuilder stringBuilder = new StringBuilder();
         if (CollectionUtils.isNotEmpty(fileList)){
+            // 文件类型
             String alias = PRIMARY_TABLE + amount1.incrementAndGet();
 
             // 文件left join字段
@@ -939,18 +940,18 @@ public class BuildModelListenerImpl implements BuildModelListener {
         }
 
         if (CollectionUtils.isNotEmpty(longitudeList)){
+            // 经纬度坐标
             String alias = PRIMARY_TABLE + amount1.incrementAndGet();
 
             // 经纬度left join字段
-            String longitudes = fileList.stream().map(e -> {
+            String longitudes = longitudeList.stream().map(e -> {
                 return PRIMARY_TABLE + "." + e.getColumnName() + " = " + alias + ".\"id\"";
             }).collect(Collectors.joining(" OR "));
 
-            stringBuilder.append(" ").append(PRIMARY_TABLE);
             stringBuilder.append(" LEFT JOIN ");
-            stringBuilder.append(" tb_file ").append(alias);
+            stringBuilder.append(" tb_geography ").append(alias);
             stringBuilder.append(" ON ");
-            stringBuilder.append(PRIMARY_TABLE + "." + MARK + "version_id" + " = " + alias + "." + "version_id");
+            stringBuilder.append(PRIMARY_TABLE + "." + MARK + "version_id" + " = " + alias + "." + MARK + "version_id");
             stringBuilder.append(" AND ").append(longitudes);
         }
 
