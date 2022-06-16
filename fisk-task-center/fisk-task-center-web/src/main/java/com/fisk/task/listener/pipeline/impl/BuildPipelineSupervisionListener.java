@@ -80,6 +80,8 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                 log.info("mapString信息:" + mapString);
 
                 KafkaReceiveDTO kafkaReceiveDTO = JSON.parseObject(mapString, KafkaReceiveDTO.class);
+                //管道总的pipelTraceId
+                kafkaReceiveDTO.pipelTraceId = UUID.randomUUID().toString();
                 if (kafkaReceiveDTO.topic != null && kafkaReceiveDTO.topic != "") {
                     String topicName = kafkaReceiveDTO.topic;
                     String[] split1 = topicName.split("\\.");
@@ -88,6 +90,7 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                         //卡夫卡的内容在发布时就定义好了
                         log.info("打印topic内容:" + JSON.toJSONString(kafkaReceiveDTO));
                         if (kafkaReceiveDTO.ifDown) {
+                            log.info("发送的topic1:{},内容:{}",topicName,mapString);
                             kafkaTemplateHelper.sendMessageAsync(topicName, mapString);
                         }
                         redisUtil.set("hand" + kafkaReceiveDTO.pipelTaskTraceId + "," + topicName, topicName, 30);
@@ -111,6 +114,7 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                                 kafkaReceiveDTO.pipelTaskTraceId = UUID.randomUUID().toString();
                                 kafkaReceiveDTO.topic = topic.topicName;
                                 String[] split = topic.topicName.split("\\.");
+                                log.info("发送的topic2:{},内容:{}",topic.topicName,JSON.toJSONString(kafkaReceiveDTO));
                                 kafkaTemplateHelper.sendMessageAsync(topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
                                 //-----------------------------------------------------
                                 String pipelTraceId = kafkaReceiveDTO.pipelTraceId;
@@ -145,6 +149,7 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                                 apiImportData.pipelJobTraceId = UUID.randomUUID().toString();
                                 apiImportData.pipelTaskTraceId = UUID.randomUUID().toString();
                                 apiImportData.pipelStageTraceId = UUID.randomUUID().toString();
+                                log.info("发送的topic3:{},内容:{}",topicName,JSON.toJSONString(apiImportData));
                                 kafkaTemplateHelper.sendMessageAsync(topicName, JSON.toJSONString(apiImportData));
                             }
 

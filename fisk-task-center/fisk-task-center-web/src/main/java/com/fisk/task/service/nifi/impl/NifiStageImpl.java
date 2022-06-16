@@ -230,7 +230,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
             HashMap<Integer, Object> taskMap = new HashMap<>();
             taskMap.put(DispatchLogEnum.taskcount.getValue(), nifiStageMessageDTO.counts);
             taskMap.put(DispatchLogEnum.taskcomment.getValue(), nifiStagePO.comment);
-            iPipelTaskLog.savePipelTaskLog(nifiStageMessageDTO.pipelJobTraceId, nifiStageMessageDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiStagePO.componentId), String.valueOf(pipelineTableLogPO.tableId), pipelineTableLogPO.tableType);
+            iPipelTaskLog.savePipelTaskLog(nifiStageMessageDTO.pipelJobTraceId, nifiStageMessageDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiStagePO.componentId), String.valueOf(tableAccessId), type);
             HashMap<Integer, Object> stagekMap = new HashMap<>();
             stagekMap.put(DispatchLogEnum.stageinsert.getValue(), nifiStagePO.insertPhase);
             stagekMap.put(DispatchLogEnum.stagestart.getValue(), nifiStagePO.queryPhase);
