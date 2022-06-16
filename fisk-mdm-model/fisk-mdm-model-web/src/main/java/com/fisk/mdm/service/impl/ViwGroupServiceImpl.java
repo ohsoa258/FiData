@@ -453,7 +453,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
                 , LinkedHashMap::new,Collectors.toList()));
 
         // 存储的是别名对应的字段名
-        Map<String,String> aliasMap = new HashMap<>(16);
+        Map<String,Integer> aliasMap = new HashMap<>(16);
 
         AtomicInteger count = new AtomicInteger(0);
         int secondaryCount = count.incrementAndGet();
@@ -462,7 +462,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             EntityVO entityVo = entityService.getDataById(data.getEntityId());
             String alias = ALIAS_MARK + secondaryCount;
             String name = alias + "." + data.getColumnName() + " AS " + entityVo.getName()  + "_" + e.getName();
-            aliasMap.put(data.getColumnName(),alias);
+            aliasMap.put(alias,data.getEntityId());
             return name;
         }).collect(Collectors.joining(","));
 
@@ -479,7 +479,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
                 AttributeVO data = attributeService.getById(e.getAttributeId()).getData();
                 EntityVO entityVo = entityService.getDataById(data.getEntityId());
                 String name = alias + "." + data.getColumnName() + " AS " + entityVo.getName() + "_" + e.getName();
-                aliasMap.put(data.getColumnName(),alias);
+                aliasMap.put(alias,data.getEntityId());
                 return name;
             }).collect(Collectors.joining(","));
 
@@ -488,10 +488,11 @@ public class ViwGroupServiceImpl implements ViwGroupService {
 
         // 追加从表属性
         String secondaryFields = list.stream().collect(Collectors.joining(","));
-        if (StringUtils.isNotBlank(secondaryFields)){
+        if (StringUtils.isNotBlank(secondaryFields) && StringUtils.isNotBlank(mainName)){
             str.append(",");
-            str.append(secondaryFields);
         }
+        str.append(secondaryFields);
+
         // 主表基础字段
         str.append(",");
         str.append(this.baseField("a1"));
@@ -559,11 +560,20 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             queryWrapper1.lambda()
                     .eq(AttributePO::getDomainId,attributeId)
                     .last(" limit 1");
-            String columnName = attributeMapper.selectOne(queryWrapper1).getColumnName();
+            AttributePO attributePo = attributeMapper.selectOne(queryWrapper1);
+
+            // 获取域属性别名
+            String doMainAlias = null;
+            for (String key : aliasMap.keySet()) {
+                Integer value = aliasMap.get(key);
+                if (value.equals(attributePo.getEntityId())){
+                    doMainAlias = key;
+                }
+            }
 
             // 查询属性
             secondaryStr.append(" AND ");
-            secondaryStr.append(aliasReduce + "." + columnName);
+            secondaryStr.append(doMainAlias + "." + attributePo.getColumnName());
             secondaryStr.append(" = ");
             secondaryStr.append(aliasAdd + "." + "fidata_id");
 
