@@ -282,7 +282,9 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
             if (StringUtils.isNotBlank(e.getDomainName())){
                 AttributeVO data = attributeService.getById(Integer.parseInt(e.getDomainName())).getData();
                 EntityVO entityVo = entityService.getDataById(data.getEntityId());
-                e.setDomainName(entityVo.getName());
+                if (entityVo != null){
+                    e.setDomainName(entityVo.getName());
+                }
             }
         });
 
