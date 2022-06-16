@@ -21,10 +21,11 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
     @Override
     public void savePipelLogAndJobLog(String pipelTraceId, Map<Integer, Object> map, String pipelId, String jobTraceId, String componentId) {
         log.info("job参数:pipelTraceId:{},map:{},pipelId:{},jobTraceId:{},componentId{}", pipelTraceId, JSON.toJSONString(map), pipelId, jobTraceId, componentId);
-        PipelJobLogPO pipelJobLog = new PipelJobLogPO();
+
         List<PipelJobLogPO> pipelJobLogs = new ArrayList<>();
         Iterator<Map.Entry<Integer, Object>> nodeMap = map.entrySet().iterator();
         while (nodeMap.hasNext()) {
+            PipelJobLogPO pipelJobLog = new PipelJobLogPO();
             Map.Entry<Integer, Object> next = nodeMap.next();
             if (Objects.isNull(next.getValue())) {
                 continue;

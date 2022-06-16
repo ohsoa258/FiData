@@ -15,5 +15,7 @@ public class PipelTaskLogPO extends BasePO {
     public String taskId;
     public String msg;
     public int type;
+    public int tableId;
+    public int tableType;
 
 }

@@ -20,10 +20,11 @@ public class PipelStageLogImpl extends ServiceImpl<PipelStateLogMapper, PipelSta
     @Override
     public void savePipelTaskStageLog(String stateTraceId, String pipelTaskTraceId, Map<Integer, Object> map) {
         log.info("pipelStage参数:stateTraceId:{},pipelTaskTraceId:{},map:{}", stateTraceId, pipelTaskTraceId, JSON.toJSONString(map));
-        PipelStageLogPO pipelStageLog = new PipelStageLogPO();
+
         List<PipelStageLogPO> pipelStageLogs = new ArrayList<>();
         Iterator<Map.Entry<Integer, Object>> nodeMap = map.entrySet().iterator();
         while (nodeMap.hasNext()) {
+            PipelStageLogPO pipelStageLog = new PipelStageLogPO();
             Map.Entry<Integer, Object> next = nodeMap.next();
             if (Objects.isNull(next.getValue())) {
                 continue;

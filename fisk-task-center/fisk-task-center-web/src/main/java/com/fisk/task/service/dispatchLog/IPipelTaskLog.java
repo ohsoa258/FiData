@@ -21,7 +21,7 @@ public interface IPipelTaskLog extends IService<PipelTaskLogPO> {
      * @param taskId
      * @return
      */
-    public void savePipelTaskLog(String jobTraceId, String pipelTaskTraceId, Map<Integer, Object> map, String taskId);
+    public void savePipelTaskLog(String jobTraceId, String pipelTaskTraceId, Map<Integer, Object> map, String taskId, String tableId, int tableType);
 
     /**
      * 获取日志

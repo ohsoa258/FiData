@@ -1653,9 +1653,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         querySqlDto.details = "insert_phase";
         querySqlDto.groupId = groupId;
         if (Objects.equals(dto.type, OlapTableEnum.WIDETABLE)) {
-            querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,now() as end_time from " + config.processorConfig.targetTableName;
+            querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,now() as end_time," +
+                    "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
+                    "'${pipelTraceId}' as pipelTraceId  from " + config.processorConfig.targetTableName;
         } else {
-            querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time from " + config.processorConfig.targetTableName;
+            querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
+                    "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
+                    "'${pipelTraceId}' as pipelTraceId  from " + config.processorConfig.targetTableName;
         }
 
         querySqlDto.dbConnectionId = targetDbPoolId;
@@ -2098,7 +2102,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         querySqlDto.details = "queryForPipelineSupervision";
         querySqlDto.groupId = groupId;
         querySqlDto.querySql = "select '${executesql.error.message}' as message,'${kafka.topic}' as topic,'" + groupId + "' as groupId"
-                + ",'${start_time}' as startTime, '${end_time}' as endTime ,'${numbers}' counts";
+                + ",'${start_time}' as startTime, '${end_time}' as endTime ,'${numbers}' counts ,'${pipelStageTraceId}' as pipelStageTraceId,'${pipelTaskTraceId} as pipelTaskTraceId'";
         querySqlDto.dbConnectionId = cfgDbPoolId;
         querySqlDto.scheduleExpression = "1";
         querySqlDto.scheduleType = SchedulingStrategyTypeEnum.TIMER;

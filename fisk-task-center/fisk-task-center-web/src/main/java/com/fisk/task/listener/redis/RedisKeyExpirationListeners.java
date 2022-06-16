@@ -8,6 +8,7 @@ import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
+import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.entity.PipelJobLogPO;
 import com.fisk.task.entity.PipelTaskLogPO;
@@ -65,6 +66,8 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
         String thisPipelTaskTraceId = UUID.randomUUID().toString();
         String thisPipelJobTraceId = UUID.randomUUID().toString();
         String thisPipelStageTraceId = UUID.randomUUID().toString();
+        String upPipelJobTraceId = "";
+
         //用户key失效不做处理
         if (!expiredKey.toLowerCase().contains("auth") && !expiredKey.startsWith("fiskgd") && !expiredKey.startsWith("hand")) {
             //分割
@@ -72,6 +75,7 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
             String topic = split1[0];
             String[] split = topic.split("\\.");
             String pipelTraceId = split1[1];
+            boolean ifEndJob = false;
             //查找所有的上一级
             NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(split[3], Integer.valueOf(split[4]), null, Integer.valueOf(split[6]));
             ResultEntity<NifiPortsHierarchyDTO> nifiPortHierarchy =
@@ -88,7 +92,9 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
                 Map<Integer, Object> taskMap = new HashMap<>();
                 taskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
                 taskMap.put(DispatchLogEnum.taskend.getValue(), simpleDateFormat.format(new Date()));
-                iPipelTaskLog.savePipelTaskLog(byPipelJobTraceId.jobTraceId, byPipelJobTraceId.taskTraceId, taskMap, byPipelJobTraceId.taskId);
+                ChannelDataEnum value = ChannelDataEnum.getValue(dto.componentType);
+                OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(value.getValue());
+                iPipelTaskLog.savePipelTaskLog(byPipelJobTraceId.jobTraceId, byPipelJobTraceId.taskTraceId, taskMap, byPipelJobTraceId.taskId, dto.tableId, olapTableEnum.getValue());
                 if (!Objects.equals(itselfPort.pid, dto.pid)) {
                     //说明这个组结束了
                     //2.记录上一个job结束
@@ -96,19 +102,33 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
                     upJobMap.put(DispatchLogEnum.jobstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
                     upJobMap.put(DispatchLogEnum.jobend.getValue(), simpleDateFormat.format(new Date()));
                     iPipelJobLog.savePipelLogAndJobLog(pipelTraceId, upJobMap, split[3], byPipelJobTraceId.jobTraceId, byPipelTraceId.componentId);
-                    //3.记录这个job开始
-                    Map<Integer, Object> thisJobMap = new HashMap<>();
-                    thisJobMap.put(DispatchLogEnum.jobstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
-                    thisJobMap.put(DispatchLogEnum.jobstart.getValue(), simpleDateFormat.format(new Date()));
-                    iPipelJobLog.savePipelLogAndJobLog(pipelTraceId, thisJobMap, split[3], thisPipelJobTraceId, String.valueOf(itselfPort.pid));
+                    ifEndJob = true;
+
+                } else {
+                    upPipelJobTraceId = byPipelJobTraceId.jobTraceId;
                 }
-                //4.记录这个task开始
-                Map<Integer, String> thisTaskMap = new HashMap<>();
-                thisTaskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
-                thisTaskMap.put(DispatchLogEnum.taskstart.getValue(), simpleDateFormat.format(new Date()));
-                iPipelTaskLog.savePipelTaskLog(byPipelJobTraceId.jobTraceId, thisPipelTaskTraceId, taskMap, String.valueOf(itselfPort.id));
+
 
             }
+            if (ifEndJob) {
+                //3.记录这个job开始
+                Map<Integer, Object> thisJobMap = new HashMap<>();
+                thisJobMap.put(DispatchLogEnum.jobstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
+                thisJobMap.put(DispatchLogEnum.jobstart.getValue(), simpleDateFormat.format(new Date()));
+                iPipelJobLog.savePipelLogAndJobLog(pipelTraceId, thisJobMap, split[3], thisPipelJobTraceId, String.valueOf(itselfPort.pid));
+                //4.记录这个task开始
+                Map<Integer, Object> thisTaskMap = new HashMap<>();
+                thisTaskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
+                thisTaskMap.put(DispatchLogEnum.taskstart.getValue(), simpleDateFormat.format(new Date()));
+                iPipelTaskLog.savePipelTaskLog(thisPipelJobTraceId, thisPipelTaskTraceId, thisTaskMap, String.valueOf(itselfPort.id), split[6], Integer.parseInt(split[4]));
+            } else {
+                //4.记录这个task开始
+                Map<Integer, Object> thisTaskMap = new HashMap<>();
+                thisTaskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
+                thisTaskMap.put(DispatchLogEnum.taskstart.getValue(), simpleDateFormat.format(new Date()));
+                iPipelTaskLog.savePipelTaskLog(upPipelJobTraceId, thisPipelTaskTraceId, thisTaskMap, String.valueOf(itselfPort.id), split[6], Integer.parseInt(split[4]));
+            }
+
 
             //此时,expiredKey就是即将要调用的节点,需要发消息topic_name就是expiredKey
 
@@ -153,7 +173,7 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
                     Map<Integer, Object> taskMap = new HashMap<>();
                     taskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
                     taskMap.put(DispatchLogEnum.taskend.getValue(), simpleDateFormat.format(new Date()));
-                    iPipelTaskLog.savePipelTaskLog(byPipelJobTraceId.jobTraceId, byPipelJobTraceId.taskTraceId, taskMap, byPipelJobTraceId.taskId);
+                    iPipelTaskLog.savePipelTaskLog(byPipelJobTraceId.jobTraceId, byPipelJobTraceId.taskTraceId, taskMap, byPipelJobTraceId.taskId, null, 0);
                     //记录job结束
                     Map<Integer, Object> upJobMap = new HashMap<>();
                     upJobMap.put(DispatchLogEnum.jobstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
@@ -169,12 +189,14 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
 
         } else if (expiredKey.startsWith("hand")) {
             //手动调度记录结束
-            String taskTraceId = expiredKey.substring(4);
+            String[] split = expiredKey.split(",");
+            String taskTraceId = split[0].substring(4);
+            String[] split1 = split[1].split("\\.");
 
             HashMap<Integer, Object> taskMap = new HashMap<>();
             taskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
             taskMap.put(DispatchLogEnum.taskend.getValue(), simpleDateFormat.format(new Date()));
-            iPipelTaskLog.savePipelTaskLog(null, taskTraceId, taskMap, null);
+            iPipelTaskLog.savePipelTaskLog(null, taskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
         }
     }
 }

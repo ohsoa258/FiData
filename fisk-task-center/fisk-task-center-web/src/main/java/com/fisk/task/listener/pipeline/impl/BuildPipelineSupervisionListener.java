@@ -90,7 +90,7 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                         if (kafkaReceiveDTO.ifDown) {
                             kafkaTemplateHelper.sendMessageAsync(topicName, mapString);
                         }
-                        redisUtil.set("hand" + kafkaReceiveDTO.pipelTaskTraceId, topicName, 30);
+                        redisUtil.set("hand" + kafkaReceiveDTO.pipelTaskTraceId + "," + topicName, topicName, 30);
                         continue;
                     } else if (split1.length == 4) {
                         //  这个时候可能是api的topic,可能是管道直接调度的topic,保存管道开始,job开始 定义管道traceid  定义job的traceid
@@ -131,7 +131,7 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                                 HashMap<Integer, Object> taskMap = new HashMap<>();
                                 taskMap.put(DispatchLogEnum.taskstart.getValue(), simpleDateFormat.format(new Date()));
                                 taskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
-                                iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.data.itselfPort.id));
+                                iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.data.itselfPort.id), null, 0);
 
                             }
 
