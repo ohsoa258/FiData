@@ -1,5 +1,6 @@
 package com.fisk.task.service.pipeline;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.task.dto.task.TableTopicDTO;
 
 import java.util.List;
@@ -7,7 +8,7 @@ import java.util.List;
 /**
  * @author cfk
  */
-public interface ITableTopicService {
+public interface ITableTopicService  extends IService<TableTopicDTO> {
 
     /**
      * 获取TableTopicDTO集合
@@ -56,4 +57,12 @@ public interface ITableTopicService {
      * @return Integer
      */
     TableTopicDTO getTableTopicDTOByComponentId(Integer id,Integer tableId,Integer tableType);
+
+    /**
+     * 根据管道topic找到实际topic
+     *
+     * @param topicName
+     * @return List<TableTopicDTO>
+     */
+    List<TableTopicDTO> getByTopicName(String topicName);
 }

@@ -105,5 +105,24 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicDTO>
         return topicDTO;
     }
 
+    @Override
+    public List<TableTopicDTO> getByTopicName(String topicName) {
+        List<TableTopicDTO> tableTopics = new ArrayList<>();
+        List<TableTopicDTO> list = this.query().eq("topic_name", topicName).eq("del_flag", 1).list();
+        for (TableTopicDTO dto : list) {
+            int tableId = dto.tableId;
+            int tableType = dto.tableType;
+            int topicType = dto.topicType;
+            List<TableTopicDTO> list1 = this.query().eq("table_id", tableId).eq("table_type", tableType)
+                    .eq("topic_type", topicType).eq("del_flag", 1).list();
+            for (TableTopicDTO dto1 : list1) {
+                if (!Objects.equals(dto.topicName, dto1.topicName)) {
+                    tableTopics.add(dto1);
+                }
+            }
+        }
+        return tableTopics;
+    }
+
 
 }

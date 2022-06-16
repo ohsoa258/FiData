@@ -29,6 +29,24 @@ public class ApiImportDataDTO {
     @ApiModelProperty(value = "管道id_apiid", required = true)
     public String pipelApiDispatch;
 
+    @ApiModelProperty(value = "管道批次id", required = true)
+    public String pipelTraceId;
+    /*
+     * job批次号
+     * */
+    public String pipelJobTraceId;
+
+    /*
+     * task批次号
+     * */
+    public String pipelTaskTraceId;
+
+    /*
+     * stage批次号
+     * */
+    public String pipelStageTraceId;
+
     public long userId;
+
 
 }

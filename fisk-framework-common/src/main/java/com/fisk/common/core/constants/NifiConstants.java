@@ -53,6 +53,11 @@ public class NifiConstants {
         public static final String KAFKA_TOPIC="kafka.topic";
         public static final String INITIAL_TIME="0000-01-01";
 
+        public static final String PIPEL_TRACE_ID="pipelTraceId";
+        public static final String PIPEL_JOB_TRACE_ID="pipelJobTraceId";
+        public static final String PIPEL_TASK_TRACE_ID="pipelTaskTraceId";
+        public static final String PIPEL_STAGE_TRACE_ID="pipelStageTraceId";
+
         public static final int POSITION_X_MAX = 5;
         public static final double POSITION_X = 500;
         public static final double POSITION_Y = 300;

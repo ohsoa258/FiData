@@ -24,6 +24,7 @@ import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.entity.NifiStagePO;
 import com.fisk.task.entity.PipelineTableLogPO;
+import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.map.NifiStageMap;
@@ -31,6 +32,8 @@ import com.fisk.task.map.NifiStageMapImpl;
 import com.fisk.task.mapper.NifiStageMapper;
 import com.fisk.task.mapper.PipelineTableLogMapper;
 import com.fisk.task.po.TableNifiSettingPO;
+import com.fisk.task.service.dispatchLog.IPipelStageLog;
+import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.utils.NifiHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -38,10 +41,7 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -65,6 +65,10 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
     DataAccessClient dataAccessClient;
     @Resource
     DataModelClient dataModelClient;
+    @Resource
+    IPipelTaskLog iPipelTaskLog;
+    @Resource
+    IPipelStageLog iPipelStageLog;
 
 
     @Override
@@ -186,11 +190,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                     }
                 }
             }
-/*            if (nifiStagePO.componentId != null && nifiStagePO.componentId != 0) {
-                pipelineTableLog.deleteByComponentId(nifiStagePO.componentId);
-                nifiStageMapper.deleteByComponentId(nifiStagePO.componentId);
 
-            }*/
 
             PipelineTableLogPO pipelineTableLogPO = new PipelineTableLogPO();
             pipelineTableLogPO.comment = nifiStagePO.comment;
@@ -225,6 +225,18 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                 pipelineTableLogPO.dispatchType = 1;
             }
             pipelineTableLog.insert(pipelineTableLogPO);
+            //----------------------------------------------
+            HashMap<Integer, Object> taskMap = new HashMap<>();
+            taskMap.put(DispatchLogEnum.taskcount.getValue(), nifiStageMessageDTO.counts);
+            taskMap.put(DispatchLogEnum.taskcomment.getValue(), nifiStagePO.comment);
+            iPipelTaskLog.savePipelTaskLog(nifiStageMessageDTO.pipelJobTraceId, nifiStageMessageDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiStagePO.componentId));
+            HashMap<Integer, Object> stagekMap = new HashMap<>();
+            stagekMap.put(DispatchLogEnum.stageinsert.getValue(), nifiStagePO.insertPhase);
+            stagekMap.put(DispatchLogEnum.stagestart.getValue(), nifiStagePO.queryPhase);
+            stagekMap.put(DispatchLogEnum.stagestate.getValue(), pipelineTableLogPO.state);
+            stagekMap.put(DispatchLogEnum.stagetransition.getValue(), nifiStagePO.transitionPhase);
+            iPipelStageLog.savePipelTaskStageLog(nifiStageMessageDTO.pipelStageTraceId, nifiStageMessageDTO.pipelTaskTraceId, stagekMap);
+            //-----------------------------------------------
             nifiStagePO.pipelineTableLogId = Math.toIntExact(pipelineTableLogPO.id);
             this.save(nifiStagePO);
         } catch (ApiException e) {

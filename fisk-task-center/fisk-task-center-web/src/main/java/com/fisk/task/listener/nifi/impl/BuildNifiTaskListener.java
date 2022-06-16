@@ -27,6 +27,7 @@ import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.daconfig.*;
+import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
@@ -43,6 +44,7 @@ import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.service.pipeline.ITableTopicService;
 import com.fisk.task.service.pipeline.impl.NifiConfigServiceImpl;
+import com.fisk.task.utils.KafkaTemplateHelper;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
 import com.fisk.task.utils.nifi.INiFiHelper;
@@ -55,6 +57,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -119,6 +122,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     private TBETLIncrementalMapper incrementalMapper;
     @Resource
     private ITableTopicService tableTopicService;
+    @Resource
+    KafkaTemplateHelper kafkaTemplateHelper;
 
     @Resource
     RestTemplate httpClient;
@@ -240,18 +245,25 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             //5. 创建组件
 
             List<ProcessorEntity> processors = buildProcessorVersion2(groupEntity.getId(), configDTO, taskGroupEntity.getId(), sourceId, dbPool.get(1).getId(), cfgDbPool.getId(), appNifiSettingPO, dto);
-            enabledProcessor(taskGroupEntity.getId(), processors.subList(0, processors.size() - 1));
+            enabledProcessor(taskGroupEntity.getId(), processors);
             //7. 如果是接入,同步一次,然后把调度组件停掉
             if (dto.groupStructureId == null && dto.openTransmission) {
-                enabledProcessor(taskGroupEntity.getId(), processors.subList(processors.size() - 1, processors.size()));
+                String topicName = "dmp.datafactory.nifi." + dto.type.getValue() + "." + dto.appId + "." + dto.id;
+                int value = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
+                if (Objects.equals(value, OlapTableEnum.KPI)) {
+                    topicName = "dmp.datafactory.nifi." + OlapTableEnum.KPI.getValue() + "." + dto.appId + "." + dto.id;
+                }
+                KafkaReceiveDTO kafkaRkeceiveDTO = new KafkaReceiveDTO();
+                kafkaRkeceiveDTO.topic = topicName;
+                kafkaRkeceiveDTO.fidata_batch_code = UUID.randomUUID().toString();
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                kafkaRkeceiveDTO.start_time = simpleDateFormat.format(new Date());
+                kafkaRkeceiveDTO.pipelTaskTraceId = UUID.randomUUID().toString();
+                kafkaRkeceiveDTO.pipelStageTraceId = UUID.randomUUID().toString();
+                kafkaRkeceiveDTO.ifDown = true;
+                kafkaTemplateHelper.sendMessageAsync(pipelineTopicName, JSON.toJSONString(kafkaRkeceiveDTO));
             }
-            Thread.sleep(1000);
-            ProcessorEntity processorEntity = processors.get(processors.size() - 1);
-            ProcessorRunStatusEntity processorRunStatusEntity = new ProcessorRunStatusEntity();
-            processorRunStatusEntity.setDisconnectedNodeAcknowledged(false);
-            processorRunStatusEntity.setRevision(processorEntity.getRevision());
-            processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.STOPPED);
-            NifiHelper.getProcessorsApi().updateRunStatus(processorEntity.getId(), processorRunStatusEntity);
+
             //7. 回写id
             savaNifiConfig(cfgDbPool.getId(), ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID);
             if (Objects.equals(dto.synchronousTypeEnum.getName(), SynchronousTypeEnum.TOPGODS.getName())) {
@@ -770,17 +782,18 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         List<ProcessorEntity> processorEntities = pipelineSupervision(groupId, res, cfgDbPoolId, tableNifiSettingPO);
         String supervisionId = processorEntities.get(0).getId();
         //调度组件,在数据接入的时候调一次
-        ProcessorEntity dispatchProcessor = new ProcessorEntity();
-        ProcessorEntity publishKafkaProcessor = new ProcessorEntity();
+       /* ProcessorEntity dispatchProcessor = new ProcessorEntity();
+        ProcessorEntity publishKafkaProcessor = new ProcessorEntity();*/
         String inputPortId = "";
-        if (dto.groupStructureId == null) {
+        createPublishKafkaProcessor(config, dto, groupId, 2);
+        /*if (dto.groupStructureId == null) {
             dispatchProcessor = queryDispatchProcessor(config, groupId, cfgDbPoolId);
             //发送消息PublishKafka
             publishKafkaProcessor = createPublishKafkaProcessor(config, dto, groupId, 2);
             componentConnector(groupId, dispatchProcessor.getId(), publishKafkaProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        }
+        }*/
         //读取增量字段组件
-        ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId, dto);
+        //ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId, dto);
         //接受消息ConsumeKafka
         ProcessorEntity consumeKafkaProcessor = createConsumeKafkaProcessor(config, dto, groupId);
         List<ProcessorEntity> processorEntityList = new ArrayList<>();
@@ -797,28 +810,28 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             e.printStackTrace();
             throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR);
         }
-        componentConnector(groupId, consumeKafkaProcessor.getId(), queryField.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        //componentConnector(groupId, consumeKafkaProcessor.getId(), queryField.getId(), AutoEndBranchTypeEnum.SUCCESS);
         tableNifiSettingPO.consumeKafkaProcessorId = consumeKafkaProcessor.getId();
         if (dto.groupStructureId != null) {
             //  创建input_port(组)
-            PositionDTO position = queryField.getComponent().getPosition();
-            inputPortId = buildPortComponent(config.taskGroupConfig.appName, groupId, position.getX(), position.getY(),
-                    PortComponentEnum.COMPONENT_INPUT_PORT_COMPONENT);
+            //PositionDTO position = queryField.getComponent().getPosition();
+            //inputPortId = buildPortComponent(config.taskGroupConfig.appName, groupId, position.getX(), position.getY(),
+            //PortComponentEnum.COMPONENT_INPUT_PORT_COMPONENT);
         }
 
-        tableNifiSettingPO.queryIncrementProcessorId = queryField.getId();
+        //tableNifiSettingPO.queryIncrementProcessorId = queryField.getId();
         //创建数据转换json组件
-        ProcessorEntity jsonRes = convertJsonProcessor(groupId, 0, 5);
-        tableNifiSettingPO.convertDataToJsonProcessorId = jsonRes.getId();
+        //ProcessorEntity jsonRes = convertJsonProcessor(groupId, 0, 5);
+        //tableNifiSettingPO.convertDataToJsonProcessorId = jsonRes.getId();
         //连接器
-        componentConnector(groupId, queryField.getId(), jsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        componentsConnector(groupId, queryField.getId(), supervisionId, autoEndBranchTypeEnums);
+        //componentConnector(groupId, queryField.getId(), jsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        //componentsConnector(groupId, queryField.getId(), supervisionId, autoEndBranchTypeEnums);
         //字段转换nifi变量
         ProcessorEntity evaluateJson = evaluateJsonPathProcessor(groupId);
         tableNifiSettingPO.setIncrementProcessorId = evaluateJson.getId();
         //连接器
-        componentConnector(groupId, jsonRes.getId(), evaluateJson.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        componentsConnector(groupId, jsonRes.getId(), supervisionId, autoEndBranchTypeEnums);
+        componentConnector(groupId, consumeKafkaProcessor.getId(), evaluateJson.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        //componentsConnector(groupId, jsonRes.getId(), supervisionId, autoEndBranchTypeEnums);
         //创建log
         ProcessorEntity logProcessor = putLogProcessor(groupId, cfgDbPoolId, dto, config);
         tableNifiSettingPO.putLogToConfigDbProcessorId = logProcessor.getId();
@@ -972,23 +985,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             String outputPortId = buildPortComponent(config.taskGroupConfig.appName, groupId, processorX, processorY,
                     PortComponentEnum.COMPONENT_OUTPUT_PORT_COMPONENT);
 
-            // 创建input_port connection(组)
-            String componentInputPortConnectionId = buildPortConnection(groupId,
-                    groupId, queryField.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
-                    groupId, inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
-                    0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
-
-            // 创建input_port connection(任务)
-            String taskInputPortConnectionId = buildPortConnection(groupEntityId,
-                    taskGroupEntityId, inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
-                    groupEntityId, tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
-                    0, PortComponentEnum.TASK_INPUT_PORT_CONNECTION);
-
-            // 创建input_port connection(应用)
-//        String appInputPortConnectionId = buildPortConnection(appParentGroupId,
-//                appGroupId, tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
-//                appParentGroupId, appInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
-//                0, PortComponentEnum.APP_INPUT_PORT_CONNECTION);
 
             // 创建output_port connection(组)
             String componentOutputPortConnectionId = "";
@@ -1017,9 +1013,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 //                appGroupId, tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
 //                1, PortComponentEnum.APP_OUTPUT_PORT_CONNECTION);
 
-            tableNifiSettingPO.processorInputPortConnectId = componentInputPortConnectionId;
             tableNifiSettingPO.processorOutputPortConnectId = componentOutputPortConnectionId;
-            tableNifiSettingPO.tableInputPortConnectId = taskInputPortConnectionId;
             tableNifiSettingPO.tableOutputPortConnectId = taskOutputPortConnectionId;
             tableNifiSettingPO.processorOutputPortId = outputPortId;
         }
@@ -1032,9 +1026,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         tableNifiSettingPO.syncMode = config.targetDsConfig.syncMode;
         appNifiSettingPO.nifiCustomWorkflowId = dto.nifiCustomWorkflowId;
         appNifiSettingService.saveOrUpdate(appNifiSettingPO);
-        res.add(queryField);
+        //res.add(queryField);
 
-        res.add(jsonRes);
+        //res.add(jsonRes);
         res.add(evaluateJson);
         res.add(logProcessor);
         res.add(delSqlRes);
@@ -1043,11 +1037,11 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         }
         res.addAll(processorEntities);
         if (dto.groupStructureId == null) {
-            tableNifiSettingPO.dispatchComponentId = dispatchProcessor.getId();
-            tableNifiSettingPO.publishKafkaProcessorId = publishKafkaProcessor.getId();
-            res.add(publishKafkaProcessor);
+            //tableNifiSettingPO.dispatchComponentId = dispatchProcessor.getId();
+            //tableNifiSettingPO.publishKafkaProcessorId = publishKafkaProcessor.getId();
+            //res.add(publishKafkaProcessor);
             res.add(consumeKafkaProcessor);
-            res.add(dispatchProcessor);
+            //res.add(dispatchProcessor);
         }
         tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
         return res;
@@ -1908,6 +1902,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //strings.add(NifiConstants.AttrConstants.INCREMENT_START);
         strings.add(NifiConstants.AttrConstants.START_TIME);
         strings.add(NifiConstants.AttrConstants.FIDATA_BATCH_CODE);
+        strings.add(NifiConstants.AttrConstants.PIPEL_TRACE_ID);
+        strings.add(NifiConstants.AttrConstants.PIPEL_JOB_TRACE_ID);
+        strings.add(NifiConstants.AttrConstants.PIPEL_TASK_TRACE_ID);
+        strings.add(NifiConstants.AttrConstants.PIPEL_STAGE_TRACE_ID);
         //strings.add(NifiConstants.AttrConstants.START_TIME);
         BuildProcessEvaluateJsonPathDTO dto = new BuildProcessEvaluateJsonPathDTO();
         dto.name = "Set Increment Field";
@@ -2012,9 +2010,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         }
         tableTopicService.updateTableTopic(tableTopicDTO);
         buildPublishKafkaProcessorDTO.TopicName = tableTopicDTO.topicName;
-        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
-        verifyProcessorResult(processorEntityBusinessResult);
-        return processorEntityBusinessResult.data;
+        //BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
+        //verifyProcessorResult(processorEntityBusinessResult);
+        return null;
     }
 
 

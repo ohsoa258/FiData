@@ -573,9 +573,10 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     querySqlDto.details = nifiNode.nifiCustomWorkflowName;
                     querySqlDto.groupId = groupStructure;
                     if (pipelApiDispatchs.size() == 0) {
-                        querySqlDto.querySql = "select '" + TopicName + "' as topic from tb_etl_Incremental limit 1";
+                        querySqlDto.querySql = "select '" + TopicName + "' as topic, '${uuid}' as pipelTraceId  from tb_etl_Incremental limit 1";
                     } else {
-                        querySqlDto.querySql = "select '" + JSON.toJSONString(pipelApiDispatchs) + "' as pipelApiDispatch ,'" + MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW + "' as topic from tb_etl_Incremental limit 1";
+                        //加管道批次
+                        querySqlDto.querySql = "select '" + JSON.toJSONString(pipelApiDispatchs) + "' as pipelApiDispatch ,'" + MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW + "' as topic, '${uuid}' as pipelTraceId from tb_etl_Incremental limit 1";
                     }
 
                     //配置库

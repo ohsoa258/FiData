@@ -576,22 +576,22 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     @Override
     public ResultEnum importData(ApiImportDataDTO dto) {
         // task根据调度配置调用
-        List<PipelApiDispatchDTO> pipelApiDispatchs = JSON.parseArray(dto.pipelApiDispatch, PipelApiDispatchDTO.class);
-        if (!CollectionUtils.isEmpty(pipelApiDispatchs)) {
-            for (PipelApiDispatchDTO pipelApiDispatch : pipelApiDispatchs) {
-                List<String> kafkaReceives = new ArrayList<>();
-                KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
-                dto.workflowId = pipelApiDispatch.workflowId;
-                dto.appId = pipelApiDispatch.appId;
-                dto.apiId = pipelApiDispatch.appId;
-                syncData(dto);
-                kafkaReceiveDTO.tableId = Math.toIntExact(dto.apiId);
-                kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
-                kafkaReceiveDTO.nifiCustomWorkflowDetailId = Long.valueOf(dto.workflowId);
-                kafkaReceiveDTO.topic = "dmp.datafactory.nifi." + dto.workflowId + "." + kafkaReceiveDTO.tableType + "." + dto.appId + "." + dto.apiId;
-                kafkaReceives.add(JSON.toJSONString(kafkaReceiveDTO));
-                publishTaskClient.consumer(kafkaReceives);
-            }
+        //List<PipelApiDispatchDTO> pipelApiDispatchs = JSON.(dto.pipelApiDispatch, PipelApiDispatchDTO.class);
+        PipelApiDispatchDTO pipelApiDispatch = JSON.parseObject(dto.pipelApiDispatch, PipelApiDispatchDTO.class);
+
+        if (!Objects.isNull(pipelApiDispatch)) {
+            List<String> kafkaReceives = new ArrayList<>();
+            KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
+            dto.workflowId = pipelApiDispatch.workflowId;
+            dto.appId = pipelApiDispatch.appId;
+            dto.apiId = pipelApiDispatch.appId;
+            syncData(dto);
+            kafkaReceiveDTO.tableId = Math.toIntExact(dto.apiId);
+            kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
+            kafkaReceiveDTO.nifiCustomWorkflowDetailId = Long.valueOf(dto.workflowId);
+            kafkaReceiveDTO.topic = "dmp.datafactory.nifi." + dto.workflowId + "." + kafkaReceiveDTO.tableType + "." + dto.appId + "." + dto.apiId;
+            kafkaReceives.add(JSON.toJSONString(kafkaReceiveDTO));
+            publishTaskClient.consumer(kafkaReceives);
         } else {
             List<String> kafkaReceives = new ArrayList<>();
             KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
