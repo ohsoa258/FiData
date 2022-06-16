@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -22,11 +23,13 @@ public class PipelStageLogImpl extends ServiceImpl<PipelStateLogMapper, PipelSta
     public void savePipelTaskStageLog(String stateTraceId, String pipelTaskTraceId, Map<Integer, Object> map) {
         PipelStageLogPO pipelStageLog = new PipelStageLogPO();
         List<PipelStageLogPO> pipelStageLogs = new ArrayList<>();
-        for (Integer i : map.keySet()) {
-            pipelStageLog.msg = map.get(i).toString();
+        Iterator<Map.Entry<Integer, Object>> nodeMap = map.entrySet().iterator();
+        while (nodeMap.hasNext()) {
+            Map.Entry<Integer, Object> next = nodeMap.next();
+            pipelStageLog.msg = next.getValue().toString();
             pipelStageLog.stateTraceId = stateTraceId;
             pipelStageLog.taskTraceId = pipelTaskTraceId;
-            pipelStageLog.type = i;
+            pipelStageLog.type = next.getKey();
             pipelStageLogs.add(pipelStageLog);
         }
         this.saveBatch(pipelStageLogs);

@@ -228,19 +228,19 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                             hmget.put(topicName1, topicName1);
                             if (hmget.size() == data.pipeEndDto.size()) {
                                 //如果结束支点就它一个,装进去等30秒
-                                redisUtil.hmset(hmgetKey, hmget, 30);
+                                redisUtil.hmsset(hmgetKey, hmget, 30);
                             } else {
                                 //如果结束支点不止它一个,不仅要装进去,还要等其他支点
-                                redisUtil.hmset(hmgetKey, hmget, 3000);
+                                redisUtil.hmsset(hmgetKey, hmget, 3000);
                             }
                         } else {
                             //如果map里面存在,判断map的记录个数,如果不是所有支点结束,刷新过期时间3000
                             if (hmget.size() == data.pipeEndDto.size()) {
                                 //如果满足有所有支点的条件了,就刷新过期时间30秒
-                                redisUtil.hmset(hmgetKey, hmget, 30);
+                                redisUtil.hmsset(hmgetKey, hmget, 30);
 
                             } else {
-                                redisUtil.hmset(hmgetKey, hmget, 3000);
+                                redisUtil.hmsset(hmgetKey, hmget, 3000);
                             }
                         }
 

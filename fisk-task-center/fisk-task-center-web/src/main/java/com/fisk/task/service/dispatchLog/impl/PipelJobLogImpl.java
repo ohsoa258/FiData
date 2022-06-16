@@ -9,6 +9,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -23,12 +24,14 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
     public void savePipelLogAndJobLog(String pipelTraceId, Map<Integer, Object> map, String pipelId, String jobTraceId, String componentId) {
         PipelJobLogPO pipelJobLog = new PipelJobLogPO();
         List<PipelJobLogPO> pipelJobLogs = new ArrayList<>();
-        for (Integer i : map.keySet()) {
-            pipelJobLog.msg = map.get(i).toString();
+        Iterator<Map.Entry<Integer, Object>> nodeMap = map.entrySet().iterator();
+        while (nodeMap.hasNext()) {
+            Map.Entry<Integer, Object> next = nodeMap.next();
+            pipelJobLog.msg = next.getValue().toString();
             pipelJobLog.pipelId = pipelId;
             pipelJobLog.jobTraceId = jobTraceId;
             pipelJobLog.pipelTraceId = pipelTraceId;
-            pipelJobLog.type = i;
+            pipelJobLog.type = next.getKey();
             pipelJobLog.componentId = componentId;
             pipelJobLogs.add(pipelJobLog);
         }

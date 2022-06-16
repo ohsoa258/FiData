@@ -223,8 +223,9 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                 pipelineTableLogPO.dispatchType = 0;
             } else {
                 pipelineTableLogPO.dispatchType = 1;
+                pipelineTableLog.insert(pipelineTableLogPO);
             }
-            pipelineTableLog.insert(pipelineTableLogPO);
+
             //----------------------------------------------
             HashMap<Integer, Object> taskMap = new HashMap<>();
             taskMap.put(DispatchLogEnum.taskcount.getValue(), nifiStageMessageDTO.counts);
@@ -238,7 +239,9 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
             iPipelStageLog.savePipelTaskStageLog(nifiStageMessageDTO.pipelStageTraceId, nifiStageMessageDTO.pipelTaskTraceId, stagekMap);
             //-----------------------------------------------
             nifiStagePO.pipelineTableLogId = Math.toIntExact(pipelineTableLogPO.id);
-            this.save(nifiStagePO);
+            if (pipelineTableLogPO.dispatchType != 1) {
+                this.save(nifiStagePO);
+            }
         } catch (ApiException e) {
             log.error(e.getResponseBody());
         } finally {
