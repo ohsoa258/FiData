@@ -1,5 +1,6 @@
 package com.fisk.task.service.dispatchLog.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.task.entity.PipelJobLogPO;
 import com.fisk.task.mapper.PipelJobLogMapper;
@@ -8,10 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author cfk
@@ -22,11 +20,15 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
 
     @Override
     public void savePipelLogAndJobLog(String pipelTraceId, Map<Integer, Object> map, String pipelId, String jobTraceId, String componentId) {
+        log.info("job参数:pipelTraceId:{},map:{},pipelId:{},jobTraceId:{},componentId{}", pipelTraceId, JSON.toJSONString(map), pipelId, jobTraceId, componentId);
         PipelJobLogPO pipelJobLog = new PipelJobLogPO();
         List<PipelJobLogPO> pipelJobLogs = new ArrayList<>();
         Iterator<Map.Entry<Integer, Object>> nodeMap = map.entrySet().iterator();
         while (nodeMap.hasNext()) {
             Map.Entry<Integer, Object> next = nodeMap.next();
+            if (Objects.isNull(next.getValue())) {
+                continue;
+            }
             pipelJobLog.msg = next.getValue().toString();
             pipelJobLog.pipelId = pipelId;
             pipelJobLog.jobTraceId = jobTraceId;
@@ -35,7 +37,10 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
             pipelJobLog.componentId = componentId;
             pipelJobLogs.add(pipelJobLog);
         }
-        this.saveBatch(pipelJobLogs);
+        if (pipelJobLogs.size() != 0) {
+            this.saveBatch(pipelJobLogs);
+        }
+
     }
 
     @Override

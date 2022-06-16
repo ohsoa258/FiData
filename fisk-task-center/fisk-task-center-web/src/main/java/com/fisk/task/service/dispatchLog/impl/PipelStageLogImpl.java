@@ -1,5 +1,6 @@
 package com.fisk.task.service.dispatchLog.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.task.entity.PipelStageLogPO;
 import com.fisk.task.mapper.PipelStateLogMapper;
@@ -7,10 +8,7 @@ import com.fisk.task.service.dispatchLog.IPipelStageLog;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author cfk
@@ -21,17 +19,24 @@ public class PipelStageLogImpl extends ServiceImpl<PipelStateLogMapper, PipelSta
 
     @Override
     public void savePipelTaskStageLog(String stateTraceId, String pipelTaskTraceId, Map<Integer, Object> map) {
+        log.info("pipelStage参数:stateTraceId:{},pipelTaskTraceId:{},map:{}", stateTraceId, pipelTaskTraceId, JSON.toJSONString(map));
         PipelStageLogPO pipelStageLog = new PipelStageLogPO();
         List<PipelStageLogPO> pipelStageLogs = new ArrayList<>();
         Iterator<Map.Entry<Integer, Object>> nodeMap = map.entrySet().iterator();
         while (nodeMap.hasNext()) {
             Map.Entry<Integer, Object> next = nodeMap.next();
+            if (Objects.isNull(next.getValue())) {
+                continue;
+            }
             pipelStageLog.msg = next.getValue().toString();
             pipelStageLog.stateTraceId = stateTraceId;
             pipelStageLog.taskTraceId = pipelTaskTraceId;
             pipelStageLog.type = next.getKey();
             pipelStageLogs.add(pipelStageLog);
         }
-        this.saveBatch(pipelStageLogs);
+        if (pipelStageLogs.size() != 0) {
+            this.saveBatch(pipelStageLogs);
+        }
+
     }
 }
