@@ -39,6 +39,7 @@ import com.fisk.task.utils.NifiHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -116,6 +117,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
 
     @Override
     public NifiStagePO saveNifiStage(String data, Acknowledgment acke) {
+        log.info("阶段日志保存:" + data);
         NifiStagePO nifiStagePO = new NifiStagePO();
         try {
             NifiStageMessageDTO nifiStageMessageDTO = JSON.parseObject(data, NifiStageMessageDTO.class);
@@ -232,13 +234,15 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
             if (!Objects.equals("运行成功", nifiStagePO.comment)) {
                 taskMap.put(DispatchLogEnum.taskcomment.getValue(), nifiStagePO.comment);
             }
-            iPipelTaskLog.savePipelTaskLog(nifiStageMessageDTO.pipelJobTraceId, nifiStageMessageDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiStagePO.componentId), String.valueOf(tableAccessId), type);
             HashMap<Integer, Object> stagekMap = new HashMap<>();
             stagekMap.put(DispatchLogEnum.stageinsert.getValue(), nifiStagePO.insertPhase);
             stagekMap.put(DispatchLogEnum.stagestart.getValue(), nifiStagePO.queryPhase);
             stagekMap.put(DispatchLogEnum.stagestate.getValue(), pipelineTableLogPO.state);
             stagekMap.put(DispatchLogEnum.stagetransition.getValue(), nifiStagePO.transitionPhase);
-            iPipelStageLog.savePipelTaskStageLog(nifiStageMessageDTO.pipelStageTraceId, nifiStageMessageDTO.pipelTaskTraceId, stagekMap);
+            if (!StringUtils.isEmpty(nifiStageMessageDTO.pipelTaskTraceId)) {
+                iPipelTaskLog.savePipelTaskLog(nifiStageMessageDTO.pipelJobTraceId, nifiStageMessageDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiStagePO.componentId), String.valueOf(tableAccessId), type);
+                iPipelStageLog.savePipelTaskStageLog(nifiStageMessageDTO.pipelStageTraceId, nifiStageMessageDTO.pipelTaskTraceId, stagekMap);
+            }
             //-----------------------------------------------
             nifiStagePO.pipelineTableLogId = Math.toIntExact(pipelineTableLogPO.id);
             if (pipelineTableLogPO.dispatchType != 1) {
