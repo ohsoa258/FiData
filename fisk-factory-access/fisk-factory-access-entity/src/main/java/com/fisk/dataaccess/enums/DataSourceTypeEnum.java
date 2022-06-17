@@ -17,7 +17,8 @@ public enum DataSourceTypeEnum implements BaseEnum {
     FTP(3, "ftp"),
     ORACLE(4, "oracle"),
     RestfulAPI(5, "RestfulAPI"),
-    API(6, "api");
+    API(6, "api"),
+    POSTGRESQL(7, "postgresql");
 
     DataSourceTypeEnum(int value, String name) {
         this.name = name;
@@ -35,5 +36,16 @@ public enum DataSourceTypeEnum implements BaseEnum {
     @Override
     public String getName() {
         return name;
+    }
+
+    public static DataSourceTypeEnum getValue(String name) {
+        DataSourceTypeEnum[] enums = values();
+        for (DataSourceTypeEnum typeEnum : enums) {
+            String queryName = typeEnum.name;
+            if (queryName.equals(name)) {
+                return typeEnum;
+            }
+        }
+        return null;
     }
 }

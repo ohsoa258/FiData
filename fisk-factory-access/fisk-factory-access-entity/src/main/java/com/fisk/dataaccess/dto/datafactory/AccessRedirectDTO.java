@@ -14,7 +14,7 @@ import javax.validation.constraints.NotNull;
 @Data
 public class AccessRedirectDTO {
 
-    @ApiModelProperty(value = "驱动类型(mysql、sqlserver、oracle、ftp、RestfulAPI、api)", required = true)
+    @ApiModelProperty(value = "表的驱动类型(mysql、sqlserver、oracle、ftp、RestfulAPI、api)", required = true)
     @NotNull
     private String driveType;
 

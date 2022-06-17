@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.constants.FilterSqlConstants;
+import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -14,6 +15,9 @@ import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
@@ -52,9 +56,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -90,6 +92,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     private TableFieldsImpl tableFieldsImpl;
     @Resource
     private ApiConfigMapper apiConfigMapper;
+    @Resource
+    private ApiConfigImpl apiConfigImpl;
     @Resource
     private DataFactoryClient dataFactoryClient;
 
@@ -711,10 +715,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Override
     public List<DispatchRedirectDTO> redirect(AccessRedirectDTO dto) {
 
-        // 根据driveType对应管道的具体组件
         NifiCustomWorkflowDetailDTO detailDto = new NifiCustomWorkflowDetailDTO();
         detailDto.appId = String.valueOf(dto.getAppId());
 
+        // 根据driveType对应管道的具体组件
         // 物理表
         if (dto.getDriveType().equalsIgnoreCase(DataSourceTypeEnum.MYSQL.getName()) ||
                 dto.getDriveType().equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName()) ||
@@ -741,5 +745,367 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             return null;
         }
         return null;
+    }
+
+    @Override
+    public List<FiDataMetaDataDTO> getDataAccessStructure(FiDataMetaDataReqDTO reqDto) {
+
+        List<FiDataMetaDataDTO> list = new ArrayList<>();
+        FiDataMetaDataDTO dto = new FiDataMetaDataDTO();
+        // FiData数据源id: 数据资产自定义
+        dto.setDataSourceId(Integer.parseInt(StringUtils.isBlank(reqDto.dataSourceId) ? String.valueOf(0) : reqDto.dataSourceId));
+
+        // 第一层id
+        String uuid = UUID.randomUUID().toString();
+        List<FiDataMetaDataTreeDTO> dataTreeList = new ArrayList<>();
+        FiDataMetaDataTreeDTO dataTree = new FiDataMetaDataTreeDTO();
+        dataTree.setId(uuid);
+        dataTree.setParentId("-1");
+        dataTree.setLabel("dmp_ods");
+        dataTree.setLabelAlias("dmp_ods");
+        dataTree.setLevelType(LevelTypeEnum.FOLDER);
+
+        // 封装data-access所有结构数据
+        dataTree.setChildren(buildChildren(uuid));
+        dataTreeList.add(dataTree);
+
+        dto.setChildren(dataTreeList);
+        list.add(dto);
+        return list;
+    }
+
+    /**
+     * 构建data-access子集树
+     *
+     * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
+     * @description 构建data-access子集树
+     * @author Lock
+     * @date 2022/6/15 17:46
+     * @version v1.0
+     * @params uuid
+     */
+    private List<FiDataMetaDataTreeDTO> buildChildren(String id) {
+
+        List<FiDataMetaDataTreeDTO> appTypeTreeList = new ArrayList<>();
+
+        FiDataMetaDataTreeDTO appTreeByRealTime = new FiDataMetaDataTreeDTO();
+        String appTreeByRealTimeGuid = UUID.randomUUID().toString();
+        appTreeByRealTime.setId(appTreeByRealTimeGuid);
+        appTreeByRealTime.setParentId(id);
+        appTreeByRealTime.setLabel("实时应用");
+        appTreeByRealTime.setLabelAlias("实时应用");
+        appTreeByRealTime.setLevelType(LevelTypeEnum.FOLDER);
+
+        FiDataMetaDataTreeDTO appTreeByNonRealTime = new FiDataMetaDataTreeDTO();
+        String appTreeByNonRealTimeGuid = UUID.randomUUID().toString();
+        appTreeByNonRealTime.setId(appTreeByNonRealTimeGuid);
+        appTreeByNonRealTime.setParentId(id);
+        appTreeByNonRealTime.setLabel("非实时应用");
+        appTreeByNonRealTime.setLabelAlias("非实时应用");
+        appTreeByNonRealTime.setLevelType(LevelTypeEnum.FOLDER);
+
+        // 所有应用
+        List<AppRegistrationPO> appPoList = this.query().orderByDesc("create_time").list();
+
+        appTreeByRealTime.setChildren(getFiDataMetaDataTreeByRealTime(id, appPoList));
+        appTreeByNonRealTime.setChildren(getFiDataMetaDataTreeByNonRealTime(id, appPoList));
+
+        appTypeTreeList.add(appTreeByRealTime);
+        appTypeTreeList.add(appTreeByNonRealTime);
+
+        return appTypeTreeList;
+    }
+
+    /**
+     * 获取实时应用结构
+     *
+     * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
+     * @description 获取实时应用结构
+     * @author Lock
+     * @date 2022/6/16 15:21
+     * @version v1.0
+     * @params id
+     * @params appPoList
+     */
+    private List<FiDataMetaDataTreeDTO> getFiDataMetaDataTreeByRealTime(String id, List<AppRegistrationPO> appPoList) {
+        return appPoList.stream()
+                .filter(Objects::nonNull)
+                // 实时应用
+                .filter(e -> e.appType == 0)
+                .map(app -> {
+
+                    // 第一层: app层
+                    FiDataMetaDataTreeDTO appDtoTree = new FiDataMetaDataTreeDTO();
+                    String appGuid = UUID.randomUUID().toString();
+                    // 当前层默认生成的uuid
+                    appDtoTree.setId(appGuid);
+                    // 上一级的id
+                    appDtoTree.setParentId(id);
+                    appDtoTree.setLabel(app.appName);
+                    appDtoTree.setLabelAlias(app.appAbbreviation);
+                    appDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                    appDtoTree.setLabelDesc(app.appDes);
+
+                    // 第二层: api层
+                    // 查询驱动类型
+                    AppDataSourcePO dataSourcePo = this.appDataSourceImpl.query().eq("app_id", app.id).one();
+                    DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.getValue(dataSourcePo.driveType);
+                    // 根据驱动类型封装不同的子级
+                    switch (Objects.requireNonNull(dataSourceTypeEnum)) {
+                        case RestfulAPI:
+                            // 当前app下的所有api
+                            List<FiDataMetaDataTreeDTO> apiTreeList = this.apiConfigImpl.query()
+                                    .eq("app_id", app.id)
+                                    .orderByDesc("create_time")
+                                    .list()
+                                    .stream()
+                                    .filter(Objects::nonNull)
+                                    .map(api -> {
+                                        FiDataMetaDataTreeDTO apiDtoTree = new FiDataMetaDataTreeDTO();
+                                        String apiGuid = UUID.randomUUID().toString();
+                                        apiDtoTree.setId(apiGuid);
+                                        apiDtoTree.setParentId(appGuid);
+                                        apiDtoTree.setLabel(api.apiName);
+                                        apiDtoTree.setLabelAlias(api.apiName);
+                                        apiDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                                        // 不是已发布的都当作未发布处理
+                                        apiDtoTree.setPublishState(String.valueOf(api.publish != 1 ? 0 : 1));
+                                        apiDtoTree.setLabelDesc(api.apiDes);
+
+                                        // 第三层: table层
+                                        List<FiDataMetaDataTreeDTO> tableTreeList = this.tableAccessImpl.query()
+                                                .eq("api_id", api.id)
+                                                .orderByDesc("create_time")
+                                                .list()
+                                                .stream()
+                                                .filter(Objects::nonNull)
+                                                .map(table -> {
+                                                    FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
+                                                    String tableGuid = UUID.randomUUID().toString();
+                                                    tableDtoTree.setId(tableGuid);
+                                                    tableDtoTree.setParentId(apiGuid);
+                                                    tableDtoTree.setLabel(table.tableName);
+                                                    tableDtoTree.setLabelAlias(table.tableName);
+                                                    tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
+                                                    tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                                    tableDtoTree.setLabelDesc(table.tableDes);
+
+                                                    // 第四层: field层
+                                                    List<FiDataMetaDataTreeDTO> fieldTreeList = this.tableFieldsImpl.query()
+                                                            .eq("table_access_id", table.id)
+                                                            .list()
+                                                            .stream()
+                                                            .filter(Objects::nonNull)
+                                                            .map(field -> {
+
+                                                                FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
+                                                                String fieldGuid = UUID.randomUUID().toString();
+                                                                fieldDtoTree.setId(fieldGuid);
+                                                                fieldDtoTree.setParentId(tableGuid);
+                                                                fieldDtoTree.setLabel(field.fieldName);
+                                                                fieldDtoTree.setLabelAlias(field.fieldName);
+                                                                fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
+                                                                fieldDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                                                fieldDtoTree.setLabelLength(String.valueOf(field.fieldLength));
+                                                                fieldDtoTree.setLabelType(field.fieldType);
+                                                                fieldDtoTree.setLabelDesc(field.fieldDes);
+
+                                                                return fieldDtoTree;
+                                                            }).collect(Collectors.toList());
+
+                                                    // table的子级
+                                                    tableDtoTree.setChildren(fieldTreeList);
+                                                    return tableDtoTree;
+                                                }).collect(Collectors.toList());
+
+                                        // api的子级
+                                        apiDtoTree.setChildren(tableTreeList);
+                                        return apiDtoTree;
+                                    }).collect(Collectors.toList());
+
+                            // app的子级
+                            appDtoTree.setChildren(apiTreeList);
+                            break;
+                        case API:
+                        case MYSQL:
+                        case SQLSERVER:
+                        case ORACLE:
+                        case POSTGRESQL:
+                        default:
+                            break;
+                    }
+                    return appDtoTree;
+                }).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取非实时应用结构
+     *
+     * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
+     * @description 获取非实时应用结构
+     * @author Lock
+     * @date 2022/6/16 15:21
+     * @version v1.0
+     * @params id
+     * @params appPoList
+     */
+    private List<FiDataMetaDataTreeDTO> getFiDataMetaDataTreeByNonRealTime(String id, List<AppRegistrationPO> appPoList) {
+        return appPoList.stream()
+                .filter(Objects::nonNull)
+                // 非实时应用
+                .filter(e -> e.appType == 1)
+                .map(app -> {
+
+                    // 第一层: app层
+                    FiDataMetaDataTreeDTO appDtoTree = new FiDataMetaDataTreeDTO();
+                    String appGuid = UUID.randomUUID().toString();
+                    // 当前层默认生成的uuid
+                    appDtoTree.setId(appGuid);
+                    // 上一级的id
+                    appDtoTree.setParentId(id);
+                    appDtoTree.setLabel(app.appName);
+                    appDtoTree.setLabelAlias(app.appAbbreviation);
+                    appDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                    appDtoTree.setLabelDesc(app.appDes);
+
+                    // 查询驱动类型
+                    AppDataSourcePO dataSourcePo = this.appDataSourceImpl.query().eq("app_id", app.id).one();
+                    DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.getValue(dataSourcePo.driveType);
+                    // 根据驱动类型封装不同的子级
+                    switch (Objects.requireNonNull(dataSourceTypeEnum)) {
+                        // 第二层: api层
+                        case API:
+                            // 当前app下的所有api
+                            List<FiDataMetaDataTreeDTO> apiTreeList = this.apiConfigImpl.query()
+                                    .eq("app_id", app.id)
+                                    .orderByDesc("create_time")
+                                    .list()
+                                    .stream()
+                                    .filter(Objects::nonNull)
+                                    .map(api -> {
+                                        FiDataMetaDataTreeDTO apiDtoTree = new FiDataMetaDataTreeDTO();
+                                        String apiGuid = UUID.randomUUID().toString();
+                                        apiDtoTree.setId(apiGuid);
+                                        apiDtoTree.setParentId(appGuid);
+                                        apiDtoTree.setLabel(api.apiName);
+                                        apiDtoTree.setLabelAlias(api.apiName);
+                                        apiDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                                        // 不是已发布的都当作未发布处理
+                                        apiDtoTree.setPublishState(String.valueOf(api.publish != 1 ? 0 : 1));
+                                        apiDtoTree.setLabelDesc(api.apiDes);
+
+                                        // 第三层: table层
+                                        List<FiDataMetaDataTreeDTO> tableTreeList = this.tableAccessImpl.query()
+                                                .eq("api_id", api.id)
+                                                .orderByDesc("create_time")
+                                                .list()
+                                                .stream()
+                                                .filter(Objects::nonNull)
+                                                .map(table -> {
+                                                    FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
+                                                    String tableGuid = UUID.randomUUID().toString();
+                                                    tableDtoTree.setId(tableGuid);
+                                                    tableDtoTree.setParentId(apiGuid);
+                                                    tableDtoTree.setLabel(table.tableName);
+                                                    tableDtoTree.setLabelAlias(table.tableName);
+                                                    tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
+                                                    tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                                    tableDtoTree.setLabelDesc(table.tableDes);
+
+                                                    // 第四层: field层
+                                                    List<FiDataMetaDataTreeDTO> fieldTreeList = this.tableFieldsImpl.query()
+                                                            .eq("table_access_id", table.id)
+                                                            .list()
+                                                            .stream()
+                                                            .filter(Objects::nonNull)
+                                                            .map(field -> {
+
+                                                                FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
+                                                                String fieldGuid = UUID.randomUUID().toString();
+                                                                fieldDtoTree.setId(fieldGuid);
+                                                                fieldDtoTree.setParentId(tableGuid);
+                                                                fieldDtoTree.setLabel(field.fieldName);
+                                                                fieldDtoTree.setLabelAlias(field.fieldName);
+                                                                fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
+                                                                fieldDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                                                fieldDtoTree.setLabelLength(String.valueOf(field.fieldLength));
+                                                                fieldDtoTree.setLabelType(field.fieldType);
+                                                                fieldDtoTree.setLabelDesc(field.fieldDes);
+
+                                                                return fieldDtoTree;
+                                                            }).collect(Collectors.toList());
+
+                                                    // table的子级
+                                                    tableDtoTree.setChildren(fieldTreeList);
+                                                    return tableDtoTree;
+                                                }).collect(Collectors.toList());
+
+                                        // api的子级
+                                        apiDtoTree.setChildren(tableTreeList);
+                                        return apiDtoTree;
+                                    }).collect(Collectors.toList());
+
+                            // app的子级
+                            appDtoTree.setChildren(apiTreeList);
+                            break;
+                        // 第二层: table层
+                        case MYSQL:
+                        case SQLSERVER:
+                        case ORACLE:
+                        case POSTGRESQL:
+
+                            List<FiDataMetaDataTreeDTO> tableTreeList = this.tableAccessImpl.query()
+                                    .eq("app_id", app.id)
+                                    .orderByDesc("create_time")
+                                    .list()
+                                    .stream()
+                                    .filter(Objects::nonNull)
+                                    .map(table -> {
+                                        FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
+                                        String tableGuid = UUID.randomUUID().toString();
+                                        tableDtoTree.setId(tableGuid);
+                                        tableDtoTree.setParentId(appGuid);
+                                        tableDtoTree.setLabel(table.tableName);
+                                        tableDtoTree.setLabelAlias(table.tableName);
+                                        tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
+                                        tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                        tableDtoTree.setLabelDesc(table.tableDes);
+
+                                        // 第四层: field层
+                                        List<FiDataMetaDataTreeDTO> fieldTreeList = this.tableFieldsImpl.query()
+                                                .eq("table_access_id", table.id)
+                                                .list()
+                                                .stream()
+                                                .filter(Objects::nonNull)
+                                                .map(field -> {
+
+                                                    FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
+                                                    String fieldGuid = UUID.randomUUID().toString();
+                                                    fieldDtoTree.setId(fieldGuid);
+                                                    fieldDtoTree.setParentId(tableGuid);
+                                                    fieldDtoTree.setLabel(field.fieldName);
+                                                    fieldDtoTree.setLabelAlias(field.fieldName);
+                                                    fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
+                                                    fieldDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                                    fieldDtoTree.setLabelLength(String.valueOf(field.fieldLength));
+                                                    fieldDtoTree.setLabelType(field.fieldType);
+                                                    fieldDtoTree.setLabelDesc(field.fieldDes);
+
+                                                    return fieldDtoTree;
+                                                }).collect(Collectors.toList());
+
+                                        // table的子级
+                                        tableDtoTree.setChildren(fieldTreeList);
+                                        return tableDtoTree;
+                                    }).collect(Collectors.toList());
+
+                            appDtoTree.setChildren(tableTreeList);
+                            break;
+                        case RestfulAPI:
+                        default:
+                            break;
+                    }
+                    return appDtoTree;
+                }).collect(Collectors.toList());
     }
 }

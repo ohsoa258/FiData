@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
@@ -188,4 +190,12 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return list
      */
     List<DispatchRedirectDTO> redirect(AccessRedirectDTO dto);
+
+    /**
+     * 获取数据接入结构
+     *
+     * @param dto dto
+     * @return list
+     */
+    List<FiDataMetaDataDTO> getDataAccessStructure(FiDataMetaDataReqDTO dto);
 }
