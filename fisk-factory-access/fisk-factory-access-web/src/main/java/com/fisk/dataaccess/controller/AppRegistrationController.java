@@ -7,6 +7,8 @@ import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
@@ -279,5 +281,11 @@ public class AppRegistrationController {
     @ApiOperation(value = "跳转页面: 查询出当前(表、api、ftp)具体在哪个管道中使用,并给跳转页面提供数据")
     public ResultEntity<Object> redirect(@Validated @RequestBody AccessRedirectDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.redirect(dto));
+    }
+
+    @PostMapping("/getDataStructure")
+    @ApiOperation(value = "获取数据接入结构")
+    public ResultEntity<List<FiDataMetaDataDTO>> getDataAccessStructure(@RequestBody FiDataMetaDataReqDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataAccessStructure(dto));
     }
 }

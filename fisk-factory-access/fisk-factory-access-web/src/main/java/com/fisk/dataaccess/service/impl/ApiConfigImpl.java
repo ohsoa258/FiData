@@ -461,19 +461,19 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 if (StringUtils.isNotBlank(msg)) {
                     msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
                 }
-                savePushDataLogToTask(startTime, dto, resultEnum, OlapTableEnum.PHYSICS_API.getValue(), msg.toString());
+                savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_API.getValue(), msg.toString());
                 // 实时调用
                 // executeConfigFlag: true -- 本次同步的数据为前端页面测试示例
             } else if (dto.flag) {
                 if (StringUtils.isNotBlank(msg)) {
                     msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为前端页面测试示例]");
                 }
-                savePushDataLogToTask(startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
+                savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
             } else if (!dto.executeConfigFlag) {
                 if (StringUtils.isNotBlank(msg)) {
                     msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
                 }
-                savePushDataLogToTask(startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
+                savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
             }
 
         } catch (Exception e) {
@@ -482,7 +482,112 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         return ResultEntityBuild.build(resultEnum, msg);
     }
 
-    private void savePushDataLogToTask(Date startTime, ReceiveDataDTO dto, ResultEnum resultEnum, int topicType, String msg) {
+    /**
+     * task添加日志执行的推送数据方法
+     *
+     * @return com.fisk.common.core.response.ResultEntity<java.lang.Object>
+     * @description task添加日志执行的推送数据方法
+     * @author Lock
+     * @date 2022/6/17 15:28
+     * @version v1.0
+     * @params importDataDto
+     * @params dto
+     */
+    private ResultEntity<Object> pushDataByImportData(ApiImportDataDTO importDataDto, ReceiveDataDTO dto) {
+        ResultEnum resultEnum = null;
+        StringBuilder msg = new StringBuilder("");
+        Date startTime = new Date();
+        try {
+            if (dto.apiCode == null) {
+                return ResultEntityBuild.build(ResultEnum.PUSH_TABLEID_NULL);
+            }
+
+            ApiConfigPO apiConfigPo = baseMapper.selectById(dto.apiCode);
+            if (apiConfigPo == null) {
+                return ResultEntityBuild.build(ResultEnum.API_NOT_EXIST);
+            }
+
+            // flag=false: 第三方调用,需要验证账号是否属于当前api
+            if (!dto.flag) {
+                AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", apiConfigPo.appId).one();
+                if (!appDataSourcePo.realtimeAccount.equalsIgnoreCase(userHelper.getLoginUserInfo().username)) {
+                    return ResultEntityBuild.build(ResultEnum.ACCOUNT_CANNOT_OPERATION_API);
+                }
+            }
+
+            // json解析的根节点
+            String jsonKey = StringUtils.isNotBlank(apiConfigPo.jsonKey) ? apiConfigPo.jsonKey : "data";
+            log.info("json解析的根节点参数为: " + jsonKey);
+
+            // 根据api_id查询所有物理表
+            List<TableAccessPO> accessPoList = tableAccessImpl.query().eq("api_id", dto.apiCode).list();
+            if (CollectionUtils.isEmpty(accessPoList)) {
+                return ResultEntityBuild.build(ResultEnum.TABLE_NOT_EXIST);
+            }
+            // 获取当前api下的所有表数据
+            List<ApiTableDTO> apiTableDtoList = getApiTableDtoList(accessPoList);
+//            apiTableDtoList.forEach(System.out::println);
+
+            AppRegistrationPO modelApp = appRegistrationImpl.query().eq("id", accessPoList.get(0).appId).one();
+            if (modelApp == null) {
+                return ResultEntityBuild.build(ResultEnum.APP_NOT_EXIST);
+            }
+            // 防止\未被解析
+            String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
+            // 将数据同步到pgsql
+            ResultEntity<Object> result = pushPgSql(jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_", jsonKey, dto.apiCode);
+            resultEnum = ResultEnum.getEnum(result.code);
+            msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
+
+            // stg同步到ods(联调task)
+            if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
+                ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
+                msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append(";");
+            }
+
+            // 保存本次的日志信息
+            // 非实时api
+            // 系统内部调用 && 实时推送示例数据
+            if (dto.flag && !dto.executeConfigFlag) {
+                if (StringUtils.isNotBlank(msg)) {
+                    msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
+                }
+                savePushDataLogToTask(importDataDto, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_API.getValue(), msg.toString());
+                // 实时调用
+                // executeConfigFlag: true -- 本次同步的数据为前端页面测试示例
+            } else if (dto.flag) {
+                if (StringUtils.isNotBlank(msg)) {
+                    msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为前端页面测试示例]");
+                }
+                savePushDataLogToTask(importDataDto, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
+            } else if (!dto.executeConfigFlag) {
+                if (StringUtils.isNotBlank(msg)) {
+                    msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
+                }
+                savePushDataLogToTask(importDataDto, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
+            }
+
+        } catch (Exception e) {
+            resultEnum = ResultEnum.PUSH_DATA_ERROR;
+        }
+        return ResultEntityBuild.build(resultEnum, msg);
+    }
+
+    /**
+     * task保存日志
+     *
+     * @return void
+     * @description task保存日志
+     * @author Lock
+     * @date 2022/6/17 15:29
+     * @version v1.0
+     * @params startTime
+     * @params dto
+     * @params resultEnum
+     * @params topicType
+     * @params msg
+     */
+    private void savePushDataLogToTask(ApiImportDataDTO importDataDto, Date startTime, ReceiveDataDTO dto, ResultEnum resultEnum, int topicType, String msg) {
         ApiConfigPO apiConfigPo = this.query().eq("id", dto.apiCode).one();
         if (apiConfigPo == null) {
             throw new FkException(ResultEnum.APICONFIG_ISNULL);
@@ -509,6 +614,14 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
             }
 
+            // 非实时日志详情
+            if (importDataDto != null) {
+                nifiStageMessageDto.pipelTaskTraceId = importDataDto.pipelTaskTraceId;
+                nifiStageMessageDto.pipelStageTraceId = importDataDto.pipelStageTraceId;
+                nifiStageMessageDto.pipelJobTraceId = importDataDto.pipelJobTraceId;
+                nifiStageMessageDto.pipelTraceId = importDataDto.pipelTraceId;
+            }
+
             log.info("保存到task的日志信息: " + JSON.toJSONString(nifiStageMessageDto));
             publishTaskClient.saveNifiStage(JSON.toJSONString(nifiStageMessageDto));
         } catch (Exception e) {
@@ -520,6 +633,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             nifiStageMessageDto.endTime = endTime;
             nifiStageMessageDto.counts = COUNT_SQL;
             nifiStageMessageDto.topic = "dmp.datafactory.nifi." + topicType + "." + apiConfigPo.appId + "." + dto.apiCode;
+            // 非实时日志详情
+            if (importDataDto != null) {
+                nifiStageMessageDto.pipelTaskTraceId = importDataDto.pipelTaskTraceId;
+                nifiStageMessageDto.pipelStageTraceId = importDataDto.pipelStageTraceId;
+                nifiStageMessageDto.pipelJobTraceId = importDataDto.pipelJobTraceId;
+                nifiStageMessageDto.pipelTraceId = importDataDto.pipelTraceId;
+            }
 
             log.info("保存到task的日志信息: " + JSON.toJSONString(nifiStageMessageDto));
             publishTaskClient.saveNifiStage(JSON.toJSONString(nifiStageMessageDto));
@@ -844,7 +964,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             receiveDataDTO.executeConfigFlag = false;
 
             // 推送数据
-            pushData(receiveDataDTO);
+            pushDataByImportData(dto, receiveDataDTO);
 
         } else if (dataSourcePo.authenticationMethod == 5) { // 没有身份验证方式
 
@@ -882,7 +1002,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             receiveDataDTO.executeConfigFlag = false;
 
             // 推送数据
-            pushData(receiveDataDTO);
+            pushDataByImportData(dto, receiveDataDTO);
 
             // Bearer Token
         } else if (dataSourcePo.authenticationMethod == 4) {
@@ -922,7 +1042,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             receiveDataDTO.executeConfigFlag = false;
 
             // 推送数据
-            pushData(receiveDataDTO);
+            pushDataByImportData(dto, receiveDataDTO);
         }
 
         return ResultEnum.SUCCESS;
