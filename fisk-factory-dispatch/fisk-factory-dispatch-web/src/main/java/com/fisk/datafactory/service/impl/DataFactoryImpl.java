@@ -17,6 +17,9 @@ import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
 import com.fisk.datafactory.map.NifiCustomWorkflowMap;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
 import com.fisk.datafactory.service.IDataFactory;
+import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
+import com.fisk.task.dto.dispatchlog.PipelStageLogVO;
+import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -373,6 +376,21 @@ public class DataFactoryImpl implements IDataFactory {
     public ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskLastListById(Long id) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, buildPipeEndDto(id));
+    }
+
+    @Override
+    public ResultEntity<List<PipelJobLogVO>> getPipeJobLog(PipelJobLogVO dto) {
+        return null;
+    }
+
+    @Override
+    public ResultEntity<List<PipelStageLogVO>> getPipeStageLog(PipelStageLogVO dto) {
+        return null;
+    }
+
+    @Override
+    public ResultEntity<List<PipelTaskLogVO>> getPipeTaskLog(PipelTaskLogVO dto) {
+        return null;
     }
 
     /**

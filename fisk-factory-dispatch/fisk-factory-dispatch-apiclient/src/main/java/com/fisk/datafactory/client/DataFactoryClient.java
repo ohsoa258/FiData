@@ -9,6 +9,9 @@ import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.PortRequestParamDTO;
+import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
+import com.fisk.task.dto.dispatchlog.PipelStageLogVO;
+import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
@@ -88,4 +91,34 @@ public interface DataFactoryClient {
     @PostMapping("/dataFactory/redirect")
     @ApiOperation(value = "根据componentType,appId,tableId查询出表具体在哪些管道,哪些组件中使用")
     ResultEntity<List<DispatchRedirectDTO>> redirect(@RequestBody NifiCustomWorkflowDetailDTO dto);
+
+    /**
+     * 获取管道日志
+     *
+     * @param dto dto
+     * @return 查询结果
+     */
+    @PostMapping("/getPipeJobLog")
+    @ApiOperation(value = "获取管道日志")
+    ResultEntity<List<PipelJobLogVO>> getPipeJobLog(@RequestBody PipelJobLogVO dto);
+
+    /**
+     * 获取阶段日志
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    @PostMapping("/getPipeStageLog")
+    @ApiOperation(value = "获取阶段日志")
+    ResultEntity<List<PipelStageLogVO>> getPipeStageLog(@RequestBody PipelStageLogVO dto);
+
+    /**
+     * 获取阶段日志
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    @PostMapping("/getPipeTaskLog")
+    @ApiOperation(value = "获取表日志")
+    ResultEntity<List<PipelTaskLogVO>> getPipeTaskLog(@RequestBody PipelTaskLogVO dto);
 }

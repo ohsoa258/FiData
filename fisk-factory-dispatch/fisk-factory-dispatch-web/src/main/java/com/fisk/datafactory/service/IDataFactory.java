@@ -6,6 +6,9 @@ import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
+import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
+import com.fisk.task.dto.dispatchlog.PipelStageLogVO;
+import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 
 import java.util.List;
 
@@ -55,4 +58,28 @@ public interface IDataFactory {
      * @return list
      */
     ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskLastListById(Long id);
+
+    /**
+     * 获取管道日志
+     *
+     * @param dto dto
+     * @return 查询结果
+     */
+    ResultEntity<List<PipelJobLogVO>> getPipeJobLog(PipelJobLogVO dto);
+
+    /**
+     * 获取阶段日志
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEntity<List<PipelStageLogVO>> getPipeStageLog(PipelStageLogVO dto);
+
+    /**
+     * 获取阶段日志
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEntity<List<PipelTaskLogVO>> getPipeTaskLog(PipelTaskLogVO dto);
 }

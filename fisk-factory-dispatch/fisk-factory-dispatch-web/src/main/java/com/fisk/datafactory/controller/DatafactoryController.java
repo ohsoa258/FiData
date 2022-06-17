@@ -7,6 +7,9 @@ import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
 import com.fisk.datafactory.service.IDataFactory;
+import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
+import com.fisk.task.dto.dispatchlog.PipelStageLogVO;
+import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -60,5 +63,23 @@ public class DatafactoryController {
     public ResultEntity<List<DispatchRedirectDTO>> redirect(@RequestBody NifiCustomWorkflowDetailDTO dto) {
 
         return service.redirect(dto);
+    }
+
+    @PostMapping("/getPipeJobLog")
+    @ApiOperation(value = "获取管道日志")
+    public ResultEntity<List<PipelJobLogVO>> getPipeJobLog(@RequestBody PipelJobLogVO dto) {
+        return service.getPipeJobLog(dto);
+    }
+
+    @PostMapping("/getPipeStageLog")
+    @ApiOperation(value = "获取阶段日志")
+    public ResultEntity<List<PipelStageLogVO>> getPipeStageLog(@RequestBody PipelStageLogVO dto) {
+        return service.getPipeStageLog(dto);
+    }
+
+    @PostMapping("/getPipeTaskLog")
+    @ApiOperation(value = "获取表日志")
+    public ResultEntity<List<PipelTaskLogVO>> getPipeTaskLog(@RequestBody PipelTaskLogVO dto) {
+        return service.getPipeTaskLog(dto);
     }
 }
