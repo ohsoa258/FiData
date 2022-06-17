@@ -13,6 +13,7 @@ import java.util.List;
 @Data
 public class CategoryDTO extends GlossaryDTO {
     public GlossaryAnchorDTO anchor;
+    public List<ChildrenCategoryDetailsDTO> childrenCategories;
     public CategoryParentDTO parentCategory;
     public List<TermDetailsDTO> terms;
 }

@@ -40,7 +40,7 @@ public class TermImpl implements ITerm {
     {
         String jsonParameter= JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.post(term,jsonParameter);
-        return result.code== AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
+        return atlasClient.newResultEnum(result);
     }
 
     @Override
@@ -61,7 +61,7 @@ public class TermImpl implements ITerm {
     {
         String jsonParameter= JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.put(term + "/" + dto.guid,jsonParameter);
-        return result.code== AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
+        return atlasClient.newResultEnum(result);
     }
 
     @Override

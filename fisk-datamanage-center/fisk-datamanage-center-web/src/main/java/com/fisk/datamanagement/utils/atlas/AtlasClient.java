@@ -1,8 +1,8 @@
 package com.fisk.datamanagement.utils.atlas;
 
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import com.fisk.datamanagement.vo.ResultErrorDTO;
@@ -276,22 +276,15 @@ public class AtlasClient {
         return "Basic " + base64;
     }
 
-    public ResultEnum newResultEnum(ResultDataDTO<String> result)
-    {
-        String error="";
-        if (result.code.getValue() ==AtlasResultEnum.NO_CONTENT.getValue())
-        {
+    public ResultEnum newResultEnum(ResultDataDTO<String> result) {
+        String error = "";
+        if (result.code.getValue() == AtlasResultEnum.NO_CONTENT.getValue()
+                || result.code.getValue() == AtlasResultEnum.REQUEST_SUCCESS.getValue()) {
             return ResultEnum.SUCCESS;
         }
-        try {
-            ResultErrorDTO dto= JSONObject.parseObject(result.data,ResultErrorDTO.class);
-            error = dto.errorMessage;
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        throw new FkException(ResultEnum.ERROR,error);
+        ResultErrorDTO dto = JSONObject.parseObject(result.data, ResultErrorDTO.class);
+        error = dto.errorMessage;
+        throw new FkException(ResultEnum.ERROR, error);
     }
 
 }

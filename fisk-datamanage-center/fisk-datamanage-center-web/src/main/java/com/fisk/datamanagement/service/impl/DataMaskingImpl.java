@@ -9,15 +9,13 @@ import com.fisk.datamanagement.dto.datamasking.DataMaskingSourceDTO;
 import com.fisk.datamanagement.dto.datamasking.DataMaskingTargetDTO;
 import com.fisk.datamanagement.dto.datamasking.SourceTableDataDTO;
 import com.fisk.datamanagement.entity.MetadataMapAtlasPO;
-import com.fisk.datamanagement.enums.DataTypeEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.enums.TableTypeEnum;
 import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
 import com.fisk.datamanagement.service.IDataMasking;
 import com.fisk.datamanagement.vo.ConnectionInformationDTO;
-import com.fisk.task.enums.OlapTableEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -26,6 +24,7 @@ import javax.annotation.Resource;
  * @author JianWenYang
  */
 @Service
+@Slf4j
 public class DataMaskingImpl implements IDataMasking {
 
     @Resource
@@ -63,6 +62,7 @@ public class DataMaskingImpl implements IDataMasking {
         }
         catch (Exception e)
         {
+            log.error("getSourceDataConfig ex:", e);
             throw new FkException(ResultEnum.SQL_ANALYSIS,e);
         }
     }
@@ -116,6 +116,7 @@ public class DataMaskingImpl implements IDataMasking {
         }
         catch (Exception e)
         {
+            log.error("getTableData ex:", e);
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,e);
         }
     }

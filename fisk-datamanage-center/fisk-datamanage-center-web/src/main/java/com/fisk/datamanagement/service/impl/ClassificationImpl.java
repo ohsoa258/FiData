@@ -105,7 +105,6 @@ public class ClassificationImpl implements IClassification {
         List<ClassificationTreeDTO> childList = new ArrayList<>();
         for (ClassificationDefContentDTO item : data) {
             if (item.superTypes.contains(pNode.name)) {
-                data.remove(pNode);
                 childList.add(buildChildTree(ClassificationMap.INSTANCES.poToDto(item), data));
             }
         }
@@ -117,7 +116,7 @@ public class ClassificationImpl implements IClassification {
     public ResultEnum updateClassification(ClassificationDefsDTO dto) {
         String jsonParameter = JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.put(typedefs + "?type=classification", jsonParameter);
-        return result.code == AtlasResultEnum.REQUEST_SUCCESS ? ResultEnum.SUCCESS : ResultEnum.BAD_REQUEST;
+        return atlasClient.newResultEnum(result);
     }
 
     @Override
@@ -137,7 +136,7 @@ public class ClassificationImpl implements IClassification {
                 .collect(Collectors.toList());
         String jsonParameter=JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.post(typedefs + "?type=classification", jsonParameter);
-        return result.code==AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
+        return atlasClient.newResultEnum(result);
     }
 
     @Override
