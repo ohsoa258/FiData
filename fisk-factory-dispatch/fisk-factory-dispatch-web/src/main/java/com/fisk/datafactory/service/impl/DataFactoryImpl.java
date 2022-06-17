@@ -142,7 +142,7 @@ public class DataFactoryImpl implements IDataFactory {
             String[] inportIds = parentDetailPo.inport.split(",");
             List<NifiCustomWorkflowDetailDTO> inportList = new ArrayList<>();
             Arrays.stream(inportIds).forEachOrdered(inportId -> {
-                // 过滤出所有主任务(数据湖、数仓、分析模型),不含绑定表的组件
+                // 过滤出上一级所有主任务(数据湖、数仓、分析模型),不含绑定表的组件
                 List<NifiCustomWorkflowDetailDTO> listAllTask = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(nifiCustomWorkflowDetailImpl.query()
                         .eq("id", inportId)
                         .list()
@@ -151,7 +151,7 @@ public class DataFactoryImpl implements IDataFactory {
                         // 过滤出主任务
                         .filter(e -> e.appId != null && !"".equals(e.appId) && (e.tableId == null || "".equals(e.tableId)))
                         .collect(Collectors.toList()));
-                // 过滤出所有表任务(接入+建模)
+                // 过滤出上一级所有表任务(接入+建模)
                 List<NifiCustomWorkflowDetailDTO> listAllTable = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(nifiCustomWorkflowDetailImpl.query()
                         .eq("id", inportId)
                         .list()
@@ -448,7 +448,7 @@ public class DataFactoryImpl implements IDataFactory {
      * @author Lock
      * @date 2022/6/15 14:05
      * @version v1.0
-     * @params id
+     * @params id 管道id
      */
     private List<NifiCustomWorkflowDetailDTO> buildPipeEndDto(Long id) {
         List<NifiCustomWorkflowDetailDTO> list = new ArrayList<>();
@@ -475,8 +475,8 @@ public class DataFactoryImpl implements IDataFactory {
                 .filter(Objects::nonNull)
                 // 过滤出主任务
                 .filter(e -> e.appId != null && !"".equals(e.appId) && (e.tableId == null || "".equals(e.tableId)))
-                // 过滤没有inport上游的
-                .filter(e -> StringUtils.isNotBlank(e.inport))
+                // 过滤出有inport,没有outport
+                .filter(e -> StringUtils.isNotBlank(e.inport) && (e.outport == null || "".equals(e.outport)))
                 // 当前组件的pid是开始组件的id
 //                .filter(e -> e.inport.equalsIgnoreCase(String.valueOf(scheduleTask.id)))
                 .collect(Collectors.toList()));
