@@ -958,9 +958,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
                     // 第一层: app层
                     FiDataMetaDataTreeDTO appDtoTree = new FiDataMetaDataTreeDTO();
-                    String appGuid = UUID.randomUUID().toString();
-                    // 当前层默认生成的uuid
-                    appDtoTree.setId(appGuid);
+                    appDtoTree.setId(String.valueOf(app.id));
                     // 上一级的id
                     appDtoTree.setParentId(id);
                     appDtoTree.setLabel(app.appName);
@@ -984,9 +982,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                     .filter(Objects::nonNull)
                                     .map(api -> {
                                         FiDataMetaDataTreeDTO apiDtoTree = new FiDataMetaDataTreeDTO();
-                                        String apiGuid = UUID.randomUUID().toString();
-                                        apiDtoTree.setId(apiGuid);
-                                        apiDtoTree.setParentId(appGuid);
+                                        apiDtoTree.setId(String.valueOf(api.id));
+                                        apiDtoTree.setParentId(String.valueOf(app.id));
                                         apiDtoTree.setLabel(api.apiName);
                                         apiDtoTree.setLabelAlias(api.apiName);
                                         apiDtoTree.setLevelType(LevelTypeEnum.FOLDER);
@@ -1003,9 +1000,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                 .filter(Objects::nonNull)
                                                 .map(table -> {
                                                     FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
-                                                    String tableGuid = UUID.randomUUID().toString();
-                                                    tableDtoTree.setId(tableGuid);
-                                                    tableDtoTree.setParentId(apiGuid);
+                                                    tableDtoTree.setId(String.valueOf(table.id));
+                                                    tableDtoTree.setParentId(String.valueOf(api.id));
                                                     tableDtoTree.setLabel(table.tableName);
                                                     tableDtoTree.setLabelAlias(table.tableName);
                                                     tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
@@ -1021,9 +1017,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                             .map(field -> {
 
                                                                 FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
-                                                                String fieldGuid = UUID.randomUUID().toString();
-                                                                fieldDtoTree.setId(fieldGuid);
-                                                                fieldDtoTree.setParentId(tableGuid);
+                                                                fieldDtoTree.setId(String.valueOf(field.id));
+                                                                fieldDtoTree.setParentId(String.valueOf(table.id));
                                                                 fieldDtoTree.setLabel(field.fieldName);
                                                                 fieldDtoTree.setLabelAlias(field.fieldName);
                                                                 fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
@@ -1062,9 +1057,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                     .filter(Objects::nonNull)
                                     .map(table -> {
                                         FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
-                                        String tableGuid = UUID.randomUUID().toString();
-                                        tableDtoTree.setId(tableGuid);
-                                        tableDtoTree.setParentId(appGuid);
+                                        tableDtoTree.setId(String.valueOf(table.id));
+                                        tableDtoTree.setParentId(String.valueOf(app.id));
                                         tableDtoTree.setLabel(table.tableName);
                                         tableDtoTree.setLabelAlias(table.tableName);
                                         tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
@@ -1081,8 +1075,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
                                                     FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
                                                     String fieldGuid = UUID.randomUUID().toString();
-                                                    fieldDtoTree.setId(fieldGuid);
-                                                    fieldDtoTree.setParentId(tableGuid);
+                                                    fieldDtoTree.setId(String.valueOf(field.id));
+                                                    fieldDtoTree.setParentId(String.valueOf(table.id));
                                                     fieldDtoTree.setLabel(field.fieldName);
                                                     fieldDtoTree.setLabelAlias(field.fieldName);
                                                     fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
