@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
+import com.fisk.dataaccess.dto.api.PipelApiDispatchDTO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
@@ -134,6 +135,7 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
                 thisTaskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
                 thisTaskMap.put(DispatchLogEnum.taskstart.getValue(), simpleDateFormat.format(new Date()));
                 iPipelTaskLog.savePipelTaskLog(upPipelJobTraceId, thisPipelTaskTraceId, thisTaskMap, String.valueOf(itselfPort.id), split[6], Integer.parseInt(split[4]));
+                thisPipelJobTraceId = upPipelJobTraceId;
             }
 
 
@@ -151,6 +153,11 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
                 apiImportDataDTO.pipelJobTraceId = thisPipelJobTraceId;
                 apiImportDataDTO.pipelTaskTraceId = thisPipelTaskTraceId;
                 apiImportDataDTO.pipelStageTraceId = thisPipelStageTraceId;
+                PipelApiDispatchDTO pipelApiDispatchDTO = new PipelApiDispatchDTO();
+                pipelApiDispatchDTO.apiId = Long.parseLong(split[6]);
+                pipelApiDispatchDTO.appId = Long.parseLong(split[5]);
+                pipelApiDispatchDTO.workflowId = split[3];
+                apiImportDataDTO.pipelApiDispatch = JSON.toJSONString(pipelApiDispatchDTO);
                 dataAccessClient.importData(apiImportDataDTO);
             } else {
                 KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();

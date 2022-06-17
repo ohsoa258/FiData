@@ -584,8 +584,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
             dto.workflowId = pipelApiDispatch.workflowId;
             dto.appId = pipelApiDispatch.appId;
-            dto.apiId = pipelApiDispatch.appId;
+            dto.apiId = pipelApiDispatch.apiId;
             syncData(dto);
+            kafkaReceiveDTO.pipelTraceId = dto.pipelTraceId;
+            kafkaReceiveDTO.pipelTaskTraceId = dto.pipelTaskTraceId;
+            kafkaReceiveDTO.pipelStageTraceId = dto.pipelStageTraceId;
+            kafkaReceiveDTO.pipelJobTraceId = dto.pipelJobTraceId;
             kafkaReceiveDTO.tableId = Math.toIntExact(dto.apiId);
             kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
             kafkaReceiveDTO.nifiCustomWorkflowDetailId = Long.valueOf(dto.workflowId);
@@ -598,6 +602,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 接入模块调用
             syncData(dto);
             if (dto.workflowId != null) {
+                kafkaReceiveDTO.pipelTraceId = dto.pipelTraceId;
+                kafkaReceiveDTO.pipelTaskTraceId = dto.pipelTaskTraceId;
+                kafkaReceiveDTO.pipelStageTraceId = dto.pipelStageTraceId;
+                kafkaReceiveDTO.pipelJobTraceId = dto.pipelJobTraceId;
                 kafkaReceiveDTO.tableId = Math.toIntExact(dto.apiId);
                 kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
                 kafkaReceiveDTO.topic = "dmp.datafactory.nifi." + dto.workflowId + "." + kafkaReceiveDTO.tableType + "." + dto.appId + "." + dto.apiId;
