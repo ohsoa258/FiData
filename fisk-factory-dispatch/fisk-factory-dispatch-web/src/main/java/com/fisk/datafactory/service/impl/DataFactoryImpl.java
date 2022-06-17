@@ -153,7 +153,7 @@ public class DataFactoryImpl implements IDataFactory {
                         .collect(Collectors.toList()));
                 // 过滤出上一级所有表任务(接入+建模)
                 List<NifiCustomWorkflowDetailDTO> listAllTable = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(nifiCustomWorkflowDetailImpl.query()
-                        .eq("id", inportId)
+                        .eq("pid", inportId)
                         .list()
                         .stream()
                         .filter(Objects::nonNull)
