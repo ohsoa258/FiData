@@ -77,12 +77,12 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
             String pipelTraceId = split1[1];
             boolean ifEndJob = false;
             //查找所有的上一级
-            NifiGetPortHierarchyDTO nifiGetPortHierarchy=new NifiGetPortHierarchyDTO();
-            if(!Objects.equals(Integer.valueOf(split[4]),OlapTableEnum.PHYSICS_API.getValue())){
-                 nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(split[3], Integer.valueOf(split[4]), null, Integer.valueOf(split[6]));
-            }else{
+            NifiGetPortHierarchyDTO nifiGetPortHierarchy = new NifiGetPortHierarchyDTO();
+            if (!Objects.equals(Integer.valueOf(split[4]), OlapTableEnum.PHYSICS_API.getValue())) {
+                nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(split[3], Integer.valueOf(split[4]), null, Integer.valueOf(split[6]));
+            } else {
                 nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(null, Integer.valueOf(split[4]), null, Integer.valueOf(split[6]));
-                nifiGetPortHierarchy.nifiCustomWorkflowDetailId= Long.valueOf(split[3]);
+                nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(split[3]);
             }
 
             ResultEntity<NifiPortsHierarchyDTO> nifiPortHierarchy =
@@ -160,17 +160,18 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
                 kafkaReceiveDTO.pipelStageTraceId = thisPipelStageTraceId;
                 kafkaReceiveDTO.fidata_batch_code = UUID.randomUUID().toString();
                 kafkaReceiveDTO.start_time = simpleDateFormat.format(new Date());
-                log.info("发送的topic4:{},内容:{}",split1[0],JSON.toJSONString(kafkaReceiveDTO));
+                log.info("发送的topic4:{},内容:{}", split1[0], JSON.toJSONString(kafkaReceiveDTO));
                 kafkaTemplateHelper.sendMessageAsync(split1[0], JSON.toJSONString(kafkaReceiveDTO));
             }
         }
         if (expiredKey.startsWith("fiskgd")) {
             //整个管道记录结束
             String pipelTraceId = expiredKey.substring(7);
+            String pipelId = "";
             List<PipelJobLogPO> list = iPipelJobLog.query().eq("pipel_trace_id", pipelTraceId).eq("del_flag", 1)
                     .isNotNull("pipel_id").orderByDesc("create_time").list();
             if (CollectionUtils.isNotEmpty(list)) {
-                String pipelId = list.get(0).pipelId;
+                pipelId = list.get(0).pipelId;
                 ResultEntity<List<NifiCustomWorkflowDetailDTO>> nifiPortTaskLastListById = dataFactoryClient.getNifiPortTaskLastListById(Long.valueOf(pipelId));
                 List<NifiCustomWorkflowDetailDTO> data = nifiPortTaskLastListById.data;
                 for (NifiCustomWorkflowDetailDTO dto : data) {
@@ -193,7 +194,7 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
             Map<Integer, Object> PipelMap = new HashMap<>();
             PipelMap.put(DispatchLogEnum.pipelend.getValue(), simpleDateFormat.format(new Date()));
             PipelMap.put(DispatchLogEnum.pipelstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
-            iPipelJobLog.savePipelLogAndJobLog(pipelTraceId, PipelMap, pipelTraceId, null, null);
+            iPipelJobLog.savePipelLogAndJobLog(pipelTraceId, PipelMap, pipelId, null, null);
 
         } else if (expiredKey.startsWith("hand")) {
             //手动调度记录结束

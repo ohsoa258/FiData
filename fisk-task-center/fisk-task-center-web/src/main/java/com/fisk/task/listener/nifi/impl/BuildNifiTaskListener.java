@@ -2102,7 +2102,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         querySqlDto.details = "queryForPipelineSupervision";
         querySqlDto.groupId = groupId;
         querySqlDto.querySql = "select '${executesql.error.message}' as message,'${kafka.topic}' as topic,'" + groupId + "' as groupId"
-                + ",'${start_time}' as startTime, '${end_time}' as endTime ,'${numbers}' counts ,'${pipelStageTraceId}' as pipelStageTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId";
+                + ",'${start_time}' as startTime, '${end_time}' as endTime ,'${numbers}' counts ,'${pipelStageTraceId}' as pipelStageTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId,'${pipelJobTraceId}' as pipelJobTraceId";
         querySqlDto.dbConnectionId = cfgDbPoolId;
         querySqlDto.scheduleExpression = "1";
         querySqlDto.scheduleType = SchedulingStrategyTypeEnum.TIMER;
