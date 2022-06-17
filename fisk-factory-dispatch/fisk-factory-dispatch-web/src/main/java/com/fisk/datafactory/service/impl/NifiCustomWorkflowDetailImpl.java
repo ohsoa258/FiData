@@ -251,7 +251,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         // 管道名称
         workListDTO.pipelineName = pipelineName;
         // TODO 封装nifi所有节点(大量改动)
-        workListDTO.nifiCustomWorkDTOS = getNifiCustomWorkList(list);
+        workListDTO.nifiCustomWorkDTOS = getNifiCustomWorkList(pipelineId, list);
         // TODO 管道详情-父子级tree,
         workListDTO.structure = getMenuTree(list);
         // 管道详情下的任务组-tree
@@ -263,9 +263,10 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
      * 封装nifi所有节点
      *
      * @param list list
+     * @param id   管道主键id
      * @return List<NifiCustomWorkDTO>
      */
-    private List<NifiCustomWorkDTO> getNifiCustomWorkList(List<NifiCustomWorkflowDetailDTO> list) {
+    private List<NifiCustomWorkDTO> getNifiCustomWorkList(Long id, List<NifiCustomWorkflowDetailDTO> list) {
         List<NifiCustomWorkDTO> nifiCustomWorkDTOList = new ArrayList<>();
         /*list.stream().map(e -> {
             NifiCustomWorkDTO dto = new NifiCustomWorkDTO();
@@ -306,7 +307,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                         // 保存topic
                         TableTopicDTO topicDTO = new TableTopicDTO();
                         topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
-                        topicDTO.topicName = "dmp.datafactory.nifi." + nifiCustomWorkflowDetailPO.id + "." + OlapTableEnum.PHYSICS_API.getValue() + "." + nifiCustomWorkflowDetailPO.appId + "." + nifiCustomWorkflowDetailPO.tableId;
+                        topicDTO.topicName = "dmp.datafactory.nifi." + id + "." + OlapTableEnum.PHYSICS_API.getValue() + "." + nifiCustomWorkflowDetailPO.appId + "." + nifiCustomWorkflowDetailPO.tableId;
                         topicDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
                         topicDTO.tableId = Integer.parseInt(dto.NifiNode.tableId);
                         topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPO.id);
