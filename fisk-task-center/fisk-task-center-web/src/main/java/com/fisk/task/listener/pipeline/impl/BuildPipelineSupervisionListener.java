@@ -163,7 +163,7 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                     //请求接口得到对象,条件--管道名称,表名称,表类别,表id,topic_name(加表名table_name)
                     NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = new NifiGetPortHierarchyDTO();
                     nifiGetPortHierarchyDTO.workflowId = pipelineId;
-                    nifiGetPortHierarchyDTO.nifiCustomWorkflowDetailId = kafkaReceiveDTO.nifiCustomWorkflowDetailId;
+                    //nifiGetPortHierarchyDTO.nifiCustomWorkflowDetailId = kafkaReceiveDTO.nifiCustomWorkflowDetailId;
                     switch (kafkaReceiveDTO.tableType) {
                         case 0:
                             OlapPO olapPO = iOlap.selectOlapPO(kafkaReceiveDTO.tableId);

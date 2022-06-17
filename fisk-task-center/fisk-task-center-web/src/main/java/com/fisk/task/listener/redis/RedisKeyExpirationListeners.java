@@ -95,6 +95,7 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
                 taskMap.put(DispatchLogEnum.taskend.getValue(), simpleDateFormat.format(new Date()));
                 ChannelDataEnum value = ChannelDataEnum.getValue(dto.componentType);
                 OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(value.getValue());
+                log.info("记录上一个task结束" + byPipelJobTraceId.taskTraceId);
                 iPipelTaskLog.savePipelTaskLog(byPipelJobTraceId.jobTraceId, byPipelJobTraceId.taskTraceId, taskMap, byPipelJobTraceId.taskId, dto.tableId, olapTableEnum.getValue());
                 if (!Objects.equals(itselfPort.pid, dto.pid)) {
                     //说明这个组结束了
@@ -102,6 +103,7 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
                     Map<Integer, Object> upJobMap = new HashMap<>();
                     upJobMap.put(DispatchLogEnum.jobstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
                     upJobMap.put(DispatchLogEnum.jobend.getValue(), simpleDateFormat.format(new Date()));
+                    log.info("上一个job的结束:" + byPipelJobTraceId.jobTraceId);
                     iPipelJobLog.savePipelLogAndJobLog(pipelTraceId, upJobMap, split[3], byPipelJobTraceId.jobTraceId, byPipelTraceId.componentId);
                     ifEndJob = true;
 
@@ -116,17 +118,20 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
                 Map<Integer, Object> thisJobMap = new HashMap<>();
                 thisJobMap.put(DispatchLogEnum.jobstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
                 thisJobMap.put(DispatchLogEnum.jobstart.getValue(), simpleDateFormat.format(new Date()));
+                log.info("这个job的开始:" + thisPipelJobTraceId);
                 iPipelJobLog.savePipelLogAndJobLog(pipelTraceId, thisJobMap, split[3], thisPipelJobTraceId, String.valueOf(itselfPort.pid));
                 //4.记录这个task开始
                 Map<Integer, Object> thisTaskMap = new HashMap<>();
                 thisTaskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
                 thisTaskMap.put(DispatchLogEnum.taskstart.getValue(), simpleDateFormat.format(new Date()));
+                log.info("这个task开始" + thisPipelTaskTraceId);
                 iPipelTaskLog.savePipelTaskLog(thisPipelJobTraceId, thisPipelTaskTraceId, thisTaskMap, String.valueOf(itselfPort.id), split[6], Integer.parseInt(split[4]));
             } else {
                 //4.记录这个task开始
                 Map<Integer, Object> thisTaskMap = new HashMap<>();
                 thisTaskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
                 thisTaskMap.put(DispatchLogEnum.taskstart.getValue(), simpleDateFormat.format(new Date()));
+                log.info("记录这个task开始" + thisPipelTaskTraceId);
                 iPipelTaskLog.savePipelTaskLog(upPipelJobTraceId, thisPipelTaskTraceId, thisTaskMap, String.valueOf(itselfPort.id), split[6], Integer.parseInt(split[4]));
                 thisPipelJobTraceId = upPipelJobTraceId;
             }
@@ -137,7 +142,7 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
             String tableType = split[4];
             int type = Integer.parseInt(tableType);
             if (Objects.equals(type, OlapTableEnum.PHYSICS_API.getValue())) {
-                // todo 这里有问题
+                //非实时api发布
                 ApiImportDataDTO apiImportDataDTO = new ApiImportDataDTO();
                 apiImportDataDTO.workflowId = split[3];
                 apiImportDataDTO.appId = Long.parseLong(split[5]);
@@ -187,14 +192,17 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
                     Map<Integer, Object> upJobMap = new HashMap<>();
                     upJobMap.put(DispatchLogEnum.jobstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
                     upJobMap.put(DispatchLogEnum.jobend.getValue(), simpleDateFormat.format(new Date()));
+                    log.info("这个job的结束:" + byPipelJobTraceId.jobTraceId);
                     iPipelJobLog.savePipelLogAndJobLog(pipelTraceId, upJobMap, byPipelTraceId.pipelId, byPipelJobTraceId.jobTraceId, byPipelTraceId.componentId);
                 }
+                //记录管道结束
+                Map<Integer, Object> PipelMap = new HashMap<>();
+                PipelMap.put(DispatchLogEnum.pipelend.getValue(), simpleDateFormat.format(new Date()));
+                PipelMap.put(DispatchLogEnum.pipelstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
+                log.info("这个管道的结束:" + pipelTraceId);
+                iPipelJobLog.savePipelLogAndJobLog(pipelTraceId, PipelMap, pipelId, null, null);
             }
-            //记录管道结束
-            Map<Integer, Object> PipelMap = new HashMap<>();
-            PipelMap.put(DispatchLogEnum.pipelend.getValue(), simpleDateFormat.format(new Date()));
-            PipelMap.put(DispatchLogEnum.pipelstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
-            iPipelJobLog.savePipelLogAndJobLog(pipelTraceId, PipelMap, pipelId, null, null);
+
 
         } else if (expiredKey.startsWith("hand")) {
             //手动调度记录结束
