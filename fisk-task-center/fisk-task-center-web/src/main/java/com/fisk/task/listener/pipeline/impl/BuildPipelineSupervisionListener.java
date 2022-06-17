@@ -99,9 +99,9 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                         continue;
                     } else if (split1.length == 4) {
                         //  这个时候可能是api的topic,可能是管道直接调度的topic,保存管道开始,job开始 定义管道traceid  定义job的traceid
-
                         //流程开始时间
                         kafkaReceiveDTO.start_time = simpleDateFormat.format(new Date());
+                        kafkaReceiveDTO.pipelStageTraceId = UUID.randomUUID().toString();
                         //nifi流程要的批次号
                         kafkaReceiveDTO.fidata_batch_code = UUID.randomUUID().toString();
 
