@@ -87,10 +87,10 @@ public class BusinessMetaDataImpl implements IBusinessMetaData {
         //获取配置数据列表
         QueryWrapper<BusinessMetadataConfigPO> queryWrapper = new QueryWrapper<>();
         List<BusinessMetadataConfigPO> list = mapper.selectList(queryWrapper);
-
+        //定义对象
         BusinessMetaDataDTO dto = new BusinessMetaDataDTO();
         List<BusinessMetadataDefsDTO> businessMetadataDefs = new ArrayList<>();
-
+        //分组业务元数据名称分组
         Map<String, List<BusinessMetadataConfigPO>> collect = list.stream()
                 .collect(Collectors.groupingBy(BusinessMetadataConfigPO::getBusinessMetadataName));
         for (String businessMetaDataName : collect.keySet()) {
@@ -110,7 +110,7 @@ public class BusinessMetaDataImpl implements IBusinessMetaData {
                 String[] split = item.suitableType.split(",");
                 JSONArray jsonArray = new JSONArray(Arrays.asList(split));
                 attribute.typeName = item.attributeType;
-                attribute.multiValueSelect = item.multipleValued;
+                attribute.multiValueSelect = item.multipleValued ? "true" : null;
                 attribute.searchWeight = "5";
                 attribute.options = new BusinessMetaDataOptionsDTO();
                 attribute.options.applicableEntityTypes = jsonArray.toString();

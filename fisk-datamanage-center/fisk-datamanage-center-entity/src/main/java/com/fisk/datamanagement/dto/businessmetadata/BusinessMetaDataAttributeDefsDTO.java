@@ -29,6 +29,6 @@ public class BusinessMetaDataAttributeDefsDTO {
 
     public String searchWeight;
 
-    public boolean multiValueSelect;
+    public String multiValueSelect;
 
 }

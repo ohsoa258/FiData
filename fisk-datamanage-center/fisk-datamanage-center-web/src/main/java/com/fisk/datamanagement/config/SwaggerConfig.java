@@ -25,13 +25,16 @@ public class SwaggerConfig {
 
     public static final String LABEL_CATEGORY = "label-category-controller";
     public static final String LABEL = "label-controller";
-    public static final String META_DATA_ENTITY="metadata-entity-controller";
-    public static final String CLASSIFICATION="classification-controller";
-    public static final String GLOSSARY="glossary-controller";
-    public static final String BUSINESS_META_DATA="business-meta-data-controller";
-    public static final String DATA_ASSETS="data_assets-controller";
-    public static final String DATA_QUALITY="data-quality-controller";
-    public static final String DATA_MASKING="data-masking-controller";
+    public static final String META_DATA_ENTITY = "metadata-entity-controller";
+    public static final String CLASSIFICATION = "classification-controller";
+    public static final String GLOSSARY = "glossary-controller";
+    public static final String BUSINESS_META_DATA = "business-meta-data-controller";
+    public static final String DATA_ASSETS = "data_assets-controller";
+    public static final String DATA_QUALITY = "data-quality-controller";
+    public static final String DATA_MASKING = "data-masking-controller";
+    public static final String SYNCHRONIZATION_DATA = "synchronization-data-controller";
+    public static final String PROCESS = "process-controller";
+
     @Bean
     public Docket createRestApi() {
         String basePck = FKDataManagementApplication.class.getPackage().getName();
@@ -42,15 +45,17 @@ public class SwaggerConfig {
                 .paths(PathSelectors.any())
                 .build()
                 .securitySchemes(apiKey())
-                .tags(new Tag(LABEL_CATEGORY,"标签类目"))
-                .tags(new Tag(LABEL,"标签管理"))
-                .tags(new Tag(META_DATA_ENTITY,"元数据对象"))
-                .tags(new Tag(CLASSIFICATION,"业务分类"))
-                .tags(new Tag(GLOSSARY,"术语库"))
-                .tags(new Tag(BUSINESS_META_DATA,"业务元数据"))
-                .tags(new Tag(DATA_ASSETS,"数据资产"))
-                .tags(new Tag(DATA_QUALITY,"数据质量"))
-                .tags(new Tag(DATA_MASKING,"数据脱敏"))
+                .tags(new Tag(LABEL_CATEGORY, "标签类目"))
+                .tags(new Tag(LABEL, "标签管理"))
+                .tags(new Tag(META_DATA_ENTITY, "元数据对象"))
+                .tags(new Tag(CLASSIFICATION, "业务分类"))
+                .tags(new Tag(GLOSSARY, "术语库"))
+                .tags(new Tag(BUSINESS_META_DATA, "业务元数据"))
+                .tags(new Tag(DATA_ASSETS, "数据资产"))
+                .tags(new Tag(DATA_QUALITY, "数据质量"))
+                .tags(new Tag(DATA_MASKING, "数据脱敏"))
+                .tags(new Tag(SYNCHRONIZATION_DATA, "同步元数据"))
+                .tags(new Tag(PROCESS, "元数据血缘连线处理"))
                 .securityContexts(securityContexts());
     }
 

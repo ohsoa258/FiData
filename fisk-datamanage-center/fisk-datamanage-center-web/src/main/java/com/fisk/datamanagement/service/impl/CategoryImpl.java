@@ -9,6 +9,7 @@ import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.service.ICategory;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ import javax.annotation.Resource;
  * @author JianWenYang
  */
 @Service
+@Slf4j
 public class CategoryImpl implements ICategory {
 
     @Resource
@@ -35,20 +37,18 @@ public class CategoryImpl implements ICategory {
            String parentCategory=jsonObj.getString("parentCategory");
            JSONObject parent = JSON.parseObject(parentCategory);
            String parentValue=parent.getString("categoryGuid");
-           if ("".equals(parentValue))
-           {
+           if ("".equals(parentValue)) {
                jsonObj.remove("parentCategory");
-               jsonParameter=jsonObj.toJSONString();
-           }else {
+               jsonParameter = jsonObj.toJSONString();
+           } else {
                jsonObj.remove("guid");
-               jsonParameter=jsonObj.toJSONString();
+               jsonParameter = jsonObj.toJSONString();
            }
-           ResultDataDTO<String> result = atlasClient.post(category,jsonParameter);
-           return result.code== AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
-       }
-       catch (Exception e)
-       {
-            return ResultEnum.PARAMTER_ERROR;
+           ResultDataDTO<String> result = atlasClient.post(category, jsonParameter);
+           return result.code == AtlasResultEnum.REQUEST_SUCCESS ? ResultEnum.SUCCESS : ResultEnum.BAD_REQUEST;
+       } catch (Exception e) {
+           log.error("addCategory ex:", e);
+           return ResultEnum.PARAMTER_ERROR;
        }
     }
 
@@ -56,7 +56,7 @@ public class CategoryImpl implements ICategory {
     public ResultEnum deleteCategory(String guid)
     {
         ResultDataDTO<String> result = atlasClient.delete(category + "/" + guid);
-        return result.code== AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
+        return atlasClient.newResultEnum(result);
     }
 
     @Override

@@ -3,9 +3,11 @@ package com.fisk.datamanagement.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.process.AddProcessDTO;
 import com.fisk.datamanagement.dto.process.ProcessDTO;
 import com.fisk.datamanagement.service.IProcess;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,7 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
+@Api(tags = {SwaggerConfig.PROCESS})
 @RestController
 @RequestMapping("/Process")
 public class ProcessController {
