@@ -78,14 +78,7 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
             String pipelTraceId = split1[1];
             boolean ifEndJob = false;
             //查找所有的上一级
-            NifiGetPortHierarchyDTO nifiGetPortHierarchy = new NifiGetPortHierarchyDTO();
-            if (!Objects.equals(Integer.valueOf(split[4]), OlapTableEnum.PHYSICS_API.getValue())) {
-                nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(split[3], Integer.valueOf(split[4]), null, Integer.valueOf(split[6]));
-            } else {
-                nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(null, Integer.valueOf(split[4]), null, Integer.valueOf(split[6]));
-                nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(split[3]);
-            }
-
+            NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(split[3], Integer.valueOf(split[4]), null, Integer.valueOf(split[6]));
             ResultEntity<NifiPortsHierarchyDTO> nifiPortHierarchy =
                     dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchy);
             NifiPortsHierarchyDTO data = nifiPortHierarchy.data;
@@ -121,7 +114,7 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
             if (ifEndJob) {
                 //3.记录这个job开始
                 Map<Integer, Object> thisJobMap = new HashMap<>();
-                thisJobMap.put(DispatchLogEnum.jobstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
+                thisJobMap.put(DispatchLogEnum.jobstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
                 thisJobMap.put(DispatchLogEnum.jobstart.getValue(), simpleDateFormat.format(new Date()));
                 iPipelJobLog.savePipelLogAndJobLog(pipelTraceId, thisJobMap, split[3], thisPipelJobTraceId, String.valueOf(itselfPort.pid));
                 //4.记录这个task开始

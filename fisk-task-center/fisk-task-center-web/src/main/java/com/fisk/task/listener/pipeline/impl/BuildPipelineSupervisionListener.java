@@ -81,7 +81,7 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
 
                 KafkaReceiveDTO kafkaReceiveDTO = JSON.parseObject(mapString, KafkaReceiveDTO.class);
                 //管道总的pipelTraceId
-                if (Objects.isNull(kafkaReceiveDTO.pipelTraceId)) {
+                if (StringUtils.isEmpty(kafkaReceiveDTO.pipelTraceId)) {
                     kafkaReceiveDTO.pipelTraceId = UUID.randomUUID().toString();
                 }
                 if (kafkaReceiveDTO.topic != null && kafkaReceiveDTO.topic != "") {
