@@ -27,3 +27,8 @@ mybatis-plus:
 fk:
   jwt:
     key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
+
+# dmp_olap的宽表文件夹guid
+fidata:
+  wide-table:
+    guid: 9bf0e48e-aef8-44c1-9871-0cb4d0560dd6

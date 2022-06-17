@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
@@ -17,6 +19,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -102,5 +105,11 @@ public class BusinessAreaController {
     @ApiOperation(value = "跳转页面: 查询出当前表具体在哪个管道中使用,并给跳转页面提供数据")
     public ResultEntity<Object> redirect(@Validated @RequestBody ModelRedirectDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.redirect(dto));
+    }
+
+    @PostMapping("/getDataStructure")
+    @ApiOperation(value = "获取数据建模结构")
+    public ResultEntity<List<FiDataMetaDataDTO>> getDataModelStructure(@RequestBody FiDataMetaDataReqDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataModelStructure(dto));
     }
 }

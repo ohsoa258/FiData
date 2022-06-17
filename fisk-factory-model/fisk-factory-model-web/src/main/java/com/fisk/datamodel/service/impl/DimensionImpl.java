@@ -1,10 +1,11 @@
 package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimension.DimensionDateAttributeDTO;
 import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
@@ -12,12 +13,16 @@ import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionMetaDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
-import com.fisk.datamodel.entity.*;
+import com.fisk.datamodel.entity.DimensionAttributePO;
+import com.fisk.datamodel.entity.DimensionPO;
+import com.fisk.datamodel.entity.FactAttributePO;
 import com.fisk.datamodel.enums.DataBaseTypeEnum;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.DimensionMap;
-import com.fisk.datamodel.mapper.*;
+import com.fisk.datamodel.mapper.DimensionAttributeMapper;
+import com.fisk.datamodel.mapper.DimensionMapper;
+import com.fisk.datamodel.mapper.FactAttributeMapper;
 import com.fisk.datamodel.service.IDimension;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
@@ -33,7 +38,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -47,7 +55,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class DimensionImpl implements IDimension {
+public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> implements IDimension {
 
     @Resource
     DimensionMapper mapper;

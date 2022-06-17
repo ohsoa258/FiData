@@ -3,6 +3,8 @@ package com.fisk.datamodel.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
@@ -116,4 +118,12 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @return list
      */
     List<DispatchRedirectDTO> redirect(ModelRedirectDTO dto);
+
+    /**
+     * 获取数据建模结构
+     *
+     * @param dto dto
+     * @return list
+     */
+    List<FiDataMetaDataDTO> getDataModelStructure(FiDataMetaDataReqDTO dto);
 }

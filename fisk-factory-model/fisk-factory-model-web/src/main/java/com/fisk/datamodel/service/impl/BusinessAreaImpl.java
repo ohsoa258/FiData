@@ -5,11 +5,15 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
+import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -24,6 +28,7 @@ import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.dto.webindex.WebIndexDTO;
+import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigDTO;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.DataFactoryEnum;
@@ -42,14 +47,13 @@ import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -80,21 +84,35 @@ public class BusinessAreaImpl
     @Resource
     DimensionMapper dimensionMapper;
     @Resource
+    DimensionImpl dimensionImpl;
+    @Resource
     DimensionAttributeMapper dimensionAttributeMapper;
     @Resource
     FactMapper factMapper;
     @Resource
+    FactImpl factImpl;
+    @Resource
     FactAttributeMapper factAttributeMapper;
+    @Resource
+    FactAttributeImpl factAttributeImpl;
     @Resource
     TableHistoryImpl tableHistory;
     @Resource
     DimensionFolderMapper dimensionFolderMapper;
     @Resource
+    DimensionFolderImpl dimensionFolderImpl;
+    @Resource
     BusinessProcessMapper businessProcessMapper;
+    @Resource
+    BusinessProcessImpl businessProcessImpl;
     @Resource
     WideTableImpl wideTable;
     @Resource
     private DataFactoryClient dataFactoryClient;
+    @Resource
+    private WideTableImpl wideTableImpl;
+    @Value("${fidata.wide-table.guid}")
+    private String wideTableGuid;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -563,4 +581,302 @@ public class BusinessAreaImpl
         return null;
     }
 
+    @Override
+    public List<FiDataMetaDataDTO> getDataModelStructure(FiDataMetaDataReqDTO reqDto) {
+
+        List<FiDataMetaDataDTO> list = new ArrayList<>();
+
+        // 第一层 - 1: dmp_dw
+        FiDataMetaDataDTO dwDto = new FiDataMetaDataDTO();
+        // FiData数据源id: 数据资产自定义
+        dwDto.setDataSourceId(Integer.parseInt(StringUtils.isBlank(reqDto.dataSourceId) ? String.valueOf(0) : reqDto.dataSourceId));
+
+        // 第一层id
+        String dwGuid = UUID.randomUUID().toString();
+        // 第一层子级
+        List<FiDataMetaDataTreeDTO> dwDataTreeList = new ArrayList<>();
+        FiDataMetaDataTreeDTO dwDataTree = new FiDataMetaDataTreeDTO();
+        dwDataTree.setId(dwGuid);
+        dwDataTree.setParentId("-1");
+        dwDataTree.setLabel("dmp_dw");
+        dwDataTree.setLabelAlias("dmp_dw");
+        dwDataTree.setLevelType(LevelTypeEnum.FOLDER);
+
+        // 封装dw所有结构数据
+        dwDataTree.setChildren(buildBusinessChildren(dwGuid, "dw"));
+        dwDataTreeList.add(dwDataTree);
+
+        dwDto.setChildren(dwDataTreeList);
+
+        FiDataMetaDataDTO olapDto = new FiDataMetaDataDTO();
+        // FiData数据源id: 数据资产自定义
+        olapDto.setDataSourceId(Integer.parseInt(StringUtils.isBlank(reqDto.dataSourceId) ? String.valueOf(0) : reqDto.dataSourceId));
+
+        // 第一层id
+        String olapGuid = UUID.randomUUID().toString();
+        List<FiDataMetaDataTreeDTO> olapDataTreeList = new ArrayList<>();
+        FiDataMetaDataTreeDTO olapDataTree = new FiDataMetaDataTreeDTO();
+        olapDataTree.setId(olapGuid);
+        olapDataTree.setParentId("-1");
+        olapDataTree.setLabel("dmp_olap");
+        olapDataTree.setLabelAlias("dmp_olap");
+        olapDataTree.setLevelType(LevelTypeEnum.FOLDER);
+
+        // 封装data-access所有结构数据
+        olapDataTree.setChildren(buildBusinessChildren(olapGuid, "olap"));
+        olapDataTreeList.add(olapDataTree);
+
+        olapDto.setChildren(olapDataTreeList);
+
+        list.add(dwDto);
+        list.add(olapDto);
+        return list;
+    }
+
+/*    private List<FiDataMetaDataTreeDTO> buildChildren(String guid, String dourceType) {
+
+        List<FiDataMetaDataTreeDTO> businessTreeList = new ArrayList<>();
+
+        // 第二层: 业务域总目录
+        FiDataMetaDataTreeDTO businessTreeDto = new FiDataMetaDataTreeDTO();
+        String businessGuid = UUID.randomUUID().toString();
+        businessTreeDto.setId(businessGuid);
+        businessTreeDto.setParentId(guid);
+        businessTreeDto.setLabel("业务域");
+        businessTreeDto.setLabelAlias("业务域");
+        businessTreeDto.setLevelType(LevelTypeEnum.FOLDER);
+
+        List<BusinessAreaPO> businessPoList = this.query().orderByDesc("create_time").list();
+
+        // 业务域子级
+        businessTreeDto.setChildren(buildBusinessChildren(guid, businessPoList, dourceType));
+        businessTreeList.add(businessTreeDto);
+
+        return businessTreeList;
+    }*/
+
+    /**
+     * 构建业务域子级
+     *
+     * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
+     * @description 构建业务域子级
+     * @author Lock
+     * @date 2022/6/16 18:03
+     * @version v1.0
+     * @params id
+     * @params businessPoList
+     */
+    private List<FiDataMetaDataTreeDTO> buildBusinessChildren(String id, String dourceType) {
+
+        List<BusinessAreaPO> businessPoList = this.query().orderByDesc("create_time").list();
+
+        List<FiDataMetaDataTreeDTO> collect = businessPoList.stream()
+                .filter(Objects::nonNull)
+                .map(business -> {
+                    // 第三层: 业务域
+                    FiDataMetaDataTreeDTO businessPoTreeDto = new FiDataMetaDataTreeDTO();
+                    businessPoTreeDto.setId(String.valueOf(business.id));
+                    businessPoTreeDto.setParentId(id);
+                    businessPoTreeDto.setLabel(business.getBusinessName());
+                    businessPoTreeDto.setLabelAlias(business.getBusinessName());
+                    businessPoTreeDto.setLabelDesc(business.getBusinessDes());
+                    businessPoTreeDto.setLevelType(LevelTypeEnum.FOLDER);
+
+                    // 第四层 - 1: 维度文件夹
+                    List<FiDataMetaDataTreeDTO> dimensionFolderTreeList = dimensionFolderImpl.query()
+                            .eq("business_id", business.id)
+                            .list()
+                            .stream()
+                            .filter(Objects::nonNull)
+                            .map(dimensionFolder -> {
+                                FiDataMetaDataTreeDTO dimensionFolderTreeDto = new FiDataMetaDataTreeDTO();
+                                dimensionFolderTreeDto.setId(String.valueOf(dimensionFolder.id));
+                                dimensionFolderTreeDto.setParentId(String.valueOf(business.id));
+                                dimensionFolderTreeDto.setLabel(dimensionFolder.dimensionFolderCnName);
+                                dimensionFolderTreeDto.setLabelAlias(dimensionFolder.dimensionFolderCnName);
+                                dimensionFolderTreeDto.setLabelDesc(dimensionFolder.dimensionFolderDesc);
+                                dimensionFolderTreeDto.setLevelType(LevelTypeEnum.FOLDER);
+
+                                // 第五层: 维度表
+                                List<FiDataMetaDataTreeDTO> dimensionTreeList = dimensionImpl.query()
+                                        .eq("dimension_folder_id", dimensionFolder.id)
+                                        .list()
+                                        .stream()
+                                        .filter(Objects::nonNull)
+                                        .map(dimension -> {
+                                            FiDataMetaDataTreeDTO dimensionTreeDto = new FiDataMetaDataTreeDTO();
+                                            dimensionTreeDto.setId(String.valueOf(dimension.id));
+                                            dimensionTreeDto.setParentId(String.valueOf(dimensionFolder.id));
+                                            dimensionTreeDto.setLabel(dimension.dimensionTabName);
+                                            dimensionTreeDto.setLabelAlias(dimension.dimensionTabName);
+                                            dimensionTreeDto.setLevelType(LevelTypeEnum.TABLE);
+                                            dimensionTreeDto.setPublishState(String.valueOf(dimension.isPublish != 1 ? 0 : 1));
+                                            dimensionTreeDto.setLabelDesc(dimension.dimensionDesc);
+
+                                            // 第六层: 维度字段
+                                            List<FiDataMetaDataTreeDTO> dimensionAttributeTreeList = dimensionAttribute.query()
+                                                    .eq("dimension_id", dimension.id)
+                                                    .list()
+                                                    .stream()
+                                                    .filter(Objects::nonNull)
+                                                    .map(field -> {
+                                                        FiDataMetaDataTreeDTO dimensionAttributeTreeDto = new FiDataMetaDataTreeDTO();
+                                                        dimensionAttributeTreeDto.setId(String.valueOf(field.id));
+                                                        dimensionAttributeTreeDto.setParentId(String.valueOf(dimension.id));
+                                                        dimensionAttributeTreeDto.setLabel(field.dimensionFieldEnName);
+                                                        dimensionAttributeTreeDto.setLabelAlias(field.dimensionFieldEnName);
+                                                        dimensionAttributeTreeDto.setLevelType(LevelTypeEnum.FIELD);
+                                                        dimensionAttributeTreeDto.setPublishState(String.valueOf(dimension.isPublish != 1 ? 0 : 1));
+                                                        dimensionAttributeTreeDto.setLabelLength(String.valueOf(field.dimensionFieldLength));
+                                                        dimensionAttributeTreeDto.setLabelType(field.dimensionFieldType);
+                                                        dimensionAttributeTreeDto.setLabelDesc(field.dimensionFieldDes);
+
+                                                        return dimensionAttributeTreeDto;
+                                                    }).collect(Collectors.toList());
+
+                                            // 维度表子级
+                                            dimensionTreeDto.setChildren(dimensionAttributeTreeList);
+                                            return dimensionTreeDto;
+                                        }).collect(Collectors.toList());
+
+                                // 维度文件夹子级
+                                dimensionFolderTreeDto.setChildren(dimensionTreeList);
+                                return dimensionFolderTreeDto;
+                            }).collect(Collectors.toList());
+
+                    // 第四层 - 2: 事实文件夹
+                    List<FiDataMetaDataTreeDTO> businessProcessTreeList = this.businessProcessImpl.query()
+                            .eq("business_id", business.id)
+                            .list()
+                            .stream()
+                            .filter(Objects::nonNull)
+                            .map(businessProcess -> {
+                                FiDataMetaDataTreeDTO businessProcessTreeDto = new FiDataMetaDataTreeDTO();
+                                businessProcessTreeDto.setId(String.valueOf(businessProcess.id));
+                                businessProcessTreeDto.setParentId(String.valueOf(business.id));
+                                businessProcessTreeDto.setLabel(businessProcess.businessProcessCnName);
+                                businessProcessTreeDto.setLabelAlias(businessProcess.businessProcessCnName);
+                                businessProcessTreeDto.setLabelDesc(businessProcess.businessProcessDesc);
+                                businessProcessTreeDto.setLevelType(LevelTypeEnum.FOLDER);
+
+                                // 第五层: 事实表
+                                List<FiDataMetaDataTreeDTO> factTreeList = factImpl.query()
+                                        .eq("business_process_id", businessProcess.id)
+                                        .list()
+                                        .stream()
+                                        .filter(Objects::nonNull)
+                                        .map(fact -> {
+                                            FiDataMetaDataTreeDTO factTreeDto = new FiDataMetaDataTreeDTO();
+                                            factTreeDto.setId(String.valueOf(fact.id));
+                                            factTreeDto.setParentId(String.valueOf(businessProcess.id));
+                                            factTreeDto.setLabel(fact.factTabName);
+                                            factTreeDto.setLabelAlias(fact.factTabName);
+                                            factTreeDto.setLevelType(LevelTypeEnum.TABLE);
+                                            factTreeDto.setPublishState(String.valueOf(fact.isPublish != 1 ? 0 : 1));
+                                            factTreeDto.setLabelDesc(fact.factTableDesc);
+
+                                            // 第六层: 维度字段
+                                            List<FiDataMetaDataTreeDTO> factAttributeTreeList = factAttributeImpl.query()
+                                                    .eq("fact_id", fact.id)
+                                                    .list()
+                                                    .stream()
+                                                    .filter(Objects::nonNull)
+                                                    .map(field -> {
+                                                        FiDataMetaDataTreeDTO factAttributeTreeDto = new FiDataMetaDataTreeDTO();
+                                                        factAttributeTreeDto.setId(String.valueOf(field.id));
+                                                        factAttributeTreeDto.setParentId(String.valueOf(fact.id));
+                                                        factAttributeTreeDto.setLabel(field.factFieldEnName);
+                                                        factAttributeTreeDto.setLabelAlias(field.factFieldEnName);
+                                                        factAttributeTreeDto.setLevelType(LevelTypeEnum.FIELD);
+                                                        factAttributeTreeDto.setPublishState(String.valueOf(fact.isPublish != 1 ? 0 : 1));
+                                                        factAttributeTreeDto.setLabelLength(String.valueOf(field.factFieldLength));
+                                                        factAttributeTreeDto.setLabelType(field.factFieldType);
+                                                        factAttributeTreeDto.setLabelDesc(field.factFieldDes);
+
+                                                        return factAttributeTreeDto;
+                                                    }).collect(Collectors.toList());
+
+                                            // 事实表子级
+                                            factTreeDto.setChildren(factAttributeTreeList);
+                                            return factTreeDto;
+                                        }).collect(Collectors.toList());
+
+                                // 事实文件夹子级
+                                businessProcessTreeDto.setChildren(factTreeList);
+                                return businessProcessTreeDto;
+                            }).collect(Collectors.toList());
+
+                    List<FiDataMetaDataTreeDTO> folderList = new ArrayList<>();
+
+                    // 第四层 - 3: 宽表文件夹
+                    if ("olap".equalsIgnoreCase(dourceType)) {
+                        FiDataMetaDataTreeDTO wideTableFolderTreeDto = new FiDataMetaDataTreeDTO();
+                        wideTableFolderTreeDto.setId(wideTableGuid);
+                        wideTableFolderTreeDto.setParentId(String.valueOf(business.id));
+                        wideTableFolderTreeDto.setLabel("宽表");
+                        wideTableFolderTreeDto.setLabelAlias("宽表");
+                        wideTableFolderTreeDto.setLabelDesc("宽表");
+                        wideTableFolderTreeDto.setLevelType(LevelTypeEnum.FOLDER);
+
+                        // 第五层: 宽表
+                        List<FiDataMetaDataTreeDTO> wideTableTreeList = this.wideTableImpl.query()
+                                .eq("business_id", business.id)
+                                .list()
+                                .stream()
+                                .filter(Objects::nonNull)
+                                .map(wideTable1 -> {
+                                    FiDataMetaDataTreeDTO wideTableTreeDto = new FiDataMetaDataTreeDTO();
+                                    wideTableTreeDto.setId(String.valueOf(wideTable1.id));
+                                    wideTableTreeDto.setParentId(wideTableGuid);
+                                    wideTableTreeDto.setLabel(wideTable1.name);
+                                    wideTableTreeDto.setLabelAlias(wideTable1.name);
+                                    wideTableTreeDto.setLevelType(LevelTypeEnum.TABLE);
+                                    wideTableTreeDto.setPublishState(String.valueOf(wideTable1.dorisPublish != 1 ? 0 : 1));
+
+                                    // 第六层: 宽表字段
+                                    WideTableFieldConfigDTO wideTableFieldDto = JSON.parseObject(wideTable1.configDetails, WideTableFieldConfigDTO.class);
+                                    List<FiDataMetaDataTreeDTO> wideTableFieldTreeList = new ArrayList<>();
+                                    if (wideTableFieldDto != null && !CollectionUtils.isEmpty(wideTableFieldDto.entity)) {
+
+                                        wideTableFieldDto.entity.forEach(e -> {
+                                            List<FiDataMetaDataTreeDTO> fieldList = e.columnConfig
+                                                    .stream()
+                                                    .filter(Objects::nonNull)
+                                                    .map(field -> {
+                                                        FiDataMetaDataTreeDTO wideTableFieldTreeDto = new FiDataMetaDataTreeDTO();
+                                                        wideTableFieldTreeDto.setId(String.valueOf(field.fieldId));
+                                                        wideTableFieldTreeDto.setParentId(String.valueOf(wideTable1.id));
+                                                        wideTableFieldTreeDto.setLabel(StringUtils.isNotEmpty(field.alias) ? field.alias : field.fieldName);
+                                                        wideTableFieldTreeDto.setLabelAlias(field.alias);
+                                                        wideTableFieldTreeDto.setLevelType(LevelTypeEnum.FIELD);
+                                                        wideTableFieldTreeDto.setPublishState(String.valueOf(wideTable1.dorisPublish != 1 ? 0 : 1));
+                                                        wideTableFieldTreeDto.setLabelLength(String.valueOf(field.fieldLength));
+                                                        wideTableFieldTreeDto.setLabelType(field.fieldType);
+                                                        return wideTableFieldTreeDto;
+                                                    }).collect(Collectors.toList());
+                                            wideTableFieldTreeList.addAll(fieldList);
+                                        });
+                                    }
+
+                                    // 宽表子级
+                                    wideTableTreeDto.setChildren(wideTableFieldTreeList);
+                                    return wideTableTreeDto;
+                                }).collect(Collectors.toList());
+                        // 宽表文件夹子级
+                        wideTableFolderTreeDto.setChildren(wideTableTreeList);
+
+                        // 业务域子级-宽表
+                        folderList.add(wideTableFolderTreeDto);
+                    }
+
+                    // 业务域子级-维度
+                    folderList.addAll(dimensionFolderTreeList);
+                    // 业务域子级-事实
+                    folderList.addAll(businessProcessTreeList);
+
+                    businessPoTreeDto.setChildren(folderList);
+                    return businessPoTreeDto;
+                }).collect(Collectors.toList());
+        return collect;
+    }
 }
