@@ -18,9 +18,9 @@ public class RedisListenerConfig {
         return listenerContainer;
     }
 
-    @Bean
+/*    @Bean
     KeyExpirationEventMessageListener redisKeyExpirationListener(RedisMessageListenerContainer listenerContainer) {
         return new RedisKeyExpirationListeners(listenerContainer);
-    }
+    }*/
 
 }
