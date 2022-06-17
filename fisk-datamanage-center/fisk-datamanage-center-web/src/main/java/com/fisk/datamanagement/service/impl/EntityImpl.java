@@ -217,9 +217,10 @@ public class EntityImpl implements IEntity {
             catch (Exception e)
             {
                 log.error("parsing data failure:"+e);
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
             }
         }
-        return result.code== AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
+        return atlasClient.newResultEnum(result);
     }
 
     @Override
@@ -232,7 +233,7 @@ public class EntityImpl implements IEntity {
         {
             redisTemplate.delete("metaDataEntityData:"+guid);
         }
-        return result.code== AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
+        return atlasClient.newResultEnum(result);
     }
 
     @Override
@@ -267,11 +268,11 @@ public class EntityImpl implements IEntity {
                 setRedis(guid);
             }
         }
-        catch (Exception e)
-        {
-            e.printStackTrace();
+        catch (Exception e) {
+            log.error("updateEntity ex:", e);
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
-        return result.code== AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
+        return atlasClient.newResultEnum(result);
     }
 
     @Override
@@ -410,7 +411,6 @@ public class EntityImpl implements IEntity {
         }
         catch (Exception e)
         {
-            e.printStackTrace();
             log.error("getMetaDataKinship ex:"+e);
             throw new FkException(ResultEnum.SQL_ANALYSIS);
         }

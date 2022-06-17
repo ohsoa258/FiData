@@ -69,9 +69,9 @@ public class CategoryImpl implements ICategory {
     @Override
     public ResultEnum updateCategory(CategoryDTO dto)
     {
-        String jsonParameter= JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.post(category,jsonParameter);
-        return result.code== AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
+        String jsonParameter = JSONArray.toJSON(dto).toString();
+        ResultDataDTO<String> result = atlasClient.put(category + "/" + dto.guid, jsonParameter);
+        return atlasClient.newResultEnum(result);
     }
 
 

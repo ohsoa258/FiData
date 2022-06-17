@@ -46,8 +46,7 @@ public class ProcessImpl implements IProcess {
     {
         ProcessDTO dto=new ProcessDTO();
         ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + processGuid);
-        if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS)
-        {
+        if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS) {
             return dto;
         }
         //序列化数据
@@ -58,13 +57,12 @@ public class ProcessImpl implements IProcess {
                 .filter(e->EntityTypeEnum.DELETED.getName().equals(e.entityStatus)
                         || EntityTypeEnum.DELETED.getName().equals(e.relationshipStatus))
                 .map(e->e.getGuid()).collect(Collectors.toList());
-        if (!CollectionUtils.isEmpty(delInputGuidList))
-        {
-            dto.entity.relationshipAttributes.inputs =dto.entity.relationshipAttributes.inputs.stream()
-                    .filter(e->!delInputGuidList.contains(e.guid)).collect(Collectors.toList());
-            dto.entity.attributes.inputs=dto.entity.attributes.inputs
+        if (!CollectionUtils.isEmpty(delInputGuidList)) {
+            dto.entity.relationshipAttributes.inputs = dto.entity.relationshipAttributes.inputs.stream()
+                    .filter(e -> !delInputGuidList.contains(e.guid)).collect(Collectors.toList());
+            dto.entity.attributes.inputs = dto.entity.attributes.inputs
                     .stream()
-                    .filter(e->!delInputGuidList.contains(e.guid)).collect(Collectors.toList());
+                    .filter(e -> !delInputGuidList.contains(e.guid)).collect(Collectors.toList());
         }
         //过滤输出已删除实体或血缘连线
         List<String> delOutGuidList=dto.entity.relationshipAttributes.outputs
@@ -72,13 +70,12 @@ public class ProcessImpl implements IProcess {
                 .filter(e->EntityTypeEnum.DELETED.getName().equals(e.entityStatus)
                         || EntityTypeEnum.DELETED.getName().equals(e.relationshipStatus))
                 .map(e->e.getGuid()).collect(Collectors.toList());
-        if (!CollectionUtils.isEmpty(delOutGuidList))
-        {
-            dto.entity.relationshipAttributes.outputs =dto.entity.relationshipAttributes.outputs.stream()
-                    .filter(e->!delInputGuidList.contains(e.guid)).collect(Collectors.toList());
-            dto.entity.attributes.outputs=dto.entity.attributes.outputs
+        if (!CollectionUtils.isEmpty(delOutGuidList)) {
+            dto.entity.relationshipAttributes.outputs = dto.entity.relationshipAttributes.outputs.stream()
+                    .filter(e -> !delInputGuidList.contains(e.guid)).collect(Collectors.toList());
+            dto.entity.attributes.outputs = dto.entity.attributes.outputs
                     .stream()
-                    .filter(e->!delInputGuidList.contains(e.guid)).collect(Collectors.toList());
+                    .filter(e -> !delInputGuidList.contains(e.guid)).collect(Collectors.toList());
 
         }
         //获取process输出血缘
@@ -90,8 +87,7 @@ public class ProcessImpl implements IProcess {
     {
         //获取实体详情
         ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + dto.outGuid);
-        if (getDetail.code !=AtlasResultEnum.REQUEST_SUCCESS)
-        {
+        if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS) {
             return ResultEnum.DATA_NOTEXISTS;
         }
         //解析数据
@@ -100,8 +96,7 @@ public class ProcessImpl implements IProcess {
         JSONObject relationShip=JSON.parseObject(entityObject.getString("relationshipAttributes"));
         JSONArray relationShipAttribute=JSON.parseArray(relationShip.getString("outputFromProcesses"));
         //条数为0,则添加process
-        if (relationShipAttribute.size()==0)
-        {
+        if (relationShipAttribute.size() == 0) {
             return process(dto);
         }
         return ResultEnum.SUCCESS;
@@ -131,8 +126,7 @@ public class ProcessImpl implements IProcess {
         attributesDTO.outputs=dtoList;
         entityTypeDTO.attributes=attributesDTO;
         //检验输入和输出参数是否有值
-        if (CollectionUtils.isEmpty(attributesDTO.inputs) || CollectionUtils.isEmpty(attributesDTO.outputs))
-        {
+        if (CollectionUtils.isEmpty(attributesDTO.inputs) || CollectionUtils.isEmpty(attributesDTO.outputs)) {
             return ResultEnum.PARAMTER_ERROR;
         }
         entityDTO.entity=entityTypeDTO;
@@ -150,18 +144,16 @@ public class ProcessImpl implements IProcess {
         List<String> relationInputGuid=dto.entity.relationshipAttributes.inputs.stream().map(e->e.getGuid()).collect(Collectors.toList());
         //获取差集
         inputGuid.removeAll(relationInputGuid);
-        if (!CollectionUtils.isEmpty(inputGuid))
-        {
-            dto=editProcessParameter(dto,1,inputGuid);
+        if (!CollectionUtils.isEmpty(inputGuid)) {
+            dto = editProcessParameter(dto, 1, inputGuid);
         }
         //判断input输入是否添加
         List<String> outGuid=dto.entity.attributes.outputs.stream().map(e->e.getGuid()).collect(Collectors.toList());
         List<String> relationOutGuid=dto.entity.relationshipAttributes.outputs.stream().map(e->e.getGuid()).collect(Collectors.toList());
         //获取差集
         outGuid.removeAll(relationOutGuid);
-        if (!CollectionUtils.isEmpty(outGuid))
-        {
-            dto=editProcessParameter(dto,2,outGuid);
+        if (!CollectionUtils.isEmpty(outGuid)) {
+            dto = editProcessParameter(dto, 2, outGuid);
         }
         //修改process
         String jsonParameter= JSONArray.toJSON(dto).toString();
@@ -171,18 +163,15 @@ public class ProcessImpl implements IProcess {
     }
 
     public ProcessDTO editProcessParameter(ProcessDTO dto,int parameterType,List<String> guidList){
-        for (String guid:guidList)
-        {
+        for (String guid : guidList) {
             //获取新增input限定名称信息
             Optional<ProcessAttributesPutDTO> first = null;
-            if (parameterType==1)
-            {
-                first=dto.entity.attributes.inputs.stream().filter(e -> e.guid.equals(guid)).findFirst();
-            }else {
-                first=dto.entity.attributes.outputs.stream().filter(e -> e.guid.equals(guid)).findFirst();
+            if (parameterType == 1) {
+                first = dto.entity.attributes.inputs.stream().filter(e -> e.guid.equals(guid)).findFirst();
+            } else {
+                first = dto.entity.attributes.outputs.stream().filter(e -> e.guid.equals(guid)).findFirst();
             }
-            if (!first.isPresent())
-            {
+            if (!first.isPresent()) {
                 continue;
             }
             //添加血缘关系连线
@@ -190,8 +179,7 @@ public class ProcessImpl implements IProcess {
                     dto.entity.attributes.qualifiedName,
                     guid,
                     first.get().uniqueAttributes.qualifiedName);
-            if (relationShipGuid=="")
-            {
+            if (relationShipGuid == "") {
                 continue;
             }
             ProcessRelationshipAttributesPutDTO inputDTO=new ProcessRelationshipAttributesPutDTO();
@@ -207,10 +195,9 @@ public class ProcessImpl implements IProcess {
             ProcessRelationShipAttributesTypeNameDTO attributesDTO=new ProcessRelationShipAttributesTypeNameDTO();
             attributesDTO.typeName=EntityTypeEnum.DATASET_PROCESS_INPUTS.getName();
             inputDTO.relationshipAttributes=attributesDTO;
-            if (parameterType==1)
-            {
+            if (parameterType == 1) {
                 dto.entity.relationshipAttributes.inputs.add(inputDTO);
-            }else {
+            } else {
                 dto.entity.relationshipAttributes.outputs.add(inputDTO);
             }
         }

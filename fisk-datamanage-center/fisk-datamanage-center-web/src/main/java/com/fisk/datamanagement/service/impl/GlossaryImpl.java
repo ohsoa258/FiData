@@ -64,7 +64,7 @@ public class GlossaryImpl implements IGlossary {
     {
         String jsonParameter= JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.post(glossary,jsonParameter);
-        return result.code== AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
+        return atlasClient.newResultEnum(result);
     }
 
     @Override
@@ -78,7 +78,7 @@ public class GlossaryImpl implements IGlossary {
     public ResultEnum updateGlossary(GlossaryDTO dto) {
         String jsonParameter = JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.put(glossary + "/" + dto.guid, jsonParameter);
-        return result.code == AtlasResultEnum.REQUEST_SUCCESS ? ResultEnum.SUCCESS : ResultEnum.BAD_REQUEST;
+        return atlasClient.newResultEnum(result);
     }
 
     @Override

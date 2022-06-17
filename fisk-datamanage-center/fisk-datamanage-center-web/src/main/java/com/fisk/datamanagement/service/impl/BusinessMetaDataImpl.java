@@ -10,7 +10,6 @@ import com.fisk.datamanagement.dto.businessmetadata.BusinessMetaDataDTO;
 import com.fisk.datamanagement.dto.businessmetadata.BusinessMetaDataOptionsDTO;
 import com.fisk.datamanagement.dto.businessmetadata.BusinessMetadataDefsDTO;
 import com.fisk.datamanagement.entity.BusinessMetadataConfigPO;
-import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.mapper.BusinessMetadataConfigMapper;
 import com.fisk.datamanagement.service.IBusinessMetaData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
@@ -54,7 +53,6 @@ public class BusinessMetaDataImpl implements IBusinessMetaData {
         }
         catch (Exception e)
         {
-            e.printStackTrace();
             log.error("getBusinessMetaDataList ex:"+e);
             throw new FkException(ResultEnum.SQL_ANALYSIS);
         }
@@ -65,7 +63,7 @@ public class BusinessMetaDataImpl implements IBusinessMetaData {
     {
         String jsonParameter= JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.post(typedefs + "?type=business_metadata", jsonParameter);
-        return result.code== AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
+        return atlasClient.newResultEnum(result);
     }
 
     @Override
