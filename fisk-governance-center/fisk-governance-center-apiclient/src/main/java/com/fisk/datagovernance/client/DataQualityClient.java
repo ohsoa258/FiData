@@ -3,7 +3,6 @@ package com.fisk.datagovernance.client;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckSyncDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckWebDTO;
-import com.fisk.datagovernance.dto.dataquality.rule.QueryRuleDTO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.rule.TableRuleInfoVO;
@@ -44,11 +43,10 @@ public interface DataQualityClient {
     /**
      * 查询数据质量表规则（含字段规则）
      *
-     * @param requestDTO 请求DTO
      * @return 查询结果
      */
     @GetMapping("/dataQualityClient/getTableRuleList")
-    ResultEntity<TableRuleInfoVO> getTableRuleList(@RequestBody QueryRuleDTO requestDTO);
+    ResultEntity<TableRuleInfoVO> getTableRuleList(int dataSourceId,String tableName);
 
     /**
      * 查询数据质量所有数据源信息，含FiData系统数据源

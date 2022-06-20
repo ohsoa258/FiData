@@ -55,15 +55,15 @@ public class DataSourceController {
         return service.getById(datasourceId);
     }
 
-    @PostMapping("/getAllMateData")
-    @ApiOperation("获取所有数据源元数据信息")
-    public ResultEntity<FiDataMateDataDTO> getAllMateData() {
-        return service.getAllMateData();
-    }
-
-    @PostMapping("/getMateData")
-    @ApiOperation("获取单个数据源元数据信息")
-    public ResultEntity<FiDataMateDataDTO> getMateData(@Validated @RequestBody FiDataMateDataQueryDTO dto) {
-        return service.getMateData(dto);
-    }
+//    @PostMapping("/getAllMateData")
+//    @ApiOperation("获取所有数据源元数据信息")
+//    public ResultEntity<FiDataMateDataDTO> getAllMateData() {
+//        return service.getAllMateData();
+//    }
+//
+//    @PostMapping("/getMateData")
+//    @ApiOperation("获取单个数据源元数据信息")
+//    public ResultEntity<FiDataMateDataDTO> getMateData(@Validated @RequestBody FiDataMateDataQueryDTO dto) {
+//        return service.getMateData(dto);
+//    }
 }

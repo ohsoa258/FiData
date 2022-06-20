@@ -2,7 +2,6 @@ package com.fisk.datagovernance.controller;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datagovernance.config.SwaggerConfig;
-import com.fisk.datagovernance.dto.dataquality.rule.QueryRuleDTO;
 import com.fisk.datagovernance.service.dataquality.IDataQualityClientManageService;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.rule.TableRuleInfoVO;
@@ -30,13 +29,12 @@ public class DataQualityClientController {
     /**
      * 查询数据质量表规则（含字段规则）
      *
-     * @param requestDTO 请求DTO
      * @return 查询结果
      */
     @ApiOperation("查询数据质量表规则（含字段规则）")
     @GetMapping("/dataQualityClient/getTableRuleList")
-    public  ResultEntity<TableRuleInfoVO> getTableRuleList(@RequestBody QueryRuleDTO requestDTO) {
-        return service.getTableRuleList(requestDTO);
+    public  ResultEntity<TableRuleInfoVO> getTableRuleList(int dataSourceId,String tableName) {
+        return service.getTableRuleList(dataSourceId,tableName);
     }
 
     /**

@@ -24,7 +24,7 @@ public class TableRuleInfoVO {
      * 表/字段 名称
      */
     @ApiModelProperty(value = "表/字段 名称")
-    public String mame;
+    public String name;
 
     /**
      * 1：表 2：字段

@@ -137,13 +137,13 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataSourceDTO);
     }
 
-    @Override
-    public ResultEntity<FiDataMateDataDTO> getAllMateData() {
-        return null;
-    }
-
-    @Override
-    public ResultEntity<FiDataMateDataDTO> getMateData(FiDataMateDataQueryDTO dto) {
-        return null;
-    }
+//    @Override
+//    public ResultEntity<FiDataMateDataDTO> getAllMateData() {
+//        return null;
+//    }
+//
+//    @Override
+//    public ResultEntity<FiDataMateDataDTO> getMateData(FiDataMateDataQueryDTO dto) {
+//        return null;
+//    }
 }

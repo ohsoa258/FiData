@@ -48,17 +48,17 @@ public interface IDataSourceManageService extends IService<DataSourcePO> {
      */
     ResultEntity<DataSourceDTO> getById(int datasourceId);
 
-    /**
-     * 获取所有数据源元数据信息
-     *
-     * @return 查询结果
-     */
-    ResultEntity<FiDataMateDataDTO> getAllMateData();
-
-    /**
-     * 获取单条数据源元数据信息
-     *
-     * @return 查询结果
-     */
-    ResultEntity<FiDataMateDataDTO> getMateData(FiDataMateDataQueryDTO dto);
+//    /**
+//     * 获取所有数据源元数据信息
+//     *
+//     * @return 查询结果
+//     */
+//    ResultEntity<FiDataMateDataDTO> getAllMateData();
+//
+//    /**
+//     * 获取单条数据源元数据信息
+//     *
+//     * @return 查询结果
+//     */
+//    ResultEntity<FiDataMateDataDTO> getMateData(FiDataMateDataQueryDTO dto);
 }

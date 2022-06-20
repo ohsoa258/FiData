@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.datagovernance.dto.dataquality.rule.QueryRuleDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.mapper.dataquality.*;
@@ -58,7 +57,10 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     private NoticeExtendMapper noticeExtendMapper;
 
     @Override
-    public ResultEntity<TableRuleInfoVO> getTableRuleList(QueryRuleDTO requestDTO) {
+    public ResultEntity<TableRuleInfoVO> getTableRuleList(int dataSourceId,String tableName) {
+        if (dataSourceId==0 || StringUtils.isEmpty(tableName)){
+            return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, null);
+        }
         // 数据校验、业务清洗、生命周期所对应的模板Id
         List<Integer> templateIdList = new ArrayList<>();
         // 数据校验、业务清洗、生命周期所对应的Id
@@ -67,8 +69,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         // 校验规则
         QueryWrapper<DataCheckPO> dataCheckPOQueryWrapper = new QueryWrapper<>();
         dataCheckPOQueryWrapper.lambda().eq(DataCheckPO::getDelFlag, 1)
-                .eq(DataCheckPO::getDatasourceId, requestDTO.getDataSourceId())
-                .eq(DataCheckPO::getUseTableName, requestDTO.getTableName())
+                .eq(DataCheckPO::getDatasourceId, dataSourceId)
+                .eq(DataCheckPO::getUseTableName, tableName)
                 .eq(DataCheckPO::getRuleState, 1);
         List<DataCheckPO> dataCheckPOS = dataCheckMapper.selectList(dataCheckPOQueryWrapper);
         List<DataCheckExtendPO> dataCheckExtendPOS = null;
@@ -87,8 +89,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         // 清洗规则
         QueryWrapper<BusinessFilterPO> businessFilterPOQueryWrapper = new QueryWrapper<>();
         businessFilterPOQueryWrapper.lambda().eq(BusinessFilterPO::getDelFlag, 1)
-                .eq(BusinessFilterPO::getDatasourceId, requestDTO.getDataSourceId())
-                .eq(BusinessFilterPO::getUseTableName, requestDTO.getTableName())
+                .eq(BusinessFilterPO::getDatasourceId, dataSourceId)
+                .eq(BusinessFilterPO::getUseTableName, tableName)
                 .eq(BusinessFilterPO::getRuleState, 1);
         List<BusinessFilterPO> businessFilterPOS = businessFilterMapper.selectList(businessFilterPOQueryWrapper);
         if (CollectionUtils.isNotEmpty(businessFilterPOS)) {
@@ -101,8 +103,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         // 生命周期
         QueryWrapper<LifecyclePO> lifecyclePOQueryWrapper = new QueryWrapper<>();
         lifecyclePOQueryWrapper.lambda().eq(LifecyclePO::getDelFlag, 1)
-                .eq(LifecyclePO::getDatasourceId, requestDTO.getDataSourceId())
-                .eq(LifecyclePO::getTableName, requestDTO.getTableName())
+                .eq(LifecyclePO::getDatasourceId, dataSourceId)
+                .eq(LifecyclePO::getTableName, tableName)
                 .eq(LifecyclePO::getRuleState, 1);
         List<LifecyclePO> lifecyclePOS = lifecycleMapper.selectList(lifecyclePOQueryWrapper);
         if (CollectionUtils.isNotEmpty(lifecyclePOS)) {
@@ -248,6 +250,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         }
 
         TableRuleInfoVO tableRule = new TableRuleInfoVO();
+        tableRule.setName(tableName);
+        tableRule.setType(1);
         List<TableRuleInfoVO> fieldRules = new ArrayList<>();
 
         if (CollectionUtils.isNotEmpty(tempVOS)) {
@@ -255,8 +259,6 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             List<TableRuleTempVO> tableRules = tempVOS.stream().filter(t -> t.getType() == "TABLE"
                     && t.getRuleValue() != null && t.getRuleValue() != "").collect(Collectors.toList());
             if (CollectionUtils.isNotEmpty(tableRules)) {
-                tableRule.setMame(requestDTO.getTableName());
-                tableRule.setType(1);
                 // 表的数据校验规则赋值
                 tableRule.checkRules = tableRules.stream().filter(t -> t.moduleType == ModuleTypeEnum.DATACHECK_MODULE).
                         map(TableRuleTempVO::getRuleValue).distinct().collect(Collectors.toList());
@@ -290,8 +292,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         map(TableRuleTempVO::getKey).distinct().collect(Collectors.toList());
                 for (String field : fieldList) {
                     TableRuleInfoVO fieldRuleInfoVO = new TableRuleInfoVO();
-                    tableRule.setMame(field);
-                    tableRule.setType(2);
+                    fieldRuleInfoVO.setName(field);
+                    fieldRuleInfoVO.setType(2);
                     List<String> ruleValues = fieldRule.stream().filter(t -> t.getKey().equals(field) && t.moduleType == ModuleTypeEnum.DATACHECK_MODULE).
                             map(TableRuleTempVO::getRuleValue).distinct().collect(Collectors.toList());
                     if (CollectionUtils.isNotEmpty(ruleValues)) {
