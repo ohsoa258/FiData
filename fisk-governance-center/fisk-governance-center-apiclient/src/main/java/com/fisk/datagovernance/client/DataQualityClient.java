@@ -11,6 +11,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -46,7 +47,7 @@ public interface DataQualityClient {
      * @return 查询结果
      */
     @GetMapping("/dataQualityClient/getTableRuleList")
-    ResultEntity<TableRuleInfoVO> getTableRuleList(int dataSourceId,String tableName);
+    ResultEntity<TableRuleInfoVO> getTableRuleList(@RequestParam("dataSourceId") int dataSourceId, @RequestParam("tableName") String tableName);
 
     /**
      * 查询数据质量所有数据源信息，含FiData系统数据源

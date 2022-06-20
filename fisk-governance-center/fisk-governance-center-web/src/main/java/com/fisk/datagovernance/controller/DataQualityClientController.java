@@ -33,7 +33,7 @@ public class DataQualityClientController {
      */
     @ApiOperation("查询数据质量表规则（含字段规则）")
     @GetMapping("/dataQualityClient/getTableRuleList")
-    public  ResultEntity<TableRuleInfoVO> getTableRuleList(int dataSourceId,String tableName) {
+    public  ResultEntity<TableRuleInfoVO> getTableRuleList(@RequestParam("dataSourceId") int dataSourceId,@RequestParam("tableName") String tableName) {
         return service.getTableRuleList(dataSourceId,tableName);
     }
 
