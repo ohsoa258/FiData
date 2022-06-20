@@ -403,9 +403,14 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         List<ViwGroupDetailsPO> detailsPoList = detailsMapper.selectList(queryWrapper);
         // 视图组id集合
         List<Integer> attributeIds = detailsPoList.stream().filter(e -> e.getAttributeId() != null).map(e -> e.getAttributeId()).collect(Collectors.toList());
+        // 实体id集合
+        Set<Integer> entityIds = detailsPoList.stream().filter(e -> e.getAttributeId() != null)
+                .map(e -> {
+                    return attributeMapper.selectById(e.getAttributeId()).getEntityId();
+                }).collect(Collectors.toSet());
 
         // 查询出域字段关联的实体
-        EntityQueryDTO attributeInfo = this.getRelationAttributeInfo(dto.getEntityId(),attributeIds,dto.getGroupId());
+        EntityQueryDTO attributeInfo = this.getRelationAttributeInfo(dto.getEntityId(),attributeIds,entityIds,dto.getGroupId());
         list.add(attributeInfo);
 
         return list;
@@ -706,9 +711,14 @@ public class ViwGroupServiceImpl implements ViwGroupService {
      * @param groupId
      * @return
      */
-    public EntityQueryDTO getRelationAttributeInfo(Integer entityId,List<Integer> attributeIds,Integer groupId){
+    public EntityQueryDTO getRelationAttributeInfo(Integer entityId,List<Integer> attributeIds,Set<Integer> entityIds,Integer groupId){
         EntityInfoVO entityInfoVo = entityService.getAttributeById(entityId);
         if (entityInfoVo == null){
+            return null;
+        }
+
+        // 实体不存在
+        if (!entityIds.contains(entityInfoVo.getId())){
             return null;
         }
 
@@ -748,7 +758,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         // 域字段递归
         List<EntityQueryDTO> doMainList = attributeList.stream().filter(e -> e.getDomainId() != null).map(e -> {
             AttributeVO data = attributeService.getById(e.getDomainId()).getData();
-            EntityQueryDTO attributeInfo = this.getRelationAttributeInfo(data.getEntityId(),attributeIds,groupId);
+            EntityQueryDTO attributeInfo = this.getRelationAttributeInfo(data.getEntityId(),attributeIds,entityIds,groupId);
             return attributeInfo;
         }).collect(Collectors.toList());
         collect.addAll(doMainList);
