@@ -45,6 +45,12 @@ public class DataSourceConVO {
     public int conPort;
 
     /**
+     * FiData数据源id
+     */
+    @ApiModelProperty(value = "FiData数据源id")
+    public int fidataDatasourceId;
+
+    /**
      * 数据源类型 1、FiData 2、自定义
      */
     @ApiModelProperty(value = "数据源类型 1、FiData 2、自定义")

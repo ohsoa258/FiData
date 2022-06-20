@@ -5,7 +5,7 @@ import com.fisk.common.core.enums.BaseEnum;
 /**
  * 数据源类型
  *
- * @author gy
+ * @author
  */
 
 public enum DataSourceTypeEnum implements BaseEnum {

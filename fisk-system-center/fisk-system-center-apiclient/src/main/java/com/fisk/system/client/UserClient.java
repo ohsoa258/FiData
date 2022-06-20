@@ -2,15 +2,13 @@ package com.fisk.system.client;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.dto.userinfo.UserDropDTO;
 import com.fisk.system.dto.userinfo.UserGroupQueryDTO;
 import com.fisk.system.dto.userinfo.UserPowerDTO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -67,5 +65,17 @@ public interface UserClient {
     @GetMapping("/info/listUserDrops")
     ResultEntity<List<UserDropDTO>> listUserDrops();
 
+    /**
+     * 查询FiData所有数据源信息
+     * @return
+     */
+    @PostMapping("/datasource/getAll")
+    ResultEntity<List<DataSourceDTO>> getAllFiDataDataSource();
 
+    /**
+     * 查询FiData指定数据源信息
+     * @return
+     */
+    @GetMapping("/datasource/getById")
+    ResultEntity<DataSourceDTO> getFiDataDataSourceById(@RequestParam("datasourceId") int datasourceId);
 }

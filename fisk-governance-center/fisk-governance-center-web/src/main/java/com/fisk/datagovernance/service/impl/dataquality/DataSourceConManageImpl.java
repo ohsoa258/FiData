@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
@@ -23,16 +24,15 @@ import com.fisk.datagovernance.vo.dataquality.datasource.DataBaseSourceVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataExampleSourceVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceVO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -45,6 +45,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Resource
     DataSourceConMapper mapper;
+
+    @Resource
+    private UserClient userClient;
 
     @Value("${pgsql-dw.ip}")
     private String pgsqlDwIp;
@@ -423,6 +426,59 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 .eq(DataSourceConPO::getDelFlag, 1);
         dataSourceConPO = baseMapper.selectOne(dataSourceConPOQueryWrapper);
         return dataSourceConPO;
+    }
+
+    /**
+     * @description 查询数据质量所有数据源信息，含FiData系统数据源
+     * @author dick 
+     * @date 2022/6/16 23:17
+     * @version v1.0
+     * @params  
+     * @return java.util.List<com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO> 
+     */
+    public List<DataSourceConVO> getAllDataSource() {
+        List<DataSourceConVO> dataSourceList = new ArrayList<>();
+        // FiData数据源信息
+        ResultEntity<List<DataSourceDTO>> fiDataDataSourceResult = userClient.getAllFiDataDataSource();
+        final List<DataSourceDTO> fiDataDataSources = fiDataDataSourceResult != null && fiDataDataSourceResult.getCode() == 0
+                ? userClient.getAllFiDataDataSource().getData() : null;
+        // 数据质量数据源信息
+        QueryWrapper<DataSourceConPO> dataSourceConPOQueryWrapper = new QueryWrapper<>();
+        dataSourceConPOQueryWrapper.lambda()
+                .eq(DataSourceConPO::getDelFlag, 1);
+        List<DataSourceConPO> dataSourceConPOList = baseMapper.selectList(dataSourceConPOQueryWrapper);
+        if (CollectionUtils.isNotEmpty(dataSourceConPOList)) {
+            dataSourceConPOList.forEach(t -> {
+                DataSourceConVO dataSourceConVO = new DataSourceConVO();
+                dataSourceConVO.setId(Math.toIntExact(t.getId()));
+                dataSourceConVO.setDatasourceType(SourceTypeEnum.getEnum(t.getDatasourceType()));
+                if (t.getDatasourceType() == 2) {
+                    dataSourceConVO.setName(t.getName());
+                    dataSourceConVO.setConStr(t.getConStr());
+                    dataSourceConVO.setConIp(t.getConIp());
+                    dataSourceConVO.setConPort(t.getConPort());
+                    dataSourceConVO.setConDbname(t.getConDbname());
+                    dataSourceConVO.setConType(DataSourceTypeEnum.getEnum(t.getConType()));
+                    dataSourceConVO.setConAccount(t.getConAccount());
+                    dataSourceConVO.setConPassword(t.getConPassword());
+                } else if (t.getDatasourceType() == 1 && CollectionUtils.isNotEmpty(fiDataDataSources)) {
+                    Optional<DataSourceDTO> first = fiDataDataSources.stream().filter(item -> item.getId() == t.fidataDatasourceId).findFirst();
+                    if (first.isPresent()) {
+                        DataSourceDTO dataSourceDTO = first.get();
+                        dataSourceConVO.setName(dataSourceDTO.getName());
+                        dataSourceConVO.setConStr(dataSourceDTO.getConStr());
+                        dataSourceConVO.setConIp(dataSourceDTO.getConIp());
+                        dataSourceConVO.setConPort(dataSourceDTO.getConPort());
+                        dataSourceConVO.setConDbname(dataSourceDTO.getConDbname());
+                        dataSourceConVO.setConType(DataSourceTypeEnum.getEnum(dataSourceDTO.getConType().getValue()));
+                        dataSourceConVO.setConAccount(dataSourceDTO.getConAccount());
+                        dataSourceConVO.setConPassword(dataSourceDTO.getConPassword());
+                    }
+                }
+                dataSourceList.add(dataSourceConVO);
+            });
+        }
+        return dataSourceList;
     }
 
     /**
