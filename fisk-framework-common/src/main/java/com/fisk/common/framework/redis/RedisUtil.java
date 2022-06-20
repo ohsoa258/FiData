@@ -1,7 +1,10 @@
 package com.fisk.common.framework.redis;
 
+import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -92,6 +95,28 @@ public class RedisUtil {
      */
     public Object get(String key) {
         return key == null ? null : redisTemplate.opsForValue().get(key);
+    }
+
+    /**
+     * 获取FidataMetaData
+     *
+     * @param dataSourceId dataSourceId
+     * @return 值
+     */
+    public List<FiDataMetaDataDTO> getFiDataMetaData(String dataSourceId) {
+
+        List<FiDataMetaDataDTO> list = null;
+        // 判断key对应的value是否存在
+        boolean flag = redisTemplate.hasKey(RedisKeyBuild.buildFiDataStructureKey(dataSourceId));
+        if (!flag) {
+            return null;
+        }
+
+        String s = redisTemplate.opsForValue().get(RedisKeyBuild.buildFiDataStructureKey(dataSourceId)).toString();
+        if (StringUtils.isNotBlank(s)) {
+            list = JSONObject.parseArray(s, FiDataMetaDataDTO.class);
+        }
+        return list;
     }
 
     /**
@@ -260,6 +285,7 @@ public class RedisUtil {
             return false;
         }
     }
+
     /**
      * 向一张hash表中放入数据,如果不存在将创建
      *
@@ -645,7 +671,7 @@ public class RedisUtil {
             System.out.println(key);
             UserInfo value = (UserInfo) redisTemplate.opsForValue().get(key);
             System.out.println(value);
-            if(Objects.equals(token,value.token)){
+            if (Objects.equals(token, value.token)) {
                 return value;
             }
         }

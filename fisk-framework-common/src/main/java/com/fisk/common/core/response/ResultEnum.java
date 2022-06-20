@@ -123,6 +123,7 @@ public enum ResultEnum {
     COPY_APINAME_ISEXIST(5046, "目标应用下已存在相同名称的api,请重新选择,或者给api重命名"),
     DATA_QUALITY_FEIGN_ERROR(5047, "数据质量的数据校验feign接口异常"),
     LOAD_DATASOURCE_META(5048, "重新加载所有数据源以及数据库、表数据报错"),
+    LOAD_FIDATA_METADATA_ERROR(5049, "加载FaidataMetaData报错"),
 
 
     /**
