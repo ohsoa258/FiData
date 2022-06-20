@@ -145,7 +145,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
         modelPublishStatusDTO.publish = 1;
         log.info("创建nifi流程发布参数:" + data);
-        data = null;
         try {
             BuildNifiFlowDTO dto = JSON.parseObject(data, BuildNifiFlowDTO.class);
             modelPublishStatusDTO.tableId = dto.id;
