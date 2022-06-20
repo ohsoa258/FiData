@@ -2,6 +2,7 @@ package com.fisk.task.extend.aop;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.enums.task.MessageLevelEnum;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.MDCHelper;
@@ -95,6 +96,7 @@ public class MQConsumerLogAspect {
             WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务开始处理", data.userId, MessageLevelEnum.MEDIUM);
         }
 
+        //invoke
         log.info("【{}】开始执行", name);
         Object res = null;
         boolean isSuccess = false;
@@ -110,12 +112,17 @@ public class MQConsumerLogAspect {
         TaskStatusEnum statusEnum = isSuccess ? TaskStatusEnum.SUCCESS : TaskStatusEnum.FAILURE;
         if (model != null) {
             model.taskStatus = statusEnum;
-            model.traceId=traceId;
+            model.traceId = traceId;
             mapper.updateById(model);
         }
 
+        String outPutMsg = "任务执行完成";
+        if (res instanceof ResultEntity<?>) {
+            outPutMsg = ((ResultEntity<?>) res).msg;
+        }
+
         if (sendMsg) {
-            WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + statusEnum.getName() + "】", data.userId, MessageLevelEnum.HIGH);
+            WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
         }
         MDCHelper.clear();
         return res;
