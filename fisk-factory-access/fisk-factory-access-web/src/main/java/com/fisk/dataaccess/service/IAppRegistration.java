@@ -198,4 +198,12 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return list
      */
     List<FiDataMetaDataDTO> getDataAccessStructure(FiDataMetaDataReqDTO dto);
+
+    /**
+     * 刷新数据接入结构
+     *
+     * @param dto dto
+     * @return list
+     */
+    List<FiDataMetaDataDTO> setDataAccessStructure(FiDataMetaDataReqDTO dto);
 }

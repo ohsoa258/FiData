@@ -50,9 +50,9 @@ feign:
         connectTimeout: 10000
         readTimeout: 12000
 
-# 数据源tree
-datasource-meta:
-  # 执行时间 凌晨12点半
-  schedule: 0 30 0 * * ?
+# 数据接入定时任务配置
+data-access-job:
+  # 数据源tree执行时间 凌晨12点半
+  schedule: 0 9 16 * * ?
   # 是否启用
   enabled: true

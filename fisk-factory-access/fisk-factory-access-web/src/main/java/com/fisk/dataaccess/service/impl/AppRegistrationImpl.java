@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -15,6 +16,8 @@ import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
+import com.fisk.common.framework.redis.RedisKeyBuild;
+import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
@@ -96,6 +99,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     private ApiConfigImpl apiConfigImpl;
     @Resource
     private DataFactoryClient dataFactoryClient;
+    @Resource
+    RedisUtil redisUtil;
 
     /**
      * 添加应用
@@ -750,6 +755,22 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Override
     public List<FiDataMetaDataDTO> getDataAccessStructure(FiDataMetaDataReqDTO reqDto) {
 
+        boolean flag = redisUtil.hasKey(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId));
+        if (!flag) {
+            // 将数据接入结构存入redis
+            setDataAccessStructure(reqDto);
+        }
+        List<FiDataMetaDataDTO> list = null;
+        String dataAccessStructure = redisUtil.get(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId)).toString();
+        if (StringUtils.isNotBlank(dataAccessStructure)) {
+            list = JSONObject.parseArray(dataAccessStructure, FiDataMetaDataDTO.class);
+        }
+        return list;
+    }
+
+    @Override
+    public List<FiDataMetaDataDTO> setDataAccessStructure(FiDataMetaDataReqDTO reqDto) {
+
         List<FiDataMetaDataDTO> list = new ArrayList<>();
         FiDataMetaDataDTO dto = new FiDataMetaDataDTO();
         // FiData数据源id: 数据资产自定义
@@ -771,6 +792,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         dto.setChildren(dataTreeList);
         list.add(dto);
+
+        if (!CollectionUtils.isEmpty(list)) {
+            redisUtil.set(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId), JSON.toJSONString(list));
+        }
+
         return list;
     }
 
@@ -869,7 +895,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                         apiDtoTree.setLabelAlias(api.apiName);
                                         apiDtoTree.setLevelType(LevelTypeEnum.FOLDER);
                                         // 不是已发布的都当作未发布处理
-                                        apiDtoTree.setPublishState(String.valueOf(api.publish != 1 ? 0 : 1));
+                                        if (api.publish == null) {
+                                            apiDtoTree.setPublishState("0");
+                                        } else {
+                                            apiDtoTree.setPublishState(String.valueOf(api.publish != 1 ? 0 : 1));
+                                        }
                                         apiDtoTree.setLabelDesc(api.apiDes);
 
                                         // 第三层: table层
@@ -887,6 +917,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     tableDtoTree.setLabel(table.tableName);
                                                     tableDtoTree.setLabelAlias(table.tableName);
                                                     tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
+                                                    if (table.publish == null) {
+                                                        tableDtoTree.setPublishState("0");
+                                                        table.publish = 0;
+                                                    }
                                                     tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
                                                     tableDtoTree.setLabelDesc(table.tableDes);
 
@@ -988,7 +1022,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                         apiDtoTree.setLabelAlias(api.apiName);
                                         apiDtoTree.setLevelType(LevelTypeEnum.FOLDER);
                                         // 不是已发布的都当作未发布处理
-                                        apiDtoTree.setPublishState(String.valueOf(api.publish != 1 ? 0 : 1));
+                                        if (api.publish == null) {
+                                            apiDtoTree.setPublishState("0");
+                                        } else {
+                                            apiDtoTree.setPublishState(String.valueOf(api.publish != 1 ? 0 : 1));
+                                        }
                                         apiDtoTree.setLabelDesc(api.apiDes);
 
                                         // 第三层: table层
@@ -1005,7 +1043,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     tableDtoTree.setLabel(table.tableName);
                                                     tableDtoTree.setLabelAlias(table.tableName);
                                                     tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
-                                                    tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                                    if (table.publish == null) {
+                                                        tableDtoTree.setPublishState("0");
+                                                        table.publish = 0;
+                                                    } else {
+                                                        tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                                    }
                                                     tableDtoTree.setLabelDesc(table.tableDes);
 
                                                     // 第四层: field层
@@ -1062,7 +1105,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                         tableDtoTree.setLabel(table.tableName);
                                         tableDtoTree.setLabelAlias(table.tableName);
                                         tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
-                                        tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                        if (table.publish == null) {
+                                            tableDtoTree.setPublishState("0");
+                                            table.publish = 0;
+                                        } else {
+                                            tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                        }
                                         tableDtoTree.setLabelDesc(table.tableDes);
 
                                         // 第四层: field层
@@ -1074,7 +1122,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                 .map(field -> {
 
                                                     FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
-                                                    String fieldGuid = UUID.randomUUID().toString();
                                                     fieldDtoTree.setId(String.valueOf(field.id));
                                                     fieldDtoTree.setParentId(String.valueOf(table.id));
                                                     fieldDtoTree.setLabel(field.fieldName);
