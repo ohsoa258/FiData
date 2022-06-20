@@ -95,7 +95,7 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
         //1.从小到大保存
         //任务日志
         if (!StringUtils.isEmpty(dto.pipelTaskTraceId)) {
-            List<PipelTaskLogPO> list = iPipelTaskLog.query().eq("pipel_task_trace_id", dto.pipelTaskTraceId).orderByDesc("create_time").list();
+            List<PipelTaskLogPO> list = iPipelTaskLog.query().eq("task_trace_id", dto.pipelTaskTraceId).orderByDesc("create_time").list();
             if (CollectionUtils.isNotEmpty(list)) {
                 Map<Integer, Object> stageMap = new HashMap<>();
                 stageMap.put(DispatchLogEnum.taskend.getValue(), simpleDateFormat.format(new Date()));
@@ -106,7 +106,7 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
         }
         //job日志
         if (!StringUtils.isEmpty(dto.pipelJobTraceId)) {
-            List<PipelJobLogPO> list = this.query().eq("pipel_job_trace_id", dto.pipelJobTraceId).orderByDesc("create_time").list();
+            List<PipelJobLogPO> list = this.query().eq("job_trace_id", dto.pipelJobTraceId).orderByDesc("create_time").list();
             if (CollectionUtils.isNotEmpty(list)) {
                 PipelJobLogPO pipelJobLogPo = list.get(0);
                 Map<Integer, Object> jobMap = new HashMap<>();

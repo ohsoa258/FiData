@@ -209,13 +209,13 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
                 iPipelTaskLog.savePipelTaskLog(null, taskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
             }
         } catch (Exception e) {
+            e.printStackTrace();
             DispatchExceptionHandlingDTO dto = new DispatchExceptionHandlingDTO();
             dto.pipelTraceId = pipelTraceId;
             dto.pipelJobTraceId = thisPipelJobTraceId;
             dto.pipelTaskTraceId = thisPipelTaskTraceId;
-            dto.comment = e.getMessage().substring(Math.min(200, e.getMessage().length()));
+            dto.comment="查找下一级报错";
             iPipelJobLog.exceptionHandlingLog(dto);
-            e.printStackTrace();
         }
     }
 }

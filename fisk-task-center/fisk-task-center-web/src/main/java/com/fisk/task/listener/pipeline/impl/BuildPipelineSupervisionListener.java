@@ -313,13 +313,12 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
             log.info("消费消息:end");
         } catch (Exception e) {
             DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = new DispatchExceptionHandlingDTO();
-            dispatchExceptionHandlingDTO.comment = e.getMessage().substring(Math.min(e.getMessage().length(), 200));
+            dispatchExceptionHandlingDTO.comment = "发布中心报错";
             dispatchExceptionHandlingDTO.pipelTraceId = kafkaReceiveDTO.pipelTraceId;
             dispatchExceptionHandlingDTO.pipelJobTraceId = kafkaReceiveDTO.pipelJobTraceId;
             dispatchExceptionHandlingDTO.pipelStageTraceId = kafkaReceiveDTO.pipelStageTraceId;
             dispatchExceptionHandlingDTO.pipelTaskTraceId = kafkaReceiveDTO.pipelTaskTraceId;
             iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
-
             log.error("管道调度报错");
             e.printStackTrace();
         } finally {
