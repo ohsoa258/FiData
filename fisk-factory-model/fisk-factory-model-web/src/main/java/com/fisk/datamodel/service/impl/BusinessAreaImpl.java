@@ -1,6 +1,7 @@
 package com.fisk.datamodel.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -11,6 +12,8 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.redis.RedisKeyBuild;
+import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
@@ -111,6 +114,8 @@ public class BusinessAreaImpl
     private DataFactoryClient dataFactoryClient;
     @Resource
     private WideTableImpl wideTableImpl;
+    @Resource
+    private RedisUtil redisUtil;
     @Value("${fidata.wide-table.guid}")
     private String wideTableGuid;
 
@@ -583,53 +588,72 @@ public class BusinessAreaImpl
 
     @Override
     public List<FiDataMetaDataDTO> getDataModelStructure(FiDataMetaDataReqDTO reqDto) {
+        boolean flag = redisUtil.hasKey(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId));
+        if (!flag) {
+            // 将数据建模结构存入redis
+            setDataModelStructure(reqDto);
+        }
+        List<FiDataMetaDataDTO> list = null;
+        String dataModelStructure = redisUtil.get(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId)).toString();
+        if (StringUtils.isNotBlank(dataModelStructure)) {
+            list = JSONObject.parseArray(dataModelStructure, FiDataMetaDataDTO.class);
+        }
+        return list;
+    }
+
+    @Override
+    public List<FiDataMetaDataDTO> setDataModelStructure(FiDataMetaDataReqDTO reqDto) {
 
         List<FiDataMetaDataDTO> list = new ArrayList<>();
+        if ("1".equalsIgnoreCase(reqDto.dataSourceId)) {
+            // 第一层 - 1: dmp_dw
+            FiDataMetaDataDTO dwDto = new FiDataMetaDataDTO();
+            // FiData数据源id: 数据资产自定义
+            dwDto.setDataSourceId(Integer.parseInt(StringUtils.isBlank(reqDto.dataSourceId) ? String.valueOf(0) : reqDto.dataSourceId));
 
-        // 第一层 - 1: dmp_dw
-        FiDataMetaDataDTO dwDto = new FiDataMetaDataDTO();
-        // FiData数据源id: 数据资产自定义
-        dwDto.setDataSourceId(Integer.parseInt(StringUtils.isBlank(reqDto.dataSourceId) ? String.valueOf(0) : reqDto.dataSourceId));
+            // 第一层id
+            String dwGuid = UUID.randomUUID().toString();
+            // 第一层子级
+            List<FiDataMetaDataTreeDTO> dwDataTreeList = new ArrayList<>();
+            FiDataMetaDataTreeDTO dwDataTree = new FiDataMetaDataTreeDTO();
+            dwDataTree.setId(dwGuid);
+            dwDataTree.setParentId("-1");
+            dwDataTree.setLabel("dmp_dw");
+            dwDataTree.setLabelAlias("dmp_dw");
+            dwDataTree.setLevelType(LevelTypeEnum.FOLDER);
 
-        // 第一层id
-        String dwGuid = UUID.randomUUID().toString();
-        // 第一层子级
-        List<FiDataMetaDataTreeDTO> dwDataTreeList = new ArrayList<>();
-        FiDataMetaDataTreeDTO dwDataTree = new FiDataMetaDataTreeDTO();
-        dwDataTree.setId(dwGuid);
-        dwDataTree.setParentId("-1");
-        dwDataTree.setLabel("dmp_dw");
-        dwDataTree.setLabelAlias("dmp_dw");
-        dwDataTree.setLevelType(LevelTypeEnum.FOLDER);
+            // 封装dw所有结构数据
+            dwDataTree.setChildren(buildBusinessChildren(dwGuid, "dw"));
+            dwDataTreeList.add(dwDataTree);
 
-        // 封装dw所有结构数据
-        dwDataTree.setChildren(buildBusinessChildren(dwGuid, "dw"));
-        dwDataTreeList.add(dwDataTree);
+            dwDto.setChildren(dwDataTreeList);
+            list.add(dwDto);
+        } else if ("4".equalsIgnoreCase(reqDto.dataSourceId)) {
+            FiDataMetaDataDTO olapDto = new FiDataMetaDataDTO();
+            // FiData数据源id: 数据资产自定义
+            olapDto.setDataSourceId(Integer.parseInt(StringUtils.isBlank(reqDto.dataSourceId) ? String.valueOf(0) : reqDto.dataSourceId));
 
-        dwDto.setChildren(dwDataTreeList);
+            // 第一层id
+            String olapGuid = UUID.randomUUID().toString();
+            List<FiDataMetaDataTreeDTO> olapDataTreeList = new ArrayList<>();
+            FiDataMetaDataTreeDTO olapDataTree = new FiDataMetaDataTreeDTO();
+            olapDataTree.setId(olapGuid);
+            olapDataTree.setParentId("-1");
+            olapDataTree.setLabel("dmp_olap");
+            olapDataTree.setLabelAlias("dmp_olap");
+            olapDataTree.setLevelType(LevelTypeEnum.FOLDER);
 
-        FiDataMetaDataDTO olapDto = new FiDataMetaDataDTO();
-        // FiData数据源id: 数据资产自定义
-        olapDto.setDataSourceId(Integer.parseInt(StringUtils.isBlank(reqDto.dataSourceId) ? String.valueOf(0) : reqDto.dataSourceId));
+            // 封装data-access所有结构数据
+            olapDataTree.setChildren(buildBusinessChildren(olapGuid, "olap"));
+            olapDataTreeList.add(olapDataTree);
 
-        // 第一层id
-        String olapGuid = UUID.randomUUID().toString();
-        List<FiDataMetaDataTreeDTO> olapDataTreeList = new ArrayList<>();
-        FiDataMetaDataTreeDTO olapDataTree = new FiDataMetaDataTreeDTO();
-        olapDataTree.setId(olapGuid);
-        olapDataTree.setParentId("-1");
-        olapDataTree.setLabel("dmp_olap");
-        olapDataTree.setLabelAlias("dmp_olap");
-        olapDataTree.setLevelType(LevelTypeEnum.FOLDER);
-
-        // 封装data-access所有结构数据
-        olapDataTree.setChildren(buildBusinessChildren(olapGuid, "olap"));
-        olapDataTreeList.add(olapDataTree);
-
-        olapDto.setChildren(olapDataTreeList);
-
-        list.add(dwDto);
-        list.add(olapDto);
+            olapDto.setChildren(olapDataTreeList);
+            list.add(olapDto);
+        }
+        // 入redis
+        if (!CollectionUtils.isEmpty(list)) {
+            redisUtil.set(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId), JSON.toJSONString(list));
+        }
         return list;
     }
 

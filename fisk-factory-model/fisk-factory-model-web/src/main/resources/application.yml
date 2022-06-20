@@ -32,3 +32,10 @@ fk:
 fidata:
   wide-table:
     guid: 9bf0e48e-aef8-44c1-9871-0cb4d0560dd6
+
+# 数据建模定时任务配置
+data-model-job:
+  # 数据源tree执行时间 凌晨12点半
+  schedule: 0 30 0 * * ?
+  # 是否启用
+  enabled: true
