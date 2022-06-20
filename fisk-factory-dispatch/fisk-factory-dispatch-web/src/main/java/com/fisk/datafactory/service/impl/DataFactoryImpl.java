@@ -17,6 +17,7 @@ import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
 import com.fisk.datafactory.map.NifiCustomWorkflowMap;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
 import com.fisk.datafactory.service.IDataFactory;
+import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
 import com.fisk.task.dto.dispatchlog.PipelStageLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
@@ -45,6 +46,8 @@ public class DataFactoryImpl implements IDataFactory {
     NifiCustomWorkflowImpl nifiCustomWorkflowImpl;
     @Resource
     NifiCustomWorkflowDetailImpl nifiCustomWorkflowDetailImpl;
+    @Resource
+    PublishTaskClient publishTaskClient;
 
     @Override
     public boolean loadDepend(LoadDependDTO dto) {
@@ -379,18 +382,20 @@ public class DataFactoryImpl implements IDataFactory {
     }
 
     @Override
-    public ResultEntity<List<PipelJobLogVO>> getPipeJobLog(PipelJobLogVO dto) {
-        return null;
+    public ResultEntity<List<PipelJobLogVO>> getPipeJobLog(List<PipelJobLogVO> dto) {
+        return publishTaskClient.getPipelJobLogVos(dto);
     }
 
     @Override
-    public ResultEntity<List<PipelStageLogVO>> getPipeStageLog(PipelStageLogVO dto) {
-        return null;
+    public ResultEntity<List<PipelStageLogVO>> getPipeStageLog(String taskId) {
+        return publishTaskClient.getPipelStageLogVos(taskId);
     }
 
     @Override
     public ResultEntity<List<PipelTaskLogVO>> getPipeTaskLog(PipelTaskLogVO dto) {
-        return null;
+        List<PipelTaskLogVO> pipelTaskLogVos = new ArrayList<>();
+        pipelTaskLogVos.add(dto);
+        return publishTaskClient.getPipelTaskLogVos(pipelTaskLogVos);
     }
 
     /**

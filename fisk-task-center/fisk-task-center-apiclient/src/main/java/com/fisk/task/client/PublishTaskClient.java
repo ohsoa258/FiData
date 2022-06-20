@@ -10,6 +10,9 @@ import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
+import com.fisk.task.dto.dispatchlog.PipelStageLogVO;
+import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
@@ -294,4 +297,28 @@ public interface PublishTaskClient {
      */
     @PostMapping("/pipeline/getPipelineTableLog")
     public ResultEntity<List<PipelineTableLogVO>> getPipelineTableLog(@RequestParam("data") String data, @RequestParam("pipelineTableQuery") String pipelineTableQuery);
+
+    /**
+     * 管道日志
+     *
+     * @return
+     */
+    @PostMapping("/dispatchLog/getPipelJobLogVos")
+    public ResultEntity<List<PipelJobLogVO>> getPipelJobLogVos(@RequestBody List<PipelJobLogVO> pipelJobLogs);
+
+    /**
+     * 任务日志
+     *
+     * @return
+     */
+    @PostMapping("/dispatchLog/getPipelTaskLogVos")
+    public ResultEntity<List<PipelTaskLogVO>> getPipelTaskLogVos(@RequestBody List<PipelTaskLogVO> pipelTaskLogs);
+
+    /**
+     * 阶段日志
+     *
+     * @return
+     */
+    @PostMapping("/dispatchLog/getPipelStageLogVos")
+    public ResultEntity<List<PipelStageLogVO>> getPipelStageLogVos(@RequestParam String taskId);
 }

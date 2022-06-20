@@ -65,15 +65,15 @@ public interface IDataFactory {
      * @param dto dto
      * @return 查询结果
      */
-    ResultEntity<List<PipelJobLogVO>> getPipeJobLog(PipelJobLogVO dto);
+    ResultEntity<List<PipelJobLogVO>> getPipeJobLog(List<PipelJobLogVO> dto);
 
     /**
      * 获取阶段日志
      *
-     * @param dto dto
+     * @param taskId taskId
      * @return 执行结果
      */
-    ResultEntity<List<PipelStageLogVO>> getPipeStageLog(PipelStageLogVO dto);
+    ResultEntity<List<PipelStageLogVO>> getPipeStageLog(String taskId);
 
     /**
      * 获取阶段日志

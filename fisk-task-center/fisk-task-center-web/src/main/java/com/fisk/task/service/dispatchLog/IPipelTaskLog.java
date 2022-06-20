@@ -1,9 +1,11 @@
 package com.fisk.task.service.dispatchLog;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 import com.fisk.task.entity.PipelTaskLogPO;
 
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -31,4 +33,14 @@ public interface IPipelTaskLog extends IService<PipelTaskLogPO> {
      * @return
      */
     PipelTaskLogPO getByPipelJobTraceId(String pipelJobTraceId, Long taskId);
+
+    /**
+     * 获取task日志
+     *
+     * @param pipelTaskLogs
+     * @return
+     */
+    List<PipelTaskLogVO> getPipelTaskLogVos(List<PipelTaskLogVO> pipelTaskLogs);
+
+
 }

@@ -12,6 +12,7 @@ import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyNextDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.entity.*;
@@ -74,12 +75,13 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
         log.info("消费消息:start");
         log.info("消费消息 size:" + arrMessage.size());
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
         //每次进来存进redis里面,key-value,都是topic-name,过期时间为5分钟
         try {
             for (String mapString : arrMessage) {
                 log.info("mapString信息:" + mapString);
 
-                KafkaReceiveDTO kafkaReceiveDTO = JSON.parseObject(mapString, KafkaReceiveDTO.class);
+                kafkaReceiveDTO = JSON.parseObject(mapString, KafkaReceiveDTO.class);
                 //管道总的pipelTraceId
                 if (StringUtils.isEmpty(kafkaReceiveDTO.pipelTraceId)) {
                     kafkaReceiveDTO.pipelTraceId = UUID.randomUUID().toString();
@@ -310,6 +312,14 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
 
             log.info("消费消息:end");
         } catch (Exception e) {
+            DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = new DispatchExceptionHandlingDTO();
+            dispatchExceptionHandlingDTO.comment = e.getMessage().substring(Math.min(e.getMessage().length(), 200));
+            dispatchExceptionHandlingDTO.pipelTraceId = kafkaReceiveDTO.pipelTraceId;
+            dispatchExceptionHandlingDTO.pipelJobTraceId = kafkaReceiveDTO.pipelJobTraceId;
+            dispatchExceptionHandlingDTO.pipelStageTraceId = kafkaReceiveDTO.pipelStageTraceId;
+            dispatchExceptionHandlingDTO.pipelTaskTraceId = kafkaReceiveDTO.pipelTaskTraceId;
+            iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
+
             log.error("管道调度报错");
             e.printStackTrace();
         } finally {

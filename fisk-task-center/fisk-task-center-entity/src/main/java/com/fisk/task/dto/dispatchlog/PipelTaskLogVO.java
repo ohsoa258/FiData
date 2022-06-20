@@ -1,5 +1,6 @@
 package com.fisk.task.dto.dispatchlog;
 
+import com.fisk.common.core.baseObject.entity.BasePO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -7,7 +8,7 @@ import lombok.Data;
  * @author cfk
  */
 @Data
-public class PipelTaskLogVO {
+public class PipelTaskLogVO extends BasePO {
     @ApiModelProperty(value = "task批次号")
     public String taskTraceId;
     @ApiModelProperty(value = "绑定表的任务的id")

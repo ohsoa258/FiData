@@ -1,5 +1,6 @@
 package com.fisk.task.dto.dispatchlog;
 
+import com.fisk.common.core.baseObject.entity.BasePO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -7,7 +8,7 @@ import lombok.Data;
  * @author cfk
  */
 @Data
-public class PipelStageLogVO {
+public class PipelStageLogVO extends BasePO {
     @ApiModelProperty(value = "阶段批次号")
     public String stateTraceId;
     @ApiModelProperty(value = "日志内容")

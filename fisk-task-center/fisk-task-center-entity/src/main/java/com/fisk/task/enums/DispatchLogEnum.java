@@ -83,4 +83,25 @@ public enum DispatchLogEnum implements BaseEnum {
     public String getName() {
         return name;
     }
+
+    public static DispatchLogEnum getValue(String name) {
+        DispatchLogEnum[] carTypeEnums = values();
+        for (DispatchLogEnum carTypeEnum : carTypeEnums) {
+            String queryName = carTypeEnum.name;
+            if (queryName.equals(name)) {
+                return carTypeEnum;
+            }
+        }
+        return null;
+    }
+
+    public static DispatchLogEnum getName(int value) {
+        DispatchLogEnum[] carTypeEnums = values();
+        for (DispatchLogEnum carTypeEnum : carTypeEnums) {
+            if (carTypeEnum.value == value) {
+                return carTypeEnum;
+            }
+        }
+        return null;
+    }
 }

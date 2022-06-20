@@ -98,19 +98,19 @@ public interface DataFactoryClient {
      * @param dto dto
      * @return 查询结果
      */
-    @PostMapping("/getPipeJobLog")
+    @PostMapping("/dataFactory/getPipeJobLog")
     @ApiOperation(value = "获取管道日志")
-    ResultEntity<List<PipelJobLogVO>> getPipeJobLog(@RequestBody PipelJobLogVO dto);
+    ResultEntity<List<PipelJobLogVO>> getPipeJobLog(@RequestBody List<PipelJobLogVO> dto);
 
     /**
      * 获取阶段日志
      *
-     * @param dto dto
+     * @param taskId dto
      * @return 执行结果
      */
-    @PostMapping("/getPipeStageLog")
+    @PostMapping("/dataFactory/getPipeStageLog")
     @ApiOperation(value = "获取阶段日志")
-    ResultEntity<List<PipelStageLogVO>> getPipeStageLog(@RequestBody PipelStageLogVO dto);
+    ResultEntity<List<PipelStageLogVO>> getPipeStageLog(@RequestParam String taskId);
 
     /**
      * 获取阶段日志
@@ -118,7 +118,7 @@ public interface DataFactoryClient {
      * @param dto dto
      * @return 执行结果
      */
-    @PostMapping("/getPipeTaskLog")
+    @PostMapping("/dataFactory/getPipeTaskLog")
     @ApiOperation(value = "获取表日志")
     ResultEntity<List<PipelTaskLogVO>> getPipeTaskLog(@RequestBody PipelTaskLogVO dto);
 }

@@ -67,14 +67,14 @@ public class DatafactoryController {
 
     @PostMapping("/getPipeJobLog")
     @ApiOperation(value = "获取管道日志")
-    public ResultEntity<List<PipelJobLogVO>> getPipeJobLog(@RequestBody PipelJobLogVO dto) {
+    public ResultEntity<List<PipelJobLogVO>> getPipeJobLog(@RequestBody List<PipelJobLogVO> dto) {
         return service.getPipeJobLog(dto);
     }
 
     @PostMapping("/getPipeStageLog")
     @ApiOperation(value = "获取阶段日志")
-    public ResultEntity<List<PipelStageLogVO>> getPipeStageLog(@RequestBody PipelStageLogVO dto) {
-        return service.getPipeStageLog(dto);
+    public ResultEntity<List<PipelStageLogVO>> getPipeStageLog(@RequestParam String taskId) {
+        return service.getPipeStageLog(taskId);
     }
 
     @PostMapping("/getPipeTaskLog")
