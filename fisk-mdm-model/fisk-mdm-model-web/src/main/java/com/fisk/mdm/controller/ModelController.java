@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.service.IModelService;
@@ -69,11 +70,18 @@ public class ModelController {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getEntityById(id));
     }
 
-    @ApiOperation("获取主数据结构")
-    @GetMapping("/getDataStructure")
+    @ApiOperation("刷新主数据结构")
+    @PostMapping("/setDataStructure")
     @ResponseBody
-    public ResultEntity<List<FiDataMetaDataDTO>> getDataStructure(){
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getDataStructure());
+    public ResultEntity<List<FiDataMetaDataDTO>> setDataStructure(@RequestBody FiDataMetaDataReqDTO dto){
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.setDataStructure(dto));
+    }
+
+    @ApiOperation("获取主数据结构")
+    @PostMapping("/getDataStructure")
+    @ResponseBody
+    public ResultEntity<List<FiDataMetaDataDTO>> getDataStructure(@RequestBody FiDataMetaDataReqDTO dto){
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getDataStructure(dto));
     }
 
 }

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.dto.model.ModelDTO;
@@ -65,5 +66,11 @@ public interface IModelService extends IService<ModelPO> {
      * 获取主数据结构
      * @return
      */
-    List<FiDataMetaDataDTO> getDataStructure();
+    List<FiDataMetaDataDTO> getDataStructure(FiDataMetaDataReqDTO reqDto);
+
+    /**
+     * 刷新主数据结构
+     * @return
+     */
+    List<FiDataMetaDataDTO> setDataStructure(FiDataMetaDataReqDTO reqDto);
 }

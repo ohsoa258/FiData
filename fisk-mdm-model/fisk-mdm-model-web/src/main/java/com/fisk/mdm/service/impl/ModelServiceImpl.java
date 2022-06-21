@@ -1,5 +1,7 @@
 package com.fisk.mdm.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -10,7 +12,10 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.redis.RedisKeyBuild;
+import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
@@ -37,6 +42,7 @@ import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
 import com.fisk.task.client.PublishTaskClient;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -81,6 +87,8 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
     @Resource
     ViwGroupService viwGroupService;
 
+    @Resource
+    RedisUtil redisUtil;
 
     /**
      * 通过id查询
@@ -273,10 +281,26 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
     }
 
     @Override
-    public List<FiDataMetaDataDTO> getDataStructure() {
+    public List<FiDataMetaDataDTO> getDataStructure(FiDataMetaDataReqDTO reqDto) {
+        boolean flag = redisUtil.hasKey(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId));
+        if (!flag) {
+            // 将数据接入结构存入redis
+            modelService.setDataStructure(reqDto);
+        }
+        List<FiDataMetaDataDTO> list = null;
+        String dataAccessStructure = redisUtil.get(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId)).toString();
+        if (StringUtils.isNotBlank(dataAccessStructure)) {
+            list = JSONObject.parseArray(dataAccessStructure, FiDataMetaDataDTO.class);
+        }
+
+        return list;
+    }
+
+    @Override
+    public List<FiDataMetaDataDTO> setDataStructure(FiDataMetaDataReqDTO reqDto) {
         List<FiDataMetaDataDTO> list = new ArrayList<>();
         FiDataMetaDataDTO dto = new FiDataMetaDataDTO();
-        dto.setDataSourceId(1);
+        dto.setDataSourceId(Integer.parseInt(StringUtils.isBlank(reqDto.dataSourceId) ? String.valueOf(0) : reqDto.dataSourceId));
 
         // 第一层id
         String uuid = UUID.randomUUID().toString();
@@ -293,6 +317,11 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
         dto.setChildren(dataTreeList);
         list.add(dto);
+
+        // 放入redis缓存
+        if (!org.springframework.util.CollectionUtils.isEmpty(list)) {
+            redisUtil.set(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId), JSON.toJSONString(list));
+        }
         return list;
     }
 
