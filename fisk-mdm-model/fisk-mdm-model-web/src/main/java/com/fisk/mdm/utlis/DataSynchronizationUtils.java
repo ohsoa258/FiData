@@ -328,8 +328,11 @@ public class DataSynchronizationUtils {
                 case "日期时间":
                     filedType = JDBCType.TIMESTAMP.getName();
                     break;
-                case "浮点型":
+                case "经纬度坐标":
                     filedType = JDBCType.NUMERIC.getName();
+                    break;
+                case "浮点型":
+                    filedType = JDBCType.FLOAT.getName();
                     break;
                 case "布尔型":
                     filedType = JDBCType.BOOLEAN.getName();
