@@ -3,10 +3,10 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamodel.dto.atomicindicator.*;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.DerivedIndicatorsEnum;
@@ -270,7 +270,6 @@ public class AtomicIndicatorsImpl
         for (IndicatorsPO item : indicatorsPo) {
             AtomicIndicatorPushDTO dto = new AtomicIndicatorPushDTO();
             dto.attributeType = FactAttributeEnum.MEASURE.getValue();
-            ;
             dto.atomicIndicatorName = item.indicatorsName;
             dto.aggregationLogic = item.calculationLogic;
             //获取聚合字段
@@ -282,6 +281,31 @@ public class AtomicIndicatorsImpl
             dto.factFieldType = factAttributePo.factFieldType;
             dto.factFieldLength = factAttributePo.factFieldLength;
             dto.id = item.id;
+            data.add(dto);
+        }
+        return data;
+    }
+
+    /**
+     * 根据事实表id,获取派生指标
+     *
+     * @param factId
+     * @return
+     */
+    public List<AtomicIndicatorPushDTO> getDerivedIndicators(int factId) {
+        List<AtomicIndicatorPushDTO> data = new ArrayList<>();
+        QueryWrapper<IndicatorsPO> indicatorsQueryWrapper = new QueryWrapper<>();
+        indicatorsQueryWrapper.lambda().eq(IndicatorsPO::getFactId, factId)
+                .eq(IndicatorsPO::getIndicatorsType, IndicatorsTypeEnum.DERIVED_INDICATORS.getValue());
+        List<IndicatorsPO> indicatorsPo = indicatorsMapper.selectList(indicatorsQueryWrapper);
+        for (IndicatorsPO item : indicatorsPo) {
+            AtomicIndicatorPushDTO dto = new AtomicIndicatorPushDTO();
+            dto.id = item.id;
+            dto.attributeType = 3;
+            dto.atomicIndicatorName = item.indicatorsName;
+            //时间周期
+            dto.aggregationLogic = item.timePeriod;
+            dto.atomicId = item.atomicId;
             data.add(dto);
         }
         return data;

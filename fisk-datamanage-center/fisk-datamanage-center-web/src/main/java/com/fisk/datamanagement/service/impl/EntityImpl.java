@@ -154,7 +154,6 @@ public class EntityImpl implements IEntity {
         }
         catch (Exception e)
         {
-            e.printStackTrace();
             log.error("getEntityTreeList ex:"+e);
             throw new FkException(ResultEnum.SQL_ANALYSIS);
         }

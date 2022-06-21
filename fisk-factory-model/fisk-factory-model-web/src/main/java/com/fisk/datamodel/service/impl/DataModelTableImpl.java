@@ -1,9 +1,13 @@
 package com.fisk.datamodel.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorPushDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceFieldDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
+import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigDTO;
+import com.fisk.datamodel.dto.widetableconfig.WideTableSourceFieldConfigDTO;
+import com.fisk.datamodel.dto.widetableconfig.WideTableSourceTableConfigDTO;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import com.fisk.datamodel.enums.FactAttributeEnum;
@@ -35,17 +39,19 @@ public class DataModelTableImpl implements IDataModelTable {
     FactAttributeMapper factAttributeMapper;
     @Resource
     AtomicIndicatorsImpl atomicIndicators;
+    @Resource
+    WideTableMapper wideTableMapper;
 
     @Override
-    public List<SourceTableDTO> getDataModelTable(int publishStatus)
-    {
-        List<SourceTableDTO> list=new ArrayList<>();
-        list.addAll(getDimensionTable(publishStatus));
-        if (publishStatus==1)
-        {
+    public List<SourceTableDTO> getDataModelTable(int publishStatus) {
+        List<SourceTableDTO> list = new ArrayList<>();
+        ////list.addAll(getDimensionTable(publishStatus));
+        if (publishStatus == 1) {
             list.addAll(getDwFactTable());
-        }else {
+        } else if (publishStatus == 2) {
             list.addAll(getDorisFactTable());
+        } else {
+            list.addAll(getDorisWideTable());
         }
         return list;
     }
@@ -236,57 +242,98 @@ public class DataModelTableImpl implements IDataModelTable {
         QueryWrapper<FactPO> factPoQueryWrapper=new QueryWrapper<>();
         factPoQueryWrapper.lambda().eq(FactPO::getDorisPublish, PublicStatusEnum.PUBLIC_SUCCESS);
         List<FactPO> factPoList=factMapper.selectList(factPoQueryWrapper);
-        if (CollectionUtils.isEmpty(factPoList))
-        {
+        if (CollectionUtils.isEmpty(factPoList)) {
             return list;
         }
         //获取事实表指标字段
-        for (FactPO item:factPoList)
-        {
-            SourceTableDTO dto=new SourceTableDTO();
-            dto.id=item.id;
-            dto.tableName=item.factTabName;
-            dto.type= DataModelTableTypeEnum.DORIS_FACT.getValue();
-            dto.tableDes=item.factTableDesc==null?item.factTabName:item.factTableDesc;
-            dto.sqlScript=item.sqlScript;
+        for (FactPO item : factPoList) {
+            SourceTableDTO dto = new SourceTableDTO();
+            dto.id = item.id;
+            dto.tableName = item.factTabName;
+            dto.type = DataModelTableTypeEnum.DORIS_FACT.getValue();
+            dto.tableDes = item.factTableDesc == null ? item.factTabName : item.factTableDesc;
+            dto.sqlScript = item.sqlScript;
             List<AtomicIndicatorPushDTO> atomicIndicator = atomicIndicators.getAtomicIndicator((int) item.id);
-            if (CollectionUtils.isEmpty(atomicIndicator))
-            {
+            if (CollectionUtils.isEmpty(atomicIndicator)) {
                 continue;
             }
-            List<SourceFieldDTO> fieldDtoList=new ArrayList<>();
-            for (AtomicIndicatorPushDTO atomic:atomicIndicator)
-            {
-                SourceFieldDTO field=new SourceFieldDTO();
-                field.attributeType=atomic.attributeType;
-                field.id=atomic.id;
-                switch (atomic.attributeType)
-                {
+            List<SourceFieldDTO> fieldDtoList = new ArrayList<>();
+            //原子指标、退化维度
+            for (AtomicIndicatorPushDTO atomic : atomicIndicator) {
+                SourceFieldDTO field = new SourceFieldDTO();
+                field.attributeType = atomic.attributeType;
+                field.id = atomic.id;
+                switch (atomic.attributeType) {
                     case 0:
-                        field.fieldName=atomic.factFieldName;
-                        field.fieldType=atomic.factFieldType;
-                        field.fieldLength=atomic.factFieldLength;
+                        field.fieldName = atomic.factFieldName;
+                        field.fieldType = atomic.factFieldType;
+                        field.fieldLength = atomic.factFieldLength;
                         break;
                     case 1:
-                        field.fieldName=atomic.dimensionTableName.substring(4)+"key";
-                        field.fieldType="NVARCHAR";
-                        field.fieldLength=255;
+                        field.fieldName = atomic.dimensionTableName.substring(4) + "key";
+                        field.fieldType = "NVARCHAR";
+                        field.fieldLength = 255;
                         break;
                     case 2:
                         field.fieldName=atomic.atomicIndicatorName;
                         field.fieldType="BIGINT";
                         field.fieldLength=0;
                         //聚合逻辑
-                        field.calculationLogic=atomic.aggregationLogic;
+                        field.calculationLogic = atomic.aggregationLogic;
                         //聚合字段
-                        field.sourceField=atomic.aggregatedField;
+                        field.sourceField = atomic.aggregatedField;
                     default:
                         break;
                 }
-                field.fieldDes=atomic.factFieldName;
+                field.fieldDes = atomic.factFieldName;
                 fieldDtoList.add(field);
             }
-            dto.fieldList=fieldDtoList;
+            //派生指标
+            List<AtomicIndicatorPushDTO> derivedIndicators = atomicIndicators.getDerivedIndicators((int) item.id);
+            for (AtomicIndicatorPushDTO atomic : derivedIndicators) {
+                SourceFieldDTO field = new SourceFieldDTO();
+                field.attributeType = atomic.attributeType;
+                field.id = atomic.id;
+                field.fieldName = atomic.atomicIndicatorName;
+                field.fieldType = "BIGINT";
+                field.fieldLength = 0;
+                field.atomicId = atomic.atomicId;
+                //时间周期
+                field.calculationLogic = atomic.aggregationLogic;
+                fieldDtoList.add(field);
+            }
+            dto.fieldList = fieldDtoList;
+            list.add(dto);
+        }
+        return list;
+    }
+
+    public List<SourceTableDTO> getDorisWideTable() {
+        List<SourceTableDTO> list = new ArrayList<>();
+        //宽表已发布数据
+        QueryWrapper<WideTableConfigPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(WideTableConfigPO::getDorisPublish, PublicStatusEnum.PUBLIC_SUCCESS);
+        List<WideTableConfigPO> wideTableConfigPoList = wideTableMapper.selectList(queryWrapper);
+        for (WideTableConfigPO item : wideTableConfigPoList) {
+            SourceTableDTO dto = new SourceTableDTO();
+            dto.id = item.id;
+            dto.tableName = item.name;
+            dto.type = DataModelTableTypeEnum.WIDE_TABLE.getValue();
+            dto.sqlScript = item.sqlScript;
+            dto.fieldList = new ArrayList<>();
+            WideTableFieldConfigDTO wideTableFieldDto = JSON.parseObject(item.configDetails, WideTableFieldConfigDTO.class);
+            if (wideTableFieldDto == null || CollectionUtils.isEmpty(wideTableFieldDto.entity)) {
+                continue;
+            }
+            for (WideTableSourceTableConfigDTO fieldTableDto : wideTableFieldDto.entity) {
+                for (WideTableSourceFieldConfigDTO fieldConfigDTO : fieldTableDto.columnConfig) {
+                    SourceFieldDTO field = new SourceFieldDTO();
+                    field.id = fieldConfigDTO.fieldId;
+                    field.attributeType = fieldTableDto.tableType;
+                    field.fieldName = fieldConfigDTO.fieldName;
+                    dto.fieldList.add(field);
+                }
+            }
             list.add(dto);
         }
         return list;

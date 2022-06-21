@@ -228,7 +228,6 @@ public class SynchronizationKinShip {
         }
         catch (Exception e)
         {
-            e.printStackTrace();
             log.error("synchronizationPgTableKinShip ex:",e);
         }
     }
@@ -525,9 +524,8 @@ public class SynchronizationKinShip {
             JSONObject relationShip=JSON.parseObject(entityObject.getString("relationshipAttributes"));
             JSONArray relationShipAttribute=JSON.parseArray(relationShip.getString("outputFromProcesses"));
             String processName=dto.sqlScript;
-            if (field.attributeType== FactAttributeEnum.MEASURE.getValue())
-            {
-                processName=field.calculationLogic;
+            if (field.attributeType == FactAttributeEnum.MEASURE.getValue() || field.attributeType == 3) {
+                processName = field.calculationLogic;
             }
             //条数为0,则添加process
             if (relationShipAttribute.size()==0)
@@ -595,20 +593,17 @@ public class SynchronizationKinShip {
             String tableName="dim_"+field.fieldName.replace("_key","");
             //获取dw库表结构
             ResultEntity<Object> result = client.getDataModelTable(1);
-            if (result.code!= ResultEnum.SUCCESS.getCode())
-            {
+            if (result.code != ResultEnum.SUCCESS.getCode()) {
                 return list;
             }
             //序列化
             List<SourceTableDTO> data= JSON.parseArray(JSON.toJSONString(result.data),SourceTableDTO.class);
             Optional<SourceTableDTO> dimensionTable = data.stream().filter(e -> e.tableName.equals(tableName)).findFirst();
-            if (!dimensionTable.isPresent())
-            {
+            if (!dimensionTable.isPresent()) {
                 return list;
             }
             Optional<SourceFieldDTO> dimensionField = dimensionTable.get().fieldList.stream().filter(e -> e.id == field.associatedDimId).findFirst();
-            if (!dimensionField.isPresent())
-            {
+            if (!dimensionField.isPresent()) {
                 return list;
             }
             QueryWrapper<MetadataMapAtlasPO> queryWrapper1=new QueryWrapper<>();
@@ -617,36 +612,53 @@ public class SynchronizationKinShip {
                     .eq(MetadataMapAtlasPO::getColumnId,0)
                     .eq(MetadataMapAtlasPO::getTableType,TableTypeEnum.DORIS_DIMENSION.getValue())
                     .eq(MetadataMapAtlasPO::getType,EntityTypeEnum.RDBMS_COLUMN.getValue());
-            MetadataMapAtlasPO po1=metadataMapAtlasMapper.selectOne(queryWrapper1);
-            if (po1==null)
-            {
+            MetadataMapAtlasPO po1 = metadataMapAtlasMapper.selectOne(queryWrapper1);
+            if (po1 == null) {
                 return list;
             }
-            EntityIdAndTypeDTO dto1=new EntityIdAndTypeDTO();
-            dto1.guid=po1.atlasGuid;
-            dto1.typeName=EntityTypeEnum.RDBMS_COLUMN.getName();
+            EntityIdAndTypeDTO dto1 = new EntityIdAndTypeDTO();
+            dto1.guid = po1.atlasGuid;
+            dto1.typeName = EntityTypeEnum.RDBMS_COLUMN.getName();
             list.add(dto1);
         }
         //原子指标
+        else if (field.attributeType == FactAttributeEnum.MEASURE.getValue()) {
+            Optional<SourceFieldDTO> sourceField = sourceTable.get().fieldList.stream()
+                    .filter(e -> field.sourceField.equals(e.fieldName.toLowerCase())).findFirst();
+            if (!sourceField.isPresent()) {
+                return list;
+            }
+            QueryWrapper<MetadataMapAtlasPO> queryWrapper1 = new QueryWrapper<>();
+            queryWrapper1.lambda().eq(MetadataMapAtlasPO::getColumnId, sourceField.get().id)
+                    .eq(MetadataMapAtlasPO::getTableType, TableTypeEnum.DW_FACT)
+                    .eq(MetadataMapAtlasPO::getDataType, DataTypeEnum.DATA_MODEL);
+            MetadataMapAtlasPO po1 = metadataMapAtlasMapper.selectOne(queryWrapper1);
+            if (po1 == null) {
+                return list;
+            }
+            EntityIdAndTypeDTO dto1 = new EntityIdAndTypeDTO();
+            dto1.guid = po1.atlasGuid;
+            dto1.typeName = EntityTypeEnum.RDBMS_COLUMN.getName();
+            list.add(dto1);
+        }
+        //派生指标
         else {
             Optional<SourceFieldDTO> sourceField = sourceTable.get().fieldList.stream()
                     .filter(e -> field.sourceField.equals(e.fieldName.toLowerCase())).findFirst();
-            if (!sourceField.isPresent())
-            {
+            if (!sourceField.isPresent()) {
                 return list;
             }
-            QueryWrapper<MetadataMapAtlasPO> queryWrapper1=new QueryWrapper<>();
-            queryWrapper1.lambda().eq(MetadataMapAtlasPO::getColumnId,sourceField.get().id)
-                    .eq(MetadataMapAtlasPO::getTableType,TableTypeEnum.DW_FACT)
-                    .eq(MetadataMapAtlasPO::getDataType, DataTypeEnum.DATA_MODEL);
-            MetadataMapAtlasPO po1=metadataMapAtlasMapper.selectOne(queryWrapper1);
-            if (po1==null)
-            {
+            QueryWrapper<MetadataMapAtlasPO> queryWrapper1 = new QueryWrapper<>();
+            queryWrapper1.lambda().eq(MetadataMapAtlasPO::getColumnId, sourceField.get().id)
+                    .eq(MetadataMapAtlasPO::getTableType, TableTypeEnum.DORIS_FACT)
+                    .eq(MetadataMapAtlasPO::getAtomicId, field.atomicId);
+            MetadataMapAtlasPO po1 = metadataMapAtlasMapper.selectOne(queryWrapper1);
+            if (po1 == null) {
                 return list;
             }
-            EntityIdAndTypeDTO dto1=new EntityIdAndTypeDTO();
-            dto1.guid=po1.atlasGuid;
-            dto1.typeName=EntityTypeEnum.RDBMS_COLUMN.getName();
+            EntityIdAndTypeDTO dto1 = new EntityIdAndTypeDTO();
+            dto1.guid = po1.atlasGuid;
+            dto1.typeName = EntityTypeEnum.RDBMS_COLUMN.getName();
             list.add(dto1);
         }
         return list;
@@ -720,6 +732,7 @@ public class SynchronizationKinShip {
                 0,
                 dto.guid,
                 "",
+                0,
                 0);
     }
 

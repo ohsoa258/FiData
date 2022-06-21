@@ -56,5 +56,9 @@ public class MetadataMapAtlasPO extends BasePO {
      * 维度key
      */
     public String dimensionKey;
+    /**
+     * 原子指标id
+     */
+    public int atomicId;
 
 }

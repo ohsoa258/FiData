@@ -11,6 +11,7 @@ import com.fisk.datamanagement.enums.TableTypeEnum;
 import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
 import com.fisk.datamanagement.service.IAssetsDirectory;
 import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.datamodel.dto.tableconfig.SourceFieldDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -40,14 +41,6 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
         data.add(setAssetsDirectory(firstLevel, "资产目录", ""));
         data.addAll(getAnalyzeDataList(firstLevel));
         return data;
-    }
-
-    public AssetsDirectoryDTO setAssetsDirectory(String key, String name, String parent) {
-        AssetsDirectoryDTO dto = new AssetsDirectoryDTO();
-        dto.key = key;
-        dto.name = name;
-        dto.parent = parent;
-        return dto;
     }
 
     /**
@@ -95,8 +88,67 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
             //业务过程
             data.add(setAssetsDirectory(item.atlasGuid, first.get().tableName, businessProcessKey));
         }
-
+        data.addAll(getAnalysisModel(analyzeDataKey));
         return data;
+    }
+
+    /**
+     * 资产目录-分析模型--原子指标、派生指标、宽表
+     *
+     * @return
+     */
+    public List<AssetsDirectoryDTO> getAnalysisModel(String analyzeDataKey) {
+        List<AssetsDirectoryDTO> data = new ArrayList<>();
+        //分析模型key
+        String analysisModelKey = UUID.randomUUID().toString();
+        data.add(setAssetsDirectory(analysisModelKey, "分析模型", analyzeDataKey));
+        //原子指标
+        String atomicIndicatorsKey = UUID.randomUUID().toString();
+        data.add(setAssetsDirectory(atomicIndicatorsKey, "原子指标", analysisModelKey));
+        //派生指标
+        String derivedIndicatorsKey = UUID.randomUUID().toString();
+        data.add(setAssetsDirectory(derivedIndicatorsKey, "派生指标", analysisModelKey));
+        List<Integer> type = new ArrayList<>();
+        type.add(TableTypeEnum.DW_FACT.getValue());
+        type.add(TableTypeEnum.DORIS_DIMENSION.getValue());
+        //查询属性为原子指标和派生指标的数据
+        QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("attribute_type", type);
+        List<MetadataMapAtlasPO> list = metadataMapAtlasMapper.selectList(queryWrapper);
+        //调用数仓建模模块接口,获取表名
+        ResultEntity<Object> result = client.getDataModelTable(2);
+        if (result.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(list)) {
+            return data;
+        }
+        List<SourceTableDTO> sourceTableList = JSON.parseArray(JSON.toJSONString(result.data), SourceTableDTO.class);
+        for (MetadataMapAtlasPO item : list) {
+            Optional<SourceTableDTO> first = sourceTableList
+                    .stream()
+                    .filter(e -> e.type == TableTypeEnum.DORIS_FACT.getValue() && e.id == item.tableId)
+                    .findFirst();
+            if (!first.isPresent()) {
+                continue;
+            }
+            Optional<SourceFieldDTO> atomic = first.get().fieldList.stream().filter(e -> e.id == item.columnId).findFirst();
+            if (!atomic.isPresent()) {
+                continue;
+            }
+            //原子指标
+            if (atomic.get().attributeType == 2) {
+                data.add(setAssetsDirectory(item.atlasGuid, atomic.get().fieldName, atomicIndicatorsKey));
+                continue;
+            }
+            data.add(setAssetsDirectory(item.atlasGuid, atomic.get().fieldName, derivedIndicatorsKey));
+        }
+        return data;
+    }
+
+    public AssetsDirectoryDTO setAssetsDirectory(String key, String name, String parent) {
+        AssetsDirectoryDTO dto = new AssetsDirectoryDTO();
+        dto.key = key;
+        dto.name = name;
+        dto.parent = parent;
+        return dto;
     }
 
 }
