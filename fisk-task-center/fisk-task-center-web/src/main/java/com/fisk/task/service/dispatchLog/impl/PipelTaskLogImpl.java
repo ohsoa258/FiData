@@ -9,6 +9,7 @@ import com.fisk.task.mapper.PipelTaskLogMapper;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -41,7 +42,9 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
             pipelTaskLog.taskTraceId = pipelTaskTraceId;
             pipelTaskLog.taskId = taskId;
             pipelTaskLog.type = next.getKey();
-            pipelTaskLog.tableId = Integer.parseInt(tableId);
+            if (StringUtils.isNotEmpty(tableId)) {
+                pipelTaskLog.tableId = Integer.valueOf(tableId);
+            }
             pipelTaskLog.tableType = tableType;
             pipelTaskLogs.add(pipelTaskLog);
         }
