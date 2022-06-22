@@ -23,6 +23,7 @@ import com.fisk.task.service.task.IBuildKfkTaskService;
 import com.fisk.task.service.task.IBuildTaskService;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -46,6 +47,8 @@ public class PublishTaskController {
     BuildAtlasTableAndColumnTaskListener buildAtlasTableAndColumnTaskListener;
     @Resource
     BuildDataModelDorisTableListener buildDataModelDorisTableListener;
+    @Value("${nifi.pipeline.topicName}")
+    public String pipelineTopicName;
 
     @PostMapping("/nifiFlow")
     @ApiOperation(value = "创建同步数据nifi流程")
@@ -248,7 +251,7 @@ public class PublishTaskController {
     public ResultEntity<Object> universalPublish(@RequestBody KafkaReceiveDTO dto){
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_UNIVERSAL_PUBLISH_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                dto.topic,
+                pipelineTopicName,
                 dto);}
 
 

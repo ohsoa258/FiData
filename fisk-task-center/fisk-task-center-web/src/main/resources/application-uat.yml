@@ -11,7 +11,7 @@ nifi:
   basePath: http://192.168.21.13:8080/nifi-api
   token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiI5YjNkMjY3NjExNDc0NWU2ODg3MDlkODkzNmUzYmQ4MiIsInVzZXIiOiJ7XCJpZFwiOjE5LFwidXNlckFjY291bnRcIjpcInRhc2vkuJPnlKh0b2tlblwifSIsImlkIjoiMTkifQ.d5g6oMU3a_XsjpOouZu1R1YlVO_E_ZjwUUJROR1XbRo
   pipeline:
-    topicName: my-topic2
+    topicName: my-topic
     waitTime: 20
 nifi-ConcurrentTasks: 3
 nifi-FetchSize: 30000

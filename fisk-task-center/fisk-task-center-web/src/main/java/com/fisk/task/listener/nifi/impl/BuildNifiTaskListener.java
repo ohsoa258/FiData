@@ -26,6 +26,7 @@ import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -124,6 +125,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     private ITableTopicService tableTopicService;
     @Resource
     KafkaTemplateHelper kafkaTemplateHelper;
+    @Resource
+    PublishTaskController pc;
 
     @Resource
     RestTemplate httpClient;
@@ -262,7 +265,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 kafkaRkeceiveDTO.pipelStageTraceId = UUID.randomUUID().toString();
                 kafkaRkeceiveDTO.ifTaskStart = true;
                 kafkaRkeceiveDTO.topicType = TopicTypeEnum.DAILY_NIFI_FLOW;
-                kafkaTemplateHelper.sendMessageAsync(pipelineTopicName, JSON.toJSONString(kafkaRkeceiveDTO));
+                pc.universalPublish(kafkaRkeceiveDTO);
+                //kafkaTemplateHelper.sendMessageAsync(pipelineTopicName, JSON.toJSONString(kafkaRkeceiveDTO));
             }
 
             //7. 回写id
