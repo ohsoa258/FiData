@@ -471,8 +471,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
 
     public AttributeColumnVO getCodeAndName(AttributeColumnVO attributeColumnVo) {
         AttributeColumnVO vo = new AttributeColumnVO();
-        vo.setDisplayName(TableNameGenerateUtils.generateComplexTypeMapType(attributeColumnVo.getDisplayName(), false));
-        vo.setName(TableNameGenerateUtils.generateComplexTypeMapType(attributeColumnVo.getName(), true));
+        vo.setDisplayName(TableNameGenerateUtils.generateComplexTypeMapType(attributeColumnVo.getDisplayName().replace("_经度", ""), false));
+        vo.setName(TableNameGenerateUtils.generateComplexTypeMapType(attributeColumnVo.getName().replace("_lng", ""), true));
         vo.setDataType(attributeColumnVo.getDataType());
         vo.setDataTypeEnDisplay(attributeColumnVo.getDataTypeEnDisplay());
         vo.setEnableRequired(attributeColumnVo.getEnableRequired());

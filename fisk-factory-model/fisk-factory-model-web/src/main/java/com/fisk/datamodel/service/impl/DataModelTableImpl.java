@@ -45,7 +45,7 @@ public class DataModelTableImpl implements IDataModelTable {
     @Override
     public List<SourceTableDTO> getDataModelTable(int publishStatus) {
         List<SourceTableDTO> list = new ArrayList<>();
-        ////list.addAll(getDimensionTable(publishStatus));
+        list.addAll(getDimensionTable(publishStatus));
         if (publishStatus == 1) {
             list.addAll(getDwFactTable());
         } else if (publishStatus == 2) {

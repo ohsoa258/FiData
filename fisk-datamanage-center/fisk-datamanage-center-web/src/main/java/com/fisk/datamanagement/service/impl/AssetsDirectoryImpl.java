@@ -13,6 +13,7 @@ import com.fisk.datamanagement.service.IAssetsDirectory;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.tableconfig.SourceFieldDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
+import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -102,12 +104,15 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
         //分析模型key
         String analysisModelKey = UUID.randomUUID().toString();
         data.add(setAssetsDirectory(analysisModelKey, "分析模型", analyzeDataKey));
-        //原子指标
+        //原子指标key
         String atomicIndicatorsKey = UUID.randomUUID().toString();
         data.add(setAssetsDirectory(atomicIndicatorsKey, "原子指标", analysisModelKey));
-        //派生指标
+        //派生指标key
         String derivedIndicatorsKey = UUID.randomUUID().toString();
         data.add(setAssetsDirectory(derivedIndicatorsKey, "派生指标", analysisModelKey));
+        //宽表key
+        String wideTableKey = UUID.randomUUID().toString();
+        data.add(setAssetsDirectory(wideTableKey, "宽表", analysisModelKey));
         List<Integer> type = new ArrayList<>();
         type.add(TableTypeEnum.DW_FACT.getValue());
         type.add(TableTypeEnum.DORIS_DIMENSION.getValue());
@@ -140,7 +145,32 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
             }
             data.add(setAssetsDirectory(item.atlasGuid, atomic.get().fieldName, derivedIndicatorsKey));
         }
+        data.addAll(getWideTableList(wideTableKey));
         return data;
+    }
+
+    public List<AssetsDirectoryDTO> getWideTableList(String wideTableKey) {
+        List<AssetsDirectoryDTO> data = new ArrayList<>();
+        //调用宽表接口,获取表名
+        ResultEntity<Object> result = client.getDataModelTable(3);
+        if (result.code != ResultEnum.SUCCESS.getCode()) {
+            return data;
+        }
+        List<SourceTableDTO> sourceTableList = JSON.parseArray(JSON.toJSONString(result.data), SourceTableDTO.class);
+        List<SourceTableDTO> collect = sourceTableList.stream().filter(e -> e.type == DataModelTableTypeEnum.WIDE_TABLE.getValue()).collect(Collectors.toList());
+        //宽表
+        QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(MetadataMapAtlasPO::getTableType, DataModelTableTypeEnum.WIDE_TABLE.getValue());
+        List<MetadataMapAtlasPO> poList = metadataMapAtlasMapper.selectList(queryWrapper);
+        for (MetadataMapAtlasPO item : poList) {
+            Optional<SourceTableDTO> first = collect.stream().filter(e -> e.id == item.id).findFirst();
+            if (!first.isPresent()) {
+                continue;
+            }
+            data.add(setAssetsDirectory(item.atlasGuid, first.get().tableName, wideTableKey));
+        }
+        return data;
+
     }
 
     public AssetsDirectoryDTO setAssetsDirectory(String key, String name, String parent) {

@@ -89,7 +89,7 @@ public class TableNameGenerateUtils {
      * @return
      */
     public static String generateComplexTypeLat(String latColumnName, boolean isCode) {
-        return isCode ? latColumnName + "_lat" : latColumnName + "_维度";
+        return isCode ? latColumnName + "_lat" : latColumnName + "_纬度";
     }
 
     /**

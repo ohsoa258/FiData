@@ -472,6 +472,8 @@ public class SynchronizationData {
                 .eq(MetadataMapAtlasPO::getColumnId, 0);
         if (wideTable) {
             queryWrapper.lambda().eq(MetadataMapAtlasPO::getTableType, DataModelTableTypeEnum.WIDE_TABLE.getValue());
+        } else {
+            queryWrapper.lambda().ne(MetadataMapAtlasPO::getTableType, DataModelTableTypeEnum.WIDE_TABLE.getValue());
         }
         List<MetadataMapAtlasPO> poList = metadataMapAtlasMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(poList)) {
