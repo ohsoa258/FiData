@@ -53,3 +53,7 @@ mybatis-plus:
       update-strategy: not_null
   mapper-locations: classpath:mapper/*.xml
   type-enums-package: com.fisk.mdm.enums
+
+# 定时任务执行时间
+timed:
+  setDataStructure: "0/1 * * * * ?"
