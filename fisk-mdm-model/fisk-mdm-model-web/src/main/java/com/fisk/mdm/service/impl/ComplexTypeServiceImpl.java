@@ -65,7 +65,8 @@ public class ComplexTypeServiceImpl implements IComplexType {
         try {
             String fileName = file.getOriginalFilename();
             Date date = new Date();
-            String path = uploadUrl + new SimpleDateFormat("yyyy-MM-dd").format(date);
+            String nowDateStr = new SimpleDateFormat("yyyy-MM-dd").format(date);
+            String path = uploadUrl + nowDateStr;
             //如果不存在,创建文件夹
             File f = new File(path);
             if (!f.exists()) {
@@ -73,7 +74,8 @@ public class ComplexTypeServiceImpl implements IComplexType {
             }
             //指定上传路径
             String filePath = path + "/" + fileName;
-            String echoNewPath = echoPath + new SimpleDateFormat("yyyy-MM-dd").format(date) + "/" + fileName;
+            //回显路径
+            String echoNewPath = echoPath + nowDateStr + "/" + fileName;
             //创建新文件对象 指定文件路径为拼接好的路径
             File newFile = new File(filePath);
             //将前端传递过来的文件输送给新文件 这里需要抛出IO异常 throws IOException
@@ -81,7 +83,7 @@ public class ComplexTypeServiceImpl implements IComplexType {
             //上传完成后将文件路径返回给前端用作图片回显或增加时的文件路径值等
             FileVO data = new FileVO();
             data.setFile_name(fileName);
-            data.setFile_path(filePath);
+            data.setFile_path(echoNewPath);
             data.setFidata_version_id(versionId);
             vo.setId(addFile(data));
             vo.setFilePath(echoNewPath);
