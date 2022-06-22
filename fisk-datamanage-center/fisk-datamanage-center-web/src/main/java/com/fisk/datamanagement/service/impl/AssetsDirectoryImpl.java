@@ -160,17 +160,18 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
         List<SourceTableDTO> collect = sourceTableList.stream().filter(e -> e.type == DataModelTableTypeEnum.WIDE_TABLE.getValue()).collect(Collectors.toList());
         //宽表
         QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(MetadataMapAtlasPO::getTableType, DataModelTableTypeEnum.WIDE_TABLE.getValue());
+        queryWrapper.lambda()
+                .eq(MetadataMapAtlasPO::getTableType, DataModelTableTypeEnum.WIDE_TABLE.getValue())
+                .eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_TABLE.getValue());
         List<MetadataMapAtlasPO> poList = metadataMapAtlasMapper.selectList(queryWrapper);
         for (MetadataMapAtlasPO item : poList) {
-            Optional<SourceTableDTO> first = collect.stream().filter(e -> e.id == item.id).findFirst();
+            Optional<SourceTableDTO> first = collect.stream().filter(e -> e.id == item.tableId).findFirst();
             if (!first.isPresent()) {
                 continue;
             }
             data.add(setAssetsDirectory(item.atlasGuid, first.get().tableName, wideTableKey));
         }
         return data;
-
     }
 
     public AssetsDirectoryDTO setAssetsDirectory(String key, String name, String parent) {

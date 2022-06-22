@@ -1,6 +1,7 @@
 package com.fisk.mdm.service;
 
 import com.fisk.mdm.dto.complextype.GeographyDTO;
+import com.fisk.mdm.vo.complextype.EchoFileVO;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -24,6 +25,6 @@ public interface IComplexType {
      * @param file
      * @return
      */
-    Integer uploadFile(Integer versionId, MultipartFile file);
+    EchoFileVO uploadFile(Integer versionId, MultipartFile file);
 
 }

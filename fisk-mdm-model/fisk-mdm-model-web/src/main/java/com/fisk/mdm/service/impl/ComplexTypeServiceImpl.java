@@ -11,6 +11,7 @@ import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.mdm.dto.complextype.GeographyDTO;
 import com.fisk.mdm.map.ComplexTypeMap;
 import com.fisk.mdm.service.IComplexType;
+import com.fisk.mdm.vo.complextype.EchoFileVO;
 import com.fisk.mdm.vo.complextype.FileVO;
 import com.fisk.mdm.vo.complextype.GeographyVO;
 import lombok.extern.slf4j.Slf4j;
@@ -57,7 +58,8 @@ public class ComplexTypeServiceImpl implements IComplexType {
     }
 
     @Override
-    public Integer uploadFile(Integer versionId, MultipartFile file) {
+    public EchoFileVO uploadFile(Integer versionId, MultipartFile file) {
+        EchoFileVO vo = new EchoFileVO();
         try {
             String fileName = file.getOriginalFilename();
             Date date = new Date();
@@ -78,7 +80,9 @@ public class ComplexTypeServiceImpl implements IComplexType {
             data.setFile_name(fileName);
             data.setFile_path(filePath);
             data.setFidata_version_id(versionId);
-            return addFile(data);
+            vo.setId(addFile(data));
+            vo.setFilePath(filePath);
+            return vo;
         } catch (IOException e) {
             log.error("uploadFile:", e);
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);

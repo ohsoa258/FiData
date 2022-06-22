@@ -57,7 +57,7 @@ fidata:
     protocol: http,http,http
     rdbmstype: postgresql,postgresql,doris
     username: postgres,postgres,root
-    password: Password01!,Password01!,Password01!
+    password: PgPassword01!,PgPassword01!,Password01!
     db: dmp_ods_UAT,dmp_dw_UAT,dmp_olap
 
 #血缘同步
