@@ -456,6 +456,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 vo.setDisplayName(TableNameGenerateUtils.generateComplexTypeLat(attributeColumnVo.getDisplayName(), false));
                 vo.setName(TableNameGenerateUtils.generateComplexTypeLat(attributeColumnVo.getName(), true));
                 break;
+            case TEXT:
+                vo.setDisplayName(attributeColumnVo.getDisplayName());
+                vo.setName(attributeColumnVo.getName());
             default:
                 break;
         }
@@ -525,14 +528,18 @@ public class MasterDataServiceImpl implements IMasterDataService {
             //文件类型
             else if (attributeColumnVo.getDataType().equals(DataTypeEnum.FILE.getName())) {
                 newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.FILE));
-                attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateComplexTypeFileName(attributeColumnVo.getDisplayName(), false));
-                attributeColumnVo.setName(TableNameGenerateUtils.generateComplexTypeFileName(attributeColumnVo.getName(), true));
+                AttributeColumnVO codeAndName = getCodeAndName(attributeColumnVo, DataTypeEnum.TEXT);
+                codeAndName.setDisplayName(TableNameGenerateUtils.generateComplexTypeFileName(attributeColumnVo.getDisplayName(), false));
+                codeAndName.setName(TableNameGenerateUtils.generateComplexTypeFileName(attributeColumnVo.getName(), true));
+                newColumnList.add(codeAndName);
             }
             //经纬度
             else if (attributeColumnVo.getDataType().equals(DataTypeEnum.LATITUDE_COORDINATE.getName())) {
+                AttributeColumnVO codeAndName = getCodeAndName(attributeColumnVo, DataTypeEnum.TEXT);
+                codeAndName.setDisplayName(TableNameGenerateUtils.generateComplexTypeFileName(attributeColumnVo.getDisplayName(), false));
+                codeAndName.setName(TableNameGenerateUtils.generateComplexTypeFileName(attributeColumnVo.getName(), true));
+                newColumnList.add(codeAndName);
                 newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.LATITUDE_COORDINATE));
-                attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateComplexTypeLng(attributeColumnVo.getDisplayName(), false));
-                attributeColumnVo.setName(TableNameGenerateUtils.generateComplexTypeLng(attributeColumnVo.getName(), true));
                 newColumnList.add(getCodeAndName(attributeColumnVo));
             }
             newColumnList.add(attributeColumnVo);
