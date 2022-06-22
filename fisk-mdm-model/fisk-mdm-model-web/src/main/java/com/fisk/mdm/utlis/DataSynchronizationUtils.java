@@ -317,6 +317,7 @@ public class DataSynchronizationUtils {
             switch (dataType) {
                 case "域字段":
                 case "数值":
+                case "文件":
                     filedType = JDBCType.INTEGER.getName();
                     break;
                 case "时间":
