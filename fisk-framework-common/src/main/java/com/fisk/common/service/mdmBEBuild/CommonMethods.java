@@ -41,7 +41,7 @@ public class CommonMethods {
             }
             //拼接value
             else {
-                if (StringUtils.isEmpty(entry.getValue().toString())) {
+                if (StringUtils.isEmpty(entry.getValue() == null ? "" : entry.getValue().toString())) {
                     columnList.add("null");
                 } else {
                     columnList.add("'" + entry.getValue().toString() + "'");
