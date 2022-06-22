@@ -316,7 +316,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         List<String> valueList = new ArrayList<>();
         for (Map.Entry<String, Object> item : data.entrySet()) {
             columnList.add(item.getKey());
-            valueList.add(item.getValue().toString());
+            valueList.add(item.getValue() == null ? "null" : item.getValue().toString());
         }
         str.append(String.join(",", columnList) + ") ");
         str.append("values(" + CommonMethods.convertListToString(valueList) + ")");

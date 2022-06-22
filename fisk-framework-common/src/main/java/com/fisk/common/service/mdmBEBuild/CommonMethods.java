@@ -67,8 +67,16 @@ public class CommonMethods {
         if (CollectionUtils.isNotEmpty(strList)) {
             for (int i = 0; i < strList.size(); i++) {
                 if (i == 0) {
+                    if ("null".equals(strList.get(i))) {
+                        sb.append("null");
+                        continue;
+                    }
                     sb.append("'").append(strList.get(i)).append("'");
                 } else {
+                    if ("null".equals(strList.get(i))) {
+                        sb.append(",").append("null");
+                        continue;
+                    }
                     sb.append(",").append("'").append(strList.get(i)).append("'");
                 }
             }
