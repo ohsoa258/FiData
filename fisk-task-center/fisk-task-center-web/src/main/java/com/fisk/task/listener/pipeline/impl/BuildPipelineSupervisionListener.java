@@ -82,7 +82,7 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
             if (StringUtils.isEmpty(kafkaReceiveDTO.pipelTraceId)) {
                 kafkaReceiveDTO.pipelTraceId = UUID.randomUUID().toString();
             }
-            if (StringUtils.isEmpty(kafkaReceiveDTO.topic)) {
+            if (!StringUtils.isEmpty(kafkaReceiveDTO.topic)) {
                 String topicName = kafkaReceiveDTO.topic;
                 String[] split1 = topicName.split("\\.");
                 String pipelineId = split1[3];

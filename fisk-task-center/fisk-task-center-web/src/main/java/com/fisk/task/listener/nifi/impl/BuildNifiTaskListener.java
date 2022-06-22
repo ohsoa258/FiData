@@ -2110,16 +2110,16 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(1, 6);
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
-        String replacementValue="{\n" +
-                "    \"message\":\"${executesql.error.message}\",\n" +
-                "    \"topic\":\"${kafka.topic}\",\n" +
-                "    \"groupId\":\""+groupId+"\",\n" +
-                "    \"startTime\":\"${start_time}\",\n" +
-                "    \"endTime\":\"${end_time}\",\n" +
-                "    \"counts\":\"${numbers}\",\n" +
-                "    \"pipelStageTraceId\":\"${pipelStageTraceId}\",\n" +
-                "    \"pipelTaskTraceId\":\"${pipelTaskTraceId}\",\n" +
-                "    \"pipelJobTraceId\":\"${pipelJobTraceId}\"\n" +
+        String replacementValue="{" +
+                "\"message\":\"${executesql.error.message}\"," +
+                "\"topic\":\"${kafka.topic}\"," +
+                "\"groupId\":\""+groupId+"\"," +
+                "\"startTime\":\"${start_time}\"," +
+                "\"endTime\":\"${end_time}\"," +
+                "\"counts\":\"${numbers}\"," +
+                "\"pipelStageTraceId\":\"${pipelStageTraceId}\"," +
+                "\"pipelTaskTraceId\":\"${pipelTaskTraceId}\"," +
+                "\"pipelJobTraceId\":\"${pipelJobTraceId}\"" +
                 "}";
         buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(replacementValue);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
