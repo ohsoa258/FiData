@@ -40,4 +40,5 @@ pgsql-mdm:
 
 # 图片上传
 file:
-  uploadurl: /file/mdm/
+  uploadurl: /root/nginx/app/file/mdm/
+  echoPath: /file/mdm/

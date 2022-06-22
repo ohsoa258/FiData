@@ -46,6 +46,8 @@ public class ComplexTypeServiceImpl implements IComplexType {
     private String password;
     @Value("${file.uploadurl}")
     private String uploadUrl;
+    @Value("${file.echoPath}")
+    private String echoPath;
 
     @Override
     public Integer addGeography(GeographyDTO dto) {
@@ -71,6 +73,7 @@ public class ComplexTypeServiceImpl implements IComplexType {
             }
             //指定上传路径
             String filePath = path + "/" + fileName;
+            String echoNewPath = echoPath + new SimpleDateFormat("yyyy-MM-dd").format(date) + fileName;
             //创建新文件对象 指定文件路径为拼接好的路径
             File newFile = new File(filePath);
             //将前端传递过来的文件输送给新文件 这里需要抛出IO异常 throws IOException
@@ -81,7 +84,7 @@ public class ComplexTypeServiceImpl implements IComplexType {
             data.setFile_path(filePath);
             data.setFidata_version_id(versionId);
             vo.setId(addFile(data));
-            vo.setFilePath(filePath);
+            vo.setFilePath(echoNewPath);
             return vo;
         } catch (IOException e) {
             log.error("uploadFile:", e);

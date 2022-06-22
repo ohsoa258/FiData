@@ -46,4 +46,5 @@ ocr:
     appCode: be40b237d6fe470d84590b5a42934596
 
 file:
-  uploadurl: /file/mdm/
+  uploadurl: /root/nginx/app/file/mdm/
+  echoPath: /file/mdm/
