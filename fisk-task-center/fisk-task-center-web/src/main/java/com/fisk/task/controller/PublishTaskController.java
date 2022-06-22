@@ -247,8 +247,9 @@ public class PublishTaskController {
                 dto);}
 
     @PostMapping("/universalPublish")
-    @ApiOperation(value = "通用调度,需要传入topic和内容")
+    @ApiOperation(value = "任务发布中心调度")
     public ResultEntity<Object> universalPublish(@RequestBody KafkaReceiveDTO dto){
+        log.info("任务发布中心调度");
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_UNIVERSAL_PUBLISH_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 pipelineTopicName,
