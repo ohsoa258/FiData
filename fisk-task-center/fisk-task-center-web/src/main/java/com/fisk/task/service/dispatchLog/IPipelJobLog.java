@@ -15,7 +15,17 @@ public interface IPipelJobLog extends IService<PipelJobLogPO> {
 
 
     /**
-     * 保存日志
+     * 保存管道日志
+     *
+     * @param pipelTraceId 管道的traceID
+     * @param map          需要添加的参数
+     * @param pipelId      管道id
+     * @return
+     */
+    public void savePipelLog(String pipelTraceId, Map<Integer, Object> map, String pipelId);
+
+    /**
+     * 保存job日志
      *
      * @param pipelTraceId 管道的traceID
      * @param map          需要添加的参数
@@ -24,7 +34,7 @@ public interface IPipelJobLog extends IService<PipelJobLogPO> {
      * @param componentId
      * @return
      */
-    public void savePipelLogAndJobLog(String pipelTraceId, Map<Integer, Object> map, String pipelId, String jobTraceId, String componentId);
+    public void savePipelJobLog(String pipelTraceId, Map<Integer, Object> map, String pipelId, String jobTraceId, String componentId);
 
     /**
      * 获取日志

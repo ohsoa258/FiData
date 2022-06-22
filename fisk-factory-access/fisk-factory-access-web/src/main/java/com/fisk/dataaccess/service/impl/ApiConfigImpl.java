@@ -8,8 +8,10 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.dto.UserAuthDTO;
+import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.constants.RedisTokenKey;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
+import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -606,7 +608,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             nifiStageMessageDto.startTime = startTime;
             nifiStageMessageDto.endTime = endTime;
             nifiStageMessageDto.counts = COUNT_SQL / 2;
-            nifiStageMessageDto.topic = "dmp.datafactory.nifi." + topicType + "." + apiConfigPo.appId + "." + dto.apiCode;
+            nifiStageMessageDto.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + topicType + "." + apiConfigPo.appId + "." + dto.apiCode;
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
                 nifiStageDto.insertPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
                 nifiStageDto.transitionPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
@@ -632,7 +634,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             nifiStageMessageDto.startTime = startTime;
             nifiStageMessageDto.endTime = endTime;
             nifiStageMessageDto.counts = COUNT_SQL;
-            nifiStageMessageDto.topic = "dmp.datafactory.nifi." + topicType + "." + apiConfigPo.appId + "." + dto.apiCode;
+            nifiStageMessageDto.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + topicType + "." + apiConfigPo.appId + "." + dto.apiCode;
             // 非实时日志详情
             if (importDataDto != null) {
                 nifiStageMessageDto.pipelTaskTraceId = importDataDto.pipelTaskTraceId;
@@ -700,41 +702,43 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         PipelApiDispatchDTO pipelApiDispatch = JSON.parseObject(dto.pipelApiDispatch, PipelApiDispatchDTO.class);
 
         if (!Objects.isNull(pipelApiDispatch)) {
-            List<String> kafkaReceives = new ArrayList<>();
-            KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
             dto.workflowId = pipelApiDispatch.workflowId;
             dto.appId = pipelApiDispatch.appId;
             dto.apiId = pipelApiDispatch.apiId;
             syncData(dto);
-            kafkaReceiveDTO.pipelTraceId = dto.pipelTraceId;
-            kafkaReceiveDTO.pipelTaskTraceId = dto.pipelTaskTraceId;
-            kafkaReceiveDTO.pipelStageTraceId = dto.pipelStageTraceId;
-            kafkaReceiveDTO.pipelJobTraceId = dto.pipelJobTraceId;
-            kafkaReceiveDTO.tableId = Math.toIntExact(dto.apiId);
-            kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
-            kafkaReceiveDTO.nifiCustomWorkflowDetailId = Long.valueOf(dto.workflowId);
-            kafkaReceiveDTO.topic = "dmp.datafactory.nifi." + dto.workflowId + "." + kafkaReceiveDTO.tableType + "." + dto.appId + "." + dto.apiId;
-            kafkaReceives.add(JSON.toJSONString(kafkaReceiveDTO));
-            publishTaskClient.consumer(kafkaReceives);
+            consumer(dto);
         } else {
-            List<String> kafkaReceives = new ArrayList<>();
-            KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
             // 接入模块调用
             syncData(dto);
             if (dto.workflowId != null) {
-                kafkaReceiveDTO.pipelTraceId = dto.pipelTraceId;
-                kafkaReceiveDTO.pipelTaskTraceId = dto.pipelTaskTraceId;
-                kafkaReceiveDTO.pipelStageTraceId = dto.pipelStageTraceId;
-                kafkaReceiveDTO.pipelJobTraceId = dto.pipelJobTraceId;
-                kafkaReceiveDTO.tableId = Math.toIntExact(dto.apiId);
-                kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
-                kafkaReceiveDTO.topic = "dmp.datafactory.nifi." + dto.workflowId + "." + kafkaReceiveDTO.tableType + "." + dto.appId + "." + dto.apiId;
-                kafkaReceiveDTO.nifiCustomWorkflowDetailId = Long.valueOf(dto.workflowId);
-                kafkaReceives.add(JSON.toJSONString(kafkaReceiveDTO));
-                publishTaskClient.consumer(kafkaReceives);
+                consumer(dto);
             }
         }
         return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 调用管道下一级task
+     *
+     * @return void
+     * @description 调用管道下一级task
+     * @author cfk
+     * @date 2022/6/22 11:31
+     * @version v1.0
+     * @params dto
+     */
+    public void consumer(ApiImportDataDTO dto) {
+        KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
+        kafkaReceiveDTO.pipelTraceId = dto.pipelTraceId;
+        kafkaReceiveDTO.pipelTaskTraceId = dto.pipelTaskTraceId;
+        kafkaReceiveDTO.pipelStageTraceId = dto.pipelStageTraceId;
+        kafkaReceiveDTO.pipelJobTraceId = dto.pipelJobTraceId;
+        kafkaReceiveDTO.tableId = Math.toIntExact(dto.apiId);
+        kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
+        kafkaReceiveDTO.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.workflowId + "." + kafkaReceiveDTO.tableType + "." + dto.appId + "." + dto.apiId;
+        kafkaReceiveDTO.nifiCustomWorkflowDetailId = Long.valueOf(dto.workflowId);
+        kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW;
+        publishTaskClient.consumer(JSON.toJSONString(kafkaReceiveDTO));
     }
 
     @Transactional(rollbackFor = Exception.class)

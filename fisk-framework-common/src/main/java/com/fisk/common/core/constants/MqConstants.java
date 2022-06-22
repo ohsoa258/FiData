@@ -11,6 +11,15 @@ public class MqConstants {
 
     }
 
+    /*
+     * topic前缀
+     * */
+    public static final class TopicPrefix {
+
+        public static final String TOPIC_PREFIX = "dmp.datafactory.nifi.";
+
+    }
+
     public static final class QueueConstants {
 
         public static final String INCREMENT_RESULT = "task.data.increment.result";
@@ -75,9 +84,12 @@ public class MqConstants {
 
         public static final String BUILD_MDM_ENTITY_DATA = "task.build.mdm.entity";
 
-        public static final String BUILD_ACCESS_API_FLOW="build.access.api.flow";
+        public static final String BUILD_ACCESS_API_FLOW = "build.access.api.flow";
 
-        public static final String BUILD_NIFI_PIPELINE_TOPICNAME_FLOW="nifi.pipeline.topicName";
+        public static final String BUILD_NIFI_PIPELINE_TOPICNAME_FLOW = "nifi.pipeline.topicName";
+
+        public static final String BUILD_UNIVERSAL_PUBLISH_FLOW = "task.build.universal_publish";
+
 
     }
 

@@ -35,7 +35,30 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
     IPipelTaskLog iPipelTaskLog;
 
     @Override
-    public void savePipelLogAndJobLog(String pipelTraceId, Map<Integer, Object> map, String pipelId, String jobTraceId, String componentId) {
+    public void savePipelLog(String pipelTraceId, Map<Integer, Object> map, String pipelId) {
+        log.info("job参数:pipelTraceId:{},map:{},pipelId:{}", pipelTraceId, JSON.toJSONString(map), pipelId);
+
+        List<PipelJobLogPO> pipelJobLogs = new ArrayList<>();
+        Iterator<Map.Entry<Integer, Object>> nodeMap = map.entrySet().iterator();
+        while (nodeMap.hasNext()) {
+            PipelJobLogPO pipelJobLog = new PipelJobLogPO();
+            Map.Entry<Integer, Object> next = nodeMap.next();
+            if (Objects.isNull(next.getValue())) {
+                continue;
+            }
+            pipelJobLog.msg = next.getValue().toString();
+            pipelJobLog.pipelId = pipelId;
+            pipelJobLog.pipelTraceId = pipelTraceId;
+            pipelJobLog.type = next.getKey();
+            pipelJobLogs.add(pipelJobLog);
+        }
+        if (pipelJobLogs.size() != 0) {
+            this.saveBatch(pipelJobLogs);
+        }
+    }
+
+    @Override
+    public void savePipelJobLog(String pipelTraceId, Map<Integer, Object> map, String pipelId, String jobTraceId, String componentId) {
         log.info("job参数:pipelTraceId:{},map:{},pipelId:{},jobTraceId:{},componentId{}", pipelTraceId, JSON.toJSONString(map), pipelId, jobTraceId, componentId);
 
         List<PipelJobLogPO> pipelJobLogs = new ArrayList<>();
@@ -57,7 +80,6 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
         if (pipelJobLogs.size() != 0) {
             this.saveBatch(pipelJobLogs);
         }
-
     }
 
     @Override
@@ -113,7 +135,7 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                 //结束时间,job状态
                 jobMap.put(DispatchLogEnum.jobend.getValue(), simpleDateFormat.format(new Date()));
                 jobMap.put(DispatchLogEnum.jobstate.getValue(), NifiStageTypeEnum.RUN_FAILED.getName());
-                this.savePipelLogAndJobLog(pipelJobLogPo.jobTraceId, jobMap, pipelJobLogPo.pipelId, pipelJobLogPo.jobTraceId, pipelJobLogPo.componentId);
+                this.savePipelJobLog(pipelJobLogPo.jobTraceId, jobMap, pipelJobLogPo.pipelId, pipelJobLogPo.jobTraceId, pipelJobLogPo.componentId);
             }
         }
         //管道级别
@@ -123,7 +145,7 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
             pipelMap.put(DispatchLogEnum.pipelend.getValue(), simpleDateFormat.format(new Date()));
             pipelMap.put(DispatchLogEnum.pipelstate.getValue(), NifiStageTypeEnum.RUN_FAILED.getName());
             //保存管道失败日志
-            this.savePipelLogAndJobLog(dto.pipelTraceId, pipelMap, list.get(0).pipelId, null, null);
+            this.savePipelLog(dto.pipelTraceId, pipelMap, list.get(0).pipelId);
         }
 
 

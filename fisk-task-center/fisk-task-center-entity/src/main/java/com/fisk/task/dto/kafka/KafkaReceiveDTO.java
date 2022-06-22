@@ -1,11 +1,13 @@
 package com.fisk.task.dto.kafka;
 
+import com.fisk.common.core.enums.task.TopicTypeEnum;
+import com.fisk.task.dto.MQBaseDTO;
 import lombok.Data;
 
 import java.util.Date;
 
 @Data
-public class KafkaReceiveDTO {
+public class KafkaReceiveDTO extends MQBaseDTO {
     public Integer tableId;
     public Integer tableType;
     public Long nifiCustomWorkflowDetailId;
@@ -43,7 +45,12 @@ public class KafkaReceiveDTO {
     public String fidata_batch_code;
 
 
-    public boolean ifDown;
+    public boolean ifTaskStart;
+
+    /*
+    * topic的类别
+    * */
+    public TopicTypeEnum topicType;
 
 
 }

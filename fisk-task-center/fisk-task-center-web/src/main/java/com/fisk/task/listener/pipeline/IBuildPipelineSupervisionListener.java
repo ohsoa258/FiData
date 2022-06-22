@@ -11,5 +11,5 @@ import java.util.List;
  */
 public interface IBuildPipelineSupervisionListener {
 
-    void msg(List<String> dataInfo, Acknowledgment acke);
+    void msg(String dataInfo, Acknowledgment acke);
 }

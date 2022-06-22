@@ -248,10 +248,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             enabledProcessor(taskGroupEntity.getId(), processors);
             //7. 如果是接入,同步一次,然后把调度组件停掉
             if (dto.groupStructureId == null && dto.openTransmission) {
-                String topicName = "dmp.datafactory.nifi." + dto.type.getValue() + "." + dto.appId + "." + dto.id;
+                String topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type.getValue() + "." + dto.appId + "." + dto.id;
                 int value = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
                 if (Objects.equals(value, OlapTableEnum.KPI)) {
-                    topicName = "dmp.datafactory.nifi." + OlapTableEnum.KPI.getValue() + "." + dto.appId + "." + dto.id;
+                    topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.KPI.getValue() + "." + dto.appId + "." + dto.id;
                 }
                 KafkaReceiveDTO kafkaRkeceiveDTO = new KafkaReceiveDTO();
                 kafkaRkeceiveDTO.topic = topicName;
@@ -260,7 +260,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 kafkaRkeceiveDTO.start_time = simpleDateFormat.format(new Date());
                 kafkaRkeceiveDTO.pipelTaskTraceId = UUID.randomUUID().toString();
                 kafkaRkeceiveDTO.pipelStageTraceId = UUID.randomUUID().toString();
-                kafkaRkeceiveDTO.ifDown = true;
+                kafkaRkeceiveDTO.ifTaskStart = true;
+                kafkaRkeceiveDTO.topicType = TopicTypeEnum.DAILY_NIFI_FLOW;
                 kafkaTemplateHelper.sendMessageAsync(pipelineTopicName, JSON.toJSONString(kafkaRkeceiveDTO));
             }
 
@@ -1054,14 +1055,14 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         tableNifiSettingPO.queryForSupervisionProcessorId = processorEntity.getId();
         processorEntityList.add(processorEntity);
         //转string convertJsonForSupervision
-        ProcessorEntity convertJsonForSupervision = convertJsonProcessor(groupId, 2, 6);
+        /*ProcessorEntity convertJsonForSupervision = convertJsonProcessor(groupId, 2, 6);
         tableNifiSettingPO.convertJsonForSupervisionProcessorId = convertJsonForSupervision.getId();
         componentConnector(groupId, processorEntity.getId(), convertJsonForSupervision.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        processorEntityList.add(convertJsonForSupervision);
+        processorEntityList.add(convertJsonForSupervision);*/
         //发消息
         ProcessorEntity publishKafkaForSupervisionProcessor = createPublishKafkaForSupervisionProcessor(groupId, 6);
         tableNifiSettingPO.publishKafkaForSupervisionProcessorId = publishKafkaForSupervisionProcessor.getId();
-        componentConnector(groupId, convertJsonForSupervision.getId(), publishKafkaForSupervisionProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        componentConnector(groupId, processorEntity.getId(), publishKafkaForSupervisionProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
         processorEntityList.add(publishKafkaForSupervisionProcessor);
         return processorEntityList;
     }
@@ -1655,11 +1656,11 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         if (Objects.equals(dto.type, OlapTableEnum.WIDETABLE)) {
             querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,now() as end_time," +
                     "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                    "'${pipelTraceId}' as pipelTraceId  from " + config.processorConfig.targetTableName;
+                    "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
         } else {
             querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
                     "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                    "'${pipelTraceId}' as pipelTraceId  from " + config.processorConfig.targetTableName;
+                    "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
         }
 
         querySqlDto.dbConnectionId = targetDbPoolId;
@@ -1910,6 +1911,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         strings.add(NifiConstants.AttrConstants.PIPEL_JOB_TRACE_ID);
         strings.add(NifiConstants.AttrConstants.PIPEL_TASK_TRACE_ID);
         strings.add(NifiConstants.AttrConstants.PIPEL_STAGE_TRACE_ID);
+        strings.add(NifiConstants.AttrConstants.TOPIC_TYPE);
         //strings.add(NifiConstants.AttrConstants.START_TIME);
         BuildProcessEvaluateJsonPathDTO dto = new BuildProcessEvaluateJsonPathDTO();
         dto.name = "Set Increment Field";
@@ -2007,10 +2009,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         TableTopicDTO tableTopicDTO = new TableTopicDTO();
         tableTopicDTO.tableId = Math.toIntExact(dto.id);
         tableTopicDTO.tableType = dto.type.getValue();
-        tableTopicDTO.topicName = "dmp.datafactory.nifi." + dto.type.getValue() + "." + dto.appId + "." + dto.id;
+        tableTopicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type.getValue() + "." + dto.appId + "." + dto.id;
         tableTopicDTO.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
         if (Objects.equals(dto.type, OlapTableEnum.KPI)) {
-            tableTopicDTO.topicName = "dmp.datafactory.nifi." + OlapTableEnum.KPI.getValue() + "." + dto.appId + "." + dto.id;
+            tableTopicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.KPI.getValue() + "." + dto.appId + "." + dto.id;
         }
         tableTopicService.updateTableTopic(tableTopicDTO);
         buildPublishKafkaProcessorDTO.TopicName = tableTopicDTO.topicName;
@@ -2097,19 +2099,28 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     }
 
     private ProcessorEntity queryForPipelineSupervision(String groupId, String cfgDbPoolId) {
-        BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
-        querySqlDto.name = "queryForPipelineSupervision";
-        querySqlDto.details = "queryForPipelineSupervision";
-        querySqlDto.groupId = groupId;
-        querySqlDto.querySql = "select '${executesql.error.message}' as message,'${kafka.topic}' as topic,'" + groupId + "' as groupId"
-                + ",'${start_time}' as startTime, '${end_time}' as endTime ,'${numbers}' counts ,'${pipelStageTraceId}' as pipelStageTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId,'${pipelJobTraceId}' as pipelJobTraceId";
-        querySqlDto.dbConnectionId = cfgDbPoolId;
-        querySqlDto.scheduleExpression = "1";
-        querySqlDto.scheduleType = SchedulingStrategyTypeEnum.TIMER;
-        querySqlDto.positionDTO = NifiPositionHelper.buildXYPositionDTO(1, 6);
-        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
-        verifyProcessorResult(querySqlRes);
-        return querySqlRes.data;
+        BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
+        buildReplaceTextProcessorDTO.name = "queryForPipelineSupervision";
+        buildReplaceTextProcessorDTO.details = "queryForPipelineSupervision";
+        buildReplaceTextProcessorDTO.groupId = groupId;
+        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(1, 6);
+        //替换流文件
+        buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
+        String replacementValue="{\n" +
+                "    \"message\":\"${executesql.error.message}\",\n" +
+                "    \"topic\":\"${kafka.topic}\",\n" +
+                "    \"groupId\":\""+groupId+"\",\n" +
+                "    \"startTime\":\"${start_time}\",\n" +
+                "    \"endTime\":\"${end_time}\",\n" +
+                "    \"counts\":\"${numbers}\",\n" +
+                "    \"pipelStageTraceId\":\"${pipelStageTraceId}\",\n" +
+                "    \"pipelTaskTraceId\":\"${pipelTaskTraceId}\",\n" +
+                "    \"pipelJobTraceId\":\"${pipelJobTraceId}\"\n" +
+                "}";
+        buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(replacementValue);
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
     }
 
 

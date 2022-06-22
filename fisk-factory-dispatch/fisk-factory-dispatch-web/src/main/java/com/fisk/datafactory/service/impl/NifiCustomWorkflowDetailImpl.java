@@ -2,6 +2,7 @@ package com.fisk.datafactory.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -307,7 +308,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                         // 保存topic
                         TableTopicDTO topicDTO = new TableTopicDTO();
                         topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
-                        topicDTO.topicName = "dmp.datafactory.nifi." + id + "." + OlapTableEnum.PHYSICS_API.getValue() + "." + nifiCustomWorkflowDetailPO.appId + "." + nifiCustomWorkflowDetailPO.tableId;
+                        topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.PHYSICS_API.getValue() + "." + nifiCustomWorkflowDetailPO.appId + "." + nifiCustomWorkflowDetailPO.tableId;
                         topicDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
                         topicDTO.tableId = Integer.parseInt(dto.NifiNode.tableId);
                         topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPO.id);

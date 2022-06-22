@@ -57,6 +57,7 @@ public class NifiConstants {
         public static final String PIPEL_JOB_TRACE_ID="pipelJobTraceId";
         public static final String PIPEL_TASK_TRACE_ID="pipelTaskTraceId";
         public static final String PIPEL_STAGE_TRACE_ID="pipelStageTraceId";
+        public static final String TOPIC_TYPE="topicType";
 
         public static final int POSITION_X_MAX = 5;
         public static final double POSITION_X = 500;

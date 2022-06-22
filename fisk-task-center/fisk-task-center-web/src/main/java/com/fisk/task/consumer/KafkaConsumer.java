@@ -156,8 +156,8 @@ public class KafkaConsumer {
 
     //这里只用来存放reids
     @KafkaListener(topics = "my-topic", containerFactory = "batchFactory", groupId = "test")
-    public void consumer(List<String> arrMessage, Acknowledgment ack) {
-        iBuildPipelineSupervisionListener.msg(arrMessage, ack);
+    public void consumer(String message, Acknowledgment ack) {
+        iBuildPipelineSupervisionListener.msg(message, ack);
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_NIFI_FLOW, containerFactory = "batchFactory", groupId = "test")

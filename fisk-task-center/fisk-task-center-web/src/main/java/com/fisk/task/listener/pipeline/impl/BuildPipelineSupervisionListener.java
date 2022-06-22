@@ -1,7 +1,7 @@
 package com.fisk.task.listener.pipeline.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
@@ -15,7 +15,6 @@ import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
-import com.fisk.task.entity.*;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
@@ -71,150 +70,106 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
 
 
     @Override
-    public void msg(List<String> arrMessage, Acknowledgment acke) {
+    public void msg(String mapString, Acknowledgment acke) {
         log.info("消费消息:start");
-        log.info("消费消息 size:" + arrMessage.size());
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
         //每次进来存进redis里面,key-value,都是topic-name,过期时间为5分钟
         try {
-            for (String mapString : arrMessage) {
-                log.info("mapString信息:" + mapString);
-
-                kafkaReceiveDTO = JSON.parseObject(mapString, KafkaReceiveDTO.class);
-                //管道总的pipelTraceId
-                if (StringUtils.isEmpty(kafkaReceiveDTO.pipelTraceId)) {
-                    kafkaReceiveDTO.pipelTraceId = UUID.randomUUID().toString();
-                }
-                if (kafkaReceiveDTO.topic != null && kafkaReceiveDTO.topic != "") {
-                    String topicName = kafkaReceiveDTO.topic;
-                    String[] split1 = topicName.split("\\.");
-                    String pipelineId = split1[3];
-                    if (split1.length == 6) {
-                        //卡夫卡的内容在发布时就定义好了
-                        log.info("打印topic内容:" + JSON.toJSONString(kafkaReceiveDTO));
-                        if (kafkaReceiveDTO.ifDown) {
-                            log.info("发送的topic1:{},内容:{}", topicName, mapString);
-                            kafkaTemplateHelper.sendMessageAsync(topicName, mapString);
-                        }
-                        redisUtil.set("hand" + kafkaReceiveDTO.pipelTaskTraceId + "," + topicName, topicName, 30);
-                        continue;
-                    } else if (split1.length == 4) {
-                        //  这个时候可能是api的topic,可能是管道直接调度的topic,保存管道开始,job开始 定义管道traceid  定义job的traceid
-                        //流程开始时间
-                        kafkaReceiveDTO.start_time = simpleDateFormat.format(new Date());
-                        kafkaReceiveDTO.pipelStageTraceId = UUID.randomUUID().toString();
-                        //nifi流程要的批次号
-                        kafkaReceiveDTO.fidata_batch_code = UUID.randomUUID().toString();
-
-                        log.info("打印topic内容:" + JSON.toJSONString(kafkaReceiveDTO));
-                        if (StringUtils.isEmpty(kafkaReceiveDTO.pipelApiDispatch)) {
-                            //管道开始,job开始,task开始
-                            List<TableTopicDTO> topicNames = iTableTopicService.getByTopicName(topicName);
-                            for (TableTopicDTO topic : topicNames) {
-                                //job批次号
-                                kafkaReceiveDTO.pipelJobTraceId = UUID.randomUUID().toString();
-                                //task批次号
-                                kafkaReceiveDTO.pipelTaskTraceId = UUID.randomUUID().toString();
-                                kafkaReceiveDTO.topic = topic.topicName;
-                                String[] split = topic.topicName.split("\\.");
-                                log.info("发送的topic2:{},内容:{}", topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
-                                kafkaTemplateHelper.sendMessageAsync(topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
-                                //-----------------------------------------------------
-                                String pipelTraceId = kafkaReceiveDTO.pipelTraceId;
-                                Map<Integer, Object> PipelMap = new HashMap<>();
-                                PipelMap.put(DispatchLogEnum.pipelstart.getValue(), simpleDateFormat.format(new Date()));
-                                PipelMap.put(DispatchLogEnum.pipelstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
-                                //管道开始日志
-                                iPipelJobLog.savePipelLogAndJobLog(pipelTraceId, PipelMap, split1[3], null, null);
-                                //job开始日志
-                                Map<Integer, Object> jobMap = new HashMap<>();
-                                NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, Integer.valueOf(split[4]), null, Integer.valueOf(split[6]));
-                                ResultEntity<NifiPortsHierarchyDTO> nifiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchy);
-                                //任务依赖的组件
-                                jobMap.put(DispatchLogEnum.jobstart.getValue(), simpleDateFormat.format(new Date()));
-                                jobMap.put(DispatchLogEnum.jobstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
-                                iPipelJobLog.savePipelLogAndJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, split1[3], kafkaReceiveDTO.pipelJobTraceId, String.valueOf(nifiPortHierarchy.data.itselfPort.pid));
-                                //task日志
-                                HashMap<Integer, Object> taskMap = new HashMap<>();
-                                taskMap.put(DispatchLogEnum.taskstart.getValue(), simpleDateFormat.format(new Date()));
-                                taskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
-                                iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.data.itselfPort.id), null, 0);
-
-                            }
-
-                        } else {
-                            ApiImportDataDTO apiImportData = new ApiImportDataDTO();
-                            //apiImportData.pipelApiDispatch = kafkaReceiveDTO.pipelApiDispatch;
-                            apiImportData.pipelTraceId = kafkaReceiveDTO.pipelTraceId;
-                            List<PipelApiDispatchDTO> pipelApiDispatchDTOS = JSON.parseArray(kafkaReceiveDTO.pipelApiDispatch, PipelApiDispatchDTO.class);
-                            for (PipelApiDispatchDTO pipelApiDispatch : pipelApiDispatchDTOS) {
-                                apiImportData.pipelApiDispatch = JSON.toJSONString(pipelApiDispatch);
-                                apiImportData.pipelJobTraceId = UUID.randomUUID().toString();
-                                apiImportData.pipelTaskTraceId = UUID.randomUUID().toString();
-                                apiImportData.pipelStageTraceId = UUID.randomUUID().toString();
-                                log.info("发送的topic3:{},内容:{}", topicName, JSON.toJSONString(apiImportData));
-                                kafkaTemplateHelper.sendMessageAsync(topicName, JSON.toJSONString(apiImportData));
-                            }
-
-                        }
-
-                        break;
+            log.info("mapString信息:" + mapString);
+            kafkaReceiveDTO = JSON.parseObject(mapString, KafkaReceiveDTO.class);
+            //管道总的pipelTraceId
+            if (StringUtils.isEmpty(kafkaReceiveDTO.pipelTraceId)) {
+                kafkaReceiveDTO.pipelTraceId = UUID.randomUUID().toString();
+            }
+            if (StringUtils.isEmpty(kafkaReceiveDTO.topic)) {
+                String topicName = kafkaReceiveDTO.topic;
+                String[] split1 = topicName.split("\\.");
+                String pipelineId = split1[3];
+                if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.DAILY_NIFI_FLOW)) {
+                    //卡夫卡的内容在发布时就定义好了
+                    log.info("打印topic内容:" + JSON.toJSONString(kafkaReceiveDTO));
+                    if (kafkaReceiveDTO.ifTaskStart) {
+                        log.info("发送的topic1:{},内容:{}", topicName, mapString);
+                        //任务中心发布任务,通知任务开始执行
+                        kafkaTemplateHelper.sendMessageAsync(topicName, mapString);
+                    } else {
+                        redisUtil.heartbeatDetection("hand" + kafkaReceiveDTO.pipelTaskTraceId + "," + topicName, topicName, Long.parseLong(waitTime));
                     }
+                }
+                //调度管道中与调度job相连接的job(可能是多个job与开始调度job连接)中首个task任务
+                else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.PIPELINE_NIFI_FLOW)) {
+                    //  这个时候可能是api的topic,可能是管道直接调度的topic,保存管道开始,job开始 定义管道traceid  定义job的traceid
+                    //流程开始时间
+                    kafkaReceiveDTO.start_time = simpleDateFormat.format(new Date());
+                    kafkaReceiveDTO.pipelStageTraceId = UUID.randomUUID().toString();
+                    //nifi流程要的批次号
+                    kafkaReceiveDTO.fidata_batch_code = UUID.randomUUID().toString();
+
+                    log.info("打印topic内容:" + JSON.toJSONString(kafkaReceiveDTO));
+                    String pipelTraceId = kafkaReceiveDTO.pipelTraceId;
+                    Map<Integer, Object> PipelMap = new HashMap<>();
+                    PipelMap.put(DispatchLogEnum.pipelstart.getValue(), simpleDateFormat.format(new Date()));
+                    PipelMap.put(DispatchLogEnum.pipelstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
+                    //管道开始日志
+                    iPipelJobLog.savePipelLog(pipelTraceId, PipelMap, split1[3]);
+                    if (StringUtils.isEmpty(kafkaReceiveDTO.pipelApiDispatch)) {
+                        //管道开始,job开始,task开始
+                        List<TableTopicDTO> topicNames = iTableTopicService.getByTopicName(topicName);
+                        for (TableTopicDTO topic : topicNames) {
+                            //job批次号
+                            kafkaReceiveDTO.pipelJobTraceId = UUID.randomUUID().toString();
+                            //task批次号
+                            kafkaReceiveDTO.pipelTaskTraceId = UUID.randomUUID().toString();
+                            kafkaReceiveDTO.topic = topic.topicName;
+                            kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW;
+                            String[] split = topic.topicName.split("\\.");
+                            log.info("发送的topic2:{},内容:{}", topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
+                            kafkaTemplateHelper.sendMessageAsync(topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
+                            //-----------------------------------------------------
+                            //job开始日志
+                            Map<Integer, Object> jobMap = new HashMap<>();
+                            NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, Integer.valueOf(split[4]), null, Integer.valueOf(split[6]));
+                            ResultEntity<NifiPortsHierarchyDTO> nifiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchy);
+                            //任务依赖的组件
+                            jobMap.put(DispatchLogEnum.jobstart.getValue(), simpleDateFormat.format(new Date()));
+                            jobMap.put(DispatchLogEnum.jobstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
+                            iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, split1[3], kafkaReceiveDTO.pipelJobTraceId, String.valueOf(nifiPortHierarchy.data.itselfPort.pid));
+                            //task日志
+                            HashMap<Integer, Object> taskMap = new HashMap<>();
+                            taskMap.put(DispatchLogEnum.taskstart.getValue(), simpleDateFormat.format(new Date()));
+                            taskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
+                            iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.data.itselfPort.id), null, 0);
+
+                        }
+
+                    } else {
+                        ApiImportDataDTO apiImportData = new ApiImportDataDTO();
+                        //apiImportData.pipelApiDispatch = kafkaReceiveDTO.pipelApiDispatch;
+                        apiImportData.pipelTraceId = kafkaReceiveDTO.pipelTraceId;
+                        List<PipelApiDispatchDTO> pipelApiDispatchDTOS = JSON.parseArray(kafkaReceiveDTO.pipelApiDispatch, PipelApiDispatchDTO.class);
+                        for (PipelApiDispatchDTO pipelApiDispatch : pipelApiDispatchDTOS) {
+                            apiImportData.pipelApiDispatch = JSON.toJSONString(pipelApiDispatch);
+                            apiImportData.pipelJobTraceId = UUID.randomUUID().toString();
+                            apiImportData.pipelTaskTraceId = UUID.randomUUID().toString();
+                            apiImportData.pipelStageTraceId = UUID.randomUUID().toString();
+                            log.info("发送的topic3:{},内容:{}", topicName, JSON.toJSONString(apiImportData));
+                            kafkaTemplateHelper.sendMessageAsync(topicName, JSON.toJSONString(apiImportData));
+                        }
+
+                    }
+                } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.COMPONENT_NIFI_FLOW)) {
 
                     //请求接口得到对象,条件--管道名称,表名称,表类别,表id,topic_name(加表名table_name)
-                    NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = new NifiGetPortHierarchyDTO();
-                    nifiGetPortHierarchyDTO.workflowId = pipelineId;
-                    //nifiGetPortHierarchyDTO.nifiCustomWorkflowDetailId = kafkaReceiveDTO.nifiCustomWorkflowDetailId;
-                    switch (kafkaReceiveDTO.tableType) {
-                        case 0:
-                            OlapPO olapPO = iOlap.selectOlapPO(kafkaReceiveDTO.tableId);
-                            nifiGetPortHierarchyDTO.tableId = String.valueOf(olapPO.tableId);
-                            if (olapPO.tableName != null && olapPO.tableName.contains("dim_")) {
-                                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_DIMENSION_TASK;
-                            } else {
-                                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_FACT_TASK;
-                            }
-                            break;
-                        case 1:
-                            nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DW_DIMENSION_TASK;
-                            nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
-                            break;
-                        case 2:
-                            nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DW_FACT_TASK;
-                            nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
-                            break;
-                        case 3:
-                            nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DATALAKE_TASK;
-                            nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
-                            break;
-                        case 9:
-                            nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_WIDETABLE_TASK;
-                            nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
-                            break;
-                        case 10:
-                            nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DATALAKE_API_TASK;
-                            nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
-                            break;
-                        default:
-                            break;
-                    }
-                    ResultEntity<NifiPortsHierarchyDTO> nIfiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchyDTO);
+                    NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, kafkaReceiveDTO.tableType, null, kafkaReceiveDTO.tableId);
+
+
+                    ResultEntity<NifiPortsHierarchyDTO> nIfiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchy);
                     NifiPortsHierarchyDTO data = nIfiPortHierarchy.data;
                     //本节点
                     NifiCustomWorkflowDetailDTO itselfPort = data.itselfPort;
                     TableTopicDTO topicSelf = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort.id),
-                            Integer.valueOf(nifiGetPortHierarchyDTO.tableId), kafkaReceiveDTO.tableType);
-                    //能走到最后说明这一批次走成功了
-                   /* pipelineTableLogMapper.updateByComponentId(Math.toIntExact(itselfPort.id), Integer.valueOf(nifiGetPortHierarchyDTO.tableId), kafkaReceiveDTO.tableType);
-                    QueryWrapper<PipelineTableLogPO> Wrapper = new QueryWrapper<>();
-                    Wrapper.lambda().eq(PipelineTableLogPO::getComponentId, itselfPort.id)
-                            .eq(PipelineTableLogPO::getTableId, nifiGetPortHierarchyDTO.tableId)
-                            .eq(PipelineTableLogPO::getTableType, kafkaReceiveDTO.tableType).orderByDesc();
-                    List<PipelineTableLogPO> pipelineTableLogs = pipelineTableLogMapper.selectList(Wrapper);
-                    for (PipelineTableLogPO pipelineTableLog:pipelineTableLogs) {
-                        nifiStageMapper.updateByComponentId(Math.toIntExact(itselfPort.id), pipelineTableLog.id);
-                    }*/
+                            Integer.valueOf(nifiGetPortHierarchy.tableId), kafkaReceiveDTO.tableType);
 
                     //本节点topic
                     String topicName1 = topicSelf.topicName;
@@ -240,7 +195,7 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                             hmget.put(topicName1, topicName1);
                             if (hmget.size() == data.pipeEndDto.size()) {
                                 //如果结束支点就它一个,装进去等30秒
-                                redisUtil.hmsset(hmgetKey, hmget, 30);
+                                redisUtil.hmsset(hmgetKey, hmget, Long.parseLong(waitTime));
                             } else {
                                 //如果结束支点不止它一个,不仅要装进去,还要等其他支点
                                 redisUtil.hmsset(hmgetKey, hmget, 3000);
@@ -249,14 +204,12 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                             //如果map里面存在,判断map的记录个数,如果不是所有支点结束,刷新过期时间3000
                             if (hmget.size() == data.pipeEndDto.size()) {
                                 //如果满足有所有支点的条件了,就刷新过期时间30秒
-                                redisUtil.hmsset(hmgetKey, hmget, 30);
+                                redisUtil.hmsset(hmgetKey, hmget, Long.parseLong(waitTime));
 
                             } else {
                                 redisUtil.hmsset(hmgetKey, hmget, 3000);
                             }
                         }
-
-                        continue;
                     }
                     for (NifiPortsHierarchyNextDTO nifiPortsHierarchyNextDTO : nextList) {
                         //下一级本身
@@ -276,9 +229,9 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                         if (key == null) {
                             if (upPortList.size() == 1) {
                                 log.info("存入redis即将调用的节点1:" + topic);
-                                redisUtil.set(topic, topicSelf.topicName, Long.parseLong(waitTime));
+                                redisUtil.heartbeatDetection(topic, topicSelf.topicName, Long.parseLong(waitTime));
                             } else {
-                                redisUtil.set(topic, topicSelf.topicName, 3000L);
+                                redisUtil.heartbeatDetection(topic, topicSelf.topicName, 3000L);
                             }
                         } else {
                             topicContent = key.toString();
@@ -291,13 +244,13 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                                         redisUtil.expire(topic, Long.parseLong(waitTime));
                                     } else {
                                         log.info("存入redis即将调用的节点3:" + topic);
-                                        redisUtil.set(topic, topicContent + "," + topicSelf.topicName, Long.parseLong(waitTime));
+                                        redisUtil.heartbeatDetection(topic, topicContent + "," + topicSelf.topicName, Long.parseLong(waitTime));
                                     }
                                 } else {
                                     if (topicContent.contains(topicSelf.topicName)) {
                                         redisUtil.expire(topic, 3000L);
                                     } else {
-                                        redisUtil.set(topic, topicContent + "," + topicSelf.topicName, 3000L);
+                                        redisUtil.heartbeatDetection(topic, topicContent + "," + topicSelf.topicName, 3000L);
                                     }
                                 }
                             } else {

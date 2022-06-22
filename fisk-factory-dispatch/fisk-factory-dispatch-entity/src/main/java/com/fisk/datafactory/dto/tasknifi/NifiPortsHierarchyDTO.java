@@ -15,22 +15,22 @@ import java.util.List;
 @Data
 public class NifiPortsHierarchyDTO {
 
-    @ApiModelProperty(value = "当前组件属性")
+    @ApiModelProperty(value = "当前task属性")
     public NifiCustomWorkflowDetailDTO itselfPort;
 
-    @ApiModelProperty(value = "是否为所属组件中的第一个任务")
+    @ApiModelProperty(value = "是否为所属job中的第一个任务")
     public boolean componentFirstFlag;
-    @ApiModelProperty(value = "是否为所属组件中的最后一个任务")
+    @ApiModelProperty(value = "是否为所属job中的最后一个任务")
     public boolean componentEndFlag;
     @ApiModelProperty(value = "是否为管道内最后一个任务")
     public boolean pipeEndFlag;
     /**
-     * 管道流程最后一批集合
+     * 管道每个分支的最后一个task
      */
     public List<NifiCustomWorkflowDetailDTO> pipeEndDto;
 
     /**
-     * 下一级组件集合
+     * 当前task的所有下一级task集合
      */
     public List<NifiPortsHierarchyNextDTO> nextList;
 

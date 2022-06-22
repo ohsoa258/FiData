@@ -81,7 +81,7 @@ public class MQConsumerLogAspect {
             log.error("任务状态更新失败", ex);
             ex.printStackTrace();
         }
-        if (data == null || data.userId == null) {
+        if (data == null) {
             throw new FkException(ResultEnum.PARAMTER_ERROR);
         }
 
@@ -92,7 +92,7 @@ public class MQConsumerLogAspect {
             mapper.updateById(model);
         }
 
-        if (sendMsg) {
+        if (sendMsg && data.userId != null) {
             WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务开始处理", data.userId, MessageLevelEnum.MEDIUM);
         }
 
@@ -121,7 +121,7 @@ public class MQConsumerLogAspect {
             outPutMsg = ((ResultEntity<?>) res).msg;
         }
 
-        if (sendMsg) {
+        if (sendMsg && data.userId != null) {
             WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
         }
         MDCHelper.clear();

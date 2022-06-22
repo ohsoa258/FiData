@@ -61,8 +61,8 @@ public class PipelineSupervisionController {
     }
 
     @PostMapping("/consumer")
-    public void consumer(@RequestBody List<String> arrMessage) {
-        iBuildPipelineSupervisionListener.msg(arrMessage, null);
+    public void consumer(@RequestParam String message) {
+        iBuildPipelineSupervisionListener.msg(message, null);
     }
 
     @PostMapping("/updateTableTopicByComponentId")

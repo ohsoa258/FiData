@@ -9,6 +9,7 @@ import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.ApiImportDataDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
+import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
@@ -241,6 +242,15 @@ public class PublishTaskController {
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW,
                 dto);}
+
+    @PostMapping("/universalPublish")
+    @ApiOperation(value = "通用调度,需要传入topic和内容")
+    public ResultEntity<Object> universalPublish(@RequestBody KafkaReceiveDTO dto){
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_UNIVERSAL_PUBLISH_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                dto.topic,
+                dto);}
+
 
 
 }

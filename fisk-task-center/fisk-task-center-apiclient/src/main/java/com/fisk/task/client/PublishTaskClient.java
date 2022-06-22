@@ -264,7 +264,7 @@ public interface PublishTaskClient {
      * @return
      */
     @PostMapping("/pipeline/consumer")
-    public void consumer(@RequestBody List<String> arrMessage);
+    public void consumer(@RequestParam String message);
 
     /**
      * updateTableTopicByComponentId

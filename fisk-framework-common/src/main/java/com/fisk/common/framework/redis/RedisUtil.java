@@ -677,4 +677,26 @@ public class RedisUtil {
         }
         return null;
     }
+
+    /**
+     * 心跳检测,流检测使用
+     *
+     * @param key   键
+     * @param value 值
+     * @return boolean
+     */
+    public boolean heartbeatDetection(String key,String value,long time){
+        try {
+            if (time > 0) {
+                redisTemplate.opsForValue().set(key, value, time, TimeUnit.SECONDS);
+            } else {
+                set(key, value);
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }
