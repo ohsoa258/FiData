@@ -347,7 +347,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 DeleteTableDetailDTO deleteTableDetailDto = new DeleteTableDetailDTO();
                 deleteTableDetailDto.appId = String.valueOf(id);
                 deleteTableDetailDto.tableId = String.valueOf(po.id);
-                deleteTableDetailDto.channelDataEnum = ChannelDataEnum.DATALAKE_API_TASK;
+                deleteTableDetailDto.channelDataEnum = ChannelDataEnum.DATALAKE_TASK;
                 deleteTableDetailDtoList.add(deleteTableDetailDto);
             });
             // 先遍历accessList,取出每个对象中的id,再去tb_table_fields表中查询相应数据,将查询到的对象删除
