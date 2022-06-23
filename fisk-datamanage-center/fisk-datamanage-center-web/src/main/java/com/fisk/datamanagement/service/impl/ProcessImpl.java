@@ -3,14 +3,17 @@ package com.fisk.datamanagement.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
 import com.fisk.datamanagement.dto.entity.EntityDTO;
 import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
 import com.fisk.datamanagement.dto.entity.EntityTypeDTO;
 import com.fisk.datamanagement.dto.process.*;
+import com.fisk.datamanagement.entity.MetadataMapAtlasPO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
+import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
 import com.fisk.datamanagement.service.IProcess;
 import com.fisk.datamanagement.synchronization.fidata.SynchronizationKinShip;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
@@ -18,6 +21,7 @@ import com.fisk.datamanagement.vo.ResultDataDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -35,6 +39,10 @@ public class ProcessImpl implements IProcess {
     AtlasClient atlasClient;
     @Resource
     SynchronizationKinShip synchronizationPgKinShip;
+    @Resource
+    MetadataMapAtlasMapper metadataMapAtlasMapper;
+    @Resource
+    EntityImpl entityImpl;
 
     @Value("${atlas.entity}")
     private String entity;
@@ -42,9 +50,8 @@ public class ProcessImpl implements IProcess {
     private String entityByGuid;
 
     @Override
-    public ProcessDTO getProcess(String processGuid)
-    {
-        ProcessDTO dto=new ProcessDTO();
+    public ProcessDTO getProcess(String processGuid) {
+        ProcessDTO dto = new ProcessDTO();
         ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + processGuid);
         if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS) {
             return dto;
@@ -194,7 +201,7 @@ public class ProcessImpl implements IProcess {
             inputDTO.relationshipStatus=EntityTypeEnum.ACTIVE.getName();
             ProcessRelationShipAttributesTypeNameDTO attributesDTO=new ProcessRelationShipAttributesTypeNameDTO();
             attributesDTO.typeName=EntityTypeEnum.DATASET_PROCESS_INPUTS.getName();
-            inputDTO.relationshipAttributes=attributesDTO;
+            inputDTO.relationshipAttributes = attributesDTO;
             if (parameterType == 1) {
                 dto.entity.relationshipAttributes.inputs.add(inputDTO);
             } else {
@@ -202,6 +209,22 @@ public class ProcessImpl implements IProcess {
             }
         }
         return dto;
+    }
+
+    @Override
+    public ResultEnum deleteProcess(String guid) {
+        List<String> guidList = new ArrayList<>();
+        if (StringUtils.isEmpty(guid)) {
+            QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.select("atlas_guid").lambda().eq(MetadataMapAtlasPO::getType, EntityTypeEnum.PROCESS);
+            guidList = (List) metadataMapAtlasMapper.selectObjs(queryWrapper);
+        } else {
+            guidList.add(guid);
+        }
+        for (String item : guidList) {
+            entityImpl.deleteEntity(item);
+        }
+        return ResultEnum.SUCCESS;
     }
 
 }

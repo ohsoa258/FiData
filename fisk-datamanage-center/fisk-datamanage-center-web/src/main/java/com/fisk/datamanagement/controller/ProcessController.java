@@ -43,4 +43,10 @@ public class ProcessController {
         return ResultEntityBuild.build(service.updateProcess(dto));
     }
 
+    @ApiOperation("删除process")
+    @DeleteMapping("/deleteProcess")
+    public ResultEntity<Object> deleteProcess(String guid) {
+        return ResultEntityBuild.build(service.deleteProcess(guid));
+    }
+
 }
