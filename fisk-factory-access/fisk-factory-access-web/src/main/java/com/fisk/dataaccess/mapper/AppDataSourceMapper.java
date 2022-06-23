@@ -26,8 +26,18 @@ public interface AppDataSourceMapper extends FKBaseMapper<AppDataSourcePO> {
 
     /**
      * 获取所有实时应用的
-     * @return
+     *
+     * @return list
      */
     @Select("SELECT realtime_account FROM tb_app_datasource WHERE del_flag=1;")
     List<String> getRealtimeAccountList();
+
+    /**
+     * 根据应用id获取驱动类型
+     *
+     * @param appId 应用id
+     * @return 驱动类型
+     */
+    @Select("SELECT drive_type FROM tb_app_datasource WHERE app_id = #{app_id};")
+    String getDriveTypeByAppId(@Param("app_id") Long appId);
 }

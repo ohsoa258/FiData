@@ -69,12 +69,12 @@ public class TableAccessController {
      * @param id 请求参数
      * @return 返回值
      */
-    @DeleteMapping("/delete/{id}")
-    @ApiOperation(value = "删除")
-    public ResultEntity<Object> deleteTableAccessData(
-            @PathVariable("id") long id) {
-        return ResultEntityBuild.build(service.deleteTableAccessData(id));
-    }
+//    @DeleteMapping("/delete/{id}")
+//    @ApiOperation(value = "删除")
+//    public ResultEntity<Object> deleteTableAccessData(
+//            @PathVariable("id") long id) {
+//        return ResultEntityBuild.build(service.deleteTableAccessData(id));
+//    }
 
     /**
      * 根据appId获取物理表列表

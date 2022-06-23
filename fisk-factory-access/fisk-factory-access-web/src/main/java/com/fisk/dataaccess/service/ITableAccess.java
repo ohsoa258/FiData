@@ -256,7 +256,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @param id id
      * @return 执行结果
      */
-    ResultEnum deleteTableAccessData(long id);
+//    ResultEnum deleteTableAccessData(long id);
 
     /**
      * 根据appId获取物理表列表

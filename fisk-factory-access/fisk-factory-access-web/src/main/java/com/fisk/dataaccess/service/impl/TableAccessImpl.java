@@ -1439,17 +1439,17 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public ResultEnum deleteTableAccessData(long id) {
-        // 参数校验
-        TableAccessPO model = this.getById(id);
-        if (model == null) {
-            return ResultEnum.DATA_NOTEXISTS;
-        }
-
-        return accessMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
-    }
+//    @Transactional(rollbackFor = Exception.class)
+//    @Override
+//    public ResultEnum deleteTableAccessData(long id) {
+//        // 参数校验
+//        TableAccessPO model = this.getById(id);
+//        if (model == null) {
+//            return ResultEnum.DATA_NOTEXISTS;
+//        }
+//
+//        return accessMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+//    }
 
     @Override
     public List<TbTableAccessDTO> getTableAccessListData(long appId) {

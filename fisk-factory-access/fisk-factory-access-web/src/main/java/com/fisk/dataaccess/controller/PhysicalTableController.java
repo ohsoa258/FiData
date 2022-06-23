@@ -16,14 +16,15 @@ import com.fisk.dataaccess.dto.table.TableAccessQueryDTO;
 import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
-import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
+import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
-import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
@@ -37,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -56,6 +58,8 @@ public class PhysicalTableController {
     private ITableAccess service;
     @Resource
     private PublishTaskClient publishTaskClient;
+    @Resource
+    private DataFactoryClient dataFactoryClient;
 
     /**
      * 根据是否为实时,查询应用名称集合
@@ -144,26 +148,8 @@ public class PhysicalTableController {
     @PostMapping("/addNonRealTime")
     @ApiOperation(value = "添加物理表(非实时)")
     public ResultEntity<Object> addNonRealTimeData(@RequestBody TableAccessNonDTO dto) {
-        ResultEntity<AtlasIdsVO> atlasIdsVO = service.addNonRealTimeData(dto);
 
-        AtlasIdsVO atlasIds = atlasIdsVO.data;
-
-        if (atlasIds == null) {
-            return ResultEntityBuild.buildData(atlasIdsVO.code,atlasIdsVO.msg);
-        }
-
-        if (atlasIdsVO.code == 0) {
-            AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
-            atlasEntityQueryDTO.userId = atlasIds.userId;
-            // 应用注册id
-            atlasEntityQueryDTO.appId = atlasIds.appId;
-            atlasEntityQueryDTO.dbId = atlasIds.dbId;
-////            ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
-////            log.info("task:" + JSON.toJSONString(task));
-////            System.out.println(task);
-        }
-
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, atlasIdsVO);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addNonRealTimeData(dto));
     }
 
     /**
@@ -253,6 +239,15 @@ public class PhysicalTableController {
         dataModelVO.userId=nifiVO.userId;
         // 删除nifi流程
         publishTaskClient.deleteNifiFlow(dataModelVO);
+
+        // 删除factory-dispatch对应的表配置
+        List<DeleteTableDetailDTO> list = new ArrayList<>();
+        DeleteTableDetailDTO deleteTableDetailDto = new DeleteTableDetailDTO();
+        deleteTableDetailDto.appId = nifiVO.appId;
+        deleteTableDetailDto.tableId = String.valueOf(id);
+        deleteTableDetailDto.channelDataEnum = ChannelDataEnum.DATALAKE_TASK;
+        list.add(deleteTableDetailDto);
+        dataFactoryClient.editByDeleteTable(list);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS,result);
     }

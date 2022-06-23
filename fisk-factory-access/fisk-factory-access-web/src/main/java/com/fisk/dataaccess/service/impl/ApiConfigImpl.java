@@ -36,6 +36,7 @@ import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.map.*;
 import com.fisk.dataaccess.mapper.ApiConfigMapper;
+import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.service.IApiConfig;
 import com.fisk.dataaccess.utils.httprequest.ApiHttpRequestFactoryHelper;
@@ -43,6 +44,9 @@ import com.fisk.dataaccess.utils.httprequest.IBuildHttpRequest;
 import com.fisk.dataaccess.utils.json.JsonUtils;
 import com.fisk.dataaccess.utils.sql.PgsqlUtils;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
+import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datagovernance.client.DataQualityClient;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckWebDTO;
 import com.fisk.datagovernance.enums.dataquality.CheckRuleEnum;
@@ -104,6 +108,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     @Resource
     private AppDataSourceImpl appDataSourceImpl;
     @Resource
+    private AppDataSourceMapper appDataSourceMapper;
+    @Resource
     private TableSyncmodeImpl tableSyncmodeImpl;
     @Resource
     private TableBusinessImpl tableBusinessImpl;
@@ -111,10 +117,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private ApiParameterServiceImpl apiParameterServiceImpl;
     @Resource
     private UserHelper userHelper;
-    //    @Resource
-//    private ApiHttpRequestFactoryHelper apiHttpRequestFactoryHelper;
     @Resource
     private PublishTaskClient publishTaskClient;
+    @Resource
+    private DataFactoryClient dataFactoryClient;
     @Value("${dataservice.pdf.path}")
     private String templatePath;
     @Value("${dataservice.pdf.uat_address}")
@@ -324,6 +330,19 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             dataModelVO.userId = nifiVO.userId;
             // 删除nifi流程
             publishTaskClient.deleteNifiFlow(dataModelVO);
+        }
+
+        // 删除factory-dispatch对应的api配置
+        String driveType = appDataSourceMapper.getDriveTypeByAppId(model.appId);
+        // 只有非实时api才会在调度中使用
+        if (DataSourceTypeEnum.API.getName().equalsIgnoreCase(driveType)) {
+            List<DeleteTableDetailDTO> list = new ArrayList<>();
+            DeleteTableDetailDTO deleteTableDetailDto = new DeleteTableDetailDTO();
+            deleteTableDetailDto.appId = String.valueOf(model.appId);
+            deleteTableDetailDto.tableId = String.valueOf(id);
+            deleteTableDetailDto.channelDataEnum = ChannelDataEnum.DATALAKE_API_TASK;
+            list.add(deleteTableDetailDto);
+            dataFactoryClient.editByDeleteTable(list);
         }
 
         // 删除api

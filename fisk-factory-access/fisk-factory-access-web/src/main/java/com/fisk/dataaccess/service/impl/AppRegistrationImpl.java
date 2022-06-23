@@ -38,6 +38,7 @@ import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.pgsql.TableListVO;
 import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
@@ -275,17 +276,17 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * @param id 请求参数
      * @return 返回值
      */
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEntity<NifiVO> deleteAppRegistration(long id) {
+        List<DeleteTableDetailDTO> deleteTableDetailDtoList = new ArrayList<>();
+
         UserInfo userInfo = userHelper.getLoginUserInfo();
 
         AppRegistrationPO model = this.getById(id);
         if (model == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
-
-        // atlas实例id
-//        String atlasInstanceId = model.atlasInstanceId;
 
         // 1.删除tb_app_registration表数据
         int deleteReg = mapper.deleteByIdWithFill(model);
@@ -294,9 +295,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
 
         // 2.删除tb_app_datasource表数据
-        AppDataSourcePO modelDataSource = appDataSourceImpl.query()
-                .eq("app_id", id)
-                .one();
+        AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", id).one();
 
         int delDataSource = appDataSourceMapper.deleteByIdWithFill(modelDataSource);
         if (delDataSource < 0) {
@@ -308,14 +307,22 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         queryWrapper.lambda().eq(ApiConfigPO::getAppId, model.id);
         List<ApiConfigPO> apiConfigPoList = apiConfigMapper.selectList(queryWrapper);
         if (!CollectionUtils.isEmpty(apiConfigPoList)) {
-            apiConfigPoList.forEach(e -> apiConfigMapper.deleteByIdWithFill(e));
+            apiConfigPoList.forEach(e -> {
+                apiConfigMapper.deleteByIdWithFill(e);
+
+                // 封装要删除的api参数
+                DeleteTableDetailDTO deleteTableDetailDto = new DeleteTableDetailDTO();
+                deleteTableDetailDto.appId = String.valueOf(id);
+                deleteTableDetailDto.tableId = String.valueOf(e.id);
+                deleteTableDetailDto.channelDataEnum = ChannelDataEnum.DATALAKE_API_TASK;
+                deleteTableDetailDtoList.add(deleteTableDetailDto);
+            });
+
+
         }
 
         // 删除应用下的物理表
-        List<TableAccessPO> accessList = tableAccessImpl.query()
-                .eq("app_id", model.id)
-                .eq("del_flag", 1)
-                .list();
+        List<TableAccessPO> accessList = tableAccessImpl.query().eq("app_id", model.id).eq("del_flag", 1).list();
         List<Long> tableIdList = new ArrayList<>();
         NifiVO vo = new NifiVO();
         List<TableListVO> tableList = new ArrayList<>();
@@ -323,19 +330,26 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (!CollectionUtils.isEmpty(accessList)) {
             // 删表之前,要将所有的数据提前查出来,不然会导致空指针异常
             tableIdList = accessList.stream().map(TableAccessPO::getId).collect(Collectors.toList());
-////            List<String> atlasTableIdList = accessList.stream().map(TableAccessPO::getAtlasTableId).collect(Collectors.toList());
 
             for (Long tableId : tableIdList) {
                 TableListVO tableVO = new TableListVO();
                 TableAccessPO po = tableAccessImpl.query().eq("id", tableId).eq("del_flag", 1).one();
-////                tableVO.tableAtlasId = po.atlasTableId;
                 tableVO.tableName = model.appAbbreviation + "_" + po.tableName;
                 tableList.add(tableVO);
             }
 
 
             // 删除应用下面的所有表及表结构
-            accessList.forEach(po -> tableAccessMapper.deleteByIdWithFill(po));
+            accessList.forEach(po -> {
+                tableAccessMapper.deleteByIdWithFill(po);
+
+                // 封装要删除的api参数
+                DeleteTableDetailDTO deleteTableDetailDto = new DeleteTableDetailDTO();
+                deleteTableDetailDto.appId = String.valueOf(id);
+                deleteTableDetailDto.tableId = String.valueOf(po.id);
+                deleteTableDetailDto.channelDataEnum = ChannelDataEnum.DATALAKE_API_TASK;
+                deleteTableDetailDtoList.add(deleteTableDetailDto);
+            });
             // 先遍历accessList,取出每个对象中的id,再去tb_table_fields表中查询相应数据,将查询到的对象删除
             accessList.stream().map(
                             po -> tableFieldsImpl.query()
@@ -345,6 +359,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     .forEachOrdered(po -> tableFieldsMapper.deleteByIdWithFill(po));
         }
 
+        // 删除factory-dispatch对应的表配置
+        if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(deleteTableDetailDtoList)) {
+            dataFactoryClient.editByDeleteTable(deleteTableDetailDtoList);
+        }
 
         /*
           将方法的返回值封装
@@ -352,8 +370,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         vo.userId = userInfo.id;
         vo.appId = String.valueOf(model.id);
         vo.tableIdList = tableIdList;
-        // atlas应用id
-//        vo.appAtlasId = atlasInstanceId;
         // atlas物理表信息
         vo.tableList = tableList;
 
@@ -362,11 +378,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
     }
 
-    /**
-     * 查询所有应用名称(实时  非实时)
-     *
-     * @return 返回值
-     */
     @Override
     public List<AppNameDTO> queryAppName() {
 
@@ -390,12 +401,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
 
-    /**
-     * 根据id查询数据,用于数据回显
-     *
-     * @param id 请求参数
-     * @return 返回值
-     */
     @Override
     public AppRegistrationDTO getData(long id) {
 
@@ -424,11 +429,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return AppRegistrationMap.INSTANCES.listPoToDto(descDate);
     }
 
-    /**
-     * 查询所有非实时应用名称(弃用)
-     *
-     * @return 返回值
-     */
     @Override
     public List<AppNameDTO> queryNoneRealTimeAppName() {
 
