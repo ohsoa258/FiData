@@ -15,4 +15,8 @@ public class AssetsDirectoryDTO {
 
     public String name;
 
+    public Integer level;
+
+    public Boolean skip;
+
 }

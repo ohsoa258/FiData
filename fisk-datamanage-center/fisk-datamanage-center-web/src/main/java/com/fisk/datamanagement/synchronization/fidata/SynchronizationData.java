@@ -470,10 +470,12 @@ public class SynchronizationData {
                 .eq(MetadataMapAtlasPO::getDataType, dataType)
                 .eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_TABLE)
                 .eq(MetadataMapAtlasPO::getColumnId, 0);
-        if (wideTable) {
-            queryWrapper.lambda().eq(MetadataMapAtlasPO::getTableType, DataModelTableTypeEnum.WIDE_TABLE.getValue());
-        } else {
-            queryWrapper.lambda().ne(MetadataMapAtlasPO::getTableType, DataModelTableTypeEnum.WIDE_TABLE.getValue());
+        if (dataType == DataTypeEnum.DATA_DORIS.getValue()) {
+            if (wideTable) {
+                queryWrapper.lambda().eq(MetadataMapAtlasPO::getTableType, DataModelTableTypeEnum.WIDE_TABLE.getValue());
+            } else {
+                queryWrapper.lambda().ne(MetadataMapAtlasPO::getTableType, DataModelTableTypeEnum.WIDE_TABLE.getValue());
+            }
         }
         List<MetadataMapAtlasPO> poList = metadataMapAtlasMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(poList)) {

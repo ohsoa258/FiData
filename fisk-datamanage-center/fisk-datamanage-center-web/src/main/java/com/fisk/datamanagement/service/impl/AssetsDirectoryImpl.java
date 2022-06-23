@@ -40,7 +40,7 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
     public List<AssetsDirectoryDTO> assetsDirectoryData() {
         List<AssetsDirectoryDTO> data = new ArrayList<>();
         String firstLevel = UUID.randomUUID().toString();
-        data.add(setAssetsDirectory(firstLevel, "资产目录", ""));
+        data.add(setAssetsDirectory(firstLevel, "资产目录", "", 1, false));
         data.addAll(getAnalyzeDataList(firstLevel));
         return data;
     }
@@ -53,13 +53,13 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
     public List<AssetsDirectoryDTO> getAnalyzeDataList(String firstLevel) {
         List<AssetsDirectoryDTO> data = new ArrayList<>();
         String analyzeDataKey = UUID.randomUUID().toString();
-        data.add(setAssetsDirectory(analyzeDataKey, "分析数据", firstLevel));
+        data.add(setAssetsDirectory(analyzeDataKey, "分析数据", firstLevel, 2, false));
         //维度key
         String dimensionKey = UUID.randomUUID().toString();
         //业务过程key
         String businessProcessKey = UUID.randomUUID().toString();
-        data.add(setAssetsDirectory(dimensionKey, "维度", analyzeDataKey));
-        data.add(setAssetsDirectory(businessProcessKey, "业务过程", analyzeDataKey));
+        data.add(setAssetsDirectory(dimensionKey, "维度", analyzeDataKey, 3, false));
+        data.add(setAssetsDirectory(businessProcessKey, "业务过程", analyzeDataKey, 3, false));
         List<Integer> type = new ArrayList<>();
         type.add(TableTypeEnum.DW_DIMENSION.getValue());
         type.add(TableTypeEnum.DW_FACT.getValue());
@@ -84,11 +84,11 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
             }
             //维度
             if (item.tableType == TableTypeEnum.DW_DIMENSION.getValue()) {
-                data.add(setAssetsDirectory(item.atlasGuid, first.get().tableName, dimensionKey));
+                data.add(setAssetsDirectory(item.atlasGuid, first.get().tableName, dimensionKey, 4, true));
                 continue;
             }
             //业务过程
-            data.add(setAssetsDirectory(item.atlasGuid, first.get().tableName, businessProcessKey));
+            data.add(setAssetsDirectory(item.atlasGuid, first.get().tableName, businessProcessKey, 4, true));
         }
         data.addAll(getAnalysisModel(analyzeDataKey));
         return data;
@@ -103,16 +103,16 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
         List<AssetsDirectoryDTO> data = new ArrayList<>();
         //分析模型key
         String analysisModelKey = UUID.randomUUID().toString();
-        data.add(setAssetsDirectory(analysisModelKey, "分析模型", analyzeDataKey));
+        data.add(setAssetsDirectory(analysisModelKey, "分析模型", analyzeDataKey, 3, false));
         //原子指标key
         String atomicIndicatorsKey = UUID.randomUUID().toString();
-        data.add(setAssetsDirectory(atomicIndicatorsKey, "原子指标", analysisModelKey));
+        data.add(setAssetsDirectory(atomicIndicatorsKey, "原子指标", analysisModelKey, 4, false));
         //派生指标key
         String derivedIndicatorsKey = UUID.randomUUID().toString();
-        data.add(setAssetsDirectory(derivedIndicatorsKey, "派生指标", analysisModelKey));
+        data.add(setAssetsDirectory(derivedIndicatorsKey, "派生指标", analysisModelKey, 4, false));
         //宽表key
         String wideTableKey = UUID.randomUUID().toString();
-        data.add(setAssetsDirectory(wideTableKey, "宽表", analysisModelKey));
+        data.add(setAssetsDirectory(wideTableKey, "宽表", analysisModelKey, 4, false));
         List<Integer> type = new ArrayList<>();
         type.add(TableTypeEnum.DW_FACT.getValue());
         type.add(TableTypeEnum.DORIS_DIMENSION.getValue());
@@ -140,10 +140,10 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
             }
             //原子指标
             if (atomic.get().attributeType == 2) {
-                data.add(setAssetsDirectory(item.atlasGuid, atomic.get().fieldName, atomicIndicatorsKey));
+                data.add(setAssetsDirectory(item.atlasGuid, atomic.get().fieldName, atomicIndicatorsKey, 5, false));
                 continue;
             }
-            data.add(setAssetsDirectory(item.atlasGuid, atomic.get().fieldName, derivedIndicatorsKey));
+            data.add(setAssetsDirectory(item.atlasGuid, atomic.get().fieldName, derivedIndicatorsKey, 5, false));
         }
         data.addAll(getWideTableList(wideTableKey));
         return data;
@@ -169,16 +169,22 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
             if (!first.isPresent()) {
                 continue;
             }
-            data.add(setAssetsDirectory(item.atlasGuid, first.get().tableName, wideTableKey));
+            data.add(setAssetsDirectory(item.atlasGuid, first.get().tableName, wideTableKey, 5, true));
         }
         return data;
     }
 
-    public AssetsDirectoryDTO setAssetsDirectory(String key, String name, String parent) {
+    public AssetsDirectoryDTO setAssetsDirectory(String key, String name,
+                                                 String parent, Integer level,
+                                                 Boolean skip) {
         AssetsDirectoryDTO dto = new AssetsDirectoryDTO();
         dto.key = key;
         dto.name = name;
         dto.parent = parent;
+        //第几级
+        dto.level = level;
+        //是否可跳转
+        dto.skip = skip;
         return dto;
     }
 
