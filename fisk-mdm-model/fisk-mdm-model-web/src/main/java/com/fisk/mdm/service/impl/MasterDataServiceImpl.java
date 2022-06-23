@@ -536,8 +536,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
             //经纬度
             else if (attributeColumnVo.getDataType().equals(DataTypeEnum.LATITUDE_COORDINATE.getName())) {
                 AttributeColumnVO codeAndName = getCodeAndName(attributeColumnVo, DataTypeEnum.TEXT);
-                codeAndName.setDisplayName(TableNameGenerateUtils.generateComplexTypeFileName(attributeColumnVo.getDisplayName(), false));
-                codeAndName.setName(TableNameGenerateUtils.generateComplexTypeFileName(attributeColumnVo.getName(), true));
+                codeAndName.setDisplayName(TableNameGenerateUtils.generateComplexTypeLng(attributeColumnVo.getDisplayName(), false));
+                codeAndName.setName(TableNameGenerateUtils.generateComplexTypeLng(attributeColumnVo.getName(), true));
                 newColumnList.add(codeAndName);
                 newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.LATITUDE_COORDINATE));
                 newColumnList.add(getCodeAndName(attributeColumnVo));
