@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
@@ -96,4 +97,12 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
      * @return 执行结果
      */
     List<NifiCustomWorkflowDetailDTO> getComponentList(long id);
+
+    /**
+     * access or model 删除操作时,task要同步删除这些数据
+     *
+     * @param list list
+     * @return 执行结果
+     */
+    ResultEnum editDataByDeleteTable(List<DeleteTableDetailDTO> list);
 }

@@ -15,12 +15,14 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
+import com.fisk.datafactory.map.NifiCustomWorkflowMap;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
 import com.fisk.datafactory.service.INifiComponent;
 import com.fisk.datafactory.service.INifiCustomWorkflow;
@@ -665,5 +667,53 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             throw new FkException(ResultEnum.COMPONENT_NOT_EXISTS);
         }
         return NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(this.query().eq("pid", po.id).list());
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ResultEnum editDataByDeleteTable(List<DeleteTableDetailDTO> list) {
+
+        list.stream()
+                .filter(Objects::nonNull)
+                .forEach(e ->
+                        // 查询出有多少条这样的task任务
+                        this.query()
+                                .eq("app_id", e.appId)
+                                .eq("table_id", e.tableId)
+                                .eq("component_type", e.channelDataEnum.getName())
+                                .list()
+                                .stream()
+                                .filter(Objects::nonNull)
+                                .forEach(po -> {
+                                    // 删除当前task
+                                    this.deleteData(po.id);
+                                    // 查询出当前task属于哪个job
+                                    NifiCustomWorkflowDetailPO job = this.query().eq("id", po.pid).one();
+                                    // 获取当前job的所有task,过滤出tableOrder > po.tableOrder的
+                                    this.query()
+                                            .eq("pid", job.id)
+                                            .list()
+                                            .stream()
+                                            .filter(Objects::nonNull)
+                                            .filter(task -> Long.valueOf(task.tableOrder) > Long.valueOf(po.tableOrder))
+                                            .forEach(task -> {
+                                                // 将过滤出的所有task中的tableOrder-1
+                                                task.tableOrder -= 1;
+                                                // 调用修改单个管道接口
+                                                this.editWorkflow(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(task));
+                                            });
+                                    // 构造参数,调用editData
+                                    NifiCustomWorkflowDetailVO vo = new NifiCustomWorkflowDetailVO();
+                                    NifiCustomWorkflowDTO dto = NifiCustomWorkflowMap.INSTANCES
+                                            .poToDto(nifiCustomWorkflowImpl.query().eq("workflow_id", job.workflowId).one());
+                                    vo.dto = dto;
+//                                    vo.flag = dto.status == 1;
+                                    // 先只改配置,不发布整体流程
+                                    vo.flag = false;
+                                    vo.list = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(this.query().eq("workflow_id", dto.workflowId).list());
+
+                                    this.editData(vo);
+                                }));
+        return ResultEnum.SUCCESS;
     }
 }

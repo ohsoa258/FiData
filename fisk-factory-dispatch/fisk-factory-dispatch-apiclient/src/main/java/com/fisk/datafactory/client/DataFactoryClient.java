@@ -2,6 +2,7 @@ package com.fisk.datafactory.client;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
@@ -121,4 +122,14 @@ public interface DataFactoryClient {
     @PostMapping("/dataFactory/getPipeTaskLog")
     @ApiOperation(value = "获取表日志")
     ResultEntity<List<PipelTaskLogVO>> getPipeTaskLog(@RequestBody PipelTaskLogVO dto);
+
+    /**
+     * access or model 删除操作时,task要同步删除这些数据
+     *
+     * @param list list
+     * @return 执行结果
+     */
+    @ApiOperation("access or model 删除操作时,task要同步删除这些数据")
+    @PostMapping("/nifiCustomWorkflowDetail/editByDeleteTable")
+    ResultEntity<Object> editByDeleteTable(@Validated @RequestBody List<DeleteTableDetailDTO> list);
 }
