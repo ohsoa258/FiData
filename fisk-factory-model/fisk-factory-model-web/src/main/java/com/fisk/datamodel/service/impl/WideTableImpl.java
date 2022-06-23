@@ -7,6 +7,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
+import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
@@ -50,6 +53,8 @@ public class WideTableImpl extends ServiceImpl<WideTableMapper,WideTableConfigPO
     DimensionAttributeImpl dimensionAttribute;
     @Resource
     AtomicIndicatorsImpl atomicIndicators;
+    @Resource
+    private DataFactoryClient dataFactoryClient;
 
     @Value("${generate.date-dimension.datasource.typeName}")
     private String typeName;
@@ -374,6 +379,17 @@ public class WideTableImpl extends ServiceImpl<WideTableMapper,WideTableConfigPO
             {
                 throw new FkException(ResultEnum.SQL_ERROR);
             }
+
+            // 删除factory-dispatch对应的表配置
+            List<DeleteTableDetailDTO> list = new ArrayList<>();
+            DeleteTableDetailDTO deleteTableDetailDto = new DeleteTableDetailDTO();
+            deleteTableDetailDto.appId = String.valueOf(po.businessId);
+            deleteTableDetailDto.tableId = String.valueOf(id);
+            // 分析宽表
+            deleteTableDetailDto.channelDataEnum = ChannelDataEnum.OLAP_WIDETABLE_TASK;
+            list.add(deleteTableDetailDto);
+            dataFactoryClient.editByDeleteTable(list);
+
             return mapper.deleteByIdWithFill(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
         }
         catch (SQLException e)

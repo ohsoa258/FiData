@@ -6,6 +6,9 @@ import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
+import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimension.DimensionDateAttributeDTO;
 import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
@@ -67,6 +70,8 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
     DimensionAttributeImpl dimensionAttributeImpl;
     @Resource
     PublishTaskClient publishTaskClient;
+    @Resource
+    private DataFactoryClient dataFactoryClient;
     @Resource
     UserHelper userHelper;
 
@@ -505,6 +510,19 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
             //拼接删除DW/Doris库中维度表
             PgsqlDelTableDTO dto = delDwDorisTable(model.dimensionTabName);
             publishTaskClient.publishBuildDeletePgsqlTableTask(dto);
+
+            // 删除factory-dispatch对应的表配置
+            List<DeleteTableDetailDTO> list = new ArrayList<>();
+            DeleteTableDetailDTO deleteTableDetailDto = new DeleteTableDetailDTO();
+            deleteTableDetailDto.appId = String.valueOf(model.businessId);
+            deleteTableDetailDto.tableId = String.valueOf(id);
+            // 数仓维度
+            deleteTableDetailDto.channelDataEnum = ChannelDataEnum.DW_DIMENSION_TASK;
+            list.add(deleteTableDetailDto);
+            // 分析维度
+            deleteTableDetailDto.channelDataEnum = ChannelDataEnum.OLAP_DIMENSION_TASK;
+            list.add(deleteTableDetailDto);
+            dataFactoryClient.editByDeleteTable(list);
 
             return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         }

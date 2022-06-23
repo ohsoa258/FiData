@@ -8,6 +8,9 @@ import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
+import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
@@ -55,6 +58,8 @@ public class FactImpl extends ServiceImpl<FactMapper,FactPO> implements IFact {
     @Resource
     PublishTaskClient publishTaskClient;
     @Resource
+    private DataFactoryClient dataFactoryClient;
+    @Resource
     UserHelper userHelper;
 
     @Override
@@ -100,6 +105,19 @@ public class FactImpl extends ServiceImpl<FactMapper,FactPO> implements IFact {
             //拼接删除DW/Doris库中维度表
             PgsqlDelTableDTO dto = delDwDorisTable(po.factTabName);
             publishTaskClient.publishBuildDeletePgsqlTableTask(dto);
+
+            // 删除factory-dispatch对应的表配置
+            List<DeleteTableDetailDTO> list = new ArrayList<>();
+            DeleteTableDetailDTO deleteTableDetailDto = new DeleteTableDetailDTO();
+            deleteTableDetailDto.appId = String.valueOf(po.businessId);
+            deleteTableDetailDto.tableId = String.valueOf(id);
+            // 数仓事实
+            deleteTableDetailDto.channelDataEnum = ChannelDataEnum.DW_FACT_TASK;
+            list.add(deleteTableDetailDto);
+            // 分析事实
+            deleteTableDetailDto.channelDataEnum = ChannelDataEnum.OLAP_FACT_TASK;
+            list.add(deleteTableDetailDto);
+            dataFactoryClient.editByDeleteTable(list);
 
             return mapper.deleteByIdWithFill(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
         }
