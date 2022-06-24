@@ -27,7 +27,6 @@ import com.fisk.dataaccess.mapper.TableFieldsMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.service.ITableFields;
-import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
@@ -247,27 +246,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
         return operateMsgDTO;
     }
-
-    /**
-     * 组装参数
-     *
-     * @param userId    当前登录人id
-     * @param appId     应用注册id
-     * @param accessId  物理表id
-     * @param tableName 表名
-     * @return atlasIdsVO
-     */
-    public AtlasIdsVO getAtlasIdsVO(Long userId, Long appId, Long accessId, String tableName) {
-        AtlasIdsVO atlasIdsVO = new AtlasIdsVO();
-        atlasIdsVO.userId = userId;
-        // 应用注册id
-        atlasIdsVO.appId = String.valueOf(appId);
-        // 物理表id
-        atlasIdsVO.dbId = String.valueOf(accessId);
-        atlasIdsVO.tableName = tableName;
-        return atlasIdsVO;
-    }
-
 
     /**
      * 调用发布和存储过程
