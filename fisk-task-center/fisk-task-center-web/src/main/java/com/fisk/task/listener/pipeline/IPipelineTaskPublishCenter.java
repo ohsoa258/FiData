@@ -9,7 +9,7 @@ import java.util.List;
  * CreateTime: 2022/04/21 15:05
  * Description:
  */
-public interface IBuildPipelineSupervisionListener {
+public interface IPipelineTaskPublishCenter {
 
     void msg(String dataInfo, Acknowledgment acke);
 }

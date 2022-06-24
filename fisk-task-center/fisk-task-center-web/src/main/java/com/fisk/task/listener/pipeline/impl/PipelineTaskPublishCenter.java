@@ -18,7 +18,7 @@ import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
-import com.fisk.task.listener.pipeline.IBuildPipelineSupervisionListener;
+import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
 import com.fisk.task.mapper.NifiStageMapper;
 import com.fisk.task.mapper.PipelineTableLogMapper;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
@@ -44,7 +45,7 @@ import java.util.*;
  */
 @Slf4j
 @Component
-public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisionListener {
+public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
     @Resource
     IOlap iOlap;
     @Value("${nifi.pipeline.waitTime}")
@@ -94,7 +95,10 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                         //任务中心发布任务,通知任务开始执行
                         kafkaTemplateHelper.sendMessageAsync(topicName, mapString);
                     } else {
-                        redisUtil.heartbeatDetection("hand" + kafkaReceiveDTO.pipelTaskTraceId + "," + topicName, topicName, Long.parseLong(waitTime));
+                        redisUtil.heartbeatDetection("nowExec" + kafkaReceiveDTO.pipelTaskTraceId + "," + topicName, topicName, Long.parseLong(waitTime));
+                        //存一个真正的过期时间,不断刷新 这里key是pipelTaskTraceId.因为手动调度没有jobId和taskId;
+                        redisUtil.heartbeatDetection(kafkaReceiveDTO.pipelTaskTraceId,simpleDateFormat.format(new Date()),3600);
+
                     }
                 }
                 //调度管道中与调度job相连接的job(可能是多个job与开始调度job连接)中首个task任务
@@ -155,6 +159,20 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                             apiImportData.pipelStageTraceId = UUID.randomUUID().toString();
                             log.info("发送的topic3:{},内容:{}", topicName, JSON.toJSONString(apiImportData));
                             kafkaTemplateHelper.sendMessageAsync(topicName, JSON.toJSONString(apiImportData));
+                            //job开始日志
+                            Map<Integer, Object> jobMap = new HashMap<>();
+                            NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, OlapTableEnum.PHYSICS_API.getValue(), null, Math.toIntExact(pipelApiDispatch.apiId));
+                            ResultEntity<NifiPortsHierarchyDTO> nifiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchy);
+                            //任务依赖的组件
+                            jobMap.put(DispatchLogEnum.jobstart.getValue(), simpleDateFormat.format(new Date()));
+                            jobMap.put(DispatchLogEnum.jobstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
+                            iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, split1[3], kafkaReceiveDTO.pipelJobTraceId, String.valueOf(nifiPortHierarchy.data.itselfPort.pid));
+                            //task日志
+                            HashMap<Integer, Object> taskMap = new HashMap<>();
+                            taskMap.put(DispatchLogEnum.taskstart.getValue(), simpleDateFormat.format(new Date()));
+                            taskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
+                            iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.data.itselfPort.id), null, 0);
+
                         }
 
                     }
@@ -175,6 +193,7 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                     String topicName1 = topicSelf.topicName;
                     //下一级
                     List<NifiPortsHierarchyNextDTO> nextList = data.nextList;
+                    //记录节点真正的失效时间,从来都是本节点的,最多包含本节点所在job的过期时间,
                     if (nextList == null) {
                         //完成时间要去rediskey失效那里做,需要有一个标识告诉我这次失效代表什么 fiskgd--fisk管道
                         String hmgetKey = "fiskgd:" + kafkaReceiveDTO.pipelTraceId;
@@ -182,13 +201,17 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                         //通过这个管道key查是否所有支线末端都走完了,如果没有不记录结束时间
                         Map<Object, Object> hmget = redisUtil.hmget(hmgetKey);
                         //便利已存在的末端
-                        Iterator<Map.Entry<Object, Object>> nodeMap = hmget.entrySet().iterator();
-                        while (nodeMap.hasNext()) {
-                            Map.Entry<Object, Object> next = nodeMap.next();
-                            String key = next.getKey().toString();
-                            if (Objects.equals(key, topicName1)) {
-                                ifexist = false;
+                        if (!CollectionUtils.isEmpty(hmget)) {
+                            Iterator<Map.Entry<Object, Object>> nodeMap = hmget.entrySet().iterator();
+                            while (nodeMap.hasNext()) {
+                                Map.Entry<Object, Object> next = nodeMap.next();
+                                String key = next.getKey().toString();
+                                if (Objects.equals(key, topicName1)) {
+                                    ifexist = false;
+                                }
                             }
+                        } else {
+                            hmget = new HashMap<>();
                         }
                         if (ifexist) {
                             //如果map里面不存在,装进去
@@ -196,6 +219,10 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                             if (hmget.size() == data.pipeEndDto.size()) {
                                 //如果结束支点就它一个,装进去等30秒
                                 redisUtil.hmsset(hmgetKey, hmget, Long.parseLong(waitTime));
+                                // 存一个真正的过期时间(最后一个task,job)
+                                //如果有刷新,没有就新建  taskid  结束时间  时间值
+                                redisUtil.hset(String.valueOf(itselfPort.id),DispatchLogEnum.taskend.getName(),simpleDateFormat.format(new Date()),3000);
+                                redisUtil.hset(String.valueOf(itselfPort.pid),DispatchLogEnum.jobend.getName(),simpleDateFormat.format(new Date()),3000);
                             } else {
                                 //如果结束支点不止它一个,不仅要装进去,还要等其他支点
                                 redisUtil.hmsset(hmgetKey, hmget, 3000);
@@ -205,60 +232,70 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                             if (hmget.size() == data.pipeEndDto.size()) {
                                 //如果满足有所有支点的条件了,就刷新过期时间30秒
                                 redisUtil.hmsset(hmgetKey, hmget, Long.parseLong(waitTime));
-
+                                // 刷新task和job的过期时间
+                                redisUtil.hset(String.valueOf(itselfPort.id),DispatchLogEnum.taskend.getName(),simpleDateFormat.format(new Date()),3000);
+                                redisUtil.hset(String.valueOf(itselfPort.pid),DispatchLogEnum.jobend.getName(),simpleDateFormat.format(new Date()),3000);
                             } else {
                                 redisUtil.hmsset(hmgetKey, hmget, 3000);
                             }
                         }
-                    }
-                    for (NifiPortsHierarchyNextDTO nifiPortsHierarchyNextDTO : nextList) {
-                        //下一级本身
-                        NifiCustomWorkflowDetailDTO itselfPort1 = nifiPortsHierarchyNextDTO.itselfPort;
-                        ChannelDataEnum channel = ChannelDataEnum.getValue(itselfPort1.componentType);
-                        OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(channel.getValue());
-                        log.info("表类别:", olapTableEnum);
-                        //下一级所有的上一级
-                        List<NifiCustomWorkflowDetailDTO> upPortList = nifiPortsHierarchyNextDTO.upPortList;
-                        //判断redis里面有没有这个key    itselfPort1(key,很关键,tnnd)
-                        TableTopicDTO topicDTO = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort1.id),
-                                Integer.valueOf(itselfPort1.tableId), olapTableEnum.getValue());
-                        String topicContent = "";
-                        //topic需要加上一个批次号   管道的  不然redis失效那里不好判断这个任务属于哪个批次 具体命名规范为  原本topic+管道批次
-                        String topic = topicDTO.topicName + "," + kafkaReceiveDTO.pipelTraceId;
-                        Object key = redisUtil.get(topic);
-                        if (key == null) {
-                            if (upPortList.size() == 1) {
-                                log.info("存入redis即将调用的节点1:" + topic);
-                                redisUtil.heartbeatDetection(topic, topicSelf.topicName, Long.parseLong(waitTime));
-                            } else {
-                                redisUtil.heartbeatDetection(topic, topicSelf.topicName, 3000L);
-                            }
-                        } else {
-                            topicContent = key.toString();
-                            String[] split = topicContent.split(",");
-                            //意思是没全了,所有上游没有调完
-                            if (split.length != upPortList.size()) {
-                                if (upPortList.size() - split.length <= 1) {
-                                    if (topicContent.contains(topicSelf.topicName)) {
-                                        log.info("存入redis即将调用的节点2:" + topic);
-                                        redisUtil.expire(topic, Long.parseLong(waitTime));
-                                    } else {
-                                        log.info("存入redis即将调用的节点3:" + topic);
-                                        redisUtil.heartbeatDetection(topic, topicContent + "," + topicSelf.topicName, Long.parseLong(waitTime));
-                                    }
+                    } else {
+                        for (NifiPortsHierarchyNextDTO nifiPortsHierarchyNextDTO : nextList) {
+                            //下一级本身
+                            NifiCustomWorkflowDetailDTO itselfPort1 = nifiPortsHierarchyNextDTO.itselfPort;
+                            ChannelDataEnum channel = ChannelDataEnum.getValue(itselfPort1.componentType);
+                            OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(channel.getValue());
+                            log.info("表类别:", olapTableEnum);
+                            //下一级所有的上一级
+                            List<NifiCustomWorkflowDetailDTO> upPortList = nifiPortsHierarchyNextDTO.upPortList;
+                            //判断redis里面有没有这个key    itselfPort1(key,很关键,tnnd)
+                            TableTopicDTO topicDTO = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort1.id),
+                                    Integer.valueOf(itselfPort1.tableId), olapTableEnum.getValue());
+                            String topicContent = "";
+                            //topic需要加上一个批次号   管道的  不然redis失效那里不好判断这个任务属于哪个批次 具体命名规范为  原本topic+管道批次
+                            String topic = topicDTO.topicName + "," + kafkaReceiveDTO.pipelTraceId;
+                            Object key = redisUtil.get(topic);
+                            if (key == null) {
+                                if (upPortList.size() == 1) {
+                                    log.info("存入redis即将调用的节点1:" + topic);
+                                    redisUtil.heartbeatDetection(topic, topicSelf.topicName, Long.parseLong(waitTime));
+                                    // 存入(此task)真正的过期时间,不断刷新  itselfPort
+                                    redisUtil.hset(String.valueOf(itselfPort.id),DispatchLogEnum.taskend.getName(),simpleDateFormat.format(new Date()),3000);
                                 } else {
-                                    if (topicContent.contains(topicSelf.topicName)) {
-                                        redisUtil.expire(topic, 3000L);
-                                    } else {
-                                        redisUtil.heartbeatDetection(topic, topicContent + "," + topicSelf.topicName, 3000L);
-                                    }
+                                    redisUtil.heartbeatDetection(topic, topicSelf.topicName, 3000L);
                                 }
                             } else {
-                                log.info("存入redis即将调用的节点4:" + topic);
-                                redisUtil.expire(topic, Long.parseLong(waitTime));
+                                topicContent = key.toString();
+                                String[] split = topicContent.split(",");
+                                //意思是没全了,所有上游没有调完
+                                if (split.length != upPortList.size()) {
+                                    if (upPortList.size() - split.length <= 1) {
+                                        if (topicContent.contains(topicSelf.topicName)) {
+                                            log.info("存入redis即将调用的节点2:" + topic);
+                                            redisUtil.expire(topic, Long.parseLong(waitTime));
+                                            // 存入(此task)真正的过期时间,不断刷新
+                                            redisUtil.hset(String.valueOf(itselfPort.id),DispatchLogEnum.taskend.getName(),simpleDateFormat.format(new Date()),3000);
+                                        } else {
+                                            log.info("存入redis即将调用的节点3:" + topic);
+                                            redisUtil.heartbeatDetection(topic, topicContent + "," + topicSelf.topicName, Long.parseLong(waitTime));
+                                            // 存入(此task)真正的过期时间,不断刷新
+                                            redisUtil.hset(String.valueOf(itselfPort.id),DispatchLogEnum.taskend.getName(),simpleDateFormat.format(new Date()),3000);
+                                        }
+                                    } else {
+                                        if (topicContent.contains(topicSelf.topicName)) {
+                                            redisUtil.expire(topic, 3000L);
+                                        } else {
+                                            redisUtil.heartbeatDetection(topic, topicContent + "," + topicSelf.topicName, 3000L);
+                                        }
+                                    }
+                                } else {
+                                    log.info("存入redis即将调用的节点4:" + topic);
+                                    redisUtil.expire(topic, Long.parseLong(waitTime));
+                                    // 存入(此task)真正的过期时间,不断刷新
+                                    redisUtil.hset(String.valueOf(itselfPort.id),DispatchLogEnum.taskend.getName(),simpleDateFormat.format(new Date()),3600);
+                                }
                             }
                         }
-
                     }
                 }
             }

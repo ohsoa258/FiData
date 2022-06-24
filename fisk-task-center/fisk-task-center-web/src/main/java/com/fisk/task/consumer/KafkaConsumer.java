@@ -22,7 +22,7 @@ import com.fisk.task.listener.nifi.impl.BuildNifiCustomWorkFlow;
 import com.fisk.task.listener.nifi.impl.BuildNifiTaskListener;
 import com.fisk.task.listener.olap.BuildModelTaskListener;
 import com.fisk.task.listener.olap.BuildWideTableTaskListener;
-import com.fisk.task.listener.pipeline.IBuildPipelineSupervisionListener;
+import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
 import com.fisk.task.listener.postgre.datainput.BuildDataInputDeletePgTableListener;
 import com.fisk.task.listener.postgre.datainput.BuildDataInputPgTableListener;
 import com.fisk.task.mapper.NifiStageMapper;
@@ -113,7 +113,7 @@ public class KafkaConsumer {
     @Resource
     BuildModelListener buildModelListener;
     @Resource
-    IBuildPipelineSupervisionListener iBuildPipelineSupervisionListener;
+    IPipelineTaskPublishCenter iPipelineTaskPublishCenter;
     @Resource
     INonRealTimeListener iNonRealTimeListener;
 
@@ -158,7 +158,7 @@ public class KafkaConsumer {
     @KafkaListener(topics = "my-topic", containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog
     public void consumer(String message, Acknowledgment ack) {
-        iBuildPipelineSupervisionListener.msg(message, ack);
+        iPipelineTaskPublishCenter.msg(message, ack);
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_NIFI_FLOW, containerFactory = "batchFactory", groupId = "test")

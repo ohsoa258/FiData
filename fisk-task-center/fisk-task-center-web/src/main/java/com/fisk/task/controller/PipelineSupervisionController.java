@@ -9,7 +9,7 @@ import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.task.TableTopicDTO;
-import com.fisk.task.listener.pipeline.IBuildPipelineSupervisionListener;
+import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
 import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.service.nifi.IPipelineTableLog;
 import com.fisk.task.service.pipeline.ITableTopicService;
@@ -32,7 +32,7 @@ public class PipelineSupervisionController {
     @Resource
     INifiStage iNifiStage;
     @Resource
-    IBuildPipelineSupervisionListener iBuildPipelineSupervisionListener;
+    IPipelineTaskPublishCenter iPipelineTaskPublishCenter;
     @Resource
     ITableTopicService iTableTopicService;
 
@@ -62,7 +62,7 @@ public class PipelineSupervisionController {
 
     @PostMapping("/consumer")
     public void consumer(@RequestParam String message) {
-        iBuildPipelineSupervisionListener.msg(message, null);
+        iPipelineTaskPublishCenter.msg(message, null);
     }
 
     @PostMapping("/updateTableTopicByComponentId")

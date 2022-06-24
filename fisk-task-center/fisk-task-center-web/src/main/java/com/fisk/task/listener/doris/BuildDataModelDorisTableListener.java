@@ -114,6 +114,7 @@ public class BuildDataModelDorisTableListener
         ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
         int id = 0;
         int tableType = 0;
+        log.info("dw创建表参数:" + dataInfo);
         //saveTableStructure(list);
         //1.,查询语句,并存库
         //2.修改表的存储过程
@@ -123,7 +124,7 @@ public class BuildDataModelDorisTableListener
             List<ModelPublishTableDTO> dimensionList = inpData.dimensionList;
 
             for (ModelPublishTableDTO modelPublishTableDTO : dimensionList) {
-                id = modelPublishStatusDTO.id;
+                id = Math.toIntExact(modelPublishTableDTO.tableId);
                 tableType = modelPublishTableDTO.createType;
                 //生成版本号
                 ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO);
@@ -358,9 +359,9 @@ public class BuildDataModelDorisTableListener
         String tableName = modelPublishTableDTO.tableName;
         String tablePk = "";
         if (modelPublishTableDTO.createType == 0) {
-            tablePk = tableName.substring(4) + "key";
+            tablePk = "\"" + tableName.substring(4) + "key\"";
         } else {
-            tablePk = tableName.substring(5) + "key";
+            tablePk = "\"" + tableName.substring(5) + "key\"";
         }
 
         StringBuilder sql = new StringBuilder();

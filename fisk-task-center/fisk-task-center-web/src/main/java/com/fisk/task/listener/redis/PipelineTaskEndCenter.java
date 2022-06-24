@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
 import com.fisk.dataaccess.dto.api.PipelApiDispatchDTO;
@@ -36,7 +37,7 @@ import java.util.*;
 
 @Component
 @Slf4j
-public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListener {
+public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
     @Resource
     KafkaTemplateHelper kafkaTemplateHelper;
     @Resource
@@ -49,9 +50,11 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
     IPipelJobLog iPipelJobLog;
     @Resource
     IPipelTaskLog iPipelTaskLog;
+    @Resource
+    RedisUtil redisUtil;
 
 
-    public RedisKeyExpirationListeners(RedisMessageListenerContainer listenerContainer) {
+    public PipelineTaskEndCenter(RedisMessageListenerContainer listenerContainer) {
         super(listenerContainer);
     }
 
@@ -81,7 +84,7 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
                 String[] split = topic.split("\\.");
                 pipelTraceId = split1[1];
                 boolean ifEndJob = false;
-                //查找所有的上一级
+                //查找本次需要结束的任务
                 NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(split[3], Integer.valueOf(split[4]), null, Integer.valueOf(split[6]));
                 ResultEntity<NifiPortsHierarchyDTO> nifiPortHierarchy =
                         dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchy);
@@ -96,7 +99,8 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
                     // 1.要记录上一个task结束
                     Map<Integer, Object> taskMap = new HashMap<>();
                     taskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
-                    taskMap.put(DispatchLogEnum.taskend.getValue(), simpleDateFormat.format(new Date()));
+                    Object endTime = redisUtil.getAndDel(byPipelJobTraceId.taskId);
+                    taskMap.put(DispatchLogEnum.taskend.getValue(), endTime != null ? endTime.toString() : simpleDateFormat.format(new Date()));
                     ChannelDataEnum value = ChannelDataEnum.getValue(dto.componentType);
                     OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(value.getValue());
                     log.info("记录上一个task结束" + byPipelJobTraceId.taskTraceId);
@@ -106,7 +110,7 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
                         //2.记录上一个job结束
                         Map<Integer, Object> upJobMap = new HashMap<>();
                         upJobMap.put(DispatchLogEnum.jobstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
-                        upJobMap.put(DispatchLogEnum.jobend.getValue(), simpleDateFormat.format(new Date()));
+                        upJobMap.put(DispatchLogEnum.jobend.getValue(), endTime != null ? endTime.toString() : simpleDateFormat.format(new Date()));
                         log.info("上一个job的结束:" + byPipelJobTraceId.jobTraceId);
                         iPipelJobLog.savePipelJobLog(pipelTraceId, upJobMap, split[3], byPipelJobTraceId.jobTraceId, byPipelTraceId.componentId);
                         ifEndJob = true;
@@ -163,7 +167,7 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
                     kafkaReceiveDTO.pipelStageTraceId = thisPipelStageTraceId;
                     kafkaReceiveDTO.fidata_batch_code = UUID.randomUUID().toString();
                     kafkaReceiveDTO.start_time = simpleDateFormat.format(new Date());
-                    kafkaReceiveDTO.topicType= TopicTypeEnum.COMPONENT_NIFI_FLOW;
+                    kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW;
                     log.info("发送的topic4:{},内容:{}", split1[0], JSON.toJSONString(kafkaReceiveDTO));
                     kafkaTemplateHelper.sendMessageAsync(split1[0], JSON.toJSONString(kafkaReceiveDTO));
                 }
@@ -184,12 +188,13 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
                         //记录task结束
                         Map<Integer, Object> taskMap = new HashMap<>();
                         taskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
-                        taskMap.put(DispatchLogEnum.taskend.getValue(), simpleDateFormat.format(new Date()));
+                        Object endTime = redisUtil.getAndDel(String.valueOf(dto.id));
+                        taskMap.put(DispatchLogEnum.taskend.getValue(), endTime != null ? endTime.toString() : simpleDateFormat.format(new Date()));
                         iPipelTaskLog.savePipelTaskLog(byPipelJobTraceId.jobTraceId, byPipelJobTraceId.taskTraceId, taskMap, byPipelJobTraceId.taskId, null, 0);
                         //记录job结束
                         Map<Integer, Object> upJobMap = new HashMap<>();
                         upJobMap.put(DispatchLogEnum.jobstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
-                        upJobMap.put(DispatchLogEnum.jobend.getValue(), simpleDateFormat.format(new Date()));
+                        upJobMap.put(DispatchLogEnum.jobend.getValue(), endTime != null ? endTime.toString() : simpleDateFormat.format(new Date()));
                         log.info("这个job的结束:" + byPipelJobTraceId.jobTraceId);
                         iPipelJobLog.savePipelJobLog(pipelTraceId, upJobMap, byPipelTraceId.pipelId, byPipelJobTraceId.jobTraceId, byPipelTraceId.componentId);
                     }
@@ -200,14 +205,15 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
                     log.info("这个管道的结束:" + pipelTraceId);
                     iPipelJobLog.savePipelLog(pipelTraceId, PipelMap, pipelId);
                 }
-            } else if (expiredKey.startsWith("hand")) {
+            } else if (expiredKey.startsWith("nowExec")) {
                 //手动调度记录结束
                 String[] split = expiredKey.split(",");
                 String taskTraceId = split[0].substring(4);
                 String[] split1 = split[1].split("\\.");
                 HashMap<Integer, Object> taskMap = new HashMap<>();
                 taskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
-                taskMap.put(DispatchLogEnum.taskend.getValue(), simpleDateFormat.format(new Date()));
+                Object endTime = redisUtil.getAndDel(taskTraceId);
+                taskMap.put(DispatchLogEnum.taskend.getValue(), endTime != null ? endTime.toString() : simpleDateFormat.format(new Date()));
                 iPipelTaskLog.savePipelTaskLog(null, taskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
             }
         } catch (Exception e) {

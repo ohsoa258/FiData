@@ -685,7 +685,7 @@ public class RedisUtil {
      * @param value 值
      * @return boolean
      */
-    public boolean heartbeatDetection(String key,String value,long time){
+    public boolean heartbeatDetection(String key, String value, long time) {
         try {
             if (time > 0) {
                 redisTemplate.opsForValue().set(key, value, time, TimeUnit.SECONDS);
@@ -697,6 +697,18 @@ public class RedisUtil {
             e.printStackTrace();
             return false;
         }
+    }
+
+    /**
+     * 普通缓存获取,然后删除
+     *
+     * @param key 键
+     * @return 值
+     */
+    public Object getAndDel(String key) {
+        Object value = key == null ? null : redisTemplate.opsForValue().get(key);
+        redisTemplate.delete(key);
+        return value;
     }
 
 }

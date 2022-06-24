@@ -76,6 +76,7 @@ public class MQConsumerLogAspect {
             if (data.logId != null) {
                 model = mapper.selectById(data.logId);
                 taskName = model == null ? "" : model.taskName;
+                log.info("此次调度队列:{},此次队列参数:{}", model.taskQueue, JSON.toJSONString(args[0]));
             }
         } catch (Exception ex) {
             log.error("任务状态更新失败", ex);
@@ -88,7 +89,7 @@ public class MQConsumerLogAspect {
         if (model != null) {
             model.taskStatus = TaskStatusEnum.PROCESSING;
             model.taskSendOk = true;
-            model.traceId=traceId;
+            model.traceId = traceId;
             mapper.updateById(model);
         }
 
