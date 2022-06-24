@@ -1657,14 +1657,22 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         querySqlDto.name = "Query numbers Field";
         querySqlDto.details = "insert_phase";
         querySqlDto.groupId = groupId;
+        //接入需要数据校验,查的是ods表,其他的不变
         if (Objects.equals(dto.type, OlapTableEnum.WIDETABLE)) {
             querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,now() as end_time," +
                     "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
                     "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
         } else {
-            querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
-                    "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                    "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
+            if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
+                querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
+                        "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from ods_" + config.processorConfig.targetTableName.substring(4) + " where fidata_batch_code='${fidata_batch_code}'";
+            } else {
+                querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
+                        "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
+            }
+
         }
 
         querySqlDto.dbConnectionId = targetDbPoolId;
@@ -2111,15 +2119,15 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
         NifiMessageDTO nifiMessage = new NifiMessageDTO();
-        nifiMessage.message="${executesql.error.message}";
-        nifiMessage.topic="${kafka.topic}";
-        nifiMessage.groupId=groupId;
-        nifiMessage.startTime="${start_time}";
-        nifiMessage.endTime="${end_time}";
-        nifiMessage.counts="${numbers}";
-        nifiMessage.pipelStageTraceId="${pipelStageTraceId}";
-        nifiMessage.pipelTaskTraceId="${pipelTaskTraceId}";
-        nifiMessage.pipelJobTraceId="${pipelJobTraceId}";
+        nifiMessage.message = "${executesql.error.message}";
+        nifiMessage.topic = "${kafka.topic}";
+        nifiMessage.groupId = groupId;
+        nifiMessage.startTime = "${start_time}";
+        nifiMessage.endTime = "${end_time}";
+        nifiMessage.counts = "${numbers}";
+        nifiMessage.pipelStageTraceId = "${pipelStageTraceId}";
+        nifiMessage.pipelTaskTraceId = "${pipelTaskTraceId}";
+        nifiMessage.pipelJobTraceId = "${pipelJobTraceId}";
         buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(JSON.toJSONString(nifiMessage));
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
         verifyProcessorResult(processorEntityBusinessResult);
