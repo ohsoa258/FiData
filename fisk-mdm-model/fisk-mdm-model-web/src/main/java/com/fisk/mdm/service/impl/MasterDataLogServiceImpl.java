@@ -55,6 +55,14 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
     private String password;
 
     /**
+     * 系统字段
+     */
+    String systemColumnName = ",fidata_create_time," +
+            "fidata_create_user," +
+            "fidata_update_time," +
+            "fidata_update_user";
+
+    /**
      * 连接Connection
      *
      * @return {@link Connection}
@@ -70,6 +78,8 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
     public ResultEnum addMasterDataLog(Map<String, Object> data, String tableName) {
         data.put("fidata_create_user", userHelper.getLoginUserInfo().id);
         data.put("fidata_create_time", LocalDateTime.now());
+        data.put("fidata_update_time", LocalDateTime.now());
+        data.put("fidata_update_user", userHelper.getLoginUserInfo().id);
         data.put("fidata_del_flag", 1);
         IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
         String sql = buildSqlCommand.buildInsertSingleData(data, tableName);
@@ -103,7 +113,7 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
                 .map(e -> e.getName()).collect(Collectors.toList()), ",");
         //获取分页sql
         MasterDataPageDTO dataPageDTO = new MasterDataPageDTO();
-        dataPageDTO.setColumnNames(businessColumnName);
+        dataPageDTO.setColumnNames(businessColumnName += systemColumnName);
         dataPageDTO.setVersionId(dto.getVersionId());
         dataPageDTO.setPageIndex(dto.getPageIndex());
         dataPageDTO.setPageSize(dto.getPageSize());
