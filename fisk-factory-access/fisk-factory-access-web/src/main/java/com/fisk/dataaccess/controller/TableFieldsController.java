@@ -26,11 +26,6 @@ public class TableFieldsController {
     @Resource
     public ITableFields service;
 
-    /**
-     * 查询表字段
-     *
-     * @return 返回值
-     */
     @PostMapping("/getTableField")
     @ApiOperation(value = "查询表字段")
     public ResultEntity<TableFieldsDTO> getTableField(@RequestParam("id") int id) {
@@ -38,24 +33,12 @@ public class TableFieldsController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableField(id));
     }
 
-    /**
-     * 添加物理表
-     *
-     * @param dto 请求参数
-     * @return 返回值
-     */
     @PostMapping("/add")
     @ApiOperation(value = "添加物理表字段--保存&发布")
     public ResultEntity<Object> addData(@RequestBody TableAccessNonDTO dto) {
         return ResultEntityBuild.build(service.addData(dto));
     }
 
-    /**
-     * 修改
-     *
-     * @param dto 请求参数
-     * @return 返回值
-     */
     @PutMapping("/edit")
     @ApiOperation(value = "修改物理表字段--保存&发布")
     public ResultEntity<Object> editData(@RequestBody TableAccessNonDTO dto) {

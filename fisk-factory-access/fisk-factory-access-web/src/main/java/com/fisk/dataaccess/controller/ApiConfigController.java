@@ -7,7 +7,6 @@ import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.api.*;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.service.IApiConfig;
-import com.fisk.task.client.PublishTaskClient;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -31,8 +30,6 @@ public class ApiConfigController {
 
     @Resource
     private IApiConfig service;
-    @Resource
-    private PublishTaskClient publishTaskClient;
 
     /**
      * 基于构造器注入

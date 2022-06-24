@@ -55,12 +55,6 @@ public class AppRegistrationController {
     @Resource
     private PublishTaskClient publishTaskClient;
 
-    /**
-     * 添加应用
-     *
-     * @param dto 请求参数
-     * @return 返回值
-     */
     @PostMapping("/add")
     @ApiOperation(value = "添加")
     public ResultEntity<Object> addData(@RequestBody AppRegistrationDTO dto) {
@@ -74,12 +68,6 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, resultEntity);
     }
 
-    /**
-     * 根据id查询数据,用于数据回显
-     *
-     * @param id 请求参数
-     * @return 返回值
-     */
     @GetMapping("/get/{id}")
     @ApiOperation(value = "回显")
     public ResultEntity<AppRegistrationDTO> getData(
@@ -87,14 +75,6 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
     }
 
-    /**
-     * 分页查询
-     *
-     * @param key  搜索条件
-     * @param page 当前页码
-     * @param rows 每页显示条数
-     * @return 返回值
-     */
     @GetMapping("/page")
     @ApiOperation(value = "分页")
     public ResultEntity<PageDTO<AppRegistrationDTO>> queryByPageAppRes(
@@ -107,24 +87,12 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, data);
     }
 
-    /**
-     * 应用注册-修改
-     *
-     * @param dto 请求参数
-     * @return 返回值
-     */
     @PutMapping("/edit")
     @ApiOperation(value = "修改")
     public ResultEntity<Object> editData(@Validated @RequestBody AppRegistrationEditDTO dto) {
         return ResultEntityBuild.build(service.updateAppRegistration(dto));
     }
 
-    /**
-     * 删除
-     *
-     * @param id 请求参数
-     * @return 返回值
-     */
     @DeleteMapping("/delete/{id}")
     @ApiOperation(value = "删除")
     public ResultEntity<Object> deleteData(
@@ -177,11 +145,6 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
 
-    /**
-     * 查询应用数据，按照创建时间倒序排序，查出top 10的数据
-     *
-     * @return 返回值
-     */
     @GetMapping("/getDescDate")
     @ApiOperation(value = "查询应用数据，按照创建时间倒序排序，查出top 10的数据")
     public ResultEntity<List<AppRegistrationDTO>> getDescDate() {

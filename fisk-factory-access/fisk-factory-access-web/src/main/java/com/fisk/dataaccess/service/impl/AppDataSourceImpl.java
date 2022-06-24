@@ -50,17 +50,6 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         return dataSource;
     }
 
-
-    /**
-     * 根据应用id,查询应用的配置表,将绑定的数据库下的表和视图结构存入reids
-     *
-     * @return void
-     * @description 根据应用id, 查询应用的配置表, 将绑定的数据库下的表和视图结构存入reids
-     * @author Lock
-     * @date 2022/5/31 16:10
-     * @version v1.0
-     * @params appId 应用id
-     */
     @Override
     public DataSourceDTO setDataSourceMeta(long appId) {
         try {

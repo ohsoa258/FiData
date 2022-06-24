@@ -103,12 +103,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Resource
     RedisUtil redisUtil;
 
-    /**
-     * 添加应用
-     *
-     * @param appRegistrationDTO 请求参数
-     * @return 返回值
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEntity<AtlasEntityQueryVO> addData(AppRegistrationDTO appRegistrationDTO) {
@@ -165,14 +159,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
     }
 
-    /**
-     * 分页查询
-     *
-     * @param key  搜索条件
-     * @param page 当前页码
-     * @param rows 每页显示条数
-     * @return 返回值
-     */
     @Override
     public PageDTO<AppRegistrationDTO> listAppRegistration(String key, Integer page, Integer rows) {
 
@@ -209,12 +195,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return pageDTO;
     }
 
-    /**
-     * 应用注册-修改
-     *
-     * @param dto 请求参数
-     * @return 返回值
-     */
     @Override
     @Transactional(rollbackFor = RuntimeException.class)
     public ResultEnum updateAppRegistration(AppRegistrationEditDTO dto) {
@@ -269,13 +249,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return appDataSourceMapper.updateById(modelDataSource) > 0 ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
-    /**
-     * 删除应用注册
-     * TODO: 删除应用时,同时删除下属所有物理表,nifi流程,元数据
-     *
-     * @param id 请求参数
-     * @return 返回值
-     */
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEntity<NifiVO> deleteAppRegistration(long id) {
@@ -520,7 +493,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (modelData == null) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
-//        modelData.atlasDbId = atlasDbId;
         // 保存tb_app_datasource
         boolean updateById = appDataSourceImpl.updateById(modelData);
 
@@ -535,8 +507,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (query.key != null && query.key.length() > 0) {
             querySql.append(" and app_name like concat('%', " + "'" + query.key + "'" + ", '%') ");
         }
-//        String key = "app_name";
-//        StringBuilder querySql = getQuerySql(key, query.value);
 
         // 拼接原生筛选条件
         querySql.append(generateCondition.getCondition(query.dto));
@@ -703,7 +673,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         // 实时api
         if (DbTypeEnum.RestfulAPI.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
-//            sourcePage = baseMapper.logMessageFilterByRestApi(dto.page, Long.valueOf(dto.appId), dto.keyword, dto.apiId);
             // 非实时api
         } else if (DbTypeEnum.api.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
             sourcePage = baseMapper.logMessageFilterByApi(Long.valueOf(dto.appId), dto.keyword, dto.apiId);
@@ -804,11 +773,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * 构建data-access子集树
      *
      * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
-     * @description 构建data-access子集树
      * @author Lock
      * @date 2022/6/15 17:46
-     * @version v1.0
-     * @params uuid
+     * @param id guid
      */
     private List<FiDataMetaDataTreeDTO> buildChildren(String id) {
 
@@ -846,12 +813,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * 获取实时应用结构
      *
      * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
-     * @description 获取实时应用结构
      * @author Lock
      * @date 2022/6/16 15:21
-     * @version v1.0
-     * @params id
-     * @params appPoList
+     * @params id guid
+     * @param appPoList 所有的应用实体对象
      */
     private List<FiDataMetaDataTreeDTO> getFiDataMetaDataTreeByRealTime(String id, List<AppRegistrationPO> appPoList) {
         return appPoList.stream()
@@ -976,12 +941,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * 获取非实时应用结构
      *
      * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
-     * @description 获取非实时应用结构
      * @author Lock
      * @date 2022/6/16 15:21
-     * @version v1.0
-     * @params id
-     * @params appPoList
+     * @param id guid
+     * @param appPoList 所有的应用实体对象
      */
     private List<FiDataMetaDataTreeDTO> getFiDataMetaDataTreeByNonRealTime(String id, List<AppRegistrationPO> appPoList) {
         return appPoList.stream()

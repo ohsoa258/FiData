@@ -88,12 +88,12 @@ public class FtpImpl implements IFtp {
     }
 
     /**
+     * 根据应用id连接ftp数据源, 获取ftp客户端
+     *
+     * @param appId 应用id
      * @return org.apache.commons.net.ftp.FTPClient
-     * @description 根据应用id连接ftp数据源, 获取ftp客户端
      * @author Lock
      * @date 2021/12/31 10:24
-     * @version v1.0
-     * @params appId 应用id
      */
     private FTPClient getFtpClient(long appId) {
         // 查询ftp数据源配置信息
@@ -111,12 +111,12 @@ public class FtpImpl implements IFtp {
     }
 
     /**
+     * 封装读取excel文件内容所需参数
+     *
+     * @param textFullPath 文件全路径
      * @return java.util.List<java.lang.String>
-     * @description 封装读取excel文件内容所需参数
      * @author Lock
      * @date 2021/12/29 11:01
-     * @version v1.0
-     * @params textFullPath
      */
     public List<String> encapsulationExcelParam(String textFullPath) {
         List<String> param = new ArrayList<>();

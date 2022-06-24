@@ -982,13 +982,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * 构建ftp数据源信息
      *
      * @return com.fisk.task.dto.daconfig.FtpConfig
-     * @description 构建ftp数据源信息
      * @author Lock
      * @date 2022/4/12 16:47
-     * @version v1.0
-     * @params ftpConfig
-     * @params modelDataSource
-     * @params modelAccess
+     * @param ftpConfig ftp数据源参数
+     * @param modelDataSource 数据源对象
+     * @param modelAccess 物理表对象
      */
     private FtpConfig buildFtpConfig(FtpConfig ftpConfig, AppDataSourcePO modelDataSource, TableAccessPO modelAccess) {
 
@@ -1033,7 +1031,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Override
     public List<FilterFieldDTO> getColumn() {
-        List<FilterFieldDTO> list = new ArrayList<>();
+        List<FilterFieldDTO> list;
         list = getMetadata.getMetadataList(
                 "dmp_datainput_db",
                 "tb_table_access",
@@ -1246,11 +1244,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * 封装应用及应用下的物理表
      *
      * @return java.util.List<com.fisk.datafactory.dto.components.ChannelDataDTO>
-     * @description 封装应用及应用下的物理表
      * @author Lock
      * @date 2022/5/1 15:33
-     * @version v1.0
-     * @params list
+     * @param list list
      */
     private List<ChannelDataDTO> bulidListChannelDataDTOByTableOrFTP(List<AppRegistrationPO> list) {
 
@@ -1276,11 +1272,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * 封装应用及应用下的api
      *
      * @return java.util.List<com.fisk.datafactory.dto.components.ChannelDataDTO>
-     * @description 封装应用及应用下的api
      * @author Lock
      * @date 2022/5/1 15:34
-     * @version v1.0
-     * @params list
+     * @param list list
      */
     private List<ChannelDataDTO> bulidListChannelDataDTOByAPI(List<AppRegistrationPO> list) {
 
@@ -1348,33 +1342,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return list;
     }
 
-/*
-    @Override
-    public List<FieldNameDTO> getTableFieldByQuery(String query) {
-        List<FieldNameDTO> list = new ArrayList<>();
-        try {
-            Class.forName("com.mysql.jdbc.Driver");
-            Connection conn = DriverManager.getConnection(jdbcStr, user, password);
-            Statement st = conn.createStatement();
-            ResultSet rs = st.executeQuery(query);
-            while (rs.next()) {
-                FieldNameDTO dto = new FieldNameDTO();
-                dto.id = rs.getInt("id");
-                dto.fieldName = rs.getString("field_name");
-                dto.fieldType = rs.getString("field_type");
-                dto.fieldLength = rs.getString("field_length");
-                dto.fieldDes = rs.getString("field_des");
-                dto.tableAccessId = rs.getInt("table_access_id");
-                list.add(dto);
-            }
-            rs.close();
-        } catch (ClassNotFoundException | SQLException e) {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
-        }
-        return list;
-    }
-*/
-
     @Override
     public ResultEntity<Object> addTableAccessData(TbTableAccessDTO dto) {
 
@@ -1438,18 +1405,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
-
-//    @Transactional(rollbackFor = Exception.class)
-//    @Override
-//    public ResultEnum deleteTableAccessData(long id) {
-//        // 参数校验
-//        TableAccessPO model = this.getById(id);
-//        if (model == null) {
-//            return ResultEnum.DATA_NOTEXISTS;
-//        }
-//
-//        return accessMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
-//    }
 
     @Override
     public List<TbTableAccessDTO> getTableAccessListData(long appId) {

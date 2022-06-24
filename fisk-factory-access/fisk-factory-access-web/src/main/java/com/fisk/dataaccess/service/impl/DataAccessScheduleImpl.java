@@ -81,12 +81,9 @@ public class DataAccessScheduleImpl implements SchedulingConfigurer {
     /**
      * 重新加载所有数据源以及数据库、表数据,并存入redis
      *
-     * @return void
      * @description 重新加载所有数据源以及数据库、表数据
      * @author Lock
      * @date 2022/5/31 17:04
-     * @version v1.0
-     * @params
      */
     private void loadDataSourceMeta() {
         try {
@@ -108,12 +105,9 @@ public class DataAccessScheduleImpl implements SchedulingConfigurer {
     /**
      * 加载数据接入结构,并存入redis
      *
-     * @return void
      * @description 加载数据接入结构, 并存入redis
      * @author Lock
      * @date 2022/6/20 14:55
-     * @version v1.0
-     * @params
      */
     private void loadFiDataMetaData() {
         try {

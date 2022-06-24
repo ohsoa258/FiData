@@ -156,14 +156,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     @Override
     public ResultEnum addData(ApiConfigDTO dto) {
         // 当前字段名不可重复,得保证同一应用下
-//        List<String> list = this.list().stream().map(e -> e.apiName).collect(Collectors.toList());
-//
-//        for (String s : list) {
-//            if (s.equalsIgnoreCase(dto.apiName)) {
-//                return ResultEnum.NAME_EXISTS;
-//            }
-//        }
-
         boolean flag = checkApiName(dto);
         if (flag) {
             return ResultEnum.APINAME_ISEXIST;
@@ -507,12 +499,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * task添加日志执行的推送数据方法
      *
      * @return com.fisk.common.core.response.ResultEntity<java.lang.Object>
-     * @description task添加日志执行的推送数据方法
      * @author Lock
      * @date 2022/6/17 15:28
-     * @version v1.0
-     * @params importDataDto
-     * @params dto
+     * @param importDataDto 管道传递的参数
+     * @param dto 同步api所需的属性
      */
     private ResultEntity<Object> pushDataByImportData(ApiImportDataDTO importDataDto, ReceiveDataDTO dto) {
         ResultEnum resultEnum = null;
@@ -739,12 +729,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     /**
      * 调用管道下一级task
      *
-     * @return void
-     * @description 调用管道下一级task
      * @author cfk
      * @date 2022/6/22 11:31
-     * @version v1.0
-     * @params dto
+     * @param dto dto
      */
     public void consumer(ApiImportDataDTO dto) {
         KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
@@ -824,7 +811,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                             throw new FkException(ResultEnum.COPY_API_TABLE_ERROR);
                         }
                         TableAccessNonDTO data = tableAccessImpl.getData((Long) tableId);
-
                         // 组装同步表信息
                         TableSyncmodePO tableSyncmodePo = tableSyncmodeImpl.query().eq("id", e.id).one();
                         if (tableSyncmodePo != null) {
@@ -832,14 +818,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                             tableSyncmodeDto.id = data.id;
                             data.tableSyncmodeDTO = tableSyncmodeDto;
                         }
-
                         // 组装业务表信息
                         TableBusinessPO tableBusinessPo = tableBusinessImpl.query().eq("access_id", e.id).one();
                         if (tableBusinessPo != null) {
                             tableBusinessPo.accessId = data.id;
                             data.businessDTO = TableBusinessMap.INSTANCES.poToDto(tableBusinessPo);
                         }
-
                         // 组装字段详情表数据
                         List<TableFieldsPO> tableFieldsPoList = tableFieldImpl.query().eq("table_access_id", e.id).list();
                         List<TableFieldsDTO> tableFieldsDtoList = TableFieldsMap.INSTANCES.listPoToDto(tableFieldsPoList);
@@ -849,27 +833,20 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                                 f.id = 0;
                                 f.tableAccessId = data.id;
                             });
-
                             data.list = tableFieldsDtoList;
                         }
-
                         // 封装所有数据
                         list.add(data);
                     }
                 }
-
                 // 4.调用apiConfig/addApiDetail接口
                 ApiConfigDTO apiConfigDto = ApiConfigMap.INSTANCES.poToDto(apiConfigPo);
                 if (!CollectionUtils.isEmpty(list)) {
-
                     apiConfigDto.list = list;
                 }
-
                 this.addApiDetail(apiConfigDto);
-
             }
         }
-
         return ResultEnum.SUCCESS;
     }
 
