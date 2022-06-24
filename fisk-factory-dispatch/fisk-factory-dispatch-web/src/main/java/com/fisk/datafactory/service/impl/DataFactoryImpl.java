@@ -130,13 +130,10 @@ public class DataFactoryImpl implements IDataFactory {
     /**
      * 封装当前任务的上一级主任务中的最后一个表任务集合
      *
-     * @return void
-     * @description 封装当前任务的上一级主任务中的最后一个表任务集合
+     * @param nifiPortsHierarchyDto 最终封装数据的对象
+     * @param detailPo              task or job
      * @author Lock
      * @date 2022/6/15 14:18
-     * @version v1.0
-     * @params nifiPortsHierarchyDto
-     * @params detailPo
      */
     private void buildInportList(NifiCustomWorkflowDetailPO detailPo, NifiPortsHierarchyDTO nifiPortsHierarchyDto) {
 
@@ -187,14 +184,11 @@ public class DataFactoryImpl implements IDataFactory {
     /**
      * 匹配当前主任务内的最后一个任务
      *
-     * @return void
-     * @description 匹配当前主任务内的最后一个任务
+     * @param inportList   最终封装数据的对象集合
+     * @param listAllTask  所有的task
+     * @param listAllTable 所有的job
      * @author Lock
      * @date 2022/6/15 15:01
-     * @version v1.0
-     * @params inportList
-     * @params listAllTask
-     * @params listAllTable
      */
     private void matchingDetailDtoList(List<NifiCustomWorkflowDetailDTO> inportList, List<NifiCustomWorkflowDetailDTO> listAllTask, List<NifiCustomWorkflowDetailDTO> listAllTable) {
         for (NifiCustomWorkflowDetailDTO dto : listAllTask) {
@@ -401,13 +395,10 @@ public class DataFactoryImpl implements IDataFactory {
     /**
      * 封装当前组件的其他属性(componentFirstFlag、componentEndFlag、pipeEndFlag、pipeEndDto)
      *
-     * @return void
-     * @description 封装当前组件的其他属性(componentFirstFlag 、 componentEndFlag 、 pipeEndFlag 、 pipeEndDto)
+     * @param detailPo              task or job
+     * @param nifiPortsHierarchyDto 最终封装数据的对象
      * @author Lock
      * @date 2022/6/14 10:00
-     * @version v1.0
-     * @params detailPo
-     * @params nifiPortsHierarchyDto
      */
     private void buildNifiOtherPorts(NifiCustomWorkflowDetailPO detailPo, NifiPortsHierarchyDTO nifiPortsHierarchyDto) {
         try {
@@ -466,12 +457,10 @@ public class DataFactoryImpl implements IDataFactory {
     /**
      * 当前管道流程最后一批执行的组件集合
      *
+     * @param id 管道id
      * @return java.util.List<com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO>
-     * @description 当前管道流程最后一批执行的组件集合
      * @author Lock
      * @date 2022/6/15 14:05
-     * @version v1.0
-     * @params id 管道id
      */
     private List<NifiCustomWorkflowDetailDTO> buildPipeEndDto(Long id) {
         List<NifiCustomWorkflowDetailDTO> list = new ArrayList<>();
@@ -525,12 +514,10 @@ public class DataFactoryImpl implements IDataFactory {
     /**
      * 获取当前组件的层级关系
      *
+     * @param nifiCustomWorkflowDetailId task or job id
      * @return com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO
-     * @description 获取当前组件的层级关系
      * @author Lock
      * @date 2022/2/21 17:35
-     * @version v1.0
-     * @params nifiCustomWorkflowDetailId
      */
     private NifiPortsHierarchyDTO buildNifiPortsHierarchyDTO(Long nifiCustomWorkflowDetailId) {
 
@@ -599,12 +586,10 @@ public class DataFactoryImpl implements IDataFactory {
     /**
      * 获取当前组件的下一级组件集合
      *
+     * @param split 下一级task or job id集合
      * @return java.util.List<com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyNextDTO>
-     * @description 获取当前组件的下一级组件集合
      * @author Lock
      * @date 2022/2/21 18:22
-     * @version v1.0
-     * @params split 下一级组件id集合
      */
     private List<NifiPortsHierarchyNextDTO> getNextList(String[] split) {
         List<NifiPortsHierarchyNextDTO> nextList = new ArrayList<>();
@@ -625,12 +610,10 @@ public class DataFactoryImpl implements IDataFactory {
     /**
      * 获取当前组件的上一级组件集合
      *
+     * @param id 当前task or job id
      * @return java.util.List<com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO>
-     * @description 获取当前组件的上一级组件集合
      * @author Lock
      * @date 2022/2/21 18:23
-     * @version v1.0
-     * @params id 当前组件id
      */
     private List<NifiCustomWorkflowDetailDTO> getUpPortList(long id) {
         NifiCustomWorkflowDetailDTO data = getPort(id);
@@ -655,12 +638,10 @@ public class DataFactoryImpl implements IDataFactory {
     /**
      * 根据管道详情id获取当前组件
      *
+     * @param id 管道task or job id
      * @return com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO
-     * @description 根据管道详情id获取当前组件
      * @author Lock
      * @date 2022/2/21 18:17
-     * @version v1.0
-     * @params id 管道详情id
      */
     private NifiCustomWorkflowDetailDTO getPort(long id) {
         NifiCustomWorkflowDetailPO port = nifiCustomWorkflowDetailImpl.query().eq("id", id).one();

@@ -24,7 +24,6 @@ import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
 import com.fisk.datafactory.map.NifiCustomWorkflowMap;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
-import com.fisk.datafactory.service.INifiComponent;
 import com.fisk.datafactory.service.INifiCustomWorkflow;
 import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
@@ -56,8 +55,6 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     INifiCustomWorkflow workflowService;
     @Resource
     NifiCustomWorkflowDetailMapper mapper;
-    @Resource
-    INifiComponent componentService;
     @Resource
     UserHelper userHelper;
     @Resource
@@ -171,14 +168,12 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     }
 
     /**
-     * 重新组装管道详情的componentsId
+     * 重新组装job和task的componentsId
      *
+     * @param workflowDetailPoList 所有的job和task
      * @return java.util.List<com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO>
-     * @description 重新组装管道详情的componentsId
      * @author Lock
      * @date 2022/5/7 14:31
-     * @version v1.0
-     * @params workflowDetailPoList
      */
     private List<NifiCustomWorkflowDetailPO> buildWorkflowDetailPoList(List<NifiCustomWorkflowDetailPO> workflowDetailPoList) {
         for (NifiCustomWorkflowDetailPO e : workflowDetailPoList) {
@@ -428,7 +423,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     }
 
     /**
-     * TODO 获取操作类型(新版改动)
+     * 获取操作类型(新版改动)
      *
      * @param componentType componentType
      * @return DataClassifyEnum
@@ -551,8 +546,6 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                     structure.put(structure1, structure2);
                 }
             }
-            structure1 = null;
-            structure2 = null;
         }
         return structure;
     }
@@ -596,7 +589,6 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         publishTaskClient.deleteTableTopicByComponentId(ids);
 
         // TODO 修改inport&outport
-
 
         // 执行删除
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;

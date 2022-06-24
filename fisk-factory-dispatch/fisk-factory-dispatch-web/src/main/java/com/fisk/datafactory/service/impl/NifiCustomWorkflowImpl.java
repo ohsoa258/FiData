@@ -154,13 +154,10 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
     /**
      * 组装应用名称和表名
      *
-     * @return void
-     * @description 组装应用名称和表名
      * @author Lock
      * @date 2022/3/18 18:26
-     * @version v1.0
-     * @params e
-     * @params flag
+     * @param e task
+     * @param flag 对应factory-access中不同的表类型
      */
     private void getDataAccessIdsDtoAccess(NifiCustomWorkflowDetailDTO e, int flag) {
 
@@ -181,13 +178,10 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
     /**
      * 组装业务域名称和表名
      *
-     * @return void
-     * @description 组装业务域名称和表名
      * @author Lock
      * @date 2022/3/18 18:27
-     * @version v1.0
-     * @params e
-     * @params flag
+     * @param e task
+     * @param flag 对应不同的数仓or分析任务
      */
     private void getDataAccessIdsDtoModel(NifiCustomWorkflowDetailDTO e, int flag) {
 
@@ -209,13 +203,10 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
     /**
      * feign接口调用,封装名称
      *
-     * @return void
-     * @description feign接口调用, 封装名称
      * @author Lock
      * @date 2022/3/18 18:28
-     * @version v1.0
-     * @params e
-     * @params result
+     * @param e task or jab
+     * @param result 调用方的接口返回对象
      */
     private void getName(NifiCustomWorkflowDetailDTO e, ResultEntity<Object> result) {
         if (result.code == 0) {
@@ -331,11 +322,9 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
      * 分页对象添加子表组件id集合
      *
      * @return java.util.List<com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO>
-     * @description 分页对象添加子表组件id集合
      * @author Lock
      * @date 2022/3/11 11:37
-     * @version v1.0
-     * @params filter
+     * @param records records
      */
     private List<NifiCustomWorkflowVO> buildRecords(List<NifiCustomWorkflowVO> records) {
         records.forEach(vo -> {
