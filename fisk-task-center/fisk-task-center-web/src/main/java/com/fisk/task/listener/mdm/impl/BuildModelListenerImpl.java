@@ -867,7 +867,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
         }
 
         if (CollectionUtils.isNotEmpty(fileList) && CollectionUtils.isNotEmpty(longitudeList)){
-            str.append(",");
+            complexTypeField.append(",");
         }
 
         // 地图类型
@@ -1010,7 +1010,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
         }
 
         if (CollectionUtils.isNotEmpty(fileList) && CollectionUtils.isNotEmpty(longitudeList)){
-            str.append(",");
+            complexTypeField.append(",");
         }
 
         // 地图类型
@@ -1028,11 +1028,6 @@ public class BuildModelListenerImpl implements BuildModelListener {
             splicingViewFiled = this.splicingViewTable(false);
         }else {
             splicingViewFiled = this.splicingViewTable(true);
-        }
-
-        // 追加复杂类型
-        if (CollectionUtils.isNotEmpty(complexType)){
-            str.append(complexTypeField).append(",");
         }
 
         // 视图基础字段
