@@ -866,6 +866,10 @@ public class BuildModelListenerImpl implements BuildModelListener {
             complexTypeField.append(PRIMARY_TABLE + amount + "."  + "file_path");
         }
 
+        if (CollectionUtils.isNotEmpty(fileList) && CollectionUtils.isNotEmpty(longitudeList)){
+            str.append(",");
+        }
+
         // 地图类型
         if (CollectionUtils.isNotEmpty(longitudeList)){
 
@@ -1003,6 +1007,10 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 存在文件类型
             complexTypeField.append(PRIMARY_TABLE + ++count + "."  + "file_name").append(",");
             complexTypeField.append(PRIMARY_TABLE + count + "."  + "file_path");
+        }
+
+        if (CollectionUtils.isNotEmpty(fileList) && CollectionUtils.isNotEmpty(longitudeList)){
+            str.append(",");
         }
 
         // 地图类型
