@@ -857,13 +857,17 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
 
         // 复杂数据类型
+        // 文件类型
         StringBuilder complexTypeField = new StringBuilder();
         if (CollectionUtils.isNotEmpty(fileList)){
 
             // 存在文件类型
             complexTypeField.append(PRIMARY_TABLE + amount.incrementAndGet() + "."  + "file_name").append(",");
             complexTypeField.append(PRIMARY_TABLE + amount + "."  + "file_path");
-        }else if (CollectionUtils.isNotEmpty(longitudeList)){
+        }
+
+        // 地图类型
+        if (CollectionUtils.isNotEmpty(longitudeList)){
 
             // 存在经纬度类型
             complexTypeField.append(PRIMARY_TABLE + amount.incrementAndGet() + "."  + "lng").append(",");
@@ -993,12 +997,16 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
         int count = 0;
         StringBuilder complexTypeField = new StringBuilder();
+        // 文件类型
         if (CollectionUtils.isNotEmpty(fileList)){
 
             // 存在文件类型
             complexTypeField.append(PRIMARY_TABLE + ++count + "."  + "file_name").append(",");
             complexTypeField.append(PRIMARY_TABLE + count + "."  + "file_path");
-        }else if (CollectionUtils.isNotEmpty(longitudeList)){
+        }
+
+        // 地图类型
+        if (CollectionUtils.isNotEmpty(longitudeList)){
 
             // 存在经纬度类型
             complexTypeField.append(PRIMARY_TABLE + ++count + "."  + "lng").append(",");
@@ -1012,6 +1020,11 @@ public class BuildModelListenerImpl implements BuildModelListener {
             splicingViewFiled = this.splicingViewTable(false);
         }else {
             splicingViewFiled = this.splicingViewTable(true);
+        }
+
+        // 追加复杂类型
+        if (CollectionUtils.isNotEmpty(complexType)){
+            str.append(complexTypeField).append(",");
         }
 
         // 视图基础字段
