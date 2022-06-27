@@ -18,6 +18,9 @@ import com.fisk.mdm.service.IMasterDataLog;
 import com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils;
 import com.fisk.mdm.vo.attribute.AttributeColumnVO;
 import com.fisk.mdm.vo.masterdatalog.MasterDataLogPageVO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.relenish.ReplenishUserInfo;
+import com.fisk.system.relenish.UserFieldEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,6 +45,8 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
     AttributeServiceImpl attributeService;
     @Resource
     MasterDataServiceImpl masterDataService;
+    @Resource
+    UserClient client;
 
     @Resource
     UserHelper userHelper;
@@ -125,6 +130,8 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
         //执行sql，获得结果集
         log.info("listMasterDataLog query sql: 【" + sql + "】");
         List<Map<String, Object>> resultMaps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
+        //创建人/更新人id替换为名称
+        ReplenishUserInfo.replenishFiDataUserName(resultMaps, client, UserFieldEnum.USER_NAME);
         data.setResultData(resultMaps);
         return data;
     }
