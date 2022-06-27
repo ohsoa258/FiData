@@ -305,7 +305,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                         // 保存topic
                         TableTopicDTO topicDTO = new TableTopicDTO();
                         //只保存非实时api的topic
-                        if (Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.DATALAKE_API_TASK.getName())) {
+                        if (!Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.DATALAKE_API_TASK.getName())) {
                             continue;
                         }
                         topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
