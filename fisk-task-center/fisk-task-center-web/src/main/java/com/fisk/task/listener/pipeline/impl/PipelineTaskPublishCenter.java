@@ -87,7 +87,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                 String topicName = kafkaReceiveDTO.topic;
                 String[] split1 = topicName.split("\\.");
                 String pipelineId = split1[3];
-                if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.DAILY_NIFI_FLOW.getName())) {
+                if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.DAILY_NIFI_FLOW.getValue())) {
                     //卡夫卡的内容在发布时就定义好了
                     log.info("打印topic内容:" + JSON.toJSONString(kafkaReceiveDTO));
                     if (kafkaReceiveDTO.ifTaskStart) {
@@ -102,7 +102,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                     }
                 }
                 //调度管道中与调度job相连接的job(可能是多个job与开始调度job连接)中首个task任务
-                else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.PIPELINE_NIFI_FLOW.getName())) {
+                else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue())) {
                     //  这个时候可能是api的topic,可能是管道直接调度的topic,保存管道开始,job开始 定义管道traceid  定义job的traceid
                     //流程开始时间
                     kafkaReceiveDTO.start_time = simpleDateFormat.format(new Date());
@@ -126,7 +126,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                             //task批次号
                             kafkaReceiveDTO.pipelTaskTraceId = UUID.randomUUID().toString();
                             kafkaReceiveDTO.topic = topic.topicName;
-                            kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getName();
+                            kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
                             String[] split = topic.topicName.split("\\.");
                             log.info("发送的topic2:{},内容:{}", topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
                             kafkaTemplateHelper.sendMessageAsync(topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
@@ -176,7 +176,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                         }
 
                     }
-                } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.COMPONENT_NIFI_FLOW.getName())) {
+                } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue())) {
 
                     //请求接口得到对象,条件--管道名称,表名称,表类别,表id,topic_name(加表名table_name)
                     NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, kafkaReceiveDTO.tableType, null, kafkaReceiveDTO.tableId);

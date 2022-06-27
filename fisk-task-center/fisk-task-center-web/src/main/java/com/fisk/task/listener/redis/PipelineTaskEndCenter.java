@@ -167,7 +167,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                     kafkaReceiveDTO.pipelStageTraceId = thisPipelStageTraceId;
                     kafkaReceiveDTO.fidata_batch_code = UUID.randomUUID().toString();
                     kafkaReceiveDTO.start_time = simpleDateFormat.format(new Date());
-                    kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getName();
+                    kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
                     log.info("发送的topic4:{},内容:{}", split1[0], JSON.toJSONString(kafkaReceiveDTO));
                     kafkaTemplateHelper.sendMessageAsync(split1[0], JSON.toJSONString(kafkaReceiveDTO));
                 }
