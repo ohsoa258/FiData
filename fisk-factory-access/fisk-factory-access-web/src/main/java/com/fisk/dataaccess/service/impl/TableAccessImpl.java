@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
+import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -1551,9 +1552,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 String columnName = metaData.getColumnLabel(i);
                 //过滤ods表中pk和code默认字段
                 String tableName = metaData.getTableName(i) + "key";
-                if ("fi_batch_code".equals(columnName) || tableName.equals("ods_" + columnName)
-                        || "fi_createtime".equals(columnName)
-                        || "fi_updatetime".equals(columnName)) {
+                if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equalsIgnoreCase(columnName)
+                        || tableName.equalsIgnoreCase("ods_" + columnName.toLowerCase())
+                        || "fi_createtime".equalsIgnoreCase(columnName)
+                        || "fi_updatetime".equalsIgnoreCase(columnName)) {
                     continue;
                 }
                 //获取sql查询数据集合
