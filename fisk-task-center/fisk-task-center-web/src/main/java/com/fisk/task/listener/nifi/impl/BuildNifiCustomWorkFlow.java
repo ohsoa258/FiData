@@ -576,10 +576,10 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     TopicTypeEnum pipelineNifiFlow = TopicTypeEnum.PIPELINE_NIFI_FLOW;
 
                     if (pipelApiDispatchs.size() == 0) {
-                        querySqlDto.querySql = "select '" + TopicName + "' as topic, '${uuid}' as pipelTraceId, '"+pipelineNifiFlow.getName()+"' as topicType from tb_etl_Incremental limit 1";
+                        querySqlDto.querySql = "select '" + TopicName + "' as topic, '${uuid}' as pipelTraceId, '"+pipelineNifiFlow.getValue()+"' as topicType from tb_etl_Incremental limit 1";
                     } else {
                         //加管道批次
-                        querySqlDto.querySql = "select '" + JSON.toJSONString(pipelApiDispatchs) + "' as pipelApiDispatch ,'" + MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW + "' as topic, '${uuid}' as pipelTraceId, '"+pipelineNifiFlow.getName()+"' as topicType  from tb_etl_Incremental limit 1";
+                        querySqlDto.querySql = "select '" + JSON.toJSONString(pipelApiDispatchs) + "' as pipelApiDispatch ,'" + MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW + "' as topic, '${uuid}' as pipelTraceId, '"+pipelineNifiFlow.getValue()+"' as topicType  from tb_etl_Incremental limit 1";
                     }
 
                     //配置库
