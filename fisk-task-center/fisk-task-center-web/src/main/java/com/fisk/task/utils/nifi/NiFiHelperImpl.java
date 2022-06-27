@@ -384,6 +384,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         Map<String, String> map = new HashMap<>(1);
         map.put("Replacement Value", data.replacementValue);
         map.put("Evaluation Mode", data.evaluationMode);
+        map.put("Maximum Buffer Size", data.maximumBufferSize);
 
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
