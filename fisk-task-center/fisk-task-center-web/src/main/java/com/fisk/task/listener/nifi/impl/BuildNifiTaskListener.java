@@ -1844,6 +1844,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
+        buildReplaceTextProcessorDTO.maximumBufferSize="100 MB";
         buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(dataCheckSyncDTO);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
         return processorEntityBusinessResult.data;
@@ -2129,6 +2130,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         nifiMessage.pipelTaskTraceId = "${pipelTaskTraceId}";
         nifiMessage.pipelJobTraceId = "${pipelJobTraceId}";
         buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(JSON.toJSONString(nifiMessage));
+        buildReplaceTextProcessorDTO.maximumBufferSize="100 MB";
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;
