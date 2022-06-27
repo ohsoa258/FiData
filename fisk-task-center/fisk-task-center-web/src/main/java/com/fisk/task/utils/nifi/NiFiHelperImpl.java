@@ -2027,7 +2027,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         TableBusinessDTO business = config.businessDTO;
         String targetTableName = config.processorConfig.targetTableName;
         String sql = "";
-        if (buildNifiFlow != null) {
+        if (buildNifiFlow != null && StringUtils.isNotEmpty(buildNifiFlow.updateSql)) {
             sql += "call public." + funcName + "('" + buildNifiFlow.updateSql + "','";
         } else {
             sql += "call public." + funcName + "('";
