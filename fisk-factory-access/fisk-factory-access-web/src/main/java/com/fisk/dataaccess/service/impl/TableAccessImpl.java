@@ -1575,9 +1575,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.sourceFieldName = metaData.getColumnLabel(i);
             dto.fieldName = metaData.getColumnLabel(i);
             String tableName = metaData.getTableName(i) + "key";
-            if ("fi_batch_code".equals(dto.fieldName) || tableName.equals("ods_" + dto.fieldName)
-                    || "fi_createtime".equals(dto.fieldName)
-                    || "fi_updatetime".equals(dto.fieldName)) {
+            if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equalsIgnoreCase(dto.fieldName)
+                    || tableName.equalsIgnoreCase("ods_" + dto.fieldName.toLowerCase())
+                    || "fi_createtime".equalsIgnoreCase(dto.fieldName)
+                    || "fi_updatetime".equalsIgnoreCase(dto.fieldName)) {
                 continue;
             }
             dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
