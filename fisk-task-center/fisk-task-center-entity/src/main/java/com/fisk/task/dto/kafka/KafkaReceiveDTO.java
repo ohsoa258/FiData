@@ -50,7 +50,7 @@ public class KafkaReceiveDTO extends MQBaseDTO {
     /*
     * topic的类别
     * */
-    public TopicTypeEnum topicType;
+    public String topicType;
 
 
 }

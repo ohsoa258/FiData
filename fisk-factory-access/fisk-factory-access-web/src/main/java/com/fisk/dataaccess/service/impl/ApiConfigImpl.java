@@ -498,11 +498,11 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     /**
      * task添加日志执行的推送数据方法
      *
+     * @param importDataDto 管道传递的参数
+     * @param dto           同步api所需的属性
      * @return com.fisk.common.core.response.ResultEntity<java.lang.Object>
      * @author Lock
      * @date 2022/6/17 15:28
-     * @param importDataDto 管道传递的参数
-     * @param dto 同步api所需的属性
      */
     private ResultEntity<Object> pushDataByImportData(ApiImportDataDTO importDataDto, ReceiveDataDTO dto) {
         ResultEnum resultEnum = null;
@@ -729,9 +729,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     /**
      * 调用管道下一级task
      *
+     * @param dto dto
      * @author cfk
      * @date 2022/6/22 11:31
-     * @param dto dto
      */
     public void consumer(ApiImportDataDTO dto) {
         KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
@@ -743,7 +743,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
         kafkaReceiveDTO.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.workflowId + "." + kafkaReceiveDTO.tableType + "." + dto.appId + "." + dto.apiId;
         kafkaReceiveDTO.nifiCustomWorkflowDetailId = Long.valueOf(dto.workflowId);
-        kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW;
+        kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getName();
         publishTaskClient.consumer(JSON.toJSONString(kafkaReceiveDTO));
     }
 

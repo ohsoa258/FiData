@@ -87,7 +87,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                 String topicName = kafkaReceiveDTO.topic;
                 String[] split1 = topicName.split("\\.");
                 String pipelineId = split1[3];
-                if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.DAILY_NIFI_FLOW)) {
+                if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.DAILY_NIFI_FLOW.getName())) {
                     //卡夫卡的内容在发布时就定义好了
                     log.info("打印topic内容:" + JSON.toJSONString(kafkaReceiveDTO));
                     if (kafkaReceiveDTO.ifTaskStart) {
@@ -97,12 +97,12 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                     } else {
                         redisUtil.heartbeatDetection("nowExec" + kafkaReceiveDTO.pipelTaskTraceId + "," + topicName, topicName, Long.parseLong(waitTime));
                         //存一个真正的过期时间,不断刷新 这里key是pipelTaskTraceId.因为手动调度没有jobId和taskId;
-                        redisUtil.heartbeatDetection(kafkaReceiveDTO.pipelTaskTraceId,simpleDateFormat.format(new Date()),3600);
+                        redisUtil.heartbeatDetection(kafkaReceiveDTO.pipelTaskTraceId, simpleDateFormat.format(new Date()), 3600);
 
                     }
                 }
                 //调度管道中与调度job相连接的job(可能是多个job与开始调度job连接)中首个task任务
-                else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.PIPELINE_NIFI_FLOW)) {
+                else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.PIPELINE_NIFI_FLOW.getName())) {
                     //  这个时候可能是api的topic,可能是管道直接调度的topic,保存管道开始,job开始 定义管道traceid  定义job的traceid
                     //流程开始时间
                     kafkaReceiveDTO.start_time = simpleDateFormat.format(new Date());
@@ -126,7 +126,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                             //task批次号
                             kafkaReceiveDTO.pipelTaskTraceId = UUID.randomUUID().toString();
                             kafkaReceiveDTO.topic = topic.topicName;
-                            kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW;
+                            kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getName();
                             String[] split = topic.topicName.split("\\.");
                             log.info("发送的topic2:{},内容:{}", topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
                             kafkaTemplateHelper.sendMessageAsync(topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
@@ -176,7 +176,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                         }
 
                     }
-                } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.COMPONENT_NIFI_FLOW)) {
+                } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.COMPONENT_NIFI_FLOW.getName())) {
 
                     //请求接口得到对象,条件--管道名称,表名称,表类别,表id,topic_name(加表名table_name)
                     NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, kafkaReceiveDTO.tableType, null, kafkaReceiveDTO.tableId);
@@ -221,8 +221,8 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                 redisUtil.hmsset(hmgetKey, hmget, Long.parseLong(waitTime));
                                 // 存一个真正的过期时间(最后一个task,job)
                                 //如果有刷新,没有就新建  taskid  结束时间  时间值
-                                redisUtil.hset(String.valueOf(itselfPort.id),DispatchLogEnum.taskend.getName(),simpleDateFormat.format(new Date()),3000);
-                                redisUtil.hset(String.valueOf(itselfPort.pid),DispatchLogEnum.jobend.getName(),simpleDateFormat.format(new Date()),3000);
+                                redisUtil.hset(String.valueOf(itselfPort.id), DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()), 3000);
+                                redisUtil.hset(String.valueOf(itselfPort.pid), DispatchLogEnum.jobend.getName(), simpleDateFormat.format(new Date()), 3000);
                             } else {
                                 //如果结束支点不止它一个,不仅要装进去,还要等其他支点
                                 redisUtil.hmsset(hmgetKey, hmget, 3000);
@@ -233,8 +233,8 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                 //如果满足有所有支点的条件了,就刷新过期时间30秒
                                 redisUtil.hmsset(hmgetKey, hmget, Long.parseLong(waitTime));
                                 // 刷新task和job的过期时间
-                                redisUtil.hset(String.valueOf(itselfPort.id),DispatchLogEnum.taskend.getName(),simpleDateFormat.format(new Date()),3000);
-                                redisUtil.hset(String.valueOf(itselfPort.pid),DispatchLogEnum.jobend.getName(),simpleDateFormat.format(new Date()),3000);
+                                redisUtil.hset(String.valueOf(itselfPort.id), DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()), 3000);
+                                redisUtil.hset(String.valueOf(itselfPort.pid), DispatchLogEnum.jobend.getName(), simpleDateFormat.format(new Date()), 3000);
                             } else {
                                 redisUtil.hmsset(hmgetKey, hmget, 3000);
                             }
@@ -260,7 +260,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                     log.info("存入redis即将调用的节点1:" + topic);
                                     redisUtil.heartbeatDetection(topic, topicSelf.topicName, Long.parseLong(waitTime));
                                     // 存入(此task)真正的过期时间,不断刷新  itselfPort
-                                    redisUtil.hset(String.valueOf(itselfPort.id),DispatchLogEnum.taskend.getName(),simpleDateFormat.format(new Date()),3000);
+                                    redisUtil.hset(String.valueOf(itselfPort.id), DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()), 3000);
                                 } else {
                                     redisUtil.heartbeatDetection(topic, topicSelf.topicName, 3000L);
                                 }
@@ -274,12 +274,12 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                             log.info("存入redis即将调用的节点2:" + topic);
                                             redisUtil.expire(topic, Long.parseLong(waitTime));
                                             // 存入(此task)真正的过期时间,不断刷新
-                                            redisUtil.hset(String.valueOf(itselfPort.id),DispatchLogEnum.taskend.getName(),simpleDateFormat.format(new Date()),3000);
+                                            redisUtil.hset(String.valueOf(itselfPort.id), DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()), 3000);
                                         } else {
                                             log.info("存入redis即将调用的节点3:" + topic);
                                             redisUtil.heartbeatDetection(topic, topicContent + "," + topicSelf.topicName, Long.parseLong(waitTime));
                                             // 存入(此task)真正的过期时间,不断刷新
-                                            redisUtil.hset(String.valueOf(itselfPort.id),DispatchLogEnum.taskend.getName(),simpleDateFormat.format(new Date()),3000);
+                                            redisUtil.hset(String.valueOf(itselfPort.id), DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()), 3000);
                                         }
                                     } else {
                                         if (topicContent.contains(topicSelf.topicName)) {
@@ -292,7 +292,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                     log.info("存入redis即将调用的节点4:" + topic);
                                     redisUtil.expire(topic, Long.parseLong(waitTime));
                                     // 存入(此task)真正的过期时间,不断刷新
-                                    redisUtil.hset(String.valueOf(itselfPort.id),DispatchLogEnum.taskend.getName(),simpleDateFormat.format(new Date()),3600);
+                                    redisUtil.hset(String.valueOf(itselfPort.id), DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()), 3600);
                                 }
                             }
                         }

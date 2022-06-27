@@ -298,17 +298,22 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             } else {
                 List<NifiCustomWorkflowDetailPO> detailPoList = this.query().eq("pid", po.id).orderByAsc("table_order").list();
                 if (CollectionUtils.isNotEmpty(detailPoList)) {
-                    for (NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO : detailPoList) {
+                    for (NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPo : detailPoList) {
                         NifiCustomWorkDTO dto = new NifiCustomWorkDTO();
-                        dto.NifiNode = getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(nifiCustomWorkflowDetailPO));
+                        dto.NifiNode = getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(nifiCustomWorkflowDetailPo));
                         nifiCustomWorkDTOList.add(dto);
                         // 保存topic
                         TableTopicDTO topicDTO = new TableTopicDTO();
+                        //只保存非实时api的topic
+                        if (Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.DATALAKE_API_TASK.getName())) {
+                            continue;
+                        }
                         topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
-                        topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.PHYSICS_API.getValue() + "." + nifiCustomWorkflowDetailPO.appId + "." + nifiCustomWorkflowDetailPO.tableId;
+                        topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.PHYSICS_API.getValue() + "." + nifiCustomWorkflowDetailPo.appId + "." + nifiCustomWorkflowDetailPo.tableId;
                         topicDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
                         topicDTO.tableId = Integer.parseInt(dto.NifiNode.tableId);
-                        topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPO.id);
+                        topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
+
                         publishTaskClient.updateTableTopicByComponentId(topicDTO);
                     }
                 }
