@@ -22,7 +22,7 @@ public interface ComplexTypeMap {
      * @return
      */
     @Mappings({
-            @Mapping(source = "mapType", target = "type"),
+            @Mapping(source = "mapType", target = "map_type"),
             @Mapping(source = "versionId", target = "fidata_version_id")
     })
     GeographyVO dtoToVo(GeographyDTO dto);
