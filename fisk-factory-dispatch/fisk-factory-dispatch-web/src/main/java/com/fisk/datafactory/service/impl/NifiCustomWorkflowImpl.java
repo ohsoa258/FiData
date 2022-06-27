@@ -257,7 +257,11 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         List<NifiCustomWorkflowDetailPO> list = customWorkflowDetailImpl.query().eq("workflow_id", model.workflowId).list();
         try {
             if (CollectionUtils.isNotEmpty(list)) {
-                List<Integer> collect = list.stream().map(e -> detailMapper.deleteByIdWithFill(e)).collect(Collectors.toList());
+                List<Integer> collect = list.stream()
+                        .map(e -> {
+                            detailMapper.deleteByIdWithFill(e);
+                            return (int) e.id;
+                        }).collect(Collectors.toList());
                 //删除topic
                 publishTaskClient.deleteTableTopicByComponentId(collect);
                 NifiCustomWorkListDTO nifiCustomWorkList = new NifiCustomWorkListDTO();
