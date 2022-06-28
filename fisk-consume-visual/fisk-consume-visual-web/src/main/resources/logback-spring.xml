@@ -42,7 +42,9 @@
             %n 换行符
             -->
             <!--@formatter:off-->
-            [%d{yyyy-MM-dd HH:mm:ss.SSS}] | [${springAppName}] | [%X{TraceID}] | [%X{SpanID}] | [%X{App_LogType}] | [%thread] | [%-5level] | [%logger{50}] | [%file:%line] | %msg%n
+            <pattern>
+                [%d{yyyy-MM-dd HH:mm:ss.SSS}] | [${springAppName}] | [%X{TraceID}] | [%X{SpanID}] | [%X{App_LogType}] | [%thread] | [%-5level] | [%logger{50}] | [%file:%line] | %msg%n
+            </pattern>
         </encoder>
     </appender>
     <!-- ELK
