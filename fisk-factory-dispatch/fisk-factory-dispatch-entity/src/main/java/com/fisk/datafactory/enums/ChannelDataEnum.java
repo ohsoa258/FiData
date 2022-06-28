@@ -3,6 +3,9 @@ package com.fisk.datafactory.enums;
 import com.fisk.common.core.enums.BaseEnum;
 import com.fisk.task.enums.OlapTableEnum;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author Lock
  */
@@ -124,4 +127,23 @@ public enum ChannelDataEnum implements BaseEnum {
         }
     }
 
+    /**
+     * 表任务task
+     *
+     * @return java.util.List<java.lang.String>
+     * @author Lock
+     * @date 2022/6/27 17:21
+     */
+    public List<String> tableList() {
+        List<String> list = new ArrayList<>();
+        list.add(ChannelDataEnum.DATALAKE_TASK.getName());
+        list.add(ChannelDataEnum.DATALAKE_FTP_TASK.getName());
+        list.add(ChannelDataEnum.DATALAKE_API_TASK.getName());
+        list.add(ChannelDataEnum.DW_DIMENSION_TASK.getName());
+        list.add(ChannelDataEnum.DW_FACT_TASK.getName());
+        list.add(ChannelDataEnum.OLAP_DIMENSION_TASK.getName());
+        list.add(ChannelDataEnum.OLAP_FACT_TASK.getName());
+        list.add(ChannelDataEnum.OLAP_WIDETABLE_TASK.getName());
+        return list;
+    }
 }

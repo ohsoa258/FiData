@@ -6,6 +6,7 @@ import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
+import com.fisk.datafactory.dto.tasknifi.PipeDagDTO;
 import com.fisk.datafactory.service.IDataFactory;
 import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
 import com.fisk.task.dto.dispatchlog.PipelStageLogVO;
@@ -81,5 +82,11 @@ public class DatafactoryController {
     @ApiOperation(value = "获取表日志")
     public ResultEntity<List<PipelTaskLogVO>> getPipeTaskLog(@RequestBody PipelTaskLogVO dto) {
         return service.getPipeTaskLog(dto);
+    }
+
+    @GetMapping("/setTaskLinkedList/{id}")
+    @ApiOperation(value = "根据管道主键id,手动将管道的task结构更新到redis")
+    public ResultEntity<PipeDagDTO> setTaskLinkedList(@PathVariable("id") Long id) {
+        return service.setTaskLinkedList(id);
     }
 }

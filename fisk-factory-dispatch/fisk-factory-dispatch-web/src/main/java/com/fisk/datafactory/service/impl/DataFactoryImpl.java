@@ -1,15 +1,19 @@
 package com.fisk.datafactory.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.redis.RedisKeyBuild;
+import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyNextDTO;
+import com.fisk.datafactory.dto.tasknifi.PipeDagDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
@@ -48,6 +52,8 @@ public class DataFactoryImpl implements IDataFactory {
     NifiCustomWorkflowDetailImpl nifiCustomWorkflowDetailImpl;
     @Resource
     PublishTaskClient publishTaskClient;
+    @Resource
+    RedisUtil redisUtil;
 
     @Override
     public boolean loadDepend(LoadDependDTO dto) {
@@ -392,6 +398,63 @@ public class DataFactoryImpl implements IDataFactory {
         return publishTaskClient.getPipelTaskLogVos(pipelTaskLogVos);
     }
 
+    @Override
+    public ResultEntity<PipeDagDTO> setTaskLinkedList(Long id) {
+        // 查询管道是否存在
+        NifiCustomWorkflowPO customWorkflowPo = nifiCustomWorkflowImpl.query().eq("id", id).one();
+        if (customWorkflowPo == null) {
+            // 当前管道已删除
+            return ResultEntityBuild.build(ResultEnum.CUSTOMWORKFLOW_NOT_EXISTS);
+        }
+        // 查询出管道下的所有job和task
+        List<NifiCustomWorkflowDetailPO> detailList = nifiCustomWorkflowDetailImpl.query()
+                .eq("workflow_id", customWorkflowPo.workflowId).list();
+        if (CollectionUtils.isEmpty(detailList)) {
+            // 当前管道下没有job和task
+            return ResultEntityBuild.build(ResultEnum.CUSTOMWORKFLOWDETAIL_NOT_EXISTS);
+        }
+//        List<NifiPortsHierarchyDTO> list = new ArrayList<>();
+
+        // 过滤到开始job和任务组job
+        List<NifiCustomWorkflowDetailPO> collect = detailList.stream()
+                .filter(Objects::nonNull)
+                // 过滤开始和任务组
+                .filter(e -> !e.componentType.equalsIgnoreCase(ChannelDataEnum.SCHEDULE_TASK.getName())
+                        && !e.componentType.equalsIgnoreCase(ChannelDataEnum.TASKGROUP.getName()))
+                .collect(Collectors.toList());
+
+        // 现有功能只需要数据湖、数仓、分析模型中的task
+        List<NifiCustomWorkflowDetailPO> jobAndTaskByTable = collect.stream()
+                .filter(Objects::nonNull)
+                .filter(e -> ChannelDataEnum.SCHEDULE_TASK.tableList().contains(e.componentType))
+                // 过滤数据湖表任务中没有绑定table的task
+                .filter(e -> ChannelDataEnum.DATALAKE_TASK.getName().equalsIgnoreCase(e.componentType)
+                        && (e.tableId != null && !"".equals(e.tableId)))
+                .collect(Collectors.toList());
+
+        // po -> dto
+        List<NifiCustomWorkflowDetailDTO> detailDtoList = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(jobAndTaskByTable);
+
+        List<NifiPortsHierarchyDTO> list = detailDtoList.stream()
+                .filter(Objects::nonNull)
+                .filter(e -> e.outport != null && !"".equals(e.outport))
+                .map(e -> {
+                    NifiGetPortHierarchyDTO dto = new NifiGetPortHierarchyDTO();
+                    dto.nifiCustomWorkflowDetailId = e.id;
+                    // 获取层级关系
+                    ResultEntity<NifiPortsHierarchyDTO> result = getNifiPortHierarchy(dto);
+                    return result.data;
+                }).collect(Collectors.toList());
+
+        PipeDagDTO pipeDagDto = new PipeDagDTO();
+        if (!CollectionUtils.isEmpty(list)) {
+            pipeDagDto.setList(list);
+            redisUtil.set(RedisKeyBuild.buildDispatchStructureKey(id), JSON.toJSONString(pipeDagDto));
+        }
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, pipeDagDto);
+    }
+
     /**
      * 封装当前组件的其他属性(componentFirstFlag、componentEndFlag、pipeEndFlag、pipeEndDto)
      *
@@ -522,6 +585,8 @@ public class DataFactoryImpl implements IDataFactory {
     private NifiPortsHierarchyDTO buildNifiPortsHierarchyDTO(Long nifiCustomWorkflowDetailId) {
 
         NifiPortsHierarchyDTO nifiPortsHierarchyDTO = new NifiPortsHierarchyDTO();
+
+        nifiPortsHierarchyDTO.id = nifiCustomWorkflowDetailId;
 
         NifiCustomWorkflowDetailDTO itselfPort = getPort(nifiCustomWorkflowDetailId);
         if (itselfPort == null) {

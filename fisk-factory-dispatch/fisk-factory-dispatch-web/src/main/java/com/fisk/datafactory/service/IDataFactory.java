@@ -6,6 +6,7 @@ import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
+import com.fisk.datafactory.dto.tasknifi.PipeDagDTO;
 import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
 import com.fisk.task.dto.dispatchlog.PipelStageLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
@@ -82,4 +83,12 @@ public interface IDataFactory {
      * @return 执行结果
      */
     ResultEntity<List<PipelTaskLogVO>> getPipeTaskLog(PipelTaskLogVO dto);
+
+    /**
+     * 根据管道主键id,手动将管道的task结构更新到redis
+     *
+     * @param id id
+     * @return 执行结果
+     */
+    ResultEntity<PipeDagDTO> setTaskLinkedList(Long id);
 }

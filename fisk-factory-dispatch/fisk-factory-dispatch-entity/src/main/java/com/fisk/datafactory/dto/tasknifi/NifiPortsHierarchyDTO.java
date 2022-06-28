@@ -15,6 +15,9 @@ import java.util.List;
 @Data
 public class NifiPortsHierarchyDTO {
 
+    @ApiModelProperty(value = "task的主键id")
+    public Long id;
+
     @ApiModelProperty(value = "当前task属性")
     public NifiCustomWorkflowDetailDTO itselfPort;
 
@@ -28,14 +31,12 @@ public class NifiPortsHierarchyDTO {
      * 管道每个分支的最后一个task
      */
     public List<NifiCustomWorkflowDetailDTO> pipeEndDto;
-
     /**
      * 当前task的所有下一级task集合
      */
     public List<NifiPortsHierarchyNextDTO> nextList;
-
     /**
-     * 当前任务的上一级主任务中的最后一个表任务集合
+     * 当前task的所有上一级task集合
      */
     public List<NifiCustomWorkflowDetailDTO> inportList;
 }
