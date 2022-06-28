@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.mdmBEBuild.CommonMethods;
+import com.fisk.datamanagement.dto.businessmetadataconfig.BusinessMetadataConfigDTO;
 import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
@@ -21,10 +23,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -38,6 +37,8 @@ public class EntityImpl implements IEntity {
     AtlasClient atlasClient;
     @Resource
     UserHelper userHelper;
+    @Resource
+    BusinessMetadataConfigImpl businessMetadataConfigImpl;
     @Resource
     private RedisTemplate redisTemplate;
 
@@ -238,17 +239,22 @@ public class EntityImpl implements IEntity {
     @Override
     public JSONObject getEntity(String guid)
     {
-        Boolean exist = redisTemplate.hasKey("metaDataEntityData:"+guid);
+        Boolean exist = redisTemplate.hasKey("metaDataEntityData:" + guid);
         if (exist) {
-            String data = redisTemplate.opsForValue().get("metaDataEntityData:"+guid).toString();
+            String data = redisTemplate.opsForValue().get("metaDataEntityData:" + guid).toString();
             return JSON.parseObject(data);
         }
         ResultDataDTO<String> result = atlasClient.get(entityByGuid + "/" + guid);
-        if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
-        {
+        if (result.code != AtlasResultEnum.REQUEST_SUCCESS) {
             throw new FkException(ResultEnum.BAD_REQUEST);
         }
-        return JSON.parseObject(result.data);
+        JSONObject data = JSON.parseObject(result.data);
+        List<BusinessMetadataConfigDTO> businessMetadataConfigList = businessMetadataConfigImpl.getBusinessMetadataConfigList();
+        Map<String, String> keyMap = new HashMap<>();
+        for (BusinessMetadataConfigDTO item : businessMetadataConfigList) {
+            keyMap.put(item.attributeName, item.attributeCnName);
+        }
+        return CommonMethods.changeJsonObj(data, keyMap);
     }
 
     @Override

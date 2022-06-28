@@ -1,5 +1,7 @@
 package com.fisk.common.service.mdmBEBuild;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
@@ -126,5 +128,42 @@ public class CommonMethods {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e);
         }
     }
+
+    /**
+     * Json串key替换指定值
+     *
+     * @param jsonObj
+     * @param keyMap
+     * @return
+     */
+    public static JSONObject changeJsonObj(JSONObject jsonObj, Map<String, String> keyMap) {
+        JSONObject resJson = new JSONObject();
+        Set<String> keySet = jsonObj.keySet();
+        for (String key : keySet) {
+            String resKey = keyMap.get(key) == null ? key : keyMap.get(key);
+            try {
+                JSONObject jsonObj1 = jsonObj.getJSONObject(key);
+                resJson.put(resKey, changeJsonObj(jsonObj1, keyMap));
+            } catch (Exception e) {
+                try {
+                    JSONArray jsonArr = jsonObj.getJSONArray(key);
+                    resJson.put(resKey, changeJsonArr(jsonArr, keyMap));
+                } catch (Exception x) {
+                    resJson.put(resKey, jsonObj.get(key));
+                }
+            }
+        }
+        return resJson;
+    }
+
+    public static JSONArray changeJsonArr(JSONArray jsonArr, Map<String, String> keyMap) {
+        JSONArray resJson = new JSONArray();
+        for (int i = 0; i < jsonArr.size(); i++) {
+            JSONObject jsonObj = jsonArr.getJSONObject(i);
+            resJson.add(changeJsonObj(jsonObj, keyMap));
+        }
+        return resJson;
+    }
+
 
 }
