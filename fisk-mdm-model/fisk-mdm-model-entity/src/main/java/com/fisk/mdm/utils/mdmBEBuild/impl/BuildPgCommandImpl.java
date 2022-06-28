@@ -392,6 +392,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append(MARK + "create_time timestamp(6) NULL").append(",");
         str.append(MARK + "create_user varchar(50) NULL").append(",");
         str.append(MARK + "del_flag int2 NULL").append(",");
+        str.append(MARK + "mdm_fidata_id int2 NULL").append(",");
         return str.toString();
     }
 
