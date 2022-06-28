@@ -51,10 +51,11 @@ public interface ModelVersionMap {
      */
     ModelVersionPO copyDtoToPo(ModelCopyDTO dto);
 
-    @Mappings({
-            @Mapping(source = "status" ,target = "status"),
-            @Mapping(source = "type" ,target = "type")
-    })
+    /**
+     * po => vo
+     * @param poList
+     * @return
+     */
     List<ModelVersionVO> poToVoList(List<ModelVersionPO> poList);
 
     /**

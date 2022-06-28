@@ -28,10 +28,10 @@ public class ModelVersionVO extends BaseUserInfoVO {
     public String desc;
 
     @ApiModelProperty(value = "版本状态，0 打开、1 锁定、2 发布")
-    public String status;
+    public Integer status;
 
     @ApiModelProperty(value = "版本类型，1 用户创建、2 自动创建")
-    public String type;
+    public Integer type;
 
     @ApiModelProperty(value = "创建人")
     public String createUser;
