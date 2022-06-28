@@ -29,10 +29,9 @@ public class DataCheckSyncDTO {
     public String dbName;
 
     /**
-     * 表名称
+     * 实际表名称/表Id
      */
-    @ApiModelProperty(value = "表名称")
-    @NotNull()
+    @ApiModelProperty(value = "实际表名称/表Id")
     public String tableName;
 
     /**

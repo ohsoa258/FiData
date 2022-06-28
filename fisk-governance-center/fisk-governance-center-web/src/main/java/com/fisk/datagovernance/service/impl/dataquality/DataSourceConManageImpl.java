@@ -4,7 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
@@ -27,11 +30,12 @@ import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Value;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.*;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -49,56 +53,26 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     @Resource
     private UserClient userClient;
 
-    @Value("${pgsql-dw.ip}")
-    private String pgsqlDwIp;
-    @Value("${pgsql-dw.port}")
-    private int pgsqlDwPort;
-    @Value("${pgsql-dw.dbName}")
-    private String pgsqlDwDbName;
-    @Value("${pgsql-dw.driverClassName}")
-    private String pgsqlDwDriverClassName;
-    @Value("${pgsql-dw.url}")
-    private String pgsqlDwUrl;
-    @Value("${pgsql-dw.username}")
-    private String pgsqlDwUsername;
-    @Value("${pgsql-dw.password}")
-    private String pgsqlDwPassword;
-
-    @Value("${pgsql-ods.ip}")
-    private String pgsqlOdsIp;
-    @Value("${pgsql-ods.port}")
-    private int pgsqlOdsPort;
-    @Value("${pgsql-ods.dbName}")
-    private String pgsqlOdsDbName;
-    @Value("${pgsql-ods.driverClassName}")
-    private String pgsqlOdsDriverClassName;
-    @Value("${pgsql-ods.url}")
-    private String pgsqlOdsUrl;
-    @Value("${pgsql-ods.username}")
-    private String pgsqlOdsUsername;
-    @Value("${pgsql-ods.password}")
-    private String pgsqlOdsPassword;
-
-    @Value("${pgsql-mdm.ip}")
-    private String pgsqlMdmIp;
-    @Value("${pgsql-mdm.port}")
-    private int pgsqlMdmPort;
-    @Value("${pgsql-mdm.dbName}")
-    private String pgsqlMdmDbName;
-    @Value("${pgsql-mdm.driverClassName}")
-    private String pgsqlMdmDriverClassName;
-    @Value("${pgsql-mdm.url}")
-    private String pgsqlMdmUrl;
-    @Value("${pgsql-mdm.username}")
-    private String pgsqlMdmUsername;
-    @Value("${pgsql-mdm.password}")
-    private String pgsqlMdmPassword;
+    @Resource
+    RedisUtil redisUtil;
 
     @Override
-    public Page<DataSourceConVO> listDataSourceCons(DataSourceConQuery query) {
-        if (query != null && query.keyword != null && query.keyword != "")
-            query.keyword = query.keyword.toLowerCase();
-        return mapper.listDataSourceCon(query.page, query);
+    public PageDTO<DataSourceConVO> listDataSourceCons(DataSourceConQuery query) {
+        PageDTO<DataSourceConVO> pageDTO = new PageDTO<>();
+        List<DataSourceConVO> allDataSource = getAllDataSource();
+        if (CollectionUtils.isNotEmpty(allDataSource) &&
+                query != null && StringUtils.isNotEmpty(query.keyword )) {
+            allDataSource = allDataSource.stream().filter(
+                    t -> (t.getConDbname().contains(query.keyword)) ||
+                            t.getConType().getName().contains(query.keyword)).collect(Collectors.toList());
+        }
+        if (CollectionUtils.isNotEmpty(allDataSource)){
+            pageDTO.setTotal(Long.valueOf(allDataSource.size()));
+            query.current = query.current - 1;
+            allDataSource = allDataSource.stream().sorted(Comparator.comparing(DataSourceConVO::getCreateTime).reversed()).skip((query.current - 1 + 1) * query.size).limit(query.size).collect(Collectors.toList());
+        }
+        pageDTO.setItems(allDataSource);
+        return pageDTO;
     }
 
     @Override
@@ -181,49 +155,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 return ResultEnum.DS_DATASOURCE_CON_ERROR;
             }
         }
-    }
-
-    @Override
-    public List<DataSourceConVO> getSystemAll() {
-        List<DataSourceConVO> dataSourceConVOS = new ArrayList<>();
-
-        DataSourceConVO dw = new DataSourceConVO();
-        dw.setConIp(pgsqlDwIp);
-        dw.setName(pgsqlDwDbName);
-        dw.setConDbname(pgsqlDwDbName);
-        dw.setConPort(pgsqlDwPort);
-        dw.setConType(DataSourceTypeEnum.getEnumByDriverName(pgsqlDwDriverClassName));
-        dw.setConAccount(pgsqlDwUsername);
-        dw.setConPassword(pgsqlDwPassword);
-        dw.setConStr(pgsqlDwUrl);
-        dw.setDatasourceType(SourceTypeEnum.FiData);
-        dataSourceConVOS.add(dw);
-
-        DataSourceConVO ods = new DataSourceConVO();
-        ods.setConIp(pgsqlOdsIp);
-        ods.setName(pgsqlOdsDbName);
-        ods.setConDbname(pgsqlOdsDbName);
-        ods.setConPort(pgsqlOdsPort);
-        ods.setConType(DataSourceTypeEnum.getEnumByDriverName(pgsqlOdsDriverClassName));
-        ods.setConAccount(pgsqlOdsUsername);
-        ods.setConPassword(pgsqlOdsPassword);
-        ods.setConStr(pgsqlOdsUrl);
-        ods.setDatasourceType(SourceTypeEnum.FiData);
-        dataSourceConVOS.add(ods);
-
-        DataSourceConVO mdm = new DataSourceConVO();
-        mdm.setConIp(pgsqlMdmIp);
-        mdm.setName(pgsqlMdmDbName);
-        mdm.setConDbname(pgsqlMdmDbName);
-        mdm.setConPort(pgsqlMdmPort);
-        mdm.setConType(DataSourceTypeEnum.getEnumByDriverName(pgsqlMdmDriverClassName));
-        mdm.setConAccount(pgsqlMdmUsername);
-        mdm.setConPassword(pgsqlMdmPassword);
-        mdm.setConStr(pgsqlMdmUrl);
-        mdm.setDatasourceType(SourceTypeEnum.FiData);
-        dataSourceConVOS.add(mdm);
-
-        return dataSourceConVOS;
     }
 
     @Override
@@ -376,6 +307,36 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         return dataSourceVO;
     }
 
+    @Override
+    public List<FiDataMetaDataDTO> getFiDataConfigMetaData(){
+        List<FiDataMetaDataDTO> dataMetaDataDTOS=new ArrayList<>();
+        List<FiDataMetaDataDTO> fiDataMetaData = redisUtil.getFiDataMetaData("1");
+        if (CollectionUtils.isNotEmpty(fiDataMetaData)){
+            dataMetaDataDTOS.addAll(fiDataMetaData);
+        }
+        List<FiDataMetaDataDTO> fiDataMetaData1 = redisUtil.getFiDataMetaData("2");
+        if (CollectionUtils.isNotEmpty(fiDataMetaData1)){
+            dataMetaDataDTOS.addAll(fiDataMetaData1);
+        }
+        List<FiDataMetaDataDTO> fiDataMetaData2 = redisUtil.getFiDataMetaData("3");
+        if (CollectionUtils.isNotEmpty(fiDataMetaData2)){
+            dataMetaDataDTOS.addAll(fiDataMetaData2);
+        }
+        List<FiDataMetaDataDTO> fiDataMetaData3 = redisUtil.getFiDataMetaData("4");
+        if (CollectionUtils.isNotEmpty(fiDataMetaData3)){
+            dataMetaDataDTOS.addAll(fiDataMetaData3);
+        }
+        return dataMetaDataDTOS;
+    }
+
+    /**
+     * @description 自定义数据源信息组装
+     * @author dick
+     * @date 2022/6/27 17:32
+     * @version v1.0
+     * @params dataSources
+     * @return java.util.List<com.fisk.datagovernance.vo.dataquality.datasource.DataExampleSourceVO>
+     */
     public List<DataExampleSourceVO> getDataSourceList(List<DataSourceVO> dataSources) {
         List<DataExampleSourceVO> dataExampleSourceVOS = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(dataSources)) {
@@ -408,8 +369,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     /**
-     * @return com.fisk.datagovernance.entity.dataquality.DataSourceConPO
-     * @description 根据数据源配置信息查询数据源
+     * 根据数据源配置信息查询数据源
      * @author dick
      * @date 2022/4/15 11:59
      * @version v1.0
@@ -429,12 +389,12 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     /**
-     * @description 查询数据质量所有数据源信息，含FiData系统数据源
-     * @author dick 
+     * 查询数据质量所有数据源信息，含FiData系统数据源
+     * @author dick
      * @date 2022/6/16 23:17
      * @version v1.0
-     * @params  
-     * @return java.util.List<com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO> 
+     * @params
+     * @return java.util.List<com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO>
      */
     public List<DataSourceConVO> getAllDataSource() {
         List<DataSourceConVO> dataSourceList = new ArrayList<>();
@@ -447,11 +407,13 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         dataSourceConPOQueryWrapper.lambda()
                 .eq(DataSourceConPO::getDelFlag, 1);
         List<DataSourceConPO> dataSourceConPOList = baseMapper.selectList(dataSourceConPOQueryWrapper);
+        DateTimeFormatter pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         if (CollectionUtils.isNotEmpty(dataSourceConPOList)) {
             dataSourceConPOList.forEach(t -> {
                 DataSourceConVO dataSourceConVO = new DataSourceConVO();
                 dataSourceConVO.setId(Math.toIntExact(t.getId()));
                 dataSourceConVO.setDatasourceType(SourceTypeEnum.getEnum(t.getDatasourceType()));
+                dataSourceConVO.setCreateTime(t.getCreateTime().format(pattern));
                 if (t.getDatasourceType() == 2) {
                     dataSourceConVO.setName(t.getName());
                     dataSourceConVO.setConStr(t.getConStr());
@@ -461,8 +423,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     dataSourceConVO.setConType(DataSourceTypeEnum.getEnum(t.getConType()));
                     dataSourceConVO.setConAccount(t.getConAccount());
                     dataSourceConVO.setConPassword(t.getConPassword());
+                    dataSourceList.add(dataSourceConVO);
                 } else if (t.getDatasourceType() == 1 && CollectionUtils.isNotEmpty(fiDataDataSources)) {
-                    Optional<DataSourceDTO> first = fiDataDataSources.stream().filter(item -> item.getId() == t.fidataDatasourceId).findFirst();
+                    Optional<DataSourceDTO> first = fiDataDataSources.stream().filter(item -> item.getId() == t.getDatasourceId()).findFirst();
                     if (first.isPresent()) {
                         DataSourceDTO dataSourceDTO = first.get();
                         dataSourceConVO.setName(dataSourceDTO.getName());
@@ -473,9 +436,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                         dataSourceConVO.setConType(DataSourceTypeEnum.getEnum(dataSourceDTO.getConType().getValue()));
                         dataSourceConVO.setConAccount(dataSourceDTO.getConAccount());
                         dataSourceConVO.setConPassword(dataSourceDTO.getConPassword());
+                        dataSourceList.add(dataSourceConVO);
                     }
                 }
-                dataSourceList.add(dataSourceConVO);
             });
         }
         return dataSourceList;
@@ -483,7 +446,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     /**
      * 连接数据库
-     *
      * @param driver   driver
      * @param url      url
      * @param username username

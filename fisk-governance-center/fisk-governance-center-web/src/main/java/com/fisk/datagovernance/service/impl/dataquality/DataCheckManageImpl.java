@@ -66,7 +66,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Override
     public Page<DataCheckVO> getAll(DataCheckQueryDTO query) {
-        Page<DataCheckVO> all = baseMapper.getAll(query.page, query.datasourceId, query.tableName, query.keyword);
+        Page<DataCheckVO> all = baseMapper.getAll(query.page, query.datasourceId, query.useTableName, query.keyword);
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
             List<Integer> ruleIds = all.getRecords().stream().map(DataCheckVO::getId).collect(Collectors.toList());
 
@@ -443,7 +443,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckPOQueryWrapper.lambda()
                     .eq(DataCheckPO::getDatasourceId, dataSourceInfo.getId())
                     .eq(DataCheckPO::getDelFlag, 1)
-                    .eq(DataCheckPO::getUseTableName, dto.tableName)
+                    .eq(DataCheckPO::getUseTableName, dto.getTableName())
                     .eq(DataCheckPO::getRuleState, RuleStateEnum.Enable.getValue())
                     .orderByAsc(DataCheckPO::getRuleSort)
                     .in(DataCheckPO::getTemplateId, templateIds);
@@ -452,7 +452,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 // 未配置表校验规则，但请求参数中含成功后要修改的字段；根据参数字段修改表数据
                 ResultEnum updateResult = ResultEnum.SUCCESS;
                 if (CollectionUtils.isNotEmpty(dtoPramsList) && StringUtils.isNotEmpty(dtoPramsList.get(1))) {
-                    String tableName = getSqlField(dataSourceType, dto.tableName);
+                    String tableName = getSqlField(dataSourceType, dto.getTableName());
                     updateResult = UpdateTableDataToSuccess_Sync(connection, dataSourceType, dtoPramsList, tableName);
                 }
                 return ResultEntityBuild.buildData(updateResult, null);

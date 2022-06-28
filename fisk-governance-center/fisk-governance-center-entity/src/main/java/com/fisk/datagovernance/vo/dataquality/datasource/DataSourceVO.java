@@ -57,7 +57,7 @@ public class DataSourceVO
      * FiData数据源id
      */
     @ApiModelProperty(value = "FiData数据源id")
-    public int fidataDatasourceId;
+    public int datasourceId;
 
     /**
      * 数据源类型 1、FiData 2、自定义

@@ -45,12 +45,9 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     @Resource
     private TemplateMapper templateMapper;
 
-    @Resource
-    UserHelper userHelper;
-
     @Override
     public Page<BusinessFilterVO> getAll(BusinessFilterQueryDTO query) {
-        return baseMapper.getAll(query.page, query.datasourceId, query.tableName, query.keyword);
+        return baseMapper.getAll(query.page, query.datasourceId, query.useTableName, query.keyword);
     }
 
     @Override
@@ -86,7 +83,6 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
         if (businessFilterPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         //第二步：转换DTO对象为PO对象
         businessFilterPO = BusinessFilterMap.INSTANCES.dtoToPo_Edit(dto);
         if (businessFilterPO == null) {

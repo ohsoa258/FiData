@@ -22,12 +22,12 @@ public interface DataCheckMapper extends FKBaseMapper<DataCheckPO> {
      *
      * @param page    分页信息
      * @param keyword where条件
-     * @param tableName 表名称
+     * @param useTableName 表名称/id
      * @return 查询结果
      */
     Page<DataCheckVO> getAll(Page<DataCheckVO> page,
                              @Param("datasourceId") int datasourceId,
-                             @Param("tableName") String tableName,
+                             @Param("useTableName") String useTableName,
                              @Param("keyword") String keyword);
 
     /**
@@ -36,6 +36,6 @@ public interface DataCheckMapper extends FKBaseMapper<DataCheckPO> {
      * @return 执行结果
      */
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
-    @Insert("INSERT INTO tb_datacheck_rule(`template_id`, `datasource_id`, `rule_name`,  `table_name`, `use_table_name`, `check_rule`, `create_rule`, `rule_sort`, `rule_state`,`threshold_value`, `create_time`, `create_user`, `del_flag`) VALUES (#{templateId}, #{datasourceId}, #{ruleName}, #{tableName}, #{useTableName}, #{checkRule}, #{createRule}, #{ruleSort}, #{ruleState}, #{thresholdValue}, #{createTime}, #{createUser},1);")
+    @Insert("INSERT INTO tb_datacheck_rule(`template_id`, `datasource_id`, `rule_name`,  `table_name`, `use_table_name`,`table_type`, `check_rule`, `create_rule`, `rule_sort`, `rule_state`,`threshold_value`, `create_time`, `create_user`, `del_flag`) VALUES (#{templateId}, #{datasourceId}, #{ruleName}, #{tableName}, #{useTableName}, #{tableType}, #{checkRule}, #{createRule}, #{ruleSort}, #{ruleState}, #{thresholdValue}, #{createTime}, #{createUser},1);")
     int insertOne(DataCheckPO po);
 }

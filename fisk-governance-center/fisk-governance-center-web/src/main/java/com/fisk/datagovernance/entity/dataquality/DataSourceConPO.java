@@ -39,7 +39,7 @@ public class DataSourceConPO extends BasePO
     /**
      * FiData数据源id
      */
-    public int fidataDatasourceId;
+    public int datasourceId;
 
     /**
      * 数据源类型 1、FiData 2、自定义

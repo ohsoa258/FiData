@@ -5,8 +5,6 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.dto.datasource.DataSourceDTO;
-import com.fisk.system.dto.datasource.FiDataMateDataDTO;
-import com.fisk.system.dto.datasource.FiDataMateDataQueryDTO;
 import com.fisk.system.dto.datasource.TestConnectionDTO;
 import com.fisk.system.service.IDataSourceManageService;
 import io.swagger.annotations.Api;

@@ -27,9 +27,9 @@ public class LifecycleVO {
     public int templateId;
 
     /**
-     * 数据源id
+     * 数据源表主键id
      */
-    @ApiModelProperty(value = "数据源id")
+    @ApiModelProperty(value = "数据源表主键id")
     public int datasourceId;
 
     /**
@@ -43,6 +43,18 @@ public class LifecycleVO {
      */
     @ApiModelProperty(value = "表名称")
     public String tableName;
+
+    /**
+     * 实际表名称/表Id
+     */
+    @ApiModelProperty(value = "实际表名称/表Id")
+    public String useTableName;
+
+    /**
+     * 表类型 1：表  2：视图
+     */
+    @ApiModelProperty(value = "表类型 1：表  2：视图")
+    public int tableType;
 
     /**
      * 回收时间

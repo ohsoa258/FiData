@@ -12,9 +12,10 @@ import java.util.List;
  * @date 2022/6/15 11:23
  */
 @Data
-public class FiDataMetaDataDTO {
+public class FiDataMetaDataDTO
+{
     @ApiModelProperty(value = "FiData数据源id", required = true)
-    public int dataSourceId ;
+    public int dataSourceId;
 
     @ApiModelProperty(value = "FiData数据源Tree")
     public List<FiDataMetaDataTreeDTO> children;

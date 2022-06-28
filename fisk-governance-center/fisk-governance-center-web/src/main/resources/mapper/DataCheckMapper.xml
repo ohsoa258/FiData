@@ -10,6 +10,7 @@
         t1.rule_name,
         t1.table_name,
         t1.use_table_name,
+        t1.table_type,
         t1.check_rule,
         t1.create_rule,
         t1.rule_sort,
@@ -34,7 +35,7 @@
         AND t2.del_flag = 1
         AND t3.del_flag = 1
         AND t3.id = #{datasourceId}
-        AND table_name = #{tableName,jdbcType=VARCHAR}
+        AND use_table_name = #{useTableName,jdbcType=VARCHAR}
         <if test="keyword != null and keyword != '' ">
             AND rule_name LIKE concat('%', #{keyword}, '%')
         </if>

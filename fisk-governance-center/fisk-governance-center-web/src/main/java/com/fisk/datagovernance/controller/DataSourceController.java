@@ -1,9 +1,11 @@
 package com.fisk.datagovernance.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
@@ -42,7 +44,7 @@ public class DataSourceController {
 
     @PostMapping("/page")
     @ApiOperation("获取所有数据源连接信息")
-    public ResultEntity<Page<DataSourceConVO>> getData(@RequestBody DataSourceConQuery query) {
+    public ResultEntity<PageDTO<DataSourceConVO>> getData(@RequestBody DataSourceConQuery query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listDataSourceCons(query));
     }
 
@@ -70,10 +72,10 @@ public class DataSourceController {
         return ResultEntityBuild.build(service.testConnection(dto));
     }
 
-    @GetMapping("/getSystemAll")
-    @ApiOperation("获取FiData数据源")
-    public ResultEntity<List<DataSourceConVO>> getSystemAll() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getSystemAll());
+    @GetMapping("/getFiDataConfigMetaData")
+    @ApiOperation("获取FiData配置表元数据信息")
+    public ResultEntity<List<FiDataMetaDataDTO>> getSystemAll() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataConfigMetaData());
     }
 
     @GetMapping("/getTableAll")

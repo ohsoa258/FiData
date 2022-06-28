@@ -19,7 +19,7 @@ public class LifecyclePO extends BasePO {
     public int templateId;
 
     /**
-     * 数据源id
+     * 数据源表主键id
      */
     public int datasourceId;
 
@@ -32,6 +32,16 @@ public class LifecyclePO extends BasePO {
      * 表名称
      */
     public String tableName;
+
+    /**
+     * 实际表名称/表Id
+     */
+    public String useTableName;
+
+    /**
+     * 表类型 1：表  2：视图
+     */
+    public int tableType;
 
     /**
      * 回收时间

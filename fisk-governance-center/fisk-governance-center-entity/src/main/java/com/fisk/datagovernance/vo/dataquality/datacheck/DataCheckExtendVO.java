@@ -1,6 +1,5 @@
 package com.fisk.datagovernance.vo.dataquality.datacheck;
 
-import com.fisk.datagovernance.enums.dataquality.DataCheckTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 
 /**
@@ -27,6 +26,12 @@ public class DataCheckExtendVO {
      */
     @ApiModelProperty(value = "字段名称")
     public String fieldName;
+
+    /**
+     * 实际字段名称/字段Id
+     */
+    @ApiModelProperty(value = "实际字段名称/字段Id")
+    public String useFieldName;
 
     /**
      * 字段条件

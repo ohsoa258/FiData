@@ -23,7 +23,7 @@ public class DataCheckDTO {
     /**
      * 数据源id
      */
-    @ApiModelProperty(value = "数据源id")
+    @ApiModelProperty(value = "数据源表主键id")
     public int datasourceId;
 
     /**
@@ -35,14 +35,20 @@ public class DataCheckDTO {
     /**
      * 表名称，页面展示
      */
-    @ApiModelProperty(value = "表名称，页面展示")
+    @ApiModelProperty(value = "表名称")
     public String tableName;
 
     /**
-     * 实际引用表名称
+     * 实际表名称/表Id
      */
-    @ApiModelProperty(value = "实际引用表名称")
+    @ApiModelProperty(value = "实际表名称/表Id")
     public String useTableName;
+
+    /**
+     * 表类型 1：表  2：视图
+     */
+    @ApiModelProperty(value = "表类型 1：表  2：视图")
+    public int tableType;
 
     /**
      * 校验规则

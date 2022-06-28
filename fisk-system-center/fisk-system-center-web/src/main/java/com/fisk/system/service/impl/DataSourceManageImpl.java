@@ -9,8 +9,6 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.system.dto.datasource.DataSourceDTO;
-import com.fisk.system.dto.datasource.FiDataMateDataDTO;
-import com.fisk.system.dto.datasource.FiDataMateDataQueryDTO;
 import com.fisk.system.dto.datasource.TestConnectionDTO;
 import com.fisk.system.entity.DataSourcePO;
 import com.fisk.system.map.DataSourceMap;
@@ -51,7 +49,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                 dataSourceDTO.setConType(DataSourceTypeEnum.getEnum(t.getConType()));
                 dataSourceDTO.setConTypeName(DataSourceTypeEnum.getEnum(t.getConType()).getName());
                 dataSourceDTO.setConAccount(t.getConAccount());
-                dataSourceDTO.setConPassword(t.getConPassword());
+                //dataSourceDTO.setConPassword(t.getConPassword());
                 dataSourceList.add(dataSourceDTO);
             });
         }

@@ -1,8 +1,9 @@
 package com.fisk.datagovernance.service.dataquality;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataExampleSourceVO;
@@ -22,7 +23,7 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      * @param query 查询参数
      * @return 查询结果
      */
-    Page<DataSourceConVO> listDataSourceCons(DataSourceConQuery query);
+    PageDTO<DataSourceConVO> listDataSourceCons(DataSourceConQuery query);
 
     /**
      * 保存数据
@@ -53,10 +54,10 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
     ResultEnum testConnection(TestConnectionDTO dto);
 
     /**
-     * 获取FiData数据源
+     * 获取FiData配置表元数据
      * @return 查询结果
      */
-    List<DataSourceConVO> getSystemAll();
+    List<FiDataMetaDataDTO> getFiDataConfigMetaData();
 
     /**
      * 获取数据源下的表

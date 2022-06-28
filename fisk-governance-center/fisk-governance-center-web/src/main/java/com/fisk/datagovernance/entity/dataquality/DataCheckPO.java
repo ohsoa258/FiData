@@ -19,7 +19,7 @@ public class DataCheckPO extends BasePO {
     public int templateId;
 
     /**
-     * 数据源id
+     * 数据源表主键id
      */
     public int datasourceId;
 
@@ -34,9 +34,14 @@ public class DataCheckPO extends BasePO {
     public String tableName;
 
     /**
-     * 实际引用表名称
+     * 实际表名称/表Id
      */
     public String useTableName;
+
+    /**
+     * 表类型 1：表  2：视图
+     */
+    public int tableType;
 
     /**
      * 校验规则：1、强规则 2、弱规则

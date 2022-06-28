@@ -24,6 +24,11 @@ public class DataCheckExtendPO extends BasePO {
     public String fieldName;
 
     /**
+     * 实际字段名称/字段Id
+     */
+    public String useFieldName;
+
+    /**
      * 字段条件值
      */
     public String fieldWhere;
