@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
@@ -99,7 +100,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                     // 1.要记录上一个task结束
                     Map<Integer, Object> taskMap = new HashMap<>();
                     taskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
-                    Object endTime = redisUtil.getAndDel(byPipelJobTraceId.taskId);
+                    Object endTime = redisUtil.getAndDel(RedisKeyEnum.PIPEL_TASK.getName() + byPipelJobTraceId.taskId);
                     taskMap.put(DispatchLogEnum.taskend.getValue(), endTime != null ? endTime.toString() : simpleDateFormat.format(new Date()));
                     ChannelDataEnum value = ChannelDataEnum.getValue(dto.componentType);
                     OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(value.getValue());
@@ -188,7 +189,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                         //记录task结束
                         Map<Integer, Object> taskMap = new HashMap<>();
                         taskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
-                        Object endTime = redisUtil.getAndDel(String.valueOf(dto.id));
+                        Object endTime = redisUtil.getAndDel(RedisKeyEnum.PIPEL_TASK.getName() + dto.id);
                         taskMap.put(DispatchLogEnum.taskend.getValue(), endTime != null ? endTime.toString() : simpleDateFormat.format(new Date()));
                         iPipelTaskLog.savePipelTaskLog(byPipelJobTraceId.jobTraceId, byPipelJobTraceId.taskTraceId, taskMap, byPipelJobTraceId.taskId, null, 0);
                         //记录job结束
@@ -212,7 +213,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                 String[] split1 = split[1].split("\\.");
                 HashMap<Integer, Object> taskMap = new HashMap<>();
                 taskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
-                Object endTime = redisUtil.getAndDel(taskTraceId);
+                Object endTime = redisUtil.getAndDel(RedisKeyEnum.PIPEL_TASK.getName() + taskTraceId);
                 taskMap.put(DispatchLogEnum.taskend.getValue(), endTime != null ? endTime.toString() : simpleDateFormat.format(new Date()));
                 iPipelTaskLog.savePipelTaskLog(null, taskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
             }

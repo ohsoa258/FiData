@@ -27,7 +27,9 @@ public enum RedisKeyEnum implements BaseEnum {
     // FiData数据结构(ods、dw、olap、mdm)
     FIDATA_STRUCTURE(-1, "FiData:Structure:DataSourceId"),
     // 数据调度管道数据结构
-    DISPATCH_STRUCTURE(-1, "FiData:Dispatch:id");
+    DISPATCH_STRUCTURE(-1, "FiData:Dispatch:id"),
+    //管道task
+    PIPEL_TASK(3000, "pipel:task:id");
 
     RedisKeyEnum(int value, String name) {
         this.value = value;
