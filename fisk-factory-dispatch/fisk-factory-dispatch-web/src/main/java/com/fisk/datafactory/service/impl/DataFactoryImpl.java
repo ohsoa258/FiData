@@ -448,7 +448,7 @@ public class DataFactoryImpl implements IDataFactory {
 
         PipeDagDTO pipeDagDto = new PipeDagDTO();
         if (!CollectionUtils.isEmpty(list)) {
-            pipeDagDto.setList(list);
+            pipeDagDto.setNifiPortsHierarchyDtos(list);
             redisUtil.set(RedisKeyBuild.buildDispatchStructureKey(id), JSON.toJSONString(pipeDagDto));
         }
 
