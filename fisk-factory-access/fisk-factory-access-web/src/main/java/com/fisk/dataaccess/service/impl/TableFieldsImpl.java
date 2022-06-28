@@ -204,7 +204,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
         // 保存tb_table_syncmode
         TableSyncmodePO modelSync = tableSyncmodeDTO.toEntity(TableSyncmodePO.class);
-        success = syncmodeImpl.updateById(modelSync);
+        success = syncmodeImpl.saveOrUpdate(modelSync);
 
         // 修改发布状态
         model.publish = 0;
