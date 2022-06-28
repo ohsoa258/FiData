@@ -62,10 +62,8 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
     /**
      * 系统字段
      */
-    String systemColumnName = ",fidata_create_time," +
-            "fidata_create_user," +
-            "fidata_update_time," +
-            "fidata_update_user";
+    String systemColumnName = ",fidata_new_code,fidata_create_time," +
+            "fidata_create_user";
 
     /**
      * 连接Connection
@@ -83,9 +81,12 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
     public ResultEnum addMasterDataLog(Map<String, Object> data, String tableName) {
         data.put("fidata_create_user", userHelper.getLoginUserInfo().id);
         data.put("fidata_create_time", LocalDateTime.now());
-        data.put("fidata_update_time", LocalDateTime.now());
-        data.put("fidata_update_user", userHelper.getLoginUserInfo().id);
         data.put("fidata_del_flag", 1);
+        if (data.get("fidata_new_code") != null && !StringUtils.isEmpty(data.get("fidata_new_code").toString())) {
+            String oldCode = data.get("code").toString();
+            data.put("code", data.get("fidata_new_code").toString());
+            data.put("fidata_new_code", oldCode);
+        }
         IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
         String sql = buildSqlCommand.buildInsertSingleData(data, tableName);
         log.info("执行新增主数据维护日志sql: 【" + sql + "】");
@@ -101,13 +102,19 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
             throw new FkException(ResultEnum.ATTRIBUTE_NOT_EXIST);
         }
         List<AttributeColumnVO> attributeColumnVoList = AttributeMap.INSTANCES.dtoListToVoList(attributeInfos);
+        AttributeColumnVO attributeColumn = new AttributeColumnVO();
+        attributeColumn.setName("fidata_new_code");
+        attributeColumn.setDisplayName("新编码");
+        attributeColumnVoList.add(1, attributeColumn);
         data.setAttributes(attributeColumnVoList);
         String tableName = TableNameGenerateUtils.generateLogTableName(dto.getModelId(), dto.getEntityId());
+        //条件
+        String conditions = " and fidata_version_id='" + dto.getVersionId() + "' and fidata_mdm_fidata_id='" + dto.getFiDataId() + "'";
         //获取总条数
         int rowCount = 0;
         IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
         //获取总条数sql
-        String count = buildSqlCommand.buildQueryCount(tableName, " and fidata_version_id='" + dto.getVersionId() + "'");
+        String count = buildSqlCommand.buildQueryCount(tableName, conditions);
         List<Map<String, Object>> columnCount = AbstractDbHelper.execQueryResultMaps(count, getConnection());
         if (!CollectionUtils.isEmpty(columnCount)) {
             rowCount = Integer.valueOf(columnCount.get(0).get("totalnum").toString()).intValue();
@@ -124,13 +131,13 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
         dataPageDTO.setPageSize(dto.getPageSize());
         dataPageDTO.setTableName(tableName);
         dataPageDTO.setExport(false);
-        dataPageDTO.setConditions(" and code='" + dto.getCode() + "'");
+        dataPageDTO.setConditions(conditions);
         IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
         String sql = sqlBuilder.buildMasterDataPage(dataPageDTO);
         //执行sql，获得结果集
         log.info("listMasterDataLog query sql: 【" + sql + "】");
         List<Map<String, Object>> resultMaps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
-        //创建人/更新人id替换为名称
+        //创建人替换为名称
         ReplenishUserInfo.replenishFiDataUserName(resultMaps, client, UserFieldEnum.USER_NAME);
         data.setResultData(resultMaps);
         return data;

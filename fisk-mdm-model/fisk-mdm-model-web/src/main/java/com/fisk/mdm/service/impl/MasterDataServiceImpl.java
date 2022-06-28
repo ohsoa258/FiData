@@ -1005,6 +1005,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
         //添加维护日志表数据
         if (entityServiceImpl.getEnableMemberLog(dto.getEntityId())) {
             dto.getMembers().put("fidata_version_id", dto.getVersionId());
+            //获取mdm表id
+            String code = dto.getMembers().get("fidata_new_code") == null ? dto.getMembers().get("code").toString() : dto.getMembers().get("fidata_new_code").toString();
+            String queryConditions = " and " + getEntityCodeName(dto.getEntityId()) + " ='" + code + "'";
+            IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
+            String sql = buildSqlCommand.buildQueryOneData(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), queryConditions);
+            List<Map<String, Object>> maps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
+            dto.getMembers().put("fidata_mdm_fidata_id", maps.get(0).get("fidata_id"));
             return masterDataLogService.addMasterDataLog(dto.getMembers(), TableNameGenerateUtils.generateLogTableName(dto.getModelId(), dto.getEntityId()));
         }
         return ResultEnum.SUCCESS;
@@ -1026,7 +1033,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (!codeColumn.isPresent()) {
             throw new FkException(ResultEnum.CODE_NOT_EXIST);
         }
-        return codeColumn.get().getName();
+        return codeColumn.get().getColumnName();
     }
 
     /**

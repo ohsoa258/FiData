@@ -13,6 +13,6 @@ public class MasterDataLogQueryDTO extends MasterDataBaseDTO {
 
     private Integer pageSize;
 
-    private String code;
+    private Integer fiDataId;
 
 }
