@@ -356,7 +356,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append(MARK + "version_id int4 NULL").append(",");
         str.append(MARK + "lock_tag int4 NULL").append(",");
         str.append(MARK + "new_code varchar(100) NULL").append(",");
-        str.append(this.commonBaseField());
+        str.append(this.commonLogBaseField());
         str.append(MARK + "old_name varchar(100) NULL").append(",");
 
         return str.toString();
@@ -380,6 +380,18 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
             str.append(PRIMARY_TABLE + "." + MARK + "del_flag");
         }
 
+        return str.toString();
+    }
+
+    /**
+     * 成员日志公用基础字段
+     * @return
+     */
+    public String commonLogBaseField(){
+        StringBuilder str = new StringBuilder();
+        str.append(MARK + "create_time timestamp(6) NULL").append(",");
+        str.append(MARK + "create_user varchar(50) NULL").append(",");
+        str.append(MARK + "del_flag int2 NULL").append(",");
         return str.toString();
     }
 
