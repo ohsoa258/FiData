@@ -123,7 +123,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
     public NifiStagePO saveNifiStage(String data, Acknowledgment acke) {
         log.info("阶段日志保存:" + data);
         NifiStagePO nifiStagePO = new NifiStagePO();
-        NifiStageMessageDTO nifiStageMessageDTO=new NifiStageMessageDTO();
+        NifiStageMessageDTO nifiStageMessageDTO = new NifiStageMessageDTO();
         try {
             nifiStageMessageDTO = JSON.parseObject(data, NifiStageMessageDTO.class);
             String topicName = nifiStageMessageDTO.topic;
@@ -233,8 +233,8 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                 pipelineTableLogPO.dispatchType = 0;
             } else {
                 pipelineTableLogPO.dispatchType = 1;
-                pipelineTableLog.insert(pipelineTableLogPO);
             }
+            pipelineTableLog.insert(pipelineTableLogPO);
 
             //----------------------------------------------
             HashMap<Integer, Object> taskMap = new HashMap<>();
@@ -260,9 +260,9 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
             }
             //-----------------------------------------------
             nifiStagePO.pipelineTableLogId = Math.toIntExact(pipelineTableLogPO.id);
-            if (pipelineTableLogPO.dispatchType != 1) {
-                this.save(nifiStagePO);
-            }
+
+            this.save(nifiStagePO);
+
         } catch (Exception e) {
             DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = new DispatchExceptionHandlingDTO();
             dispatchExceptionHandlingDTO.comment = nifiStagePO.comment;
