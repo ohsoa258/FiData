@@ -159,6 +159,8 @@ public class PgsqlUtils {
 
                 // 保存本次信息
                 apiSqlResultDto.setCount(countSql);
+                // 多表插入时重新清空条数
+                countSql = 0;
                 // stg表名
                 apiSqlResultDto.setTableName(tablePrefixName + tableName);
                 apiSqlResultDto.setMsg("成功");

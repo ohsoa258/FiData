@@ -464,7 +464,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // stg同步到ods(联调task)
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
                 ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
-                msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append(";");
+                msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
             }
 
             // 保存本次的日志信息
@@ -553,7 +553,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // stg同步到ods(联调task)
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
                 ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
-                msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append(";");
+                msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
             }
 
             // 保存本次的日志信息
@@ -1160,7 +1160,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             if (!CollectionUtils.isEmpty(list)) {
                 for (ApiSqlResultDTO e : list) {
                     checkResultMsg.append("数据推送到").append("[").append(e.getTableName()).append("]").append(": ")
-                            .append(e.getMsg()).append(",").append("推送的条数为: ").append(e.getCount()).append(";");
+                            .append(e.getMsg()).append(",").append("推送的条数为: ").append(e.getCount()).append("；");
                     COUNT_SQL = e.getCount();
                     // 推送条数累加值
                     COUNT_SQL += COUNT_SQL;
