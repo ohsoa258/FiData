@@ -5,7 +5,7 @@ import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckSyncDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckWebDTO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
-import com.fisk.datagovernance.vo.dataquality.rule.TableRuleInfoVO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,7 +47,7 @@ public interface DataQualityClient {
      * @return 查询结果
      */
     @GetMapping("/dataQualityClient/getTableRuleList")
-    ResultEntity<TableRuleInfoVO> getTableRuleList(@RequestParam("dataSourceId") int dataSourceId, @RequestParam("tableName") String tableName);
+    ResultEntity<TableRuleInfoDTO> getTableRuleList(@RequestParam("dataSourceId") int dataSourceId, @RequestParam("tableName") String tableName);
 
     /**
      * 查询数据质量所有数据源信息，含FiData系统数据源

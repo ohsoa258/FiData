@@ -1,4 +1,4 @@
-package com.fisk.datagovernance.vo.dataquality.rule;
+package com.fisk.common.server.ocr.dto.businessmetadata;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -13,8 +13,8 @@ import java.util.List;
  * @date 2022/6/16 21:28
  */
 @Data
-public class TableRuleInfoVO {
-    public TableRuleInfoVO(){
+public class TableRuleInfoDTO {
+    public TableRuleInfoDTO(){
         checkRules=new ArrayList<>();
         filterRules=new ArrayList<>();
         lifecycleRules=new ArrayList<>();
@@ -58,5 +58,5 @@ public class TableRuleInfoVO {
     /**
      * 表字段规则
      */
-    public List<TableRuleInfoVO> fieldRules;
+    public List<TableRuleInfoDTO> fieldRules;
 }

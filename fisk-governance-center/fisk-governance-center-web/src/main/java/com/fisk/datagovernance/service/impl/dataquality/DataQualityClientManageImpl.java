@@ -10,7 +10,7 @@ import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataQualityClientManageService;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
-import com.fisk.datagovernance.vo.dataquality.rule.TableRuleInfoVO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.datagovernance.vo.dataquality.rule.TableRuleTempVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -56,7 +56,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     private NoticeExtendMapper noticeExtendMapper;
 
     @Override
-    public ResultEntity<TableRuleInfoVO> getTableRuleList(int dataSourceId,String tableName) {
+    public ResultEntity<TableRuleInfoDTO> getTableRuleList(int dataSourceId, String tableName) {
         if (dataSourceId==0 || StringUtils.isEmpty(tableName)){
             return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, null);
         }
@@ -248,10 +248,10 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             }
         }
 
-        TableRuleInfoVO tableRule = new TableRuleInfoVO();
+        TableRuleInfoDTO tableRule = new TableRuleInfoDTO();
         tableRule.setName(tableName);
         tableRule.setType(1);
-        List<TableRuleInfoVO> fieldRules = new ArrayList<>();
+        List<TableRuleInfoDTO> fieldRules = new ArrayList<>();
 
         if (CollectionUtils.isNotEmpty(tempVOS)) {
             // 获取表一级的校验规则
@@ -290,7 +290,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 List<String> fieldList = fieldRule.stream().filter(t -> t.moduleType == ModuleTypeEnum.DATACHECK_MODULE).
                         map(TableRuleTempVO::getKey).distinct().collect(Collectors.toList());
                 for (String field : fieldList) {
-                    TableRuleInfoVO fieldRuleInfoVO = new TableRuleInfoVO();
+                    TableRuleInfoDTO fieldRuleInfoVO = new TableRuleInfoDTO();
                     fieldRuleInfoVO.setName(field);
                     fieldRuleInfoVO.setType(2);
                     List<String> ruleValues = fieldRule.stream().filter(t -> t.getKey().equals(field) && t.moduleType == ModuleTypeEnum.DATACHECK_MODULE).

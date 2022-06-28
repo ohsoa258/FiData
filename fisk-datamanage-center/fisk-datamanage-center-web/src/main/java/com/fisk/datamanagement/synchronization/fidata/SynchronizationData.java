@@ -10,7 +10,7 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.datagovernance.client.DataQualityClient;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
-import com.fisk.datagovernance.vo.dataquality.rule.TableRuleInfoVO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.dto.metadatamapatlas.UpdateMetadataMapAtlasDTO;
 import com.fisk.datamanagement.entity.BusinessMetadataConfigPO;
@@ -370,8 +370,8 @@ public class SynchronizationData {
                 MetadataMapAtlasPO po = metadataMapAtlasMapper.selectOne(queryWrapper);
                 String qualifiedName = dbPo.qualifiedName + "_" + dto.tableName;
                 //获取数据质量配置规则
-                TableRuleInfoVO tableRuleInfo = new TableRuleInfoVO();
-                ResultEntity<TableRuleInfoVO> tableRuleList = dataQualityClient.getTableRuleList(dataSourceId, "dim_a_test0524");
+                TableRuleInfoDTO tableRuleInfo = new TableRuleInfoDTO();
+                ResultEntity<TableRuleInfoDTO> tableRuleList = dataQualityClient.getTableRuleList(dataSourceId, "dim_a_test0524");
                 if (tableRuleList.code == ResultEnum.SUCCESS.getCode()) {
                     tableRuleInfo = tableRuleList.data;
                 }
@@ -420,7 +420,7 @@ public class SynchronizationData {
                                     fieldDTO.attributeType,
                                     fieldDTO.atomicId);
                             log.info("add entity column name:", fieldDTO.fieldName + ",guid:" + columnGuid);
-                            Optional<TableRuleInfoVO> first = tableRuleInfo.fieldRules.stream()
+                            Optional<TableRuleInfoDTO> first = tableRuleInfo.fieldRules.stream()
                                     .filter(e -> fieldDTO.fieldName.equals(e.name))
                                     .findFirst();
                             if (first.isPresent()) {
@@ -474,7 +474,7 @@ public class SynchronizationData {
                             String newQualifiedName = po.qualifiedName + "_" + field.fieldName;
                             updateEntity(EntityTypeEnum.RDBMS_COLUMN, fieldData, field.fieldName, newQualifiedName, null, field);
                         }
-                        Optional<TableRuleInfoVO> first = tableRuleInfo.fieldRules.stream()
+                        Optional<TableRuleInfoDTO> first = tableRuleInfo.fieldRules.stream()
                                 .filter(e -> field.fieldName.equals(e.name))
                                 .findFirst();
                         if (first.isPresent()) {
@@ -832,7 +832,7 @@ public class SynchronizationData {
     }
 
     public ResultEnum setBusinessMetaDataAttributeValue(String guid,
-                                                        TableRuleInfoVO tableRuleInfoVO,
+                                                        TableRuleInfoDTO tableRuleInfoDTO,
                                                         List<BusinessMetadataConfigPO> poList) {
         EntityAssociatedMetaDataDTO dto = new EntityAssociatedMetaDataDTO();
         dto.guid = guid;
@@ -843,10 +843,10 @@ public class SynchronizationData {
             JSONObject attributeJson = new JSONObject();
             if ("QualityRules".equals(businessMetaDataName)) {
                 //校验规则
-                attributeJson.put("ValidationRules", tableRuleInfoVO.checkRules);
-                attributeJson.put("CleaningRules", tableRuleInfoVO.filterRules);
-                attributeJson.put("LifeCycle", tableRuleInfoVO.lifecycleRules);
-                attributeJson.put("AlarmSet", tableRuleInfoVO.noticeRules);
+                attributeJson.put("ValidationRules", tableRuleInfoDTO.checkRules);
+                attributeJson.put("CleaningRules", tableRuleInfoDTO.filterRules);
+                attributeJson.put("LifeCycle", tableRuleInfoDTO.lifecycleRules);
+                attributeJson.put("AlarmSet", tableRuleInfoDTO.noticeRules);
             } else if ("BusinessDefinition".equals(businessMetaDataName)) {
                 attributeJson.put("BusinessName", "财务域");
             } else if ("BusinessRules".equals(businessMetaDataName)) {

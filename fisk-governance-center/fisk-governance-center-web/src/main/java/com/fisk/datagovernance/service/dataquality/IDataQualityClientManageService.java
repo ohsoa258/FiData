@@ -2,7 +2,7 @@ package com.fisk.datagovernance.service.dataquality;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
-import com.fisk.datagovernance.vo.dataquality.rule.TableRuleInfoVO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ public interface IDataQualityClientManageService {
     /**
      * 查询数据质量表规则（含字段规则）
      */
-    ResultEntity<TableRuleInfoVO> getTableRuleList(int dataSourceId,String tableName);
+    ResultEntity<TableRuleInfoDTO> getTableRuleList(int dataSourceId, String tableName);
 
     /**
      * 查询数据质量所有数据源信息，含FiData系统数据源
