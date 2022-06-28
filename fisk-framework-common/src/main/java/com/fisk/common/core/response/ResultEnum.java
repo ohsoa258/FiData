@@ -289,7 +289,8 @@ public enum ResultEnum {
     DATA_REPLICATION_FAILED(151024, "数据复制失败"),
     CODE_EXIST(151025, "编码已存在"),
     MANDATE_TIMESTAMP_START(151026, "主数据定时任务开始执行"),
-    MANDATE_TIMESTAMP_SUCCESS(151027, "主数据定时任务执行成功!");
+    MANDATE_TIMESTAMP_SUCCESS(151027, "主数据定时任务执行成功!"),
+    UNCOMMITTED_CANNOT_COPIED(151028, "未提交不能复制!");
 
     ResultEnum(int code, String msg) {
         this.code = code;

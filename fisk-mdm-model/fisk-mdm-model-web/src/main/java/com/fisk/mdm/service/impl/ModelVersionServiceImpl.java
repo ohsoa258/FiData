@@ -116,6 +116,11 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
             return ResultEnum.DATA_NOTEXISTS;
         }
 
+        // 未提交的数据的不能复制
+        if (!modelVersionPo.getStatus().equals(ModelVersionStatusEnum.SUBMITTED)) {
+            return ResultEnum.UNCOMMITTED_CANNOT_COPIED;
+        }
+
         // 1.创建一条版本数据
         ModelVersionPO versionPo = ModelVersionMap.INSTANCES.copyDtoToPo(dto);
         versionPo.setStatus(ModelVersionStatusEnum.OPEN);
