@@ -6,10 +6,7 @@ import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
-import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
-import com.fisk.datafactory.dto.tasknifi.NifiPortsDTO;
-import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
-import com.fisk.datafactory.dto.tasknifi.PortRequestParamDTO;
+import com.fisk.datafactory.dto.tasknifi.*;
 import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
 import com.fisk.task.dto.dispatchlog.PipelStageLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
@@ -132,4 +129,14 @@ public interface DataFactoryClient {
     @ApiOperation("access or model 删除操作时,task要同步删除这些数据")
     @PostMapping("/nifiCustomWorkflowDetail/editByDeleteTable")
     ResultEntity<Object> editByDeleteTable(@Validated @RequestBody List<DeleteTableDetailDTO> list);
+
+    /**
+     * 根据管道主键id,获取redis里面的task结构
+     *
+     * @param id id
+     * @return 执行结果
+     */
+    @GetMapping("/dataFactory/getTaskLinkedList/{id}")
+    @ApiOperation(value = "根据管道主键id,获取reids里面的task结构")
+    ResultEntity<PipeDagDTO> getTaskLinkedList(@PathVariable("id") Long id);
 }

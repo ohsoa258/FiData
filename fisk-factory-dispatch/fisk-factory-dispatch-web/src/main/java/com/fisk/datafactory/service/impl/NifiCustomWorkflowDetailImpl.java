@@ -65,6 +65,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     DataModelClient dataModelClient;
     @Resource
     DataAccessClient dataAccessClient;
+    @Resource
+    DataFactoryImpl dataFactoryImpl;
 
 
     @Override
@@ -163,6 +165,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             }
         }
 
+        // 将当前管道的task结构存入redis
+        dataFactoryImpl.setTaskLinkedList(workflowDTO.id);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, workListDTO);
     }

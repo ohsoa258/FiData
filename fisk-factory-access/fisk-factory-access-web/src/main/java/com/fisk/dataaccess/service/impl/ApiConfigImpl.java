@@ -613,7 +613,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             Date endTime = new Date();
             nifiStageMessageDto.message = msg;
             nifiStageDto.comment = msg;
-            nifiStageMessageDto.nifiStageDTO = nifiStageDto;
             nifiStageMessageDto.startTime = startTime;
             nifiStageMessageDto.endTime = endTime;
             nifiStageMessageDto.counts = COUNT_SQL / 2;
@@ -624,14 +623,18 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 nifiStageDto.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
 
             }
-
             // 非实时日志详情
             if (importDataDto != null) {
                 nifiStageMessageDto.pipelTaskTraceId = importDataDto.pipelTaskTraceId;
                 nifiStageMessageDto.pipelStageTraceId = importDataDto.pipelStageTraceId;
                 nifiStageMessageDto.pipelJobTraceId = importDataDto.pipelJobTraceId;
                 nifiStageMessageDto.pipelTraceId = importDataDto.pipelTraceId;
+                PipelApiDispatchDTO pipelApiDispatchDto = JSON.parseObject(importDataDto.pipelApiDispatch, PipelApiDispatchDTO.class);
+                if (pipelApiDispatchDto != null) {
+                    nifiStageDto.componentId = Integer.parseInt(pipelApiDispatchDto.workflowId);
+                }
             }
+            nifiStageMessageDto.nifiStageDTO = nifiStageDto;
 
             log.info("保存到task的日志信息: " + JSON.toJSONString(nifiStageMessageDto));
             publishTaskClient.saveNifiStage(JSON.toJSONString(nifiStageMessageDto));
@@ -639,7 +642,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             Date endTime = new Date();
             nifiStageMessageDto.message = msg == null ? "运行失败" : msg;
             nifiStageDto.comment = msg == null ? "运行失败" : msg;
-            nifiStageMessageDto.nifiStageDTO = nifiStageDto;
             nifiStageMessageDto.startTime = startTime;
             nifiStageMessageDto.endTime = endTime;
             nifiStageMessageDto.counts = COUNT_SQL;
@@ -650,8 +652,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 nifiStageMessageDto.pipelStageTraceId = importDataDto.pipelStageTraceId;
                 nifiStageMessageDto.pipelJobTraceId = importDataDto.pipelJobTraceId;
                 nifiStageMessageDto.pipelTraceId = importDataDto.pipelTraceId;
+                PipelApiDispatchDTO pipelApiDispatchDto = JSON.parseObject(importDataDto.pipelApiDispatch, PipelApiDispatchDTO.class);
+                if (pipelApiDispatchDto != null) {
+                    nifiStageDto.componentId = Integer.parseInt(pipelApiDispatchDto.workflowId);
+                }
             }
 
+            nifiStageMessageDto.nifiStageDTO = nifiStageDto;
             log.info("保存到task的日志信息: " + JSON.toJSONString(nifiStageMessageDto));
             publishTaskClient.saveNifiStage(JSON.toJSONString(nifiStageMessageDto));
         }
