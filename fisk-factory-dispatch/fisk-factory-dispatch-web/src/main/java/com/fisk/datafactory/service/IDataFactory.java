@@ -91,4 +91,12 @@ public interface IDataFactory {
      * @return 执行结果
      */
     ResultEntity<PipeDagDTO> setTaskLinkedList(Long id);
+
+    /**
+     * 根据管道主键id,获取redis里面的task结构
+     *
+     * @param id id
+     * @return 执行结果
+     */
+    ResultEntity<PipeDagDTO> getTaskLinkedList(Long id);
 }

@@ -455,6 +455,24 @@ public class DataFactoryImpl implements IDataFactory {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, pipeDagDto);
     }
 
+    @Override
+    public ResultEntity<PipeDagDTO> getTaskLinkedList(Long id) {
+
+        boolean flag = redisUtil.hasKey(RedisKeyBuild.buildDispatchStructureKey(id));
+        if (!flag) {
+            // 将task结构存入redis
+            setTaskLinkedList(id);
+        }
+
+        PipeDagDTO dto = null;
+        String taskJson = redisUtil.get(RedisKeyBuild.buildDispatchStructureKey(id)).toString();
+        if (StringUtils.isNotBlank(taskJson)) {
+            dto = JSON.parseObject(taskJson, PipeDagDTO.class);
+
+        }
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dto);
+    }
+
     /**
      * 封装当前组件的其他属性(componentFirstFlag、componentEndFlag、pipeEndFlag、pipeEndDto)
      *

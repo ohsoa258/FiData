@@ -89,4 +89,10 @@ public class DatafactoryController {
     public ResultEntity<PipeDagDTO> setTaskLinkedList(@PathVariable("id") Long id) {
         return service.setTaskLinkedList(id);
     }
+
+    @GetMapping("/getTaskLinkedList/{id}")
+    @ApiOperation(value = "根据管道主键id,获取redis里面的task结构")
+    public ResultEntity<PipeDagDTO> getTaskLinkedList(@PathVariable("id") Long id) {
+        return service.getTaskLinkedList(id);
+    }
 }
