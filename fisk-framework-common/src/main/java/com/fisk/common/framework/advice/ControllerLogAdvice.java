@@ -2,6 +2,7 @@ package com.fisk.common.framework.advice;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.constants.SystemConstants;
+import com.fisk.common.core.constants.TraceConstant;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.JwtUtils;
@@ -39,15 +40,32 @@ public class ControllerLogAdvice {
 
     @Around("within(@org.springframework.web.bind.annotation.RestController *)")
     public Object handleLog(ProceedingJoinPoint jp) throws Throwable {
-        // 设置TraceID
-        String traceId = MDCHelper.setTraceId();
+        // log var
+        long userId = 0L;
+        int remotePort = 0;
+        String remoteAddr = "",
+                requestUrl = "",
+                token = "",
+                traceId = "",
+                spanId = MDCHelper.setSpanId();
+
+        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (requestAttributes != null) {
+            HttpServletRequest request = requestAttributes.getRequest();
+            token = request.getHeader(SystemConstants.HTTP_HEADER_AUTH);
+            if (StringUtils.isNotEmpty(token)) {
+                userId = JwtUtils.getUserIdByToken(secret, token);
+            }
+            remoteAddr = request.getRemoteAddr();
+            remotePort = request.getRemotePort();
+            requestUrl = request.getRequestURI();
+            traceId = request.getHeader(TraceConstant.HTTP_HEADER_TRACE);
+            if (StringUtils.isNotEmpty(traceId)) {
+                MDCHelper.setTraceId(traceId);
+            }
+        }
+
         try {
-            // log var
-            long userId = 0L;
-            int remotePort = 0;
-            String remoteAddr = "",
-                    requestUrl = "",
-                    token = "";
 
             // get method meta
             Class<?> targetClass = jp.getTarget().getClass();
@@ -55,18 +73,6 @@ public class ControllerLogAdvice {
             Method method = targetClass.getMethod(jp.getSignature().getName(), argClass);
             ControllerAOPConfig ano = method.getAnnotation(ControllerAOPConfig.class);
 
-            // get token
-            ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            if (requestAttributes != null) {
-                HttpServletRequest request = requestAttributes.getRequest();
-                token = request.getHeader(SystemConstants.HTTP_HEADER_AUTH);
-                if (StringUtils.isNotEmpty(token)) {
-                    userId = JwtUtils.getUserIdByToken(secret, token);
-                }
-                remoteAddr = request.getRemoteAddr();
-                remotePort = request.getRemotePort();
-                requestUrl = request.getRequestURI();
-            }
             // log
             log.debug("IP: 【{}】, Port: 【{}】, 请求地址: 【{}】, 用户ID: 【{}】, Token: 【{}】", remoteAddr, remotePort, requestUrl, userId, token);
 
@@ -91,7 +97,7 @@ public class ControllerLogAdvice {
                 resultEntity.traceId = traceId;
             }
             log.debug("控制器【{}】调用成功，执行耗时: {} ms", jp.getSignature(), System.currentTimeMillis() - execTime);
-            MDCHelper.removeTraceId();
+            MDCHelper.clear();
             return result;
         } catch (Throwable throwable) {
             log.debug("控制器【{}】执行失败，原因：{}", jp.getSignature(), throwable.toString(), throwable);

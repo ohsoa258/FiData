@@ -9,8 +9,10 @@ import com.fisk.auth.dto.clientregister.ClientRegisterDTO;
 import com.fisk.auth.utils.JwtUtils;
 import com.fisk.common.core.constants.RedisTokenKey;
 import com.fisk.common.core.constants.SystemConstants;
+import com.fisk.common.core.constants.TraceConstant;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.mdc.MDCHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -45,25 +47,20 @@ public class LoginFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
+        // 前端请求开始，创建Trace对象，追踪请求链路信息
+        String traceId = MDCHelper.setTraceId(),
+                spanId = MDCHelper.setSpanId();
+
         // 1.获取Request对象
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
 
-        // 判断是不是swagger
-        if (request.getPath().value().contains(SystemConstants.GATEWAY_SWAGGER_WHITELIST)) {
+        // 把traceId设置到http请求头中
+        request.mutate().header(TraceConstant.HTTP_HEADER_TRACE, traceId).build();
+
+        // 是否跳过登录验证
+        if (hasSkipInterception(request, exchange)) {
             return chain.filter(exchange);
-        }
-        // 判断是不是websocket
-        if (SystemConstants.WEBSOCKET.equals(exchange.getRequest().getHeaders().getUpgrade())) {
-            return chain.filter(exchange);
-        }
-        // 判断是否在白名单中
-        ResultEntity<Boolean> res = authClient.pathIsExists(request.getPath().value());
-        if (res.code == ResultEnum.SUCCESS.getCode() && res.data) {
-            return chain.filter(exchange);
-        } else if (res.code != ResultEnum.SUCCESS.getCode()) {
-            log.error("远程调用失败，方法名：【auth-service:pathIsExists】");
-            return buildResult(response, exchange, ResultEnum.REMOTE_SERVICE_CALLFAILED.getMsg());
         }
 
         // 2. 获取token
@@ -152,6 +149,33 @@ public class LoginFilter implements GlobalFilter, Ordered {
     public int getOrder() {
         // 登录拦截，可以采用最高优先级！
         return HIGHEST_PRECEDENCE;
+    }
+
+    /**
+     * 是否需要跳过网关验证
+     *
+     * @param request  request
+     * @param exchange exchange
+     * @return 是否应该跳过
+     */
+    private boolean hasSkipInterception(ServerHttpRequest request, ServerWebExchange exchange) {
+        // 判断是不是swagger
+        if (request.getPath().value().contains(SystemConstants.GATEWAY_SWAGGER_WHITELIST)) {
+            return true;
+        }
+        // 判断是不是websocket
+        if (SystemConstants.WEBSOCKET.equals(exchange.getRequest().getHeaders().getUpgrade())) {
+            return true;
+        }
+
+        // 判断是否在白名单中
+        ResultEntity<Boolean> res = authClient.pathIsExists(request.getPath().value());
+        if (res.code == ResultEnum.SUCCESS.getCode() && res.data) {
+            return true;
+        } else if (res.code != ResultEnum.SUCCESS.getCode()) {
+            log.error("远程调用失败，方法名：【auth-service:pathIsExists】");
+        }
+        return false;
     }
 
     private Mono<Void> buildResult(ServerHttpResponse response, ServerWebExchange exchange, String str) {
