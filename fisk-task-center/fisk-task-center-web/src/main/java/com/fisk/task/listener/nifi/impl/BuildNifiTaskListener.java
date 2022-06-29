@@ -1059,14 +1059,14 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         tableNifiSettingPO.queryForSupervisionProcessorId = processorEntity.getId();
         processorEntityList.add(processorEntity);
         //转string convertJsonForSupervision
-        /*ProcessorEntity convertJsonForSupervision = convertJsonProcessor(groupId, 2, 6);
+        ProcessorEntity convertJsonForSupervision = specificSymbolProcessor(groupId, null);
         tableNifiSettingPO.convertJsonForSupervisionProcessorId = convertJsonForSupervision.getId();
         componentConnector(groupId, processorEntity.getId(), convertJsonForSupervision.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        processorEntityList.add(convertJsonForSupervision);*/
+        processorEntityList.add(convertJsonForSupervision);
         //发消息
         ProcessorEntity publishKafkaForSupervisionProcessor = createPublishKafkaForSupervisionProcessor(groupId, 6);
         tableNifiSettingPO.publishKafkaForSupervisionProcessorId = publishKafkaForSupervisionProcessor.getId();
-        componentConnector(groupId, processorEntity.getId(), publishKafkaForSupervisionProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        componentConnector(groupId, convertJsonForSupervision.getId(), publishKafkaForSupervisionProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
         processorEntityList.add(publishKafkaForSupervisionProcessor);
         return processorEntityList;
     }
@@ -1844,7 +1844,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
-        buildReplaceTextProcessorDTO.maximumBufferSize="100 MB";
+        buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
         buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(dataCheckSyncDTO);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
         return processorEntityBusinessResult.data;
@@ -2130,7 +2130,22 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         nifiMessage.pipelTaskTraceId = "${pipelTaskTraceId}";
         nifiMessage.pipelJobTraceId = "${pipelJobTraceId}";
         buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(nifiMessage);
-        buildReplaceTextProcessorDTO.maximumBufferSize="100 MB";
+        buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
+    }
+
+    private ProcessorEntity specificSymbolProcessor(String groupId, String cfgDbPoolId) {
+        BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
+        buildReplaceTextProcessorDTO.name = "specificSymbol";
+        buildReplaceTextProcessorDTO.details = "specificSymbol";
+        buildReplaceTextProcessorDTO.groupId = groupId;
+        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(2, 6);
+        //替换流文件
+        buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
+        buildReplaceTextProcessorDTO.replacementValue = "$1:escapJson()";
+        buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;
