@@ -17,6 +17,7 @@ import org.springframework.context.ConfigurableApplicationContext;
         "com.fisk.common.framework.mybatis",
         "com.fisk.common.framework.redis",
         "com.fisk.common.core.user",
+        "com.fisk.common.framework.advice",
         "com.fisk.common.framework.feign",
         "com.fisk.common.framework.exception",
         "com.fisk.common.framework.actuators"},
