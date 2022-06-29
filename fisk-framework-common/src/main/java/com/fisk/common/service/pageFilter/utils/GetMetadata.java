@@ -18,7 +18,7 @@ import java.util.List;
 public class GetMetadata {
 
     private static final String DRIVER = "com.mysql.jdbc.Driver";
-    private static final String URL = "jdbc:mysql://10.220.108.140:13307/";
+    private static final String URL = "jdbc:mysql://192.168.11.130:3306/";
     private static final String USERNAME = "root";
     private static final String PASSWORD = "root123";
     private static final String MYSQL_SUFFIX = "?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true";
