@@ -62,8 +62,7 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
     /**
      * 系统字段
      */
-    String systemColumnName = ",fidata_new_code,fidata_create_time," +
-            "fidata_create_user";
+    String systemColumnName = ",fidata_new_code,fidata_create_time,fidata_create_user";
 
     /**
      * 连接Connection
