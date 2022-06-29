@@ -7,6 +7,8 @@ import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
@@ -256,5 +258,11 @@ public class AppRegistrationController {
     @ApiOperation(value = "刷新数据接入结构")
     public ResultEntity<List<FiDataMetaDataDTO>> setDataAccessStructure(@RequestBody FiDataMetaDataReqDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setDataAccessStructure(dto));
+    }
+
+    @PostMapping("/buildTableRuleInfo")
+    @ApiOperation(value = "构建业务元数据其他数据信息")
+    public ResultEntity<TableRuleInfoDTO> buildTableRuleInfo(@RequestBody TableRuleParameterDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.buildTableRuleInfo(dto));
     }
 }

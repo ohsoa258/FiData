@@ -1,6 +1,8 @@
 package com.fisk.dataaccess.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.dataaccess.dto.access.NifiAccessDTO;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
@@ -244,4 +246,14 @@ public interface DataAccessClient {
      */
     @PostMapping("/appRegistration/getTableAccessQueryList")
     public ResultEntity<OdsResultDTO> getTableAccessQueryList(@RequestBody OdsQueryDTO query);
+
+    /**
+     * 构建业务元数据其他数据信息
+     *
+     * @param dto dto
+     * @return 查询结果
+     */
+    @PostMapping("/appRegistration/buildTableRuleInfo")
+    @ApiOperation(value = "构建业务元数据其他数据信息")
+    ResultEntity<TableRuleInfoDTO> buildTableRuleInfo(@RequestBody TableRuleParameterDTO dto);
 }

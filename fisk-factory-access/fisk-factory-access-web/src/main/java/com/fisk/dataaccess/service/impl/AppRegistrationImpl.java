@@ -18,6 +18,8 @@ import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
@@ -26,6 +28,7 @@ import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
+import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
@@ -767,6 +770,59 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
 
         return list;
+    }
+
+    @Override
+    public TableRuleInfoDTO buildTableRuleInfo(TableRuleParameterDTO dto) {
+
+        TableRuleInfoDTO tableRuleInfoDto = new TableRuleInfoDTO();
+        List<TableRuleInfoDTO> fieldRules = new ArrayList<>();
+
+        TableAccessNonDTO data = tableAccessImpl.getData(dto.getTableId());
+        if (data == null) {
+            return null;
+        }
+        AppRegistrationDTO appRegistrationDto = this.getData(data.appId);
+        if (appRegistrationDto==null) {
+            return null;
+        }
+
+        // 应用名称
+        tableRuleInfoDto.businessName = appRegistrationDto.appName;
+        // 应用负责人
+        tableRuleInfoDto.dataResponsiblePerson = appRegistrationDto.appPrincipal;
+        // 表名
+        tableRuleInfoDto.name = data.tableName;
+        // 类型 1: 表
+        tableRuleInfoDto.type = 1;
+
+        if (!CollectionUtils.isEmpty(data.list)) {
+            StringBuilder transformationRules = new StringBuilder();
+            data.list.stream()
+                    .filter(Objects::nonNull)
+                    .forEach(e -> {
+                        TableRuleInfoDTO tableRuleInfoDtoByField = new TableRuleInfoDTO();
+                        // 应用名称
+                        tableRuleInfoDtoByField.businessName = appRegistrationDto.appName;
+                        // 应用负责人
+                        tableRuleInfoDtoByField.dataResponsiblePerson = appRegistrationDto.appPrincipal;
+                        // 字段名称
+                        tableRuleInfoDtoByField.name = e.fieldName;
+                        // 类型 2: 字段
+                        tableRuleInfoDtoByField.type = 2;
+                        if (!e.fieldName.equalsIgnoreCase(e.sourceFieldName)) {
+                            transformationRules.append(e.sourceFieldName).append("转换").append(e.fieldName).append(",");
+                            // 转换规则
+                            tableRuleInfoDtoByField.transformationRules = transformationRules.deleteCharAt(transformationRules.length() - 1).toString();
+                        }
+                        fieldRules.add(tableRuleInfoDtoByField);
+                    });
+        }
+
+        // 表字段规则
+        tableRuleInfoDto.fieldRules = fieldRules;
+
+        return tableRuleInfoDto;
     }
 
     /**

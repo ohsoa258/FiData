@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
@@ -206,4 +208,12 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return list
      */
     List<FiDataMetaDataDTO> setDataAccessStructure(FiDataMetaDataReqDTO dto);
+
+    /**
+     * 构建业务元数据其他数据信息
+     *
+     * @param dto dto
+     * @return 查询结果
+     */
+    TableRuleInfoDTO buildTableRuleInfo(TableRuleParameterDTO dto);
 }
