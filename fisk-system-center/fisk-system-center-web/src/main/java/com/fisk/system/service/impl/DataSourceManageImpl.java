@@ -33,27 +33,14 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
 
     @Override
     public List<DataSourceDTO> getAll() {
-        List<DataSourceDTO> dataSourceList = new ArrayList<>();
-        QueryWrapper<DataSourcePO> dataSourcePOQueryWrapper = new QueryWrapper<>();
-        dataSourcePOQueryWrapper.lambda().eq(DataSourcePO::getDelFlag, 1);
-        List<DataSourcePO> dataSourcePOS = baseMapper.selectList(dataSourcePOQueryWrapper);
-        if (CollectionUtils.isNotEmpty(dataSourcePOS)) {
-            dataSourcePOS.forEach(t -> {
-                DataSourceDTO dataSourceDTO = new DataSourceDTO();
-                dataSourceDTO.setId(Math.toIntExact(t.getId()));
-                dataSourceDTO.setName(t.getName());
-                dataSourceDTO.setConStr(t.getConStr());
-                dataSourceDTO.setConIp(t.getConIp());
-                dataSourceDTO.setConPort(t.getConPort());
-                dataSourceDTO.setConDbname(t.getConDbname());
-                dataSourceDTO.setConType(DataSourceTypeEnum.getEnum(t.getConType()));
-                dataSourceDTO.setConTypeName(DataSourceTypeEnum.getEnum(t.getConType()).getName());
-                dataSourceDTO.setConAccount(t.getConAccount());
-                //dataSourceDTO.setConPassword(t.getConPassword());
-                dataSourceList.add(dataSourceDTO);
-            });
-        }
-        return dataSourceList;
+        List<DataSourceDTO> all = getAll(true);
+        return all;
+    }
+
+    @Override
+    public List<DataSourceDTO> getAllDataSourec() {
+        List<DataSourceDTO> all = getAll(false);
+        return all;
     }
 
     @Override
@@ -133,6 +120,32 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         dataSourceDTO.setConAccount(t.getConAccount());
         dataSourceDTO.setConPassword(t.getConPassword());
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataSourceDTO);
+    }
+
+    public List<DataSourceDTO> getAll(boolean isShowPwd) {
+        List<DataSourceDTO> dataSourceList = new ArrayList<>();
+        QueryWrapper<DataSourcePO> dataSourcePOQueryWrapper = new QueryWrapper<>();
+        dataSourcePOQueryWrapper.lambda().eq(DataSourcePO::getDelFlag, 1);
+        List<DataSourcePO> dataSourcePOS = baseMapper.selectList(dataSourcePOQueryWrapper);
+        if (CollectionUtils.isNotEmpty(dataSourcePOS)) {
+            dataSourcePOS.forEach(t -> {
+                DataSourceDTO dataSourceDTO = new DataSourceDTO();
+                dataSourceDTO.setId(Math.toIntExact(t.getId()));
+                dataSourceDTO.setName(t.getName());
+                dataSourceDTO.setConStr(t.getConStr());
+                dataSourceDTO.setConIp(t.getConIp());
+                dataSourceDTO.setConPort(t.getConPort());
+                dataSourceDTO.setConDbname(t.getConDbname());
+                dataSourceDTO.setConType(DataSourceTypeEnum.getEnum(t.getConType()));
+                dataSourceDTO.setConTypeName(DataSourceTypeEnum.getEnum(t.getConType()).getName());
+                dataSourceDTO.setConAccount(t.getConAccount());
+                if (isShowPwd) {
+                    dataSourceDTO.setConPassword(t.getConPassword());
+                }
+                dataSourceList.add(dataSourceDTO);
+            });
+        }
+        return dataSourceList;
     }
 
 //    @Override

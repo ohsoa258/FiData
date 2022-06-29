@@ -30,9 +30,15 @@ public class DataSourceController {
     private IDataSourceManageService service;
 
     @PostMapping("/getAll")
-    @ApiOperation("获取所有数据源连接信息")
+    @ApiOperation("获取所有数据源连接信息,外部接口")
     public ResultEntity<List<DataSourceDTO>> getAll() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAll());
+    }
+
+    @PostMapping("/getAllDataSourec")
+    @ApiOperation("获取所有数据源连接信息")
+    public ResultEntity<List<DataSourceDTO>> getAllDataSourec() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllDataSourec());
     }
 
     @PutMapping("/edit")

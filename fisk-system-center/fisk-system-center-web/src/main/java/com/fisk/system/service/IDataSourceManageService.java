@@ -26,6 +26,13 @@ public interface IDataSourceManageService extends IService<DataSourcePO> {
     List<DataSourceDTO> getAll();
 
     /**
+     * 获取全部数据源
+     *
+     * @return 查询结果
+     */
+    List<DataSourceDTO> getAllDataSourec();
+
+    /**
      * 更新数据
      *
      * @param dto dto
