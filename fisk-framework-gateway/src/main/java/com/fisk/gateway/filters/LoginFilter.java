@@ -101,7 +101,7 @@ public class LoginFilter implements GlobalFilter, Ordered {
                     // 3.3.刷新jwt
                     jwtUtils.refreshJwt(userInfo.getId());
                 }
-                log.info("用户{}正在访问{}", userInfo.getUserAccount(), request.getURI().getPath());
+                log.info("用户: {}, 正在访问: {}", userInfo.getUserAccount(), request.getURI().getPath());
             } catch (Exception e) {
                 // 3.2客户端注册的token解析
                 payload = jwtUtils.parseClientRegisterJwt(token);
@@ -125,7 +125,7 @@ public class LoginFilter implements GlobalFilter, Ordered {
                             return buildResult(response, exchange, "当前token已禁用或删除,请联系管理员");
                         }
                     }
-                    log.info("客户端{}正在访问{}", userInfo.getUserAccount(), request.getURI().getPath());
+                    log.info("客户端: {}, 正在访问: {}", userInfo.getUserAccount(), request.getURI().getPath());
                 } else { // 两种情况会执行到else: 1: feign接口调用失败, 2: 当前客户端已删除,auth模块执行catch
                     // 远程调用失败
                     return buildResult(response, exchange, authClientData.msg);
