@@ -11,8 +11,22 @@ eureka:
   client:
     fetch-registry: false # 不注册自己
     register-with-eureka: false  # 不去注册中心获取其他服务的地址
+    # 服务端地址
     service-url:
       defaultZone: http://127.0.0.1:8082/eureka # 域名地址,与上面的服务名不是一个意思
+
+  server:
+    # 是否开启自我保护模式
+    enable-self-preservation: false
+    # 定时检查实例的时间, 如果在客户端lease-expiration-duration-in-seconds配置的时间内，未收到实例心跳则注销该实例
+    eviction-interval-timer-in-ms: 5000
+    # 间隔多长时间，清除过期的 delta 数据
+    delta-retention-timer-interval-in-ms: 1000
+    # 关闭三级缓存，让客户端直接从二级缓存去读取，省去各缓存之间的同步的时间
+    use-read-only-response-cache: false
+      # eureka server刷新readCacheMap的时间，注意，client读取的是readCacheMap，这个时间决定了多久会把readWriteCacheMap的缓存更新到readCacheMap上
+      # response-cache-update-interval-ms: 3000
+
 fk:
   jwt:
     key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥

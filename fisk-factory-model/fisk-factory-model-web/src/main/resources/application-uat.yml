@@ -33,12 +33,6 @@ generate:
       userName: postgres
       password: PgPassword01!
 
-#注册中心
-eureka:
-  client:
-    service-url:
-      defaultZone: http://127.0.0.1:8082/eureka
-
 #feign接口超时配置
 feign:
   client:
