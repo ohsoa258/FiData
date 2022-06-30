@@ -313,8 +313,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
             dispatchExceptionHandlingDTO.pipelStageTraceId = kafkaReceiveDTO.pipelStageTraceId;
             dispatchExceptionHandlingDTO.pipelTaskTraceId = kafkaReceiveDTO.pipelTaskTraceId;
             iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
-            log.error("管道调度报错");
-            e.printStackTrace();
+            log.error("管道调度报错" + e);
         } finally {
             if (acke != null) {
                 acke.acknowledge();
@@ -324,7 +323,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
 
     @Override
     public NifiPortsHierarchyDTO getNifiPortHierarchy(NifiGetPortHierarchyDTO nifiGetPortHierarchy, String pipelTraceId) {
-        log.info("查询dag图参数:{},pipelTraceId:{}", JSON.toJSONString(nifiGetPortHierarchy), pipelTraceId);
+        log.info("查询部分dag图参数:{},pipelTraceId:{}", JSON.toJSONString(nifiGetPortHierarchy), pipelTraceId);
         PipeDagDTO data = this.getPipeDagDto(nifiGetPortHierarchy, pipelTraceId);
         if (data != null && data.nifiPortsHierarchyDtos != null) {
             List<NifiPortsHierarchyDTO> nifiPortsHierarchyDtos = data.nifiPortsHierarchyDtos;
@@ -362,6 +361,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
             }
         }
         data.pipelTraceId = pipelTraceId;
+        log.info("该管道dag图:{}"+JSON.toJSONString(data));
         return data;
     }
 

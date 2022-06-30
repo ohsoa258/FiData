@@ -1267,8 +1267,8 @@ public class NiFiHelperImpl implements INiFiHelper {
             portRunStatusEntity.setDisconnectedNodeAcknowledged(true);
             try {
                 NifiHelper.getOutputPortsApi().updateRunStatus(portEntity.getId(), portRunStatusEntity);
-            } catch (ApiException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                log.error("系统异常" + e);
             }
         }
 
@@ -1286,7 +1286,7 @@ public class NiFiHelperImpl implements INiFiHelper {
             try {
                 NifiHelper.getInputPortsApi().updateRunStatus(portEntity.getId(), portRunStatusEntity);
             } catch (ApiException e) {
-                e.printStackTrace();
+                log.error("系统异常" + e);
             }
         }
         return ResultEnum.SUCCESS;
@@ -2117,7 +2117,7 @@ public class NiFiHelperImpl implements INiFiHelper {
             processorRunStatusEntity.setState(com.davis.client.model.ProcessorRunStatusEntity.StateEnum.STOPPED);
             NifiHelper.getProcessorsApi().updateRunStatus(processor.getId(), processorRunStatusEntity);
         } catch (ApiException e) {
-            e.printStackTrace();
+            log.error("系统异常" + e);
         }
     }
 

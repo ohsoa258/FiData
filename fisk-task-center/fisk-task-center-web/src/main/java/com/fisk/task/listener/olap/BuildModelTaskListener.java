@@ -108,7 +108,7 @@ public class BuildModelTaskListener {
                 modelPublishStatusDTO.id = Math.toIntExact(tableId);
                 client.updateFactPublishStatus(modelPublishStatusDTO);
             }
-            e.printStackTrace();
+            log.error("系统异常" + e);
             return ResultEnum.ERROR;
         } finally {
             acke.acknowledge();

@@ -73,8 +73,7 @@ public class BuildWideTableTaskListener {
             pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
             return ResultEnum.SUCCESS;
         } catch (Exception e) {
-            log.error("宽表创建失败");
-            e.printStackTrace();
+            log.error("宽表创建失败" + e);
             modelPublishStatusDTO.status = PublicStatusEnum.PUBLIC_FAILURE.getValue();
             return ResultEnum.ERROR;
         } finally {

@@ -131,7 +131,7 @@ public class TriggerScheduling implements ITriggerScheduling {
             }
             return ResultEnum.SUCCESS;
         } catch (ApiException e) {
-            e.printStackTrace();
+            log.error("系统异常" + e);
             return ResultEnum.ERROR;
         } finally {
             acknowledgment.acknowledge();

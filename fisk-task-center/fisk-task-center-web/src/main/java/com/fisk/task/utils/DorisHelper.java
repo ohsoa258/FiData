@@ -26,11 +26,9 @@ public class DorisHelper {
             Class.forName(driver);
             conn = DriverManager.getConnection(url, username, password);
         } catch (ClassNotFoundException e) {
-            System.out.println("找不到驱动程序类 ，加载驱动失败！");
-            e.printStackTrace();
+            System.out.println("找不到驱动程序类 ，加载驱动失败！" + e);
         } catch (SQLException e) {
-            System.out.println("数据库连接失败！");
-            e.printStackTrace();
+            System.out.println("数据库连接失败！" + e);
         }
         return conn;
     }

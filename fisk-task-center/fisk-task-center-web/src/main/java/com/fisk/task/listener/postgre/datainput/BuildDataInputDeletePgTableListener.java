@@ -75,7 +75,7 @@ public class BuildDataInputDeletePgTableListener {
             }
             return ResultEnum.SUCCESS;
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("系统异常" + e);
             return ResultEnum.ERROR;
         } finally {
             acke.acknowledge();

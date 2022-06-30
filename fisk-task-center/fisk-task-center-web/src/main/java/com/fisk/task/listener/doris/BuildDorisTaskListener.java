@@ -126,7 +126,7 @@ public class BuildDorisTaskListener {
             return resultEnum;
         } catch (Exception e) {
             resultEnum = ResultEnum.ERROR;
-            e.printStackTrace();
+            log.error("系统异常" + e);
             return resultEnum;
         } finally {
             acke.acknowledge();

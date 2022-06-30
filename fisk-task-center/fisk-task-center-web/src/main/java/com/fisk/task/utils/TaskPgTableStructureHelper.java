@@ -219,7 +219,7 @@ public class TaskPgTableStructureHelper
                             rs.close();
                         }
                     }catch(SQLException e){
-                        e.printStackTrace();
+                        log.error("系统异常" + e);
                     }
                 }
             }

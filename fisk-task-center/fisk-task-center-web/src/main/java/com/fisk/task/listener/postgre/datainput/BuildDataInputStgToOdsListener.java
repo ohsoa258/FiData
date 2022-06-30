@@ -59,7 +59,7 @@ public class BuildDataInputStgToOdsListener {
             try {
                 nextExecTime = getNextExecTime(expressiion, 1);
             } catch (ParseException e) {
-                e.printStackTrace();
+                log.error("系统异常" + e);
             }
             nextExecTime.stream().forEach(d -> {
                 System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d));

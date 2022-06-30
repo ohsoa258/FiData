@@ -63,7 +63,7 @@ public class DorisBuildImpl implements IDorisBuild {
 
         } catch (Exception e) {
             //捕捉错误
-            e.printStackTrace();
+            log.error("系统异常" + e);
             msg = e.getMessage();
             throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
         } finally {

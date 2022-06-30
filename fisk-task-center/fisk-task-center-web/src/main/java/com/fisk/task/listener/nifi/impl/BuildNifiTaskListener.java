@@ -285,7 +285,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             resultEnum = ResultEnum.ERROR;
             modelPublishStatusDTO.publish = 2;
             client.updateTablePublishStatus(modelPublishStatusDTO);
-            e.printStackTrace();
             log.error("nifi流程创建失败" + e);
             return resultEnum;
         } finally {
@@ -812,7 +811,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.STOPPED);
             NifiHelper.getProcessorsApi().updateRunStatus(processorEntity.getId(), processorRunStatusEntity);
         } catch (ApiException e) {
-            e.printStackTrace();
+            log.error("系统异常" + e);
             throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR);
         }
         //componentConnector(groupId, consumeKafkaProcessor.getId(), queryField.getId(), AutoEndBranchTypeEnum.SUCCESS);

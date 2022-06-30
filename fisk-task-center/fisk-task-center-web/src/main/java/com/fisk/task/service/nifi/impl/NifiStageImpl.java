@@ -274,7 +274,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
             dispatchExceptionHandlingDTO.pipelStageTraceId = nifiStageMessageDTO.pipelStageTraceId;
             dispatchExceptionHandlingDTO.pipelTaskTraceId = nifiStageMessageDTO.pipelTaskTraceId;
             iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
-            e.printStackTrace();
+            log.error("系统异常" + e);
         } finally {
             if (acke != null) {
                 acke.acknowledge();

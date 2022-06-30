@@ -131,8 +131,7 @@ public class BuildDataInputPgTableListener {
                 modelPublishStatusDTO.publish = PublishTypeEnum.FAIL.getValue();
                 dc.updateApiPublishStatus(modelPublishStatusDTO);
             }
-            log.error("创建表失败");
-            e.printStackTrace();
+            log.error("创建表失败" + e);
             return ResultEnum.ERROR;
         } finally {
             acke.acknowledge();
@@ -158,7 +157,7 @@ public class BuildDataInputPgTableListener {
         try {
             expr = new CronExpression("0 25 20 * * ?");
         } catch (ParseException e) {
-            e.printStackTrace();
+            log.error("系统异常" + e);
         }
         System.out.println(expr.getNextValidTimeAfter(new Date()));
         System.out.println(expr.getTimeZone());

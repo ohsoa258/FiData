@@ -234,7 +234,7 @@ public class KafkaConsumer {
             }
             return ResultEntityBuild.build(ResultEnum.SUCCESS);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("系统异常" + e);
             return ResultEntityBuild.build(ResultEnum.ERROR);
         } finally {
             acke.acknowledge();

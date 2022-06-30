@@ -212,8 +212,7 @@ public class BuildDataModelDorisTableListener
             }
             return result;
         } catch (Exception e) {
-            log.error("dw发布失败,表id为" + id);
-            e.printStackTrace();
+            log.error("dw发布失败,表id为" + id + e);
             if (tableType == 0) {
                 modelPublishStatusDTO.status = 1;
                 modelPublishStatusDTO.id = Math.toIntExact(id);

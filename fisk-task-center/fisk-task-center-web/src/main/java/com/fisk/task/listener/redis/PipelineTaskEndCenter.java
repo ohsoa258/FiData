@@ -221,7 +221,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                 iPipelTaskLog.savePipelTaskLog(null, taskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("系统异常" + e);
             DispatchExceptionHandlingDTO dto = new DispatchExceptionHandlingDTO();
             dto.pipelTraceId = pipelTraceId;
             dto.pipelJobTraceId = thisPipelJobTraceId;
