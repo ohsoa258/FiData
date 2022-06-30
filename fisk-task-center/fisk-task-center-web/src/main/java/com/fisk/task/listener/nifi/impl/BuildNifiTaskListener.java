@@ -48,6 +48,7 @@ import com.fisk.task.service.pipeline.impl.NifiConfigServiceImpl;
 import com.fisk.task.utils.KafkaTemplateHelper;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
+import com.fisk.task.utils.StackTraceHelper;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -285,7 +286,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             resultEnum = ResultEnum.ERROR;
             modelPublishStatusDTO.publish = 2;
             client.updateTablePublishStatus(modelPublishStatusDTO);
-            log.error("nifi流程创建失败" + e);
+            log.error("nifi流程创建失败" + StackTraceHelper.getStackTraceInfo(e));
             return resultEnum;
         } finally {
             ack.acknowledge();
@@ -811,7 +812,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.STOPPED);
             NifiHelper.getProcessorsApi().updateRunStatus(processorEntity.getId(), processorRunStatusEntity);
         } catch (ApiException e) {
-            log.error("系统异常" + e);
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR);
         }
         //componentConnector(groupId, consumeKafkaProcessor.getId(), queryField.getId(), AutoEndBranchTypeEnum.SUCCESS);

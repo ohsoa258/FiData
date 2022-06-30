@@ -7,6 +7,7 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.service.doris.IDorisBuild;
+import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
@@ -126,7 +127,7 @@ public class BuildDorisTaskListener {
             return resultEnum;
         } catch (Exception e) {
             resultEnum = ResultEnum.ERROR;
-            log.error("系统异常" + e);
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             return resultEnum;
         } finally {
             acke.acknowledge();

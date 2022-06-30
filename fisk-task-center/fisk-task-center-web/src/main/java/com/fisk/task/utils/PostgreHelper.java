@@ -47,9 +47,9 @@ public class PostgreHelper {
             Class.forName(pgsqlDriverClassName);
             conn = DriverManager.getConnection(url, pgsqlUsername, pgsqlPassword);
         } catch (ClassNotFoundException e) {
-            System.out.println("找不到驱动程序类 ，加载驱动失败！" + e);
+            System.out.println("找不到驱动程序类 ，加载驱动失败！" + StackTraceHelper.getStackTraceInfo(e));
         } catch (SQLException e) {
-            System.out.println("数据库连接失败！" + e);
+            System.out.println("数据库连接失败！" + StackTraceHelper.getStackTraceInfo(e));
         }
         return conn;
     }
@@ -169,7 +169,7 @@ public class PostgreHelper {
                 conn.close();
             } catch (SQLException e) {
                 // TODO Auto-generated catch block
-                log.error("系统异常" + e);
+                log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             }
         }
     }
@@ -181,7 +181,7 @@ public class PostgreHelper {
                 stmt.close();
             } catch (SQLException e) {
                 // TODO Auto-generated catch block
-                log.error("系统异常" + e);
+                log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             }
         }
     }
@@ -193,7 +193,7 @@ public class PostgreHelper {
                 rs.close();
             } catch (SQLException e) {
                 // TODO Auto-generated catch block
-                log.error("系统异常" + e);
+                log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             }
         }
     }

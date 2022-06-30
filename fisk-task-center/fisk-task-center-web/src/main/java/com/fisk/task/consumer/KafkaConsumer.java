@@ -31,6 +31,7 @@ import com.fisk.task.mapper.PipelineTableLogMapper;
 import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.pipeline.ITableTopicService;
+import com.fisk.task.utils.StackTraceHelper;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -234,7 +235,7 @@ public class KafkaConsumer {
             }
             return ResultEntityBuild.build(ResultEnum.SUCCESS);
         } catch (Exception e) {
-            log.error("系统异常" + e);
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEntityBuild.build(ResultEnum.ERROR);
         } finally {
             acke.acknowledge();

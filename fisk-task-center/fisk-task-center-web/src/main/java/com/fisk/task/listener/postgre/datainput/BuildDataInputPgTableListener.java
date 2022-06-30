@@ -13,6 +13,7 @@ import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.service.nifi.IPostgreBuild;
+import com.fisk.task.utils.StackTraceHelper;
 import com.fisk.task.utils.TaskPgTableStructureHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.CronExpression;
@@ -131,7 +132,7 @@ public class BuildDataInputPgTableListener {
                 modelPublishStatusDTO.publish = PublishTypeEnum.FAIL.getValue();
                 dc.updateApiPublishStatus(modelPublishStatusDTO);
             }
-            log.error("创建表失败" + e);
+            log.error("创建表失败" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.ERROR;
         } finally {
             acke.acknowledge();
@@ -157,7 +158,7 @@ public class BuildDataInputPgTableListener {
         try {
             expr = new CronExpression("0 25 20 * * ?");
         } catch (ParseException e) {
-            log.error("系统异常" + e);
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
         }
         System.out.println(expr.getNextValidTimeAfter(new Date()));
         System.out.println(expr.getTimeZone());

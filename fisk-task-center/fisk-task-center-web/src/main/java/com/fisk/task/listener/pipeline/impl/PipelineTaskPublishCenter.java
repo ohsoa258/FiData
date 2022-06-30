@@ -31,6 +31,7 @@ import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.pipeline.ITableTopicService;
 import com.fisk.task.utils.KafkaTemplateHelper;
+import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.Acknowledgment;
@@ -313,7 +314,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
             dispatchExceptionHandlingDTO.pipelStageTraceId = kafkaReceiveDTO.pipelStageTraceId;
             dispatchExceptionHandlingDTO.pipelTaskTraceId = kafkaReceiveDTO.pipelTaskTraceId;
             iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
-            log.error("管道调度报错" + e);
+            log.error("管道调度报错" + StackTraceHelper.getStackTraceInfo(e));
         } finally {
             if (acke != null) {
                 acke.acknowledge();
@@ -324,6 +325,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
     @Override
     public NifiPortsHierarchyDTO getNifiPortHierarchy(NifiGetPortHierarchyDTO nifiGetPortHierarchy, String pipelTraceId) {
         log.info("查询部分dag图参数:{},pipelTraceId:{}", JSON.toJSONString(nifiGetPortHierarchy), pipelTraceId);
+        NifiPortsHierarchyDTO nifiPortsHierarchy = new NifiPortsHierarchyDTO();
         PipeDagDTO data = this.getPipeDagDto(nifiGetPortHierarchy, pipelTraceId);
         if (data != null && data.nifiPortsHierarchyDtos != null) {
             List<NifiPortsHierarchyDTO> nifiPortsHierarchyDtos = data.nifiPortsHierarchyDtos;
@@ -331,12 +333,18 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                     .filter(e -> e.itselfPort.tableId == nifiGetPortHierarchy.tableId && e.itselfPort.componentType.equals(nifiGetPortHierarchy.channelDataEnum.getName())
                     ).collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(collect)) {
-                return collect.get(0);
+                nifiPortsHierarchy = collect.get(0);
             }
         } else {
             log.error("调度模块无此调度的dag图");
         }
-        return null;
+        if (Objects.isNull(nifiPortsHierarchy) || Objects.isNull(nifiPortsHierarchy.itselfPort)) {
+            ResultEntity<NifiPortsHierarchyDTO> nifiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchy);
+            if (Objects.equals(nifiPortHierarchy.code, ResultEnum.SUCCESS.getCode())) {
+                nifiPortsHierarchy = nifiPortHierarchy.data;
+            }
+        }
+        return nifiPortsHierarchy;
     }
 
     @Override
@@ -361,7 +369,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
             }
         }
         data.pipelTraceId = pipelTraceId;
-        log.info("该管道dag图:{}"+JSON.toJSONString(data));
+        log.info("该管道dag图:{}", JSON.toJSONString(data));
         return data;
     }
 

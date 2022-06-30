@@ -7,6 +7,7 @@ import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import com.fisk.task.service.doris.IDorisBuild;
 import com.fisk.task.utils.PostgreHelper;
+import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
@@ -59,7 +60,7 @@ public class BuildDataInputDeletePgTableListener {
                 } else {
                     inputData.tableList.forEach((t) -> {
                         buildDelSqlStr.append(t.tableName + ", ");
-                        buildDelSqlStr.append("stg_"+t.tableName + ", ");
+                        buildDelSqlStr.append("stg_" + t.tableName + ", ");
                         conditionHashMap.put("table_name", t.tableName);
                         taskPgTableStructureMapper.deleteByMap(conditionHashMap);
                     });
@@ -73,7 +74,7 @@ public class BuildDataInputDeletePgTableListener {
             }
             return ResultEnum.SUCCESS;
         } catch (Exception e) {
-            log.error("系统异常" + e);
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.ERROR;
         } finally {
             acke.acknowledge();

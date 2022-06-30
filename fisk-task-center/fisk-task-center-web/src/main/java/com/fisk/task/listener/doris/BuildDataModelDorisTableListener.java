@@ -43,6 +43,7 @@ import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.service.pipeline.impl.NifiConfigServiceImpl;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
+import com.fisk.task.utils.StackTraceHelper;
 import com.fisk.task.utils.TaskPgTableStructureHelper;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -212,7 +213,7 @@ public class BuildDataModelDorisTableListener
             }
             return result;
         } catch (Exception e) {
-            log.error("dw发布失败,表id为" + id + e);
+            log.error("dw发布失败,表id为" + id + StackTraceHelper.getStackTraceInfo(e));
             if (tableType == 0) {
                 modelPublishStatusDTO.status = 1;
                 modelPublishStatusDTO.id = Math.toIntExact(id);

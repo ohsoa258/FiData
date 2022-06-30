@@ -26,6 +26,7 @@ import com.fisk.task.service.dispatchLog.IPipelJobLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.utils.KafkaTemplateHelper;
+import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.data.redis.connection.Message;
@@ -221,7 +222,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                 iPipelTaskLog.savePipelTaskLog(null, taskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
             }
         } catch (Exception e) {
-            log.error("系统异常" + e);
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             DispatchExceptionHandlingDTO dto = new DispatchExceptionHandlingDTO();
             dto.pipelTraceId = pipelTraceId;
             dto.pipelJobTraceId = thisPipelJobTraceId;

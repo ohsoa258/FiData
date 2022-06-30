@@ -39,6 +39,7 @@ import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.service.pipeline.impl.*;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
+import com.fisk.task.utils.StackTraceHelper;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import com.fisk.task.utils.nifi.NiFiHelperImpl;
 import com.google.gson.Gson;
@@ -132,7 +133,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
         } catch (Exception e) {
             nifiCustomWorkflowDTO.status = PipelineStatuTypeEnum.failure_publish.getValue();
             dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
-            log.info("此组启动失败" + e);
+            log.info("此组启动失败" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.ERROR;
         } finally {
             acke.acknowledge();
@@ -172,7 +173,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
 
             //emptyNifiConnectionQueue
         } catch (Exception e) {
-            log.info("此组删除失败:" + appComponentId + " " + e);
+            log.info("此组删除失败:" + appComponentId + " " + StackTraceHelper.getStackTraceInfo(e));
             nifiCustomWorkflowDTO.status = PipelineStatuTypeEnum.failure_publish.getValue();
             dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
         }
@@ -675,7 +676,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.RUNNING);
             NifiHelper.getFlowApi().scheduleComponents(groupStructure, scheduleComponentsEntity);
         } catch (Exception e) {
-            log.error("组id:" + groupStructure + "停止失败" + e);
+            log.error("组id:" + groupStructure + "停止失败" + StackTraceHelper.getStackTraceInfo(e));
             nifiCustomWorkflowDTO.status = PipelineStatuTypeEnum.failure_publish.getValue();
             dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
         }
@@ -747,7 +748,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             log.info("组件详情1:" + id);
             return processor;
         } catch (Exception e) {
-            log.error("系统异常" + e);
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             throw new FkException(ResultEnum.TASK_PUBLISH_ERROR);
         }
     }
@@ -770,7 +771,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                 }
             }
         } catch (Exception e) {
-            log.error("系统异常" + e);
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             throw new FkException(ResultEnum.TASK_PUBLISH_ERROR);
         }
 
@@ -985,7 +986,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             buildNifiTaskListener.buildPortConnection(groupId, groupId, pipelineConfigurationPO.outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
                     groupId, waitProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR, 3, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
         } catch (Exception e) {
-            log.error("系统异常" + e);
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
         }
     }
 
@@ -1207,7 +1208,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                 }
             }
         } catch (Exception e) {
-            log.error("系统异常" + e);
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
         }
     }
 
@@ -1257,7 +1258,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                 NifiHelper.getProcessGroupsApi().removeProcessGroup(appComponentId, String.valueOf(processGroup.getRevision().getVersion()), processGroup.getRevision().getClientId(), false);
             }
         } catch (Exception e) {
-            log.info("此组删除失败:" + appComponentId + " " + e);
+            log.info("此组删除失败:" + appComponentId + " " + StackTraceHelper.getStackTraceInfo(e));
         }
     }
 

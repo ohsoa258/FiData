@@ -36,6 +36,7 @@ import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.service.pipeline.impl.TableTopicImpl;
 import com.fisk.task.utils.NifiHelper;
+import com.fisk.task.utils.StackTraceHelper;
 import com.fisk.task.vo.ProcessGroupsVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -1268,7 +1269,7 @@ public class NiFiHelperImpl implements INiFiHelper {
             try {
                 NifiHelper.getOutputPortsApi().updateRunStatus(portEntity.getId(), portRunStatusEntity);
             } catch (Exception e) {
-                log.error("系统异常" + e);
+                log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             }
         }
 
@@ -1286,7 +1287,7 @@ public class NiFiHelperImpl implements INiFiHelper {
             try {
                 NifiHelper.getInputPortsApi().updateRunStatus(portEntity.getId(), portRunStatusEntity);
             } catch (ApiException e) {
-                log.error("系统异常" + e);
+                log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             }
         }
         return ResultEnum.SUCCESS;
@@ -2117,7 +2118,7 @@ public class NiFiHelperImpl implements INiFiHelper {
             processorRunStatusEntity.setState(com.davis.client.model.ProcessorRunStatusEntity.StateEnum.STOPPED);
             NifiHelper.getProcessorsApi().updateRunStatus(processor.getId(), processorRunStatusEntity);
         } catch (ApiException e) {
-            log.error("系统异常" + e);
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
         }
     }
 

@@ -10,6 +10,7 @@ import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.task.dto.doris.UpdateLogAndImportDataDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.nifi.IPostgreBuild;
+import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.TriggerUtils;
 import org.quartz.impl.triggers.CronTriggerImpl;
@@ -59,7 +60,7 @@ public class BuildDataInputStgToOdsListener {
             try {
                 nextExecTime = getNextExecTime(expressiion, 1);
             } catch (ParseException e) {
-                log.error("系统异常" + e);
+                log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             }
             nextExecTime.stream().forEach(d -> {
                 System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d));

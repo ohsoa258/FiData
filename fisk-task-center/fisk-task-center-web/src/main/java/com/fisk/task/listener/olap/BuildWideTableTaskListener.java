@@ -17,6 +17,7 @@ import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.service.doris.IDorisBuild;
 import com.fisk.task.service.task.impl.TBETLIncrementalImpl;
+import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
@@ -73,7 +74,7 @@ public class BuildWideTableTaskListener {
             pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
             return ResultEnum.SUCCESS;
         } catch (Exception e) {
-            log.error("宽表创建失败" + e);
+            log.error("宽表创建失败" + StackTraceHelper.getStackTraceInfo(e));
             modelPublishStatusDTO.status = PublicStatusEnum.PUBLIC_FAILURE.getValue();
             return ResultEnum.ERROR;
         } finally {
