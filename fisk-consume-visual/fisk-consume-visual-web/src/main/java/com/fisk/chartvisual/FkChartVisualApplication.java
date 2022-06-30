@@ -1,6 +1,5 @@
 package com.fisk.chartvisual;
 
-import com.ctrip.framework.apollo.spring.annotation.EnableApolloConfig;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -20,7 +19,6 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.common.framework.actuators"})
 @MapperScan("com.fisk.chartvisual.mapper")
 @EnableFeignClients(basePackages = {"com.fisk.auth.client", "com.fisk.task.client","com.fisk.datamodel.client"})
-@EnableApolloConfig
 public class FkChartVisualApplication {
     public static void main(String[] args) {
         SpringApplication.run(FkChartVisualApplication.class, args);
