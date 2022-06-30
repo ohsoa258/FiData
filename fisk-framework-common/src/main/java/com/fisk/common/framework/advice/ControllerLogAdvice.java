@@ -16,6 +16,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StopWatch;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -40,6 +41,8 @@ public class ControllerLogAdvice {
 
     @Around("within(@org.springframework.web.bind.annotation.RestController *)")
     public Object handleLog(ProceedingJoinPoint jp) throws Throwable {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
         // log var
         long userId = 0L;
         int remotePort = 0;
@@ -96,11 +99,13 @@ public class ControllerLogAdvice {
                 ResultEntity resultEntity = (ResultEntity) result;
                 resultEntity.traceId = traceId;
             }
-            log.debug("控制器【{}】调用成功，执行耗时: {} ms", jp.getSignature(), System.currentTimeMillis() - execTime);
+            stopWatch.stop();
+            log.debug("控制器【{}】调用成功，执行耗时: {} ms", jp.getSignature(), stopWatch.getTotalTimeMillis());
             MDCHelper.clear();
             return result;
         } catch (Throwable throwable) {
-            log.debug("控制器【{}】执行失败，原因：{}", jp.getSignature(), throwable.toString(), throwable);
+            stopWatch.stop();
+            log.debug("控制器【{}】执行失败，执行耗时: {} ms，原因：{}", jp.getSignature(), stopWatch.getTotalTimeMillis(), throwable.toString(), throwable);
             //出现异常不清除mdc，等待全局异常拦截处清理
             if (throwable instanceof FkException) {
                 throw throwable;
