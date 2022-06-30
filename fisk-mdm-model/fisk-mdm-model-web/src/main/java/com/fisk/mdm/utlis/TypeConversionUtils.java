@@ -170,4 +170,12 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
     }
+
+    public static MapTypeEnum intToMapTypeEnum(Integer value){
+        if (value == null){
+            return null;
+        }
+
+        return MapTypeEnum.values()[value];
+    }
 }

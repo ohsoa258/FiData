@@ -35,6 +35,7 @@ public interface AttributeMap {
             @Mapping(source = "enableReadonly" ,target = "enableReadonly"),
             @Mapping(source = "enableRequired" ,target = "enableRequired"),
             @Mapping(source = "mdmType" , target = "mdmType"),
+            @Mapping(source = "mapType" , target = "mapType"),
             @Mapping(source = "dataType" , target = "dataType"),
             @Mapping(source = "status" ,target = "status")
     })
@@ -128,6 +129,7 @@ public interface AttributeMap {
             @Mapping(source = "enableReadonly" ,target = "enableReadonly"),
             @Mapping(source = "enableRequired" ,target = "enableRequired"),
             @Mapping(source = "mdmType" , target = "mdmType"),
+            @Mapping(source = "mapType" , target = "mapType"),
             @Mapping(source = "dataType" , target = "dataType"),
             @Mapping(source = "status" ,target = "status")
     })

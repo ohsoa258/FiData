@@ -62,6 +62,11 @@ public class AttributePO extends BasePO {
     private DataTypeEnum dataType;
 
     /**
+     * 地图类型：0高德地图，1百度地图
+     */
+    private MapTypeEnum mapType;
+
+    /**
      * 数据类型长度
      */
     private Integer dataTypeLength;

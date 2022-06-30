@@ -126,6 +126,11 @@ public class AttributeInfoDTO extends BaseUserInfoVO {
     private String mdmType;
 
     /**
+     * 地图类型：0高德地图，1百度地图
+     */
+    private String mapType;
+
+    /**
      * 数据域id（相当于外键）
      */
     private Integer domainId;
