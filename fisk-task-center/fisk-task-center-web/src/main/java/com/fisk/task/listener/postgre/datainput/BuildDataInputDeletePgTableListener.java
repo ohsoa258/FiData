@@ -5,7 +5,6 @@ import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
-import com.fisk.task.service.atlas.IAtlasBuildInstance;
 import com.fisk.task.service.doris.IDorisBuild;
 import com.fisk.task.utils.PostgreHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -26,8 +25,7 @@ import java.util.Objects;
 @Component
 @Slf4j
 public class BuildDataInputDeletePgTableListener {
-    @Resource
-    IAtlasBuildInstance atlas;
+
     @Resource
     IDorisBuild doris;
     @Resource

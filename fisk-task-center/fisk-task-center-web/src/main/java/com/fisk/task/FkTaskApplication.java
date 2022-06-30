@@ -1,6 +1,5 @@
 package com.fisk.task;
 
-import com.ctrip.framework.apollo.spring.annotation.EnableApolloConfig;
 import com.fisk.task.server.WebSocketServer;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
@@ -28,7 +27,6 @@ import org.springframework.context.ConfigurableApplicationContext;
         "com.fisk.datamodel.client",
         "com.fisk.datafactory.client",
         "com.fisk.mdm.client"})
-@EnableApolloConfig
 public class FkTaskApplication {
     public static void main(String[] args) {
         ConfigurableApplicationContext configurableApplicationContext =  SpringApplication.run(FkTaskApplication.class, args);

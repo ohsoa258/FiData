@@ -31,8 +31,8 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicDTO>
         if (tableTopicDTO.topicType != 0) {
             conditionMap.put("topic_type", tableTopicDTO.topicType);
         }
-        List<TableTopicDTO> tableTopicDTOS = tableTopicMapper.selectByMap(conditionMap);
-        return tableTopicDTOS;
+        List<TableTopicDTO> tableTopicDtos = tableTopicMapper.selectByMap(conditionMap);
+        return tableTopicDtos;
     }
 
     @Override
@@ -114,7 +114,7 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicDTO>
             int tableType = dto.tableType;
             int topicType = dto.topicType;
             List<TableTopicDTO> list1 = this.query().eq("table_id", tableId).eq("table_type", tableType)
-                    .eq("topic_type", topicType).eq("del_flag", 1).like("topic_name","topicName").list();
+                    .eq("topic_type", topicType).eq("del_flag", 1).like("topic_name", topicName).list();
             for (TableTopicDTO dto1 : list1) {
                 if (!Objects.equals(dto.topicName, dto1.topicName)) {
                     tableTopics.add(dto1);

@@ -20,7 +20,6 @@ import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import com.fisk.task.po.TableNifiSettingPO;
-import com.fisk.task.service.atlas.IAtlasBuildInstance;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.TriggerUtils;
@@ -43,8 +42,7 @@ import static com.cronutils.model.CronType.QUARTZ;
 @Slf4j
 public class BuildAtlasTableAndColumnTaskListener
         extends ServiceImpl<TaskPgTableStructureMapper, TaskPgTableStructurePO> {
-    @Resource
-    IAtlasBuildInstance atlas;
+
     @Resource
     DataAccessClient dc;
     @Resource
