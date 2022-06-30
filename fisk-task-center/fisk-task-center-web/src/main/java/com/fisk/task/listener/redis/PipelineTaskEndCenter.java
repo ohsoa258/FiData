@@ -21,6 +21,7 @@ import com.fisk.task.entity.PipelTaskLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
+import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.service.nifi.IOlap;
@@ -53,6 +54,8 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
     IPipelTaskLog iPipelTaskLog;
     @Resource
     RedisUtil redisUtil;
+    @Resource
+    IPipelineTaskPublishCenter iPipelineTaskPublishCenter;
 
 
     public PipelineTaskEndCenter(RedisMessageListenerContainer listenerContainer) {
@@ -87,9 +90,8 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                 boolean ifEndJob = false;
                 //查找本次需要结束的任务
                 NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(split[3], Integer.valueOf(split[4]), null, Integer.valueOf(split[6]));
-                ResultEntity<NifiPortsHierarchyDTO> nifiPortHierarchy =
-                        dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchy);
-                NifiPortsHierarchyDTO data = nifiPortHierarchy.data;
+                NifiPortsHierarchyDTO data =
+                        iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchy, pipelTraceId);
                 NifiCustomWorkflowDetailDTO itselfPort = data.itselfPort;
                 List<NifiCustomWorkflowDetailDTO> inportList = data.inportList;
                 for (NifiCustomWorkflowDetailDTO dto : inportList) {
@@ -204,6 +206,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                     PipelMap.put(DispatchLogEnum.pipelend.getValue(), simpleDateFormat.format(new Date()));
                     PipelMap.put(DispatchLogEnum.pipelstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
                     log.info("这个管道的结束:" + pipelTraceId);
+                    redisUtil.del(RedisKeyEnum.PIPEL_TRACE_ID.getName() + pipelTraceId);
                     iPipelJobLog.savePipelLog(pipelTraceId, PipelMap, pipelId);
                 }
             } else if (expiredKey.startsWith("nowExec")) {

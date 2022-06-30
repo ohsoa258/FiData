@@ -28,6 +28,7 @@ import com.fisk.task.entity.PipelineTableLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
+import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
 import com.fisk.task.map.NifiStageMap;
 import com.fisk.task.map.NifiStageMapImpl;
 import com.fisk.task.mapper.NifiStageMapper;
@@ -74,6 +75,8 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
     IPipelStageLog iPipelStageLog;
     @Resource
     IPipelJobLog iPipelJobLog;
+    @Resource
+    IPipelineTaskPublishCenter iPipelineTaskPublishCenter;
 
 
     @Override
@@ -147,8 +150,8 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                 appId = Integer.valueOf(topic[5]);
                 NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = olap.getNifiGetPortHierarchy(pipelineId, type, null, tableAccessId);
                 //三个阶段,默认正在运行
-                ResultEntity<NifiPortsHierarchyDTO> nIfiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchyDTO);
-                NifiCustomWorkflowDetailDTO itselfPort = nIfiPortHierarchy.data.itselfPort;
+                NifiPortsHierarchyDTO nIfiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchyDTO, nifiStageMessageDTO.pipelTraceId);
+                NifiCustomWorkflowDetailDTO itselfPort = nIfiPortHierarchy.itselfPort;
                 nifiStagePO.componentId = Math.toIntExact(itselfPort.id);
             } else if (topic.length == 4) {
                 //长度为4的只可能为nifi流程,可以通过groupid区分
@@ -162,8 +165,8 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                 appId = tableNifiSettingPO.appId;
                 NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = olap.getNifiGetPortHierarchy(pipelineId, type, tableName, tableAccessId);
                 //三个阶段,默认正在运行
-                ResultEntity<NifiPortsHierarchyDTO> nIfiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchyDTO);
-                NifiCustomWorkflowDetailDTO itselfPort = nIfiPortHierarchy.data.itselfPort;
+                NifiPortsHierarchyDTO nIfiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchyDTO, nifiStageMessageDTO.pipelTraceId);
+                NifiCustomWorkflowDetailDTO itselfPort = nIfiPortHierarchy.itselfPort;
                 nifiStagePO.componentId = Math.toIntExact(itselfPort.id);
             }
 

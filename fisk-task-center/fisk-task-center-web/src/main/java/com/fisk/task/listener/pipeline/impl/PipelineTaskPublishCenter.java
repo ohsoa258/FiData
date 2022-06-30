@@ -3,6 +3,8 @@ package com.fisk.task.listener.pipeline.impl;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
@@ -12,6 +14,7 @@ import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyNextDTO;
+import com.fisk.datafactory.dto.tasknifi.PipeDagDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
@@ -38,6 +41,7 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author: cfk
@@ -135,16 +139,16 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                             //job开始日志
                             Map<Integer, Object> jobMap = new HashMap<>();
                             NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, Integer.valueOf(split[4]), null, Integer.valueOf(split[6]));
-                            ResultEntity<NifiPortsHierarchyDTO> nifiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchy);
+                            NifiPortsHierarchyDTO nifiPortHierarchy = this.getNifiPortHierarchy(nifiGetPortHierarchy, kafkaReceiveDTO.pipelTraceId);
                             //任务依赖的组件
                             jobMap.put(DispatchLogEnum.jobstart.getValue(), simpleDateFormat.format(new Date()));
                             jobMap.put(DispatchLogEnum.jobstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
-                            iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, split1[3], kafkaReceiveDTO.pipelJobTraceId, String.valueOf(nifiPortHierarchy.data.itselfPort.pid));
+                            iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, split1[3], kafkaReceiveDTO.pipelJobTraceId, String.valueOf(nifiPortHierarchy.itselfPort.pid));
                             //task日志
                             HashMap<Integer, Object> taskMap = new HashMap<>();
                             taskMap.put(DispatchLogEnum.taskstart.getValue(), simpleDateFormat.format(new Date()));
                             taskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
-                            iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.data.itselfPort.id), null, 0);
+                            iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.itselfPort.id), null, 0);
 
                         }
 
@@ -163,16 +167,16 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                             //job开始日志
                             Map<Integer, Object> jobMap = new HashMap<>();
                             NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, OlapTableEnum.PHYSICS_API.getValue(), null, Math.toIntExact(pipelApiDispatch.apiId));
-                            ResultEntity<NifiPortsHierarchyDTO> nifiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchy);
+                            NifiPortsHierarchyDTO nifiPortHierarchy = this.getNifiPortHierarchy(nifiGetPortHierarchy, kafkaReceiveDTO.pipelTraceId);
                             //任务依赖的组件
                             jobMap.put(DispatchLogEnum.jobstart.getValue(), simpleDateFormat.format(new Date()));
                             jobMap.put(DispatchLogEnum.jobstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
-                            iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, split1[3], kafkaReceiveDTO.pipelJobTraceId, String.valueOf(nifiPortHierarchy.data.itselfPort.pid));
+                            iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, split1[3], kafkaReceiveDTO.pipelJobTraceId, String.valueOf(nifiPortHierarchy.itselfPort.pid));
                             //task日志
                             HashMap<Integer, Object> taskMap = new HashMap<>();
                             taskMap.put(DispatchLogEnum.taskstart.getValue(), simpleDateFormat.format(new Date()));
                             taskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.RUNNING.getName());
-                            iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.data.itselfPort.id), null, 0);
+                            iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.itselfPort.id), null, 0);
 
                         }
 
@@ -183,8 +187,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                     NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, kafkaReceiveDTO.tableType, null, kafkaReceiveDTO.tableId);
 
 
-                    ResultEntity<NifiPortsHierarchyDTO> nIfiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchy);
-                    NifiPortsHierarchyDTO data = nIfiPortHierarchy.data;
+                    NifiPortsHierarchyDTO data = this.getNifiPortHierarchy(nifiGetPortHierarchy, kafkaReceiveDTO.pipelTraceId);
                     //本节点
                     NifiCustomWorkflowDetailDTO itselfPort = data.itselfPort;
                     TableTopicDTO topicSelf = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort.id),
@@ -317,6 +320,49 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                 acke.acknowledge();
             }
         }
+    }
+
+    @Override
+    public NifiPortsHierarchyDTO getNifiPortHierarchy(NifiGetPortHierarchyDTO nifiGetPortHierarchy, String pipelTraceId) {
+        log.info("查询dag图参数:{},pipelTraceId:{}", JSON.toJSONString(nifiGetPortHierarchy), pipelTraceId);
+        PipeDagDTO data = this.getPipeDagDto(nifiGetPortHierarchy, pipelTraceId);
+        if (data != null && data.nifiPortsHierarchyDtos != null) {
+            List<NifiPortsHierarchyDTO> nifiPortsHierarchyDtos = data.nifiPortsHierarchyDtos;
+            List<NifiPortsHierarchyDTO> collect = nifiPortsHierarchyDtos.stream().filter(Objects::nonNull)
+                    .filter(e -> e.itselfPort.tableId == nifiGetPortHierarchy.tableId && e.itselfPort.componentType.equals(nifiGetPortHierarchy.channelDataEnum.getName())
+                    ).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(collect)) {
+                return collect.get(0);
+            }
+        } else {
+            log.error("调度模块无此调度的dag图");
+        }
+        return null;
+    }
+
+    @Override
+    public PipeDagDTO getPipeDagDto(NifiGetPortHierarchyDTO nifiGetPortHierarchy, String pipelTraceId) {
+        log.info("查询dag图参数:{},pipelTraceId:{}", JSON.toJSONString(nifiGetPortHierarchy), pipelTraceId);
+        PipeDagDTO data = new PipeDagDTO();
+        //先查redis,如果没有查一次调度模块
+        boolean flag = redisUtil.hasKey(RedisKeyEnum.PIPEL_TRACE_ID.getName() + pipelTraceId);
+        if (!flag) {
+            ResultEntity<PipeDagDTO> taskLinkedList = dataFactoryClient.getTaskLinkedList(Long.valueOf(nifiGetPortHierarchy.workflowId));
+            if (Objects.equals(ResultEnum.SUCCESS.getCode(), taskLinkedList.code)) {
+                data = taskLinkedList.data;
+                redisUtil.set(RedisKeyEnum.PIPEL_TRACE_ID.getName() + pipelTraceId, JSON.toJSONString(data), 3000);
+            } else {
+                log.error("调度模块无此调度的dag图:" + taskLinkedList.msg);
+            }
+        } else {
+            //如果有,从redis里面拿
+            String taskJson = redisUtil.get(RedisKeyBuild.buildDispatchStructureKey(Long.valueOf(nifiGetPortHierarchy.workflowId))).toString();
+            if (org.apache.commons.lang3.StringUtils.isNotBlank(taskJson)) {
+                data = JSON.parseObject(taskJson, PipeDagDTO.class);
+            }
+        }
+        data.pipelTraceId = pipelTraceId;
+        return data;
     }
 
 }

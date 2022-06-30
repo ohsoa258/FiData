@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Lock
@@ -39,4 +40,15 @@ public class NifiPortsHierarchyDTO {
      * 当前task的所有上一级task集合
      */
     public List<NifiCustomWorkflowDetailDTO> inportList;
+    /**
+     * 本节点特殊参数
+     */
+    public Map<String, String> specialParaMap;
+
+    /**
+     * 本节点状态类参数
+     */
+    public Map<String, String> taskParaMap;
+
+
 }

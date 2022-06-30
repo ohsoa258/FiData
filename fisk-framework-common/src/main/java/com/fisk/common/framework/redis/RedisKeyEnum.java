@@ -28,6 +28,8 @@ public enum RedisKeyEnum implements BaseEnum {
     FIDATA_STRUCTURE(-1, "FiData:Structure:DataSourceId"),
     // 数据调度管道数据结构
     DISPATCH_STRUCTURE(-1, "FiData:Dispatch:id"),
+    // 数据调度管道数据结构--trace_id
+    PIPEL_TRACE_ID(3000,"pipel:trace:id"),
     //管道task
     PIPEL_TASK(3000, "pipel:task:id");
 
