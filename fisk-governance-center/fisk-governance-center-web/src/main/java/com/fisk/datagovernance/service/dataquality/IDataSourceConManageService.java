@@ -14,40 +14,46 @@ import java.util.List;
 
 /**
  * 数据源接口
+ *
  * @author dick
  */
 public interface IDataSourceConManageService extends IService<DataSourceConPO> {
 
     /**
-     * 获取权限内所有的数据源
+     * 获取所有的数据源
+     *
      * @param query 查询参数
      * @return 查询结果
      */
-    PageDTO<DataSourceConVO> listDataSourceCons(DataSourceConQuery query);
+    PageDTO<DataSourceConVO> page(DataSourceConQuery query);
 
     /**
      * 保存数据
+     *
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum saveDataSourceCon(DataSourceConDTO dto);
+    ResultEnum add(DataSourceConDTO dto);
 
     /**
      * 更新数据
+     *
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum updateDataSourceCon(DataSourceConEditDTO dto);
+    ResultEnum edit(DataSourceConEditDTO dto);
 
     /**
      * 删除数据
+     *
      * @param id id
      * @return 执行结果
      */
-    ResultEnum deleteDataSourceCon(int id);
+    ResultEnum delete(int id);
 
     /**
      * 测试数据库连接
+     *
      * @param dto 连接信息
      * @return 是否连接成功
      */
@@ -55,18 +61,21 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
 
     /**
      * 获取FiData配置表元数据
+     *
      * @return 查询结果
      */
     List<FiDataMetaDataDTO> getFiDataConfigMetaData();
 
     /**
      * 获取数据源下的表
+     *
      * @return 查询结果
      */
     List<DataExampleSourceVO> getTableAll();
 
     /**
      * 获取表字段信息
+     *
      * @return 查询结果
      */
     DataSourceVO getTableFieldAll(TableFieldQueryDTO dto);

@@ -57,16 +57,16 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     RedisUtil redisUtil;
 
     @Override
-    public PageDTO<DataSourceConVO> listDataSourceCons(DataSourceConQuery query) {
+    public PageDTO<DataSourceConVO> page(DataSourceConQuery query) {
         PageDTO<DataSourceConVO> pageDTO = new PageDTO<>();
         List<DataSourceConVO> allDataSource = getAllDataSource();
         if (CollectionUtils.isNotEmpty(allDataSource) &&
-                query != null && StringUtils.isNotEmpty(query.keyword )) {
+                query != null && StringUtils.isNotEmpty(query.keyword)) {
             allDataSource = allDataSource.stream().filter(
                     t -> (t.getConDbname().contains(query.keyword)) ||
                             t.getConType().getName().contains(query.keyword)).collect(Collectors.toList());
         }
-        if (CollectionUtils.isNotEmpty(allDataSource)){
+        if (CollectionUtils.isNotEmpty(allDataSource)) {
             pageDTO.setTotal(Long.valueOf(allDataSource.size()));
             query.current = query.current - 1;
             allDataSource = allDataSource.stream().sorted(Comparator.comparing(DataSourceConVO::getCreateTime).reversed()).skip((query.current - 1 + 1) * query.size).limit(query.size).collect(Collectors.toList());
@@ -76,9 +76,15 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     @Override
-    public ResultEnum saveDataSourceCon(DataSourceConDTO dto) {
+    public ResultEnum add(DataSourceConDTO dto) {
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(DataSourceConPO::getName, dto.name);
+        if (dto.datasourceType == SourceTypeEnum.FiData) {
+            queryWrapper.lambda().eq(DataSourceConPO::getDatasourceId, dto.datasourceId)
+                    .eq(DataSourceConPO::getDelFlag, 1);
+        } else {
+            queryWrapper.lambda().eq(DataSourceConPO::getName, dto.name)
+                    .eq(DataSourceConPO::getDelFlag, 1);
+        }
         DataSourceConPO data = mapper.selectOne(queryWrapper);
         if (data != null) {
             return ResultEnum.NAME_EXISTS;
@@ -88,27 +94,26 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     @Override
-    public ResultEnum updateDataSourceCon(DataSourceConEditDTO dto) {
+    public ResultEnum edit(DataSourceConEditDTO dto) {
         DataSourceConPO model = mapper.selectById(dto.id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(DataSourceConPO::getName, dto.name)
+                .eq(DataSourceConPO::getDelFlag, 1)
                 .ne(DataSourceConPO::getId, dto.id);
         DataSourceConPO data = mapper.selectOne(queryWrapper);
         if (data != null) {
             return ResultEnum.NAME_EXISTS;
         }
-
         DataSourceConMap.INSTANCES.editDtoToPo(dto, model);
         return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
-    public ResultEnum deleteDataSourceCon(int id) {
+    public ResultEnum delete(int id) {
         DataSourceConPO model = mapper.selectById(id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
@@ -308,34 +313,33 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     @Override
-    public List<FiDataMetaDataDTO> getFiDataConfigMetaData(){
-        List<FiDataMetaDataDTO> dataMetaDataDTOS=new ArrayList<>();
-        List<FiDataMetaDataDTO> fiDataMetaData = redisUtil.getFiDataMetaData("1");
-        if (CollectionUtils.isNotEmpty(fiDataMetaData)){
-            dataMetaDataDTOS.addAll(fiDataMetaData);
-        }
-        List<FiDataMetaDataDTO> fiDataMetaData1 = redisUtil.getFiDataMetaData("2");
-        if (CollectionUtils.isNotEmpty(fiDataMetaData1)){
-            dataMetaDataDTOS.addAll(fiDataMetaData1);
-        }
-        List<FiDataMetaDataDTO> fiDataMetaData2 = redisUtil.getFiDataMetaData("3");
-        if (CollectionUtils.isNotEmpty(fiDataMetaData2)){
-            dataMetaDataDTOS.addAll(fiDataMetaData2);
-        }
-        List<FiDataMetaDataDTO> fiDataMetaData3 = redisUtil.getFiDataMetaData("4");
-        if (CollectionUtils.isNotEmpty(fiDataMetaData3)){
-            dataMetaDataDTOS.addAll(fiDataMetaData3);
+    public List<FiDataMetaDataDTO> getFiDataConfigMetaData() {
+        List<FiDataMetaDataDTO> dataMetaDataDTOS = new ArrayList<>();
+
+        QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(DataSourceConPO::getDatasourceType, SourceTypeEnum.FiData.getValue())
+                .eq(DataSourceConPO::getDelFlag, 1);
+        List<DataSourceConPO> dataSourceConPOList = mapper.selectList(queryWrapper);
+
+        if (CollectionUtils.isNotEmpty(dataSourceConPOList)) {
+            for (DataSourceConPO dataSourceConPO : dataSourceConPOList) {
+                List<FiDataMetaDataDTO> fiDataMetaData = redisUtil.getFiDataMetaData(String.valueOf(dataSourceConPO.datasourceId));
+                if (CollectionUtils.isNotEmpty(fiDataMetaData)) {
+                    dataMetaDataDTOS.addAll(fiDataMetaData);
+                }
+            }
         }
         return dataMetaDataDTOS;
     }
 
     /**
+     * @return java.util.List<com.fisk.datagovernance.vo.dataquality.datasource.DataExampleSourceVO>
      * @description 自定义数据源信息组装
      * @author dick
      * @date 2022/6/27 17:32
      * @version v1.0
      * @params dataSources
-     * @return java.util.List<com.fisk.datagovernance.vo.dataquality.datasource.DataExampleSourceVO>
      */
     public List<DataExampleSourceVO> getDataSourceList(List<DataSourceVO> dataSources) {
         List<DataExampleSourceVO> dataExampleSourceVOS = new ArrayList<>();
@@ -370,6 +374,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     /**
      * 根据数据源配置信息查询数据源
+     *
      * @author dick
      * @date 2022/4/15 11:59
      * @version v1.0
@@ -390,11 +395,12 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     /**
      * 查询数据质量所有数据源信息，含FiData系统数据源
+     *
+     * @return java.util.List<com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO>
      * @author dick
      * @date 2022/6/16 23:17
      * @version v1.0
      * @params
-     * @return java.util.List<com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO>
      */
     public List<DataSourceConVO> getAllDataSource() {
         List<DataSourceConVO> dataSourceList = new ArrayList<>();
@@ -446,6 +452,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     /**
      * 连接数据库
+     *
      * @param driver   driver
      * @param url      url
      * @param username username
