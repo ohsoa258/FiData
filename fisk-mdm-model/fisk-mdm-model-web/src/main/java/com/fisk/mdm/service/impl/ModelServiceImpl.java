@@ -335,7 +335,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         List<FiDataMetaDataTreeDTO> modelDataList = modelPoList.stream().filter(Objects::nonNull)
                 .map(e -> {
                     // 模型层级
-                    String modelUuid = UUID.randomUUID().toString();
+                    String modelUuid = String.valueOf(e.getId());
                     FiDataMetaDataTreeDTO dto = new FiDataMetaDataTreeDTO();
                     dto.setId(modelUuid);
                     dto.setParentId(id);
@@ -351,7 +351,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                             .map(item -> {
 
                                 // 实体层级
-                                String entityUuid = UUID.randomUUID().toString();
+                                String entityUuid = String.valueOf(item.getId());
                                 FiDataMetaDataTreeDTO entityDto = new FiDataMetaDataTreeDTO();
                                 entityDto.setId(entityUuid);
                                 entityDto.setParentId(modelUuid);
@@ -365,7 +365,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                         .map(iter -> {
 
                                             // 属性层级
-                                            String attributeUuid = UUID.randomUUID().toString();
+                                            String attributeUuid = String.valueOf(iter.getId());
                                             FiDataMetaDataTreeDTO attributeDto = new FiDataMetaDataTreeDTO();
                                             attributeDto.setId(attributeUuid);
                                             attributeDto.setParentId(entityUuid);
@@ -399,7 +399,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
                                 // 视图层级
                                 String viwName = TableNameGenerateUtils.generateViwTableName((int) e.getId(), item.getId());
-                                String entityUuid = UUID.randomUUID().toString();
+                                String entityUuid = String.valueOf(item.getId());
                                 FiDataMetaDataTreeDTO entityDto = new FiDataMetaDataTreeDTO();
                                 entityDto.setId(entityUuid);
                                 entityDto.setParentId(modelUuid);
@@ -425,7 +425,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                                 .forEach(iter -> {
 
                                                     // 自定义视图
-                                                    String entityUuid = UUID.randomUUID().toString();
+                                                    String entityUuid = String.valueOf(iter.getId());
                                                     FiDataMetaDataTreeDTO entityDto = new FiDataMetaDataTreeDTO();
                                                     entityDto.setId(entityUuid);
                                                     entityDto.setParentId(modelUuid);
