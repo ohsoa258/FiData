@@ -303,7 +303,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         dto.setDataSourceId(Integer.parseInt(StringUtils.isBlank(reqDto.dataSourceId) ? String.valueOf(0) : reqDto.dataSourceId));
 
         // 第一层id
-        String uuid = UUID.randomUUID().toString();
+        String uuid = reqDto.dataSourceId;
         List<FiDataMetaDataTreeDTO> dataTreeList = new ArrayList<>();
         FiDataMetaDataTreeDTO dataTree = new FiDataMetaDataTreeDTO();
         dataTree.setId(uuid);
