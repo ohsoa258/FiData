@@ -321,4 +321,12 @@ public interface PublishTaskClient {
      */
     @PostMapping("/dispatchLog/getPipelStageLogVos")
     public ResultEntity<List<PipelStageLogVO>> getPipelStageLogVos(@RequestParam String taskId);
+
+    /**
+     * 暂停管道
+     *
+     * @return
+     */
+    @PostMapping("/nifi/suspendCustomWorkNifiFlow")
+    public ResultEntity<Object> suspendCustomWorkNifiFlow(@RequestParam("nifiCustomWorkflowId") String nifiCustomWorkflowId, @RequestParam("ifFire") boolean ifFire);
 }

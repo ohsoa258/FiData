@@ -576,10 +576,10 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     TopicTypeEnum pipelineNifiFlow = TopicTypeEnum.PIPELINE_NIFI_FLOW;
 
                     if (pipelApiDispatchs.size() == 0) {
-                        querySqlDto.querySql = "select '" + TopicName + "' as topic, '${uuid}' as pipelTraceId, '"+pipelineNifiFlow.getValue()+"' as topicType from tb_etl_Incremental limit 1";
+                        querySqlDto.querySql = "select '" + TopicName + "' as topic, '${uuid}' as pipelTraceId, '" + pipelineNifiFlow.getValue() + "' as topicType from tb_etl_Incremental limit 1";
                     } else {
                         //加管道批次
-                        querySqlDto.querySql = "select '" + JSON.toJSONString(pipelApiDispatchs) + "' as pipelApiDispatch ,'" + MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW + "' as topic, '${uuid}' as pipelTraceId, '"+pipelineNifiFlow.getValue()+"' as topicType  from tb_etl_Incremental limit 1";
+                        querySqlDto.querySql = "select '" + JSON.toJSONString(pipelApiDispatchs) + "' as pipelApiDispatch ,'" + MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW + "' as topic, '${uuid}' as pipelTraceId, '" + pipelineNifiFlow.getValue() + "' as topicType  from tb_etl_Incremental limit 1";
                     }
 
                     //配置库
@@ -1262,6 +1262,36 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
         } catch (Exception e) {
             log.info("此组删除失败:" + appComponentId);
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public ResultEnum suspendCustomWorkNifiFlow(String nifiCustomWorkflowId, boolean ifFire) {
+        String appComponentId = "";
+        List<AppNifiSettingPO> appNifiSettingPOList = appNifiSettingService.query().eq("app_id", nifiCustomWorkflowId).list();
+        for (int i = 0; i < appNifiSettingPOList.size(); i++) {
+            if (appNifiSettingPOList.get(i).nifiCustomWorkflowId != null) {
+                appComponentId = appNifiSettingPOList.get(i).appComponentId;
+            }
+        }
+        try {
+            //停止或开启
+            if (appComponentId != "") {
+                ScheduleComponentsEntity scheduleComponentsEntity = new ScheduleComponentsEntity();
+                scheduleComponentsEntity.setId(appComponentId);
+                scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
+                if (ifFire) {
+                    scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.RUNNING);
+                } else {
+                    scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.STOPPED);
+                }
+                NifiHelper.getFlowApi().scheduleComponents(appComponentId, scheduleComponentsEntity);
+            }
+            return ResultEnum.SUCCESS;
+            //emptyNifiConnectionQueue
+        } catch (Exception e) {
+            log.info("该组件状态修改失败:" + appComponentId);
+            return ResultEnum.ERROR;
         }
     }
 }
