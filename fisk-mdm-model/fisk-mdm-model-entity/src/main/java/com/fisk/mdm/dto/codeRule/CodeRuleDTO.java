@@ -1,18 +1,15 @@
-package com.fisk.mdm.entity;
+package com.fisk.mdm.dto.codeRule;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.mdm.enums.RuleTypeEnum;
 import lombok.Data;
 
 /**
  * @Author WangYan
- * @Date 2022/6/23 10:45
+ * @Date 2022/7/1 11:09
  * @Version 1.0
  */
-@TableName("tb_code_rule")
 @Data
-public class CodeRulePO extends BasePO {
+public class CodeRuleDTO {
 
     /**
      * 规则组id
