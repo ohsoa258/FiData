@@ -428,8 +428,7 @@ public class DataFactoryImpl implements IDataFactory {
                 .filter(Objects::nonNull)
                 .filter(e -> ChannelDataEnum.SCHEDULE_TASK.tableList().contains(e.componentType))
                 // 过滤数据湖表任务中没有绑定table的task
-                .filter(e -> ChannelDataEnum.DATALAKE_TASK.getName().equalsIgnoreCase(e.componentType)
-                        && (e.tableId != null && !"".equals(e.tableId)))
+                .filter(e -> e.tableId != null && !"".equals(e.tableId))
                 .collect(Collectors.toList());
 
         // po -> dto
@@ -437,7 +436,6 @@ public class DataFactoryImpl implements IDataFactory {
 
         List<NifiPortsHierarchyDTO> list = detailDtoList.stream()
                 .filter(Objects::nonNull)
-                .filter(e -> e.outport != null && !"".equals(e.outport))
                 .map(e -> {
                     NifiGetPortHierarchyDTO dto = new NifiGetPortHierarchyDTO();
                     dto.nifiCustomWorkflowDetailId = e.id;
