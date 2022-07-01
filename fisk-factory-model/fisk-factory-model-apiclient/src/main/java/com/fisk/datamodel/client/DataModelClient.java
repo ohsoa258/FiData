@@ -8,6 +8,8 @@ import com.fisk.chartvisual.dto.chartvisual.TableDataDTO;
 import com.fisk.chartvisual.enums.DataDoFieldTypeEnum;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
@@ -185,6 +187,7 @@ public interface DataModelClient {
 
     /**
      * 获取数据建模表数据
+     *
      * @param publishStatus
      * @return
      */
@@ -192,7 +195,17 @@ public interface DataModelClient {
     ResultEntity<Object> getDataModelTable(@PathVariable("publishStatus") int publishStatus);
 
     /**
+     * 获取数仓中每个表中的业务元数据配置
+     *
+     * @param dto
+     * @return
+     */
+    @GetMapping("/DataManagement/setTableRule")
+    ResultEntity<TableRuleInfoDTO> setTableRule(TableRuleParameterDTO dto);
+
+    /**
      * 获取白泽数据源
+     *
      * @return
      */
     @GetMapping("/Datamation/getAll")

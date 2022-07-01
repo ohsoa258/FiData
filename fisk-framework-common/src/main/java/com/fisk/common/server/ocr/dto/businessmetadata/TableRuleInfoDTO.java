@@ -14,12 +14,11 @@ import java.util.List;
  */
 @Data
 public class TableRuleInfoDTO {
-    public TableRuleInfoDTO(){
-        checkRules=new ArrayList<>();
-        filterRules=new ArrayList<>();
-        lifecycleRules=new ArrayList<>();
-        noticeRules=new ArrayList<>();
-    }
+    /**
+     * 利益相关方
+     */
+    @ApiModelProperty(value = "利益相关方")
+    public List<String> stakeholders;
     /**
      * 表/字段 名称
      */
@@ -103,11 +102,15 @@ public class TableRuleInfoDTO {
     @ApiModelProperty(value = "数据责任人")
     public String dataResponsiblePerson;
 
-    /**
-     * 利益相关方
-     */
-    @ApiModelProperty(value = "利益相关方")
-    public String stakeholders;
+    public TableRuleInfoDTO() {
+        checkRules = new ArrayList<>();
+        filterRules = new ArrayList<>();
+        lifecycleRules = new ArrayList<>();
+        noticeRules = new ArrayList<>();
+        updateRules = new ArrayList<>();
+        validValueConstraint = new ArrayList<>();
+        stakeholders = new ArrayList<>();
+    }
 
     /**
      * 表字段规则

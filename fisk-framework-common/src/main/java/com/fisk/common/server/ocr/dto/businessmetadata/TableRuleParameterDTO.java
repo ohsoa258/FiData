@@ -14,5 +14,9 @@ public class TableRuleParameterDTO {
      */
     public Integer tableId;
 
+    /**
+     * 表类型：
+     */
+    public Integer type;
 
 }

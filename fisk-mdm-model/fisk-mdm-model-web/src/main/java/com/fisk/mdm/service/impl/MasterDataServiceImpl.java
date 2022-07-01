@@ -290,6 +290,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
         List<ResultAttributeGroupVO> attributeGroupVoList = new ArrayList<>();
         if (!CollectionUtils.isEmpty(dto.getAttributeGroups())) {
             List<AttributeColumnVO> newAttributeColumnVoList = CommonMethods.deepCopy(attributeColumnVoList);
+            newAttributeColumnVoList.stream()
+                    .map(e -> e.dataTypeEnDisplay = DataTypeEnum.getValue(e.getDataType()).name())
+                    .collect(Collectors.toList());
             for (Integer id : dto.getAttributeGroups()) {
                 attributeGroupVoList.add(setAttributeGroup(id, dto.getEntityId(), newAttributeColumnVoList));
             }
@@ -340,6 +343,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
         List<ResultAttributeGroupVO> attributeGroupVoList = new ArrayList<>();
         //组装属性组数据
         List<AttributeColumnVO> newAttributeColumnVoList = CommonMethods.deepCopy(attributeColumnVoList);
+        newAttributeColumnVoList.stream()
+                .map(e -> e.dataTypeEnDisplay = DataTypeEnum.getValue(e.getDataType()).name())
+                .collect(Collectors.toList());
         for (Integer id : dto.getAttributeGroups()) {
             attributeGroupVoList.add(setAttributeGroup(id, dto.getEntityId(), newAttributeColumnVoList));
         }
