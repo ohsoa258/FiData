@@ -783,7 +783,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             return null;
         }
         AppRegistrationDTO appRegistrationDto = this.getData(data.appId);
-        if (appRegistrationDto==null) {
+        if (appRegistrationDto == null) {
             return null;
         }
 
@@ -792,7 +792,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 应用负责人
         tableRuleInfoDto.dataResponsiblePerson = appRegistrationDto.appPrincipal;
         // 表名
-        tableRuleInfoDto.name = data.tableName;
+        StringBuilder tablePrefix = null;
+        tablePrefix.append("ods_").append(appRegistrationDto.appAbbreviation).append("_");
+        tableRuleInfoDto.name = tablePrefix + data.tableName;
         // 类型 1: 表
         tableRuleInfoDto.type = 1;
 
@@ -828,10 +830,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     /**
      * 构建data-access子集树
      *
+     * @param id guid
      * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
      * @author Lock
      * @date 2022/6/15 17:46
-     * @param id guid
      */
     private List<FiDataMetaDataTreeDTO> buildChildren(String id) {
 
@@ -868,11 +870,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     /**
      * 获取实时应用结构
      *
+     * @param appPoList 所有的应用实体对象
      * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
      * @author Lock
      * @date 2022/6/16 15:21
      * @params id guid
-     * @param appPoList 所有的应用实体对象
      */
     private List<FiDataMetaDataTreeDTO> getFiDataMetaDataTreeByRealTime(String id, List<AppRegistrationPO> appPoList) {
         return appPoList.stream()
@@ -996,11 +998,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     /**
      * 获取非实时应用结构
      *
+     * @param id        guid
+     * @param appPoList 所有的应用实体对象
      * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
      * @author Lock
      * @date 2022/6/16 15:21
-     * @param id guid
-     * @param appPoList 所有的应用实体对象
      */
     private List<FiDataMetaDataTreeDTO> getFiDataMetaDataTreeByNonRealTime(String id, List<AppRegistrationPO> appPoList) {
         return appPoList.stream()
