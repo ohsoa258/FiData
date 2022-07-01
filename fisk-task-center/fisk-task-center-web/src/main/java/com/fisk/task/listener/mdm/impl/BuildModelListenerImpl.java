@@ -862,8 +862,17 @@ public class BuildModelListenerImpl implements BuildModelListener {
         if (CollectionUtils.isNotEmpty(fileList)){
 
             // 存在文件类型
-            complexTypeField.append(PRIMARY_TABLE + amount.incrementAndGet() + "."  + "file_name").append(",");
-            complexTypeField.append(PRIMARY_TABLE + amount + "."  + "file_path");
+            String collect = fileList.stream().filter(Objects::nonNull)
+                    .map(e -> {
+
+                        StringBuilder stringBuilder = new StringBuilder();
+                        stringBuilder.append(PRIMARY_TABLE + amount.incrementAndGet() + "." + "file_name"
+                                + " AS " + e.getName() + "_file_name").append(",");
+                        stringBuilder.append(PRIMARY_TABLE + amount + "." + "file_path"
+                                + " AS " + e.getName() + "_file_path");
+                        return stringBuilder.toString();
+                    }).collect(Collectors.joining(","));
+            complexTypeField.append(collect);
         }
 
         if (CollectionUtils.isNotEmpty(fileList) && CollectionUtils.isNotEmpty(longitudeList)){
@@ -874,9 +883,19 @@ public class BuildModelListenerImpl implements BuildModelListener {
         if (CollectionUtils.isNotEmpty(longitudeList)){
 
             // 存在经纬度类型
-            complexTypeField.append(PRIMARY_TABLE + amount.incrementAndGet() + "."  + "lng").append(",");
-            complexTypeField.append(PRIMARY_TABLE + amount + "."  + "lat").append(",");
-            complexTypeField.append(PRIMARY_TABLE + amount + "."  + "map_type");
+            String collect = longitudeList.stream().filter(Objects::nonNull)
+                    .map(e -> {
+
+                        StringBuilder stringBuilder = new StringBuilder();
+                        stringBuilder.append(PRIMARY_TABLE + amount.incrementAndGet() + "." + "lng"
+                                + " AS " + e.getName() + "_lng").append(",");
+                        stringBuilder.append(PRIMARY_TABLE + amount + "." + "lat"
+                                + " AS " + e.getName() + "_lat").append(",");
+                        stringBuilder.append(PRIMARY_TABLE + amount + "." + "map_type"
+                                + " AS " + e.getName() + "_map_type");
+                        return stringBuilder;
+                    }).collect(Collectors.joining(","));
+            complexTypeField.append(collect);
         }
 
         // 获取主表表名
@@ -933,34 +952,40 @@ public class BuildModelListenerImpl implements BuildModelListener {
         StringBuilder stringBuilder = new StringBuilder();
         if (CollectionUtils.isNotEmpty(fileList)){
             // 文件类型
-            String alias = PRIMARY_TABLE + amount1.incrementAndGet();
 
             // 文件left join字段
             String fileField = fileList.stream().map(e -> {
-                return PRIMARY_TABLE + "." + e.getColumnName() + " = " + alias + ".\"id\"";
-            }).collect(Collectors.joining(" OR "));
+                String alias = PRIMARY_TABLE + amount1.incrementAndGet();
 
-            stringBuilder.append(" LEFT JOIN ");
-            stringBuilder.append(" tb_file ").append(alias);
-            stringBuilder.append(" ON ");
-            stringBuilder.append(PRIMARY_TABLE + "." + MARK + "version_id" + " = " + alias + "." + MARK + "version_id");
-            stringBuilder.append(" AND ").append(fileField);
+                StringBuilder str = new StringBuilder();
+                str.append(" LEFT JOIN ");
+                str.append(" tb_file ").append(alias);
+                str.append(" ON ");
+                str.append(PRIMARY_TABLE + "." + MARK + "version_id" + " = " + alias + "." + MARK + "version_id");
+                str.append(" AND ").append(PRIMARY_TABLE + "." + e.getColumnName() + " = " + alias + ".\"id\"");
+
+                return str;
+            }).collect(Collectors.joining(" "));
+            stringBuilder.append(fileField);
         }
 
         if (CollectionUtils.isNotEmpty(longitudeList)){
             // 经纬度坐标
-            String alias = PRIMARY_TABLE + amount1.incrementAndGet();
 
             // 经纬度left join字段
             String longitudes = longitudeList.stream().map(e -> {
-                return PRIMARY_TABLE + "." + e.getColumnName() + " = " + alias + ".\"id\"";
-            }).collect(Collectors.joining(" OR "));
+                String alias = PRIMARY_TABLE + amount1.incrementAndGet();
 
-            stringBuilder.append(" LEFT JOIN ");
-            stringBuilder.append(" tb_geography ").append(alias);
-            stringBuilder.append(" ON ");
-            stringBuilder.append(PRIMARY_TABLE + "." + MARK + "version_id" + " = " + alias + "." + MARK + "version_id");
-            stringBuilder.append(" AND ").append(longitudes);
+                StringBuilder str = new StringBuilder();
+                str.append(" LEFT JOIN ");
+                str.append(" tb_geography ").append(alias);
+                str.append(" ON ");
+                str.append(PRIMARY_TABLE + "." + MARK + "version_id" + " = " + alias + "." + MARK + "version_id");
+                str.append(" AND ").append(PRIMARY_TABLE + "." + e.getColumnName() + " = " + alias + ".\"id\"");
+
+                return str;
+            }).collect(Collectors.joining(" "));
+            stringBuilder.append(longitudes);
         }
 
         return stringBuilder.toString();
@@ -999,14 +1024,24 @@ public class BuildModelListenerImpl implements BuildModelListener {
         // 经纬度类型
         List<AttributeInfoDTO> longitudeList = noForeignList.stream().filter(e -> e.getDataType().equals("经纬度坐标")).collect(Collectors.toList());
 
-        int count = 0;
+        AtomicInteger count = new AtomicInteger();
         StringBuilder complexTypeField = new StringBuilder();
         // 文件类型
         if (CollectionUtils.isNotEmpty(fileList)){
 
             // 存在文件类型
-            complexTypeField.append(PRIMARY_TABLE + ++count + "."  + "file_name").append(",");
-            complexTypeField.append(PRIMARY_TABLE + count + "."  + "file_path");
+            String collect = fileList.stream().filter(Objects::nonNull)
+                    .map(e -> {
+                        String name = mdmClient.getDataById(e.getEntityId()).getData().getName();
+
+                        StringBuilder stringBuilder = new StringBuilder();
+                        stringBuilder.append(PRIMARY_TABLE + count.incrementAndGet() + "." + "file_name"
+                                + " AS " + e.getName() + "_file_name").append(",");
+                        stringBuilder.append(PRIMARY_TABLE + count + "." + "file_path"
+                                + " AS " + e.getName() + "_file_path");
+                        return stringBuilder.toString();
+                    }).collect(Collectors.joining(","));
+            complexTypeField.append(collect);
         }
 
         if (CollectionUtils.isNotEmpty(fileList) && CollectionUtils.isNotEmpty(longitudeList)){
@@ -1017,9 +1052,19 @@ public class BuildModelListenerImpl implements BuildModelListener {
         if (CollectionUtils.isNotEmpty(longitudeList)){
 
             // 存在经纬度类型
-            complexTypeField.append(PRIMARY_TABLE + ++count + "."  + "lng").append(",");
-            complexTypeField.append(PRIMARY_TABLE + count + "."  + "lat").append(",");
-            complexTypeField.append(PRIMARY_TABLE + count + "."  + "map_type");
+            String collect = longitudeList.stream().filter(Objects::nonNull)
+                    .map(e -> {
+                        StringBuilder stringBuilder = new StringBuilder();
+
+                        stringBuilder.append(PRIMARY_TABLE + count.incrementAndGet() + "." + "lng"
+                                + " AS " + e.getName() + "_lng").append(",");
+                        stringBuilder.append(PRIMARY_TABLE + count + "." + "lat"
+                                + " AS " + e.getName() + "_lat").append(",");
+                        stringBuilder.append(PRIMARY_TABLE + count + "." + "map_type"
+                                + " AS " + e.getName() + "_map_type");
+                        return stringBuilder;
+                    }).collect(Collectors.joining(","));
+            complexTypeField.append(collect);
         }
 
         // 如果存在复杂数据类型就需要字段加上别名
