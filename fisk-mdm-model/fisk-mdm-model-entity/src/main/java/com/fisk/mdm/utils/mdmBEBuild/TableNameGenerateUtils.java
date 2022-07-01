@@ -100,7 +100,7 @@ public class TableNameGenerateUtils {
      * @return
      */
     public static String generateComplexTypeMapType(String mapTypeColumnName, boolean isCode) {
-        return isCode ? mapTypeColumnName + "_type" : mapTypeColumnName + "_类型";
+        return isCode ? mapTypeColumnName + "_map_type" : mapTypeColumnName + "_类型";
     }
 
 
