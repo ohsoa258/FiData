@@ -1,10 +1,7 @@
 package com.fisk.mdm.service;
 
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.mdm.dto.codeRule.CodeRuleAddDTO;
-import com.fisk.mdm.dto.codeRule.CodeRuleDTO;
-import com.fisk.mdm.dto.codeRule.CodeRuleGroupDTO;
-import com.fisk.mdm.dto.codeRule.CodeRuleGroupUpdateDTO;
+import com.fisk.mdm.dto.codeRule.*;
 import com.fisk.mdm.vo.codeRule.CodeRuleVO;
 import java.util.List;
 
@@ -41,7 +38,7 @@ public interface CodeRuleService {
      * @param dto
      * @return
      */
-    ResultEnum deleteCodeRuleById(CodeRuleDTO dto);
+    ResultEnum deleteCodeRuleById(CodeRuleDeleteDTO dto);
 
     /**
      * 编码规则组新增规则

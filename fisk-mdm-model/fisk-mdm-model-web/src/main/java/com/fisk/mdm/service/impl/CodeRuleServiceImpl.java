@@ -4,10 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.mdm.dto.codeRule.CodeRuleAddDTO;
-import com.fisk.mdm.dto.codeRule.CodeRuleDTO;
-import com.fisk.mdm.dto.codeRule.CodeRuleGroupDTO;
-import com.fisk.mdm.dto.codeRule.CodeRuleGroupUpdateDTO;
+import com.fisk.mdm.dto.codeRule.*;
 import com.fisk.mdm.entity.CodeRuleGroupPO;
 import com.fisk.mdm.entity.CodeRulePO;
 import com.fisk.mdm.map.CodeRuleMap;
@@ -90,7 +87,7 @@ public class CodeRuleServiceImpl implements CodeRuleService {
     }
 
     @Override
-    public ResultEnum deleteCodeRuleById(CodeRuleDTO dto) {
+    public ResultEnum deleteCodeRuleById(CodeRuleDeleteDTO dto) {
         boolean existCodeRule = this.isExistCodeRule(dto.getGroupId());
         if (existCodeRule == false){
             return ResultEnum.DATA_NOTEXISTS;
@@ -99,7 +96,7 @@ public class CodeRuleServiceImpl implements CodeRuleService {
         QueryWrapper<CodeRulePO> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .eq(CodeRulePO::getGroupId,dto.getGroupId())
-                .eq(CodeRulePO::getRuleType,dto.getRuleType());
+                .eq(CodeRulePO::getId,dto.getId());
         int res = codeRuleMapper.delete(queryWrapper);
         return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -117,6 +114,7 @@ public class CodeRuleServiceImpl implements CodeRuleService {
         dto.getCodeRuleDtoList().stream().filter(Objects::nonNull)
                 .forEach(e -> {
                     CodeRulePO codeRulePo = CodeRuleMap.INSTANCES.dtoToPo(e);
+                    codeRulePo.setGroupId(dto.getGroupId());
                     int res = codeRuleMapper.insert(codeRulePo);
                     if (res <= 0){
                         throw new FkException(ResultEnum.SAVE_DATA_ERROR);

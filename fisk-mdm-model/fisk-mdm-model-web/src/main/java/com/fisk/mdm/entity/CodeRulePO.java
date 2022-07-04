@@ -1,5 +1,6 @@
 package com.fisk.mdm.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.mdm.enums.RuleTypeEnum;
@@ -22,6 +23,7 @@ public class CodeRulePO extends BasePO {
     /**
      * 排序
      */
+    @TableField(value = "`order`")
     private Integer order;
 
     /**

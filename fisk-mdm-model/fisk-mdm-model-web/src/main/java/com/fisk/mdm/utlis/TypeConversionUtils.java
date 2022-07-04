@@ -178,4 +178,12 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
 
         return MapTypeEnum.values()[value];
     }
+
+    public static RuleTypeEnum intToRuleTypeEnum(Integer value){
+        if (value == null){
+            return null;
+        }
+
+        return RuleTypeEnum.values()[value];
+    }
 }

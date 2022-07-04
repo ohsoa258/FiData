@@ -11,6 +11,7 @@ import lombok.Data;
 @Data
 public class CodeRuleDTO {
 
+    private Integer id;
     /**
      * 规则组id
      */
@@ -24,7 +25,7 @@ public class CodeRuleDTO {
     /**
      * 规则类型
      */
-    private RuleTypeEnum ruleType;
+    private Integer ruleType;
 
     /**
      * 常量值

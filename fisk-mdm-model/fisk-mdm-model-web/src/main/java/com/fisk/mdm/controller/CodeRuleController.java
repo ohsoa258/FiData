@@ -4,10 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
-import com.fisk.mdm.dto.codeRule.CodeRuleAddDTO;
-import com.fisk.mdm.dto.codeRule.CodeRuleDTO;
-import com.fisk.mdm.dto.codeRule.CodeRuleGroupDTO;
-import com.fisk.mdm.dto.codeRule.CodeRuleGroupUpdateDTO;
+import com.fisk.mdm.dto.codeRule.*;
 import com.fisk.mdm.service.CodeRuleService;
 import com.fisk.mdm.vo.codeRule.CodeRuleVO;
 import io.swagger.annotations.Api;
@@ -62,7 +59,7 @@ public class CodeRuleController {
     @ApiOperation("编码规则组删除规则(根据规则id)")
     @DeleteMapping("/deleteCodeRuleById")
     @ResponseBody
-    public ResultEntity<ResultEnum> deleteCodeRuleById(@RequestBody CodeRuleDTO dto) {
+    public ResultEntity<ResultEnum> deleteCodeRuleById(@RequestBody CodeRuleDeleteDTO dto) {
         return ResultEntityBuild.build(ruleService.deleteCodeRuleById(dto));
     }
 
