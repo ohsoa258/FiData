@@ -124,7 +124,7 @@ public enum ResultEnum {
     DATA_QUALITY_FEIGN_ERROR(5047, "数据质量的数据校验feign接口异常"),
     LOAD_DATASOURCE_META(5048, "重新加载所有数据源以及数据库、表数据报错"),
     LOAD_FIDATA_METADATA_ERROR(5049, "加载FaidataMetaData报错"),
-
+    JSON_ROOTNODE_HANDLER_ERROR(5050, "pushData中json格式可能有误,解析失败,请自行检查"),
 
     /**
      * 后台任务模块
