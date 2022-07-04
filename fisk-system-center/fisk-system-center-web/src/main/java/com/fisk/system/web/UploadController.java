@@ -3,6 +3,7 @@ package com.fisk.system.web;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.service.UploadService;
 import io.swagger.annotations.Api;
@@ -26,6 +27,7 @@ public class UploadController {
 
     @ApiOperation("图片上传到服务器")
     @PostMapping("/imageUpload")
+    @ControllerAOPConfig(printParams = false)
     @ResponseBody
     public ResultEntity<String> imageUpload(@RequestParam("file") MultipartFile file) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, uploadService.upload(file));
