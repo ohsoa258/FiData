@@ -1090,16 +1090,15 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     /**
      * 将数据同步到pgsql
      *
+     * @param jsonStr         json数据
+     * @param apiTableDtoList 当前api下的所有表(父子级结构)
+     * @param tablePrefixName stg_应用简称
+     * @param apiId           apiId
+     * @param jsonKey         json解析的根节点(一般为data)
      * @return void
      * @description 将数据同步到pgsql
      * @author Lock
      * @date 2022/2/16 19:17
-     * @version v1.0
-     * @params jsonStr
-     * @params apiTableDtoList
-     * @params tablePrefixName stg_应用简称
-     * @params apiId apiId
-     * @params flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
      */
     private ResultEntity<Object> pushPgSql(String jsonStr, List<ApiTableDTO> apiTableDtoList,
                                            String tablePrefixName, String jsonKey, Long apiId) {
@@ -1108,19 +1107,22 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         StringBuilder checkResultMsg = new StringBuilder();
         // ods_应用简称
         String replaceTablePrefixName = tablePrefixName.replace("stg_", "ods_");
+        List<String> tableNameList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tableName).collect(Collectors.toList());
+        JsonUtils jsonUtils = new JsonUtils();
+        List<JsonTableData> targetTable = jsonUtils.getTargetTable(tableNameList);
+//            targetTable.forEach(System.out::println);
+        // 获取Json的schema信息
+        List<JsonSchema> schemas = jsonUtils.getJsonSchema(apiTableDtoList, jsonKey);
+//            schemas.forEach(System.out::println);
+        // json根节点处理
         try {
             JSONObject json = JSON.parseObject(jsonStr);
-            List<String> tableNameList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tableName).collect(Collectors.toList());
-            JsonUtils jsonUtils = new JsonUtils();
-            List<JsonTableData> targetTable = jsonUtils.getTargetTable(tableNameList);
-//            targetTable.forEach(System.out::println);
-            // 获取Json的schema信息
-            List<JsonSchema> schemas = jsonUtils.getJsonSchema(apiTableDtoList, jsonKey);
-//            schemas.forEach(System.out::println);
-            // json根节点处理
             jsonUtils.rootNodeHandler(schemas, json, targetTable);
-            targetTable.forEach(System.out::println);
-
+        } catch (Exception e) {
+            return ResultEntityBuild.build(ResultEnum.JSON_ROOTNODE_HANDLER_ERROR);
+        }
+        targetTable.forEach(System.out::println);
+        try {
             // TODO 先去数据质量验证
             // 实例(url信息)  库  json解析完的参数(List<JsonTableData>)
             if (!CollectionUtils.isEmpty(targetTable)) {
@@ -1156,26 +1158,31 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 // 校验完成后每次推送数据前,将stg数据删除;解析上游的数据为空,本次也不需要同步数据,stg临时表也不用删
                 pushDataStgToOds(apiId, 0);
             }
-
-            System.out.println("开始执行sql");
-            PgsqlUtils pgsqlUtils = new PgsqlUtils();
-            // stg_abbreviationName_tableName
-            ResultEntity<Object> excuteResult = pgsqlUtils.executeBatchPgsql(tablePrefixName, targetTable);
-            resultEnum = ResultEnum.getEnum(excuteResult.code);
-
-            List<ApiSqlResultDTO> list = JSONArray.parseArray(excuteResult.msg.toString(), ApiSqlResultDTO.class);
-            if (!CollectionUtils.isEmpty(list)) {
-                for (ApiSqlResultDTO e : list) {
-                    checkResultMsg.append("数据推送到").append("[").append(e.getTableName()).append("]").append(": ")
-                            .append(e.getMsg()).append(",").append("推送的条数为: ").append(e.getCount()).append("；");
-                    COUNT_SQL = e.getCount();
-                    // 推送条数累加值
-                    COUNT_SQL += COUNT_SQL;
-                }
-            }
         } catch (Exception e) {
             return ResultEntityBuild.build(ResultEnum.DATA_QUALITY_FEIGN_ERROR);
         }
+        System.out.println("开始执行sql");
+        PgsqlUtils pgsqlUtils = new PgsqlUtils();
+        // stg_abbreviationName_tableName
+        ResultEntity<Object> excuteResult;
+        try {
+            excuteResult = pgsqlUtils.executeBatchPgsql(tablePrefixName, targetTable);
+        } catch (Exception e) {
+            return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR);
+        }
+        resultEnum = ResultEnum.getEnum(excuteResult.code);
+
+        List<ApiSqlResultDTO> list = JSONArray.parseArray(excuteResult.msg.toString(), ApiSqlResultDTO.class);
+        if (!CollectionUtils.isEmpty(list)) {
+            for (ApiSqlResultDTO e : list) {
+                checkResultMsg.append("数据推送到").append("[").append(e.getTableName()).append("]").append(": ")
+                        .append(e.getMsg()).append(",").append("推送的条数为: ").append(e.getCount()).append("；");
+                COUNT_SQL = e.getCount();
+                // 推送条数累加值
+                COUNT_SQL += COUNT_SQL;
+            }
+        }
+
 
         return ResultEntityBuild.build(resultEnum, checkResultMsg.toString());
     }
@@ -1184,12 +1191,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * 将数据从stg同步到ods
      *
      * @return void
-     * @description
      * @author Lock
      * @date 2022/2/25 16:41
-     * @version v1.0
-     * @params apiId apiId
-     * @params flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
+     * @param apiId apiId
+     * @param flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
      */
     private ResultEnum pushDataStgToOds(Long apiId, int flag) {
 
@@ -1256,12 +1261,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * 获取同步数据的sql并执行
      *
      * @return void
-     * @description 获取同步数据的sql并执行
      * @author Lock
      * @date 2022/2/25 16:06
-     * @version v1.0
-     * @params configDTO task需要的参数
-     * @params flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
+     * @param configDTO task需要的参数
+     * @param flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
      */
     private ResultEnum getSynchroDataSqlAndExcute(DataAccessConfigDTO configDTO, int flag) {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
@@ -1290,8 +1293,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @description 根据api_id查询物理表集合
      * @author Lock
      * @date 2022/2/15 10:30
-     * @version v1.0
-     * @params id api_id
+     * @param id api_id
      */
     private List<TableAccessPO> getListTableAccessByApiId(long id) {
         QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
