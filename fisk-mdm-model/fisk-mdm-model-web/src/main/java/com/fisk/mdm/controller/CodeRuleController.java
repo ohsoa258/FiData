@@ -23,7 +23,7 @@ import java.util.List;
  * @Date 2022/6/23 14:06
  * @Version 1.0
  */
-@Api(tags = {SwaggerConfig.TAG_10})
+@Api(tags = {SwaggerConfig.TAG_11})
 @RestController
 @RequestMapping("/rule")
 public class CodeRuleController {

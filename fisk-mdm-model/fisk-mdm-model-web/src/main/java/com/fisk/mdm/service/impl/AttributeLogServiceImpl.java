@@ -84,7 +84,8 @@ public class AttributeLogServiceImpl implements AttributeLogService {
     public List<AttributeLogDTO> queryDataByAttributeId(Integer attributeId) {
         QueryWrapper<AttributeLogPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(AttributeLogPO::getAttributeId,attributeId);
+                .eq(AttributeLogPO::getAttributeId,attributeId)
+                .orderByDesc(AttributeLogPO::getCreateTime);
         List<AttributeLogPO> list = logMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(list)){
 
