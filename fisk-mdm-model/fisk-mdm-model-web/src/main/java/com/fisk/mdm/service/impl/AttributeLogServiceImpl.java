@@ -19,6 +19,7 @@ import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -37,6 +38,8 @@ public class AttributeLogServiceImpl implements AttributeLogService {
     AttributeMapper attributeMapper;
     @Resource
     UserClient userClient;
+    @Resource
+    AttributeLogService attributeLogService;;
 
     @Override
     public ResultEnum saveAttributeLog(AttributeLogSaveDTO dto) {
@@ -96,16 +99,22 @@ public class AttributeLogServiceImpl implements AttributeLogService {
         return null;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum rollbackData(AttributeRollbackDTO dto) {
         AttributePO attributePo = attributeMapper.selectById(dto.getAttributeId());
         AttributeStatusEnum status = attributePo.getStatus();
-        if (status.equals(AttributeStatusEnum.UPDATE)){
-            // 需要回滚的日志表数据
+        if (!status.equals(AttributeStatusEnum.SUBMITTED)){
+            // 1.回滚需要回滚的日志表数据
             AttributeLogPO attributeLogPo = logMapper.selectById(dto.getId());
             AttributePO attribute = AttributeMap.INSTANCES.poToLogPo(attributeLogPo);
             attribute.setId(dto.getAttributeId());
             int res = attributeMapper.updateById(attribute);
+
+            // 2.记录回滚前的最新数据
+            AttributeLogSaveDTO dto1 = AttributeMap.INSTANCES.poToLogDto(attributePo);
+            dto1.setAttributeId(dto.getAttributeId());
+            attributeLogService.saveAttributeLog(dto1);
             return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         }
         return null;
