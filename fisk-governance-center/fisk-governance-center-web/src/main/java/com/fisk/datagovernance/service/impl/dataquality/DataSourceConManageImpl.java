@@ -315,7 +315,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     @Override
     public List<FiDataMetaDataDTO> getFiDataConfigMetaData() {
         List<FiDataMetaDataDTO> dataMetaDataDTOS = new ArrayList<>();
-
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(DataSourceConPO::getDatasourceType, SourceTypeEnum.FiData.getValue())
