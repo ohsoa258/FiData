@@ -71,6 +71,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
         String tableName = null;
         String sql = null;
+        Connection connection = null;
         try {
             // 获取需要创建的表名
             ModelDTO model = JSON.parseObject(dataInfo, ModelDTO.class);
@@ -80,19 +81,20 @@ public class BuildModelListenerImpl implements BuildModelListener {
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
 
             AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
-            Connection connection = abstractDbHelper.connection(connectionStr, acc, pwd, type);
+            connection = abstractDbHelper.connection(connectionStr, acc, pwd, type);
             sql = sqlBuilder.buildAttributeLogTable(tableName);
             // 执行sql
             abstractDbHelper.executeSql(sql, connection);
             log.info("【创建属性日志表名】:" + tableName + "创建属性日志表名SQL:" + sql);
+            return ResultEnum.SUCCESS;
         } catch (Exception ex) {
             log.error("【创建属性日志表名】:" + tableName + "【创建属性日志表名SQL】:" + sql
                     + "【创建属性日志表名失败,异常信息】:" + ex);
             ex.printStackTrace();
-            return ResultEnum.SUCCESS;
-        } finally {
-            acke.acknowledge();
             return ResultEnum.ERROR;
+        } finally {
+            closeConnection(connection);
+            acke.acknowledge();
         }
     }
 
