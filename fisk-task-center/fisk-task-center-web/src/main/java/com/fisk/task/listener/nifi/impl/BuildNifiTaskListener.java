@@ -918,9 +918,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 // todo 数据验证
                 ProcessorEntity generateFlowFile = new ProcessorEntity();
                 if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
-                    generateFlowFile = replaceTextProcess(config, groupId);
+                    generateFlowFile = replaceTextProcess(config, groupId, dto);
                 } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
-                    generateFlowFile = replaceTextForDwProcess(config, groupId);
+                    generateFlowFile = replaceTextForDwProcess(config, groupId, dto);
                 }
 
                 tableNifiSettingPO.generateFlowFileProcessorId = generateFlowFile.getId();
@@ -1829,7 +1829,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      * @param groupId 组id
      * @return 组件对象
      */
-    private ProcessorEntity replaceTextProcess(DataAccessConfigDTO config, String groupId) {
+    private ProcessorEntity replaceTextProcess(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
         HashMap<String, Object> updateFieldMap_Y = new HashMap<>();
         updateFieldMap_Y.put("verify_type", "3");
@@ -1845,12 +1845,14 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
         dataCheckSyncDTO.ip = pgsqlDatainputIp;
         dataCheckSyncDTO.dbName = pgsqlDatainputDbName;
-        dataCheckSyncDTO.tableName = "stg_" + config.processorConfig.targetTableName;
+        dataCheckSyncDTO.tableName = config.processorConfig.targetTableName;
         dataCheckSyncDTO.msgField = "error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
         dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
         dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
+        dataCheckSyncDTO.tablePrefix = "stg_";
+        dataCheckSyncDTO.tableUnique = String.valueOf(dto.id);
 
         buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
         buildReplaceTextProcessorDTO.details = "query_phase";
@@ -1872,7 +1874,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      * @param groupId 组id
      * @return 组件对象
      */
-    private ProcessorEntity replaceTextForDwProcess(DataAccessConfigDTO config, String groupId) {
+    private ProcessorEntity replaceTextForDwProcess(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
         HashMap<String, Object> updateFieldMap_Y = new HashMap<>();
         updateFieldMap_Y.put("verify_type", "3");
@@ -1888,12 +1890,14 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
         dataCheckSyncDTO.ip = pgsqlDatamodelIp;
         dataCheckSyncDTO.dbName = pgsqlDatamodelDbName;
-        dataCheckSyncDTO.tableName = "stg_" + config.processorConfig.targetTableName;
+        dataCheckSyncDTO.tableName = config.processorConfig.targetTableName;
         dataCheckSyncDTO.msgField = "error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
         dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
         dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
+        dataCheckSyncDTO.tablePrefix = "stg_";
+        dataCheckSyncDTO.tableUnique = String.valueOf(dto.id);
 
         buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
         buildReplaceTextProcessorDTO.details = "query_phase";
