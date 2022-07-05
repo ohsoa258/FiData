@@ -3,6 +3,7 @@ package com.fisk.mdm.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
 import com.fisk.mdm.dto.attributelog.AttributeLogDTO;
 import com.fisk.mdm.dto.attributelog.AttributeLogSaveDTO;
 import com.fisk.mdm.dto.attributelog.AttributeLogUpdateDTO;
@@ -10,10 +11,12 @@ import com.fisk.mdm.dto.attributelog.AttributeRollbackDTO;
 import com.fisk.mdm.entity.AttributeLogPO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
+import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.map.AttributeLogMap;
 import com.fisk.mdm.map.AttributeMap;
 import com.fisk.mdm.mapper.AttributeLogMapper;
 import com.fisk.mdm.mapper.AttributeMapper;
+import com.fisk.mdm.service.AttributeGroupService;
 import com.fisk.mdm.service.AttributeLogService;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
@@ -23,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Author WangYan
@@ -39,7 +43,9 @@ public class AttributeLogServiceImpl implements AttributeLogService {
     @Resource
     UserClient userClient;
     @Resource
-    AttributeLogService attributeLogService;;
+    AttributeLogService attributeLogService;
+    @Resource
+    AttributeGroupService groupService;
 
     @Override
     public ResultEnum saveAttributeLog(AttributeLogSaveDTO dto) {
@@ -92,8 +98,19 @@ public class AttributeLogServiceImpl implements AttributeLogService {
             // 转换dto
             List<AttributeLogDTO> dtoList = AttributeLogMap.INSTANCES.logPoToDto(list);
 
+            // 获取属性组
+            dtoList.stream().filter(e -> e.getId() != null).forEach(e -> {
+                List<AttributeGroupDTO> attributeGroupList = groupService.getDataByAttributeId(e.getId());
+                e.setAttributeGroupList(attributeGroupList);
+            });
+
             // 获取创建人、修改人
             ReplenishUserInfo.replenishUserName(dtoList, userClient, UserFieldEnum.USER_ACCOUNT);
+
+            dtoList.stream().map(e -> {
+                e.setDataTypeEnDisplay(DataTypeEnum.getValue(e.getDataType()).name());
+                return e;
+            }).collect(Collectors.toList());
 
             return dtoList;
         }

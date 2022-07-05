@@ -3,12 +3,13 @@ package com.fisk.mdm.dto.attributelog;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fisk.common.core.baseObject.vo.BaseUserInfoVO;
-import com.fisk.mdm.enums.DataTypeEnum;
+import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
 import com.fisk.mdm.enums.MdmTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @Author WangYan
@@ -62,12 +63,17 @@ public class AttributeLogDTO extends BaseUserInfoVO {
     /**
      * 数据类型
      */
-    private DataTypeEnum dataType;
+    private String dataType;
 
     /**
      * 数据类型长度
      */
     private Integer dataTypeLength;
+
+    /**
+     * 数据类型枚举名称
+     */
+    private String dataTypeEnDisplay;
 
     /**
      * 数据类型小数点长度
@@ -97,17 +103,17 @@ public class AttributeLogDTO extends BaseUserInfoVO {
     /**
      * 是否开启属性日志 0：false 1:true
      */
-    private Integer enableAttributeLog;
+    private Boolean enableAttributeLog;
 
     /**
      * 是否只读 0：false 1:true
      */
-    private Integer enableReadonly;
+    private Boolean enableReadonly;
 
     /**
      * 是否必填 0：false 1:true
      */
-    private Integer enableRequired;
+    private Boolean enableRequired;
 
     /**
      * 类型：
@@ -119,6 +125,11 @@ public class AttributeLogDTO extends BaseUserInfoVO {
      * 数据域id（相当于外键）
      */
     private Integer domainId;
+
+    /**
+     * 属性组信息
+     */
+    private List<AttributeGroupDTO> attributeGroupList;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @ApiModelProperty(value = "创建时间",required = true)
