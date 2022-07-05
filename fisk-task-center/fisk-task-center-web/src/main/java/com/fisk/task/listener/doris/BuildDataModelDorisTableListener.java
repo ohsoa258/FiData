@@ -393,7 +393,7 @@ public class BuildDataModelDorisTableListener
         String associatedKey = "";
         String sql2 = sqlFileds.toString() + associatedKey;
         sql2 += "fi_createtime varchar(50),fi_updatetime varchar(50)";
-        sql2 +=",error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), sync_type varchar(50) DEFAULT '2',verify_type varchar(50) DEFAULT '3'";
+        sql2 +=",fidata_batch_code varchar(50)";
         String sql3 = sqlFileds1.toString();
         if (Objects.equals("", sql3)) {
             sql1 += sql2;
@@ -408,7 +408,7 @@ public class BuildDataModelDorisTableListener
         //创建表
         log.info("pg_dw建表语句" + sql1);
         //String stgTable = sql1.replaceFirst(tableName, "stg_" + tableName);
-        String stgTable = "DROP TABLE IF EXISTS stg_" + tableName + "; CREATE TABLE stg_" + tableName + " (" + tablePk + " varchar(50) NOT NULL DEFAULT sys_guid()," + stgSqlFileds.toString() + associatedKey + "fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),enableflag varchar(50),fidata_batch_code varchar(50))";
+        String stgTable = "DROP TABLE IF EXISTS stg_" + tableName + "; CREATE TABLE stg_" + tableName + " (" + tablePk + " varchar(50) NOT NULL DEFAULT sys_guid()," + stgSqlFileds.toString() + associatedKey + "fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),enableflag varchar(50),error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), sync_type varchar(50) DEFAULT '2',verify_type varchar(50) DEFAULT '3')";
         sqlList.add(stgTable);
         sqlList.add(sql1);
         HashMap<String, Object> map = new HashMap<>();
