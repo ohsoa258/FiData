@@ -3,6 +3,8 @@ package com.fisk.dataaccess.client;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
 import com.fisk.dataaccess.dto.access.NifiAccessDTO;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
@@ -256,4 +258,14 @@ public interface DataAccessClient {
     @PostMapping("/appRegistration/buildTableRuleInfo")
     @ApiOperation(value = "构建业务元数据其他数据信息")
     ResultEntity<TableRuleInfoDTO> buildTableRuleInfo(@RequestBody TableRuleParameterDTO dto);
+
+    /**
+     * 构建元数据查询对象(表及下面的字段)
+     *
+     * @param dto dto
+     * @return 元数据对象
+     */
+    @ApiOperation("构建元数据查询对象(表及下面的字段)")
+    @PostMapping("/dataAccessTree/buildFiDataTableMetaData")
+    ResultEntity<List<FiDataTableMetaDataDTO>> buildFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto);
 }
