@@ -134,8 +134,9 @@ public class AttributeLogServiceImpl implements AttributeLogService {
             dto1.setAttributeId(dto.getAttributeId());
             attributeLogService.saveAttributeLog(dto1);
             return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        }else {
+            return ResultEnum.POSTULATES_NOT_ROLLBACK;
         }
-        return null;
     }
 
     @Override
