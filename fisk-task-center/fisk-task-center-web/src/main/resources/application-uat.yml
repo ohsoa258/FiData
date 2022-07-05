@@ -29,6 +29,8 @@ pgsql-datamodel:
   password: PgPassword01!
   url: jdbc:postgresql://192.168.21.13:5432/dmp_dw_UAT?stringtype=unspecified
   username: postgres
+  ip: 192.168.21.13
+  dbName: dmp_dw_UAT
 pgsql-mdm:
   driverClassName: org.postgresql.Driver
   password: PgPassword01!

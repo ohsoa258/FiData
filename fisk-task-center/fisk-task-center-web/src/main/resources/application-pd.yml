@@ -29,6 +29,8 @@ pgsql-datamodel:
   password: .FdF_r&tj4)+
   url: jdbc:postgresql://100.102.201.107:5433/dmp_dw?stringtype=unspecified
   username: adminuser
+  ip: 100.102.201.107
+  dbName: dmp_dw
 pgsql-mdm:
   driverClassName: org.postgresql.Driver
   password: .FdF_r&tj4)+

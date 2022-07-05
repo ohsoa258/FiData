@@ -83,6 +83,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     private String pgsqlDatainputIp;
     @Value("${pgsql-datainput.dbName}")
     private String pgsqlDatainputDbName;
+    @Value("${pgsql-datamodel.ip}")
+    private String pgsqlDatamodelIp;
+    @Value("${pgsql-datamodel.dbName}")
+    private String pgsqlDatamodelDbName;
     @Value("${pgsql-datainput.username}")
     private String pgsqlDatainputUsername;
     @Value("${pgsql-datainput.password}")
@@ -142,17 +146,18 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     public String tableOutputPortId;
 
 
-    //@MQConsumerLog
     @Override
     public ResultEnum msg(String data, Acknowledgment ack) {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
         ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
         modelPublishStatusDTO.publish = 1;
         log.info("创建nifi流程发布参数:" + data);
+        BuildNifiFlowDTO dto = JSON.parseObject(data, BuildNifiFlowDTO.class);
         try {
-            BuildNifiFlowDTO dto = JSON.parseObject(data, BuildNifiFlowDTO.class);
             modelPublishStatusDTO.tableId = dto.id;
-            client.updateTablePublishStatus(modelPublishStatusDTO);
+            if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
+                client.updateTablePublishStatus(modelPublishStatusDTO);
+            }
             //获取数据接入配置项
             DataAccessConfigDTO configDTO = getConfigData(dto.id, dto.appId, dto.synchronousTypeEnum, dto.type, dto.dataClassifyEnum, dto.tableName, dto.selectSql, dto);
             if (configDTO == null) {
@@ -285,7 +290,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         } catch (Exception e) {
             resultEnum = ResultEnum.ERROR;
             modelPublishStatusDTO.publish = 2;
-            client.updateTablePublishStatus(modelPublishStatusDTO);
+            modelPublishStatusDTO.publishErrorMsg = StackTraceHelper.getStackTraceInfo(e);
+            if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
+                client.updateTablePublishStatus(modelPublishStatusDTO);
+            }
             log.error("nifi流程创建失败" + StackTraceHelper.getStackTraceInfo(e));
             return resultEnum;
         } finally {
@@ -905,10 +913,16 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             //componentConnector(groupId, putDatabaseRecord.getId(), mergeRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
             //用组件,调存储过程把stg里的数据向ods里面插入
             ProcessorEntity invokeHTTP = new ProcessorEntity();
-            if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
+            if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS) || Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
                 //---------------------------------
                 // todo 数据验证
-                ProcessorEntity generateFlowFile = replaceTextProcess(config, groupId);
+                ProcessorEntity generateFlowFile = new ProcessorEntity();
+                if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
+                    generateFlowFile = replaceTextProcess(config, groupId);
+                } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
+                    generateFlowFile = replaceTextForDwProcess(config, groupId);
+                }
+
                 tableNifiSettingPO.generateFlowFileProcessorId = generateFlowFile.getId();
                 componentConnector(groupId, putDatabaseRecord.getId(), generateFlowFile.getId(), AutoEndBranchTypeEnum.SUCCESS);
                 invokeHTTP = invokeHTTPProcessor(groupId);
@@ -1670,7 +1684,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             } else {
                 querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
                         "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName + " where fidata_batch_code='${fidata_batch_code}'";
             }
 
         }
@@ -1831,6 +1845,49 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
         dataCheckSyncDTO.ip = pgsqlDatainputIp;
         dataCheckSyncDTO.dbName = pgsqlDatainputDbName;
+        dataCheckSyncDTO.tableName = "stg_" + config.processorConfig.targetTableName;
+        dataCheckSyncDTO.msgField = "error_message";
+        dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
+        dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
+        dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
+        dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
+
+        buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
+        buildReplaceTextProcessorDTO.details = "query_phase";
+        buildReplaceTextProcessorDTO.groupId = groupId;
+        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
+        //替换流文件
+        buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
+        buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
+        buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(dataCheckSyncDTO);
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
+        return processorEntityBusinessResult.data;
+    }
+
+
+    /**
+     * 调用api参数组件
+     *
+     * @param config  数据接入配置
+     * @param groupId 组id
+     * @return 组件对象
+     */
+    private ProcessorEntity replaceTextForDwProcess(DataAccessConfigDTO config, String groupId) {
+        BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
+        HashMap<String, Object> updateFieldMap_Y = new HashMap<>();
+        updateFieldMap_Y.put("verify_type", "3");
+        updateFieldMap_Y.put("sync_type", "2");
+        HashMap<String, Object> updateFieldMap_N = new HashMap<>();
+        updateFieldMap_N.put("sync_type", 3);
+        updateFieldMap_N.put("verify_type", 2);
+        HashMap<String, Object> updateFieldMap_R = new HashMap<>();
+        updateFieldMap_R.put("sync_type", 2);
+        updateFieldMap_R.put("verify_type", 4);
+        HashMap<String, Object> checkByFieldMap = new HashMap<>();
+        checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
+        DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
+        dataCheckSyncDTO.ip = pgsqlDatamodelIp;
+        dataCheckSyncDTO.dbName = pgsqlDatamodelDbName;
         dataCheckSyncDTO.tableName = "stg_" + config.processorConfig.targetTableName;
         dataCheckSyncDTO.msgField = "error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;

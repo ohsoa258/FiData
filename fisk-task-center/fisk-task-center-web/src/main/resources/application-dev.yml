@@ -29,6 +29,8 @@ pgsql-datamodel:
   password: Password01!
   url: jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified
   username: postgres
+  ip: 192.168.1.250
+  dbName: dmp_dw
 pgsql-mdm:
   password: Password01!
   url: jdbc:postgresql://192.168.1.250:5432/dmp_mdm?stringtype=unspecified
