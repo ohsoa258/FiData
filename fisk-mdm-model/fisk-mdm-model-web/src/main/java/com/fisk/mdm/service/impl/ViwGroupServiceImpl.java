@@ -348,6 +348,15 @@ public class ViwGroupServiceImpl implements ViwGroupService {
                         ViwGroupCheckDTO dto = new ViwGroupCheckDTO();
                         dto.setId(e.getId());
                         dto.setAliasName(e.getAliasName());
+                        dto.setName(e.getName());
+                        dto.setDisplayName(e.getDisplayName());
+                        dto.setDesc(e.getDesc());
+                        dto.setDataType(e.getDataType());
+                        dto.setDataTypeLength(e.getDataTypeLength());
+                        dto.setDataTypeDecimalLength(e.getDataTypeDecimalLength());
+                        dto.setDomainEntityId(e.getDomainEntityId());
+                        dto.setDomainName(e.getDomainName());
+                        dto.setMapType(e.getMapType());
                         checkIds.add(dto);
                     });
         }
@@ -675,6 +684,13 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             dto1.setName(e.getName());
             dto1.setType(ObjectTypeEnum.ATTRIBUTES.getName());
             dto1.setDisplayName(e.getDisplayName());
+            dto1.setDesc(e.getDesc());
+            dto1.setDataType(e.getDataType());
+            dto1.setDataTypeLength(e.getDataTypeLength());
+            dto1.setDataTypeDecimalLength(e.getDataTypeDecimalLength());
+            dto1.setDomainEntityId(e.getDomainEntityId());
+            dto1.setDomainName(e.getDomainName());
+            dto1.setMapType(e.getMapType());
 
             // 查询别名
             QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();

@@ -20,6 +20,12 @@ public class EntityQueryDTO {
     private String dataType;
     private String displayName;
     private String aliasName;
+    private String desc;
+    private Integer dataTypeLength;
+    private Integer dataTypeDecimalLength;
+    private Integer domainEntityId;
+    private String domainName;
+    private String mapType;
     /**
      * 是否选中 0:未选中 1:选中
      */
