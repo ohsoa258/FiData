@@ -32,7 +32,7 @@ public class DataCheckWebDTO {
     /**
      * key:表名称 value:验证的数据，json数组
      */
-    @ApiModelProperty(value = "key:表名称 value:验证的数据，json数组")
+    @ApiModelProperty(value = "key:表id/表名称 value:验证的数据，json数组")
     @NotNull()
     public HashMap<String, JSONArray> body;
 }

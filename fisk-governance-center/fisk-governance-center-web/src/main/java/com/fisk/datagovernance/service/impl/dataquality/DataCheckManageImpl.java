@@ -208,7 +208,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS, dataCheckResults);
             }
             // 第三步：查询配置的表规则信息
-            Set<String> tableNames = dto.body.keySet();
+            Set<String> tableUnique = dto.body.keySet();
             List<Long> templateIds = templatePOList.stream().map(TemplatePO::getId).collect(Collectors.toList());
             QueryWrapper<DataCheckPO> dataCheckPOQueryWrapper = new QueryWrapper<>();
             dataCheckPOQueryWrapper.lambda()
@@ -216,7 +216,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     .eq(DataCheckPO::getDelFlag, 1)
                     .eq(DataCheckPO::getRuleState, RuleStateEnum.Enable.getValue())
                     .orderByAsc(DataCheckPO::getRuleSort)
-                    .in(DataCheckPO::getUseTableName, tableNames)
+                    .in(DataCheckPO::getUseTableName, tableUnique)
                     .in(DataCheckPO::getTemplateId, templateIds);
             List<DataCheckPO> dataCheckPOList = baseMapper.selectList(dataCheckPOQueryWrapper);
             if (CollectionUtils.isEmpty(dataCheckPOList)) {
@@ -231,7 +231,13 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             if (CollectionUtils.isEmpty(dataCheckExtends)) {
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATACHECK_RULE_ERROR, dataCheckResults);
             }
-            // 第五步：循环规则，解析数据，验证数据是否合规
+
+            // 第五步：判断数据源是FiData还是自定义，FiData调用相关接口给配置表的表名称和ID重命名
+            if (dataSourceInfo.getDatasourceType() == SourceTypeEnum.FiData.getValue()){
+                //for ()
+            }
+
+            // 第六步：循环规则，解析数据，验证数据是否合规
             for (DataCheckPO dataCheckPO : dataCheckPOList) {
                 TemplatePO templatePO = templatePOList.stream().filter(item -> item.getId() == dataCheckPO.getTemplateId()).findFirst().orElse(null);
                 TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
@@ -293,7 +299,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params dataCheckExtendPO  数据校验扩展属性PO
      * @params data 校验的数据
      */
-    public ResultEntity<List<DataCheckResultVO>> CheckFieldRule_Interface(TemplatePO templatePO, DataSourceConPO dataSourceInfo, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO, JSONArray data) {
+    public ResultEntity<List<DataCheckResultVO>> CheckFieldRule_Interface(TemplatePO templatePO, DataSourceConPO dataSourceInfo,
+                                                                          DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO, JSONArray data) {
         List<DataCheckResultVO> dataCheckResult = new ArrayList<>();
         String[] split = dataCheckExtendPO.checkType.split(",");
         if (split == null || split.length == 0) {
@@ -443,7 +450,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckPOQueryWrapper.lambda()
                     .eq(DataCheckPO::getDatasourceId, dataSourceInfo.getId())
                     .eq(DataCheckPO::getDelFlag, 1)
-                    .eq(DataCheckPO::getUseTableName, dto.getTableName())
+                    .eq(DataCheckPO::getUseTableName, dto.getTableUnique())
                     .eq(DataCheckPO::getRuleState, RuleStateEnum.Enable.getValue())
                     .orderByAsc(DataCheckPO::getRuleSort)
                     .in(DataCheckPO::getTemplateId, templateIds);
@@ -452,7 +459,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 // 未配置表校验规则，但请求参数中含成功后要修改的字段；根据参数字段修改表数据
                 ResultEnum updateResult = ResultEnum.SUCCESS;
                 if (CollectionUtils.isNotEmpty(dtoPramsList) && StringUtils.isNotEmpty(dtoPramsList.get(1))) {
-                    String tableName = getSqlField(dataSourceType, dto.getTableName());
+                    String tableName = getSqlField(dataSourceType, dto.getTableUnique());
                     updateResult = UpdateTableDataToSuccess_Sync(connection, dataSourceType, dtoPramsList, tableName);
                 }
                 return ResultEntityBuild.buildData(updateResult, null);

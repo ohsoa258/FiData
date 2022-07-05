@@ -29,11 +29,18 @@ public class DataCheckSyncDTO {
     public String dbName;
 
     /**
-     * 实际表名称/表Id
+     * 表前缀
      */
-    @ApiModelProperty(value = "实际表名称/表Id")
-    public String tableName;
+    @ApiModelProperty(value = "表前缀")
+    public String tablePrefix;
 
+    /**
+     * 表唯一标识：表名称/表ID
+     */
+    @ApiModelProperty(value = "表唯一标识：表名称/表ID")
+    public String tableUnique;
+
+    public String  tableName;
     /**
      * 校验通过修改字段集合，key：字段名称 value：字段值
      */
