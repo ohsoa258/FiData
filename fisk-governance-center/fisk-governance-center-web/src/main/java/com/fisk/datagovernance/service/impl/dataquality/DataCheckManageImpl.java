@@ -15,6 +15,8 @@ import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.common.core.utils.RegexUtils;
 import com.fisk.common.core.utils.SqlParmUtils;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.datagovernance.enums.DataSourceTypeEnum;
@@ -231,18 +233,46 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             if (CollectionUtils.isEmpty(dataCheckExtends)) {
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATACHECK_RULE_ERROR, dataCheckResults);
             }
-
-            // 第五步：判断数据源是FiData还是自定义，FiData调用相关接口给配置表的表名称和ID重命名
+            // 第五步：数据源是FiData，调用相关接口给配置表的表名称和ID重命名
+            List<FiDataTableMetaDataDTO> fiDataTableMetaDataDTOS=null;
             if (dataSourceInfo.getDatasourceType() == SourceTypeEnum.FiData.getValue()){
-                //for ()
+                fiDataTableMetaDataDTOS  =new ArrayList<>();
+                if (CollectionUtils.isEmpty(fiDataTableMetaDataDTOS)){
+                    return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TABLECONFIGURATION_SENT_CHANGES, dataCheckResults);
+                }
             }
-
             // 第六步：循环规则，解析数据，验证数据是否合规
             for (DataCheckPO dataCheckPO : dataCheckPOList) {
                 TemplatePO templatePO = templatePOList.stream().filter(item -> item.getId() == dataCheckPO.getTemplateId()).findFirst().orElse(null);
                 TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
                 List<DataCheckExtendPO> dataCheckExtendFilters = dataCheckExtends.stream().filter(item -> item.getRuleId() == dataCheckPO.getId()).collect(Collectors.toList());
                 if (CollectionUtils.isEmpty(dataCheckExtendFilters)) {
+                    continue;
+                }
+                boolean tableIsChange=false;
+                if (CollectionUtils.isNotEmpty(fiDataTableMetaDataDTOS)) {
+                    FiDataTableMetaDataDTO fiDataTableMetaDataDTO = fiDataTableMetaDataDTOS.stream().filter(t -> t.id.equals(dataCheckPO.getUseTableName())).findFirst().orElse(null);
+                    if (fiDataTableMetaDataDTO == null) {
+                        tableIsChange = true;
+                    } else {
+                        dataCheckPO.setTableName(fiDataTableMetaDataDTO.getName());
+                        dataCheckPO.setUseTableName(fiDataTableMetaDataDTO.getName());
+                        if (CollectionUtils.isEmpty(fiDataTableMetaDataDTO.getFieldList())) {
+                            tableIsChange = true;
+                        } else {
+                            for (DataCheckExtendPO dataCheckExtendPO : dataCheckExtendFilters) {
+                                FiDataTableMetaDataDTO fiDataFieldMetaDataDTO = fiDataTableMetaDataDTO.fieldList.stream().filter(t -> t.id.equals(dataCheckExtendPO.getUseFieldName())).findFirst().orElse(null);
+                                if (fiDataFieldMetaDataDTO == null) {
+                                    tableIsChange = true;
+                                } else {
+                                    dataCheckExtendPO.setFieldName(fiDataFieldMetaDataDTO.getName());
+                                    dataCheckExtendPO.setUseFieldName(fiDataFieldMetaDataDTO.getName());
+                                }
+                            }
+                        }
+                    }
+                }
+                if (tableIsChange) {
                     continue;
                 }
                 // 第六步：解析需要验证的数据
@@ -431,6 +461,18 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             if (dataSourceInfo == null) {
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_EXISTS, null);
             }
+            String tableNameStr=dto.getTablePrefix();
+            // 数据源是FiData，调用相关接口给配置表的表名称和ID重命名
+            List<FiDataTableMetaDataDTO> fiDataTableMetaDataDTOS=null;
+            if (dataSourceInfo.getDatasourceType() == SourceTypeEnum.FiData.getValue()) {
+                fiDataTableMetaDataDTOS = new ArrayList<>();
+                if (CollectionUtils.isEmpty(fiDataTableMetaDataDTOS)) {
+                    return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TABLECONFIGURATION_SENT_CHANGES, null);
+                }
+                tableNameStr += fiDataTableMetaDataDTOS.get(0).getName();
+            }else {
+                tableNameStr += dto.getTableName();
+            }
             DataSourceTypeEnum dataSourceType = DataSourceTypeEnum.getEnum(dataSourceInfo.getConType());
             List<String> dtoPramsList = GetPrams_Sync(dto, dataSourceType);
             Connection connection = dataSourceConManageImpl.getStatement(dataSourceType.getDriverName(), dataSourceInfo.getConStr(), dataSourceInfo.getConAccount(), dataSourceInfo.getConPassword());
@@ -459,7 +501,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 // 未配置表校验规则，但请求参数中含成功后要修改的字段；根据参数字段修改表数据
                 ResultEnum updateResult = ResultEnum.SUCCESS;
                 if (CollectionUtils.isNotEmpty(dtoPramsList) && StringUtils.isNotEmpty(dtoPramsList.get(1))) {
-                    String tableName = getSqlField(dataSourceType, dto.getTableUnique());
+                    String tableName = getSqlField(dataSourceType, tableNameStr);
                     updateResult = UpdateTableDataToSuccess_Sync(connection, dataSourceType, dtoPramsList, tableName);
                 }
                 return ResultEntityBuild.buildData(updateResult, null);
@@ -478,6 +520,32 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
                 List<DataCheckExtendPO> dataCheckExtendFilters = dataCheckExtends.stream().filter(item -> item.getRuleId() == dataCheckPO.getId()).collect(Collectors.toList());
                 if (CollectionUtils.isEmpty(dataCheckExtendFilters)) {
+                    continue;
+                }
+                boolean tableIsChange=false;
+                if (CollectionUtils.isNotEmpty(fiDataTableMetaDataDTOS)) {
+                    FiDataTableMetaDataDTO fiDataTableMetaDataDTO = fiDataTableMetaDataDTOS.stream().filter(t -> t.id.equals(dataCheckPO.getUseTableName())).findFirst().orElse(null);
+                    if (fiDataTableMetaDataDTO == null) {
+                        tableIsChange = true;
+                    } else {
+                        dataCheckPO.setTableName(dto.getTablePrefix() + fiDataTableMetaDataDTO.getName());
+                        dataCheckPO.setUseTableName(dto.getTablePrefix() + fiDataTableMetaDataDTO.getName());
+                        if (CollectionUtils.isEmpty(fiDataTableMetaDataDTO.getFieldList())) {
+                            tableIsChange = true;
+                        } else {
+                            for (DataCheckExtendPO dataCheckExtendPO : dataCheckExtendFilters) {
+                                FiDataTableMetaDataDTO fiDataFieldMetaDataDTO = fiDataTableMetaDataDTO.fieldList.stream().filter(t -> t.id.equals(dataCheckExtendPO.getUseFieldName())).findFirst().orElse(null);
+                                if (fiDataFieldMetaDataDTO == null) {
+                                    tableIsChange = true;
+                                } else {
+                                    dataCheckExtendPO.setFieldName(fiDataFieldMetaDataDTO.getName());
+                                    dataCheckExtendPO.setUseFieldName(fiDataFieldMetaDataDTO.getName());
+                                }
+                            }
+                        }
+                    }
+                }
+                if (tableIsChange) {
                     continue;
                 }
                 switch (templateType) {

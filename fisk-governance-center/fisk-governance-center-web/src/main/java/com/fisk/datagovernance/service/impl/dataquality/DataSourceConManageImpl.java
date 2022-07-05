@@ -100,10 +100,17 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             return ResultEnum.DATA_NOTEXISTS;
         }
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda()
-                .eq(DataSourceConPO::getName, dto.name)
-                .eq(DataSourceConPO::getDelFlag, 1)
-                .ne(DataSourceConPO::getId, dto.id);
+        if (dto.datasourceType == SourceTypeEnum.FiData) {
+            queryWrapper.lambda()
+                    .eq(DataSourceConPO::getDatasourceId, dto.datasourceId)
+                    .eq(DataSourceConPO::getDelFlag, 1)
+                    .ne(DataSourceConPO::getId, dto.id);
+        }else {
+            queryWrapper.lambda()
+                    .eq(DataSourceConPO::getName, dto.name)
+                    .eq(DataSourceConPO::getDelFlag, 1)
+                    .ne(DataSourceConPO::getId, dto.id);
+        }
         DataSourceConPO data = mapper.selectOne(queryWrapper);
         if (data != null) {
             return ResultEnum.NAME_EXISTS;
