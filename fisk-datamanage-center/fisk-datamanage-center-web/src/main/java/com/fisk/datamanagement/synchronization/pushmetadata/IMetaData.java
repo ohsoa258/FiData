@@ -1,7 +1,7 @@
 package com.fisk.datamanagement.synchronization.pushmetadata;
 
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.server.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 
 import java.util.List;
 
