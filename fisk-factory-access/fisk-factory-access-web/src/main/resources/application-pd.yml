@@ -44,3 +44,18 @@ pgsql-ods:
 Data-quality-check:
   ip: 100.102.201.107
   dbName: dmp_ods
+
+# 元数据实例信息
+metadata-instance:
+  # 数据库类型
+  rdbmsType: postgresql
+  # 平台
+  platform: Linux
+  # 主机
+  hostname: 100.102.201.107
+  # 端口
+  port: 5433
+  # 数据库
+  dbName: dmp_ods
+  # 网络协议
+  protocol: http

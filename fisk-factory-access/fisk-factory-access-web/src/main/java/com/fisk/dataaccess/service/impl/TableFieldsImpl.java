@@ -9,6 +9,10 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDbAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
@@ -37,6 +41,7 @@ import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -44,6 +49,7 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -72,6 +78,18 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     private UserHelper userHelper;
     @Resource
     private DataFactoryClient dataFactoryClient;
+    @Value("${metadata-instance.rdbmsType}")
+    private String rdbmsType;
+    @Value("${metadata-instance.platform}")
+    private String platform;
+    @Value("${metadata-instance.hostname}")
+    private String hostname;
+    @Value("${metadata-instance.port}")
+    private String port;
+    @Value("${metadata-instance.dbName}")
+    private String dbName;
+    @Value("${metadata-instance.protocol}")
+    private String protocol;
 
     @Override
     public Page<DataReviewVO> listData(DataReviewQueryDTO query) {
@@ -302,6 +320,114 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 log.info("发布失败,{}", ResultEnum.TASK_EXEC_FAILURE.getMsg());
                 throw new FkException(ResultEnum.TASK_EXEC_FAILURE);
             }
+        }
+    }
+
+    /**
+     * 构建元数据实时同步数据对象
+     *
+     * @param app      应用
+     * @param accessId 表id
+     * @param flag     1: api 2:table
+     * @author Lock
+     * @date 2022/7/5 16:51
+     */
+    private void buildMetaDataInstanceAttribute(AppRegistrationPO app, long accessId, int flag) {
+
+        int apiType = 1;
+        int tableType = 2;
+
+        // 实例
+        List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
+        MetaDataInstanceAttributeDTO instance = new MetaDataInstanceAttributeDTO();
+        instance.setRdbms_type(rdbmsType);
+        instance.setPlatform(platform);
+        instance.setHostname(hostname);
+        instance.setPort(port);
+        instance.setProtocol(protocol);
+        instance.setQualifiedName(hostname);
+        instance.setName(hostname);
+        instance.setContact_info(app.getAppPrincipal());
+        instance.setDescription(app.getAppDes());
+        instance.setComment(app.getAppDes());
+
+        // 库
+        List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
+        MetaDataDbAttributeDTO db = new MetaDataDbAttributeDTO();
+        db.setQualifiedName(hostname + "_" + dbName);
+        db.setName(dbName);
+        db.setContact_info(app.getAppPrincipal());
+        db.setDescription(app.getAppDes());
+        db.setComment(app.getAppDes());
+
+        TableAccessPO tableAccess = tableAccessImpl.query().eq("id", accessId).one();
+        if (tableAccess == null) {
+            return;
+        }
+        if (flag == tableType) {
+            // 表
+            List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
+            MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+            table.setQualifiedName(hostname + "_" + dbName + "_" + tableAccess.getId());
+            table.setName("ods_" + app.appAbbreviation + "_" + tableAccess.getTableName());
+            table.setContact_info(app.getAppPrincipal());
+            table.setDescription(tableAccess.getTableDes());
+            table.setComment(tableAccess.getTableDes());
+
+            // 字段
+            List<MetaDataColumnAttributeDTO> columnList = this.query().eq("table_access_id", tableAccess.id).list()
+                    .stream()
+                    .filter(Objects::nonNull)
+                    .map(e -> {
+                        MetaDataColumnAttributeDTO field = new MetaDataColumnAttributeDTO();
+                        table.setQualifiedName(hostname + "_" + dbName + "_" + tableAccess.getId() + "_" + e.getId());
+                        table.setName(e.getFieldName());
+                        table.setContact_info(app.getAppPrincipal());
+                        table.setDescription(e.getFieldDes());
+                        table.setComment(e.getFieldDes());
+                        return field;
+                    }).collect(Collectors.toList());
+
+            table.setColumnList(columnList);
+            tableList.add(table);
+            db.setTableList(tableList);
+            dbList.add(db);
+            instance.setDbList(dbList);
+        } else if (flag == apiType) {
+
+            List<MetaDataTableAttributeDTO> tableList = tableAccessImpl.query().eq("api_id", tableAccess.apiId).list()
+                    .stream().filter(Objects::nonNull)
+                    .map(tb -> {
+                        // 表
+                        MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+                        table.setQualifiedName(hostname + "_" + dbName + "_" + tb.getId());
+                        table.setName("ods_" + app.appAbbreviation + "_" + tb.getTableName());
+                        table.setContact_info(app.getAppPrincipal());
+                        table.setDescription(tb.getTableDes());
+                        table.setComment(tb.getTableDes());
+
+                        // 字段
+                        List<MetaDataColumnAttributeDTO> columnList = this.query()
+                                .eq("table_access_id", tb.id)
+                                .list()
+                                .stream()
+                                .filter(Objects::nonNull)
+                                .map(e -> {
+                                    MetaDataColumnAttributeDTO field = new MetaDataColumnAttributeDTO();
+                                    table.setQualifiedName(hostname + "_" + dbName + "_" + tb.getId() + "_" + e.getId());
+                                    table.setName(e.getFieldName());
+                                    table.setContact_info(app.getAppPrincipal());
+                                    table.setDescription(e.getFieldDes());
+                                    table.setComment(e.getFieldDes());
+                                    return field;
+                                }).collect(Collectors.toList());
+
+                        table.setColumnList(columnList);
+                        return table;
+                    }).collect(Collectors.toList());
+            db.setTableList(tableList);
+            dbList.add(db);
+            instance.setDbList(dbList);
         }
     }
 
