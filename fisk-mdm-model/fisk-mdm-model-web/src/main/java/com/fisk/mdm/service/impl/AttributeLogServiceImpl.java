@@ -100,7 +100,7 @@ public class AttributeLogServiceImpl implements AttributeLogService {
 
             // 获取属性组
             dtoList.stream().filter(e -> e.getId() != null).forEach(e -> {
-                List<AttributeGroupDTO> attributeGroupList = groupService.getDataByAttributeId(e.getId());
+                List<AttributeGroupDTO> attributeGroupList = groupService.getDataByAttributeId(e.getAttributeId());
                 e.setAttributeGroupList(attributeGroupList);
             });
 
