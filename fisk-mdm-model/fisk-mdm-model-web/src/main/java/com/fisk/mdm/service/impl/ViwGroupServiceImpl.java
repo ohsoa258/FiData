@@ -411,9 +411,13 @@ public class ViwGroupServiceImpl implements ViwGroupService {
 
         // 查询出域字段关联的实体
         EntityQueryDTO attributeInfo = this.getRelationAttributeInfo(dto.getEntityId(),attributeIds,entityIds,dto.getGroupId());
-        list.add(attributeInfo);
 
-        return list;
+        if (attributeInfo == null){
+            return null;
+        }else {
+            list.add(attributeInfo);
+            return list;
+        }
     }
 
     /**
