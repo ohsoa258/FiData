@@ -80,36 +80,42 @@ public class MysqlConUtils {
      * @params password
      * @params dbName
      */
-    public List<DataBaseViewDTO> loadViewDetails(DriverTypeEnum driverTypeEnum, String url, String user, String password,String dbName) {
+    public List<DataBaseViewDTO> loadViewDetails(DriverTypeEnum driverTypeEnum, String url, String user, String password, String dbName) {
 
         List<DataBaseViewDTO> list = null;
         try {
             Class.forName(driverTypeEnum.getName());
             Connection conn = DriverManager.getConnection(url, user, password);
             // 获取数据库中所有视图名称
-            List<String> viewNameList = loadViewNameList(driverTypeEnum,conn,dbName);
+            List<String> viewNameList = loadViewNameList(driverTypeEnum, conn, dbName);
             Statement st = conn.createStatement();
 
             list = new ArrayList<>();
 
             for (String viewName : viewNameList) {
-                ResultSet resultSql = st.executeQuery("select * from " + viewName + ";");
-
-                List<TableStructureDTO> colNames = getColNames(resultSql);
-
                 DataBaseViewDTO dto = new DataBaseViewDTO();
-                dto.viewName = viewName;
-                dto.fields = colNames;
-                // 关闭当前结果集
-                resultSql.close();
+                try {
+                    ResultSet resultSql = st.executeQuery("select * from `" + viewName + "`;");
 
+                    List<TableStructureDTO> colNames = getColNames(resultSql);
+
+                    dto.viewName = viewName;
+                    dto.fields = colNames;
+                    // 关闭当前结果集
+                    resultSql.close();
+
+                } catch (SQLException e) {
+                    log.error("无效的视图: " + viewName + ": " + e);
+                    dto.flag = 2;
+                    list.add(dto);
+                    continue;
+                }
                 list.add(dto);
             }
-
             st.close();
             conn.close();
         } catch (ClassNotFoundException | SQLException e) {
-            log.error("【getTableNameAndColumns】获取表名报错, ex", e);
+            log.error("【loadViewDetails】获取视图详情报错, ex", e);
             throw new FkException(ResultEnum.LOAD_VIEW_STRUCTURE_ERROR);
         }
 
@@ -126,7 +132,7 @@ public class MysqlConUtils {
         ArrayList<String> tablesList = null;
         try {
             DatabaseMetaData databaseMetaData = conn.getMetaData();
-            ResultSet tables = databaseMetaData.getTables(null, null, "%", null);
+            ResultSet tables = databaseMetaData.getTables(null, null, "%", new String[]{"TABLE_NAME"});
             tablesList = new ArrayList<String>();
             while (tables.next()) {
                 tablesList.add(tables.getString("TABLE_NAME"));
@@ -138,15 +144,15 @@ public class MysqlConUtils {
     }
 
     /**
+     * @return java.util.List<java.lang.String>
      * @description 获取视图名称列表
      * @author Lock
      * @date 2021/12/31 17:45
      * @version v1.0
      * @params conn
      * @params dbName
-     * @return java.util.List<java.lang.String>
      */
-    private List<String> loadViewNameList(DriverTypeEnum driverTypeEnum,Connection conn, String dbName) {
+    private List<String> loadViewNameList(DriverTypeEnum driverTypeEnum, Connection conn, String dbName) {
         ArrayList<String> viewNameList = null;
         try {
             DatabaseMetaData databaseMetaData = conn.getMetaData();
