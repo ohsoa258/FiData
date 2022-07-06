@@ -416,7 +416,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             //判断结果集是否为空
             if (CollectionUtils.isEmpty(data)) {
                 resultObjectVO.setResultData(new ArrayList<>());
-                return resultObjectVO;
+                //return resultObjectVO;
             }
             //创建人/更新人id替换为名称
             ReplenishUserInfo.replenishFiDataUserName(data, client, UserFieldEnum.USER_NAME);
