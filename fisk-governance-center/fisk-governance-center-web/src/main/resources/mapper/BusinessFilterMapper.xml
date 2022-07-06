@@ -10,6 +10,7 @@
         t1.rule_name,
         t1.table_unique,
         t1.table_type,
+        t1.table_business_type,
         t1.create_rule,
         t1.rule_sort,
         t1.rule_state,
@@ -33,6 +34,9 @@
         AND t3.del_flag = 1
         AND t3.id = #{datasourceId}
         AND table_unique = #{tableUnique,jdbcType=VARCHAR}
+        <if test="tableBusinessType != 0 ">
+            AND table_business_type = #{tableBusinessType}
+        </if>
         <if test="keyword != null and keyword != '' ">
             AND rule_name LIKE concat('%', #{keyword}, '%')
         </if>

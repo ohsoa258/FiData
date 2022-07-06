@@ -51,6 +51,12 @@ public class LifecycleVO {
     public int tableType;
 
     /**
+     * 表业务类型 1：事实表、2：维度表、3、指标表  4、宽表
+     */
+    @ApiModelProperty(value = "表业务类型 1：事实表、2：维度表、3、指标表  4、宽表")
+    public int tableBusinessType;
+
+    /**
      * 回收时间
      */
     @ApiModelProperty(value = "回收时间")

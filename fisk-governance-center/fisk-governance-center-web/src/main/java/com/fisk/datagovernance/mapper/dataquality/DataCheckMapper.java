@@ -28,6 +28,7 @@ public interface DataCheckMapper extends FKBaseMapper<DataCheckPO> {
     Page<DataCheckVO> getAll(Page<DataCheckVO> page,
                              @Param("datasourceId") int datasourceId,
                              @Param("tableUnique") String tableUnique,
+                             @Param("tableBusinessType") int tableBusinessType,
                              @Param("keyword") String keyword);
 
     /**
@@ -36,6 +37,6 @@ public interface DataCheckMapper extends FKBaseMapper<DataCheckPO> {
      * @return 执行结果
      */
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
-    @Insert("INSERT INTO tb_datacheck_rule(`template_id`, `datasource_id`, `rule_name`, `table_unique`,`table_type`, `check_rule`, `create_rule`, `rule_sort`, `rule_state`,`threshold_value`, `create_time`, `create_user`, `del_flag`) VALUES (#{templateId}, #{datasourceId}, #{ruleName}, #{tableUnique}, #{tableType}, #{checkRule}, #{createRule}, #{ruleSort}, #{ruleState}, #{thresholdValue}, #{createTime}, #{createUser},1);")
+    @Insert("INSERT INTO tb_datacheck_rule(`template_id`, `datasource_id`, `rule_name`, `table_unique`,`table_type`, `table_business_type`, `check_rule`, `create_rule`, `rule_sort`, `rule_state`,`threshold_value`, `create_time`, `create_user`, `del_flag`) VALUES (#{templateId}, #{datasourceId}, #{ruleName}, #{tableUnique}, #{tableType}, #{tableBusinessType}, #{checkRule}, #{createRule}, #{ruleSort}, #{ruleState}, #{thresholdValue}, #{createTime}, #{createUser},1);")
     int insertOne(DataCheckPO po);
 }

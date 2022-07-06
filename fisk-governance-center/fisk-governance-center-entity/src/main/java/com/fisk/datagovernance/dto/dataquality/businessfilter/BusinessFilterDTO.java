@@ -41,6 +41,12 @@ public class BusinessFilterDTO {
     public int tableType;
 
     /**
+     * 表业务类型 1：事实表、2：维度表、3、指标表  4、宽表
+     */
+    @ApiModelProperty(value = "表业务类型 1：事实表、2：维度表、3、指标表  4、宽表")
+    public int tableBusinessType;
+
+    /**
      * 生成规则（清洗脚本）
      */
     @ApiModelProperty(value = "生成规则（清洗脚本）")

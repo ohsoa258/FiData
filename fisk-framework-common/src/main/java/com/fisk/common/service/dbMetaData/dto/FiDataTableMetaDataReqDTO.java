@@ -24,8 +24,8 @@ public class FiDataTableMetaDataReqDTO {
     public String dataSourceId;
 
     /**
-     * 表ID集合
+     * 表信息集合
      */
-    @ApiModelProperty(value = "表ID集合")
-    public List<String> tableId;
+    @ApiModelProperty(value = "表信息集合")
+    public List<FiDataTableMetaDataReqDetailDTO> reqDetails;
 }

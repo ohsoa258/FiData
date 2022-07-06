@@ -43,11 +43,13 @@ public interface DataQualityClient {
 
     /**
      * 查询数据质量表规则（含字段规则）
-     *
+     * tableBusinessType：表业务类型 1：事实表、2：维度表、3、指标表  4、宽表
      * @return 查询结果
      */
     @GetMapping("/dataQualityClient/getTableRuleList")
-    ResultEntity<TableRuleInfoDTO> getTableRuleList(@RequestParam("dataSourceId") int dataSourceId, @RequestParam("tableUnique") String tableUnique);
+    ResultEntity<TableRuleInfoDTO> getTableRuleList(@RequestParam("dataSourceId") int dataSourceId,
+                                                    @RequestParam("tableUnique") String tableUnique,
+                                                    @RequestParam("tableBusinessType") int tableBusinessType);
 
     /**
      * 查询数据质量所有数据源信息，含FiData系统数据源

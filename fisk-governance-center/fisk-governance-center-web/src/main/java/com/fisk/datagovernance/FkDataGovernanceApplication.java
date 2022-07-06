@@ -25,7 +25,9 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.auth.client",
         "com.fisk.task.client",
         "com.fisk.datamanage.client",
-        "com.fisk.system.client"
+        "com.fisk.system.client",
+        "com.fisk.dataaccess.client",
+        "com.fisk.mdm.client"
 })
 public class FkDataGovernanceApplication {
     public static void main(String[] args) {

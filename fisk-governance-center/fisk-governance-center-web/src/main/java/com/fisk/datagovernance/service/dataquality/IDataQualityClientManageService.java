@@ -17,7 +17,7 @@ public interface IDataQualityClientManageService {
     /**
      * 查询数据质量表规则（含字段规则）
      */
-    ResultEntity<TableRuleInfoDTO> getTableRuleList(int dataSourceId, String tableName);
+    ResultEntity<TableRuleInfoDTO> getTableRuleList(int dataSourceId, String tableName,int tableBusinessType);
 
     /**
      * 查询数据质量所有数据源信息，含FiData系统数据源

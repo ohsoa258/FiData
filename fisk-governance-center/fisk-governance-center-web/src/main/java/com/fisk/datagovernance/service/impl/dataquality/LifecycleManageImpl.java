@@ -44,7 +44,8 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
 
     @Override
     public Page<LifecycleVO> getAll(LifecycleQueryDTO query) {
-        return baseMapper.getAll(query.page, query.datasourceId, query.tableUnique, query.keyword);
+        return baseMapper.getAll(query.page, query.datasourceId, query.tableUnique,
+                query.tableBusinessType,query.keyword);
     }
 
     @Override

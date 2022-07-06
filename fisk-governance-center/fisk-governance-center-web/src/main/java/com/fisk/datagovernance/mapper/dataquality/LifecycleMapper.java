@@ -26,5 +26,6 @@ public interface LifecycleMapper extends FKBaseMapper<LifecyclePO> {
     Page<LifecycleVO> getAll(Page<LifecycleVO> page,
                              @Param("datasourceId") int datasourceId,
                              @Param("tableUnique") String tableUnique,
+                             @Param("tableBusinessType") int tableBusinessType,
                              @Param("keyword") String keyword);
 }

@@ -26,5 +26,6 @@ public interface BusinessFilterMapper extends FKBaseMapper<BusinessFilterPO> {
     Page<BusinessFilterVO> getAll(Page<BusinessFilterVO> page,
                                   @Param("datasourceId") int datasourceId,
                                   @Param("tableUnique") String tableUnique,
+                                  @Param("tableBusinessType") int tableBusinessType,
                                   @Param("keyword") String keyword);
 }

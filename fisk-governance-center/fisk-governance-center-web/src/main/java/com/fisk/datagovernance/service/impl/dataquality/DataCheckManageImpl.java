@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -17,6 +18,8 @@ import com.fisk.common.core.utils.SqlParmUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDetailDTO;
+import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.datagovernance.enums.DataSourceTypeEnum;
@@ -29,6 +32,8 @@ import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckTypeV0;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.SyncCheckInfoVO;
+import com.fisk.mdm.client.MdmClient;
+import com.fisk.mdm.vo.entity.EntityInfoVO;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,11 +72,18 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     private DataCheckExtendManageImpl dataCheckExtendManageImpl;
 
     @Resource
+    private DataAccessClient dataAccessClient;
+
+    @Resource
+    private MdmClient mdmClient;
+
+    @Resource
     UserHelper userHelper;
 
     @Override
     public Page<DataCheckVO> getAll(DataCheckQueryDTO query) {
-        Page<DataCheckVO> all = baseMapper.getAll(query.page, query.datasourceId, query.tableUnique, query.keyword);
+        Page<DataCheckVO> all = baseMapper.getAll(query.page, query.datasourceId,
+                query.tableUnique, query.tableBusinessType, query.keyword);
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
             List<Integer> ruleIds = all.getRecords().stream().map(DataCheckVO::getId).collect(Collectors.toList());
             // 数据校验规则扩展属性
@@ -238,7 +250,27 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             // 第五步：数据源是FiData，调用相关接口给配置表的表名称和ID重命名
             List<FiDataTableMetaDataDTO> fiDataTableMetaDataDTOS = null;
             if (dataSourceInfo.getDatasourceType() == SourceTypeEnum.FiData.getValue()) {
-                fiDataTableMetaDataDTOS = new ArrayList<>();
+                FiDataTableMetaDataReqDTO reqDTO = new FiDataTableMetaDataReqDTO();
+                reqDTO.setDataSourceId(String.valueOf(dataSourceInfo.datasourceId));
+                List<FiDataTableMetaDataReqDetailDTO> reqDetails = new ArrayList<>();
+                ResultEntity<List<FiDataTableMetaDataDTO>> listResultEntity = null;
+                // dmp_ods
+                if (dataSourceInfo.getDatasourceId() == 2) {
+                    tableUnique.forEach(t -> {
+                        FiDataTableMetaDataReqDetailDTO reqDetail = new FiDataTableMetaDataReqDetailDTO();
+                        reqDetail.setTableUnique(t);
+                        reqDetail.setTableBusinessType(TableBusinessTypeEnum.NONE);
+                        reqDetails.add(reqDetail);
+                    });
+                    reqDTO.reqDetails = reqDetails;
+                    listResultEntity = dataAccessClient.buildFiDataTableMetaData(reqDTO);
+                } else if (dataSourceInfo.getDatasourceId() == 3) {
+                    // dmp_mdm
+
+                }
+                if (listResultEntity != null && listResultEntity.code == ResultEnum.SUCCESS.getCode()) {
+                    fiDataTableMetaDataDTOS = listResultEntity.getData();
+                }
                 if (CollectionUtils.isEmpty(fiDataTableMetaDataDTOS)) {
                     return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TABLECONFIGURATION_SENT_CHANGES, dataCheckResults);
                 }
@@ -458,11 +490,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_SYNCCHECK_NOOPERATION, null);
             }
             // 第一步：查询数据源信息
-            QueryWrapper<DataSourceConPO> dataSourceConPOQueryWrapper=new QueryWrapper<>();
+            QueryWrapper<DataSourceConPO> dataSourceConPOQueryWrapper = new QueryWrapper<>();
             dataSourceConPOQueryWrapper.lambda()
-                    .eq(DataSourceConPO::getDelFlag,1)
-                    .eq(DataSourceConPO::getDatasourceId,dto.dataSourceId)
-                    .eq(DataSourceConPO::getDatasourceType,SourceTypeEnum.FiData.getValue());
+                    .eq(DataSourceConPO::getDelFlag, 1)
+                    .eq(DataSourceConPO::getDatasourceId, dto.dataSourceId)
+                    .eq(DataSourceConPO::getDatasourceType, SourceTypeEnum.FiData.getValue());
             DataSourceConPO dataSourceInfo = dataSourceConMapper.selectOne(dataSourceConPOQueryWrapper);
             if (dataSourceInfo == null) {
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_EXISTS, null);
@@ -500,6 +532,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     .eq(DataCheckPO::getDatasourceId, dataSourceInfo.getId())
                     .eq(DataCheckPO::getDelFlag, 1)
                     .eq(DataCheckPO::getTableUnique, dto.getTableUnique())
+                    .eq(DataCheckPO::getTableBusinessType, dto.getTableBusinessType().getValue())
                     .eq(DataCheckPO::getRuleState, RuleStateEnum.Enable.getValue())
                     .orderByAsc(DataCheckPO::getRuleSort)
                     .in(DataCheckPO::getTemplateId, templateIds);
@@ -1066,5 +1099,20 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             updateMsgFieldSql = String.format("\"%s\"" + "=" + "%s ", msgField, caseSql);
         }
         return updateMsgFieldSql;
+    }
+
+    public ResultEntity<List<FiDataTableMetaDataDTO>> getMdmTableMetaData(List<String> tableUniques) {
+        List<FiDataTableMetaDataDTO> fiDataTableMetaDataDTOS = new ArrayList<>();
+        for (String tableUnique : tableUniques) {
+            ResultEntity<EntityInfoVO> attributeById = mdmClient.getAttributeById(Integer.valueOf(tableUnique));
+            if (attributeById != null && attributeById.code == ResultEnum.SUCCESS.getCode()) {
+                EntityInfoVO entityInfoVO = attributeById.getData();
+                if (entityInfoVO != null) {
+                    FiDataTableMetaDataDTO fiDataTableMetaDataDTO = new FiDataTableMetaDataDTO();
+
+                }
+            }
+        }
+        return null;
     }
 }

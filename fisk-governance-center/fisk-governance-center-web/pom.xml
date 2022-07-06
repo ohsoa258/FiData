@@ -94,6 +94,30 @@
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
+        <!-- 数据接入服务 -->
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-factory-access-apiclient</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-factory-access-entity</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- MDM主数据服务 -->
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-mdm-model-apiclient</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-mdm-model-entity</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
         <!-- 元数据服务 -->
         <dependency>
             <groupId>com.fisk</groupId>

@@ -1,9 +1,9 @@
 package com.fisk.datagovernance.dto.dataquality.datacheck;
 
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 
 /**
@@ -31,6 +31,12 @@ public class DataCheckSyncDTO {
      */
     @ApiModelProperty(value = "表唯一标识：表名称/表ID")
     public String tableUnique;
+
+    /**
+     * 表业务类型
+     */
+    @ApiModelProperty(value = "表业务类型")
+    public TableBusinessTypeEnum tableBusinessType;
 
     /**
      * 校验通过修改字段集合，key：字段名称 value：字段值

@@ -39,6 +39,11 @@ public class LifecyclePO extends BasePO {
     public int tableType;
 
     /**
+     * 表业务类型 1：事实表、2：维度表、3、指标表  4、宽表
+     */
+    public int tableBusinessType;
+
+    /**
      * 回收时间
      */
     public String recoveryDate;

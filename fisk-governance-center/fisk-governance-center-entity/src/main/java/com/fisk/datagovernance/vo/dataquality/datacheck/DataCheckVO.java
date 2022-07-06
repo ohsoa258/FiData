@@ -52,6 +52,12 @@ public class DataCheckVO {
     public int tableType;
 
     /**
+     * 表业务类型 1：事实表、2：维度表、3、指标表  4、宽表
+     */
+    @ApiModelProperty(value = "表业务类型 1：事实表、2：维度表、3、指标表  4、宽表")
+    public int tableBusinessType;
+
+    /**
      * 校验规则：1、强规则 2、弱规则
      */
     @ApiModelProperty(value = "校验规则")
