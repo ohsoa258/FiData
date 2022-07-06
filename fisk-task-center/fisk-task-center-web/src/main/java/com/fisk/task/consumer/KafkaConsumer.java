@@ -1,7 +1,16 @@
 package com.fisk.task.consumer;
 
+import com.alibaba.fastjson.JSON;
+import com.fisk.common.core.constants.MqConstants;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.task.dto.task.BuildTableNifiSettingDTO;
+import com.fisk.task.dto.task.TableNifiSettingDTO;
+import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.listener.doris.BuildDorisTaskListener;
@@ -23,20 +32,25 @@ import com.fisk.task.mapper.PipelineTableLogMapper;
 import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.pipeline.ITableTopicService;
+import com.fisk.task.utils.StackTraceHelper;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -143,7 +157,7 @@ public class KafkaConsumer {
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         return props;
     }
-/*
+
     //任务发布中心,这里只用来存放reids
     @KafkaListener(topics = "my-topic", containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog
@@ -337,5 +351,5 @@ public class KafkaConsumer {
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_METADATA_FLOW, containerFactory = "batchFactory", groupId = "test")
     public ResultEntity<Object> buildMetaData(String dataInfo, Acknowledgment ack) {
         return ResultEntityBuild.build(metaDataListener.metaData(dataInfo, ack));
-    }*/
+    }
 }
