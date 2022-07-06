@@ -60,8 +60,8 @@ public interface DataManageClient {
      * @param dto
      * @return
      */
-    @PostMapping("/MetaData/MetaData")
-    ResultEntity<Object> MetaData(@RequestBody List<MetaDataInstanceAttributeDTO> dto);
+    @PostMapping("/MetaData/metaData")
+    ResultEntity<Object> metaData(@RequestBody List<MetaDataInstanceAttributeDTO> dto);
 
     /**
      * 添加元数据实体

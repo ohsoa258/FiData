@@ -25,8 +25,8 @@ public class MetaDataController {
     IMetaData service;
 
     @ApiOperation("元数据实时同步")
-    @PostMapping("/MetaData")
-    public ResultEntity<Object> MetaData(@RequestBody List<MetaDataInstanceAttributeDTO> dto) {
+    @PostMapping("/metaData")
+    public ResultEntity<Object> metaData(@RequestBody List<MetaDataInstanceAttributeDTO> dto) {
         return ResultEntityBuild.build(service.metaData(dto));
     }
 
