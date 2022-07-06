@@ -13,10 +13,7 @@ import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
-import com.fisk.task.dto.task.BuildNifiFlowDTO;
-import com.fisk.task.dto.task.BuildPhysicalTableDTO;
-import com.fisk.task.dto.task.BuildTableNifiSettingDTO;
-import com.fisk.task.dto.task.NifiCustomWorkListDTO;
+import com.fisk.task.dto.task.*;
 import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.service.task.IBuildKfkTaskService;
@@ -266,6 +263,16 @@ public class PublishTaskController {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_UNIVERSAL_PUBLISH_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 pipelineTopicName,
+                dto);
+    }
+
+    @PostMapping("/metaData")
+    @ApiOperation(value = "元数据实时同步")
+    public ResultEntity<Object> metaData(@RequestBody BuildMetaDataDTO dto) {
+        log.info("元数据实时同步");
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_METADATA_FLOW.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_METADATA_FLOW,
                 dto);
     }
 

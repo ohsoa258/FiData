@@ -1,6 +1,7 @@
 package com.fisk.datamanage.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.datamanagement.dto.datamasking.DataMaskingSourceDTO;
 import com.fisk.datamanagement.dto.datamasking.DataMaskingTargetDTO;
 import com.fisk.datamanagement.dto.datamasking.SourceTableDataDTO;
@@ -10,6 +11,8 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -44,11 +47,30 @@ public interface DataManageClient {
 
     /**
      * 根据guid获取数据工厂表信息
+     *
      * @param dto
      * @return
      */
     @PostMapping("/DataMasking/getTableData")
     ResultEntity<Object> getTableData(@Validated @RequestBody SourceTableDataDTO dto);
+
+    /**
+     * 元数据实时同步
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/MetaData/MetaData")
+    ResultEntity<Object> MetaData(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto);
+
+    /**
+     * 添加元数据实体
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/MetaData/consumeMetaData")
+    ResultEntity<Object> consumeMetaData(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto);
 
 
 }

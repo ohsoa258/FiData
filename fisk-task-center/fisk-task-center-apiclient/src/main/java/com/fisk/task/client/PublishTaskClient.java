@@ -329,4 +329,13 @@ public interface PublishTaskClient {
      */
     @PostMapping("/nifi/suspendCustomWorkNifiFlow")
     public ResultEntity<Object> suspendCustomWorkNifiFlow(@RequestParam("nifiCustomWorkflowId") String nifiCustomWorkflowId, @RequestParam("ifFire") boolean ifFire);
+
+    /**
+     * 元数据实时同步
+     *
+     * @param dto
+     */
+    @PostMapping("/publishTask/metaData")
+    public ResultEntity<Object> metaData(@RequestBody BuildMetaDataDTO dto);
+
 }

@@ -6,10 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataDbAttributeDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
 import com.fisk.datamanagement.dto.entity.EntityDTO;
 import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
@@ -17,11 +14,14 @@ import com.fisk.datamanagement.dto.entity.EntityTypeDTO;
 import com.fisk.datamanagement.entity.MetadataMapAtlasPO1;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
+import com.fisk.datamanagement.map.MetaDataMap;
 import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper1;
 import com.fisk.datamanagement.service.impl.EntityImpl;
 import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
+import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.task.BuildMetaDataDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,6 +45,9 @@ public class MetaDataImpl implements IMetaData {
     @Resource
     MetadataMapAtlasMapper1 metadataMapAtlasMapper1;
 
+    @Resource
+    PublishTaskClient client;
+
     @Value("${atlas.entity}")
     private String entity;
     @Value("${atlas.entityByGuid}")
@@ -52,6 +55,14 @@ public class MetaDataImpl implements IMetaData {
 
     @Override
     public ResultEnum metaData(List<MetaDataInstanceAttributeDTO> data) {
+        BuildMetaDataDTO dto = new BuildMetaDataDTO();
+        dto.data = data;
+        client.metaData(dto);
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data) {
         for (MetaDataInstanceAttributeDTO instance : data) {
             String instanceGuid = metaDataInstance(instance);
             if (StringUtils.isEmpty(instanceGuid)) {
@@ -75,7 +86,6 @@ public class MetaDataImpl implements IMetaData {
                     //删除
                     deleteMetaData(qualifiedNames, tableGuid);
                 }
-
             }
         }
         return ResultEnum.SUCCESS;
@@ -88,45 +98,13 @@ public class MetaDataImpl implements IMetaData {
             EntityDTO entityDTO = new EntityDTO();
             EntityTypeDTO entityTypeDTO = new EntityTypeDTO();
             entityTypeDTO.typeName = EntityTypeEnum.RDBMS_INSTANCE.getName();
-            EntityAttributesDTO attributesDTO = new EntityAttributesDTO();
-            attributesDTO.name = dto.name;
-            attributesDTO.qualifiedName = dto.qualifiedName;
-            attributesDTO.hostname = dto.hostname;
-            attributesDTO.port = dto.port;
-            attributesDTO.contact_info = dto.contact_info;
-            attributesDTO.description = dto.description;
-            attributesDTO.protocol = dto.protocol;
-            attributesDTO.owner = "";
-            attributesDTO.rdbms_type = dto.rdbms_type;
+            EntityAttributesDTO attributesDTO = MetaDataMap.INSTANCES.instanceDtoToAttribute(dto);
             entityTypeDTO.attributes = attributesDTO;
             entityDTO.entity = entityTypeDTO;
             return addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_INSTANCE, "");
         }
-        ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + atlasGuid);
-        if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS) {
-            return "";
-        }
-        //解析数据
-        JSONObject jsonObj = JSON.parseObject(getDetail.data);
-        JSONObject entityObject = JSON.parseObject(jsonObj.getString("entity"));
-        JSONObject attribute = JSON.parseObject(entityObject.getString("attributes"));
-        //修改数据
-        attribute.put("hostname", dto.hostname);
-        attribute.put("name", dto.name);
-        attribute.put("port", dto.port);
-        attribute.put("platform", dto.platform);
-        attribute.put("protocol", dto.protocol);
-        attribute.put("comment", dto.comment);
-        attribute.put("contact_info", dto.contact_info);
-        attribute.put("description", dto.description);
-        entityObject.put("attributes", attribute);
-        jsonObj.put("entity", entityObject);
-        String jsonParameter = JSONArray.toJSON(jsonObj).toString();
-        ResultDataDTO<String> result = atlasClient.post(entity, jsonParameter);
-        if (result.code != AtlasResultEnum.REQUEST_SUCCESS) {
-            return "";
-        }
-        return atlasGuid;
+        //修改
+        return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_INSTANCE, dto);
     }
 
     public String metaDataDb(MetaDataDbAttributeDTO dto, String parentEntityGuid) {
@@ -136,36 +114,15 @@ public class MetaDataImpl implements IMetaData {
             EntityTypeDTO entityTypeDTO = new EntityTypeDTO();
             entityTypeDTO.typeName = EntityTypeEnum.RDBMS_DB.getName();
             EntityIdAndTypeDTO parentEntity = new EntityIdAndTypeDTO();
-            EntityAttributesDTO attributesDTO = new EntityAttributesDTO();
-            attributesDTO.qualifiedName = dto.qualifiedName;
-            attributesDTO.name = dto.name;
-            attributesDTO.description = dto.description;
-            attributesDTO.comment = dto.comment;
+            EntityAttributesDTO attributesDTO = MetaDataMap.INSTANCES.dbDtoToAttribute(dto);
             parentEntity.typeName = EntityTypeEnum.RDBMS_INSTANCE.getName();
             parentEntity.guid = parentEntityGuid;
             attributesDTO.instance = parentEntity;
+            entityTypeDTO.attributes = attributesDTO;
+            entityDTO.entity = entityTypeDTO;
             return addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_DB, parentEntityGuid);
         }
-        ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + atlasGuid);
-        if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS) {
-            return "";
-        }
-        //解析数据
-        JSONObject jsonObj = JSON.parseObject(getDetail.data);
-        JSONObject entityObject = JSON.parseObject(jsonObj.getString("entity"));
-        JSONObject attribute = JSON.parseObject(entityObject.getString("attributes"));
-        attribute.put("name", dto.name);
-        attribute.put("comment", dto.comment);
-        attribute.put("contact_info", dto.contact_info);
-        attribute.put("description", dto.description);
-        entityObject.put("attributes", attribute);
-        jsonObj.put("entity", entityObject);
-        String jsonParameter = JSONArray.toJSON(jsonObj).toString();
-        ResultDataDTO<String> result = atlasClient.post(entity, jsonParameter);
-        if (result.code != AtlasResultEnum.REQUEST_SUCCESS) {
-            return "";
-        }
-        return atlasGuid;
+        return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_DB, dto);
     }
 
     public String metaDataTable(MetaDataTableAttributeDTO dto, String parentEntityGuid) {
@@ -175,36 +132,15 @@ public class MetaDataImpl implements IMetaData {
             EntityTypeDTO entityTypeDTO = new EntityTypeDTO();
             entityTypeDTO.typeName = EntityTypeEnum.RDBMS_TABLE.getName();
             EntityIdAndTypeDTO parentEntity = new EntityIdAndTypeDTO();
-            EntityAttributesDTO attributesDTO = new EntityAttributesDTO();
-            attributesDTO.qualifiedName = dto.qualifiedName;
-            attributesDTO.name = dto.name;
-            attributesDTO.description = dto.description;
-            attributesDTO.comment = dto.comment;
+            EntityAttributesDTO attributesDTO = MetaDataMap.INSTANCES.tableDtoToAttribute(dto);
             parentEntity.typeName = EntityTypeEnum.RDBMS_DB.getName();
             parentEntity.guid = parentEntityGuid;
             attributesDTO.db = parentEntity;
+            entityTypeDTO.attributes = attributesDTO;
+            entityDTO.entity = entityTypeDTO;
             return addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_TABLE, parentEntityGuid);
         }
-        ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + atlasGuid);
-        if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS) {
-            return "";
-        }
-        //解析数据
-        JSONObject jsonObj = JSON.parseObject(getDetail.data);
-        JSONObject entityObject = JSON.parseObject(jsonObj.getString("entity"));
-        JSONObject attribute = JSON.parseObject(entityObject.getString("attributes"));
-        attribute.put("name", dto.name);
-        attribute.put("comment", dto.comment);
-        attribute.put("contact_info", dto.contact_info);
-        attribute.put("description", dto.description);
-        entityObject.put("attributes", attribute);
-        jsonObj.put("entity", entityObject);
-        String jsonParameter = JSONArray.toJSON(jsonObj).toString();
-        ResultDataDTO<String> result = atlasClient.post(entity, jsonParameter);
-        if (result.code != AtlasResultEnum.REQUEST_SUCCESS) {
-            return "";
-        }
-        return atlasGuid;
+        return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_TABLE, dto);
     }
 
     public String metaDataField(MetaDataColumnAttributeDTO dto, String parentEntityGuid) {
@@ -214,17 +150,20 @@ public class MetaDataImpl implements IMetaData {
             EntityTypeDTO entityTypeDTO = new EntityTypeDTO();
             entityTypeDTO.typeName = EntityTypeEnum.RDBMS_COLUMN.getName();
             EntityIdAndTypeDTO parentEntity = new EntityIdAndTypeDTO();
-            EntityAttributesDTO attributesDTO = new EntityAttributesDTO();
-            attributesDTO.name = dto.name;
-            attributesDTO.comment = dto.comment;
-            attributesDTO.qualifiedName = dto.qualifiedName;
-            attributesDTO.data_type = dto.dataType;
-            attributesDTO.contact_info = dto.contact_info;
+            EntityAttributesDTO attributesDTO = MetaDataMap.INSTANCES.fieldDtoToAttribute(dto);
             parentEntity.typeName = EntityTypeEnum.RDBMS_TABLE.getName();
             parentEntity.guid = parentEntityGuid;
             attributesDTO.table = parentEntity;
+            entityTypeDTO.attributes = attributesDTO;
+            entityDTO.entity = entityTypeDTO;
             return addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_COLUMN, parentEntityGuid);
         }
+        return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_COLUMN, dto);
+    }
+
+    public String updateMetaDataEntity(String atlasGuid,
+                                       EntityTypeEnum entityTypeEnum,
+                                       MetaDataBaseAttributeDTO dto) {
         ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + atlasGuid);
         if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS) {
             return "";
@@ -233,14 +172,38 @@ public class MetaDataImpl implements IMetaData {
         JSONObject jsonObj = JSON.parseObject(getDetail.data);
         JSONObject entityObject = JSON.parseObject(jsonObj.getString("entity"));
         JSONObject attribute = JSON.parseObject(entityObject.getString("attributes"));
-        attribute.put("name", dto.name);
-        attribute.put("comment", dto.comment);
-        attribute.put("contact_info", dto.contact_info);
-        attribute.put("description", dto.description);
-        attribute.put("data_type", dto.dataType);
+        switch (entityTypeEnum) {
+            case RDBMS_INSTANCE:
+                MetaDataInstanceAttributeDTO data = (MetaDataInstanceAttributeDTO) dto;
+                //修改数据
+                attribute.put("hostname", data.hostname);
+                attribute.put("name", data.name);
+                attribute.put("port", data.port);
+                attribute.put("platform", data.platform);
+                attribute.put("protocol", data.protocol);
+                attribute.put("comment", data.comment);
+                attribute.put("contact_info", data.contact_info);
+                attribute.put("description", data.description);
+                break;
+            case RDBMS_DB:
+            case RDBMS_TABLE:
+                attribute.put("name", dto.name);
+                attribute.put("comment", dto.comment);
+                attribute.put("contact_info", dto.contact_info);
+                attribute.put("description", dto.description);
+                break;
+            case RDBMS_COLUMN:
+                MetaDataColumnAttributeDTO field = (MetaDataColumnAttributeDTO) dto;
+                attribute.put("name", field.name);
+                attribute.put("comment", field.comment);
+                attribute.put("contact_info", field.contact_info);
+                attribute.put("description", field.description);
+                attribute.put("data_type", field.dataType);
+                break;
+            default:
+        }
         entityObject.put("attributes", attribute);
         jsonObj.put("entity", entityObject);
-        //修改元数据
         String jsonParameter = JSONArray.toJSON(jsonObj).toString();
         ResultDataDTO<String> result = atlasClient.post(entity, jsonParameter);
         if (result.code != AtlasResultEnum.REQUEST_SUCCESS) {

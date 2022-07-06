@@ -6,11 +6,12 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.datagovernance.client.DataQualityClient;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
-import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.dto.metadatamapatlas.UpdateMetadataMapAtlasDTO;
 import com.fisk.datamanagement.entity.BusinessMetadataConfigPO;
@@ -30,7 +31,6 @@ import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
 import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import com.fisk.datamodel.enums.FactAttributeEnum;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -271,12 +271,11 @@ public class SynchronizationData {
     public void synchronizationDw()
     {
         ResultEntity<Object> result = client.getDataModelTable(1);
-        if (result.code!=ResultEnum.SUCCESS.getCode())
-        {
+        if (result.code != ResultEnum.SUCCESS.getCode()) {
             return;
         }
         List<SourceTableDTO> list = JSON.parseArray(JSON.toJSONString(result.data), SourceTableDTO.class);
-        list = list.stream().filter(e -> e.tableName.equals("dim_ghs2")).collect(Collectors.toList());
+        ////list = list.stream().filter(e -> e.tableName.equals("dim_ghs2")).collect(Collectors.toList());
         QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(MetadataMapAtlasPO::getDbNameType, DataTypeEnum.DATA_MODEL.getValue());
         MetadataMapAtlasPO po = metadataMapAtlasMapper.selectOne(queryWrapper);
@@ -369,12 +368,6 @@ public class SynchronizationData {
                         .eq(MetadataMapAtlasPO::getTableType, dto.type);
                 MetadataMapAtlasPO po = metadataMapAtlasMapper.selectOne(queryWrapper);
                 String qualifiedName = dbPo.qualifiedName + "_" + dto.tableName;
-                //获取数据质量配置规则
-                TableRuleInfoDTO tableRuleInfo = new TableRuleInfoDTO();
-                ResultEntity<TableRuleInfoDTO> tableRuleList = dataQualityClient.getTableRuleList(dataSourceId, "dim_a_test0524");
-                if (tableRuleList.code == ResultEnum.SUCCESS.getCode()) {
-                    tableRuleInfo = tableRuleList.data;
-                }
                 if (po == null) {
                     String addResult = addEntity(EntityTypeEnum.RDBMS_TABLE, dbPo, dto.tableName, dto, null, 0);
                     if (StringUtils.isEmpty(addResult)) {
@@ -397,7 +390,8 @@ public class SynchronizationData {
                         continue;
                     }
                     //设置表业务元数据值
-                    //setBusinessMetaDataAttributeValue(addResult,tableRuleInfo,poList);
+                    TableRuleInfoDTO tableRuleInfo = setTableRuleInfo(dataSourceId, (int) dto.id, dto.tableName, dataType, dto.type);
+                    setBusinessMetaDataAttributeValue(addResult, tableRuleInfo, poList);
                     po = metadataMapAtlasMapper.selectOne(queryWrapper);
                     for (SourceFieldDTO fieldDTO : dto.fieldList) {
                         String fieldQualifiedName = qualifiedName + "_" + fieldDTO.fieldName;
@@ -424,7 +418,7 @@ public class SynchronizationData {
                                     .filter(e -> fieldDTO.fieldName.equals(e.name))
                                     .findFirst();
                             if (first.isPresent()) {
-                                //setBusinessMetaDataAttributeValue(columnGuid,first.get(),poList);
+                                setBusinessMetaDataAttributeValue(columnGuid, first.get(), poList);
                             }
                         }
                     }
@@ -432,7 +426,8 @@ public class SynchronizationData {
                 else {
                     updateEntity(EntityTypeEnum.RDBMS_TABLE, po, dto.tableName, qualifiedName, dto, null);
                     //设置表业务元数据值
-                    //setBusinessMetaDataAttributeValue(po.atlasGuid,tableRuleInfo,poList);
+                    TableRuleInfoDTO tableRuleInfo = setTableRuleInfo(dataSourceId, (int) dto.id, dto.tableName, dataType, dto.type);
+                    setBusinessMetaDataAttributeValue(po.atlasGuid, tableRuleInfo, poList);
                     //判断表下的字段是否需要修改
                     if (CollectionUtils.isEmpty(dto.fieldList)) {
                         continue;
@@ -478,15 +473,13 @@ public class SynchronizationData {
                                 .filter(e -> field.fieldName.equals(e.name))
                                 .findFirst();
                         if (first.isPresent()) {
-                            //setBusinessMetaDataAttributeValue(columnGuid,first.get(),poList);
+                            setBusinessMetaDataAttributeValue(columnGuid, first.get(), poList);
                         }
                     }
                 }
             }
-        }
-        catch (Exception e)
-        {
-            log.error("synchronizationData ex",e);
+        } catch (Exception e) {
+            log.error("synchronizationData ex", e);
         }
     }
 
@@ -589,27 +582,24 @@ public class SynchronizationData {
                             String name,
                             SourceTableDTO dto,
                             SourceFieldDTO fieldDTO,
-                            int index)
-    {
+                            int index) {
         //组装参数
-        EntityDTO entityDTO=new EntityDTO();
-        EntityTypeDTO entityTypeDTO=new EntityTypeDTO();
-        entityTypeDTO.typeName=entityTypeEnum.getName();
-        EntityAttributesDTO attributesDTO=new EntityAttributesDTO();
-        EntityIdAndTypeDTO parentEntity=new EntityIdAndTypeDTO();
-        if (po!=null)
-        {
-            parentEntity.guid=po.atlasGuid;
+        EntityDTO entityDTO = new EntityDTO();
+        EntityTypeDTO entityTypeDTO = new EntityTypeDTO();
+        entityTypeDTO.typeName = entityTypeEnum.getName();
+        EntityAttributesDTO attributesDTO = new EntityAttributesDTO();
+        EntityIdAndTypeDTO parentEntity = new EntityIdAndTypeDTO();
+        if (po != null) {
+            parentEntity.guid = po.atlasGuid;
         }
         //获取类型
         EntityTypeEnum typeNameEnum = EntityTypeEnum.getValue(entityTypeEnum.getName());
-        switch (typeNameEnum)
-        {
+        switch (typeNameEnum) {
             case RDBMS_INSTANCE:
                 String[] userList = fiDataUserName.split(",");
                 String[] passwordList = fiDataPassword.split(",");
-                attributesDTO.qualifiedName=fiDataName.split(",")[index]+":"+fiDataPort.split(",")[index];
-                attributesDTO.hostname =fiDataHostName.split(",")[index];
+                attributesDTO.qualifiedName = fiDataName.split(",")[index] + ":" + fiDataPort.split(",")[index];
+                attributesDTO.hostname = fiDataHostName.split(",")[index];
                 attributesDTO.port=fiDataPort.split(",")[index];
                 attributesDTO.platform=fiDataPlatform.split(",")[index];
                 attributesDTO.name=fiDataName.split(",")[index]+":"+fiDataPort.split(",")[index];
@@ -671,21 +661,18 @@ public class SynchronizationData {
                              String name,
                              String qualifiedName,
                              SourceTableDTO dto,
-                             SourceFieldDTO fieldDTO)
-    {
-        boolean change=false;
+                             SourceFieldDTO fieldDTO) {
+        boolean change = false;
         ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + po.atlasGuid);
-        if (getDetail.code !=AtlasResultEnum.REQUEST_SUCCESS)
-        {
+        if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS) {
             return;
         }
         //解析数据
         JSONObject jsonObj = JSON.parseObject(getDetail.data);
-        JSONObject entityObject= JSON.parseObject(jsonObj.getString("entity"));
-        JSONObject attribute=JSON.parseObject(entityObject.getString("attributes"));
+        JSONObject entityObject = JSON.parseObject(jsonObj.getString("entity"));
+        JSONObject attribute = JSON.parseObject(entityObject.getString("attributes"));
         EntityTypeEnum typeNameEnum = EntityTypeEnum.getValue(entityTypeEnum.getName());
-        switch (typeNameEnum)
-        {
+        switch (typeNameEnum) {
             case RDBMS_INSTANCE:
                 if (!fiDataName.equals(attribute.getString("name"))
                         || !fiDataHostName.equals(attribute.getString("hostname"))
@@ -831,6 +818,53 @@ public class SynchronizationData {
         redisTemplate.opsForValue().set("metaDataEntityData:" + guid, getDetail.data);
     }
 
+    /**
+     * 设置业务元数据表规则
+     *
+     * @param dataSourceId
+     * @param tableId
+     * @param tableName
+     * @param dataType
+     */
+    public TableRuleInfoDTO setTableRuleInfo(int dataSourceId,
+                                             int tableId,
+                                             String tableName,
+                                             int dataType,
+                                             int tableType) {
+        TableRuleInfoDTO dto = new TableRuleInfoDTO();
+        ResultEntity<TableRuleInfoDTO> tableRule = dataQualityClient.getTableRuleList(dataSourceId, tableName);
+        if (tableRule.code == ResultEnum.SUCCESS.getCode()) {
+            dto = tableRule.data;
+        }
+        TableRuleParameterDTO parameter = new TableRuleParameterDTO();
+        parameter.type = tableType;
+        parameter.tableId = tableId;
+        ResultEntity<TableRuleInfoDTO> result = new ResultEntity<>();
+        TableRuleInfoDTO data = result.data;
+        //数仓建模
+        if (dataType == DataTypeEnum.DATA_MODEL.getValue()) {
+            result = client.setTableRule(parameter);
+        }
+        //数据接入
+        else if (dataType == DataTypeEnum.DATA_INPUT.getValue()) {
+            result = dataAccessClient.buildTableRuleInfo(parameter);
+        }
+        if (result.code == ResultEnum.SUCCESS.getCode()) {
+            if (StringUtils.isEmpty(dto.name)) {
+                dto = result.data;
+            } else {
+                dto.businessName = result.data.businessName;
+                dto.dataResponsiblePerson = result.data.dataResponsiblePerson;
+                dto.fieldRules.stream().map(e -> {
+                    e.businessName = data.businessName;
+                    e.dataResponsiblePerson = data.dataResponsiblePerson;
+                    return e;
+                });
+            }
+        }
+        return dto;
+    }
+
     public ResultEnum setBusinessMetaDataAttributeValue(String guid,
                                                         TableRuleInfoDTO tableRuleInfoDTO,
                                                         List<BusinessMetadataConfigPO> poList) {
@@ -848,41 +882,23 @@ public class SynchronizationData {
                 attributeJson.put("LifeCycle", tableRuleInfoDTO.lifecycleRules);
                 attributeJson.put("AlarmSet", tableRuleInfoDTO.noticeRules);
             } else if ("BusinessDefinition".equals(businessMetaDataName)) {
-                attributeJson.put("BusinessName", "财务域");
+                attributeJson.put("BusinessName", tableRuleInfoDTO.businessName);
             } else if ("BusinessRules".equals(businessMetaDataName)) {
-                attributeJson.put("UpdateRules", "每天凌晨两点");
-                attributeJson.put("TransformationRules", "name转换为userName");
-                attributeJson.put("ComputationalFormula", "test");
-                attributeJson.put("KnownDataProblem", "非空字段存在空值");
-                attributeJson.put("DirectionsForUse", "业务人员使用");
-                List<String> valid = new ArrayList<>();
-                valid.add("不能为空");
-                attributeJson.put("ValidValueConstraint", valid);
+                attributeJson.put("UpdateRules", tableRuleInfoDTO.updateRules);
+                attributeJson.put("TransformationRules", tableRuleInfoDTO.transformationRules == null ? "" : tableRuleInfoDTO.transformationRules);
+                attributeJson.put("ComputationalFormula", "");
+                attributeJson.put("KnownDataProblem", tableRuleInfoDTO.knownDataProblem == null ? "" : tableRuleInfoDTO.knownDataProblem);
+                attributeJson.put("DirectionsForUse", tableRuleInfoDTO.directionsForUse == null ? "" : tableRuleInfoDTO.directionsForUse);
+                attributeJson.put("ValidValueConstraint", tableRuleInfoDTO.validValueConstraint);
             } else {
-                attributeJson.put("DataResponsibilityDepartment", "产品部");
-                attributeJson.put("DataResponsiblePerson", "管理员");
-                List<String> stake = new ArrayList<>();
-                stake.add("无");
-                attributeJson.put("Stakeholders", stake);
+                attributeJson.put("DataResponsibilityDepartment", "");
+                attributeJson.put("DataResponsiblePerson", tableRuleInfoDTO.dataResponsiblePerson);
+                attributeJson.put("Stakeholders", tableRuleInfoDTO.stakeholders);
             }
             jsonObject.put(businessMetaDataName, attributeJson);
         }
         dto.businessMetaDataAttribute = jsonObject;
         return entityImpl.entityAssociatedMetaData(dto);
-    }
-
-    @Test
-    public void test() {
-        JSONObject head = new JSONObject();
-        JSONObject aa = new JSONObject();
-        aa.put("BusinessName", "");
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("BusinessDefinition", aa);
-        jsonObject.put("BusinessRules", "");
-
-
-        String cc = jsonObject.toString();
-        String bb="";
     }
 
 }

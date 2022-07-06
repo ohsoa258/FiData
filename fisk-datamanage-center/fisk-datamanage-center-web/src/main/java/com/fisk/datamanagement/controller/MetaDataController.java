@@ -30,4 +30,10 @@ public class MetaDataController {
         return ResultEntityBuild.build(service.metaData(dto));
     }
 
+    @ApiOperation("添加元数据实体")
+    @PostMapping("/consumeMetaData")
+    public ResultEntity<Object> consumeMetaData(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto) {
+        return ResultEntityBuild.build(service.consumeMetaData(dto));
+    }
+
 }

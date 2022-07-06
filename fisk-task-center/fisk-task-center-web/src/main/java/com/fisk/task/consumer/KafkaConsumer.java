@@ -15,6 +15,7 @@ import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.listener.doris.BuildDorisTaskListener;
 import com.fisk.task.listener.mdm.BuildModelListener;
+import com.fisk.task.listener.metadata.IMetaDataListener;
 import com.fisk.task.listener.nifi.INifiTaskListener;
 import com.fisk.task.listener.nifi.INonRealTimeListener;
 import com.fisk.task.listener.nifi.ITriggerScheduling;
@@ -117,6 +118,8 @@ public class KafkaConsumer {
     IPipelineTaskPublishCenter iPipelineTaskPublishCenter;
     @Resource
     INonRealTimeListener iNonRealTimeListener;
+    @Resource
+    IMetaDataListener metaDataListener;
 
     @Bean
     public KafkaListenerContainerFactory<?> batchFactory() {
@@ -343,5 +346,10 @@ public class KafkaConsumer {
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW, containerFactory = "batchFactory", groupId = "test")
     public ResultEntity<Object> importData(String dataInfo, Acknowledgment acke) {
         return ResultEntityBuild.build(iNonRealTimeListener.importData(dataInfo, acke));
+    }
+
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_METADATA_FLOW, containerFactory = "batchFactory", groupId = "test")
+    public ResultEntity<Object> buildMetaData(String dataInfo, Acknowledgment ack) {
+        return ResultEntityBuild.build(metaDataListener.metaData(dataInfo, ack));
     }
 }

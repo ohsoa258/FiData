@@ -11,11 +11,19 @@ import java.util.List;
 public interface IMetaData {
 
     /**
-     * 添加元数据
+     * 新增元数据
      *
      * @param data
      * @return
      */
     ResultEnum metaData(List<MetaDataInstanceAttributeDTO> data);
+
+    /**
+     * 消费元数据
+     *
+     * @param data
+     * @return
+     */
+    ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data);
 
 }
