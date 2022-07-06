@@ -22,6 +22,9 @@ import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.model.ModelInfoVO;
 import com.fisk.mdm.vo.modelVersion.ModelVersionDropDownVO;
 import com.fisk.mdm.vo.modelVersion.ModelVersionVO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.relenish.ReplenishUserInfo;
+import com.fisk.system.relenish.UserFieldEnum;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,6 +60,8 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
     IModelService modelService;
     @Resource
     EntityService entityService;
+    @Resource
+    UserClient userClient;
 
 
     /**
@@ -83,7 +88,11 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
         QueryWrapper<ModelVersionPO> wrapper = new QueryWrapper<>();
         wrapper.lambda().eq(ModelVersionPO::getModelId,modelId);
 
-        return ModelVersionMap.INSTANCES.poToVoList(baseMapper.selectList(wrapper));
+        List<ModelVersionVO> list = ModelVersionMap.INSTANCES.poToVoList(baseMapper.selectList(wrapper));
+
+        // 获取创建人、修改人
+        ReplenishUserInfo.replenishUserName(list, userClient, UserFieldEnum.USER_ACCOUNT);
+        return list;
     }
 
     @Override
