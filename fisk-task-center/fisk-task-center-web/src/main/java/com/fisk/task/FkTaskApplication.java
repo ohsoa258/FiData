@@ -26,7 +26,8 @@ import org.springframework.context.ConfigurableApplicationContext;
         "com.fisk.dataaccess.client",
         "com.fisk.datamodel.client",
         "com.fisk.datafactory.client",
-        "com.fisk.mdm.client"})
+        "com.fisk.mdm.client",
+        "com.fisk.datamanage.client"})
 public class FkTaskApplication {
     public static void main(String[] args) {
         ConfigurableApplicationContext configurableApplicationContext =  SpringApplication.run(FkTaskApplication.class, args);
