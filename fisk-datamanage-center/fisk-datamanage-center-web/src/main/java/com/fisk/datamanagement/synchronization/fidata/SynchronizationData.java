@@ -832,7 +832,7 @@ public class SynchronizationData {
                                              int dataType,
                                              int tableType) {
         TableRuleInfoDTO dto = new TableRuleInfoDTO();
-        ResultEntity<TableRuleInfoDTO> tableRule = dataQualityClient.getTableRuleList(dataSourceId, tableName);
+        ResultEntity<TableRuleInfoDTO> tableRule = dataQualityClient.getTableRuleList(dataSourceId, tableName, 0);
         if (tableRule.code == ResultEnum.SUCCESS.getCode()) {
             dto = tableRule.data;
         }
