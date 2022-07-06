@@ -52,7 +52,7 @@ public class ModelVersionController {
     @ApiOperation("根据id删除版本信息")
     @DeleteMapping("/deleteDataById")
     public ResultEntity<ResultEnum> deleteDataById(Integer id){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.deleteDataById(id));
+        return ResultEntityBuild.build(service.deleteDataById(id));
     }
 
     @ApiOperation("版本复制")

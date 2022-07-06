@@ -113,6 +113,15 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
             return ResultEnum.DATA_NOTEXISTS;
         }
 
+        // 最后一个版本不允许删除
+        QueryWrapper<ModelVersionPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(ModelVersionPO::getModelId,modelVersionPo.getModelId());
+        List<ModelVersionPO> list = modelVersionMapper.selectList(queryWrapper);
+        if (list.size() <= 1){
+            return ResultEnum.AVERSION_NOT_DELETE;
+        }
+
         int res = modelVersionMapper.deleteById(id);
         return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }

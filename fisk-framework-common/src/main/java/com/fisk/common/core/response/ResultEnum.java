@@ -292,7 +292,8 @@ public enum ResultEnum {
     MANDATE_TIMESTAMP_START(151026, "主数据定时任务开始执行"),
     MANDATE_TIMESTAMP_SUCCESS(151027, "主数据定时任务执行成功!"),
     UNCOMMITTED_CANNOT_COPIED(151028, "未提交不能复制!"),
-    POSTULATES_NOT_ROLLBACK(151029, "发布状态不能回滚!");
+    POSTULATES_NOT_ROLLBACK(151029, "发布状态不能回滚!"),
+    AVERSION_NOT_DELETE(151030, "最后一个版本了,不能删除!"),;
 
     ResultEnum(int code, String msg) {
         this.code = code;
