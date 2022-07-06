@@ -387,11 +387,12 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     .filter(Objects::nonNull)
                     .map(e -> {
                         MetaDataColumnAttributeDTO field = new MetaDataColumnAttributeDTO();
-                        table.setQualifiedName(hostname + "_" + dbName + "_" + tableAccess.getId() + "_" + e.getId());
-                        table.setName(e.getFieldName());
-                        table.setContact_info(app.getAppPrincipal());
-                        table.setDescription(e.getFieldDes());
-                        table.setComment(e.getFieldDes());
+                        field.setQualifiedName(hostname + "_" + dbName + "_" + tableAccess.getId() + "_" + e.getId());
+                        field.setName(e.getFieldName());
+                        field.setContact_info(app.getAppPrincipal());
+                        field.setDescription(e.getFieldDes());
+                        field.setComment(e.getFieldDes());
+                        field.setDataType("VARCHAR".equalsIgnoreCase(e.fieldType) ? e.fieldType + "(" + e.fieldLength + ")" : e.fieldType);
                         return field;
                     }).collect(Collectors.toList());
 
@@ -421,11 +422,12 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                                 .filter(Objects::nonNull)
                                 .map(e -> {
                                     MetaDataColumnAttributeDTO field = new MetaDataColumnAttributeDTO();
-                                    table.setQualifiedName(hostname + "_" + dbName + "_" + tb.getId() + "_" + e.getId());
-                                    table.setName(e.getFieldName());
-                                    table.setContact_info(app.getAppPrincipal());
-                                    table.setDescription(e.getFieldDes());
-                                    table.setComment(e.getFieldDes());
+                                    field.setQualifiedName(hostname + "_" + dbName + "_" + tb.getId() + "_" + e.getId());
+                                    field.setName(e.getFieldName());
+                                    field.setContact_info(app.getAppPrincipal());
+                                    field.setDescription(e.getFieldDes());
+                                    field.setComment(e.getFieldDes());
+                                    field.setDataType("VARCHAR".equalsIgnoreCase(e.fieldType) ? e.fieldType + "(" + e.fieldLength + ")" : e.fieldType);
                                     return field;
                                 }).collect(Collectors.toList());
 
@@ -441,6 +443,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
         try {
             // 更新元数据内容
+            log.info("构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
             dataManageClient.MetaData(list);
         } catch (Exception e) {
             log.error("【dataManageClient.MetaData()】方法报错,ex", e);

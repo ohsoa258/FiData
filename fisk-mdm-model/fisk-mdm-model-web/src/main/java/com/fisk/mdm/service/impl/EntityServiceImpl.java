@@ -80,7 +80,11 @@ public class EntityServiceImpl implements EntityService {
         String name = dto.getName();
         if (StringUtils.isNotBlank(name)) {
             query.lambda()
-                    .like(EntityPO::getName, name);
+                    .like(EntityPO::getName, name)
+                    .or()
+                    .like(EntityPO::getDisplayName,name)
+                    .or()
+                    .like(EntityPO::getDesc,name);
             Page<EntityPO> entityPoPage = entityMapper.selectPage(poPage, query);
 
             // 查创建人信息

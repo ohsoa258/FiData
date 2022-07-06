@@ -30,7 +30,10 @@
         from tb_attribute as attribute
         where attribute.del_flag=1
         <if test="query.keyword !=null and query.keyword.length()>0 ">
-            and attribute.name like concat('%', #{query.keyword}, '%')
+            and (
+            attribute.name like concat('%', #{query.keyword}, '%') or
+            display_name like concat('%', #{query.keyword}, '%') or
+            attribute.desc like concat('%', #{query.keyword}, '%'))
         </if>
         order by sort_wieght asc
     </select>
