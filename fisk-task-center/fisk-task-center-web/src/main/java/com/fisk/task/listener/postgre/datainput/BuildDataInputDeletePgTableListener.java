@@ -43,7 +43,6 @@ public class BuildDataInputDeletePgTableListener {
                 HashMap<String, Object> conditionHashMap = new HashMap<>();
                 if (Objects.equals(inputData.businessTypeEnum, BusinessTypeEnum.DATAINPUT)) {
                     List<String> atlasEntityId = new ArrayList();
-                    ;
                     inputData.tableList.forEach((t) -> {
                         buildDelSqlStr.append("stg_" + t.tableName + ",ods_" + t.tableName + ", ");
                         atlasEntityId.add(t.tableAtlasId);
@@ -63,11 +62,12 @@ public class BuildDataInputDeletePgTableListener {
                         buildDelSqlStr.append("stg_" + t.tableName + ", ");
                         conditionHashMap.put("table_name", t.tableName);
                         taskPgTableStructureMapper.deleteByMap(conditionHashMap);
+                        //doris.dorisBuildTable("DROP TABLE IF EXISTS " + t.tableName + ";");
+                        //doris.dorisBuildTable("DROP TABLE IF EXISTS external_" + t.tableName + ";");
                     });
                     String delSqlStr = buildDelSqlStr.toString();
                     delSqlStr = delSqlStr.substring(0, delSqlStr.lastIndexOf(",")) + " ;";
                     PostgreHelper.postgreExecuteSql(delSqlStr.toLowerCase(), BusinessTypeEnum.DATAMODEL);
-                    doris.dorisBuildTable(delSqlStr);
                     log.info("delsql:" + delSqlStr);
                     log.info("执行pg delete table 完成");
                 }
@@ -77,7 +77,7 @@ public class BuildDataInputDeletePgTableListener {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.ERROR;
         } finally {
-            acke.acknowledge();
+            //acke.acknowledge();
         }
 
     }
