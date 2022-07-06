@@ -1,5 +1,6 @@
 package com.fisk.datamodel.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
@@ -773,6 +774,8 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         dbList.add(db);
         data.dbList = dbList;
         list.add(data);
+        // 更新元数据内容
+        log.info("构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
         //调用元数据实时同步接口
         dataManageClient.MetaData(list);
 
