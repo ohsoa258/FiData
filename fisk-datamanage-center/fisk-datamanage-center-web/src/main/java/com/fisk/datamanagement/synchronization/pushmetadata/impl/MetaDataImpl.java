@@ -11,11 +11,11 @@ import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
 import com.fisk.datamanagement.dto.entity.EntityDTO;
 import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
 import com.fisk.datamanagement.dto.entity.EntityTypeDTO;
-import com.fisk.datamanagement.entity.MetadataMapAtlasPO1;
+import com.fisk.datamanagement.entity.MetadataMapAtlasPO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.map.MetaDataMap;
-import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper1;
+import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
 import com.fisk.datamanagement.service.impl.EntityImpl;
 import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
@@ -43,7 +43,7 @@ public class MetaDataImpl implements IMetaData {
     @Resource
     EntityImpl entityImpl;
     @Resource
-    MetadataMapAtlasMapper1 metadataMapAtlasMapper1;
+    MetadataMapAtlasMapper metadataMapAtlasMapper;
 
     @Resource
     PublishTaskClient client;
@@ -213,17 +213,17 @@ public class MetaDataImpl implements IMetaData {
     }
 
     public void deleteMetaData(List<String> qualifiedNameList, String parentEntityGuid) {
-        QueryWrapper<MetadataMapAtlasPO1> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
         queryWrapper
                 .notIn("qualified_name", qualifiedNameList)
                 .select("atlas_guid")
                 .lambda()
-                .eq(MetadataMapAtlasPO1::getParentAtlasGuid, parentEntityGuid);
-        List<String> guidList = (List) metadataMapAtlasMapper1.selectObjs(queryWrapper);
+                .eq(MetadataMapAtlasPO::getParentAtlasGuid, parentEntityGuid);
+        List<String> guidList = (List) metadataMapAtlasMapper.selectObjs(queryWrapper);
         for (String guid : guidList) {
             entityImpl.deleteEntity(guid);
         }
-        metadataMapAtlasMapper1.delete(queryWrapper);
+        metadataMapAtlasMapper.delete(queryWrapper);
     }
 
     /**
@@ -254,12 +254,12 @@ public class MetaDataImpl implements IMetaData {
                 jsonArray = mutatedEntities.getJSONArray("UPDATE");
             }
             //配置表添加数据
-            MetadataMapAtlasPO1 metadataMapAtlasPo = new MetadataMapAtlasPO1();
+            MetadataMapAtlasPO metadataMapAtlasPo = new MetadataMapAtlasPO();
             metadataMapAtlasPo.qualifiedName = qualifiedName;
             metadataMapAtlasPo.atlasGuid = jsonArray.getJSONObject(0).getString("guid");
             metadataMapAtlasPo.type = entityTypeEnum.getValue();
             metadataMapAtlasPo.parentAtlasGuid = parentGuid;
-            return metadataMapAtlasMapper1.insert(metadataMapAtlasPo) > 0 ? jsonArray.getJSONObject(0).getString("guid") : "";
+            return metadataMapAtlasMapper.insert(metadataMapAtlasPo) > 0 ? jsonArray.getJSONObject(0).getString("guid") : "";
         } catch (Exception e) {
             log.error("addMetaDataConfig ex:", e);
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, e.getMessage());
@@ -273,9 +273,9 @@ public class MetaDataImpl implements IMetaData {
      * @return
      */
     public String getMetaDataConfig(String qualifiedName) {
-        QueryWrapper<MetadataMapAtlasPO1> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(MetadataMapAtlasPO1::getQualifiedName, qualifiedName);
-        MetadataMapAtlasPO1 po = metadataMapAtlasMapper1.selectOne(queryWrapper);
+        QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(MetadataMapAtlasPO::getQualifiedName, qualifiedName);
+        MetadataMapAtlasPO po = metadataMapAtlasMapper.selectOne(queryWrapper);
         return po == null ? "" : po.atlasGuid;
     }
 

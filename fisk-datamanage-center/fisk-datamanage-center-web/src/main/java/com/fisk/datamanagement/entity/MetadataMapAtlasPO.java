@@ -60,5 +60,9 @@ public class MetadataMapAtlasPO extends BasePO {
      * 原子指标id
      */
     public int atomicId;
+    /**
+     * 客户id
+     */
+    public int clientId;
 
 }
