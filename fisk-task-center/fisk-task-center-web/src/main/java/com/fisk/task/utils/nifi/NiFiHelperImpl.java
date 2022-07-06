@@ -2031,7 +2031,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         if (buildNifiFlow != null && StringUtils.isNotEmpty(buildNifiFlow.updateSql)) {
             sql += "call public." + funcName + "('" + buildNifiFlow.updateSql + "','";
         } else {
-            sql += "call public." + funcName + "('";
+            sql += "call public." + funcName + "('','";
         }
 
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {

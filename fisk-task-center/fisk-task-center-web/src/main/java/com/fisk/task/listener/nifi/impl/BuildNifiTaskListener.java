@@ -1843,9 +1843,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
         checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
-        dataCheckSyncDTO.ip = pgsqlDatainputIp;
-        dataCheckSyncDTO.dbName = pgsqlDatainputDbName;
-        dataCheckSyncDTO.tableName = config.processorConfig.targetTableName;
+        dataCheckSyncDTO.dataSourceId = "2";
         dataCheckSyncDTO.msgField = "error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
@@ -1888,9 +1886,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
         checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
-        dataCheckSyncDTO.ip = pgsqlDatamodelIp;
-        dataCheckSyncDTO.dbName = pgsqlDatamodelDbName;
-        //dataCheckSyncDTO.tableName = config.processorConfig.targetTableName;
+        dataCheckSyncDTO.dataSourceId = "1";
         dataCheckSyncDTO.msgField = "error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
@@ -1931,9 +1927,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
         checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
-        dataCheckSyncDTO.ip = "192.168.1.250";
-        dataCheckSyncDTO.dbName = "dmp_ods";
-        //dataCheckSyncDTO.tableName = "stg_" + config.processorConfig.targetTableName;
+        dataCheckSyncDTO.dataSourceId = null;
         dataCheckSyncDTO.msgField = "error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;

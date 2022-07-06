@@ -330,7 +330,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
         if (data != null && data.nifiPortsHierarchyDtos != null) {
             List<NifiPortsHierarchyDTO> nifiPortsHierarchyDtos = data.nifiPortsHierarchyDtos;
             List<NifiPortsHierarchyDTO> collect = nifiPortsHierarchyDtos.stream().filter(Objects::nonNull)
-                    .filter(e -> e.itselfPort.tableId == nifiGetPortHierarchy.tableId && e.itselfPort.componentType.equals(nifiGetPortHierarchy.channelDataEnum.getName())
+                    .filter(e -> e.itselfPort.tableId.equals(nifiGetPortHierarchy.tableId) && e.itselfPort.componentType.equals(nifiGetPortHierarchy.channelDataEnum.getName())
                     ).collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(collect)) {
                 nifiPortsHierarchy = collect.get(0);
