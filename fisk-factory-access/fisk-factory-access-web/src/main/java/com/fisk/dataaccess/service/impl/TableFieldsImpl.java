@@ -392,6 +392,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         field.setContact_info(app.getAppPrincipal());
                         field.setDescription(e.getFieldDes());
                         field.setComment(e.getFieldDes());
+                        field.setDataType(e.fieldType);
                         return field;
                     }).collect(Collectors.toList());
 
@@ -426,6 +427,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                                     field.setContact_info(app.getAppPrincipal());
                                     field.setDescription(e.getFieldDes());
                                     field.setComment(e.getFieldDes());
+                                    field.setDataType(e.fieldType);
                                     return field;
                                 }).collect(Collectors.toList());
 
