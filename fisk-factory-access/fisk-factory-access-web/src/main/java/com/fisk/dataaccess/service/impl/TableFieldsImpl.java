@@ -308,7 +308,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     // 创建表流程
                     publishTaskClient.publishBuildPhysicsTableTask(data);
                     // 构建元数据实时同步数据对象
-//                    buildMetaDataInstanceAttribute(registration, accessId, 1);
+                    buildMetaDataInstanceAttribute(registration, accessId, 1);
                 } else if (registration.appType == 1) {
                     // 非实时物理表发布
                     // 创建表流程
@@ -320,7 +320,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     log.info(JSON.toJSONString(data));
                     publishTaskClient.publishBuildAtlasTableTask(data);
                     // 构建元数据实时同步数据对象
-//                    buildMetaDataInstanceAttribute(registration, accessId, 2);
+                    buildMetaDataInstanceAttribute(registration, accessId, 2);
                 }
             } catch (Exception e) {
                 log.info("发布失败", e);
@@ -443,8 +443,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
         try {
             // 更新元数据内容
-//            log.info("构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
-//            dataManageClient.MetaData(list);
+            log.info("构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+            dataManageClient.MetaData(list);
         } catch (Exception e) {
             log.error("【dataManageClient.MetaData()】方法报错,ex", e);
         }
