@@ -244,6 +244,7 @@ public class MetaDataImpl implements IMetaData {
                                      EntityTypeEnum entityTypeEnum,
                                      String parentGuid) {
         try {
+            log.info("向atlas添加元数据实体.......参数为:", jsonStr);
             //调用atlas添加实例
             ResultDataDTO<String> result = atlasClient.post(entity, jsonStr);
             if (result.code != AtlasResultEnum.REQUEST_SUCCESS) {
