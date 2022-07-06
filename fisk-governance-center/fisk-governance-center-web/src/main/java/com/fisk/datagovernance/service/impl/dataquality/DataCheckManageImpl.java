@@ -18,7 +18,6 @@ import com.fisk.common.core.utils.SqlParmUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDetailDTO;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.entity.dataquality.*;
@@ -35,6 +34,7 @@ import com.fisk.datagovernance.vo.dataquality.datacheck.SyncCheckInfoVO;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import org.apache.commons.lang.StringUtils;
+import org.bouncycastle.ocsp.Req;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -252,17 +252,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             if (dataSourceInfo.getDatasourceType() == SourceTypeEnum.FiData.getValue()) {
                 FiDataTableMetaDataReqDTO reqDTO = new FiDataTableMetaDataReqDTO();
                 reqDTO.setDataSourceId(String.valueOf(dataSourceInfo.datasourceId));
-                List<FiDataTableMetaDataReqDetailDTO> reqDetails = new ArrayList<>();
+                reqDTO.setTableUniques(tableUnique.stream().collect(Collectors.toList()));
+                reqDTO.setTableBusinessType(TableBusinessTypeEnum.NONE);
                 ResultEntity<List<FiDataTableMetaDataDTO>> listResultEntity = null;
                 // dmp_ods
                 if (dataSourceInfo.getDatasourceId() == 2) {
-                    tableUnique.forEach(t -> {
-                        FiDataTableMetaDataReqDetailDTO reqDetail = new FiDataTableMetaDataReqDetailDTO();
-                        reqDetail.setTableUnique(t);
-                        reqDetail.setTableBusinessType(TableBusinessTypeEnum.NONE);
-                        reqDetails.add(reqDetail);
-                    });
-                    reqDTO.reqDetails = reqDetails;
                     listResultEntity = dataAccessClient.buildFiDataTableMetaData(reqDTO);
                 } else if (dataSourceInfo.getDatasourceId() == 3) {
                     // dmp_mdm

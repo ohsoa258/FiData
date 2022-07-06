@@ -1,5 +1,6 @@
 package com.fisk.common.service.dbMetaData.dto;
 
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -24,8 +25,14 @@ public class FiDataTableMetaDataReqDTO {
     public String dataSourceId;
 
     /**
-     * 表信息集合
+     * 表ID集合
      */
-    @ApiModelProperty(value = "表信息集合")
-    public List<FiDataTableMetaDataReqDetailDTO> reqDetails;
+    @ApiModelProperty(value = "表ID集合")
+    public List<String> tableUniques;
+
+    /**
+     * 表业务类型
+     */
+    @ApiModelProperty(value = "表业务类型")
+    public TableBusinessTypeEnum tableBusinessType;
 }
