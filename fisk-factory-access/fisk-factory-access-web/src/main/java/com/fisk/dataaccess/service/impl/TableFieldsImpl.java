@@ -387,11 +387,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     .filter(Objects::nonNull)
                     .map(e -> {
                         MetaDataColumnAttributeDTO field = new MetaDataColumnAttributeDTO();
-                        table.setQualifiedName(hostname + "_" + dbName + "_" + tableAccess.getId() + "_" + e.getId());
-                        table.setName(e.getFieldName());
-                        table.setContact_info(app.getAppPrincipal());
-                        table.setDescription(e.getFieldDes());
-                        table.setComment(e.getFieldDes());
+                        field.setQualifiedName(hostname + "_" + dbName + "_" + tableAccess.getId() + "_" + e.getId());
+                        field.setName(e.getFieldName());
+                        field.setContact_info(app.getAppPrincipal());
+                        field.setDescription(e.getFieldDes());
+                        field.setComment(e.getFieldDes());
                         return field;
                     }).collect(Collectors.toList());
 
@@ -421,11 +421,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                                 .filter(Objects::nonNull)
                                 .map(e -> {
                                     MetaDataColumnAttributeDTO field = new MetaDataColumnAttributeDTO();
-                                    table.setQualifiedName(hostname + "_" + dbName + "_" + tb.getId() + "_" + e.getId());
-                                    table.setName(e.getFieldName());
-                                    table.setContact_info(app.getAppPrincipal());
-                                    table.setDescription(e.getFieldDes());
-                                    table.setComment(e.getFieldDes());
+                                    field.setQualifiedName(hostname + "_" + dbName + "_" + tb.getId() + "_" + e.getId());
+                                    field.setName(e.getFieldName());
+                                    field.setContact_info(app.getAppPrincipal());
+                                    field.setDescription(e.getFieldDes());
+                                    field.setComment(e.getFieldDes());
                                     return field;
                                 }).collect(Collectors.toList());
 
