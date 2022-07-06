@@ -250,7 +250,6 @@ public class AtomicIndicatorsImpl
                     for (FactAttributePO po : factAttributePoList) {
                         AtomicIndicatorPushDTO dto = new AtomicIndicatorPushDTO();
                         dto.attributeType = FactAttributeEnum.DEGENERATION_DIMENSION.getValue();
-                        ;
                         dto.factFieldName = po.factFieldEnName;
                         dto.factFieldType = po.factFieldType;
                         dto.factFieldLength = po.factFieldLength;

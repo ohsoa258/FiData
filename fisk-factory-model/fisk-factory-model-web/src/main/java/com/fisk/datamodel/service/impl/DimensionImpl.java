@@ -2,18 +2,26 @@ package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDbAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimension.DimensionDateAttributeDTO;
 import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeListDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionMetaDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
@@ -29,6 +37,8 @@ import com.fisk.datamodel.mapper.FactAttributeMapper;
 import com.fisk.datamodel.service.IDimension;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
@@ -74,6 +84,10 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
     private DataFactoryClient dataFactoryClient;
     @Resource
     UserHelper userHelper;
+    @Resource
+    UserClient userClient;
+    @Resource
+    DataManageClient dataManageClient;
 
     @Value("${generate.date-dimension.datasource.typeName}")
     private String typeName;
@@ -696,20 +710,72 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
     }
 
     @Override
-    public void updateDimensionPublishStatus(ModelPublishStatusDTO dto)
-    {
-        DimensionPO po=mapper.selectById(dto.id);
-        if (po !=null)
-        {
-            //0:DW发布状态
-            if (dto.type==0)
-            {
-                po.isPublish=dto.status;
-            }else {
-                po.dorisPublish=dto.status;
-            }
-            mapper.updateById(po);
+    public void updateDimensionPublishStatus(ModelPublishStatusDTO dto) {
+        DimensionPO po = mapper.selectById(dto.id);
+        if (po == null) {
+            return;
         }
+        int dataSourceId = 0;
+        //0:DW发布状态
+        if (dto.type == 0) {
+            po.isPublish = dto.status;
+            dataSourceId = DataSourceConfigEnum.DMP_DW.getValue();
+        } else {
+            po.dorisPublish = dto.status;
+            dataSourceId = DataSourceConfigEnum.DMP_OLAP.getValue();
+        }
+        int flat = mapper.updateById(po);
+        if (flat == 0 && dto.status != PublicStatusEnum.PUBLIC_SUCCESS.getValue()) {
+            return;
+        }
+        //实时更新元数据
+        ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(dataSourceId);
+        if (result.code != ResultEnum.SUCCESS.getCode()) {
+            return;
+        }
+        List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
+        MetaDataInstanceAttributeDTO data = new MetaDataInstanceAttributeDTO();
+        data.name = result.data.conIp;
+        data.hostname = result.data.conIp;
+        data.port = result.data.conPort.toString();
+        data.platform = result.data.platform;
+        data.qualifiedName = result.data.conIp;
+        data.protocol = result.data.protocol;
+        data.rdbms_type = result.data.conType.getName();
+        //库
+        List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
+        MetaDataDbAttributeDTO db = new MetaDataDbAttributeDTO();
+        db.name = result.data.conDbname;
+        db.qualifiedName = result.data.conIp + "_" + result.data.conDbname;
+        //表
+        List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
+        MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+        DimensionDTO dimension = getDimension(dto.id);
+        table.contact_info = "";
+        table.description = dimension.dimensionDesc;
+        table.name = dimension.dimensionTabName;
+        table.qualifiedName = db.qualifiedName + "_" + dimension.id;
+        //字段
+        List<MetaDataColumnAttributeDTO> columnList = new ArrayList<>();
+        DimensionAttributeListDTO dimensionAttributeList = dimensionAttributeImpl.getDimensionAttributeList(dto.id);
+        for (DimensionAttributeDTO field : dimensionAttributeList.attributeDTOList) {
+            MetaDataColumnAttributeDTO column = new MetaDataColumnAttributeDTO();
+            String fieldTypeLength = field.dimensionFieldLength == 0 ? "" : "(" + field.dimensionFieldLength + ")";
+            column.dataType = field.dimensionFieldType + fieldTypeLength;
+            column.description = field.dimensionFieldDes;
+            column.name = field.dimensionFieldEnName;
+            column.qualifiedName = table.qualifiedName + "_" + field.id;
+            columnList.add(column);
+        }
+        table.columnList = columnList;
+        tableList.add(table);
+        db.tableList = tableList;
+        dbList.add(db);
+        data.dbList = dbList;
+        list.add(data);
+        //调用元数据实时同步接口
+        dataManageClient.MetaData(list);
+
     }
 
 }
