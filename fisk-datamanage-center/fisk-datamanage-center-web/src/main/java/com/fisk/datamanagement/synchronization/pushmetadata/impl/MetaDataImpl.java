@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
@@ -44,7 +45,8 @@ public class MetaDataImpl implements IMetaData {
     EntityImpl entityImpl;
     @Resource
     MetadataMapAtlasMapper metadataMapAtlasMapper;
-
+    @Resource
+    UserHelper userHelper;
     @Resource
     PublishTaskClient client;
 
@@ -56,6 +58,7 @@ public class MetaDataImpl implements IMetaData {
     @Override
     public ResultEnum metaData(List<MetaDataInstanceAttributeDTO> data) {
         BuildMetaDataDTO dto = new BuildMetaDataDTO();
+        dto.userId = userHelper.getLoginUserInfo().id;
         dto.data = data;
         client.metaData(dto);
         return ResultEnum.SUCCESS;
