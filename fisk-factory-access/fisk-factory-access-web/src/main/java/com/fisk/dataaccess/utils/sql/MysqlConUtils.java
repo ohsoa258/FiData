@@ -43,7 +43,13 @@ public class MysqlConUtils {
             int tag = 0;
 
             for (String tableName : tableNames) {
-                ResultSet rs = st.executeQuery("select * from `" + tableName + "` LIMIT 0,10;");
+                ResultSet rs = null;
+                try {
+                    rs = st.executeQuery("select * from `" + tableName + "` LIMIT 0,10;");
+                } catch (SQLException e) {
+                    log.error("【getTableNameAndColumns】获取表名报错, ex", e);
+                    continue;
+                }
 
                 List<TableStructureDTO> colNames = getColNames(rs);
 
@@ -132,7 +138,7 @@ public class MysqlConUtils {
         ArrayList<String> tablesList = null;
         try {
             DatabaseMetaData databaseMetaData = conn.getMetaData();
-            ResultSet tables = databaseMetaData.getTables(null, null, "%", new String[]{"TABLE"});
+            ResultSet tables = databaseMetaData.getTables(null, null, "%",null);
             tablesList = new ArrayList<String>();
             while (tables.next()) {
                 tablesList.add(tables.getString("TABLE_NAME"));
