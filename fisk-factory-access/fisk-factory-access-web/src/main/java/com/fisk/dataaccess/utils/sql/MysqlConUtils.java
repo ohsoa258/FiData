@@ -132,7 +132,7 @@ public class MysqlConUtils {
         ArrayList<String> tablesList = null;
         try {
             DatabaseMetaData databaseMetaData = conn.getMetaData();
-            ResultSet tables = databaseMetaData.getTables(null, null, "%", new String[]{"TABLE_NAME"});
+            ResultSet tables = databaseMetaData.getTables(null, null, "%", new String[]{"TABLE"});
             tablesList = new ArrayList<String>();
             while (tables.next()) {
                 tablesList.add(tables.getString("TABLE_NAME"));
