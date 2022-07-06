@@ -25,16 +25,10 @@ public class DataCheckQueryDTO {
     public int datasourceId;
 
     /**
-     * 数据源类型
+     * 表名称/表Id
      */
-    @ApiModelProperty(value = "数据源类型")
-    public SourceTypeEnum datasourceType;
-
-    /**
-     * 实际表名称/表Id
-     */
-    @ApiModelProperty(value = "实际表名称/表Id")
-    public String useTableName;
+    @ApiModelProperty(value = "表名称/表Id")
+    public String tableUnique;
 
     /**
      * 分页对象

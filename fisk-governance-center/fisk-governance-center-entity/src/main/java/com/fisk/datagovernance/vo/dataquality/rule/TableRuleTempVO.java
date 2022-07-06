@@ -3,12 +3,11 @@ package com.fisk.datagovernance.vo.dataquality.rule;
 import com.fisk.datagovernance.enums.dataquality.ModuleTypeEnum;
 import lombok.Data;
 
-import java.util.List;
 
 /**
  * @author dick
  * @version 1.0
- * @description TDDD
+ * @description 查询表检验规则
  * @date 2022/6/20 9:58
  */
 @Data

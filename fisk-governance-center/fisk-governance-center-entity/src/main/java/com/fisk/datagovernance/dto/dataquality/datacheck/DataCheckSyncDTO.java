@@ -15,18 +15,10 @@ import java.util.HashMap;
 @Data
 public class DataCheckSyncDTO {
     /**
-     * 服务器IP
+     * FiData系统数据源ID
      */
-    @ApiModelProperty(value = "服务器IP")
-    @NotNull()
-    public String ip;
-
-    /**
-     * 数据库名称
-     */
-    @ApiModelProperty(value = "数据库名称")
-    @NotNull()
-    public String dbName;
+    @ApiModelProperty(value = "FiData系统数据源ID")
+    public String dataSourceId;
 
     /**
      * 表前缀
@@ -40,7 +32,6 @@ public class DataCheckSyncDTO {
     @ApiModelProperty(value = "表唯一标识：表名称/表ID")
     public String tableUnique;
 
-    public String  tableName;
     /**
      * 校验通过修改字段集合，key：字段名称 value：字段值
      */

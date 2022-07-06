@@ -26,10 +26,10 @@ public class BusinessFilterQueryDTO {
     public int datasourceId;
 
     /**
-     * 实际表名称/表Id
+     * 表名称/表Id
      */
-    @ApiModelProperty(value = "实际表名称/表Id")
-    public String useTableName;
+    @ApiModelProperty(value = "表名称/表Id")
+    public String tableUnique;
 
     /**
      * 分页对象

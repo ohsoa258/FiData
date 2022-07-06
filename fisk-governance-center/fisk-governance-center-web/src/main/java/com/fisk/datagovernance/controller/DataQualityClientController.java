@@ -36,8 +36,8 @@ public class DataQualityClientController {
      */
     @ApiOperation("查询数据质量表规则（含字段规则）")
     @GetMapping("/getTableRuleList")
-    public  ResultEntity<TableRuleInfoDTO> getTableRuleList(@RequestParam("dataSourceId") int dataSourceId, @RequestParam("tableName") String tableName) {
-        return service.getTableRuleList(dataSourceId,tableName);
+    public  ResultEntity<TableRuleInfoDTO> getTableRuleList(@RequestParam("dataSourceId") int dataSourceId, @RequestParam("tableUnique") String tableUnique) {
+        return service.getTableRuleList(dataSourceId,tableUnique);
     }
 
     /**

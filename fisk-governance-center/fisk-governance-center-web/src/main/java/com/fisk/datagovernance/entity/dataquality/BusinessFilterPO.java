@@ -30,14 +30,9 @@ public class BusinessFilterPO extends BasePO
     public String ruleName;
 
     /**
-     * 表名称
+     * 表名称/表Id
      */
-    public String tableName;
-
-    /**
-     * 实际表名称/表Id
-     */
-    public String useTableName;
+    public String tableUnique;
 
     /**
      * 表类型 1：表  2：视图

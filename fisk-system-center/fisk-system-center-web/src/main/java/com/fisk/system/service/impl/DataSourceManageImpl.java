@@ -119,6 +119,8 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         dataSourceDTO.setConTypeName(DataSourceTypeEnum.getEnum(t.getConType()).getName());
         dataSourceDTO.setConAccount(t.getConAccount());
         dataSourceDTO.setConPassword(t.getConPassword());
+        dataSourceDTO.setPlatform(t.getPlatform());
+        dataSourceDTO.setProtocol(t.getProtocol());
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataSourceDTO);
     }
 
@@ -139,6 +141,8 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                 dataSourceDTO.setConType(DataSourceTypeEnum.getEnum(t.getConType()));
                 dataSourceDTO.setConTypeName(DataSourceTypeEnum.getEnum(t.getConType()).getName());
                 dataSourceDTO.setConAccount(t.getConAccount());
+                dataSourceDTO.setPlatform(t.getPlatform());
+                dataSourceDTO.setProtocol(t.getProtocol());
                 if (isShowPwd) {
                     dataSourceDTO.setConPassword(t.getConPassword());
                 }
@@ -147,14 +151,4 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         }
         return dataSourceList;
     }
-
-//    @Override
-//    public ResultEntity<FiDataMateDataDTO> getAllMateData() {
-//        return null;
-//    }
-//
-//    @Override
-//    public ResultEntity<FiDataMateDataDTO> getMateData(FiDataMateDataQueryDTO dto) {
-//        return null;
-//    }
 }

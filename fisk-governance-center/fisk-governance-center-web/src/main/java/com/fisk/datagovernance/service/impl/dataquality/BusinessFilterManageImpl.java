@@ -47,7 +47,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
 
     @Override
     public Page<BusinessFilterVO> getAll(BusinessFilterQueryDTO query) {
-        return baseMapper.getAll(query.page, query.datasourceId, query.useTableName, query.keyword);
+        return baseMapper.getAll(query.page, query.datasourceId, query.tableUnique, query.keyword);
     }
 
     @Override

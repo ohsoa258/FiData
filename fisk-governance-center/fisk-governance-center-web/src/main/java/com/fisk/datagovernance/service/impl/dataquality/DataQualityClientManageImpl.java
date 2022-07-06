@@ -56,8 +56,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     private NoticeExtendMapper noticeExtendMapper;
 
     @Override
-    public ResultEntity<TableRuleInfoDTO> getTableRuleList(int dataSourceId, String tableName) {
-        if (dataSourceId==0 || StringUtils.isEmpty(tableName)){
+    public ResultEntity<TableRuleInfoDTO> getTableRuleList(int dataSourceId, String tableUnique) {
+        if (dataSourceId == 0 || StringUtils.isEmpty(tableUnique)) {
             return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, null);
         }
         // 数据校验、业务清洗、生命周期所对应的模板Id
@@ -69,7 +69,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         QueryWrapper<DataCheckPO> dataCheckPOQueryWrapper = new QueryWrapper<>();
         dataCheckPOQueryWrapper.lambda().eq(DataCheckPO::getDelFlag, 1)
                 .eq(DataCheckPO::getDatasourceId, dataSourceId)
-                .eq(DataCheckPO::getUseTableName, tableName)
+                .eq(DataCheckPO::getTableUnique, tableUnique)
                 .eq(DataCheckPO::getRuleState, 1);
         List<DataCheckPO> dataCheckPOS = dataCheckMapper.selectList(dataCheckPOQueryWrapper);
         List<DataCheckExtendPO> dataCheckExtendPOS = null;
@@ -89,7 +89,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         QueryWrapper<BusinessFilterPO> businessFilterPOQueryWrapper = new QueryWrapper<>();
         businessFilterPOQueryWrapper.lambda().eq(BusinessFilterPO::getDelFlag, 1)
                 .eq(BusinessFilterPO::getDatasourceId, dataSourceId)
-                .eq(BusinessFilterPO::getUseTableName, tableName)
+                .eq(BusinessFilterPO::getTableUnique, tableUnique)
                 .eq(BusinessFilterPO::getRuleState, 1);
         List<BusinessFilterPO> businessFilterPOS = businessFilterMapper.selectList(businessFilterPOQueryWrapper);
         if (CollectionUtils.isNotEmpty(businessFilterPOS)) {
@@ -103,7 +103,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         QueryWrapper<LifecyclePO> lifecyclePOQueryWrapper = new QueryWrapper<>();
         lifecyclePOQueryWrapper.lambda().eq(LifecyclePO::getDelFlag, 1)
                 .eq(LifecyclePO::getDatasourceId, dataSourceId)
-                .eq(LifecyclePO::getTableName, tableName)
+                .eq(LifecyclePO::getTableUnique, tableUnique)
                 .eq(LifecyclePO::getRuleState, 1);
         List<LifecyclePO> lifecyclePOS = lifecycleMapper.selectList(lifecyclePOQueryWrapper);
         if (CollectionUtils.isNotEmpty(lifecyclePOS)) {
@@ -163,7 +163,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
                 if (templateType.getRangeType() == "TABLE") {
                     tempVO = new TableRuleTempVO();
-                    tempVO.setKey(dataCheckPO.getTableName());
+                    tempVO.setKey(dataCheckPO.getTableUnique());
                     tempVO.setRuleValue(templatePO.getSceneDesc());
                     tempVO.setType(templateType.getRangeType());
                     tempVO.setModuleType(ModuleTypeEnum.DATACHECK_MODULE);
@@ -181,7 +181,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                                         for (String checkType : split) {
                                             CheckTypeEnum checkTypeEnum = CheckTypeEnum.getEnum(Integer.parseInt(checkType));
                                             tempVO = new TableRuleTempVO();
-                                            tempVO.setKey(dataCheckExtendPO.getFieldName());
+                                            tempVO.setKey(dataCheckExtendPO.getFieldUnique());
                                             tempVO.setType(templateType.getRangeType());
                                             tempVO.setModuleType(ModuleTypeEnum.DATACHECK_MODULE);
                                             tempVO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
@@ -199,7 +199,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         }
                     } else {
                         tempVO = new TableRuleTempVO();
-                        tempVO.setKey(dataCheckPO.getTableName());
+                        tempVO.setKey(dataCheckPO.getTableUnique());
                         tempVO.setRuleValue(templatePO.getSceneDesc());
                         tempVO.setType(templateType.getRangeType());
                         tempVO.setModuleType(ModuleTypeEnum.DATACHECK_MODULE);
@@ -219,7 +219,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
                 if (templateType.getRangeType() == "TABLE") {
                     tempVO = new TableRuleTempVO();
-                    tempVO.setKey(businessFilterPO.getTableName());
+                    tempVO.setKey(businessFilterPO.getTableUnique());
                     tempVO.setRuleValue(templatePO.getSceneDesc());
                     tempVO.setType(templateType.getRangeType());
                     tempVO.setModuleType(ModuleTypeEnum.BIZCHECK_MODULE);
@@ -238,7 +238,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
                 if (templateType.getRangeType() == "TABLE") {
                     tempVO = new TableRuleTempVO();
-                    tempVO.setKey(lifecyclePO.getTableName());
+                    tempVO.setKey(lifecyclePO.getTableUnique());
                     tempVO.setRuleValue(templatePO.getSceneDesc());
                     tempVO.setType(templateType.getRangeType());
                     tempVO.setModuleType(ModuleTypeEnum.LIFECYCLE_MODULE);
@@ -249,7 +249,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         }
 
         TableRuleInfoDTO tableRule = new TableRuleInfoDTO();
-        tableRule.setName(tableName);
+        tableRule.setName(tableUnique);
         tableRule.setType(1);
         List<TableRuleInfoDTO> fieldRules = new ArrayList<>();
 
@@ -318,7 +318,6 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     }
                     fieldRules.add(fieldRuleInfoVO);
                 }
-
                 tableRule.fieldRules = fieldRules;
             }
         }

@@ -4,8 +4,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.dto.datasource.DataSourceDTO;
-import com.fisk.system.dto.datasource.FiDataMateDataDTO;
-import com.fisk.system.dto.datasource.FiDataMateDataQueryDTO;
 import com.fisk.system.dto.datasource.TestConnectionDTO;
 import com.fisk.system.entity.DataSourcePO;
 
@@ -54,18 +52,4 @@ public interface IDataSourceManageService extends IService<DataSourcePO> {
      * @return 查询结果
      */
     ResultEntity<DataSourceDTO> getById(int datasourceId);
-
-//    /**
-//     * 获取所有数据源元数据信息
-//     *
-//     * @return 查询结果
-//     */
-//    ResultEntity<FiDataMateDataDTO> getAllMateData();
-//
-//    /**
-//     * 获取单条数据源元数据信息
-//     *
-//     * @return 查询结果
-//     */
-//    ResultEntity<FiDataMateDataDTO> getMateData(FiDataMateDataQueryDTO dto);
 }

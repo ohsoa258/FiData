@@ -227,7 +227,7 @@ public enum ResultEnum {
     DATA_QUALITY_DATACHECK_REQUESTJSON_ERROR(11012, "待校验的JSON数据格式异常，未包含指定字段key"),
     DATA_QUALITY_SYNCCHECK_NOOPERATION(11013, "请求参数中操作型参数均为空，无需校验"),
     DATA_QUALITY_UPDATEDATA_ERROR(11014, "数据校验完成，修改表数据触发异常"),
-    DATA_QUALITY_TABLECONFIGURATION_SENT_CHANGES(11014, "表配置已发送变更"),
+    DATA_QUALITY_TABLECONFIGURATION_SENT_CHANGES(11014, "表配置信息在源已发生变更"),
 
     /**
      * 数据安全

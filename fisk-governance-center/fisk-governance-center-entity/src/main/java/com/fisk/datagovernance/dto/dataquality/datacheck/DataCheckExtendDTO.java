@@ -16,16 +16,10 @@ public class DataCheckExtendDTO {
     public int ruleId;
 
     /**
-     * 字段名称
-     */
-    @ApiModelProperty(value = "字段名称")
-    public String fieldName;
-
-    /**
      * 实际字段名称/字段Id
      */
     @ApiModelProperty(value = "实际字段名称/字段Id")
-    public String useFieldName;
+    public String fieldUnique;
 
     /**
      * 字段条件

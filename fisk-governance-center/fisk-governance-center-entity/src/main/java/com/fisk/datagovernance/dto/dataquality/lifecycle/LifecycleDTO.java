@@ -36,10 +36,10 @@ public class LifecycleDTO {
     public String tableName;
 
     /**
-     * 实际表名称/表Id
+     * 表名称/表Id
      */
-    @ApiModelProperty(value = "实际表名称/表Id")
-    public String useTableName;
+    @ApiModelProperty(value = "表名称/表Id")
+    public String tableUnique;
 
     /**
      * 表类型 1：表  2：视图

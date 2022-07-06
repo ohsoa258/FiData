@@ -42,15 +42,9 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
     @Resource
     private DataSourceConManageImpl dataSourceConManageImpl;
 
-    @Resource
-    private NoticeManageImpl noticeManageImpl;
-
-    @Resource
-    UserHelper userHelper;
-
     @Override
     public Page<LifecycleVO> getAll(LifecycleQueryDTO query) {
-        return baseMapper.getAll(query.page, query.datasourceId, query.useTableName, query.keyword);
+        return baseMapper.getAll(query.page, query.datasourceId, query.tableUnique, query.keyword);
     }
 
     @Override
@@ -100,7 +94,6 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
         if (role == null || role.code != ResultEnum.SUCCESS.getCode()) {
             return ResultEnum.getEnum(role.getCode());
         }
-        UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         dto.createRule = role.data;
         //第四步：转换DTO对象为PO对象
         lifecyclePO = LifecycleMap.INSTANCES.dtoToPo_Edit(dto);

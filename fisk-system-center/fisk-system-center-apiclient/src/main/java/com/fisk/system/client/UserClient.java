@@ -76,6 +76,6 @@ public interface UserClient {
      * 查询FiData指定数据源信息
      * @return
      */
-    @GetMapping("/datasource/getById")
+    @GetMapping("/datasource/getById/{datasourceId}")
     ResultEntity<DataSourceDTO> getFiDataDataSourceById(@RequestParam("datasourceId") int datasourceId);
 }

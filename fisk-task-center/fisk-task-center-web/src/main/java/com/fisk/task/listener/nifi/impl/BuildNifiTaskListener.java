@@ -1890,7 +1890,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
         dataCheckSyncDTO.ip = pgsqlDatamodelIp;
         dataCheckSyncDTO.dbName = pgsqlDatamodelDbName;
-        dataCheckSyncDTO.tableName = config.processorConfig.targetTableName;
+        //dataCheckSyncDTO.tableName = config.processorConfig.targetTableName;
         dataCheckSyncDTO.msgField = "error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
@@ -1933,7 +1933,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
         dataCheckSyncDTO.ip = "192.168.1.250";
         dataCheckSyncDTO.dbName = "dmp_ods";
-        dataCheckSyncDTO.tableName = "stg_" + config.processorConfig.targetTableName;
+        //dataCheckSyncDTO.tableName = "stg_" + config.processorConfig.targetTableName;
         dataCheckSyncDTO.msgField = "error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;

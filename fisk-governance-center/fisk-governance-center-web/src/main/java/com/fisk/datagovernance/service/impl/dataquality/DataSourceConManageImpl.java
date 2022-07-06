@@ -2,7 +2,6 @@ package com.fisk.datagovernance.service.impl.dataquality;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
@@ -389,13 +388,23 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @params conDbname
      */
     public DataSourceConPO getDataSourceInfo(String conIp, String conDbname) {
-        DataSourceConPO dataSourceConPO = null;
-        QueryWrapper<DataSourceConPO> dataSourceConPOQueryWrapper = new QueryWrapper<>();
-        dataSourceConPOQueryWrapper.lambda().eq(DataSourceConPO::getConIp, conIp)
-                .eq(DataSourceConPO::getConIp, conIp)
-                .eq(DataSourceConPO::getConDbname, conDbname)
-                .eq(DataSourceConPO::getDelFlag, 1);
-        dataSourceConPO = baseMapper.selectOne(dataSourceConPOQueryWrapper);
+        DataSourceConPO dataSourceConPO=new DataSourceConPO();
+        List<DataSourceConVO> allDataSource = getAllDataSource();
+        if (CollectionUtils.isNotEmpty(allDataSource)){
+            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getConIp().equals(conIp) && t.getConDbname().equals(conDbname)).findFirst().orElse(null);
+            if (dataSourceConVO!=null){
+                dataSourceConPO.setId(dataSourceConVO.getId());
+                dataSourceConPO.setName(dataSourceConVO.getName());
+                dataSourceConPO.setConIp(dataSourceConVO.getConIp());
+                dataSourceConPO.setConPort(dataSourceConVO.getConPort());
+                dataSourceConPO.setDatasourceId(dataSourceConVO.getDatasourceId());
+                dataSourceConPO.setDatasourceType(dataSourceConVO.getDatasourceType().getValue());
+                dataSourceConPO.setConDbname(dataSourceConVO.getConDbname());
+                dataSourceConPO.setConType(dataSourceConVO.getConType().getValue());
+                dataSourceConPO.setConAccount(dataSourceConVO.getConAccount());
+                dataSourceConPO.setConPassword(dataSourceConVO.getConPassword());
+            }
+        }
         return dataSourceConPO;
     }
 

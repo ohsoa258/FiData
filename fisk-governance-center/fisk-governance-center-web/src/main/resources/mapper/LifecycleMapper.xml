@@ -8,8 +8,7 @@
         t1.template_id,
         t1.datasource_id,
         t1.rule_name,
-        t1.table_name,
-        t1.use_table_name,
+        t1.table_unique,
         t1.table_type,
         t1.recovery_date,
         t1.continued_number,
@@ -38,7 +37,7 @@
         AND t2.del_flag = 1
         AND t3.del_flag = 1
         AND t3.id = #{datasourceId}
-        AND use_table_name = #{useTableName,jdbcType=VARCHAR}
+        AND table_unique = #{tableUnique,jdbcType=VARCHAR}
         <if test="keyword != null and keyword != '' ">
             AND rule_name LIKE concat('%', #{keyword}, '%')
         </if>

@@ -55,4 +55,14 @@ public class DataSourcePO extends BasePO
      * 密码
      */
     public String conPassword;
+
+    /**
+     * 请求协议
+     */
+    public String protocol;
+
+    /**
+     * 平台
+     */
+    public String platform;
 }

@@ -20,11 +20,11 @@ public interface BusinessFilterMapper extends FKBaseMapper<BusinessFilterPO> {
      *
      * @param page    分页信息
      * @param keyword where条件
-     * @param useTableName 表名称/Id
+     * @param tableUnique 表名称/Id
      * @return 查询结果
      */
     Page<BusinessFilterVO> getAll(Page<BusinessFilterVO> page,
                                   @Param("datasourceId") int datasourceId,
-                                  @Param("useTableName") String useTableName,
+                                  @Param("tableUnique") String tableUnique,
                                   @Param("keyword") String keyword);
 }

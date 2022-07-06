@@ -82,4 +82,18 @@ public class DataSourceDTO
     @ApiModelProperty(value = "密码")
     @Length(min = 0, max = 50, message = "长度最多50")
     public String conPassword;
+
+    /**
+     * 请求协议
+     */
+    @ApiModelProperty(value = "请求协议")
+    @Length(min = 0, max = 20, message = "长度最多20")
+    public String protocol;
+
+    /**
+     * 平台
+     */
+    @ApiModelProperty(value = "平台")
+    @Length(min = 0, max = 20, message = "长度最多20")
+    public String platform;
 }

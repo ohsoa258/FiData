@@ -47,7 +47,7 @@ public interface DataQualityClient {
      * @return 查询结果
      */
     @GetMapping("/dataQualityClient/getTableRuleList")
-    ResultEntity<TableRuleInfoDTO> getTableRuleList(@RequestParam("dataSourceId") int dataSourceId, @RequestParam("tableName") String tableName);
+    ResultEntity<TableRuleInfoDTO> getTableRuleList(@RequestParam("dataSourceId") int dataSourceId, @RequestParam("tableUnique") String tableUnique);
 
     /**
      * 查询数据质量所有数据源信息，含FiData系统数据源

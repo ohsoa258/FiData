@@ -41,9 +41,19 @@ public class SyncCheckInfoVO {
     public String tableName;
 
     /**
+     * 表标识
+     */
+    public String tableUnique;
+
+    /**
      * 字段名称
      */
     public String fieldName;
+
+    /**
+     * 字段标识
+     */
+    public String fieldUnique;
 
     /**
      * 校验表
