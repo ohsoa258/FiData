@@ -43,7 +43,7 @@ public class MysqlConUtils {
             int tag = 0;
 
             for (String tableName : tableNames) {
-                ResultSet rs = st.executeQuery("select * from " + tableName + " LIMIT 0,10;");
+                ResultSet rs = st.executeQuery("select * from `" + tableName + "` LIMIT 0,10;");
 
                 List<TableStructureDTO> colNames = getColNames(rs);
 
