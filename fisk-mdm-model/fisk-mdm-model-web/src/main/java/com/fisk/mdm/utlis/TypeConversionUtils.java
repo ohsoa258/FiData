@@ -70,14 +70,7 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
             return null;
         }
 
-        switch (value){
-            case 1 :
-                return AttributeSyncStatusEnum.SUCCESS;
-            case 0:
-                return AttributeSyncStatusEnum.ERROR;
-            default:
-                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
-        }
+        return AttributeSyncStatusEnum.values()[value];
     }
 
     /**
