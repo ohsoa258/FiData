@@ -29,7 +29,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         "com.fisk.task.client",
         "com.fisk.datamodel.client",
         "com.fisk.datafactory.client",
-        "com.fisk.datagovernance.client"
+        "com.fisk.datagovernance.client",
+        "com.fisk.datamanage.client"
 })
 @EnableTransactionManagement
 public class FiskFactoryAccessApplication {

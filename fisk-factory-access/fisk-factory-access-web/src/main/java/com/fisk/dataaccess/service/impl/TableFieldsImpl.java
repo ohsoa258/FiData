@@ -35,6 +35,7 @@ import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
@@ -78,6 +79,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     private UserHelper userHelper;
     @Resource
     private DataFactoryClient dataFactoryClient;
+    @Resource
+    private DataManageClient dataManageClient;
     @Value("${metadata-instance.rdbmsType}")
     private String rdbmsType;
     @Value("${metadata-instance.platform}")
@@ -304,6 +307,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     data.apiId = accessPo.apiId;
                     // 创建表流程
                     publishTaskClient.publishBuildPhysicsTableTask(data);
+                    // 构建元数据实时同步数据对象
+                    buildMetaDataInstanceAttribute(registration, accessId, 1);
                 } else if (registration.appType == 1) {
                     // 非实时物理表发布
                     // 创建表流程
@@ -314,6 +319,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     // 生成nifi流程
                     log.info(JSON.toJSONString(data));
                     publishTaskClient.publishBuildAtlasTableTask(data);
+                    // 构建元数据实时同步数据对象
+                    buildMetaDataInstanceAttribute(registration, accessId, 2);
                 }
             } catch (Exception e) {
                 log.info("发布失败", e);
@@ -428,6 +435,15 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             db.setTableList(tableList);
             dbList.add(db);
             instance.setDbList(dbList);
+        }
+
+        list.add(instance);
+
+        try {
+            // 更新元数据内容
+            dataManageClient.MetaData(list);
+        } catch (Exception e) {
+            log.error("【dataManageClient.MetaData()】方法报错,ex", e);
         }
     }
 
