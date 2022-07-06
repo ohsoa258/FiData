@@ -336,6 +336,6 @@ public interface PublishTaskClient {
      * @param dto
      */
     @PostMapping("/publishTask/metaData")
-    public ResultEntity<Object> metaData(@RequestBody BuildMetaDataDTO dto);
+    ResultEntity<Object> metaData(@RequestBody BuildMetaDataDTO dto);
 
 }
