@@ -799,26 +799,48 @@ public class BusinessAreaImpl
                                             factTreeDto.setPublishState(String.valueOf(fact.isPublish != 1 ? 0 : 1));
                                             factTreeDto.setLabelDesc(fact.factTableDesc);
 
-                                            // 第六层: 维度字段
-                                            List<FiDataMetaDataTreeDTO> factAttributeTreeList = factAttributeImpl.query()
-                                                    .eq("fact_id", fact.id)
-                                                    .list()
-                                                    .stream()
-                                                    .filter(Objects::nonNull)
-                                                    .map(field -> {
-                                                        FiDataMetaDataTreeDTO factAttributeTreeDto = new FiDataMetaDataTreeDTO();
-                                                        factAttributeTreeDto.setId(String.valueOf(field.id));
-                                                        factAttributeTreeDto.setParentId(String.valueOf(fact.id));
-                                                        factAttributeTreeDto.setLabel(field.factFieldEnName);
-                                                        factAttributeTreeDto.setLabelAlias(field.factFieldEnName);
-                                                        factAttributeTreeDto.setLevelType(LevelTypeEnum.FIELD);
-                                                        factAttributeTreeDto.setPublishState(String.valueOf(fact.isPublish != 1 ? 0 : 1));
-                                                        factAttributeTreeDto.setLabelLength(String.valueOf(field.factFieldLength));
-                                                        factAttributeTreeDto.setLabelType(field.factFieldType);
-                                                        factAttributeTreeDto.setLabelDesc(field.factFieldDes);
+                                            // 第六层: 事实字段
+                                            List<FiDataMetaDataTreeDTO> factAttributeTreeList;
+                                            // olap: 分析指标
+                                            if ("olap".equalsIgnoreCase(dourceType)) {
+                                                factAttributeTreeList = atomicIndicators.getAtomicIndicator(Math.toIntExact(fact.id))
+                                                        .stream()
+                                                        .filter(Objects::nonNull)
+                                                        .map(field -> {
+                                                            FiDataMetaDataTreeDTO factAttributeTreeDto = new FiDataMetaDataTreeDTO();
+                                                            factAttributeTreeDto.setId(String.valueOf(field.id));
+                                                            factAttributeTreeDto.setParentId(String.valueOf(fact.id));
+                                                            factAttributeTreeDto.setLabel(field.factFieldName);
+                                                            factAttributeTreeDto.setLabelAlias(field.factFieldName);
+                                                            factAttributeTreeDto.setLevelType(LevelTypeEnum.FIELD);
+                                                            factAttributeTreeDto.setPublishState(String.valueOf(fact.dorisPublish != 1 ? 0 : 1));
+//                                                        factAttributeTreeDto.setLabelLength(String.valueOf(""));
+                                                            factAttributeTreeDto.setLabelType(field.factFieldType);
+//                                                        factAttributeTreeDto.setLabelDesc(field.indicatorsDes);
+                                                            return factAttributeTreeDto;
+                                                        }).collect(Collectors.toList());
+                                            } else {
+                                                // 数仓
+                                                factAttributeTreeList = factAttributeImpl.query()
+                                                        .eq("fact_id", fact.id)
+                                                        .list()
+                                                        .stream()
+                                                        .filter(Objects::nonNull)
+                                                        .map(field -> {
+                                                            FiDataMetaDataTreeDTO factAttributeTreeDto = new FiDataMetaDataTreeDTO();
+                                                            factAttributeTreeDto.setId(String.valueOf(field.id));
+                                                            factAttributeTreeDto.setParentId(String.valueOf(fact.id));
+                                                            factAttributeTreeDto.setLabel(field.factFieldEnName);
+                                                            factAttributeTreeDto.setLabelAlias(field.factFieldEnName);
+                                                            factAttributeTreeDto.setLevelType(LevelTypeEnum.FIELD);
+                                                            factAttributeTreeDto.setPublishState(String.valueOf(fact.isPublish != 1 ? 0 : 1));
+                                                            factAttributeTreeDto.setLabelLength(String.valueOf(field.factFieldLength));
+                                                            factAttributeTreeDto.setLabelType(field.factFieldType);
+                                                            factAttributeTreeDto.setLabelDesc(field.factFieldDes);
 
-                                                        return factAttributeTreeDto;
-                                                    }).collect(Collectors.toList());
+                                                            return factAttributeTreeDto;
+                                                        }).collect(Collectors.toList());
+                                            }
 
                                             // 事实表子级
                                             factTreeDto.setChildren(factAttributeTreeList);
