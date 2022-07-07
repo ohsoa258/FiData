@@ -716,11 +716,12 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         }
         int dataSourceId = 0;
         //0:DW发布状态
-        dimension.dorisPublish = dto.status;
-        dataSourceId = DataSourceConfigEnum.DMP_OLAP.getValue();
         if (dto.type == 0) {
             dimension.isPublish = dto.status;
             dataSourceId = DataSourceConfigEnum.DMP_DW.getValue();
+        } else {
+            dimension.dorisPublish = dto.status;
+            dataSourceId = DataSourceConfigEnum.DMP_OLAP.getValue();
         }
         int flat = mapper.updateById(dimension);
         if (flat == 0 && dto.status != PublicStatusEnum.PUBLIC_SUCCESS.getValue()) {

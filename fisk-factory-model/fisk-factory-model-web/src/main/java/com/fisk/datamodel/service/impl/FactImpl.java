@@ -262,11 +262,12 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         }
         //0:DW发布状态
         int dataSourceId;
-        fact.dorisPublish = dto.status;
-        dataSourceId = DataSourceConfigEnum.DMP_OLAP.getValue();
         if (dto.type == 0) {
             fact.isPublish = dto.status;
             dataSourceId = DataSourceConfigEnum.DMP_DW.getValue();
+        } else {
+            fact.dorisPublish = dto.status;
+            dataSourceId = DataSourceConfigEnum.DMP_OLAP.getValue();
         }
         int flat = mapper.updateById(fact);
         if (flat == 0 && dto.status != PublicStatusEnum.PUBLIC_SUCCESS.getValue()) {
