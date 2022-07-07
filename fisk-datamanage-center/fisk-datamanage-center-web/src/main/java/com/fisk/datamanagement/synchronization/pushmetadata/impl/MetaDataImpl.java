@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -57,12 +58,17 @@ public class MetaDataImpl implements IMetaData {
 
     @Override
     public ResultEnum metaData(MetaDataAttributeDTO data) {
-        log.info("开始推送元数据实时同步，参数:{}", JSON.toJSONString(data));
-        BuildMetaDataDTO dto = new BuildMetaDataDTO();
-        dto.userId = (long) 52;
-        dto.data = data.instanceList;
-        client.metaData(dto);
-        return ResultEnum.SUCCESS;
+        try {
+            log.info("开始推送元数据实时同步，参数:{}", JSON.toJSONString(data));
+            BuildMetaDataDTO dto = new BuildMetaDataDTO();
+            dto.userId = userHelper.getLoginUserInfo().id;
+            dto.data = data.instanceList;
+            client.metaData(dto);
+            return ResultEnum.SUCCESS;
+        } catch (Exception e) {
+            log.error("元数据实时同步失败,失败信息:", e);
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
     }
 
     @Override
@@ -97,6 +103,47 @@ public class MetaDataImpl implements IMetaData {
         return ResultEnum.SUCCESS;
     }
 
+    @Override
+    public ResultEnum deleteMetaData(MetaDataDeleteAttributeDTO dto) {
+        for (String qualifiedName : dto.qualifiedNames) {
+            QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(MetadataMapAtlasPO::getQualifiedName, qualifiedName);
+            MetadataMapAtlasPO po = metadataMapAtlasMapper.selectOne(queryWrapper);
+            if (po == null) {
+                continue;
+            }
+            ResultEnum resultEnum = entityImpl.deleteEntity(po.atlasGuid);
+            if (resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
+                continue;
+            }
+            int flat = metadataMapAtlasMapper.delete(queryWrapper);
+            if (flat > 0) {
+                delete(po.atlasGuid);
+            }
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    public void delete(String atlasGuid) {
+        QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(MetadataMapAtlasPO::getParentAtlasGuid, atlasGuid);
+        List<MetadataMapAtlasPO> list = metadataMapAtlasMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(list)) {
+            return;
+        }
+        String guid = list.get(0).atlasGuid;
+        int flat = metadataMapAtlasMapper.delete(queryWrapper);
+        if (flat > 0) {
+            delete(guid);
+        }
+    }
+
+    /**
+     * 实例新增/修改
+     *
+     * @param dto
+     * @return
+     */
     public String metaDataInstance(MetaDataInstanceAttributeDTO dto) {
         String atlasGuid = getMetaDataConfig(dto.qualifiedName);
         //为空,则新增
@@ -113,6 +160,13 @@ public class MetaDataImpl implements IMetaData {
         return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_INSTANCE, dto);
     }
 
+    /**
+     * 库新增/修改
+     *
+     * @param dto
+     * @param parentEntityGuid
+     * @return
+     */
     public String metaDataDb(MetaDataDbAttributeDTO dto, String parentEntityGuid) {
         String atlasGuid = getMetaDataConfig(dto.qualifiedName);
         if (StringUtils.isEmpty(atlasGuid)) {
@@ -131,6 +185,13 @@ public class MetaDataImpl implements IMetaData {
         return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_DB, dto);
     }
 
+    /**
+     * 表新增/修改
+     *
+     * @param dto
+     * @param parentEntityGuid
+     * @return
+     */
     public String metaDataTable(MetaDataTableAttributeDTO dto, String parentEntityGuid) {
         String atlasGuid = getMetaDataConfig(dto.qualifiedName);
         if (StringUtils.isEmpty(atlasGuid)) {
@@ -149,6 +210,13 @@ public class MetaDataImpl implements IMetaData {
         return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_TABLE, dto);
     }
 
+    /**
+     * 字段新增/修改
+     *
+     * @param dto
+     * @param parentEntityGuid
+     * @return
+     */
     public String metaDataField(MetaDataColumnAttributeDTO dto, String parentEntityGuid) {
         String atlasGuid = getMetaDataConfig(dto.qualifiedName);
         if (StringUtils.isEmpty(atlasGuid)) {
@@ -167,6 +235,14 @@ public class MetaDataImpl implements IMetaData {
         return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_COLUMN, dto);
     }
 
+    /**
+     * 更新元数据实体
+     *
+     * @param atlasGuid
+     * @param entityTypeEnum
+     * @param dto
+     * @return
+     */
     public String updateMetaDataEntity(String atlasGuid,
                                        EntityTypeEnum entityTypeEnum,
                                        MetaDataBaseAttributeDTO dto) {
@@ -218,6 +294,12 @@ public class MetaDataImpl implements IMetaData {
         return atlasGuid;
     }
 
+    /**
+     * 删除元数据实体
+     *
+     * @param qualifiedNameList
+     * @param parentEntityGuid
+     */
     public void deleteMetaData(List<String> qualifiedNameList, String parentEntityGuid) {
         QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
         queryWrapper

@@ -62,7 +62,7 @@ fidata:
 
 #血缘同步
 scheduling:
-  enabled: true
+  enabled: false
 
 #feign接口超时配置
 feign:

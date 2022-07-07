@@ -2,6 +2,7 @@ package com.fisk.datamanagement.synchronization.pushmetadata;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 
 import java.util.List;
@@ -26,5 +27,13 @@ public interface IMetaData {
      * @return
      */
     ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data);
+
+    /**
+     * 删除元数据实体
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum deleteMetaData(MetaDataDeleteAttributeDTO dto);
 
 }

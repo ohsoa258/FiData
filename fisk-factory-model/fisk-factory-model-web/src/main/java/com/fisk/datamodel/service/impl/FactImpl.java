@@ -261,7 +261,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             return;
         }
         //0:DW发布状态
-        int dataSourceId = 0;
+        int dataSourceId;
         fact.dorisPublish = dto.status;
         dataSourceId = DataSourceConfigEnum.DMP_OLAP.getValue();
         if (dto.type == 0) {
@@ -317,6 +317,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
      */
     private List<MetaDataColumnAttributeDTO> setFactField(ModelPublishStatusDTO dto, MetaDataTableAttributeDTO table) {
         List<MetaDataColumnAttributeDTO> columnList = new ArrayList<>();
+        //事实表
         if (dto.type == 0) {
             FactAttributeDetailDTO factAttributeDataList = factAttributeImpl.getFactAttributeDataList(dto.id);
             if (factAttributeDataList == null || factAttributeDataList.attributeDTO.size() == 0) {
