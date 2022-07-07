@@ -147,6 +147,11 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             attributePo.setDomainId(null);
         }
 
+        // 如果不是经纬度坐标类型,地图类型不会有值
+        if(!attributePo.getDataType().equals(DataTypeEnum.LATITUDE_COORDINATE)){
+            attributePo.setMapType(null);
+        }
+
         //添加数据
         attributePo.setStatus(AttributeStatusEnum.INSERT);
         attributePo.setSyncStatus(AttributeSyncStatusEnum.NOT_PUBLISH);
