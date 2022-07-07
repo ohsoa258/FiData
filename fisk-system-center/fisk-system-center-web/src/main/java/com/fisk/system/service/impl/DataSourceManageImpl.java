@@ -75,8 +75,8 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                     Class.forName(DataSourceTypeEnum.SQLSERVER.getDriverName());
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
-                case POSTGRE:
-                    Class.forName(DataSourceTypeEnum.POSTGRE.getDriverName());
+                case POSTGRESQL:
+                    Class.forName(DataSourceTypeEnum.POSTGRESQL.getDriverName());
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
                 case DORIS:

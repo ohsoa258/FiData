@@ -2,6 +2,7 @@ package com.fisk.datamanagement.controller;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
 import io.swagger.annotations.ApiOperation;
@@ -26,7 +27,7 @@ public class MetaDataController {
 
     @ApiOperation("元数据实时同步")
     @PostMapping("/metaData")
-    public ResultEntity<Object> metaData(@RequestBody List<MetaDataInstanceAttributeDTO> dto) {
+    public ResultEntity<Object> metaData(@RequestBody MetaDataAttributeDTO dto) {
         return ResultEntityBuild.build(service.metaData(dto));
     }
 

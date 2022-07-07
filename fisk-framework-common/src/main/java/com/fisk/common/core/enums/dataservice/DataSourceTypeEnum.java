@@ -17,11 +17,11 @@ public enum DataSourceTypeEnum implements BaseEnum {
 
     SQLSERVER(1, "SQLSERVER", "com.microsoft.sqlserver.jdbc.SQLServerDriver"),
 
-    CUBE(2,"CUBE","org.olap4j.driver.xmla.XmlaOlap4jDriver"),
+    CUBE(2, "CUBE", "org.olap4j.driver.xmla.XmlaOlap4jDriver"),
 
-    TABULAR(3,"TABULAR","org.olap4j.driver.xmla.XmlaOlap4jDriver"),
+    TABULAR(3, "TABULAR", "org.olap4j.driver.xmla.XmlaOlap4jDriver"),
 
-    POSTGRE(4, "POSTGRE", "org.postgresql.Driver"),
+    POSTGRESQL(4, "POSTGRESQL", "org.postgresql.Driver"),
 
     DORIS(5, "DORIS", "com.mysql.jdbc.Driver");
 

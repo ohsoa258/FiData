@@ -56,11 +56,11 @@ public class MetaDataImpl implements IMetaData {
     private String entityByGuid;
 
     @Override
-    public ResultEnum metaData(List<MetaDataInstanceAttributeDTO> data) {
+    public ResultEnum metaData(MetaDataAttributeDTO data) {
         log.info("开始推送元数据实时同步，参数:{}", JSON.toJSONString(data));
         BuildMetaDataDTO dto = new BuildMetaDataDTO();
         dto.userId = (long) 52;
-        dto.data = data;
+        dto.data = data.instanceList;
         client.metaData(dto);
         return ResultEnum.SUCCESS;
     }
