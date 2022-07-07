@@ -9,10 +9,7 @@ import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.entity.EntityQueryDTO;
 import com.fisk.mdm.dto.viwGroup.*;
-import com.fisk.mdm.entity.AttributeGroupPO;
-import com.fisk.mdm.entity.AttributePO;
-import com.fisk.mdm.entity.ViwGroupDetailsPO;
-import com.fisk.mdm.entity.ViwGroupPO;
+import com.fisk.mdm.entity.*;
 import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.ViwGroupMap;
 import com.fisk.mdm.mapper.AttributeMapper;
@@ -132,11 +129,16 @@ public class ViwGroupServiceImpl implements ViwGroupService {
 
         QueryWrapper<ViwGroupPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(ViwGroupPO::getEntityId,entityId)
-                .and(wq -> wq
-                        .like(ViwGroupPO::getName, name)
-                        .or()
-                        .like(ViwGroupPO::getDetails,name));
+                .eq(ViwGroupPO::getEntityId,entityId);
+
+        // 追加模糊搜索条件
+        if (com.baomidou.mybatisplus.core.toolkit.StringUtils.isNotBlank(name)){
+            queryWrapper.lambda().and(wq -> wq
+                    .like(ViwGroupPO::getName, name)
+                    .or()
+                    .like(ViwGroupPO::getDetails,name));
+        }
+
         List<ViwGroupPO> viwGroupPoList = viwGroupMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(viwGroupPoList)){
             List<ViwGroupVO> collect = viwGroupPoList.stream().filter(e -> e.getId() != 0).map(e -> {

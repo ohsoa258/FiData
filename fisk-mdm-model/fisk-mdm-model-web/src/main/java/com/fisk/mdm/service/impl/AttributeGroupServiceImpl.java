@@ -9,6 +9,7 @@ import com.fisk.mdm.dto.attributeGroup.*;
 import com.fisk.mdm.entity.AttributeGroupDetailsPO;
 import com.fisk.mdm.entity.AttributeGroupPO;
 import com.fisk.mdm.entity.EntityPO;
+import com.fisk.mdm.entity.ViwGroupPO;
 import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.AttributeGroupMap;
@@ -96,11 +97,16 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
     public List<AttributeGroupVO> getDataByModelId(Integer modelId,String name) {
         QueryWrapper<AttributeGroupPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(AttributeGroupPO::getModelId,modelId)
-                .and(wq -> wq
-                        .like(AttributeGroupPO::getName, name)
-                        .or()
-                        .like(AttributeGroupPO::getDetails,name));
+                .eq(AttributeGroupPO::getModelId,modelId);
+
+        // 追加模糊搜索条件
+        if (com.baomidou.mybatisplus.core.toolkit.StringUtils.isNotBlank(name)){
+            queryWrapper.lambda().and(wq -> wq
+                    .like(AttributeGroupPO::getName, name)
+                    .or()
+                    .like(AttributeGroupPO::getDetails,name));
+        }
+
         List<AttributeGroupPO> groupPoList = groupMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(groupPoList)){
             List<AttributeGroupVO> collect = groupPoList.stream().filter(e -> e.getId() != 0).map(e -> {

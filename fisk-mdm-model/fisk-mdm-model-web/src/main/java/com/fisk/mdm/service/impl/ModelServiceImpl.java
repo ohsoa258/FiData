@@ -21,6 +21,7 @@ import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.dto.modelVersion.ModelVersionDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupDetailsDTO;
+import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.entity.ModelVersionPO;
@@ -263,13 +264,18 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         ModelInfoVO modelInfoVO = ModelMap.INSTANCES.poToInfoVO(modelPo);
         QueryWrapper<EntityPO> wrapper = new QueryWrapper<>();
         wrapper.lambda()
-                .eq(EntityPO::getModelId,modelId)
-                .and(wq -> wq
-                        .like(EntityPO::getName, name)
-                        .or()
-                        .like(EntityPO::getDisplayName,name)
-                        .or()
-                        .like(EntityPO::getDesc,name));
+                .eq(EntityPO::getModelId,modelId);
+
+        // 追加模糊搜索条件
+        if (com.baomidou.mybatisplus.core.toolkit.StringUtils.isNotBlank(name)){
+            wrapper.lambda().and(wq -> wq
+                    .like(EntityPO::getName, name)
+                    .or()
+                    .like(EntityPO::getDisplayName,name)
+                    .or()
+                    .like(EntityPO::getDesc,name));
+        }
+
         List<EntityPO> entityPos = entityMapper.selectList(wrapper);
 
         //判断是否存在实体
