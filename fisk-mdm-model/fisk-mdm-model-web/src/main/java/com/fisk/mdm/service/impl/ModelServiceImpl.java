@@ -264,11 +264,12 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         QueryWrapper<EntityPO> wrapper = new QueryWrapper<>();
         wrapper.lambda()
                 .eq(EntityPO::getModelId,modelId)
-                .like(EntityPO::getName, name)
-                .or()
-                .like(EntityPO::getDisplayName,name)
-                .or()
-                .like(EntityPO::getDesc,name);
+                .and(wq -> wq
+                        .like(EntityPO::getName, name)
+                        .or()
+                        .like(EntityPO::getDisplayName,name)
+                        .or()
+                        .like(EntityPO::getDesc,name));
         List<EntityPO> entityPos = entityMapper.selectList(wrapper);
 
         //判断是否存在实体
