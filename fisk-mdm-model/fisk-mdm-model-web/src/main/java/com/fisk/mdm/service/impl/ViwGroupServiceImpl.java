@@ -133,9 +133,10 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         QueryWrapper<ViwGroupPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(ViwGroupPO::getEntityId,entityId)
-                .like(ViwGroupPO::getName, name)
-                .or()
-                .like(ViwGroupPO::getDetails,name);
+                .and(wq -> wq
+                        .like(ViwGroupPO::getName, name)
+                        .or()
+                        .like(ViwGroupPO::getDetails,name));
         List<ViwGroupPO> viwGroupPoList = viwGroupMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(viwGroupPoList)){
             List<ViwGroupVO> collect = viwGroupPoList.stream().filter(e -> e.getId() != 0).map(e -> {
