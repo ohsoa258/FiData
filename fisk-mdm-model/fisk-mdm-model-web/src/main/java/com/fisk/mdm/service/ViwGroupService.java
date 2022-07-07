@@ -26,7 +26,7 @@ public interface ViwGroupService {
      * @param entityId
      * @return
      */
-    List<ViwGroupVO> getDataByEntityId(Integer entityId);
+    List<ViwGroupVO> getDataByEntityId(Integer entityId,String name);
 
     /**
      * 创建自定义视图组

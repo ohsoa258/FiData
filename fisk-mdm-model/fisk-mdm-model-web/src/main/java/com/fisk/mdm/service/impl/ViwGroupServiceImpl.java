@@ -9,6 +9,7 @@ import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.entity.EntityQueryDTO;
 import com.fisk.mdm.dto.viwGroup.*;
+import com.fisk.mdm.entity.AttributeGroupPO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.ViwGroupDetailsPO;
 import com.fisk.mdm.entity.ViwGroupPO;
@@ -124,14 +125,17 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     }
 
     @Override
-    public List<ViwGroupVO> getDataByEntityId(Integer entityId) {
+    public List<ViwGroupVO> getDataByEntityId(Integer entityId,String name) {
         if (entityId == null){
             return null;
         }
 
         QueryWrapper<ViwGroupPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(ViwGroupPO::getEntityId,entityId);
+                .eq(ViwGroupPO::getEntityId,entityId)
+                .like(ViwGroupPO::getName, name)
+                .or()
+                .like(ViwGroupPO::getDetails,name);
         List<ViwGroupPO> viwGroupPoList = viwGroupMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(viwGroupPoList)){
             List<ViwGroupVO> collect = viwGroupPoList.stream().filter(e -> e.getId() != 0).map(e -> {

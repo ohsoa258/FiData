@@ -26,7 +26,7 @@ public interface AttributeGroupService {
      * @param modelId
      * @return
      */
-    List<AttributeGroupVO> getDataByModelId(Integer modelId);
+    List<AttributeGroupVO> getDataByModelId(Integer modelId,String name);
 
     /**
      * 修改属性组信息

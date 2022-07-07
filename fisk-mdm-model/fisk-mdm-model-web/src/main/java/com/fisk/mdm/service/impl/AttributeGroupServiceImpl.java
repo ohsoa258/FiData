@@ -93,10 +93,13 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
     }
 
     @Override
-    public List<AttributeGroupVO> getDataByModelId(Integer modelId) {
+    public List<AttributeGroupVO> getDataByModelId(Integer modelId,String name) {
         QueryWrapper<AttributeGroupPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(AttributeGroupPO::getModelId,modelId);
+                .eq(AttributeGroupPO::getModelId,modelId)
+                .like(AttributeGroupPO::getName, name)
+                .or()
+                .like(AttributeGroupPO::getDetails,name);;
         List<AttributeGroupPO> groupPoList = groupMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(groupPoList)){
             List<AttributeGroupVO> collect = groupPoList.stream().filter(e -> e.getId() != 0).map(e -> {

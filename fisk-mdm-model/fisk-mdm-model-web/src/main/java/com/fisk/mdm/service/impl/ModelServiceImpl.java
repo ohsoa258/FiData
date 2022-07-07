@@ -422,7 +422,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                     .forEach(item -> {
 
                                         // 自定义视图组
-                                        List<ViwGroupVO> viwGroupList = viwGroupService.getDataByEntityId(item.getId());
+                                        List<ViwGroupVO> viwGroupList = viwGroupService.getDataByEntityId(item.getId(),null);
                                         if (viwGroupList == null){
                                             return;
                                         }

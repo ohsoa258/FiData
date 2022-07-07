@@ -74,8 +74,8 @@ public class ViwGroupController {
     @ApiOperation("查询视图组(根据实体id)")
     @GetMapping("/getDataByEntityId")
     @ResponseBody
-    public ResultEntity<List<ViwGroupVO>> getDataByEntityId(Integer id) {
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,viwGroupService.getDataByEntityId(id));
+    public ResultEntity<List<ViwGroupVO>> getDataByEntityId(Integer id,String name) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,viwGroupService.getDataByEntityId(id,name));
     }
 
     @ApiOperation("根据实体id查询实体关联关系")
