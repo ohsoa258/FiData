@@ -709,50 +709,38 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
 
     @Override
     public void updateDimensionPublishStatus(ModelPublishStatusDTO dto) {
-        DimensionPO po = mapper.selectById(dto.id);
-        if (po == null) {
+        DimensionPO dimension = mapper.selectById(dto.id);
+        if (dimension == null) {
+            log.info("数据建模元数据实时同步失败,维度表不存在!");
             return;
         }
         int dataSourceId = 0;
         //0:DW发布状态
+        dimension.dorisPublish = dto.status;
+        dataSourceId = DataSourceConfigEnum.DMP_OLAP.getValue();
         if (dto.type == 0) {
-            po.isPublish = dto.status;
+            dimension.isPublish = dto.status;
             dataSourceId = DataSourceConfigEnum.DMP_DW.getValue();
-        } else {
-            po.dorisPublish = dto.status;
-            dataSourceId = DataSourceConfigEnum.DMP_OLAP.getValue();
         }
-        int flat = mapper.updateById(po);
+        int flat = mapper.updateById(dimension);
         if (flat == 0 && dto.status != PublicStatusEnum.PUBLIC_SUCCESS.getValue()) {
+            log.info("维度表更改状态失败!");
             return;
         }
         //实时更新元数据
-        ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(dataSourceId);
-        if (result.code != ResultEnum.SUCCESS.getCode()) {
+        List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
+        MetaDataInstanceAttributeDTO data = getDataSourceConfig(dataSourceId);
+        if (data == null) {
+            log.info("维度表元数据实时更新,查询实例数据失败!");
             return;
         }
-        List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
-        MetaDataInstanceAttributeDTO data = new MetaDataInstanceAttributeDTO();
-        data.name = result.data.conIp;
-        data.hostname = result.data.conIp;
-        data.port = result.data.conPort.toString();
-        data.platform = result.data.platform;
-        data.qualifiedName = result.data.conIp;
-        data.protocol = result.data.protocol;
-        data.rdbms_type = result.data.conType.getName();
-        //库
-        List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
-        MetaDataDbAttributeDTO db = new MetaDataDbAttributeDTO();
-        db.name = result.data.conDbname;
-        db.qualifiedName = result.data.conIp + "_" + result.data.conDbname;
         //表
         List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
         MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
-        DimensionDTO dimension = getDimension(dto.id);
         table.contact_info = "";
         table.description = dimension.dimensionDesc;
         table.name = dimension.dimensionTabName;
-        table.qualifiedName = db.qualifiedName + "_" + dimension.id;
+        table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dimension.id;
         //字段
         List<MetaDataColumnAttributeDTO> columnList = new ArrayList<>();
         DimensionAttributeListDTO dimensionAttributeList = dimensionAttributeImpl.getDimensionAttributeList(dto.id);
@@ -767,19 +755,40 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         }
         table.columnList = columnList;
         tableList.add(table);
-        db.tableList = tableList;
-        dbList.add(db);
-        data.dbList = dbList;
+        data.dbList.get(0).tableList = tableList;
         list.add(data);
         try {
             MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
             metaDataAttribute.instanceList = list;
             // 更新元数据内容
-            log.info("构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+            log.info("维度表构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
             dataManageClient.metaData(metaDataAttribute);
         } catch (Exception e) {
             log.error("【dataManageClient.MetaData()】方法报错,ex", e);
         }
+    }
+
+    public MetaDataInstanceAttributeDTO getDataSourceConfig(int dataSourceId) {
+        ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(dataSourceId);
+        if (result.code != ResultEnum.SUCCESS.getCode()) {
+            return null;
+        }
+        MetaDataInstanceAttributeDTO data = new MetaDataInstanceAttributeDTO();
+        data.name = result.data.conIp;
+        data.hostname = result.data.conIp;
+        data.port = result.data.conPort.toString();
+        data.platform = result.data.platform;
+        data.qualifiedName = result.data.conIp;
+        data.protocol = result.data.protocol;
+        data.rdbms_type = result.data.conType.getName();
+        //库
+        List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
+        MetaDataDbAttributeDTO db = new MetaDataDbAttributeDTO();
+        db.name = result.data.conDbname;
+        db.qualifiedName = result.data.conIp + "_" + result.data.conDbname;
+        dbList.add(db);
+        data.dbList = dbList;
+        return data;
     }
 
 }
