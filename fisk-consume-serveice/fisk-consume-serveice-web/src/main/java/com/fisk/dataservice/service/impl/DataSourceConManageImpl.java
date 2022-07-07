@@ -6,26 +6,29 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbMetaData.dto.DataBaseViewDTO;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
-import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
-import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
-import com.fisk.common.framework.exception.FkException;
-import com.fisk.dataservice.dto.datasource.*;
+import com.fisk.dataservice.dto.datasource.DataSourceConDTO;
+import com.fisk.dataservice.dto.datasource.DataSourceConEditDTO;
+import com.fisk.dataservice.dto.datasource.DataSourceConQuery;
+import com.fisk.dataservice.dto.datasource.TestConnectionDTO;
 import com.fisk.dataservice.entity.DataSourceConPO;
 import com.fisk.dataservice.map.DataSourceConMap;
 import com.fisk.dataservice.mapper.DataSourceConMapper;
 import com.fisk.dataservice.service.IDataSourceConManageService;
 import com.fisk.dataservice.vo.api.FieldInfoVO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
-import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.vo.datasource.DataSourceVO;
 import lombok.SneakyThrows;
 import org.apache.commons.lang.StringUtils;
@@ -139,9 +142,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     //2.获得数据库的连接
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
-                case POSTGRE:
+                case POSTGRESQL:
                     //1.加载驱动程序
-                    Class.forName(DataSourceTypeEnum.POSTGRE.getDriverName());
+                    Class.forName(DataSourceTypeEnum.POSTGRESQL.getDriverName());
                     //2.获得数据库的连接
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
@@ -223,7 +226,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 //dataSource.viewDtoList = sqlServerPlusUtils.loadViewDetails(DriverTypeEnum.SQLSERVER, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
                 dataBaseViewDTOS = sqlServerPlusUtils.loadViewDetails(DriverTypeEnum.SQLSERVER, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
                 break;
-            case POSTGRE:
+            case POSTGRESQL:
                 dataSource.tableDtoList = postgresConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DriverTypeEnum.POSTGRESQL);
                 break;
         }

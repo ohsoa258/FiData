@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
@@ -12,8 +14,6 @@ import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
-import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
 import com.fisk.datagovernance.enums.DataSourceTypeEnum;
@@ -143,7 +143,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     //2.获得数据库的连接
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
-                case POSTGRE:
+                case POSTGRESQL:
                     //1.加载驱动程序
                     Class.forName(DataSourceTypeEnum.POSTGRE.getDriverName());
                     //2.获得数据库的连接

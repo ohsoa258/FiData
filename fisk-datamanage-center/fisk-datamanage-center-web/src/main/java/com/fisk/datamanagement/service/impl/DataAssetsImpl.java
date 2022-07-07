@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -11,12 +12,15 @@ import com.fisk.datamanagement.dto.dataassets.DataAssetsParameterDTO;
 import com.fisk.datamanagement.dto.dataassets.DataAssetsResultDTO;
 import com.fisk.datamanagement.service.IDataAssets;
 import com.fisk.datamanagement.vo.ConnectionInformationDTO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author JianWenYang
@@ -29,27 +33,35 @@ public class DataAssetsImpl implements IDataAssets {
     @Resource
     EntityImpl entity;
 
+    @Resource
+    UserClient userClient;
+
     @Override
-    public DataAssetsResultDTO getDataAssetsTableList(DataAssetsParameterDTO dto)
-    {
-        DataAssetsResultDTO data=new DataAssetsResultDTO();
+    public DataAssetsResultDTO getDataAssetsTableList(DataAssetsParameterDTO dto) {
+        DataAssetsResultDTO data = new DataAssetsResultDTO();
         try {
             //获取实例配置信息
             JSONObject instanceEntity = this.entity.getEntity(dto.instanceGuid);
-            JSONObject entity= JSON.parseObject(instanceEntity.getString("entity"));
-            JSONObject attributes= JSON.parseObject(entity.getString("attributes"));
+            JSONObject entity = JSON.parseObject(instanceEntity.getString("entity"));
+            JSONObject attributes = JSON.parseObject(entity.getString("attributes"));
             //获取数据库类型
             String rdbmsType = attributes.getString("rdbms_type").toLowerCase();
             //获取账号密码
-            String[] comments = attributes.getString("comment").split("\\\\");
+            ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
+            if (allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            }
+            Optional<DataSourceDTO> first = allFiDataDataSource.data.stream().filter(e -> dto.dbName.equals(e.conDbname)).findFirst();
+            if (!first.isPresent()) {
+                throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            }
             ConnectionInformationDTO connectionDTO = jointConnection(rdbmsType, attributes.getString("hostname"), attributes.getString("port"), dto.dbName);
             //连接数据源
-            Connection conn=getStatement(connectionDTO.driver,connectionDTO.url,comments[0],comments[1]);
+            Connection conn = getStatement(connectionDTO.driver, connectionDTO.url, first.get().conAccount, first.get().conPassword);
             Statement st = conn.createStatement();
             //拼接筛选条件
-            String condition=" where 1=1 ";
-            if (CollectionUtils.isNotEmpty(dto.filterQueryDTOList))
-            {
+            String condition = " where 1=1 ";
+            if (CollectionUtils.isNotEmpty(dto.filterQueryDTOList)) {
                 condition += generateCondition.getCondition(dto.filterQueryDTOList);
             }
             String sql="";

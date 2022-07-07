@@ -9,10 +9,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataDbAttributeDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
@@ -442,9 +439,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         list.add(instance);
 
         try {
+            MetaDataAttributeDTO data = new MetaDataAttributeDTO();
+            data.instanceList = list;
             // 更新元数据内容
             log.info("构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
-            dataManageClient.metaData(list);
+            dataManageClient.metaData(data);
         } catch (Exception e) {
             log.error("【dataManageClient.MetaData()】方法报错,ex", e);
         }

@@ -1,6 +1,7 @@
 package com.fisk.datamanage.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.datamanagement.dto.datamasking.DataMaskingSourceDTO;
 import com.fisk.datamanagement.dto.datamasking.DataMaskingTargetDTO;
@@ -61,7 +62,7 @@ public interface DataManageClient {
      * @return
      */
     @PostMapping("/MetaData/metaData")
-    ResultEntity<Object> metaData(@RequestBody List<MetaDataInstanceAttributeDTO> dto);
+    ResultEntity<Object> metaData(@RequestBody MetaDataAttributeDTO dto);
 
     /**
      * 添加元数据实体

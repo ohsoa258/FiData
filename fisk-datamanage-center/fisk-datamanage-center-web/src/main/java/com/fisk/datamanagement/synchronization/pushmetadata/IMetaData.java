@@ -1,6 +1,7 @@
 package com.fisk.datamanagement.synchronization.pushmetadata;
 
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 
 import java.util.List;
@@ -16,7 +17,7 @@ public interface IMetaData {
      * @param data
      * @return
      */
-    ResultEnum metaData(List<MetaDataInstanceAttributeDTO> data);
+    ResultEnum metaData(MetaDataAttributeDTO data);
 
     /**
      * 消费元数据
