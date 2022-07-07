@@ -134,6 +134,16 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
             return ResultEnum.DATA_NOTEXISTS;
         }
 
+        // 复制的版本名称不能重复
+        QueryWrapper<ModelVersionPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(ModelVersionPO::getName,dto.getName())
+                .last(" limit 1 ");
+        ModelVersionPO modelVersionPo1 = modelVersionMapper.selectOne(queryWrapper);
+        if (modelVersionPo1 != null){
+            return ResultEnum.NAME_EXISTS;
+        }
+
         // 未提交的数据的不能复制
         if (!modelVersionPo.getStatus().equals(ModelVersionStatusEnum.SUBMITTED)) {
             return ResultEnum.UNCOMMITTED_CANNOT_COPIED;
