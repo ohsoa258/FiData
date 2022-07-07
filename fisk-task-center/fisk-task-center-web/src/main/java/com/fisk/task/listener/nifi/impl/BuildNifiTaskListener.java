@@ -2199,7 +2199,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(2, 6);
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
-        buildReplaceTextProcessorDTO.replacementValue = "$1:escapJson()";
+        buildReplaceTextProcessorDTO.replacementValue = "$1:escapeJson()";
         buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
         verifyProcessorResult(processorEntityBusinessResult);
