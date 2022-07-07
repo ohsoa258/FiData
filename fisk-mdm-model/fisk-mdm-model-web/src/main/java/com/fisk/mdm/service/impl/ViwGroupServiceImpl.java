@@ -683,48 +683,50 @@ public class ViwGroupServiceImpl implements ViwGroupService {
 
         // 属性信息
         List<AttributeInfoDTO> attributeList = entityInfoVo.getAttributeList();
-        List<EntityQueryDTO> collect = attributeList.stream().filter(e -> e.getDomainId() == null).map(e -> {
-            EntityQueryDTO dto1 = new EntityQueryDTO();
-            dto1.setId(e.getId());
-            dto1.setName(e.getName());
-            dto1.setType(ObjectTypeEnum.ATTRIBUTES.getName());
-            dto1.setDisplayName(e.getDisplayName());
-            dto1.setDesc(e.getDesc());
-            dto1.setDataType(e.getDataType());
-            dto1.setDataTypeLength(e.getDataTypeLength());
-            dto1.setDataTypeDecimalLength(e.getDataTypeDecimalLength());
-            dto1.setDomainEntityId(e.getDomainEntityId());
-            dto1.setDomainName(e.getDomainName());
-            dto1.setMapType(e.getMapType());
+        if (CollectionUtils.isNotEmpty(attributeList)){
+            List<EntityQueryDTO> collect = attributeList.stream().filter(e -> e.getDomainId() == null).map(e -> {
+                EntityQueryDTO dto1 = new EntityQueryDTO();
+                dto1.setId(e.getId());
+                dto1.setName(e.getName());
+                dto1.setType(ObjectTypeEnum.ATTRIBUTES.getName());
+                dto1.setDisplayName(e.getDisplayName());
+                dto1.setDesc(e.getDesc());
+                dto1.setDataType(e.getDataType());
+                dto1.setDataTypeLength(e.getDataTypeLength());
+                dto1.setDataTypeDecimalLength(e.getDataTypeDecimalLength());
+                dto1.setDomainEntityId(e.getDomainEntityId());
+                dto1.setDomainName(e.getDomainName());
+                dto1.setMapType(e.getMapType());
 
-            // 查询别名
-            QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
-            queryWrapper.lambda()
-                    .eq(ViwGroupDetailsPO::getGroupId,groupId)
-                    .eq(ViwGroupDetailsPO::getAttributeId,e.getId());
-            ViwGroupDetailsPO detailsPo = detailsMapper.selectOne(queryWrapper);
-            if (detailsPo != null){
-                dto1.setAliasName(detailsPo.getAliasName());
-            }
+                // 查询别名
+                QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
+                queryWrapper.lambda()
+                        .eq(ViwGroupDetailsPO::getGroupId,groupId)
+                        .eq(ViwGroupDetailsPO::getAttributeId,e.getId());
+                ViwGroupDetailsPO detailsPo = detailsMapper.selectOne(queryWrapper);
+                if (detailsPo != null){
+                    dto1.setAliasName(detailsPo.getAliasName());
+                }
 
-            // 判断是否在视图组中存在
-            if (attributeIds.contains(e.getId())){
-                dto1.setIsCheck(1);
-            }else {
-                dto1.setIsCheck(0);
-            }
+                // 判断是否在视图组中存在
+                if (attributeIds.contains(e.getId())){
+                    dto1.setIsCheck(1);
+                }else {
+                    dto1.setIsCheck(0);
+                }
 
-            return dto1;
-        }).collect(Collectors.toList());
+                return dto1;
+            }).collect(Collectors.toList());
 
-        // 域字段递归
-        List<EntityQueryDTO> doMainList = attributeList.stream().filter(e -> e.getDomainId() != null).map(e -> {
-            AttributeVO data = attributeService.getById(e.getDomainId()).getData();
-            EntityQueryDTO attributeInfo = this.getAttributeInfo(data.getEntityId(),attributeIds,groupId);
-            return attributeInfo;
-        }).collect(Collectors.toList());
-        collect.addAll(doMainList);
-        dto.setChildren(collect);
+            // 域字段递归
+            List<EntityQueryDTO> doMainList = attributeList.stream().filter(e -> e.getDomainId() != null).map(e -> {
+                AttributeVO data = attributeService.getById(e.getDomainId()).getData();
+                EntityQueryDTO attributeInfo = this.getAttributeInfo(data.getEntityId(),attributeIds,groupId);
+                return attributeInfo;
+            }).collect(Collectors.toList());
+            collect.addAll(doMainList);
+            dto.setChildren(collect);
+        }
 
         return dto;
     }
