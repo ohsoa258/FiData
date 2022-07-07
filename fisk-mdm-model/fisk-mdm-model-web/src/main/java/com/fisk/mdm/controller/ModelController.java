@@ -66,8 +66,8 @@ public class ModelController {
     @ApiOperation("根据模型id获取实体")
     @GetMapping("/getEntityById")
     @ResponseBody
-    public ResultEntity<ModelInfoVO> getEntityById(Integer id){
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getEntityById(id));
+    public ResultEntity<ModelInfoVO> getEntityById(Integer id,String name){
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getEntityById(id,name));
     }
 
     @ApiOperation("刷新主数据结构")
