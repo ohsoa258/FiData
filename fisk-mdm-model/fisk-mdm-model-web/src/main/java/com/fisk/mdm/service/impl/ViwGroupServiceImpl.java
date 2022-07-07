@@ -756,42 +756,44 @@ public class ViwGroupServiceImpl implements ViwGroupService {
 
         // 属性信息
         List<AttributeInfoDTO> attributeList = entityInfoVo.getAttributeList();
-        List<EntityQueryDTO> collect = attributeList.stream().filter(e -> e.getDomainId() == null).map(e -> {
-            // 判断是否在视图组中存在
-            if (attributeIds.contains(e.getId())){
-                EntityQueryDTO dto1 = new EntityQueryDTO();
-                dto1.setId(e.getId());
-                dto1.setName(e.getName());
-                dto1.setType(ObjectTypeEnum.ATTRIBUTES.getName());
-                dto1.setDataType(e.getDataType());
-                dto1.setDisplayName(e.getDisplayName());
+        if (CollectionUtils.isNotEmpty(attributeList)){
+            List<EntityQueryDTO> collect = attributeList.stream().filter(e -> e.getDomainId() == null).map(e -> {
+                // 判断是否在视图组中存在
+                if (attributeIds.contains(e.getId())){
+                    EntityQueryDTO dto1 = new EntityQueryDTO();
+                    dto1.setId(e.getId());
+                    dto1.setName(e.getName());
+                    dto1.setType(ObjectTypeEnum.ATTRIBUTES.getName());
+                    dto1.setDataType(e.getDataType());
+                    dto1.setDisplayName(e.getDisplayName());
 
-                // 查询别名
-                QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
-                queryWrapper.lambda()
-                        .eq(ViwGroupDetailsPO::getGroupId,groupId)
-                        .eq(ViwGroupDetailsPO::getAttributeId,e.getId());
-                ViwGroupDetailsPO detailsPo = detailsMapper.selectOne(queryWrapper);
-                if (detailsPo != null){
-                    dto1.setAliasName(detailsPo.getAliasName());
+                    // 查询别名
+                    QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
+                    queryWrapper.lambda()
+                            .eq(ViwGroupDetailsPO::getGroupId,groupId)
+                            .eq(ViwGroupDetailsPO::getAttributeId,e.getId());
+                    ViwGroupDetailsPO detailsPo = detailsMapper.selectOne(queryWrapper);
+                    if (detailsPo != null){
+                        dto1.setAliasName(detailsPo.getAliasName());
+                    }
+
+                    return dto1;
                 }
 
-                return dto1;
-            }
+                return null;
+            }).collect(Collectors.toList());
 
-            return null;
-        }).collect(Collectors.toList());
+            // 域字段递归
+            List<EntityQueryDTO> doMainList = attributeList.stream().filter(e -> e.getDomainId() != null).map(e -> {
+                AttributeVO data = attributeService.getById(e.getDomainId()).getData();
+                EntityQueryDTO attributeInfo = this.getRelationAttributeInfo(data.getEntityId(),attributeIds,entityIds,groupId);
+                return attributeInfo;
+            }).collect(Collectors.toList());
+            collect.addAll(doMainList);
 
-        // 域字段递归
-        List<EntityQueryDTO> doMainList = attributeList.stream().filter(e -> e.getDomainId() != null).map(e -> {
-            AttributeVO data = attributeService.getById(e.getDomainId()).getData();
-            EntityQueryDTO attributeInfo = this.getRelationAttributeInfo(data.getEntityId(),attributeIds,entityIds,groupId);
-            return attributeInfo;
-        }).collect(Collectors.toList());
-        collect.addAll(doMainList);
-
-        List<EntityQueryDTO> collect1 = collect.stream().filter(Objects::nonNull).collect(Collectors.toList());
-        dto.setChildren(collect1);
+            List<EntityQueryDTO> collect1 = collect.stream().filter(Objects::nonNull).collect(Collectors.toList());
+            dto.setChildren(collect1);
+        }
 
         return dto;
     }
