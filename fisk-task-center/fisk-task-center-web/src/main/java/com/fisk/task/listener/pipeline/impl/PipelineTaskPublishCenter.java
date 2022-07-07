@@ -114,7 +114,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                     kafkaReceiveDTO.start_time = simpleDateFormat.format(new Date());
                     kafkaReceiveDTO.pipelStageTraceId = UUID.randomUUID().toString();
                     //nifi流程要的批次号
-                    kafkaReceiveDTO.fidata_batch_code = UUID.randomUUID().toString();
+                    kafkaReceiveDTO.fidata_batch_code = kafkaReceiveDTO.pipelTraceId;
 
                     log.info("打印topic内容:" + JSON.toJSONString(kafkaReceiveDTO));
                     String pipelTraceId = kafkaReceiveDTO.pipelTraceId;

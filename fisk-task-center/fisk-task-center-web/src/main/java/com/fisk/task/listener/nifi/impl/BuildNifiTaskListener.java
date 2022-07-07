@@ -264,10 +264,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 }
                 KafkaReceiveDTO kafkaRkeceiveDTO = new KafkaReceiveDTO();
                 kafkaRkeceiveDTO.topic = topicName;
-                kafkaRkeceiveDTO.fidata_batch_code = UUID.randomUUID().toString();
                 SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 kafkaRkeceiveDTO.start_time = simpleDateFormat.format(new Date());
                 kafkaRkeceiveDTO.pipelTaskTraceId = UUID.randomUUID().toString();
+                kafkaRkeceiveDTO.fidata_batch_code = kafkaRkeceiveDTO.pipelTaskTraceId;
                 kafkaRkeceiveDTO.pipelStageTraceId = UUID.randomUUID().toString();
                 kafkaRkeceiveDTO.ifTaskStart = true;
                 kafkaRkeceiveDTO.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
