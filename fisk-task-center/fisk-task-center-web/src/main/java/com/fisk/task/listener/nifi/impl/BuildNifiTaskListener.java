@@ -2278,7 +2278,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         if (dto.selectSql != null && dto.selectSql != "") {
             filedValues += ",'" + dto.selectSql + "'";
         } else {
-            filedValues += ",'" + selectSql + "'";
+            filedValues += ",\"" + selectSql + "\"";
         }
 
         return "INSERT INTO tb_etl_log ( tablename, startdate, `status`,query_start_time,query_end_time,query_sql) " +
