@@ -656,10 +656,12 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                 log.info("父级id:" + nifiNode.groupId);
                 //2.拼装参数,三类nifi流程,3.调用方法生成流程
                 TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(nifiNode);
-                Topic += "." + tableNifiSettingPO.type + "." + tableNifiSettingPO.appId + "." + tableNifiSettingPO.tableAccessId;
+
                 if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL) ||
                         Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL)) {
                     Topic += "." + OlapTableEnum.KPI.getValue() + "." + tableNifiSettingPO.appId + "." + tableNifiSettingPO.tableAccessId;
+                } else {
+                    Topic += "." + tableNifiSettingPO.type + "." + tableNifiSettingPO.appId + "." + tableNifiSettingPO.tableAccessId;
                 }
                 ProcessorEntity processorEntity = updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, Topic, TopicTypeEnum.COMPONENT_NIFI_FLOW,
                         tableNifiSettingPO.tableAccessId, tableNifiSettingPO.type, nifiNode.workflowDetailId);
