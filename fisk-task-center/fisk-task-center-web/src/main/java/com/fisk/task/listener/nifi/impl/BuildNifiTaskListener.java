@@ -2175,7 +2175,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
         NifiMessageDTO nifiMessage = new NifiMessageDTO();
-        nifiMessage.message = "${executesql.error.message}";
+        nifiMessage.message = "${executesql.error.message:escapeJson()}";
         nifiMessage.topic = "${kafka.topic}";
         nifiMessage.groupId = groupId;
         nifiMessage.startTime = "${start_time}";
@@ -2199,7 +2199,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(2, 6);
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
-        buildReplaceTextProcessorDTO.replacementValue = "$1:escapeJson()";
+        buildReplaceTextProcessorDTO.replacementValue = "$1";
         buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
         verifyProcessorResult(processorEntityBusinessResult);
