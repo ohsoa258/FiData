@@ -60,7 +60,7 @@ public interface IModelService extends IService<ModelPO> {
      * @param modelId 模型id
      * @return {@link ModelInfoVO}
      */
-    ModelInfoVO getEntityById(Integer modelId);
+    ModelInfoVO getEntityById(Integer modelId,String name);
 
     /**
      * 获取主数据结构

@@ -252,7 +252,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
      * @return {@link ModelInfoVO}
      */
     @Override
-    public ModelInfoVO getEntityById(Integer modelId) {
+    public ModelInfoVO getEntityById(Integer modelId,String name) {
         //判断模型是否存在
         ModelPO modelPo = baseMapper.selectById(modelId);
         if(modelPo == null){
@@ -262,7 +262,13 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         //查询实体
         ModelInfoVO modelInfoVO = ModelMap.INSTANCES.poToInfoVO(modelPo);
         QueryWrapper<EntityPO> wrapper = new QueryWrapper<>();
-        wrapper.eq("model_id",modelId);
+        wrapper.lambda()
+                .eq(EntityPO::getModelId,modelId)
+                .like(EntityPO::getName, name)
+                .or()
+                .like(EntityPO::getDisplayName,name)
+                .or()
+                .like(EntityPO::getDesc,name);
         List<EntityPO> entityPos = entityMapper.selectList(wrapper);
 
         //判断是否存在实体
@@ -345,7 +351,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
                     List<FiDataMetaDataTreeDTO> dataList = new ArrayList<>();
 
-                    List<EntityVO> entityVoList = modelService.getEntityById((int) e.getId()).getEntityVOList();
+                    List<EntityVO> entityVoList = modelService.getEntityById((int) e.getId(),null).getEntityVOList();
                     // 获取模型下的实体
                     List<FiDataMetaDataTreeDTO> entityDataList = entityVoList.stream().filter(Objects::nonNull)
                             .map(item -> {

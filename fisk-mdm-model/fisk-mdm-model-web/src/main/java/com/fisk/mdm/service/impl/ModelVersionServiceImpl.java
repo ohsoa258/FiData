@@ -148,7 +148,7 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
         }
 
         // 2.复制模型下的所有实体
-        ModelInfoVO modelInfoVo = modelService.getEntityById(dto.getModelId());
+        ModelInfoVO modelInfoVo = modelService.getEntityById(dto.getModelId(),null);
         List<EntityVO> list = modelInfoVo.getEntityVOList();
         if (CollectionUtils.isNotEmpty(list)){
 
