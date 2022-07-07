@@ -58,6 +58,6 @@ public class ModelVersionController {
     @ApiOperation("版本复制")
     @PostMapping("/copyDataByModelId")
     public ResultEntity<ResultEnum> copyDataByModelId(@RequestBody ModelCopyDTO dto){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.copyDataByModelId(dto));
+        return ResultEntityBuild.build(service.copyDataByModelId(dto));
     }
 }

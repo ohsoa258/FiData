@@ -137,6 +137,7 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
         // 复制的版本名称不能重复
         QueryWrapper<ModelVersionPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
+                .eq(ModelVersionPO::getModelId,dto.getModelId())
                 .eq(ModelVersionPO::getName,dto.getName())
                 .last(" limit 1 ");
         ModelVersionPO modelVersionPo1 = modelVersionMapper.selectOne(queryWrapper);
