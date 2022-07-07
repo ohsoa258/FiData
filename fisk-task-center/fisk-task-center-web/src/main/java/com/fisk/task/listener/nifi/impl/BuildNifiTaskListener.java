@@ -1412,7 +1412,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildUpdateRecordDTO.name = "UpdateRecord";
 
         //至少有一个属性
-        buildParameter.put("/fidata_batch_code", "${fidata_batch_code}");
+        //nifi的三元运算,如果pipelTraceId是空的,取pipelTaskTraceId当作fidata_batch_code的值
+        buildParameter.put("/fidata_batch_code", "${pipelTraceId:isNull():ifElse(${pipelTaskTraceId},${pipelTraceId})}");
         buildParameter.put("/fidata_flow_batch_code", "${input.flowfile.uuid}");
         buildUpdateRecordDTO.filedMap = buildParameter;
 
