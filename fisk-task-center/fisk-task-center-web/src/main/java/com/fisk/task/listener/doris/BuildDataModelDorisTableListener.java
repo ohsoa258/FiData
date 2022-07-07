@@ -214,20 +214,21 @@ public class BuildDataModelDorisTableListener
             return result;
         } catch (Exception e) {
             log.error("dw发布失败,表id为" + id + StackTraceHelper.getStackTraceInfo(e));
+            result = ResultEnum.ERROR;
             if (tableType == 0) {
-                modelPublishStatusDTO.status = 1;
+                modelPublishStatusDTO.status = 2;
                 modelPublishStatusDTO.id = Math.toIntExact(id);
                 modelPublishStatusDTO.type = 0;
                 dataModelClient.updateDimensionPublishStatus(modelPublishStatusDTO);
             } else {
-                modelPublishStatusDTO.status = 1;
+                modelPublishStatusDTO.status = 2;
                 modelPublishStatusDTO.id = Math.toIntExact(id);
                 modelPublishStatusDTO.type = 0;
                 dataModelClient.updateFactPublishStatus(modelPublishStatusDTO);
             }
             return result;
         } finally {
-            acke.acknowledge();
+            //acke.acknowledge();
         }
     }
 
@@ -393,7 +394,7 @@ public class BuildDataModelDorisTableListener
         String associatedKey = "";
         String sql2 = sqlFileds.toString() + associatedKey;
         sql2 += "fi_createtime varchar(50),fi_updatetime varchar(50)";
-        sql2 +=",fidata_batch_code varchar(50)";
+        sql2 += ",fidata_batch_code varchar(50)";
         String sql3 = sqlFileds1.toString();
         if (Objects.equals("", sql3)) {
             sql1 += sql2;

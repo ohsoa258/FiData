@@ -90,10 +90,12 @@ public class BuildModelTaskListener {
                 if (tableType == 1) {
                     modelPublishStatusDTO.status = 1;
                     modelPublishStatusDTO.id = Math.toIntExact(tableId);
+                    modelPublishStatusDTO.type = 1;
                     client.updateDimensionPublishStatus(modelPublishStatusDTO);
                 } else {
                     modelPublishStatusDTO.status = 1;
                     modelPublishStatusDTO.id = Math.toIntExact(tableId);
+                    modelPublishStatusDTO.type = 1;
                     client.updateFactPublishStatus(modelPublishStatusDTO);
                 }
                 log.info("nifi流程配置结束");
@@ -102,10 +104,12 @@ public class BuildModelTaskListener {
         } catch (Exception e) {
             if (tableType == 1) {
                 modelPublishStatusDTO.status = 2;
+                modelPublishStatusDTO.type = 1;
                 modelPublishStatusDTO.id = Math.toIntExact(tableId);
                 client.updateDimensionPublishStatus(modelPublishStatusDTO);
             } else {
                 modelPublishStatusDTO.status = 2;
+                modelPublishStatusDTO.type = 1;
                 modelPublishStatusDTO.id = Math.toIntExact(tableId);
                 client.updateFactPublishStatus(modelPublishStatusDTO);
             }
