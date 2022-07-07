@@ -57,7 +57,7 @@ public interface EntityService {
      * @param id
      * @return
      */
-    EntityInfoVO getAttributeById(Integer id);
+    EntityInfoVO getAttributeById(Integer id,String name);
 
     /**
      *  获取可关联（同模型下 除本身外 创建后台表成功）的实体

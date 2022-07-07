@@ -28,7 +28,7 @@ public interface MdmClient {
      * @return
      */
     @GetMapping("/entity/getAttributeById")
-    ResultEntity<EntityInfoVO> getAttributeById(@RequestParam("id") Integer id);
+    ResultEntity<EntityInfoVO> getAttributeById(@RequestParam("id") Integer id,@RequestParam("name") String name);
 
     /**
      * 根据id查询查询属性

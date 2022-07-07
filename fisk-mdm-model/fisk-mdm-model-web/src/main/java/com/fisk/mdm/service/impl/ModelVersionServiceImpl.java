@@ -233,7 +233,7 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
         str.append(MARK + "del_flag");
 
         // 拼接业务字段
-        List<AttributeInfoDTO> attributeList = entityService.getAttributeById(entityId).getAttributeList();
+        List<AttributeInfoDTO> attributeList = entityService.getAttributeById(entityId,null).getAttributeList();
         if (CollectionUtils.isNotEmpty(attributeList)){
 
             // 业务字段

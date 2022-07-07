@@ -284,7 +284,7 @@ public class EntityServiceImpl implements EntityService {
     }
 
     @Override
-    public EntityInfoVO getAttributeById(Integer id) {
+    public EntityInfoVO getAttributeById(Integer id,String name) {
         EntityPO entityPo = entityMapper.selectById(id);
         if (entityPo == null){
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -296,6 +296,11 @@ public class EntityServiceImpl implements EntityService {
         QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(AttributePO::getEntityId,id)
+                .like(AttributePO::getName, name)
+                .or()
+                .like(AttributePO::getDisplayName,name)
+                .or()
+                .like(AttributePO::getDesc,name)
                 .orderByAsc(AttributePO::getSortWieght);
         List<AttributePO> attributePoList = attributeMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(attributePoList)){

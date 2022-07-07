@@ -69,8 +69,8 @@ public class EntityController {
     @ApiOperation("根据实体id获取属性")
     @GetMapping("/getAttributeById")
     @ResponseBody
-    public ResultEntity<EntityInfoVO> getAttributeById(Integer id) {
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,entityService.getAttributeById(id));
+    public ResultEntity<EntityInfoVO> getAttributeById(Integer id,String name) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,entityService.getAttributeById(id,name));
     }
 
     @ApiOperation("获取可关联的实体")

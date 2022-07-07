@@ -1098,7 +1098,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     public ResultEntity<List<FiDataTableMetaDataDTO>> getMdmTableMetaData(List<String> tableUniques) {
         List<FiDataTableMetaDataDTO> fiDataTableMetaDataDTOS = new ArrayList<>();
         for (String tableUnique : tableUniques) {
-            ResultEntity<EntityInfoVO> attributeById = mdmClient.getAttributeById(Integer.valueOf(tableUnique));
+            ResultEntity<EntityInfoVO> attributeById = mdmClient.getAttributeById(Integer.valueOf(tableUnique),null);
             if (attributeById != null && attributeById.code == ResultEnum.SUCCESS.getCode()) {
                 EntityInfoVO entityInfoVO = attributeById.getData();
                 if (entityInfoVO != null) {

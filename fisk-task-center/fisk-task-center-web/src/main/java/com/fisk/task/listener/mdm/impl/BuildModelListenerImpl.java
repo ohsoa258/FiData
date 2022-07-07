@@ -111,7 +111,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             connection = abstractDbHelper.connection(connectionStr, acc, pwd, type);
 
             // 获取实体信息
-            EntityInfoVO entityInfoVo = mdmClient.getAttributeById(dto.getEntityId()).getData();
+            EntityInfoVO entityInfoVo = mdmClient.getAttributeById(dto.getEntityId(),null).getData();
             String status = entityInfoVo.getStatus();
             if (status.equals(NOT_CREATED.getName()) || status.equals(CREATED_FAIL.getName())) {
                 // 1.执行创建表任务
@@ -154,7 +154,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
             // 1.stg表删了重新生成
             this.updateStgTable(abstractDbHelper, connection, sqlBuilder, entityInfoVo, noSubmitAttributeList);
-            EntityInfoVO data = mdmClient.getAttributeById(entityId).getData();
+            EntityInfoVO data = mdmClient.getAttributeById(entityId,null).getData();
             // 2.mdm表更新、log表更新
             List<AttributeStatusDTO> dtoList = this.updateMdmTable(abstractDbHelper, connection, sqlBuilder, data.getAttributeList());
             // 3.viw视图重新生成

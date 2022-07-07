@@ -443,7 +443,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         // 获取主实体下的属性
         List<ViwGroupDetailsDTO> mainDetailsList = new ArrayList<>();
         List<ViwGroupDetailsDTO> groupDetailsList = viwGroupVo.getGroupDetailsList();
-        EntityInfoVO infoVo = entityService.getAttributeById(viwGroupVo.getEntityId());
+        EntityInfoVO infoVo = entityService.getAttributeById(viwGroupVo.getEntityId(),null);
         infoVo.getAttributeList().stream().forEach(e -> {
             groupDetailsList.stream().forEach(item -> {
                 if (e.getId().equals(item.getAttributeId())){
@@ -559,7 +559,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             int res = count1.get() - 1;
             String aliasReduce = ALIAS_MARK + res;
             AttributeVO data = attributeService.getById(detailsDto.getAttributeId()).getData();
-            EntityInfoVO entityVo1 = entityService.getAttributeById(data.getEntityId());
+            EntityInfoVO entityVo1 = entityService.getAttributeById(data.getEntityId(),null);
 
             StringBuilder secondaryStr = new StringBuilder();
             secondaryStr.append(entityVo1.getTableName() + " " + aliasAdd);
@@ -610,7 +610,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             AttributeVO data = attributeService.getById(detailsDto.getAttributeId()).getData();
             AttributeVO doMainData = attributeService.getById(e).getData();
             // 查询域属性的实体名称
-            EntityInfoVO entityVo1 = entityService.getAttributeById(doMainData.getEntityId());
+            EntityInfoVO entityVo1 = entityService.getAttributeById(doMainData.getEntityId(),null);
 
             StringBuilder secondaryStr = new StringBuilder();
             secondaryStr.append(entityVo1.getTableName() + " " + aliasAdd);
@@ -666,7 +666,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
      * @return
      */
     public EntityQueryDTO getAttributeInfo(Integer entityId,List<Integer> attributeIds,Integer groupId){
-        EntityInfoVO entityInfoVo = entityService.getAttributeById(entityId);
+        EntityInfoVO entityInfoVo = entityService.getAttributeById(entityId,null);
         if (entityInfoVo == null){
             return null;
         }
@@ -732,7 +732,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
      * @return
      */
     public EntityQueryDTO getRelationAttributeInfo(Integer entityId,List<Integer> attributeIds,Set<Integer> entityIds,Integer groupId){
-        EntityInfoVO entityInfoVo = entityService.getAttributeById(entityId);
+        EntityInfoVO entityInfoVo = entityService.getAttributeById(entityId,null);
         if (entityInfoVo == null){
             return null;
         }

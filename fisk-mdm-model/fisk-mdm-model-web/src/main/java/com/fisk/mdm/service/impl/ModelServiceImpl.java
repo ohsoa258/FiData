@@ -366,7 +366,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                 entityDto.setLevelType(LevelTypeEnum.TABLE);
 
                                 // 获取实体下的属性
-                                List<AttributeInfoDTO> attributeList = entityService.getAttributeById(item.getId()).getAttributeList();
+                                List<AttributeInfoDTO> attributeList = entityService.getAttributeById(item.getId(),null).getAttributeList();
                                 List<FiDataMetaDataTreeDTO> attributeDataList = attributeList.stream().filter(Objects::nonNull)
                                         .map(iter -> {
 
