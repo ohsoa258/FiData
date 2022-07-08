@@ -623,7 +623,11 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (!CollectionUtils.isEmpty(maps) && Integer.valueOf(maps.get(0).get("totalnum").toString()).intValue() > 0) {
             throw new FkException(ResultEnum.EXISTS_INCORRECT_DATA);
         }
-        return dataSynchronizationUtils.stgDataSynchronize(dto.getEntityId(), dto.getKey());
+        ResultEnum resultEnum = dataSynchronizationUtils.stgDataSynchronize(dto.getEntityId(), dto.getKey());
+        if (resultEnum.getCode() != ResultEnum.DATA_SYNCHRONIZATION_SUCCESS.getCode()) {
+            return resultEnum;
+        }
+        return resultEnum == ResultEnum.DATA_SYNCHRONIZATION_SUCCESS ? ResultEnum.SUCCESS : resultEnum;
     }
 
     @Override
