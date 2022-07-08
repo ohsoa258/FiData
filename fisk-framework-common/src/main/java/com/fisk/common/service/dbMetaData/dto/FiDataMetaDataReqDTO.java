@@ -11,6 +11,9 @@ import lombok.Data;
  */
 @Data
 public class FiDataMetaDataReqDTO {
-    @ApiModelProperty(value = "FiData数据源id，为空则查询全部")
+    @ApiModelProperty(value = "FiData数据源id")
     public String dataSourceId;
+
+    @ApiModelProperty(value = "FiData数据源名称")
+    public String dataSourceName;
 }
