@@ -92,9 +92,9 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
     NiFiHelperImpl nifiComponentsBuild;
     @Resource
     TableTopicImpl tableTopic;
-    @Value("nifi.pipeline.operation-interval")
+    @Value("${nifi.pipeline.operation-interval}")
     public String operationInterval;
-    @Value("nifi.pipeline.operation-interval")
+    @Value("${nifi.pipeline.number-of-operations}")
     public String numberOfOperations;
 
 
