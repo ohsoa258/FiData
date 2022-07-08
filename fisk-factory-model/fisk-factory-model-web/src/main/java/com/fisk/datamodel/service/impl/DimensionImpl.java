@@ -724,7 +724,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
             dataSourceId = DataSourceConfigEnum.DMP_OLAP.getValue();
         }
         int flat = mapper.updateById(dimension);
-        if (flat == 0 && dto.status != PublicStatusEnum.PUBLIC_SUCCESS.getValue()) {
+        if (flat == 0 || dto.status != PublicStatusEnum.PUBLIC_SUCCESS.getValue()) {
             log.info("维度表更改状态失败!");
             return;
         }

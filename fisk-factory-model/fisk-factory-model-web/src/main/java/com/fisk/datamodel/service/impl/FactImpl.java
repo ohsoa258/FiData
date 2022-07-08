@@ -270,7 +270,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             dataSourceId = DataSourceConfigEnum.DMP_OLAP.getValue();
         }
         int flat = mapper.updateById(fact);
-        if (flat == 0 && dto.status != PublicStatusEnum.PUBLIC_SUCCESS.getValue()) {
+        if (flat == 0 || dto.status != PublicStatusEnum.PUBLIC_SUCCESS.getValue()) {
             log.info("维度表更改状态失败!");
             return;
         }

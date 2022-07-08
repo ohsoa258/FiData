@@ -355,15 +355,27 @@ public class EntityServiceImpl implements EntityService {
         return entityInfoVo;
     }
 
+    @Override
+    public EntityInfoVO getFilterAttributeById(Integer id) {
+        EntityInfoVO entityInfo = getAttributeById(id, null);
+        List<AttributeInfoDTO> collect = entityInfo.getAttributeList()
+                .stream()
+                .filter(e -> e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName())
+                        && e.getSyncStatus().equals(AttributeSyncStatusEnum.SUCCESS.getName()))
+                .collect(Collectors.toList());
+        entityInfo.setAttributeList(collect);
+        return entityInfo;
+    }
+
     /**
      * 获取可关联（同模型下 除本身外 创建后台表成功）的实体
      *
      * @return {@link List}<{@link EntityVO}>
      */
     @Override
-    public ResultEntity<List<EntityVO>> getCreateSuccessEntity(Integer modelId,Integer entityId) {
+    public ResultEntity<List<EntityVO>> getCreateSuccessEntity(Integer modelId, Integer entityId) {
         QueryWrapper<EntityPO> wrapper = new QueryWrapper<>();
-        wrapper.lambda().eq(EntityPO::getStatus,MdmStatusTypeEnum.CREATED_SUCCESSFULLY)
+        wrapper.lambda().eq(EntityPO::getStatus, MdmStatusTypeEnum.CREATED_SUCCESSFULLY)
                 .ne(EntityPO::getId,entityId)
                 .eq(EntityPO::getModelId,modelId);
         List<EntityPO> entityPoS = entityMapper.selectList(wrapper);
