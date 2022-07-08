@@ -13,6 +13,8 @@ nifi:
   pipeline:
     topicName: my-topic
     waitTime: 20
+    operation-interval: 2000
+    number-of-operations: 5
 nifi-ConcurrentTasks: 3
 nifi-FetchSize: 30000
 nifi-MaxRowsPerFlowFile: 10000

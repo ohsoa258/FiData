@@ -92,6 +92,10 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
     NiFiHelperImpl nifiComponentsBuild;
     @Resource
     TableTopicImpl tableTopic;
+    @Value("nifi.pipeline.operation-interval")
+    public String operationInterval;
+    @Value("nifi.pipeline.operation-interval")
+    public String numberOfOperations;
 
 
     public ResultEnum msg(String data, Acknowledgment acke) {
@@ -762,15 +766,22 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
         try {
             if (CollectionUtils.isNotEmpty(processorEntities)) {
                 int i = 0;
+                Integer terminatedThreadCount = 0;
                 ProcessorEntity processor = new ProcessorEntity();
                 for (ProcessorEntity processorEntity : processorEntities) {
                     //-------------------------------------------------------------
                     do {
                         i++;
                         processor = NifiHelper.getProcessorsApi().getProcessor(processorEntity.getId());
-                        Thread.sleep(50);
+                        Thread.sleep(Long.parseLong(operationInterval));
+                        terminatedThreadCount = processor.getStatus().getAggregateSnapshot().getTerminatedThreadCount();
+
                     }
-                    while (!Objects.equals(processor.getComponent().getState(), ProcessorDTO.StateEnum.STOPPED) && i < 3);
+                    //否定出去
+                    while ((!Objects.equals(processor.getComponent().getState(), ProcessorDTO.StateEnum.STOPPED) && i < Integer.parseInt(numberOfOperations)) || terminatedThreadCount > 0);
+                    if (terminatedThreadCount > 0) {
+                        NifiHelper.getProcessorsApi().terminateProcessor(processorEntity.getId());
+                    }
                     //--------------------------------------------------------------------------------
                     String id = processorEntity.getId();
                     NifiHelper.getProcessorsApi().updateProcessor(id, processorEntity);
