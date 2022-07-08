@@ -79,9 +79,9 @@ public class DataSourceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataConfigMetaData());
     }
 
-    @GetMapping("/getCustomTableMetaData")
+    @GetMapping("/getCustomizeMetaData")
     @ApiOperation("数据质量，获取自定义数据源表元数据信息")
-    public ResultEntity<FiDataMetaDataTreeDTO> getCustomTableMetaData() {
+    public ResultEntity<FiDataMetaDataTreeDTO> getCustomizeMetaData() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCustomizeMetaData());
     }
 
