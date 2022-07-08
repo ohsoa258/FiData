@@ -702,6 +702,10 @@ public class MasterDataServiceImpl implements IMasterDataService {
         }
         //获取已发布的属性
         List<AttributeInfoDTO> list = attributeService.listPublishedAttribute(dto.getEntityId());
+        //过滤复杂类型数据
+        list = list.stream().filter(e -> !e.getDataType().equals(DataTypeEnum.LATITUDE_COORDINATE.getName()))
+                .filter(e -> !e.getDataType().equals(DataTypeEnum.FILE.getName()))
+                .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(list)) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
