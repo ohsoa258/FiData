@@ -1,6 +1,7 @@
 package com.fisk.common.service.dbMetaData.dto;
 
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -26,6 +27,15 @@ public class FiDataMetaDataTreeDTO {
 
     @ApiModelProperty(value = "别名，没有别名则和名称保持一致", required = true)
     public String labelAlias;
+
+    @ApiModelProperty(value = "业务类型，表和视图维度设置")
+    public TableBusinessTypeEnum labelBusinessType;
+
+    @ApiModelProperty(value = "源类型，1、FiData 2、自定义")
+    public int sourceType;
+
+    @ApiModelProperty(value = "源ID")
+    public int sourceId;
 
     @ApiModelProperty(value = "层级类型", required = true)
     public LevelTypeEnum levelType;

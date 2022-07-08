@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataExampleSourceVO;
@@ -64,19 +65,12 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      *
      * @return 查询结果
      */
-    List<FiDataMetaDataDTO> getFiDataConfigMetaData();
+    FiDataMetaDataTreeDTO getFiDataConfigMetaData();
 
     /**
-     * 获取数据源下的表
+     * 获取自定义数据源元数据
      *
      * @return 查询结果
      */
-    List<DataExampleSourceVO> getTableAll();
-
-    /**
-     * 获取表字段信息
-     *
-     * @return 查询结果
-     */
-    DataSourceVO getTableFieldAll(TableFieldQueryDTO dto);
+    FiDataMetaDataTreeDTO getCustomizeMetaData();
 }

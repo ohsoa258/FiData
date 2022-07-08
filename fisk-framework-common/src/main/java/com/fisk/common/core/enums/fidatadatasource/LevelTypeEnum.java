@@ -11,10 +11,12 @@ import com.fisk.common.core.enums.BaseEnum;
 public enum LevelTypeEnum implements BaseEnum {
 
     NONE(0, "NONE"),
-    FOLDER(1, "FOLDER"),
-    TABLE(2, "TABLE"),
-    VIEW(3, "VIEW"),
-    FIELD(4, "FIELD");
+    BASEFOLDER(1, "BASEFOLDER"),
+    FOLDER(2, "FOLDER"),
+    DATABASE(3, "DATABASE"),
+    TABLE(4, "TABLE"),
+    VIEW(5, "VIEW"),
+    FIELD(6, "FIELD");
 
     LevelTypeEnum(int value, String name) {
         this.value = value;

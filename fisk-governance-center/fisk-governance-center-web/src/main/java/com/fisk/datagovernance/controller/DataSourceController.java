@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
@@ -74,20 +75,14 @@ public class DataSourceController {
 
     @GetMapping("/getFiDataConfigMetaData")
     @ApiOperation("数据质量，获取FiData配置表元数据信息")
-    public ResultEntity<List<FiDataMetaDataDTO>> getFiDataConfigMetaData() {
+    public ResultEntity<FiDataMetaDataTreeDTO> getFiDataConfigMetaData() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataConfigMetaData());
     }
 
     @GetMapping("/getCustomTableMetaData")
     @ApiOperation("数据质量，获取自定义数据源表元数据信息")
-    public ResultEntity<List<DataExampleSourceVO>> getCustomTableMetaData() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableAll());
-    }
-
-    @PostMapping("/getCustomFieldMetaData")
-    @ApiOperation("数据质量，获取自定义数据源字段元数据信息")
-    public ResultEntity<DataSourceVO> getCustomFieldMetaData(@Validated @RequestBody TableFieldQueryDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldAll(dto));
+    public ResultEntity<FiDataMetaDataTreeDTO> getCustomTableMetaData() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCustomizeMetaData());
     }
 
     @PostMapping("/getDataOpsDataSource")
