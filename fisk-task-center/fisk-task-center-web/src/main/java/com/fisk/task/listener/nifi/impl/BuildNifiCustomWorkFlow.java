@@ -136,7 +136,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             log.info("此组启动失败" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.ERROR;
         } finally {
-            acke.acknowledge();
+            //acke.acknowledge();
         }
 
     }
@@ -761,10 +761,26 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
     public void updateProcessor(List<ProcessorEntity> processorEntities) {
         try {
             if (CollectionUtils.isNotEmpty(processorEntities)) {
+                int i = 0;
+                ProcessorEntity processor = new ProcessorEntity();
                 for (ProcessorEntity processorEntity : processorEntities) {
-                    Thread.sleep(50);
+                    //-------------------------------------------------------------
+                    do {
+                        i++;
+                        processor = NifiHelper.getProcessorsApi().getProcessor(processorEntity.getId());
+                        Thread.sleep(50);
+                    }
+                    while (!Objects.equals(processor.getComponent().getState(), ProcessorDTO.StateEnum.STOPPED) && i < 3);
+                    //--------------------------------------------------------------------------------
                     String id = processorEntity.getId();
                     NifiHelper.getProcessorsApi().updateProcessor(id, processorEntity);
+                    i = 0;
+                    do {
+                        i++;
+                        processor = NifiHelper.getProcessorsApi().getProcessor(processorEntity.getId());
+                        Thread.sleep(50);
+                    }
+                    while (!Objects.equals(processor.getComponent().getConfig().getProperties(), processorEntity.getComponent().getConfig().getProperties()) && i < 3);
                     log.info("组件详情2:" + id);
                     processorEntity = NifiHelper.getProcessorsApi().getProcessor(id);
                     log.info("组件详情3:" + id);
