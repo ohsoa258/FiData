@@ -61,8 +61,7 @@ public interface EntityService {
     EntityInfoVO getAttributeById(Integer id, String name);
 
     /**
-     * 根据实体id查询发布成功属性数据
-     *
+     *根据实体id查询发布成功属性数据
      * @param id
      * @return
      */

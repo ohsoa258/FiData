@@ -145,7 +145,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
 
     @Override
     public String buildQueryOneColumn(String tableName, String selectColumnName) {
-        return "select distinct " + selectColumnName + " as columnName from " + tableName;
+        return "select distinct " + selectColumnName + " as columns from " + tableName;
     }
 
     @Override

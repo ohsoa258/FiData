@@ -986,7 +986,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 //code是否验证已存在
                 List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), columnName);
                 if (codeList.contains(mapData.get("code"))) {
-                    return ResultEnum.CODE_EXIST;
+                    throw new FkException(ResultEnum.CODE_EXIST);
                 }
             }
         }
@@ -1152,7 +1152,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             //查询code列sql
             String sql = buildSqlCommand.buildQueryOneColumn(tableName, codeColumnName);
             List<Map<String, Object>> maps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
-            codeList.addAll(maps.stream().map(e -> e.get("columnName").toString()).collect(Collectors.toList()));
+            codeList.addAll(maps.stream().map(e -> e.get("columns").toString()).collect(Collectors.toList()));
         } catch (Exception e) {
             log.error("getCodeList:", e);
         }

@@ -376,11 +376,11 @@ public class EntityServiceImpl implements EntityService {
     public ResultEntity<List<EntityVO>> getCreateSuccessEntity(Integer modelId, Integer entityId) {
         QueryWrapper<EntityPO> wrapper = new QueryWrapper<>();
         wrapper.lambda().eq(EntityPO::getStatus, MdmStatusTypeEnum.CREATED_SUCCESSFULLY)
-                .ne(EntityPO::getId,entityId)
-                .eq(EntityPO::getModelId,modelId);
+                .ne(EntityPO::getId, entityId)
+                .eq(EntityPO::getModelId, modelId);
         List<EntityPO> entityPoS = entityMapper.selectList(wrapper);
         return entityPoS.size() == 0 ? ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS) :
-                ResultEntityBuild.build(ResultEnum.SUCCESS,EntityMap.INSTANCES.poToVoList(entityPoS));
+                ResultEntityBuild.build(ResultEnum.SUCCESS, EntityMap.INSTANCES.poToVoList(entityPoS));
     }
 
     /**
