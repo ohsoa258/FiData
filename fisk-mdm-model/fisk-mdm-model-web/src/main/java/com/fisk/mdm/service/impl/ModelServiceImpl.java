@@ -320,9 +320,9 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         List<FiDataMetaDataTreeDTO> dataTreeList = new ArrayList<>();
         FiDataMetaDataTreeDTO dataTree = new FiDataMetaDataTreeDTO();
         dataTree.setId(uuid);
-        dataTree.setParentId("-1");
-        dataTree.setLabel("dmp_mdm");
-        dataTree.setLabelAlias("dmp_mdm");
+        dataTree.setParentId("-10");
+        dataTree.setLabel(reqDto.getDataSourceName());
+        dataTree.setLabelAlias(reqDto.getDataSourceName());
         dataTree.setLevelType(LevelTypeEnum.FOLDER);
         // 获取模型数据
         dataTree.setChildren(this.getModelData(uuid));
@@ -354,7 +354,9 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                     dto.setParentId(id);
                     dto.setLabel(e.getName());
                     dto.setLabelAlias(e.getDisplayName());
-                    dto.setLevelType(LevelTypeEnum.FOLDER);
+                    dto.setLevelType(LevelTypeEnum.DATABASE);
+                    dto.setSourceType(1);
+                    dto.setSourceId(Integer.parseInt(id));
 
                     List<FiDataMetaDataTreeDTO> dataList = new ArrayList<>();
 
@@ -371,6 +373,8 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                 entityDto.setLabel(item.getName());
                                 entityDto.setLabelAlias(item.getDisplayName());
                                 entityDto.setLevelType(LevelTypeEnum.TABLE);
+                                entityDto.setSourceType(1);
+                                entityDto.setSourceId(Integer.parseInt(id));
 
                                 // 获取实体下的属性
                                 List<AttributeInfoDTO> attributeList = entityService.getAttributeById(item.getId(),null).getAttributeList();
@@ -398,6 +402,8 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                             }
                                             attributeDto.setLabelType(iter.getDataType());
                                             attributeDto.setLabelDesc(iter.getDesc());
+                                            attributeDto.setSourceType(1);
+                                            attributeDto.setSourceId(Integer.parseInt(id));
                                             return attributeDto;
                                         }).collect(Collectors.toList());
 
@@ -419,6 +425,8 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                 entityDto.setLabel(viwName);
                                 entityDto.setLabelAlias(viwName);
                                 entityDto.setLevelType(LevelTypeEnum.VIEW);
+                                entityDto.setSourceType(1);
+                                entityDto.setSourceId(Integer.parseInt(id));
                                 return entityDto;
                             }).collect(Collectors.toList());
                     dataList.addAll(viwDataList);
@@ -445,6 +453,8 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                                     entityDto.setLabel(iter.getName());
                                                     entityDto.setLabelAlias(iter.getDetails());
                                                     entityDto.setLevelType(LevelTypeEnum.VIEW);
+                                                    entityDto.setSourceType(1);
+                                                    entityDto.setSourceId(Integer.parseInt(id));
                                                     viwGroupDataList.add(entityDto);
                                                 });
                                     });
