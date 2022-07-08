@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * @author cfk
  */
-public interface ITableTopicService  extends IService<TableTopicDTO> {
+public interface ITableTopicService extends IService<TableTopicDTO> {
 
     /**
      * 获取TableTopicDTO集合
@@ -56,7 +56,7 @@ public interface ITableTopicService  extends IService<TableTopicDTO> {
      * @param id
      * @return Integer
      */
-    TableTopicDTO getTableTopicDTOByComponentId(Integer id,Integer tableId,Integer tableType);
+    TableTopicDTO getTableTopicDTOByComponentId(Integer id, Integer tableId, Integer tableType);
 
     /**
      * 根据管道topic找到实际topic
@@ -65,4 +65,12 @@ public interface ITableTopicService  extends IService<TableTopicDTO> {
      * @return List<TableTopicDTO>
      */
     List<TableTopicDTO> getByTopicName(String topicName);
+
+    /**
+     * 管道删除组件,同时删除topic
+     *
+     * @param dtos
+     * @return
+     */
+    boolean deleteTableTopicGroup(List<TableTopicDTO> dtos);
 }

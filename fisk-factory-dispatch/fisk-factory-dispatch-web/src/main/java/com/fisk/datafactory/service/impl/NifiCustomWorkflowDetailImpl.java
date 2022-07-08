@@ -1,5 +1,6 @@
 package com.fisk.datafactory.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.MqConstants;
@@ -620,8 +621,26 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     @Override
     public ResultEnum deleteDataList(WorkflowTaskGroupDTO dto) {
         try {
+
             List<NifiCustomWorkflowDetailDTO> dtoList = dto.list;
             if (CollectionUtils.isNotEmpty(dtoList)) {
+                NifiCustomWorkflowPO workflow = workflowService.query().eq("workflow_id", dtoList.get(0).workflowId).one();
+                long id = workflow.id;
+                List<TableTopicDTO> topicDtos = new ArrayList<>();
+                for (NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetail : dtoList) {
+                    if (StringUtils.isNotEmpty(nifiCustomWorkflowDetail.tableId)) {
+                        TableTopicDTO topicDto = new TableTopicDTO();
+                        topicDto.tableId = Integer.parseInt(nifiCustomWorkflowDetail.tableId);
+                        topicDto.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
+                        ChannelDataEnum value = ChannelDataEnum.getValue(nifiCustomWorkflowDetail.componentType);
+                        OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(value.getValue());
+                        topicDto.tableType = olapTableEnum.getValue();
+                        topicDto.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + "." + id;
+                        topicDtos.add(topicDto);
+                    }
+                }
+                log.info("删除组件的topic组装参数:" + JSON.toJSONString(topicDtos));
+                publishTaskClient.deleteTableTopicGroup(topicDtos);
                 dtoList.forEach(e -> mapper.deleteByIdWithFill(NifiCustomWorkflowDetailMap.INSTANCES.dtoToPo(e)));
             }
         } catch (Exception e) {

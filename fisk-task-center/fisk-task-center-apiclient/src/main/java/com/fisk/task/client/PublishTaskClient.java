@@ -166,6 +166,15 @@ public interface PublishTaskClient {
     public ResultEntity<Object> deleteTableTopicByComponentId(@RequestParam("ids") List<Integer> ids);
 
     /**
+     * deleteTableTopicGroup
+     *
+     * @param dtos
+     * @return
+     */
+    @PostMapping("/TableTopic/deleteTableTopicGroup")
+    public ResultEntity<Object> deleteTableTopicGroup(@RequestParam("dtos") List<TableTopicDTO> dtos);
+
+    /**
      * 拼接sql替换时间
      *
      * @param tableName tableName

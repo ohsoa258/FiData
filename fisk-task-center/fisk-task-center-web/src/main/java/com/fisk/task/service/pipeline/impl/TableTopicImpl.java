@@ -1,5 +1,6 @@
 package com.fisk.task.service.pipeline.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.task.dto.task.TableTopicDTO;
@@ -122,6 +123,21 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicDTO>
             }
         }
         return tableTopics;
+    }
+
+    @Override
+    public boolean deleteTableTopicGroup(List<TableTopicDTO> dtos) {
+        boolean ifsuccess = true;
+        for (TableTopicDTO topic : dtos) {
+            QueryWrapper<TableTopicDTO> TableTopicWrapper = new QueryWrapper<>();
+            TableTopicWrapper.lambda().eq(TableTopicDTO::getTableId, topic.tableId).eq(TableTopicDTO::getTableType, topic.tableType)
+                    .eq(TableTopicDTO::getTopicType, topic.topicType).like(TableTopicDTO::getTopicName, topic.topicName);
+            boolean remove = this.remove(TableTopicWrapper);
+            if (!remove) {
+                ifsuccess = false;
+            }
+        }
+        return ifsuccess;
     }
 
 
