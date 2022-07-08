@@ -779,9 +779,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     }
                     //否定出去
                     while ((!Objects.equals(processor.getComponent().getState(), ProcessorDTO.StateEnum.STOPPED) && i < Integer.parseInt(numberOfOperations)) || terminatedThreadCount > 0);
-                    if (terminatedThreadCount > 0) {
-                        NifiHelper.getProcessorsApi().terminateProcessor(processorEntity.getId());
-                    }
+                    NifiHelper.getProcessorsApi().terminateProcessor(processorEntity.getId());
                     //--------------------------------------------------------------------------------
                     String id = processorEntity.getId();
                     NifiHelper.getProcessorsApi().updateProcessor(id, processorEntity);
