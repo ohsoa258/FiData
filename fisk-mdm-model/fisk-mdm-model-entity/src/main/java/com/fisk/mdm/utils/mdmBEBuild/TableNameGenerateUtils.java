@@ -56,7 +56,7 @@ public class TableNameGenerateUtils {
      * @return
      */
     public static String generateComplexTypeFileName(String fileColumnName, boolean isCode) {
-        return isCode ? fileColumnName + "_name" : fileColumnName + "_文件名";
+        return isCode ? fileColumnName + "_file_name" : fileColumnName + "_文件名";
     }
 
     /**
@@ -67,7 +67,7 @@ public class TableNameGenerateUtils {
      * @return
      */
     public static String generateComplexTypeFilePath(String fileColumnPath, boolean isCode) {
-        return isCode ? fileColumnPath + "_path" : fileColumnPath + "_文件路径";
+        return isCode ? fileColumnPath + "_file_path" : fileColumnPath + "_文件路径";
     }
 
     /**
