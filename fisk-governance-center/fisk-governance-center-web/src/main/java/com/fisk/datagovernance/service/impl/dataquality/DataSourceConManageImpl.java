@@ -186,6 +186,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             fiDataMetaDataTreeBase.setLabel("Customize");
             fiDataMetaDataTreeBase.setLabelAlias("Customize");
             fiDataMetaDataTreeBase.setLevelType(LevelTypeEnum.BASEFOLDER);
+            fiDataMetaDataTreeBase.children=new ArrayList<>();
             for (DataSourceConPO dataSourceConPO : dataSourceConPOList) {
                 List<FiDataMetaDataDTO> fiDataMetaData = redisUtil.getFiDataMetaData(String.valueOf(dataSourceConPO.datasourceId));
                 if (CollectionUtils.isNotEmpty(fiDataMetaData)) {
@@ -239,6 +240,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 fiDataMetaDataTree_Ip.setChildren(fiDataMetaDataTree_Ip_DataBases);
                 fiDataMetaDataTree_Ips.add(fiDataMetaDataTree_Ip);
             }
+            fiDataMetaDataTreeBase.children=new ArrayList<>();
             fiDataMetaDataTreeBase.children.addAll(fiDataMetaDataTree_Ips);
         }
         return fiDataMetaDataTreeBase;
@@ -283,20 +285,20 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                         for (TableStructureDTO field : table.fields) {
                             String uuid_FieldId = UUID.randomUUID().toString().replace("-", "");
                             FiDataMetaDataTreeDTO fiDataMetaDataTree_Field = new FiDataMetaDataTreeDTO();
-                            fiDataMetaDataTree_Table.setId(uuid_FieldId);
-                            fiDataMetaDataTree_Table.setParentId(uuid_TableId);
-                            fiDataMetaDataTree_Table.setLabel(field.fieldName);
-                            fiDataMetaDataTree_Table.setLabelAlias(field.fieldName);
-                            fiDataMetaDataTree_Table.setSourceId(Math.toIntExact(conPo.id));
-                            fiDataMetaDataTree_Table.setSourceType(SourceTypeEnum.custom.getValue());
-                            fiDataMetaDataTree_Table.setLevelType(LevelTypeEnum.FIELD);
-                            fiDataMetaDataTree_Table.setLabelType(field.fieldType);
-                            fiDataMetaDataTree_Table.setLabelLength(String.valueOf(field.fieldLength));
-                            fiDataMetaDataTree_Table.setLabelDesc(field.fieldDes);
+                            fiDataMetaDataTree_Field.setId(uuid_FieldId);
+                            fiDataMetaDataTree_Field.setParentId(uuid_TableId);
+                            fiDataMetaDataTree_Field.setLabel(field.fieldName);
+                            fiDataMetaDataTree_Field.setLabelAlias(field.fieldName);
+                            fiDataMetaDataTree_Field.setSourceId(Math.toIntExact(conPo.id));
+                            fiDataMetaDataTree_Field.setSourceType(SourceTypeEnum.custom.getValue());
+                            fiDataMetaDataTree_Field.setLevelType(LevelTypeEnum.FIELD);
+                            fiDataMetaDataTree_Field.setLabelType(field.fieldType);
+                            fiDataMetaDataTree_Field.setLabelLength(String.valueOf(field.fieldLength));
+                            fiDataMetaDataTree_Field.setLabelDesc(field.fieldDes);
                             fiDataMetaDataTree_Table_Children.add(fiDataMetaDataTree_Field);
                         }
                     }
-
+                    fiDataMetaDataTree_Table.setChildren(fiDataMetaDataTree_Table_Children);
                     fiDataMetaDataTrees.add(fiDataMetaDataTree_Table);
                 }
             }
