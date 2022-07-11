@@ -1383,23 +1383,23 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public ResultEnum updateTableAccessData(TbTableAccessDTO dto) {
 
-        TableAccessPO model = this.getById(dto.id);
-        if (model == null) {
-            return ResultEnum.DATA_NOTEXISTS;
-        }
+//        TableAccessPO model = this.getById(dto.id);
+//        if (model == null) {
+//            return ResultEnum.DATA_NOTEXISTS;
+//        }
         // sql保存时丢失
         if (dto.sqlFlag == 1 && "".equals(dto.sqlScript)) {
             return ResultEnum.SQL_EXCEPT_CLEAR;
         }
 
         // 判断名称是否重复
-        QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
-        // 限制在同一应用下
-        queryWrapper.lambda().eq(TableAccessPO::getTableName, dto.tableName).eq(TableAccessPO::getAppId, model.appId);
-        TableAccessPO tableAccessPo = baseMapper.selectOne(queryWrapper);
-        if (tableAccessPo != null && tableAccessPo.id != dto.id) {
-            return ResultEnum.TABLE_IS_EXIST;
-        }
+//        QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
+//        // 限制在同一应用下
+//        queryWrapper.lambda().eq(TableAccessPO::getTableName, dto.tableName).eq(TableAccessPO::getAppId, model.appId);
+//        TableAccessPO tableAccessPo = baseMapper.selectOne(queryWrapper);
+//        if (tableAccessPo != null && tableAccessPo.id != dto.id) {
+//            return ResultEnum.TABLE_IS_EXIST;
+//        }
 
         // dto -> po
         TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
