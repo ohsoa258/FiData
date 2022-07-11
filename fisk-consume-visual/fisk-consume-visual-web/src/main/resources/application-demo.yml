@@ -1,0 +1,45 @@
+# 数据库类型
+database:
+  type: mysql
+
+# 图片上传
+file:
+  uploadurl: /root/nginx/app/file/chartvisual/componentfile
+
+# 组件上传
+folder:
+  accessAddress: /component/
+  uploadPath: /root/nginx/app/vue/component/component/
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    org:
+      springframework:
+        orm:
+          jpa: debug
+management:
+  endpoint:
+    health:
+      show-details: always
+    shutdown:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+# spring配置
+spring:
+  application:
+    name: chartvisual-service
+  datasource:
+    url: jdbc:mysql://192.168.21.21:3306/dmp_chartvisual_db_UAT?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+    username: root
+    password: root123
+    driver-class-name: com.mysql.jdbc.Driver
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  redis:
+    host: 192.168.21.21
+    password: test123456

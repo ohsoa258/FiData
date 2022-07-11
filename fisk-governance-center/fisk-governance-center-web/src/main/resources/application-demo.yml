@@ -1,0 +1,50 @@
+dataquality:
+  excel:
+    # excel保存路径
+    path: /root/java/fisk-governance-center/dataquality/excel
+dataops:
+  # pg数据库元数据对应 redis key
+  pg_metadataentity_key: DataOps_PGMetaDataEntityKey
+  # 执行时间 凌晨12点半
+  schedule: 0 30 0 * * ?
+  # 是否启用
+  enabled: true
+spring:
+  application:
+    name: datagovernance-service
+  datasource:
+    url: jdbc:mysql://192.168.21.21:3306/dmp_datagovernance_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: root123
+    driver-class-name: com.mysql.jdbc.Driver
+  redis:
+    host: 192.168.21.21
+    password: test123456
+# pg数据源配置
+pgsql-dw:
+  id: 1
+  ip: 192.168.21.21
+  port: 5432
+  dbName: dmp_dw
+  url: jdbc:postgresql://192.168.21.21:5432/dmp_dw?stringtype=unspecified #&connectTimeout=60&socketTimeout=60超时等待60s
+  username: postgres
+  password: postgres123
+  driverClassName: org.postgresql.Driver
+pgsql-ods:
+  id: 2
+  ip: 192.168.21.21
+  port: 5432
+  dbName: dmp_ods
+  url: jdbc:postgresql://192.168.21.21:5432/dmp_ods?stringtype=unspecified #&connectTimeout=60&socketTimeout=60超时等待60s
+  username: postgres
+  password: postgres123
+  driverClassName: org.postgresql.Driver
+pgsql-mdm:
+  id: 3
+  ip: 192.168.21.21
+  port: 5432
+  dbName: dmp_mdm
+  url: jdbc:postgresql://192.168.21.21:5432/dmp_mdm?stringtype=unspecified #&connectTimeout=60&socketTimeout=60超时等待60s
+  username: postgres
+  password: postgres123
+  driverClassName: org.postgresql.Driver
