@@ -25,7 +25,7 @@ public class DataCheckExtendVO {
      * 字段名称/字段Id
      */
     @ApiModelProperty(value = "字段名称/字段Id")
-    public String tableUnique;
+    public String fieldUnique;
 
     /**
      * 字段条件
