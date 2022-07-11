@@ -22,7 +22,6 @@ import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.dto.table.TableSyncmodeDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
-import com.fisk.dataaccess.map.TableAccessMap;
 import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.TableFieldsMapper;
@@ -122,19 +121,19 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     @Override
     public ResultEnum addData(TableAccessNonDTO dto) {
 
-        TableAccessPO aa = this.tableAccessImpl.getById(dto.id);
-        if (aa == null) {
-            return ResultEnum.DATA_NOTEXISTS;
-        }
-        // sql保存时丢失
-        if ("".equals(dto.sqlScript)) {
-            return ResultEnum.SQL_EXCEPT_CLEAR;
-        }
-
-        // dto -> po
-        TableAccessPO tb = TableAccessMap.INSTANCES.dtoToPoNon(dto);
-
-        this.tableAccessImpl.updateById(tb);
+//        TableAccessPO aa = this.tableAccessImpl.getById(dto.id);
+//        if (aa == null) {
+//            return ResultEnum.DATA_NOTEXISTS;
+//        }
+//        // sql保存时丢失
+//        if ("".equals(dto.sqlScript)) {
+//            return ResultEnum.SQL_EXCEPT_CLEAR;
+//        }
+//
+//        // dto -> po
+//        TableAccessPO tb = TableAccessMap.INSTANCES.dtoToPoNon(dto);
+//
+//        this.tableAccessImpl.updateById(tb);
 
         List<TableFieldsDTO> listDto = dto.list;
         TableSyncmodeDTO syncmodeDto = dto.tableSyncmodeDTO;
@@ -183,19 +182,19 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     @Override
     public ResultEnum updateData(TableAccessNonDTO dto) {
 
-        TableAccessPO aa = this.tableAccessImpl.getById(dto.id);
-        if (aa == null) {
-            return ResultEnum.DATA_NOTEXISTS;
-        }
-        // sql保存时丢失
-        if ("".equals(dto.sqlScript)) {
-            return ResultEnum.SQL_EXCEPT_CLEAR;
-        }
-
-        // dto -> po
-        TableAccessPO tb = TableAccessMap.INSTANCES.dtoToPoNon(dto);
-
-        this.tableAccessImpl.updateById(tb);
+//        TableAccessPO aa = this.tableAccessImpl.getById(dto.id);
+//        if (aa == null) {
+//            return ResultEnum.DATA_NOTEXISTS;
+//        }
+//        // sql保存时丢失
+//        if ("".equals(dto.sqlScript)) {
+//            return ResultEnum.SQL_EXCEPT_CLEAR;
+//        }
+//
+//        // dto -> po
+//        TableAccessPO tb = TableAccessMap.INSTANCES.dtoToPoNon(dto);
+//
+//        this.tableAccessImpl.updateById(tb);
 
         List<TableFieldsDTO> list = dto.list;
 
