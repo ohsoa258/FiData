@@ -36,6 +36,10 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
 
         DataSourceDTO dataSource = mapper.getDataSource(appId);
 
+        if ("ftp".equalsIgnoreCase(dataSource.driveType) || "RestfulAPI".equalsIgnoreCase(dataSource.driveType) || "api".equalsIgnoreCase(dataSource.driveType)) {
+            return null;
+        }
+
         // 查询缓存里有没有redis的数据
         boolean flag = redisUtil.hasKey(RedisKeyBuild.buildDataSoureKey(appId));
         if (!flag) {

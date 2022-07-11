@@ -1383,7 +1383,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public ResultEnum updateTableAccessData(TbTableAccessDTO dto) {
 
-        TableAccessPO model = this.getById(dto.id);
+/*        TableAccessPO model = this.getById(dto.id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
@@ -1404,7 +1404,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // dto -> po
         TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
 
-        return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+        return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;*/
+        return ResultEnum.SUCCESS;
     }
 
     @Override

@@ -1,0 +1,59 @@
+spring:
+  datasource:
+    url: jdbc:mysql://192.168.21.21:3306/dmp_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: root123
+    driver-class-name: com.mysql.jdbc.Driver
+    dynamic:
+      datasource:
+        taskdb:
+          url: jdbc:mysql://192.168.21.21:3306/dmp_task_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+          username: root
+          password: root123
+          driver-class-name: com.mysql.jdbc.Driver
+
+  # redis
+  redis:
+    host: 192.168.21.21
+    password: test123456
+  # 防止模板报空错误
+  freemarker:
+    settings:
+      classic_compatible: true
+# pdf文档模板
+dataservice:
+  pdf:
+    path: /root/java/fisk-factory-access/pdf
+    uat_address: http://192.168.21.21:8083
+    prd_address: https://prdHost
+
+# pg数据源配置
+pgsql-datamodel:
+  driverClassName: org.postgresql.Driver
+  url: jdbc:postgresql://192.168.21.21:5432/dmp_dw?stringtype=unspecified
+  username: postgres
+  password: postgres123
+pgsql-ods:
+  url: jdbc:postgresql://192.168.21.21:5432/dmp_ods?stringtype=unspecified
+  username: postgres
+  password: postgres123
+
+# 数据质量校验的信息(ip: pg数据源的ip地址; dbName: 连接的ods库)
+Data-quality-check:
+  ip: 192.168.21.21
+  dbName: dmp_ods
+
+# 元数据实例信息
+metadata-instance:
+  # 数据库类型
+  rdbmsType: postgresql
+  # 平台
+  platform: Linux
+  # 主机
+  hostname: 192.168.21.21
+  # 端口
+  port: 5432
+  # 数据库
+  dbName: dmp_ods
+  # 网络协议
+  protocol: http
