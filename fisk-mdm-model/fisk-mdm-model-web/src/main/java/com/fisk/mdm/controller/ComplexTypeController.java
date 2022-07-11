@@ -43,9 +43,9 @@ public class ComplexTypeController {
     }
 
     @ApiOperation("获取复杂类型数据")
-    @GetMapping("/addGeography")
+    @GetMapping("/getComplexType")
     @ResponseBody
-    public ResultEntity<Object> addGeography(ComplexTypeDetailsParameterDTO dto) {
+    public ResultEntity<Object> getComplexType(ComplexTypeDetailsParameterDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getComplexTypeDetails(dto));
     }
 
