@@ -997,6 +997,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     throw new FkException(ResultEnum.CODE_EXIST);
                 }
             }
+            mapData.put("fidata_new_code", mapData.get("code").toString());
         }
         //生成批次号
         String batchNumber = UUID.randomUUID().toString();
