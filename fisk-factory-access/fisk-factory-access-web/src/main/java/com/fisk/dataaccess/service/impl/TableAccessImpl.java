@@ -488,7 +488,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.setTableSyncmodeDTO(sdto);
 
         // 只有存在业务时间覆盖时,才会给前端展示
-        int businessTimeType = 4;
+        /*int businessTimeType = 4;
         if (modelSync != null && modelSync.syncMode == businessTimeType) {
             // 查询tb_table_business
             QueryWrapper<TableBusinessPO> queryWrapper = new QueryWrapper<>();
@@ -496,7 +496,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             TableBusinessPO modelBusiness = businessMapper.selectOne(queryWrapper);
             TableBusinessDTO businessDTO = TableBusinessMap.INSTANCES.poToDto(modelBusiness);
             dto.setBusinessDTO(businessDTO);
-        }
+        }*/
 
         return dto;
     }
