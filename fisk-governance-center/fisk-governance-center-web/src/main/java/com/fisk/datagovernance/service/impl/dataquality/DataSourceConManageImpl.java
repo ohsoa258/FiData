@@ -183,8 +183,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             fiDataMetaDataTreeBase = new FiDataMetaDataTreeDTO();
             fiDataMetaDataTreeBase.setId("-10");
             fiDataMetaDataTreeBase.setParentId("-100");
-            fiDataMetaDataTreeBase.setLabel("Customize");
-            fiDataMetaDataTreeBase.setLabelAlias("Customize");
+            fiDataMetaDataTreeBase.setLabel("FiData");
+            fiDataMetaDataTreeBase.setLabelAlias("FiData");
             fiDataMetaDataTreeBase.setLevelType(LevelTypeEnum.BASEFOLDER);
             fiDataMetaDataTreeBase.children=new ArrayList<>();
             for (DataSourceConPO dataSourceConPO : dataSourceConPOList) {
@@ -211,8 +211,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             fiDataMetaDataTreeBase = new FiDataMetaDataTreeDTO();
             fiDataMetaDataTreeBase.setId("-20");
             fiDataMetaDataTreeBase.setParentId("-200");
-            fiDataMetaDataTreeBase.setLabel("FiData");
-            fiDataMetaDataTreeBase.setLabelAlias("FiData");
+            fiDataMetaDataTreeBase.setLabel("Customize");
+            fiDataMetaDataTreeBase.setLabelAlias("Customize");
             fiDataMetaDataTreeBase.setLevelType(LevelTypeEnum.BASEFOLDER);
 
             List<FiDataMetaDataTreeDTO> fiDataMetaDataTree_Ips = new ArrayList<>();
