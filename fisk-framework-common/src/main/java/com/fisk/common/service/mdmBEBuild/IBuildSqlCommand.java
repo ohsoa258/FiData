@@ -71,9 +71,10 @@ public interface IBuildSqlCommand {
      *
      * @param tableName
      * @param selectColumnName
+     * @param versionId
      * @return
      */
-    String buildQueryOneColumn(String tableName, String selectColumnName);
+    String buildQueryOneColumn(String tableName, String selectColumnName, int versionId);
 
     /**
      * 查询条数

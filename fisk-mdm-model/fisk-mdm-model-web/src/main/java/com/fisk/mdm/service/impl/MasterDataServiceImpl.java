@@ -720,7 +720,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (!codeColumn.isPresent()) {
             throw new FkException(ResultEnum.CODE_NOT_EXIST);
         }
-        List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), codeColumn.get().getColumnName());
+        List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), codeColumn.get().getColumnName(), dto.getVersionId());
         String batchNumber = UUID.randomUUID().toString();
         //解析Excel数据集合
         CopyOnWriteArrayList<Map<String, Object>> objectArrayList = new CopyOnWriteArrayList<>();
@@ -919,7 +919,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 throw new FkException(ResultEnum.CODE_NOT_EXIST);
             }
             //获取mdm表code数据列表
-            List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(entityPO.getModelId(), dto.getEntityId()), attributePO.getColumnName());
+            List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(entityPO.getModelId(), dto.getEntityId()), attributePO.getColumnName(), (int) dto.getData().get("fidata_version_id"));
             //判断上传逻辑
             dto.getData().put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
             if (codeList.contains(dto.getData().get("code"))) {
@@ -992,7 +992,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 //获取code列名
                 String columnName = getEntityCodeName(dto.getEntityId());
                 //code是否验证已存在
-                List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), columnName);
+                List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), columnName, dto.getVersionId());
                 if (codeList.contains(mapData.get("code"))) {
                     throw new FkException(ResultEnum.CODE_EXIST);
                 }
@@ -1153,12 +1153,12 @@ public class MasterDataServiceImpl implements IMasterDataService {
      * @param tableName
      * @return
      */
-    public List<String> getCodeList(String tableName, String codeColumnName) {
+    public List<String> getCodeList(String tableName, String codeColumnName, int versionId) {
         List<String> codeList = new ArrayList<>();
         try {
             IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
             //查询code列sql
-            String sql = buildSqlCommand.buildQueryOneColumn(tableName, codeColumnName);
+            String sql = buildSqlCommand.buildQueryOneColumn(tableName, codeColumnName, versionId);
             List<Map<String, Object>> maps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
             codeList.addAll(maps.stream().map(e -> e.get("columns").toString()).collect(Collectors.toList()));
         } catch (Exception e) {
