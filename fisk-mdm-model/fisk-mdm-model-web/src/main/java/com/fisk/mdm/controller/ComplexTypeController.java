@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.mdm.config.SwaggerConfig;
+import com.fisk.mdm.dto.complextype.ComplexTypeDetailsParameterDTO;
 import com.fisk.mdm.dto.complextype.GeographyDTO;
 import com.fisk.mdm.service.IComplexType;
 import io.swagger.annotations.Api;
@@ -39,6 +40,13 @@ public class ComplexTypeController {
     @ControllerAOPConfig(printParams = false)
     public ResultEntity<Object> uploadFile(Integer versionId, @RequestParam("file") MultipartFile file) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.uploadFile(versionId, file));
+    }
+
+    @ApiOperation("获取复杂类型数据")
+    @GetMapping("/addGeography")
+    @ResponseBody
+    public ResultEntity<Object> addGeography(ComplexTypeDetailsParameterDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getComplexTypeDetails(dto));
     }
 
 }

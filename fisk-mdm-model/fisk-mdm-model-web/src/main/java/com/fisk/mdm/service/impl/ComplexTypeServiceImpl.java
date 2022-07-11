@@ -8,6 +8,7 @@ import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.common.service.mdmBEBuild.BuildFactoryHelper;
 import com.fisk.common.service.mdmBEBuild.CommonMethods;
 import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
+import com.fisk.mdm.dto.complextype.ComplexTypeDetailsParameterDTO;
 import com.fisk.mdm.dto.complextype.GeographyDTO;
 import com.fisk.mdm.map.ComplexTypeMap;
 import com.fisk.mdm.service.IComplexType;
@@ -17,6 +18,7 @@ import com.fisk.mdm.vo.complextype.GeographyVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
@@ -26,6 +28,8 @@ import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author JianWenYang
@@ -100,6 +104,46 @@ public class ComplexTypeServiceImpl implements IComplexType {
         IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
         String sql = buildSqlCommand.buildInsertSingleData(CommonMethods.beanToMap(data), "tb_file");
         return AbstractDbHelper.executeSqlReturnKey(sql, getConnection());
+    }
+
+    @Override
+    public Object getComplexTypeDetails(ComplexTypeDetailsParameterDTO dto) {
+        String tableName;
+        switch (dto.getDataTypeEnum()) {
+            case LATITUDE_COORDINATE:
+                tableName = "tb_geography";
+                break;
+            case FILE:
+                tableName = "tb_file";
+                break;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+        IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
+        String sql = buildSqlCommand.buildQueryOneData(tableName, " and id=" + dto.getId());
+        List<Map<String, Object>> resultMaps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
+        if (CollectionUtils.isEmpty(resultMaps) || resultMaps.size() > 1) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        Object data;
+        switch (dto.getDataTypeEnum()) {
+            case FILE:
+                FileVO file = new FileVO();
+                file.setFile_path(resultMaps.get(0).get("file_path").toString());
+                file.setFile_name(resultMaps.get(0).get("file_name").toString());
+                data = file;
+                break;
+            case LATITUDE_COORDINATE:
+                GeographyVO geography = new GeographyVO();
+                geography.setLat(resultMaps.get(0).get("lat").toString());
+                geography.setLng(resultMaps.get(0).get("lng").toString());
+                geography.setMap_type(Integer.valueOf(resultMaps.get(0).get("map_type").toString()).intValue());
+                data = geography;
+                break;
+            default:
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return data;
     }
 
     /**

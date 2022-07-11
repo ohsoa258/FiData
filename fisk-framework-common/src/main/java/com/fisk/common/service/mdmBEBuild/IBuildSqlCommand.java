@@ -109,9 +109,10 @@ public interface IBuildSqlCommand {
      * @param tableName
      * @param code
      * @param name
+     * @param versionId
      * @return
      */
-    String buildQueryCodeAndName(String tableName, String code, String name);
+    String buildQueryCodeAndName(String tableName, String code, String name, Integer versionId);
 
     /**
      * 获取主数据列表筛选条件运算符

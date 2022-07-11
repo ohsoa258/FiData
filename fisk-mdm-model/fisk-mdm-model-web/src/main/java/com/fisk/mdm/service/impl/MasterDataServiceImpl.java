@@ -454,14 +454,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 vo.setDisplayName(TableNameGenerateUtils.generateDomainNameDisplayName(attributeColumnVo.getDisplayName()));
                 vo.setName(TableNameGenerateUtils.generateDomainName(attributeColumnVo.getName()));
                 break;
-            case FILE:
-                vo.setDisplayName(TableNameGenerateUtils.generateComplexTypeFilePath(attributeColumnVo.getDisplayName(), false));
-                vo.setName(TableNameGenerateUtils.generateComplexTypeFilePath(attributeColumnVo.getName(), true));
-                break;
-            case LATITUDE_COORDINATE:
-                vo.setDisplayName(TableNameGenerateUtils.generateComplexTypeLat(attributeColumnVo.getDisplayName(), false));
-                vo.setName(TableNameGenerateUtils.generateComplexTypeLat(attributeColumnVo.getName(), true));
-                break;
             case TEXT:
                 vo.setDisplayName(attributeColumnVo.getDisplayName());
                 vo.setName(attributeColumnVo.getName());
@@ -474,19 +466,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
         vo.setSortWieght(attributeColumnVo.getSortWieght());
         vo.setDisplayWidth(attributeColumnVo.getDisplayWidth());
         vo.setEntityId(attributeColumnVo.getEntityId());
-        vo.setAttributeGroupIds(new ArrayList<>());
-        return vo;
-    }
-
-    public AttributeColumnVO getCodeAndName(AttributeColumnVO attributeColumnVo) {
-        AttributeColumnVO vo = new AttributeColumnVO();
-        vo.setDisplayName(TableNameGenerateUtils.generateComplexTypeMapType(attributeColumnVo.getDisplayName().replace("_经度", ""), false));
-        vo.setName(TableNameGenerateUtils.generateComplexTypeMapType(attributeColumnVo.getName().replace("_lng", ""), true));
-        vo.setDataType(attributeColumnVo.getDataType());
-        vo.setDataTypeEnDisplay(attributeColumnVo.getDataTypeEnDisplay());
-        vo.setEnableRequired(attributeColumnVo.getEnableRequired());
-        vo.setSortWieght(attributeColumnVo.getSortWieght());
-        vo.setDisplayWidth(attributeColumnVo.getDisplayWidth());
         vo.setAttributeGroupIds(new ArrayList<>());
         return vo;
     }
@@ -530,23 +509,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.DOMAIN));
                 attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateDomainCodeDisplayName(attributeColumnVo.getDisplayName()));
                 attributeColumnVo.setName(TableNameGenerateUtils.generateDomainCode(attributeColumnVo.getName()));
-            }
-            //文件类型
-            else if (attributeColumnVo.getDataType().equals(DataTypeEnum.FILE.getName())) {
-                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.FILE));
-                AttributeColumnVO codeAndName = getCodeAndName(attributeColumnVo, DataTypeEnum.TEXT);
-                codeAndName.setDisplayName(TableNameGenerateUtils.generateComplexTypeFileName(attributeColumnVo.getDisplayName(), false));
-                codeAndName.setName(TableNameGenerateUtils.generateComplexTypeFileName(attributeColumnVo.getName(), true));
-                newColumnList.add(codeAndName);
-            }
-            //经纬度
-            else if (attributeColumnVo.getDataType().equals(DataTypeEnum.LATITUDE_COORDINATE.getName())) {
-                AttributeColumnVO codeAndName = getCodeAndName(attributeColumnVo, DataTypeEnum.TEXT);
-                codeAndName.setDisplayName(TableNameGenerateUtils.generateComplexTypeLng(attributeColumnVo.getDisplayName(), false));
-                codeAndName.setName(TableNameGenerateUtils.generateComplexTypeLng(attributeColumnVo.getName(), true));
-                newColumnList.add(codeAndName);
-                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.LATITUDE_COORDINATE));
-                newColumnList.add(getCodeAndName(attributeColumnVo));
             }
             newColumnList.add(attributeColumnVo);
         }
@@ -869,13 +831,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
     }
 
     @Override
-    public List<Map<String, Object>> listEntityCodeAndName(Integer entityId) {
-        EntityPO entityPo = entityMapper.selectById(entityId);
+    public List<Map<String, Object>> listEntityCodeAndName(MasterDataBaseDTO dto) {
+        EntityPO entityPo = entityMapper.selectById(dto.getEntityId());
         if (entityPo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         //查询该实体下发布的属性
-        List<AttributeInfoDTO> attributeInfos = attributeService.listPublishedAttribute(entityId);
+        List<AttributeInfoDTO> attributeInfos = attributeService.listPublishedAttribute(dto.getEntityId());
         if (attributeInfos.isEmpty()) {
             throw new FkException(ResultEnum.ATTRIBUTE_NOT_EXIST);
         }
@@ -884,10 +846,10 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (!codeColumn.isPresent() || !nameColumn.isPresent()) {
             throw new FkException(ResultEnum.EXIST_INVALID_COLUMN);
         }
-        String tableName = TableNameGenerateUtils.generateMdmTableName(entityPo.getModelId(), entityId);
+        String tableName = TableNameGenerateUtils.generateMdmTableName(entityPo.getModelId(), dto.getEntityId());
         IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
         //生成查询语句
-        String selectSql = sqlBuilder.buildQueryCodeAndName(tableName, codeColumn.get().getColumnName(), nameColumn.get().getColumnName());
+        String selectSql = sqlBuilder.buildQueryCodeAndName(tableName, codeColumn.get().getColumnName(), nameColumn.get().getColumnName(), dto.getVersionId());
         return AbstractDbHelper.execQueryResultMaps(selectSql, getConnection());
     }
 
@@ -997,7 +959,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     throw new FkException(ResultEnum.CODE_EXIST);
                 }
             }
-            mapData.put("fidata_new_code", mapData.get("code").toString());
         }
         //生成批次号
         String batchNumber = UUID.randomUUID().toString();
@@ -1027,6 +988,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
             String sql = buildSqlCommand.buildQueryOneData(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), queryConditions);
             List<Map<String, Object>> maps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
             dto.getMembers().put("fidata_mdm_fidata_id", maps.get(0).get("fidata_id"));
+            if (dto.getMembers().get("fidata_new_code") == null) {
+                dto.getMembers().put("fidata_new_code", dto.getMembers().get("code"));
+            }
             return masterDataLogService.addMasterDataLog(dto.getMembers(), TableNameGenerateUtils.generateLogTableName(dto.getModelId(), dto.getEntityId()));
         }
         return ResultEnum.SUCCESS;

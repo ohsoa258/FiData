@@ -111,7 +111,8 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         int offset = (dto.getPageIndex() - 1) * dto.getPageSize();
         StringBuilder str = new StringBuilder();
         str.append("select " + dto.getColumnNames());
-        str.append(" from " + dto.getTableName() + " view ");
+        str.append(" from ");
+        str.append("\"" + dto.getTableName() + "\"");
         str.append("where fidata_del_flag = 1 and fidata_version_id = " + dto.getVersionId());
         if (!StringUtils.isEmpty(dto.getConditions())) {
             str.append(dto.getConditions());
@@ -155,7 +156,8 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     @Override
     public String buildQueryCount(String tableName, String queryConditions) {
         StringBuilder str = new StringBuilder();
-        str.append("SELECT COUNT(*) AS totalNum FROM " + tableName);
+        str.append("SELECT COUNT(*) AS totalNum FROM ");
+        str.append("\"" + tableName + "\"");
         str.append(" WHERE fidata_del_flag=1 ");
         if (!StringUtils.isEmpty(queryConditions)) {
             str.append(queryConditions);
@@ -190,12 +192,12 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildQueryCodeAndName(String tableName, String code, String name) {
+    public String buildQueryCodeAndName(String tableName, String code, String name, Integer versionId) {
         StringBuilder str = new StringBuilder();
         str.append("select " + code + " as code,");
         str.append(name + " as name ");
         str.append(" from " + tableName);
-        str.append(" where fidata_del_flag=1 ");
+        str.append(" where fidata_del_flag=1 and fidata_version_id=" + versionId);
         return str.toString();
     }
 
