@@ -107,9 +107,11 @@ public class DataSynchronizationUtils {
             return code1;
         }).collect(Collectors.joining(","));
 
-        stringBuilder.append("SELECT fidata_id, " + columnName  + "  FROM " + mdmTableName);
+        stringBuilder.append("SELECT fidata_id, " + columnName + "  FROM " + mdmTableName);
         stringBuilder.append(" WHERE fidata_del_flag = 1 AND " + codeColumnName.get(0));
         stringBuilder.append(" IN(" + codes + ")");
+        // TODO 添加版本过滤条件
+        stringBuilder.append(" and fidata_version_id=" + resultList.get(0).get("fidata_version_id"));
 
         // 查询数据
         List<Map<String, Object>> mdmResultList = execQueryResultList(stringBuilder.toString(), dto);
@@ -119,7 +121,7 @@ public class DataSynchronizationUtils {
         domains.stream().forEach(e -> {
             resultList.stream().forEach(item -> {
                 for (String key : item.keySet()) {
-                    if (e.getName().equals(key)){
+                    if (e.getName().equals(key)) {
                         // 查询出域字段信息
                         AttributeVO data = attributeService.getById(e.getDomainId()).getData();
 
