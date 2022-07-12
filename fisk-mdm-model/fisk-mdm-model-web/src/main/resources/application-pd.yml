@@ -41,5 +41,5 @@ pgsql-mdm:
   type: PG
 
 file:
-  uploadurl: /root/nginx/app/file/mdm/
+  uploadUrl: /root/nginx/app/file/mdm/
   echoPath: /file/mdm/
