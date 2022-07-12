@@ -723,7 +723,8 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             }).collect(Collectors.toList());
 
             // 域字段递归
-            List<EntityQueryDTO> doMainList = attributeList.stream().filter(e -> e.getDomainId() != null).map(e -> {
+            List<EntityQueryDTO> doMainList = attributeList.stream().filter(e -> e.getDomainId() != null
+                    && e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName())).map(e -> {
                 AttributeVO data = attributeService.getById(e.getDomainId()).getData();
                 EntityQueryDTO attributeInfo = this.getAttributeInfo(data.getEntityId(),attributeIds,groupId);
                 return attributeInfo;
