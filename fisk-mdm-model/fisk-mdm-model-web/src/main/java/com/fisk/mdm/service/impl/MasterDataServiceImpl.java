@@ -385,7 +385,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 .map(e -> e.getName()).collect(Collectors.toList()), ",");
         try {
             //拼接筛选条件
-            String conditions = "";
+            String conditions = " and fidata_version_id=" + dto.getVersionId() + " ";
             if (!CollectionUtils.isEmpty(dto.getFilterQuery())) {
                 conditions = getOperatorCondition(dto.getFilterQuery());
             }
