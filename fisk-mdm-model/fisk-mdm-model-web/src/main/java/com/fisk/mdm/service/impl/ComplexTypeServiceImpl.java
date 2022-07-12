@@ -181,10 +181,11 @@ public class ComplexTypeServiceImpl implements IComplexType {
 
     public String newPath(String path) {
         String[] split = path.trim().split("/");
-        String newPath = "";
+        String newPath = File.separator + "root" + File.separator + "nginx" + File.separator + "app";
         for (int i = 0; i < split.length; i++) {
             newPath += split[i] + File.separator;
         }
+        log.info("下载文件路径:" + newPath.substring(0, newPath.length() - 1));
         return newPath.substring(0, newPath.length() - 1);
     }
 
