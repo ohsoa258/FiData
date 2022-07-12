@@ -117,7 +117,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         if (!StringUtils.isEmpty(dto.getConditions())) {
             str.append(dto.getConditions());
         }
-        str.append(" order by fidata_create_time,fidata_id desc ");
+        str.append(" order by fidata_create_time desc ");
         if (!dto.getExport()) {
             str.append(" limit " + dto.getPageSize() + " offset " + offset);
         }
