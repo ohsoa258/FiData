@@ -52,8 +52,6 @@ public class ComplexTypeServiceImpl implements IComplexType {
     private String uploadUrl;
     @Value("${file.echoPath}")
     private String echoPath;
-    @Value("${file.uploadIp}")
-    private String uploadIp;
 
     @Override
     public Integer addGeography(GeographyDTO dto) {
