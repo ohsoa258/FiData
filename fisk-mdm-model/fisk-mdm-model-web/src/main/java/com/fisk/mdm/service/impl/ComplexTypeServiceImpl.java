@@ -153,7 +153,7 @@ public class ComplexTypeServiceImpl implements IComplexType {
     public HttpServletResponse download(String path, HttpServletResponse response) {
         try {
             // path是指欲下载的文件的路径。
-            File file = new File(path);
+            File file = new File(newPath(path));
             // 取得文件名。
             String filename = file.getName();
             // 取得文件的后缀名。
@@ -177,6 +177,15 @@ public class ComplexTypeServiceImpl implements IComplexType {
             log.error("downloadFile ex:", ex);
         }
         return response;
+    }
+
+    public String newPath(String path) {
+        String[] split = path.trim().split("/");
+        String newPath = "";
+        for (int i = 0; i < split.length; i++) {
+            newPath += split[i] + File.separator;
+        }
+        return newPath.substring(0, newPath.length() - 1);
     }
 
     /**
