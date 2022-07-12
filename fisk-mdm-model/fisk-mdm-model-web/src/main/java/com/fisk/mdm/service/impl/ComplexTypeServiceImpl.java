@@ -22,8 +22,8 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import java.io.File;
-import java.io.IOException;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -48,10 +48,12 @@ public class ComplexTypeServiceImpl implements IComplexType {
     private String username;
     @Value("${pgsql-mdm.password}")
     private String password;
-    @Value("${file.uploadurl}")
+    @Value("${file.uploadUrl}")
     private String uploadUrl;
     @Value("${file.echoPath}")
     private String echoPath;
+    @Value("${file.uploadIp}")
+    private String uploadIp;
 
     @Override
     public Integer addGeography(GeographyDTO dto) {
@@ -107,7 +109,7 @@ public class ComplexTypeServiceImpl implements IComplexType {
     }
 
     @Override
-    public Object getComplexTypeDetails(ComplexTypeDetailsParameterDTO dto) {
+    public Object getComplexTypeDetails(ComplexTypeDetailsParameterDTO dto, HttpServletResponse response) {
         String tableName;
         switch (dto.getDataTypeEnum()) {
             case LATITUDE_COORDINATE:
@@ -131,6 +133,10 @@ public class ComplexTypeServiceImpl implements IComplexType {
                 FileVO file = new FileVO();
                 file.setFile_path(resultMaps.get(0).get("file_path").toString());
                 file.setFile_name(resultMaps.get(0).get("file_name").toString());
+                String[] file_names = file.getFile_name().split("\\.");
+                if (!"JPEG".equals(file_names[1].toUpperCase()) && !"PNG".equals(file_names[1].toUpperCase())) {
+                    return download(file.getFile_path(), response);
+                }
                 data = file;
                 break;
             case LATITUDE_COORDINATE:
@@ -144,6 +150,35 @@ public class ComplexTypeServiceImpl implements IComplexType {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         return data;
+    }
+
+    public HttpServletResponse download(String path, HttpServletResponse response) {
+        try {
+            // path是指欲下载的文件的路径。
+            File file = new File(path);
+            // 取得文件名。
+            String filename = file.getName();
+            // 取得文件的后缀名。
+            ////String ext = filename.substring(filename.lastIndexOf(".") + 1).toUpperCase();
+            // 以流的形式下载文件。
+            InputStream fis = new BufferedInputStream(new FileInputStream(path));
+            byte[] buffer = new byte[fis.available()];
+            fis.read(buffer);
+            fis.close();
+            // 清空response
+            response.reset();
+            // 设置response的Header
+            response.addHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes()));
+            response.addHeader("Content-Length", "" + file.length());
+            OutputStream toClient = new BufferedOutputStream(response.getOutputStream());
+            response.setContentType("application/octet-stream");
+            toClient.write(buffer);
+            toClient.flush();
+            toClient.close();
+        } catch (IOException ex) {
+            log.error("downloadFile ex:", ex);
+        }
+        return response;
     }
 
     /**

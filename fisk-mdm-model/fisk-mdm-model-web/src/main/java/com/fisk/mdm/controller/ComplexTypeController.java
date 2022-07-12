@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author JianWenYang
@@ -26,6 +28,18 @@ public class ComplexTypeController {
 
     @Resource
     private IComplexType service;
+
+    /**
+     * 基于构造器注入
+     */
+    private final HttpServletResponse response;
+    private final HttpServletRequest request;
+
+    public ComplexTypeController(HttpServletResponse response, HttpServletRequest request) {
+
+        this.response = response;
+        this.request = request;
+    }
 
     @ApiOperation("新增经纬度")
     @PostMapping("/addGeography")
@@ -46,7 +60,7 @@ public class ComplexTypeController {
     @GetMapping("/getComplexType")
     @ResponseBody
     public ResultEntity<Object> getComplexType(ComplexTypeDetailsParameterDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getComplexTypeDetails(dto));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getComplexTypeDetails(dto, response));
     }
 
 }

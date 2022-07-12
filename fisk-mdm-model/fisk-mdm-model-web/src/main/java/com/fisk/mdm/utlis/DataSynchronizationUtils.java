@@ -64,7 +64,7 @@ public class DataSynchronizationUtils {
     public ResultEnum stgDataSynchronize(Integer entityId,String batchCode){
 
         // 1.查询属性配置信息
-        EntityInfoVO entityInfoVo = entityService.getAttributeById(entityId,null);
+        EntityInfoVO entityInfoVo = entityService.getFilterAttributeById(entityId);
         List<AttributeInfoDTO> attributeList = entityInfoVo.getAttributeList();
         String mdmTableName = entityInfoVo.getTableName();
 
