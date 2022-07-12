@@ -25,6 +25,7 @@ import com.fisk.mdm.vo.modelVersion.ModelVersionVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -164,8 +165,11 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
         if (CollectionUtils.isNotEmpty(list)){
 
             list.stream().forEach(e -> {
-                // 复制数据
-                this.entityDataCopy(e,(int)versionPo.getId(),dto.getId());
+
+                if (StringUtils.isNotBlank(e.getTableName())){
+                    // 复制数据
+                    this.entityDataCopy(e,(int)versionPo.getId(),dto.getId());
+                }
             });
         }
 
