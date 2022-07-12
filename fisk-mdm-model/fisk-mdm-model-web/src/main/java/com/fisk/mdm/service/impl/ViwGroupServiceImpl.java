@@ -10,6 +10,7 @@ import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.entity.EntityQueryDTO;
 import com.fisk.mdm.dto.viwGroup.*;
 import com.fisk.mdm.entity.*;
+import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.ViwGroupMap;
 import com.fisk.mdm.mapper.AttributeMapper;
@@ -686,7 +687,8 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         // 属性信息
         List<AttributeInfoDTO> attributeList = entityInfoVo.getAttributeList();
         if (CollectionUtils.isNotEmpty(attributeList)){
-            List<EntityQueryDTO> collect = attributeList.stream().filter(e -> e.getDomainId() == null).map(e -> {
+            List<EntityQueryDTO> collect = attributeList.stream().filter(e -> e.getDomainId() == null
+            && e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName())).map(e -> {
                 EntityQueryDTO dto1 = new EntityQueryDTO();
                 dto1.setId(e.getId());
                 dto1.setName(e.getName());
