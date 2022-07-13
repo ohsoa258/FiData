@@ -1,4 +1,4 @@
-package com.fisk.auth.dto;
+package com.fisk.common.framework.jwt.model;
 
 import lombok.Data;
 

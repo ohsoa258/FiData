@@ -1,7 +1,5 @@
 package com.fisk.dataaccess.test;
 
-import com.fisk.auth.dto.Payload;
-import com.fisk.auth.dto.UserDetail;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;

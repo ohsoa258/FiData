@@ -1,17 +1,17 @@
 package com.fisk.auth.service.impl;
 
 import com.fisk.auth.constants.JwtConstants;
-import com.fisk.auth.dto.Payload;
 import com.fisk.auth.dto.UserAuthDTO;
-import com.fisk.auth.dto.UserDetail;
 import com.fisk.auth.service.UserAuthService;
-import com.fisk.auth.utils.JwtUtils;
 import com.fisk.common.core.constants.SystemConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.jwt.JwtUtils;
+import com.fisk.common.framework.jwt.model.Payload;
+import com.fisk.common.framework.jwt.model.UserDetail;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;

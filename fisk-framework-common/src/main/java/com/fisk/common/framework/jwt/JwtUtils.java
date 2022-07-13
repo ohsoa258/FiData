@@ -1,11 +1,12 @@
-package com.fisk.auth.utils;
+package com.fisk.common.framework.jwt;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fisk.auth.dto.Payload;
-import com.fisk.auth.dto.UserDetail;
 import com.fisk.common.core.constants.SystemConstants;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.framework.jwt.model.Payload;
+import com.fisk.common.framework.jwt.model.UserDetail;
+import com.fisk.common.framework.properties.ProjectProperties;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
@@ -15,7 +16,10 @@ import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -27,27 +31,30 @@ import java.util.UUID;
  * <p>
  * Jwt工具类: 用于生成、验证并解析Jwt
  */
+@Component
 public class JwtUtils {
 
+    @Resource
+    private ProjectProperties properties;
+
+    @Resource
+    private RedisUtil redis;
 
     /**
      * JWT解析器
      */
-    private final JwtParser jwtParser;
+    private JwtParser jwtParser;
     /**
      * 秘钥
      */
-    private final SecretKey secretKey;
-
-    private final RedisUtil redis;
+    private SecretKey secretKey;
 
     private final static ObjectMapper MAPPER = new ObjectMapper();
 
-    public JwtUtils(String key, RedisUtil redis) {
+    @PostConstruct
+    public void init() {
         // 生成秘钥
-        secretKey = Keys.hmacShaKeyFor(key.getBytes(Charset.forName("UTF-8")));
-        // Redis工具
-        this.redis = redis;
+        secretKey = Keys.hmacShaKeyFor(properties.getJwt().getKey().getBytes(Charset.forName("UTF-8")));
         // JWT解析器
         this.jwtParser = Jwts.parserBuilder().setSigningKey(secretKey).build();
     }

@@ -10,6 +10,13 @@ spring:
 fk:
   jwt:
     key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
+  auth:
+    clientId: auth-service
+    secret: 1234
+  encoder:
+    crypt:
+      secret: ${random.uuid}
+      strength: 6
 
 mybatis-plus:
   global-config:
