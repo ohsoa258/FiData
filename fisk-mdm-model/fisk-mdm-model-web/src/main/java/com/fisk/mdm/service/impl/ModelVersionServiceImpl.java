@@ -8,16 +8,20 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
+import com.fisk.mdm.dto.complextype.GeographyDTO;
 import com.fisk.mdm.dto.modelVersion.ModelCopyDTO;
 import com.fisk.mdm.dto.modelVersion.ModelVersionDTO;
 import com.fisk.mdm.dto.modelVersion.ModelVersionUpdateDTO;
 import com.fisk.mdm.entity.ModelVersionPO;
+import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.enums.ModelVersionStatusEnum;
 import com.fisk.mdm.map.ModelVersionMap;
 import com.fisk.mdm.mapper.ModelVersionMapper;
 import com.fisk.mdm.service.EntityService;
+import com.fisk.mdm.service.IComplexType;
 import com.fisk.mdm.service.IModelService;
 import com.fisk.mdm.service.IModelVersionService;
+import com.fisk.mdm.vo.complextype.EchoFileVO;
 import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.model.ModelInfoVO;
 import com.fisk.mdm.vo.modelVersion.ModelVersionDropDownVO;
@@ -25,10 +29,13 @@ import com.fisk.mdm.vo.modelVersion.ModelVersionVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
+import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
@@ -37,7 +44,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.closeConnection;
+import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.execQueryResultList;
 import static com.fisk.mdm.utlis.DataSynchronizationUtils.MARK;
+import static com.fisk.mdm.utlis.FileConvertUtils.createFileItem;
 
 
 /**
@@ -63,6 +72,8 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
     EntityService entityService;
     @Resource
     UserClient userClient;
+    @Resource
+    IComplexType iComplexType;
 
 
     /**
@@ -167,8 +178,39 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
             list.stream().forEach(e -> {
 
                 if (StringUtils.isNotBlank(e.getTableName())){
-                    // 复制数据
-                    this.entityDataCopy(e,(int)versionPo.getId(),dto.getId());
+
+                    // 创建连接对象
+                    AbstractDbHelper dbHelper = new AbstractDbHelper();
+                    Connection connection = dbHelper.connection(connectionStr, acc,
+                            pwd,type);
+
+                    // 1.复制数据
+                    this.entityDataCopy(dbHelper,connection,e,(int)versionPo.getId(),dto.getId());
+
+                    // 2.复制复杂类型数据
+                    List<AttributeInfoDTO> attributeList = entityService.getAttributeById(e.getId(), null).getAttributeList();
+
+                    List<AttributeInfoDTO> longitudeList = attributeList.stream().filter(item -> item.getDataType().equals(DataTypeEnum.LATITUDE_COORDINATE)).collect(Collectors.toList());
+                    List<AttributeInfoDTO> fileList = attributeList.stream().filter(item -> item.getDataType().equals(DataTypeEnum.FILE)).collect(Collectors.toList());
+
+                    // 3.查询复杂类型的code
+                    if (CollectionUtils.isNotEmpty(longitudeList)){
+                        // 经纬度类型
+                        String field = longitudeList.stream().map(iter -> iter.getColumnName()).collect(Collectors.joining(","));
+                        String sql = "SELECT " + field + " FROM " + e.getTableName() + " WHERE fidata_version_id = '" + dto.getId() + "'";
+                        // 需要复制数据得code
+                        List<String> codes = execQueryResultList(sql, connection, String.class);
+                        this.copyLatitude(codes,(int)versionPo.getId(),connection,DataTypeEnum.LATITUDE_COORDINATE);
+                    }
+
+                    if (CollectionUtils.isNotEmpty(fileList)){
+                        // 文件类型
+                        String field = fileList.stream().map(iter -> iter.getColumnName()).collect(Collectors.joining(","));
+                        String sql = "SELECT " + field + " FROM " + e.getTableName() + " WHERE fidata_version_id = '" + dto.getId() + "'";
+                        // 需要复制数据得code
+                        List<String> codes = execQueryResultList(sql, connection, String.class);
+                        this.copyLatitude(codes,(int)versionPo.getId(),connection,DataTypeEnum.FILE);
+                    }
                 }
             });
         }
@@ -182,16 +224,11 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
      * @param newVersionId
      * @param oldVersionId
      */
-    public void entityDataCopy(EntityVO entityVo,Integer newVersionId,Integer oldVersionId){
+    public void entityDataCopy(AbstractDbHelper dbHelper,Connection connection,
+                               EntityVO entityVo,Integer newVersionId,Integer oldVersionId){
 
-        Connection connection = null;
         String sql = null;
         try {
-            // 创建连接对象
-            AbstractDbHelper dbHelper = new AbstractDbHelper();
-            connection = dbHelper.connection(connectionStr, acc,
-                    pwd,type);
-
             // 1.生成Sql
             sql = this.buildDataCopySql(entityVo, newVersionId,oldVersionId);
 
@@ -250,14 +287,57 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
         // 拼接业务字段
         List<AttributeInfoDTO> attributeList = entityService.getAttributeById(entityId,null).getAttributeList();
         if (CollectionUtils.isNotEmpty(attributeList)){
-
-            // 业务字段
             String businessFiled = attributeList.stream().map(e -> e.getColumnName()).collect(Collectors.joining(","));
             str.append(",");
             str.append(businessFiled);
+
+            // 业务字段
         }
 
         return str.toString();
+    }
+
+    /**
+     * 复制复杂数据类型
+     * @param codes
+     * @param newVersionId
+     * @param connection
+     * @param type
+     * @return
+     */
+    public ResultEnum copyLatitude(List<String> codes,Integer newVersionId, Connection connection,
+                               DataTypeEnum type){
+
+        String code = codes.stream().map(e -> "'" + e + "'").collect(Collectors.joining(","));
+
+        // 经纬度类型
+        if (type.equals(DataTypeEnum.LATITUDE_COORDINATE)){
+            // 1.查询数据
+            String sql = "SELECT * FROM " + "tb_geography" + " WHERE IN(" + code +")";
+            List<GeographyDTO> list = execQueryResultList(sql, connection, GeographyDTO.class);
+
+            // 2.结果集转换
+            list.stream().forEach(e -> {
+                e.setVersionId(newVersionId);
+                iComplexType.addGeography(e);
+            });
+        }
+
+        // 文件类型
+        if (type.equals(DataTypeEnum.FILE)){
+            // 1.查询数据
+            String sql = "SELECT * FROM " + "tb_file" + " WHERE code IN(" + code +")";
+            List<EchoFileVO> list = execQueryResultList(sql, connection, EchoFileVO.class);
+
+            // 2.结果集转换
+            list.forEach(e -> {
+                FileItem fileItem = createFileItem(e.getFilePath());
+                MultipartFile file = new CommonsMultipartFile(fileItem);
+                iComplexType.uploadFile(newVersionId,file).getId();
+            });
+        }
+
+        return ResultEnum.SUCCESS;
     }
 
     /**
