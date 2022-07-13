@@ -82,22 +82,6 @@ public interface IEntity {
     LineAgeDTO getMetaDataKinship(String guid);
 
     /**
-     * 首页查询Entity
-     * @param query
-     * @param limit
-     * @param offset
-     * @return
-     */
-    JSONObject searchQuick(String query,int limit,int offset);
-
-    /**
-     *首页查询Suggestions
-     * @param prefixString
-     * @return
-     */
-    JSONObject searchSuggestions(String prefixString);
-
-    /**
      * 获取实例详情
      * @param guid
      * @return

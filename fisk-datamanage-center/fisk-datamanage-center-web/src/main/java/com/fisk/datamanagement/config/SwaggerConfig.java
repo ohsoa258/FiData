@@ -34,6 +34,7 @@ public class SwaggerConfig {
     public static final String DATA_MASKING = "data-masking-controller";
     public static final String SYNCHRONIZATION_DATA = "synchronization-data-controller";
     public static final String PROCESS = "process-controller";
+    public static final String GLOBAL_SEARCH = "globalSearch-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -56,6 +57,7 @@ public class SwaggerConfig {
                 .tags(new Tag(DATA_MASKING, "数据脱敏"))
                 .tags(new Tag(SYNCHRONIZATION_DATA, "同步元数据"))
                 .tags(new Tag(PROCESS, "元数据血缘连线处理"))
+                .tags(new Tag(GLOBAL_SEARCH, "全局搜索"))
                 .securityContexts(securityContexts());
     }
 

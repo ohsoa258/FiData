@@ -52,10 +52,6 @@ public class EntityImpl implements IEntity {
     private String lineage;
     @Value("${atlas.relationship}")
     private String relationship;
-    @Value("${atlas.searchQuick}")
-    private String searchQuick;
-    @Value("${atlas.searchSuggestions}")
-    private String searchSuggestions;
     @Value("${spring.metadataentity}")
     private String metaDataEntity;
 
@@ -631,30 +627,6 @@ public class EntityImpl implements IEntity {
             log.error("getRelationShip ex:",e);
         }
         return false;
-    }
-
-    @Override
-    public JSONObject searchQuick(String query,int limit,int offset)
-    {
-        ResultDataDTO<String> result = atlasClient.get(searchQuick + "?query=" + query + "&limit=" + limit + "&offset=" + offset);
-        if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
-        {
-            JSONObject msg=JSON.parseObject(result.data);
-            throw new FkException(ResultEnum.BAD_REQUEST,msg.getString("errorMessage"));
-        }
-        return JSON.parseObject(result.data);
-    }
-
-    @Override
-    public JSONObject searchSuggestions(String prefixString)
-    {
-        ResultDataDTO<String> result = atlasClient.get(searchSuggestions + "?prefixString=" + prefixString);
-        if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
-        {
-            JSONObject msg=JSON.parseObject(result.data);
-            throw new FkException(ResultEnum.BAD_REQUEST,msg.getString("errorMessage"));
-        }
-        return JSON.parseObject(result.data);
     }
 
     public void setRedis(String guid)
