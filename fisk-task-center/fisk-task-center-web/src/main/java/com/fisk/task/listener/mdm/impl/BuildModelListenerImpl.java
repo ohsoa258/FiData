@@ -964,7 +964,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 str.append(" tb_file ").append(alias);
                 str.append(" ON ");
                 str.append(PRIMARY_TABLE + "." + MARK + "version_id" + " = " + alias + "." + MARK + "version_id");
-                str.append(" AND ").append(PRIMARY_TABLE + "." + e.getColumnName() + " = " + alias + ".\"id\"");
+                str.append(" AND ").append(PRIMARY_TABLE + "." + e.getColumnName() + " = " + alias + ".\"code\"");
 
                 return str;
             }).collect(Collectors.joining(" "));
@@ -983,7 +983,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 str.append(" tb_geography ").append(alias);
                 str.append(" ON ");
                 str.append(PRIMARY_TABLE + "." + MARK + "version_id" + " = " + alias + "." + MARK + "version_id");
-                str.append(" AND ").append(PRIMARY_TABLE + "." + e.getColumnName() + " = " + alias + ".\"id\"");
+                str.append(" AND ").append(PRIMARY_TABLE + "." + e.getColumnName() + " = " + alias + ".\"code\"");
 
                 return str;
             }).collect(Collectors.joining(" "));
