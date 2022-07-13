@@ -51,8 +51,7 @@ spring:
   # 日志输入环境
   profiles:
     active: dev
-  thymeleaf:
-    check-template: false
+  freemarker:
     check-template-location: false
   redis:
     host: 192.168.11.130
@@ -160,7 +159,7 @@ fk:
   jwt:
     key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
   auth:
-    clientId: api-gateway
+    clientId: gateway-service
     secret: 1234
   encoder:
     crypt:

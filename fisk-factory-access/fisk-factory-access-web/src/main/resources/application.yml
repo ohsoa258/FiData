@@ -29,7 +29,7 @@ fk:
   jwt:
     key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
   auth:
-    clientId: dataAccess-service
+    clientId: data-factory-access-service
     secret: 1234
   encoder:
     crypt:

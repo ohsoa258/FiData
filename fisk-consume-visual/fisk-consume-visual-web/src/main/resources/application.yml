@@ -14,7 +14,7 @@ fk:
   jwt:
     key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
   auth:
-    clientId: chartvisual-service
+    clientId: chart-visual-service
     secret: 1234
   encoder:
     crypt:

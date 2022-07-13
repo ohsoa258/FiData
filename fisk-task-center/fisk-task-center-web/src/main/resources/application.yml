@@ -12,6 +12,13 @@ spring:
 fk:
   jwt:
     key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
+  auth:
+    clientId: task-service
+    secret: 1234
+  encoder:
+    crypt:
+      secret: ${random.uuid}
+      strength: 6
 
 eureka:
   client:

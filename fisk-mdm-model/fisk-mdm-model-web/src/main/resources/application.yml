@@ -12,9 +12,8 @@ spring:
 fk:
   jwt:
     key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
-# 授权中心
   auth:
-    clientId: mdmmodel-service
+    clientId: mdm-model-service
     secret: 1234
   encoder:
     crypt:

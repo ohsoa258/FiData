@@ -16,11 +16,8 @@ fk:
       strength: 6 # 加密强度4~31，决定盐加密时的运算强度，超过10以后加密耗时会显著增加
   # 配置此条信息,当前服务开启时会调用feign接口,去授权中心获取秘钥
   auth:
-    clientId: user-service
+    clientId: system-service
     secret: 1234
-    includeFilterPaths:
-      - /info/me # 展示用户登录信息时需要拦截器生效
-      - /test/** # 自定义拦截路径: 拦截/test开头的地址
 
 mybatis-plus:
   global-config:

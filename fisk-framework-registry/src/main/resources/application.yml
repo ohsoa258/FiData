@@ -5,9 +5,6 @@ spring:
     name: fk-registry  # 当前服务的名称(自定义),也是注册进Eureka中的名称
   profiles:
     active: dev
-  thymeleaf:
-    check-template: false
-    check-template-location: false
 
 eureka:
   client:
@@ -32,3 +29,10 @@ eureka:
 fk:
   jwt:
     key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
+  auth:
+    clientId: register-service
+    secret: 1234
+  encoder:
+    crypt:
+      secret: ${random.uuid}
+      strength: 6

@@ -20,7 +20,7 @@ spring:
 #授权
 fk:
   auth:
-    clientId: datamanagement-service
+    clientId: data-management-service
     secret: 1234
   encoder:
     crypt:

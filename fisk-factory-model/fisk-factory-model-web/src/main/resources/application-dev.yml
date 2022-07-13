@@ -15,7 +15,7 @@ spring:
 #授权
 fk:
   auth:
-    clientId: datamodel-service
+    clientId: data-model-service
     secret: 1234
   encoder:
     crypt:

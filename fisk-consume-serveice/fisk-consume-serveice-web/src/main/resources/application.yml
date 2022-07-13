@@ -68,7 +68,7 @@ fk:
   jwt:
     key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
   auth:
-    clientId: dataservice-service
+    clientId: data-service
     secret: 1234
   encoder:
     crypt:
