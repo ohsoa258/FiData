@@ -609,21 +609,21 @@ public class BusinessAreaImpl
             // 第一层 - 1: dmp_dw
             FiDataMetaDataDTO dwDto = new FiDataMetaDataDTO();
             // FiData数据源id: 数据资产自定义
-            dwDto.setDataSourceId(Integer.parseInt(StringUtils.isBlank(reqDto.dataSourceId) ? String.valueOf(0) : reqDto.dataSourceId));
+            dwDto.setDataSourceId(Integer.parseInt(reqDto.dataSourceId));
 
             // 第一层id
-            String dwGuid = UUID.randomUUID().toString();
+//            String dwGuid = UUID.randomUUID().toString();
             // 第一层子级
             List<FiDataMetaDataTreeDTO> dwDataTreeList = new ArrayList<>();
             FiDataMetaDataTreeDTO dwDataTree = new FiDataMetaDataTreeDTO();
-            dwDataTree.setId(dwGuid);
-            dwDataTree.setParentId("-1");
-            dwDataTree.setLabel("dmp_dw");
-            dwDataTree.setLabelAlias("dmp_dw");
-            dwDataTree.setLevelType(LevelTypeEnum.FOLDER);
+            dwDataTree.setId(reqDto.dataSourceId);
+            dwDataTree.setParentId("-10");
+            dwDataTree.setLabel(reqDto.dataSourceName);
+            dwDataTree.setLabelAlias(reqDto.dataSourceName);
+            dwDataTree.setLevelType(LevelTypeEnum.DATABASE);
 
             // 封装dw所有结构数据
-            dwDataTree.setChildren(buildBusinessChildren(dwGuid, "dw"));
+            dwDataTree.setChildren(buildBusinessChildren(reqDto.dataSourceId, "dw"));
             dwDataTreeList.add(dwDataTree);
 
             dwDto.setChildren(dwDataTreeList);
@@ -634,17 +634,17 @@ public class BusinessAreaImpl
             olapDto.setDataSourceId(Integer.parseInt(StringUtils.isBlank(reqDto.dataSourceId) ? String.valueOf(0) : reqDto.dataSourceId));
 
             // 第一层id
-            String olapGuid = UUID.randomUUID().toString();
+//            String olapGuid = UUID.randomUUID().toString();
             List<FiDataMetaDataTreeDTO> olapDataTreeList = new ArrayList<>();
             FiDataMetaDataTreeDTO olapDataTree = new FiDataMetaDataTreeDTO();
-            olapDataTree.setId(olapGuid);
-            olapDataTree.setParentId("-1");
-            olapDataTree.setLabel("dmp_olap");
-            olapDataTree.setLabelAlias("dmp_olap");
-            olapDataTree.setLevelType(LevelTypeEnum.FOLDER);
+            olapDataTree.setId(reqDto.dataSourceId);
+            olapDataTree.setParentId("-10");
+            olapDataTree.setLabel(reqDto.dataSourceName);
+            olapDataTree.setLabelAlias(reqDto.dataSourceName);
+            olapDataTree.setLevelType(LevelTypeEnum.DATABASE);
 
             // 封装data-access所有结构数据
-            olapDataTree.setChildren(buildBusinessChildren(olapGuid, "olap"));
+            olapDataTree.setChildren(buildBusinessChildren(reqDto.dataSourceId, "olap"));
             olapDataTreeList.add(olapDataTree);
 
             olapDto.setChildren(olapDataTreeList);
@@ -687,7 +687,7 @@ public class BusinessAreaImpl
      * @author Lock
      * @date 2022/6/16 18:03
      * @version v1.0
-     * @params id
+     * @params id FiData数据源id
      * @params businessPoList
      */
     private List<FiDataMetaDataTreeDTO> buildBusinessChildren(String id, String dourceType) {
@@ -736,7 +736,8 @@ public class BusinessAreaImpl
                                             dimensionTreeDto.setLevelType(LevelTypeEnum.TABLE);
                                             dimensionTreeDto.setPublishState(String.valueOf(dimension.isPublish != 1 ? 0 : 1));
                                             dimensionTreeDto.setLabelDesc(dimension.dimensionDesc);
-
+                                            dimensionTreeDto.setSourceId(Integer.parseInt(id));
+                                            dimensionTreeDto.setSourceType(1);
                                             // 第六层: 维度字段
                                             List<FiDataMetaDataTreeDTO> dimensionAttributeTreeList = dimensionAttribute.query()
                                                     .eq("dimension_id", dimension.id)
@@ -754,7 +755,8 @@ public class BusinessAreaImpl
                                                         dimensionAttributeTreeDto.setLabelLength(String.valueOf(field.dimensionFieldLength));
                                                         dimensionAttributeTreeDto.setLabelType(field.dimensionFieldType);
                                                         dimensionAttributeTreeDto.setLabelDesc(field.dimensionFieldDes);
-
+                                                        dimensionAttributeTreeDto.setSourceId(Integer.parseInt(id));
+                                                        dimensionAttributeTreeDto.setSourceType(1);
                                                         return dimensionAttributeTreeDto;
                                                     }).collect(Collectors.toList());
 
@@ -798,7 +800,8 @@ public class BusinessAreaImpl
                                             factTreeDto.setLevelType(LevelTypeEnum.TABLE);
                                             factTreeDto.setPublishState(String.valueOf(fact.isPublish != 1 ? 0 : 1));
                                             factTreeDto.setLabelDesc(fact.factTableDesc);
-
+                                            factTreeDto.setSourceId(Integer.parseInt(id));
+                                            factTreeDto.setSourceType(1);
                                             // 第六层: 事实字段
                                             List<FiDataMetaDataTreeDTO> factAttributeTreeList;
                                             // olap: 分析指标
@@ -817,6 +820,8 @@ public class BusinessAreaImpl
 //                                                        factAttributeTreeDto.setLabelLength(String.valueOf(""));
                                                             factAttributeTreeDto.setLabelType(field.factFieldType);
 //                                                        factAttributeTreeDto.setLabelDesc(field.indicatorsDes);
+                                                            factAttributeTreeDto.setSourceId(Integer.parseInt(id));
+                                                            factAttributeTreeDto.setSourceType(1);
                                                             return factAttributeTreeDto;
                                                         }).collect(Collectors.toList());
                                             } else {
@@ -837,7 +842,8 @@ public class BusinessAreaImpl
                                                             factAttributeTreeDto.setLabelLength(String.valueOf(field.factFieldLength));
                                                             factAttributeTreeDto.setLabelType(field.factFieldType);
                                                             factAttributeTreeDto.setLabelDesc(field.factFieldDes);
-
+                                                            factAttributeTreeDto.setSourceId(Integer.parseInt(id));
+                                                            factAttributeTreeDto.setSourceType(1);
                                                             return factAttributeTreeDto;
                                                         }).collect(Collectors.toList());
                                             }
@@ -878,6 +884,8 @@ public class BusinessAreaImpl
                                     wideTableTreeDto.setLabelAlias(wideTable1.name);
                                     wideTableTreeDto.setLevelType(LevelTypeEnum.TABLE);
                                     wideTableTreeDto.setPublishState(String.valueOf(wideTable1.dorisPublish != 1 ? 0 : 1));
+                                    wideTableTreeDto.setSourceId(Integer.parseInt(id));
+                                    wideTableTreeDto.setSourceType(1);
 
                                     // 第六层: 宽表字段
                                     WideTableFieldConfigDTO wideTableFieldDto = JSON.parseObject(wideTable1.configDetails, WideTableFieldConfigDTO.class);
@@ -898,6 +906,8 @@ public class BusinessAreaImpl
                                                         wideTableFieldTreeDto.setPublishState(String.valueOf(wideTable1.dorisPublish != 1 ? 0 : 1));
                                                         wideTableFieldTreeDto.setLabelLength(String.valueOf(field.fieldLength));
                                                         wideTableFieldTreeDto.setLabelType(field.fieldType);
+                                                        wideTableFieldTreeDto.setSourceId(Integer.parseInt(id));
+                                                        wideTableFieldTreeDto.setSourceType(1);
                                                         return wideTableFieldTreeDto;
                                                     }).collect(Collectors.toList());
                                             wideTableFieldTreeList.addAll(fieldList);
