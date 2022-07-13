@@ -5,14 +5,19 @@ import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
+import com.fisk.datamanagement.dto.glossary.GlossaryAttributeDTO;
+import com.fisk.datamanagement.dto.glossary.GlossaryTermAttributeDTO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.service.IGlobalSearch;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -25,6 +30,8 @@ public class GlobalSearchImpl implements IGlobalSearch {
     AtlasClient atlasClient;
     @Resource
     ClassificationImpl classification;
+    @Resource
+    GlossaryImpl glossary;
 
     @Value("${atlas.searchQuick}")
     private String searchQuick;
@@ -54,10 +61,31 @@ public class GlobalSearchImpl implements IGlobalSearch {
     @Override
     public ClassificationDefsDTO searchClassification(String keyword) {
         ClassificationDefsDTO classificationList = classification.getClassificationList();
+        //filter过滤
         classificationList.classificationDefs = classificationList.classificationDefs
                 .stream()
                 .filter(e -> e.name.contains(keyword)).collect(Collectors.toList());
         return classificationList;
+    }
+
+    @Override
+    public List<GlossaryAttributeDTO> searchTerms(String keyword) {
+        //获取术语库列表
+        List<GlossaryAttributeDTO> glossaryList = glossary.getGlossaryList();
+        List<GlossaryAttributeDTO> list = new ArrayList<>();
+        for (GlossaryAttributeDTO item : glossaryList) {
+            if (CollectionUtils.isEmpty(item.terms)) {
+                continue;
+            }
+            List<GlossaryTermAttributeDTO> filterTerms = item.terms.stream().filter(e -> e.displayText.contains(keyword)).collect(Collectors.toList());
+            //过滤是否存在术语
+            if (CollectionUtils.isEmpty(filterTerms)) {
+                continue;
+            }
+            item.terms = filterTerms;
+            list.add(item);
+        }
+        return list;
     }
 
 }

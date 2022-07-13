@@ -42,4 +42,10 @@ public class GlobalSearchController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchClassification(keyword));
     }
 
+    @ApiOperation("全局搜索-模糊查询术语")
+    @GetMapping("/searchTerms")
+    public ResultEntity<Object> searchTerms(String keyword) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchTerms(keyword));
+    }
+
 }
