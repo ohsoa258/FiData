@@ -14,6 +14,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.common.framework.mybatis",
         "com.fisk.common.framework.redis",
         "com.fisk.common.framework.config",
+        "com.fisk.common.framework.properties",
         "com.fisk.common.service.pageFilter",
         "com.fisk.common.framework.exception",
         "com.fisk.common.core.user",})

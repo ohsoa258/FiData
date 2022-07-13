@@ -51,10 +51,13 @@ spring:
   # 日志输入环境
   profiles:
     active: dev
+  thymeleaf:
+    check-template: false
+    check-template-location: false
+  redis:
+    host: 192.168.11.130
   cloud:
-
     gateway:
-
       # =============跨域============
       globalcors: # 全局的跨域处理
         add-to-simple-url-handler-mapping: true # 是否将当前cors配置加入到SimpleUrlHandlerMapping中，解决options请求被拦截问题
@@ -153,18 +156,6 @@ spring:
           predicates:
             - Path=/mdmmodel/**
 
-
-  redis:
-    host: 192.168.11.130
-#    host: 192.168.21.13
-#    host: 10.220.108.140
-#    port: 16380
-#    password: test123456
-
-
-logging:
-  level:
-    com.fisk: debug
 fk:
   jwt:
     key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥

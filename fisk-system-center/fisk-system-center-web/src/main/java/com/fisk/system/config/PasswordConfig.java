@@ -1,9 +1,7 @@
 package com.fisk.system.config;
 
 import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.security.SecureRandom;
@@ -14,8 +12,8 @@ import java.security.SecureRandom;
  * 对密码进行加密,
  */
 @Data
-@Configuration
-@ConfigurationProperties(prefix = "fk.encoder.crypt")
+//@Configuration
+//@ConfigurationProperties(prefix = "fk.encoder.crypt")
 public class PasswordConfig {
 
     private int strength;

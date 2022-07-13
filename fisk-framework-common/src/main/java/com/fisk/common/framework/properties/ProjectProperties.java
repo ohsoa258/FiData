@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * @author Lock
+ * @author gy
  */
 @Data
 @Component
@@ -14,6 +14,7 @@ public class ProjectProperties {
 
     private final AuthProperties auth = new AuthProperties();
     private final JwtProperties jwt = new JwtProperties();
+    private final EncoderProperties encoder = new EncoderProperties();
 
     @Data
     public static class AuthProperties {
@@ -30,5 +31,16 @@ public class ProjectProperties {
     @Data
     public static class JwtProperties {
         private String key;
+    }
+
+    @Data
+    public static class EncoderProperties {
+        private final CryptProperties crypt = new CryptProperties();
+
+        @Data
+        public static class CryptProperties {
+            public String secret;
+            public int strength;
+        }
     }
 }

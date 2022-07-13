@@ -5,6 +5,9 @@ spring:
     name: auth-service
   profiles:
     active: dev
+  thymeleaf:
+    check-template: false
+    check-template-location: false
 
 # 配置秘钥,给Jwt加密的私钥,可定期更改
 fk:
