@@ -746,20 +746,19 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         List<FiDataMetaDataDTO> list = new ArrayList<>();
         FiDataMetaDataDTO dto = new FiDataMetaDataDTO();
         // FiData数据源id: 数据资产自定义
-        dto.setDataSourceId(Integer.parseInt(StringUtils.isBlank(reqDto.dataSourceId) ? String.valueOf(0) : reqDto.dataSourceId));
+        dto.setDataSourceId(Integer.parseInt(reqDto.dataSourceId));
 
         // 第一层id
-        String uuid = UUID.randomUUID().toString();
         List<FiDataMetaDataTreeDTO> dataTreeList = new ArrayList<>();
         FiDataMetaDataTreeDTO dataTree = new FiDataMetaDataTreeDTO();
-        dataTree.setId(uuid);
-        dataTree.setParentId("-1");
-        dataTree.setLabel("dmp_ods");
-        dataTree.setLabelAlias("dmp_ods");
-        dataTree.setLevelType(LevelTypeEnum.FOLDER);
+        dataTree.setId(reqDto.dataSourceId);
+        dataTree.setParentId("-10");
+        dataTree.setLabel(reqDto.dataSourceName);
+        dataTree.setLabelAlias(reqDto.dataSourceName);
+        dataTree.setLevelType(LevelTypeEnum.DATABASE);
 
         // 封装data-access所有结构数据
-        dataTree.setChildren(buildChildren(uuid));
+        dataTree.setChildren(buildChildren(reqDto.dataSourceId));
         dataTreeList.add(dataTree);
 
         dto.setChildren(dataTreeList);
@@ -830,7 +829,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     /**
      * 构建data-access子集树
      *
-     * @param id guid
+     * @param id FiData数据源id
      * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
      * @author Lock
      * @date 2022/6/15 17:46
@@ -874,7 +873,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
      * @author Lock
      * @date 2022/6/16 15:21
-     * @params id guid
+     * @params id FiData数据源id
      */
     private List<FiDataMetaDataTreeDTO> getFiDataMetaDataTreeByRealTime(String id, List<AppRegistrationPO> appPoList) {
         return appPoList.stream()
@@ -937,6 +936,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     tableDtoTree.setLabel(table.tableName);
                                                     tableDtoTree.setLabelAlias(table.tableName);
                                                     tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
+                                                    tableDtoTree.setSourceType(1);
+                                                    tableDtoTree.setSourceId(Integer.parseInt(id));
                                                     if (table.publish == null) {
                                                         tableDtoTree.setPublishState("0");
                                                         table.publish = 0;
@@ -963,7 +964,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                                 fieldDtoTree.setLabelLength(String.valueOf(field.fieldLength));
                                                                 fieldDtoTree.setLabelType(field.fieldType);
                                                                 fieldDtoTree.setLabelDesc(field.fieldDes);
-
+                                                                fieldDtoTree.setSourceType(1);
+                                                                fieldDtoTree.setSourceId(Integer.parseInt(id));
                                                                 return fieldDtoTree;
                                                             }).collect(Collectors.toList());
 
@@ -1061,6 +1063,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     tableDtoTree.setLabel(table.tableName);
                                                     tableDtoTree.setLabelAlias(table.tableName);
                                                     tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
+                                                    tableDtoTree.setSourceType(1);
+                                                    tableDtoTree.setSourceId(Integer.parseInt(id));
                                                     if (table.publish == null) {
                                                         tableDtoTree.setPublishState("0");
                                                         table.publish = 0;
@@ -1087,7 +1091,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                                 fieldDtoTree.setLabelLength(String.valueOf(field.fieldLength));
                                                                 fieldDtoTree.setLabelType(field.fieldType);
                                                                 fieldDtoTree.setLabelDesc(field.fieldDes);
-
+                                                                fieldDtoTree.setSourceType(1);
+                                                                fieldDtoTree.setSourceId(Integer.parseInt(id));
                                                                 return fieldDtoTree;
                                                             }).collect(Collectors.toList());
 
@@ -1123,6 +1128,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                         tableDtoTree.setLabel(table.tableName);
                                         tableDtoTree.setLabelAlias(table.tableName);
                                         tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
+                                        tableDtoTree.setSourceType(1);
+                                        tableDtoTree.setSourceId(Integer.parseInt(id));
                                         if (table.publish == null) {
                                             tableDtoTree.setPublishState("0");
                                             table.publish = 0;
@@ -1149,7 +1156,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     fieldDtoTree.setLabelLength(String.valueOf(field.fieldLength));
                                                     fieldDtoTree.setLabelType(field.fieldType);
                                                     fieldDtoTree.setLabelDesc(field.fieldDes);
-
+                                                    fieldDtoTree.setSourceType(1);
+                                                    fieldDtoTree.setSourceId(Integer.parseInt(id));
                                                     return fieldDtoTree;
                                                 }).collect(Collectors.toList());
 
