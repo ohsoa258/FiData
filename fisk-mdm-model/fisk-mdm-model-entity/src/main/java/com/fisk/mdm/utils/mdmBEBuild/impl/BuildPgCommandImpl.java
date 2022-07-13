@@ -115,6 +115,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
                     switch (e.getDataType()) {
                         case "文件":
                         case "经纬度坐标":
+                            str1 = name + " VARCHAR(" + "50" + ")" + required;
                         case "数值":
                         case "域字段":
                             str1 = name + " int4 " + required;
@@ -185,6 +186,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
                     switch (e.getDataType()) {
                         case "文件":
                         case "经纬度坐标":
+                            str1 = name + " VARCHAR(" + "50" + ")" + required;
                         case "数值":
                         case "域字段":
                             str1 = name + " int4 " + required;
