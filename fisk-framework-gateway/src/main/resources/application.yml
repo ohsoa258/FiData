@@ -162,3 +162,7 @@ fk:
   auth:
     clientId: api-gateway
     secret: 1234
+  encoder:
+    crypt:
+      secret: ${random.uuid}
+      strength: 6
