@@ -1,9 +1,7 @@
 package com.fisk.datamanagement.service;
 
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.datamanagement.dto.classification.ClassificationTreeDTO;
-
-import java.util.List;
+import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
 
 /**
  * @author JianWenYang
@@ -34,6 +32,6 @@ public interface IGlobalSearch {
      * @param keyword
      * @return
      */
-    List<ClassificationTreeDTO> searchClassification(String keyword);
+    ClassificationDefsDTO searchClassification(String keyword);
 
 }

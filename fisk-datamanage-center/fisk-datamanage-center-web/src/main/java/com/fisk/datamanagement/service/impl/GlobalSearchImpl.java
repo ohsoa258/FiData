@@ -4,18 +4,16 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.datamanagement.dto.classification.ClassificationTreeDTO;
+import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.service.IGlobalSearch;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.Iterator;
-import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -54,37 +52,12 @@ public class GlobalSearchImpl implements IGlobalSearch {
     }
 
     @Override
-    public List<ClassificationTreeDTO> searchClassification(String keyword) {
-        List<ClassificationTreeDTO> classificationTree = classification.getClassificationTree();
-        filterClassificationTree(classificationTree, keyword);
-        return classificationTree;
-    }
-
-    /**
-     * 模糊查询tree
-     *
-     * @param classificationList
-     * @param keyword
-     */
-    public void filterClassificationTree(List<ClassificationTreeDTO> classificationList, String keyword) {
-        Iterator<ClassificationTreeDTO> iter = classificationList.iterator();
-        while (iter.hasNext()) {
-            // 获取当前遍历到的目录
-            ClassificationTreeDTO classification = iter.next();
-            // 如果当前目录名称包含关键字，则什么也不做（不移除），否则就看下一级
-            if (!classification.getName().contains(keyword)) {
-                // 取出下一级目录集合
-                List<ClassificationTreeDTO> childrenCategoryList = classification.getChild();
-                // 递归
-                if (!CollectionUtils.isEmpty(childrenCategoryList)) {
-                    filterClassificationTree(childrenCategoryList, keyword);
-                }
-                // 下一级目录看完了，如果下一级目录全部被移除，则移除当前目录
-                if (CollectionUtils.isEmpty(classification.getChild())) {
-                    iter.remove();
-                }
-            }
-        }
+    public ClassificationDefsDTO searchClassification(String keyword) {
+        ClassificationDefsDTO classificationList = classification.getClassificationList();
+        classificationList.classificationDefs = classificationList.classificationDefs
+                .stream()
+                .filter(e -> e.name.contains(keyword)).collect(Collectors.toList());
+        return classificationList;
     }
 
 }
