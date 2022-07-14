@@ -132,7 +132,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         ModelVersionDTO modelVersionDTO = new ModelVersionDTO();
         modelVersionDTO.setModelId((int)modelPO.getId());
         modelVersionDTO.setName("VERSION1");
-        modelVersionDTO.setDesc("新增模型生成的默认版本");
+        modelVersionDTO.setDesc("默认版本");
         modelVersionDTO.setStatus(ModelVersionStatusEnum.OPEN.getValue());
         modelVersionDTO.setType(ModelVersionTypeEnum.SYSTEM_CREAT.getValue());
         ModelVersionPO modelVersionPO = ModelVersionMap.INSTANCES.dtoToPo(modelVersionDTO);
