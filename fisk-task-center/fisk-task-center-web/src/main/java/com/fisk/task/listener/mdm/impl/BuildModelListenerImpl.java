@@ -427,10 +427,12 @@ public class BuildModelListenerImpl implements BuildModelListener {
         if (dataType != null) {
             String filedType = null;
             switch (dataType) {
-                case "域字段":
-                case "数值":
                 case "文件":
                 case "经纬度坐标":
+                    filedType = "VARCHAR ( " + "50" + " )";
+                    break;
+                case "域字段":
+                case "数值":
                     filedType = "int4";
                     break;
                 case "时间":
