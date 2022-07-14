@@ -1,14 +1,16 @@
-package com.fisk.mdm.vo.complextype;
+package com.fisk.mdm.dto.complextype;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 /**
- * @author JianWenYang
+ * @Author WangYan
+ * @Date 2022/7/14 16:05
+ * @Version 1.0
  */
 @Data
-public class GeographyVO {
+public class GeographyDataDTO {
 
     /**
      * 唯一编码
@@ -18,25 +20,20 @@ public class GeographyVO {
     /**
      * 经度
      */
-    private String lng;
+    private BigDecimal lng;
 
     /**
      * 维度
      */
-    private String lat;
+    private BigDecimal lat;
 
     /**
      * 地图类型：0:高德类型，1:百度类型
      */
     private Integer map_type;
 
-    private LocalDateTime create_time;
-
-    private Long create_user;
-
     /**
      * 版本id
      */
     private Integer fidata_version_id;
-
 }

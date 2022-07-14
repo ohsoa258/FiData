@@ -6,6 +6,8 @@ import com.fisk.mdm.vo.complextype.EchoFileVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  * @author JianWenYang
@@ -20,6 +22,14 @@ public interface IComplexType {
      * @return
      */
     Integer addGeography(GeographyDTO dto);
+
+    /**
+     * 添加经纬度
+     * @param dto
+     * @param connection
+     * @throws SQLException
+     */
+    void addGeography(GeographyDTO dto, Connection connection) throws SQLException;
 
     /**
      * 上传文件

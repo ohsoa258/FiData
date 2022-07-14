@@ -9,12 +9,14 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.complextype.GeographyDTO;
+import com.fisk.mdm.dto.complextype.GeographyDataDTO;
 import com.fisk.mdm.dto.modelVersion.ModelCopyDTO;
 import com.fisk.mdm.dto.modelVersion.ModelVersionDTO;
 import com.fisk.mdm.dto.modelVersion.ModelVersionUpdateDTO;
 import com.fisk.mdm.entity.ModelVersionPO;
 import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.enums.ModelVersionStatusEnum;
+import com.fisk.mdm.map.ComplexTypeMap;
 import com.fisk.mdm.map.ModelVersionMap;
 import com.fisk.mdm.mapper.ModelVersionMapper;
 import com.fisk.mdm.service.EntityService;
@@ -39,12 +41,13 @@ import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.closeConnection;
-import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.execQueryResultList;
+import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.*;
 import static com.fisk.mdm.utlis.DataSynchronizationUtils.MARK;
 import static com.fisk.mdm.utlis.FileConvertUtils.createFileItem;
 
@@ -175,44 +178,66 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
         List<EntityVO> list = modelInfoVo.getEntityVOList();
         if (CollectionUtils.isNotEmpty(list)){
 
-            list.stream().forEach(e -> {
+            Connection connection = null;
+            try{
+                for (EntityVO entity : list) {
+                    if (StringUtils.isNotBlank(entity.getTableName())){
 
-                if (StringUtils.isNotBlank(e.getTableName())){
+                        // 创建连接对象
+                        AbstractDbHelper dbHelper = new AbstractDbHelper();
+                        connection = dbHelper.connection(connectionStr, acc,
+                                pwd,type);
 
-                    // 创建连接对象
-                    AbstractDbHelper dbHelper = new AbstractDbHelper();
-                    Connection connection = dbHelper.connection(connectionStr, acc,
-                            pwd,type);
+                        // a.开启事务
+                        connection.getAutoCommit();
+                        connection.setAutoCommit(false);
 
-                    // 1.复制数据
-                    this.entityDataCopy(dbHelper,connection,e,(int)versionPo.getId(),dto.getId());
+                        // 1.复制数据
+                        this.entityDataCopy(connection,entity,(int)versionPo.getId(),dto.getId());
 
-                    // 2.复制复杂类型数据
-                    List<AttributeInfoDTO> attributeList = entityService.getAttributeById(e.getId(), null).getAttributeList();
+                        // 2.复制复杂类型数据
+                        List<AttributeInfoDTO> attributeList = entityService.getAttributeById(entity.getId(), null).getAttributeList();
 
-                    List<AttributeInfoDTO> longitudeList = attributeList.stream().filter(item -> item.getDataType().equals(DataTypeEnum.LATITUDE_COORDINATE)).collect(Collectors.toList());
-                    List<AttributeInfoDTO> fileList = attributeList.stream().filter(item -> item.getDataType().equals(DataTypeEnum.FILE)).collect(Collectors.toList());
+                        List<AttributeInfoDTO> longitudeList = attributeList.stream().filter(item -> item.getDataType().equals(DataTypeEnum.LATITUDE_COORDINATE.getName())).collect(Collectors.toList());
+                        List<AttributeInfoDTO> fileList = attributeList.stream().filter(item -> item.getDataType().equals(DataTypeEnum.FILE.getName())).collect(Collectors.toList());
 
-                    // 3.查询复杂类型的code
-                    if (CollectionUtils.isNotEmpty(longitudeList)){
-                        // 经纬度类型
-                        String field = longitudeList.stream().map(iter -> iter.getColumnName()).collect(Collectors.joining(","));
-                        String sql = "SELECT " + field + " FROM " + e.getTableName() + " WHERE fidata_version_id = '" + dto.getId() + "'";
-                        // 需要复制数据得code
-                        List<String> codes = execQueryResultList(sql, connection, String.class);
-                        this.copyLatitude(codes,(int)versionPo.getId(),connection,DataTypeEnum.LATITUDE_COORDINATE);
-                    }
+                        // 3.查询复杂类型的code
+                        if (CollectionUtils.isNotEmpty(longitudeList)){
+                            // 经纬度类型
+                            String field = longitudeList.stream().map(iter -> iter.getColumnName()).collect(Collectors.joining(","));
+                            String sql = "SELECT " + field + " FROM " + entity.getTableName() + " WHERE fidata_version_id = '" + dto.getId() + "'";
+                           
+                            // 需要复制数据得code
+                            List<Map<String, Object>> list1 = execQueryResultMaps(sql, connection);
+                            List<String> codes = list1.stream().map(e -> {
+                                for (AttributeInfoDTO info : longitudeList) {
+                                    return e.get(info.getColumnName()).toString();
+                                }
+                                return null;
+                            }).collect(Collectors.toList());
+                            this.copyLatitude(codes,(int)versionPo.getId(),dto.getId(),connection,DataTypeEnum.LATITUDE_COORDINATE);
+                        }
 
-                    if (CollectionUtils.isNotEmpty(fileList)){
-                        // 文件类型
-                        String field = fileList.stream().map(iter -> iter.getColumnName()).collect(Collectors.joining(","));
-                        String sql = "SELECT " + field + " FROM " + e.getTableName() + " WHERE fidata_version_id = '" + dto.getId() + "'";
-                        // 需要复制数据得code
-                        List<String> codes = execQueryResultList(sql, connection, String.class);
-                        this.copyLatitude(codes,(int)versionPo.getId(),connection,DataTypeEnum.FILE);
+                        if (CollectionUtils.isNotEmpty(fileList)){
+                            // 文件类型
+                            String field = fileList.stream().map(iter -> iter.getColumnName()).collect(Collectors.joining(","));
+                            String sql = "SELECT " + field + " FROM " + entity.getTableName() + " WHERE fidata_version_id = '" + dto.getId() + "'";
+                            // 需要复制数据得code
+                            List<String> codes = execQueryResultList(sql, connection, String.class);
+                            this.copyLatitude(codes,(int)versionPo.getId(),dto.getId(),connection,DataTypeEnum.FILE);
+                        }
+
+                        // e.提交事务
+                        connection.commit();
                     }
                 }
-            });
+            }catch (Exception ex){
+                // a.回滚事务
+                rollbackConnection(connection);
+            }finally {
+                // 关闭数据库连接
+                closeConnection(connection);
+            }
         }
 
         return ResultEnum.SUCCESS;
@@ -224,8 +249,8 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
      * @param newVersionId
      * @param oldVersionId
      */
-    public void entityDataCopy(AbstractDbHelper dbHelper,Connection connection,
-                               EntityVO entityVo,Integer newVersionId,Integer oldVersionId){
+    public void entityDataCopy(Connection connection, EntityVO entityVo,
+                               Integer newVersionId,Integer oldVersionId){
 
         String sql = null;
         try {
@@ -233,13 +258,11 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
             sql = this.buildDataCopySql(entityVo, newVersionId,oldVersionId);
 
             // 2.执行Sql
-            dbHelper.executeSql(sql, connection);
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.execute();
         }catch (SQLException ex){
             log.error("【版本复制数据Sql】:" + sql + "【版本复制数据失败,异常信息】:" + ex);
             throw new FkException(ResultEnum.DATA_REPLICATION_FAILED);
-        }finally {
-            // 关闭数据库连接
-            closeConnection(connection);
         }
     }
 
@@ -301,32 +324,35 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
      * 复制复杂数据类型
      * @param codes
      * @param newVersionId
+     * @param oldVersionId
      * @param connection
      * @param type
      * @return
+     * @throws SQLException
      */
-    public ResultEnum copyLatitude(List<String> codes,Integer newVersionId, Connection connection,
-                               DataTypeEnum type){
+    public ResultEnum copyLatitude(List<String> codes,Integer newVersionId,Integer oldVersionId,
+                                   Connection connection, DataTypeEnum type) throws SQLException {
 
         String code = codes.stream().map(e -> "'" + e + "'").collect(Collectors.joining(","));
 
         // 经纬度类型
         if (type.equals(DataTypeEnum.LATITUDE_COORDINATE)){
             // 1.查询数据
-            String sql = "SELECT * FROM " + "tb_geography" + " WHERE IN(" + code +")";
-            List<GeographyDTO> list = execQueryResultList(sql, connection, GeographyDTO.class);
+            String sql = "SELECT * FROM " + "tb_geography" + " WHERE code IN(" + code +")" + " AND fidata_version_id = '"+ oldVersionId +"'";
+            List<GeographyDataDTO> list = execQueryResultList(sql, connection, GeographyDataDTO.class);
+            List<GeographyDTO> dtoList = ComplexTypeMap.INSTANCES.dataToDto(list);
 
             // 2.结果集转换
-            list.stream().forEach(e -> {
-                e.setVersionId(newVersionId);
-                iComplexType.addGeography(e);
-            });
+            for (GeographyDTO dto : dtoList) {
+                dto.setVersionId(newVersionId);
+                iComplexType.addGeography(dto,connection);
+            }
         }
 
         // 文件类型
         if (type.equals(DataTypeEnum.FILE)){
             // 1.查询数据
-            String sql = "SELECT * FROM " + "tb_file" + " WHERE code IN(" + code +")";
+            String sql = "SELECT * FROM " + "tb_file" + " WHERE code IN(" + code +")" + " AND fidata_version_id = '"+ oldVersionId +"'";
             List<EchoFileVO> list = execQueryResultList(sql, connection, EchoFileVO.class);
 
             // 2.结果集转换

@@ -10,6 +10,11 @@ import lombok.Data;
 public class GeographyDTO {
 
     /**
+     * 唯一编码
+     */
+    private String code;
+
+    /**
      * 经度
      */
     private String lng;

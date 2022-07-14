@@ -25,6 +25,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -61,6 +63,17 @@ public class ComplexTypeServiceImpl implements IComplexType {
         IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
         String sql = buildSqlCommand.buildInsertSingleData(CommonMethods.beanToMap(geographyVO), "tb_geography");
         return AbstractDbHelper.executeSqlReturnKey(sql, getConnection());
+    }
+
+    @Override
+    public void addGeography(GeographyDTO dto, Connection connection) throws SQLException {
+        GeographyVO geographyVO = ComplexTypeMap.INSTANCES.dtoToVo(dto);
+        geographyVO.setCreate_user(userHelper.getLoginUserInfo().id);
+        geographyVO.setCreate_time(LocalDateTime.now());
+        IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
+        String sql = buildSqlCommand.buildInsertSingleData(CommonMethods.beanToMap(geographyVO), "tb_geography");
+        PreparedStatement statement = connection.prepareStatement(sql);
+        statement.execute();
     }
 
     @Override
