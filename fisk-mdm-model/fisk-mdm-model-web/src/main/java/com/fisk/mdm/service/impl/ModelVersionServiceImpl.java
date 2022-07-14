@@ -43,6 +43,7 @@ import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -209,12 +210,12 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
                            
                             // 需要复制数据得code
                             List<Map<String, Object>> list1 = execQueryResultMaps(sql, connection);
-                            List<String> codes = list1.stream().map(e -> {
-                                for (AttributeInfoDTO info : longitudeList) {
-                                    return e.get(info.getColumnName()).toString();
-                                }
-                                return null;
-                            }).collect(Collectors.toList());
+                            List<String> codes = new ArrayList<>();
+                            longitudeList.stream().forEach(e -> {
+                                list1.stream().forEach(iter -> {
+                                    codes.add(iter.get(e.getColumnName()).toString());
+                                });
+                            });
                             this.copyLatitude(codes,(int)versionPo.getId(),dto.getId(),connection,DataTypeEnum.LATITUDE_COORDINATE);
                         }
 
