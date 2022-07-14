@@ -1404,7 +1404,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // dto -> po
         TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
 
-        return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+        return this.saveOrUpdate(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
 //        return ResultEnum.SUCCESS;
     }
 
