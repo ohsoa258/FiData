@@ -682,6 +682,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         EntityQueryDTO dto = new EntityQueryDTO();
         dto.setId(entityInfoVo.getId());
         dto.setName(entityInfoVo.getName());
+        dto.setDisplayName(entityInfoVo.getDisplayName());
         dto.setType(ObjectTypeEnum.ENTITY.getName());
 
         // 属性信息
