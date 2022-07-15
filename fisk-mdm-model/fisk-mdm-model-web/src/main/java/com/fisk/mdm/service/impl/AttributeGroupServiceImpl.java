@@ -9,22 +9,24 @@ import com.fisk.mdm.dto.attributeGroup.*;
 import com.fisk.mdm.entity.AttributeGroupDetailsPO;
 import com.fisk.mdm.entity.AttributeGroupPO;
 import com.fisk.mdm.entity.EntityPO;
-import com.fisk.mdm.entity.ViwGroupPO;
 import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.AttributeGroupMap;
+import com.fisk.mdm.map.EntityMap;
 import com.fisk.mdm.mapper.AttributeGroupDetailsMapper;
 import com.fisk.mdm.mapper.AttributeGroupMapper;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.service.AttributeGroupService;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EntityService;
+import com.fisk.mdm.service.IModelService;
 import com.fisk.mdm.utlis.TypeConversionUtils;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupDropDownVO;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupVO;
 import com.fisk.mdm.vo.attributeGroup.QueryAttributeGroupVO;
 import com.fisk.mdm.vo.entity.EntityVO;
+import com.fisk.mdm.vo.entity.EntityViewVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
@@ -59,6 +61,8 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
     EntityMapper entityMapper;
     @Resource
     EntityService entityService;
+    @Resource
+    IModelService modelService;
 
     @Override
     public AttributeGroupVO getDataByGroupId(Integer id) {
@@ -279,27 +283,33 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
     }
 
     @Override
-    public List<AttributeInfoDTO> getAttributeExists(AttributeInfoQueryDTO dto) {
+    public List<EntityViewVO> getAttributeExists(AttributeInfoQueryDTO dto) {
         TypeConversionUtils typeConversionUtils = new TypeConversionUtils();
-        // 查询数据
-        List<AttributeInfoDTO> attributeExists = groupMapper.getAttributeExists(dto.getGroupId(), dto.getEntityId());
-        // 枚举转换
-        attributeExists.stream().forEach(e -> {
-            DataTypeEnum typeEnum = typeConversionUtils.intToDataTypeEnum(Integer.parseInt(e.getDataType()));
-            e.setDataType(typeEnum.getName());
 
-            // 域字段的名称
-            if (StringUtils.isNotBlank(e.getDomainName())){
-                AttributeVO data = attributeService.getById(Integer.parseInt(e.getDomainName())).getData();
-                EntityVO entityVo = entityService.getDataById(data.getEntityId());
-                if (entityVo != null){
-                    e.setDomainName(entityVo.getName());
+        List<EntityVO> entityVoList = modelService.getEntityById(dto.getModelId(), null).getEntityVOList();
+
+        return entityVoList.stream().map(iter -> {
+            EntityViewVO viewVo = EntityMap.INSTANCES.viewToVo(iter);
+
+            // 查询数据
+            List<AttributeInfoDTO> attributeExists = groupMapper.getAttributeExists(dto.getGroupId(), iter.getId());
+            // 枚举转换
+            attributeExists.stream().forEach(e -> {
+                DataTypeEnum typeEnum = typeConversionUtils.intToDataTypeEnum(Integer.parseInt(e.getDataType()));
+                e.setDataType(typeEnum.getName());
+
+                // 域字段的名称
+                if (StringUtils.isNotBlank(e.getDomainName())){
+                    AttributeVO data = attributeService.getById(Integer.parseInt(e.getDomainName())).getData();
+                    EntityVO entityVo = entityService.getDataById(data.getEntityId());
+                    if (entityVo != null){
+                        e.setDomainName(entityVo.getName());
+                    }
                 }
-            }
-        });
-
-
-        return attributeExists;
+            });
+            viewVo.setAttributeList(attributeExists);
+            return viewVo;
+        }).collect(Collectors.toList());
     }
 
     /**

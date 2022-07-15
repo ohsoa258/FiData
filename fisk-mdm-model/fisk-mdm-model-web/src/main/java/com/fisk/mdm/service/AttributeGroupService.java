@@ -4,6 +4,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.attributeGroup.*;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupVO;
 import com.fisk.mdm.vo.attributeGroup.QueryAttributeGroupVO;
+import com.fisk.mdm.vo.entity.EntityViewVO;
 
 import java.util.List;
 
@@ -82,5 +83,5 @@ public interface AttributeGroupService {
      * @param dto
      * @return
      */
-    List<AttributeInfoDTO> getAttributeExists(AttributeInfoQueryDTO dto);
+    List<EntityViewVO> getAttributeExists(AttributeInfoQueryDTO dto);
 }
