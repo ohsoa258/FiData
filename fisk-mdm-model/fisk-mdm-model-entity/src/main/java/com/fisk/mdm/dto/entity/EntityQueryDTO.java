@@ -30,6 +30,10 @@ public class EntityQueryDTO {
      * 是否选中 0:未选中 1:选中
      */
     private Integer isCheck;
+    /**
+     * 是否选中 0:是 1:不是
+     */
+    private Integer isMainEntity;
     private List<EntityQueryDTO> children;
 
     public EntityQueryDTO(Integer id, String name, String type) {

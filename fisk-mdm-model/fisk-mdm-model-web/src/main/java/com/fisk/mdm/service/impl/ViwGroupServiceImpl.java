@@ -82,6 +82,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     UserClient userClient;
 
     public static final String ALIAS_MARK = "a";
+    public static int count = 0;
 
     @Override
     public List<ViwGroupVO> getDataByGroupId(Integer id) {
@@ -694,6 +695,11 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         dto.setName(entityInfoVo.getName());
         dto.setDisplayName(entityInfoVo.getDisplayName());
         dto.setType(ObjectTypeEnum.ENTITY.getName());
+        if (++count == 1){
+            dto.setIsMainEntity(0);
+        }else {
+            dto.setIsMainEntity(1);
+        }
 
         // 属性信息
         List<AttributeInfoDTO> attributeList = entityInfoVo.getAttributeList();
