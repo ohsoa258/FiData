@@ -949,7 +949,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
             if (StringUtils.isEmpty(mapData.get("code") == null ? "" : mapData.get("code").toString())) {
                 //code生成规则
                 IBuildCodeCommand buildCodeCommand = BuildCodeHelper.getCodeCommand();
-                mapData.put("code", buildCodeCommand.createCode());
+                String code = buildCodeCommand.createCode();
+                mapData.put("code", code);
+                dto.getMembers().put("code", code);
             } else {
                 //获取code列名
                 String columnName = getEntityCodeName(dto.getEntityId());
