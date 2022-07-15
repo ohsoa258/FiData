@@ -116,7 +116,9 @@ public class ComplexTypeServiceImpl implements IComplexType {
         data.setCreate_user(userHelper.getLoginUserInfo().id);
         data.setCreate_time(LocalDateTime.now());
         IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
-        String sql = buildSqlCommand.buildInsertSingleData(CommonMethods.beanToMap(data), "tb_file");
+        Map map = CommonMethods.beanToMap(data);
+        map.remove("file_type");
+        String sql = buildSqlCommand.buildInsertSingleData(map, "tb_file");
         return AbstractDbHelper.executeSqlReturnKey(sql, getConnection());
     }
 
