@@ -20,4 +20,6 @@ public class FileVO {
 
     private Integer fidata_version_id;
 
+    private Integer file_type;
+
 }

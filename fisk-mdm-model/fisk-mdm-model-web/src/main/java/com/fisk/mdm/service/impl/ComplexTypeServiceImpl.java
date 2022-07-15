@@ -10,6 +10,7 @@ import com.fisk.common.service.mdmBEBuild.CommonMethods;
 import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.mdm.dto.complextype.ComplexTypeDetailsParameterDTO;
 import com.fisk.mdm.dto.complextype.GeographyDTO;
+import com.fisk.mdm.enums.FileTypeEnum;
 import com.fisk.mdm.map.ComplexTypeMap;
 import com.fisk.mdm.service.IComplexType;
 import com.fisk.mdm.vo.complextype.EchoFileVO;
@@ -120,7 +121,7 @@ public class ComplexTypeServiceImpl implements IComplexType {
     }
 
     @Override
-    public Object getComplexTypeDetails(ComplexTypeDetailsParameterDTO dto, HttpServletResponse response) {
+    public Object getComplexTypeDetails(ComplexTypeDetailsParameterDTO dto) {
         String tableName;
         switch (dto.getDataTypeEnum()) {
             case LATITUDE_COORDINATE:
@@ -145,8 +146,11 @@ public class ComplexTypeServiceImpl implements IComplexType {
                 file.setFile_path(resultMaps.get(0).get("file_path").toString());
                 file.setFile_name(resultMaps.get(0).get("file_name").toString());
                 String[] file_names = file.getFile_name().split("\\.");
-                if (!"JPEG".equals(file_names[1].toUpperCase()) && !"PNG".equals(file_names[1].toUpperCase())) {
-                    return download(file.getFile_path(), response);
+                file.setFile_type(FileTypeEnum.FILE.getValue());
+                if (!"JPEG".equals(file_names[1].toUpperCase())
+                        && !"JPG".equals(file_names[1].toUpperCase())
+                        && !"PNG".equals(file_names[1].toUpperCase())) {
+                    file.setFile_type(FileTypeEnum.FILE_IMAGE.getValue());
                 }
                 data = file;
                 break;
@@ -171,8 +175,6 @@ public class ComplexTypeServiceImpl implements IComplexType {
             File file = new File(newPath);
             // 取得文件名。
             String filename = file.getName();
-            // 取得文件的后缀名。
-            ////String ext = filename.substring(filename.lastIndexOf(".") + 1).toUpperCase();
             // 以流的形式下载文件。
             InputStream fis = new BufferedInputStream(new FileInputStream(newPath));
             byte[] buffer = new byte[fis.available()];

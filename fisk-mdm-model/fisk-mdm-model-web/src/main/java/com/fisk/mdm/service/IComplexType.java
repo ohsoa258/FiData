@@ -5,7 +5,6 @@ import com.fisk.mdm.dto.complextype.GeographyDTO;
 import com.fisk.mdm.vo.complextype.EchoFileVO;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletResponse;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -44,9 +43,8 @@ public interface IComplexType {
      * 获取复杂类型数据详情
      *
      * @param dto
-     * @param response
      * @return
      */
-    Object getComplexTypeDetails(ComplexTypeDetailsParameterDTO dto, HttpServletResponse response);
+    Object getComplexTypeDetails(ComplexTypeDetailsParameterDTO dto);
 
 }
