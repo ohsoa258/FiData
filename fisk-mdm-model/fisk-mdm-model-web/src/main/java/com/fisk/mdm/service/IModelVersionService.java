@@ -49,4 +49,11 @@ public interface IModelVersionService extends IService<ModelVersionPO> {
      * @return
      */
     ResultEnum copyDataByModelId(ModelCopyDTO dto);
+
+    /**
+     * 判断模型下是否存在未发布的实体
+     * @param modelId
+     * @return true : 不存在   false:存在
+     */
+    Boolean getNotReleaseData(Integer modelId);
 }

@@ -13,11 +13,14 @@ import com.fisk.mdm.dto.complextype.GeographyDataDTO;
 import com.fisk.mdm.dto.modelVersion.ModelCopyDTO;
 import com.fisk.mdm.dto.modelVersion.ModelVersionDTO;
 import com.fisk.mdm.dto.modelVersion.ModelVersionUpdateDTO;
+import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.entity.ModelVersionPO;
 import com.fisk.mdm.enums.DataTypeEnum;
+import com.fisk.mdm.enums.MdmStatusTypeEnum;
 import com.fisk.mdm.enums.ModelVersionStatusEnum;
 import com.fisk.mdm.map.ComplexTypeMap;
 import com.fisk.mdm.map.ModelVersionMap;
+import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.mapper.ModelVersionMapper;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.IComplexType;
@@ -79,6 +82,8 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
     UserClient userClient;
     @Resource
     IComplexType iComplexType;
+    @Resource
+    EntityMapper entityMapper;
 
 
     /**
@@ -250,6 +255,25 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
         }
 
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public Boolean getNotReleaseData(Integer modelId) {
+        if (modelId == null){
+            return null;
+        }
+
+        QueryWrapper<EntityPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(EntityPO::getModelId,modelId)
+                .ne(EntityPO::getStatus, MdmStatusTypeEnum.CREATED_SUCCESSFULLY)
+                .last(" limit 1 ");
+        EntityPO entityPo = entityMapper.selectOne(queryWrapper);
+        if (entityPo != null){
+            return false;
+        }
+
+        return true;
     }
 
     /**

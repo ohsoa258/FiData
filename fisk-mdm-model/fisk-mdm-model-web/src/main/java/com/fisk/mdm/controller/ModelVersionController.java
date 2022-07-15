@@ -60,4 +60,10 @@ public class ModelVersionController {
     public ResultEntity<ResultEnum> copyDataByModelId(@RequestBody ModelCopyDTO dto){
         return ResultEntityBuild.build(service.copyDataByModelId(dto));
     }
+
+    @ApiOperation("模型下是否存在未发布的实体")
+    @GetMapping("/getNotReleaseData")
+    public ResultEntity<Boolean> getNotReleaseData(Integer id){
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getNotReleaseData(id));
+    }
 }
