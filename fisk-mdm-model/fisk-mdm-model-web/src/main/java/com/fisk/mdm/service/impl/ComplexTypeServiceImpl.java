@@ -146,11 +146,11 @@ public class ComplexTypeServiceImpl implements IComplexType {
                 file.setFile_path(resultMaps.get(0).get("file_path").toString());
                 file.setFile_name(resultMaps.get(0).get("file_name").toString());
                 String[] file_names = file.getFile_name().split("\\.");
-                file.setFile_type(FileTypeEnum.FILE.getValue());
+                file.setFile_type(FileTypeEnum.FILE_IMAGE.getValue());
                 if (!"JPEG".equals(file_names[1].toUpperCase())
                         && !"JPG".equals(file_names[1].toUpperCase())
                         && !"PNG".equals(file_names[1].toUpperCase())) {
-                    file.setFile_type(FileTypeEnum.FILE_IMAGE.getValue());
+                    file.setFile_type(FileTypeEnum.FILE.getValue());
                 }
                 data = file;
                 break;
