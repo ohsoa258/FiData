@@ -12,6 +12,7 @@ import com.fisk.common.service.mdmBEBuild.dto.MasterDataPageDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.masterdata.MasterDataDTO;
 import com.fisk.mdm.dto.masterdatalog.MasterDataLogQueryDTO;
+import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.enums.EventTypeEnum;
 import com.fisk.mdm.map.AttributeMap;
 import com.fisk.mdm.service.IMasterDataLog;
@@ -101,6 +102,11 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
             throw new FkException(ResultEnum.ATTRIBUTE_NOT_EXIST);
         }
         List<AttributeColumnVO> attributeColumnVoList = AttributeMap.INSTANCES.dtoListToVoList(attributeInfos);
+        //数据类型英文名称赋值
+        attributeColumnVoList
+                .stream()
+                .map(e -> e.dataTypeEnDisplay = DataTypeEnum.getValue(e.getDataType()).name())
+                .collect(Collectors.toList());
         AttributeColumnVO attributeColumn = new AttributeColumnVO();
         attributeColumn.setName("fidata_new_code");
         attributeColumn.setDisplayName("新编码");
