@@ -4,6 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
+import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityQueryDTO;
 import com.fisk.mdm.dto.viwGroup.*;
 import com.fisk.mdm.service.ViwGroupService;
@@ -97,5 +98,12 @@ public class ViwGroupController {
     @ResponseBody
     public ResultEntity<List<EntityQueryDTO>> getRelationDataById(@RequestBody ViwGroupQueryDTO dto) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,viwGroupService.getRelationDataById(dto));
+    }
+
+    @ApiOperation("获取已经发布得实体(根据模型id)")
+    @GetMapping("/getReleaseData")
+    @ResponseBody
+    public ResultEntity<List<EntityDTO>> getReleaseData(Integer modelId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,viwGroupService.getReleaseData(modelId));
     }
 }

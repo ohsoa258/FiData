@@ -1,6 +1,7 @@
 package com.fisk.mdm.service;
 
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityQueryDTO;
 import com.fisk.mdm.dto.viwGroup.*;
 import com.fisk.mdm.vo.viwGroup.ViwGroupVO;
@@ -83,4 +84,11 @@ public interface ViwGroupService {
      * @return
      */
     List<EntityQueryDTO> getRelationDataById(ViwGroupQueryDTO dto);
+
+    /**
+     * 获取已经发布得实体
+     * @param modelId
+     * @return
+     */
+    List<EntityDTO> getReleaseData(Integer modelId);
 }

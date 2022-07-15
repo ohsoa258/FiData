@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
+import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityQueryDTO;
 import com.fisk.mdm.dto.viwGroup.*;
 import com.fisk.mdm.entity.*;
@@ -435,6 +436,15 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             list.add(attributeInfo);
             return list;
         }
+    }
+
+    @Override
+    public List<EntityDTO> getReleaseData(Integer modelId) {
+        if (modelId == null){
+            return null;
+        }
+
+        return viwGroupMapper.getReleaseData(modelId);
     }
 
     /**
