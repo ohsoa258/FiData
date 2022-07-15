@@ -260,6 +260,10 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (viwGroupVO == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
+        //判断视图下是否有属性
+        if (CollectionUtils.isEmpty(viwGroupVO.getGroupDetailsList())) {
+            throw new FkException(ResultEnum.VIEW_NO_EXIST_ATTRIBUTE);
+        }
         List<Integer> attributeIds = viwGroupVO.getGroupDetailsList().stream()
                 .map(e -> e.getAttributeId()).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(attributeIds)) {
