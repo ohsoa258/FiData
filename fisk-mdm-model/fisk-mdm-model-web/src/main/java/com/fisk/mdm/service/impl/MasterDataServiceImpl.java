@@ -946,7 +946,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             }
             mapData.put("fidata_status", SyncStatusTypeEnum.UPLOADED_SUCCESSFULLY.getValue());
             mapData.put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
-            if (StringUtils.isEmpty(mapData.get("code").toString())) {
+            if (mapData.get("code") == null) {
                 //code生成规则
                 IBuildCodeCommand buildCodeCommand = BuildCodeHelper.getCodeCommand();
                 mapData.put("code", buildCodeCommand.createCode());
