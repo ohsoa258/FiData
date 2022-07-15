@@ -23,6 +23,7 @@ import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.IComplexType;
 import com.fisk.mdm.service.IModelService;
 import com.fisk.mdm.service.IModelVersionService;
+import com.fisk.mdm.vo.complextype.EchoFileDataVO;
 import com.fisk.mdm.vo.complextype.EchoFileVO;
 import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.model.ModelInfoVO;
@@ -223,8 +224,15 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
                             // 文件类型
                             String field = fileList.stream().map(iter -> iter.getColumnName()).collect(Collectors.joining(","));
                             String sql = "SELECT " + field + " FROM " + entity.getTableName() + " WHERE fidata_version_id = '" + dto.getId() + "'";
+
                             // 需要复制数据得code
-                            List<String> codes = execQueryResultList(sql, connection, String.class);
+                            List<Map<String, Object>> list1 = execQueryResultMaps(sql, connection);
+                            List<String> codes = new ArrayList<>();
+                            longitudeList.stream().forEach(e -> {
+                                list1.stream().forEach(iter -> {
+                                    codes.add(iter.get(e.getColumnName()).toString());
+                                });
+                            });
                             this.copyLatitude(codes,(int)versionPo.getId(),dto.getId(),connection,DataTypeEnum.FILE);
                         }
 
@@ -354,10 +362,11 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
         if (type.equals(DataTypeEnum.FILE)){
             // 1.查询数据
             String sql = "SELECT * FROM " + "tb_file" + " WHERE code IN(" + code +")" + " AND fidata_version_id = '"+ oldVersionId +"'";
-            List<EchoFileVO> list = execQueryResultList(sql, connection, EchoFileVO.class);
+            List<EchoFileDataVO> list = execQueryResultList(sql, connection, EchoFileDataVO.class);
+            List<EchoFileVO> dtoList = ComplexTypeMap.INSTANCES.fileToVo(list);
 
             // 2.结果集转换
-            list.forEach(e -> {
+            dtoList.forEach(e -> {
                 FileItem fileItem = createFileItem(e.getFilePath());
                 MultipartFile file = new CommonsMultipartFile(fileItem);
                 iComplexType.uploadFile(newVersionId,file).getId();

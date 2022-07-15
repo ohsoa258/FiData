@@ -2,6 +2,8 @@ package com.fisk.mdm.map;
 
 import com.fisk.mdm.dto.complextype.GeographyDTO;
 import com.fisk.mdm.dto.complextype.GeographyDataDTO;
+import com.fisk.mdm.vo.complextype.EchoFileDataVO;
+import com.fisk.mdm.vo.complextype.EchoFileVO;
 import com.fisk.mdm.vo.complextype.GeographyVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -49,4 +51,21 @@ public interface ComplexTypeMap {
      * @return
      */
     List<GeographyDTO> dataToDto(List<GeographyDataDTO> list);
+
+    /**
+     * dto => vo
+     * @param list
+     * @return
+     */
+    @Mappings({
+            @Mapping(source = "file_path", target = "filePath")
+    })
+    EchoFileVO fileToVo(EchoFileDataVO list);
+
+    /**
+     * dto => vo
+     * @param list
+     * @return
+     */
+    List<EchoFileVO> fileToVo(List<EchoFileDataVO> list);
 }
