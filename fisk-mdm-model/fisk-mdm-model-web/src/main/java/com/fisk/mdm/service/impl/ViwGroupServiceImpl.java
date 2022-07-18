@@ -720,6 +720,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
                 dto1.setMapType(e.getMapType());
                 dto1.setEntityId(entityInfoVo.getId());
                 dto1.setEntityName(entityInfoVo.getName());
+                dto1.setEntityDisplayName(entityInfoVo.getDisplayName());
 
                 // 查询别名
                 QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
