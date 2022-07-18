@@ -31,6 +31,7 @@ public class EntityQueryDTO {
      */
     private Integer entityId;
     private String entityName;
+    private String entityDisplayName;
     /**
      * 是否选中 0:未选中 1:选中
      */
