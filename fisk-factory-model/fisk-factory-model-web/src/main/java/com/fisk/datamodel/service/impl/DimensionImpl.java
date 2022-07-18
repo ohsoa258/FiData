@@ -473,7 +473,10 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         int flat = mapper.updateById(model);
         if (flat > 0 && dto.timeTable) {
             //同步atlas
-            addTimeTableAttribute(dto);
+            DimensionPO dimensionPo = mapper.selectById(dto.id);
+            if (dimensionPo != null) {
+                synchronousMetadata(DataSourceConfigEnum.DMP_DW.getValue(), dimensionPo);
+            }
         }
         return flat > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
