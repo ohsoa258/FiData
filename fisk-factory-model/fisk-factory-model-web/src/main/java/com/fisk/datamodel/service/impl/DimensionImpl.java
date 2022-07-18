@@ -465,13 +465,17 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         }
         if (model.timeTable && (!model.startTime.equals(dto.startTime)
                 || !model.startTime.equals(dto.startTime)
-                || !model.dimensionTabName.equals(dto.dimensionTabName)))
-        {
-            editDateDimension(dto,model.dimensionTabName);
+                || !model.dimensionTabName.equals(dto.dimensionTabName))) {
+            editDateDimension(dto, model.dimensionTabName);
         }
-        dto.businessId=model.businessId;
-        model= DimensionMap.INSTANCES.dtoToPo(dto);
-        return mapper.updateById(model)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        dto.businessId = model.businessId;
+        model = DimensionMap.INSTANCES.dtoToPo(dto);
+        int flat = mapper.updateById(model);
+        if (flat > 0) {
+            //同步atlas
+            addTimeTableAttribute(dto);
+        }
+        return flat > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -726,6 +730,12 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         synchronousMetadata(dataSourceId, dimension);
     }
 
+    /**
+     * 数据实时同步到atlas
+     *
+     * @param dataSourceId
+     * @param dimension
+     */
     public void synchronousMetadata(int dataSourceId, DimensionPO dimension) {
         //实时更新元数据
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
@@ -767,6 +777,12 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         }
     }
 
+    /**
+     * 获取数据源配置信息
+     *
+     * @param dataSourceId
+     * @return
+     */
     public MetaDataInstanceAttributeDTO getDataSourceConfig(int dataSourceId) {
         ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(dataSourceId);
         if (result.code != ResultEnum.SUCCESS.getCode()) {
