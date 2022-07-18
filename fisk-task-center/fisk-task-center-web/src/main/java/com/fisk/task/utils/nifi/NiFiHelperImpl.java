@@ -1933,7 +1933,9 @@ public class NiFiHelperImpl implements INiFiHelper {
                     registryDTO.setProcessGroupId(variableRegistry.getVariableRegistry().getProcessGroupId());
                     variableRegistryEntity.setDisconnectedNodeAcknowledged(null);
                     variableRegistryEntity.setVariableRegistry(registryDTO);
-                    RevisionDTO processGroupRevision = variableRegistry.getProcessGroupRevision();
+                    //连续插入变量查询最新版本
+                    VariableRegistryEntity newVariableRegistry = NifiHelper.getProcessGroupsApi().getVariableRegistry(NifiConstants.ApiConstants.ROOT_NODE, true);
+                    RevisionDTO processGroupRevision = newVariableRegistry.getProcessGroupRevision();
                     variableRegistryEntity.setProcessGroupRevision(processGroupRevision);
                     System.out.println(JSON.toJSONString(variableRegistryEntity));
                     NifiHelper.getProcessGroupsApi().updateVariableRegistry(variableRegistry.getVariableRegistry().getProcessGroupId(), variableRegistryEntity);
