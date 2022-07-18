@@ -20,7 +20,7 @@ public interface IComplexType {
      * @param dto
      * @return
      */
-    Integer addGeography(GeographyDTO dto);
+    Object addGeography(GeographyDTO dto);
 
     /**
      * 添加经纬度

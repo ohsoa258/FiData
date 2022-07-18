@@ -158,6 +158,13 @@ public class AbstractDbHelper {
         statement.execute(sql);
     }
 
+    /**
+     * 新增数据，返回主键id
+     *
+     * @param sql
+     * @param connection
+     * @return
+     */
     public static Integer executeSqlReturnKey(String sql, Connection connection) {
         Statement statement = null;
         String code = UUID.randomUUID().toString();

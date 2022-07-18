@@ -23,8 +23,8 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -33,6 +33,7 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author JianWenYang
@@ -57,13 +58,19 @@ public class ComplexTypeServiceImpl implements IComplexType {
     private String echoPath;
 
     @Override
-    public Integer addGeography(GeographyDTO dto) {
+    public Object addGeography(GeographyDTO dto) {
         GeographyVO geographyVO = ComplexTypeMap.INSTANCES.dtoToVo(dto);
         geographyVO.setCreate_user(userHelper.getLoginUserInfo().id);
         geographyVO.setCreate_time(LocalDateTime.now());
+        String code = UUID.randomUUID().toString();
+        geographyVO.setCode(code);
         IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
         String sql = buildSqlCommand.buildInsertSingleData(CommonMethods.beanToMap(geographyVO), "tb_geography");
-        return AbstractDbHelper.executeSqlReturnKey(sql, getConnection());
+        Integer id = AbstractDbHelper.executeSqlReturnKey(sql, getConnection());
+        if (id > 0) {
+            return code;
+        }
+        throw new FkException(ResultEnum.SAVE_DATA_ERROR);
     }
 
     @Override
@@ -103,7 +110,7 @@ public class ComplexTypeServiceImpl implements IComplexType {
             data.setFile_name(fileName);
             data.setFile_path(echoNewPath);
             data.setFidata_version_id(versionId);
-            vo.setId(addFile(data));
+            vo.setCode(addFile(data));
             vo.setFilePath(echoNewPath);
             return vo;
         } catch (IOException e) {
@@ -112,14 +119,26 @@ public class ComplexTypeServiceImpl implements IComplexType {
         }
     }
 
-    public Integer addFile(FileVO data) {
+    /**
+     * 新增文件
+     *
+     * @param data
+     * @return
+     */
+    public String addFile(FileVO data) {
         data.setCreate_user(userHelper.getLoginUserInfo().id);
         data.setCreate_time(LocalDateTime.now());
+        String code = UUID.randomUUID().toString();
+        data.setCode(code);
         IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
         Map map = CommonMethods.beanToMap(data);
         map.remove("file_type");
         String sql = buildSqlCommand.buildInsertSingleData(map, "tb_file");
-        return AbstractDbHelper.executeSqlReturnKey(sql, getConnection());
+        Integer id = AbstractDbHelper.executeSqlReturnKey(sql, getConnection());
+        if (id > 0) {
+            return code;
+        }
+        throw new FkException(ResultEnum.SAVE_DATA_ERROR);
     }
 
     @Override
@@ -136,7 +155,7 @@ public class ComplexTypeServiceImpl implements IComplexType {
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
         IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
-        String sql = buildSqlCommand.buildQueryOneData(tableName, " and id=" + dto.getId());
+        String sql = buildSqlCommand.buildQueryOneData(tableName, " and code='" + dto.getCode() + "'");
         List<Map<String, Object>> resultMaps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
         if (CollectionUtils.isEmpty(resultMaps) || resultMaps.size() > 1) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -167,44 +186,6 @@ public class ComplexTypeServiceImpl implements IComplexType {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         return data;
-    }
-
-    public HttpServletResponse download(String path, HttpServletResponse response) {
-        try {
-            String newPath = newPath(path);
-            log.info("下载文件路径:" + newPath);
-            // path是指欲下载的文件的路径。
-            File file = new File(newPath);
-            // 取得文件名。
-            String filename = file.getName();
-            // 以流的形式下载文件。
-            InputStream fis = new BufferedInputStream(new FileInputStream(newPath));
-            byte[] buffer = new byte[fis.available()];
-            fis.read(buffer);
-            fis.close();
-            // 清空response
-            response.reset();
-            // 设置response的Header
-            response.addHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes()));
-            response.addHeader("Content-Length", "" + file.length());
-            OutputStream toClient = new BufferedOutputStream(response.getOutputStream());
-            response.setContentType("application/octet-stream");
-            toClient.write(buffer);
-            toClient.flush();
-            toClient.close();
-        } catch (IOException ex) {
-            log.error("downloadFile ex:", ex);
-        }
-        return response;
-    }
-
-    public String newPath(String path) {
-        String[] split = path.trim().split("/");
-        String newPath = File.separator + "root" + File.separator + "nginx" + File.separator + "app";
-        for (int i = 0; i < split.length; i++) {
-            newPath += split[i] + File.separator;
-        }
-        return newPath.substring(0, newPath.length() - 1);
     }
 
     /**

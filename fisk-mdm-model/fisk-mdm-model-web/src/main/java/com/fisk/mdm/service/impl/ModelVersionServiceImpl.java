@@ -393,7 +393,7 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
             dtoList.forEach(e -> {
                 FileItem fileItem = createFileItem(e.getFilePath());
                 MultipartFile file = new CommonsMultipartFile(fileItem);
-                iComplexType.uploadFile(newVersionId,file).getId();
+                iComplexType.uploadFile(newVersionId, file).getCode();
             });
         }
 

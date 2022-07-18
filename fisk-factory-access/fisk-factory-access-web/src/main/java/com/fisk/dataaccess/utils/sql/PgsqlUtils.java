@@ -3,14 +3,17 @@ package com.fisk.dataaccess.utils.sql;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
 import com.fisk.dataaccess.dto.json.JsonTableData;
 import com.fisk.dataaccess.dto.pgsqlmetadata.ApiSqlResultDTO;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -97,7 +100,7 @@ public class PgsqlUtils {
             statement.close();
             pgConn.close();
         } catch (SQLException e) {
-            log.error("批量执行SQL异常: {}", e.getMessage());
+            log.error("批量执行SQL异常: " + e);
             statement.close();
             pgConn.close();
             return ResultEnum.STG_TO_ODS_ERROR;
@@ -109,13 +112,11 @@ public class PgsqlUtils {
     /**
      * 批量执行pgsql
      *
+     * @param res             json数据
+     * @param tablePrefixName pg中的物理表前缀名
      * @return void
-     * @description 批量执行pgsql
      * @author Lock
      * @date 2022/1/21 17:24
-     * @version v1.0
-     * @params jsonStr json字符串
-     * @params tablePrefixName pg中的物理表前缀名
      */
     public ResultEntity<Object> executeBatchPgsql(String tablePrefixName, List<JsonTableData> res) throws Exception {
         Connection con = getPgConn();
@@ -189,4 +190,96 @@ public class PgsqlUtils {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, JSON.toJSONString(list));
     }
 
+    /**
+     * 批量执行pgsql
+     *
+     * @param importDataDto   task调用的入参
+     * @param tablePrefixName 表前缀
+     * @param res             json数据
+     * @return com.fisk.common.core.response.ResultEntity<java.lang.Object>
+     * @author Lock
+     * @date 2022/7/18 14:26
+     */
+    public ResultEntity<Object> executeBatchPgsql(ApiImportDataDTO importDataDto, String tablePrefixName, List<JsonTableData> res) throws Exception {
+        Connection con = getPgConn();
+        Statement statement = con.createStatement();
+        //这里必须设置为false，我们手动批量提交
+        con.setAutoCommit(false);
+        //这里需要注意，SQL语句的格式必须是预处理的这种，就是values(?,?,...,?)，否则批处理不起作用
+        ////PreparedStatement statement = con.prepareStatement("insert into student(id,`name`,age) values(?,?,?)");
+
+        // TODO 调用JsonUtils获取表对象集合
+        int countSql = 0;
+        List<ApiSqlResultDTO> list = new ArrayList<>();
+        try {
+            for (JsonTableData re : res) {
+
+                ApiSqlResultDTO apiSqlResultDto = new ApiSqlResultDTO();
+
+                String tableName = re.table;
+                JSONArray data = re.data;
+                for (Object datum : data) {
+                    String insertSqlIndex = "insert into ";
+                    String insertSqlLast = "(";
+                    String inserSql = "";
+                    insertSqlIndex = insertSqlIndex + tablePrefixName + tableName + "(";
+                    JSONObject object = (JSONObject) datum;
+                    Iterator<Map.Entry<String, Object>> iter = object.entrySet().iterator();
+                    while (iter.hasNext()) {
+                        Map.Entry entry = iter.next();
+                        insertSqlIndex = insertSqlIndex + entry.getKey() + ",";
+                        insertSqlLast = insertSqlLast + "'" + entry.getValue() + "'" + ",";
+                    }
+                    insertSqlIndex = insertSqlIndex.substring(0, insertSqlIndex.lastIndexOf(",")) + ") values";
+                    insertSqlLast = insertSqlLast.substring(0, insertSqlLast.lastIndexOf(",")) + ")";
+                    inserSql = insertSqlIndex + insertSqlLast;
+                    log.info("数据推送到stg的sql为: " + inserSql);
+                    countSql++;
+                    statement.addBatch(inserSql);
+                }
+                if (importDataDto != null) {
+                    String s1 = StringUtils.isNotBlank(importDataDto.pipelTraceId) ? importDataDto.pipelTraceId : "";
+                    String s2 = StringUtils.isNotBlank(importDataDto.pipelTaskTraceId) ? importDataDto.pipelTaskTraceId : "";
+                    String traceId = StringUtils.isNotBlank(s1) ? s1 : s2;
+                    String updateBatchSql = "UPDATE " + tablePrefixName + tableName + " SET " + NifiConstants.AttrConstants.FIDATA_BATCH_CODE
+                            + " = '" + traceId + "' WHERE " + NifiConstants.AttrConstants.FIDATA_BATCH_CODE + " IS NULL";
+
+                    log.info("设置" + NifiConstants.AttrConstants.FIDATA_BATCH_CODE + "的update语句为: " + updateBatchSql);
+
+                    statement.addBatch(updateBatchSql);
+                }
+                // 批量执行sql
+                statement.executeBatch();
+
+                // 保存本次信息
+                apiSqlResultDto.setCount(countSql);
+                // 多表插入时重新清空条数
+                countSql = 0;
+                // stg表名
+                apiSqlResultDto.setTableName(tablePrefixName + tableName);
+                apiSqlResultDto.setMsg("成功");
+
+                list.add(apiSqlResultDto);
+            }
+            System.out.println("本次添加的sql个数为: " + countSql);
+            // 提交要执行的批处理，防止 JDBC 执行事务处理
+            con.commit();
+            statement.close();
+            // 关闭相关连接
+            con.close();
+        } catch (SQLException e) {
+            log.error("批量执行SQL异常: {}", e.getMessage());
+            statement.close();
+            con.close();
+            // 执行sql异常,重置记录的条数
+            countSql = 0;
+            ApiSqlResultDTO apiSqlResultDto = new ApiSqlResultDTO();
+            apiSqlResultDto.setMsg("失败");
+            apiSqlResultDto.setCount(0);
+            list.add(apiSqlResultDto);
+            return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR, list);
+        }
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, JSON.toJSONString(list));
+    }
 }

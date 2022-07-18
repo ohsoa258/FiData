@@ -214,7 +214,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             }
 
             // 3.创建Stg表
-            sql = this.createStgTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo,stgTableName);
+            sql = this.createStgTable(sqlBuilder, entityInfoVo,stgTableName);
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.execute();
 
@@ -480,13 +480,13 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
             // 1.创建Stg表
             String stgTableName = generateStgTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
-            sql = this.createStgTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo,stgTableName);
+            sql = this.createStgTable(sqlBuilder, entityInfoVo,stgTableName);
             PreparedStatement stemStg = connection.prepareStatement(sql);
             stemStg.execute();
 
             // 2.创建mdm表
             String mdmTableName = generateMdmTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
-            sql = this.createMdmTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo,mdmTableName);
+            sql = this.createMdmTable(sqlBuilder, entityInfoVo,mdmTableName);
             PreparedStatement stemMdm = connection.prepareStatement(sql);
             stemMdm.execute();
 
@@ -524,8 +524,8 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // a.回滚事务
             rollbackConnection(connection);
             // b.回写失败状态
-            this.exceptionProcess(entityInfoVo, ex, ResultEnum.CREATE_TABLE_ERROR.getMsg() + "【执行Sql】:" + sql
-                    + "【原因】:" + ex.getMessage());
+            this.exceptionProcess(entityInfoVo, ex, ResultEnum.CREATE_TABLE_ERROR.getMsg() + "【原因】:" + ex.getMessage());
+            log.error(ResultEnum.CREATE_TABLE_ERROR.getMsg() + "【执行Sql】:" + sql);
         }
     }
 
@@ -603,33 +603,17 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
     /**
      * 创建Stg表
-     *
-     * @param abstractDbHelper
      * @param sqlBuilder
-     * @param connection
      * @param entityInfoVo
+     * @param stgTableName
+     * @return
      */
-    public String createStgTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
-                                 Connection connection, EntityInfoVO entityInfoVo,String stgTableName) {
+    public String createStgTable(IBuildSqlCommand sqlBuilder, EntityInfoVO entityInfoVo,String stgTableName) {
 
-        String buildStgTableSql = null;
-        try {
-            // 1.生成Sql
-            buildStgTableSql = sqlBuilder.buildStgTable(entityInfoVo,stgTableName);
-            // 2.执行sql
-            return buildStgTableSql;
-        } catch (Exception ex) {
-
-            // 筛选属性出去发布
-            List<AttributeInfoDTO> noSubmitAttributeList = entityInfoVo.getAttributeList().stream().filter(e -> !e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName()))
-                    .collect(Collectors.toList());
-
-            // 回写失败属性信息
-            this.exceptionAttributeProcess(noSubmitAttributeList, ResultEnum.CREATE_STG_TABLE.getMsg()
-                    + "【执行SQL】" + buildStgTableSql + "【原因】:" + ex);
-            log.error("创建Stg表失败,异常信息:" + ex);
-            throw new FkException(ResultEnum.CREATE_STG_TABLE);
-        }
+        // 1.生成Sql
+        String buildStgTableSql = sqlBuilder.buildStgTable(entityInfoVo,stgTableName);
+        // 2.执行sql
+        return buildStgTableSql;
     }
 
     /**
@@ -651,33 +635,19 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
     /**
      * 创建mdm表
-     *
-     * @param abstractDbHelper
      * @param sqlBuilder
-     * @param connection
      * @param entityInfoVo
+     * @param mdmTableName
+     * @return
      */
-    public String createMdmTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
-                                 Connection connection, EntityInfoVO entityInfoVo,String mdmTableName) {
+    public String createMdmTable(IBuildSqlCommand sqlBuilder, EntityInfoVO entityInfoVo,String mdmTableName) {
 
-        String buildStgTableSql = null;
-        try {
-            // 1.生成Sql
-            List<String> code = entityInfoVo.getAttributeList().stream().filter(e -> e.getName().equals("code")).map(e -> {
-                return "column_" + e.getEntityId() + "_" + e.getId();
-            }).collect(Collectors.toList());
-            buildStgTableSql = sqlBuilder.buildMdmTable(entityInfoVo,mdmTableName,code.get(0));
-            // 2.执行sql
-            return buildStgTableSql;
-        } catch (Exception ex) {
-            closeConnection(connection);
-
-            // 回写失败信息
-            this.exceptionProcess(entityInfoVo, ex, ResultEnum.CREATE_MDM_TABLE.getMsg()
-                    + "【执行的SQL】" + buildStgTableSql + "【原因】:" + ex);
-            log.error("创建Mdm表失败,异常信息:" + ex);
-            throw new FkException(ResultEnum.CREATE_MDM_TABLE);
-        }
+        // 1.生成Sql
+        List<String> code = entityInfoVo.getAttributeList().stream().filter(e -> e.getName().equals("code")).map(e -> {
+            return "column_" + e.getEntityId() + "_" + e.getId();
+        }).collect(Collectors.toList());
+        String buildStgTableSql = sqlBuilder.buildMdmTable(entityInfoVo,mdmTableName,code.get(0));
+        return buildStgTableSql;
     }
 
     /**

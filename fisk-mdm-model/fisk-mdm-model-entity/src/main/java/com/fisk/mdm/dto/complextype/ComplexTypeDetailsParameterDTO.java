@@ -10,7 +10,7 @@ import lombok.Data;
 @Data
 public class ComplexTypeDetailsParameterDTO {
 
-    private Integer id;
+    private String code;
 
     private DataTypeEnum dataTypeEnum;
 
