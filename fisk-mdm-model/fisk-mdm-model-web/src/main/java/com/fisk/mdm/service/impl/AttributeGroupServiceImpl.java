@@ -37,6 +37,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -283,13 +284,15 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
     }
 
     @Override
-    public List<EntityViewVO> getAttributeExists(AttributeInfoQueryDTO dto) {
+    public AttributeQueryRelationDTO getAttributeExists(AttributeInfoQueryDTO dto) {
         TypeConversionUtils typeConversionUtils = new TypeConversionUtils();
 
         List<EntityVO> entityVoList = modelService.getEntityById(dto.getModelId(), null).getEntityVOList();
 
-        return entityVoList.stream().map(iter -> {
+        // 所有实体数据
+        List<EntityViewVO> collect = entityVoList.stream().map(iter -> {
             EntityViewVO viewVo = EntityMap.INSTANCES.viewToVo(iter);
+            viewVo.setType(ObjectTypeEnum.ENTITY.getName());
 
             // 查询数据
             List<AttributeInfoDTO> attributeExists = groupMapper.getAttributeExists(dto.getGroupId(), iter.getId());
@@ -297,12 +300,13 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
             attributeExists.stream().forEach(e -> {
                 DataTypeEnum typeEnum = typeConversionUtils.intToDataTypeEnum(Integer.parseInt(e.getDataType()));
                 e.setDataType(typeEnum.getName());
+                e.setType(ObjectTypeEnum.ATTRIBUTES.getName());
 
                 // 域字段的名称
-                if (StringUtils.isNotBlank(e.getDomainName())){
+                if (StringUtils.isNotBlank(e.getDomainName())) {
                     AttributeVO data = attributeService.getById(Integer.parseInt(e.getDomainName())).getData();
                     EntityVO entityVo = entityService.getDataById(data.getEntityId());
-                    if (entityVo != null){
+                    if (entityVo != null) {
                         e.setDomainName(entityVo.getName());
                     }
                 }
@@ -310,6 +314,21 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
             viewVo.setAttributeList(attributeExists);
             return viewVo;
         }).collect(Collectors.toList());
+
+        // 选中的实行
+        List<AttributeInfoDTO> checkedArr = new ArrayList<>();
+        collect.stream().forEach(e -> {
+            e.getAttributeList().stream().filter(Objects::nonNull).forEach(iter -> {
+                if (iter.getExistsGroup() != null){
+                    checkedArr.add(iter);
+                }
+            });
+        });
+
+        AttributeQueryRelationDTO dto1 = new AttributeQueryRelationDTO();
+        dto1.setRelationList(collect);
+        dto1.setCheckedArr(checkedArr);
+        return dto1;
     }
 
     /**
