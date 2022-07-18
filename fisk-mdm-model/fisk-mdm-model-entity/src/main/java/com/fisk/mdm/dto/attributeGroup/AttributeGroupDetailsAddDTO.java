@@ -15,6 +15,5 @@ public class AttributeGroupDetailsAddDTO {
 
     @NotNull
     private Integer groupId;
-    private Integer entityId;
-    private List<Integer> attributeId;
+    private List<AttributeQueryDTO> attributes;
 }

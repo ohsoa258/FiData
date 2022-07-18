@@ -161,19 +161,20 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
     @Override
     public ResultEnum addAttribute(AttributeGroupDetailsAddDTO dto) {
 
+        Integer entityId = dto.getAttributes().get(0).getEntityId();
         // 删除属性组下的实体数据
         QueryWrapper<AttributeGroupDetailsPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(AttributeGroupDetailsPO::getGroupId,dto.getGroupId())
-                .eq(AttributeGroupDetailsPO::getEntityId,dto.getEntityId());
+                .eq(AttributeGroupDetailsPO::getEntityId,entityId);
         detailsMapper.delete(queryWrapper);
 
         // 新增属性
         AttributeGroupDetailsDTO detailsDto = new AttributeGroupDetailsDTO();
         detailsDto.setGroupId(dto.getGroupId());
-        detailsDto.setEntityId(dto.getEntityId());
-        dto.getAttributeId().stream().forEach(e -> {
-            detailsDto.setAttributeId(e);
+        detailsDto.setEntityId(entityId);
+        dto.getAttributes().stream().forEach(e -> {
+            detailsDto.setAttributeId(e.getAttributeId());
             AttributeGroupDetailsPO detailsPo1 = AttributeGroupMap.INSTANCES.detailsDtoToDto(detailsDto);
             int res = detailsMapper.insert(detailsPo1);
             if (res <= 0){
