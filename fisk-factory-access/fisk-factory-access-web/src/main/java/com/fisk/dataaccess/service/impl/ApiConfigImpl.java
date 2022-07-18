@@ -457,7 +457,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 防止\未被解析
             String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
             // 将数据同步到pgsql
-            ResultEntity<Object> result = pushPgSql(jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_", jsonKey, dto.apiCode);
+            ResultEntity<Object> result = pushPgSql(null, jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_", jsonKey, dto.apiCode);
             resultEnum = ResultEnum.getEnum(result.code);
             msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
 
@@ -546,7 +546,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 防止\未被解析
             String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
             // 将数据同步到pgsql
-            ResultEntity<Object> result = pushPgSql(jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_", jsonKey, dto.apiCode);
+            ResultEntity<Object> result = pushPgSql(importDataDto, jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_", jsonKey, dto.apiCode);
             resultEnum = ResultEnum.getEnum(result.code);
             msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
 
@@ -1100,7 +1100,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @author Lock
      * @date 2022/2/16 19:17
      */
-    private ResultEntity<Object> pushPgSql(String jsonStr, List<ApiTableDTO> apiTableDtoList,
+    private ResultEntity<Object> pushPgSql(ApiImportDataDTO importDataDto, String jsonStr, List<ApiTableDTO> apiTableDtoList,
                                            String tablePrefixName, String jsonKey, Long apiId) {
         ResultEnum resultEnum;
         // 初始化数据
@@ -1166,7 +1166,11 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // stg_abbreviationName_tableName
         ResultEntity<Object> excuteResult;
         try {
-            excuteResult = pgsqlUtils.executeBatchPgsql(tablePrefixName, targetTable);
+            if (importDataDto == null) {
+                excuteResult = pgsqlUtils.executeBatchPgsql(tablePrefixName, targetTable);
+            } else {
+                excuteResult = pgsqlUtils.executeBatchPgsql(importDataDto, tablePrefixName, targetTable);
+            }
         } catch (Exception e) {
             return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR);
         }
@@ -1190,11 +1194,11 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     /**
      * 将数据从stg同步到ods
      *
+     * @param apiId apiId
+     * @param flag  0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
      * @return void
      * @author Lock
      * @date 2022/2/25 16:41
-     * @param apiId apiId
-     * @param flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
      */
     private ResultEnum pushDataStgToOds(Long apiId, int flag) {
 
@@ -1260,11 +1264,11 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     /**
      * 获取同步数据的sql并执行
      *
+     * @param configDTO task需要的参数
+     * @param flag      0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
      * @return void
      * @author Lock
      * @date 2022/2/25 16:06
-     * @param configDTO task需要的参数
-     * @param flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
      */
     private ResultEnum getSynchroDataSqlAndExcute(DataAccessConfigDTO configDTO, int flag) {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
@@ -1289,11 +1293,11 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     /**
      * 根据api_id查询物理表集合
      *
+     * @param id api_id
      * @return java.util.List<com.fisk.dataaccess.entity.TableAccessPO>
      * @description 根据api_id查询物理表集合
      * @author Lock
      * @date 2022/2/15 10:30
-     * @param id api_id
      */
     private List<TableAccessPO> getListTableAccessByApiId(long id) {
         QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
