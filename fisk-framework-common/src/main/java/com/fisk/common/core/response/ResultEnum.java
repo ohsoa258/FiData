@@ -125,6 +125,7 @@ public enum ResultEnum {
     LOAD_DATASOURCE_META(5048, "重新加载所有数据源以及数据库、表数据报错"),
     LOAD_FIDATA_METADATA_ERROR(5049, "加载FaidataMetaData报错"),
     JSON_ROOTNODE_HANDLER_ERROR(5050, "pushData中json格式可能有误,解析失败,请自行检查"),
+    FILE_NOT_SELECTED(5051, "请选择需要读取的文件"),
 
     /**
      * 后台任务模块

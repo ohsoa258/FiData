@@ -15,6 +15,7 @@ import com.fisk.dataaccess.enums.FtpFileTypeEnum;
 import com.fisk.dataaccess.service.IFtp;
 import com.fisk.dataaccess.utils.ftp.ExcelUtils;
 import com.fisk.dataaccess.utils.ftp.FtpUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.ftp.FTPClient;
 import org.springframework.stereotype.Service;
 
@@ -55,6 +56,10 @@ public class FtpImpl implements IFtp {
     @Override
     public List<ExcelDTO> previewContent(OdsQueryDTO query) {
         FTPClient ftpClient = getFtpClient(query.appId);
+
+        if (StringUtils.isBlank(query.querySql)) {
+            throw new FkException(ResultEnum.FILE_NOT_SELECTED);
+        }
 
         // 重新封装excel参数
         List<String> excelParam = encapsulationExcelParam(query.querySql);
