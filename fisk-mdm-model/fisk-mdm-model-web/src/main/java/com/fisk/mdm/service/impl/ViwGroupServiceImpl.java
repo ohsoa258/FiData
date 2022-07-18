@@ -15,6 +15,7 @@ import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.ViwGroupMap;
 import com.fisk.mdm.mapper.AttributeMapper;
+import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.mapper.ViwGroupDetailsMapper;
 import com.fisk.mdm.mapper.ViwGroupMapper;
 import com.fisk.mdm.service.AttributeService;
@@ -80,6 +81,8 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     AttributeMapper attributeMapper;
     @Resource
     UserClient userClient;
+    @Resource
+    EntityMapper entityMapper;
 
     public static final String ALIAS_MARK = "a";
     public static int count = 0;
@@ -367,6 +370,16 @@ public class ViwGroupServiceImpl implements ViwGroupService {
                         dto.setDomainEntityId(e.getDomainEntityId());
                         dto.setDomainName(e.getDomainName());
                         dto.setMapType(e.getMapType());
+
+                        // 根据属性id查询实体信息
+                        Integer entityId = attributeMapper.selectById(e.getId()).getEntityId();
+                        if (entityId != null){
+                            EntityPO entityPo = entityMapper.selectById(entityId);
+                            dto.setEntityId((int) entityPo.getId());
+                            dto.setEntityName(entityPo.getName());
+                            dto.setEntityDisplayName(entityPo.getDisplayName());
+                        }
+
                         checkIds.add(dto);
                     });
         }
