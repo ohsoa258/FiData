@@ -11,6 +11,6 @@ public class EchoFileVO {
 
     private String filePath;
 
-    private Integer id;
+    private String code;
 
 }
