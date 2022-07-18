@@ -319,7 +319,6 @@ public class DataSynchronizationUtils {
             switch (dataType) {
                 case "域字段":
                 case "数值":
-                case "文件":
                     filedType = JDBCType.INTEGER.getName();
                     break;
                 case "时间":
@@ -331,9 +330,6 @@ public class DataSynchronizationUtils {
                 case "日期时间":
                     filedType = JDBCType.TIMESTAMP.getName();
                     break;
-                case "经纬度坐标":
-                    filedType = JDBCType.NUMERIC.getName();
-                    break;
                 case "浮点型":
                     filedType = JDBCType.FLOAT.getName();
                     break;
@@ -344,6 +340,8 @@ public class DataSynchronizationUtils {
                     filedType = JDBCType.DECIMAL.getName();
                     break;
                 case "文本":
+                case "文件":
+                case "经纬度坐标":
                 default:
                     filedType = JDBCType.VARCHAR.getName();
             }
