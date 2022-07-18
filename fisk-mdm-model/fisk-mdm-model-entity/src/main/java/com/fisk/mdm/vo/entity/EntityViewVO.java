@@ -24,6 +24,7 @@ public class EntityViewVO {
     private Integer approvalRuleId;
     private Integer buildCodeRuleId;
     private Integer hierarchyId;
+    private String type;
     /**
      * 属性信息
      */

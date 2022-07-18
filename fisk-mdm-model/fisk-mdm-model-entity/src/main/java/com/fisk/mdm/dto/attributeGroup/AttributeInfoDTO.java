@@ -22,4 +22,5 @@ public class AttributeInfoDTO {
      * 关联实体的名称
      */
     private String domainName;
+    private String type;
 }

@@ -83,5 +83,5 @@ public interface AttributeGroupService {
      * @param dto
      * @return
      */
-    List<EntityViewVO> getAttributeExists(AttributeInfoQueryDTO dto);
+    AttributeQueryRelationDTO getAttributeExists(AttributeInfoQueryDTO dto);
 }

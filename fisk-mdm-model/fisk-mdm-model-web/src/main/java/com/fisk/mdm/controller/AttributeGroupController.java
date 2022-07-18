@@ -89,7 +89,7 @@ public class AttributeGroupController {
     @ApiOperation("获取出属性组存在的属性")
     @PostMapping("/getAttributeExists")
     @ResponseBody
-    public ResultEntity<List<EntityViewVO>> getAttributeExists(@RequestBody AttributeInfoQueryDTO dto) {
+    public ResultEntity<AttributeQueryRelationDTO> getAttributeExists(@RequestBody AttributeInfoQueryDTO dto) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,groupService.getAttributeExists(dto));
     }
 }

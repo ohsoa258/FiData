@@ -21,4 +21,10 @@ public class ViwGroupCheckDTO {
     private Integer domainEntityId;
     private String domainName;
     private String mapType;
+    /**
+     * 实体id,实体名称
+     */
+    private Integer entityId;
+    private String entityName;
+    private String entityDisplayName;
 }
