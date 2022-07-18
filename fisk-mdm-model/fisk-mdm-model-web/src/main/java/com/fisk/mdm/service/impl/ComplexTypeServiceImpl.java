@@ -58,7 +58,7 @@ public class ComplexTypeServiceImpl implements IComplexType {
     private String echoPath;
 
     @Override
-    public String addGeography(GeographyDTO dto) {
+    public Object addGeography(GeographyDTO dto) {
         GeographyVO geographyVO = ComplexTypeMap.INSTANCES.dtoToVo(dto);
         geographyVO.setCreate_user(userHelper.getLoginUserInfo().id);
         geographyVO.setCreate_time(LocalDateTime.now());
