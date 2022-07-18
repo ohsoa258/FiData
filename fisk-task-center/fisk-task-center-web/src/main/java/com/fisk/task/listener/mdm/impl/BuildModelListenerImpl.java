@@ -323,7 +323,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
                 if (infoDto.getStatus().equals(INSERT.getName())) {
                     // 新增字段
-                    String filedType = this.getDataType(infoDto.getDataType(), infoDto.getDataTypeLength());
+                    String filedType = this.getDataType(infoDto.getDataType(), infoDto.getDataTypeLength(),infoDto.getDataTypeDecimalLength());
 
                     // 判断是否必填
                     String required = null;
@@ -344,7 +344,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     statementLog.execute();
                 } else if (infoDto.getStatus().equals(UPDATE.getName())) {
                     // 修改字段
-                    String filedType = this.getDataType(infoDto.getDataType(), infoDto.getDataTypeLength());
+                    String filedType = this.getDataType(infoDto.getDataType(), infoDto.getDataTypeLength(),infoDto.getDataTypeDecimalLength());
 
                     // 1.修改字段类型
                     sql = sqlBuilder.modifyFieldType(tableName, infoDto.getColumnName(), filedType);
@@ -423,7 +423,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param dataTypeLength
      * @return
      */
-    public String getDataType(String dataType, Integer dataTypeLength) {
+    public String getDataType(String dataType, Integer dataTypeLength,Integer precision) {
         if (dataType != null) {
             String filedType = null;
             switch (dataType) {
@@ -445,7 +445,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     filedType = "timestamp";
                     break;
                 case "浮点型":
-                    filedType = "numeric(12,2)";
+                    filedType = "numeric(" + dataTypeLength + "," + precision + ")";
                     break;
                 case "布尔型":
                     filedType = "bool";
