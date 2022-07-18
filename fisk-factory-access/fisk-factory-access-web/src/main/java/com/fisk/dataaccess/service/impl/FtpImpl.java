@@ -57,7 +57,7 @@ public class FtpImpl implements IFtp {
     public List<ExcelDTO> previewContent(OdsQueryDTO query) {
         FTPClient ftpClient = getFtpClient(query.appId);
 
-        if (StringUtils.isBlank(query.querySql)&& FtpFileTypeEnum.judgeSuffixList(query.querySql)) {
+        if (StringUtils.isBlank(query.querySql) || FtpFileTypeEnum.judgeSuffixList(query.querySql)) {
             throw new FkException(ResultEnum.FILE_NOT_SELECTED);
         }
 

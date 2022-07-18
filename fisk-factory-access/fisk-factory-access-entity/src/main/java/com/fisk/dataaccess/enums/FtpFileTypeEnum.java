@@ -59,14 +59,14 @@ public enum FtpFileTypeEnum implements BaseEnum {
      * @author Lock
      * @date 2022/7/18 11:38
      */
-    public static   boolean judgeSuffixList(String fileName) {
+    public static boolean judgeSuffixList(String fileName) {
         boolean flag = true;
         List<String> list = new ArrayList<>();
         list.add(XLS_FILE.name);
         list.add(XLSX_FILE.name);
         list.add(CSV_FILE.name);
         for (String s : list) {
-            if (StringUtils.containsIgnoreCase(fileName,s)) {
+            if (StringUtils.containsIgnoreCase(fileName, s)) {
                 flag = false;
                 break;
             }
