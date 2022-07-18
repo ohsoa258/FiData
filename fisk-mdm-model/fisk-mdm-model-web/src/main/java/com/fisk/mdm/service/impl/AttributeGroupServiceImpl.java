@@ -302,6 +302,9 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
                 DataTypeEnum typeEnum = typeConversionUtils.intToDataTypeEnum(Integer.parseInt(e.getDataType()));
                 e.setDataType(typeEnum.getName());
                 e.setType(ObjectTypeEnum.ATTRIBUTES.getName());
+                e.setEntityId(viewVo.getId());
+                e.setEntityName(viewVo.getName());
+                e.setEntityDisplayName(viewVo.getDisplayName());
 
                 // 域字段的名称
                 if (StringUtils.isNotBlank(e.getDomainName())) {

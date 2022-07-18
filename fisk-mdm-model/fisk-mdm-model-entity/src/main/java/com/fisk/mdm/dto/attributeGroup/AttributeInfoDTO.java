@@ -23,4 +23,10 @@ public class AttributeInfoDTO {
      */
     private String domainName;
     private String type;
+    /**
+     * 实体id,实体名称
+     */
+    private Integer entityId;
+    private String entityName;
+    private String entityDisplayName;
 }
