@@ -213,9 +213,9 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             } else if (dataSourceConPO.getConType() == DataSourceTypeEnum.SQLSERVER.getValue()) {
                 conn = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
                 typeEnum = DataSourceTypeEnum.SQLSERVER;
-            }else if (dataSourceConPO.getConType() == DataSourceTypeEnum.POSTGRE.getValue()){
-                conn = getStatement(DataSourceTypeEnum.POSTGRE.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
-                typeEnum = DataSourceTypeEnum.POSTGRE;
+            }else if (dataSourceConPO.getConType() == DataSourceTypeEnum.POSTGRESQL.getValue()){
+                conn = getStatement(DataSourceTypeEnum.POSTGRESQL.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
+                typeEnum = DataSourceTypeEnum.POSTGRESQL;
             }
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             assert st != null;

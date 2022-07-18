@@ -235,8 +235,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             conn = getStatement(com.fisk.dataservice.enums.DataSourceTypeEnum.MYSQL.getDriverName(), conPo.conStr, conPo.conAccount, conPo.conPassword);
         } else if (conPo.getConType() == com.fisk.dataservice.enums.DataSourceTypeEnum.SQLSERVER.getValue()) {
             conn = getStatement(com.fisk.dataservice.enums.DataSourceTypeEnum.SQLSERVER.getDriverName(), conPo.conStr, conPo.conAccount, conPo.conPassword);
-        } else if (conPo.getConType() == com.fisk.dataservice.enums.DataSourceTypeEnum.POSTGRE.getValue()) {
-            conn = getStatement(com.fisk.dataservice.enums.DataSourceTypeEnum.POSTGRE.getDriverName(), conPo.conStr, conPo.conAccount, conPo.conPassword);
+        } else if (conPo.getConType() == com.fisk.dataservice.enums.DataSourceTypeEnum.POSTGRESQL.getValue()) {
+            conn = getStatement(com.fisk.dataservice.enums.DataSourceTypeEnum.POSTGRESQL.getDriverName(), conPo.conStr, conPo.conAccount, conPo.conPassword);
         }
         List<FieldInfoVO> tableFieldList = getTableFieldList(conn, conPo);
         if (CollectionUtils.isNotEmpty(tableFieldList)
@@ -350,7 +350,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                         "\tLEFT JOIN sys.extended_properties f ON d.id= f.major_id \n" +
                         "\tAND f.minor_id= 0";
                 break;
-            case POSTGRE:
+            case POSTGRESQL:
                 sql = "SELECT c.relname as originalTableName,a.attname as originalFieldName,col_description(a.attrelid,a.attnum) as originalFieldDesc,'' AS originalFramework \n" +
                         "FROM pg_class as c,pg_attribute as a inner join pg_type on pg_type.oid = a.atttypid\n" +
                         "where c.relname in  (SELECT tablename FROM pg_tables ) and a.attrelid = c.oid and a.attnum>0";
