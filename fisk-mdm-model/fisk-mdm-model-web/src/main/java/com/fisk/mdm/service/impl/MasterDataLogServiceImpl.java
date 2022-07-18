@@ -108,8 +108,8 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
                 .map(e -> e.dataTypeEnDisplay = DataTypeEnum.getValue(e.getDataType()).name())
                 .collect(Collectors.toList());
         AttributeColumnVO attributeColumn = new AttributeColumnVO();
-        attributeColumn.setName("fidata_new_code");
-        attributeColumn.setDisplayName("新编码");
+        attributeColumn.setName("fidata_mdm_fidata_id");
+        attributeColumn.setDisplayName("mdm表id");
         attributeColumnVoList.add(1, attributeColumn);
         data.setAttributes(attributeColumnVoList);
         String tableName = TableNameGenerateUtils.generateLogTableName(dto.getModelId(), dto.getEntityId());
@@ -150,6 +150,25 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
 
     @Override
     public ResultEnum rollBackMasterData(MasterDataDTO dto) {
+        //获取mdm表最新code
+        String mdmTableName = TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId());
+        IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
+        String sql = sqlBuilder.buildQueryOneData(mdmTableName, " fidata_id =" + dto.getMembers().get("fidata_mdm_fidata_id"));
+        log.info("日志回滚,查询mdm最新code:", sql);
+        List<Map<String, Object>> resultMaps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
+        if (CollectionUtils.isEmpty(resultMaps) || resultMaps.size() > 1) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        //获取该实体mdm表中的code名称
+        String entityCodeName = masterDataService.getEntityCodeName(dto.getEntityId());
+        //mdm最新code值
+        String codeLatest = resultMaps.get(0).get(entityCodeName).toString();
+        String code = resultMaps.get(0).get("code").toString();
+        //不相等,则要修改的code为new_code
+        if (!codeLatest.equals(code)) {
+            dto.getMembers().put("fidata_new_code", code);
+            dto.getMembers().put("code", codeLatest);
+        }
         return masterDataService.OperateMasterData(dto, EventTypeEnum.ROLLBACK);
     }
 
