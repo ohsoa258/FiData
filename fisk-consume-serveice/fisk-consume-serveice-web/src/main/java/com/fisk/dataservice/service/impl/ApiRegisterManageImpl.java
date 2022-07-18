@@ -371,6 +371,17 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(dto.apiDTO.getDatasourceId());
         if (dataSourceConPO == null)
             return apiPreviewVO;
+
+        // 第四步：如果是编辑，查询上次配置的字段信息，如果描述信息不为空，使用该描述。如果为空使用系统查询出来的描述信息
+        List<FieldConfigPO> fieldConfigPOS = null;
+        if (dto.apiId != 0) {
+            QueryWrapper<FieldConfigPO> fieldConfigPOQueryWrapper = new QueryWrapper<>();
+            fieldConfigPOQueryWrapper.lambda()
+                    .eq(FieldConfigPO::getDelFlag, 1)
+                    .eq(FieldConfigPO::getApiId, dto.apiId);
+            fieldConfigPOS = apiFieldMapper.selectList(fieldConfigPOQueryWrapper);
+        }
+
         try {
             Statement st = null;
             Connection conn = null;
@@ -394,7 +405,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             assert st != null;
             ResultSet rs = st.executeQuery(sql);
             //获取数据集
-            apiPreviewVO = resultSetToJsonArray(conn, dataSourceConPO, rs, dto);
+            apiPreviewVO = resultSetToJsonArray(conn, dataSourceConPO, rs, dto, fieldConfigPOS);
             rs.close();
         } catch (Exception e) {
             throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR, e.getMessage());
@@ -411,7 +422,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
      * @param pvDTO      预览请求参数
      * @return target
      */
-    private static ApiPreviewVO resultSetToJsonArray(Connection conn, DataSourceConPO dataSource, ResultSet rs, ApiPreviewDTO pvDTO)
+    private static ApiPreviewVO resultSetToJsonArray(Connection conn, DataSourceConPO dataSource,
+                                                     ResultSet rs, ApiPreviewDTO pvDTO, List<FieldConfigPO> fieldConfigPOS)
             throws SQLException, JSONException {
         ApiPreviewVO data = new ApiPreviewVO();
 
@@ -470,14 +482,18 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
 
             // 获取表字段描述
             if (CollectionUtils.isNotEmpty(tableFieldList)) {
-                Optional<FieldInfoVO> first = tableFieldList.stream().filter(item -> item.originalFieldName.equals(fieldConfigVO.fieldName)).findFirst();
-                if (first.isPresent()) {
-                    FieldInfoVO fieldInfoVO = first.get();
-                    if (fieldInfoVO != null)
-                        fieldConfigVO.fieldDesc = fieldInfoVO.originalFieldDesc;
+                FieldInfoVO fieldInfoVO = tableFieldList.stream().
+                        filter(item -> item.originalFieldName.equals(fieldConfigVO.fieldName)).findFirst().orElse(null);
+                if (fieldInfoVO != null) {
+                    fieldConfigVO.fieldDesc = fieldInfoVO.originalFieldDesc;
                 }
             }
-
+            if (CollectionUtils.isNotEmpty(fieldConfigPOS)) {
+                FieldConfigPO fieldConfigPO = fieldConfigPOS.stream().filter(t -> t.getFieldName().equals(fieldConfigVO.fieldName)).findFirst().orElse(null);
+                if (fieldConfigPO != null && StringUtils.isNotEmpty(fieldConfigPO.fieldDesc)) {
+                    fieldConfigVO.fieldDesc = fieldConfigPO.fieldDesc;
+                }
+            }
             fieldConfigVOS.add(fieldConfigVO);
         }
         data.fieldVO = fieldConfigVOS.stream().collect(Collectors.toList());
@@ -579,7 +595,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
      * @param tableNames 查询的表
      * @return statement
      */
-    private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConPO dataSource, List<String> tableNames) throws SQLException {
+    private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConPO
+            dataSource, List<String> tableNames) throws SQLException {
         List<FieldInfoVO> fieldlist = new ArrayList<>();
         if (CollectionUtils.isEmpty(tableNames))
             return fieldlist;
