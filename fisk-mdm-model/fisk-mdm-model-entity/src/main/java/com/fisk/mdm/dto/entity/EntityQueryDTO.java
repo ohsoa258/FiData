@@ -27,6 +27,11 @@ public class EntityQueryDTO {
     private String domainName;
     private String mapType;
     /**
+     * 实体id,实体名称
+     */
+    private Integer entityId;
+    private String entityName;
+    /**
      * 是否选中 0:未选中 1:选中
      */
     private Integer isCheck;

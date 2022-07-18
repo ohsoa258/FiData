@@ -718,6 +718,8 @@ public class ViwGroupServiceImpl implements ViwGroupService {
                 dto1.setDomainEntityId(e.getDomainEntityId());
                 dto1.setDomainName(e.getDomainName());
                 dto1.setMapType(e.getMapType());
+                dto1.setEntityId(entityInfoVo.getId());
+                dto1.setEntityName(entityInfoVo.getName());
 
                 // 查询别名
                 QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
