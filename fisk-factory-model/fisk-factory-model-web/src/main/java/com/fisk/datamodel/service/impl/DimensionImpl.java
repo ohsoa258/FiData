@@ -158,7 +158,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            log.error("editDateDimension ex:", e);
             throw new FkException(ResultEnum.VISUAL_CONNECTION_ERROR);
         }
     }
@@ -369,21 +369,14 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
     public int getCurrentMonth(int currentMonth)
     {
         int dt = 0;
-        if (currentMonth >= Calendar.JANUARY && currentMonth <= Calendar.MARCH)
-        {
-            dt=1;
-        }
-        else if (currentMonth >= Calendar.APRIL && currentMonth <= Calendar.JUNE)
-        {
-            dt=2;
-        }
-        else if (currentMonth >= Calendar.JULY && currentMonth <= Calendar.SEPTEMBER)
-        {
-            dt=3;
-        }
-        else if (currentMonth >= Calendar.OCTOBER && currentMonth <= Calendar.DECEMBER)
-        {
-            dt=4;
+        if (currentMonth >= Calendar.JANUARY && currentMonth <= Calendar.MARCH) {
+            dt = 1;
+        } else if (currentMonth >= Calendar.APRIL && currentMonth <= Calendar.JUNE) {
+            dt = 2;
+        } else if (currentMonth >= Calendar.JULY && currentMonth <= Calendar.SEPTEMBER) {
+            dt = 3;
+        } else if (currentMonth >= Calendar.OCTOBER && currentMonth <= Calendar.DECEMBER) {
+            dt = 4;
         }
         return dt;
     }
@@ -393,8 +386,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         queryWrapper.lambda().eq(DimensionPO::getDimensionTabName,dto.dimensionTabName)
                 .eq(DimensionPO::getBusinessId,dto.businessId);
         DimensionPO po=mapper.selectOne(queryWrapper);
-        if (po==null)
-        {
+        if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         String[] columnList = {"FullDateAlternateKey", "DayNumberOfWeek",
@@ -403,35 +395,38 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         String[] columnDataTypeList={"DATE","INT","VARCHAR","INT","INT","INT","VARCHAR","INT","INT","INT"};
         String[] columnDataTypeLengthList={"0","0","10","0","0","0","10","0","0","0"};
         DataBaseTypeEnum dataBaseTypeEnum = DataBaseTypeEnum.getValue(typeName.toLowerCase());
-        switch (dataBaseTypeEnum)
-        {
+        switch (dataBaseTypeEnum) {
             case MYSQL:
                 break;
             case ORACLE:
-                columnDataTypeList=new String[]{"DATE","NUMBER","VARCHAR2","NUMBER","NUMBER","NUMBER","VARCHAR2","NUMBER","NUMBER","NUMBER"};
+                columnDataTypeList = new String[]{"DATE", "NUMBER", "VARCHAR2", "NUMBER", "NUMBER", "NUMBER", "VARCHAR2", "NUMBER", "NUMBER", "NUMBER"};
                 break;
             case SQL_SERVER:
-                columnDataTypeList=new String[]{"DATE","INT","VARCHAR","INT","INT","INT","VARCHAR","INT","INT","INT"};
+                columnDataTypeList = new String[]{"DATE", "INT", "VARCHAR", "INT", "INT", "INT", "VARCHAR", "INT", "INT", "INT"};
                 break;
             case POSTGRESQL:
-                columnDataTypeList=new String[]{"DATE","INT2","VARCHAR","INT2","INT2","INT2","VARCHAR","INT2","INT2","INT2"};
+                columnDataTypeList = new String[]{"DATE", "INT2", "VARCHAR", "INT2", "INT2", "INT2", "VARCHAR", "INT2", "INT2", "INT2"};
                 break;
             case DORIS:
                 break;
             default:
         }
-        List<DimensionAttributeDTO> list=new ArrayList<>();
-        for (int i=0;i<columnList.length;i++)
-        {
-            DimensionAttributeDTO attributeDTO=new DimensionAttributeDTO();
-            attributeDTO.attributeType= DimensionAttributeEnum.BUSINESS_KEY.getValue();
-            attributeDTO.dimensionFieldCnName=columnList[i];
-            attributeDTO.dimensionFieldEnName=columnList[i];
-            attributeDTO.dimensionFieldType=columnDataTypeList[i];
-            attributeDTO.dimensionFieldLength=Integer.parseInt(columnDataTypeLengthList[i]);
+        List<DimensionAttributeDTO> list = new ArrayList<>();
+        for (int i = 0; i < columnList.length; i++) {
+            DimensionAttributeDTO attributeDTO = new DimensionAttributeDTO();
+            attributeDTO.attributeType = DimensionAttributeEnum.BUSINESS_KEY.getValue();
+            attributeDTO.dimensionFieldCnName = columnList[i];
+            attributeDTO.dimensionFieldEnName = columnList[i];
+            attributeDTO.dimensionFieldType = columnDataTypeList[i];
+            attributeDTO.dimensionFieldLength = Integer.parseInt(columnDataTypeLengthList[i]);
             list.add(attributeDTO);
         }
-        return dimensionAttributeImpl.addTimeTableAttribute(list,(int)po.id);
+        ResultEnum result = dimensionAttributeImpl.addTimeTableAttribute(list, (int) po.id);
+        if (result.getCode() == ResultEnum.SUCCESS.getCode()) {
+            //同步到atlas
+            synchronousMetadata(DataSourceConfigEnum.DMP_DW.getValue(), po);
+        }
+        return result;
     }
 
     /**
@@ -728,12 +723,15 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
             log.info("维度表更改状态失败!");
             return;
         }
+        synchronousMetadata(dataSourceId, dimension);
+    }
+
+    public void synchronousMetadata(int dataSourceId, DimensionPO dimension) {
         //实时更新元数据
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
         MetaDataInstanceAttributeDTO data = getDataSourceConfig(dataSourceId);
         if (data == null) {
             log.info("维度表元数据实时更新,查询实例数据失败!");
-            return;
         }
         //表
         List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
@@ -744,7 +742,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dimension.id;
         //字段
         List<MetaDataColumnAttributeDTO> columnList = new ArrayList<>();
-        DimensionAttributeListDTO dimensionAttributeList = dimensionAttributeImpl.getDimensionAttributeList(dto.id);
+        DimensionAttributeListDTO dimensionAttributeList = dimensionAttributeImpl.getDimensionAttributeList((int) dimension.id);
         for (DimensionAttributeDTO field : dimensionAttributeList.attributeDTOList) {
             MetaDataColumnAttributeDTO column = new MetaDataColumnAttributeDTO();
             String fieldTypeLength = field.dimensionFieldLength == 0 ? "" : "(" + field.dimensionFieldLength + ")";

@@ -3,14 +3,14 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
+import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
 import com.fisk.datamodel.entity.*;
-import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.enums.SyncModeEnum;
 import com.fisk.datamodel.enums.TableHistoryTypeEnum;
@@ -26,8 +26,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -145,8 +147,6 @@ public class DimensionAttributeImpl
             } else {
                 fieldDTO.sourceFieldName = attributePo.sourceFieldName;
             }
-
-//            fieldDTO.sourceFieldName=attributePo.sourceFieldName;
             fieldDTO.associateDimensionId=attributePo.associateDimensionId;
             fieldDTO.associateDimensionFieldId=attributePo.associateDimensionFieldId;
             //判断是否关联维度
@@ -366,7 +366,5 @@ public class DimensionAttributeImpl
         List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
         return DimensionAttributeMap.INSTANCES.poToDetailDtoList(list);
     }
-
-
 
 }
