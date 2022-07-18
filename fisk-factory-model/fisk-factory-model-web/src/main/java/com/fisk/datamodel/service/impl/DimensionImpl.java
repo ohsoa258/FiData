@@ -471,7 +471,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         dto.businessId = model.businessId;
         model = DimensionMap.INSTANCES.dtoToPo(dto);
         int flat = mapper.updateById(model);
-        if (flat > 0) {
+        if (flat > 0 && dto.timeTable) {
             //同步atlas
             addTimeTableAttribute(dto);
         }
