@@ -59,6 +59,9 @@ public class TbTableAccessDTO {
      */
     public String sheet;
 
+    @ApiModelProperty(value = "发布错误信息", required = true)
+    public String publishErrorMsg;
+
     /**
      * 0: 发布;  1: 保存sql脚本
      */

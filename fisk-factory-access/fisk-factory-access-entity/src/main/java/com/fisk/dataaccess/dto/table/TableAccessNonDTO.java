@@ -83,6 +83,9 @@ public class TableAccessNonDTO extends BaseDTO {
     @ApiModelProperty(value = "excel sheet页名称", required = true)
     public String sheet;
 
+    @ApiModelProperty(value = "发布错误信息", required = true)
+    public String publishErrorMsg;
+
     /**
      * 表字段对象
      */

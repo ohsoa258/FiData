@@ -67,4 +67,9 @@ public class TableAccessPO extends BasePO {
      * excel sheet页名称
      */
     public String sheet;
+
+    /**
+     * 发布错误信息
+     */
+    public String publishErrorMsg;
 }

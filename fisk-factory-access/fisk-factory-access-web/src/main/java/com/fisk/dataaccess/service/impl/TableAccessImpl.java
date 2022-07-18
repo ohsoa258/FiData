@@ -982,12 +982,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     /**
      * 构建ftp数据源信息
      *
+     * @param ftpConfig       ftp数据源参数
+     * @param modelDataSource 数据源对象
+     * @param modelAccess     物理表对象
      * @return com.fisk.task.dto.daconfig.FtpConfig
      * @author Lock
      * @date 2022/4/12 16:47
-     * @param ftpConfig ftp数据源参数
-     * @param modelDataSource 数据源对象
-     * @param modelAccess 物理表对象
      */
     private FtpConfig buildFtpConfig(FtpConfig ftpConfig, AppDataSourcePO modelDataSource, TableAccessPO modelAccess) {
 
@@ -1244,10 +1244,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     /**
      * 封装应用及应用下的物理表
      *
+     * @param list list
      * @return java.util.List<com.fisk.datafactory.dto.components.ChannelDataDTO>
      * @author Lock
      * @date 2022/5/1 15:33
-     * @param list list
      */
     private List<ChannelDataDTO> bulidListChannelDataDTOByTableOrFTP(List<AppRegistrationPO> list) {
 
@@ -1272,10 +1272,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     /**
      * 封装应用及应用下的api
      *
+     * @param list list
      * @return java.util.List<com.fisk.datafactory.dto.components.ChannelDataDTO>
      * @author Lock
      * @date 2022/5/1 15:34
-     * @param list list
      */
     private List<ChannelDataDTO> bulidListChannelDataDTOByAPI(List<AppRegistrationPO> list) {
 
@@ -1789,6 +1789,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableAccessPO model = baseMapper.selectById(dto.tableId);
         if (model != null) {
             model.publish = dto.publish;
+            model.publishErrorMsg = StringUtils.isNotBlank(dto.publishErrorMsg) ? dto.publishErrorMsg : "";
             baseMapper.updateById(model);
         }
     }
