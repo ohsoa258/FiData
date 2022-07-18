@@ -249,7 +249,8 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
         List<QueryAttributeGroupVO> list = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(detailsPoList)){
             // 根据实体id进行分组
-            Map<Integer, List<AttributeGroupDetailsPO>> listMap = detailsPoList.stream().collect(Collectors.groupingBy(AttributeGroupDetailsPO::getEntityId));
+            Map<Integer, List<AttributeGroupDetailsPO>> listMap = detailsPoList.stream().filter(e -> e.getEntityId() != null)
+                    .collect(Collectors.groupingBy(AttributeGroupDetailsPO::getEntityId));
             for (Integer key : listMap.keySet()) {
                 // 拼接所需参数
                 List<AttributeGroupDetailsPO> detailsList = listMap.get(key);
