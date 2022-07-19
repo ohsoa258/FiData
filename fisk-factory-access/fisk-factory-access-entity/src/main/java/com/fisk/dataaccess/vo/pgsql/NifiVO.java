@@ -37,4 +37,8 @@ public class NifiVO {
      * 表数组
      */
     public List<TableListVO> tableList;
+    /**
+     * 元数据限定名
+     */
+    public List<String> qualifiedNames;
 }

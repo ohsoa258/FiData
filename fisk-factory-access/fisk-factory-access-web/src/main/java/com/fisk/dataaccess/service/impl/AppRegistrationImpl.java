@@ -54,6 +54,7 @@ import com.fisk.task.enums.OlapTableEnum;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -105,6 +106,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     private DataFactoryClient dataFactoryClient;
     @Resource
     RedisUtil redisUtil;
+    @Value("${metadata-instance.hostname}")
+    private String hostname;
+    @Value("${metadata-instance.dbName}")
+    private String dbName;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -302,6 +307,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         List<Long> tableIdList = new ArrayList<>();
         NifiVO vo = new NifiVO();
         List<TableListVO> tableList = new ArrayList<>();
+        List<String> qualifiedNames = new ArrayList<>();
 
         if (!CollectionUtils.isEmpty(accessList)) {
             // 删表之前,要将所有的数据提前查出来,不然会导致空指针异常
@@ -312,6 +318,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 TableAccessPO po = tableAccessImpl.query().eq("id", tableId).eq("del_flag", 1).one();
                 tableVO.tableName = model.appAbbreviation + "_" + po.tableName;
                 tableList.add(tableVO);
+                qualifiedNames.add(hostname + "_" + dbName + "_" + po.getId());
             }
 
 
@@ -348,7 +355,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         vo.tableIdList = tableIdList;
         // atlas物理表信息
         vo.tableList = tableList;
-
+        vo.qualifiedNames = qualifiedNames;
         log.info("删除的应用信息,{}", vo);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);

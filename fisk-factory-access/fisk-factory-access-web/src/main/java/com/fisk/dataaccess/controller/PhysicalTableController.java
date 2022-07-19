@@ -7,6 +7,7 @@ import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.app.AppNameDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
@@ -21,6 +22,7 @@ import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
@@ -60,6 +62,8 @@ public class PhysicalTableController {
     private PublishTaskClient publishTaskClient;
     @Resource
     private DataFactoryClient dataFactoryClient;
+    @Resource
+    private DataManageClient dataManageClient;
 
     /**
      * 根据是否为实时,查询应用名称集合
@@ -248,6 +252,11 @@ public class PhysicalTableController {
         deleteTableDetailDto.channelDataEnum = ChannelDataEnum.DATALAKE_TASK;
         list.add(deleteTableDetailDto);
         dataFactoryClient.editByDeleteTable(list);
+
+        // 删除元数据
+        MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
+        metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.qualifiedNames);
+        dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS,result);
     }

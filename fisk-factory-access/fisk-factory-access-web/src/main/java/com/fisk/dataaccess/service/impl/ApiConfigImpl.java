@@ -19,6 +19,7 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.office.pdf.component.PDFHeaderFooter;
 import com.fisk.common.core.utils.office.pdf.component.PDFKit;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.dataaccess.dto.api.*;
 import com.fisk.dataaccess.dto.api.doc.*;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
@@ -51,6 +52,7 @@ import com.fisk.datagovernance.client.DataQualityClient;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckWebDTO;
 import com.fisk.datagovernance.enums.dataquality.CheckRuleEnum;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
@@ -121,6 +123,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private PublishTaskClient publishTaskClient;
     @Resource
     private DataFactoryClient dataFactoryClient;
+    @Resource
+    private DataManageClient dataManageClient;
     @Value("${dataservice.pdf.path}")
     private String templatePath;
     @Value("${dataservice.pdf.uat_address}")
@@ -322,6 +326,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             dataModelVO.userId = nifiVO.userId;
             // 删除nifi流程
             publishTaskClient.deleteNifiFlow(dataModelVO);
+
+            // 删除元数据
+            // 删除元数据
+            MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
+            metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.qualifiedNames);
+            dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
         }
 
         // 删除factory-dispatch对应的api配置

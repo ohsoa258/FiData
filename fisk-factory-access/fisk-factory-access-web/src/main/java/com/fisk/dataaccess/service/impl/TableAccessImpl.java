@@ -137,6 +137,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Value("${pgsql-ods.password}")
     public String pgsqlOdsPassword;
 
+    @Value("${metadata-instance.hostname}")
+    private String hostname;
+    @Value("${metadata-instance.dbName}")
+    private String dbName;
+
     /**
      * 添加物理表(实时)
      *
@@ -675,7 +680,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableListVO tableListVO = new TableListVO();
 
         tableListVO.userId = userInfo.id;
-//        tableListVO.tableAtlasId = modelAccess.atlasTableId;
         tableListVO.tableName = registrationPo.appAbbreviation + "_" + modelAccess.tableName;
         voList.add(tableListVO);
         List<Long> tableIdList = new ArrayList<>();
@@ -683,9 +687,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         vo.appId = String.valueOf(modelAccess.appId);
         vo.userId = userInfo.id;
-//        vo.appAtlasId = registrationPo.atlasInstanceId;
         vo.tableList = voList;
         vo.tableIdList = tableIdList;
+
+        List<String> qualifiedNames = new ArrayList<>();
+        qualifiedNames.add(hostname + "_" + dbName + "_" + id);
+        vo.setQualifiedNames(qualifiedNames);
+
         log.info("删除的物理表信息,{}", vo);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);

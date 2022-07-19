@@ -11,6 +11,7 @@ import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
@@ -21,6 +22,7 @@ import com.fisk.dataaccess.service.impl.TableAccessImpl;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
@@ -56,6 +58,8 @@ public class AppRegistrationController {
     private TableAccessImpl tableAccessImpl;
     @Resource
     private PublishTaskClient publishTaskClient;
+    @Resource
+    private DataManageClient dataManageClient;
 
     @PostMapping("/add")
     @ApiOperation(value = "添加")
@@ -141,7 +145,13 @@ public class AppRegistrationController {
             // 删除nifi流程
             publishTaskClient.deleteNifiFlow(dataModelVO);
             log.info("task删除应用{}", task);
-            System.out.println(task);
+        }
+
+        // 删除元数据
+        if (CollectionUtils.isNotEmpty(nifiVO.qualifiedNames)) {
+            MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
+            metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.getQualifiedNames());
+            dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
