@@ -1109,9 +1109,14 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         tableNifiSettingPO.convertRecordProcessorId = convertRecordProcessor.getId();
         //连接器
         componentConnector(groupId, convertExcelToCSVProcessor.getId(), convertRecordProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        ProcessorEntity updateAttributeProcessor = createUpdateAttributeProcessor(groupId);
+        tableNifiSettingPO.mergeContentProcessorId = updateAttributeProcessor.getId();
+        //连接器
+        componentConnector(groupId, convertRecordProcessor.getId(), updateAttributeProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
         processorEntities.add(getFTPProcessor);
         processorEntities.add(convertExcelToCSVProcessor);
         processorEntities.add(convertRecordProcessor);
+        processorEntities.add(updateAttributeProcessor);
         return processorEntities;
     }
 
@@ -1209,6 +1214,17 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildConvertRecordProcessorDTO.groupId = groupId;
         buildConvertRecordProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-3, 9);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildConvertRecordProcess(buildConvertRecordProcessorDTO);
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
+    }
+
+    public ProcessorEntity createUpdateAttributeProcessor(String groupId) {
+        BuildUpdateAttributeDTO buildUpdateAttribute = new BuildUpdateAttributeDTO();
+        buildUpdateAttribute.details = "buildUpdateAttribute";
+        buildUpdateAttribute.name = "buildUpdateAttribute";
+        buildUpdateAttribute.groupId = groupId;
+        buildUpdateAttribute.positionDTO = NifiPositionHelper.buildXYPositionDTO(-4, 9);
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildUpdateAttribute(buildUpdateAttribute);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;
     }
@@ -2185,6 +2201,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         nifiMessage.pipelStageTraceId = "${pipelStageTraceId}";
         nifiMessage.pipelTaskTraceId = "${pipelTaskTraceId}";
         nifiMessage.pipelJobTraceId = "${pipelJobTraceId}";
+        nifiMessage.pipelTraceId = "${pipelTraceId}";
         buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(nifiMessage);
         buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());

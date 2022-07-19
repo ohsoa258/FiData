@@ -344,6 +344,12 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                 nifiPortsHierarchy = nifiPortHierarchy.data;
             }
         }
+        //去除ftp分类影响
+        String dagPart = JSON.toJSONString(nifiPortsHierarchy);
+        if (org.apache.commons.lang3.StringUtils.isNotBlank(dagPart)) {
+            dagPart = dagPart.replaceAll(ChannelDataEnum.DATALAKE_FTP_TASK.getName(), ChannelDataEnum.DATALAKE_TASK.getName());
+            nifiPortsHierarchy = JSON.parseObject(dagPart, NifiPortsHierarchyDTO.class);
+        }
         return nifiPortsHierarchy;
     }
 
@@ -369,6 +375,12 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
             }
         }
         data.pipelTraceId = pipelTraceId;
+        //去除ftp分类影响
+        String dag = JSON.toJSONString(data);
+        if (org.apache.commons.lang3.StringUtils.isNotBlank(dag)) {
+            dag = dag.replaceAll(ChannelDataEnum.DATALAKE_FTP_TASK.getName(), ChannelDataEnum.DATALAKE_TASK.getName());
+            data = JSON.parseObject(dag, PipeDagDTO.class);
+        }
         log.info("该管道dag图:{}", JSON.toJSONString(data));
         return data;
     }

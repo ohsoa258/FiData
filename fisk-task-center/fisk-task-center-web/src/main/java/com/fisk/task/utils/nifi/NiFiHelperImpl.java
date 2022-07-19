@@ -894,7 +894,8 @@ public class NiFiHelperImpl implements INiFiHelper {
         List<String> autoRes = new ArrayList<>();
 
         Map<String, String> map = new HashMap<>(1);
-        map.put("Delete Attributes Expression", "sql\\.args\\..*");
+        //map.put("Delete Attributes Expression", "sql\\.args\\..*");
+        map.put("input.flowfile.uuid", "${uuid}");
 
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
@@ -1512,12 +1513,12 @@ public class NiFiHelperImpl implements INiFiHelper {
                 ProcessIds.add(tableNifiSettingPO.getFtpProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertExcelToCsvProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertRecordProcessorId);
+                ProcessIds.add(tableNifiSettingPO.mergeContentProcessorId);
                 ProcessIds.add(tableNifiSettingPO.updateFieldProcessorId);
                 ProcessIds.add(tableNifiSettingPO.updateFieldForCodeProcessorId);
                 ProcessIds.add(tableNifiSettingPO.saveTargetDbProcessorId);
                 ProcessIds.add(tableNifiSettingPO.generateFlowFileProcessorId);
                 ProcessIds.add(tableNifiSettingPO.invokeHttpProcessorId);
-                //ProcessIds.add(tableNifiSettingPO.mergeContentProcessorId);
                 ProcessIds.add(tableNifiSettingPO.odsToStgProcessorId);
                 ProcessIds.add(tableNifiSettingPO.queryNumbersProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertNumbersToJsonProcessorId);
