@@ -121,21 +121,17 @@ public class WideTableImpl extends ServiceImpl<WideTableMapper,WideTableConfigPO
      */
     public WideTableAliasDTO appendField(List<WideTableSourceTableConfigDTO> entity)
     {
-        WideTableAliasDTO dto=new WideTableAliasDTO();
-        StringBuilder str=new StringBuilder();
-        List<String> fieldList=new ArrayList<>();
-        for (WideTableSourceTableConfigDTO item:entity)
-        {
-            for (WideTableSourceFieldConfigDTO field:item.columnConfig)
-            {
+        WideTableAliasDTO dto = new WideTableAliasDTO();
+        StringBuilder str = new StringBuilder();
+        List<String> fieldList = new ArrayList<>();
+        for (WideTableSourceTableConfigDTO item : entity) {
+            for (WideTableSourceFieldConfigDTO field : item.columnConfig) {
                 //判断字段名称是否重复
-                if (fieldList.contains(field.fieldName))
-                {
+                if (fieldList.contains(field.fieldName)) {
                     field.alias = item.tableName + "_" + field.fieldName;
                     str.append("external_" + item.tableName + "." + field.fieldName + " as " + field.alias + ",");
-                }
-                else {
-                    str.append("external_"+item.tableName+"."+field.fieldName+",");
+                } else {
+                    str.append("external_" + item.tableName + "." + field.fieldName + ",");
                     fieldList.add(field.fieldName);
                 }
             }

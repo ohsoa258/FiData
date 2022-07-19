@@ -10,10 +10,7 @@ import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
@@ -26,6 +23,7 @@ import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.entity.FactAttributePO;
 import com.fisk.datamodel.entity.FactPO;
+import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.FactAttributeMap;
@@ -35,7 +33,6 @@ import com.fisk.datamodel.mapper.FactMapper;
 import com.fisk.datamodel.service.IFact;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
-import com.fisk.system.client.UserClient;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
@@ -72,8 +69,6 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     @Resource
     UserHelper userHelper;
     @Resource
-    UserClient userClient;
-    @Resource
     DimensionImpl dimensionImpl;
     @Resource
     DataManageClient dataManageClient;
@@ -81,12 +76,9 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     @Override
     public ResultEnum addFact(FactDTO dto) {
         QueryWrapper<FactPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda()
-                //.eq(FactPO::getBusinessProcessId,dto.businessProcessId)
-                .eq(FactPO::getFactTabName, dto.factTabName);
+        queryWrapper.lambda().eq(FactPO::getFactTabName, dto.factTabName);
         FactPO po = mapper.selectOne(queryWrapper);
-        if (po != null)
-        {
+        if (po != null) {
             return ResultEnum.FACT_EXIST;
         }
         FactPO model= FactMap.INSTANCES.dtoToPo(dto);
@@ -98,19 +90,16 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     {
         try {
             FactPO po=mapper.selectById(id);
-            if (po==null)
-            {
+            if (po == null) {
                 return ResultEnum.DATA_NOTEXISTS;
             }
             //删除事实字段表
             QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
             queryWrapper.select("id").lambda().eq(FactAttributePO::getFactId,id);
             List<Integer> factAttributeIds=(List)attributeMapper.selectObjs(queryWrapper);
-            if (!CollectionUtils.isEmpty(factAttributeIds))
-            {
+            if (!CollectionUtils.isEmpty(factAttributeIds)) {
                 ResultEnum resultEnum = factAttributeImpl.deleteFactAttribute(factAttributeIds);
-                if (ResultEnum.SUCCESS !=resultEnum)
-                {
+                if (ResultEnum.SUCCESS != resultEnum) {
                     throw new FkException(resultEnum);
                 }
             }
@@ -134,7 +123,26 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             list.add(deleteTableDetailDto);
             dataFactoryClient.editByDeleteTable(list);
 
-            return mapper.deleteByIdWithFill(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+            int flat = mapper.deleteByIdWithFill(po);
+            if (flat > 0) {
+                //删除atlas
+                MetaDataDeleteAttributeDTO deleteDto = new MetaDataDeleteAttributeDTO();
+                List<String> delQualifiedName = new ArrayList<>();
+                //删除dw
+                MetaDataInstanceAttributeDTO dataSourceConfigDw = dimensionImpl.getDataSourceConfig(DataSourceConfigEnum.DMP_DW.getValue());
+                if (dataSourceConfigDw != null && !CollectionUtils.isEmpty(dataSourceConfigDw.dbList)) {
+                    delQualifiedName.add(dataSourceConfigDw.dbList.get(0).qualifiedName + "_" + DataModelTableTypeEnum.DW_FACT.getValue() + "_" + id);
+                }
+                //删除Olap
+                MetaDataInstanceAttributeDTO dataSourceConfigOlap = dimensionImpl.getDataSourceConfig(DataSourceConfigEnum.DMP_OLAP.getValue());
+                if (dataSourceConfigOlap != null && !CollectionUtils.isEmpty(dataSourceConfigOlap.dbList)) {
+                    delQualifiedName.add(dataSourceConfigOlap.dbList.get(0).qualifiedName + "_" + DataModelTableTypeEnum.DORIS_FACT.getValue() + "_" + id);
+                }
+                deleteDto.qualifiedNames = delQualifiedName;
+                dataManageClient.deleteMetaData(deleteDto);
+            }
+
+            return mapper.deleteByIdWithFill(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         }
         catch (Exception e)
         {
@@ -198,9 +206,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             return ResultEnum.DATA_NOTEXISTS;
         }
         QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda()
-                //.eq(FactPO::getBusinessProcessId,dto.businessProcessId)
-            .eq(FactPO::getFactTabName,dto.factTabName);
+        queryWrapper.lambda().eq(FactPO::getFactTabName, dto.factTabName);
         FactPO model=mapper.selectOne(queryWrapper);
         if (model !=null && model.id !=dto.id)
         {
@@ -262,12 +268,15 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         }
         //0:DW发布状态
         int dataSourceId;
+        int dataModelType;
         if (dto.type == 0) {
             fact.isPublish = dto.status;
             dataSourceId = DataSourceConfigEnum.DMP_DW.getValue();
+            dataModelType = DataModelTableTypeEnum.DW_FACT.getValue();
         } else {
             fact.dorisPublish = dto.status;
             dataSourceId = DataSourceConfigEnum.DMP_OLAP.getValue();
+            dataModelType = DataModelTableTypeEnum.DORIS_FACT.getValue();
         }
         int flat = mapper.updateById(fact);
         if (flat == 0 || dto.status != PublicStatusEnum.PUBLIC_SUCCESS.getValue()) {
@@ -287,7 +296,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         table.contact_info = "";
         table.description = fact.factTableDesc;
         table.name = fact.factTabName;
-        table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + fact.id;
+        table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dataModelType + "_" + fact.id;
         //字段
         List<MetaDataColumnAttributeDTO> columnList = setFactField(dto, table);
         if (CollectionUtils.isEmpty(columnList)) {

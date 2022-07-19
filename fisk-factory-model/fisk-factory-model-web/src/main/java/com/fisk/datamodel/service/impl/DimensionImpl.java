@@ -26,6 +26,7 @@ import com.fisk.datamodel.entity.DimensionAttributePO;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.FactAttributePO;
 import com.fisk.datamodel.enums.DataBaseTypeEnum;
+import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.DimensionMap;
@@ -424,7 +425,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         ResultEnum result = dimensionAttributeImpl.addTimeTableAttribute(list, (int) po.id);
         if (result.getCode() == ResultEnum.SUCCESS.getCode()) {
             //同步到atlas
-            synchronousMetadata(DataSourceConfigEnum.DMP_DW.getValue(), po);
+            synchronousMetadata(DataSourceConfigEnum.DMP_DW.getValue(), po, DataModelTableTypeEnum.DW_DIMENSION.getValue());
         }
         return result;
     }
@@ -475,7 +476,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
             //同步atlas
             DimensionPO dimensionPo = mapper.selectById(dto.id);
             if (dimensionPo != null) {
-                synchronousMetadata(DataSourceConfigEnum.DMP_DW.getValue(), dimensionPo);
+                synchronousMetadata(DataSourceConfigEnum.DMP_DW.getValue(), dimensionPo, DataModelTableTypeEnum.DW_DIMENSION.getValue());
             }
         }
         return flat > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -538,7 +539,25 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
             list.add(deleteTableDetailDto);
             dataFactoryClient.editByDeleteTable(list);
 
-            return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+            int flat = mapper.deleteByIdWithFill(model);
+            if (flat > 0) {
+                //删除atlas
+                MetaDataDeleteAttributeDTO deleteDto = new MetaDataDeleteAttributeDTO();
+                List<String> delQualifiedName = new ArrayList<>();
+                //删除dw
+                MetaDataInstanceAttributeDTO dataSourceConfigDw = getDataSourceConfig(DataSourceConfigEnum.DMP_DW.getValue());
+                if (dataSourceConfigDw != null && !CollectionUtils.isEmpty(dataSourceConfigDw.dbList)) {
+                    delQualifiedName.add(dataSourceConfigDw.dbList.get(0).qualifiedName + "_" + DataModelTableTypeEnum.DW_DIMENSION.getValue() + "_" + id);
+                }
+                //删除Olap
+                MetaDataInstanceAttributeDTO dataSourceConfigOlap = getDataSourceConfig(DataSourceConfigEnum.DMP_OLAP.getValue());
+                if (dataSourceConfigOlap != null && !CollectionUtils.isEmpty(dataSourceConfigOlap.dbList)) {
+                    delQualifiedName.add(dataSourceConfigOlap.dbList.get(0).qualifiedName + "_" + DataModelTableTypeEnum.DORIS_DIMENSION.getValue() + "_" + id);
+                }
+                deleteDto.qualifiedNames = delQualifiedName;
+                dataManageClient.deleteMetaData(deleteDto);
+            }
+            return flat > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         }
         catch (Exception e)
         {
@@ -716,21 +735,24 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
             log.info("数据建模元数据实时同步失败,维度表不存在!");
             return;
         }
-        int dataSourceId = 0;
+        int dataSourceId;
+        int dataModelType;
         //0:DW发布状态
         if (dto.type == 0) {
             dimension.isPublish = dto.status;
             dataSourceId = DataSourceConfigEnum.DMP_DW.getValue();
+            dataModelType = DataModelTableTypeEnum.DW_DIMENSION.getValue();
         } else {
             dimension.dorisPublish = dto.status;
             dataSourceId = DataSourceConfigEnum.DMP_OLAP.getValue();
+            dataModelType = DataModelTableTypeEnum.DORIS_DIMENSION.getValue();
         }
         int flat = mapper.updateById(dimension);
         if (flat == 0 || dto.status != PublicStatusEnum.PUBLIC_SUCCESS.getValue()) {
             log.info("维度表更改状态失败!");
             return;
         }
-        synchronousMetadata(dataSourceId, dimension);
+        synchronousMetadata(dataSourceId, dimension, dataModelType);
     }
 
     /**
@@ -738,8 +760,9 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
      *
      * @param dataSourceId
      * @param dimension
+     * @param dataModelType
      */
-    public void synchronousMetadata(int dataSourceId, DimensionPO dimension) {
+    public void synchronousMetadata(int dataSourceId, DimensionPO dimension, int dataModelType) {
         //实时更新元数据
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
         MetaDataInstanceAttributeDTO data = getDataSourceConfig(dataSourceId);
@@ -752,7 +775,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         table.contact_info = "";
         table.description = dimension.dimensionDesc;
         table.name = dimension.dimensionTabName;
-        table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dimension.id;
+        table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dataModelType + "_" + dimension.id;
         //字段
         List<MetaDataColumnAttributeDTO> columnList = new ArrayList<>();
         DimensionAttributeListDTO dimensionAttributeList = dimensionAttributeImpl.getDimensionAttributeList((int) dimension.id);

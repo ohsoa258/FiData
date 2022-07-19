@@ -2,6 +2,7 @@ package com.fisk.datamanage.client;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.datamanagement.dto.datamasking.DataMaskingSourceDTO;
 import com.fisk.datamanagement.dto.datamasking.DataMaskingTargetDTO;
@@ -10,6 +11,7 @@ import com.fisk.datamanagement.dto.dataquality.DataQualityDTO;
 import com.fisk.datamanagement.dto.dataquality.UpperLowerBloodParameterDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -72,6 +74,15 @@ public interface DataManageClient {
      */
     @PostMapping("/MetaData/consumeMetaData")
     ResultEntity<Object> consumeMetaData(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto);
+
+    /**
+     * 删除元数据实体
+     *
+     * @param dto
+     * @return
+     */
+    @DeleteMapping("/MetaData/deleteMetaData")
+    ResultEntity<Object> deleteMetaData(@Validated @RequestBody MetaDataDeleteAttributeDTO dto);
 
 
 }
