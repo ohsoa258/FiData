@@ -3,6 +3,7 @@ package com.fisk.auth;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
 /**
@@ -24,6 +25,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.common.framework.properties",
         "com.fisk.common.framework.mybatis",
         "com.fisk.common.service.pageFilter"})
+@EnableHystrix
 public class FiskFrameworkAuthorizationApplication {
     public static void main(String[] args) {
         SpringApplication.run(FiskFrameworkAuthorizationApplication.class);

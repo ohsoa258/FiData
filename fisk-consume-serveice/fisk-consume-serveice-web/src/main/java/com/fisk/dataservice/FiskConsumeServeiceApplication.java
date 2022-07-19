@@ -3,6 +3,7 @@ package com.fisk.dataservice;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
 /**
@@ -25,6 +26,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.auth.client",
         "com.fisk.system.client"
 })
+@EnableHystrix
 public class FiskConsumeServeiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(FiskConsumeServeiceApplication.class, args);

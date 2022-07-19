@@ -895,7 +895,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             ProcessorEntity updateField = createUpdateField(appGroupId, config, groupId, dto, tableNifiSettingPO);
             tableNifiSettingPO.updateFieldProcessorId = updateField.getId();
             componentConnector(groupId, processorEntity1.getId(), updateField.getId(), AutoEndBranchTypeEnum.SUCCESS);
-            componentsConnector(groupId, processorEntity1.getId(), supervisionId, autoEndBranchTypeEnums);
+            //componentsConnector(groupId, processorEntity1.getId(), supervisionId, autoEndBranchTypeEnums);
             //加批量字段值
             ProcessorEntity updateField1 = createUpdateField1(appGroupId, config, groupId, dto, tableNifiSettingPO);
             componentConnector(groupId, updateField.getId(), updateField1.getId(), AutoEndBranchTypeEnum.SUCCESS);

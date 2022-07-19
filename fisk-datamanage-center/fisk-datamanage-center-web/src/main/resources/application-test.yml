@@ -64,24 +64,24 @@ scheduling:
   enabled: false
 
 #feign接口超时配置
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 10000
-        readTimeout: 12000
-
-ribbon:
-  eager-load:
-    enabled: true
-    clients: datamodel-service,dataaccess-service
-
-  hystrix:
-    command:
-    default:
-      isolation:
-        thread:
-          timeoutInMilliseconds: 30000
-      execution:
-        timeout:
-          enabled: true
+#feign:
+#  client:
+#    config:
+#      default:
+#        connectTimeout: 10000
+#        readTimeout: 12000
+#
+#ribbon:
+#  eager-load:
+#    enabled: true
+#    clients: datamodel-service,dataaccess-service
+#
+#  hystrix:
+#    command:
+#    default:
+#      isolation:
+#        thread:
+#          timeoutInMilliseconds: 30000
+#      execution:
+#        timeout:
+#          enabled: true
