@@ -139,7 +139,7 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildQueryOneData(String tableName, String queryConditions) {
+    public String buildQueryData(String tableName, String queryConditions) {
         StringBuilder str = new StringBuilder();
         str.append(" select *");
         str.append(" from " + tableName);

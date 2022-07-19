@@ -980,7 +980,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             //where条件
             String queryConditions = " and fidata_batch_code ='" + batchNumber + "'";
             IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
-            String sql = buildSqlCommand.buildQueryOneData(tableName, queryConditions);
+            String sql = buildSqlCommand.buildQueryData(tableName, queryConditions);
             List<Map<String, Object>> maps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
             //返回错误信息
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, maps.get(0).get("fidata_error_msg").toString());
@@ -992,7 +992,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             String code = dto.getMembers().get("fidata_new_code") == null ? dto.getMembers().get("code").toString() : dto.getMembers().get("fidata_new_code").toString();
             String queryConditions = " and " + getEntityCodeName(dto.getEntityId()) + " ='" + code + "'";
             IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
-            String sql = buildSqlCommand.buildQueryOneData(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), queryConditions);
+            String sql = buildSqlCommand.buildQueryData(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), queryConditions);
             List<Map<String, Object>> maps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
             dto.getMembers().put("fidata_mdm_fidata_id", maps.get(0).get("fidata_id"));
             if (dto.getMembers().get("fidata_new_code") == null) {

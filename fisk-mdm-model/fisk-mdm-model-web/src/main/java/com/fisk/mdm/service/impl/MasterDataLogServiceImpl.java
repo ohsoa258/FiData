@@ -148,7 +148,7 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
         //获取mdm表最新code
         String mdmTableName = TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId());
         IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
-        String sql = sqlBuilder.buildQueryOneData(mdmTableName, " and fidata_id =" + dto.getMembers().get("fidata_mdm_fidata_id"));
+        String sql = sqlBuilder.buildQueryData(mdmTableName, " and fidata_id =" + dto.getMembers().get("fidata_mdm_fidata_id"));
         log.info("日志回滚,查询mdm最新code:", sql);
         List<Map<String, Object>> resultMaps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
         if (CollectionUtils.isEmpty(resultMaps) || resultMaps.size() > 1) {

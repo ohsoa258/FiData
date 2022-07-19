@@ -155,7 +155,7 @@ public class ComplexTypeServiceImpl implements IComplexType {
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
         IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
-        String sql = buildSqlCommand.buildQueryOneData(tableName, " and code='" + dto.getCode() + "'");
+        String sql = buildSqlCommand.buildQueryData(tableName, " and code='" + dto.getCode() + "'");
         List<Map<String, Object>> resultMaps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
         if (CollectionUtils.isEmpty(resultMaps) || resultMaps.size() > 1) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
