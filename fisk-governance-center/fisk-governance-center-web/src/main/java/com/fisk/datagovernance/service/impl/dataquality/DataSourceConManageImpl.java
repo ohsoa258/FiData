@@ -178,7 +178,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(DataSourceConPO::getDatasourceType, SourceTypeEnum.FiData.getValue())
-                .eq(DataSourceConPO::getDelFlag, 1);
+                .eq(DataSourceConPO::getDelFlag, 1)
+                .orderByAsc(t->t.getDatasourceId());
         List<DataSourceConPO> dataSourceConPOList = mapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(dataSourceConPOList)) {
             fiDataMetaDataTreeBase = new FiDataMetaDataTreeDTO();
