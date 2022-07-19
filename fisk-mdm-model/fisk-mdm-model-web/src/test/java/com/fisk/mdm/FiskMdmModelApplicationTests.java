@@ -26,7 +26,7 @@ class FiskMdmModelApplicationTests {
 
     @Test
     void contextLoads() {
-        dataSynchronizationUtils.stgDataSynchronize(28,"8bd55bb1-1c04-4c3e-b886-62369bdb501f");
+        dataSynchronizationUtils.stgDataSynchronize(124, "b23a805d-9740-43b9-8ef7-78ddbdf896c9");
     }
 
     @Test

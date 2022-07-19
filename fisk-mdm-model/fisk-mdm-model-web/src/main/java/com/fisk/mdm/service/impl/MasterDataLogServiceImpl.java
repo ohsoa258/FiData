@@ -153,7 +153,7 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
         //获取mdm表最新code
         String mdmTableName = TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId());
         IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
-        String sql = sqlBuilder.buildQueryOneData(mdmTableName, " fidata_id =" + dto.getMembers().get("fidata_mdm_fidata_id"));
+        String sql = sqlBuilder.buildQueryOneData(mdmTableName, " and fidata_id =" + dto.getMembers().get("fidata_mdm_fidata_id"));
         log.info("日志回滚,查询mdm最新code:", sql);
         List<Map<String, Object>> resultMaps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
         if (CollectionUtils.isEmpty(resultMaps) || resultMaps.size() > 1) {
@@ -163,7 +163,7 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
         String entityCodeName = masterDataService.getEntityCodeName(dto.getEntityId());
         //mdm最新code值
         String codeLatest = resultMaps.get(0).get(entityCodeName).toString();
-        String code = resultMaps.get(0).get("code").toString();
+        String code = resultMaps.get(0).get(entityCodeName).toString();
         //不相等,则要修改的code为new_code
         if (!codeLatest.equals(code)) {
             dto.getMembers().put("fidata_new_code", code);
