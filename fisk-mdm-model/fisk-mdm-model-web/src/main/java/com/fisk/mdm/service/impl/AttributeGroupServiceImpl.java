@@ -175,8 +175,8 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
         // 新增属性
         AttributeGroupDetailsDTO detailsDto = new AttributeGroupDetailsDTO();
         detailsDto.setGroupId(dto.getGroupId());
-        detailsDto.setEntityId(entityId);
         dto.getAttributes().stream().forEach(e -> {
+            detailsDto.setEntityId(e.getEntityId());
             detailsDto.setAttributeId(e.getAttributeId());
             AttributeGroupDetailsPO detailsPo1 = AttributeGroupMap.INSTANCES.detailsDtoToDto(detailsDto);
             int res = detailsMapper.insert(detailsPo1);
