@@ -812,7 +812,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
             checkFieldName = "[" + checkFieldName + "]";
             tableName = "[" + tableName + "]";
-        } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRE) {
+        } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
             checkFieldName = String.format("\"%s\"", checkFieldName);
             checkFieldName = String.format("\"%s\"", checkFieldName);
         }
@@ -1030,7 +1030,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 ? "`%s`" + "=" + "'%s'" :
                 dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER
                         ? "[%s]" + "=" + "'%s'" :
-                        dataSourceTypeEnum == DataSourceTypeEnum.POSTGRE
+                        dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL
                                 ? "\"%s\"" + "=" + "'%s'" :
                                 "";
         return sqlWhereStr;
@@ -1049,7 +1049,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 ? "`%s`" :
                 dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER
                         ? "[%s]" :
-                        dataSourceTypeEnum == DataSourceTypeEnum.POSTGRE
+                        dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL
                                 ? "\"%s\"" :
                                 "";
         if (StringUtils.isNotEmpty(sqlFieldStr)) {
@@ -1083,7 +1083,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     "END", "[" + msgField + "]", "[" + msgField + "]", "'" + msg + "'", "[" + msgField + "]+" + "'；" + msg + "'");
             updateMsgFieldSql = String.format("[%s]" + "=" + "%s ", msgField, caseSql);
 
-        } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRE) {
+        } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
             String caseSql = String.format("CASE \n" +
                     "\tWHEN %s='' or %s is null THEN\n" +
                     "\t\t%s\n" +

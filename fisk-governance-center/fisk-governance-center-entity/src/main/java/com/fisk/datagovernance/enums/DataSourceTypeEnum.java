@@ -21,7 +21,7 @@ public enum DataSourceTypeEnum implements BaseEnum {
 
     TABULAR(3, "TABULAR", "org.olap4j.driver.xmla.XmlaOlap4jDriver"),
 
-    POSTGRE(4, "POSTGRE", "org.postgresql.Driver");
+    POSTGRESQL(4, "POSTGRESQL", "org.postgresql.Driver");
 
     DataSourceTypeEnum(int value, String name, String driverName) {
         this.driverName = driverName;

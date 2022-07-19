@@ -148,7 +148,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     return ResultEnum.SUCCESS;
                 case POSTGRESQL:
                     //1.加载驱动程序
-                    Class.forName(DataSourceTypeEnum.POSTGRE.getDriverName());
+                    Class.forName(DataSourceTypeEnum.POSTGRESQL.getDriverName());
                     //2.获得数据库的连接
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
@@ -262,7 +262,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     // 表结构
                     tableNameAndColumns = sqlServerPlusUtils.getTableNameAndColumnsPlus(conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
                     break;
-                case POSTGRE:
+                case POSTGRESQL:
                     // 表结构
                     tableNameAndColumns = postgresConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DriverTypeEnum.POSTGRESQL);
                     break;

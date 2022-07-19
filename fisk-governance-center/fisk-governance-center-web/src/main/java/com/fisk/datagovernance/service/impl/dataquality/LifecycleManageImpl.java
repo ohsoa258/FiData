@@ -145,7 +145,7 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
                 fieldName = "`" + fieldName + "`";
             } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
                 fieldName = "[" + fieldName + "]";
-            } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRE) {
+            } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
                 fieldName = "" + fieldName + "";
             }
         }

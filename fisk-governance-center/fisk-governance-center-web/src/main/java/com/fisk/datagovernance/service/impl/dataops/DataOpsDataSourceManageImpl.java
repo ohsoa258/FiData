@@ -291,7 +291,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                         }
                         List<DataOpsDataTableVO> dataOpsDataTableVOList = new ArrayList<>();
                         // pg数据库信息读取
-                        if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRE) {
+                        if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRESQL) {
                             // 表信息
                             List<String> tableList = postgresConUtils.getTableList(postgreDTO.getPgsqlUrl(), postgreDTO.getPgsqlUsername(),
                                     postgreDTO.getPgsqlPassword(), postgreDTO.getDataSourceTypeEnum().getDriverName());
