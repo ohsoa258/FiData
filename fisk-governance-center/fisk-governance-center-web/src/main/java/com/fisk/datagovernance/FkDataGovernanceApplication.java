@@ -3,6 +3,7 @@ package com.fisk.datagovernance;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
 /**
@@ -29,6 +30,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.dataaccess.client",
         "com.fisk.mdm.client"
 })
+@EnableHystrix
 public class FkDataGovernanceApplication {
     public static void main(String[] args) {
         SpringApplication.run(FkDataGovernanceApplication.class, args);
