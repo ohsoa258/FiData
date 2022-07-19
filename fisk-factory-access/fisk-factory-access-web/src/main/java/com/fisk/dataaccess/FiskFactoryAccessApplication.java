@@ -3,6 +3,7 @@ package com.fisk.dataaccess;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -33,6 +34,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         "com.fisk.datamanage.client"
 })
 @EnableTransactionManagement
+@EnableHystrix
 public class FiskFactoryAccessApplication {
 
     public static void main(String[] args) {
