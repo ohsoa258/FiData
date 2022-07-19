@@ -63,7 +63,7 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
     /**
      * 系统字段
      */
-    String systemColumnName = ",fidata_new_code,fidata_create_time,fidata_create_user";
+    String systemColumnName = ",fidata_create_time,fidata_create_user";
 
     /**
      * 连接Connection
@@ -163,12 +163,13 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
         String entityCodeName = masterDataService.getEntityCodeName(dto.getEntityId());
         //mdm最新code值
         String codeLatest = resultMaps.get(0).get(entityCodeName).toString();
-        String code = resultMaps.get(0).get(entityCodeName).toString();
+        String code = dto.getMembers().get("code").toString();
         //不相等,则要修改的code为new_code
         if (!codeLatest.equals(code)) {
             dto.getMembers().put("fidata_new_code", code);
             dto.getMembers().put("code", codeLatest);
         }
+        dto.getMembers().remove("fidata_mdm_fidata_id");
         return masterDataService.OperateMasterData(dto, EventTypeEnum.ROLLBACK);
     }
 
