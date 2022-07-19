@@ -395,6 +395,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         return checkIds;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum createCustomView(Integer id) {
         ViwGroupVO viwGroupVo = viwGroupService.getDataByGroupId(id).get(0);
