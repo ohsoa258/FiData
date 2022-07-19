@@ -168,8 +168,7 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
         // 删除属性组下的实体数据
         QueryWrapper<AttributeGroupDetailsPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(AttributeGroupDetailsPO::getGroupId,dto.getGroupId())
-                .eq(AttributeGroupDetailsPO::getEntityId,entityId);
+                .eq(AttributeGroupDetailsPO::getGroupId,dto.getGroupId());
         detailsMapper.delete(queryWrapper);
 
         // 新增属性
