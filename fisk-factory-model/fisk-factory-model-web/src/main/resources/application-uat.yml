@@ -32,11 +32,3 @@ generate:
       url: jdbc:postgresql://192.168.21.13:5432/dmp_dw_UAT?stringtype=unspecified
       userName: postgres
       password: PgPassword01!
-
-#feign接口超时配置
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 10000
-        readTimeout: 12000

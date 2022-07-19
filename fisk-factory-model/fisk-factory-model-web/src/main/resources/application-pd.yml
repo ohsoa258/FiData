@@ -34,11 +34,3 @@ generate:
       url: jdbc:postgresql://100.102.201.107:5433/dmp_dw?stringtype=unspecified
       userName: adminuser
       password: .FdF_r&tj4)+
-
-#feign接口超时配置
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 10000
-        readTimeout: 12000
