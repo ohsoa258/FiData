@@ -30,6 +30,7 @@ spring:
     time-zone: GMT+8
   redis:
     host: 192.168.21.21
+    password: test123456
 
 # pg数仓
 pgsql-mdm:
