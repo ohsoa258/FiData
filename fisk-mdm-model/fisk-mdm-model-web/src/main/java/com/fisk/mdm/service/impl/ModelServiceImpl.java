@@ -323,7 +323,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         dataTree.setParentId("-10");
         dataTree.setLabel(reqDto.getDataSourceName());
         dataTree.setLabelAlias(reqDto.getDataSourceName());
-        dataTree.setLevelType(LevelTypeEnum.FOLDER);
+        dataTree.setLevelType(LevelTypeEnum.DATABASE);
         // 获取模型数据
         dataTree.setChildren(this.getModelData(uuid));
         dataTreeList.add(dataTree);
@@ -354,7 +354,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                     dto.setParentId(id);
                     dto.setLabel(e.getName());
                     dto.setLabelAlias(e.getDisplayName());
-                    dto.setLevelType(LevelTypeEnum.DATABASE);
+                    dto.setLevelType(LevelTypeEnum.FOLDER);
                     dto.setSourceType(1);
                     dto.setSourceId(Integer.parseInt(id));
 
