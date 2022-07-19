@@ -18,6 +18,7 @@ public enum TemplateTypeEnum implements BaseEnum {
     TABLE_BLOOD_KINSHIP_CHECK_TEMPLATE(105, "表血缘断裂校验模板", "TABLE"),
     BUSINESS_CHECK_TEMPLATE(106, "业务验证模板", "TABLE"),
     SIMILARITY_TEMPLATE(107, "相似度模板", "FIELD"),
+    DATA_MISSING_TEMPLATE(108, "数据缺失模板", "FIELD"),
     BUSINESS_FILTER_TEMPLATE(200, "业务清洗模板", "TABLE"),
     SPECIFY_TIME_RECYCLING_TEMPLATE(300, "指定时间回收模板", "TABLE"),
     EMPTY_TABLE_RECOVERY_TEMPLATE(301, "空表回收模板", "TABLE"),
