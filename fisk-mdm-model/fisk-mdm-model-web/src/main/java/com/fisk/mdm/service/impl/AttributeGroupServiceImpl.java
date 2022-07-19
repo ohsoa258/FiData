@@ -160,6 +160,9 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum addAttribute(AttributeGroupDetailsAddDTO dto) {
+        if (CollectionUtils.isEmpty(dto.getAttributes())){
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
 
         Integer entityId = dto.getAttributes().get(0).getEntityId();
         // 删除属性组下的实体数据
