@@ -58,3 +58,42 @@ eureka:
     lease-renewal-interval-in-seconds: 2
     # 告诉eureka服务端，n秒内未收到心跳，就将该服务剔除 （spring cloud 默认配置90s）
     lease-expiration-duration-in-seconds: 4
+
+feign:
+  client:
+    config:
+      default:
+        loggerLevel: basic
+  hystrix:
+    enabled: true
+
+ribbon:
+  ConnectTimeout: 3000
+  ReadTimeout: 15000
+  NIWSServerListClassName: com.netflix.niws.loadbalancer.DiscoveryEnabledNIWSServerList
+  ServerListRefreshInterval: 3000
+  MaxAutoRetries: 0
+  MaxAutoRetriesNextServer: 0
+
+hystrix:
+  command:
+    default:
+      execution:
+        timeout:
+          enabled: true
+        isolation:
+          # 线程隔离 THREAD， SEMAPHORE
+          strategy: THREAD
+          thread:
+            # 超时时间
+            timeoutInMilliseconds: 15500
+            # 超时时是否应中断执行（默认true）
+            interruptOnTimeout: true
+      circuitBreaker:
+        enabled: true
+        # 在滚动窗口中启用熔断的最小请求数（默认20次）
+        requestVolumeThreshold: 10
+        # 熔断后，多少ms后进行一次请求尝试（默认5000ms）
+        sleepWindowInMilliseconds: 5000
+        # 当请求错误比例到达n%时，开启熔断（默认50%）
+        errorThresholdPercentage: 50
