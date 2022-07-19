@@ -5,6 +5,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
+import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -28,6 +29,7 @@ import org.springframework.context.ConfigurableApplicationContext;
         "com.fisk.datafactory.client",
         "com.fisk.mdm.client",
         "com.fisk.datamanage.client"})
+@EnableHystrix
 public class FkTaskApplication {
     public static void main(String[] args) {
         ConfigurableApplicationContext configurableApplicationContext =  SpringApplication.run(FkTaskApplication.class, args);
