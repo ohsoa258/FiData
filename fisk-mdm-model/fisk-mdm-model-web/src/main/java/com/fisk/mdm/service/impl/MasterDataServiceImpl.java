@@ -982,10 +982,11 @@ public class MasterDataServiceImpl implements IMasterDataService {
             IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
             String sql = buildSqlCommand.buildQueryOneData(tableName, queryConditions);
             List<Map<String, Object>> maps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
+            //返回错误信息
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, maps.get(0).get("fidata_error_msg").toString());
         }
         //添加维护日志表数据
-        if (entityServiceImpl.getEnableMemberLog(dto.getEntityId())) {
+        if (entityServiceImpl.getEnableMemberLog(dto.getEntityId()) && !delete) {
             dto.getMembers().put("fidata_version_id", dto.getVersionId());
             //获取mdm表id
             String code = dto.getMembers().get("fidata_new_code") == null ? dto.getMembers().get("code").toString() : dto.getMembers().get("fidata_new_code").toString();

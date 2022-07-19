@@ -82,11 +82,6 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
         data.put("fidata_create_user", userHelper.getLoginUserInfo().id);
         data.put("fidata_create_time", LocalDateTime.now());
         data.put("fidata_del_flag", 1);
-        if (data.get("fidata_new_code") != null && !StringUtils.isEmpty(data.get("fidata_new_code").toString())) {
-            String oldCode = data.get("code").toString();
-            data.put("code", data.get("fidata_new_code").toString());
-            data.put("fidata_new_code", oldCode);
-        }
         IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
         String sql = buildSqlCommand.buildInsertSingleData(data, tableName);
         log.info("执行新增主数据维护日志sql: 【" + sql + "】");
