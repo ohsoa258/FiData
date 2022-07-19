@@ -12,9 +12,9 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties("fk")
 public class ProjectProperties {
 
-    private final AuthProperties auth = new AuthProperties();
-    private final JwtProperties jwt = new JwtProperties();
-    private final EncoderProperties encoder = new EncoderProperties();
+    private AuthProperties auth;
+    private JwtProperties jwt;
+    private EncoderProperties encoder;
 
     @Data
     public static class AuthProperties {
@@ -35,7 +35,7 @@ public class ProjectProperties {
 
     @Data
     public static class EncoderProperties {
-        private final CryptProperties crypt = new CryptProperties();
+        private CryptProperties crypt;
 
         @Data
         public static class CryptProperties {
