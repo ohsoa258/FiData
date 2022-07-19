@@ -8,24 +8,60 @@ package com.fisk.mdm.utils.mdmBEBuild;
  */
 public class TableNameGenerateUtils {
 
+    /**
+     * stg表
+     * @param modelId
+     * @param entityId
+     * @return
+     */
     public static String generateStgTableName(Integer modelId, Integer entityId) {
         StringBuilder str = new StringBuilder();
         str.append("stg_" + modelId + "_" + entityId);
         return str.toString();
     }
 
+    /**
+     * mdm表
+     * @param modelId
+     * @param entityId
+     * @return
+     */
     public static String generateMdmTableName(Integer modelId, Integer entityId) {
         StringBuilder str = new StringBuilder();
         str.append("mdm_" + modelId + "_" + entityId);
         return str.toString();
     }
 
+    /**
+     * 视图表
+     * @param modelId
+     * @param entityId
+     * @return
+     */
     public static String generateViwTableName(Integer modelId, Integer entityId) {
         StringBuilder str = new StringBuilder();
         str.append("viw_" + modelId + "_" + entityId);
         return str.toString();
     }
 
+    /**
+     * 自定义视图表
+     * @param entityId
+     * @param viewId
+     * @return
+     */
+    public static String generateCustomizeViwTableName(Integer entityId,Integer viewId) {
+        StringBuilder str = new StringBuilder();
+        str.append("viw_" + entityId + "_" + viewId);
+        return str.toString();
+    }
+
+    /**
+     * 日志表
+     * @param modelId
+     * @param entityId
+     * @return
+     */
     public static String generateLogTableName(Integer modelId, Integer entityId) {
         StringBuilder str = new StringBuilder();
         str.append("log_" + modelId + "_" + entityId);

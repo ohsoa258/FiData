@@ -23,6 +23,7 @@ import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.ViwGroupService;
 import com.fisk.mdm.utils.mdmBEBuild.BuildFactoryHelper;
 import com.fisk.mdm.utils.mdmBEBuild.IBuildSqlCommand;
+import com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.vo.entity.EntityVO;
@@ -414,6 +415,12 @@ public class ViwGroupServiceImpl implements ViwGroupService {
 
             // 3.执行Sql
             dbHelper.executeSql(sql, connection);
+
+            // 回写自定义视图表名
+            ViwGroupPO groupPo = new ViwGroupPO();
+            groupPo.setId(id);
+            groupPo.setColumnName(TableNameGenerateUtils.generateCustomizeViwTableName(viwGroupVo.getEntityId(),viwGroupVo.getId()));
+            viwGroupMapper.updateById(groupPo);
         }catch (SQLException ex){
             log.error("【创建自定义视图Sql】:" + sql + "【创建自定义视图失败,异常信息】:" + ex);
             ex.printStackTrace();
@@ -469,7 +476,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     public String buildCreateCustomViw(ViwGroupVO viwGroupVo) {
         StringBuilder str = new StringBuilder();
         str.append("CREATE VIEW " + PUBLIC + ".");
-        str.append(viwGroupVo.getName());
+        str.append(TableNameGenerateUtils.generateCustomizeViwTableName(viwGroupVo.getEntityId(),viwGroupVo.getId()));
         str.append(" AS ").append("SELECT ");
 
         // 获取主实体下的属性
