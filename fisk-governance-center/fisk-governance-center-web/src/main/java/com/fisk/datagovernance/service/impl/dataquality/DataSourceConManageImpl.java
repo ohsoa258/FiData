@@ -178,17 +178,19 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(DataSourceConPO::getDatasourceType, SourceTypeEnum.FiData.getValue())
-                .eq(DataSourceConPO::getDelFlag, 1)
-                .orderByAsc(t->t.getDatasourceId());
+                .eq(DataSourceConPO::getDelFlag, 1);
         List<DataSourceConPO> dataSourceConPOList = mapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(dataSourceConPOList)) {
+            dataSourceConPOList = dataSourceConPOList.stream()
+                    .sorted(Comparator.comparing(DataSourceConPO::getDatasourceId))
+                    .collect(Collectors.toList());
             fiDataMetaDataTreeBase = new FiDataMetaDataTreeDTO();
             fiDataMetaDataTreeBase.setId("-10");
             fiDataMetaDataTreeBase.setParentId("-100");
             fiDataMetaDataTreeBase.setLabel("FiData");
             fiDataMetaDataTreeBase.setLabelAlias("FiData");
             fiDataMetaDataTreeBase.setLevelType(LevelTypeEnum.BASEFOLDER);
-            fiDataMetaDataTreeBase.children=new ArrayList<>();
+            fiDataMetaDataTreeBase.children = new ArrayList<>();
             for (DataSourceConPO dataSourceConPO : dataSourceConPOList) {
                 List<FiDataMetaDataDTO> fiDataMetaData = redisUtil.getFiDataMetaData(String.valueOf(dataSourceConPO.datasourceId));
                 if (CollectionUtils.isNotEmpty(fiDataMetaData)) {
@@ -242,7 +244,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 fiDataMetaDataTree_Ip.setChildren(fiDataMetaDataTree_Ip_DataBases);
                 fiDataMetaDataTree_Ips.add(fiDataMetaDataTree_Ip);
             }
-            fiDataMetaDataTreeBase.children=new ArrayList<>();
+            fiDataMetaDataTreeBase.children = new ArrayList<>();
             fiDataMetaDataTreeBase.children.addAll(fiDataMetaDataTree_Ips);
         }
         return fiDataMetaDataTreeBase;
