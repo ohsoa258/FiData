@@ -5,6 +5,10 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -57,6 +61,18 @@ public class RegexUtils {
         }
         List<String> subtract = (List<String>) CollectionUtils.subtract(list1, list2);
         return subtract;
+    }
+
+    /**
+     * 自定义函数去重: 用于stream流根据对象指定字段去重
+     *
+     * @param keyExtractor 去重的对象
+     * @param <T>          泛型
+     * @return 返回的实体对象
+     */
+    public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+        Map<Object, Boolean> map = new ConcurrentHashMap<>();
+        return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
 
     private static boolean matches(String str, String regex) {
