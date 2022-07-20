@@ -5,6 +5,9 @@ import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
+import com.fisk.common.service.mdmBEBuild.BuildFactoryHelper;
+import com.fisk.common.service.mdmBEBuild.CommonMethods;
+import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.common.service.mdmBEBuild.dto.DataSourceConDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.stgbatch.MdmDTO;
@@ -27,8 +30,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.execQueryResultList;
-import static com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils.generateMdmTableName;
-import static com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils.generateStgTableName;
+import static com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils.*;
 
 /**
  * @Author WangYan
@@ -61,7 +63,7 @@ public class DataSynchronizationUtils {
      * @param entityId
      * @param batchCode
      */
-    public ResultEnum stgDataSynchronize(Integer entityId,String batchCode){
+    public ResultEnum stgDataSynchronize(Integer entityId,String batchCode) {
 
         // 1.查询属性配置信息
         EntityInfoVO entityInfoVo = entityService.getFilterAttributeById(entityId);
@@ -71,8 +73,11 @@ public class DataSynchronizationUtils {
         // 获取stg表名
         String stgTableName = generateStgTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
 
+        //获取log表名
+        String logTableName = generateLogTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
+
         // 2.查询需要同步的数据
-        String sql = "SELECT * FROM " + stgTableName + " WHERE fidata_batch_code = '" + batchCode +"'";
+        String sql = "SELECT * FROM " + stgTableName + " WHERE fidata_batch_code = '" + batchCode + "'";
 
         DataSourceConDTO dto = new DataSourceConDTO();
         dto.setConStr(connectionStr);
@@ -147,20 +152,20 @@ public class DataSynchronizationUtils {
         List<Map<String, Object>> dateList = this.dataProcessing(mdmResultList, resultList, attributeList);
 
         // 4.数据导入
-        return this.dataImport(mdmTableName,stgTableName,dto,attributeList,dateList,batchCode);
+        return this.dataImport(mdmTableName, stgTableName, logTableName, dto, attributeList, dateList, batchCode);
     }
 
     /**
      * 数据导入
      */
-    public ResultEnum dataImport(String mdmTableName,String stgTableName
-            ,DataSourceConDTO dto
-            ,List<AttributeInfoDTO> attributeList
-            ,List<Map<String, Object>> listMap
-            ,String batchCode){
+    public ResultEnum dataImport(String mdmTableName, String stgTableName, String logTableName
+            , DataSourceConDTO dto
+            , List<AttributeInfoDTO> attributeList
+            , List<Map<String, Object>> listMap
+            , String batchCode) {
         AbstractDbHelper dbHelper = new AbstractDbHelper();
         Connection connection = dbHelper.connection(dto.conStr, dto.conAccount,
-                dto.conPassword,dto.conType);
+                dto.conPassword, dto.conType);
 
         StringBuilder str = new StringBuilder();
         str.append("INSERT INTO " + mdmTableName);
@@ -245,32 +250,82 @@ public class DataSynchronizationUtils {
             int res = stmt.executeUpdate();
             System.out.println("成功条数！:" + res);
             log.info(ResultEnum.DATA_SYNCHRONIZATION_SUCCESS.getMsg() + "【成功条数】:" + res
-                       + "【批次号】:" + batchCode);
+                    + "【批次号】:" + batchCode);
             // 回调成功同步状态
-            this.callbackSuccessStatus(stgTableName,batchCode,connection);
+            this.callbackSuccessStatus(stgTableName, batchCode, connection);
+
+            //添加log表
+            addLogTable(mdmTableName, logTableName, attributeList, listMap, columnName);
 
             return ResultEnum.DATA_SYNCHRONIZATION_SUCCESS;
         } catch (SQLException ex) {
             log.error("stg表数据同步失败,异常信息:" + ex);
             String errorMessage = ResultEnum.DATA_SYNCHRONIZATION_FAILED.getMsg() + "【原因】:" + ex.getMessage();
-            this.errorMessageProcess(stgTableName,errorMessage,batchCode,connection);
+            this.errorMessageProcess(stgTableName, errorMessage, batchCode, connection);
 
             // 回调失败同步状态
-            this.callbackFailedStatus(stgTableName,batchCode,connection);
+            this.callbackFailedStatus(stgTableName, batchCode, connection);
 
             return ResultEnum.DATA_SYNCHRONIZATION_FAILED;
         }
     }
 
     /**
+     * 数据添加到日志表
+     *
+     * @param mdmTableName
+     * @param logTableName
+     * @param attributeList
+     * @param listMap
+     * @param columnName
+     */
+    public void addLogTable(String mdmTableName, String logTableName
+            , List<AttributeInfoDTO> attributeList
+            , List<Map<String, Object>> listMap
+            , String columnName) {
+        //获取新增数据code集合
+        List<String> codeList = listMap.stream().map(e -> e.get(columnName).toString()).collect(Collectors.toList());
+        //转为单引号也为逗号隔开的字符串
+        String values = CommonMethods.convertListToString(codeList);
+        //连接对象
+        AbstractDbHelper dbHelper = new AbstractDbHelper();
+        Connection connection = dbHelper.connection(connectionStr, acc, pwd, type);
+        IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
+        String sql = buildSqlCommand.buildQueryData(mdmTableName, " and " + columnName + " in(" + values + ")");
+        //查询新增到mdm表的数据,获取fidata_id
+        List<Map<String, Object>> maps = AbstractDbHelper.execQueryResultMaps(sql, connection);
+        for (Map<String, Object> item : listMap) {
+            Optional<Map<String, Object>> first = maps.stream().filter(e -> e.get(columnName).equals(item.get(columnName))).findFirst();
+            if (!first.isPresent()) {
+                continue;
+            }
+            Map<String, Object> data = new HashMap<>();
+            for (AttributeInfoDTO attribute : attributeList) {
+                if (item.get(attribute.getColumnName()) == null) {
+                    continue;
+                }
+                data.put(attribute.getName(), item.get(attribute.getColumnName()).toString());
+            }
+            data.put("fidata_mdm_fidata_id", first.get().get("fidata_id"));
+            data.put("fidata_del_flag", "1");
+            data.put("fidata_version_id", item.get("fidata_version_id"));
+            data.put("fidata_create_time", item.get("fidata_create_time"));
+            data.put("fidata_create_user", item.get("fidata_create_user"));
+            String insertSql = buildSqlCommand.buildInsertSingleData(data, logTableName);
+            AbstractDbHelper.executeSqlReturnKey(insertSql, connection);
+        }
+    }
+
+    /**
      * 根据指定字段获取值
+     *
      * @param listMap
      * @param filed
      */
-    public List<Object> getParameter(List<Map<String, Object>> listMap,String filed){
+    public List<Object> getParameter(List<Map<String, Object>> listMap, String filed) {
         List<Object> list = new ArrayList<>();
         listMap.stream().forEach(e -> {
-            e.forEach((k,v) -> {
+            e.forEach((k, v) -> {
                 if (k.equals(filed)){
                     if (SPECIAL_CHARACTERS_NULL.equals(v)){
                         list.add(null);
