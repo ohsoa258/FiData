@@ -311,14 +311,14 @@ public class MasterDataServiceImpl implements IMasterDataService {
                         .collect(Collectors.toList());
             }
             resultObjectVO.setAttributes(attributeGroupVoList);
-            return queryMasterData(resultObjectVO, dto, viwGroupVO.getName(), attributeColumnVoList, response);
+            return queryMasterData(resultObjectVO, dto, viwGroupVO.getColumnName(), attributeColumnVoList, response);
         }
         ResultAttributeGroupVO attributeGroupVo = new ResultAttributeGroupVO();
         attributeGroupVo.setName("");
         attributeGroupVo.setAttributes(attributeColumnVoList);
         attributeGroupVoList.add(attributeGroupVo);
         resultObjectVO.setAttributes(attributeGroupVoList);
-        return queryMasterData(resultObjectVO, dto, viwGroupVO.getName(), attributeColumnVoList, response);
+        return queryMasterData(resultObjectVO, dto, viwGroupVO.getColumnName(), attributeColumnVoList, response);
     }
 
     /**
@@ -510,9 +510,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
         for (AttributeColumnVO attributeColumnVo : attributeColumnVoList) {
             //域字段添加编码和名称表头
             if (attributeColumnVo.getDataType().equals(DataTypeEnum.DOMAIN.getName())) {
-                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.DOMAIN));
                 attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateDomainCodeDisplayName(attributeColumnVo.getDisplayName()));
                 attributeColumnVo.setName(TableNameGenerateUtils.generateDomainCode(attributeColumnVo.getName()));
+                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.DOMAIN));
             }
             newColumnList.add(attributeColumnVo);
         }
