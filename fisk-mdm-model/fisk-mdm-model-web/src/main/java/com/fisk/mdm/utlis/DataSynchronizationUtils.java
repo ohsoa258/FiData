@@ -312,6 +312,7 @@ public class DataSynchronizationUtils {
             data.put("fidata_create_time", item.get("fidata_create_time"));
             data.put("fidata_create_user", item.get("fidata_create_user"));
             String insertSql = buildSqlCommand.buildInsertSingleData(data, logTableName);
+            log.info("添加日志数据,sql:", insertSql);
             AbstractDbHelper.executeSqlReturnKey(insertSql, connection);
         }
     }
