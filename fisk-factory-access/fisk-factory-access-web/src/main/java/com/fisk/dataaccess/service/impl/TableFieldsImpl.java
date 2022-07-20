@@ -8,6 +8,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.core.utils.RegexUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -131,9 +132,12 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         // list: dto -> po
         List<TableFieldsPO> listPo = TableFieldsMap.INSTANCES.listDtoToPo(listDto);
 
+        // 字段名称不可重复(前端没有提示功能,后端强制去重)
+        List<TableFieldsPO> distinctFields = listPo.stream().filter(RegexUtils.distinctByKey(po -> po.fieldName)).collect(Collectors.toList());
+
         boolean success;
         // 批量添加tb_table_fields
-        success = this.saveBatch(listPo);
+        success = this.saveBatch(distinctFields);
         if (!success) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
@@ -146,7 +150,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             }
         }
         // 添加tb_table_syncmode
-        Long tableAccessId = listPo.get(0).tableAccessId;
+        Long tableAccessId = distinctFields.get(0).tableAccessId;
         TableSyncmodePO syncmodePo = syncmodeDto.toEntity(TableSyncmodePO.class);
         syncmodePo.id = tableAccessId;
         success = syncmodeImpl.saveOrUpdate(syncmodePo);
@@ -168,7 +172,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     @Override
     public ResultEnum updateData(TableAccessNonDTO dto) {
 
-        List<TableFieldsDTO> list = dto.list;
+        // 字段名称不可重复(前端没有提示功能,后端强制去重)
+        List<TableFieldsDTO> list = dto.list.stream().filter(RegexUtils.distinctByKey(po -> po.fieldName)).collect(Collectors.toList());
 
         List<TableFieldsPO> originalDataList = list(Wrappers.<TableFieldsPO>lambdaQuery()
                 .eq(TableFieldsPO::getTableAccessId, list.get(0).tableAccessId)
