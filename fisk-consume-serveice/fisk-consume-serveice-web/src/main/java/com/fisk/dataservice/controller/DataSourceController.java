@@ -1,6 +1,7 @@
 package com.fisk.dataservice.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -37,7 +38,7 @@ public class DataSourceController {
 
     @PostMapping("/page")
     @ApiOperation("获取所有数据源连接信息")
-    public ResultEntity<Page<DataSourceConVO>> getData(@RequestBody DataSourceConQuery query) {
+    public ResultEntity<PageDTO<DataSourceConVO>> getData(@RequestBody DataSourceConQuery query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listDataSourceCons(query));
     }
 

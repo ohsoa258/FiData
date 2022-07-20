@@ -2,6 +2,7 @@ package com.fisk.dataservice.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.dataservice.dto.datasource.DataSourceConDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConEditDTO;
@@ -28,7 +29,7 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      * @param query 查询参数
      * @return 查询结果
      */
-    Page<DataSourceConVO> listDataSourceCons(DataSourceConQuery query);
+    PageDTO<DataSourceConVO> listDataSourceCons(DataSourceConQuery query);
 
     /**
      * 保存数据

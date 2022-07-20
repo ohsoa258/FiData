@@ -10,6 +10,8 @@
         api_type,
         datasource_id,
         table_name,
+        table_type,
+        table_business_type,
         create_sql,
         api.create_time,
         create_user
@@ -32,6 +34,8 @@
         api_type,
         datasource_id,
         table_name,
+        table_type,
+        table_business_type,
         create_sql,
         api.create_time,
         -- userinfo.user_account AS create_user

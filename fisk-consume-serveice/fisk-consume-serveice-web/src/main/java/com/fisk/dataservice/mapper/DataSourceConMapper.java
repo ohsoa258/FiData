@@ -46,6 +46,6 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
      * @return 执行结果
      */
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
-    @Insert("INSERT INTO `tb_datasource_config`(`name`, `con_str`, `con_ip`, `con_port`, `con_cube`, `con_dbname`, `con_type`, `con_account`, `con_password`, `create_time`, `create_user`,`del_flag`) VALUES (#{name}, #{conStr}, #{conIp}, #{conPort}, #{conCube}, #{conDbname}, #{conType}, #{conAccount}, #{conPassword}, #{createTime}, #{createUser},1);")
+    @Insert("INSERT INTO `tb_datasource_config`(`name`, `con_str`, `con_ip`, `con_port`, `datasource_id`, `datasource_type`,  `con_dbname`, `con_type`, `con_account`, `con_password`, `create_time`, `create_user`,`del_flag`) VALUES (#{name}, #{conStr}, #{conIp}, #{conPort}, #{datasourceId}, #{datasourceType}, #{conDbname}, #{conType}, #{conAccount}, #{conPassword}, #{createTime}, #{createUser},1);")
     int insertOne(DataSourceConPO po);
 }
