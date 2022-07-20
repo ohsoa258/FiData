@@ -295,7 +295,9 @@ public enum ResultEnum {
     UNCOMMITTED_CANNOT_COPIED(151028, "未提交不能复制!"),
     POSTULATES_NOT_ROLLBACK(151029, "发布状态不能回滚!"),
     AVERSION_NOT_DELETE(151030, "最后一个版本了,不能删除!"),
-    VIEW_NO_EXIST_ATTRIBUTE(151030, "该视图下暂无属性");
+    VIEW_NO_EXIST_ATTRIBUTE(151031, "该视图下暂无属性"),
+    FILE_NOT_FOUND_EXCEPTION(151032, "file流路径找不到"),
+    FILE_IO_EXCEPTION(151033, "IO流异常");
 
     ResultEnum(int code, String msg) {
         this.code = code;

@@ -35,15 +35,18 @@ import com.fisk.mdm.vo.modelVersion.ModelVersionVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
-import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
-
 import javax.annotation.Resource;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -54,8 +57,6 @@ import java.util.stream.Collectors;
 
 import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.*;
 import static com.fisk.mdm.utlis.DataSynchronizationUtils.MARK;
-import static com.fisk.mdm.utlis.FileConvertUtils.createFileItem;
-
 
 /**
  * @author ChenYa
@@ -233,7 +234,7 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
                             // 需要复制数据得code
                             List<Map<String, Object>> list1 = execQueryResultMaps(sql, connection);
                             List<String> codes = new ArrayList<>();
-                            longitudeList.stream().forEach(e -> {
+                            fileList.stream().forEach(e -> {
                                 list1.stream().forEach(iter -> {
                                     codes.add(iter.get(e.getColumnName()).toString());
                                 });
@@ -364,7 +365,7 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
      * @throws SQLException
      */
     public ResultEnum copyLatitude(List<String> codes,Integer newVersionId,Integer oldVersionId,
-                                   Connection connection, DataTypeEnum type) throws SQLException {
+                                   Connection connection, DataTypeEnum type) throws Exception {
 
         String code = codes.stream().map(e -> "'" + e + "'").collect(Collectors.joining(","));
 
@@ -391,9 +392,21 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
 
             // 2.结果集转换
             dtoList.forEach(e -> {
-                FileItem fileItem = createFileItem(e.getFilePath());
-                MultipartFile file = new CommonsMultipartFile(fileItem);
-                iComplexType.uploadFile(newVersionId, file).getCode();
+                File file = new File(e.getFilePath());
+                FileInputStream input = null;
+                try {
+                    input = new FileInputStream(file);
+                } catch (FileNotFoundException ex) {
+                    log.error(ResultEnum.FILE_NOT_FOUND_EXCEPTION.getMsg() + "异常信息:" + ex.getMessage());
+                }
+
+                MultipartFile multipartFile = null;
+                try {
+                    multipartFile = new MockMultipartFile("file", file.getName(),"text/plain", IOUtils.toByteArray(input));
+                } catch (IOException ex) {
+                    log.error(ResultEnum.FILE_IO_EXCEPTION.getMsg() + "异常信息:" + ex.getMessage());
+                }
+                iComplexType.uploadFile(newVersionId, multipartFile);
             });
         }
 
