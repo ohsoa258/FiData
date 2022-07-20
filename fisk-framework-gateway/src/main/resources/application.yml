@@ -29,6 +29,22 @@ eureka:
     # 告诉eureka服务端，n秒内未收到心跳，就将该服务剔除 （spring cloud 默认配置90s）
     lease-expiration-duration-in-seconds: 4
 
+feign:
+  client:
+    config:
+      default:
+        loggerLevel: basic
+  hystrix:
+    enabled: true
+
+ribbon:
+  ConnectTimeout: 3000
+  ReadTimeout: 15000
+  NIWSServerListClassName: com.netflix.niws.loadbalancer.DiscoveryEnabledNIWSServerList
+  ServerListRefreshInterval: 3000
+  MaxAutoRetries: 0
+  MaxAutoRetriesNextServer: 0
+
 hystrix:
   command:
     default:
@@ -36,14 +52,21 @@ hystrix:
         timeout:
           enabled: true
         isolation:
+          # 线程隔离 THREAD， SEMAPHORE
+          strategy: THREAD
           thread:
-            timeoutInMilliseconds: 20000 # 请求超时时长：6000ms
-
-ribbon:
-  # ribbon请求连接的超时时间- 限制5秒内必须请求到服务，并不限制服务处理的返回时间
-  ConnectTimeout: 5000 # 连接超时时间,毫秒
-  # 请求处理的超时时间 下级服务响应最大时间,超出时间消费方（路由也是消费方）返回timeout,超时时间不可大于断路器的超时时间
-  ReadTimeout: 6000 # 逻辑处理超时时间,毫秒
+            # 超时时间
+            timeoutInMilliseconds: 15500
+            # 超时时是否应中断执行（默认true）
+            interruptOnTimeout: true
+      circuitBreaker:
+        enabled: true
+        # 在滚动窗口中启用熔断的最小请求数（默认20次）
+        requestVolumeThreshold: 10
+        # 熔断后，多少ms后进行一次请求尝试（默认5000ms）
+        sleepWindowInMilliseconds: 5000
+        # 当请求错误比例到达n%时，开启熔断（默认50%）
+        errorThresholdPercentage: 50
 
 spring:
   application:
