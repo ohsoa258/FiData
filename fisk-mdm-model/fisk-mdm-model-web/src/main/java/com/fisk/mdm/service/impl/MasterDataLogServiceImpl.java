@@ -2,6 +2,7 @@ package com.fisk.mdm.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
@@ -18,6 +19,8 @@ import com.fisk.mdm.map.AttributeMap;
 import com.fisk.mdm.service.IMasterDataLog;
 import com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils;
 import com.fisk.mdm.vo.attribute.AttributeColumnVO;
+import com.fisk.mdm.vo.attribute.AttributeVO;
+import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.vo.masterdatalog.MasterDataLogPageVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
@@ -46,6 +49,8 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
     AttributeServiceImpl attributeService;
     @Resource
     MasterDataServiceImpl masterDataService;
+    @Resource
+    EntityServiceImpl entityService;
     @Resource
     UserClient client;
 
@@ -149,7 +154,7 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
         String mdmTableName = TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId());
         IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
         String sql = sqlBuilder.buildQueryData(mdmTableName, " and fidata_id =" + dto.getMembers().get("fidata_mdm_fidata_id"));
-        log.info("日志回滚,查询mdm最新code:", sql);
+        log.info("日志回滚,查询mdm最新code,sql:", sql);
         List<Map<String, Object>> resultMaps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
         if (CollectionUtils.isEmpty(resultMaps) || resultMaps.size() > 1) {
             return ResultEnum.DATA_NOTEXISTS;
@@ -166,8 +171,34 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
             dto.getMembers().put("code", codeLatest);
         }
         //域字段数据
-
-
+        EntityInfoVO attributeList = entityService.getFilterAttributeById(dto.getEntityId());
+        if (attributeList == null && CollectionUtils.isEmpty(attributeList.getAttributeList())) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        List<AttributeInfoDTO> domainList = attributeList.getAttributeList()
+                .stream()
+                .filter(e -> e.getDataType() == DataTypeEnum.DOMAIN.getName())
+                .collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(domainList)) {
+            for (AttributeInfoDTO item : domainList) {
+                //获取域字段mdm表名
+                ResultEntity<AttributeVO> domainAttribute = attributeService.getById(item.getDomainId());
+                if (domainAttribute.code != ResultEnum.SUCCESS.getCode()) {
+                    return ResultEnum.DATA_NOTEXISTS;
+                }
+                String domainMdmTableName = TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), domainAttribute.data.getEntityId());
+                String domainSql = sqlBuilder.buildQueryData(domainMdmTableName,
+                        " and fidata_id =" + dto.getMembers().get(item.getName()));
+                log.info("查询域字段数据,sql:", domainSql);
+                //查询域字段mdm表数据
+                List<Map<String, Object>> result = AbstractDbHelper.execQueryResultMaps(domainSql, getConnection());
+                if (CollectionUtils.isEmpty(resultMaps) || resultMaps.size() > 1) {
+                    return ResultEnum.DATA_NOTEXISTS;
+                }
+                //域字段id替换code
+                dto.getMembers().put(item.getName(), result.get(0).get(domainAttribute.data.getColumnName()));
+            }
+        }
         dto.getMembers().remove("fidata_mdm_fidata_id");
         return masterDataService.OperateMasterData(dto, EventTypeEnum.ROLLBACK);
     }
