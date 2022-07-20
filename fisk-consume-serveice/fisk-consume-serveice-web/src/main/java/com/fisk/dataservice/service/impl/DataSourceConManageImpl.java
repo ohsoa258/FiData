@@ -153,6 +153,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         try {
             switch (dto.conType) {
                 case MYSQL:
+                case DORIS:
                     Class.forName(DataSourceTypeEnum.MYSQL.getDriverName());
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
