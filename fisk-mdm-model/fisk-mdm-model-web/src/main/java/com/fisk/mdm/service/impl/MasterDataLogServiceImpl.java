@@ -158,12 +158,16 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
         String entityCodeName = masterDataService.getEntityCodeName(dto.getEntityId());
         //mdm最新code值
         String codeLatest = resultMaps.get(0).get(entityCodeName).toString();
+        //当前code
         String code = dto.getMembers().get("code").toString();
         //不相等,则要修改的code为new_code
         if (!codeLatest.equals(code)) {
             dto.getMembers().put("fidata_new_code", code);
             dto.getMembers().put("code", codeLatest);
         }
+        //域字段数据
+
+
         dto.getMembers().remove("fidata_mdm_fidata_id");
         return masterDataService.OperateMasterData(dto, EventTypeEnum.ROLLBACK);
     }
