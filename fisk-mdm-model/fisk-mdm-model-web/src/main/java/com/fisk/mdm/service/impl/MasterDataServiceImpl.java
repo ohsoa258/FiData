@@ -455,8 +455,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
         AttributeColumnVO vo = new AttributeColumnVO();
         switch (dataTypeEnum) {
             case DOMAIN:
-                vo.setDisplayName(TableNameGenerateUtils.generateDomainNameDisplayName(attributeColumnVo.getDisplayName()));
-                vo.setName(TableNameGenerateUtils.generateDomainName(attributeColumnVo.getName()));
+                vo.setDisplayName(TableNameGenerateUtils.generateDomainCodeDisplayName(attributeColumnVo.getDisplayName()));
+                vo.setName(TableNameGenerateUtils.generateDomainCode(attributeColumnVo.getName()));
                 break;
             case TEXT:
                 vo.setDisplayName(attributeColumnVo.getDisplayName());
@@ -510,9 +510,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
         for (AttributeColumnVO attributeColumnVo : attributeColumnVoList) {
             //域字段添加编码和名称表头
             if (attributeColumnVo.getDataType().equals(DataTypeEnum.DOMAIN.getName())) {
-                attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateDomainCodeDisplayName(attributeColumnVo.getDisplayName()));
-                attributeColumnVo.setName(TableNameGenerateUtils.generateDomainCode(attributeColumnVo.getName()));
                 newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.DOMAIN));
+                attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateDomainNameDisplayName(attributeColumnVo.getDisplayName()));
+                attributeColumnVo.setName(TableNameGenerateUtils.generateDomainName(attributeColumnVo.getName()));
             }
             newColumnList.add(attributeColumnVo);
         }
