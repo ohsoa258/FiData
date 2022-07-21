@@ -206,7 +206,7 @@ public class DataSynchronizationUtils {
 
         // 获取唯一键
         String columnName = codeAssociationCondition.get(0).getColumnName();
-        str.append(" ON CONFLICT ( " + columnName + "," + MARK + "version_id" + ") DO UPDATE ");
+        str.append(" ON CONFLICT ( " + columnName + "," + MARK + "version_id" + "," + MARK + "del_flag" + ") DO UPDATE ");
         str.append(" SET ");
         str.append(MARK + "new_code = " + "excluded." + MARK + "new_code").append(",");
         str.append(MARK + "version_id = " + "excluded." + MARK + "version_id").append(",");
@@ -495,8 +495,9 @@ public class DataSynchronizationUtils {
                         for (String mdmKey : item.keySet()) {
                             for (String stgKey : e.keySet()) {
                                 Object stgValue = e.get(stgKey);
-                                if (ObjectUtils.isEmpty(stgValue) && mdmKey.equals(stgKey)){
-                                    e.put(stgKey,item.get(mdmKey));
+                                if (ObjectUtils.isEmpty(stgValue) && mdmKey.equals(stgKey)) {
+                                    // TODO 编辑主数据，删除域字段数据，此处操作将mdm表数据重新赋值到updateList中
+                                    //e.put(stgKey,item.get(mdmKey));
                                 }
                             }
                         }

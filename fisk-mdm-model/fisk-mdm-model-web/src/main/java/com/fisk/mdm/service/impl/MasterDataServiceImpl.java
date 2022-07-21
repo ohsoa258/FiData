@@ -784,6 +784,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
                                 Date date = new Date();
                                 jsonObj.put("fidata_create_time", CommonMethods.getFormatDate(date));
                                 jsonObj.put("fidata_create_user", userId);
+                                jsonObj.put("fidata_update_time", CommonMethods.getFormatDate(date));
+                                jsonObj.put("fidata_update_user", userId);
                                 jsonObj.put("fidata_error_msg", errorMsg);
                                 jsonObj.put("internalId", "");
                                 //0：上传成功（数据进入stg表） 1：提交成功（数据进入mdm表） 2：提交失败（数据进入mdm表失败）
@@ -971,10 +973,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     throw new FkException(ResultEnum.CODE_EXIST);
                 }
             }
-        } else if (eventTypeEnum == EventTypeEnum.UPDATE) {
-            mapData.put("fidata_update_time", CommonMethods.getFormatDate(date));
-            mapData.put("fidata_update_user", userHelper.getLoginUserInfo().id);
         }
+        mapData.put("fidata_update_time", CommonMethods.getFormatDate(date));
+        mapData.put("fidata_update_user", userHelper.getLoginUserInfo().id);
         //生成批次号
         String batchNumber = UUID.randomUUID().toString();
         List<Map<String, Object>> members = new ArrayList<>();
