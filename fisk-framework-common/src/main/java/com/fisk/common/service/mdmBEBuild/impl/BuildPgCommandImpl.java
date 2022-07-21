@@ -60,7 +60,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
             for (int i = 1; i < dto.getMembers().size(); i++) {
                 str.append(",(" + CommonMethods.getColumnNameAndValue(dto.getMembers().get(i), ImportDataEnum.COLUMN_VALUE.getValue()) + ","
                         + dto.getImportType() + ",'" + dto.getBatchCode() + "',"
-                        + dto.getVersionId() + ",'");
+                        + dto.getVersionId() + ",");
                 str.append("1" + ")");
             }
         }

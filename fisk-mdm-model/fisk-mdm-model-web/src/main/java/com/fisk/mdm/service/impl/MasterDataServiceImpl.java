@@ -783,7 +783,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                                 }
                                 Date date = new Date();
                                 jsonObj.put("fidata_create_time", CommonMethods.getFormatDate(date));
-                                jsonObj.put("fidata_create_user", userHelper.getLoginUserInfo().id);
+                                jsonObj.put("fidata_create_user", userId);
                                 jsonObj.put("fidata_error_msg", errorMsg);
                                 jsonObj.put("internalId", "");
                                 //0：上传成功（数据进入stg表） 1：提交成功（数据进入mdm表） 2：提交失败（数据进入mdm表失败）
