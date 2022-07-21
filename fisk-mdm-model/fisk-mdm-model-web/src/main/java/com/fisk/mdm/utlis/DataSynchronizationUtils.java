@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.common.service.mdmBEBuild.BuildFactoryHelper;
 import com.fisk.common.service.mdmBEBuild.CommonMethods;
@@ -54,16 +55,19 @@ public class DataSynchronizationUtils {
     EntityService entityService;
     @Resource
     AttributeService attributeService;
+    @Resource
+    UserHelper userHelper;
 
-    public static final String MARK ="fidata_";
+    public static final String MARK = "fidata_";
     public static final String SPECIAL_CHARACTERS_NULL = "`fidata_null`";
 
     /**
      * stg数据同步
+     *
      * @param entityId
      * @param batchCode
      */
-    public ResultEnum stgDataSynchronize(Integer entityId,String batchCode) {
+    public ResultEnum stgDataSynchronize(Integer entityId, String batchCode) {
 
         // 1.查询属性配置信息
         EntityInfoVO entityInfoVo = entityService.getFilterAttributeById(entityId);
@@ -311,6 +315,9 @@ public class DataSynchronizationUtils {
             data.put("fidata_mdm_fidata_id", first.get().get("fidata_id"));
             data.put("fidata_del_flag", "1");
             data.put("fidata_version_id", item.get("fidata_version_id"));
+            Date date = new Date();
+            data.put("fidata_create_time", CommonMethods.getFormatDate(date));
+            data.put("fidata_create_user", userHelper.getLoginUserInfo().id);
             data.put("fidata_create_time", item.get("fidata_create_time"));
             data.put("fidata_create_user", item.get("fidata_create_user"));
             String insertSql = buildSqlCommand.buildInsertSingleData(data, logTableName);
