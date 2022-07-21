@@ -19,6 +19,7 @@ import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -290,7 +291,14 @@ public class DataSynchronizationUtils {
             , List<Map<String, Object>> listMap
             , String columnName) {
         //获取新增数据code集合
-        List<String> codeList = listMap.stream().map(e -> e.get(columnName).toString()).collect(Collectors.toList());
+        List<String> codeList = new ArrayList<>();
+        for (Map<String, Object> code : listMap) {
+            if (code.get("fidata_new_code") != null && !StringUtils.isEmpty(code.get("fidata_new_code").toString())) {
+                codeList.add(code.get(columnName).toString());
+                continue;
+            }
+            codeList.add(columnName);
+        }
         //转为单引号也为逗号隔开的字符串
         String values = CommonMethods.convertListToString(codeList);
         //连接对象
