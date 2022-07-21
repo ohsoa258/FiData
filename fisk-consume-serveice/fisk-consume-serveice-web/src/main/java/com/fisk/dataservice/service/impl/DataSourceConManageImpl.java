@@ -18,6 +18,8 @@ import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.dataservice.dto.datasource.DataSourceConDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConEditDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConQuery;
@@ -29,6 +31,7 @@ import com.fisk.dataservice.mapper.DataSourceConMapper;
 import com.fisk.dataservice.service.IDataSourceConManageService;
 import com.fisk.dataservice.vo.api.FieldInfoVO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
+import com.fisk.mdm.client.MdmClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.SneakyThrows;
@@ -62,6 +65,15 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Resource
     private RedisTemplate redisTemplate;
+
+    @Resource
+    private DataAccessClient dataAccessClient;
+
+    @Resource
+    private DataModelClient dataModelClient;
+
+    @Resource
+    private MdmClient mdmClient;
 
     @Value("${dataservice.datasource.metadataentity_key}")
     private String metaDataEntityKey;
@@ -208,20 +220,28 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             return ResultEntityBuild.buildData(ResultEnum.DS_DATASOURCE_EXISTS, "数据源不存在");
         }
         if (dataSourceConPO.getDatasourceType() == SourceTypeEnum.FiData.getValue()) {
-            switch (dataSourceConPO.datasourceId) {
-                case 1:
-                    // dw
-
-                    break;
-                case 2:
-                    // ods
-                    break;
-                case 3:
-                    // mdm
-                    break;
-                case 4:
-                    // olap
-                    break;
+            ResultEntity<DataSourceDTO> fiDataDataSourceResult =
+                    userClient.getFiDataDataSourceById(dataSourceConPO.getDatasourceId());
+            if (fiDataDataSourceResult.code == ResultEnum.SUCCESS.getCode()) {
+                DataSourceDTO fiDataSourceDTO = fiDataDataSourceResult.getData();
+                FiDataMetaDataReqDTO reqDTO = new FiDataMetaDataReqDTO();
+                reqDTO.setDataSourceId(String.valueOf(fiDataSourceDTO.id));
+                reqDTO.setDataSourceName(fiDataSourceDTO.getConDbname());
+                switch (fiDataSourceDTO.id) {
+                    case 1:
+                    case 4:
+                        // dw olap
+                        dataModelClient.setDataModelStructure(reqDTO);
+                        break;
+                    case 2:
+                        // ods
+                        dataAccessClient.setDataAccessStructure(reqDTO);
+                        break;
+                    case 3:
+                        // mdm
+                        mdmClient.setMDMDataStructure();
+                        break;
+                }
             }
         } else {
             setMetaDataToRedis(id, 2);

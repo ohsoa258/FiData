@@ -24,7 +24,10 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @MapperScan("com.fisk.dataservice.mapper")
 @EnableFeignClients(basePackages = {
         "com.fisk.auth.client",
-        "com.fisk.system.client"
+        "com.fisk.system.client",
+        "com.fisk.dataaccess.client",
+        "com.fisk.datamodel.client",
+        "com.fisk.mdm.client"
 })
 @EnableHystrix
 public class FiskConsumeServeiceApplication {

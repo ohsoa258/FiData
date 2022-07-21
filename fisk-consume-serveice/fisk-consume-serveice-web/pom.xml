@@ -86,6 +86,32 @@
             <artifactId>fisk-system-center-apiclient</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-system-center-entity</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- 主数据feign接口 -->
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-mdm-model-apiclient</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- 数据接入feign接口 -->
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-factory-access-apiclient</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- 数据建模feign接口 -->
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-factory-model-apiclient</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
 
         <!-- 本模块实体类 -->
         <dependency>
