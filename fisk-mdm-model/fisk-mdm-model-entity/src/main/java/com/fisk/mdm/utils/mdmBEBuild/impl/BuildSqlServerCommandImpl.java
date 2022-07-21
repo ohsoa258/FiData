@@ -95,4 +95,9 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     public String insertAttributeFact(List<AttributeFactDTO> dtoList) {
         return null;
     }
+
+    @Override
+    public String deleteDataByAttributeId(String tableName, String deleteFiled, List<Integer> attributeIds) {
+        return null;
+    }
 }

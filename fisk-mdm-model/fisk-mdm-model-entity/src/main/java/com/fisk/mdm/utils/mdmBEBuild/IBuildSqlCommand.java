@@ -123,4 +123,13 @@ public interface IBuildSqlCommand {
      * @return
      */
     String insertAttributeFact(List<AttributeFactDTO> dtoList);
+
+    /**
+     * 删除数据(物理删除)
+     * @param tableName
+     * @param deleteFiled
+     * @param attributeIds
+     * @return
+     */
+    String deleteDataByAttributeId(String tableName,String deleteFiled,List<Integer> attributeIds);
 }

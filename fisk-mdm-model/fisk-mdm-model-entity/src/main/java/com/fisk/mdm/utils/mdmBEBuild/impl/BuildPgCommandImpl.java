@@ -333,6 +333,21 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         return str.toString();
     }
 
+    @Override
+    public String deleteDataByAttributeId(String tableName, String deleteFiled, List<Integer> attributeIds) {
+        String attributeId = attributeIds.stream().map(e -> "'" + e.toString() + "'").collect(Collectors.joining(","));
+        if (StringUtils.isBlank(attributeId)){
+            return null;
+        }
+
+        StringBuilder str = new StringBuilder();
+        str.append("DELETE FROM ").append(tableName);
+        str.append(" WHERE ");
+        str.append(" deleteFiled IN(");
+        str.append(attributeId).append(")");
+        return str.toString();
+    }
+
     /**
      * stg表基础字段拼接
      * @return

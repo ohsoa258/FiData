@@ -162,6 +162,8 @@ public class BuildModelListenerImpl implements BuildModelListener {
             List<AttributeStatusDTO> dtoList = this.updateMdmTable(abstractDbHelper, connection, sqlBuilder, data.getAttributeList());
             // 3.viw视图重新生成
             this.createViwTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
+            // 3.1更新事实属性表
+            this.updateFactTable(sqlBuilder, connection, entityInfoVo.getAttributeList());
 
             // e.提交事务
             connection.commit();
@@ -182,6 +184,42 @@ public class BuildModelListenerImpl implements BuildModelListener {
         }catch (Exception ex){
             // a.回滚事务
             rollbackConnection(connection);
+        }
+    }
+
+    /**
+     * 更新事实属性表
+     * @param sqlBuilder
+     * @param connection
+     * @param attributeList
+     */
+    public void updateFactTable(IBuildSqlCommand sqlBuilder,Connection connection,List<AttributeInfoDTO> attributeList){
+
+        try {
+            // 1.删除状态为删除和修改得属性
+            List<Integer> deleteAttributeIds = attributeList.stream()
+                    .filter(e -> e.getStatus().equals(DELETE.getName()) ||
+                            e.getStatus().equals(UPDATE.getName()))
+                    .map(e -> e.getId())
+                    .collect(Collectors.toList());
+
+            String deleteSql = sqlBuilder.deleteDataByAttributeId("tb_fact_attribute", "attribute_id", deleteAttributeIds);
+
+            // 2.插入状态为修改和新增得属性
+            String insertSql = this.buildAttributeSql(sqlBuilder, attributeList);
+
+            PreparedStatement stateDelete = connection.prepareStatement(deleteSql);
+            PreparedStatement stateInsert = connection.prepareStatement(insertSql);
+            stateDelete.execute();
+            stateInsert.execute();
+        }catch (Exception ex){
+            // 回滚事务
+            rollbackConnection(connection);
+
+            // 记录日志
+            log.error(ResultEnum.FACT_ATTRIBUTE_FAILD.getMsg() + "【原因:】" + ex.getMessage());
+
+            throw new FkException(ResultEnum.FACT_ATTRIBUTE_FAILD);
         }
     }
 
@@ -546,7 +584,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
     public String buildAttributeSql(IBuildSqlCommand sqlBuilder,List<AttributeInfoDTO> attributeList){
 
         // 1.数据转换
-        List<AttributeFactDTO> dtoList = attributeList.stream().map(e -> {
+        List<AttributeFactDTO> dtoList = attributeList.stream().filter(e -> e.getStatus().equals(INSERT.getName())).map(e -> {
             AttributeFactDTO dto = new AttributeFactDTO();
             dto.setName(e.getName());
             dto.setDataType(DataTypeEnum.getValue(e.getDataType()).getValue());
