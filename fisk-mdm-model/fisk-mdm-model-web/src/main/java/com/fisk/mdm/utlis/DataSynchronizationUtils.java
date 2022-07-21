@@ -294,10 +294,11 @@ public class DataSynchronizationUtils {
         List<String> codeList = new ArrayList<>();
         for (Map<String, Object> code : listMap) {
             if (code.get("fidata_new_code") != null && !StringUtils.isEmpty(code.get("fidata_new_code").toString())) {
-                codeList.add(code.get(columnName).toString());
+                codeList.add(code.get("fidata_new_code").toString());
+                code.put(columnName, code.get("fidata_new_code").toString());
                 continue;
             }
-            codeList.add(columnName);
+            codeList.add(code.get(columnName).toString());
         }
         //转为单引号也为逗号隔开的字符串
         String values = CommonMethods.convertListToString(codeList);
