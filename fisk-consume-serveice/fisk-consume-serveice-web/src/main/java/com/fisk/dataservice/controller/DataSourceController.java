@@ -1,10 +1,10 @@
 package com.fisk.dataservice.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.datasource.DataSourceConDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConQuery;
@@ -12,14 +12,12 @@ import com.fisk.dataservice.dto.datasource.DataSourceConEditDTO;
 import com.fisk.dataservice.dto.datasource.TestConnectionDTO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.dataservice.service.IDataSourceConManageService;
-import com.fisk.dataservice.vo.datasource.DataSourceVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -72,16 +70,16 @@ public class DataSourceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAll());
     }
 
-    @GetMapping("/getTableAll/{id}")
-    @ApiOperation("获取全部表字段信息")
-    public ResultEntity<DataSourceVO> getTableAll(@PathVariable("id") int id) {
-        return service.getTableAll(id);
-    }
-
     @GetMapping("/reloadDataSource/{id}")
     @ApiOperation("重新加载数据源到redis")
     public ResultEntity<Object> reloadDataSource(@PathVariable("id")int id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.reloadDataSource(id));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.reloadMetaData(id));
+    }
+
+    @GetMapping("/getMetaDataById/{id}")
+    @ApiOperation("获取Api配置页面左侧Tree元数据信息")
+    public ResultEntity<FiDataMetaDataTreeDTO> getFiDataConfigMetaData(@PathVariable("id")int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMetaDataById(id));
     }
 
 }

@@ -67,6 +67,12 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             allDataSource = allDataSource.stream().filter(
                     t -> (t.getConDbname().contains(query.keyword)) ||
                             t.getConType().getName().contains(query.keyword)).collect(Collectors.toList());
+
+            allDataSource.forEach(t -> {
+                if (t.getDatasourceType()!=SourceTypeEnum.FiData){
+                    t.setConPassword("");
+                }
+            });
         }
         if (CollectionUtils.isNotEmpty(allDataSource)) {
             pageDTO.setTotal(Long.valueOf(allDataSource.size()));

@@ -43,7 +43,7 @@ public class SynchronizationSchedule implements SchedulingConfigurer {
                if (enabled)
                {
                    //写入数据源到redis
-                   dataSourceConManageImpl.setDataSourceToRedis();
+                   dataSourceConManageImpl.setMetaDataToRedis();
                }
             }
         };

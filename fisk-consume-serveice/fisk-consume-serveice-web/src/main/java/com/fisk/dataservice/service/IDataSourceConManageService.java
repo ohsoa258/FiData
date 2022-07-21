@@ -1,9 +1,9 @@
 package com.fisk.dataservice.service;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConEditDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConQuery;
@@ -11,9 +11,7 @@ import com.fisk.dataservice.entity.DataSourceConPO;
 import com.fisk.dataservice.dto.datasource.TestConnectionDTO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.dataservice.vo.datasource.DataSourceVO;
 
-import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -71,18 +69,17 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
     List<DataSourceConVO> getAll();
 
     /**
-     * 获取数据源下的表
-     *
-     * @param datasourceId 数据源id
-     * @return 查询结果
-     */
-    ResultEntity<DataSourceVO> getTableAll(int datasourceId);
-
-    /**
      * 重载数据源
      *
-     * @param datasourceId 数据源id
+     * @param id 数据源id
      * @return 查询结果
      */
-    ResultEntity<Object> reloadDataSource(int datasourceId);
+    ResultEntity<Object> reloadMetaData(int id);
+
+    /**
+     * 查询元数据信息
+     *
+     * @return 查询结果
+     */
+    FiDataMetaDataTreeDTO getMetaDataById(int id);
 }
