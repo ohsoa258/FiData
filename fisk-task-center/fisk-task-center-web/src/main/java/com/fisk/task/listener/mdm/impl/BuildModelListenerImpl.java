@@ -195,6 +195,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
      */
     public void updateFactTable(IBuildSqlCommand sqlBuilder,Connection connection,List<AttributeInfoDTO> attributeList){
 
+        String sql = null;
         try {
             // 1.删除状态为删除和修改得属性
             List<Integer> deleteAttributeIds = attributeList.stream()
@@ -203,21 +204,24 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     .map(e -> e.getId())
                     .collect(Collectors.toList());
 
-            String deleteSql = sqlBuilder.deleteDataByAttributeId("tb_fact_attribute", "attribute_id", deleteAttributeIds);
+            if (CollectionUtils.isNotEmpty(deleteAttributeIds)){
+                sql = sqlBuilder.deleteDataByAttributeId("tb_fact_attribute", "attribute_id", deleteAttributeIds);
+                PreparedStatement stateDelete = connection.prepareStatement(sql);
+                stateDelete.execute();
+            }
 
             // 2.插入状态为修改和新增得属性
-            String insertSql = this.buildAttributeSql(sqlBuilder, attributeList);
-
-            PreparedStatement stateDelete = connection.prepareStatement(deleteSql);
-            PreparedStatement stateInsert = connection.prepareStatement(insertSql);
-            stateDelete.execute();
-            stateInsert.execute();
+            sql = this.buildAttributeSql(sqlBuilder, attributeList);
+            if (StringUtils.isNotBlank(sql)){
+                PreparedStatement stateInsert = connection.prepareStatement(sql);
+                stateInsert.execute();
+            }
         }catch (Exception ex){
             // 回滚事务
             rollbackConnection(connection);
 
             // 记录日志
-            log.error(ResultEnum.FACT_ATTRIBUTE_FAILD.getMsg() + "【原因:】" + ex.getMessage());
+            log.error(ResultEnum.FACT_ATTRIBUTE_FAILD.getMsg() + "【SQL:】" + sql + "【原因:】" + ex.getMessage());
 
             throw new FkException(ResultEnum.FACT_ATTRIBUTE_FAILD);
         }
@@ -584,19 +588,21 @@ public class BuildModelListenerImpl implements BuildModelListener {
     public String buildAttributeSql(IBuildSqlCommand sqlBuilder,List<AttributeInfoDTO> attributeList){
 
         // 1.数据转换
-        List<AttributeFactDTO> dtoList = attributeList.stream().filter(e -> e.getStatus().equals(INSERT.getName())).map(e -> {
-            AttributeFactDTO dto = new AttributeFactDTO();
-            dto.setName(e.getName());
-            dto.setDataType(DataTypeEnum.getValue(e.getDataType()).getValue());
-            dto.setDataTypeLength(e.getDataTypeLength());
-            dto.setDataTypeDecimalLength(e.getDataTypeDecimalLength());
+        List<AttributeFactDTO> dtoList = attributeList.stream()
+                .filter(e -> e.getStatus().equals(INSERT.getName()) || e.getStatus().equals(UPDATE.getName()))
+                .map(e -> {
+                    AttributeFactDTO dto = new AttributeFactDTO();
+                    dto.setName(e.getName());
+                    dto.setDataType(DataTypeEnum.getValue(e.getDataType()).getValue());
+                    dto.setDataTypeLength(e.getDataTypeLength());
+                    dto.setDataTypeDecimalLength(e.getDataTypeDecimalLength());
 
-            // bool值转换
-            EnumTypeConversionUtils conversionUtils = new EnumTypeConversionUtils();
-            dto.setEnableRequired(conversionUtils.boolToInt(e.getEnableRequired()));
-            dto.setAttribute_id(e.getId());
-            return dto;
-        }).collect(Collectors.toList());
+                    // bool值转换
+                    EnumTypeConversionUtils conversionUtils = new EnumTypeConversionUtils();
+                    dto.setEnableRequired(conversionUtils.boolToInt(e.getEnableRequired()));
+                    dto.setAttribute_id(e.getId());
+                    return dto;
+                }).collect(Collectors.toList());
 
         // 2.创建Sql
         String sql = sqlBuilder.insertAttributeFact(dtoList);

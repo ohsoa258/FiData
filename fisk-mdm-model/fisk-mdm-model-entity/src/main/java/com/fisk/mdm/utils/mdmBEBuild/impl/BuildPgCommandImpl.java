@@ -322,7 +322,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
             str1.append(e.getDataTypeLength()).append(",");
             str1.append(e.getDataTypeDecimalLength()).append(",");
             str1.append(e.getEnableRequired()).append(",");
-            str1.append(e.getAttribute_id()).append(",");
+            str1.append(e.getAttribute_id()).append(")");
             return str1;
         }).collect(Collectors.joining(","));
 
@@ -343,7 +343,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         StringBuilder str = new StringBuilder();
         str.append("DELETE FROM ").append(tableName);
         str.append(" WHERE ");
-        str.append(" deleteFiled IN(");
+        str.append(deleteFiled + " IN(");
         str.append(attributeId).append(")");
         return str.toString();
     }
