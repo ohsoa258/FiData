@@ -4,16 +4,19 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.core.mapstruct.EnumTypeConversionUtils;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.mdm.dto.attribute.AttributeDomainDTO;
+import com.fisk.mdm.dto.attribute.AttributeFactDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeStatusDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
+import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.task.dto.model.EntityDTO;
@@ -504,6 +507,11 @@ public class BuildModelListenerImpl implements BuildModelListener {
             PreparedStatement stemViw = connection.prepareStatement(sql);
             stemViw.execute();
 
+            // 4.1 提交最新属性表
+            sql = this.buildAttributeSql(sqlBuilder, entityInfoVo.getAttributeList());
+            PreparedStatement stemAttribute = connection.prepareStatement(sql);
+            stemAttribute.execute();
+            
             // e.提交事务
             connection.commit();
 
@@ -527,6 +535,34 @@ public class BuildModelListenerImpl implements BuildModelListener {
             this.exceptionProcess(entityInfoVo, ex, ResultEnum.CREATE_TABLE_ERROR.getMsg() + "【原因】:" + ex.getMessage());
             log.error(ResultEnum.CREATE_TABLE_ERROR.getMsg() + "【执行Sql】:" + sql);
         }
+    }
+
+    /**
+     * 生成插入属性事实表的Sql
+     * @param sqlBuilder
+     * @param attributeList
+     * @return
+     */
+    public String buildAttributeSql(IBuildSqlCommand sqlBuilder,List<AttributeInfoDTO> attributeList){
+
+        // 1.数据转换
+        List<AttributeFactDTO> dtoList = attributeList.stream().map(e -> {
+            AttributeFactDTO dto = new AttributeFactDTO();
+            dto.setName(e.getName());
+            dto.setDataType(DataTypeEnum.getValue(e.getDataType()).getValue());
+            dto.setDataTypeLength(e.getDataTypeLength());
+            dto.setDataTypeDecimalLength(e.getDataTypeDecimalLength());
+
+            // bool值转换
+            EnumTypeConversionUtils conversionUtils = new EnumTypeConversionUtils();
+            dto.setEnableRequired(conversionUtils.boolToInt(e.getEnableRequired()));
+            dto.setAttribute_id(e.getId());
+            return dto;
+        }).collect(Collectors.toList());
+
+        // 2.创建Sql
+        String sql = sqlBuilder.insertAttributeFact(dtoList);
+        return sql;
     }
 
     /**
