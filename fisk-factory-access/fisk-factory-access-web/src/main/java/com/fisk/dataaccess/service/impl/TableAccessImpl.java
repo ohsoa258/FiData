@@ -1391,30 +1391,32 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public ResultEnum updateTableAccessData(TbTableAccessDTO dto) {
 
-//        TableAccessPO model = this.getById(dto.id);
-//        if (model == null) {
-//            return ResultEnum.DATA_NOTEXISTS;
-//        }
         // sql保存时丢失
         if (dto.sqlFlag == 1 && "".equals(dto.sqlScript)) {
             return ResultEnum.SQL_EXCEPT_CLEAR;
         }
 
-        // 判断名称是否重复
-//        QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
-//        // 限制在同一应用下
-//        queryWrapper.lambda().eq(TableAccessPO::getTableName, dto.tableName).eq(TableAccessPO::getAppId, model.appId);
-//        TableAccessPO tableAccessPo = baseMapper.selectOne(queryWrapper);
-//        if (tableAccessPo != null && tableAccessPo.id != dto.id) {
-//            return ResultEnum.TABLE_IS_EXIST;
-//        }
+        // 前端操作多了未命名,不传物理表id,提前保存物理表的sql脚本,导致更新失败
+        if (dto.id > 0) {
+            TableAccessPO model = this.getById(dto.id);
+            if (model == null) {
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            // 判断名称是否重复
+            QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
+            // 限制在同一应用下
+            queryWrapper.lambda().eq(TableAccessPO::getTableName, dto.tableName).eq(TableAccessPO::getAppId, model.appId);
+            TableAccessPO tableAccessPo = baseMapper.selectOne(queryWrapper);
+            if (tableAccessPo != null && tableAccessPo.id != dto.id) {
+                return ResultEnum.TABLE_IS_EXIST;
+            }
+        }
 
         // dto -> po
         TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
         po.setPublish(0);
 
         return this.saveOrUpdate(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
-//        return ResultEnum.SUCCESS;
     }
 
     @Override
