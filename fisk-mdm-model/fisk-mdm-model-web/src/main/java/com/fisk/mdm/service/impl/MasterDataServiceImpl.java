@@ -781,6 +781,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
                                     jsonObj.put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
                                     addCount.incrementAndGet();
                                 }
+                                Date date = new Date();
+                                jsonObj.put("fidata_create_time", CommonMethods.getFormatDate(date));
+                                jsonObj.put("fidata_create_user", userHelper.getLoginUserInfo().id);
                                 jsonObj.put("fidata_error_msg", errorMsg);
                                 jsonObj.put("internalId", "");
                                 //0：上传成功（数据进入stg表） 1：提交成功（数据进入mdm表） 2：提交失败（数据进入mdm表失败）
@@ -942,6 +945,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         Map<String, Object> mapData = new HashMap<>();
         mapData.putAll(dto.getMembers());
         String tableName = TableNameGenerateUtils.generateStgTableName(dto.getModelId(), dto.getEntityId());
+        Date date = new Date();
         if (eventTypeEnum == EventTypeEnum.SAVE) {
             //校验code
             ImportDataVerifyDTO verifyResult = MasterDataFormatVerifyUtils.verifyCode(mapData);
@@ -950,6 +954,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
             }
             mapData.put("fidata_status", SyncStatusTypeEnum.UPLOADED_SUCCESSFULLY.getValue());
             mapData.put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
+            mapData.put("fidata_create_time", CommonMethods.getFormatDate(date));
+            mapData.put("fidata_create_user", userHelper.getLoginUserInfo().id);
             if (StringUtils.isEmpty(mapData.get("code") == null ? "" : mapData.get("code").toString())) {
                 //code生成规则
                 IBuildCodeCommand buildCodeCommand = BuildCodeHelper.getCodeCommand();
@@ -965,6 +971,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     throw new FkException(ResultEnum.CODE_EXIST);
                 }
             }
+        } else if (eventTypeEnum == EventTypeEnum.UPDATE) {
+            mapData.put("fidata_update_time", CommonMethods.getFormatDate(date));
+            mapData.put("fidata_update_user", userHelper.getLoginUserInfo().id);
         }
         //生成批次号
         String batchNumber = UUID.randomUUID().toString();
