@@ -25,9 +25,18 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
     Page<DataSourceConVO> listDataSourceCon(Page<DataSourceConVO> page, @Param("query") DataSourceConQuery query);
 
     /**
-     * 查询所有数据源信息
+     * 查询自定义数据源信息
      * @return 查询结果
      */
     @Select("SELECT id,`name` FROM tb_datasource_config  WHERE datasource_type=2 AND del_flag=1;")
     List<DataSourceConVO> getAll();
+
+    /**
+     * 新增一条数据
+     *
+     * @return 执行结果
+     */
+    @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
+    @Insert("INSERT INTO `tb_datasource_config`(`name`, `con_str`, `con_ip`, `con_port`, `datasource_id`, `datasource_type`, `con_dbname`, `con_type`, `con_account`, `con_password`, `create_time`, `create_user`,`del_flag`) VALUES (#{name}, #{conStr}, #{conIp}, #{conPort}, #{datasourceId}, #{datasourceType}, #{conDbname}, #{conType}, #{conAccount}, #{conPassword}, #{createTime}, #{createUser},1);")
+    int insertOne(DataSourceConPO po);
 }

@@ -12,6 +12,7 @@ import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbMetaData.dto.*;
@@ -42,6 +43,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -65,6 +67,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Resource
     private RedisTemplate redisTemplate;
+
+    @Resource
+    private UserHelper userHelper;
 
     @Resource
     private DataAccessClient dataAccessClient;
@@ -113,12 +118,18 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             queryWrapper.lambda().eq(DataSourceConPO::getName, dto.name)
                     .eq(DataSourceConPO::getDelFlag, 1);
         }
-        DataSourceConPO data = mapper.selectOne(queryWrapper);
-        if (data != null) {
-            return ResultEnum.NAME_EXISTS;
-        }
         DataSourceConPO model = DataSourceConMap.INSTANCES.dtoToPo(dto);
-        return mapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        model.setCreateTime(LocalDateTime.now());
+        Long userId = userHelper.getLoginUserInfo().getId();
+        model.setCreateUser(userId.toString());
+        boolean isInsert = baseMapper.insertOne(model) > 0;
+        if (!isInsert)
+            return ResultEnum.SAVE_DATA_ERROR;
+        int id = (int) model.getId();
+        if (model.getDatasourceType()== SourceTypeEnum.custom.getValue()){
+            setMetaDataToRedis(id, 1);
+        }
+        return ResultEnum.SUCCESS;
     }
 
     @Override
@@ -143,6 +154,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         if (data != null) {
             return ResultEnum.NAME_EXISTS;
         }
+       if (dto.getDatasourceType()== SourceTypeEnum.custom){
+           setMetaDataToRedis(dto.getId(), 2);
+       }
         DataSourceConMap.INSTANCES.editDtoToPo(dto, model);
         return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -152,6 +166,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         DataSourceConPO model = mapper.selectById(id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
+        }
+        if (model.getDatasourceType()==SourceTypeEnum.custom.getValue()){
+            setMetaDataToRedis(id, 3);
         }
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -239,7 +256,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                         break;
                     case 3:
                         // mdm
-                        mdmClient.setMDMDataStructure();
+                        mdmClient.setMDMDataStructure(reqDTO);
                         break;
                 }
             }
@@ -249,6 +266,14 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "已重新加载数据源");
     }
 
+    /**
+     * @description 查询数据源元数据信息
+     * @author dick
+     * @date 2022/7/21 14:03
+     * @version v1.0
+     * @params id
+     * @return com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO
+     */
     public FiDataMetaDataTreeDTO getMetaDataDetailById(int id) {
         FiDataMetaDataTreeDTO fiDataMetaDataTreeDTO = new FiDataMetaDataTreeDTO();
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
