@@ -3,6 +3,7 @@ package com.fisk.mdm.client;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.mdm.dto.attribute.AttributeDomainDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeStatusDTO;
@@ -91,12 +92,12 @@ public interface MdmClient {
      * @return
      */
     @PostMapping("/model/getDataStructure")
-    ResultEntity<List<FiDataMetaDataDTO>> getMDMDataStructure();
+    ResultEntity<List<FiDataMetaDataDTO>> getMDMDataStructure(@RequestBody FiDataMetaDataReqDTO dto);
 
     /**
      * 刷新主数据结构
      * @return
      */
     @PostMapping("/model/setDataStructure")
-    ResultEntity<Object> setMDMDataStructure();
+    ResultEntity<Object> setMDMDataStructure(@RequestBody FiDataMetaDataReqDTO dto);
 }
