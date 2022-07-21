@@ -118,6 +118,10 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             queryWrapper.lambda().eq(DataSourceConPO::getName, dto.name)
                     .eq(DataSourceConPO::getDelFlag, 1);
         }
+        DataSourceConPO data = mapper.selectOne(queryWrapper);
+        if (data != null) {
+            return ResultEnum.DS_DATASOURCE_EXISTS;
+        }
         DataSourceConPO model = DataSourceConMap.INSTANCES.dtoToPo(dto);
         model.setCreateTime(LocalDateTime.now());
         Long userId = userHelper.getLoginUserInfo().getId();
@@ -125,9 +129,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         boolean isInsert = baseMapper.insertOne(model) > 0;
         if (!isInsert)
             return ResultEnum.SAVE_DATA_ERROR;
-        int id = (int) model.getId();
-        if (model.getDatasourceType()== SourceTypeEnum.custom.getValue()){
-            setMetaDataToRedis(id, 1);
+        if (model.getDatasourceType() == SourceTypeEnum.custom.getValue()) {
+            setMetaDataToRedis(model, 1);
         }
         return ResultEnum.SUCCESS;
     }
@@ -152,12 +155,12 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         }
         DataSourceConPO data = mapper.selectOne(queryWrapper);
         if (data != null) {
-            return ResultEnum.NAME_EXISTS;
+            return ResultEnum.DS_DATASOURCE_EXISTS;
         }
-       if (dto.getDatasourceType()== SourceTypeEnum.custom){
-           setMetaDataToRedis(dto.getId(), 2);
-       }
         DataSourceConMap.INSTANCES.editDtoToPo(dto, model);
+        if (dto.getDatasourceType() == SourceTypeEnum.custom) {
+            setMetaDataToRedis(model, 2);
+        }
         return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -167,8 +170,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        if (model.getDatasourceType()==SourceTypeEnum.custom.getValue()){
-            setMetaDataToRedis(id, 3);
+        if (model.getDatasourceType() == SourceTypeEnum.custom.getValue()) {
+            setMetaDataToRedis(model, 3);
         }
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -222,7 +225,24 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Override
     public FiDataMetaDataTreeDTO getMetaDataById(int id) {
-        FiDataMetaDataTreeDTO fiDataMetaDataTreeDTO = getMetaDataDetailById(id);
+        FiDataMetaDataTreeDTO fiDataMetaDataTreeDTO = new FiDataMetaDataTreeDTO();
+        QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(DataSourceConPO::getDelFlag, 1)
+                .eq(DataSourceConPO::getId, id);
+        DataSourceConPO dataSourceConPO = mapper.selectOne(queryWrapper);
+        if (dataSourceConPO == null) {
+            return fiDataMetaDataTreeDTO;
+        }
+        String redisKey = metaDataEntityKey + "_" + id;
+        Boolean exist = redisTemplate.hasKey(redisKey);
+        if (!exist) {
+            setMetaDataToRedis(dataSourceConPO, 1);
+        }
+        String json = redisTemplate.opsForValue().get(redisKey).toString();
+        if (StringUtils.isNotEmpty(json)) {
+            fiDataMetaDataTreeDTO = JSONObject.parseObject(json, FiDataMetaDataTreeDTO.class);
+        }
         return fiDataMetaDataTreeDTO;
     }
 
@@ -234,7 +254,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 .eq(DataSourceConPO::getId, id);
         DataSourceConPO dataSourceConPO = mapper.selectOne(queryWrapper);
         if (dataSourceConPO == null) {
-            return ResultEntityBuild.buildData(ResultEnum.DS_DATASOURCE_EXISTS, "数据源不存在");
+            return ResultEntityBuild.buildData(ResultEnum.DS_DATASOURCE_NOTEXISTS, "数据源不存在");
         }
         if (dataSourceConPO.getDatasourceType() == SourceTypeEnum.FiData.getValue()) {
             ResultEntity<DataSourceDTO> fiDataDataSourceResult =
@@ -261,44 +281,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 }
             }
         } else {
-            setMetaDataToRedis(id, 2);
+            setMetaDataToRedis(dataSourceConPO, 2);
         }
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "已重新加载数据源");
-    }
-
-    /**
-     * @description 查询数据源元数据信息
-     * @author dick
-     * @date 2022/7/21 14:03
-     * @version v1.0
-     * @params id
-     * @return com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO
-     */
-    public FiDataMetaDataTreeDTO getMetaDataDetailById(int id) {
-        FiDataMetaDataTreeDTO fiDataMetaDataTreeDTO = new FiDataMetaDataTreeDTO();
-        QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda()
-                .eq(DataSourceConPO::getDelFlag, 1)
-                .eq(DataSourceConPO::getId, id);
-        DataSourceConPO dataSourceConPO = mapper.selectOne(queryWrapper);
-        if (dataSourceConPO == null) {
-            return fiDataMetaDataTreeDTO;
-        }
-        if (dataSourceConPO.getDatasourceType() == SourceTypeEnum.FiData.getValue()) {
-            fiDataMetaDataTreeDTO = getFiDataConfigMetaData(dataSourceConPO);
-        } else {
-            fiDataMetaDataTreeDTO = getCustomizeMetaData(dataSourceConPO);
-            String redisKey = metaDataEntityKey + "_" + id;
-            Boolean exist = redisTemplate.hasKey(redisKey);
-            if (!exist) {
-                setMetaDataToRedis(id, 1);
-            }
-            String json = redisTemplate.opsForValue().get(redisKey).toString();
-            if (StringUtils.isNotEmpty(json)) {
-                fiDataMetaDataTreeDTO = JSONObject.parseObject(json, FiDataMetaDataTreeDTO.class);
-            }
-        }
-        return fiDataMetaDataTreeDTO;
     }
 
     /**
@@ -698,18 +683,18 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @params datasourceId
      * @params operationType 操作类型 1、新增 2、修改 3、删除
      */
-    public void setMetaDataToRedis(int id, int operationType) {
-        if (id <= 0 && StringUtils.isNotEmpty(metaDataEntityKey)) {
+    public void setMetaDataToRedis(DataSourceConPO dataSourceConPO, int operationType) {
+        if (StringUtils.isNotEmpty(metaDataEntityKey)) {
             return;
         }
-        String redisKey = metaDataEntityKey + "_" + id;
+        String redisKey = metaDataEntityKey + "_" + dataSourceConPO.getId();
         if (operationType == 3) {
             Boolean exist = redisTemplate.hasKey(redisKey);
             if (exist) {
                 redisTemplate.delete(redisKey);
             }
         } else if (operationType == 1 || operationType == 2) {
-            FiDataMetaDataTreeDTO meta = getMetaDataDetailById(id);
+            FiDataMetaDataTreeDTO meta = getFiDataConfigMetaData(dataSourceConPO);
             String json = JSONArray.toJSON(meta).toString();
             redisTemplate.opsForValue().set(redisKey, json);
         }
@@ -723,10 +708,14 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @version v1.0
      */
     public void setMetaDataToRedis() {
-        List<DataSourceConVO> all = mapper.getAll();
-        if (CollectionUtils.isNotEmpty(all)) {
-            for (DataSourceConVO dataSourceConVO : all) {
-                setMetaDataToRedis(dataSourceConVO.getId(), 2);
+        QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(DataSourceConPO::getDelFlag, 1)
+                .eq(DataSourceConPO::getDatasourceType, SourceTypeEnum.custom.getValue());
+        List<DataSourceConPO> dataSourceConPOs = mapper.selectList(queryWrapper);
+        if (CollectionUtils.isNotEmpty(dataSourceConPOs)) {
+            for (DataSourceConPO dataSourceConPO : dataSourceConPOs) {
+                setMetaDataToRedis(dataSourceConPO, 2);
             }
         }
     }

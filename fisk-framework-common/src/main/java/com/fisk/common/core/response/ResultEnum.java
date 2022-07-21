@@ -195,7 +195,7 @@ public enum ResultEnum {
     DS_APP_PWD_NOTNULL(10005, "应用密码不能为null"),
     DS_DATASOURCE_CON_WARN(10006, "当前驱动类型尚未开发"),
     DS_DATASOURCE_CON_ERROR(10007, "连接失败"),
-    DS_DATASOURCE_EXISTS(10008, "数据源不存在，请刷新页面"),
+    DS_DATASOURCE_NOTEXISTS(10008, "数据源不存在，请刷新页面"),
     DS_API_PV_QUERY_ERROR(10009, "查询失败"),
     DS_APISERVICE_APP_EXISTS(10010, "当前下游系统已失效，请联系相关人员"),
     DS_APISERVICE_API_EXISTS(10011, "API不存在，请检查APICODE"),
@@ -210,12 +210,13 @@ public enum ResultEnum {
     DS_APP_SUBAPI_ENABLE(10020, "取消勾选的API含已启用的API，请先禁用"),
     DS_APISERVICE_API_APPINFO_EXISTS(10021, "应用账号/密码错误，请核对"),
     DS_DATASOURCE_READ_ERROR(10022, "数据源信息读取失败"),
+    DS_DATASOURCE_EXISTS(11023, "数据源已存在"),
 
     /**
      * 数据质量
      */
     DATA_QUALITY_TEMPLATE_EXISTS(11001, "模板信息不存在"),
-    DATA_QUALITY_DATASOURCE_EXISTS(11002, "数据源不存在"),
+    DATA_QUALITY_DATASOURCE_ONTEXISTS(11002, "数据源不存在"),
     DATA_QUALITY_REQUESTSORT_ERROR(11003, "参数异常，执行顺序调整失败"),
     DATA_QUALITY_CREATESTATEMENT_ERROR(11004, "数据库连接建立失败"),
     DATA_QUALITY_CLOSESTATEMENT_ERROR(11005, "数据库连接关闭失败"),
@@ -228,7 +229,8 @@ public enum ResultEnum {
     DATA_QUALITY_DATACHECK_REQUESTJSON_ERROR(11012, "待校验的JSON数据格式异常，未包含指定字段key"),
     DATA_QUALITY_SYNCCHECK_NOOPERATION(11013, "请求参数中操作型参数均为空，无需校验"),
     DATA_QUALITY_UPDATEDATA_ERROR(11014, "数据校验完成，修改表数据触发异常"),
-    DATA_QUALITY_TABLECONFIGURATION_SENT_CHANGES(11014, "表配置信息在源已发生变更"),
+    DATA_QUALITY_TABLECONFIGURATION_SENT_CHANGES(11015, "表配置信息在源已发生变更"),
+    DATA_QUALITY_DATASOURCE_EXISTS(11016, "数据源已存在"),
 
     /**
      * 数据安全

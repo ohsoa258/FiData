@@ -153,7 +153,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             return ResultEnum.SAVE_DATA_ERROR;
         DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(apiConfigPO.getDatasourceId());
         if (dataSourceConPO == null)
-            return ResultEnum.DS_DATASOURCE_EXISTS;
+            return ResultEnum.DS_DATASOURCE_NOTEXISTS;
         String apiCode = UUID.randomUUID().toString().replace("-", "").toLowerCase();
         apiConfigPO.setApiCode(apiCode);
         apiConfigPO.setCreateTime(LocalDateTime.now());
@@ -211,7 +211,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         }
         DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(dto.apiDTO.getDatasourceId());
         if (dataSourceConPO == null)
-            return ResultEnum.DS_DATASOURCE_EXISTS;
+            return ResultEnum.DS_DATASOURCE_NOTEXISTS;
         int apiId;
         boolean isUpdate = false;
         // 第一步：编辑保存api信息

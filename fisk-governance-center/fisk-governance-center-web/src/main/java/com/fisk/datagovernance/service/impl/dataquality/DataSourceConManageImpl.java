@@ -95,7 +95,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         }
         DataSourceConPO data = mapper.selectOne(queryWrapper);
         if (data != null) {
-            return ResultEnum.NAME_EXISTS;
+            return ResultEnum.DATA_QUALITY_DATASOURCE_EXISTS;
         }
         DataSourceConPO model = DataSourceConMap.INSTANCES.dtoToPo(dto);
         return mapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -121,7 +121,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         }
         DataSourceConPO data = mapper.selectOne(queryWrapper);
         if (data != null) {
-            return ResultEnum.NAME_EXISTS;
+            return ResultEnum.DATA_QUALITY_DATASOURCE_EXISTS;
         }
         DataSourceConMap.INSTANCES.editDtoToPo(dto, model);
         return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
