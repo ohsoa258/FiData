@@ -115,7 +115,7 @@ public class BusinessAreaController {
 
     @PostMapping("/setDataStructure")
     @ApiOperation(value = "刷新数据建模结构")
-    public ResultEntity<List<FiDataMetaDataDTO>> setDataModelStructure(@RequestBody FiDataMetaDataReqDTO dto) {
+    public ResultEntity<Object> setDataModelStructure(@RequestBody FiDataMetaDataReqDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setDataModelStructure(dto));
     }
 }

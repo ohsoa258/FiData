@@ -3,6 +3,7 @@ package com.fisk.dataaccess.client;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
 import com.fisk.dataaccess.dto.access.NifiAccessDTO;
@@ -247,7 +248,7 @@ public interface DataAccessClient {
      * @return 查询结果
      */
     @PostMapping("/appRegistration/getTableAccessQueryList")
-    public ResultEntity<OdsResultDTO> getTableAccessQueryList(@RequestBody OdsQueryDTO query);
+    ResultEntity<OdsResultDTO> getTableAccessQueryList(@RequestBody OdsQueryDTO query);
 
     /**
      * 构建业务元数据其他数据信息
@@ -268,4 +269,14 @@ public interface DataAccessClient {
     @ApiOperation("构建元数据查询对象(表及下面的字段)")
     @PostMapping("/dataAccessTree/buildFiDataTableMetaData")
     ResultEntity<List<FiDataTableMetaDataDTO>> buildFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto);
+
+    /**
+     * 刷新数据接入结构
+     *
+     * @param dto dto
+     * @return 元数据对象
+     */
+    @ApiOperation("刷新数据接入结构")
+    @PostMapping("/appRegistration/setDataStructure")
+    ResultEntity<Object> setDataAccessStructure(@RequestBody FiDataMetaDataReqDTO dto);
 }

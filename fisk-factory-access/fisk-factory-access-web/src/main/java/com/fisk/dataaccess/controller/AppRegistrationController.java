@@ -266,7 +266,7 @@ public class AppRegistrationController {
 
     @PostMapping("/setDataStructure")
     @ApiOperation(value = "刷新数据接入结构")
-    public ResultEntity<List<FiDataMetaDataDTO>> setDataAccessStructure(@RequestBody FiDataMetaDataReqDTO dto) {
+    public ResultEntity<Object> setDataAccessStructure(@RequestBody FiDataMetaDataReqDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setDataAccessStructure(dto));
     }
 

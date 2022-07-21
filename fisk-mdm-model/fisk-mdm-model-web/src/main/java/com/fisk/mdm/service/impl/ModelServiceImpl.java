@@ -100,14 +100,15 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
     @Override
     public ResultEntity<ModelVO> getById(Integer id) {
         ModelVO modelVO = ModelMap.INSTANCES.poToVo(baseMapper.selectById(id));
-        if(Objects.isNull(modelVO)){
+        if (Objects.isNull(modelVO)) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,modelVO);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, modelVO);
     }
 
     /**
      * 添加模型
+     *
      * @param modelDTO
      * @return
      */
@@ -117,8 +118,8 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
         //判断名称是否存在
         QueryWrapper<ModelPO> wrapper = new QueryWrapper<>();
-        wrapper.eq("name",modelDTO.name);
-        if(baseMapper.selectOne(wrapper) != null){
+        wrapper.eq("name", modelDTO.name);
+        if (baseMapper.selectOne(wrapper) != null) {
             return ResultEnum.NAME_EXISTS;
         }
 
@@ -130,20 +131,20 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
         //创建成功后创建默认版本
         ModelVersionDTO modelVersionDTO = new ModelVersionDTO();
-        modelVersionDTO.setModelId((int)modelPO.getId());
+        modelVersionDTO.setModelId((int) modelPO.getId());
         modelVersionDTO.setName("VERSION1");
         modelVersionDTO.setDesc("默认版本");
         modelVersionDTO.setStatus(ModelVersionStatusEnum.OPEN.getValue());
         modelVersionDTO.setType(ModelVersionTypeEnum.SYSTEM_CREAT.getValue());
         ModelVersionPO modelVersionPO = ModelVersionMap.INSTANCES.dtoToPo(modelVersionDTO);
-        if(!iModelVersionService.save(modelVersionPO)){
+        if (!iModelVersionService.save(modelVersionPO)) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
         //回填current_version_id字段、attribute_log_name字段
-        modelPO.setCurrentVersionId((int)modelVersionPO.getId());
-        modelPO.setAttributeLogName("tb_attribute_log_"+modelPO.getId());
-        if(baseMapper.updateById(modelPO) <= 0){
+        modelPO.setCurrentVersionId((int) modelVersionPO.getId());
+        modelPO.setAttributeLogName("tb_attribute_log_" + modelPO.getId());
+        if (baseMapper.updateById(modelPO) <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
@@ -151,14 +152,14 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         com.fisk.task.dto.model.ModelDTO dto = new com.fisk.task.dto.model.ModelDTO();
         dto.setAttributeLogName(modelPO.attributeLogName);
         dto.setUserId(userHelper.getLoginUserInfo().getId());
-        if(publishTaskClient.pushModelByName(dto).getCode() != ResultEnum.SUCCESS.getCode()){
+        if (publishTaskClient.pushModelByName(dto).getCode() != ResultEnum.SUCCESS.getCode()) {
             return ResultEnum.CREATE_ATTRIBUTE_LOG_TABLE_ERROR;
         }
 
 
         // 记录日志
         String desc = "新增一个模型,id:" + modelPO.getId();
-        logService.saveEventLog((int)modelPO.getId(),ObjectTypeEnum.MODEL,EventTypeEnum.SAVE,desc);
+        logService.saveEventLog((int) modelPO.getId(), ObjectTypeEnum.MODEL, EventTypeEnum.SAVE, desc);
 
         //创建成功
         return ResultEnum.SUCCESS;
@@ -166,6 +167,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
     /**
      * 编辑
+     *
      * @param modelUpdateDTO
      * @return
      */
@@ -174,15 +176,15 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         ModelPO modelPO = baseMapper.selectById(modelUpdateDTO.getId());
 
         //判断数据是否存在
-        if (modelPO == null){
+        if (modelPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
         //判断修改后的名称是否存在
         QueryWrapper<ModelPO> wrapper = new QueryWrapper<>();
-        wrapper.eq("name",modelUpdateDTO.getName())
-                .ne("id",modelUpdateDTO.getId());
-        if(baseMapper.selectOne(wrapper) != null){
+        wrapper.eq("name", modelUpdateDTO.getName())
+                .ne("id", modelUpdateDTO.getId());
+        if (baseMapper.selectOne(wrapper) != null) {
             return ResultEnum.NAME_EXISTS;
         }
 
@@ -197,7 +199,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
         // 记录日志
         String desc = "修改一个模型,id:" + modelUpdateDTO.getId();
-        logService.saveEventLog((int)modelPO.getId(),ObjectTypeEnum.MODEL,EventTypeEnum.UPDATE,desc);
+        logService.saveEventLog((int) modelPO.getId(), ObjectTypeEnum.MODEL, EventTypeEnum.UPDATE, desc);
 
         //添加成功
         return ResultEnum.SUCCESS;
@@ -205,13 +207,14 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
     /**
      * 删除
+     *
      * @param id
      * @return
      */
     @Override
     public ResultEnum deleteDataById(Integer id) {
         //判断数据是否存在
-        if (baseMapper.selectById(id) == null){
+        if (baseMapper.selectById(id) == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
@@ -222,7 +225,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
         // 记录日志
         String desc = "删除一个模型,id:" + id;
-        logService.saveEventLog(id,ObjectTypeEnum.MODEL,EventTypeEnum.DELETE,desc);
+        logService.saveEventLog(id, ObjectTypeEnum.MODEL, EventTypeEnum.DELETE, desc);
 
         //删除成功
         return ResultEnum.SUCCESS;
@@ -230,6 +233,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
     /**
      * 分页查询
+     *
      * @param query
      * @return
      */
@@ -253,10 +257,10 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
      * @return {@link ModelInfoVO}
      */
     @Override
-    public ModelInfoVO getEntityById(Integer modelId,String name) {
+    public ModelInfoVO getEntityById(Integer modelId, String name) {
         //判断模型是否存在
         ModelPO modelPo = baseMapper.selectById(modelId);
-        if(modelPo == null){
+        if (modelPo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
@@ -264,22 +268,22 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         ModelInfoVO modelInfoVO = ModelMap.INSTANCES.poToInfoVO(modelPo);
         QueryWrapper<EntityPO> wrapper = new QueryWrapper<>();
         wrapper.lambda()
-                .eq(EntityPO::getModelId,modelId);
+                .eq(EntityPO::getModelId, modelId);
 
         // 追加模糊搜索条件
-        if (com.baomidou.mybatisplus.core.toolkit.StringUtils.isNotBlank(name)){
+        if (com.baomidou.mybatisplus.core.toolkit.StringUtils.isNotBlank(name)) {
             wrapper.lambda().and(wq -> wq
                     .like(EntityPO::getName, name)
                     .or()
-                    .like(EntityPO::getDisplayName,name)
+                    .like(EntityPO::getDisplayName, name)
                     .or()
-                    .like(EntityPO::getDesc,name));
+                    .like(EntityPO::getDesc, name));
         }
 
         List<EntityPO> entityPos = entityMapper.selectList(wrapper);
 
         //判断是否存在实体
-        if(!CollectionUtils.isNotEmpty(entityPos)){
+        if (!CollectionUtils.isNotEmpty(entityPos)) {
             return modelInfoVO;
         }
 
@@ -310,7 +314,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
     }
 
     @Override
-    public List<FiDataMetaDataDTO> setDataStructure(FiDataMetaDataReqDTO reqDto) {
+    public boolean setDataStructure(FiDataMetaDataReqDTO reqDto) {
         List<FiDataMetaDataDTO> list = new ArrayList<>();
         FiDataMetaDataDTO dto = new FiDataMetaDataDTO();
         dto.setDataSourceId(Integer.parseInt(StringUtils.isBlank(reqDto.dataSourceId) ? String.valueOf(0) : reqDto.dataSourceId));
@@ -335,15 +339,16 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         if (!org.springframework.util.CollectionUtils.isEmpty(list)) {
             redisUtil.set(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId), JSON.toJSONString(list));
         }
-        return list;
+        return true;
     }
 
     /**
      * 获取模型、实体、属性 数据结构Tree
+     *
      * @param id
      * @return
      */
-    public List<FiDataMetaDataTreeDTO> getModelData(String id){
+    public List<FiDataMetaDataTreeDTO> getModelData(String id) {
         List<ModelPO> modelPoList = baseMapper.selectList(null);
         List<FiDataMetaDataTreeDTO> modelDataList = modelPoList.stream().filter(Objects::nonNull)
                 .map(e -> {
@@ -360,9 +365,9 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
                     List<FiDataMetaDataTreeDTO> dataList = new ArrayList<>();
 
-                    List<EntityVO> entityVoList = modelService.getEntityById((int) e.getId(),null).getEntityVOList();
+                    List<EntityVO> entityVoList = modelService.getEntityById((int) e.getId(), null).getEntityVOList();
 
-                    if (CollectionUtils.isNotEmpty(entityVoList)){
+                    if (CollectionUtils.isNotEmpty(entityVoList)) {
                         // 获取模型下的实体
                         List<FiDataMetaDataTreeDTO> entityDataList = entityVoList.stream().filter(Objects::nonNull)
                                 .map(item -> {
@@ -379,7 +384,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                     entityDto.setSourceId(Integer.parseInt(id));
 
                                     // 获取实体下的属性
-                                    List<AttributeInfoDTO> attributeList = entityService.getAttributeById(item.getId(),null).getAttributeList();
+                                    List<AttributeInfoDTO> attributeList = entityService.getAttributeById(item.getId(), null).getAttributeList();
                                     List<FiDataMetaDataTreeDTO> attributeDataList = attributeList.stream().filter(Objects::nonNull)
                                             .map(iter -> {
 
@@ -399,7 +404,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                                 }
                                                 // 字段信息
                                                 Integer dataTypeLength = iter.getDataTypeLength();
-                                                if (dataTypeLength != null){
+                                                if (dataTypeLength != null) {
                                                     attributeDto.setLabelLength(dataTypeLength.toString());
                                                 }
                                                 attributeDto.setLabelType(iter.getDataType());
@@ -439,8 +444,8 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                 .forEach(item -> {
 
                                     // 自定义视图组
-                                    List<ViwGroupVO> viwGroupList = viwGroupService.getDataByEntityId(item.getId(),null);
-                                    if (viwGroupList == null){
+                                    List<ViwGroupVO> viwGroupList = viwGroupService.getDataByEntityId(item.getId(), null);
+                                    if (viwGroupList == null) {
                                         return;
                                     }
 
