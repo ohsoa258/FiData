@@ -748,7 +748,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
     @Override
-    public List<FiDataMetaDataDTO> setDataAccessStructure(FiDataMetaDataReqDTO reqDto) {
+    public boolean setDataAccessStructure(FiDataMetaDataReqDTO reqDto) {
 
         List<FiDataMetaDataDTO> list = new ArrayList<>();
         FiDataMetaDataDTO dto = new FiDataMetaDataDTO();
@@ -775,7 +775,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             redisUtil.set(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId), JSON.toJSONString(list));
         }
 
-        return list;
+        return true;
     }
 
     @Override

@@ -133,5 +133,5 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @param dto dto
      * @return list
      */
-    List<FiDataMetaDataDTO> setDataModelStructure(FiDataMetaDataReqDTO dto);
+    boolean setDataModelStructure(FiDataMetaDataReqDTO dto);
 }

@@ -602,7 +602,7 @@ public class BusinessAreaImpl
     }
 
     @Override
-    public List<FiDataMetaDataDTO> setDataModelStructure(FiDataMetaDataReqDTO reqDto) {
+    public boolean setDataModelStructure(FiDataMetaDataReqDTO reqDto) {
 
         List<FiDataMetaDataDTO> list = new ArrayList<>();
         if ("1".equalsIgnoreCase(reqDto.dataSourceId)) {
@@ -654,7 +654,7 @@ public class BusinessAreaImpl
         if (!CollectionUtils.isEmpty(list)) {
             redisUtil.set(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId), JSON.toJSONString(list));
         }
-        return list;
+        return true;
     }
 
 /*    private List<FiDataMetaDataTreeDTO> buildChildren(String guid, String dourceType) {

@@ -72,5 +72,5 @@ public interface IModelService extends IService<ModelPO> {
      * 刷新主数据结构
      * @return
      */
-    List<FiDataMetaDataDTO> setDataStructure(FiDataMetaDataReqDTO reqDto);
+    boolean setDataStructure(FiDataMetaDataReqDTO reqDto);
 }

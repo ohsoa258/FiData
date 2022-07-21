@@ -73,7 +73,7 @@ public class ModelController {
     @ApiOperation("刷新主数据结构")
     @PostMapping("/setDataStructure")
     @ResponseBody
-    public ResultEntity<List<FiDataMetaDataDTO>> setDataStructure(@RequestBody FiDataMetaDataReqDTO dto){
+    public ResultEntity<Object> setDataStructure(@RequestBody FiDataMetaDataReqDTO dto){
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.setDataStructure(dto));
     }
 

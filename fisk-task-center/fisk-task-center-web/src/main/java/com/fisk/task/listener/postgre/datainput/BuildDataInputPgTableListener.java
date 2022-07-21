@@ -12,6 +12,7 @@ import com.fisk.dataaccess.enums.PublishTypeEnum;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.fisk.task.enums.DbTypeEnum;
+import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import com.fisk.task.service.nifi.IPostgreBuild;
 import com.fisk.task.utils.StackTraceHelper;
 import com.fisk.task.utils.TaskPgTableStructureHelper;
@@ -21,7 +22,9 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -38,6 +41,8 @@ public class BuildDataInputPgTableListener {
     DataAccessClient dc;
     @Resource
     TaskPgTableStructureHelper taskPgTableStructureHelper;
+    @Resource
+    TaskPgTableStructureMapper taskPgTableStructureMapper;
 
 
     public ResultEnum msg(String dataInfo, Acknowledgment acke) {
@@ -52,7 +57,15 @@ public class BuildDataInputPgTableListener {
         try {
             log.info("开始保存ods版本号,参数为{}", dto);
             // 保存ods版本号
-            ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(dto);
+            //获取时间戳版本号
+            DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+            Calendar calendar = Calendar.getInstance();
+            String version = df.format(calendar.getTime());
+            ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(dto, version);
+            if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
+                taskPgTableStructureMapper.updatevalidVersion(version);
+                throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+            }
 /*
         dto.tableName = "stg_" + dto.tableName.substring(4);
         dto.createType = 4;
@@ -143,12 +156,12 @@ public class BuildDataInputPgTableListener {
     public void saveOrUpdate(ModelPublishTableDTO dto) {
         log.info("开始保存ods版本号,参数为{}", dto);
         // 保存ods版本号
-        taskPgTableStructureHelper.saveTableStructure(dto);
+        taskPgTableStructureHelper.saveTableStructure(dto, null);
         dto.tableName = "stg_" + dto.tableName.substring(4);
         dto.createType = 4;
         log.info("开始保存stg版本号,参数为{}", dto);
         // 保存stg版本号
-        taskPgTableStructureHelper.saveTableStructure(dto);
+        taskPgTableStructureHelper.saveTableStructure(dto, null);
         log.info("保存版本号方法执行成功");
 
     }

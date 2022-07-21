@@ -90,6 +90,13 @@ public interface MdmClient {
      * 获取主数据结构
      * @return
      */
-    @GetMapping("/model/getDataStructure")
-    ResultEntity<List<FiDataMetaDataDTO>> getDataStructure();
+    @PostMapping("/model/getDataStructure")
+    ResultEntity<List<FiDataMetaDataDTO>> getMDMDataStructure();
+
+    /**
+     * 刷新主数据结构
+     * @return
+     */
+    @PostMapping("/model/setDataStructure")
+    ResultEntity<Object> setMDMDataStructure();
 }

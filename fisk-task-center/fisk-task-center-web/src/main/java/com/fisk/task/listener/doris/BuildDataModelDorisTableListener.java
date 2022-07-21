@@ -52,6 +52,8 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -128,7 +130,15 @@ public class BuildDataModelDorisTableListener
                 id = Math.toIntExact(modelPublishTableDTO.tableId);
                 tableType = modelPublishTableDTO.createType;
                 //生成版本号
-                ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO);
+                //获取时间戳版本号
+                DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+                Calendar calendar = Calendar.getInstance();
+                String version = df.format(calendar.getTime());
+                ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO, version);
+                if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
+                    taskPgTableStructureMapper.updatevalidVersion(version);
+                    throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+                }
                 log.info("执行存储过程返回结果" + resultEnum.getCode());
                 //生成建表语句
                 List<String> pgdbTable2 = createPgdbTable2(modelPublishTableDTO);
@@ -228,7 +238,7 @@ public class BuildDataModelDorisTableListener
             }
             return result;
         } finally {
-            //acke.acknowledge();
+            acke.acknowledge();
         }
     }
 
