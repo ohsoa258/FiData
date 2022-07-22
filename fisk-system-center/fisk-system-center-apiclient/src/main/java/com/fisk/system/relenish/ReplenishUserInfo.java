@@ -108,7 +108,7 @@ public class ReplenishUserInfo {
         // remote call
         List<Long> userIds = new ArrayList<>(userIdSet);
         ResultEntity<List<UserDTO>> res = client.getUserListByIds(userIds);
-        // get res
+        // get  res
         if (res.code == ResultEnum.SUCCESS.getCode() && res.getData() != null) {
             data.forEach(e -> {
                 res.getData()
