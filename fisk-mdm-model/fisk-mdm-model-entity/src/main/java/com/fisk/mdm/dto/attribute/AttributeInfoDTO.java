@@ -57,7 +57,7 @@ public class AttributeInfoDTO extends BaseUserInfoVO {
      */
     private String dataType;
 
-    private String dataTypeEnDisplay;
+    public String dataTypeEnDisplay;
 
     /**
      * 数据类型长度

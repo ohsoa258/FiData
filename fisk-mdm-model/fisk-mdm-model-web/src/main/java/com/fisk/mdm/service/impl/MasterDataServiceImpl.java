@@ -100,8 +100,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
     AttributeGroupServiceImpl attributeGroupService;
     @Resource
     ViwGroupServiceImpl viwGroupService;
-    @Resource
-    MasterDataLogServiceImpl masterDataLogService;
 
     @Resource
     AttributeMapper attributeMapper;
@@ -606,6 +604,10 @@ public class MasterDataServiceImpl implements IMasterDataService {
         vo.setEntityName(entityPO.getDisplayName());
         vo.setEntityId(dto.getEntityId());
         List<AttributeInfoDTO> attributeInfos = attributeService.listPublishedAttribute(dto.getEntityId());
+        attributeInfos
+                .stream()
+                .map(e -> e.dataTypeEnDisplay = DataTypeEnum.getValue(e.getDataType()).name())
+                .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(attributeInfos)) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
@@ -889,8 +891,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
             if (attributePO == null) {
                 throw new FkException(ResultEnum.CODE_NOT_EXIST);
             }
+            int versionId = Integer.parseInt(dto.getData().get("fidata_version_id").toString());
             //获取mdm表code数据列表
-            List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(entityPO.getModelId(), dto.getEntityId()), attributePO.getColumnName(), (int) dto.getData().get("fidata_version_id"));
+            List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(entityPO.getModelId(), dto.getEntityId()), attributePO.getColumnName(), versionId);
             //判断上传逻辑
             dto.getData().put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
             if (codeList.contains(dto.getData().get("code"))) {
