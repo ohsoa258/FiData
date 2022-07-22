@@ -471,11 +471,11 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     break;
                 case SQLSERVER:
                     // 表结构
-                    viewNameAndColumns = sqlServerPlusUtils.loadViewDetails(DriverTypeEnum.MYSQL, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                    viewNameAndColumns = sqlServerPlusUtils.loadViewDetails(DriverTypeEnum.SQLSERVER, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
                     break;
                 case POSTGRESQL:
                     // 表结构
-                    viewNameAndColumns = postgresConUtils.loadViewDetails(DriverTypeEnum.MYSQL, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                    viewNameAndColumns = postgresConUtils.loadViewDetails(DriverTypeEnum.POSTGRESQL, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
                     break;
             }
 
@@ -684,7 +684,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @params operationType 操作类型 1、新增 2、修改 3、删除
      */
     public void setMetaDataToRedis(DataSourceConPO dataSourceConPO, int operationType) {
-        if (StringUtils.isNotEmpty(metaDataEntityKey)) {
+        if (StringUtils.isEmpty(metaDataEntityKey)) {
             return;
         }
         String redisKey = metaDataEntityKey + "_" + dataSourceConPO.getId();
@@ -694,7 +694,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 redisTemplate.delete(redisKey);
             }
         } else if (operationType == 1 || operationType == 2) {
-            FiDataMetaDataTreeDTO meta = getFiDataConfigMetaData(dataSourceConPO);
+            FiDataMetaDataTreeDTO meta = getCustomizeMetaData(dataSourceConPO);
             String json = JSONArray.toJSON(meta).toString();
             redisTemplate.opsForValue().set(redisKey, json);
         }

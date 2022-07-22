@@ -88,28 +88,21 @@ public class PostgresConUtils {
             Class.forName(driverTypeEnum.getName());
             Connection conn = DriverManager.getConnection(url, user, password);
             // 获取数据库中所有视图名称
-            List<String> viewNameList = loadViewNameList(  conn );
+            List<String> viewNameList = loadViewNameList(conn);
             Statement st = conn.createStatement();
 
             list = new ArrayList<>();
-
             for (String viewName : viewNameList) {
-
-                List<TableStructureDTO> colNames = getColNames(st, viewName);
-
+                List<TableStructureDTO> colNames = getViewColumns(conn, viewName);
                 DataBaseViewDTO dto = new DataBaseViewDTO();
                 dto.viewName = viewName;
                 dto.fields = colNames;
-                // 关闭当前结果集
-//                resultSql.close();
-
                 list.add(dto);
             }
-
             st.close();
             conn.close();
         } catch (ClassNotFoundException | SQLException e) {
-            log.error("【getTableNameAndColumns】获取表名报错, ex", e);
+            log.error("【loadViewDetails】获取视图信息报错, ex", e);
             throw new FkException(ResultEnum.LOAD_VIEW_STRUCTURE_ERROR);
         }
 
@@ -125,7 +118,7 @@ public class PostgresConUtils {
      * @params conn
      * @params dbName
      */
-    private List<String> loadViewNameList( Connection conn ) {
+    private List<String> loadViewNameList(Connection conn) {
         ArrayList<String> viewNameList = null;
         try {
             DatabaseMetaData databaseMetaData = conn.getMetaData();
@@ -137,8 +130,7 @@ public class PostgresConUtils {
             while (rs.next()) {
                 viewNameList.add(rs.getString(3));
             }
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             throw new FkException(ResultEnum.LOAD_VIEW_NAME_ERROR);
         }
         return viewNameList;
@@ -254,15 +246,15 @@ public class PostgresConUtils {
     }
 
     /**
-     * 获取指定表的字段信息（包括字段名称，字段类型，字段长度，备注）
+     * 获取指定表视图字段信息
      *
-     * @param tableName
+     * @param viewName
      * @return
      */
-    public List<TableStructureDTO> getTableColumns(Connection conn, String tableName) {
+    public List<TableStructureDTO> getViewColumns(Connection conn, String viewName) {
         List<TableStructureDTO> colNameList = new ArrayList<>();
         try {
-            ResultSet rs = conn.getMetaData().getColumns(null, "%", tableName, "%");
+            ResultSet rs = conn.getMetaData().getColumns(null, "%", viewName, "%");
             while (rs.next()) {
                 TableStructureDTO tableStructureDTO = new TableStructureDTO();
                 //字段名称
@@ -270,13 +262,13 @@ public class PostgresConUtils {
                 //字段类型
                 tableStructureDTO.setFieldType(rs.getString("TYPE_NAME"));
                 //字段长度
-                //tableStructureDTO.setFieldLength(Integer.parseInt(rs.getString("COLUMN_SIZE")));
+                tableStructureDTO.setFieldLength(Integer.parseInt(rs.getString("COLUMN_SIZE")));
                 //备注
                 //tableStructureDTO.setFieldDes(rs.getString("REMARKS"));
                 colNameList.add(tableStructureDTO);
             }
         } catch (Exception e) {
-            log.error("【PostgresConUtils/getTableColumns】读取字段信息异常, ex", e);
+            log.error("【PostgresConUtils/getViewColumns】读取字段信息异常, ex", e);
             throw new FkException(ResultEnum.PG_READ_FIELD_ERROR);
         }
         return colNameList;
