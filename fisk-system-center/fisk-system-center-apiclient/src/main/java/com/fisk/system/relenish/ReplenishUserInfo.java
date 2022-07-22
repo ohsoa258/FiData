@@ -113,7 +113,7 @@ public class ReplenishUserInfo {
             data.forEach(e -> {
                 res.getData()
                         .stream()
-                        .filter(user -> user.id.toString().equals(e.get("fidata_create_user")) || user.id.toString().equals(e.get("updateUser")))
+                        .filter(user -> user.id.toString().equals(e.get("fidata_create_user")) || user.id.toString().equals(e.get("fidata_update_user")))
                         .forEach(user -> {
                             String value = null;
                             switch (fieldType) {
