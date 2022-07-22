@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.NotNull;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -30,6 +31,7 @@ public class TableSyncmodeDTO extends BaseDTO {
      * 1：全量、2：时间戳增量、3：业务时间覆盖、4：自定义覆盖；
      */
     @ApiModelProperty(value = "1：全量、2：时间戳增量、3：业务时间覆盖、4：自定义覆盖；", required = true)
+    @NotNull
     public int syncMode;
 
     /**

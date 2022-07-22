@@ -186,7 +186,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 
         TableSyncmodeDTO tableSyncmodeDTO = dto.getTableSyncmodeDTO();
-        if (CollectionUtils.isEmpty(dto.list) || tableSyncmodeDTO == null) {
+        if (CollectionUtils.isEmpty(dto.list) || tableSyncmodeDTO == null || tableSyncmodeDTO.syncMode < 1) {
             return ResultEnum.PARAMTER_NOTNULL;
         }
 

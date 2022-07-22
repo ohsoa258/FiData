@@ -11,6 +11,7 @@ import com.fisk.dataaccess.service.ITableFields;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -35,13 +36,13 @@ public class TableFieldsController {
 
     @PostMapping("/add")
     @ApiOperation(value = "添加物理表字段--保存&发布")
-    public ResultEntity<Object> addData(@RequestBody TableAccessNonDTO dto) {
+    public ResultEntity<Object> addData(@Validated @RequestBody TableAccessNonDTO dto) {
         return ResultEntityBuild.build(service.addData(dto));
     }
 
     @PutMapping("/edit")
     @ApiOperation(value = "修改物理表字段--保存&发布")
-    public ResultEntity<Object> editData(@RequestBody TableAccessNonDTO dto) {
+    public ResultEntity<Object> editData(@Validated @RequestBody TableAccessNonDTO dto) {
         return ResultEntityBuild.build(service.updateData(dto));
     }
 
