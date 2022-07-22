@@ -649,6 +649,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
             AttributeInfoDTO infoDTO = new AttributeInfoDTO();
             infoDTO.setName("fidata_new_code");
             infoDTO.setDisplayName("新编码");
+            infoDTO.setDataType(DataTypeEnum.TEXT.getName());
+            infoDTO.setDataTypeEnDisplay(DataTypeEnum.TEXT.name());
             attributeInfos.add(1, infoDTO);
             vo.setAttribute(attributeInfos);
             vo.setMembers(resultPageMaps);
