@@ -142,7 +142,7 @@ public class BuildDataInputPgTableListener {
                     dc.updateApiPublishStatus(modelPublishStatusDTO);
                 }
             } else {
-                //buildAtlasTableAndColumnTaskListener.msg(JSON.toJSONString(dto), null);
+                buildAtlasTableAndColumnTaskListener.msg(dataInfo, null);
             }
 
             return ResultEnum.SUCCESS;

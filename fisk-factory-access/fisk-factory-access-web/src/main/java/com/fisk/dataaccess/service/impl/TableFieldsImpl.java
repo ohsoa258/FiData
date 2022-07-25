@@ -319,8 +319,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         data.excelFlow = true;
                     }
                     // 生成nifi流程
-                    log.info(JSON.toJSONString(data));
-                    publishTaskClient.publishBuildAtlasTableTask(data);
+                    //log.info(JSON.toJSONString(data));
+                    //publishTaskClient.publishBuildAtlasTableTask(data);
                     // 构建元数据实时同步数据对象
                     buildMetaDataInstanceAttribute(registration, accessId, 2);
                 }
