@@ -12,8 +12,12 @@ public class NifiCustomWorkflowDetailDTO {
     public long id;
     public Long pid;
     public String workflowId;
+    @ApiModelProperty(value = "管道名称")
+    public String workflowName;
     @ApiModelProperty(value = "左边组件类型id", required = true)
     public Integer componentsId;
+    @ApiModelProperty(value = "task组件名称")
+    public String componentsName;
     @ApiModelProperty(value = "应用id or 业务域id")
     public String appId;
     @ApiModelProperty(value = "表id")
