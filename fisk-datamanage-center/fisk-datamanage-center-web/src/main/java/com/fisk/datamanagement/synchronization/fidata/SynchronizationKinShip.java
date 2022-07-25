@@ -137,7 +137,7 @@ public class SynchronizationKinShip {
             dto.guid=po1.get().atlasGuid;
             dto.typeName=EntityTypeEnum.RDBMS_DB.getName();
             list.add(dto);
-            addProcess(EntityTypeEnum.PROCESS,name,list,po.atlasGuid,0);
+            //addProcess(EntityTypeEnum.PROCESS,name,list,po.atlasGuid,0);
         }
     }
 
@@ -198,7 +198,7 @@ public class SynchronizationKinShip {
                 //条数为0,则添加process
                 if (relationShipAttribute.size()==0)
                 {
-                    addProcess(EntityTypeEnum.RDBMS_TABLE,item.sqlScript,tableList,atlasGuid,(int)item.id);
+                    //addProcess(EntityTypeEnum.RDBMS_TABLE,item.sqlScript,tableList,atlasGuid,(int)item.id);
                 }
                 else {
                     List<SourceTableDTO> sourceTableDtoList =new ArrayList<>();
@@ -275,7 +275,7 @@ public class SynchronizationKinShip {
             //条数为0,则添加process
             if (relationShipAttribute.size()==0)
             {
-                addProcess(EntityTypeEnum.RDBMS_COLUMN,dto.sqlScript,inputColumnList,po.atlasGuid,(int)field.id);
+                //addProcess(EntityTypeEnum.RDBMS_COLUMN,dto.sqlScript,inputColumnList,po.atlasGuid,(int)field.id);
             }else {
                 List<SourceTableDTO> dtoList=new ArrayList<>();
                 dtoList.add(dto);
@@ -390,7 +390,7 @@ public class SynchronizationKinShip {
                 //条数为0,则添加process
                 if (relationShipAttribute.size()==0)
                 {
-                    addProcess(EntityTypeEnum.RDBMS_TABLE,"doris_"+item.sqlScript,tableList,atlasGuid,(int)item.id);
+                    //addProcess(EntityTypeEnum.RDBMS_TABLE,"doris_"+item.sqlScript,tableList,atlasGuid,(int)item.id);
                 }else {
                     for (int i=0;i<relationShipAttribute.size();i++)
                     {
@@ -530,7 +530,7 @@ public class SynchronizationKinShip {
             //条数为0,则添加process
             if (relationShipAttribute.size()==0)
             {
-                addProcess(EntityTypeEnum.RDBMS_COLUMN,processName,inputColumnList,po.atlasGuid,(int)field.id);
+                //addProcess(EntityTypeEnum.RDBMS_COLUMN,processName,inputColumnList,po.atlasGuid,(int)field.id);
             }else {
                 List<SourceTableDTO> dtoList=new ArrayList<>();
                 dtoList.add(dto);
@@ -673,8 +673,7 @@ public class SynchronizationKinShip {
     public void addProcess(EntityTypeEnum entityTypeEnum,
                            String sql,
                            List<EntityIdAndTypeDTO> tableList,
-                           String atlasGuid,
-                           int dataInputId
+                           String atlasGuid
                            )
     {
         //去除换行符,以及转小写
@@ -713,27 +712,6 @@ public class SynchronizationKinShip {
         {
             return;
         }
-        int tableId=0;
-        int columnId=0;
-        if (entityTypeEnum==EntityTypeEnum.RDBMS_TABLE)
-        {
-            tableId=dataInputId;
-        }else {
-            columnId=dataInputId;
-        }
-        synchronizationPgData.addMetadataMapAtlas(
-                addResult.data,
-                EntityTypeEnum.PROCESS,
-                sql,
-                DataTypeEnum.DATA_MODEL.getValue(),
-                tableId,
-                columnId,
-                0,
-                0,
-                dto.guid,
-                "",
-                0,
-                0);
     }
 
     /**
@@ -776,7 +754,7 @@ public class SynchronizationKinShip {
             if (EntityTypeEnum.DELETED.getName().equals(dto.entity.status))
             {
                 //如果已删除,则重新添加
-                addProcess(entityTypeEnum,sqlScript,inputList,atlasGuid,dataInputId);
+                //addProcess(entityTypeEnum,sqlScript,inputList,atlasGuid,dataInputId);
                 return;
             }
             List<String> inputGuidList=dto.entity.attributes.inputs.stream().map(e->e.getGuid()).collect(Collectors.toList());
@@ -959,5 +937,6 @@ public class SynchronizationKinShip {
         }
         return list;
     }
+
 
 }

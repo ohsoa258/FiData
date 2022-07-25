@@ -4,10 +4,14 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.metadata.dto.metadata.*;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
 import com.fisk.datamanagement.dto.entity.EntityDTO;
 import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
@@ -18,9 +22,14 @@ import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.map.MetaDataMap;
 import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
 import com.fisk.datamanagement.service.impl.EntityImpl;
+import com.fisk.datamanagement.synchronization.fidata.SynchronizationKinShip;
 import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
+import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.BuildMetaDataDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +41,8 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -50,6 +61,14 @@ public class MetaDataImpl implements IMetaData {
     UserHelper userHelper;
     @Resource
     PublishTaskClient client;
+    @Resource
+    UserClient userClient;
+    @Resource
+    DataAccessClient dataAccessClient;
+    @Resource
+    DataModelClient dataModelClient;
+    @Resource
+    SynchronizationKinShip synchronizationKinShip;
 
     @Value("${atlas.entity}")
     private String entity;
@@ -88,6 +107,8 @@ public class MetaDataImpl implements IMetaData {
                     if (StringUtils.isEmpty(tableGuid)) {
                         continue;
                     }
+                    //同步表血缘
+                    synchronizationTableKinShip(db.name, tableGuid, table.name);
                     List<String> qualifiedNames = new ArrayList<>();
                     for (MetaDataColumnAttributeDTO field : table.columnList) {
                         metaDataField(field, tableGuid);
@@ -101,6 +122,54 @@ public class MetaDataImpl implements IMetaData {
         //更新Redis
         entityImpl.updateRedis();
         return ResultEnum.SUCCESS;
+    }
+
+    public void synchronizationTableKinShip(String dbName, String tableGuid, String tableName) {
+        try {
+            String dbQualifiedName = whetherSynchronization(dbName);
+            if (StringUtils.isEmpty(dbQualifiedName)) {
+                return;
+            }
+            //获取实体详情
+            ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + tableGuid);
+            if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS) {
+                return;
+            }
+            //获取ods表信息
+            ResultEntity<List<DataAccessSourceTableDTO>> odsResult = dataAccessClient.getDataAccessMetaData();
+            if (odsResult.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(odsResult.data)) {
+                return;
+            }
+            //获取dw表信息
+            ResultEntity<Object> result = dataModelClient.getDataModelTable(1);
+            if (result.code != ResultEnum.SUCCESS.getCode()) {
+                return;
+            }
+            //序列化
+            List<SourceTableDTO> list = JSON.parseArray(JSON.toJSONString(result.data), SourceTableDTO.class);
+            Optional<SourceTableDTO> first = list.stream().filter(e -> tableName.equals(e.tableName)).findFirst();
+            if (!first.isPresent()) {
+                return;
+            }
+            List<String> tableList = first.get().fieldList
+                    .stream()
+                    .map(e -> e.getSourceTable())
+                    .distinct()
+                    .collect(Collectors.toList());
+            List<EntityIdAndTypeDTO> inputTableList = getTableList(tableList, odsResult.data, first.get(), dbQualifiedName);
+            //解析数据
+            JSONObject jsonObj = JSON.parseObject(getDetail.data);
+            JSONObject entityObject = JSON.parseObject(jsonObj.getString("entity"));
+            JSONObject relationShip = JSON.parseObject(entityObject.getString("relationshipAttributes"));
+            JSONArray relationShipAttribute = JSON.parseArray(relationShip.getString("outputFromProcesses"));
+            //条数为0,则添加process
+            if (relationShipAttribute.size() == 0) {
+                synchronizationKinShip.addProcess(EntityTypeEnum.RDBMS_TABLE, first.get().sqlScript, inputTableList, tableGuid);
+            }
+        } catch (Exception e) {
+            log.error("同步表血缘失败,表guid" + tableGuid + " ex:", e);
+            return;
+        }
     }
 
     @Override
@@ -124,6 +193,11 @@ public class MetaDataImpl implements IMetaData {
         return ResultEnum.SUCCESS;
     }
 
+    /**
+     * 循环删除子节点
+     *
+     * @param atlasGuid
+     */
     public void delete(String atlasGuid) {
         QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(MetadataMapAtlasPO::getParentAtlasGuid, atlasGuid);
@@ -366,6 +440,75 @@ public class MetaDataImpl implements IMetaData {
         queryWrapper.lambda().eq(MetadataMapAtlasPO::getQualifiedName, qualifiedName);
         MetadataMapAtlasPO po = metadataMapAtlasMapper.selectOne(queryWrapper);
         return po == null ? "" : po.atlasGuid;
+    }
+
+
+    /**
+     * 根据数据库名,判断是否可以血缘同步
+     *
+     * @param dbName
+     * @return
+     */
+    public String whetherSynchronization(String dbName) {
+        //获取所有数据源
+        ResultEntity<List<DataSourceDTO>> result = userClient.getAllFiDataDataSource();
+        if (result.code != ResultEnum.SUCCESS.getCode()) {
+            return null;
+        }
+        //根据数据库筛选
+        Optional<DataSourceDTO> first = result.data.stream().filter(e -> dbName.equals(e.conDbname)).findFirst();
+        if (!first.isPresent()) {
+            return null;
+        }
+        //暂不支持同步ods血缘
+        if (first.get().id == DataSourceConfigEnum.DMP_ODS.getValue()) {
+            return null;
+        }
+        return first.get().conIp + "_" + first.get().conDbname;
+    }
+
+    /**
+     * @param tableNameList
+     * @param dtoList
+     * @param associateDto
+     * @param dbQualifiedName
+     * @return
+     */
+    public List<EntityIdAndTypeDTO> getTableList(List<String> tableNameList,
+                                                 List<DataAccessSourceTableDTO> dtoList,
+                                                 SourceTableDTO associateDto,
+                                                 String dbQualifiedName) {
+        List<EntityIdAndTypeDTO> list = new ArrayList<>();
+
+        List<String> tableQualifiedNameList = (List) dtoList.stream()
+                .filter(e -> tableNameList.contains(e.tableName))
+                .map(e -> {
+                    return dbQualifiedName + "_" + e.id;
+                }).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(tableQualifiedNameList)) {
+            return list;
+        }
+        QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("qualified_name", tableQualifiedNameList);
+        List<MetadataMapAtlasPO> poList = metadataMapAtlasMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(poList)) {
+            return list;
+        }
+        for (MetadataMapAtlasPO item : poList) {
+            EntityIdAndTypeDTO dto = new EntityIdAndTypeDTO();
+            dto.guid = item.atlasGuid;
+            dto.typeName = EntityTypeEnum.RDBMS_TABLE.getName();
+            list.add(dto);
+        }
+        List<Integer> associateIdList = associateDto.fieldList.stream().filter(e -> e.associatedDim == true).map(e -> e.getAssociatedDimId()).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(associateIdList)) {
+            return list;
+        }
+        //关联维度
+        List<Integer> collect = associateIdList.stream().distinct().collect(Collectors.toList());
+        for (Integer id : collect) {
+        }
+        return list;
     }
 
 
