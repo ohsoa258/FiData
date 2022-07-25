@@ -49,6 +49,8 @@ public class DataFactoryImpl implements IDataFactory {
     @Resource
     NifiCustomWorkflowImpl nifiCustomWorkflowImpl;
     @Resource
+    NifiComponentImpl nifiComponentImpl;
+    @Resource
     NifiCustomWorkflowDetailImpl nifiCustomWorkflowDetailImpl;
     @Resource
     PublishTaskClient publishTaskClient;
@@ -90,6 +92,9 @@ public class DataFactoryImpl implements IDataFactory {
             // 封装当前任务的上一级主任务中的最后一个表任务集合
             buildInportList(detailPo, nifiPortsHierarchyDto);
 
+            // 封装当前task的其他属性(管道名称、组件名称、表名等信息)
+            buildAttribute(nifiPortsHierarchyDto);
+
             return ResultEntityBuild.build(ResultEnum.SUCCESS, nifiPortsHierarchyDto);
         } else {
             NifiCustomWorkflowPO customWorkflowPo = nifiCustomWorkflowImpl.query().eq("id", dto.workflowId).one();
@@ -128,9 +133,50 @@ public class DataFactoryImpl implements IDataFactory {
             // 封装当前任务的上一级主任务中的最后一个表任务集合
             buildInportList(detailPo, nifiPortsHierarchyDto);
 
+            // 封装当前task的其他属性(管道名称、组件名称、表名等信息)
+            buildAttribute(nifiPortsHierarchyDto);
+
             return ResultEntityBuild.build(ResultEnum.SUCCESS, nifiPortsHierarchyDto);
         }
 
+    }
+
+    private void buildAttribute(NifiPortsHierarchyDTO dto) {
+        if (dto == null) {
+            return;
+        }
+
+        /*
+            属性转换
+         */
+        dto.setItselfPort(dtoToDto(dto.getItselfPort()));
+        dto.setPipeEndDto(listDtoToDto(dto.getPipeEndDto()));
+        dto.setInportList(listDtoToDto(dto.getInportList()));
+        dto.setNextList(listNextDtoToDto(dto.getNextList()));
+    }
+
+    private NifiCustomWorkflowDetailDTO dtoToDto(NifiCustomWorkflowDetailDTO dto) {
+        dto.workflowName = nifiCustomWorkflowImpl.query().eq("workflow_id", dto.workflowId).one().getWorkflowName();
+        dto.componentsName = nifiComponentImpl.query().eq("id", dto.componentsId).one().getName();
+        return dto;
+    }
+
+    private List<NifiCustomWorkflowDetailDTO> listDtoToDto(List<NifiCustomWorkflowDetailDTO> list) {
+
+        return list.stream().filter(Objects::nonNull)
+                .peek(e -> {
+                    e.workflowName = nifiCustomWorkflowImpl.query().eq("workflow_id", e.workflowId).one().getWorkflowName();
+                    e.componentsName = nifiComponentImpl.query().eq("id", e.componentsId).one().getName();
+                }).collect(Collectors.toList());
+    }
+
+    private List<NifiPortsHierarchyNextDTO> listNextDtoToDto(List<NifiPortsHierarchyNextDTO> list) {
+
+        return list.stream().filter(Objects::nonNull)
+                .peek(e -> {
+                    e.setItselfPort(dtoToDto(e.getItselfPort()));
+                    e.setUpPortList(listDtoToDto(e.getUpPortList()));
+                }).collect(Collectors.toList());
     }
 
     /**
