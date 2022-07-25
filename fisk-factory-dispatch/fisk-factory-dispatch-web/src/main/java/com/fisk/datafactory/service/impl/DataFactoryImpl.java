@@ -415,7 +415,9 @@ public class DataFactoryImpl implements IDataFactory {
             }
         }
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, Objects.requireNonNull(list.stream().distinct().collect(Collectors.toList())));
+        List<NifiCustomWorkflowDetailDTO> detailDtoList = Objects.requireNonNull(list.stream().distinct().collect(Collectors.toList()));
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, listDtoToDto(detailDtoList));
     }
 
     @Override
