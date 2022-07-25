@@ -155,7 +155,7 @@ public class BuildDataInputPgTableListener {
                 modelPublishStatus.publishErrorMsg = StackTraceHelper.getStackTraceInfo(e);
                 modelPublishStatus.publish = 2;
                 modelPublishStatus.tableId = Long.parseLong(buildPhysicalTableDTO.dbId);
-                dc.updateTablePublishStatus(modelPublishStatusDTO);
+                dc.updateTablePublishStatus(modelPublishStatus);
             }
             log.error("创建表失败" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.ERROR;
