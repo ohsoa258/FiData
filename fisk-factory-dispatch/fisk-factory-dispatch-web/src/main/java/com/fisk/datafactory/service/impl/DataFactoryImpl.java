@@ -156,9 +156,15 @@ public class DataFactoryImpl implements IDataFactory {
             填充workflowName、componentsName属性
          */
         dto.setItselfPort(dtoToDto(dto.getItselfPort()));
-        dto.setPipeEndDto(listDtoToDto(dto.getPipeEndDto()));
-        dto.setInportList(listDtoToDto(dto.getInportList()));
-        dto.setNextList(listNextDtoToDto(dto.getNextList()));
+        if (!CollectionUtils.isEmpty(dto.getPipeEndDto())) {
+            dto.setPipeEndDto(listDtoToDto(dto.getPipeEndDto()));
+        }
+        if (!CollectionUtils.isEmpty(dto.getInportList())) {
+            dto.setInportList(listDtoToDto(dto.getInportList()));
+        }
+        if (!CollectionUtils.isEmpty(dto.getNextList())) {
+            dto.setNextList(listNextDtoToDto(dto.getNextList()));
+        }
     }
 
     /**
@@ -205,7 +211,9 @@ public class DataFactoryImpl implements IDataFactory {
         return list.stream().filter(Objects::nonNull)
                 .peek(e -> {
                     e.setItselfPort(dtoToDto(e.getItselfPort()));
-                    e.setUpPortList(listDtoToDto(e.getUpPortList()));
+                    if (!CollectionUtils.isEmpty(e.getUpPortList())) {
+                        e.setUpPortList(listDtoToDto(e.getUpPortList()));
+                    }
                 }).collect(Collectors.toList());
     }
 
