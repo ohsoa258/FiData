@@ -374,6 +374,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
                                     // 实体层级
                                     String entityUuid = String.valueOf(item.getId());
+                                    String entityName=item.getDisplayName();
                                     FiDataMetaDataTreeDTO entityDto = new FiDataMetaDataTreeDTO();
                                     entityDto.setId(entityUuid);
                                     entityDto.setParentId(modelUuid);
@@ -393,6 +394,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                                 FiDataMetaDataTreeDTO attributeDto = new FiDataMetaDataTreeDTO();
                                                 attributeDto.setId(attributeUuid);
                                                 attributeDto.setParentId(entityUuid);
+                                                attributeDto.setParentName(entityName);
                                                 attributeDto.setLabel(iter.getName());
                                                 attributeDto.setLabelAlias(iter.getDisplayName());
                                                 attributeDto.setLevelType(LevelTypeEnum.FIELD);
