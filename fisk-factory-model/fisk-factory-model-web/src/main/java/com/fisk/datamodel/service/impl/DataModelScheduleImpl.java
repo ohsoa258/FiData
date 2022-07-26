@@ -1,8 +1,11 @@
 package com.fisk.datamodel.service.impl;
 
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.Trigger;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author Lock
@@ -33,6 +37,8 @@ public class DataModelScheduleImpl implements SchedulingConfigurer {
     private boolean enabled;
     @Resource
     private BusinessAreaImpl businessAreaImpl;
+    @Resource
+    private UserClient userClient;
 
     @Override
     public void configureTasks(ScheduledTaskRegistrar scheduledTaskRegistrar) {
@@ -81,12 +87,20 @@ public class DataModelScheduleImpl implements SchedulingConfigurer {
     private void loadFiDataMetaData() {
         try {
             FiDataMetaDataReqDTO reqDto = new FiDataMetaDataReqDTO();
-            // 1: dw数据源
-            reqDto.setDataSourceId("1");
-            businessAreaImpl.setDataModelStructure(reqDto);
-            // 4: olap数据源
-            reqDto.setDataSourceId("4");
-            businessAreaImpl.setDataModelStructure(reqDto);
+            ResultEntity<List<DataSourceDTO>> result = userClient.getAllFiDataDataSource();
+            if (result.code == ResultEnum.SUCCESS.getCode()) {
+
+                DataSourceDTO dw = result.data.stream().filter(e -> e.id == 1).findFirst().orElse(null);
+                DataSourceDTO olap = result.data.stream().filter(e -> e.id == 4).findFirst().orElse(null);
+                // 1: dw数据源
+                reqDto.setDataSourceId(String.valueOf(dw.id));
+                reqDto.setDataSourceName(dw.name);
+                businessAreaImpl.setDataModelStructure(reqDto);
+                // 4: olap数据源
+                reqDto.setDataSourceId(String.valueOf(olap.id));
+                reqDto.setDataSourceName(olap.name);
+                businessAreaImpl.setDataModelStructure(reqDto);
+            }
         } catch (Exception e) {
             throw new FkException(ResultEnum.LOAD_FIDATA_METADATA_ERROR, e);
         }
