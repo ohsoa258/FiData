@@ -82,7 +82,7 @@ public interface IDataFactory {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEntity<List<PipelTaskLogVO>> getPipeTaskLog(PipelTaskLogVO dto);
+    ResultEntity<List<PipelTaskLogVO>> getPipeTaskLog(List<PipelTaskLogVO> list);
 
     /**
      * 根据管道主键id,手动将管道的task结构更新到redis
