@@ -180,7 +180,11 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
                 .filter(e -> e.getDataType() == DataTypeEnum.DOMAIN.getName())
                 .collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(domainList)) {
+            //域字段,fidata_id值,转code值
             for (AttributeInfoDTO item : domainList) {
+                if (dto.getMembers().get(item.getName()) == null) {
+                    continue;
+                }
                 //获取域字段mdm表名
                 ResultEntity<AttributeVO> domainAttribute = attributeService.getById(item.getDomainId());
                 if (domainAttribute.code != ResultEnum.SUCCESS.getCode()) {

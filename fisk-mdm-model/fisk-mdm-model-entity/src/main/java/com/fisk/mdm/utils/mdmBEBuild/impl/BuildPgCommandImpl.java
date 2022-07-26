@@ -1,9 +1,12 @@
 package com.fisk.mdm.utils.mdmBEBuild.impl;
 
+import com.fisk.mdm.dto.attribute.AttributeFactDTO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.utils.mdmBEBuild.IBuildSqlCommand;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.fisk.mdm.enums.AttributeStatusEnum.*;
@@ -302,6 +305,46 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String queryData(String tableName) {
         StringBuilder str = new StringBuilder();
         str.append("SELECT * FROM " + PUBLIC + "." + tableName + " LIMIT 1 ");
+        return str.toString();
+    }
+
+    @Override
+    public String insertAttributeFact(List<AttributeFactDTO> dtoList) {
+        StringBuilder str = new StringBuilder();
+        str.append("INSERT INTO ").append(" tb_fact_attribute(");
+        str.append("\"name\", data_type, data_type_length, data_type_decimal_length, enable_required, attribute_id");
+        str.append(")VALUES");
+
+        String value = dtoList.stream().map(e -> {
+            StringBuilder str1 = new StringBuilder();
+            str1.append("('" + e.getName() + "'").append(",");
+            str1.append(e.getDataType()).append(",");
+            str1.append(e.getDataTypeLength()).append(",");
+            str1.append(e.getDataTypeDecimalLength()).append(",");
+            str1.append(e.getEnableRequired()).append(",");
+            str1.append(e.getAttribute_id()).append(")");
+            return str1;
+        }).collect(Collectors.joining(","));
+
+        if (StringUtils.isNotBlank(value)){
+            str.append(value);
+        }
+
+        return str.toString();
+    }
+
+    @Override
+    public String deleteDataByAttributeId(String tableName, String deleteFiled, List<Integer> attributeIds) {
+        String attributeId = attributeIds.stream().map(e -> "'" + e.toString() + "'").collect(Collectors.joining(","));
+        if (StringUtils.isBlank(attributeId)){
+            return null;
+        }
+
+        StringBuilder str = new StringBuilder();
+        str.append("DELETE FROM ").append(tableName);
+        str.append(" WHERE ");
+        str.append(deleteFiled + " IN(");
+        str.append(attributeId).append(")");
         return str.toString();
     }
 

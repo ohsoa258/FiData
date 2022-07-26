@@ -100,8 +100,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
     AttributeGroupServiceImpl attributeGroupService;
     @Resource
     ViwGroupServiceImpl viwGroupService;
-    @Resource
-    MasterDataLogServiceImpl masterDataLogService;
 
     @Resource
     AttributeMapper attributeMapper;
@@ -606,6 +604,10 @@ public class MasterDataServiceImpl implements IMasterDataService {
         vo.setEntityName(entityPO.getDisplayName());
         vo.setEntityId(dto.getEntityId());
         List<AttributeInfoDTO> attributeInfos = attributeService.listPublishedAttribute(dto.getEntityId());
+        attributeInfos
+                .stream()
+                .map(e -> e.dataTypeEnDisplay = DataTypeEnum.getValue(e.getDataType()).name())
+                .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(attributeInfos)) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
@@ -647,6 +649,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
             AttributeInfoDTO infoDTO = new AttributeInfoDTO();
             infoDTO.setName("fidata_new_code");
             infoDTO.setDisplayName("新编码");
+            infoDTO.setDataType(DataTypeEnum.TEXT.getName());
+            infoDTO.setDataTypeEnDisplay(DataTypeEnum.TEXT.name());
             attributeInfos.add(1, infoDTO);
             vo.setAttribute(attributeInfos);
             vo.setMembers(resultPageMaps);
@@ -781,6 +785,11 @@ public class MasterDataServiceImpl implements IMasterDataService {
                                     jsonObj.put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
                                     addCount.incrementAndGet();
                                 }
+                                Date date = new Date();
+                                jsonObj.put("fidata_create_time", CommonMethods.getFormatDate(date));
+                                jsonObj.put("fidata_create_user", userId);
+                                jsonObj.put("fidata_update_time", CommonMethods.getFormatDate(date));
+                                jsonObj.put("fidata_update_user", userId);
                                 jsonObj.put("fidata_error_msg", errorMsg);
                                 jsonObj.put("internalId", "");
                                 //0：上传成功（数据进入stg表） 1：提交成功（数据进入mdm表） 2：提交失败（数据进入mdm表失败）
@@ -884,8 +893,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
             if (attributePO == null) {
                 throw new FkException(ResultEnum.CODE_NOT_EXIST);
             }
+            int versionId = Integer.parseInt(dto.getData().get("fidata_version_id").toString());
             //获取mdm表code数据列表
-            List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(entityPO.getModelId(), dto.getEntityId()), attributePO.getColumnName(), (int) dto.getData().get("fidata_version_id"));
+            List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(entityPO.getModelId(), dto.getEntityId()), attributePO.getColumnName(), versionId);
             //判断上传逻辑
             dto.getData().put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
             if (codeList.contains(dto.getData().get("code"))) {
@@ -942,6 +952,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         Map<String, Object> mapData = new HashMap<>();
         mapData.putAll(dto.getMembers());
         String tableName = TableNameGenerateUtils.generateStgTableName(dto.getModelId(), dto.getEntityId());
+        Date date = new Date();
         if (eventTypeEnum == EventTypeEnum.SAVE) {
             //校验code
             ImportDataVerifyDTO verifyResult = MasterDataFormatVerifyUtils.verifyCode(mapData);
@@ -950,6 +961,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
             }
             mapData.put("fidata_status", SyncStatusTypeEnum.UPLOADED_SUCCESSFULLY.getValue());
             mapData.put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
+            mapData.put("fidata_create_time", CommonMethods.getFormatDate(date));
+            mapData.put("fidata_create_user", userHelper.getLoginUserInfo().id);
             if (StringUtils.isEmpty(mapData.get("code") == null ? "" : mapData.get("code").toString())) {
                 //code生成规则
                 IBuildCodeCommand buildCodeCommand = BuildCodeHelper.getCodeCommand();
@@ -966,6 +979,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 }
             }
         }
+        mapData.put("fidata_update_time", CommonMethods.getFormatDate(date));
+        mapData.put("fidata_update_user", userHelper.getLoginUserInfo().id);
         //生成批次号
         String batchNumber = UUID.randomUUID().toString();
         List<Map<String, Object>> members = new ArrayList<>();

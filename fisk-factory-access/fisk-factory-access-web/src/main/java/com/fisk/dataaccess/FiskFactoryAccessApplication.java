@@ -31,7 +31,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         "com.fisk.datamodel.client",
         "com.fisk.datafactory.client",
         "com.fisk.datagovernance.client",
-        "com.fisk.datamanage.client"
+        "com.fisk.datamanage.client",
+        "com.fisk.system.client"
 })
 @EnableTransactionManagement
 @EnableHystrix

@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -56,7 +57,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -623,7 +627,7 @@ public class BusinessAreaImpl
             dwDataTree.setLevelType(LevelTypeEnum.DATABASE);
 
             // 封装dw所有结构数据
-            dwDataTree.setChildren(buildBusinessChildren(reqDto.dataSourceId, "dw"));
+            dwDataTree.setChildren(buildBusinessChildren(reqDto.dataSourceId, "dw", TableBusinessTypeEnum.FACTTABLE));
             dwDataTreeList.add(dwDataTree);
 
             dwDto.setChildren(dwDataTreeList);
@@ -644,7 +648,7 @@ public class BusinessAreaImpl
             olapDataTree.setLevelType(LevelTypeEnum.DATABASE);
 
             // 封装data-access所有结构数据
-            olapDataTree.setChildren(buildBusinessChildren(reqDto.dataSourceId, "olap"));
+            olapDataTree.setChildren(buildBusinessChildren(reqDto.dataSourceId, "olap", TableBusinessTypeEnum.QUOTATABLE));
             olapDataTreeList.add(olapDataTree);
 
             olapDto.setChildren(olapDataTreeList);
@@ -690,7 +694,7 @@ public class BusinessAreaImpl
      * @params id FiData数据源id
      * @params businessPoList
      */
-    private List<FiDataMetaDataTreeDTO> buildBusinessChildren(String id, String dourceType) {
+    private List<FiDataMetaDataTreeDTO> buildBusinessChildren(String id, String dourceType, TableBusinessTypeEnum tableBusinessTypeEnum) {
 
         List<BusinessAreaPO> businessPoList = this.query().orderByDesc("create_time").list();
 
@@ -738,6 +742,7 @@ public class BusinessAreaImpl
                                             dimensionTreeDto.setLabelDesc(dimension.dimensionDesc);
                                             dimensionTreeDto.setSourceId(Integer.parseInt(id));
                                             dimensionTreeDto.setSourceType(1);
+                                            dimensionTreeDto.setLabelBusinessType(TableBusinessTypeEnum.DIMENSIONTABLE);
                                             // 第六层: 维度字段
                                             List<FiDataMetaDataTreeDTO> dimensionAttributeTreeList = dimensionAttribute.query()
                                                     .eq("dimension_id", dimension.id)
@@ -757,6 +762,8 @@ public class BusinessAreaImpl
                                                         dimensionAttributeTreeDto.setLabelDesc(field.dimensionFieldDes);
                                                         dimensionAttributeTreeDto.setSourceId(Integer.parseInt(id));
                                                         dimensionAttributeTreeDto.setSourceType(1);
+                                                        dimensionAttributeTreeDto.setLabelBusinessType(TableBusinessTypeEnum.DIMENSIONTABLE);
+                                                        dimensionAttributeTreeDto.setParentName(dimension.dimensionTabName);
                                                         return dimensionAttributeTreeDto;
                                                     }).collect(Collectors.toList());
 
@@ -802,6 +809,7 @@ public class BusinessAreaImpl
                                             factTreeDto.setLabelDesc(fact.factTableDesc);
                                             factTreeDto.setSourceId(Integer.parseInt(id));
                                             factTreeDto.setSourceType(1);
+                                            factTreeDto.setLabelBusinessType(tableBusinessTypeEnum);
                                             // 第六层: 事实字段
                                             List<FiDataMetaDataTreeDTO> factAttributeTreeList;
                                             // olap: 分析指标
@@ -822,6 +830,8 @@ public class BusinessAreaImpl
 //                                                        factAttributeTreeDto.setLabelDesc(field.indicatorsDes);
                                                             factAttributeTreeDto.setSourceId(Integer.parseInt(id));
                                                             factAttributeTreeDto.setSourceType(1);
+                                                            factAttributeTreeDto.setLabelBusinessType(TableBusinessTypeEnum.QUOTATABLE);
+                                                            factAttributeTreeDto.setParentName(fact.factTabName);
                                                             return factAttributeTreeDto;
                                                         }).collect(Collectors.toList());
                                             } else {
@@ -844,6 +854,7 @@ public class BusinessAreaImpl
                                                             factAttributeTreeDto.setLabelDesc(field.factFieldDes);
                                                             factAttributeTreeDto.setSourceId(Integer.parseInt(id));
                                                             factAttributeTreeDto.setSourceType(1);
+                                                            factAttributeTreeDto.setParentName(fact.factTabName);
                                                             return factAttributeTreeDto;
                                                         }).collect(Collectors.toList());
                                             }
@@ -886,6 +897,7 @@ public class BusinessAreaImpl
                                     wideTableTreeDto.setPublishState(String.valueOf(wideTable1.dorisPublish != 1 ? 0 : 1));
                                     wideTableTreeDto.setSourceId(Integer.parseInt(id));
                                     wideTableTreeDto.setSourceType(1);
+                                    wideTableTreeDto.setLabelBusinessType(TableBusinessTypeEnum.WIDETABLE);
 
                                     // 第六层: 宽表字段
                                     WideTableFieldConfigDTO wideTableFieldDto = JSON.parseObject(wideTable1.configDetails, WideTableFieldConfigDTO.class);
@@ -908,6 +920,8 @@ public class BusinessAreaImpl
                                                         wideTableFieldTreeDto.setLabelType(field.fieldType);
                                                         wideTableFieldTreeDto.setSourceId(Integer.parseInt(id));
                                                         wideTableFieldTreeDto.setSourceType(1);
+                                                        wideTableFieldTreeDto.setLabelBusinessType(TableBusinessTypeEnum.WIDETABLE);
+                                                        wideTableFieldTreeDto.setParentName(wideTable1.name);
                                                         return wideTableFieldTreeDto;
                                                     }).collect(Collectors.toList());
                                             wideTableFieldTreeList.addAll(fieldList);

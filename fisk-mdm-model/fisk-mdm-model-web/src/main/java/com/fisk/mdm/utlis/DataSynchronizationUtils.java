@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.common.service.mdmBEBuild.BuildFactoryHelper;
 import com.fisk.common.service.mdmBEBuild.CommonMethods;
@@ -18,6 +19,7 @@ import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -54,16 +56,19 @@ public class DataSynchronizationUtils {
     EntityService entityService;
     @Resource
     AttributeService attributeService;
+    @Resource
+    UserHelper userHelper;
 
-    public static final String MARK ="fidata_";
+    public static final String MARK = "fidata_";
     public static final String SPECIAL_CHARACTERS_NULL = "`fidata_null`";
 
     /**
      * stg数据同步
+     *
      * @param entityId
      * @param batchCode
      */
-    public ResultEnum stgDataSynchronize(Integer entityId,String batchCode) {
+    public ResultEnum stgDataSynchronize(Integer entityId, String batchCode) {
 
         // 1.查询属性配置信息
         EntityInfoVO entityInfoVo = entityService.getFilterAttributeById(entityId);
@@ -206,12 +211,14 @@ public class DataSynchronizationUtils {
 
         // 获取唯一键
         String columnName = codeAssociationCondition.get(0).getColumnName();
-        str.append(" ON CONFLICT ( " + columnName + "," + MARK + "version_id" +") DO UPDATE ");
+        str.append(" ON CONFLICT ( " + columnName + "," + MARK + "version_id" + ") DO UPDATE ");
         str.append(" SET ");
         str.append(MARK + "new_code = " + "excluded." + MARK + "new_code").append(",");
         str.append(MARK + "version_id = " + "excluded." + MARK + "version_id").append(",");
         str.append(MARK + "lock_tag = " + "excluded." + MARK + "lock_tag").append(",");
         str.append(MARK + "del_flag = " + "excluded." + MARK + "del_flag").append(",");
+        str.append(MARK + "update_time = " + "excluded." + MARK + "update_time").append(",");
+        str.append(MARK + "update_user = " + "excluded." + MARK + "update_user").append(",");
 
         String code1 = columnName + " = " + "excluded." + MARK + "new_code" + ",";
 
@@ -284,7 +291,15 @@ public class DataSynchronizationUtils {
             , List<Map<String, Object>> listMap
             , String columnName) {
         //获取新增数据code集合
-        List<String> codeList = listMap.stream().map(e -> e.get(columnName).toString()).collect(Collectors.toList());
+        List<String> codeList = new ArrayList<>();
+        for (Map<String, Object> code : listMap) {
+            if (code.get("fidata_new_code") != null && !StringUtils.isEmpty(code.get("fidata_new_code").toString())) {
+                codeList.add(code.get("fidata_new_code").toString());
+                code.put(columnName, code.get("fidata_new_code").toString());
+                continue;
+            }
+            codeList.add(code.get(columnName).toString());
+        }
         //转为单引号也为逗号隔开的字符串
         String values = CommonMethods.convertListToString(codeList);
         //连接对象
@@ -309,8 +324,9 @@ public class DataSynchronizationUtils {
             data.put("fidata_mdm_fidata_id", first.get().get("fidata_id"));
             data.put("fidata_del_flag", "1");
             data.put("fidata_version_id", item.get("fidata_version_id"));
-            data.put("fidata_create_time", item.get("fidata_create_time"));
-            data.put("fidata_create_user", item.get("fidata_create_user"));
+            Date date = new Date();
+            data.put("fidata_create_time", CommonMethods.getFormatDate(date));
+            data.put("fidata_create_user", userHelper.getLoginUserInfo().id);
             String insertSql = buildSqlCommand.buildInsertSingleData(data, logTableName);
             log.info("添加日志数据,sql:", insertSql);
             AbstractDbHelper.executeSqlReturnKey(insertSql, connection);
@@ -493,8 +509,9 @@ public class DataSynchronizationUtils {
                         for (String mdmKey : item.keySet()) {
                             for (String stgKey : e.keySet()) {
                                 Object stgValue = e.get(stgKey);
-                                if (ObjectUtils.isEmpty(stgValue) && mdmKey.equals(stgKey)){
-                                    e.put(stgKey,item.get(mdmKey));
+                                if (ObjectUtils.isEmpty(stgValue) && mdmKey.equals(stgKey)) {
+                                    // TODO 编辑主数据，删除域字段数据，此处操作将mdm表数据重新赋值到updateList中
+                                    //e.put(stgKey,item.get(mdmKey));
                                 }
                             }
                         }

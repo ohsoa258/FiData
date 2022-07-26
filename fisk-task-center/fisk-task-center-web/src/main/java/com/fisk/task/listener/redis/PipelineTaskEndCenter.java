@@ -82,7 +82,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
         String pipelTraceId = "";
         try {
             //用户key失效不做处理
-            if (expiredKey.toLowerCase().contains(MqConstants.TopicPrefix.TOPIC_PREFIX)) {
+            if (expiredKey.toLowerCase().startsWith(MqConstants.TopicPrefix.TOPIC_PREFIX)) {
                 //分割
                 String[] split1 = expiredKey.split(",");
                 String topic = split1[0];

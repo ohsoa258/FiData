@@ -299,7 +299,8 @@ public enum ResultEnum {
     AVERSION_NOT_DELETE(151030, "最后一个版本了,不能删除!"),
     VIEW_NO_EXIST_ATTRIBUTE(151031, "该视图下暂无属性"),
     FILE_NOT_FOUND_EXCEPTION(151032, "file流路径找不到"),
-    FILE_IO_EXCEPTION(151033, "IO流异常");
+    FILE_IO_EXCEPTION(151033, "IO流异常"),
+    FACT_ATTRIBUTE_FAILD(151034, "事实属性表更新失败!");
 
     ResultEnum(int code, String msg) {
         this.code = code;

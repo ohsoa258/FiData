@@ -961,7 +961,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                             .map(field -> {
 
                                                                 FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
-                                                                String fieldGuid = UUID.randomUUID().toString();
                                                                 fieldDtoTree.setId(String.valueOf(field.id));
                                                                 fieldDtoTree.setParentId(String.valueOf(table.id));
                                                                 fieldDtoTree.setLabel(field.fieldName);
@@ -973,6 +972,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                                 fieldDtoTree.setLabelDesc(field.fieldDes);
                                                                 fieldDtoTree.setSourceType(1);
                                                                 fieldDtoTree.setSourceId(Integer.parseInt(id));
+                                                                fieldDtoTree.setParentName(table.tableName);
                                                                 return fieldDtoTree;
                                                             }).collect(Collectors.toList());
 
@@ -1100,6 +1100,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                                 fieldDtoTree.setLabelDesc(field.fieldDes);
                                                                 fieldDtoTree.setSourceType(1);
                                                                 fieldDtoTree.setSourceId(Integer.parseInt(id));
+                                                                fieldDtoTree.setParentName(table.tableName);
                                                                 return fieldDtoTree;
                                                             }).collect(Collectors.toList());
 
@@ -1165,6 +1166,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     fieldDtoTree.setLabelDesc(field.fieldDes);
                                                     fieldDtoTree.setSourceType(1);
                                                     fieldDtoTree.setSourceId(Integer.parseInt(id));
+                                                    fieldDtoTree.setParentName(table.tableName);
                                                     return fieldDtoTree;
                                                 }).collect(Collectors.toList());
 

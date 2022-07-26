@@ -49,6 +49,8 @@ public class DataFactoryImpl implements IDataFactory {
     @Resource
     NifiCustomWorkflowImpl nifiCustomWorkflowImpl;
     @Resource
+    NifiComponentImpl nifiComponentImpl;
+    @Resource
     NifiCustomWorkflowDetailImpl nifiCustomWorkflowDetailImpl;
     @Resource
     PublishTaskClient publishTaskClient;
@@ -90,6 +92,9 @@ public class DataFactoryImpl implements IDataFactory {
             // 封装当前任务的上一级主任务中的最后一个表任务集合
             buildInportList(detailPo, nifiPortsHierarchyDto);
 
+            // 填充当前task的其他属性(管道名称、组件名称、表名等信息)
+            buildAttribute(nifiPortsHierarchyDto);
+
             return ResultEntityBuild.build(ResultEnum.SUCCESS, nifiPortsHierarchyDto);
         } else {
             NifiCustomWorkflowPO customWorkflowPo = nifiCustomWorkflowImpl.query().eq("id", dto.workflowId).one();
@@ -128,9 +133,88 @@ public class DataFactoryImpl implements IDataFactory {
             // 封装当前任务的上一级主任务中的最后一个表任务集合
             buildInportList(detailPo, nifiPortsHierarchyDto);
 
+            // 填充当前task的其他属性(管道名称、组件名称、表名等信息)
+            buildAttribute(nifiPortsHierarchyDto);
+
             return ResultEntityBuild.build(ResultEnum.SUCCESS, nifiPortsHierarchyDto);
         }
 
+    }
+
+    /**
+     * 填充当前task的其他属性(管道名称、组件名称、表名等信息)
+     *
+     * @param dto source
+     * @author Lock
+     * @date 2022/7/25 13:57
+     */
+    private void buildAttribute(NifiPortsHierarchyDTO dto) {
+        if (dto == null) {
+            return;
+        }
+        /*
+            填充workflowName、componentsName属性
+         */
+        dto.setItselfPort(dtoToDto(dto.getItselfPort()));
+        if (!CollectionUtils.isEmpty(dto.getPipeEndDto())) {
+            dto.setPipeEndDto(listDtoToDto(dto.getPipeEndDto()));
+        }
+        if (!CollectionUtils.isEmpty(dto.getInportList())) {
+            dto.setInportList(listDtoToDto(dto.getInportList()));
+        }
+        if (!CollectionUtils.isEmpty(dto.getNextList())) {
+            dto.setNextList(listNextDtoToDto(dto.getNextList()));
+        }
+    }
+
+    /**
+     * task对象填充workflowName、componentsName属性
+     *
+     * @param dto task对象
+     * @return com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO
+     * @author Lock
+     * @date 2022/7/25 13:57
+     */
+    private NifiCustomWorkflowDetailDTO dtoToDto(NifiCustomWorkflowDetailDTO dto) {
+        dto.workflowName = nifiCustomWorkflowImpl.query().eq("workflow_id", dto.workflowId).one().getWorkflowName();
+        dto.componentsName = nifiComponentImpl.query().eq("id", dto.componentsId).one().getName();
+        return dto;
+    }
+
+    /**
+     * task集合填充workflowName、componentsName属性
+     *
+     * @param list task集合
+     * @return java.util.List<com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO>
+     * @author Lock
+     * @date 2022/7/25 14:00
+     */
+    private List<NifiCustomWorkflowDetailDTO> listDtoToDto(List<NifiCustomWorkflowDetailDTO> list) {
+
+        return list.stream().filter(Objects::nonNull)
+                .peek(e -> {
+                    e.workflowName = nifiCustomWorkflowImpl.query().eq("workflow_id", e.workflowId).one().getWorkflowName();
+                    e.componentsName = nifiComponentImpl.query().eq("id", e.componentsId).one().getName();
+                }).collect(Collectors.toList());
+    }
+
+    /**
+     * 填充workflowName、componentsName属性
+     *
+     * @param list 下一级task集合
+     * @return java.util.List<com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyNextDTO>
+     * @author Lock
+     * @date 2022/7/25 14:01
+     */
+    private List<NifiPortsHierarchyNextDTO> listNextDtoToDto(List<NifiPortsHierarchyNextDTO> list) {
+
+        return list.stream().filter(Objects::nonNull)
+                .peek(e -> {
+                    e.setItselfPort(dtoToDto(e.getItselfPort()));
+                    if (!CollectionUtils.isEmpty(e.getUpPortList())) {
+                        e.setUpPortList(listDtoToDto(e.getUpPortList()));
+                    }
+                }).collect(Collectors.toList());
     }
 
     /**
@@ -339,7 +423,9 @@ public class DataFactoryImpl implements IDataFactory {
             }
         }
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, Objects.requireNonNull(list.stream().distinct().collect(Collectors.toList())));
+        List<NifiCustomWorkflowDetailDTO> detailDtoList = Objects.requireNonNull(list.stream().distinct().collect(Collectors.toList()));
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, listDtoToDto(detailDtoList));
     }
 
     @Override

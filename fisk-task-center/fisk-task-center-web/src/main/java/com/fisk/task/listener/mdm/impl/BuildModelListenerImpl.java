@@ -4,16 +4,19 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.core.mapstruct.EnumTypeConversionUtils;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.mdm.dto.attribute.AttributeDomainDTO;
+import com.fisk.mdm.dto.attribute.AttributeFactDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeStatusDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
+import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.task.dto.model.EntityDTO;
@@ -159,6 +162,8 @@ public class BuildModelListenerImpl implements BuildModelListener {
             List<AttributeStatusDTO> dtoList = this.updateMdmTable(abstractDbHelper, connection, sqlBuilder, data.getAttributeList());
             // 3.viw视图重新生成
             this.createViwTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
+            // 3.1更新事实属性表
+            this.updateFactTable(sqlBuilder, connection, entityInfoVo.getAttributeList());
 
             // e.提交事务
             connection.commit();
@@ -179,6 +184,46 @@ public class BuildModelListenerImpl implements BuildModelListener {
         }catch (Exception ex){
             // a.回滚事务
             rollbackConnection(connection);
+        }
+    }
+
+    /**
+     * 更新事实属性表
+     * @param sqlBuilder
+     * @param connection
+     * @param attributeList
+     */
+    public void updateFactTable(IBuildSqlCommand sqlBuilder,Connection connection,List<AttributeInfoDTO> attributeList){
+
+        String sql = null;
+        try {
+            // 1.删除状态为删除和修改得属性
+            List<Integer> deleteAttributeIds = attributeList.stream()
+                    .filter(e -> e.getStatus().equals(DELETE.getName()) ||
+                            e.getStatus().equals(UPDATE.getName()))
+                    .map(e -> e.getId())
+                    .collect(Collectors.toList());
+
+            if (CollectionUtils.isNotEmpty(deleteAttributeIds)){
+                sql = sqlBuilder.deleteDataByAttributeId("tb_fact_attribute", "attribute_id", deleteAttributeIds);
+                PreparedStatement stateDelete = connection.prepareStatement(sql);
+                stateDelete.execute();
+            }
+
+            // 2.插入状态为修改和新增得属性
+            sql = this.buildAttributeSql(sqlBuilder, attributeList);
+            if (StringUtils.isNotBlank(sql)){
+                PreparedStatement stateInsert = connection.prepareStatement(sql);
+                stateInsert.execute();
+            }
+        }catch (Exception ex){
+            // 回滚事务
+            rollbackConnection(connection);
+
+            // 记录日志
+            log.error(ResultEnum.FACT_ATTRIBUTE_FAILD.getMsg() + "【SQL:】" + sql + "【原因:】" + ex.getMessage());
+
+            throw new FkException(ResultEnum.FACT_ATTRIBUTE_FAILD);
         }
     }
 
@@ -504,6 +549,11 @@ public class BuildModelListenerImpl implements BuildModelListener {
             PreparedStatement stemViw = connection.prepareStatement(sql);
             stemViw.execute();
 
+            // 4.1 提交最新属性表
+            sql = this.buildAttributeSql(sqlBuilder, entityInfoVo.getAttributeList());
+            PreparedStatement stemAttribute = connection.prepareStatement(sql);
+            stemAttribute.execute();
+            
             // e.提交事务
             connection.commit();
 
@@ -527,6 +577,36 @@ public class BuildModelListenerImpl implements BuildModelListener {
             this.exceptionProcess(entityInfoVo, ex, ResultEnum.CREATE_TABLE_ERROR.getMsg() + "【原因】:" + ex.getMessage());
             log.error(ResultEnum.CREATE_TABLE_ERROR.getMsg() + "【执行Sql】:" + sql);
         }
+    }
+
+    /**
+     * 生成插入属性事实表的Sql
+     * @param sqlBuilder
+     * @param attributeList
+     * @return
+     */
+    public String buildAttributeSql(IBuildSqlCommand sqlBuilder,List<AttributeInfoDTO> attributeList){
+
+        // 1.数据转换
+        List<AttributeFactDTO> dtoList = attributeList.stream()
+                .filter(e -> e.getStatus().equals(INSERT.getName()) || e.getStatus().equals(UPDATE.getName()))
+                .map(e -> {
+                    AttributeFactDTO dto = new AttributeFactDTO();
+                    dto.setName(e.getName());
+                    dto.setDataType(DataTypeEnum.getValue(e.getDataType()).getValue());
+                    dto.setDataTypeLength(e.getDataTypeLength());
+                    dto.setDataTypeDecimalLength(e.getDataTypeDecimalLength());
+
+                    // bool值转换
+                    EnumTypeConversionUtils conversionUtils = new EnumTypeConversionUtils();
+                    dto.setEnableRequired(conversionUtils.boolToInt(e.getEnableRequired()));
+                    dto.setAttribute_id(e.getId());
+                    return dto;
+                }).collect(Collectors.toList());
+
+        // 2.创建Sql
+        String sql = sqlBuilder.insertAttributeFact(dtoList);
+        return sql;
     }
 
     /**

@@ -11,8 +11,8 @@ import com.fisk.common.core.enums.BaseEnum;
 public enum TableBusinessTypeEnum implements BaseEnum {
 
     NONE(0, "NONE"), //空
-    FACTTABLE(1, "FACTTABLE"), //维度表
-    DIMENSIONTABLE(2, "DIMENSIONTABLE"), //事实表
+    FACTTABLE(1, "FACTTABLE"), //事实表
+    DIMENSIONTABLE(2, "DIMENSIONTABLE"), //维度表
     QUOTATABLE(3, "QUOTATABLE"), //指标表
     WIDETABLE(4, "WIDETABLE"); //宽表
 

@@ -225,6 +225,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+
+        // 重置api发布装填
+        dto.setPublish(0);
+
         // dto -> po
         // 执行修改
         return this.updateById(ApiConfigMap.INSTANCES.dtoToPo(dto)) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;

@@ -12,6 +12,7 @@ import com.fisk.dataaccess.enums.PublishTypeEnum;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.fisk.task.enums.DbTypeEnum;
+import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import com.fisk.task.service.nifi.IPostgreBuild;
 import com.fisk.task.utils.StackTraceHelper;
@@ -43,6 +44,8 @@ public class BuildDataInputPgTableListener {
     TaskPgTableStructureHelper taskPgTableStructureHelper;
     @Resource
     TaskPgTableStructureMapper taskPgTableStructureMapper;
+    @Resource
+    BuildAtlasTableAndColumnTaskListener buildAtlasTableAndColumnTaskListener;
 
 
     public ResultEnum msg(String dataInfo, Acknowledgment acke) {
@@ -138,12 +141,21 @@ public class BuildDataInputPgTableListener {
                 if (tableCount == buildPhysicalTableDTO.apiTableNames.size()) {
                     dc.updateApiPublishStatus(modelPublishStatusDTO);
                 }
+            } else {
+                buildAtlasTableAndColumnTaskListener.msg(dataInfo, null);
             }
+
             return ResultEnum.SUCCESS;
         } catch (Exception e) {
             if (((buildPhysicalTableDTO.apiId != null && buildPhysicalTableDTO.appType == 0) || Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.api))) {
                 modelPublishStatusDTO.publish = PublishTypeEnum.FAIL.getValue();
                 dc.updateApiPublishStatus(modelPublishStatusDTO);
+            } else {
+                ModelPublishStatusDTO modelPublishStatus = new ModelPublishStatusDTO();
+                modelPublishStatus.publishErrorMsg = StackTraceHelper.getStackTraceInfo(e);
+                modelPublishStatus.publish = 2;
+                modelPublishStatus.tableId = Long.parseLong(buildPhysicalTableDTO.dbId);
+                dc.updateTablePublishStatus(modelPublishStatus);
             }
             log.error("创建表失败" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.ERROR;
