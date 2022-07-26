@@ -40,6 +40,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -156,6 +157,7 @@ public class MetaDataImpl implements IMetaData {
                     .map(e -> e.getSourceTable())
                     .distinct()
                     .collect(Collectors.toList());
+            tableList.removeAll(Collections.singleton(null));
             List<EntityIdAndTypeDTO> inputTableList = getTableList(tableList, odsResult.data, first.get(), dbQualifiedName);
             //解析数据
             JSONObject jsonObj = JSON.parseObject(getDetail.data);
@@ -164,7 +166,7 @@ public class MetaDataImpl implements IMetaData {
             JSONArray relationShipAttribute = JSON.parseArray(relationShip.getString("outputFromProcesses"));
             //条数为0,则添加process
             if (relationShipAttribute.size() == 0) {
-                synchronizationKinShip.addProcess(EntityTypeEnum.RDBMS_TABLE, first.get().sqlScript, inputTableList, tableGuid);
+                //synchronizationKinShip.addProcess(EntityTypeEnum.RDBMS_TABLE, first.get().sqlScript, inputTableList, tableGuid);
             }
         } catch (Exception e) {
             log.error("同步表血缘失败,表guid" + tableGuid + " ex:", e);
@@ -464,7 +466,16 @@ public class MetaDataImpl implements IMetaData {
         if (first.get().id == DataSourceConfigEnum.DMP_ODS.getValue()) {
             return null;
         }
-        return first.get().conIp + "_" + first.get().conDbname;
+        //dw
+        else if (first.get().id == DataSourceConfigEnum.DMP_DW.getValue()) {
+            ResultEntity<DataSourceDTO> resultDataSource = userClient.getFiDataDataSourceById(DataSourceConfigEnum.DMP_ODS.getValue());
+            if (resultDataSource.code != ResultEnum.SUCCESS.getCode() && resultDataSource.data == null) {
+                return null;
+            }
+            return resultDataSource.data.conIp + "_" + resultDataSource.data.conDbname;
+        }
+
+        return null;
     }
 
     /**
@@ -480,11 +491,9 @@ public class MetaDataImpl implements IMetaData {
                                                  String dbQualifiedName) {
         List<EntityIdAndTypeDTO> list = new ArrayList<>();
 
-        List<String> tableQualifiedNameList = (List) dtoList.stream()
-                .filter(e -> tableNameList.contains(e.tableName))
-                .map(e -> {
-                    return dbQualifiedName + "_" + e.id;
-                }).collect(Collectors.toList());
+        List<String> tableQualifiedNameList = dtoList.stream()
+                .filter(e -> tableNameList.contains(e.tableName.toLowerCase()))
+                .map(e -> dbQualifiedName + "_" + e.getId()).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(tableQualifiedNameList)) {
             return list;
         }

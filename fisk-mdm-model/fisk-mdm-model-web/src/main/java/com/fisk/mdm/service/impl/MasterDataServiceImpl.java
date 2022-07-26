@@ -791,7 +791,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
                                 jsonObj.put("fidata_update_time", CommonMethods.getFormatDate(date));
                                 jsonObj.put("fidata_update_user", userId);
                                 jsonObj.put("fidata_error_msg", errorMsg);
-                                jsonObj.put("internalId", "");
                                 //0：上传成功（数据进入stg表） 1：提交成功（数据进入mdm表） 2：提交失败（数据进入mdm表失败）
                                 if (StringUtils.isEmpty(errorMsg)) {
                                     jsonObj.put("fidata_status", SyncStatusTypeEnum.UPLOADED_SUCCESSFULLY.getValue());

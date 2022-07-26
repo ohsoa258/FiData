@@ -2,6 +2,7 @@ package com.fisk.datamanagement.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.assetsdirectory.AssetsDirectoryDTO;
@@ -14,6 +15,9 @@ import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.tableconfig.SourceFieldDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
 import com.fisk.datamodel.enums.DataModelTableTypeEnum;
+import com.fisk.datamodel.enums.FactAttributeEnum;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -32,6 +36,8 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
 
     @Resource
     DataModelClient client;
+    @Resource
+    UserClient userClient;
 
     @Resource
     MetadataMapAtlasMapper metadataMapAtlasMapper;
@@ -40,6 +46,7 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
     public List<AssetsDirectoryDTO> assetsDirectoryData() {
         List<AssetsDirectoryDTO> data = new ArrayList<>();
         String firstLevel = UUID.randomUUID().toString();
+        //第一级目录
         data.add(setAssetsDirectory(firstLevel, "资产目录", "", 1, false));
         data.addAll(getAnalyzeDataList(firstLevel));
         return data;
@@ -56,16 +63,17 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
         data.add(setAssetsDirectory(analyzeDataKey, "分析数据", firstLevel, 2, false));
         //维度key
         String dimensionKey = UUID.randomUUID().toString();
+        data.add(setAssetsDirectory(dimensionKey, "维度", analyzeDataKey, 3, false));
         //业务过程key
         String businessProcessKey = UUID.randomUUID().toString();
-        data.add(setAssetsDirectory(dimensionKey, "维度", analyzeDataKey, 3, false));
         data.add(setAssetsDirectory(businessProcessKey, "业务过程", analyzeDataKey, 3, false));
-        List<Integer> type = new ArrayList<>();
-        type.add(TableTypeEnum.DW_DIMENSION.getValue());
-        type.add(TableTypeEnum.DW_FACT.getValue());
+
+        //数据库限定名
+        String dbQualifiedName = getDataSource(DataSourceConfigEnum.DMP_DW.getValue());
         //读取dw中的维度和事实
         QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("table_type", type.toArray()).lambda()
+        queryWrapper
+                .lambda()
                 .eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_TABLE);
         List<MetadataMapAtlasPO> list = metadataMapAtlasMapper.selectList(queryWrapper);
         //调用数仓建模模块接口,获取表名
@@ -75,20 +83,24 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
         }
         List<SourceTableDTO> sourceTableList = JSON.parseArray(JSON.toJSONString(result.data), SourceTableDTO.class);
         //循环赋值
-        for (MetadataMapAtlasPO item : list) {
-            Optional<SourceTableDTO> first = sourceTableList.stream()
-                    .filter(e -> e.id == item.tableId && e.type == item.tableType)
-                    .findFirst();
-            if (!first.isPresent()) {
-                continue;
-            }
+        for (SourceTableDTO item : sourceTableList) {
             //维度
-            if (item.tableType == TableTypeEnum.DW_DIMENSION.getValue()) {
-                data.add(setAssetsDirectory(item.atlasGuid, first.get().tableName, dimensionKey, 4, true));
+            if (item.type == TableTypeEnum.DW_DIMENSION.getValue()) {
+                String tableQualifiedName = dbQualifiedName + "_" + DataModelTableTypeEnum.DW_DIMENSION.getValue() + "_" + item.id;
+                Optional<MetadataMapAtlasPO> first = list.stream().filter(e -> tableQualifiedName.equals(e.qualifiedName)).findFirst();
+                if (!first.isPresent()) {
+                    continue;
+                }
+                data.add(setAssetsDirectory(first.get().atlasGuid, item.tableName, dimensionKey, 4, true));
                 continue;
             }
             //业务过程
-            data.add(setAssetsDirectory(item.atlasGuid, first.get().tableName, businessProcessKey, 4, true));
+            String tableQualifiedName = dbQualifiedName + "_" + DataModelTableTypeEnum.DW_FACT.getValue() + "_" + item.id;
+            Optional<MetadataMapAtlasPO> first = list.stream().filter(e -> tableQualifiedName.equals(e.qualifiedName)).findFirst();
+            if (!first.isPresent()) {
+                continue;
+            }
+            data.add(setAssetsDirectory(first.get().atlasGuid, item.tableName, dimensionKey, 4, true));
         }
         data.addAll(getAnalysisModel(analyzeDataKey));
         return data;
@@ -113,42 +125,35 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
         //宽表key
         String wideTableKey = UUID.randomUUID().toString();
         data.add(setAssetsDirectory(wideTableKey, "宽表", analysisModelKey, 4, false));
-        List<Integer> type = new ArrayList<>();
-        type.add(TableTypeEnum.DW_FACT.getValue());
-        type.add(TableTypeEnum.DORIS_DIMENSION.getValue());
-        //查询属性为原子指标和派生指标的数据
-        QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("attribute_type", type);
-        List<MetadataMapAtlasPO> list = metadataMapAtlasMapper.selectList(queryWrapper);
+
         //调用数仓建模模块接口,获取表名
         ResultEntity<Object> result = client.getDataModelTable(2);
-        if (result.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(list)) {
+        if (result.code != ResultEnum.SUCCESS.getCode()) {
             return data;
         }
         List<SourceTableDTO> sourceTableList = JSON.parseArray(JSON.toJSONString(result.data), SourceTableDTO.class);
-        for (MetadataMapAtlasPO item : list) {
-            Optional<SourceTableDTO> first = sourceTableList
-                    .stream()
-                    .filter(e -> e.type == TableTypeEnum.DORIS_FACT.getValue() && e.id == item.tableId)
-                    .findFirst();
-            if (!first.isPresent()) {
-                continue;
+        for (SourceTableDTO item : sourceTableList) {
+            for (SourceFieldDTO field : item.fieldList) {
+                //原子指标
+                if (field.attributeType == FactAttributeEnum.MEASURE.getValue()) {
+                    data.add(setAssetsDirectory("", field.fieldName, atomicIndicatorsKey, 5, false));
+                }
+                //派生指标
+                else if (field.attributeType == FactAttributeEnum.DERIVED_INDICATORS.getValue()) {
+                    data.add(setAssetsDirectory("", field.fieldName, derivedIndicatorsKey, 5, false));
+                }
             }
-            Optional<SourceFieldDTO> atomic = first.get().fieldList.stream().filter(e -> e.id == item.columnId).findFirst();
-            if (!atomic.isPresent()) {
-                continue;
-            }
-            //原子指标
-            if (atomic.get().attributeType == 2) {
-                data.add(setAssetsDirectory(item.atlasGuid, atomic.get().fieldName, atomicIndicatorsKey, 5, false));
-                continue;
-            }
-            data.add(setAssetsDirectory(item.atlasGuid, atomic.get().fieldName, derivedIndicatorsKey, 5, false));
         }
-        data.addAll(getWideTableList(wideTableKey));
+        ////data.addAll(getWideTableList(wideTableKey));
         return data;
     }
 
+    /**
+     * 获取宽表
+     *
+     * @param wideTableKey
+     * @return
+     */
     public List<AssetsDirectoryDTO> getWideTableList(String wideTableKey) {
         List<AssetsDirectoryDTO> data = new ArrayList<>();
         //调用宽表接口,获取表名
@@ -186,6 +191,20 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
         //是否可跳转
         dto.skip = skip;
         return dto;
+    }
+
+    /**
+     * 根据数据源,获取限定名
+     *
+     * @param dataSourceId
+     * @return
+     */
+    public String getDataSource(int dataSourceId) {
+        ResultEntity<DataSourceDTO> resultDataSource = userClient.getFiDataDataSourceById(dataSourceId);
+        if (resultDataSource.code != ResultEnum.SUCCESS.getCode() && resultDataSource.data == null) {
+            return null;
+        }
+        return resultDataSource.data.conIp + "_" + resultDataSource.data.conDbname;
     }
 
 }

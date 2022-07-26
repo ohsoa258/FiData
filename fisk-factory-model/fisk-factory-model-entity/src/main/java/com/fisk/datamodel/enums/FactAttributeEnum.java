@@ -10,15 +10,19 @@ public enum FactAttributeEnum implements BaseEnum {
     /**
      * 退化维度
      */
-    DEGENERATION_DIMENSION(0,"退化维度"),
+    DEGENERATION_DIMENSION(0, "退化维度"),
     /**
      * 维度键
      */
-    DIMENSION_KEY(1,"维度键"),
+    DIMENSION_KEY(1, "维度键"),
     /**
      * 度量
      */
-    MEASURE(2,"度量");
+    MEASURE(2, "度量"),
+    /**
+     * 派生指标
+     */
+    DERIVED_INDICATORS(3, "派生指标");
 
     FactAttributeEnum(int value, String name) {
         this.name = name;
