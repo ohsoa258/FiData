@@ -100,7 +100,7 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
             if (!first.isPresent()) {
                 continue;
             }
-            data.add(setAssetsDirectory(first.get().atlasGuid, item.tableName, dimensionKey, 4, true));
+            data.add(setAssetsDirectory(first.get().atlasGuid, item.tableName, businessProcessKey, 4, true));
         }
         data.addAll(getAnalysisModel(analyzeDataKey));
         return data;
