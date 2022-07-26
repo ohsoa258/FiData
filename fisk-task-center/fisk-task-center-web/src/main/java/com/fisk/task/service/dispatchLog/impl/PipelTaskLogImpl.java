@@ -69,13 +69,13 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
         List<PipelTaskLogVO> pipelTaskLogVos = new ArrayList<>();
         for (PipelTaskLogVO pipelTaskLog : pipelTaskLogs) {
             List<PipelTaskLogVO> byTaskId = pipelTaskLogMapper.getByTaskId(pipelTaskLog.taskId);
-            pipelTaskLogVos.stream().filter(Objects::nonNull)
-                    .filter(e -> e.taskId.equalsIgnoreCase(pipelTaskLog.taskId))
+            byTaskId.stream().filter(Objects::nonNull)
+                    //.filter(e -> e.taskId.equalsIgnoreCase(pipelTaskLog.taskId))
                     .forEach(f -> {
                         f.taskName = pipelTaskLog.taskName;
                         f.tableName = pipelTaskLog.tableName;
                         f.tableId = pipelTaskLog.tableId;
-                        f.typeName = DispatchLogEnum.getName(f.type).getValue();
+                        f.typeName = DispatchLogEnum.getName(f.type).getName();
                     });
             pipelTaskLogVos.addAll(byTaskId);
         }
