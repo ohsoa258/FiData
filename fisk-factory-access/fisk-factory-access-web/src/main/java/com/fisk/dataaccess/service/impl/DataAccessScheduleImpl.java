@@ -1,11 +1,14 @@
 package com.fisk.dataaccess.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.Trigger;
@@ -39,6 +42,8 @@ public class DataAccessScheduleImpl implements SchedulingConfigurer {
     private AppDataSourceImpl dataSourceImpl;
     @Resource
     private AppRegistrationImpl appRegistrationImpl;
+    @Resource
+    private UserClient userClient;
 
     @Override
     public void configureTasks(ScheduledTaskRegistrar scheduledTaskRegistrar) {
@@ -111,10 +116,15 @@ public class DataAccessScheduleImpl implements SchedulingConfigurer {
      */
     private void loadFiDataMetaData() {
         try {
-            FiDataMetaDataReqDTO reqDto = new FiDataMetaDataReqDTO();
-            // 2: ods数据源
-            reqDto.setDataSourceId("2");
-            appRegistrationImpl.setDataAccessStructure(reqDto);
+            ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(2);
+            if (result.code == ResultEnum.SUCCESS.getCode()) {
+
+                FiDataMetaDataReqDTO reqDto = new FiDataMetaDataReqDTO();
+                // 2: ods数据源
+                reqDto.setDataSourceId(String.valueOf(result.data.id));
+                reqDto.setDataSourceName(reqDto.dataSourceName);
+                appRegistrationImpl.setDataAccessStructure(reqDto);
+            }
         } catch (Exception e) {
             throw new FkException(ResultEnum.LOAD_FIDATA_METADATA_ERROR, e);
         }

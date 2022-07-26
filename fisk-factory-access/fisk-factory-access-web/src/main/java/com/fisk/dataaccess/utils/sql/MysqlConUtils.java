@@ -32,7 +32,7 @@ public class MysqlConUtils {
 
         List<TablePyhNameDTO> list = null;
         try {
-            Class.forName(driverTypeEnum.getName());
+            Class.forName(DriverTypeEnum.MYSQL.getName());
             Connection conn = DriverManager.getConnection(url, user, password);
             // 获取数据库中所有表名称
             List<String> tableNames = getTables(conn);
@@ -138,7 +138,7 @@ public class MysqlConUtils {
         ArrayList<String> tablesList = null;
         try {
             DatabaseMetaData databaseMetaData = conn.getMetaData();
-            ResultSet tables = databaseMetaData.getTables(null, null, "%",null);
+            ResultSet tables = databaseMetaData.getTables(null, null, "%", null);
             tablesList = new ArrayList<String>();
             while (tables.next()) {
                 tablesList.add(tables.getString("TABLE_NAME"));
