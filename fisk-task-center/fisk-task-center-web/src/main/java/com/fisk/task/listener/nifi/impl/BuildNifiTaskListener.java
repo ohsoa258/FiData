@@ -350,6 +350,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             } else if (Objects.equals(type, OlapTableEnum.FACT) || Objects.equals(type, OlapTableEnum.CUSTOMWORKFACT)) {
                 fieldDetails = dataModelClient.selectAttributeList(Math.toIntExact(id));
             }
+            //dw同步,业务主键,逗号分隔
+            data.businessKeyAppend = fieldDetails.data.stream().filter(Objects::nonNull).filter(e -> e.isPrimaryKey == 1).map(e -> e.fieldEnName).collect(Collectors.joining(","));
             //添加增量方式的接口
             int tableType = Objects.equals(type, OlapTableEnum.DIMENSION) || Objects.equals(type, OlapTableEnum.CUSTOMWORKDIMENSION) ? 0 : 1;
             ResultEntity<GetTableBusinessDTO> tableBusiness = dataModelClient.getTableBusiness(Math.toIntExact(id), tableType);
