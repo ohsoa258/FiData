@@ -30,4 +30,25 @@ public enum NifiStageTypeEnum implements BaseEnum {
     public String getName() {
         return name;
     }
+
+    public static NifiStageTypeEnum getValue(String name) {
+        NifiStageTypeEnum[] carTypeEnums = values();
+        for (NifiStageTypeEnum carTypeEnum : carTypeEnums) {
+            String queryName = carTypeEnum.name;
+            if (queryName.equals(name)) {
+                return carTypeEnum;
+            }
+        }
+        return null;
+    }
+
+    public static NifiStageTypeEnum getName(int value) {
+        NifiStageTypeEnum[] carTypeEnums = values();
+        for (NifiStageTypeEnum carTypeEnum : carTypeEnums) {
+            if (carTypeEnum.value == value) {
+                return carTypeEnum;
+            }
+        }
+        return null;
+    }
 }

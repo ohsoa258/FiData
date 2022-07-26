@@ -16,5 +16,5 @@ public class PipelStageLogVO extends BasePO {
     @ApiModelProperty(value = "日志类别")
     public Integer type;
     @ApiModelProperty(value = "日志类别名称")
-    public Integer typeName;
+    public String typeName;
 }
