@@ -99,11 +99,15 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
             List<PipelJobLogVO> pipelJobLogVo = pipelJobLogMapper.getPipelJobLogVo(pipelJobLog);
             pipelJobLogVo.stream()
                     .filter(Objects::nonNull)
-                    .filter(e -> e.componentId.equalsIgnoreCase(pipelJobLog.componentId))
+                    .filter(e -> e.componentId != null && e.componentId.equalsIgnoreCase(pipelJobLog.componentId))
                     .forEach(f -> {
                         f.componentName = pipelJobLog.componentName;
+                    });
+            pipelJobLogVo.stream()
+                    .filter(Objects::nonNull)
+                    .forEach(f -> {
                         f.pipelName = pipelJobLog.pipelName;
-                        f.typeName = DispatchLogEnum.getName(f.type).getValue();
+                        f.typeName = DispatchLogEnum.getName(f.type).getName();
                     });
             pipelJobLogVos.addAll(pipelJobLogVo);
 

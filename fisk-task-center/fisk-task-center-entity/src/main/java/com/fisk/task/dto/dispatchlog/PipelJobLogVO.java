@@ -26,5 +26,5 @@ public class PipelJobLogVO extends BasePO {
     @ApiModelProperty(value = "日志类型")
     public int type;
     @ApiModelProperty(value = "日志类型名称")
-    public int typeName;
+    public String typeName;
 }
