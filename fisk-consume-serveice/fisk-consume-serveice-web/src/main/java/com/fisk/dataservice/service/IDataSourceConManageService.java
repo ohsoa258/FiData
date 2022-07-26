@@ -11,6 +11,7 @@ import com.fisk.dataservice.entity.DataSourceConPO;
 import com.fisk.dataservice.dto.datasource.TestConnectionDTO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.dataservice.vo.datasource.DataSourceVO;
 
 import java.util.List;
 
@@ -81,5 +82,5 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      *
      * @return 查询结果
      */
-    FiDataMetaDataTreeDTO getMetaDataById(int id);
+    DataSourceVO getMetaDataById(int id);
 }

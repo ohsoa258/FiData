@@ -32,6 +32,7 @@ import com.fisk.dataservice.mapper.DataSourceConMapper;
 import com.fisk.dataservice.service.IDataSourceConManageService;
 import com.fisk.dataservice.vo.api.FieldInfoVO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
+import com.fisk.dataservice.vo.datasource.DataSourceVO;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
@@ -224,26 +225,40 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     @Override
-    public FiDataMetaDataTreeDTO getMetaDataById(int id) {
-        FiDataMetaDataTreeDTO fiDataMetaDataTreeDTO = new FiDataMetaDataTreeDTO();
+    public DataSourceVO getMetaDataById(int id) {
+        DataSourceVO dataSourceVO = new DataSourceVO();
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(DataSourceConPO::getDelFlag, 1)
                 .eq(DataSourceConPO::getId, id);
         DataSourceConPO dataSourceConPO = mapper.selectOne(queryWrapper);
         if (dataSourceConPO == null) {
-            return fiDataMetaDataTreeDTO;
+            return dataSourceVO;
         }
-        String redisKey = metaDataEntityKey + "_" + id;
-        Boolean exist = redisTemplate.hasKey(redisKey);
-        if (!exist) {
-            setMetaDataToRedis(dataSourceConPO, 1);
+        FiDataMetaDataTreeDTO fiDataMetaDataTreeDTO = new FiDataMetaDataTreeDTO();
+        if (dataSourceConPO.getDatasourceType() == SourceTypeEnum.custom.getValue()) {
+            String redisKey = metaDataEntityKey + "_" + id;
+            Boolean exist = redisTemplate.hasKey(redisKey);
+            if (!exist) {
+                setMetaDataToRedis(dataSourceConPO, 1);
+            }
+            String json = redisTemplate.opsForValue().get(redisKey).toString();
+            if (StringUtils.isNotEmpty(json)) {
+                fiDataMetaDataTreeDTO = JSONObject.parseObject(json, FiDataMetaDataTreeDTO.class);
+            }
+        } else {
+            fiDataMetaDataTreeDTO = getFiDataConfigMetaData(dataSourceConPO);
         }
-        String json = redisTemplate.opsForValue().get(redisKey).toString();
-        if (StringUtils.isNotEmpty(json)) {
-            fiDataMetaDataTreeDTO = JSONObject.parseObject(json, FiDataMetaDataTreeDTO.class);
+        List<DataSourceConVO> allDataSource = getAllDataSource();
+        DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == dataSourceConPO.getId()).findFirst().orElse(null);
+        if (dataSourceConVO == null) {
+            return dataSourceVO;
         }
-        return fiDataMetaDataTreeDTO;
+        dataSourceConVO.setConPassword("");
+        dataSourceConVO.setConAccount("");
+        dataSourceVO.setDataSourceCon(dataSourceConVO);
+        dataSourceVO.setTree(fiDataMetaDataTreeDTO);
+        return dataSourceVO;
     }
 
     @Override

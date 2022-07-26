@@ -1,8 +1,8 @@
 package com.fisk.dataservice.vo.datasource;
 
-import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
-import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 import java.util.List;
 
@@ -12,41 +12,12 @@ import java.util.List;
  * @description 数据源
  * @date 2022/1/14 18:27
  */
+@Data
 public class DataSourceVO
 {
-    /**
-     * 数据源id
-     */
-    @ApiModelProperty(value = "数据源id")
-    public int id;
+    @ApiModelProperty(value = "数据源信息")
+    public  DataSourceConVO dataSourceCon;
 
-    /**
-     * 数据源类型
-     */
-    @ApiModelProperty(value = "数据源类型")
-    public DataSourceTypeEnum conType;
-
-    /**
-     * 连接名称
-     */
-    @ApiModelProperty(value = "连接名称")
-    public String name;
-
-    /**
-     * 数据库名称
-     */
-    @ApiModelProperty(value = "数据库名称")
-    public String conDbname;
-
-    /**
-     * 表
-     */
-    @ApiModelProperty(value = "表")
-    public List<TablePyhNameDTO> tableDtoList;
-
-    /**
-     * 视图
-     */
-    //@ApiModelProperty(value = "视图")
-    //public List<DataBaseViewDTO> viewDtoList;
+    @ApiModelProperty(value = "树节点信息")
+    public FiDataMetaDataTreeDTO tree;
 }
