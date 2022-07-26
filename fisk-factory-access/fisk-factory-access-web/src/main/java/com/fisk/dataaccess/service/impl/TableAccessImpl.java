@@ -1732,10 +1732,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             assert st != null;
             Map<String, String> converSql = publishTaskClient.converSql(query.tableName, query.querySql, po.driveType).data;
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
-            array.sql = sql;
             ResultSet rs = st.executeQuery(sql);
             //获取数据集
             array = resultSetToJsonArrayDataAccess(rs);
+            array.sql = sql;
             rs.close();
         } catch (Exception e) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e.getMessage());
