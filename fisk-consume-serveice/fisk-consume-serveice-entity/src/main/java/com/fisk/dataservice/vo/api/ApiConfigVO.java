@@ -1,5 +1,6 @@
 package com.fisk.dataservice.vo.api;
 
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -41,7 +42,7 @@ public class ApiConfigVO {
      * 表业务类型 1：事实表、2：维度表、3、指标表  4、宽表
      */
     @ApiModelProperty(value = "表业务类型 1：事实表、2：维度表、3、指标表  4、宽表")
-    public int tableBusinessType;
+    public TableBusinessTypeEnum tableBusinessType;
 
     /**
      * 数据源id
