@@ -764,6 +764,7 @@ public class BusinessAreaImpl
                                                         dimensionAttributeTreeDto.setSourceType(1);
                                                         dimensionAttributeTreeDto.setLabelBusinessType(TableBusinessTypeEnum.DIMENSIONTABLE);
                                                         dimensionAttributeTreeDto.setParentName(dimension.dimensionTabName);
+                                                        dimensionAttributeTreeDto.setParentNameAlias(dimension.dimensionTabName);
                                                         return dimensionAttributeTreeDto;
                                                     }).collect(Collectors.toList());
 
@@ -832,6 +833,7 @@ public class BusinessAreaImpl
                                                             factAttributeTreeDto.setSourceType(1);
                                                             factAttributeTreeDto.setLabelBusinessType(TableBusinessTypeEnum.QUOTATABLE);
                                                             factAttributeTreeDto.setParentName(fact.factTabName);
+                                                            factAttributeTreeDto.setParentNameAlias(fact.factTabName);
                                                             return factAttributeTreeDto;
                                                         }).collect(Collectors.toList());
                                             } else {
@@ -855,6 +857,7 @@ public class BusinessAreaImpl
                                                             factAttributeTreeDto.setSourceId(Integer.parseInt(id));
                                                             factAttributeTreeDto.setSourceType(1);
                                                             factAttributeTreeDto.setParentName(fact.factTabName);
+                                                            factAttributeTreeDto.setParentNameAlias(fact.factTabName);
                                                             return factAttributeTreeDto;
                                                         }).collect(Collectors.toList());
                                             }
@@ -922,6 +925,7 @@ public class BusinessAreaImpl
                                                         wideTableFieldTreeDto.setSourceType(1);
                                                         wideTableFieldTreeDto.setLabelBusinessType(TableBusinessTypeEnum.WIDETABLE);
                                                         wideTableFieldTreeDto.setParentName(wideTable1.name);
+                                                        wideTableFieldTreeDto.setParentNameAlias(wideTable1.name);
                                                         return wideTableFieldTreeDto;
                                                     }).collect(Collectors.toList());
                                             wideTableFieldTreeList.addAll(fieldList);
