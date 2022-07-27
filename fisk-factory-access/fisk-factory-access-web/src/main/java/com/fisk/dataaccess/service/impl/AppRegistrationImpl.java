@@ -895,8 +895,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     appDtoTree.setId(String.valueOf(app.id));
                     // 上一级的id
                     appDtoTree.setParentId(id);
-                    appDtoTree.setLabel(app.appName);
-                    appDtoTree.setLabelAlias(app.appAbbreviation);
+                    appDtoTree.setLabel(app.appAbbreviation);
+                    appDtoTree.setLabelAlias(app.appName);
                     appDtoTree.setLevelType(LevelTypeEnum.FOLDER);
                     appDtoTree.setLabelDesc(app.appDes);
 
