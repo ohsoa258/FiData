@@ -1,7 +1,10 @@
 package com.fisk.task.service.task.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.NifiConstants;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.task.entity.TBETLIncrementalPO;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
@@ -20,63 +23,84 @@ import java.util.*;
  */
 @Service
 @Slf4j
-public class TBETLIncrementalImpl extends ServiceImpl<TBETLIncrementalMapper, TBETLIncrementalPO>  implements ITBETLIncremental {
+public class TBETLIncrementalImpl extends ServiceImpl<TBETLIncrementalMapper, TBETLIncrementalPO> implements ITBETLIncremental {
     @Resource
     TBETLIncrementalMapper tbetlIncrementalMapper;
 
     @Override
     public Map<String, String> converSql(String tableName, String sql, String driveType) {
         Map<String, String> paramMap = new HashMap<>();
-        if(sql.contains(SystemVariableTypeEnum.START_TIME.getValue())||sql.contains(SystemVariableTypeEnum.END_TIME.getValue())){
-            //task提供方法
-            Map<String, Date> etlIncremental = tbetlIncrementalMapper.getEtlIncrementalByTableName(tableName);
-            if (etlIncremental != null) {
-                Date startTime = etlIncremental.get(SystemVariableTypeEnum.START_TIME.getName());
-                Date endTime = etlIncremental.get(SystemVariableTypeEnum.END_TIME.getName());
-                if (startTime != null) {
-                    String startDate = getStringDate(startTime);
-                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'" + startDate + "'");
-                    paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), startDate);
+        List<TBETLIncrementalPO> list = new ArrayList<>();
+        TBETLIncrementalPO tbetlIncremental = new TBETLIncrementalPO();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            if (sql.contains(SystemVariableTypeEnum.START_TIME.getValue()) || sql.contains(SystemVariableTypeEnum.END_TIME.getValue())) {
+                //task提供方法
+                Map<String, Date> etlIncremental = tbetlIncrementalMapper.getEtlIncrementalByTableName(tableName);
+                if (etlIncremental != null) {
+                    list = this.query().eq("object_name", tableName)
+                            .eq("enable_flag", 2).list();
+                    Date startTime = etlIncremental.get(SystemVariableTypeEnum.START_TIME.getName());
+                    Date endTime = etlIncremental.get(SystemVariableTypeEnum.END_TIME.getName());
+                    if (startTime != null) {
+                        String startDate = getStringDate(startTime);
+                        sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'" + startDate + "'");
+                        paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), startDate);
+                    } else {
+                        sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
+                        paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
+                    }
+                    if (endTime != null) {
+                        String endDate = getStringDate(endTime);
+                        sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'" + endDate + "'");
+                        paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), endDate);
+                    } else {
+                        sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
+                        paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
+                    }
                 } else {
                     sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
-                    paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
-                }
-                if (endTime != null) {
-                    String endDate = getStringDate(endTime);
-                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'" + endDate + "'");
-                    paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), endDate);
-                } else {
                     sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
                     paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
+                    paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
+                    Date parse = formatter.parse(NifiConstants.AttrConstants.INITIAL_TIME);
+                    tbetlIncremental.incrementalObjectivescoreEnd = parse;
+                    tbetlIncremental.incrementalObjectivescoreStart = parse;
+                    list.add(tbetlIncremental);
                 }
             } else {
-                sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
-                sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
-                paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
-                paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
+                Date parse = formatter.parse(NifiConstants.AttrConstants.INITIAL_TIME);
+                tbetlIncremental.incrementalObjectivescoreEnd = parse;
+                tbetlIncremental.incrementalObjectivescoreStart = parse;
+                list.add(tbetlIncremental);
             }
+            paramMap.put(SystemVariableTypeEnum.HISTORICAL_TIME.getValue(), JSON.toJSONString(list));
+            paramMap.put(SystemVariableTypeEnum.QUERY_SQL.getValue(), sql);
+            log.info("map返回:" + JSON.toJSONString(paramMap));
+            return paramMap;
+        } catch (Exception e) {
+            throw new FkException(ResultEnum.ERROR);
         }
-        paramMap.put(SystemVariableTypeEnum.QUERY_SQL.getValue(),sql);
-        return  paramMap;
     }
-      public  String getStringDate(Date date) {
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String dateString = formatter.format(date);
-            return dateString;
-         }
+
+    public String getStringDate(Date date) {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String dateString = formatter.format(date);
+        return dateString;
+    }
 
     @Override
     public void addEtlIncremental(String tableName) {
-        TBETLIncrementalPO ETLIncremental=new TBETLIncrementalPO();
-        ETLIncremental.object_name=tableName;
-        ETLIncremental.enable_flag="1";
-        ETLIncremental.incremental_objectivescore_batchno= UUID.randomUUID().toString();
+        TBETLIncrementalPO ETLIncremental = new TBETLIncrementalPO();
+        ETLIncremental.objectName = tableName;
+        ETLIncremental.enableFlag = "1";
+        ETLIncremental.incrementalObjectivescoreBatchno = UUID.randomUUID().toString();
         Map<String, Object> conditionHashMap = new HashMap<>();
-        conditionHashMap.put("object_name",ETLIncremental.object_name);
+        conditionHashMap.put("object_name", ETLIncremental.objectName);
         List<TBETLIncrementalPO> tbetlIncrementalPos = tbetlIncrementalMapper.selectByMap(conditionHashMap);
-        if(tbetlIncrementalPos!=null&&tbetlIncrementalPos.size()>0){
+        if (tbetlIncrementalPos != null && tbetlIncrementalPos.size() > 0) {
             log.info("此表已有同步记录,无需重复添加");
-        }else{
+        } else {
             tbetlIncrementalMapper.insert(ETLIncremental);
         }
     }

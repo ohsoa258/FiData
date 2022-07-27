@@ -158,11 +158,11 @@ public class BuildDataModelDorisTableListener
             iPostgreBuild.postgreBuildTable(storedProcedure3, BusinessTypeEnum.DATAMODEL);*/
                 log.info("开始执行nifi创建数据同步");
                 TBETLIncrementalPO ETLIncremental = new TBETLIncrementalPO();
-                ETLIncremental.object_name = modelPublishTableDTO.tableName;
-                ETLIncremental.enable_flag = "1";
-                ETLIncremental.incremental_objectivescore_batchno = UUID.randomUUID().toString();
+                ETLIncremental.objectName = modelPublishTableDTO.tableName;
+                ETLIncremental.enableFlag = "1";
+                ETLIncremental.incrementalObjectivescoreBatchno = UUID.randomUUID().toString();
                 Map<String, Object> conditionHashMap = new HashMap<>();
-                conditionHashMap.put("object_name", ETLIncremental.object_name);
+                conditionHashMap.put("object_name", ETLIncremental.objectName);
                 List<TBETLIncrementalPO> tbetlIncrementalPos = incrementalMapper.selectByMap(conditionHashMap);
                 if (tbetlIncrementalPos != null && tbetlIncrementalPos.size() > 0) {
                     log.info("此表已有同步记录,无需重复添加");

@@ -275,10 +275,10 @@ public class TaskPgTableStructureHelper
             return ResultEnum.SUCCESS;
         } catch (SQLException e) {
             log.error("updatePgTableStructure:" + StackTraceHelper.getStackTraceInfo(e));
+            return ResultEnum.SQL_ERROR;
         } finally {
             conn.close();
         }
-        return ResultEnum.UPDATE_DATA_ERROR;
     }
 
     /**
