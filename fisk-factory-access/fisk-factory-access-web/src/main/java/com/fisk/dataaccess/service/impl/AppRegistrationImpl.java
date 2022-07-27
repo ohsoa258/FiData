@@ -940,7 +940,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
                                                     tableDtoTree.setId(String.valueOf(table.id));
                                                     tableDtoTree.setParentId(String.valueOf(api.id));
-                                                    tableDtoTree.setLabel(table.tableName);
+                                                    tableDtoTree.setLabel("ods_" + app.appAbbreviation + "_" + table.tableName);
                                                     tableDtoTree.setLabelAlias(table.tableName);
                                                     tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
                                                     tableDtoTree.setSourceType(1);
@@ -1067,7 +1067,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
                                                     tableDtoTree.setId(String.valueOf(table.id));
                                                     tableDtoTree.setParentId(String.valueOf(api.id));
-                                                    tableDtoTree.setLabel(table.tableName);
+                                                    tableDtoTree.setLabel("ods_" + app.appAbbreviation + "_" + table.tableName);
                                                     tableDtoTree.setLabelAlias(table.tableName);
                                                     tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
                                                     tableDtoTree.setSourceType(1);
@@ -1133,7 +1133,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                         FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
                                         tableDtoTree.setId(String.valueOf(table.id));
                                         tableDtoTree.setParentId(String.valueOf(app.id));
-                                        tableDtoTree.setLabel(table.tableName);
+                                        tableDtoTree.setLabel("ods_" + app.appAbbreviation + "_" + table.tableName);
                                         tableDtoTree.setLabelAlias(table.tableName);
                                         tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
                                         tableDtoTree.setSourceType(1);

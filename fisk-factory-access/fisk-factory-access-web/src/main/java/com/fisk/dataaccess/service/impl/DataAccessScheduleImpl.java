@@ -122,7 +122,7 @@ public class DataAccessScheduleImpl implements SchedulingConfigurer {
                 FiDataMetaDataReqDTO reqDto = new FiDataMetaDataReqDTO();
                 // 2: ods数据源
                 reqDto.setDataSourceId(String.valueOf(result.data.id));
-                reqDto.setDataSourceName(reqDto.dataSourceName);
+                reqDto.setDataSourceName(result.data.conDbname);
                 appRegistrationImpl.setDataAccessStructure(reqDto);
             }
         } catch (Exception e) {
