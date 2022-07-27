@@ -1,5 +1,6 @@
 package com.fisk.dataservice.dto.api;
 
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
@@ -48,7 +49,7 @@ public class ApiConfigDTO
      * 表业务类型 1：事实表、2：维度表、3、指标表  4、宽表
      */
     @ApiModelProperty(value = "表业务类型 1：事实表、2：维度表、3、指标表  4、宽表")
-    public int tableBusinessType;
+    public TableBusinessTypeEnum tableBusinessType;
 
     /**
      * sql语句

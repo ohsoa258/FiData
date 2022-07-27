@@ -25,6 +25,9 @@ public interface ApiRegisterMap {
      * @param dto source
      * @return target
      */
+    @Mappings({
+            @Mapping(source = "tableBusinessType.value", target = "tableBusinessType"),
+    })
     ApiConfigPO dtoToPo(ApiConfigDTO dto);
 
     /**
@@ -33,6 +36,9 @@ public interface ApiRegisterMap {
      * @param dto source
      * @return target
      */
+    @Mappings({
+            @Mapping(source = "tableBusinessType.value", target = "tableBusinessType"),
+    })
     ApiConfigPO dtoToPo_Edit(ApiConfigEditDTO dto);
 
     /**
