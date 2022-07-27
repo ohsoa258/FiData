@@ -972,7 +972,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                                 fieldDtoTree.setLabelDesc(field.fieldDes);
                                                                 fieldDtoTree.setSourceType(1);
                                                                 fieldDtoTree.setSourceId(Integer.parseInt(id));
-                                                                fieldDtoTree.setParentName(table.tableName);
+                                                                fieldDtoTree.setParentName("ods_" + app.appAbbreviation + "_" + table.tableName);
+                                                                fieldDtoTree.setParentNameAlias(table.tableName);
                                                                 return fieldDtoTree;
                                                             }).collect(Collectors.toList());
 
@@ -1100,7 +1101,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                                 fieldDtoTree.setLabelDesc(field.fieldDes);
                                                                 fieldDtoTree.setSourceType(1);
                                                                 fieldDtoTree.setSourceId(Integer.parseInt(id));
-                                                                fieldDtoTree.setParentName(table.tableName);
+                                                                fieldDtoTree.setParentName("ods_" + app.appAbbreviation + "_" + table.tableName);
+                                                                fieldDtoTree.setParentNameAlias(table.tableName);
                                                                 return fieldDtoTree;
                                                             }).collect(Collectors.toList());
 
@@ -1166,7 +1168,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     fieldDtoTree.setLabelDesc(field.fieldDes);
                                                     fieldDtoTree.setSourceType(1);
                                                     fieldDtoTree.setSourceId(Integer.parseInt(id));
-                                                    fieldDtoTree.setParentName(table.tableName);
+                                                    fieldDtoTree.setParentName("ods_" + app.appAbbreviation + "_" + table.tableName);
+                                                    fieldDtoTree.setParentNameAlias(table.tableName);
                                                     return fieldDtoTree;
                                                 }).collect(Collectors.toList());
 
