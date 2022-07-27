@@ -34,9 +34,6 @@ public class CommonMethods {
         while (iter.hasNext()) {
             Map.Entry entry = (Map.Entry) iter.next();
             String name = entry.getKey().toString();
-            if (name.equals("internalId") || name.equals("ErrorAttribute")) {
-                continue;
-            }
             //获取列名
             if (type == 0) {
                 columnList.add(name);

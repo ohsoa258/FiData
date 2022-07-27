@@ -6,7 +6,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * @author JianWenYang
+ * @author Lock
  */
 @Data
 public class TableHistoryDTO {
@@ -15,7 +15,7 @@ public class TableHistoryDTO {
      */
     public Integer tableId;
     /**
-     * 发布表类型 0：实时表 1：非实时表  2:  api
+     * 发布表类型 0：RestfulAPI 1：非实时表  2:  api
      */
     public Integer tableType;
     /**

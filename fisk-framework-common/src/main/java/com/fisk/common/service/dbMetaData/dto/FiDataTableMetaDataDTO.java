@@ -20,10 +20,16 @@ public class FiDataTableMetaDataDTO {
     public String id;
 
     /**
-     * 表名称/字段名称
+     * 表/字段 名称
      */
-    @ApiModelProperty(value = "表名称/字段名称")
+    @ApiModelProperty(value = "表/字段 名称")
     public String name;
+
+    /**
+     * 表/字段 别名
+     */
+    @ApiModelProperty(value = "表/字段 别名")
+    public String nameAlias;
 
     /**
      * 表字段集合

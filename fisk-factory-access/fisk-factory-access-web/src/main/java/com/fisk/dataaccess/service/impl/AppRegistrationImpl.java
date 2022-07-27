@@ -895,8 +895,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     appDtoTree.setId(String.valueOf(app.id));
                     // 上一级的id
                     appDtoTree.setParentId(id);
-                    appDtoTree.setLabel(app.appName);
-                    appDtoTree.setLabelAlias(app.appAbbreviation);
+                    appDtoTree.setLabel(app.appAbbreviation);
+                    appDtoTree.setLabelAlias(app.appName);
                     appDtoTree.setLevelType(LevelTypeEnum.FOLDER);
                     appDtoTree.setLabelDesc(app.appDes);
 
@@ -940,7 +940,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
                                                     tableDtoTree.setId(String.valueOf(table.id));
                                                     tableDtoTree.setParentId(String.valueOf(api.id));
-                                                    tableDtoTree.setLabel(table.tableName);
+                                                    tableDtoTree.setLabel("ods_" + app.appAbbreviation + "_" + table.tableName);
                                                     tableDtoTree.setLabelAlias(table.tableName);
                                                     tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
                                                     tableDtoTree.setSourceType(1);
@@ -972,7 +972,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                                 fieldDtoTree.setLabelDesc(field.fieldDes);
                                                                 fieldDtoTree.setSourceType(1);
                                                                 fieldDtoTree.setSourceId(Integer.parseInt(id));
-                                                                fieldDtoTree.setParentName(table.tableName);
+                                                                fieldDtoTree.setParentName("ods_" + app.appAbbreviation + "_" + table.tableName);
+                                                                fieldDtoTree.setParentNameAlias(table.tableName);
                                                                 return fieldDtoTree;
                                                             }).collect(Collectors.toList());
 
@@ -1067,7 +1068,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
                                                     tableDtoTree.setId(String.valueOf(table.id));
                                                     tableDtoTree.setParentId(String.valueOf(api.id));
-                                                    tableDtoTree.setLabel(table.tableName);
+                                                    tableDtoTree.setLabel("ods_" + app.appAbbreviation + "_" + table.tableName);
                                                     tableDtoTree.setLabelAlias(table.tableName);
                                                     tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
                                                     tableDtoTree.setSourceType(1);
@@ -1100,7 +1101,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                                 fieldDtoTree.setLabelDesc(field.fieldDes);
                                                                 fieldDtoTree.setSourceType(1);
                                                                 fieldDtoTree.setSourceId(Integer.parseInt(id));
-                                                                fieldDtoTree.setParentName(table.tableName);
+                                                                fieldDtoTree.setParentName("ods_" + app.appAbbreviation + "_" + table.tableName);
+                                                                fieldDtoTree.setParentNameAlias(table.tableName);
                                                                 return fieldDtoTree;
                                                             }).collect(Collectors.toList());
 
@@ -1133,7 +1135,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                         FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
                                         tableDtoTree.setId(String.valueOf(table.id));
                                         tableDtoTree.setParentId(String.valueOf(app.id));
-                                        tableDtoTree.setLabel(table.tableName);
+                                        tableDtoTree.setLabel("ods_" + app.appAbbreviation + "_" + table.tableName);
                                         tableDtoTree.setLabelAlias(table.tableName);
                                         tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
                                         tableDtoTree.setSourceType(1);
@@ -1166,7 +1168,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     fieldDtoTree.setLabelDesc(field.fieldDes);
                                                     fieldDtoTree.setSourceType(1);
                                                     fieldDtoTree.setSourceId(Integer.parseInt(id));
-                                                    fieldDtoTree.setParentName(table.tableName);
+                                                    fieldDtoTree.setParentName("ods_" + app.appAbbreviation + "_" + table.tableName);
+                                                    fieldDtoTree.setParentNameAlias(table.tableName);
                                                     return fieldDtoTree;
                                                 }).collect(Collectors.toList());
 

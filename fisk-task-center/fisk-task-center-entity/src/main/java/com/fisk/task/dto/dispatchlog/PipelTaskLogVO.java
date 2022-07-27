@@ -24,6 +24,6 @@ public class PipelTaskLogVO extends BasePO {
     @ApiModelProperty(value = "类型")
     public int type;
     @ApiModelProperty(value = "类型汉语")
-    public int typeName;
+    public String typeName;
 
 }

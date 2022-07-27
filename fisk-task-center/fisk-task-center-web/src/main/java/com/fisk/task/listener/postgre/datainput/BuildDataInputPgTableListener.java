@@ -65,6 +65,7 @@ public class BuildDataInputPgTableListener {
             Calendar calendar = Calendar.getInstance();
             String version = df.format(calendar.getTime());
             ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(dto, version);
+            log.info("执行修改语句返回结果:" + resultEnum);
             if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
                 taskPgTableStructureMapper.updatevalidVersion(version);
                 throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);

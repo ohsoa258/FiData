@@ -19,7 +19,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 /**
- * @author JianWenYang
+ * @author Lock
  */
 @Api(tags = { SwaggerConfig.TABLE_HISTORY })
 @RestController

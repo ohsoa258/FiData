@@ -1735,6 +1735,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             ResultSet rs = st.executeQuery(sql);
             //获取数据集
             array = resultSetToJsonArrayDataAccess(rs);
+            array.sql = sql;
             rs.close();
         } catch (Exception e) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e.getMessage());

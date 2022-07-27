@@ -61,7 +61,7 @@ public class DataAccessImpl implements IDataAccess {
         if (CollectionUtils.isNotEmpty(dto.tableUniques)) {
             List<TableAccessPO> tableAccessPoList = new ArrayList<>();
             // SELECT table_name,id FROM tb_table_access WHERE del_flag=1 AND (id = ?)
-            dto.tableUniques.forEach(tableId -> tableAccessPoList.add(tableAccessImpl.query().eq("id", tableId).select("table_name", "id").one()));
+            // dto.tableUniques.forEach(tableId -> tableAccessPoList.add(tableAccessImpl.query().eq("id", tableId).select("table_name", "id").one()));
 
             tableAccessPoList.forEach(po -> {
                 // table: po => dto

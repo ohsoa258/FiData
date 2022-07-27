@@ -51,7 +51,7 @@ public class NifiConstants {
         public static final String TABLE_TYPE="table_type";
         public static final String FIDATA_BATCH_CODE="fidata_batch_code";
         public static final String KAFKA_TOPIC="kafka.topic";
-        public static final String INITIAL_TIME="0000-01-01";
+        public static final String INITIAL_TIME="0001-01-01";
 
         public static final String PIPEL_TRACE_ID="pipelTraceId";
         public static final String PIPEL_JOB_TRACE_ID="pipelJobTraceId";

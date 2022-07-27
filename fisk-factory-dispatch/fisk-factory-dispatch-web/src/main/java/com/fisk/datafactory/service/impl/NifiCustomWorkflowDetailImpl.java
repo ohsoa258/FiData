@@ -624,7 +624,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
             List<NifiCustomWorkflowDetailDTO> dtoList = dto.list;
             if (CollectionUtils.isNotEmpty(dtoList)) {
-                NifiCustomWorkflowPO workflow = workflowService.query().eq("workflow_id", dtoList.get(0).workflowId).one();
+                String workflowId = this.query().eq("id", dtoList.get(0).id).one().workflowId;
+                NifiCustomWorkflowPO workflow = workflowService.query().eq("workflow_id", workflowId).one();
                 long id = workflow.id;
                 List<TableTopicDTO> topicDtos = new ArrayList<>();
                 for (NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetail : dtoList) {

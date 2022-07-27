@@ -14,29 +14,25 @@ import javax.annotation.Resource;
 import java.util.List;
 
 /**
- * @author JianWenYang
+ * @author Lock
  */
 @Service
-public class TableHistoryImpl
-        extends ServiceImpl<TableHistoryMapper, TableHistoryPO>
-        implements ITableHistory {
+public class TableHistoryImpl extends ServiceImpl<TableHistoryMapper, TableHistoryPO> implements ITableHistory {
 
     @Resource
     TableHistoryMapper mapper;
 
     @Override
-    public ResultEnum addTableHistory(List<TableHistoryDTO> dto)
-    {
+    public ResultEnum addTableHistory(List<TableHistoryDTO> dto) {
 
-        return this.saveBatch(TableHistoryMap.INSTANCES.dtoListToPoList(dto))?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        return this.saveBatch(TableHistoryMap.INSTANCES.dtoListToPoList(dto)) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
-    public List<TableHistoryDTO> getTableHistoryList(TableHistoryDTO dto)
-    {
-        QueryWrapper<TableHistoryPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(TableHistoryPO::getTableId,dto.tableId)
-                .eq(TableHistoryPO::getTableType,dto.tableType);
+    public List<TableHistoryDTO> getTableHistoryList(TableHistoryDTO dto) {
+        QueryWrapper<TableHistoryPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(TableHistoryPO::getTableId, dto.tableId)
+                .eq(TableHistoryPO::getTableType, dto.tableType);
         return TableHistoryMap.INSTANCES.poListToDtoList(mapper.selectList(queryWrapper));
     }
 

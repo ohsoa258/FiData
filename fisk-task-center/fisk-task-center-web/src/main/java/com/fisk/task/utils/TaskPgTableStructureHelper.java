@@ -116,7 +116,7 @@ public class TaskPgTableStructureHelper
      *
      * @param
      */
-    public ResultEnum saveTableStructure(ModelPublishTableDTO dto,String version) {
+    public ResultEnum saveTableStructure(ModelPublishTableDTO dto, String version) {
         try {
             List<TaskPgTableStructurePO> poList = new ArrayList<>();
             Thread.sleep(200);
@@ -269,11 +269,12 @@ public class TaskPgTableStructureHelper
             //修改表结构
             if (sql != null && sql.length() > 0) {
                 Statement st = conn.createStatement();
-                return st.execute(sql) == true ? ResultEnum.SUCCESS : ResultEnum.SQL_ERROR;
+                //无需判断ddl语句执行结果,因为如果执行失败会进catch
+                st.execute(sql);
             }
             return ResultEnum.SUCCESS;
         } catch (SQLException e) {
-            log.error("updatePgTableStructure:" + e);
+            log.error("updatePgTableStructure:" + StackTraceHelper.getStackTraceInfo(e));
         } finally {
             conn.close();
         }

@@ -18,10 +18,10 @@ import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
+import com.fisk.mdm.dto.model.ModelDTO;
+import com.fisk.mdm.dto.model.ModelQueryDTO;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.dto.modelVersion.ModelVersionDTO;
-import com.fisk.mdm.dto.viwGroup.ViwGroupDetailsDTO;
-import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.entity.ModelVersionPO;
@@ -32,8 +32,6 @@ import com.fisk.mdm.map.ModelVersionMap;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.mapper.ModelMapper;
 import com.fisk.mdm.service.*;
-import com.fisk.mdm.dto.model.ModelDTO;
-import com.fisk.mdm.dto.model.ModelQueryDTO;
 import com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils;
 import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.model.ModelInfoVO;
@@ -47,12 +45,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -374,12 +370,13 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
                                     // 实体层级
                                     String entityUuid = String.valueOf(item.getId());
-                                    String entityName=item.getDisplayName();
+                                    String entityName = item.getName();
+                                    String displayName = item.getDisplayName();
                                     FiDataMetaDataTreeDTO entityDto = new FiDataMetaDataTreeDTO();
                                     entityDto.setId(entityUuid);
                                     entityDto.setParentId(modelUuid);
-                                    entityDto.setLabel(item.getName());
-                                    entityDto.setLabelAlias(item.getDisplayName());
+                                    entityDto.setLabel(entityName);
+                                    entityDto.setLabelAlias(displayName);
                                     entityDto.setLevelType(LevelTypeEnum.TABLE);
                                     entityDto.setSourceType(1);
                                     entityDto.setSourceId(Integer.parseInt(id));
@@ -395,6 +392,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                                 attributeDto.setId(attributeUuid);
                                                 attributeDto.setParentId(entityUuid);
                                                 attributeDto.setParentName(entityName);
+                                                attributeDto.setParentNameAlias(displayName);
                                                 attributeDto.setLabel(iter.getName());
                                                 attributeDto.setLabelAlias(iter.getDisplayName());
                                                 attributeDto.setLevelType(LevelTypeEnum.FIELD);

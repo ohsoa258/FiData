@@ -80,8 +80,8 @@ public class DatafactoryController {
 
     @PostMapping("/getPipeTaskLog")
     @ApiOperation(value = "获取表日志")
-    public ResultEntity<List<PipelTaskLogVO>> getPipeTaskLog(@RequestBody PipelTaskLogVO dto) {
-        return service.getPipeTaskLog(dto);
+    public ResultEntity<List<PipelTaskLogVO>> getPipeTaskLog(@RequestBody List<PipelTaskLogVO> list) {
+        return service.getPipeTaskLog(list);
     }
 
     @GetMapping("/setTaskLinkedList/{id}")

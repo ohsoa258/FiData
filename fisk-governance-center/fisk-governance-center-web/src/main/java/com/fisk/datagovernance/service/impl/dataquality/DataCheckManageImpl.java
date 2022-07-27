@@ -34,7 +34,6 @@ import com.fisk.datagovernance.vo.dataquality.datacheck.SyncCheckInfoVO;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import org.apache.commons.lang.StringUtils;
-import org.bouncycastle.ocsp.Req;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -252,8 +251,12 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             if (dataSourceInfo.getDatasourceType() == SourceTypeEnum.FiData.getValue()) {
                 FiDataTableMetaDataReqDTO reqDTO = new FiDataTableMetaDataReqDTO();
                 reqDTO.setDataSourceId(String.valueOf(dataSourceInfo.datasourceId));
-                reqDTO.setTableUniques(tableUnique.stream().collect(Collectors.toList()));
-                reqDTO.setTableBusinessType(TableBusinessTypeEnum.NONE);
+                HashMap<String,TableBusinessTypeEnum> hashMap=new HashMap<>();
+                List<String> collect = tableUnique.stream().collect(Collectors.toList());
+                collect.forEach(t->{
+                    hashMap.put(t,TableBusinessTypeEnum.NONE);
+                });
+                reqDTO.setTableUniques(hashMap);
                 ResultEntity<List<FiDataTableMetaDataDTO>> listResultEntity = null;
                 // dmp_ods
                 if (dataSourceInfo.getDatasourceId() == 2) {

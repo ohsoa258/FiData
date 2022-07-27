@@ -4,6 +4,7 @@ import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -28,11 +29,5 @@ public class FiDataTableMetaDataReqDTO {
      * 表ID集合
      */
     @ApiModelProperty(value = "表ID集合")
-    public List<String> tableUniques;
-
-    /**
-     * 表业务类型
-     */
-    @ApiModelProperty(value = "表业务类型")
-    public TableBusinessTypeEnum tableBusinessType;
+    public HashMap<String,TableBusinessTypeEnum> tableUniques;
 }

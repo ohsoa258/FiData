@@ -25,4 +25,6 @@ public class OdsResultDTO {
     public int pageSize;
 
     public int total;
+
+    public String sql;
 }

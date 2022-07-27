@@ -478,10 +478,8 @@ public class DataFactoryImpl implements IDataFactory {
     }
 
     @Override
-    public ResultEntity<List<PipelTaskLogVO>> getPipeTaskLog(PipelTaskLogVO dto) {
-        List<PipelTaskLogVO> pipelTaskLogVos = new ArrayList<>();
-        pipelTaskLogVos.add(dto);
-        return publishTaskClient.getPipelTaskLogVos(pipelTaskLogVos);
+    public ResultEntity<List<PipelTaskLogVO>> getPipeTaskLog(List<PipelTaskLogVO> list) {
+        return publishTaskClient.getPipelTaskLogVos(list);
     }
 
     @Override

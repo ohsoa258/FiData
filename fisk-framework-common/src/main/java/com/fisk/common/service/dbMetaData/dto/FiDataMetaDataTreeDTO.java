@@ -25,6 +25,9 @@ public class FiDataMetaDataTreeDTO {
     @ApiModelProperty(value = "父级name，应用到字段维度，取值为字段父级名称", required = true)
     public String parentName;
 
+    @ApiModelProperty(value = "父级name别名，应用到字段维度，取值为字段父级别名名称", required = true)
+    public String parentNameAlias;
+
     @ApiModelProperty(value = "名称", required = true)
     public String label;
 
