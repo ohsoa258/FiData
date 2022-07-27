@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -426,6 +427,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     fiDataMetaDataTree_Table.setSourceId(Math.toIntExact(conPo.id));
                     fiDataMetaDataTree_Table.setSourceType(SourceTypeEnum.custom.getValue());
                     fiDataMetaDataTree_Table.setLevelType(LevelTypeEnum.TABLE);
+                    fiDataMetaDataTree_Table.setLabelBusinessType(TableBusinessTypeEnum.NONE);
                     List<FiDataMetaDataTreeDTO> fiDataMetaDataTree_Table_Children = new ArrayList<>();
 
                     if (CollectionUtils.isNotEmpty(table.fields)) {
@@ -443,6 +445,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                             fiDataMetaDataTree_Field.setLabelType(field.fieldType);
                             fiDataMetaDataTree_Field.setLabelLength(String.valueOf(field.fieldLength));
                             fiDataMetaDataTree_Field.setLabelDesc(field.fieldDes);
+                            fiDataMetaDataTree_Field.setParentName(table.tableName);
+                            fiDataMetaDataTree_Field.setParentNameAlias(table.tableName);
+                            fiDataMetaDataTree_Field.setLabelBusinessType(TableBusinessTypeEnum.NONE);
                             if (CollectionUtils.isNotEmpty(tableFieldList)) {
                                 FieldInfoVO fieldInfoVO = tableFieldList.stream()
                                         .filter(item -> item.originalTableName.equals(table.getTableName()) && item.originalFieldName.equals(field.getFieldName()))
@@ -506,6 +511,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     fiDataMetaDataTree_View.setSourceId(Math.toIntExact(conPo.id));
                     fiDataMetaDataTree_View.setSourceType(SourceTypeEnum.custom.getValue());
                     fiDataMetaDataTree_View.setLevelType(LevelTypeEnum.VIEW);
+                    fiDataMetaDataTree_View.setLabelBusinessType(TableBusinessTypeEnum.NONE);
                     List<FiDataMetaDataTreeDTO> fiDataMetaDataTree_View_Children = new ArrayList<>();
 
                     if (CollectionUtils.isNotEmpty(view.fields)) {
@@ -523,6 +529,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                             fiDataMetaDataTree_Field.setLabelType(field.fieldType);
                             fiDataMetaDataTree_Field.setLabelLength(String.valueOf(field.fieldLength));
                             fiDataMetaDataTree_Field.setLabelDesc(field.fieldDes);
+                            fiDataMetaDataTree_Field.setParentName(view.viewName);
+                            fiDataMetaDataTree_Field.setParentNameAlias(view.viewName);
+                            fiDataMetaDataTree_Field.setLabelBusinessType(TableBusinessTypeEnum.NONE);
                             fiDataMetaDataTree_View_Children.add(fiDataMetaDataTree_Field);
                         }
                     }

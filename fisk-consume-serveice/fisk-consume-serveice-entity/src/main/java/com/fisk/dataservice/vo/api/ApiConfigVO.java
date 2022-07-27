@@ -3,6 +3,7 @@ package com.fisk.dataservice.vo.api;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.hibernate.validator.constraints.Length;
 
 import java.time.LocalDateTime;
 
@@ -33,6 +34,12 @@ public class ApiConfigVO {
     public String tableName;
 
     /**
+     * 表别名
+     */
+    @ApiModelProperty(value = "表别名")
+    public String tableNameAlias;
+
+    /**
      * 表类型 1：表  2：视图
      */
     @ApiModelProperty(value = "表类型 1：表  2：视图")
@@ -42,7 +49,7 @@ public class ApiConfigVO {
      * 表业务类型 1：事实表、2：维度表、3、指标表  4、宽表
      */
     @ApiModelProperty(value = "表业务类型 1：事实表、2：维度表、3、指标表  4、宽表")
-    public TableBusinessTypeEnum tableBusinessType;
+    public int tableBusinessType;
 
     /**
      * 数据源id

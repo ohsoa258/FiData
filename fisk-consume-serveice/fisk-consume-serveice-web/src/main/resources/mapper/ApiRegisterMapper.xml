@@ -10,6 +10,7 @@
         api_type,
         datasource_id,
         table_name,
+        table_name_alias,
         table_type,
         table_business_type,
         create_sql,

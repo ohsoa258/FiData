@@ -45,6 +45,11 @@ public class ApiConfigPO extends BasePO
     public String tableName;
 
     /**
+     * 表别名
+     */
+    public String tableNameAlias;
+
+    /**
      * 表类型 1：表  2：视图
      */
     public int tableType;
