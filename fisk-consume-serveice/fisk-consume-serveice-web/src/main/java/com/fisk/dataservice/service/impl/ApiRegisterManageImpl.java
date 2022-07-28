@@ -287,6 +287,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         if (model == null)
             return ResultEntityBuild.buildData(ResultEnum.DS_API_EXISTS, apiRegisterDetailVO);
         apiRegisterDetailVO.apiVO = ApiRegisterMap.INSTANCES.poToVo(model);
+        DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(model.getDatasourceId());
+        apiRegisterDetailVO.apiVO.setDatasourceType(dataSourceConPO.getDatasourceType());
 
         // 第二步：查询字段信息
         QueryWrapper<FieldConfigPO> fieldQueryWrapper = new QueryWrapper<>();

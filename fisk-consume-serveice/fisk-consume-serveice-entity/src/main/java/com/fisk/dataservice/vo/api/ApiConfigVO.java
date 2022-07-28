@@ -1,6 +1,7 @@
 package com.fisk.dataservice.vo.api;
 
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
+import com.fisk.dataservice.enums.SourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
@@ -56,6 +57,12 @@ public class ApiConfigVO {
      */
     @ApiModelProperty(value = "数据源id")
     public int datasourceId;
+
+    /**
+     * 数据源类型
+     */
+    @ApiModelProperty(value = "数据源类型")
+    public int datasourceType;
 
     /**
      * api标识code
