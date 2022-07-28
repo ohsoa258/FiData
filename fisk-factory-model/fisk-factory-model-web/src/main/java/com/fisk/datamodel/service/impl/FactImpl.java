@@ -144,7 +144,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
                 dataManageClient.deleteMetaData(deleteDto);
             }
 
-            return mapper.deleteByIdWithFill(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+            return flat > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         }
         catch (Exception e)
         {
