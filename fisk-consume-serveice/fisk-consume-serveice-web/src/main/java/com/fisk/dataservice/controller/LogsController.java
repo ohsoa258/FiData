@@ -36,5 +36,5 @@ public class LogsController {
     public ResultEntity<Page<ApiLogVO>> pageFilter(@RequestBody LogQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.pageFilter(dto));
     }
-    
+
 }
