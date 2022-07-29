@@ -9,7 +9,8 @@ public enum SystemVariableTypeEnum {
      */
     START_TIME("@start_time","incremental_objectivescore_start"),
     END_TIME("@end_time","incremental_objectivescore_end"),
-    QUERY_SQL("查询语句","query_sql");
+    QUERY_SQL("查询语句","query_sql"),
+    HISTORICAL_TIME("历史时间","historical_time");
 
     SystemVariableTypeEnum(String value, String name) {
         this.name = name;

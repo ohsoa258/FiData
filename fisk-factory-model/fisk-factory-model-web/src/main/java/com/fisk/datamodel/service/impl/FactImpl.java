@@ -117,7 +117,9 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             deleteTableDetailDto.tableId = String.valueOf(id);
             // 数仓事实
             deleteTableDetailDto.channelDataEnum = ChannelDataEnum.DW_FACT_TASK;
-            list.add(deleteTableDetailDto);
+            //解决对象赋值混乱
+            DeleteTableDetailDTO deleteTableDetail = JSON.parseObject(JSON.toJSONString(deleteTableDetailDto), DeleteTableDetailDTO.class);
+            list.add(deleteTableDetail);
             // 分析事实
             deleteTableDetailDto.channelDataEnum = ChannelDataEnum.OLAP_FACT_TASK;
             list.add(deleteTableDetailDto);
@@ -142,7 +144,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
                 dataManageClient.deleteMetaData(deleteDto);
             }
 
-            return mapper.deleteByIdWithFill(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+            return flat > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         }
         catch (Exception e)
         {

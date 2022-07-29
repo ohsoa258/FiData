@@ -60,11 +60,11 @@ public class BuildAtlasTableAndColumnTaskListener
             String physicalSelect = createPhysicalTable(buildPhysicalTableDTO);
             //endregion
             TBETLIncrementalPO ETLIncremental = new TBETLIncrementalPO();
-            ETLIncremental.object_name = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
-            ETLIncremental.enable_flag = "1";
-            ETLIncremental.incremental_objectivescore_batchno = UUID.randomUUID().toString();
+            ETLIncremental.objectName = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
+            ETLIncremental.enableFlag = "1";
+            ETLIncremental.incrementalObjectivescoreBatchno = UUID.randomUUID().toString();
             Map<String, Object> conditionHashMap = new HashMap<>();
-            conditionHashMap.put("object_name", ETLIncremental.object_name);
+            conditionHashMap.put("object_name", ETLIncremental.objectName);
             List<TBETLIncrementalPO> tbetlIncrementalPos = incrementalMapper.selectByMap(conditionHashMap);
             if (tbetlIncrementalPos != null && tbetlIncrementalPos.size() > 0) {
                 log.info("此表已有同步记录,无需重复添加");
