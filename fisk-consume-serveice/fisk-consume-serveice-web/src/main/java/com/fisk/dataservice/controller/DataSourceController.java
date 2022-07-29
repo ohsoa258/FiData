@@ -82,5 +82,4 @@ public class DataSourceController {
     public ResultEntity<DataSourceVO> getFiDataConfigMetaData(@PathVariable("id")int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMetaDataById(id));
     }
-
 }
