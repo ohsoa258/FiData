@@ -428,6 +428,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     fiDataMetaDataTree_Table.setSourceType(SourceTypeEnum.custom.getValue());
                     fiDataMetaDataTree_Table.setLevelType(LevelTypeEnum.TABLE);
                     fiDataMetaDataTree_Table.setLabelBusinessType(TableBusinessTypeEnum.NONE);
+                    fiDataMetaDataTree_Table.setPublishState("1");
                     List<FiDataMetaDataTreeDTO> fiDataMetaDataTree_Table_Children = new ArrayList<>();
 
                     if (CollectionUtils.isNotEmpty(table.fields)) {
@@ -513,6 +514,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     fiDataMetaDataTree_View.setSourceType(SourceTypeEnum.custom.getValue());
                     fiDataMetaDataTree_View.setLevelType(LevelTypeEnum.VIEW);
                     fiDataMetaDataTree_View.setLabelBusinessType(TableBusinessTypeEnum.NONE);
+                    fiDataMetaDataTree_View.setPublishState("1");
                     List<FiDataMetaDataTreeDTO> fiDataMetaDataTree_View_Children = new ArrayList<>();
 
                     if (CollectionUtils.isNotEmpty(view.fields)) {
