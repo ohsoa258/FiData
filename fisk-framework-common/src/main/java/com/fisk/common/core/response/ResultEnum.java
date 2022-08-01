@@ -298,7 +298,8 @@ public enum ResultEnum {
     VIEW_NO_EXIST_ATTRIBUTE(151031, "该视图下暂无属性"),
     FILE_NOT_FOUND_EXCEPTION(151032, "file流路径找不到"),
     FILE_IO_EXCEPTION(151033, "IO流异常"),
-    FACT_ATTRIBUTE_FAILD(151034, "事实属性表更新失败!");
+    FACT_ATTRIBUTE_FAILD(151034, "事实属性表更新失败!"),
+    FORM_NO_VALID_DATA(151035, "表格暂无有效数据");
 
     ResultEnum(int code, String msg) {
         this.code = code;

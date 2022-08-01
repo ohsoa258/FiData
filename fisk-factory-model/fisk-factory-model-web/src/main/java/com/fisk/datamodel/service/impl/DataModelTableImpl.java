@@ -139,13 +139,11 @@ public class DataModelTableImpl implements IDataModelTable {
         field.primaryKey=attributePo.isPrimaryKey;
         field.sourceTable=attributePo.sourceTableName;
         field.sourceField=attributePo.sourceFieldName;
-        if (attributePo.associateDimensionId !=0 && attributePo.associateDimensionFieldId !=0)
-        {
-            field.associatedDim=true;
-            field.associatedDimId=attributePo.associateDimensionId;
-            DimensionPO dimensionPo1=dimensionMapper.selectById(attributePo.associateDimensionId);
-            if (dimensionPo1==null)
-            {
+        if (attributePo.associateDimensionId != 0 || attributePo.associateDimensionFieldId != 0) {
+            field.associatedDim = true;
+            field.associatedDimId = attributePo.associateDimensionId;
+            DimensionPO dimensionPo1 = dimensionMapper.selectById(attributePo.associateDimensionId);
+            if (dimensionPo1 == null) {
                 return field;
             }
             field.associatedDimName = dimensionPo1.dimensionTabName;

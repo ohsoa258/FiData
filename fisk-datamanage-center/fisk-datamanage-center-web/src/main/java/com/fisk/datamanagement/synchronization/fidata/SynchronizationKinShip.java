@@ -818,21 +818,18 @@ public class SynchronizationKinShip {
                         .stream()
                         .filter(e->!ids.contains(e.guid))
                         .collect(Collectors.toList());
-                dto.entity.relationshipAttributes.inputs =dto.entity.relationshipAttributes.inputs
+                dto.entity.relationshipAttributes.inputs = dto.entity.relationshipAttributes.inputs
                         .stream()
-                        .filter(e->!ids.contains(e.guid))
+                        .filter(e -> !ids.contains(e.guid))
                         .collect(Collectors.toList());
             }
-            dto.entity.attributes.name=sqlScript;
+            dto.entity.attributes.name = sqlScript;
             //修改process
-            String jsonParameter= JSONArray.toJSON(dto).toString();
+            String jsonParameter = JSONArray.toJSON(dto).toString();
             //调用atlas修改实例
             atlasClient.post(entity, jsonParameter);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            log.error("updateProcess ex:",e);
+        } catch (Exception e) {
+            log.error("updateProcess ex:", e);
         }
     }
 
