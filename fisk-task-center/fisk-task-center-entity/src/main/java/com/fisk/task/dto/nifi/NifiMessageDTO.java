@@ -37,4 +37,9 @@ public class NifiMessageDTO {
      * */
     public String pipelStageTraceId;
 
+    /*
+     * 流文件流入时间
+     * */
+    public String entryDate;
+
 }

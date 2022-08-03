@@ -2204,6 +2204,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         nifiMessage.pipelTaskTraceId = "${pipelTaskTraceId}";
         nifiMessage.pipelJobTraceId = "${pipelJobTraceId}";
         nifiMessage.pipelTraceId = "${pipelTraceId}";
+        nifiMessage.entryDate="${entryDate:format('YYYY-MM-dd HH:mm:ss')}";
         buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(nifiMessage);
         buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
