@@ -11,6 +11,7 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceFieldDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
 import com.fisk.datamanagement.dto.entity.EntityDTO;
@@ -28,6 +29,7 @@ import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.datamodel.dto.tableconfig.SourceFieldDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
 import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import com.fisk.system.client.UserClient;
@@ -110,8 +112,6 @@ public class MetaDataImpl implements IMetaData {
                     if (StringUtils.isEmpty(tableGuid)) {
                         continue;
                     }
-                    //同步表血缘
-                    synchronizationTableKinShip(db.name, tableGuid, table.name);
                     List<String> qualifiedNames = new ArrayList<>();
                     for (MetaDataColumnAttributeDTO field : table.columnList) {
                         metaDataField(field, tableGuid);
@@ -119,6 +119,8 @@ public class MetaDataImpl implements IMetaData {
                     }
                     //删除
                     deleteMetaData(qualifiedNames, tableGuid);
+                    //同步血缘
+                    synchronizationTableKinShip(db.name, tableGuid, table.name, table.columnList);
                 }
             }
         }
@@ -134,7 +136,10 @@ public class MetaDataImpl implements IMetaData {
      * @param tableGuid
      * @param tableName
      */
-    public void synchronizationTableKinShip(String dbName, String tableGuid, String tableName) {
+    public void synchronizationTableKinShip(String dbName,
+                                            String tableGuid,
+                                            String tableName,
+                                            List<MetaDataColumnAttributeDTO> columnList) {
         try {
             String dbQualifiedName = whetherSynchronization(dbName, false);
             if (StringUtils.isEmpty(dbQualifiedName)) {
@@ -153,7 +158,9 @@ public class MetaDataImpl implements IMetaData {
 
             Optional<SourceTableDTO> first = null;
 
-            List<SourceTableDTO> list = new ArrayList<>();
+            List<SourceTableDTO> list;
+
+            ResultEntity<List<DataAccessSourceTableDTO>> odsResult = null;
 
             DataSourceDTO dataSourceInfo = getDataSourceInfo(dbName);
             if (dataSourceInfo == null) {
@@ -161,7 +168,7 @@ public class MetaDataImpl implements IMetaData {
             }
             if (dataSourceInfo.id == DataSourceConfigEnum.DMP_DW.getValue()) {
                 //获取ods表信息
-                ResultEntity<List<DataAccessSourceTableDTO>> odsResult = dataAccessClient.getDataAccessMetaData();
+                odsResult = dataAccessClient.getDataAccessMetaData();
                 if (odsResult.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(odsResult.data)) {
                     return;
                 }
@@ -221,16 +228,111 @@ public class MetaDataImpl implements IMetaData {
                     updateProcess(
                             relationShipAttribute.getJSONObject(i).getString("guid"),
                             inputTableList,
-                            list,
                             EntityTypeEnum.RDBMS_TABLE,
                             first.get().sqlScript,
                             tableGuid);
                 }
             }
+            //同步字段血缘
+            synchronizationColumnKinShip(odsResult.data, first.get(), columnList, dataSourceInfo.id, dbQualifiedName);
         } catch (Exception e) {
             log.error("同步表血缘失败,表guid" + tableGuid + " ex:", e);
             return;
         }
+    }
+
+    /**
+     * 同步字段血缘
+     *
+     * @param odsData
+     * @param dto
+     * @param columnList
+     * @param dataSourceId
+     * @param dbQualifiedName
+     */
+    public void synchronizationColumnKinShip(List<DataAccessSourceTableDTO> odsData,
+                                             SourceTableDTO dto,
+                                             List<MetaDataColumnAttributeDTO> columnList,
+                                             int dataSourceId,
+                                             String dbQualifiedName) {
+        if (CollectionUtils.isEmpty(columnList)) {
+            return;
+        }
+
+        QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("qualified_name", columnList.stream().map(e -> e.qualifiedName).collect(Collectors.toList()));
+        List<MetadataMapAtlasPO> poList = metadataMapAtlasMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(poList)) {
+            return;
+        }
+
+        List<EntityIdAndTypeDTO> inputList = new ArrayList<>();
+        for (MetadataMapAtlasPO item : poList) {
+            inputList.clear();
+            //获取实体详情
+            ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + item.atlasGuid);
+            if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS) {
+                continue;
+            }
+
+            Optional<MetaDataColumnAttributeDTO> first = columnList.stream().filter(e -> e.qualifiedName.equals(item.qualifiedName)).findFirst();
+
+            Optional<SourceFieldDTO> first1 = dto.fieldList.stream().filter(e -> e.fieldName.equals(first.get().name)).findFirst();
+            if (!first1.isPresent()) {
+                continue;
+            }
+
+            EntityIdAndTypeDTO inputDto = new EntityIdAndTypeDTO();
+            inputDto.typeName = EntityTypeEnum.RDBMS_TABLE.getName();
+
+            String fieldName = null;
+            if (dataSourceId == DataSourceConfigEnum.DMP_DW.getValue()) {
+                Optional<DataAccessSourceTableDTO> first2 = odsData.stream().filter(e -> e.tableName.equals(first1.get().sourceTable)).findFirst();
+                if (!first2.isPresent()) {
+                    continue;
+                }
+
+                Optional<DataAccessSourceFieldDTO> first3 = first2.get().list.stream().filter(e -> e.fieldName.toLowerCase().equals(first1.get().sourceField)).findFirst();
+                if (!first3.isPresent()) {
+                    continue;
+                }
+
+                String columnQualifiedName = dbQualifiedName + "_" + first2.get().id + "_" + first3.get().id;
+                QueryWrapper<MetadataMapAtlasPO> queryWrapper1 = new QueryWrapper<>();
+                queryWrapper1.lambda().eq(MetadataMapAtlasPO::getQualifiedName, columnQualifiedName);
+                MetadataMapAtlasPO po = metadataMapAtlasMapper.selectOne(queryWrapper1);
+                if (po == null) {
+                    continue;
+                }
+                inputDto.guid = po.atlasGuid;
+                inputList.add(inputDto);
+                fieldName = first3.get().fieldName;
+            } else if (dataSourceId == DataSourceConfigEnum.DMP_ODS.getValue()) {
+
+            }
+
+            //解析数据
+            JSONObject jsonObj = JSON.parseObject(getDetail.data);
+            JSONObject entityObject = JSON.parseObject(jsonObj.getString("entity"));
+            JSONObject relationShip = JSON.parseObject(entityObject.getString("relationshipAttributes"));
+            JSONArray relationShipAttribute = JSON.parseArray(relationShip.getString("outputFromProcesses"));
+            //条数为0,则添加process
+            if (relationShipAttribute.size() == 0) {
+                addProcess(EntityTypeEnum.RDBMS_COLUMN, fieldName, inputList, item.atlasGuid);
+            } else {
+                for (int i = 0; i < relationShipAttribute.size(); i++) {
+                    updateProcess(
+                            relationShipAttribute.getJSONObject(i).getString("guid"),
+                            inputList,
+                            EntityTypeEnum.RDBMS_TABLE,
+                            fieldName,
+                            item.atlasGuid);
+                }
+            }
+
+        }
+
+
     }
 
     @Override
@@ -592,6 +694,14 @@ public class MetaDataImpl implements IMetaData {
         return list;
     }
 
+    /**
+     * 获取dw与doris表血缘输入参数
+     *
+     * @param dto
+     * @param dbQualifiedName
+     * @param newDbQualifiedName
+     * @return
+     */
     public List<EntityIdAndTypeDTO> getDorisTableList(SourceTableDTO dto, String dbQualifiedName, String newDbQualifiedName) {
         List<EntityIdAndTypeDTO> list = new ArrayList<>();
         //获取dw事实表限定名
@@ -739,14 +849,12 @@ public class MetaDataImpl implements IMetaData {
      *
      * @param processGuid
      * @param inputList
-     * @param dtoList
      * @param entityTypeEnum
      * @param sqlScript
      * @param atlasGuid
      */
     public void updateProcess(String processGuid,
                               List<EntityIdAndTypeDTO> inputList,
-                              List<SourceTableDTO> dtoList,
                               EntityTypeEnum entityTypeEnum,
                               String sqlScript,
                               String atlasGuid) {
