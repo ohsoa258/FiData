@@ -64,7 +64,13 @@ public enum DispatchLogEnum implements BaseEnum {
     /*
      *阶段--状态
      * */
-    stagestate(15, "阶段--状态");
+    stagestate(15, "阶段--状态"),
+    /*
+     *流文件进来时间
+     * */
+    entrydate(16,"流文件进来时间");
+
+
 
     DispatchLogEnum(int value, String name) {
         this.value = value;

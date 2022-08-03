@@ -7,6 +7,7 @@ import com.fisk.task.entity.PipelTaskLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.mapper.PipelTaskLogMapper;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
+import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;

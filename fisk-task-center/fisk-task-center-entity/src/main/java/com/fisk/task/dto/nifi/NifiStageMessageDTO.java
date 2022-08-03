@@ -40,7 +40,7 @@ public class NifiStageMessageDTO {
     /*
      * 流文件流入时间
      * */
-    public Date entryDate;
+    public String entryDate;
 
 
 }
