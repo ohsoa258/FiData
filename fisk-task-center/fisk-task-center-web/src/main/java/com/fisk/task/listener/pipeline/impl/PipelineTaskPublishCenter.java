@@ -26,6 +26,7 @@ import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
 import com.fisk.task.mapper.NifiStageMapper;
 import com.fisk.task.mapper.PipelineTableLogMapper;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
+import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelStageLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.service.nifi.IOlap;
@@ -70,6 +71,8 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
     KafkaTemplateHelper kafkaTemplateHelper;
     @Resource
     IPipelJobLog iPipelJobLog;
+    @Resource
+    IPipelLog iPipelLog;
     @Resource
     IPipelTaskLog iPipelTaskLog;
     @Resource

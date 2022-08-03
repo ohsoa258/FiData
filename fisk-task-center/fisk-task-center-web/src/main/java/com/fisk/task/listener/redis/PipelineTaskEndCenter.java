@@ -23,6 +23,7 @@ import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
+import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.utils.KafkaTemplateHelper;
@@ -51,6 +52,8 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
     IOlap iOlap;
     @Resource
     IPipelJobLog iPipelJobLog;
+    @Resource
+    IPipelLog iPipelLog;
     @Resource
     IPipelTaskLog iPipelTaskLog;
     @Resource
@@ -209,6 +212,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                     log.info("这个管道的结束:" + pipelTraceId);
                     redisUtil.del(RedisKeyEnum.PIPEL_TRACE_ID.getName() + pipelTraceId);
                     iPipelJobLog.savePipelLog(pipelTraceId, PipelMap, pipelId);
+                    iPipelLog.savePipelLog(pipelTraceId, PipelMap, pipelId);
                 }
             } else if (expiredKey.startsWith("nowExec")) {
                 //手动调度记录结束

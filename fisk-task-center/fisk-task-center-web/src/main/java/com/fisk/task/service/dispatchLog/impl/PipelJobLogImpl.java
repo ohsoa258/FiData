@@ -10,6 +10,7 @@ import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.mapper.PipelJobLogMapper;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
+import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelStageLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,8 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
     IPipelStageLog iPipelStageLog;
     @Resource
     IPipelTaskLog iPipelTaskLog;
+    @Resource
+    IPipelLog iPipelLog;
 
     @Override
     public void savePipelLog(String pipelTraceId, Map<Integer, Object> map, String pipelId) {
@@ -150,6 +153,7 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
             pipelMap.put(DispatchLogEnum.pipelstate.getValue(), NifiStageTypeEnum.RUN_FAILED.getName());
             //保存管道失败日志
             this.savePipelLog(dto.pipelTraceId, pipelMap, list.get(0).pipelId);
+            iPipelLog.savePipelLog(dto.pipelTraceId, pipelMap, list.get(0).pipelId);
         }
 
 
