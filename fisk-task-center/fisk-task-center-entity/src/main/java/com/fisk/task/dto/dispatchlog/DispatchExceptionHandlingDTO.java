@@ -31,4 +31,15 @@ public class DispatchExceptionHandlingDTO {
      */
     public String comment;
 
+    /**
+     * 管道名称
+     */
+    public String pipleName;
+
+    /**
+     * job名称
+     */
+    public String JobName;
+
+
 }
