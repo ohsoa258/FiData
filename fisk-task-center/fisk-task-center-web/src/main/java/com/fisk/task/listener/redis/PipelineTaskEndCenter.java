@@ -213,7 +213,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
             } else if (expiredKey.startsWith("nowExec")) {
                 //手动调度记录结束
                 String[] split = expiredKey.split(",");
-                String taskTraceId = split[0].substring(4);
+                String taskTraceId = split[0].substring(7);
                 String[] split1 = split[1].split("\\.");
                 HashMap<Integer, Object> taskMap = new HashMap<>();
                 taskMap.put(DispatchLogEnum.taskstate.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
