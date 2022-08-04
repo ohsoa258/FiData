@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.service.impl.dataquality;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -20,6 +21,9 @@ import com.fisk.datagovernance.map.dataquality.NoticeExtendMap;
 import com.fisk.datagovernance.map.dataquality.NoticeMap;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.INoticeManageService;
+import com.fisk.datagovernance.vo.dataquality.emailserver.EmailServerVO;
+import com.fisk.datagovernance.vo.dataquality.notice.NoticeDetailVO;
+import com.fisk.datagovernance.vo.dataquality.notice.NoticeModuleVO;
 import com.fisk.datagovernance.vo.dataquality.notice.NoticeVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +32,7 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author dick
@@ -43,6 +48,15 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
 
     @Resource
     private NoticeExtendManageImpl noticeExtendManageImpl;
+
+    @Resource
+    private DataCheckMapper dataCheckMapper;
+
+    @Resource
+    private BusinessFilterMapper businessFilterMapper;
+
+    @Resource
+    private LifecycleMapper lifecycleMapper;
 
     @Resource
     private EmailServerMapper emailServerMapper;
@@ -80,9 +94,9 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         }
         //第四步：保存通知扩展信息
         if (CollectionUtils.isNotEmpty(dto.noticeExtends)) {
-            List<NoticeExtendPO> noticeExtendPOS =new ArrayList<>();
-            dto.noticeExtends.forEach(t->{
-                NoticeExtendPO noticeExtendPO=new NoticeExtendPO();
+            List<NoticeExtendPO> noticeExtendPOS = new ArrayList<>();
+            dto.noticeExtends.forEach(t -> {
+                NoticeExtendPO noticeExtendPO = new NoticeExtendPO();
                 noticeExtendPO.setNoticeId(t.noticeId);
                 noticeExtendPO.setModuleType(t.moduleType.getValue());
                 noticeExtendPO.setRuleId(t.ruleId);
@@ -118,9 +132,9 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         //第四步：保存通知扩展信息
         if (CollectionUtils.isNotEmpty(dto.noticeExtends)) {
             noticeExtendMapper.updateByNoticeId(dto.id);
-            List<NoticeExtendPO> noticeExtendPOS =new ArrayList<>();
-            dto.noticeExtends.forEach(t->{
-                NoticeExtendPO noticeExtendPO=new NoticeExtendPO();
+            List<NoticeExtendPO> noticeExtendPOS = new ArrayList<>();
+            dto.noticeExtends.forEach(t -> {
+                NoticeExtendPO noticeExtendPO = new NoticeExtendPO();
                 noticeExtendPO.setNoticeId(t.noticeId);
                 noticeExtendPO.setModuleType(t.moduleType.getValue());
                 noticeExtendPO.setRuleId(t.ruleId);
@@ -169,5 +183,136 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             throw new FkException(ResultEnum.ERROR, ex.getMessage());
         }
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "发送完成");
+    }
+
+    @Override
+    public ResultEntity<NoticeDetailVO> getNoticeRuleInfo(int noticeId) {
+        NoticeDetailVO noticeDetailVO = new NoticeDetailVO();
+
+        List<NoticeModuleVO> noticeModuleVOS = new ArrayList<>();
+        List<EmailServerVO> emailServerVOS = new ArrayList<>();
+
+        //第一步：查询模板组件关联信息
+        QueryWrapper<NoticeExtendPO> noticeExtendPOQueryWrapper = new QueryWrapper<>();
+        if (noticeId > 0) {
+            noticeExtendPOQueryWrapper.lambda().eq(NoticeExtendPO::getDelFlag, 1)
+                    .eq(NoticeExtendPO::getNoticeId, noticeId);
+        } else {
+            noticeExtendPOQueryWrapper.lambda().eq(NoticeExtendPO::getDelFlag, 1);
+        }
+        List<NoticeExtendPO> noticeExtendPOS = noticeExtendMapper.selectList(noticeExtendPOQueryWrapper);
+
+        //第二步：查询所有质量报告模板
+        List<Integer> templateScene = new ArrayList<>();
+        templateScene.add(TemplateSceneEnum.DATACHECK_QUALITYREPORT.getValue());
+        templateScene.add(TemplateSceneEnum.BUSINESSFILTER_FILTERREPORT.getValue());
+        templateScene.add(TemplateSceneEnum.LIFECYCLE_REPORT.getValue());
+        QueryWrapper<TemplatePO> templatePOQueryWrapper = new QueryWrapper<>();
+        templatePOQueryWrapper.lambda().eq(TemplatePO::getDelFlag, 1)
+                .in(TemplatePO::getTemplateScene, templateScene);
+        List<TemplatePO> templatePOS = templateMapper.selectList(templatePOQueryWrapper);
+        if (CollectionUtils.isEmpty(templatePOS)) {
+            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS, noticeDetailVO);
+        }
+
+        //第三步：查询数据校验质量报告规则信息
+        List<Long> templateIds = templatePOS.stream().
+                filter(t -> t.moduleType == ModuleTypeEnum.DATACHECK_MODULE.getValue())
+                .map(m -> m.getId()).collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(templateIds)) {
+            QueryWrapper<DataCheckPO> dataCheckPOQueryWrapper = new QueryWrapper<>();
+            dataCheckPOQueryWrapper.lambda().eq(DataCheckPO::getDelFlag, 1)
+                    .in(DataCheckPO::getTemplateId, templateIds)
+                    .orderByAsc(DataCheckPO::getRuleSort);
+            List<DataCheckPO> dataCheckPOS = dataCheckMapper.selectList(dataCheckPOQueryWrapper);
+            if (CollectionUtils.isNotEmpty(dataCheckPOS) && CollectionUtils.isNotEmpty(noticeExtendPOS)) {
+                dataCheckPOS.forEach(e -> {
+                    NoticeModuleVO noticeModuleVO = new NoticeModuleVO();
+                    NoticeExtendPO noticeExtendPO = noticeExtendPOS.stream().filter
+                            (item -> item.moduleType == ModuleTypeEnum.DATACHECK_MODULE.getValue()
+                                    && item.ruleId == e.id).findFirst().orElse(null);
+                    if (noticeExtendPO != null) {
+                        noticeModuleVO.checkd = 1;
+                    }
+                    noticeModuleVO.noticeId = noticeId;
+                    noticeModuleVO.moduleType = ModuleTypeEnum.DATACHECK_MODULE;
+                    noticeModuleVO.ruleId = Math.toIntExact(e.id);
+                    noticeModuleVO.ruleName = e.ruleName;
+                    noticeModuleVOS.add(noticeModuleVO);
+                });
+            }
+        }
+
+        //第四步：查询业务清洗质量报告规则信息
+        templateIds = templatePOS.stream().
+                filter(t -> t.moduleType == ModuleTypeEnum.BIZCHECK_MODULE.getValue())
+                .map(m -> m.getId()).collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(templateIds)){
+            QueryWrapper<BusinessFilterPO> businessFilterPOQueryWrapper = new QueryWrapper<>();
+            businessFilterPOQueryWrapper.lambda().eq(BusinessFilterPO::getDelFlag, 1)
+                    .in(BusinessFilterPO::getTemplateId, templateIds)
+                    .orderByAsc(BusinessFilterPO::getRuleSort);
+            List<BusinessFilterPO> businessFilterPOS = businessFilterMapper.selectList(businessFilterPOQueryWrapper);
+            if (CollectionUtils.isNotEmpty(businessFilterPOS) && CollectionUtils.isNotEmpty(noticeExtendPOS)) {
+                businessFilterPOS.forEach(e -> {
+                    NoticeModuleVO noticeModuleVO = new NoticeModuleVO();
+                    NoticeExtendPO noticeExtendPO = noticeExtendPOS.stream().filter
+                            (item -> item.moduleType == ModuleTypeEnum.BIZCHECK_MODULE.getValue()
+                                    && item.ruleId == e.id).findFirst().orElse(null);
+                    if (noticeExtendPO != null) {
+                        noticeModuleVO.checkd = 1;
+                    }
+                    noticeModuleVO.noticeId = noticeId;
+                    noticeModuleVO.moduleType = ModuleTypeEnum.BIZCHECK_MODULE;
+                    noticeModuleVO.ruleId = Math.toIntExact(e.id);
+                    noticeModuleVO.ruleName = e.ruleName;
+                    noticeModuleVOS.add(noticeModuleVO);
+                });
+            }
+        }
+
+        //第五步：查询生命周期质量报告规则信息
+        templateIds = templatePOS.stream().
+                filter(t -> t.moduleType == ModuleTypeEnum.LIFECYCLE_MODULE.getValue())
+                .map(m -> m.getId()).collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(templateIds)){
+            QueryWrapper<LifecyclePO> lifecyclePOQueryWrapper = new QueryWrapper<>();
+            lifecyclePOQueryWrapper.lambda().eq(LifecyclePO::getDelFlag, 1)
+                    .in(LifecyclePO::getTemplateId, templateIds);
+            List<LifecyclePO> lifecyclePOS = lifecycleMapper.selectList(lifecyclePOQueryWrapper);
+            if (CollectionUtils.isNotEmpty(lifecyclePOS) && CollectionUtils.isNotEmpty(noticeExtendPOS)) {
+                lifecyclePOS.forEach(e -> {
+                    NoticeModuleVO noticeModuleVO = new NoticeModuleVO();
+                    NoticeExtendPO noticeExtendPO = noticeExtendPOS.stream().filter
+                            (item -> item.moduleType == ModuleTypeEnum.LIFECYCLE_MODULE.getValue()
+                                    && item.ruleId == e.id).findFirst().orElse(null);
+                    if (noticeExtendPO != null) {
+                        noticeModuleVO.checkd = 1;
+                    }
+                    noticeModuleVO.noticeId = noticeId;
+                    noticeModuleVO.moduleType = ModuleTypeEnum.LIFECYCLE_MODULE;
+                    noticeModuleVO.ruleId = Math.toIntExact(e.id);
+                    noticeModuleVO.ruleName = e.ruleName;
+                    noticeModuleVOS.add(noticeModuleVO);
+                });
+            }
+        }
+
+        //第六步：获取邮件服务器信息
+        QueryWrapper<EmailServerPO> emailServerPOQueryWrapper = new QueryWrapper<>();
+        emailServerPOQueryWrapper.lambda().eq(EmailServerPO::getDelFlag, 1);
+        List<EmailServerPO> emailServerPOS = emailServerMapper.selectList(emailServerPOQueryWrapper);
+        if (CollectionUtils.isNotEmpty(emailServerPOS)) {
+            emailServerPOS.forEach(e -> {
+                EmailServerVO emailServerVO = new EmailServerVO();
+                emailServerVO.setId(Math.toIntExact(e.getId()));
+                emailServerVO.setName(e.getName());
+                emailServerVOS.add(emailServerVO);
+            });
+        }
+
+        noticeDetailVO.noticeModuleVOS = noticeModuleVOS;
+        noticeDetailVO.emailServerVOS = emailServerVOS;
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, noticeDetailVO);
     }
 }

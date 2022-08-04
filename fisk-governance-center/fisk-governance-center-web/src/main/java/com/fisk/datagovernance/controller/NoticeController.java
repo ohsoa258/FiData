@@ -9,6 +9,7 @@ import com.fisk.datagovernance.dto.dataquality.notice.NoticeDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeEditDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeQueryDTO;
 import com.fisk.datagovernance.service.dataquality.INoticeManageService;
+import com.fisk.datagovernance.vo.dataquality.notice.NoticeDetailVO;
 import com.fisk.datagovernance.vo.dataquality.notice.NoticeVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -57,5 +58,11 @@ public class NoticeController {
     @PostMapping("/testSend")
     public ResultEntity<Object> testSend(@RequestBody NoticeDTO dto) {
         return service.sendEmialNotice(dto);
+    }
+
+    @ApiOperation("查询通知下的规则")
+    @GetMapping("/getNoticeRuleInfo")
+    public ResultEntity<NoticeDetailVO> getNoticeRuleInfo(int id) {
+        return service.getNoticeRuleInfo(id);
     }
 }
