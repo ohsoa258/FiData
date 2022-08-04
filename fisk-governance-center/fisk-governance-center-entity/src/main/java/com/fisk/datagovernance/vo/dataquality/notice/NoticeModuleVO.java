@@ -14,6 +14,12 @@ import lombok.Data;
 public class NoticeModuleVO {
 
     /**
+     * 通知扩展表ID
+     */
+    @ApiModelProperty(value = "通知扩展表ID")
+    public Long noticeExtId;
+
+    /**
      * 通知id
      */
     @ApiModelProperty(value = "通知id")

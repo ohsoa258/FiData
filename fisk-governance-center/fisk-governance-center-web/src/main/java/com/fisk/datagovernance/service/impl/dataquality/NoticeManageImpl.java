@@ -189,8 +189,13 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
     public ResultEntity<NoticeDetailVO> getNoticeRuleInfo(int noticeId) {
         NoticeDetailVO noticeDetailVO = new NoticeDetailVO();
 
-        List<NoticeModuleVO> noticeModuleVOS = new ArrayList<>();
+        List<NoticeModuleVO> noticeRule_DataCheck = new ArrayList<>();
+        List<NoticeModuleVO> noticeRule_BusinessFilter = new ArrayList<>();
+        List<NoticeModuleVO> noticeRule_Lifecycle = new ArrayList<>();
         List<EmailServerVO> emailServerVOS = new ArrayList<>();
+        List<Long> noticeIds_DataCheck = new ArrayList<>();
+        List<Long> noticeIds_BusinessFilter = new ArrayList<>();
+        List<Long> noticeIds_Lifecycle = new ArrayList<>();
 
         //第一步：查询模板组件关联信息
         QueryWrapper<NoticeExtendPO> noticeExtendPOQueryWrapper = new QueryWrapper<>();
@@ -228,21 +233,22 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             if (CollectionUtils.isNotEmpty(dataCheckPOS)) {
                 dataCheckPOS.forEach(e -> {
                     NoticeModuleVO noticeModuleVO = new NoticeModuleVO();
-                    NoticeExtendPO noticeExtendPO =null;
-                    if (CollectionUtils.isNotEmpty(noticeExtendPOS))
-                    {
-                        noticeExtendPO=  noticeExtendPOS.stream().filter
+                    NoticeExtendPO noticeExtendPO = null;
+                    if (CollectionUtils.isNotEmpty(noticeExtendPOS)) {
+                        noticeExtendPO = noticeExtendPOS.stream().filter
                                 (item -> item.moduleType == ModuleTypeEnum.DATACHECK_MODULE.getValue()
                                         && item.ruleId == e.id).findFirst().orElse(null);
                     }
                     if (noticeExtendPO != null) {
                         noticeModuleVO.checkd = 1;
+                        noticeModuleVO.noticeExtId = noticeExtendPO.id;
+                        noticeIds_DataCheck.add(noticeExtendPO.id);
                     }
                     noticeModuleVO.noticeId = noticeId;
                     noticeModuleVO.moduleType = ModuleTypeEnum.DATACHECK_MODULE;
                     noticeModuleVO.ruleId = Math.toIntExact(e.id);
                     noticeModuleVO.ruleName = e.ruleName;
-                    noticeModuleVOS.add(noticeModuleVO);
+                    noticeRule_DataCheck.add(noticeModuleVO);
                 });
             }
         }
@@ -251,7 +257,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         templateIds = templatePOS.stream().
                 filter(t -> t.moduleType == ModuleTypeEnum.BIZCHECK_MODULE.getValue())
                 .map(m -> m.getId()).collect(Collectors.toList());
-        if (CollectionUtils.isNotEmpty(templateIds)){
+        if (CollectionUtils.isNotEmpty(templateIds)) {
             QueryWrapper<BusinessFilterPO> businessFilterPOQueryWrapper = new QueryWrapper<>();
             businessFilterPOQueryWrapper.lambda().eq(BusinessFilterPO::getDelFlag, 1)
                     .in(BusinessFilterPO::getTemplateId, templateIds)
@@ -260,21 +266,22 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             if (CollectionUtils.isNotEmpty(businessFilterPOS)) {
                 businessFilterPOS.forEach(e -> {
                     NoticeModuleVO noticeModuleVO = new NoticeModuleVO();
-                    NoticeExtendPO noticeExtendPO =null;
-                    if (CollectionUtils.isNotEmpty(noticeExtendPOS))
-                    {
-                        noticeExtendPO=  noticeExtendPOS.stream().filter
+                    NoticeExtendPO noticeExtendPO = null;
+                    if (CollectionUtils.isNotEmpty(noticeExtendPOS)) {
+                        noticeExtendPO = noticeExtendPOS.stream().filter
                                 (item -> item.moduleType == ModuleTypeEnum.BIZCHECK_MODULE.getValue()
                                         && item.ruleId == e.id).findFirst().orElse(null);
                     }
                     if (noticeExtendPO != null) {
                         noticeModuleVO.checkd = 1;
+                        noticeModuleVO.noticeExtId = noticeExtendPO.id;
+                        noticeIds_BusinessFilter.add(noticeExtendPO.id);
                     }
                     noticeModuleVO.noticeId = noticeId;
                     noticeModuleVO.moduleType = ModuleTypeEnum.BIZCHECK_MODULE;
                     noticeModuleVO.ruleId = Math.toIntExact(e.id);
                     noticeModuleVO.ruleName = e.ruleName;
-                    noticeModuleVOS.add(noticeModuleVO);
+                    noticeRule_BusinessFilter.add(noticeModuleVO);
                 });
             }
         }
@@ -283,7 +290,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         templateIds = templatePOS.stream().
                 filter(t -> t.moduleType == ModuleTypeEnum.LIFECYCLE_MODULE.getValue())
                 .map(m -> m.getId()).collect(Collectors.toList());
-        if (CollectionUtils.isNotEmpty(templateIds)){
+        if (CollectionUtils.isNotEmpty(templateIds)) {
             QueryWrapper<LifecyclePO> lifecyclePOQueryWrapper = new QueryWrapper<>();
             lifecyclePOQueryWrapper.lambda().eq(LifecyclePO::getDelFlag, 1)
                     .in(LifecyclePO::getTemplateId, templateIds);
@@ -291,21 +298,22 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             if (CollectionUtils.isNotEmpty(lifecyclePOS) && CollectionUtils.isNotEmpty(noticeExtendPOS)) {
                 lifecyclePOS.forEach(e -> {
                     NoticeModuleVO noticeModuleVO = new NoticeModuleVO();
-                    NoticeExtendPO noticeExtendPO =null;
-                    if (CollectionUtils.isNotEmpty(noticeExtendPOS))
-                    {
-                        noticeExtendPO=  noticeExtendPOS.stream().filter
+                    NoticeExtendPO noticeExtendPO = null;
+                    if (CollectionUtils.isNotEmpty(noticeExtendPOS)) {
+                        noticeExtendPO = noticeExtendPOS.stream().filter
                                 (item -> item.moduleType == ModuleTypeEnum.LIFECYCLE_MODULE.getValue()
                                         && item.ruleId == e.id).findFirst().orElse(null);
                     }
                     if (noticeExtendPO != null) {
                         noticeModuleVO.checkd = 1;
+                        noticeModuleVO.noticeExtId = noticeExtendPO.id;
+                        noticeIds_Lifecycle.add(noticeExtendPO.id);
                     }
                     noticeModuleVO.noticeId = noticeId;
                     noticeModuleVO.moduleType = ModuleTypeEnum.LIFECYCLE_MODULE;
                     noticeModuleVO.ruleId = Math.toIntExact(e.id);
                     noticeModuleVO.ruleName = e.ruleName;
-                    noticeModuleVOS.add(noticeModuleVO);
+                    noticeRule_Lifecycle.add(noticeModuleVO);
                 });
             }
         }
@@ -323,7 +331,12 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             });
         }
 
-        noticeDetailVO.noticeModuleVOS = noticeModuleVOS;
+        noticeDetailVO.noticeRule_DataCheck = noticeRule_DataCheck;
+        noticeDetailVO.noticeRule_BusinessFilter = noticeRule_BusinessFilter;
+        noticeDetailVO.noticeRule_Lifecycle = noticeRule_Lifecycle;
+        noticeDetailVO.noticeIds_DataCheck = noticeIds_DataCheck;
+        noticeDetailVO.noticeIds_BusinessFilter = noticeIds_BusinessFilter;
+        noticeDetailVO.noticeIds_Lifecycle = noticeIds_Lifecycle;
         noticeDetailVO.emailServerVOS = emailServerVOS;
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, noticeDetailVO);
     }
