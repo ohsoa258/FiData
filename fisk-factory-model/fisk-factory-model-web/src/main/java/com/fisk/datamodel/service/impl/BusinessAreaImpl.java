@@ -490,6 +490,8 @@ public class BusinessAreaImpl
                 data.remark = dto.remark;
                 data.tableId = id;
                 data.tableType = CreateTypeEnum.CREATE_DORIS.getValue();
+                //doris表默认勾选同步
+                data.openTransmission = true;
                 list.add(data);
             }
         }
@@ -499,6 +501,8 @@ public class BusinessAreaImpl
                 data.remark = dto.remark;
                 data.tableId = id;
                 data.tableType = CreateTypeEnum.CREATE_WIDE_TABLE.getValue();
+                //doris表默认勾选同步
+                data.openTransmission = true;
                 list.add(data);
             }
         }

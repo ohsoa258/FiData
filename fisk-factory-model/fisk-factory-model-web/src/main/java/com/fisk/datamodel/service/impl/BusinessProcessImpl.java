@@ -301,6 +301,7 @@ public class BusinessProcessImpl
             data.remark=dto.remark;
             data.tableId=id;
             data.tableType=CreateTypeEnum.CREATE_FACT.getValue();
+            data.openTransmission = dto.openTransmission;
             list.add(data);
         }
         tableHistory.addTableHistory(list);

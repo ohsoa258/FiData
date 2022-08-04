@@ -224,6 +224,7 @@ public class AtomicIndicatorsImpl
             for (DimensionPO item : dimensionPoList) {
                 AtomicIndicatorPushDTO dto = new AtomicIndicatorPushDTO();
                 dto.attributeType = FactAttributeEnum.DIMENSION_KEY.getValue();
+                dto.dimensionTableId = item.id;
                 dto.dimensionTableName = item.dimensionTabName;
                 dto.id = item.id;
                 data.add(dto);

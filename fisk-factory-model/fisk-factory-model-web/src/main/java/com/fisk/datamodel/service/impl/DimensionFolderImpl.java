@@ -394,6 +394,7 @@ public class DimensionFolderImpl
             data.remark=dto.remark;
             data.tableId=id;
             data.tableType=CreateTypeEnum.CREATE_DIMENSION.getValue();
+            data.openTransmission = dto.openTransmission;
             list.add(data);
         }
         tableHistory.addTableHistory(list);

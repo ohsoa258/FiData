@@ -671,7 +671,9 @@ public class DataFactoryImpl implements IDataFactory {
                 .collect(Collectors.toList()));
 
         matchingDetailDtoList(list, listAllTask, listAllTable);
-        return Objects.requireNonNull(list.stream().distinct().collect(Collectors.toList()));
+        List<NifiCustomWorkflowDetailDTO> detailDtoList = Objects.requireNonNull(list.stream().distinct().collect(Collectors.toList()));
+        // 填充workflowName、componentsName属性
+        return listDtoToDto(detailDtoList);
     }
 
     /**

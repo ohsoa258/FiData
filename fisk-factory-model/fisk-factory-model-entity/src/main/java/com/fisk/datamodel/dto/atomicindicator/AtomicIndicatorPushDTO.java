@@ -25,6 +25,11 @@ public class AtomicIndicatorPushDTO {
     public int factFieldLength;
 
     /**
+     * 关联维度表id
+     */
+    public long dimensionTableId;
+
+    /**
      * 关联维度名称
      */
     public String dimensionTableName;

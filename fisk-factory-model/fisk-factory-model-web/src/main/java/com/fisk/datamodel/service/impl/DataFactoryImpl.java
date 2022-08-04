@@ -57,6 +57,7 @@ public class DataFactoryImpl implements IDataFactory {
         }
         //查询维度
         QueryWrapper<DimensionPO> dimensionPoQueryWrapper=new QueryWrapper<>();
+        dimensionPoQueryWrapper.lambda().eq(DimensionPO::getTimeTable, false);
         List<DimensionPO> dimensionPoList=dimensionMapper.selectList(dimensionPoQueryWrapper);
         //查询事实
         QueryWrapper<FactPO> factPoQueryWrapper=new QueryWrapper<>();

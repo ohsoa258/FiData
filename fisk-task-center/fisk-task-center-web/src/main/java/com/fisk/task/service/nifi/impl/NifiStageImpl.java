@@ -127,6 +127,8 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
     public NifiStagePO saveNifiStage(String data, Acknowledgment acke) {
         log.info("阶段日志保存:" + data);
         NifiStagePO nifiStagePO = new NifiStagePO();
+        String pipleName = "";
+        String JobName = "";
         NifiStageMessageDTO nifiStageMessageDTO = new NifiStageMessageDTO();
         try {
             nifiStageMessageDTO = JSON.parseObject(data, NifiStageMessageDTO.class);
@@ -242,7 +244,10 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
 
             //----------------------------------------------
             HashMap<Integer, Object> taskMap = new HashMap<>();
+            //nifiStageMessageDTO.pipelTaskTraceId
+
             taskMap.put(DispatchLogEnum.taskcount.getValue(), nifiStageMessageDTO.counts);
+            taskMap.put(DispatchLogEnum.entrydate.getValue(), nifiStageMessageDTO.entryDate);
             if (!Objects.equals("运行成功", nifiStagePO.comment)) {
                 taskMap.put(DispatchLogEnum.taskcomment.getValue(), nifiStagePO.comment);
                 DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = new DispatchExceptionHandlingDTO();
@@ -258,6 +263,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
             stagekMap.put(DispatchLogEnum.stagestart.getValue(), nifiStagePO.queryPhase);
             stagekMap.put(DispatchLogEnum.stagestate.getValue(), pipelineTableLogPO.state);
             stagekMap.put(DispatchLogEnum.stagetransition.getValue(), nifiStagePO.transitionPhase);
+            stagekMap.put(DispatchLogEnum.entrydate.getValue(), nifiStageMessageDTO.entryDate);
             if (!StringUtils.isEmpty(nifiStageMessageDTO.pipelTaskTraceId)) {
                 iPipelTaskLog.savePipelTaskLog(nifiStageMessageDTO.pipelJobTraceId, nifiStageMessageDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiStagePO.componentId), String.valueOf(tableAccessId), type);
                 iPipelStageLog.savePipelTaskStageLog(nifiStageMessageDTO.pipelStageTraceId, nifiStageMessageDTO.pipelTaskTraceId, stagekMap);

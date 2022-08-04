@@ -139,13 +139,11 @@ public class DataModelTableImpl implements IDataModelTable {
         field.primaryKey=attributePo.isPrimaryKey;
         field.sourceTable=attributePo.sourceTableName;
         field.sourceField=attributePo.sourceFieldName;
-        if (attributePo.associateDimensionId !=0 && attributePo.associateDimensionFieldId !=0)
-        {
-            field.associatedDim=true;
-            field.associatedDimId=attributePo.associateDimensionId;
-            DimensionPO dimensionPo1=dimensionMapper.selectById(attributePo.associateDimensionId);
-            if (dimensionPo1==null)
-            {
+        if (attributePo.associateDimensionId != 0 || attributePo.associateDimensionFieldId != 0) {
+            field.associatedDim = true;
+            field.associatedDimId = attributePo.associateDimensionId;
+            DimensionPO dimensionPo1 = dimensionMapper.selectById(attributePo.associateDimensionId);
+            if (dimensionPo1 == null) {
                 return field;
             }
             field.associatedDimName = dimensionPo1.dimensionTabName;
@@ -279,11 +277,13 @@ public class DataModelTableImpl implements IDataModelTable {
                         field.fieldName = atomic.dimensionTableName.substring(4) + "key";
                         field.fieldType = "NVARCHAR";
                         field.fieldLength = 255;
+                        field.associatedDimId = (int) atomic.dimensionTableId;
+                        field.associatedDim = true;
                         break;
                     case 2:
-                        field.fieldName=atomic.atomicIndicatorName;
-                        field.fieldType="BIGINT";
-                        field.fieldLength=0;
+                        field.fieldName = atomic.atomicIndicatorName;
+                        field.fieldType = "BIGINT";
+                        field.fieldLength = 0;
                         //聚合逻辑
                         field.calculationLogic = atomic.aggregationLogic;
                         //聚合字段

@@ -556,7 +556,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             //调用生成批量insert语句方法
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             String sql = sqlBuilder.buildInsertImportData(dto);
-            log.info("模板批量添加sql:", sql);
+            ////log.info("模板批量添加sql:", sql);
             stat.addBatch(sql);
             int[] flatCount = stat.executeBatch();
             //关闭连接
@@ -564,7 +564,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             AbstractDbHelper.rollbackConnection(conn);
             return flatCount[0];
         } catch (SQLException e) {
-            log.error("templateDataSubmitStg:", e);
+            log.error("模板批量导入失败:", e);
             throw new FkException(ResultEnum.DATA_SUBMIT_ERROR, e);
         }
 
@@ -663,6 +663,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
 
     @Override
     public BathUploadMemberListVO importTemplateData(ImportParamDTO dto, MultipartFile file) {
+        //校验文件格式
         if (!file.getOriginalFilename().contains(".xlsx")) {
             throw new FkException(ResultEnum.FILE_NAME_ERROR);
         }
@@ -685,11 +686,12 @@ public class MasterDataServiceImpl implements IMasterDataService {
         result.setEntityId(dto.getEntityId());
         result.setEntityName(po.getDisplayName());
         String tableName = TableNameGenerateUtils.generateStgTableName(dto.getModelId(), dto.getEntityId());
-        //获取mdm表code数据列表
+        //获取mdm表code列名
         Optional<AttributeInfoDTO> codeColumn = list.stream().filter(e -> e.getName().equals(MdmTypeEnum.CODE.getName())).findFirst();
         if (!codeColumn.isPresent()) {
             throw new FkException(ResultEnum.CODE_NOT_EXIST);
         }
+        //获取mdm表code数据列表
         List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), codeColumn.get().getColumnName(), dto.getVersionId());
         String batchNumber = UUID.randomUUID().toString();
         //解析Excel数据集合
@@ -704,20 +706,25 @@ public class MasterDataServiceImpl implements IMasterDataService {
         IBuildCodeCommand buildCodeCommand = BuildCodeHelper.getCodeCommand();
         //用户id
         long userId = userHelper.getLoginUserInfo().id;
-        //创建工作簿
-        Workbook workbook;
+        List<AttributeInfoDTO> attributePoList = new ArrayList<>();
+        //获得总行数
+        int rowNum;
+        //列数
+        int columnNum;
+        Sheet sheet;
         try {
+            //创建工作簿
+            Workbook workbook;
             workbook = WorkbookFactory.create(file.getInputStream());
-            Sheet sheet = workbook.getSheetAt(0);
+            sheet = workbook.getSheetAt(0);
             if (sheet.getRow(0) == null) {
                 throw new FkException(ResultEnum.EMPTY_FORM);
             }
             //列数
-            int columnNum = sheet.getRow(0).getPhysicalNumberOfCells();
+            columnNum = sheet.getRow(0).getPhysicalNumberOfCells();
             //获得总行数
-            int rowNum = sheet.getPhysicalNumberOfRows();
+            rowNum = sheet.getPhysicalNumberOfRows();
             Row row1 = sheet.getRow(0);
-            List<AttributeInfoDTO> attributePoList = new ArrayList<>();
             //获取表头
             for (int col = 0; col < columnNum; col++) {
                 Cell cell = row1.getCell(col);
@@ -736,14 +743,19 @@ public class MasterDataServiceImpl implements IMasterDataService {
             if (list.size() != columnNum - 1) {
                 throw new FkException(ResultEnum.CHECK_TEMPLATE_IMPORT_FAILURE);
             }
-            result.setAttribute(attributePoList);
-            result.setCount(rowNum - 1);
-            //每个线程执行条数
-            final int threadHandleNumber = MdmConstants.THREAD_EXECUTE_NUMBER;
-            //线程数
-            int truncInt = (int) Math.rint((rowNum / threadHandleNumber));
-            int threadCount = rowNum % threadHandleNumber == 0 ? rowNum / threadHandleNumber : truncInt + 1;
-            final CountDownLatch countDownLatch = new CountDownLatch(threadCount);
+        } catch (Exception e) {
+            log.error("导入模板错误:", e);
+            throw new FkException(ResultEnum.CHECK_TEMPLATE_IMPORT_FAILURE);
+        }
+        result.setAttribute(attributePoList);
+        result.setCount(rowNum - 1);
+        //每个线程执行条数
+        final int threadHandleNumber = MdmConstants.THREAD_EXECUTE_NUMBER;
+        //计算线程数
+        int truncInt = (int) Math.rint((rowNum / threadHandleNumber));
+        int threadCount = rowNum % threadHandleNumber == 0 ? rowNum / threadHandleNumber : truncInt + 1;
+        final CountDownLatch countDownLatch = new CountDownLatch(threadCount);
+        try {
             for (int thread = 0; thread < threadCount; thread++) {
                 int start = thread * threadHandleNumber + 1;
                 int end = (thread + 1) * threadHandleNumber > rowNum ? rowNum : ((thread + 1) * threadHandleNumber) + 1;
@@ -814,26 +826,26 @@ public class MasterDataServiceImpl implements IMasterDataService {
             }
             //等待所有线程执行完毕
             countDownLatch.await();
-            int flatCount = 0;
-            if (!CollectionUtils.isEmpty(objectArrayList)) {
-                flatCount = templateDataSubmitStg(objectArrayList, tableName, batchNumber, dto.getVersionId(), userId, ImportTypeEnum.EXCEL_IMPORT, false);
-            }
-            //添加批次
-            setStgBatch(batchNumber, dto.getEntityId(), dto.getVersionId(), result.getCount(), result.getCount() - flatCount, addCount.get(), updateCount.get(), flatCount > 0 ? 0 : 1);
-            //校验重复code
-            verifyRepeatCode(tableName, batchNumber);
-            result.setMembers(objectArrayList);
-            result.setAddCount(addCount.get());
-            result.setUpdateCount(updateCount.get());
-            List<BathUploadMemberVO> bathUploadMemberVOList = new ArrayList<>();
-            bathUploadMemberVOList.add(result);
-            listVo.setKey(batchNumber);
-            listVo.setList(bathUploadMemberVOList);
-            return listVo;
         } catch (Exception e) {
-            log.error("importTemplateData", e);
-            throw new FkException(ResultEnum.CHECK_TEMPLATE_IMPORT_FAILURE, e);
+            log.error("解析Excel表格存在错误格式数据:", e);
+            throw new FkException(ResultEnum.EXISTS_INCORRECT_DATA);
         }
+        if (CollectionUtils.isEmpty(objectArrayList)) {
+            throw new FkException(ResultEnum.FORM_NO_VALID_DATA);
+        }
+        int flatCount = templateDataSubmitStg(objectArrayList, tableName, batchNumber, dto.getVersionId(), userId, ImportTypeEnum.EXCEL_IMPORT, false);
+        //添加批次
+        setStgBatch(batchNumber, dto.getEntityId(), dto.getVersionId(), result.getCount(), result.getCount() - flatCount, addCount.get(), updateCount.get(), flatCount > 0 ? 0 : 1);
+        //校验重复code
+        verifyRepeatCode(tableName, batchNumber);
+        result.setMembers(objectArrayList);
+        result.setAddCount(addCount.get());
+        result.setUpdateCount(updateCount.get());
+        List<BathUploadMemberVO> bathUploadMemberVOList = new ArrayList<>();
+        bathUploadMemberVOList.add(result);
+        listVo.setKey(batchNumber);
+        listVo.setList(bathUploadMemberVOList);
+        return listVo;
     }
 
     @Override
