@@ -9,6 +9,8 @@ import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.redis.RedisKeyBuild;
+import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
@@ -67,6 +69,8 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
     private DataModelClient dataModelClient;
     @Resource
     PublishTaskClient publishTaskClient;
+    @Resource
+    RedisUtil redisUtil;
 
 
     @Override
@@ -268,6 +272,9 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                 nifiCustomWorkList.nifiCustomWorkflowId = model.workflowId;
                 //删除nifi组件
                 publishTaskClient.deleteCustomWorkNifiFlow(nifiCustomWorkList);
+
+                // 删除redis中的DAG图
+                redisUtil.del(RedisKeyBuild.buildDispatchStructureKey(id));
             }
         } catch (Exception e) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
