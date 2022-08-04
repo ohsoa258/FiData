@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author JianWenYang
@@ -28,7 +29,14 @@ public class TableHistoryImpl
     @Override
     public ResultEnum addTableHistory(List<TableHistoryDTO> dto)
     {
-
+        dto.stream().filter(Objects::nonNull)
+                .forEach(e -> {
+                    if (e.openTransmission) {
+                        e.remark = e.remark + " --> 同步";
+                    } else {
+                        e.remark = e.remark + " --> 未同步";
+                    }
+                });
         return this.saveBatch(TableHistoryMap.INSTANCES.dtoListToPoList(dto))?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
