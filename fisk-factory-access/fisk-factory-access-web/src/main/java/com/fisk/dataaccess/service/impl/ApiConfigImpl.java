@@ -398,13 +398,15 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     public ResultEnum generateAppPdfDoc(List<GenerateDocDTO> list, HttpServletResponse response) {
 
         List<ApiConfigDTO> dtoList = new ArrayList<>();
-        list.forEach(generateDocDTO -> {
-            ApiConfigDTO data = getData(generateDocDTO.apiId);
-            if (data != null & generateDocDTO.tableIsEmpty) {
-                data.pushDataJson = generateDocDTO.pushDataJson;
-                dtoList.add(data);
-            }
-        });
+        // 去重
+        list.stream().filter(Objects::nonNull).distinct().collect(Collectors.toList())
+                .forEach(generateDocDTO -> {
+                    ApiConfigDTO data = getData(generateDocDTO.apiId);
+                    if (data != null & generateDocDTO.tableIsEmpty) {
+                        data.pushDataJson = generateDocDTO.pushDataJson;
+                        dtoList.add(data);
+                    }
+                });
 
         // api信息转换为文档实体
         ApiDocDTO docDTO = createApiDocDTO(dtoList);
