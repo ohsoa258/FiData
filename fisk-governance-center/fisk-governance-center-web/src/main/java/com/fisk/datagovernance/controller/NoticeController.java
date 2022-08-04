@@ -61,7 +61,7 @@ public class NoticeController {
     }
 
     @ApiOperation("查询通知下的规则")
-    @GetMapping("/getNoticeRuleInfo")
+    @GetMapping("/getNoticeRuleInfo/{id}")
     public ResultEntity<NoticeDetailVO> getNoticeRuleInfo(@PathVariable("id") int id) {
         return service.getNoticeRuleInfo(id);
     }
