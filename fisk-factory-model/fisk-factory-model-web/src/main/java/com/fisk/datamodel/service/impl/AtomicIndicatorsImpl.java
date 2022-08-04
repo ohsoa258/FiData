@@ -281,6 +281,7 @@ public class AtomicIndicatorsImpl
             dto.factFieldType = factAttributePo.factFieldType;
             dto.factFieldLength = factAttributePo.factFieldLength;
             dto.id = item.id;
+            dto.dimensionTableId = item.factAttributeId;
             data.add(dto);
         }
         return data;

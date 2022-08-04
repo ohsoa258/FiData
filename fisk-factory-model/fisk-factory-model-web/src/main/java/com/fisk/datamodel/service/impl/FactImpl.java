@@ -359,7 +359,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
                     String fieldTypeLength = field.factFieldLength == 0 ? "" : "(" + field.factFieldLength + ")";
                     column.dataType = field.factFieldType + fieldTypeLength;
                 } else if (field.attributeType == FactAttributeEnum.DIMENSION_KEY.getValue()) {
-                    column.name = field.dimensionTableName + "_key";
+                    column.name = field.factFieldName + "key";
                     column.qualifiedName = table.qualifiedName + "_" + field.attributeType + "_" + field.id;
                     column.dataType = "VARCHAR(50)";
                 } else if (field.attributeType == FactAttributeEnum.MEASURE.getValue()) {

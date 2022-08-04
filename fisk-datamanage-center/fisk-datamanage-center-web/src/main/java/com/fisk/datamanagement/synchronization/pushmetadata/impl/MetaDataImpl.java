@@ -160,7 +160,7 @@ public class MetaDataImpl implements IMetaData {
 
             List<SourceTableDTO> list;
 
-            ResultEntity<List<DataAccessSourceTableDTO>> odsResult = null;
+            ResultEntity<List<DataAccessSourceTableDTO>> odsResult = new ResultEntity<>();
 
             DataSourceDTO dataSourceInfo = getDataSourceInfo(dbName);
             if (dataSourceInfo == null) {
@@ -307,8 +307,61 @@ public class MetaDataImpl implements IMetaData {
                 inputDto.guid = po.atlasGuid;
                 inputList.add(inputDto);
                 fieldName = first3.get().fieldName;
-            } else if (dataSourceId == DataSourceConfigEnum.DMP_ODS.getValue()) {
+            } else if (dataSourceId == DataSourceConfigEnum.DMP_OLAP.getValue()) {
+                //业务限定
+                if (first1.get().attributeType == 0) {
+                    String qualifiedName = dbQualifiedName + "_" + DataModelTableTypeEnum.DW_FACT.getValue() + "_" + dto.id + "_" + first1.get().id;
+                    QueryWrapper<MetadataMapAtlasPO> queryWrapper1 = new QueryWrapper<>();
+                    queryWrapper1.lambda().eq(MetadataMapAtlasPO::getQualifiedName, qualifiedName);
+                    MetadataMapAtlasPO po = metadataMapAtlasMapper.selectOne(queryWrapper1);
+                    if (po == null) {
+                        continue;
+                    }
+                    inputDto.guid = po.atlasGuid;
+                    inputList.add(inputDto);
+                    fieldName = "doris_" + first1.get().fieldName;
+                }
+                //关联维度
+                else if (first1.get().attributeType == 1) {
+                    ResultEntity<Object> dataModelTable = dataModelClient.getDataModelTable(1);
+                    if (dataModelTable.code != ResultEnum.SUCCESS.getCode()) {
+                        continue;
+                    }
+                    List<SourceTableDTO> result = JSON.parseArray(JSON.toJSONString(dataModelTable.data), SourceTableDTO.class);
+                    Optional<SourceTableDTO> first2 = result.stream().filter(e -> dto.tableName.equals(e.tableName)).findFirst();
+                    if (!first2.isPresent()) {
+                        continue;
+                    }
 
+                    Optional<SourceFieldDTO> first3 = first2.get().fieldList.stream().filter(e -> e.fieldName.equals(first1.get().fieldName) && e.associatedDim == true).findFirst();
+                    if (!first3.isPresent()) {
+                        continue;
+                    }
+
+                    String qualifiedName = dbQualifiedName + "_" + DataModelTableTypeEnum.DW_FACT.getValue() + "_" + dto.id + "_" + first3.get().id;
+                    QueryWrapper<MetadataMapAtlasPO> queryWrapper1 = new QueryWrapper<>();
+                    queryWrapper1.lambda().eq(MetadataMapAtlasPO::getQualifiedName, qualifiedName);
+                    MetadataMapAtlasPO po = metadataMapAtlasMapper.selectOne(queryWrapper1);
+                    if (po == null) {
+                        continue;
+                    }
+                    inputDto.guid = po.atlasGuid;
+                    inputList.add(inputDto);
+                    fieldName = "doris_" + first1.get().fieldName;
+                }
+                //原子指标
+                else {
+                    String qualifiedName = dbQualifiedName + "_" + DataModelTableTypeEnum.DW_FACT.getValue() + "_" + dto.id + "_" + first1.get().sourceTable;
+                    QueryWrapper<MetadataMapAtlasPO> queryWrapper1 = new QueryWrapper<>();
+                    queryWrapper1.lambda().eq(MetadataMapAtlasPO::getQualifiedName, qualifiedName);
+                    MetadataMapAtlasPO po = metadataMapAtlasMapper.selectOne(queryWrapper1);
+                    if (po == null) {
+                        continue;
+                    }
+                    inputDto.guid = po.atlasGuid;
+                    inputList.add(inputDto);
+                    fieldName = first1.get().calculationLogic + "(" + first1.get().sourceField + ")";
+                }
             }
 
             //解析数据
@@ -329,10 +382,7 @@ public class MetaDataImpl implements IMetaData {
                             item.atlasGuid);
                 }
             }
-
         }
-
-
     }
 
     @Override

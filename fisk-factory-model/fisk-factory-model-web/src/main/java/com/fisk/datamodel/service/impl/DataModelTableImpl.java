@@ -288,6 +288,8 @@ public class DataModelTableImpl implements IDataModelTable {
                         field.calculationLogic = atomic.aggregationLogic;
                         //聚合字段
                         field.sourceField = atomic.aggregatedField;
+                        //聚合字段id
+                        field.sourceTable = String.valueOf(atomic.dimensionTableId);
                     default:
                         break;
                 }
