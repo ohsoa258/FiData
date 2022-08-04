@@ -225,12 +225,16 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
                     .in(DataCheckPO::getTemplateId, templateIds)
                     .orderByAsc(DataCheckPO::getRuleSort);
             List<DataCheckPO> dataCheckPOS = dataCheckMapper.selectList(dataCheckPOQueryWrapper);
-            if (CollectionUtils.isNotEmpty(dataCheckPOS) && CollectionUtils.isNotEmpty(noticeExtendPOS)) {
+            if (CollectionUtils.isNotEmpty(dataCheckPOS)) {
                 dataCheckPOS.forEach(e -> {
                     NoticeModuleVO noticeModuleVO = new NoticeModuleVO();
-                    NoticeExtendPO noticeExtendPO = noticeExtendPOS.stream().filter
-                            (item -> item.moduleType == ModuleTypeEnum.DATACHECK_MODULE.getValue()
-                                    && item.ruleId == e.id).findFirst().orElse(null);
+                    NoticeExtendPO noticeExtendPO =null;
+                    if (CollectionUtils.isNotEmpty(noticeExtendPOS))
+                    {
+                        noticeExtendPO=  noticeExtendPOS.stream().filter
+                                (item -> item.moduleType == ModuleTypeEnum.DATACHECK_MODULE.getValue()
+                                        && item.ruleId == e.id).findFirst().orElse(null);
+                    }
                     if (noticeExtendPO != null) {
                         noticeModuleVO.checkd = 1;
                     }
@@ -253,12 +257,16 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
                     .in(BusinessFilterPO::getTemplateId, templateIds)
                     .orderByAsc(BusinessFilterPO::getRuleSort);
             List<BusinessFilterPO> businessFilterPOS = businessFilterMapper.selectList(businessFilterPOQueryWrapper);
-            if (CollectionUtils.isNotEmpty(businessFilterPOS) && CollectionUtils.isNotEmpty(noticeExtendPOS)) {
+            if (CollectionUtils.isNotEmpty(businessFilterPOS)) {
                 businessFilterPOS.forEach(e -> {
                     NoticeModuleVO noticeModuleVO = new NoticeModuleVO();
-                    NoticeExtendPO noticeExtendPO = noticeExtendPOS.stream().filter
-                            (item -> item.moduleType == ModuleTypeEnum.BIZCHECK_MODULE.getValue()
-                                    && item.ruleId == e.id).findFirst().orElse(null);
+                    NoticeExtendPO noticeExtendPO =null;
+                    if (CollectionUtils.isNotEmpty(noticeExtendPOS))
+                    {
+                        noticeExtendPO=  noticeExtendPOS.stream().filter
+                                (item -> item.moduleType == ModuleTypeEnum.BIZCHECK_MODULE.getValue()
+                                        && item.ruleId == e.id).findFirst().orElse(null);
+                    }
                     if (noticeExtendPO != null) {
                         noticeModuleVO.checkd = 1;
                     }
@@ -283,9 +291,13 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             if (CollectionUtils.isNotEmpty(lifecyclePOS) && CollectionUtils.isNotEmpty(noticeExtendPOS)) {
                 lifecyclePOS.forEach(e -> {
                     NoticeModuleVO noticeModuleVO = new NoticeModuleVO();
-                    NoticeExtendPO noticeExtendPO = noticeExtendPOS.stream().filter
-                            (item -> item.moduleType == ModuleTypeEnum.LIFECYCLE_MODULE.getValue()
-                                    && item.ruleId == e.id).findFirst().orElse(null);
+                    NoticeExtendPO noticeExtendPO =null;
+                    if (CollectionUtils.isNotEmpty(noticeExtendPOS))
+                    {
+                        noticeExtendPO=  noticeExtendPOS.stream().filter
+                                (item -> item.moduleType == ModuleTypeEnum.LIFECYCLE_MODULE.getValue()
+                                        && item.ruleId == e.id).findFirst().orElse(null);
+                    }
                     if (noticeExtendPO != null) {
                         noticeModuleVO.checkd = 1;
                     }
