@@ -158,7 +158,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         StringBuilder str = new StringBuilder();
         str.append("SELECT COUNT(*) AS totalNum FROM ");
         str.append("\"" + tableName + "\"");
-        ////str.append(" WHERE fidata_del_flag=1 ");
+        str.append(" WHERE 1=1 ");
         if (!StringUtils.isEmpty(queryConditions)) {
             str.append(queryConditions);
         }
