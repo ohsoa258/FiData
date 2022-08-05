@@ -304,7 +304,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
                     break;
                 case LIKE:
                 case NOT_LIKE:
-                    str.append(" and " + item.columnName + " " + operatorEnum.getValue() + "'" + item.columnValue + "%'");
+                    str.append(" and " + item.columnName + " " + operatorEnum.getValue() + "'%" + item.columnValue + "%'");
                     break;
                 default:
                     continue;
