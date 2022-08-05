@@ -118,7 +118,8 @@ public class DataSynchronizationUtils {
         }).collect(Collectors.joining(","));
 
         stringBuilder.append("SELECT fidata_id, " + columnName + "  FROM " + mdmTableName);
-        stringBuilder.append(" WHERE fidata_del_flag = 1 AND " + codeColumnName.get(0));
+        stringBuilder.append(" WHERE " + codeColumnName.get(0));
+        ////stringBuilder.append(" WHERE fidata_del_flag = 1 AND " + codeColumnName.get(0));
         stringBuilder.append(" IN(" + codes + ")");
         // TODO 添加版本过滤条件
         stringBuilder.append(" and fidata_version_id=" + resultList.get(0).get("fidata_version_id"));
@@ -322,7 +323,7 @@ public class DataSynchronizationUtils {
                 data.put(attribute.getName(), item.get(attribute.getColumnName()).toString());
             }
             data.put("fidata_mdm_fidata_id", first.get().get("fidata_id"));
-            data.put("fidata_del_flag", "1");
+            //data.put("fidata_del_flag", "1");
             data.put("fidata_version_id", item.get("fidata_version_id"));
             Date date = new Date();
             data.put("fidata_create_time", CommonMethods.getFormatDate(date));
@@ -456,7 +457,7 @@ public class DataSynchronizationUtils {
         str.append("UPDATE " + stgTableName);
         str.append(" SET fidata_status = '" + SyncStatusTypeEnum.SUBMISSION_FAILED.getValue()).append("'");
         str.append(" WHERE fidata_batch_code ='" + batchCode + "'");
-        str.append(" AND fidata_del_flag = 1 ");
+        //str.append(" AND fidata_del_flag = 1 ");
 
         PreparedStatement statement = null;
         try {

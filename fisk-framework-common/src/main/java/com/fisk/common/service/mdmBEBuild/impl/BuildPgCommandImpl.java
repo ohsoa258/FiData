@@ -113,7 +113,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append("select " + dto.getColumnNames());
         str.append(" from ");
         str.append("\"" + dto.getTableName() + "\"");
-        str.append("where fidata_del_flag = 1 and fidata_version_id = " + dto.getVersionId());
+        str.append("where fidata_version_id = " + dto.getVersionId());
         if (!StringUtils.isEmpty(dto.getConditions())) {
             str.append(dto.getConditions());
         }
@@ -149,7 +149,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         StringBuilder str = new StringBuilder();
         str.append("select distinct ");
         str.append(selectColumnName + " as columns from " + tableName);
-        str.append(" where fidata_del_flag = 1 and fidata_version_id=" + versionId);
+        str.append(" where fidata_version_id=" + versionId);
         return str.toString();
     }
 
@@ -158,7 +158,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         StringBuilder str = new StringBuilder();
         str.append("SELECT COUNT(*) AS totalNum FROM ");
         str.append("\"" + tableName + "\"");
-        str.append(" WHERE fidata_del_flag=1 ");
+        ////str.append(" WHERE fidata_del_flag=1 ");
         if (!StringUtils.isEmpty(queryConditions)) {
             str.append(queryConditions);
         }
@@ -197,7 +197,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append("select " + code + " as code,");
         str.append(name + " as name ");
         str.append(" from " + tableName);
-        str.append(" where fidata_del_flag=1 and fidata_version_id=" + versionId);
+        str.append(" where fidata_version_id=" + versionId);
         return str.toString();
     }
 
