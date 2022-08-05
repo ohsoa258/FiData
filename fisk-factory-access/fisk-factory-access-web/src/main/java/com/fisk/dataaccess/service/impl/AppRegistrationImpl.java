@@ -20,9 +20,7 @@ import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
+import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
@@ -831,6 +829,39 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         tableRuleInfoDto.fieldRules = fieldRules;
 
         return tableRuleInfoDto;
+    }
+
+    @Override
+    public List<FiDataTableMetaDataDTO> getFiDataTableMetaData(FiDataTableMetaDataReqDTO dto) {
+
+        if (CollectionUtils.isEmpty(dto.getTableUniques())) {
+            return null;
+        }
+
+        return dto.getTableUniques().keySet().stream()
+                .map(tableBusinessTypeEnum -> {
+                    // 表信息
+                    FiDataTableMetaDataDTO tableMetaDataDto = new FiDataTableMetaDataDTO();
+                    TableAccessNonDTO data = tableAccessImpl.getData(Long.parseLong(tableBusinessTypeEnum));
+                    if (data == null || CollectionUtils.isEmpty(data.list)) {
+                        return null;
+                    }
+                    AppRegistrationPO app = this.query().eq("id", data.appId).select("app_abbreviation").one();
+                    tableMetaDataDto.id = tableBusinessTypeEnum;
+                    tableMetaDataDto.name = "ods_" + (app.appAbbreviation == null ? "" : app.appAbbreviation) + data.tableName;
+                    tableMetaDataDto.nameAlias = data.tableName;
+
+                    // 字段信息
+                    tableMetaDataDto.fieldList = data.list.stream().filter(Objects::nonNull).map(field -> {
+                        FiDataTableMetaDataDTO fieldMetaDataDto = new FiDataTableMetaDataDTO();
+                        fieldMetaDataDto.id = String.valueOf(field.id);
+                        fieldMetaDataDto.name = field.fieldName;
+                        fieldMetaDataDto.nameAlias = field.fieldName;
+                        return fieldMetaDataDto;
+                    }).collect(Collectors.toList());
+
+                    return tableMetaDataDto;
+                }).collect(Collectors.toList());
     }
 
     /**

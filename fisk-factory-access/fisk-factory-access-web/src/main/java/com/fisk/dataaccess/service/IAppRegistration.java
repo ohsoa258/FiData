@@ -9,6 +9,8 @@ import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
@@ -216,4 +218,12 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return 查询结果
      */
     TableRuleInfoDTO buildTableRuleInfo(TableRuleParameterDTO dto);
+
+    /**
+     * 根据表信息/字段ID,获取表/字段基本信息
+     *
+     * @param dto dto
+     * @return 查询结果
+     */
+    List<FiDataTableMetaDataDTO> getFiDataTableMetaData(FiDataTableMetaDataReqDTO dto);
 }

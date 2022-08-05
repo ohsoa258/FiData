@@ -279,4 +279,14 @@ public interface DataAccessClient {
     @ApiOperation("刷新数据接入结构")
     @PostMapping("/appRegistration/setDataStructure")
     ResultEntity<Object> setDataAccessStructure(@RequestBody FiDataMetaDataReqDTO dto);
+
+    /**
+     * 根据表信息/字段ID,获取表/字段基本信息
+     *
+     * @param dto dto
+     * @return 查询结果
+     */
+    @PostMapping("/appRegistration/getFiDataTableMetaData")
+    @ApiOperation(value = "根据表信息/字段ID,获取表/字段基本信息")
+    ResultEntity<List<FiDataTableMetaDataDTO>> getFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto);
 }
