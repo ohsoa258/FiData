@@ -49,6 +49,7 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
             if (next.getKey() == DispatchLogEnum.entrydate.getValue()) {
                 try {
                     entryDate = sdf.parse(next.getValue().toString());
+                    continue;
                 } catch (Exception e) {
                     log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
                     throw new FkException(ResultEnum.ERROR);
