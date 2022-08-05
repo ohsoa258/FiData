@@ -839,15 +839,15 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
 
         return dto.getTableUniques().keySet().stream()
-                .map(tableBusinessTypeEnum -> {
+                .map(e -> {
                     // 表信息
                     FiDataTableMetaDataDTO tableMetaDataDto = new FiDataTableMetaDataDTO();
-                    TableAccessNonDTO data = tableAccessImpl.getData(Long.parseLong(tableBusinessTypeEnum));
+                    TableAccessNonDTO data = tableAccessImpl.getData(Long.parseLong(e));
                     if (data == null || CollectionUtils.isEmpty(data.list)) {
                         return null;
                     }
                     AppRegistrationPO app = this.query().eq("id", data.appId).select("app_abbreviation").one();
-                    tableMetaDataDto.id = tableBusinessTypeEnum;
+                    tableMetaDataDto.id = e;
                     tableMetaDataDto.name = "ods_" + (app.appAbbreviation == null ? "" : app.appAbbreviation) + data.tableName;
                     tableMetaDataDto.nameAlias = data.tableName;
 
