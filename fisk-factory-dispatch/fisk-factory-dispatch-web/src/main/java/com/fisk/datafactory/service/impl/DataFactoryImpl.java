@@ -23,6 +23,7 @@ import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
 import com.fisk.datafactory.service.IDataFactory;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
+import com.fisk.task.dto.dispatchlog.PipelLogVO;
 import com.fisk.task.dto.dispatchlog.PipelStageLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 import lombok.extern.slf4j.Slf4j;
@@ -465,6 +466,11 @@ public class DataFactoryImpl implements IDataFactory {
     public ResultEntity<List<NifiCustomWorkflowDetailDTO>> getNifiPortTaskLastListById(Long id) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, buildPipeEndDto(id));
+    }
+
+    @Override
+    public ResultEntity<List<PipelLogVO>> getPipeLog(PipelLogVO dto) {
+        return publishTaskClient.getPipelLogVos(dto);
     }
 
     @Override

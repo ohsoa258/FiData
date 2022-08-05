@@ -13,7 +13,7 @@ import java.util.List;
  */
 public interface PipelJobLogMapper extends FKBaseMapper<PipelJobLogPO> {
 
-    @Select("select * from tb_pipel_job_log where pipel_id=#{pipelJobLog.pipelId} and del_flag=1 ORDER BY create_time desc limit 100")
+    @Select("select * from tb_pipel_job_log where pipel_id=#{pipelJobLog.pipelId} and pipelTraceId=#{pipelJobLog.pipelTraceId} and del_flag=1 ORDER BY create_time desc limit 100")
     List<PipelJobLogVO> getPipelJobLogVo(@Param("pipelJobLog") PipelJobLogVO pipelJobLog);
 
 }

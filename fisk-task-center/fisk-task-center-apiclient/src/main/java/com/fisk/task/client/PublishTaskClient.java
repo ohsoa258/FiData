@@ -11,6 +11,7 @@ import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
+import com.fisk.task.dto.dispatchlog.PipelLogVO;
 import com.fisk.task.dto.dispatchlog.PipelStageLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 import com.fisk.task.dto.model.EntityDTO;
@@ -308,7 +309,7 @@ public interface PublishTaskClient {
     public ResultEntity<List<PipelineTableLogVO>> getPipelineTableLog(@RequestParam("data") String data, @RequestParam("pipelineTableQuery") String pipelineTableQuery);
 
     /**
-     * 管道日志
+     * 管道job日志
      *
      * @return
      */
@@ -346,5 +347,14 @@ public interface PublishTaskClient {
      */
     @PostMapping("/publishTask/metaData")
     ResultEntity<Object> metaData(@RequestBody BuildMetaDataDTO dto);
+
+    /**
+     * 获取管道日志
+     *
+     * @param pipelLog pipelLog
+     * @return 执行结果
+     */
+    @PostMapping("/dispatchLog/getPipelLogVos")
+    public ResultEntity<List<PipelLogVO>> getPipelLogVos(@RequestBody PipelLogVO pipelLog);
 
 }

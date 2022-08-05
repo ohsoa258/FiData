@@ -2,9 +2,11 @@ package com.fisk.task.controller;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
+import com.fisk.task.dto.dispatchlog.PipelLogVO;
 import com.fisk.task.dto.dispatchlog.PipelStageLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
+import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelStageLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import lombok.extern.slf4j.Slf4j;
@@ -26,9 +28,25 @@ public class DispatchLogController {
     IPipelTaskLog iPipelTaskLog;
     @Resource
     IPipelStageLog iPipelStageLog;
+    @Resource
+    IPipelLog iPipelLog;
 
     /**
      * 获取管道日志
+     *
+     * @param pipelLog pipelLog
+     * @return 执行结果
+     */
+    @PostMapping("/getPipelLogVos")
+    public ResultEntity<List<PipelLogVO>> getPipelLogVos(@RequestBody PipelLogVO pipelLog) {
+        ResultEntity<List<PipelLogVO>> objectResultEntity = new ResultEntity<>();
+        objectResultEntity.data = iPipelLog.getPipelLogVos(pipelLog);
+        objectResultEntity.code = 0;
+        return objectResultEntity;
+    }
+
+    /**
+     * 获取job日志
      *
      * @param pipelJobLogs pipelJobLogs
      * @return 执行结果

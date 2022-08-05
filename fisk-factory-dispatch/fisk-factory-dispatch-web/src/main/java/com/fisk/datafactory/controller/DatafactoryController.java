@@ -9,6 +9,7 @@ import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.PipeDagDTO;
 import com.fisk.datafactory.service.IDataFactory;
 import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
+import com.fisk.task.dto.dispatchlog.PipelLogVO;
 import com.fisk.task.dto.dispatchlog.PipelStageLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 import io.swagger.annotations.ApiOperation;
@@ -66,8 +67,14 @@ public class DatafactoryController {
         return service.redirect(dto);
     }
 
-    @PostMapping("/getPipeJobLog")
+    @PostMapping("/getPipeLog")
     @ApiOperation(value = "获取管道日志")
+    public ResultEntity<List<PipelLogVO>> getPipeJobLog(@RequestBody PipelLogVO dto) {
+        return service.getPipeLog(dto);
+    }
+
+    @PostMapping("/getPipeJobLog")
+    @ApiOperation(value = "获取管道job日志")
     public ResultEntity<List<PipelJobLogVO>> getPipeJobLog(@RequestBody List<PipelJobLogVO> dto) {
         return service.getPipeJobLog(dto);
     }
