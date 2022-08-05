@@ -255,6 +255,31 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return appDataSourceMapper.updateById(modelDataSource) > 0 ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResultEnum editAppBasicInfo(AppRegistrationEditDTO dto) {
+
+        // 判断名称是否重复
+        QueryWrapper<AppRegistrationPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(AppRegistrationPO::getAppName, dto.appName);
+        AppRegistrationPO registrationPo = mapper.selectOne(queryWrapper);
+        if (registrationPo != null && registrationPo.id != dto.id) {
+            return ResultEnum.DATAACCESS_APPNAME_ERROR;
+        }
+
+        // 1.1非空判断
+        AppRegistrationPO model = this.getById(dto.getId());
+        if (model == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        // 1.2dto->po
+        AppRegistrationPO po = dto.toEntity(AppRegistrationPO.class);
+
+        // 1.3修改tb_app_registration数据
+        return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+    }
+
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEntity<NifiVO> deleteAppRegistration(long id) {

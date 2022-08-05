@@ -57,6 +57,13 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
     ResultEnum updateAppRegistration(AppRegistrationEditDTO dto);
 
     /**
+     * 修改应用基本信息
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum editAppBasicInfo(AppRegistrationEditDTO dto);
+
+    /**
      * 删除
      *
      * @param id 请求参数

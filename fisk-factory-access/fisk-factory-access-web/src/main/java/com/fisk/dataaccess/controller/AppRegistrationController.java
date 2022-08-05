@@ -101,6 +101,12 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(service.updateAppRegistration(dto));
     }
 
+    @PutMapping("/editAppBasicInfo")
+    @ApiOperation(value = "修改应用基本信息")
+    public ResultEntity<Object> editAppBasicInfo(@Validated @RequestBody AppRegistrationEditDTO dto) {
+        return ResultEntityBuild.build(service.editAppBasicInfo(dto));
+    }
+
     @DeleteMapping("/delete/{id}")
     @ApiOperation(value = "删除")
     public ResultEntity<Object> deleteData(
