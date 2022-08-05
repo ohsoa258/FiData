@@ -421,6 +421,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 .eq("del_flag", 1)
                 .one();
         AppDataSourceDTO appDataSourceDTO = AppDataSourceMap.INSTANCES.poToDto(modelDataSource);
+        // 数据库密码不展示
+        appDataSourceDTO.connectPwd = "";
         appRegistrationDTO.setAppDatasourceDTO(appDataSourceDTO);
 
         return appRegistrationDTO;
