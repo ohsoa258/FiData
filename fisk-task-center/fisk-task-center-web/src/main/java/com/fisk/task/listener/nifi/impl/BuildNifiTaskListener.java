@@ -763,6 +763,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             case POSTGRESQL:
                 dto.driverLocation = NifiConstants.DriveConstants.POSTGRESQL_DRIVE_PATH;
                 break;
+            case ORACLE:
+                dto.driverLocation = NifiConstants.DriveConstants.ORACLE_DRIVE_PATH;
+                break;
             default:
                 break;
         }

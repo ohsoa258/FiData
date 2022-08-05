@@ -884,6 +884,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         String sqlserverType = "sqlserver";
         String postgresqlType = "postgresql";
         String ftpType = "ftp";
+        String oracleType = "oracle";
         // 增量
         int syncModel = 4;
         DataAccessConfigDTO dto = new DataAccessConfigDTO();
@@ -925,6 +926,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             sourceDsConfig.setType(DriverTypeEnum.POSTGRESQL);
         } else if (Objects.equals(modelDataSource.driveType, ftpType)) {
             dto.ftpConfig = buildFtpConfig(ftpConfig, modelDataSource, modelAccess);
+        } else if (Objects.equals(modelDataSource.driveType, oracleType)) {
+            sourceDsConfig.setType(DriverTypeEnum.ORACLE);
         }
         sourceDsConfig.setUser(modelDataSource.getConnectAccount());
         sourceDsConfig.setPassword(modelDataSource.getConnectPwd());
