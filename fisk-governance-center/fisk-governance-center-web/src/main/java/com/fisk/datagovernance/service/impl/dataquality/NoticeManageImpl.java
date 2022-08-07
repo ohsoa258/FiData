@@ -97,7 +97,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             List<NoticeExtendPO> noticeExtendPOS = new ArrayList<>();
             dto.noticeExtends.forEach(t -> {
                 NoticeExtendPO noticeExtendPO = new NoticeExtendPO();
-                noticeExtendPO.setNoticeId(t.noticeId);
+                noticeExtendPO.setNoticeId(Math.toIntExact(noticePO.id));
                 noticeExtendPO.setModuleType(t.moduleType.getValue());
                 noticeExtendPO.setRuleId(t.ruleId);
                 noticeExtendPOS.add(noticeExtendPO);
