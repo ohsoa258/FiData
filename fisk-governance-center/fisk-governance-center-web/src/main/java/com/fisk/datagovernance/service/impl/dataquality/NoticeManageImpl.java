@@ -242,7 +242,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
                     if (noticeExtendPO != null) {
                         noticeModuleVO.checkd = 1;
                         noticeModuleVO.noticeExtId = noticeExtendPO.id;
-                        noticeIds_DataCheck.add(noticeExtendPO.id);
+                        noticeIds_DataCheck.add(e.id);
                     }
                     noticeModuleVO.noticeId = noticeId;
                     noticeModuleVO.moduleType = ModuleTypeEnum.DATACHECK_MODULE;
@@ -275,7 +275,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
                     if (noticeExtendPO != null) {
                         noticeModuleVO.checkd = 1;
                         noticeModuleVO.noticeExtId = noticeExtendPO.id;
-                        noticeIds_BusinessFilter.add(noticeExtendPO.id);
+                        noticeIds_BusinessFilter.add(e.id);
                     }
                     noticeModuleVO.noticeId = noticeId;
                     noticeModuleVO.moduleType = ModuleTypeEnum.BIZCHECK_MODULE;
@@ -307,7 +307,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
                     if (noticeExtendPO != null) {
                         noticeModuleVO.checkd = 1;
                         noticeModuleVO.noticeExtId = noticeExtendPO.id;
-                        noticeIds_Lifecycle.add(noticeExtendPO.id);
+                        noticeIds_Lifecycle.add(e.id);
                     }
                     noticeModuleVO.noticeId = noticeId;
                     noticeModuleVO.moduleType = ModuleTypeEnum.LIFECYCLE_MODULE;
