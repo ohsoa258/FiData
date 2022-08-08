@@ -762,6 +762,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         kafkaReceiveDTO.pipelTaskTraceId = dto.pipelTaskTraceId;
         kafkaReceiveDTO.pipelStageTraceId = dto.pipelStageTraceId;
         kafkaReceiveDTO.pipelJobTraceId = dto.pipelJobTraceId;
+        kafkaReceiveDTO.numbers = COUNT_SQL;
         kafkaReceiveDTO.tableId = Math.toIntExact(dto.apiId);
         kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
         kafkaReceiveDTO.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.workflowId + "." + kafkaReceiveDTO.tableType + "." + dto.appId + "." + dto.apiId;
