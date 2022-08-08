@@ -265,7 +265,6 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
             stagekMap.put(DispatchLogEnum.stagetransition.getValue(), nifiStagePO.transitionPhase);
             stagekMap.put(DispatchLogEnum.entrydate.getValue(), nifiStageMessageDTO.entryDate);
             if (!StringUtils.isEmpty(nifiStageMessageDTO.pipelTaskTraceId)) {
-                iPipelTaskLog.savePipelTaskLog(nifiStageMessageDTO.pipelJobTraceId, nifiStageMessageDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiStagePO.componentId), String.valueOf(tableAccessId), type);
                 iPipelStageLog.savePipelTaskStageLog(nifiStageMessageDTO.pipelStageTraceId, nifiStageMessageDTO.pipelTaskTraceId, stagekMap);
             }
             //-----------------------------------------------

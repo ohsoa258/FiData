@@ -109,14 +109,17 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                         log.info("发送的topic1:{},内容:{}", topicName, mapString);
                         TableNifiSettingPO tableNifiSetting = iTableNifiSettingService.getByTableId(Long.parseLong(split1[5]), Long.parseLong(split1[3]));
                         HashMap<Integer, Object> taskMap = new HashMap<>();
-                        taskMap.put(DispatchLogEnum.taskstart.getValue(), tableNifiSetting.tableName + " " + simpleDateFormat.format(new Date()));
+                        taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN + " - " + simpleDateFormat.format(new Date()));
                         iPipelTaskLog.savePipelTaskLog(null, kafkaReceiveDTO.pipelTaskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
                         //任务中心发布任务,通知任务开始执行
                         kafkaTemplateHelper.sendMessageAsync(topicName, mapString);
                     } else {
                         redisUtil.heartbeatDetection("nowExec" + kafkaReceiveDTO.pipelTaskTraceId + "," + topicName, topicName, Long.parseLong(waitTime));
                         //存一个真正的过期时间,不断刷新 这里key是pipelTaskTraceId.因为手动调度没有jobId和taskId;
-                        redisUtil.heartbeatDetection(RedisKeyEnum.PIPEL_TASK.getName() + kafkaReceiveDTO.pipelTaskTraceId, simpleDateFormat.format(new Date()), 3600);
+                        Map<String, Object> map = new HashMap<>();
+                        map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
+                        map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers);
+                        redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + kafkaReceiveDTO.pipelTaskTraceId, map, 3600);
 
                     }
                 }
@@ -155,13 +158,13 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                             pipelName = nifiPortHierarchy.itselfPort.workflowName;
                             jobName = nifiPortHierarchy.itselfPort.componentsName;
                             //任务依赖的组件
-                            jobMap.put(DispatchLogEnum.jobstart.getValue(), jobName + " " + simpleDateFormat.format(new Date()));
-                            jobMap.put(DispatchLogEnum.jobstate.getValue(), jobName + " " + NifiStageTypeEnum.RUNNING.getName());
+                            jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                            //jobMap.put(DispatchLogEnum.jobstate.getValue(), jobName + " " + NifiStageTypeEnum.RUNNING.getName());
                             iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, split1[3], kafkaReceiveDTO.pipelJobTraceId, String.valueOf(nifiPortHierarchy.itselfPort.pid));
                             //task日志
                             HashMap<Integer, Object> taskMap = new HashMap<>();
-                            taskMap.put(DispatchLogEnum.taskstart.getValue(), jobName + "-" + nifiPortHierarchy.itselfPort.tableOrder + " " + simpleDateFormat.format(new Date()));
-                            taskMap.put(DispatchLogEnum.taskstate.getValue(), jobName + "-" + nifiPortHierarchy.itselfPort.tableOrder + " " + NifiStageTypeEnum.RUNNING.getName());
+                            taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                            //taskMap.put(DispatchLogEnum.taskstate.getValue(), jobName + "-" + nifiPortHierarchy.itselfPort.tableOrder + " " + NifiStageTypeEnum.RUNNING.getName());
                             iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.itselfPort.id), null, 0);
 
                         }
@@ -185,21 +188,21 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                             pipelName = nifiPortHierarchy.itselfPort.workflowName;
                             jobName = nifiPortHierarchy.itselfPort.componentsName;
                             //任务依赖的组件
-                            jobMap.put(DispatchLogEnum.jobstart.getValue(), jobName + " " + simpleDateFormat.format(new Date()));
-                            jobMap.put(DispatchLogEnum.jobstate.getValue(), jobName + " " + NifiStageTypeEnum.RUNNING.getName());
+                            jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                            //jobMap.put(DispatchLogEnum.jobstate.getValue(), jobName + " " + NifiStageTypeEnum.RUNNING.getName());
                             iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, split1[3], kafkaReceiveDTO.pipelJobTraceId, String.valueOf(nifiPortHierarchy.itselfPort.pid));
                             //task日志
                             HashMap<Integer, Object> taskMap = new HashMap<>();
-                            taskMap.put(DispatchLogEnum.taskstart.getValue(), jobName + "-" + nifiPortHierarchy.itselfPort.tableOrder + " " + simpleDateFormat.format(new Date()));
-                            taskMap.put(DispatchLogEnum.taskstate.getValue(), jobName + "-" + nifiPortHierarchy.itselfPort.tableOrder + " " + NifiStageTypeEnum.RUNNING.getName());
+                            taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                            //taskMap.put(DispatchLogEnum.taskstate.getValue(), jobName + "-" + nifiPortHierarchy.itselfPort.tableOrder + " " + NifiStageTypeEnum.RUNNING.getName());
                             iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.itselfPort.id), null, 0);
 
                         }
 
                     }
                     //管道开始日志
-                    PipelMap.put(DispatchLogEnum.pipelstart.getValue(), pipelName + " " + pipelstart);
-                    PipelMap.put(DispatchLogEnum.pipelstate.getValue(), pipelName + " " + NifiStageTypeEnum.RUNNING.getName());
+                    PipelMap.put(DispatchLogEnum.pipelstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + pipelstart);
+                    //PipelMap.put(DispatchLogEnum.pipelstate.getValue(), pipelName + " " + NifiStageTypeEnum.RUNNING.getName());
                     iPipelJobLog.savePipelLog(pipelTraceId, PipelMap, split1[3]);
                     iPipelLog.savePipelLog(pipelTraceId, PipelMap, split1[3]);
                 } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue())) {
@@ -247,7 +250,10 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                 redisUtil.hmsset(hmgetKey, hmget, Long.parseLong(waitTime));
                                 // 存一个真正的过期时间(最后一个task,job)
                                 //如果有刷新,没有就新建  taskid  结束时间  时间值
-                                redisUtil.hset(RedisKeyEnum.PIPEL_TASK.getName() + itselfPort.id, jobName + "-" + itselfPort.tableOrder + " " + DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()), 3000);
+                                Map<String, Object> map = new HashMap<>();
+                                map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
+                                map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers);
+                                redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + itselfPort.id, map, 3000);
                                 //redisUtil.hset(RedisKeyEnum.PIPEL_JOB.getName()+itselfPort.pid, DispatchLogEnum.jobend.getName(), simpleDateFormat.format(new Date()), 3000);
                             } else {
                                 //如果结束支点不止它一个,不仅要装进去,还要等其他支点
@@ -259,7 +265,10 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                 //如果满足有所有支点的条件了,就刷新过期时间30秒
                                 redisUtil.hmsset(hmgetKey, hmget, Long.parseLong(waitTime));
                                 // 刷新task和job的过期时间
-                                redisUtil.hset(RedisKeyEnum.PIPEL_TASK.getName() + itselfPort.id, jobName + "-" + itselfPort.tableOrder + " " + DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()), 3000);
+                                Map<String, Object> map = new HashMap<>();
+                                map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
+                                map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers);
+                                redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + itselfPort.id, map, 3000);
                                 //redisUtil.hset(RedisKeyEnum.PIPEL_JOB.getName()+itselfPort.pid, DispatchLogEnum.jobend.getName(), simpleDateFormat.format(new Date()), 3000);
                             } else {
                                 redisUtil.hmsset(hmgetKey, hmget, 3000);
@@ -286,7 +295,10 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                     log.info("存入redis即将调用的节点1:" + topic);
                                     redisUtil.heartbeatDetection(topic, topicSelf.topicName, Long.parseLong(waitTime));
                                     // 存入(此task)真正的过期时间,不断刷新  itselfPort
-                                    redisUtil.hset(RedisKeyEnum.PIPEL_TASK.getName() + itselfPort.id, jobName + "-" + itselfPort.tableOrder + " " + DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()), 3000);
+                                    Map<String, Object> map = new HashMap<>();
+                                    map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
+                                    map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers);
+                                    redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + itselfPort.id, map, 3000);
                                 } else {
                                     redisUtil.heartbeatDetection(topic, topicSelf.topicName, 3000L);
                                 }
@@ -300,12 +312,18 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                             log.info("存入redis即将调用的节点2:" + topic);
                                             redisUtil.expire(topic, Long.parseLong(waitTime));
                                             // 存入(此task)真正的过期时间,不断刷新
-                                            redisUtil.hset(RedisKeyEnum.PIPEL_TASK.getName() + itselfPort.id, jobName + "-" + itselfPort.tableOrder + " " + DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()), 3000);
+                                            Map<String, Object> map = new HashMap<>();
+                                            map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
+                                            map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers);
+                                            redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + itselfPort.id, map, 3000);
                                         } else {
                                             log.info("存入redis即将调用的节点3:" + topic);
                                             redisUtil.heartbeatDetection(topic, topicContent + "," + topicSelf.topicName, Long.parseLong(waitTime));
                                             // 存入(此task)真正的过期时间,不断刷新
-                                            redisUtil.hset(RedisKeyEnum.PIPEL_TASK.getName() + itselfPort.id, jobName + "-" + itselfPort.tableOrder + " " + DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()), 3000);
+                                            Map<String, Object> map = new HashMap<>();
+                                            map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
+                                            map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers);
+                                            redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + itselfPort.id, map, 3000);
                                         }
                                     } else {
                                         if (topicContent.contains(topicSelf.topicName)) {
@@ -318,7 +336,10 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                     log.info("存入redis即将调用的节点4:" + topic);
                                     redisUtil.expire(topic, Long.parseLong(waitTime));
                                     // 存入(此task)真正的过期时间,不断刷新
-                                    redisUtil.hset(RedisKeyEnum.PIPEL_TASK.getName() + itselfPort.id, jobName + "-" + itselfPort.tableOrder + " " + DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()), 3600);
+                                    Map<String, Object> map = new HashMap<>();
+                                    map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
+                                    map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers);
+                                    redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + itselfPort.id, map, 3600);
                                 }
                             }
                         }

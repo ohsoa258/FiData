@@ -129,9 +129,9 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
             List<PipelTaskLogPO> list = iPipelTaskLog.query().eq("task_trace_id", dto.pipelTaskTraceId).orderByDesc("create_time").list();
             if (CollectionUtils.isNotEmpty(list)) {
                 Map<Integer, Object> stageMap = new HashMap<>();
-                stageMap.put(DispatchLogEnum.taskend.getValue(), dto.pipleName + dto.JobName + " " + simpleDateFormat.format(new Date()));
-                stageMap.put(DispatchLogEnum.taskstate.getValue(), dto.pipleName + dto.JobName + " " + NifiStageTypeEnum.RUN_FAILED.getName());
-                stageMap.put(DispatchLogEnum.taskcomment.getValue(), dto.pipleName + dto.JobName + " " + dto.comment);
+                stageMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()) + " - " + dto.comment);
+                //stageMap.put(DispatchLogEnum.taskstate.getValue(), dto.pipleName + dto.JobName + " " + NifiStageTypeEnum.RUN_FAILED.getName());
+                //stageMap.put(DispatchLogEnum.taskcomment.getValue(), dto.pipleName + dto.JobName + " " + dto.comment);
                 iPipelTaskLog.savePipelTaskLog(dto.pipelJobTraceId, dto.pipelTaskTraceId, stageMap, list.get(0).taskId, null, 0);
             }
         }
@@ -142,8 +142,8 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                 PipelJobLogPO pipelJobLogPo = list.get(0);
                 Map<Integer, Object> jobMap = new HashMap<>();
                 //结束时间,job状态
-                jobMap.put(DispatchLogEnum.jobend.getValue(), dto.JobName + " " + simpleDateFormat.format(new Date()));
-                jobMap.put(DispatchLogEnum.jobstate.getValue(), dto.JobName + " " + NifiStageTypeEnum.RUN_FAILED.getName());
+                jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()) + " - " + dto.comment);
+                //jobMap.put(DispatchLogEnum.jobstate.getValue(), dto.JobName + " " + NifiStageTypeEnum.RUN_FAILED.getName());
                 this.savePipelJobLog(pipelJobLogPo.jobTraceId, jobMap, pipelJobLogPo.pipelId, pipelJobLogPo.jobTraceId, pipelJobLogPo.componentId);
             }
         }
@@ -151,8 +151,8 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
         List<PipelJobLogPO> list = this.query().eq("pipel_trace_id", dto.pipelTraceId).orderByDesc("create_time").list();
         if (CollectionUtils.isNotEmpty(list)) {
             Map<Integer, Object> pipelMap = new HashMap<>();
-            pipelMap.put(DispatchLogEnum.pipelend.getValue(), dto.pipleName + " " + simpleDateFormat.format(new Date()));
-            pipelMap.put(DispatchLogEnum.pipelstate.getValue(), dto.pipleName + " " + NifiStageTypeEnum.RUN_FAILED.getName());
+            pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()) + " - " + dto.comment);
+            //pipelMap.put(DispatchLogEnum.pipelstate.getValue(), dto.pipleName + " " + NifiStageTypeEnum.RUN_FAILED.getName());
             //保存管道失败日志
             this.savePipelLog(dto.pipelTraceId, pipelMap, list.get(0).pipelId);
             iPipelLog.savePipelLog(dto.pipelTraceId, pipelMap, list.get(0).pipelId);

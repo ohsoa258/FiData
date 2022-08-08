@@ -705,10 +705,10 @@ public class RedisUtil {
      * @param key 键
      * @return 值
      */
-    public Object getAndDel(String key) {
-        Object value = key == null ? null : redisTemplate.opsForValue().get(key);
+    public Map<Object, Object> getAndDel(String key) {
+        Map<Object, Object> entries = redisTemplate.opsForHash().entries(key);
         redisTemplate.delete(key);
-        return value;
+        return entries;
     }
 
 }
