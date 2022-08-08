@@ -2,6 +2,8 @@ package com.fisk.datamanagement.dto.assetsdirectory;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author JianWenYang
  * @date 2022-06-20 17:56
@@ -18,5 +20,8 @@ public class AssetsDirectoryDTO {
     public Integer level;
 
     public Boolean skip;
+
+    public List<String> superTypes;
+
 
 }

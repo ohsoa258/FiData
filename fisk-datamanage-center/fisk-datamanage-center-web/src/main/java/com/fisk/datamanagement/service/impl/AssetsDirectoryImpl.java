@@ -1,23 +1,13 @@
 package com.fisk.datamanagement.service.impl;
 
-import com.alibaba.fastjson.JSON;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
-import com.fisk.common.core.response.ResultEntity;
-import com.fisk.common.core.response.ResultEnum;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.fisk.datamanagement.dto.assetsdirectory.AssetsDirectoryDTO;
-import com.fisk.datamanagement.entity.MetadataMapAtlasPO;
+import com.fisk.datamanagement.dto.classification.ClassificationDefContentDTO;
+import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
+import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
-import com.fisk.datamanagement.enums.TableTypeEnum;
-import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
 import com.fisk.datamanagement.service.IAssetsDirectory;
-import com.fisk.datamodel.client.DataModelClient;
-import com.fisk.datamodel.dto.tableconfig.SourceFieldDTO;
-import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
-import com.fisk.datamodel.enums.DataModelTableTypeEnum;
-import com.fisk.datamodel.enums.FactAttributeEnum;
-import com.fisk.system.client.UserClient;
-import com.fisk.system.dto.datasource.DataSourceDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -35,153 +25,122 @@ import java.util.stream.Collectors;
 public class AssetsDirectoryImpl implements IAssetsDirectory {
 
     @Resource
-    DataModelClient client;
+    ClassificationImpl classification;
     @Resource
-    UserClient userClient;
-
-    @Resource
-    MetadataMapAtlasMapper metadataMapAtlasMapper;
+    EntityImpl entity;
 
     @Override
     public List<AssetsDirectoryDTO> assetsDirectoryData() {
         List<AssetsDirectoryDTO> data = new ArrayList<>();
+        data.addAll(getAssociationEntity());
         String firstLevel = UUID.randomUUID().toString();
         //第一级目录
-        data.add(setAssetsDirectory(firstLevel, "资产目录", "", 1, false));
-        data.addAll(getAnalyzeDataList(firstLevel));
-        return data;
+        data.add(setAssetsDirectory(firstLevel, "资产目录", "", 1, true, null));
+        return aa(data, firstLevel);
     }
 
     /**
-     * 资产目录-分析数据--维度、业务过程
+     * 获取业务过程关联实体
      *
      * @return
      */
-    public List<AssetsDirectoryDTO> getAnalyzeDataList(String firstLevel) {
+    public List<AssetsDirectoryDTO> getAssociationEntity() {
         List<AssetsDirectoryDTO> data = new ArrayList<>();
-        String analyzeDataKey = UUID.randomUUID().toString();
-        data.add(setAssetsDirectory(analyzeDataKey, "分析数据", firstLevel, 2, false));
-        //维度key
-        String dimensionKey = UUID.randomUUID().toString();
-        data.add(setAssetsDirectory(dimensionKey, "维度", analyzeDataKey, 3, false));
-        //业务过程key
-        String businessProcessKey = UUID.randomUUID().toString();
-        data.add(setAssetsDirectory(businessProcessKey, "业务过程", analyzeDataKey, 3, false));
-
-        //数据库限定名
-        String dbQualifiedName = getDataSource(DataSourceConfigEnum.DMP_DW.getValue());
-        //读取dw中的维度和事实
-        QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper
-                .lambda()
-                .eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_TABLE);
-        List<MetadataMapAtlasPO> list = metadataMapAtlasMapper.selectList(queryWrapper);
-        //调用数仓建模模块接口,获取表名
-        ResultEntity<Object> result = client.getDataModelTable(1);
-        if (result.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(list)) {
+        //获取业务过程数据
+        ClassificationDefsDTO classificationList = classification.getClassificationList();
+        if (classificationList != null && CollectionUtils.isEmpty(classificationList.classificationDefs)) {
             return data;
         }
-        List<SourceTableDTO> sourceTableList = JSON.parseArray(JSON.toJSONString(result.data), SourceTableDTO.class);
-        //循环赋值
-        for (SourceTableDTO item : sourceTableList) {
-            //维度
-            if (item.type == TableTypeEnum.DW_DIMENSION.getValue()) {
-                String tableQualifiedName = dbQualifiedName + "_" + DataModelTableTypeEnum.DW_DIMENSION.getValue() + "_" + item.id;
-                Optional<MetadataMapAtlasPO> first = list.stream().filter(e -> tableQualifiedName.equals(e.qualifiedName)).findFirst();
-                if (!first.isPresent()) {
-                    continue;
-                }
-                data.add(setAssetsDirectory(first.get().atlasGuid, item.tableName, dimensionKey, 4, true));
+        EntityFilterDTO parameter = new EntityFilterDTO();
+        parameter.limit = 100;
+        parameter.offset = 0;
+        for (ClassificationDefContentDTO classification : classificationList.classificationDefs) {
+            data.add(setAssetsDirectory(classification.guid, classification.name, "", 0, false, classification.superTypes));
+            parameter.classification = classification.name;
+            //获取关联实体数据
+            JSONObject jsonObject = entity.searchBasicEntity(parameter);
+            Object entities1 = jsonObject.get("entities");
+            if (entities1 == null) {
                 continue;
             }
-            //业务过程
-            String tableQualifiedName = dbQualifiedName + "_" + DataModelTableTypeEnum.DW_FACT.getValue() + "_" + item.id;
-            Optional<MetadataMapAtlasPO> first = list.stream().filter(e -> tableQualifiedName.equals(e.qualifiedName)).findFirst();
+            JSONArray entities = jsonObject.getJSONArray("entities");
+            for (int i = 0; i < entities.size(); i++) {
+                if (EntityTypeEnum.RDBMS_TABLE.getName().equals(entities.getJSONObject(i).getString("typeName"))
+                        && "ACTIVE".equals(entities.getJSONObject(i).getString("status"))) {
+                    data.add(setAssetsDirectory(entities.getJSONObject(i).getString("guid"),
+                            entities.getJSONObject(i).getString("displayText"),
+                            classification.guid, 0, true, null));
+                }
+            }
+        }
+        return data;
+    }
+
+    public List<AssetsDirectoryDTO> aa(List<AssetsDirectoryDTO> data, String firstCode) {
+        //获取第一级
+        List<AssetsDirectoryDTO> firstLevel =
+                data.stream()
+                        .filter(e -> e.superTypes != null && e.superTypes.size() == 0)
+                        .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(firstLevel)) {
+
+        }
+        //第二级目录
+        for (AssetsDirectoryDTO item : firstLevel) {
+            item.parent = firstCode;
+            item.level = 2;
+            //递归获取tree结构
+            buildChildTree(item, data);
+        }
+        //关联实体修改level属性
+        List<AssetsDirectoryDTO> collect = data.stream().filter(e -> e.superTypes == null && e.level == 0).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(collect)) {
+            return data;
+        }
+        for (AssetsDirectoryDTO item : collect) {
+            Optional<AssetsDirectoryDTO> first = data.stream().filter(e -> item.parent.equals(e.key)).findFirst();
             if (!first.isPresent()) {
                 continue;
             }
-            data.add(setAssetsDirectory(first.get().atlasGuid, item.tableName, businessProcessKey, 4, true));
+            item.level = first.get().level + 1;
         }
-        data.addAll(getAnalysisModel(analyzeDataKey));
         return data;
     }
 
     /**
-     * 资产目录-分析模型--原子指标、派生指标、宽表
+     * 递归创建树形结构
      *
-     * @return
+     * @param pNode
+     * @param data
      */
-    public List<AssetsDirectoryDTO> getAnalysisModel(String analyzeDataKey) {
-        List<AssetsDirectoryDTO> data = new ArrayList<>();
-        //分析模型key
-        String analysisModelKey = UUID.randomUUID().toString();
-        data.add(setAssetsDirectory(analysisModelKey, "分析模型", analyzeDataKey, 3, false));
-        //原子指标key
-        String atomicIndicatorsKey = UUID.randomUUID().toString();
-        data.add(setAssetsDirectory(atomicIndicatorsKey, "原子指标", analysisModelKey, 4, false));
-        //派生指标key
-        String derivedIndicatorsKey = UUID.randomUUID().toString();
-        data.add(setAssetsDirectory(derivedIndicatorsKey, "派生指标", analysisModelKey, 4, false));
-        //宽表key
-        String wideTableKey = UUID.randomUUID().toString();
-        data.add(setAssetsDirectory(wideTableKey, "宽表", analysisModelKey, 4, false));
-
-        //调用数仓建模模块接口,获取表名
-        ResultEntity<Object> result = client.getDataModelTable(2);
-        if (result.code != ResultEnum.SUCCESS.getCode()) {
-            return data;
+    public void buildChildTree(AssetsDirectoryDTO pNode, List<AssetsDirectoryDTO> data) {
+        List<AssetsDirectoryDTO> collect = data.stream()
+                .filter(e -> e.superTypes != null && e.superTypes.contains(pNode.name)).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(collect)) {
+            return;
         }
-        List<SourceTableDTO> sourceTableList = JSON.parseArray(JSON.toJSONString(result.data), SourceTableDTO.class);
-        for (SourceTableDTO item : sourceTableList) {
-            for (SourceFieldDTO field : item.fieldList) {
-                //原子指标
-                if (field.attributeType == FactAttributeEnum.MEASURE.getValue()) {
-                    data.add(setAssetsDirectory("", field.fieldName, atomicIndicatorsKey, 5, false));
-                }
-                //派生指标
-                else if (field.attributeType == FactAttributeEnum.DERIVED_INDICATORS.getValue()) {
-                    data.add(setAssetsDirectory("", field.fieldName, derivedIndicatorsKey, 5, false));
-                }
-            }
+        for (AssetsDirectoryDTO item : collect) {
+            item.parent = pNode.key;
+            item.level = pNode.level + 1;
+            buildChildTree(item, data);
         }
-        ////data.addAll(getWideTableList(wideTableKey));
-        return data;
     }
 
     /**
-     * 获取宽表
+     * dto添加值
      *
-     * @param wideTableKey
+     * @param key
+     * @param name
+     * @param parent
+     * @param level
+     * @param skip
+     * @param superTypes
      * @return
      */
-    public List<AssetsDirectoryDTO> getWideTableList(String wideTableKey) {
-        List<AssetsDirectoryDTO> data = new ArrayList<>();
-        //调用宽表接口,获取表名
-        ResultEntity<Object> result = client.getDataModelTable(3);
-        if (result.code != ResultEnum.SUCCESS.getCode()) {
-            return data;
-        }
-        List<SourceTableDTO> sourceTableList = JSON.parseArray(JSON.toJSONString(result.data), SourceTableDTO.class);
-        List<SourceTableDTO> collect = sourceTableList.stream().filter(e -> e.type == DataModelTableTypeEnum.WIDE_TABLE.getValue()).collect(Collectors.toList());
-        //宽表
-        QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda()
-                .eq(MetadataMapAtlasPO::getTableType, DataModelTableTypeEnum.WIDE_TABLE.getValue())
-                .eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_TABLE.getValue());
-        List<MetadataMapAtlasPO> poList = metadataMapAtlasMapper.selectList(queryWrapper);
-        for (MetadataMapAtlasPO item : poList) {
-            Optional<SourceTableDTO> first = collect.stream().filter(e -> e.id == item.tableId).findFirst();
-            if (!first.isPresent()) {
-                continue;
-            }
-            data.add(setAssetsDirectory(item.atlasGuid, first.get().tableName, wideTableKey, 5, true));
-        }
-        return data;
-    }
-
     public AssetsDirectoryDTO setAssetsDirectory(String key, String name,
                                                  String parent, Integer level,
-                                                 Boolean skip) {
+                                                 Boolean skip,
+                                                 List<String> superTypes) {
         AssetsDirectoryDTO dto = new AssetsDirectoryDTO();
         dto.key = key;
         dto.name = name;
@@ -190,21 +149,10 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
         dto.level = level;
         //是否可跳转
         dto.skip = skip;
+        //上级
+        dto.superTypes = superTypes;
         return dto;
     }
 
-    /**
-     * 根据数据源,获取限定名
-     *
-     * @param dataSourceId
-     * @return
-     */
-    public String getDataSource(int dataSourceId) {
-        ResultEntity<DataSourceDTO> resultDataSource = userClient.getFiDataDataSourceById(dataSourceId);
-        if (resultDataSource.code != ResultEnum.SUCCESS.getCode() && resultDataSource.data == null) {
-            return null;
-        }
-        return resultDataSource.data.conIp + "_" + resultDataSource.data.conDbname;
-    }
 
 }
