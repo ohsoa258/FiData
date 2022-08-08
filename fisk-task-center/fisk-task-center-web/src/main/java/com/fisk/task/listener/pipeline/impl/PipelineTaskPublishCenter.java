@@ -118,7 +118,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                         //存一个真正的过期时间,不断刷新 这里key是pipelTaskTraceId.因为手动调度没有jobId和taskId;
                         Map<String, Object> map = new HashMap<>();
                         map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
-                        map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers);
+                        map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers + "");
                         redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + kafkaReceiveDTO.pipelTaskTraceId, map, 3600);
 
                     }
@@ -252,7 +252,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                 //如果有刷新,没有就新建  taskid  结束时间  时间值
                                 Map<String, Object> map = new HashMap<>();
                                 map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
-                                map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers);
+                                map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers + "");
                                 redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + itselfPort.id, map, 3000);
                                 //redisUtil.hset(RedisKeyEnum.PIPEL_JOB.getName()+itselfPort.pid, DispatchLogEnum.jobend.getName(), simpleDateFormat.format(new Date()), 3000);
                             } else {
@@ -267,7 +267,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                 // 刷新task和job的过期时间
                                 Map<String, Object> map = new HashMap<>();
                                 map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
-                                map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers);
+                                map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers + "");
                                 redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + itselfPort.id, map, 3000);
                                 //redisUtil.hset(RedisKeyEnum.PIPEL_JOB.getName()+itselfPort.pid, DispatchLogEnum.jobend.getName(), simpleDateFormat.format(new Date()), 3000);
                             } else {
@@ -297,7 +297,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                     // 存入(此task)真正的过期时间,不断刷新  itselfPort
                                     Map<String, Object> map = new HashMap<>();
                                     map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
-                                    map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers);
+                                    map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers + "");
                                     redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + itselfPort.id, map, 3000);
                                 } else {
                                     redisUtil.heartbeatDetection(topic, topicSelf.topicName, 3000L);
@@ -314,7 +314,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                             // 存入(此task)真正的过期时间,不断刷新
                                             Map<String, Object> map = new HashMap<>();
                                             map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
-                                            map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers);
+                                            map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers + "");
                                             redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + itselfPort.id, map, 3000);
                                         } else {
                                             log.info("存入redis即将调用的节点3:" + topic);
@@ -322,7 +322,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                             // 存入(此task)真正的过期时间,不断刷新
                                             Map<String, Object> map = new HashMap<>();
                                             map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
-                                            map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers);
+                                            map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers + "");
                                             redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + itselfPort.id, map, 3000);
                                         }
                                     } else {
@@ -338,7 +338,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                     // 存入(此task)真正的过期时间,不断刷新
                                     Map<String, Object> map = new HashMap<>();
                                     map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
-                                    map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers);
+                                    map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers + "");
                                     redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + itselfPort.id, map, 3600);
                                 }
                             }
