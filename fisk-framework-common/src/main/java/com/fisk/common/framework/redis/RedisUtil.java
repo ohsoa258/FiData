@@ -1,5 +1,6 @@
 package com.fisk.common.framework.redis;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
@@ -707,6 +708,7 @@ public class RedisUtil {
      */
     public Map<Object, Object> getAndDel(String key) {
         Map<Object, Object> entries = redisTemplate.opsForHash().entries(key);
+        log.info("map中内容:" + JSON.toJSONString(entries));
         redisTemplate.delete(key);
         return entries;
     }

@@ -12,6 +12,6 @@ import java.util.List;
  */
 public interface PipelTaskLogMapper extends FKBaseMapper<PipelTaskLogPO> {
 
-    @Select("select * from tb_pipel_task_log where task_id=#{taskId}")
+    @Select("select * from tb_pipel_task_log where task_id=#{taskId} order by create_time desc")
     List<PipelTaskLogVO> getByTaskId(String taskId);
 }
