@@ -15,6 +15,7 @@ nifi:
     waitTime: 20
     operation-interval: 2000
     number-of-operations: 5
+    data-governance-url: http://10.220.108.140:10089
 nifi-ConcurrentTasks: 3
 nifi-FetchSize: 30000
 nifi-MaxRowsPerFlowFile: 10000

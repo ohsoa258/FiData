@@ -112,6 +112,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     public String pipelineTopicName;
     @Value("${nifi.token}")
     public String nifiToken;
+    @Value("${nifi.data-governance-url}")
+    public String dataGovernanceUrl;
     @Resource
     INiFiHelper componentsBuild;
     @Resource
@@ -1980,7 +1982,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildInvokeHttpProcessorDTO.attributesToSend = "(?s)(^.*$)";
         buildInvokeHttpProcessorDTO.contentType = "application/json;charset=UTF-8";
         buildInvokeHttpProcessorDTO.httpMethod = "POST";
-        buildInvokeHttpProcessorDTO.remoteUrl = "http://192.168.11.130:8083/datagovernance/datacheck/syncCheckData?Content-Type=application/json";
+        buildInvokeHttpProcessorDTO.remoteUrl = dataGovernanceUrl + "/datagovernance/datacheck/syncCheckData?Content-Type=application/json";
         buildInvokeHttpProcessorDTO.nifiToken = nifiToken;
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildInvokeHTTPProcessor(buildInvokeHttpProcessorDTO, new ArrayList<>());
         return processorEntityBusinessResult.data;
@@ -2207,7 +2209,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         nifiMessage.pipelTaskTraceId = "${pipelTaskTraceId}";
         nifiMessage.pipelJobTraceId = "${pipelJobTraceId}";
         nifiMessage.pipelTraceId = "${pipelTraceId}";
-        nifiMessage.entryDate="${entryDate:format('YYYY-MM-dd HH:mm:ss')}";
+        nifiMessage.entryDate = "${entryDate:format('YYYY-MM-dd HH:mm:ss')}";
         buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(nifiMessage);
         buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
