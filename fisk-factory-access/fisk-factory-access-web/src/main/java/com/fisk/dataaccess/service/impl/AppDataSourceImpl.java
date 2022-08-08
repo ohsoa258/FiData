@@ -47,9 +47,14 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             setDataSourceMeta(appId);
         }
 
-        String datasourceMetaJson = redisUtil.get(RedisKeyBuild.buildDataSoureKey(appId)).toString();
-        if (StringUtils.isNotBlank(datasourceMetaJson)) {
-            dataSource = JSON.parseObject(datasourceMetaJson, DataSourceDTO.class);
+        try {
+            String datasourceMetaJson = redisUtil.get(RedisKeyBuild.buildDataSoureKey(appId)).toString();
+            if (StringUtils.isNotBlank(datasourceMetaJson)) {
+                dataSource = JSON.parseObject(datasourceMetaJson, DataSourceDTO.class);
+            }
+        } catch (Exception e) {
+            log.error("redis中获取数据失败");
+            dataSource = null;
         }
         return dataSource;
     }
