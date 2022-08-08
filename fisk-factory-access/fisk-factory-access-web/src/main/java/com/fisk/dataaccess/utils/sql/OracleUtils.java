@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.utils.sql;
 
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.table.DataBaseViewDTO;
@@ -37,6 +38,9 @@ public class OracleUtils {
             Connection conn = DriverManager.getConnection(url, user, password);
             // 获取数据库中所有表名称
             List<String> tableNames = getTables(conn,user.toUpperCase());
+            if (CollectionUtils.isEmpty(tableNames)) {
+                return null;
+            }
             Statement st = conn.createStatement();
 
             list = new ArrayList<>();
@@ -44,6 +48,9 @@ public class OracleUtils {
                 ResultSet rs = st.executeQuery("select * from " + tableName + " OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY");
 
                 List<TableStructureDTO> colNames = getColNames(rs);
+                if (CollectionUtils.isEmpty(colNames)) {
+                    break;
+                }
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(tableName);
                 tablePyhNameDTO.setFields(colNames);
@@ -82,6 +89,9 @@ public class OracleUtils {
             Connection conn = DriverManager.getConnection(url, user, password);
             // 获取数据库中所有视图名称
             List<String> viewNameList = loadViewNameList(driverTypeEnum, conn, user.toUpperCase());
+            if (CollectionUtils.isEmpty(viewNameList)) {
+                return null;
+            }
             Statement st = conn.createStatement();
 
             list = new ArrayList<>();
