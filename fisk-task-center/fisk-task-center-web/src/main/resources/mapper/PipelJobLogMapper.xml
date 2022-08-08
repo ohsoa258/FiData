@@ -8,6 +8,7 @@
         <if test="pipelJobLog.pipelTraceId != null and pipelJobLog.pipelTraceId != '' ">
             and pipel_trace_id=#{pipelJobLog.pipelTraceId}
         </if>
+        and job_trace_id is not null
         and del_flag=1 ORDER BY create_time desc limit 100
 
     </select>
