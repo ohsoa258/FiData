@@ -112,7 +112,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     public String pipelineTopicName;
     @Value("${nifi.token}")
     public String nifiToken;
-    @Value("${nifi.data-governance-url}")
+    @Value("${nifi.pipeline.data-governance-url}")
     public String dataGovernanceUrl;
     @Resource
     INiFiHelper componentsBuild;
