@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.v3.DataSourceDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
@@ -19,6 +21,8 @@ import com.fisk.dataaccess.utils.sql.SqlServerPlusUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Lock
@@ -98,5 +102,34 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             log.error(appId + ":" + JSON.toJSONString(ResultEnum.DATASOURCE_INFORMATION_ISNULL));
             return null;
         }
+    }
+
+    @Override
+    public List<String> getDatabaseNameList(AppDataSourceDTO dto) {
+
+        if (StringUtils.isBlank(dto.driveType)) {
+            throw new FkException(ResultEnum.DRIVETYPE_IS_NULL);
+        }
+
+        // jdbc连接信息
+        String url = "";
+
+        DataSourceTypeEnum driveType = DataSourceTypeEnum.getValue(dto.driveType);
+        switch (Objects.requireNonNull(driveType)) {
+            case MYSQL:
+                MysqlConUtils mysqlConUtils = new MysqlConUtils();
+                url = "jdbc:mysql://" + dto.host + ":" + dto.port;
+                return mysqlConUtils.getAllDatabases(url, dto.connectAccount, dto.connectPwd);
+            case SQLSERVER:
+                url = "jdbc:sqlserver://" + dto.host + ":" + dto.port;
+                SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
+                return sqlServerPlusUtils.getAllDatabases(url, dto.connectAccount, dto.connectPwd);
+            case ORACLE:
+                return null;
+            default:
+                break;
+        }
+
+        return null;
     }
 }

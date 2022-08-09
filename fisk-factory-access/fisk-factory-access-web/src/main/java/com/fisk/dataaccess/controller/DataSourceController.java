@@ -4,13 +4,11 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
+import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.service.IAppDataSource;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
@@ -34,5 +32,11 @@ public class DataSourceController {
     @GetMapping("/setDataSourceMeta/{appId}")
     public ResultEntity<Object> setDataSourceMeta(@PathVariable long appId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setDataSourceMeta(appId));
+    }
+
+    @PostMapping("/getDatabaseNameList")
+    @ApiOperation(value = "根据服务配置信息,获取所有的数据库名称")
+    public ResultEntity<Object> getDatabaseNameList(@RequestBody AppDataSourceDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDatabaseNameList(dto));
     }
 }

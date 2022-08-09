@@ -153,7 +153,7 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @param dto dto
      * @return 连接结果
      */
-    ResultEntity<Object> connectDb(DbConnectionDTO dto);
+    List<String> connectDb(DbConnectionDTO dto);
 
     /**
      * 判断应用名称是否重复

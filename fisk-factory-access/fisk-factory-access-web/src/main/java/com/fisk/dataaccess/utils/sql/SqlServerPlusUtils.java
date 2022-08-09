@@ -307,4 +307,39 @@ public class SqlServerPlusUtils {
         }
         return colNameList;
     }
+
+    /**
+     * 获取所有数据库
+     *
+     * @param url      jdbc连接url: jdbc:sqlserver://192.168.11.133:1433
+     * @param user     数据库用户名
+     * @param password 数据库密码
+     * @return java.util.List<java.lang.String>
+     * @author Lock
+     * @date 2022/8/9 13:59
+     */
+    public List<String> getAllDatabases(String url, String user, String password) {
+
+        List<String> dbName = new ArrayList<>();
+
+        try {
+            Class.forName(DriverTypeEnum.SQLSERVER.getName());
+            Connection conn = DriverManager.getConnection(url, user, password);
+
+            Statement stmt = conn.createStatement();
+            ResultSet resultSet = stmt.executeQuery("SELECT name FROM  master..sysdatabases WHERE name NOT IN ( 'master', 'model', 'msdb', 'tempdb', 'northwind','pubs' )");
+            while(resultSet.next()){
+                dbName.add(resultSet.getString("name"));
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new FkException(ResultEnum.GET_DATABASE_ERROR);
+        }
+
+        return dbName;
+    }
+
+//    public static void main(String[] args) {
+//        List<String> allDatabases = getAllDatabases("jdbc:sqlserver://192.168.11.133:1433", "sa", "Password01!");
+//        allDatabases.forEach(System.out::println);
+//    }
 }

@@ -215,7 +215,7 @@ public class AppRegistrationController {
     @PostMapping("/connect")
     public ResultEntity<Object> connectDb(@RequestBody DbConnectionDTO dto) {
 
-        return service.connectDb(dto);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.connectDb(dto));
     }
 
     @ApiOperation("判断应用名称是否重复")

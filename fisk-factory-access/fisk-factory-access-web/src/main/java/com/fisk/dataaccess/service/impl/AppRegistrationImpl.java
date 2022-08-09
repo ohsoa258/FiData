@@ -34,6 +34,8 @@ import com.fisk.dataaccess.map.AppDataSourceMap;
 import com.fisk.dataaccess.map.AppRegistrationMap;
 import com.fisk.dataaccess.mapper.*;
 import com.fisk.dataaccess.service.IAppRegistration;
+import com.fisk.dataaccess.utils.sql.MysqlConUtils;
+import com.fisk.dataaccess.utils.sql.SqlServerPlusUtils;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
@@ -58,9 +60,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -570,8 +570,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     @SneakyThrows
     @Override
-    public ResultEntity<Object> connectDb(DbConnectionDTO dto) {
-        Connection conn = null;
+    public List<String> connectDb(DbConnectionDTO dto) {
+/*        Connection conn = null;
         try {
             switch (dto.driveType) {
                 case "mysql":
@@ -604,7 +604,38 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             } catch (SQLException e) {
                 throw new FkException(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
             }
+        }*/
+
+        if (StringUtils.isBlank(dto.driveType)) {
+            throw new FkException(ResultEnum.DRIVETYPE_IS_NULL);
         }
+
+        // jdbc连接信息
+        String url = "";
+
+        DataSourceTypeEnum driveType = DataSourceTypeEnum.getValue(dto.driveType);
+        try {
+            switch (Objects.requireNonNull(driveType)) {
+                case MYSQL:
+                    MysqlConUtils mysqlConUtils = new MysqlConUtils();
+                    url = "jdbc:mysql://" + dto.host + ":" + dto.port;
+                    return mysqlConUtils.getAllDatabases(url, dto.connectAccount, dto.connectPwd);
+                case SQLSERVER:
+                    url = "jdbc:sqlserver://" + dto.host + ":" + dto.port;
+                    SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
+                    return sqlServerPlusUtils.getAllDatabases(url, dto.connectAccount, dto.connectPwd);
+                case ORACLE:
+                    Class.forName(DriverTypeEnum.ORACLE.getName());
+                    DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
+                    return null;
+                default:
+                    break;
+            }
+        } catch (Exception e) {
+            throw new FkException(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
+        }
+
+        return null;
 
     }
 
