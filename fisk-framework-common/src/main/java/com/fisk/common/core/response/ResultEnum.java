@@ -78,7 +78,7 @@ public enum ResultEnum {
     DATAACCESS_GETFIELD_ERROR(5001, "获取表字段失败"),
     DATAACCESS_GETTABLE_ERROR(5002, "获取表名失败"),
     DATAACCESS_SAVEFIELD_ERROR(5003, "添加表字段失败"),
-    DATAACCESS_CONNECTDB_ERROR(5004, "连接失败"),
+    DATAACCESS_CONNECTDB_ERROR(5004, "连接失败,请检查参数"),
     DATAACCESS_CONNECTDB_WARN(5005, "当前驱动类型尚未开发"),
     DATAACCESS_APPNAME_SUCCESS(5006, "应用名称有效"),
     DATAACCESS_APPNAME_ERROR(5007, "应用名称已存在"),
@@ -126,6 +126,8 @@ public enum ResultEnum {
     LOAD_FIDATA_METADATA_ERROR(5049, "加载FaidataMetaData报错"),
     JSON_ROOTNODE_HANDLER_ERROR(5050, "pushData中json格式可能有误,解析失败,请自行检查"),
     FILE_NOT_SELECTED(5051, "请选择需要读取的文件"),
+    DRIVETYPE_IS_NULL(5052, "请选择驱动类型"),
+    GET_DATABASE_ERROR(5053, "获取数据库失败,请重新检查参数"),
 
     /**
      * 后台任务模块
