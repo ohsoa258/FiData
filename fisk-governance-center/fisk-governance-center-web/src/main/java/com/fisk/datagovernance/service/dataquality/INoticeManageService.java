@@ -42,6 +42,14 @@ public interface INoticeManageService extends IService<NoticePO> {
     ResultEnum editData(NoticeEditDTO dto);
 
     /**
+     * 启用禁用
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum editState(NoticeEditDTO dto);
+
+    /**
      * 删除数据
      *
      * @param id id

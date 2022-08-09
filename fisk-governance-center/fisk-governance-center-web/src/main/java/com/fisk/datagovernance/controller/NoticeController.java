@@ -48,6 +48,12 @@ public class NoticeController {
         return ResultEntityBuild.build(service.editData(dto));
     }
 
+    @ApiOperation("编辑告警通知模板组件状态")
+    @PutMapping("/editState")
+    public ResultEntity<Object> editState(@RequestBody NoticeEditDTO dto){
+        return ResultEntityBuild.build(service.editState(dto));
+    }
+
     @ApiOperation("删除告警通知模板组件")
     @DeleteMapping("/delete/{id}")
     public ResultEntity<Object> deleteData(@PathVariable("id") int id) {

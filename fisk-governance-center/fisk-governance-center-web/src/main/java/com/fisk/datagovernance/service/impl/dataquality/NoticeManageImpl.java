@@ -125,6 +125,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             return ResultEnum.SAVE_DATA_ERROR;
         }
         //第三步：保存通知信息
+        int id = Math.toIntExact(noticePO.id);
         int i = baseMapper.updateById(noticePO);
         if (i <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
@@ -135,7 +136,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             List<NoticeExtendPO> noticeExtendPOS = new ArrayList<>();
             dto.noticeExtends.forEach(t -> {
                 NoticeExtendPO noticeExtendPO = new NoticeExtendPO();
-                noticeExtendPO.setNoticeId(t.noticeId);
+                noticeExtendPO.setNoticeId(id);
                 noticeExtendPO.setModuleType(t.moduleType.getValue());
                 noticeExtendPO.setRuleId(t.ruleId);
                 noticeExtendPOS.add(noticeExtendPO);
@@ -143,6 +144,16 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             noticeExtendManageImpl.saveBatch(noticeExtendPOS);
         }
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum editState(NoticeEditDTO dto) {
+        NoticePO noticePO = baseMapper.selectById(dto.id);
+        if (noticePO == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        noticePO.setNoticeState(dto.noticeState.getValue());
+        return baseMapper.updateById(noticePO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
