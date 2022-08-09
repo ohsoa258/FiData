@@ -54,6 +54,7 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
         EntityFilterDTO parameter = new EntityFilterDTO();
         parameter.limit = 100;
         parameter.offset = 0;
+        parameter.includeClassificationAttributes = true;
         for (ClassificationDefContentDTO classification : classificationList.classificationDefs) {
             data.add(setAssetsDirectory(classification.guid, classification.name, "", 0, false, classification.superTypes));
             parameter.classification = classification.name;
@@ -65,8 +66,16 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
             }
             JSONArray entities = jsonObject.getJSONArray("entities");
             for (int i = 0; i < entities.size(); i++) {
+                //获取业务过程直接关联的实体
+                List<String> entityList = new ArrayList<>();
+                String classifications = entities.getJSONObject(i).getString("classifications");
+                JSONArray array = JSONArray.parseArray(classifications);
+                for (int j = 0; j < array.size(); j++) {
+                    entityList.add(array.getJSONObject(j).getString("entityGuid"));
+                }
                 if (EntityTypeEnum.RDBMS_TABLE.getName().equals(entities.getJSONObject(i).getString("typeName"))
-                        && "ACTIVE".equals(entities.getJSONObject(i).getString("status"))) {
+                        && "ACTIVE".equals(entities.getJSONObject(i).getString("status"))
+                        && entityList.contains(entities.getJSONObject(i).getString("guid"))) {
                     data.add(setAssetsDirectory(entities.getJSONObject(i).getString("guid"),
                             entities.getJSONObject(i).getString("displayText"),
                             classification.guid, 0, true, null));
