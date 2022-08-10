@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
@@ -289,4 +290,13 @@ public interface DataAccessClient {
     @PostMapping("/appRegistration/getFiDataTableMetaData")
     @ApiOperation(value = "根据表信息/字段ID,获取表/字段基本信息")
     ResultEntity<List<FiDataTableMetaDataDTO>> getFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto);
+
+    /**
+     * 获取所有应用信息
+     *
+     * @return list
+     */
+    @GetMapping("/appRegistration/getAppList")
+    @ApiOperation(value = "获取所有应用信息")
+    ResultEntity<List<AppBusinessInfoDTO>> getAppList();
 }
