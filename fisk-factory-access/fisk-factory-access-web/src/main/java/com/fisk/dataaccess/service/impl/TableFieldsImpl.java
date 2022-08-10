@@ -381,7 +381,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             table.setName("ods_" + app.appAbbreviation + "_" + tableAccess.getTableName());
             table.setContact_info(app.getAppPrincipal());
             table.setDescription(tableAccess.getTableDes());
-            table.setComment(tableAccess.getTableDes());
+            table.setComment(app.getAppName());
 
             // 字段
             List<MetaDataColumnAttributeDTO> columnList = this.query().eq("table_access_id", tableAccess.id).list()
@@ -414,7 +414,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         table.setName("ods_" + app.appAbbreviation + "_" + tb.getTableName());
                         table.setContact_info(app.getAppPrincipal());
                         table.setDescription(tb.getTableDes());
-                        table.setComment(tb.getTableDes());
+                        table.setComment(app.getAppName());
 
                         // 字段
                         List<MetaDataColumnAttributeDTO> columnList = this.query()
