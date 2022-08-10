@@ -7,6 +7,7 @@ import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
@@ -288,5 +289,11 @@ public class AppRegistrationController {
     @ApiOperation(value = "根据表信息/字段ID,获取表/字段基本信息")
     public ResultEntity<List<FiDataTableMetaDataDTO>> getFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataTableMetaData(dto));
+    }
+
+    @GetMapping("/getAppList")
+    @ApiOperation(value = "获取所有应用信息")
+    public ResultEntity<List<AppBusinessInfoDTO>> getAppList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppList());
     }
 }

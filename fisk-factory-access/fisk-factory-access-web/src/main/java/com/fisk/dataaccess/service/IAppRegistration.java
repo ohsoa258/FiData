@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
@@ -58,6 +59,7 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
 
     /**
      * 修改应用基本信息
+     *
      * @param dto dto
      * @return 执行结果
      */
@@ -233,4 +235,11 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return 查询结果
      */
     List<FiDataTableMetaDataDTO> getFiDataTableMetaData(FiDataTableMetaDataReqDTO dto);
+
+    /**
+     * 获取所有应用信息
+     *
+     * @return list
+     */
+    List<AppBusinessInfoDTO> getAppList();
 }

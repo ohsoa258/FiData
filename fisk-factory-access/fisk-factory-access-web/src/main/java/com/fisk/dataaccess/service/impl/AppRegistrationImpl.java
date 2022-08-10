@@ -18,6 +18,7 @@ import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
@@ -920,6 +921,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
                     return tableMetaDataDto;
                 }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<AppBusinessInfoDTO> getAppList() {
+        return AppRegistrationMap.INSTANCES.listDtoToAppBusinessInfoDto(baseMapper.getDataList());
     }
 
     /**
