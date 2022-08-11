@@ -298,6 +298,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         table.contact_info = "";
         table.description = fact.factTableDesc;
         table.name = fact.factTabName;
+        table.comment = String.valueOf(fact.businessId);
         table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dataModelType + "_" + fact.id;
         //字段
         List<MetaDataColumnAttributeDTO> columnList = setFactField(dto, table);

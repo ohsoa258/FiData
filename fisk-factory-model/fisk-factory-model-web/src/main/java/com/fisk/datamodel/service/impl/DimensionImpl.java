@@ -776,6 +776,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         table.description = dimension.dimensionDesc;
         table.name = dimension.dimensionTabName;
         table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dataModelType + "_" + dimension.id;
+        table.comment = String.valueOf(dimension.businessId);
         //字段
         List<MetaDataColumnAttributeDTO> columnList = new ArrayList<>();
         DimensionAttributeListDTO dimensionAttributeList = dimensionAttributeImpl.getDimensionAttributeList((int) dimension.id);
