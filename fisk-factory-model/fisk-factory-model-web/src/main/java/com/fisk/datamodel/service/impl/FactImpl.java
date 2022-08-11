@@ -298,6 +298,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         table.contact_info = "";
         table.description = fact.factTableDesc;
         table.name = fact.factTabName;
+        table.comment = String.valueOf(fact.businessId);
         table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dataModelType + "_" + fact.id;
         //字段
         List<MetaDataColumnAttributeDTO> columnList = setFactField(dto, table);
@@ -312,6 +313,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         try {
             MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
             metaDataAttribute.instanceList = list;
+            metaDataAttribute.userId = userHelper.getLoginUserInfo().id;
             // 更新元数据内容
             log.info("事实/指标表构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
             dataManageClient.metaData(metaDataAttribute);

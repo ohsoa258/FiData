@@ -11,6 +11,8 @@ import java.util.List;
 @Data
 public class MetaDataAttributeDTO {
 
+    public Long userId;
+
     public List<MetaDataInstanceAttributeDTO> instanceList;
 
 }

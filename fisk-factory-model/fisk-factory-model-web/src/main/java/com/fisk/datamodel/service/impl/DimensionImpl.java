@@ -776,6 +776,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         table.description = dimension.dimensionDesc;
         table.name = dimension.dimensionTabName;
         table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dataModelType + "_" + dimension.id;
+        table.comment = String.valueOf(dimension.businessId);
         //字段
         List<MetaDataColumnAttributeDTO> columnList = new ArrayList<>();
         DimensionAttributeListDTO dimensionAttributeList = dimensionAttributeImpl.getDimensionAttributeList((int) dimension.id);
@@ -795,6 +796,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         try {
             MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
             metaDataAttribute.instanceList = list;
+            metaDataAttribute.userId = userHelper.getLoginUserInfo().id;
             // 更新元数据内容
             log.info("维度表构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
             dataManageClient.metaData(metaDataAttribute);
