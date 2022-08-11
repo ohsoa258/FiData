@@ -403,18 +403,18 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
         log.info("查询dag图参数:{},pipelTraceId:{}", JSON.toJSONString(nifiGetPortHierarchy), pipelTraceId);
         PipeDagDTO data = new PipeDagDTO();
         //先查redis,如果没有查一次调度模块
-        boolean flag = redisUtil.hasKey(RedisKeyEnum.PIPEL_TRACE_ID.getName() + pipelTraceId);
+        boolean flag = redisUtil.hasKey(RedisKeyEnum.PIPEL_TRACE_ID.getName() + ":" + pipelTraceId);
         if (!flag) {
             ResultEntity<PipeDagDTO> taskLinkedList = dataFactoryClient.getTaskLinkedList(Long.valueOf(nifiGetPortHierarchy.workflowId));
             if (Objects.equals(ResultEnum.SUCCESS.getCode(), taskLinkedList.code)) {
                 data = taskLinkedList.data;
-                redisUtil.set(RedisKeyEnum.PIPEL_TRACE_ID.getName() + pipelTraceId, JSON.toJSONString(data), 3000);
+                redisUtil.set(RedisKeyEnum.PIPEL_TRACE_ID.getName() + ":" + pipelTraceId, JSON.toJSONString(data), 3000);
             } else {
                 log.error("调度模块无此调度的dag图:" + taskLinkedList.msg);
             }
         } else {
             //如果有,从redis里面拿
-            String taskJson = redisUtil.get(RedisKeyBuild.buildDispatchStructureKey(Long.valueOf(nifiGetPortHierarchy.workflowId))).toString();
+            String taskJson = redisUtil.get(RedisKeyEnum.PIPEL_TRACE_ID.getName() + ":" + pipelTraceId).toString();
             if (org.apache.commons.lang3.StringUtils.isNotBlank(taskJson)) {
                 data = JSON.parseObject(taskJson, PipeDagDTO.class);
             }
