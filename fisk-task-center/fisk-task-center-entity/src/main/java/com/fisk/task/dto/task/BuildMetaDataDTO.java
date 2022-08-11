@@ -12,7 +12,7 @@ import java.util.List;
 @Data
 public class BuildMetaDataDTO extends MQBaseDTO {
 
-    public long userId;
+    public Long userId;
 
     public List<MetaDataInstanceAttributeDTO> data;
 
