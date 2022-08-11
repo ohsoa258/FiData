@@ -28,10 +28,6 @@ public class EntityAttributesDTO {
     public String port;
     @ApiModelProperty(value = "创建实例：网络协议")
     public String protocol;
-    @ApiModelProperty(value = "创建实例：用户名")
-    public String userName;
-    @ApiModelProperty(value = "创建实例：密码")
-    public String password;
     @ApiModelProperty(value = "联系人信息")
     public String contact_info;
     @ApiModelProperty(value = "评论")

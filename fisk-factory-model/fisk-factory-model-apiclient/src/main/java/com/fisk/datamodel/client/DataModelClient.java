@@ -8,6 +8,7 @@ import com.fisk.chartvisual.dto.chartvisual.TableDataDTO;
 import com.fisk.chartvisual.enums.DataDoFieldTypeEnum;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
@@ -295,5 +296,16 @@ public interface DataModelClient {
 
     @PostMapping("/business/getFiDataTableMetaData")
     @ApiOperation(value = "根据表信息/字段ID,获取表/字段基本信息")
-    public ResultEntity<List<FiDataTableMetaDataDTO>> getFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto);
+    ResultEntity<List<FiDataTableMetaDataDTO>> getFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto);
+
+    /**
+     * 获取业务域下拉列表
+     *
+     * @return
+     */
+    @GetMapping("/business/getBusinessAreaList")
+    @ApiOperation(value = "获取业务域下拉列表")
+    ResultEntity<List<AppBusinessInfoDTO>> getBusinessAreaList();
+
+
 }

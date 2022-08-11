@@ -3,6 +3,7 @@ package com.fisk.datamodel.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
@@ -144,5 +145,12 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @return 查询结果
      */
     List<FiDataTableMetaDataDTO> getFiDataTableMetaData(FiDataTableMetaDataReqDTO dto);
+
+    /**
+     * 获取所有业务域
+     *
+     * @return
+     */
+    List<AppBusinessInfoDTO> getBusinessAreaList();
 
 }

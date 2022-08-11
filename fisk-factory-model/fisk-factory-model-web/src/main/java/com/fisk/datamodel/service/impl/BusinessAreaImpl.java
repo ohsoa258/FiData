@@ -15,6 +15,7 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
@@ -965,4 +966,13 @@ public class BusinessAreaImpl
                 }).collect(Collectors.toList());
         return collect;
     }
+
+    @Override
+    public List<AppBusinessInfoDTO> getBusinessAreaList() {
+        QueryWrapper<BusinessAreaPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().select(BusinessAreaPO::getId, BusinessAreaPO::getBusinessName);
+        return BusinessAreaMap.INSTANCES.poListToBusinessAreaInfo(mapper.selectList(queryWrapper));
+
+    }
+
 }

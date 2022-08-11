@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
@@ -125,5 +126,11 @@ public class BusinessAreaController {
     @ApiOperation(value = "根据表信息/字段ID,获取表/字段基本信息")
     public ResultEntity<List<FiDataTableMetaDataDTO>> getFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataTableMetaData(dto));
+    }
+
+    @GetMapping("/getBusinessAreaList")
+    @ApiOperation(value = "获取业务域下拉列表")
+    public ResultEntity<List<AppBusinessInfoDTO>> getBusinessAreaList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessAreaList());
     }
 }

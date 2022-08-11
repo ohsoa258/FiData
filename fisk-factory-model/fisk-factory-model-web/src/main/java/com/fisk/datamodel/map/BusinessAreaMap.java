@@ -1,10 +1,15 @@
 package com.fisk.datamodel.map;
 
-import com.fisk.datamodel.dto.businessarea.*;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @author Lock
@@ -29,4 +34,23 @@ public interface BusinessAreaMap {
      * @return dto
      */
     BusinessAreaDTO poToDto(BusinessAreaPO po);
+
+    /**
+     * po==>BusinessAreaInfo
+     *
+     * @param po
+     * @return
+     */
+    @Mappings({
+            @Mapping(source = "businessName", target = "name")
+    })
+    AppBusinessInfoDTO poToBusinessAreaInfo(BusinessAreaPO po);
+
+    /**
+     * poList==>BusinessAreaInfo
+     *
+     * @param poList
+     * @return
+     */
+    List<AppBusinessInfoDTO> poListToBusinessAreaInfo(List<BusinessAreaPO> poList);
 }
