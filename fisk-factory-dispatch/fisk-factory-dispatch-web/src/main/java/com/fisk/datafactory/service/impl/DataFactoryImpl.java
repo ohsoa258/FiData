@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
@@ -154,8 +155,19 @@ public class DataFactoryImpl implements IDataFactory {
             return;
         }
         /*
-            填充workflowName、componentsName属性
+            填充workflowName、componentsName、管道主键id属性
          */
+        NifiCustomWorkflowDetailPO detailPo = nifiCustomWorkflowDetailImpl.query().eq("id", dto.id).one();
+        if (detailPo == null) {
+            throw new FkException(ResultEnum.COMPONENT_NOT_EXISTS);
+        }
+
+        NifiCustomWorkflowPO workflowPo = nifiCustomWorkflowImpl.query().eq("workflow_id", detailPo.workflowId).one();
+        if (workflowPo == null) {
+            throw new FkException(ResultEnum.CUSTOMWORKFLOW_NOT_EXISTS);
+        }
+        dto.pipelineId = workflowPo.id;
+
         dto.setItselfPort(dtoToDto(dto.getItselfPort()));
         if (!CollectionUtils.isEmpty(dto.getPipeEndDto())) {
             dto.setPipeEndDto(listDtoToDto(dto.getPipeEndDto()));

@@ -19,6 +19,9 @@ public class NifiPortsHierarchyDTO {
     @ApiModelProperty(value = "task的主键id")
     public Long id;
 
+    @ApiModelProperty(value = "管道主键id")
+    public Long pipelineId;
+
     @ApiModelProperty(value = "当前task属性")
     public NifiCustomWorkflowDetailDTO itselfPort;
 

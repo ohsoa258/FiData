@@ -9,8 +9,15 @@ import lombok.Data;
  */
 @Data
 public class PipelApiDispatchDTO {
+    /**
+     * task_id任务id
+     */
     public String workflowId;
     public long appId;
     public long apiId;
+    /**
+     * 管道id
+     */
+    public long pipelineId;
 
 }

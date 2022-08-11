@@ -528,13 +528,13 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
         return appNifiSettingDTOS;
     }
 
-    public void createCustomWorkNifiFlowVersion2(NifiCustomWorkListDTO nifiCustomWorkListDTO, String groupStructure, NifiCustomWorkflowDTO nifiCustomWorkflowDTO) {
+    public void createCustomWorkNifiFlowVersion2(NifiCustomWorkListDTO nifiCustomWorkList, String groupStructure, NifiCustomWorkflowDTO nifiCustomWorkflowDTO) {
         BuildNifiCustomWorkFlowDTO nifiNode = new BuildNifiCustomWorkFlowDTO();
-        String TopicName = MqConstants.TopicPrefix.TOPIC_PREFIX + nifiCustomWorkListDTO.pipelineId;
+        String TopicName = MqConstants.TopicPrefix.TOPIC_PREFIX + nifiCustomWorkList.pipelineId;
         List<ProcessorEntity> processorEntities = new ArrayList<>();
         List<ProcessorEntity> processors = new ArrayList<>();
         //1.找到在哪个组下面
-        List<NifiCustomWorkDTO> nifiCustomWorkDTOS = nifiCustomWorkListDTO.nifiCustomWorkDTOS;
+        List<NifiCustomWorkDTO> nifiCustomWorkDTOS = nifiCustomWorkList.nifiCustomWorkDTOS;
         try {
             //----------------------------------------------------------------------------------
             for (NifiCustomWorkDTO nifiCustomWorkDTO : nifiCustomWorkDTOS) {
@@ -565,6 +565,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                             pipelApiDispatch.workflowId = String.valueOf(buildNifiCustomWorkFlowDTO.workflowDetailId);
                             pipelApiDispatch.appId = buildNifiCustomWorkFlowDTO.appId;
                             pipelApiDispatch.apiId = Long.parseLong(buildNifiCustomWorkFlowDTO.tableId);
+                            pipelApiDispatch.pipelineId = nifiCustomWorkList.pipelineId;
                             pipelApiDispatchs.add(pipelApiDispatch);
                         }
 
