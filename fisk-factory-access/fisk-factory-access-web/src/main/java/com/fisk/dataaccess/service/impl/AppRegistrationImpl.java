@@ -571,7 +571,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     @SneakyThrows
     @Override
-    public List<String> connectDb(DbConnectionDTO dto) {
+    public List<DbNameDTO> connectDb(DbConnectionDTO dto) {
 /*        Connection conn = null;
         try {
             switch (dto.driveType) {
@@ -613,6 +613,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         // jdbc连接信息
         String url = "";
+        List<String> allDatabases = new ArrayList<>();
 
         DataSourceTypeEnum driveType = DataSourceTypeEnum.getValue(dto.driveType);
         try {
@@ -620,11 +621,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 case MYSQL:
                     MysqlConUtils mysqlConUtils = new MysqlConUtils();
                     url = "jdbc:mysql://" + dto.host + ":" + dto.port;
-                    return mysqlConUtils.getAllDatabases(url, dto.connectAccount, dto.connectPwd);
+                    allDatabases.addAll(mysqlConUtils.getAllDatabases(url, dto.connectAccount, dto.connectPwd));
+                    break;
                 case SQLSERVER:
                     url = "jdbc:sqlserver://" + dto.host + ":" + dto.port;
                     SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
-                    return sqlServerPlusUtils.getAllDatabases(url, dto.connectAccount, dto.connectPwd);
+                    allDatabases.addAll(sqlServerPlusUtils.getAllDatabases(url, dto.connectAccount, dto.connectPwd));
+                    break;
                 case ORACLE:
                     Class.forName(DriverTypeEnum.ORACLE.getName());
                     DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
@@ -636,8 +639,16 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             throw new FkException(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
         }
 
-        return null;
+        final int[] count = {1};
 
+        return allDatabases.stream().filter(Objects::nonNull)
+                .map(e -> {
+                    DbNameDTO dbname = new DbNameDTO();
+                    dbname.setId(count[0]);
+                    count[0]++;
+                    dbname.setDbName(e);
+                    return dbname;
+                }).collect(Collectors.toList());
     }
 
     @Override
