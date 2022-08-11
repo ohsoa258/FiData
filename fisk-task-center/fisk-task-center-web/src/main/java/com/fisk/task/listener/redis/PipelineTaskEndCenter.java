@@ -176,6 +176,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                     pipelApiDispatchDTO.apiId = Long.parseLong(split[6]);
                     pipelApiDispatchDTO.appId = Long.parseLong(split[5]);
                     pipelApiDispatchDTO.workflowId = split[3];
+                    pipelApiDispatchDTO.pipelineId = data.pipelineId;
                     apiImportDataDTO.pipelApiDispatch = JSON.toJSONString(pipelApiDispatchDTO);
                     dataAccessClient.importData(apiImportDataDTO);
                 } else {

@@ -173,24 +173,25 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                         ApiImportDataDTO apiImportData = new ApiImportDataDTO();
                         //apiImportData.pipelApiDispatch = kafkaReceiveDTO.pipelApiDispatch;
                         apiImportData.pipelTraceId = kafkaReceiveDTO.pipelTraceId;
-                        List<PipelApiDispatchDTO> pipelApiDispatchDTOS = JSON.parseArray(kafkaReceiveDTO.pipelApiDispatch, PipelApiDispatchDTO.class);
-                        for (PipelApiDispatchDTO pipelApiDispatch : pipelApiDispatchDTOS) {
+                        List<PipelApiDispatchDTO> pipelApiDispatchs = JSON.parseArray(kafkaReceiveDTO.pipelApiDispatch, PipelApiDispatchDTO.class);
+                        for (PipelApiDispatchDTO pipelApiDispatch : pipelApiDispatchs) {
                             apiImportData.pipelApiDispatch = JSON.toJSONString(pipelApiDispatch);
                             apiImportData.pipelJobTraceId = UUID.randomUUID().toString();
                             apiImportData.pipelTaskTraceId = UUID.randomUUID().toString();
                             apiImportData.pipelStageTraceId = UUID.randomUUID().toString();
+                            pipelineId = String.valueOf(pipelApiDispatch.pipelineId);
                             log.info("发送的topic3:{},内容:{}", topicName, JSON.toJSONString(apiImportData));
                             kafkaTemplateHelper.sendMessageAsync(topicName, JSON.toJSONString(apiImportData));
                             //job开始日志
                             Map<Integer, Object> jobMap = new HashMap<>();
-                            NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, OlapTableEnum.PHYSICS_API.getValue(), null, Math.toIntExact(pipelApiDispatch.apiId));
+                            NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelApiDispatch.workflowId, OlapTableEnum.PHYSICS_API.getValue(), null, Math.toIntExact(pipelApiDispatch.apiId));
                             NifiPortsHierarchyDTO nifiPortHierarchy = this.getNifiPortHierarchy(nifiGetPortHierarchy, kafkaReceiveDTO.pipelTraceId);
                             pipelName = nifiPortHierarchy.itselfPort.workflowName;
                             jobName = nifiPortHierarchy.itselfPort.componentsName;
                             //任务依赖的组件
                             jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
                             //jobMap.put(DispatchLogEnum.jobstate.getValue(), jobName + " " + NifiStageTypeEnum.RUNNING.getName());
-                            iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, split1[3], kafkaReceiveDTO.pipelJobTraceId, String.valueOf(nifiPortHierarchy.itselfPort.pid));
+                            iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, pipelApiDispatch.workflowId, kafkaReceiveDTO.pipelJobTraceId, String.valueOf(nifiPortHierarchy.itselfPort.pid));
                             //task日志
                             HashMap<Integer, Object> taskMap = new HashMap<>();
                             taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
@@ -203,8 +204,8 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                     //管道开始日志
                     PipelMap.put(DispatchLogEnum.pipelstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + pipelstart);
                     //PipelMap.put(DispatchLogEnum.pipelstate.getValue(), pipelName + " " + NifiStageTypeEnum.RUNNING.getName());
-                    iPipelJobLog.savePipelLog(pipelTraceId, PipelMap, split1[3]);
-                    iPipelLog.savePipelLog(pipelTraceId, PipelMap, split1[3]);
+                    iPipelJobLog.savePipelLog(pipelTraceId, PipelMap, pipelineId);
+                    iPipelLog.savePipelLog(pipelTraceId, PipelMap, pipelineId);
                 } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue())) {
 
                     //请求接口得到对象,条件--管道名称,表名称,表类别,表id,topic_name(加表名table_name)
