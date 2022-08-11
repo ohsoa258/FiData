@@ -238,6 +238,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         if (CollectionUtils.isNotEmpty(templateIds)) {
             QueryWrapper<DataCheckPO> dataCheckPOQueryWrapper = new QueryWrapper<>();
             dataCheckPOQueryWrapper.lambda().eq(DataCheckPO::getDelFlag, 1)
+                    .eq(DataCheckPO::getRuleState, RuleStateEnum.Enable.getValue())
                     .in(DataCheckPO::getTemplateId, templateIds)
                     .orderByAsc(DataCheckPO::getRuleSort);
             List<DataCheckPO> dataCheckPOS = dataCheckMapper.selectList(dataCheckPOQueryWrapper);
@@ -271,6 +272,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         if (CollectionUtils.isNotEmpty(templateIds)) {
             QueryWrapper<BusinessFilterPO> businessFilterPOQueryWrapper = new QueryWrapper<>();
             businessFilterPOQueryWrapper.lambda().eq(BusinessFilterPO::getDelFlag, 1)
+                    .eq(BusinessFilterPO::getRuleState, RuleStateEnum.Enable.getValue())
                     .in(BusinessFilterPO::getTemplateId, templateIds)
                     .orderByAsc(BusinessFilterPO::getRuleSort);
             List<BusinessFilterPO> businessFilterPOS = businessFilterMapper.selectList(businessFilterPOQueryWrapper);
@@ -304,6 +306,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         if (CollectionUtils.isNotEmpty(templateIds)) {
             QueryWrapper<LifecyclePO> lifecyclePOQueryWrapper = new QueryWrapper<>();
             lifecyclePOQueryWrapper.lambda().eq(LifecyclePO::getDelFlag, 1)
+                    .eq(LifecyclePO::getRuleState, RuleStateEnum.Enable.getValue())
                     .in(LifecyclePO::getTemplateId, templateIds);
             List<LifecyclePO> lifecyclePOS = lifecycleMapper.selectList(lifecyclePOQueryWrapper);
             if (CollectionUtils.isNotEmpty(lifecyclePOS) && CollectionUtils.isNotEmpty(noticeExtendPOS)) {
