@@ -72,12 +72,12 @@ public class EntityImpl implements IEntity {
     public List<EntityTreeDTO> getEntityTreeList()
     {
         List<EntityTreeDTO> list;
-        /*Boolean exist = redisTemplate.hasKey(metaDataEntity);
+        Boolean exist = redisTemplate.hasKey(metaDataEntity);
         if (exist) {
             String treeList = redisTemplate.opsForValue().get(metaDataEntity).toString();
             list = JSONObject.parseArray(treeList, EntityTreeDTO.class);
             return list;
-        }*/
+        }
         list = getEntityList();
         return list;
     }
@@ -172,6 +172,8 @@ public class EntityImpl implements IEntity {
                                 dbStag.guid = dbObject.getString("guid") + "_" + first.get().name;
                                 dbStag.parent = dbObject.getString("guid");
                                 dbStag.name = first.get().name;
+                                //库名
+                                dbStag.type = dbObject.getString("displayText");
                                 stagingDTOList.add(dbStag);
 
                                 childEntityDTO.parent = dbStag.guid;
