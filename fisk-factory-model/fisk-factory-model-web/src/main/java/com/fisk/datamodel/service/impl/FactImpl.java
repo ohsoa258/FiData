@@ -313,7 +313,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         try {
             MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
             metaDataAttribute.instanceList = list;
-            metaDataAttribute.userId = userHelper.getLoginUserInfo().id;
+            metaDataAttribute.userId = Long.parseLong(fact.createUser);
             // 更新元数据内容
             log.info("事实/指标表构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
             dataManageClient.metaData(metaDataAttribute);
