@@ -153,10 +153,91 @@ public class ClassificationImpl implements IClassification {
     }
 
     @Override
-    public ResultEnum classificationDelAssociatedEntity(ClassificationDelAssociatedEntityDTO dto)
-    {
-        ResultDataDTO<String> result = atlasClient.delete(entityByGuid + "/" + dto.entityGuid+"/classification/"+dto.classificationName);
+    public ResultEnum classificationDelAssociatedEntity(ClassificationDelAssociatedEntityDTO dto) {
+        ResultDataDTO<String> result = atlasClient.delete(entityByGuid + "/" + dto.entityGuid + "/classification/" + dto.classificationName);
         return atlasClient.newResultEnum(result);
     }
+
+    @Override
+    public ResultEnum synchronousClassification() {
+        ClassificationDefsDTO data = new ClassificationDefsDTO();
+        List<ClassificationDefContentDTO> list = new ArrayList<>();
+
+        //同步主数据业务分类
+        ClassificationDefContentDTO masterData = new ClassificationDefContentDTO();
+        masterData.name = "主数据";
+        masterData.description = "主数据";
+        list.add(masterData);
+
+        //同步数据接入业务分类
+        ClassificationDefContentDTO dataAccess = new ClassificationDefContentDTO();
+        dataAccess.name = "业务数据";
+        dataAccess.description = "业务数据";
+        list.add(dataAccess);
+
+        //同步数仓建模业务分类
+        ClassificationDefContentDTO dataModel = new ClassificationDefContentDTO();
+        dataModel.name = "分析数据";
+        dataModel.description = "分析数据";
+        list.add(dataModel);
+
+        //分析数据下分析模型
+        ClassificationDefContentDTO analysisModel = new ClassificationDefContentDTO();
+        analysisModel.name = "分析模型";
+        analysisModel.description = "分析模型";
+        List<String> analysisModelSuperType = new ArrayList<>();
+        analysisModelSuperType.add(dataModel.name);
+        analysisModel.superTypes = analysisModelSuperType;
+        list.add(analysisModel);
+
+        //分析数据下派生指标
+        ClassificationDefContentDTO derivedIndicators = new ClassificationDefContentDTO();
+        derivedIndicators.name = "派生指标";
+        derivedIndicators.description = "派生指标";
+        List<String> derivedIndicatorsSuperType = new ArrayList<>();
+        derivedIndicatorsSuperType.add(analysisModel.name);
+        derivedIndicators.superTypes = derivedIndicatorsSuperType;
+        list.add(derivedIndicators);
+
+        //分析模型下宽表
+        ClassificationDefContentDTO wideTable = new ClassificationDefContentDTO();
+        wideTable.name = "宽表";
+        wideTable.description = "宽表";
+        List<String> wideTableSuperType = new ArrayList<>();
+        wideTableSuperType.add(analysisModel.name);
+        wideTable.superTypes = wideTableSuperType;
+        list.add(wideTable);
+
+        //分析模型下原子指标
+        ClassificationDefContentDTO atomicIndicators = new ClassificationDefContentDTO();
+        atomicIndicators.name = "原子指标";
+        atomicIndicators.description = "原子指标";
+        List<String> atomicIndicatorsSuperType = new ArrayList<>();
+        atomicIndicatorsSuperType.add(analysisModel.name);
+        atomicIndicators.superTypes = atomicIndicatorsSuperType;
+        list.add(atomicIndicators);
+
+        //分析模型下业务过程
+        ClassificationDefContentDTO businessProcess = new ClassificationDefContentDTO();
+        businessProcess.name = "业务过程";
+        businessProcess.description = "业务过程";
+        List<String> businessProcessSuperType = new ArrayList<>();
+        businessProcessSuperType.add(dataModel.name);
+        businessProcess.superTypes = businessProcessSuperType;
+        list.add(businessProcess);
+
+        //分析模型下维度
+        ClassificationDefContentDTO dimension = new ClassificationDefContentDTO();
+        dimension.name = "维度";
+        dimension.description = "维度";
+        List<String> dimensionSuperType = new ArrayList<>();
+        dimensionSuperType.add(dataModel.name);
+        dimension.superTypes = dimensionSuperType;
+        list.add(dimension);
+        data.classificationDefs = list;
+
+        return this.addClassification(data);
+    }
+
 
 }
