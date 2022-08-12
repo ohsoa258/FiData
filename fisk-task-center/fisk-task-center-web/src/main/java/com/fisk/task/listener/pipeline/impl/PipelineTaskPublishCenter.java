@@ -110,6 +110,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                         TableNifiSettingPO tableNifiSetting = iTableNifiSettingService.getByTableId(Long.parseLong(split1[5]), Long.parseLong(split1[3]));
                         HashMap<Integer, Object> taskMap = new HashMap<>();
                         taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN + " - " + simpleDateFormat.format(new Date()));
+                        log.info("第二处调用保存task日志");
                         iPipelTaskLog.savePipelTaskLog(null, kafkaReceiveDTO.pipelTaskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
                         //任务中心发布任务,通知任务开始执行
                         kafkaTemplateHelper.sendMessageAsync(topicName, mapString);
@@ -165,6 +166,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                             HashMap<Integer, Object> taskMap = new HashMap<>();
                             taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
                             //taskMap.put(DispatchLogEnum.taskstate.getValue(), jobName + "-" + nifiPortHierarchy.itselfPort.tableOrder + " " + NifiStageTypeEnum.RUNNING.getName());
+                            log.info("第三处调用保存task日志");
                             iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.itselfPort.id), null, 0);
 
                         }
@@ -198,6 +200,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                             HashMap<Integer, Object> taskMap = new HashMap<>();
                             taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
                             //taskMap.put(DispatchLogEnum.taskstate.getValue(), jobName + "-" + nifiPortHierarchy.itselfPort.tableOrder + " " + NifiStageTypeEnum.RUNNING.getName());
+                            log.info("第四处调用保存task日志");
                             iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.itselfPort.id), null, 0);
 
                         }
@@ -206,6 +209,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                     //管道开始日志
                     PipelMap.put(DispatchLogEnum.pipelstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + pipelstart);
                     //PipelMap.put(DispatchLogEnum.pipelstate.getValue(), pipelName + " " + NifiStageTypeEnum.RUNNING.getName());
+                    log.info("第一处调用保存job日志");
                     iPipelJobLog.savePipelLog(pipelTraceId, PipelMap, pipelineId);
                     iPipelLog.savePipelLog(pipelTraceId, PipelMap, pipelineId);
                 } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue())) {
