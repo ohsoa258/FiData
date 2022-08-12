@@ -132,6 +132,7 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                 stageMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()) + " - " + dto.comment);
                 //stageMap.put(DispatchLogEnum.taskstate.getValue(), dto.pipleName + dto.JobName + " " + NifiStageTypeEnum.RUN_FAILED.getName());
                 //stageMap.put(DispatchLogEnum.taskcomment.getValue(), dto.pipleName + dto.JobName + " " + dto.comment);
+                log.info("第一处调用保存task日志");
                 iPipelTaskLog.savePipelTaskLog(dto.pipelJobTraceId, dto.pipelTaskTraceId, stageMap, list.get(0).taskId, null, 0);
             }
         }
@@ -154,6 +155,7 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
             pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()) + " - " + dto.comment);
             //pipelMap.put(DispatchLogEnum.pipelstate.getValue(), dto.pipleName + " " + NifiStageTypeEnum.RUN_FAILED.getName());
             //保存管道失败日志
+            log.info("第三处调用保存job日志");
             this.savePipelLog(dto.pipelTraceId, pipelMap, list.get(0).pipelId);
             iPipelLog.savePipelLog(dto.pipelTraceId, pipelMap, list.get(0).pipelId);
         }
