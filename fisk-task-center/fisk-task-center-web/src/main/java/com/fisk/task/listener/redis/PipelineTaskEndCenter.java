@@ -108,7 +108,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                 List<NifiCustomWorkflowDetailDTO> inportList = data.inportList;
                 for (NifiCustomWorkflowDetailDTO dto : inportList) {
                     //上一级的信息
-                    PipelJobLogPO byPipelTraceId = iPipelJobLog.getByPipelTraceId(pipelTraceId, dto.id);
+                    PipelJobLogPO byPipelTraceId = iPipelJobLog.getByPipelTraceId(pipelTraceId, dto.pid);
                     PipelTaskLogPO byPipelJobTraceId = iPipelTaskLog.getByPipelJobTraceId(byPipelTraceId.jobTraceId, dto.id);
                     String pipelTaskTraceId = byPipelJobTraceId.taskTraceId;
                     // 1.要记录上一个task结束

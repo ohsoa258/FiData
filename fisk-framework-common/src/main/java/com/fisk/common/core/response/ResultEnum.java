@@ -233,6 +233,7 @@ public enum ResultEnum {
     DATA_QUALITY_UPDATEDATA_ERROR(11014, "数据校验完成，修改表数据触发异常"),
     DATA_QUALITY_TABLECONFIGURATION_SENT_CHANGES(11015, "表配置信息在源已发生变更"),
     DATA_QUALITY_DATASOURCE_EXISTS(11016, "数据源已存在"),
+    DATA_QUALITY_NOTICE_NOTEXISTS(11017, "告警通知信息不存在"),
 
     /**
      * 数据安全

@@ -54,6 +54,8 @@ public class MqConstants {
 
         public static final String BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW = "task.build.nifi.dispatch.flow";
 
+        public static final String BUILD_GOVERNANCE_QUALITY_REPORT_FLOW = "task.build.governance.qualityReport.flow";
+
         public static final String BUILD_GOVERNANCE_FIELD_STRONG_RULE_TEMPLATE_FLOW = "task.build.governance.fieldStrongRule.template.flow";
 
         public static final String BUILD_GOVERNANCE_FIELD_AGGREGATE_THRESHOLD_TEMPLATE_FLOW = "task.build.governance.fieldAggregateThreshold.template.flow";

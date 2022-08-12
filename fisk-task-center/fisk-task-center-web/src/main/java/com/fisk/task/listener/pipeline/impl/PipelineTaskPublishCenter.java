@@ -177,7 +177,9 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                         for (PipelApiDispatchDTO pipelApiDispatch : pipelApiDispatchs) {
                             apiImportData.pipelApiDispatch = JSON.toJSONString(pipelApiDispatch);
                             apiImportData.pipelJobTraceId = UUID.randomUUID().toString();
+                            kafkaReceiveDTO.pipelJobTraceId = apiImportData.pipelJobTraceId;
                             apiImportData.pipelTaskTraceId = UUID.randomUUID().toString();
+                            kafkaReceiveDTO.pipelTaskTraceId = apiImportData.pipelTaskTraceId;
                             apiImportData.pipelStageTraceId = UUID.randomUUID().toString();
                             pipelineId = String.valueOf(pipelApiDispatch.pipelineId);
                             log.info("发送的topic3:{},内容:{}", topicName, JSON.toJSONString(apiImportData));
@@ -191,7 +193,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                             //任务依赖的组件
                             jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
                             //jobMap.put(DispatchLogEnum.jobstate.getValue(), jobName + " " + NifiStageTypeEnum.RUNNING.getName());
-                            iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, pipelApiDispatch.workflowId, kafkaReceiveDTO.pipelJobTraceId, String.valueOf(nifiPortHierarchy.itselfPort.pid));
+                            iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, pipelineId, kafkaReceiveDTO.pipelJobTraceId, String.valueOf(nifiPortHierarchy.itselfPort.pid));
                             //task日志
                             HashMap<Integer, Object> taskMap = new HashMap<>();
                             taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
