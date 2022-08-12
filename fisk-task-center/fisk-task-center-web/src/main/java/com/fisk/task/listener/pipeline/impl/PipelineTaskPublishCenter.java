@@ -186,7 +186,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                             kafkaTemplateHelper.sendMessageAsync(topicName, JSON.toJSONString(apiImportData));
                             //job开始日志
                             Map<Integer, Object> jobMap = new HashMap<>();
-                            NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelApiDispatch.workflowId, OlapTableEnum.PHYSICS_API.getValue(), null, Math.toIntExact(pipelApiDispatch.apiId));
+                            NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, OlapTableEnum.PHYSICS_API.getValue(), null, Math.toIntExact(pipelApiDispatch.apiId));
                             NifiPortsHierarchyDTO nifiPortHierarchy = this.getNifiPortHierarchy(nifiGetPortHierarchy, kafkaReceiveDTO.pipelTraceId);
                             pipelName = nifiPortHierarchy.itselfPort.workflowName;
                             jobName = nifiPortHierarchy.itselfPort.componentsName;
