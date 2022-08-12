@@ -58,9 +58,17 @@ public interface IClassification {
 
     /**
      * 业务分类删除关联实体
+     *
      * @param dto
      * @return
      */
     ResultEnum classificationDelAssociatedEntity(ClassificationDelAssociatedEntityDTO dto);
+
+    /**
+     * 同步业务分类
+     *
+     * @return
+     */
+    ResultEnum synchronousClassification();
 
 }

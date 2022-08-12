@@ -69,4 +69,10 @@ public class ClassificationController {
         return ResultEntityBuild.build(service.classificationDelAssociatedEntity(dto));
     }
 
+    @ApiOperation("同步业务分类")
+    @PostMapping("/synchronousClassification")
+    public ResultEntity<Object> synchronousClassification() {
+        return ResultEntityBuild.build(service.synchronousClassification());
+    }
+
 }
