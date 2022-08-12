@@ -558,26 +558,14 @@ public class DataFactoryImpl implements IDataFactory {
     @Override
     public ResultEntity<PipeDagDTO> getTaskLinkedList(Long id) {
 
-        NifiCustomWorkflowDetailPO detailPo = nifiCustomWorkflowDetailImpl.query().eq("id", id).select("workflow_id").one();
-        if (detailPo == null) {
-            // 当前组件已删除
-            return ResultEntityBuild.build(ResultEnum.COMPONENT_NOT_EXISTS);
-        }
-        // 查询管道是否存在
-        NifiCustomWorkflowPO customWorkflowPo = nifiCustomWorkflowImpl.query().eq("workflow_id", detailPo.workflowId).one();
-        if (customWorkflowPo == null) {
-            // 当前管道已删除
-            return ResultEntityBuild.build(ResultEnum.CUSTOMWORKFLOW_NOT_EXISTS);
-        }
-
-        boolean flag = redisUtil.hasKey(RedisKeyBuild.buildDispatchStructureKey(customWorkflowPo.id));
+        boolean flag = redisUtil.hasKey(RedisKeyBuild.buildDispatchStructureKey(id));
         if (!flag) {
             // 将task结构存入redis
-            setTaskLinkedList(customWorkflowPo.id);
+            setTaskLinkedList(id);
         }
 
         PipeDagDTO dto = null;
-        String taskJson = redisUtil.get(RedisKeyBuild.buildDispatchStructureKey(customWorkflowPo.id)).toString();
+        String taskJson = redisUtil.get(RedisKeyBuild.buildDispatchStructureKey(id)).toString();
         if (StringUtils.isNotBlank(taskJson)) {
             dto = JSON.parseObject(taskJson, PipeDagDTO.class);
 
