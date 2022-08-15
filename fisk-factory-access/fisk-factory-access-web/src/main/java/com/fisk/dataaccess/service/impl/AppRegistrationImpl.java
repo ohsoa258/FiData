@@ -169,7 +169,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         // 添加元数据信息
         ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
-        classificationInfoDto.setName(appRegistrationDTO.appName);
+        classificationInfoDto.setName(appRegistrationDTO.appName + "(" + appRegistrationDTO.appAbbreviation + ")");
         classificationInfoDto.setDescription(appRegistrationDTO.appDes);
         classificationInfoDto.setSourceType(1);
         classificationInfoDto.setDelete(false);
@@ -402,7 +402,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         // 删除元数据信息
         ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
-        classificationInfoDto.setName(model.appName);
+        classificationInfoDto.setName(model.appName + "(" + model.appAbbreviation + ")");
         classificationInfoDto.setDescription(model.appDes);
         classificationInfoDto.setSourceType(1);
         classificationInfoDto.setDelete(true);
