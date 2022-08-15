@@ -23,4 +23,9 @@ public interface IDataQualityClientManageService {
      * 查询数据质量所有数据源信息，含FiData系统数据源
      */
     ResultEntity<List<DataSourceConVO>> getAllDataSource();
+
+    /**
+     * 生成质量报告
+     */
+    ResultEntity<Object> CreateQualityReport(int id);
 }

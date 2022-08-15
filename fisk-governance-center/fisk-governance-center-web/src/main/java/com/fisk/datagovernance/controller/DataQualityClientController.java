@@ -36,10 +36,8 @@ public class DataQualityClientController {
      */
     @ApiOperation("查询数据质量表规则（含字段规则）")
     @GetMapping("/getTableRuleList")
-    public  ResultEntity<TableRuleInfoDTO> getTableRuleList(@RequestParam("dataSourceId") int dataSourceId,
-                                                            @RequestParam("tableUnique") String tableUnique,
-                                                            @RequestParam("tableBusinessType") int tableBusinessType) {
-        return service.getTableRuleList(dataSourceId,tableUnique,tableBusinessType);
+    public ResultEntity<TableRuleInfoDTO> getTableRuleList(@RequestParam("dataSourceId") int dataSourceId, @RequestParam("tableUnique") String tableUnique, @RequestParam("tableBusinessType") int tableBusinessType) {
+        return service.getTableRuleList(dataSourceId, tableUnique, tableBusinessType);
     }
 
     /**
@@ -49,7 +47,18 @@ public class DataQualityClientController {
      */
     @ApiOperation("查询数据质量所有数据源信息，含FiData系统数据源")
     @GetMapping("/getAllDataSource")
-    public  ResultEntity<List<DataSourceConVO>> getAllDataSource() {
+    public ResultEntity<List<DataSourceConVO>> getAllDataSource() {
         return service.getAllDataSource();
+    }
+
+    /**
+     * 生成质量报告
+     *
+     * @return 操作结果
+     */
+    @ApiOperation("生成质量报告")
+    @GetMapping("/CreateQualityReport")
+    public ResultEntity<Object> CreateQualityReport(@RequestParam("id") int id) {
+        return service.CreateQualityReport(id);
     }
 }

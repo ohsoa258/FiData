@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.constants.MqConstants;
+import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -17,7 +19,6 @@ import com.fisk.datagovernance.dto.dataquality.notice.NoticeEditDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeQueryDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.datagovernance.enums.dataquality.*;
-import com.fisk.datagovernance.map.dataquality.NoticeExtendMap;
 import com.fisk.datagovernance.map.dataquality.NoticeMap;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.INoticeManageService;
@@ -25,6 +26,9 @@ import com.fisk.datagovernance.vo.dataquality.emailserver.EmailServerVO;
 import com.fisk.datagovernance.vo.dataquality.notice.NoticeDetailVO;
 import com.fisk.datagovernance.vo.dataquality.notice.NoticeModuleVO;
 import com.fisk.datagovernance.vo.dataquality.notice.NoticeVO;
+import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.task.UnifiedControlDTO;
+import com.fisk.task.enums.DataClassifyEnum;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,6 +71,9 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
     @Resource
     UserHelper userHelper;
 
+    @Resource
+    PublishTaskClient publishTaskClient;
+
     @Override
     public Page<NoticeVO> getAll(NoticeQueryDTO query) {
         return baseMapper.getAll(query.page, query.keyword);
@@ -104,6 +111,8 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             });
             noticeExtendManageImpl.saveBatch(noticeExtendPOS);
         }
+        //第五步：保存调度任务
+        publishBuildunifiedControlTask(Math.toIntExact(noticePO.id), noticePO.noticeState);
         return ResultEnum.SUCCESS;
     }
 
@@ -143,6 +152,8 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             });
             noticeExtendManageImpl.saveBatch(noticeExtendPOS);
         }
+        //第五步：保存调度任务
+        publishBuildunifiedControlTask(Math.toIntExact(noticePO.id), noticePO.noticeState);
         return ResultEnum.SUCCESS;
     }
 
@@ -153,6 +164,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             return ResultEnum.DATA_NOTEXISTS;
         }
         noticePO.setNoticeState(dto.noticeState.getValue());
+        publishBuildunifiedControlTask(Math.toIntExact(noticePO.id), noticePO.noticeState);
         return baseMapper.updateById(noticePO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -163,11 +175,12 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             return ResultEnum.DATA_NOTEXISTS;
         }
         noticeExtendMapper.updateByNoticeId(id);
+        publishBuildunifiedControlTask(Math.toIntExact(noticePO.id), RuleStateEnum.Disable.getValue());
         return baseMapper.deleteByIdWithFill(noticePO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
-    public ResultEntity<Object> sendEmialNotice(NoticeDTO dto) {
+    public ResultEntity<Object> sendEmailNotice(NoticeDTO dto) {
         //第一步：查询邮件服务器设置
         EmailServerPO emailServerPO = emailServerMapper.selectById(dto.emailServerId);
         if (emailServerPO == null) {
@@ -353,5 +366,36 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         noticeDetailVO.noticeIds_Lifecycle = noticeIds_Lifecycle;
         noticeDetailVO.emailServerVOS = emailServerVOS;
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, noticeDetailVO);
+    }
+
+    /**
+     * @return ResultEnum
+     * @description 调用task服务提供的API，创建调度任务
+     * @author dick
+     * @date 2022/4/8 10:59
+     * @version v1.0
+     * @params id 组件id
+     * @params stateEnum 状态
+     */
+    public ResultEnum publishBuildunifiedControlTask(int id, int state) {
+        ResultEnum resultEnum = ResultEnum.TASK_NIFI_DISPATCH_ERROR;
+        //调用task服务提供的API生成调度任务
+        if (id == 0) {
+            return ResultEnum.SAVE_VERIFY_ERROR;
+        }
+        long userId = userHelper.getLoginUserInfo().getId();
+        boolean isDelTask = state != RuleStateEnum.Enable.getValue();
+        UnifiedControlDTO unifiedControlDTO = new UnifiedControlDTO();
+        unifiedControlDTO.setUserId(userId);
+        unifiedControlDTO.setId(id);
+        unifiedControlDTO.setScheduleType(SchedulingStrategyTypeEnum.CRON);
+        unifiedControlDTO.setTopic(MqConstants.QueueConstants.BUILD_GOVERNANCE_QUALITY_REPORT_FLOW);
+        unifiedControlDTO.setDataClassifyEnum(DataClassifyEnum.UNIFIEDCONTROL);
+        unifiedControlDTO.setDeleted(isDelTask);
+        ResultEntity<Object> result = publishTaskClient.publishBuildunifiedControlTask(unifiedControlDTO);
+        if (result != null) {
+            resultEnum = ResultEnum.getEnum(result.getCode());
+        }
+        return resultEnum;
     }
 }

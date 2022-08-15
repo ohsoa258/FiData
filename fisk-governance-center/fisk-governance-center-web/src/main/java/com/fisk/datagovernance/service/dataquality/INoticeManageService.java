@@ -63,7 +63,7 @@ public interface INoticeManageService extends IService<NoticePO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEntity<Object> sendEmialNotice(NoticeDTO dto);
+    ResultEntity<Object> sendEmailNotice(NoticeDTO dto);
 
     /**
      * 查询通知下的规则

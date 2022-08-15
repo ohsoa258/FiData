@@ -20,10 +20,7 @@ public enum DataClassifyEnum  implements BaseEnum {
     CUSTOMWORKSTRUCTURE(6,"结构层级"),
     //scheduling component
     CUSTOMWORKSCHEDULINGCOMPONENT(7,"管道服务-调度组件"),
-    DATACHECK_MODULE(100, "数据校验"),
-    BIZCHECK_MODULE(200, "业务清洗"),
-    LIFECYCLE_MODULE(300, "生命周期"),
-    WARNNOTICE_MODULE(400, "告警通知");
+    QUALITYREPORT(12, "质量报告");
 
     private final String name;
     private final int value;

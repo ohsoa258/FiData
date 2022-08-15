@@ -56,10 +56,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     private NoticeExtendMapper noticeExtendMapper;
 
     @Override
-    public ResultEntity<TableRuleInfoDTO> getTableRuleList(int dataSourceId,
-                                                           String tableUnique,
-                                                           int tableBusinessType) {
-        if (dataSourceId == 0 || StringUtils.isEmpty(tableUnique) || tableBusinessType==0) {
+    public ResultEntity<TableRuleInfoDTO> getTableRuleList(int dataSourceId, String tableUnique, int tableBusinessType) {
+        if (dataSourceId == 0 || StringUtils.isEmpty(tableUnique) || tableBusinessType == 0) {
             return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, null);
         }
         // 数据校验、业务清洗、生命周期所对应的模板Id
@@ -72,7 +70,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         dataCheckPOQueryWrapper.lambda().eq(DataCheckPO::getDelFlag, 1)
                 .eq(DataCheckPO::getDatasourceId, dataSourceId)
                 .eq(DataCheckPO::getTableUnique, tableUnique)
-                .eq(DataCheckPO::getTableBusinessType,tableBusinessType)
+                .eq(DataCheckPO::getTableBusinessType, tableBusinessType)
                 .eq(DataCheckPO::getRuleState, 1);
         List<DataCheckPO> dataCheckPOS = dataCheckMapper.selectList(dataCheckPOQueryWrapper);
         List<DataCheckExtendPO> dataCheckExtendPOS = null;
@@ -93,7 +91,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         businessFilterPOQueryWrapper.lambda().eq(BusinessFilterPO::getDelFlag, 1)
                 .eq(BusinessFilterPO::getDatasourceId, dataSourceId)
                 .eq(BusinessFilterPO::getTableUnique, tableUnique)
-                .eq(BusinessFilterPO::getTableBusinessType,tableBusinessType)
+                .eq(BusinessFilterPO::getTableBusinessType, tableBusinessType)
                 .eq(BusinessFilterPO::getRuleState, 1);
         List<BusinessFilterPO> businessFilterPOS = businessFilterMapper.selectList(businessFilterPOQueryWrapper);
         if (CollectionUtils.isNotEmpty(businessFilterPOS)) {
@@ -108,7 +106,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         lifecyclePOQueryWrapper.lambda().eq(LifecyclePO::getDelFlag, 1)
                 .eq(LifecyclePO::getDatasourceId, dataSourceId)
                 .eq(LifecyclePO::getTableUnique, tableUnique)
-                .eq(LifecyclePO::getTableBusinessType,tableBusinessType)
+                .eq(LifecyclePO::getTableBusinessType, tableBusinessType)
                 .eq(LifecyclePO::getRuleState, 1);
         List<LifecyclePO> lifecyclePOS = lifecycleMapper.selectList(lifecyclePOQueryWrapper);
         if (CollectionUtils.isNotEmpty(lifecyclePOS)) {
@@ -332,5 +330,22 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     @Override
     public ResultEntity<List<DataSourceConVO>> getAllDataSource() {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataSourceConManageImpl.getAllDataSource());
+    }
+
+    @Override
+    public ResultEntity<Object> CreateQualityReport(int id) {
+        if (id == 0) {
+            return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, "");
+        }
+        NoticePO noticePO = noticeMapper.selectById(id);
+        if (noticePO == null) {
+            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NOTICE_NOTEXISTS, "");
+        }
+        TemplatePO templatePO = templateMapper.selectById(noticePO.templateId);
+        if (templatePO == null) {
+            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS, "");
+        }
+        // 第一步：判断质量报告属于哪个业务模块
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "");
     }
 }

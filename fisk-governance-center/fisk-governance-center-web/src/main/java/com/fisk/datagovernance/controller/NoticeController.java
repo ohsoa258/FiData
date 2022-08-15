@@ -63,7 +63,7 @@ public class NoticeController {
     @ApiOperation("测试发送邮件通知")
     @PostMapping("/testSend")
     public ResultEntity<Object> testSend(@RequestBody NoticeDTO dto) {
-        return service.sendEmialNotice(dto);
+        return service.sendEmailNotice(dto);
     }
 
     @ApiOperation("查询通知下的规则")
