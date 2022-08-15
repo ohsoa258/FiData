@@ -13,6 +13,8 @@ import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceFieldDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
+import com.fisk.datamanagement.dto.classification.ClassificationDTO;
 import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
 import com.fisk.datamanagement.dto.entity.EntityDTO;
 import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
@@ -24,6 +26,7 @@ import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.map.MetaDataMap;
 import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
+import com.fisk.datamanagement.service.impl.ClassificationImpl;
 import com.fisk.datamanagement.service.impl.EntityImpl;
 import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
@@ -60,6 +63,8 @@ public class MetaDataImpl implements IMetaData {
     AtlasClient atlasClient;
     @Resource
     EntityImpl entityImpl;
+    @Resource
+    ClassificationImpl classification;
     @Resource
     MetadataMapAtlasMapper metadataMapAtlasMapper;
     @Resource
@@ -109,7 +114,7 @@ public class MetaDataImpl implements IMetaData {
                     continue;
                 }
                 for (MetaDataTableAttributeDTO table : db.tableList) {
-                    String tableGuid = metaDataTable(table, dbGuid);
+                    String tableGuid = metaDataTable(table, dbGuid, db.name);
                     if (StringUtils.isEmpty(tableGuid)) {
                         continue;
                     }
@@ -480,7 +485,7 @@ public class MetaDataImpl implements IMetaData {
      * @param parentEntityGuid
      * @return
      */
-    public String metaDataTable(MetaDataTableAttributeDTO dto, String parentEntityGuid) {
+    public String metaDataTable(MetaDataTableAttributeDTO dto, String parentEntityGuid, String dbName) {
         String atlasGuid = getMetaDataConfig(dto.qualifiedName);
         if (StringUtils.isEmpty(atlasGuid)) {
             EntityDTO entityDTO = new EntityDTO();
@@ -493,7 +498,10 @@ public class MetaDataImpl implements IMetaData {
             attributesDTO.db = parentEntity;
             entityTypeDTO.attributes = attributesDTO;
             entityDTO.entity = entityTypeDTO;
-            return addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_TABLE, parentEntityGuid);
+            atlasGuid = addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_TABLE, parentEntityGuid);
+            //同步业务分类
+            associatedClassification(atlasGuid, dto.name, dbName);
+            return atlasGuid;
         }
         return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_TABLE, dto);
     }
@@ -521,6 +529,46 @@ public class MetaDataImpl implements IMetaData {
             return addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_COLUMN, parentEntityGuid);
         }
         return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_COLUMN, dto);
+    }
+
+    /**
+     * 实体关联业务分类
+     *
+     * @param tableGuid
+     * @param tableName
+     * @param dbName
+     */
+    public void associatedClassification(String tableGuid, String tableName, String dbName) {
+        try {
+            //获取数据源列表
+            ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
+            if (allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
+                return;
+            }
+            Optional<DataSourceDTO> sourceData = allFiDataDataSource.data.stream().filter(e -> e.conDbname.equals(dbName)).findFirst();
+            if (!sourceData.isPresent()) {
+                return;
+            }
+            ClassificationAddEntityDTO dto = new ClassificationAddEntityDTO();
+            dto.entityGuids = new ArrayList<>();
+            dto.entityGuids.add(tableGuid);
+            ClassificationDTO data = new ClassificationDTO();
+            //ods表关联业务数据分类
+            if (DataSourceConfigEnum.DMP_ODS.getValue() == sourceData.get().id) {
+                data.typeName = "业务数据";
+            } else if (DataSourceConfigEnum.DMP_DW.getValue() == sourceData.get().id) {
+                if ("dim_".equals(tableName.substring(0, 4))) {
+                    data.typeName = "维度";
+                } else {
+                    data.typeName = "业务过程";
+                }
+            }
+            dto.classification = data;
+            classification.classificationAddAssociatedEntity(dto);
+        } catch (Exception e) {
+            log.error("associatedClassification ex:", e);
+        }
+
     }
 
     /**
