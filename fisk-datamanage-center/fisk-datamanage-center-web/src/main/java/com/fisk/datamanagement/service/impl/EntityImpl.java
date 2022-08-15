@@ -163,21 +163,27 @@ public class EntityImpl implements IEntity {
                             if (!sourceData.isPresent()) {
                                 continue;
                             }
+                            Optional<AppBusinessInfoDTO> first = null;
                             if (DataSourceConfigEnum.DMP_ODS.getValue() == sourceData.get().id) {
-                                Optional<AppBusinessInfoDTO> first = appList.data.stream().filter(e -> e.id == Integer.parseInt(names.getString("comment"))).findFirst();
+                                first = appList.data.stream().filter(e -> e.id == Integer.parseInt(names.getString("comment"))).findFirst();
                                 if (!first.isPresent()) {
                                     continue;
                                 }
-                                EntityStagingDTO dbStag = new EntityStagingDTO();
-                                dbStag.guid = dbObject.getString("guid") + "_" + first.get().name;
-                                dbStag.parent = dbObject.getString("guid");
-                                dbStag.name = first.get().name;
-                                //库名
-                                dbStag.type = dbObject.getString("displayText");
-                                stagingDTOList.add(dbStag);
-
-                                childEntityDTO.parent = dbStag.guid;
+                            } else if (DataSourceConfigEnum.DMP_DW.getValue() == sourceData.get().id) {
+                                first = businessAreaList.data.stream().filter(e -> e.id == Integer.parseInt(names.getString("comment"))).findFirst();
+                                if (!first.isPresent()) {
+                                    continue;
+                                }
                             }
+                            EntityStagingDTO dbStag = new EntityStagingDTO();
+                            dbStag.guid = dbObject.getString("guid") + "_" + first.get().name;
+                            dbStag.parent = dbObject.getString("guid");
+                            dbStag.name = first.get().name;
+                            //库名
+                            dbStag.type = dbObject.getString("displayText");
+                            stagingDTOList.add(dbStag);
+
+                            childEntityDTO.parent = dbStag.guid;
                             break;
                         case RDBMS_COLUMN:
                             JSONObject tables = JSON.parseObject(names.getString("table"));

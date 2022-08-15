@@ -161,6 +161,7 @@ public class ClassificationImpl implements IClassification {
 
     @Override
     public ResultEnum appSynchronousClassification(ClassificationInfoDTO dto) {
+        log.info("开始同步业务， 参数:{}", JSON.toJSONString(dto));
         //是否删除
         if (dto.delete) {
             return deleteClassification(dto.name);
