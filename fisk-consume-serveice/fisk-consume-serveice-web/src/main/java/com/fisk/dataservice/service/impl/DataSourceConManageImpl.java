@@ -640,7 +640,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConPO dataSource) {
         List<FieldInfoVO> fieldlist = new ArrayList<>();
         String sql = "";
-        com.fisk.dataservice.enums.DataSourceTypeEnum value = com.fisk.dataservice.enums.DataSourceTypeEnum.values()[dataSource.getConType()];
+       DataSourceTypeEnum value = DataSourceTypeEnum.values()[dataSource.getConType()];
         switch (value) {
             case MYSQL:
                 sql = String.format("SELECT\n" +

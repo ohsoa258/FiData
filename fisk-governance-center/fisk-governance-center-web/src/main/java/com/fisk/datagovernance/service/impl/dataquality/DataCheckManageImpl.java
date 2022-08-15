@@ -31,6 +31,7 @@ import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckTypeV0;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.SyncCheckInfoVO;
+import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import org.apache.commons.lang.StringUtils;
@@ -251,10 +252,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             if (dataSourceInfo.getDatasourceType() == SourceTypeEnum.FiData.getValue()) {
                 FiDataTableMetaDataReqDTO reqDTO = new FiDataTableMetaDataReqDTO();
                 reqDTO.setDataSourceId(String.valueOf(dataSourceInfo.datasourceId));
-                HashMap<String,TableBusinessTypeEnum> hashMap=new HashMap<>();
+                HashMap<String, TableBusinessTypeEnum> hashMap = new HashMap<>();
                 List<String> collect = tableUnique.stream().collect(Collectors.toList());
-                collect.forEach(t->{
-                    hashMap.put(t,TableBusinessTypeEnum.NONE);
+                collect.forEach(t -> {
+                    hashMap.put(t, TableBusinessTypeEnum.NONE);
                 });
                 reqDTO.setTableUniques(hashMap);
                 ResultEntity<List<FiDataTableMetaDataDTO>> listResultEntity = null;
@@ -438,8 +439,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params dataCheckExtendPO
      * @params fieldValues
      */
-    public DataCheckResultVO GetDataCheckResult_Interface(String tableName, String fieldName, String fieldWhere, int dataCheckType,
-                                                          List<String> fieldValues) {
+    public DataCheckResultVO GetDataCheckResult_Interface(String tableName, String fieldName, String fieldWhere, int dataCheckType, List<String> fieldValues) {
         DataCheckResultVO dataCheckResultVO = new DataCheckResultVO();
         DataCheckTypeEnum dataCheckTypeEnum = DataCheckTypeEnum.getEnum(dataCheckType);
         boolean isValid = true;
@@ -670,8 +670,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params checkResultSqlList
      */
     @Transactional(rollbackFor = Exception.class)
-    public ResultEntity<List<DataCheckResultVO>> UpdateTableData_Sync(Connection connection, DataSourceTypeEnum dataSourceTypeEnum,
-                                                                      List<String> dtoPramsList, List<SyncCheckInfoVO> checkResultSqlList) {
+    public ResultEntity<List<DataCheckResultVO>> UpdateTableData_Sync(Connection connection, DataSourceTypeEnum dataSourceTypeEnum, List<String> dtoPramsList, List<SyncCheckInfoVO> checkResultSqlList) {
         List<DataCheckResultVO> results = new ArrayList<>();
         ResultEnum resultEnum = ResultEnum.SUCCESS;
         try {
@@ -784,9 +783,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params dataCheckPO
      * @params dataCheckExtendFilters
      */
-    public ResultEntity<List<SyncCheckInfoVO>> GetCheckFieldRule_Sync(TemplatePO templatePO, DataSourceConPO dataSourceConPO,
-                                                                      DataSourceTypeEnum dataSourceTypeEnum, DataCheckPO dataCheckPO,
-                                                                      DataCheckExtendPO dataCheckExtend, FiDataTableMetaDataDTO fiDataTableMetaData) {
+    public ResultEntity<List<SyncCheckInfoVO>> GetCheckFieldRule_Sync(TemplatePO templatePO, DataSourceConPO dataSourceConPO, DataSourceTypeEnum dataSourceTypeEnum, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtend, FiDataTableMetaDataDTO fiDataTableMetaData) {
         List<SyncCheckInfoVO> checkResultSqls = new ArrayList<>();
         String tableName = "";
         String fieldName = "";
@@ -1101,7 +1098,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     public ResultEntity<List<FiDataTableMetaDataDTO>> getMdmTableMetaData(List<String> tableUniques) {
         List<FiDataTableMetaDataDTO> fiDataTableMetaDataDTOS = new ArrayList<>();
         for (String tableUnique : tableUniques) {
-            ResultEntity<EntityInfoVO> attributeById = mdmClient.getAttributeById(Integer.valueOf(tableUnique),null);
+            ResultEntity<EntityInfoVO> attributeById = mdmClient.getAttributeById(Integer.valueOf(tableUnique), null);
             if (attributeById != null && attributeById.code == ResultEnum.SUCCESS.getCode()) {
                 EntityInfoVO entityInfoVO = attributeById.getData();
                 if (entityInfoVO != null) {
@@ -1112,4 +1109,111 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
         return null;
     }
+
+    /**
+     * @return com.fisk.common.core.response.ResultEntity<java.lang.String>
+     * @description 根据校验条件生成校验规则
+     * @author dick
+     * @date 2022/4/2 15:51
+     * @version v1.0
+     * @params dto
+     * @params templateTypeEnum
+     */
+    public ResultEntity<String> createRole(DataCheckDTO dto, TemplateTypeEnum templateTypeEnum) {
+        if (dto == null) {
+            return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, "");
+        }
+        List<DataSourceConVO> allDataSource = dataSourceConManageImpl.getAllDataSource();
+        DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == dto.getDatasourceId()).findFirst().orElse(null);
+        if (dataSourceConVO == null) {
+            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS, "");
+        }
+        ResultEntity<String> rule = null;
+        switch (templateTypeEnum) {
+            case DATA_MISSING_TEMPLATE:
+                // 数据缺失模板
+                rule = createData_MissingRule(dataSourceConVO, dto);
+                break;
+            case FIELD_AGGREGATE_TEMPLATE:
+                // 字段聚合波动阈值模板
+                rule = createField_AggregateRule(dataSourceConVO, dto);
+                break;
+        }
+        return rule;
+    }
+
+    /**
+     * @return com.fisk.common.core.response.ResultEntity<java.lang.String>
+     * @description 生成数据缺失模板规则
+     * @author dick
+     * @date 2022/3/25 13:59
+     * @version v1.0
+     * @params dataSourceTypeEnum 数据源类型
+     * @params dto 请求参数DTO
+     */
+    public ResultEntity<String> createData_MissingRule(DataSourceConVO dataSourceConVO, DataCheckDTO dto) {
+        String sql = String.format("SELECT * FROM %s WHERE %s IS NULL OR %s = '' ",
+                dto.getTempTableName(), dto.getDataCheckExtends().get(0).tempFieldName,
+                dto.getDataCheckExtends().get(0).tempFieldName);
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, sql);
+    }
+
+    /**
+     * @return com.fisk.common.core.response.ResultEntity<java.lang.String>
+     * @description 生成字段聚合波动阈值规则
+     * @author dick
+     * @date 2022/3/25 13:59
+     * @version v1.0
+     * @params tableName 表名称
+     * @params fieldName 字段名称
+     * @params fieldAggregate 字段聚合函数
+     * @params thresholdValue 波动阈值
+     */
+    public ResultEntity<String> createField_AggregateRule(DataSourceConVO dataSourceConVO, DataCheckDTO dto) {
+
+        String sql = "SELECT\n" +
+                "\t'%s' AS checkDataBase,\n" +
+                "\t'%s' AS checkTable,\n" +
+                "\t'%s' AS checkField,\n" +
+                "\t'%s' AS checkDesc,\n" +
+                "\t'%s' AS checkType,\n" +
+                "CASE\n" +
+                "\t\t\n" +
+                "\t\tWHEN %s >= %s THEN\n" +
+                "\t\t'fail' ELSE 'success' \n" +
+                "\tEND AS checkResult \n" +
+                "FROM\n" +
+                "\t'%s';";
+        String fieldAggregate = dto.dataCheckExtends.get(0).fieldAggregate;
+        String dataBase = dataSourceConVO.conDbname;
+        String tableName = dto.tempTableName;
+        String fieldName = dto.dataCheckExtends.get(0).tempFieldName;
+        int thresholdValue = dto.thresholdValue;
+        switch (fieldAggregate) {
+            case "SUM":
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
+                        "SUM", "SUM(" + fieldName + ")", thresholdValue, tableName);
+                break;
+            case "COUNT":
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
+                        "COUNT", "COUNT(" + fieldName + ")", thresholdValue, tableName);
+                break;
+            case "AVG":
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
+                        "AVG", "AVG(CAST(" + fieldName + " AS decimal(10, 2)))", thresholdValue, tableName);
+                break;
+            case "MAX":
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
+                        "MAX", "MAX(" + fieldName + ")", thresholdValue, tableName);
+                break;
+            case "MIN":
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
+                        "MIN", "MIN(" + fieldName + ")", thresholdValue, tableName);
+                break;
+            default:
+                return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, "");
+        }
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, sql);
+    }
+
 }

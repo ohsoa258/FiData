@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -19,14 +20,11 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataservice.dto.api.*;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.ApiTypeEnum;
-import com.fisk.dataservice.enums.DataSourceTypeEnum;
-import com.fisk.dataservice.map.ApiFieldMap;
-import com.fisk.dataservice.map.ApiFilterConditionMap;
-import com.fisk.dataservice.map.ApiParmMap;
-import com.fisk.dataservice.map.ApiRegisterMap;
+import com.fisk.dataservice.map.*;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IApiRegisterManageService;
 import com.fisk.dataservice.vo.api.*;
+import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
 import org.apache.commons.lang.StringUtils;
@@ -52,6 +50,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
 
     @Resource
     private DataSourceConMapper dataSourceConMapper;
+
+    @Resource
+    private DataSourceConManageImpl dataSourceConManageImpl;
 
     @Resource
     private ApiFilterConditionMapper apiFilterConditionMapper;
@@ -370,8 +371,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         }
 
         // 第三步：查询数据源信息
-        DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(dto.apiDTO.getDatasourceId());
-        if (dataSourceConPO == null)
+        DataSourceConVO dataSourceConVO = dataSourceConManageImpl.getAllDataSource().stream().filter(t -> t.getId() == dto.apiDTO.getDatasourceId()).findFirst().orElse(null);
+        if (dataSourceConVO == null)
             return apiPreviewVO;
 
         // 第四步：如果是编辑，查询上次配置的字段信息，如果描述信息不为空，使用该描述。如果为空使用系统查询出来的描述信息
@@ -387,12 +388,12 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         try {
             Statement st = null;
             Connection conn = null;
-            if (dataSourceConPO.getConType() == DataSourceTypeEnum.MYSQL.getValue()) {
-                conn = getStatement(DataSourceTypeEnum.MYSQL.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
-            } else if (dataSourceConPO.getConType() == DataSourceTypeEnum.SQLSERVER.getValue()) {
-                conn = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
-            } else if (dataSourceConPO.getConType() == DataSourceTypeEnum.POSTGRESQL.getValue()) {
-                conn = getStatement(DataSourceTypeEnum.POSTGRESQL.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
+            if (dataSourceConVO.getConType() == DataSourceTypeEnum.MYSQL) {
+                conn = getStatement(DataSourceTypeEnum.MYSQL.getDriverName(), dataSourceConVO.conStr, dataSourceConVO.conAccount, dataSourceConVO.conPassword);
+            } else if (dataSourceConVO.getConType() == DataSourceTypeEnum.SQLSERVER) {
+                conn = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), dataSourceConVO.conStr, dataSourceConVO.conAccount, dataSourceConVO.conPassword);
+            } else if (dataSourceConVO.getConType() == DataSourceTypeEnum.POSTGRESQL) {
+                conn = getStatement(DataSourceTypeEnum.POSTGRESQL.getDriverName(), dataSourceConVO.conStr, dataSourceConVO.conAccount, dataSourceConVO.conPassword);
             }
             /*
                 以流的形式 TYPE_FORWARD_ONLY: 只可向前滚动查询 CONCUR_READ_ONLY: 指定不可以更新 ResultSet
@@ -407,7 +408,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             assert st != null;
             ResultSet rs = st.executeQuery(sql);
             //获取数据集
-            apiPreviewVO = resultSetToJsonArray(conn, dataSourceConPO, rs, dto, fieldConfigPOS);
+            apiPreviewVO = resultSetToJsonArray(conn, dataSourceConVO, rs, dto, fieldConfigPOS);
             rs.close();
         } catch (Exception e) {
             throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR, e.getMessage());
@@ -424,7 +425,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
      * @param pvDTO      预览请求参数
      * @return target
      */
-    private static ApiPreviewVO resultSetToJsonArray(Connection conn, DataSourceConPO dataSource,
+    private static ApiPreviewVO resultSetToJsonArray(Connection conn, DataSourceConVO dataSource,
                                                      ResultSet rs, ApiPreviewDTO pvDTO, List<FieldConfigPO> fieldConfigPOS)
             throws SQLException, JSONException {
         ApiPreviewVO data = new ApiPreviewVO();
@@ -531,13 +532,13 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
      * @param tableNames 查询的表
      * @return statement
      */
-    private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConPO
+    private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConVO
             dataSource, List<String> tableNames) throws SQLException {
         List<FieldInfoVO> fieldlist = new ArrayList<>();
         if (CollectionUtils.isEmpty(tableNames))
             return fieldlist;
         String sql = "";
-        DataSourceTypeEnum value = DataSourceTypeEnum.values()[dataSource.getConType()];
+        DataSourceTypeEnum value = dataSource.getConType();
         switch (value) {
             case MYSQL:
                 sql = String.format("SELECT\n" +

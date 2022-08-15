@@ -14,11 +14,13 @@ import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.datagovernance.vo.dataquality.rule.TableRuleTempVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -57,6 +59,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
     @Resource
     private AttachmentInfoMapper attachmentInfoMapper;
+
+    @Value("${file.uploadUrl}")
+    private String uploadUrl;
+    @Value("${file.echoPath}")
+    private String echoPath;
 
     @Override
     public ResultEntity<TableRuleInfoDTO> getTableRuleList(int dataSourceId, String tableUnique, int tableBusinessType) {
@@ -358,19 +365,52 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         }
         // 第一步：判断质量报告属于哪个业务模块 数据校验/业务清洗/生命周期
         TemplateSceneEnum templateSceneEnum = TemplateSceneEnum.getEnum(templatePO.getTemplateScene());
+        AttachmentInfoPO attachmentInfoPO = new AttachmentInfoPO();
+        String currentFileName = UUID.randomUUID().toString().replace("-", "") + ".xlsx";
+        attachmentInfoPO.setCurrentFileName(currentFileName);
+        attachmentInfoPO.setExtensionName(".xlsx");
+        attachmentInfoPO.setAbsolutePath(uploadUrl);
+        attachmentInfoPO.setRelativePath(echoPath);
+        attachmentInfoPO.setObjectId(String.valueOf(id));
         switch (templateSceneEnum) {
             case DATACHECK_QUALITYREPORT:
-                // 生成数据校验报告
+                // 生成数据校验质量报告
+                attachmentInfoPO.setOriginalName("数据校验质量报告.xlsx");
+                attachmentInfoPO.setCategory(100);
                 break;
             case BUSINESSFILTER_FILTERREPORT:
-                // 生成业务清洗报告
+                // 生成业务清洗质量报告
+                attachmentInfoPO.setOriginalName("业务清洗质量报告.xlsx");
+                attachmentInfoPO.setCategory(200);
                 break;
             case LIFECYCLE_REPORT:
-                // 生成生命周期报告
+                // 生成生命周期质量报告
+                attachmentInfoPO.setOriginalName("生命周期质量报告.xlsx");
+                attachmentInfoPO.setCategory(300);
                 break;
         }
+        // 第二步：保存质量报告信息到附件信息表
+        attachmentInfoMapper.insert(attachmentInfoPO);
+
+        // 第三步：发送邮件/站内消息通知
+
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "");
     }
 
+    /**
+     * @return void
+     * @description 生成数据校验质量报告
+     * @author dick
+     * @date 2022/8/15 11:04
+     * @version v1.0
+     * @params noticePO 通知PO
+     * @params noticeExtendPOS 通知扩展PO
+     * @params templatePO 模板PO
+     * @params attachmentInfoPO 附件PO
+     */
+    public void CreateDataCheckQualityReport(NoticePO noticePO, List<NoticeExtendPO> noticeExtendPOS,
+                                             TemplatePO templatePO, AttachmentInfoPO attachmentInfoPO) {
+
+    }
 }
 
