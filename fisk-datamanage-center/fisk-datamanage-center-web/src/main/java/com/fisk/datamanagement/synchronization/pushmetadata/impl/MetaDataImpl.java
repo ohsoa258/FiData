@@ -88,7 +88,7 @@ public class MetaDataImpl implements IMetaData {
     @Override
     public ResultEnum metaData(MetaDataAttributeDTO data) {
         try {
-            log.info("开始推送元数据实时同步，参数:{}", JSON.toJSONString(data));
+            log.info("开始推送元数据实时同步， 参数:{}", JSON.toJSONString(data));
             BuildMetaDataDTO dto = new BuildMetaDataDTO();
             dto.userId = data.userId;
             dto.data = data.instanceList;

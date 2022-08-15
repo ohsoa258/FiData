@@ -448,7 +448,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.instanceList = list;
             data.userId = userHelper.getLoginUserInfo().id;
             // 更新元数据内容
-            log.info("构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+            log.info("构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
             dataManageClient.metaData(data);
         } catch (Exception e) {
             log.error("【dataManageClient.MetaData()】方法报错,ex", e);
