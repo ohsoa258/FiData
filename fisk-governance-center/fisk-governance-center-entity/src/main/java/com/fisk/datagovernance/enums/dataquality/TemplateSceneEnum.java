@@ -12,7 +12,7 @@ public enum TemplateSceneEnum implements BaseEnum {
     NONE(0, "空"),
     DATACHECK_WEBCHECK(100, "页面校验"),
     DATACHECK_SYNCCHECK(101, "同步校验"),
-    DATACHECK_QUALITYREPORT(102, "质量报告"),
+    DATACHECK_QUALITYREPORT(102, "校验报告"),
     BUSINESSFILTER_SYNCFILTER(200, "同步清洗"),
     BUSINESSFILTER_FILTERREPORT(201, "清洗报告"),
     LIFECYCLE_REPORT(300, "生命周期报告"),

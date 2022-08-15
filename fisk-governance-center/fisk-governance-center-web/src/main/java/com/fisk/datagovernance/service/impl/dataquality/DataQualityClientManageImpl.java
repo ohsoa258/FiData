@@ -55,6 +55,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     @Resource
     private NoticeExtendMapper noticeExtendMapper;
 
+    @Resource
+    private AttachmentInfoMapper attachmentInfoMapper;
+
     @Override
     public ResultEntity<TableRuleInfoDTO> getTableRuleList(int dataSourceId, String tableUnique, int tableBusinessType) {
         if (dataSourceId == 0 || StringUtils.isEmpty(tableUnique) || tableBusinessType == 0) {
@@ -341,11 +344,33 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         if (noticePO == null) {
             return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NOTICE_NOTEXISTS, "");
         }
+        QueryWrapper<NoticeExtendPO> noticeExtendPOQueryWrapper = new QueryWrapper<>();
+        noticeExtendPOQueryWrapper.lambda()
+                .eq(NoticeExtendPO::getNoticeId, noticePO.getId())
+                .eq(NoticeExtendPO::getDelFlag, 1);
+        List<NoticeExtendPO> noticeExtendPOS = noticeExtendMapper.selectList(noticeExtendPOQueryWrapper);
+        if (!CollectionUtils.isNotEmpty(noticeExtendPOS)) {
+            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NOTICE_NOTEXISTS, "");
+        }
         TemplatePO templatePO = templateMapper.selectById(noticePO.templateId);
         if (templatePO == null) {
             return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS, "");
         }
-        // 第一步：判断质量报告属于哪个业务模块
+        // 第一步：判断质量报告属于哪个业务模块 数据校验/业务清洗/生命周期
+        TemplateSceneEnum templateSceneEnum = TemplateSceneEnum.getEnum(templatePO.getTemplateScene());
+        switch (templateSceneEnum) {
+            case DATACHECK_QUALITYREPORT:
+                // 生成数据校验报告
+                break;
+            case BUSINESSFILTER_FILTERREPORT:
+                // 生成业务清洗报告
+                break;
+            case LIFECYCLE_REPORT:
+                // 生成生命周期报告
+                break;
+        }
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "");
     }
+
 }
+
