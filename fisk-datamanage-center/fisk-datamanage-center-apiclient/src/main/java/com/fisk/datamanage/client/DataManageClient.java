@@ -1,6 +1,7 @@
 package com.fisk.datamanage.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
@@ -83,6 +84,15 @@ public interface DataManageClient {
      */
     @DeleteMapping("/MetaData/deleteMetaData")
     ResultEntity<Object> deleteMetaData(@Validated @RequestBody MetaDataDeleteAttributeDTO dto);
+
+    /**
+     * 数据接入应用同步到业务分类
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/Classification/appSynchronousClassification")
+    ResultEntity<Object> appSynchronousClassification(@Validated @RequestBody ClassificationInfoDTO dto);
 
 
 }

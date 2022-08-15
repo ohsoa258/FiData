@@ -1,6 +1,7 @@
 package com.fisk.datamanagement.service;
 
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDelAssociatedEntityDTO;
@@ -70,5 +71,13 @@ public interface IClassification {
      * @return
      */
     ResultEnum synchronousClassification();
+
+    /**
+     * 数据接入应用同步到业务分类
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum appSynchronousClassification(ClassificationInfoDTO dto);
 
 }

@@ -3,6 +3,7 @@ package com.fisk.datamanagement.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
@@ -73,6 +74,12 @@ public class ClassificationController {
     @PostMapping("/synchronousClassification")
     public ResultEntity<Object> synchronousClassification() {
         return ResultEntityBuild.build(service.synchronousClassification());
+    }
+
+    @ApiOperation("数据接入应用同步到业务分类")
+    @PostMapping("/appSynchronousClassification")
+    public ResultEntity<Object> appSynchronousClassification(@Validated @RequestBody ClassificationInfoDTO dto) {
+        return ResultEntityBuild.build(service.appSynchronousClassification(dto));
     }
 
 }

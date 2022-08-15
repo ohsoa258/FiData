@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.map.ClassificationMap;
@@ -156,6 +157,34 @@ public class ClassificationImpl implements IClassification {
     public ResultEnum classificationDelAssociatedEntity(ClassificationDelAssociatedEntityDTO dto) {
         ResultDataDTO<String> result = atlasClient.delete(entityByGuid + "/" + dto.entityGuid + "/classification/" + dto.classificationName);
         return atlasClient.newResultEnum(result);
+    }
+
+    @Override
+    public ResultEnum appSynchronousClassification(ClassificationInfoDTO dto) {
+        //是否删除
+        if (dto.delete) {
+            return deleteClassification(dto.name);
+        }
+
+        ClassificationDefsDTO data = new ClassificationDefsDTO();
+        List<ClassificationDefContentDTO> list = new ArrayList<>();
+
+        //同步主数据业务分类
+        ClassificationDefContentDTO masterData = new ClassificationDefContentDTO();
+        masterData.name = dto.name;
+        masterData.description = dto.description;
+
+        List<String> analysisModelSuperType = new ArrayList<>();
+        if (dto.sourceType == 1) {
+            analysisModelSuperType.add("业务数据");
+        }
+        masterData.superTypes = analysisModelSuperType;
+
+        list.add(masterData);
+
+        data.classificationDefs = list;
+
+        return this.addClassification(data);
     }
 
     @Override
