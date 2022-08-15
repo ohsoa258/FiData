@@ -50,3 +50,6 @@ pgsql-mdm:
   username: adminuser
   password: .FdF_r&tj4)+
   driverClassName: org.postgresql.Driver
+file:
+  uploadUrl: /root/nginx/app/file/qualityreport/
+  echoPath: /file/qualityreport/

@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.core.constants.RedisTokenKey;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -213,7 +214,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             } else if (dataSourceConPO.getConType() == DataSourceTypeEnum.SQLSERVER.getValue()) {
                 conn = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
                 typeEnum = DataSourceTypeEnum.SQLSERVER;
-            }else if (dataSourceConPO.getConType() == DataSourceTypeEnum.POSTGRESQL.getValue()){
+            } else if (dataSourceConPO.getConType() == DataSourceTypeEnum.POSTGRESQL.getValue()) {
                 conn = getStatement(DataSourceTypeEnum.POSTGRESQL.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
                 typeEnum = DataSourceTypeEnum.POSTGRESQL;
             }
