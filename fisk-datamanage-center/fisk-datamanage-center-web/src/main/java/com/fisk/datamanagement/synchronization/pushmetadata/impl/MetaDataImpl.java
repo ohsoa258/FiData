@@ -7,8 +7,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceFieldDTO;
@@ -67,8 +67,6 @@ public class MetaDataImpl implements IMetaData {
     ClassificationImpl classification;
     @Resource
     MetadataMapAtlasMapper metadataMapAtlasMapper;
-    @Resource
-    UserHelper userHelper;
     @Resource
     PublishTaskClient client;
     @Resource
@@ -500,7 +498,7 @@ public class MetaDataImpl implements IMetaData {
             entityDTO.entity = entityTypeDTO;
             atlasGuid = addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_TABLE, parentEntityGuid);
             //同步业务分类
-            associatedClassification(atlasGuid, dto.name, dbName);
+            associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
             return atlasGuid;
         }
         return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_TABLE, dto);
@@ -538,7 +536,7 @@ public class MetaDataImpl implements IMetaData {
      * @param tableName
      * @param dbName
      */
-    public void associatedClassification(String tableGuid, String tableName, String dbName) {
+    public void associatedClassification(String tableGuid, String tableName, String dbName, String comment) {
         try {
             //获取数据源列表
             ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
@@ -555,7 +553,16 @@ public class MetaDataImpl implements IMetaData {
             ClassificationDTO data = new ClassificationDTO();
             //ods表关联业务数据分类
             if (DataSourceConfigEnum.DMP_ODS.getValue() == sourceData.get().id) {
-                data.typeName = "业务数据";
+                //获取接入应用列表
+                ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
+                if (appList.code != ResultEnum.SUCCESS.getCode()) {
+                    return;
+                }
+                Optional<AppBusinessInfoDTO> first = appList.data.stream().filter(e -> e.id == Long.parseLong(comment)).findFirst();
+                if (!first.isPresent()) {
+                    return;
+                }
+                data.typeName = first.get().name;
             } else if (DataSourceConfigEnum.DMP_DW.getValue() == sourceData.get().id) {
                 if ("dim_".equals(tableName.substring(0, 4))) {
                     data.typeName = "维度";
