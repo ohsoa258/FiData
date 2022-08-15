@@ -19,6 +19,7 @@ import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
@@ -46,6 +47,7 @@ import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
@@ -103,6 +105,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     private ApiConfigImpl apiConfigImpl;
     @Resource
     private DataFactoryClient dataFactoryClient;
+    @Resource
+    private DataManageClient dataManageClient;
     @Resource
     RedisUtil redisUtil;
     @Value("${metadata-instance.hostname}")
@@ -162,6 +166,19 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         AtlasEntityQueryVO vo = new AtlasEntityQueryVO();
         vo.userId = userId;
         vo.appId = String.valueOf(po.getId());
+
+        // 添加元数据信息
+        ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
+        classificationInfoDto.setName(appRegistrationDTO.appName);
+        classificationInfoDto.setDescription(appRegistrationDTO.appDes);
+        classificationInfoDto.setSourceType(1);
+        classificationInfoDto.setDelete(false);
+        try {
+            dataManageClient.appSynchronousClassification(classificationInfoDto);
+        } catch (Exception e) {
+            // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
+            log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
+        }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
     }
@@ -381,6 +398,20 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         vo.tableList = tableList;
         vo.qualifiedNames = qualifiedNames;
         log.info("删除的应用信息,{}", vo);
+
+
+        // 删除元数据信息
+        ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
+        classificationInfoDto.setName(model.appName);
+        classificationInfoDto.setDescription(model.appDes);
+        classificationInfoDto.setSourceType(1);
+        classificationInfoDto.setDelete(true);
+        try {
+            dataManageClient.appSynchronousClassification(classificationInfoDto);
+        } catch (Exception e) {
+            // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
+            log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
+        }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
     }
