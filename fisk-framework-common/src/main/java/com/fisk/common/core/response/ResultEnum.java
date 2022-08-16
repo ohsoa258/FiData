@@ -234,6 +234,7 @@ public enum ResultEnum {
     DATA_QUALITY_TABLECONFIGURATION_SENT_CHANGES(11015, "表配置信息在源已发生变更"),
     DATA_QUALITY_DATASOURCE_EXISTS(11016, "数据源已存在"),
     DATA_QUALITY_NOTICE_NOTEXISTS(11017, "告警通知信息不存在"),
+    DATA_QUALITY_RULE_NOTEXISTS(11018, "规则信息不存在"),
 
     /**
      * 数据安全

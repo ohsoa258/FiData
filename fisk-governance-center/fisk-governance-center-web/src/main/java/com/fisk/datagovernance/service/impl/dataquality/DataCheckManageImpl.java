@@ -112,9 +112,14 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
         }
         //第二步：转换DTO对象为PO对象
+        ResultEntity<String> role = createRole(dto, templatePO);
+        if (role == null || role.code != ResultEnum.SUCCESS.getCode()) {
+            return ResultEnum.SAVE_VERIFY_ERROR;
+        }
+        dto.setCreateRule(role.getData());
         DataCheckPO dataCheckPO = DataCheckMap.INSTANCES.dtoToPo(dto);
         if (dataCheckPO == null) {
-            return ResultEnum.SAVE_DATA_ERROR;
+            return ResultEnum.SAVE_VERIFY_ERROR;
         }
         //第三步：保存数据校验
         UserInfo loginUserInfo = userHelper.getLoginUserInfo();
@@ -143,6 +148,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (templatePO == null) {
             return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
         }
+        ResultEntity<String> role = createRole(dto, templatePO);
+        if (role == null || role.code != ResultEnum.SUCCESS.getCode()) {
+            return ResultEnum.SAVE_VERIFY_ERROR;
+        }
+        dto.setCreateRule(role.getData());
         DataCheckPO dataCheckPO = baseMapper.selectById(dto.id);
         if (dataCheckPO == null) {
             return ResultEnum.SAVE_VERIFY_ERROR;
@@ -150,7 +160,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         //第二步：转换DTO对象为PO对象
         dataCheckPO = DataCheckMap.INSTANCES.dtoToPo_Edit(dto);
         if (dataCheckPO == null) {
-            return ResultEnum.SAVE_DATA_ERROR;
+            return ResultEnum.SAVE_VERIFY_ERROR;
         }
         //第三步：保存数据校验信息
         int i = baseMapper.updateById(dataCheckPO);
@@ -1119,7 +1129,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params dto
      * @params templateTypeEnum
      */
-    public ResultEntity<String> createRole(DataCheckDTO dto, TemplateTypeEnum templateTypeEnum) {
+    public ResultEntity<String> createRole(DataCheckDTO dto, TemplatePO templatePO) {
         if (dto == null) {
             return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, "");
         }
@@ -1129,6 +1139,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS, "");
         }
         ResultEntity<String> rule = null;
+        TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
         switch (templateTypeEnum) {
             case DATA_MISSING_TEMPLATE:
                 // 数据缺失模板
@@ -1137,6 +1148,15 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             case FIELD_AGGREGATE_TEMPLATE:
                 // 字段聚合波动阈值模板
                 rule = createField_AggregateRule(dataSourceConVO, dto);
+                break;
+            case BUSINESS_CHECK_TEMPLATE:
+                rule = new ResultEntity<>();
+                rule.setCode(0);
+                rule.setData(dto.createRule);
+                break;
+            default:
+                rule = new ResultEntity<>();
+                rule.setCode(0);
                 break;
         }
         return rule;

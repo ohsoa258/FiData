@@ -5,7 +5,13 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.DateTimeUtils;
+import com.fisk.common.core.utils.Dto.Excel.DataDto;
+import com.fisk.common.core.utils.Dto.Excel.ExcelDto;
+import com.fisk.common.core.utils.Dto.Excel.RowDto;
+import com.fisk.common.core.utils.Dto.Excel.SheetDto;
 import com.fisk.datagovernance.entity.dataquality.*;
+import com.fisk.datagovernance.enums.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataQualityClientManageService;
@@ -18,9 +24,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.sql.*;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -348,7 +353,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, "");
         }
         NoticePO noticePO = noticeMapper.selectById(id);
-        if (noticePO == null) {
+        if (noticePO == null || noticePO.noticeState == RuleStateEnum.Disable.getValue()) {
             return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NOTICE_NOTEXISTS, "");
         }
         QueryWrapper<NoticeExtendPO> noticeExtendPOQueryWrapper = new QueryWrapper<>();
@@ -358,6 +363,10 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         List<NoticeExtendPO> noticeExtendPOS = noticeExtendMapper.selectList(noticeExtendPOQueryWrapper);
         if (!CollectionUtils.isNotEmpty(noticeExtendPOS)) {
             return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NOTICE_NOTEXISTS, "");
+        }
+        List<DataSourceConVO> allDataSource = dataSourceConManageImpl.getAllDataSource();
+        if (!CollectionUtils.isNotEmpty(allDataSource)) {
+            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS, "");
         }
         TemplatePO templatePO = templateMapper.selectById(noticePO.templateId);
         if (templatePO == null) {
@@ -375,24 +384,25 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         switch (templateSceneEnum) {
             case DATACHECK_QUALITYREPORT:
                 // 生成数据校验质量报告
-                attachmentInfoPO.setOriginalName("数据校验质量报告.xlsx");
+                attachmentInfoPO.setOriginalName(String.format("数据校验质量报告%s.xlsx",
+                        DateTimeUtils.getNowToShortDate().replace("-", "")));
                 attachmentInfoPO.setCategory(100);
                 break;
             case BUSINESSFILTER_FILTERREPORT:
                 // 生成业务清洗质量报告
-                attachmentInfoPO.setOriginalName("业务清洗质量报告.xlsx");
+                attachmentInfoPO.setOriginalName(String.format("业务清洗质量报告%s.xlsx",
+                        DateTimeUtils.getNowToShortDate().replace("-", "")));
                 attachmentInfoPO.setCategory(200);
                 break;
             case LIFECYCLE_REPORT:
                 // 生成生命周期质量报告
-                attachmentInfoPO.setOriginalName("生命周期质量报告.xlsx");
+                attachmentInfoPO.setOriginalName(String.format("生命周期质量报告%s.xlsx",
+                        DateTimeUtils.getNowToShortDate().replace("-", "")));
                 attachmentInfoPO.setCategory(300);
                 break;
         }
         // 第二步：保存质量报告信息到附件信息表
         attachmentInfoMapper.insert(attachmentInfoPO);
-
-        // 第三步：发送邮件/站内消息通知
 
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "");
     }
@@ -408,9 +418,232 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params templatePO 模板PO
      * @params attachmentInfoPO 附件PO
      */
-    public void CreateDataCheckQualityReport(NoticePO noticePO, List<NoticeExtendPO> noticeExtendPOS,
-                                             TemplatePO templatePO, AttachmentInfoPO attachmentInfoPO) {
+    public ResultEnum createDataCheckQualityReport(List<NoticeExtendPO> noticeExtendPOS,
+                                                   List<DataSourceConVO> allDataSource, AttachmentInfoPO attachmentInfoPO) {
 
+        List<Integer> ruleIds = noticeExtendPOS.stream().map(NoticeExtendPO::getRuleId).collect(Collectors.toList());
+        QueryWrapper<DataCheckPO> dataCheckPOQueryWrapper = new QueryWrapper<>();
+        dataCheckPOQueryWrapper.lambda()
+                .eq(DataCheckPO::getDelFlag, 1)
+                .eq(DataCheckPO::getRuleState, RuleStateEnum.Enable.getValue())
+                .in(DataCheckPO::getId, ruleIds)
+                .orderByAsc(DataCheckPO::getRuleSort);
+        List<DataCheckPO> dataCheckPOList = dataCheckMapper.selectList(dataCheckPOQueryWrapper);
+        if (!CollectionUtils.isNotEmpty(dataCheckPOList)) {
+            return ResultEnum.DATA_QUALITY_RULE_NOTEXISTS;
+        }
+        QueryWrapper<DataCheckExtendPO> dataCheckExtendPOQueryWrapper = new QueryWrapper<>();
+        dataCheckExtendPOQueryWrapper.lambda()
+                .eq(DataCheckExtendPO::getDelFlag, 1)
+                .in(DataCheckExtendPO::getRuleId, ruleIds);
+        List<DataCheckExtendPO> dataCheckExtendPOList = dataCheckExtendMapper.selectList(dataCheckExtendPOQueryWrapper);
+
+        ExcelDto excelDto = new ExcelDto();
+        excelDto.setExcelName(attachmentInfoPO.getCurrentFileName());
+        List<SheetDto> sheets = new ArrayList<>();
+
+        for (int i = 0; i <= dataCheckPOList.size(); i++) {
+            DataCheckPO dataCheckPO = dataCheckPOList.get(i);
+            DataCheckExtendPO dataCheckExtendPO = dataCheckExtendPOList.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).findFirst().orElse(null);
+            if (dataCheckExtendPO == null) {
+                continue;
+            }
+            TemplatePO templatePO = templateMapper.selectById(dataCheckPO.templateId);
+            if (templatePO == null) {
+                continue;
+            }
+            String sql = "";
+            TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
+            switch (templateTypeEnum) {
+                case DATA_MISSING_TEMPLATE:
+                    //case FIELD_AGGREGATE_TEMPLATE:
+                case BUSINESS_CHECK_TEMPLATE:
+                    sql = dataCheckPO.getCreateRule();
+                    break;
+            }
+            if (StringUtils.isEmpty(sql)) {
+                continue;
+            }
+            String tableName = "";
+            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
+            SheetDto sheet = new SheetDto();
+            sheet.setSheetName(dataCheckPO.getRuleName());
+            List<List<DataDto>> lists = resultSetToMap(dataSourceConVO, sql);
+            List<RowDto> singRows = new ArrayList<>();
+            RowDto rowDto = new RowDto();
+            rowDto.setRowIndex(0);
+            List<String> Columns = new ArrayList<>();
+            Columns.add("表名称");
+            Columns.add("模板名称");
+            rowDto.setColumns(Columns);
+            singRows.add(rowDto);
+
+            rowDto = new RowDto();
+            rowDto.setRowIndex(1);
+            Columns = new ArrayList<>();
+            Columns.add(tableName);
+            Columns.add(templatePO.getTemplatenName());
+            rowDto.setColumns(Columns);
+
+            rowDto = new RowDto();
+            rowDto.setRowIndex(3);
+            Columns = new ArrayList<>();
+            Columns.add("质量报告明细");
+            rowDto.setColumns(Columns);
+
+
+        }
+        return ResultEnum.SUCCESS;
     }
+
+    public List<RowDto> getSingRows(String tableName, String templatenName, List<DataDto> fields) {
+        List<RowDto> singRows = new ArrayList<>();
+        RowDto rowDto = new RowDto();
+        rowDto.setRowIndex(0);
+        List<String> Columns = new ArrayList<>();
+        Columns.add("表名称");
+        Columns.add("模板名称");
+        rowDto.setColumns(Columns);
+        singRows.add(rowDto);
+
+        rowDto = new RowDto();
+        rowDto.setRowIndex(1);
+        Columns = new ArrayList<>();
+        Columns.add(tableName);
+        Columns.add(templatenName);
+        rowDto.setColumns(Columns);
+        singRows.add(rowDto);
+
+        rowDto = new RowDto();
+        rowDto.setRowIndex(3);
+        Columns = new ArrayList<>();
+        Columns.add("质量报告明细");
+        rowDto.setColumns(Columns);
+        singRows.add(rowDto);
+
+        rowDto = new RowDto();
+        rowDto.setRowIndex(4);
+        Columns = new ArrayList<>();
+        Columns.addAll(fields.stream().map(DataDto::getFieldName).collect(Collectors.toList()));
+        singRows.add(rowDto);
+        return singRows;
+    }
+
+    /**
+     * @return java.util.List<java.util.Map < java.lang.String, java.lang.Object>>
+     * @description 根据SQL查询，转Map
+     * @author dick
+     * @date 2022/4/18 11:00
+     * @version v1.0
+     * @params dataSourceConPO
+     * @params sql
+     * @params templateTypeEnum
+     */
+    public List<List<DataDto>> resultSetToMap(DataSourceConVO dataSourceCon, String sql) {
+        List<List<DataDto>> mapList = new ArrayList<>();
+        Statement st = null;
+        Connection conn = null;
+        try {
+            // 数据源类型
+            DataSourceTypeEnum sourceTypeEnum = dataSourceCon.getConType();
+            // 数据库连接对象
+            conn = dataSourceConManageImpl.getStatement(sourceTypeEnum.getDriverName(), dataSourceCon.getConStr(),
+                    dataSourceCon.getConAccount(), dataSourceCon.getConPassword());
+            // JDBC 读取大量数据时的 ResultSet resultSetType 设置TYPE_FORWARD_ONLY
+            st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            assert st != null;
+            ResultSet rs = st.executeQuery(sql);
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            while (rs.next()) {
+                List<DataDto> objectMap = new ArrayList<>();
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = metaData.getColumnLabel(i);
+                    Object value = rs.getObject(columnName);
+                    DataDto dataDto = new DataDto();
+                    dataDto.setFieldName(columnName);
+                    dataDto.setFieldValue(value != null ? value.toString() : "");
+                    objectMap.add(dataDto);
+                }
+                mapList.add(objectMap);
+            }
+            rs.close();
+        } catch (Exception ex) {
+            log.error("resultSetToMap触发异常，详细报错:", ex);
+        } finally {
+            try {
+                if (st != null) {
+                    conn.close();
+                }
+            } catch (SQLException ex) {
+                // do nothing
+            }
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException ex) {
+                log.error("resultSetToMap数据库关闭异常，详细报错:", ex);
+            }
+        }
+        return mapList;
+    }
+
+    /**
+     * @return int
+     * @description 执行sql，返回结果
+     * @author dick
+     * @date 2022/4/18 11:15
+     * @version v1.0
+     * @params dataSourceConPO
+     * @params sql
+     * @params templateTypeEnum
+     */
+    public int executeSql(DataSourceConPO dataSourceConPO, String
+            sql, TemplateTypeEnum templateTypeEnum) {
+        int affectedCount = 0;
+        Statement st = null;
+        Connection conn = null;
+        try {
+            // 数据源类型
+            DataSourceTypeEnum sourceTypeEnum = DataSourceTypeEnum.values()[dataSourceConPO.getConType()];
+            // 数据库连接对象
+
+            conn = dataSourceConManageImpl.getStatement(sourceTypeEnum.getDriverName(), dataSourceConPO.getConStr(),
+                    dataSourceConPO.getConAccount(), dataSourceConPO.getConPassword());
+            st = conn.createStatement();
+            assert st != null;
+            /*
+              boolean execute(String sql)
+              允许执行查询语句、更新语句、DDL语句。
+              返回值为true时，表示执行的是查询语句，可以通过getResultSet方法获取结果；
+              返回值为false时，执行的是更新语句或DDL语句，getUpdateCount方法获取更新的记录数量。
+
+              int executeUpdate(String sql)
+              执行给定 SQL 语句，该语句可能为 INSERT、UPDATE、DELETE、DROP 语句，或者不返回任何内容的 SQL 语句（如 SQL DDL 语句）。
+              返回值是更新的记录数量
+             */
+            affectedCount = st.executeUpdate(sql);
+        } catch (Exception ex) {
+            log.error("executeSql触发异常，详细报错:", ex);
+        } finally {
+            try {
+                if (st != null) {
+                    conn.close();
+                }
+            } catch (SQLException ex) {
+                // do nothing
+            }
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException ex) {
+                log.error("executeSql数据库连接关闭异常，详细报错:", ex);
+            }
+        }
+        return affectedCount;
+    }
+
 }
 
