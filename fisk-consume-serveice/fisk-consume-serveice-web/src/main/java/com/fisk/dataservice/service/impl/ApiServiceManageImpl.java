@@ -27,6 +27,7 @@ import com.fisk.dataservice.map.ApiParmMap;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IApiServiceManageService;
 import com.fisk.dataservice.vo.apiservice.ResponseVO;
+import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -61,6 +62,9 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
 
     @Resource
     private DataSourceConMapper dataSourceConMapper;
+
+    @Resource
+    private DataSourceConManageImpl dataSourceConManageImpl;
 
     @Resource
     private ApiFilterConditionMapper apiFilterConditionMapper;
@@ -153,8 +157,9 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             }
 
             // 第五步：验证数据源是否有效
-            DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(apiInfo.datasourceId);
-            if (dataSourceConPO == null) {
+            DataSourceConVO dataSourceConVO = dataSourceConManageImpl.getAllDataSource()
+                    .stream().filter(t -> t.getId() == apiInfo.datasourceId).findFirst().orElse(null);
+            if (dataSourceConVO == null) {
                 resultEnum = ResultEnum.DS_APISERVICE_DATASOURCE_EXISTS;
                 return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_DATASOURCE_EXISTS, responseVO);
             }
@@ -209,13 +214,13 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             Statement st = null;
             Connection conn = null;
             DataSourceTypeEnum typeEnum = DataSourceTypeEnum.MYSQL;
-            if (dataSourceConPO.getConType() == DataSourceTypeEnum.MYSQL.getValue()) {
-                conn = getStatement(DataSourceTypeEnum.MYSQL.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
-            } else if (dataSourceConPO.getConType() == DataSourceTypeEnum.SQLSERVER.getValue()) {
-                conn = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
+            if (dataSourceConVO.getConType() == DataSourceTypeEnum.MYSQL) {
+                conn = getStatement(DataSourceTypeEnum.MYSQL.getDriverName(), dataSourceConVO.conStr, dataSourceConVO.conAccount, dataSourceConVO.conPassword);
+            } else if (dataSourceConVO.getConType() == DataSourceTypeEnum.SQLSERVER) {
+                conn = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), dataSourceConVO.conStr, dataSourceConVO.conAccount, dataSourceConVO.conPassword);
                 typeEnum = DataSourceTypeEnum.SQLSERVER;
-            } else if (dataSourceConPO.getConType() == DataSourceTypeEnum.POSTGRESQL.getValue()) {
-                conn = getStatement(DataSourceTypeEnum.POSTGRESQL.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
+            } else if (dataSourceConVO.getConType() == DataSourceTypeEnum.POSTGRESQL) {
+                conn = getStatement(DataSourceTypeEnum.POSTGRESQL.getDriverName(), dataSourceConVO.conStr, dataSourceConVO.conAccount, dataSourceConVO.conPassword);
                 typeEnum = DataSourceTypeEnum.POSTGRESQL;
             }
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
