@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.utils.Dto.SqlParmDto;
 import com.fisk.common.core.utils.Dto.SqlWhereDto;
 import com.google.common.base.Joiner;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -67,7 +68,7 @@ public class SqlParmUtils {
             return sql;
         for (SqlParmDto item : list) {
             String targetKey = String.format("%s%s", symbol, item.parmName);
-            String replacement = "'" + item.parmValue + "'";
+            String replacement = StringUtils.isEmpty(item.parmValue) ? "NULL" : "'" + item.parmValue + "'";
             sql = sql.replace(targetKey, replacement);
         }
         return sql;
