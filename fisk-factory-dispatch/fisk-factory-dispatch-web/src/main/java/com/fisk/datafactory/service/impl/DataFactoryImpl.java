@@ -288,13 +288,13 @@ public class DataFactoryImpl implements IDataFactory {
      * 匹配当前主任务内的最后一个任务
      *
      * @param inportList   最终封装数据的对象集合
-     * @param listAllTask  所有的task
-     * @param listAllTable 所有的job
+     * @param listAllJob  所有的job
+     * @param listAllTable 所有的task
      * @author Lock
      * @date 2022/6/15 15:01
      */
-    private void matchingDetailDtoList(List<NifiCustomWorkflowDetailDTO> inportList, List<NifiCustomWorkflowDetailDTO> listAllTask, List<NifiCustomWorkflowDetailDTO> listAllTable) {
-        for (NifiCustomWorkflowDetailDTO dto : listAllTask) {
+    private void matchingDetailDtoList(List<NifiCustomWorkflowDetailDTO> inportList, List<NifiCustomWorkflowDetailDTO> listAllJob, List<NifiCustomWorkflowDetailDTO> listAllTable) {
+        for (NifiCustomWorkflowDetailDTO dto : listAllJob) {
             // 数据湖任务
             List<NifiCustomWorkflowDetailDTO> datalakeTaskDtoList = listAllTable.stream()
                     .filter(Objects::nonNull)
@@ -661,7 +661,7 @@ public class DataFactoryImpl implements IDataFactory {
 //        }
 
         // 过滤出所有主任务(数据湖、数仓、分析模型),不含绑定表的组件
-        List<NifiCustomWorkflowDetailDTO> listAllTask = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(nifiCustomWorkflowDetailImpl.query()
+        List<NifiCustomWorkflowDetailDTO> listAllJob = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(nifiCustomWorkflowDetailImpl.query()
                 .eq("workflow_id", nifiCustomWorkflowPo.workflowId)
                 .list()
                 .stream()
@@ -688,7 +688,7 @@ public class DataFactoryImpl implements IDataFactory {
 //                .filter(e -> e.inport.equalsIgnoreCase(String.valueOf(scheduleTask.id)))
                 .collect(Collectors.toList()));
 
-        matchingDetailDtoList(list, listAllTask, listAllTable);
+        matchingDetailDtoList(list, listAllJob, listAllTable);
         List<NifiCustomWorkflowDetailDTO> detailDtoList = Objects.requireNonNull(list.stream().distinct().collect(Collectors.toList()));
         // 填充workflowName、componentsName属性
         return listDtoToDto(detailDtoList);
