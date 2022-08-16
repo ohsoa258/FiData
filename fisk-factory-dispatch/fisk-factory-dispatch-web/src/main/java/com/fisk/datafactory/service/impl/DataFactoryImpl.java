@@ -656,9 +656,9 @@ public class DataFactoryImpl implements IDataFactory {
                 .eq("workflow_id", nifiCustomWorkflowPo.workflowId)
                 .eq("component_name", ChannelDataEnum.SCHEDULE_TASK.getName())
                 .one();
-        if (scheduleTask == null) {
-            return null;
-        }
+//        if (scheduleTask == null) {
+//            return null;
+//        }
 
         // 过滤出所有主任务(数据湖、数仓、分析模型),不含绑定表的组件
         List<NifiCustomWorkflowDetailDTO> listAllTask = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(nifiCustomWorkflowDetailImpl.query()
