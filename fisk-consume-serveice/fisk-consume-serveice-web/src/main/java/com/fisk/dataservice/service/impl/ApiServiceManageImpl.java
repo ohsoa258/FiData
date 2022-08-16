@@ -165,7 +165,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             }
 
             String sql = apiInfo.createSql;
-            // 第六步：查询参数信息，如果参数设置为内置参数，则以内置参数为准，反之则以传递的参数为准，如果没设置内置参数&参数列表中未传递，则读取后台配置的参数值
+            // 第六步：查询参数信息，如果参数设置为内置参数，则以内置参数为准，反之则以传递的参数为准，如果没设置内置参数&参数列表中未传递，默认为空//则读取后台配置的参数值
             List<ParmConfigPO> parmList = apiParmMapper.getListByApiId(Math.toIntExact(apiInfo.id));
             if (CollectionUtils.isNotEmpty(parmList)) {
                 if (CollectionUtils.isNotEmpty(dto.parmList)) {
@@ -175,6 +175,8 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                             Map.Entry<String, Object> stringObjectEntry = entryStream.get();
                             if (stringObjectEntry != null)
                                 e.setParmValue(String.valueOf(stringObjectEntry.getValue()));
+                        }else{
+                            e.setParmValue(null);
                         }
                     });
                 }
