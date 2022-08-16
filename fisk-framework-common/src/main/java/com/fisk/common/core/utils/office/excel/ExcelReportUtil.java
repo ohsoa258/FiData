@@ -102,10 +102,10 @@ public class ExcelReportUtil {
             row = sheet.createRow(rowEntity.getRowIndex());
             row.setHeightInPoints(20);
             for (int cellIndex = 0; cellIndex < rowEntity.getColumns().size(); cellIndex++) {
-                ColumnDto column = rowEntity.getColumns().get(cellIndex);
+                //ColumnDto column = rowEntity.getColumns().get(cellIndex);
                 cell = row.createCell(cellIndex);
                 cell.setCellStyle(style_header);
-                cell.setCellValue(column.getColumnName());
+               // cell.setCellValue(column.getColumnName());
             }
         }
         // 创建数据行
