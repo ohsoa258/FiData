@@ -575,6 +575,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 DataSourceConVO dataSourceConVO = new DataSourceConVO();
                 dataSourceConVO.setId(Math.toIntExact(t.getId()));
                 dataSourceConVO.setDatasourceType(SourceTypeEnum.getEnum(t.getDatasourceType()));
+                dataSourceConVO.setDatasourceId(t.getDatasourceId());
                 dataSourceConVO.setCreateTime(t.getCreateTime().format(pattern));
                 if (t.getDatasourceType() == 2) {
                     dataSourceConVO.setName(t.getName());
