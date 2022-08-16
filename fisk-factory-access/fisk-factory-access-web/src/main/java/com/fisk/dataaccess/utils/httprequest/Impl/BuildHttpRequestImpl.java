@@ -2,6 +2,7 @@ package com.fisk.dataaccess.utils.httprequest.Impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
@@ -124,7 +125,7 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
             request.setHeader("Content-Type", "application/json; charset=utf-8");
 
             // 页面自定义的请求头信息
-            if (!dto.headersParams.isEmpty()) {
+            if (CollectionUtils.isNotEmpty(dto.headersParams)) {
                 dto.headersParams.forEach(request::setHeader);
             }
 
