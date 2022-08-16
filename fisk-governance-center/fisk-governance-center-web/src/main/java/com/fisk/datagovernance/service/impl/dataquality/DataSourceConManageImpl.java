@@ -62,14 +62,14 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     public PageDTO<DataSourceConVO> page(DataSourceConQuery query) {
         PageDTO<DataSourceConVO> pageDTO = new PageDTO<>();
         List<DataSourceConVO> allDataSource = getAllDataSource();
-        if (CollectionUtils.isNotEmpty(allDataSource) &&
-                query != null && StringUtils.isNotEmpty(query.keyword)) {
-            allDataSource = allDataSource.stream().filter(
-                    t -> (t.getConDbname().contains(query.keyword)) ||
-                            t.getConType().getName().contains(query.keyword)).collect(Collectors.toList());
-
+        if (CollectionUtils.isNotEmpty(allDataSource)) {
+            if (query != null && StringUtils.isNotEmpty(query.keyword)) {
+                allDataSource = allDataSource.stream().filter(
+                        t -> (t.getConDbname().contains(query.keyword)) ||
+                                t.getConType().getName().contains(query.keyword)).collect(Collectors.toList());
+            }
             allDataSource.forEach(t -> {
-                if (t.getDatasourceType()!=SourceTypeEnum.FiData){
+                if (t.getDatasourceType() != SourceTypeEnum.FiData) {
                     t.setConPassword("");
                 }
             });
