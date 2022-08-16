@@ -173,11 +173,9 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                     dto.parmList = new HashMap<>();
                 }
                 parmList.forEach(e -> {
-                    Optional<Map.Entry<String, Object>> entryStream = dto.parmList.entrySet().stream().filter(item -> item.getKey().equals(e.getParmName())).findFirst();
-                    if (entryStream.isPresent()) {
-                        Map.Entry<String, Object> stringObjectEntry = entryStream.get();
-                        if (stringObjectEntry != null)
-                            e.setParmValue(String.valueOf(stringObjectEntry.getValue()));
+                    Map.Entry<String, Object> stringObjectEntry = dto.parmList.entrySet().stream().filter(item -> item.getKey().equals(e.getParmName())).findFirst().orElse(null);
+                    if (stringObjectEntry != null) {
+                        e.setParmValue(String.valueOf(stringObjectEntry.getValue()));
                     } else {
                         e.setParmValue(null);
                     }
