@@ -69,6 +69,8 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.sql.*;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -1703,10 +1705,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         AppDataSourcePO po = appDataSourceImpl.query().eq("app_id", query.appId).one();
 
         OdsResultDTO array = new OdsResultDTO();
+        Instant inst1 = Instant.now();
         try {
+            Connection conn = null;
             Statement st = null;
             if (po.driveType.equalsIgnoreCase(mysqlDriver)) {
-                Connection conn = getStatement(DriverTypeEnum.MYSQL.getName(), po.connectStr, po.connectAccount, po.connectPwd);
+                conn = getStatement(DriverTypeEnum.MYSQL.getName(), po.connectStr, po.connectAccount, po.connectPwd);
                 // 以流的形式    第一个参数: 只可向前滚动查询     第二个参数: 指定不可以更新 ResultSet
                 /*
                 如果PreparedStatement对象初始化时resultSetType参数设置为TYPE_FORWARD_ONLY，
@@ -1716,33 +1720,55 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                  */
                 st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
                 // 每次流10条
-                st.setFetchSize(Integer.MIN_VALUE);
+//                st.setFetchSize(Integer.MIN_VALUE);
+                st.setMaxRows(10);
             } else if (po.driveType.equalsIgnoreCase(sqlserverDriver)) {
                 //1.加载驱动程序
                 Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
                 //2.获得数据库的连接
-                Connection conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
+                conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
                 st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-                st.setFetchSize(Integer.MIN_VALUE);
+//                st.setFetchSize(Integer.MIN_VALUE);
+                st.setMaxRows(10);
             } else if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName())) {
                 //1.加载驱动程序
                 Class.forName(com.fisk.dataaccess.enums.DriverTypeEnum.ORACLE.getName());
                 //2.获得数据库的连接
-                Connection conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
+                conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
                 st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-                st.setFetchSize(Integer.MIN_VALUE);
+//                st.setFetchSize(Integer.MIN_VALUE);
+                st.setMaxRows(10);
             }
             assert st != null;
+            Instant inst2 = Instant.now();
+            System.out.println("流式设置执行时间 : " + Duration.between(inst1, inst2).toMillis());
+            Instant inst3 = Instant.now();
+
             Map<String, String> converSql = publishTaskClient.converSql(query.tableName, query.querySql, po.driveType).data;
+            System.out.println("拼语句执行时间 : " + Duration.between(inst2, inst3).toMillis());
+
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             ResultSet rs = st.executeQuery(sql);
+            Instant inst4 = Instant.now();
+            System.out.println("执行sql时间 : " + Duration.between(inst3, inst4).toMillis());
             //获取数据集
             array = resultSetToJsonArrayDataAccess(rs);
+            Instant inst5 = Instant.now();
+            System.out.println("封装数据执行时间 : " + Duration.between(inst4, inst5).toMillis());
+
             array.sql = sql;
             rs.close();
+            System.out.println("关闭rs");
+            st.close();
+            System.out.println("关闭st");
+            conn.close();
+            System.out.println("关闭conn");
         } catch (Exception e) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e.getMessage());
         }
+        Instant inst5 = Instant.now();
+        System.out.println("最终执行时间 : " + Duration.between(inst1, inst5).toMillis());
+
         return array;
     }
 
