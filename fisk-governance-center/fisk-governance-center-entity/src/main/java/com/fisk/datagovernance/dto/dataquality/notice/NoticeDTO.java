@@ -79,4 +79,22 @@ public class NoticeDTO {
      */
     @ApiModelProperty(value = "通知扩展信息")
     public List<NoticeExtendDTO> noticeExtends;
+
+    /**
+     * 是否发送附件
+     */
+    @ApiModelProperty(value = "是否发送附件")
+    public boolean sendAttachment;
+
+    /**
+     * 附件名称
+     */
+    @ApiModelProperty(value = "附件名称")
+    public String attachmentName;
+
+    /**
+     * 附件地址
+     */
+    @ApiModelProperty(value = "附件地址")
+    public String attachmentPath;
 }

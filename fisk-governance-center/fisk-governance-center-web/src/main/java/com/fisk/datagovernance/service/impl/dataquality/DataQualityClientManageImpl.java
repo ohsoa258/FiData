@@ -6,10 +6,9 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.DateTimeUtils;
-import com.fisk.common.core.utils.Dto.Excel.DataDto;
-import com.fisk.common.core.utils.Dto.Excel.ExcelDto;
-import com.fisk.common.core.utils.Dto.Excel.RowDto;
-import com.fisk.common.core.utils.Dto.Excel.SheetDto;
+import com.fisk.common.core.utils.Dto.Excel.*;
+import com.fisk.common.core.utils.office.excel.ExcelReportUtil;
+import com.fisk.datagovernance.dto.dataquality.notice.NoticeDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.datagovernance.enums.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
@@ -24,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.io.File;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -58,6 +58,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
     @Resource
     private NoticeMapper noticeMapper;
+
+    @Resource
+    private NoticeManageImpl noticeManageImpl;
 
     @Resource
     private NoticeExtendMapper noticeExtendMapper;
@@ -387,6 +390,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 attachmentInfoPO.setOriginalName(String.format("数据校验质量报告%s.xlsx",
                         DateTimeUtils.getNowToShortDate().replace("-", "")));
                 attachmentInfoPO.setCategory(100);
+                createDataCheckQualityReport(noticeExtendPOS,allDataSource,attachmentInfoPO);
                 break;
             case BUSINESSFILTER_FILTERREPORT:
                 // 生成业务清洗质量报告
@@ -403,6 +407,20 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         }
         // 第二步：保存质量报告信息到附件信息表
         attachmentInfoMapper.insert(attachmentInfoPO);
+
+        // 第三步：是否需要发送邮件
+        if (noticePO.getNoticeType() == NoticeTypeEnum.EMAIL_NOTICE.getValue()) {
+            NoticeDTO noticeDTO = new NoticeDTO();
+            noticeDTO.emailServerId = noticePO.getEmailServerId();
+            noticeDTO.emailSubject = noticePO.getEmailSubject();
+            noticeDTO.body = noticePO.getBody();
+            noticeDTO.emailConsignee = noticePO.getEmailConsignee();
+            noticeDTO.emailCc = noticePO.getEmailCc();
+            noticeDTO.sendAttachment = true;
+            noticeDTO.attachmentName = attachmentInfoPO.getCurrentFileName();
+            noticeDTO.attachmentPath = attachmentInfoPO.getAbsolutePath();
+            noticeManageImpl.sendEmailNotice(noticeDTO);
+        }
 
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "");
     }
@@ -441,7 +459,6 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         ExcelDto excelDto = new ExcelDto();
         excelDto.setExcelName(attachmentInfoPO.getCurrentFileName());
         List<SheetDto> sheets = new ArrayList<>();
-
         for (int i = 0; i <= dataCheckPOList.size(); i++) {
             DataCheckPO dataCheckPO = dataCheckPOList.get(i);
             DataCheckExtendPO dataCheckExtendPO = dataCheckExtendPOList.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).findFirst().orElse(null);
@@ -468,35 +485,20 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
             SheetDto sheet = new SheetDto();
             sheet.setSheetName(dataCheckPO.getRuleName());
-            List<List<DataDto>> lists = resultSetToMap(dataSourceConVO, sql);
-            List<RowDto> singRows = new ArrayList<>();
-            RowDto rowDto = new RowDto();
-            rowDto.setRowIndex(0);
-            List<String> Columns = new ArrayList<>();
-            Columns.add("表名称");
-            Columns.add("模板名称");
-            rowDto.setColumns(Columns);
-            singRows.add(rowDto);
-
-            rowDto = new RowDto();
-            rowDto.setRowIndex(1);
-            Columns = new ArrayList<>();
-            Columns.add(tableName);
-            Columns.add(templatePO.getTemplatenName());
-            rowDto.setColumns(Columns);
-
-            rowDto = new RowDto();
-            rowDto.setRowIndex(3);
-            Columns = new ArrayList<>();
-            Columns.add("质量报告明细");
-            rowDto.setColumns(Columns);
-
-
+            SheetDataDto sheetDataDto = resultSetToMap(dataSourceConVO, sql);
+            List<RowDto> singRows = getSingRows(tableName, templatePO.templatenName, sheetDataDto.columns);
+            sheet.setSingRows(singRows);
+            sheet.setDataRows(sheetDataDto.columnData);
+            sheets.add(sheet);
+        }
+        if (CollectionUtils.isNotEmpty(sheets)) {
+            excelDto.setSheets(sheets);
+            ExcelReportUtil.createExcel(excelDto, attachmentInfoPO.absolutePath, attachmentInfoPO.currentFileName);
         }
         return ResultEnum.SUCCESS;
     }
 
-    public List<RowDto> getSingRows(String tableName, String templatenName, List<DataDto> fields) {
+    public List<RowDto> getSingRows(String tableName, String templatenName, List<String> fields) {
         List<RowDto> singRows = new ArrayList<>();
         RowDto rowDto = new RowDto();
         rowDto.setRowIndex(0);
@@ -524,7 +526,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         rowDto = new RowDto();
         rowDto.setRowIndex(4);
         Columns = new ArrayList<>();
-        Columns.addAll(fields.stream().map(DataDto::getFieldName).collect(Collectors.toList()));
+        Columns.addAll(fields);
         singRows.add(rowDto);
         return singRows;
     }
@@ -539,7 +541,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params sql
      * @params templateTypeEnum
      */
-    public List<List<DataDto>> resultSetToMap(DataSourceConVO dataSourceCon, String sql) {
+    public SheetDataDto resultSetToMap(DataSourceConVO dataSourceCon, String sql) {
+        SheetDataDto sheetDataDto = new SheetDataDto();
+        List<String> columnList = new ArrayList<>();
         List<List<DataDto>> mapList = new ArrayList<>();
         Statement st = null;
         Connection conn = null;
@@ -555,6 +559,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             ResultSet rs = st.executeQuery(sql);
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();
+            for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
+                columnList.add(metaData.getColumnLabel(columnIndex));
+            }
             while (rs.next()) {
                 List<DataDto> objectMap = new ArrayList<>();
                 for (int i = 1; i <= columnCount; i++) {
@@ -568,6 +575,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 mapList.add(objectMap);
             }
             rs.close();
+            sheetDataDto.setColumns(columnList);
+            sheetDataDto.setColumnData(mapList);
         } catch (Exception ex) {
             log.error("resultSetToMap触发异常，详细报错:", ex);
         } finally {
@@ -586,7 +595,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 log.error("resultSetToMap数据库关闭异常，详细报错:", ex);
             }
         }
-        return mapList;
+        return sheetDataDto;
     }
 
     /**

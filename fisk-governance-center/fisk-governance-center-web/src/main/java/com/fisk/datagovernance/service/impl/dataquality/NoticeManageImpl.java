@@ -200,6 +200,9 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         mailSenderDTO.setBody(dto.body);
         mailSenderDTO.setToAddress(dto.emailConsignee);
         mailSenderDTO.setToCc(dto.emailCc);
+        mailSenderDTO.setSendAttachment(dto.sendAttachment);
+        mailSenderDTO.setAttachmentName(dto.attachmentName);
+        mailSenderDTO.setAttachmentPath(dto.attachmentPath);
         try {
             //第二步：调用邮件发送方法
             MailSenderUtils.send(mailServeiceDTO, mailSenderDTO);

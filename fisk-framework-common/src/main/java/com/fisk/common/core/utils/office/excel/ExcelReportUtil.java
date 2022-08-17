@@ -102,10 +102,9 @@ public class ExcelReportUtil {
             row = sheet.createRow(rowEntity.getRowIndex());
             row.setHeightInPoints(20);
             for (int cellIndex = 0; cellIndex < rowEntity.getColumns().size(); cellIndex++) {
-                //ColumnDto column = rowEntity.getColumns().get(cellIndex);
                 cell = row.createCell(cellIndex);
                 cell.setCellStyle(style_header);
-               // cell.setCellValue(column.getColumnName());
+                cell.setCellValue(rowEntity.getColumns().get(cellIndex));
             }
         }
         // 创建数据行
@@ -169,7 +168,7 @@ public class ExcelReportUtil {
         dataFont.setFontName("宋体");
         dataFont.setFontHeightInPoints((short) 11);
         style_data.setFont(dataFont);
-        // 设置居中
+        // 设置左对齐
         style_data.setAlignment(HSSFCellStyle.ALIGN_LEFT);
         style_data.setVerticalAlignment(HSSFCellStyle.VERTICAL_CENTER);
         // 设置自动换行

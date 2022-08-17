@@ -94,7 +94,7 @@ public class MailSenderUtils {
         if (senderDTO.sendAttachment
                 && senderDTO.getAttachmentName() != null && !senderDTO.getAttachmentName().isEmpty()
                 && senderDTO.getAttachmentPath() != null && !senderDTO.getAttachmentPath().isEmpty()) {
-            File tmpFile = new File(senderDTO.getAttachmentPath());
+            File tmpFile = new File(senderDTO.getAttachmentPath()+senderDTO.getAttachmentName());
             if (tmpFile.exists()) {
                 MimeMultipart multipart = new MimeMultipart();
                 MimeBodyPart file1 = new MimeBodyPart();
