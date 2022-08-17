@@ -107,7 +107,6 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                     log.info("打印topic内容:" + JSON.toJSONString(kafkaReceiveDTO));
                     if (kafkaReceiveDTO.ifTaskStart) {
                         log.info("发送的topic1:{},内容:{}", topicName, mapString);
-                        TableNifiSettingPO tableNifiSetting = iTableNifiSettingService.getByTableId(Long.parseLong(split1[5]), Long.parseLong(split1[3]));
                         HashMap<Integer, Object> taskMap = new HashMap<>();
                         taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN + " - " + simpleDateFormat.format(new Date()));
                         log.info("第二处调用保存task日志");
