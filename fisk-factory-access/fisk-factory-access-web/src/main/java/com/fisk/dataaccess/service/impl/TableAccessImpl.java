@@ -1716,21 +1716,21 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                  */
                 st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
                 // 每次流10条
-                st.setFetchSize(10);
+                st.setFetchSize(Integer.MIN_VALUE);
             } else if (po.driveType.equalsIgnoreCase(sqlserverDriver)) {
                 //1.加载驱动程序
                 Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
                 //2.获得数据库的连接
                 Connection conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
                 st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-                st.setFetchSize(10);
+                st.setFetchSize(Integer.MIN_VALUE);
             } else if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName())) {
                 //1.加载驱动程序
                 Class.forName(com.fisk.dataaccess.enums.DriverTypeEnum.ORACLE.getName());
                 //2.获得数据库的连接
                 Connection conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
                 st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-                st.setFetchSize(10);
+                st.setFetchSize(Integer.MIN_VALUE);
             }
             assert st != null;
             Map<String, String> converSql = publishTaskClient.converSql(query.tableName, query.querySql, po.driveType).data;
