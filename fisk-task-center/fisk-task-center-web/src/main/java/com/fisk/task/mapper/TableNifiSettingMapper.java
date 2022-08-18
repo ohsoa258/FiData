@@ -17,6 +17,6 @@ public interface TableNifiSettingMapper extends FKBaseMapper<TableNifiSettingPO>
      * @param type    表类别
      * @return 返回值
      */
-    @Select("select * from tb_table_nifi_setting where table_id=#{tableId} and type=#{type} and  del_flag=1")
+    @Select("select * from tb_table_nifi_setting where table_access_id=#{tableId} and type=#{type} and  del_flag=1")
     TableNifiSettingPO getByTableId(@Param("tableId") long tableId, @Param("type") long type);
 }
