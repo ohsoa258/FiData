@@ -28,10 +28,16 @@ public class DataCheckExtendVO {
     public String fieldUnique;
 
     /**
-     * 字段名称/字段Id
+     * 字段名称
      */
     @ApiModelProperty(value = "字段名称")
     public String fieldName;
+
+    /**
+     * 字段别名
+     */
+    @ApiModelProperty(value = "字段别名")
+    public String fieldAlias;
 
     /**
      * 字段条件

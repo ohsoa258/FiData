@@ -27,6 +27,12 @@ public class DataTableFielDTO {
     public String lable;
 
     /**
+     * 表/字段 别名名称
+     */
+    @ApiModelProperty(value = "表/字段 别名名称")
+    public String labelAlias;
+
+    /**
      * 表类型
      */
     @ApiModelProperty(value = "表类型")
