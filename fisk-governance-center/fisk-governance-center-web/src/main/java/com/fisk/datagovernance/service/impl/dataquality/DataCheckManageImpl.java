@@ -93,7 +93,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             List<DataCheckExtendPO> dataCheckExtends = dataCheckExtendMapper.selectList(dataCheckExtendPOQueryWrapper);
             if (CollectionUtils.isNotEmpty(dataCheckExtends)) {
                 all.getRecords().forEach(e -> {
-                    e.setTableName(query.tableField.getLable());
+                    e.setTableName(query.tableField.getLabel());
                     e.setTableAlias(query.tableField.getLabelAlias());
                     List<DataCheckExtendPO> dataCheckExtendFilters = dataCheckExtends.stream().filter(item -> item.getRuleId() == e.getId()).collect(Collectors.toList());
                     if (CollectionUtils.isNotEmpty(dataCheckExtendFilters)) {
@@ -103,7 +103,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                 if (CollectionUtils.isNotEmpty(query.tableField.getFields())) {
                                     DataTableFielDTO dataTableFielDTO = query.tableField.getFields().stream().filter(f -> f.id.equals(t.fieldUnique)).findFirst().orElse(null);
                                     if (dataTableFielDTO != null) {
-                                        t.fieldName = dataTableFielDTO.getLable();
+                                        t.fieldName = dataTableFielDTO.getLabel();
                                         t.fieldAlias = dataTableFielDTO.getLabelAlias();
                                     }
                                 }
