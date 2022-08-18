@@ -34,6 +34,12 @@ public class DataCheckVO {
     public int datasourceId;
 
     /**
+     * 数据源类型
+     */
+    @ApiModelProperty(value = "数据源类型")
+    public SourceTypeEnum datasourceType;
+
+    /**
      * 规则名称
      */
     @ApiModelProperty(value = "规则名称")
@@ -44,6 +50,12 @@ public class DataCheckVO {
      */
     @ApiModelProperty(value = "表名称/表Id")
     public String tableUnique;
+
+    /**
+     * 表名称
+     */
+    @ApiModelProperty(value = "表名称")
+    public String tableName;
 
     /**
      * 表类型 1：表  2：视图

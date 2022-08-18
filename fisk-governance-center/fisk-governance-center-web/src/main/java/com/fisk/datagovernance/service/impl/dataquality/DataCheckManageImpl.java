@@ -32,6 +32,7 @@ import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckTypeV0;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.SyncCheckInfoVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
+import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFielDTO;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import org.apache.commons.lang.StringUtils;
@@ -82,8 +83,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Override
     public Page<DataCheckVO> getAll(DataCheckQueryDTO query) {
-        Page<DataCheckVO> all = baseMapper.getAll(query.page, query.datasourceId,
-                query.tableUnique, query.tableBusinessType, query.keyword);
+        Page<DataCheckVO> all = baseMapper.getAll(query.page, query.datasourceId, query.tableUnique, query.tableBusinessType, query.keyword);
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
             List<Integer> ruleIds = all.getRecords().stream().map(DataCheckVO::getId).collect(Collectors.toList());
             // 数据校验规则扩展属性
@@ -93,9 +93,22 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             List<DataCheckExtendPO> dataCheckExtends = dataCheckExtendMapper.selectList(dataCheckExtendPOQueryWrapper);
             if (CollectionUtils.isNotEmpty(dataCheckExtends)) {
                 all.getRecords().forEach(e -> {
+                    e.setTableName(query.tableField.getLable());
                     List<DataCheckExtendPO> dataCheckExtendFilters = dataCheckExtends.stream().filter(item -> item.getRuleId() == e.getId()).collect(Collectors.toList());
                     if (CollectionUtils.isNotEmpty(dataCheckExtendFilters)) {
                         e.setDataCheckExtends(DataCheckExtendMap.INSTANCES.poToVo(dataCheckExtendFilters));
+                        e.getDataCheckExtends().stream().forEach(t -> {
+                            if (e.datasourceType == SourceTypeEnum.FiData) {
+                                if (CollectionUtils.isNotEmpty(query.tableField.getFields())) {
+                                    DataTableFielDTO dataTableFielDTO = query.tableField.getFields().stream().filter(f -> f.id.equals(t.fieldUnique)).findFirst().orElse(null);
+                                    if (dataTableFielDTO != null) {
+                                        t.fieldName = dataTableFielDTO.getLable();
+                                    }
+                                }
+                            } else {
+                                t.fieldName = t.fieldUnique;
+                            }
+                        });
                     }
                 });
             }
@@ -345,9 +358,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params dataCheckExtendPO  数据校验扩展属性PO
      * @params data 校验的数据
      */
-    public ResultEntity<List<DataCheckResultVO>> CheckFieldRule_Interface(TemplatePO templatePO, DataSourceConPO dataSourceInfo,
-                                                                          DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO,
-                                                                          JSONArray data, List<FiDataTableMetaDataDTO> fiDataTableMetaDataDTOS) {
+    public ResultEntity<List<DataCheckResultVO>> CheckFieldRule_Interface(TemplatePO templatePO, DataSourceConPO dataSourceInfo, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO, JSONArray data, List<FiDataTableMetaDataDTO> fiDataTableMetaDataDTOS) {
         String tableName = "";
         String fieldName = "";
         if (CollectionUtils.isNotEmpty(fiDataTableMetaDataDTOS)) {
@@ -1235,5 +1246,6 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, sql);
     }
+
 
 }
