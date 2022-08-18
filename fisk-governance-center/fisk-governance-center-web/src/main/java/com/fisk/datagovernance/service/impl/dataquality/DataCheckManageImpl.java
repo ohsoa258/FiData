@@ -128,11 +128,6 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
         }
         //第二步：转换DTO对象为PO对象
-        ResultEntity<String> role = createRole(dto, templatePO);
-        if (role == null || role.code != ResultEnum.SUCCESS.getCode()) {
-            return ResultEnum.SAVE_VERIFY_ERROR;
-        }
-        dto.setCreateRule(role.getData());
         DataCheckPO dataCheckPO = DataCheckMap.INSTANCES.dtoToPo(dto);
         if (dataCheckPO == null) {
             return ResultEnum.SAVE_VERIFY_ERROR;
@@ -164,11 +159,6 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (templatePO == null) {
             return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
         }
-        ResultEntity<String> role = createRole(dto, templatePO);
-        if (role == null || role.code != ResultEnum.SUCCESS.getCode()) {
-            return ResultEnum.SAVE_VERIFY_ERROR;
-        }
-        dto.setCreateRule(role.getData());
         DataCheckPO dataCheckPO = baseMapper.selectById(dto.id);
         if (dataCheckPO == null) {
             return ResultEnum.SAVE_VERIFY_ERROR;
@@ -1133,122 +1123,5 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
         return null;
     }
-
-    /**
-     * @return com.fisk.common.core.response.ResultEntity<java.lang.String>
-     * @description 根据校验条件生成校验规则
-     * @author dick
-     * @date 2022/4/2 15:51
-     * @version v1.0
-     * @params dto
-     * @params templateTypeEnum
-     */
-    public ResultEntity<String> createRole(DataCheckDTO dto, TemplatePO templatePO) {
-        if (dto == null) {
-            return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, "");
-        }
-        List<DataSourceConVO> allDataSource = dataSourceConManageImpl.getAllDataSource();
-        DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == dto.getDatasourceId()).findFirst().orElse(null);
-        if (dataSourceConVO == null) {
-            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS, "");
-        }
-        ResultEntity<String> rule = null;
-        TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
-        switch (templateTypeEnum) {
-            case DATA_MISSING_TEMPLATE:
-                // 数据缺失模板
-                rule = createData_MissingRule(dataSourceConVO, dto);
-                break;
-            case FIELD_AGGREGATE_TEMPLATE:
-                // 字段聚合波动阈值模板
-                rule = createField_AggregateRule(dataSourceConVO, dto);
-                break;
-            case BUSINESS_CHECK_TEMPLATE:
-                rule = new ResultEntity<>();
-                rule.setCode(0);
-                rule.setData(dto.createRule);
-                break;
-            default:
-                rule = new ResultEntity<>();
-                rule.setCode(0);
-                break;
-        }
-        return rule;
-    }
-
-    /**
-     * @return com.fisk.common.core.response.ResultEntity<java.lang.String>
-     * @description 生成数据缺失模板规则
-     * @author dick
-     * @date 2022/3/25 13:59
-     * @version v1.0
-     * @params dataSourceTypeEnum 数据源类型
-     * @params dto 请求参数DTO
-     */
-    public ResultEntity<String> createData_MissingRule(DataSourceConVO dataSourceConVO, DataCheckDTO dto) {
-        String sql = String.format("SELECT * FROM %s WHERE %s IS NULL OR %s = '' ",
-                dto.getTempTableName(), dto.getDataCheckExtends().get(0).tempFieldName,
-                dto.getDataCheckExtends().get(0).tempFieldName);
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, sql);
-    }
-
-    /**
-     * @return com.fisk.common.core.response.ResultEntity<java.lang.String>
-     * @description 生成字段聚合波动阈值规则
-     * @author dick
-     * @date 2022/3/25 13:59
-     * @version v1.0
-     * @params tableName 表名称
-     * @params fieldName 字段名称
-     * @params fieldAggregate 字段聚合函数
-     * @params thresholdValue 波动阈值
-     */
-    public ResultEntity<String> createField_AggregateRule(DataSourceConVO dataSourceConVO, DataCheckDTO dto) {
-
-        String sql = "SELECT\n" +
-                "\t'%s' AS checkDataBase,\n" +
-                "\t'%s' AS checkTable,\n" +
-                "\t'%s' AS checkField,\n" +
-                "\t'%s' AS checkDesc,\n" +
-                "\t'%s' AS checkType,\n" +
-                "CASE\n" +
-                "\t\t\n" +
-                "\t\tWHEN %s >= %s THEN\n" +
-                "\t\t'fail' ELSE 'success' \n" +
-                "\tEND AS checkResult \n" +
-                "FROM\n" +
-                "\t'%s';";
-        String fieldAggregate = dto.dataCheckExtends.get(0).fieldAggregate;
-        String dataBase = dataSourceConVO.conDbname;
-        String tableName = dto.tempTableName;
-        String fieldName = dto.dataCheckExtends.get(0).tempFieldName;
-        int thresholdValue = dto.thresholdValue;
-        switch (fieldAggregate) {
-            case "SUM":
-                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
-                        "SUM", "SUM(" + fieldName + ")", thresholdValue, tableName);
-                break;
-            case "COUNT":
-                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
-                        "COUNT", "COUNT(" + fieldName + ")", thresholdValue, tableName);
-                break;
-            case "AVG":
-                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
-                        "AVG", "AVG(CAST(" + fieldName + " AS decimal(10, 2)))", thresholdValue, tableName);
-                break;
-            case "MAX":
-                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
-                        "MAX", "MAX(" + fieldName + ")", thresholdValue, tableName);
-                break;
-            case "MIN":
-                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
-                        "MIN", "MIN(" + fieldName + ")", thresholdValue, tableName);
-                break;
-            default:
-                return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, "");
-        }
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, sql);
-    }
-
 
 }

@@ -22,10 +22,16 @@ public class DataCheckExtendDTO {
     public String fieldUnique;
 
     /**
-     * 临时字段名称
+     * 字段名称
      */
-    @ApiModelProperty(value = "临时字段名称")
-    public String tempFieldName;
+    @ApiModelProperty(value = "字段名称")
+    public String fieldName;
+
+    /**
+     * 字段别名
+     */
+    @ApiModelProperty(value = "字段别名")
+    public String fieldAlias;
 
     /**
      * 字段条件

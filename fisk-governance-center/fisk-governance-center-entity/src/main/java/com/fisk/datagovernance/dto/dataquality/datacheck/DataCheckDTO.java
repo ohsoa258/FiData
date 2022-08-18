@@ -39,10 +39,16 @@ public class DataCheckDTO {
     public String tableUnique;
 
     /**
-     * 临时表名称
+     * 表名称
      */
-    @ApiModelProperty(value = "临时表名称")
-    public String tempTableName;
+    @ApiModelProperty(value = "表名称")
+    public String tableName;
+
+    /**
+     * 表别名
+     */
+    @ApiModelProperty(value = "表别名")
+    public String tableAlias;
 
     /**
      * 表类型 1：表  2：视图
