@@ -27,6 +27,12 @@ public class DataCheckDTO {
     public int datasourceId;
 
     /**
+     * 数据源类型
+     */
+    @ApiModelProperty(value = "数据源类型")
+    public SourceTypeEnum sourceTypeEnum;
+
+    /**
      * 规则名称
      */
     @ApiModelProperty(value = "规则名称")

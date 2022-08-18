@@ -407,6 +407,27 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     /**
+     * @description 根据FiData系统数据源的Id查询数据质量数据源ID
+     * @author dick
+     * @date 2022/8/18 16:36
+     * @version v1.0
+     * @params sourceTypeEnum
+     * @params datasourceId
+     * @return int
+     */
+    public int getIdByDataSourceId(SourceTypeEnum sourceTypeEnum, int datasourceId) {
+        int id = 0;
+        List<DataSourceConVO> allDataSource = getAllDataSource();
+        if (sourceTypeEnum == SourceTypeEnum.FiData) {
+            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getDatasourceId() == datasourceId).findFirst().orElse(null);
+            if (dataSourceConVO != null) {
+                id = dataSourceConVO.getId();
+            }
+        }
+        return id;
+    }
+
+    /**
      * 连接数据库
      *
      * @param driver   driver
