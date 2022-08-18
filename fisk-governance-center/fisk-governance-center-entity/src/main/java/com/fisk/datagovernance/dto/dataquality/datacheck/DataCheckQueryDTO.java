@@ -1,6 +1,7 @@
 package com.fisk.datagovernance.dto.dataquality.datacheck;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFielDTO;
 import io.swagger.annotations.ApiModelProperty;
@@ -23,6 +24,12 @@ public class DataCheckQueryDTO {
      */
     @ApiModelProperty(value = "数据源表主键id")
     public int datasourceId;
+
+    /**
+     * 数据源类型
+     */
+    @ApiModelProperty(value = "数据源类型")
+    public SourceTypeEnum sourceTypeEnum;
 
     /**
      * 表名称/表Id

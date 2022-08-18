@@ -22,18 +22,6 @@ public class DataCheckExtendDTO {
     public String fieldUnique;
 
     /**
-     * 字段名称
-     */
-    @ApiModelProperty(value = "字段名称")
-    public String fieldName;
-
-    /**
-     * 字段别名
-     */
-    @ApiModelProperty(value = "字段别名")
-    public String fieldAlias;
-
-    /**
      * 字段条件
      */
     @ApiModelProperty(value = "字段条件")

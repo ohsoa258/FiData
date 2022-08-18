@@ -83,6 +83,13 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Override
     public Page<DataCheckVO> getAll(DataCheckQueryDTO query) {
+        List<DataSourceConVO> allDataSource = dataSourceConManageImpl.getAllDataSource();
+        if (query.sourceTypeEnum == SourceTypeEnum.FiData) {
+            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getDatasourceId() == query.datasourceId).findFirst().orElse(null);
+            if (dataSourceConVO != null) {
+                query.datasourceId = dataSourceConVO.getId();
+            }
+        }
         Page<DataCheckVO> all = baseMapper.getAll(query.page, query.datasourceId, query.tableUnique, query.tableBusinessType, query.keyword);
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
             List<Integer> ruleIds = all.getRecords().stream().map(DataCheckVO::getId).collect(Collectors.toList());
