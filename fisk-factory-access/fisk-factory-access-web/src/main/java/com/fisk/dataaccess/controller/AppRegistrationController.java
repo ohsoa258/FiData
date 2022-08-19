@@ -273,6 +273,12 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataAccessStructure(dto));
     }
 
+    @PostMapping("/getDataTableStructure")
+    @ApiOperation(value = "获取数据接入表结构")
+    public ResultEntity<List<FiDataMetaDataDTO>> getDataAccessTableStructure(@RequestBody FiDataMetaDataReqDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataAccessTableStructure(dto));
+    }
+
     @PostMapping("/setDataStructure")
     @ApiOperation(value = "刷新数据接入结构")
     public ResultEntity<Object> setDataAccessStructure(@RequestBody FiDataMetaDataReqDTO dto) {

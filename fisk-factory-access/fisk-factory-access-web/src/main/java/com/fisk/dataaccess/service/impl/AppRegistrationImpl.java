@@ -854,6 +854,22 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
     @Override
+    public List<FiDataMetaDataDTO> getDataAccessTableStructure(FiDataMetaDataReqDTO reqDto) {
+
+        boolean flag = redisUtil.hasKey(RedisKeyBuild.buildFiDataTableStructureKey(reqDto.dataSourceId));
+        if (!flag) {
+            // 将数据接入结构存入redis
+            setDataAccessStructure(reqDto);
+        }
+        List<FiDataMetaDataDTO> list = null;
+        String dataAccessStructure = redisUtil.get(RedisKeyBuild.buildFiDataTableStructureKey(reqDto.dataSourceId)).toString();
+        if (StringUtils.isNotBlank(dataAccessStructure)) {
+            list = JSONObject.parseArray(dataAccessStructure, FiDataMetaDataDTO.class);
+        }
+        return list;
+    }
+
+    @Override
     public boolean setDataAccessStructure(FiDataMetaDataReqDTO reqDto) {
 
         List<FiDataMetaDataDTO> list = new ArrayList<>();
@@ -871,7 +887,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         dataTree.setLevelType(LevelTypeEnum.DATABASE);
 
         // 封装data-access所有结构数据
-        dataTree.setChildren(buildChildren(reqDto.dataSourceId));
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = buildChildren(reqDto.dataSourceId);
+        Map.Entry<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> next = hashMap.entrySet().iterator().next();
+        dataTree.setChildren(next.getValue());
         dataTreeList.add(dataTree);
 
         dto.setChildren(dataTreeList);
@@ -879,6 +897,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         if (!CollectionUtils.isEmpty(list)) {
             redisUtil.set(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId), JSON.toJSONString(list));
+        }
+        if (!CollectionUtils.isEmpty(next.getKey())){
+            redisUtil.set(RedisKeyBuild.buildFiDataTableStructureKey(reqDto.dataSourceId), JSON.toJSONString(next.getKey()));
         }
 
         return true;
@@ -985,7 +1006,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * @author Lock
      * @date 2022/6/15 17:46
      */
-    private List<FiDataMetaDataTreeDTO> buildChildren(String id) {
+    private  HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> buildChildren(String id) {
+
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap=new HashMap<>();
 
         List<FiDataMetaDataTreeDTO> appTypeTreeList = new ArrayList<>();
 
@@ -1007,14 +1030,25 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         // 所有应用
         List<AppRegistrationPO> appPoList = this.query().orderByDesc("create_time").list();
+        // 所有应用下表字段信息
+        List<FiDataMetaDataTreeDTO> tableFieldList=new ArrayList<>();
 
-        appTreeByRealTime.setChildren(getFiDataMetaDataTreeByRealTime(id, appPoList));
-        appTreeByNonRealTime.setChildren(getFiDataMetaDataTreeByNonRealTime(id, appPoList));
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> fiDataMetaDataTreeByRealTime = getFiDataMetaDataTreeByRealTime(id, appPoList);
+        Map.Entry<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> nextTreeByRealTime = fiDataMetaDataTreeByRealTime.entrySet().iterator().next();
+        appTreeByRealTime.setChildren(nextTreeByRealTime.getValue());
+        tableFieldList.addAll(nextTreeByRealTime.getKey());
+
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> fiDataMetaDataTreeByNonRealTime = getFiDataMetaDataTreeByNonRealTime(id, appPoList);
+        Map.Entry<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> nextTreeByNonRealTime = fiDataMetaDataTreeByNonRealTime.entrySet().iterator().next();
+        appTreeByNonRealTime.setChildren(nextTreeByNonRealTime.getValue());
+        tableFieldList.addAll(nextTreeByNonRealTime.getKey());
 
         appTypeTreeList.add(appTreeByRealTime);
         appTypeTreeList.add(appTreeByNonRealTime);
 
-        return appTypeTreeList;
+        // key是表字段 value是tree
+        hashMap.put(tableFieldList,appTypeTreeList);
+        return hashMap;
     }
 
     /**
@@ -1026,8 +1060,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * @date 2022/6/16 15:21
      * @params id FiData数据源id
      */
-    private List<FiDataMetaDataTreeDTO> getFiDataMetaDataTreeByRealTime(String id, List<AppRegistrationPO> appPoList) {
-        return appPoList.stream()
+    private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> getFiDataMetaDataTreeByRealTime(String id, List<AppRegistrationPO> appPoList) {
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = new HashMap<>();
+        List<FiDataMetaDataTreeDTO> key = new ArrayList<>();
+        List<FiDataMetaDataTreeDTO> value = appPoList.stream()
                 .filter(Objects::nonNull)
                 // 实时应用
                 .filter(e -> e.appType == 0)
@@ -1128,6 +1164,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
                                         // api的子级
                                         apiDtoTree.setChildren(tableTreeList);
+                                        // 表字段信息单独再保存一份
+                                        if (!CollectionUtils.isEmpty(tableTreeList)) {
+                                            key.addAll(tableTreeList);
+                                        }
                                         return apiDtoTree;
                                     }).collect(Collectors.toList());
 
@@ -1144,6 +1184,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     }
                     return appDtoTree;
                 }).collect(Collectors.toList());
+        hashMap.put(key, value);
+        return hashMap;
     }
 
     /**
@@ -1155,8 +1197,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * @author Lock
      * @date 2022/6/16 15:21
      */
-    private List<FiDataMetaDataTreeDTO> getFiDataMetaDataTreeByNonRealTime(String id, List<AppRegistrationPO> appPoList) {
-        return appPoList.stream()
+    private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> getFiDataMetaDataTreeByNonRealTime(String id, List<AppRegistrationPO> appPoList) {
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = new HashMap<>();
+        List<FiDataMetaDataTreeDTO> key = new ArrayList<>();
+        List<FiDataMetaDataTreeDTO> value = appPoList.stream()
                 .filter(Objects::nonNull)
                 // 非实时应用
                 .filter(e -> e.appType == 1)
@@ -1257,6 +1301,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
                                         // api的子级
                                         apiDtoTree.setChildren(tableTreeList);
+                                        // 表字段信息单独再保存一份
+                                        if (!CollectionUtils.isEmpty(tableTreeList)) {
+                                            key.addAll(tableTreeList);
+                                        }
                                         return apiDtoTree;
                                     }).collect(Collectors.toList());
 
@@ -1323,6 +1371,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                     }).collect(Collectors.toList());
 
                             appDtoTree.setChildren(tableTreeList);
+                            // 表字段信息单独再保存一份
+                            if (!CollectionUtils.isEmpty(tableTreeList)) {
+                                key.addAll(tableTreeList);
+                            }
                             break;
                         case RestfulAPI:
                         default:
@@ -1330,5 +1382,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     }
                     return appDtoTree;
                 }).collect(Collectors.toList());
+        hashMap.put(key, value);
+        return hashMap;
     }
 }

@@ -407,13 +407,13 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     /**
+     * @return int
      * @description 根据FiData系统数据源的Id查询数据质量数据源ID
      * @author dick
      * @date 2022/8/18 16:36
      * @version v1.0
      * @params sourceTypeEnum
      * @params datasourceId
-     * @return int
      */
     public int getIdByDataSourceId(SourceTypeEnum sourceTypeEnum, int datasourceId) {
         int id = 0;
@@ -425,6 +425,37 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             }
         }
         return id;
+    }
+
+    /**
+     * @return void
+     * @description 查询表字段名称
+     * @author dick
+     * @date 2022/8/18 12:13
+     * @version v1.0
+     * @params dataSourceConfigEnum
+     * @params dataTableFieldList
+     */
+    public void setTableFieldName(DataSourceConfigEnum dataSourceConfigEnum, List<DataTableFielDTO> dataTableFieldList) {
+        if (dataSourceConfigEnum == DataSourceConfigEnum.NONE || !CollectionUtils.isNotEmpty(dataTableFieldList)) {
+            return;
+        }
+        List<FiDataMetaDataDTO> fiDataMetaData = null;
+        switch (dataSourceConfigEnum) {
+            case DMP_DW:
+                fiDataMetaData = redisUtil.getFiDataMetaData(String.valueOf(DataSourceConfigEnum.DMP_DW.getValue()));
+                break;
+            case DMP_ODS:
+                fiDataMetaData = redisUtil.getFiDataMetaData(String.valueOf(DataSourceConfigEnum.DMP_ODS.getValue()));
+                break;
+            case DMP_MDM:
+                fiDataMetaData = redisUtil.getFiDataMetaData(String.valueOf(DataSourceConfigEnum.DMP_MDM.getValue()));
+                break;
+            case DMP_OLAP:
+                fiDataMetaData = redisUtil.getFiDataMetaData(String.valueOf(DataSourceConfigEnum.DMP_OLAP.getValue()));
+                break;
+        }
+
     }
 
     /**

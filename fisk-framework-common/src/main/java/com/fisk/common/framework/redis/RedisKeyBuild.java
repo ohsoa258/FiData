@@ -59,4 +59,14 @@ public class RedisKeyBuild {
     public static String buildDispatchStructureKey(Long id) {
         return RedisKeyEnum.DISPATCH_STRUCTURE.getName() + ":" + id;
     }
+
+    /**
+     * 组装redis的key
+     *
+     * @param dataSourceId 数据源id
+     * @return redis key
+     */
+    public static String buildFiDataTableStructureKey(String dataSourceId) {
+        return RedisKeyEnum.FIDATA_TABLE_STRUCTURE.getName() + ":" + dataSourceId;
+    }
 }

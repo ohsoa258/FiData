@@ -14,6 +14,7 @@ import com.fisk.datagovernance.enums.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataQualityClientManageService;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.datagovernance.vo.dataquality.rule.TableRuleTempVO;
@@ -436,8 +437,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params templatePO 模板PO
      * @params attachmentInfoPO 附件PO
      */
-    public ResultEnum createDataCheckQualityReport(List<NoticeExtendPO> noticeExtendPOS,
-                                                   List<DataSourceConVO> allDataSource, AttachmentInfoPO attachmentInfoPO) {
+    public ResultEnum createDataCheckQualityReport(List<NoticeExtendPO> noticeExtendPOS, List<DataSourceConVO> allDataSource, AttachmentInfoPO attachmentInfoPO) {
 
         List<Integer> ruleIds = noticeExtendPOS.stream().map(NoticeExtendPO::getRuleId).collect(Collectors.toList());
         QueryWrapper<DataCheckPO> dataCheckPOQueryWrapper = new QueryWrapper<>();
@@ -459,7 +459,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         ExcelDto excelDto = new ExcelDto();
         excelDto.setExcelName(attachmentInfoPO.getCurrentFileName());
         List<SheetDto> sheets = new ArrayList<>();
-        for (int i = 0; i <= dataCheckPOList.size(); i++) {
+        for (int i = 0; i <= dataCheckPOList.size(); i++)
+        {
             DataCheckPO dataCheckPO = dataCheckPOList.get(i);
             DataCheckExtendPO dataCheckExtendPO = dataCheckExtendPOList.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).findFirst().orElse(null);
             if (dataCheckExtendPO == null) {
@@ -469,15 +470,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             if (templatePO == null) {
                 continue;
             }
+
+
             String sql = "";
-            TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
-            switch (templateTypeEnum) {
-                case DATA_MISSING_TEMPLATE:
-                    //case FIELD_AGGREGATE_TEMPLATE:
-                case BUSINESS_CHECK_TEMPLATE:
-                    sql = dataCheckPO.getCreateRule();
-                    break;
-            }
             if (StringUtils.isEmpty(sql)) {
                 continue;
             }
@@ -498,6 +493,16 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         return ResultEnum.SUCCESS;
     }
 
+    /**
+     * @description 获取Excel标识行
+     * @author dick
+     * @date 2022/8/18 17:38
+     * @version v1.0
+     * @params tableName
+     * @params templatenName
+     * @params fields
+     * @return java.util.List<com.fisk.common.core.utils.Dto.Excel.RowDto>
+     */
     public List<RowDto> getSingRows(String tableName, String templatenName, List<String> fields) {
         List<RowDto> singRows = new ArrayList<>();
         RowDto rowDto = new RowDto();
@@ -608,8 +613,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params sql
      * @params templateTypeEnum
      */
-    public int executeSql(DataSourceConPO dataSourceConPO, String
-            sql, TemplateTypeEnum templateTypeEnum) {
+    public int executeSql(DataSourceConPO dataSourceConPO, String sql, TemplateTypeEnum templateTypeEnum) {
         int affectedCount = 0;
         Statement st = null;
         Connection conn = null;
@@ -652,6 +656,107 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             }
         }
         return affectedCount;
+    }
+
+    /**
+     * @return com.fisk.common.core.response.ResultEntity<java.lang.String>
+     * @description 根据校验条件生成校验规则
+     * @author dick
+     * @date 2022/4/2 15:51
+     * @version v1.0
+     * @params dto
+     * @params templateTypeEnum
+     */
+//    public String createRole(DataSourceConVO dataSourceConVO, TemplatePO templatePO,) {
+//        TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
+//        String sql="";
+//        switch (templateTypeEnum) {
+//            case DATA_MISSING_TEMPLATE:
+//                // 数据缺失模板
+//                sql = createData_MissingRule(dataSourceConVO, dataCheckPO);
+//                break;
+//            case FIELD_AGGREGATE_TEMPLATE:
+//                // 字段聚合波动阈值模板
+//                sql = createField_AggregateRule(dataSourceConVO, dataCheckPO);
+//                break;
+//            case BUSINESS_CHECK_TEMPLATE:
+//                // 业务验证模板
+//                rule.setData(dto.createRule);
+//                break;
+//            default:
+//                rule = new ResultEntity<>();
+//                rule.setCode(0);
+//                break;
+//        }
+//    }
+
+    /**
+     * @return java.lang.String
+     * @description 生成数据缺失模板规则
+     * @author dick
+     * @date 2022/3/25 13:59
+     * @version v1.0
+     * @params dataSourceTypeEnum 数据源类型
+     * @params dto 请求参数DTO
+     */
+    public String createData_MissingRule(String tableName,String fieldName) {
+        String sql = String.format("SELECT * FROM %s WHERE %s IS NULL OR %s = '' ",
+                tableName,fieldName, fieldName);
+        return sql;
+    }
+
+    /**
+     * @return java.lang.String
+     * @description 生成字段聚合波动阈值规则
+     * @author dick
+     * @date 2022/3/25 13:59
+     * @version v1.0
+     * @params tableName 表名称
+     * @params fieldName 字段名称
+     * @params fieldAggregate 字段聚合函数
+     * @params thresholdValue 波动阈值
+     */
+    public String createField_AggregateRule(DataSourceConVO dataSourceConVO, String tableName,String fieldName,String fieldAggregate,int thresholdValue) {
+
+        String sql = "SELECT\n" +
+                "\t'%s' AS checkDataBase,\n" +
+                "\t'%s' AS checkTable,\n" +
+                "\t'%s' AS checkField,\n" +
+                "\t'%s' AS checkDesc,\n" +
+                "\t'%s' AS checkType,\n" +
+                "CASE\n" +
+                "\t\t\n" +
+                "\t\tWHEN %s >= %s THEN\n" +
+                "\t\t'fail' ELSE 'success' \n" +
+                "\tEND AS checkResult \n" +
+                "FROM\n" +
+                "\t'%s';";
+        String dataBase = dataSourceConVO.conDbname;
+        switch (fieldAggregate) {
+            case "SUM":
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
+                        "SUM", "SUM(" + fieldName + ")", thresholdValue, tableName);
+                break;
+            case "COUNT":
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
+                        "COUNT", "COUNT(" + fieldName + ")", thresholdValue, tableName);
+                break;
+            case "AVG":
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
+                        "AVG", "AVG(CAST(" + fieldName + " AS decimal(10, 2)))", thresholdValue, tableName);
+                break;
+            case "MAX":
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
+                        "MAX", "MAX(" + fieldName + ")", thresholdValue, tableName);
+                break;
+            case "MIN":
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
+                        "MIN", "MIN(" + fieldName + ")", thresholdValue, tableName);
+                break;
+            default:
+                return "";
+        }
+        return sql;
     }
 
 }
