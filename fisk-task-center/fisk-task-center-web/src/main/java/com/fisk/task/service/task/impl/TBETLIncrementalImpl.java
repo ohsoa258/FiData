@@ -47,7 +47,7 @@ public class TBETLIncrementalImpl extends ServiceImpl<TBETLIncrementalMapper, TB
                         sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'" + startDate + "'");
                         paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), startDate);
                     } else {
-                        sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
+                        sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'" + NifiConstants.AttrConstants.INITIAL_TIME + "'");
                         paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
                     }
                     if (endTime != null) {
@@ -55,12 +55,12 @@ public class TBETLIncrementalImpl extends ServiceImpl<TBETLIncrementalMapper, TB
                         sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'" + endDate + "'");
                         paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), endDate);
                     } else {
-                        sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
+                        sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'" + NifiConstants.AttrConstants.INITIAL_TIME + "'");
                         paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
                     }
                 } else {
-                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
-                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
+                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'" + NifiConstants.AttrConstants.INITIAL_TIME + "'");
+                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'" + NifiConstants.AttrConstants.INITIAL_TIME + "'");
                     paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
                     paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
                     Date parse = formatter.parse(NifiConstants.AttrConstants.INITIAL_TIME);
