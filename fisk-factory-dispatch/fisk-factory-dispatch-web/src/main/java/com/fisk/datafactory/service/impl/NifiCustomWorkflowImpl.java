@@ -12,7 +12,9 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.common.service.pageFilter.utils.GetConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
@@ -43,7 +45,8 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -71,6 +74,8 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
     PublishTaskClient publishTaskClient;
     @Resource
     RedisUtil redisUtil;
+    @Resource
+    GetConfigDTO getConfig;
 
 
     @Override
@@ -285,12 +290,14 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
 
     @Override
     public List<FilterFieldDTO> getColumn() {
-
-        return getMetadata.getMetadataList(
-                "dmp_datafactory_db",
-                "tb_nifi_custom_workflow",
-                "",
-                FilterSqlConstants.CUSTOM_WORKFLOW_SQL);
+        MetaDataConfigDTO dto = new MetaDataConfigDTO();
+        dto.url = getConfig.url;
+        dto.userName = getConfig.username;
+        dto.password = getConfig.password;
+        dto.driver = getConfig.driver;
+        dto.tableName = "tb_nifi_custom_workflow";
+        dto.filterSql = FilterSqlConstants.CUSTOM_WORKFLOW_SQL;
+        return getMetadata.getMetadataList(dto);
     }
 
     @Override

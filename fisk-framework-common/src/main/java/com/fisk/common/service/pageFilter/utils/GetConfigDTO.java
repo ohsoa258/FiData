@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto;
+package com.fisk.common.service.pageFilter.utils;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,5 +19,8 @@ public class GetConfigDTO {
 
     @Value("${spring.datasource.password}")
     public String password;
+
+    @Value("${spring.datasource.driver-class-name}")
+    public String driver;
 
 }

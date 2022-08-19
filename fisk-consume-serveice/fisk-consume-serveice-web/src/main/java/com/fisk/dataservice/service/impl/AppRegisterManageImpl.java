@@ -6,20 +6,25 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
-import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
-import com.fisk.common.service.pageFilter.utils.GenerateCondition;
-import com.fisk.common.service.pageFilter.utils.GetMetadata;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.EnCryptUtils;
 import com.fisk.common.core.utils.office.pdf.component.PDFHeaderFooter;
 import com.fisk.common.core.utils.office.pdf.component.PDFKit;
 import com.fisk.common.core.utils.office.pdf.exception.PDFException;
-import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.core.utils.EnCryptUtils;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
+import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.common.service.pageFilter.utils.GetConfigDTO;
+import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataservice.dto.api.doc.*;
 import com.fisk.dataservice.dto.app.*;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.ApiStateTypeEnum;
-import com.fisk.dataservice.map.*;
+import com.fisk.dataservice.map.ApiBuiltinParmMap;
+import com.fisk.dataservice.map.ApiParmMap;
+import com.fisk.dataservice.map.AppApiMap;
+import com.fisk.dataservice.map.AppRegisterMap;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IAppRegisterManageService;
 import com.fisk.dataservice.vo.app.AppApiParmVO;
@@ -32,9 +37,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.fisk.common.core.constants.ApiConstants.*;
@@ -72,6 +81,9 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
     @Resource
     private ApiFieldMapper apiFieldMapper;
 
+    @Resource
+    GetConfigDTO getConfig;
+
     @Value("${dataservice.pdf.path}")
     private String templatePath;
     @Value("${dataservice.pdf.api_address}")
@@ -89,11 +101,14 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 
     @Override
     public List<FilterFieldDTO> getColumn() {
-        return getMetadata.getMetadataList(
-                "dmp_dataservice_db",
-                "tb_app_config",
-                "",
-                FilterSqlConstants.DS_APP_REGISTRATION_SQL);
+        MetaDataConfigDTO dto = new MetaDataConfigDTO();
+        dto.url = getConfig.url;
+        dto.userName = getConfig.username;
+        dto.password = getConfig.password;
+        dto.driver = getConfig.driver;
+        dto.tableName = "tb_app_config";
+        dto.filterSql = FilterSqlConstants.DS_APP_REGISTRATION_SQL;
+        return getMetadata.getMetadataList(dto);
     }
 
     @Override

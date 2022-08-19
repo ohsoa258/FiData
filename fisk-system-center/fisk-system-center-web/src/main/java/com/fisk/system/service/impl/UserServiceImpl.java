@@ -13,9 +13,9 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.common.service.pageFilter.utils.GetConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.system.dto.ChangePasswordDTO;
-import com.fisk.system.dto.GetConfigDTO;
 import com.fisk.system.dto.QueryDTO;
 import com.fisk.system.dto.UserInfoCurrentDTO;
 import com.fisk.system.dto.userinfo.*;
@@ -331,6 +331,7 @@ public class UserServiceImpl implements IUserService {
         dto.password = getConfig.password;
         dto.tableName = "tb_user_info";
         dto.tableAlias = "a";
+        dto.driver = getConfig.driver;
         dto.filterSql = FilterSqlConstants.USER_INFO_SQL;
         List<FilterFieldDTO> list = getMetadata.getMetadataList(dto);
         //添加创建人

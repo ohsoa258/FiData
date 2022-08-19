@@ -24,7 +24,9 @@ import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.common.service.pageFilter.utils.GetConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
@@ -113,6 +115,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     private String hostname;
     @Value("${metadata-instance.dbName}")
     private String dbName;
+    @Resource
+    GetConfigDTO getConfig;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -587,11 +591,14 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     @Override
     public List<FilterFieldDTO> getColumn() {
-        return getMetadata.getMetadataList(
-                "dmp_datainput_db",
-                "tb_app_registration",
-                "",
-                FilterSqlConstants.APP_REGISTRATION_SQL);
+        MetaDataConfigDTO dto = new MetaDataConfigDTO();
+        dto.url = getConfig.url;
+        dto.userName = getConfig.username;
+        dto.password = getConfig.password;
+        dto.driver = getConfig.driver;
+        dto.tableName = "tb_app_registration";
+        dto.filterSql = FilterSqlConstants.APP_REGISTRATION_SQL;
+        return getMetadata.getMetadataList(dto);
     }
 
     @Override

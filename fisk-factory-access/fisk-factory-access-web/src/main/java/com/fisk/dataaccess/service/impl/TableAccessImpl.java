@@ -20,7 +20,9 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.common.service.pageFilter.utils.GetConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataaccess.dto.access.DataAccessTreeDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
@@ -143,6 +145,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private String hostname;
     @Value("${metadata-instance.dbName}")
     private String dbName;
+    @Resource
+    GetConfigDTO getConfig;
 
     /**
      * 添加物理表(实时)
@@ -1046,16 +1050,20 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public List<FilterFieldDTO> getColumn() {
         List<FilterFieldDTO> list;
-        list = getMetadata.getMetadataList(
-                "dmp_datainput_db",
-                "tb_table_access",
-                "a",
-                FilterSqlConstants.TABLE_ACCESS_SQL);
-        List<FilterFieldDTO> fieldDTOList = getMetadata.getMetadataList(
-                "dmp_datainput_db",
-                "tb_table_syncmode",
-                "b",
-                FilterSqlConstants.TABLE_SYNCMODE_SQL);
+        MetaDataConfigDTO dto = new MetaDataConfigDTO();
+        dto.url = getConfig.url;
+        dto.userName = getConfig.username;
+        dto.password = getConfig.password;
+        dto.driver = getConfig.driver;
+        dto.tableName = "tb_table_access";
+        dto.tableAlias = "a";
+        dto.filterSql = FilterSqlConstants.TABLE_ACCESS_SQL;
+        list = getMetadata.getMetadataList(dto);
+
+        dto.tableName = "tb_table_syncmode";
+        dto.tableAlias = "b";
+        dto.filterSql = FilterSqlConstants.TABLE_SYNCMODE_SQL;
+        List<FilterFieldDTO> fieldDTOList = getMetadata.getMetadataList(dto);
         list.addAll(fieldDTOList);
         return list;
     }

@@ -21,7 +21,9 @@ import com.fisk.common.framework.jwt.model.UserDetail;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.common.service.pageFilter.utils.GetConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +48,8 @@ public class ClientRegisterServiceImpl extends ServiceImpl<ClientRegisterMapper,
     private GenerateCondition generateCondition;
     @Resource
     private GetMetadata getMetadata;
+    @Resource
+    GetConfigDTO getConfig;
 
     @Override
     public ClientRegisterDTO getData(long id) {
@@ -161,11 +165,14 @@ public class ClientRegisterServiceImpl extends ServiceImpl<ClientRegisterMapper,
 
     @Override
     public List<FilterFieldDTO> getColumn() {
-        return getMetadata.getMetadataList(
-                "dmp_system_db",
-                "tb_client_register",
-                "",
-                FilterSqlConstants.TB_CLIENT_REGISTER_SQL);
+        MetaDataConfigDTO dto = new MetaDataConfigDTO();
+        dto.url = getConfig.url;
+        dto.userName = getConfig.username;
+        dto.password = getConfig.password;
+        dto.driver = getConfig.driver;
+        dto.tableName = "tb_client_register";
+        dto.filterSql = FilterSqlConstants.TB_CLIENT_REGISTER_SQL;
+        return getMetadata.getMetadataList(dto);
     }
 
 }
