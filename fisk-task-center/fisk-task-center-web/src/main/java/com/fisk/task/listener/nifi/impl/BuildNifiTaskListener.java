@@ -2302,7 +2302,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         filedValues += dto.queryStartTime == null ? ",'0000-01-01 00:00:00'" : (",'" + dto.queryStartTime + "'");
         filedValues += dto.queryEndTime == null ? ",now()" : (",'" + dto.queryEndTime + "'");
         if (dto.selectSql != null && dto.selectSql != "") {
-            filedValues += ",'" + dto.selectSql + "'";
+            filedValues += ",\"" + dto.selectSql + "\"";
         } else {
             filedValues += ",\"" + selectSql + "\"";
         }
