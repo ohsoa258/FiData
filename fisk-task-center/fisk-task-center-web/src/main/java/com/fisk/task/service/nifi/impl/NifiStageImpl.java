@@ -248,7 +248,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
 
             taskMap.put(DispatchLogEnum.taskcount.getValue(), nifiStageMessageDTO.counts);
             taskMap.put(DispatchLogEnum.entrydate.getValue(), nifiStageMessageDTO.entryDate);
-            if (!Objects.equals("运行成功", nifiStagePO.comment)) {
+            if (StringUtils.isEmpty(nifiStagePO.comment) || !nifiStagePO.comment.contains("成功")) {
                 taskMap.put(DispatchLogEnum.taskcomment.getValue(), nifiStagePO.comment);
                 DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = new DispatchExceptionHandlingDTO();
                 dispatchExceptionHandlingDTO.comment = nifiStagePO.comment;

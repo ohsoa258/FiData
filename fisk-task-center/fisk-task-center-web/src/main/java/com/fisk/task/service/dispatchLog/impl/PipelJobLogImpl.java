@@ -145,7 +145,7 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                 //结束时间,job状态
                 jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()) + " - " + dto.comment);
                 //jobMap.put(DispatchLogEnum.jobstate.getValue(), dto.JobName + " " + NifiStageTypeEnum.RUN_FAILED.getName());
-                this.savePipelJobLog(pipelJobLogPo.jobTraceId, jobMap, pipelJobLogPo.pipelId, pipelJobLogPo.jobTraceId, pipelJobLogPo.componentId);
+                this.savePipelJobLog(pipelJobLogPo.pipelTraceId, jobMap, pipelJobLogPo.pipelId, pipelJobLogPo.jobTraceId, pipelJobLogPo.componentId);
             }
         }
         //管道级别
