@@ -8,10 +8,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
+import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
@@ -218,7 +215,7 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @param dto dto
      * @return list
      */
-    List<FiDataMetaDataDTO> getDataAccessTableStructure(FiDataMetaDataReqDTO dto);
+    List<FiDataMetaDataTreeDTO> getDataAccessTableStructure(FiDataMetaDataReqDTO dto);
 
     /**
      * 刷新数据接入结构

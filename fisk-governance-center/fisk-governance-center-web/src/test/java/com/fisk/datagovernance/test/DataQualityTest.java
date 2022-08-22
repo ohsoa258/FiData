@@ -7,7 +7,11 @@ import com.fisk.datagovernance.service.impl.dataops.DataOpsDataSourceManageImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.Properties;
 
 /**
  * @author dick
@@ -34,6 +38,32 @@ public class DataQualityTest {
         System.out.println("相似度i计算比例：" + similarity);
         similarity = CosineSimilarity.getSimilarity("上海农产品销售渠道", "上海农产品销售渠道");
         System.out.println("相似度i计算比例：" + similarity);
+    }
+
+    @Test
+    public void testSendEmail(){
+        JavaMailSenderImpl sender = new JavaMailSenderImpl();
+        sender.setHost("smtp.office365.com");
+        sender.setPort(587);
+        sender.setUsername("dick@fisksoft.com");
+        sender.setPassword("Lijiayun@0424...");
+        Properties properties = sender.getJavaMailProperties();
+        properties.put("mail.smtp.auth", true);
+        properties.put("mail.smtp.timeout", "25000");
+        properties.put("mail.smtp.starttls.enable", "true");
+
+        SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+        simpleMailMessage.setFrom("dick@fisksoft.com");
+
+        simpleMailMessage.setTo("jianwen@fisksoft.com.cn");
+        simpleMailMessage.setSubject("test");
+        String text = "email.getText()";
+        simpleMailMessage.setText(text);
+
+        try{
+            sender.send(simpleMailMessage);
+        } catch (Exception e) {
+        }
     }
 
     /**

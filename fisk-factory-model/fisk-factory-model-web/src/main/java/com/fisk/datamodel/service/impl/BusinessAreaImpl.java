@@ -756,7 +756,7 @@ public class BusinessAreaImpl
                                             dimensionTreeDto.setLabelDesc(dimension.dimensionDesc);
                                             dimensionTreeDto.setSourceId(Integer.parseInt(id));
                                             dimensionTreeDto.setSourceType(1);
-                                            dimensionTreeDto.setLabelBusinessType(TableBusinessTypeEnum.DIMENSIONTABLE);
+                                            dimensionTreeDto.setLabelBusinessType(TableBusinessTypeEnum.DIMENSIONTABLE.getValue());
                                             // 第六层: 维度字段
                                             List<FiDataMetaDataTreeDTO> dimensionAttributeTreeList = dimensionAttribute.query()
                                                     .eq("dimension_id", dimension.id)
@@ -776,7 +776,7 @@ public class BusinessAreaImpl
                                                         dimensionAttributeTreeDto.setLabelDesc(field.dimensionFieldDes);
                                                         dimensionAttributeTreeDto.setSourceId(Integer.parseInt(id));
                                                         dimensionAttributeTreeDto.setSourceType(1);
-                                                        dimensionAttributeTreeDto.setLabelBusinessType(TableBusinessTypeEnum.DIMENSIONTABLE);
+                                                        dimensionAttributeTreeDto.setLabelBusinessType(TableBusinessTypeEnum.DIMENSIONTABLE.getValue());
                                                         dimensionAttributeTreeDto.setParentName(dimension.dimensionTabName);
                                                         dimensionAttributeTreeDto.setParentNameAlias(dimension.dimensionTabName);
                                                         return dimensionAttributeTreeDto;
@@ -824,7 +824,7 @@ public class BusinessAreaImpl
                                             factTreeDto.setLabelDesc(fact.factTableDesc);
                                             factTreeDto.setSourceId(Integer.parseInt(id));
                                             factTreeDto.setSourceType(1);
-                                            factTreeDto.setLabelBusinessType(tableBusinessTypeEnum);
+                                            factTreeDto.setLabelBusinessType(tableBusinessTypeEnum.getValue());
                                             // 第六层: 事实字段
                                             List<FiDataMetaDataTreeDTO> factAttributeTreeList;
                                             // olap: 分析指标
@@ -845,7 +845,7 @@ public class BusinessAreaImpl
 //                                                        factAttributeTreeDto.setLabelDesc(field.indicatorsDes);
                                                             factAttributeTreeDto.setSourceId(Integer.parseInt(id));
                                                             factAttributeTreeDto.setSourceType(1);
-                                                            factAttributeTreeDto.setLabelBusinessType(TableBusinessTypeEnum.QUOTATABLE);
+                                                            factAttributeTreeDto.setLabelBusinessType(TableBusinessTypeEnum.QUOTATABLE.getValue());
                                                             factAttributeTreeDto.setParentName(fact.factTabName);
                                                             factAttributeTreeDto.setParentNameAlias(fact.factTabName);
                                                             return factAttributeTreeDto;
@@ -914,7 +914,7 @@ public class BusinessAreaImpl
                                     wideTableTreeDto.setPublishState(String.valueOf(wideTable1.dorisPublish != 1 ? 0 : 1));
                                     wideTableTreeDto.setSourceId(Integer.parseInt(id));
                                     wideTableTreeDto.setSourceType(1);
-                                    wideTableTreeDto.setLabelBusinessType(TableBusinessTypeEnum.WIDETABLE);
+                                    wideTableTreeDto.setLabelBusinessType(TableBusinessTypeEnum.WIDETABLE.getValue());
 
                                     // 第六层: 宽表字段
                                     WideTableFieldConfigDTO wideTableFieldDto = JSON.parseObject(wideTable1.configDetails, WideTableFieldConfigDTO.class);
@@ -937,7 +937,7 @@ public class BusinessAreaImpl
                                                         wideTableFieldTreeDto.setLabelType(field.fieldType);
                                                         wideTableFieldTreeDto.setSourceId(Integer.parseInt(id));
                                                         wideTableFieldTreeDto.setSourceType(1);
-                                                        wideTableFieldTreeDto.setLabelBusinessType(TableBusinessTypeEnum.WIDETABLE);
+                                                        wideTableFieldTreeDto.setLabelBusinessType(TableBusinessTypeEnum.WIDETABLE.getValue());
                                                         wideTableFieldTreeDto.setParentName(wideTable1.name);
                                                         wideTableFieldTreeDto.setParentNameAlias(wideTable1.name);
                                                         return wideTableFieldTreeDto;

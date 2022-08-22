@@ -35,7 +35,7 @@ public class FiDataMetaDataTreeDTO {
     public String labelAlias;
 
     @ApiModelProperty(value = "业务类型，表和视图维度设置")
-    public TableBusinessTypeEnum labelBusinessType;
+    public int labelBusinessType;
 
     @ApiModelProperty(value = "源类型，1、FiData 2、自定义")
     public int sourceType;

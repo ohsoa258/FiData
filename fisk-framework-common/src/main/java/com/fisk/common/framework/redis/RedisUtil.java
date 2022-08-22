@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -116,6 +117,28 @@ public class RedisUtil {
         String s = redisTemplate.opsForValue().get(RedisKeyBuild.buildFiDataStructureKey(dataSourceId)).toString();
         if (StringUtils.isNotBlank(s)) {
             list = JSONObject.parseArray(s, FiDataMetaDataDTO.class);
+        }
+        return list;
+    }
+
+    /**
+     * 获取FidataMetaData
+     *
+     * @param dataSourceId dataSourceId
+     * @return 值
+     */
+    public List<FiDataMetaDataTreeDTO> getFiDataTableMetaData(String dataSourceId) {
+
+        List<FiDataMetaDataTreeDTO> list = null;
+        // 判断key对应的value是否存在
+        boolean flag = redisTemplate.hasKey(RedisKeyBuild.buildFiDataStructureKey(dataSourceId));
+        if (!flag) {
+            return null;
+        }
+
+        String s = redisTemplate.opsForValue().get(RedisKeyBuild.buildFiDataTableStructureKey(dataSourceId)).toString();
+        if (StringUtils.isNotBlank(s)) {
+            list = JSONObject.parseArray(s, FiDataMetaDataTreeDTO.class);
         }
         return list;
     }

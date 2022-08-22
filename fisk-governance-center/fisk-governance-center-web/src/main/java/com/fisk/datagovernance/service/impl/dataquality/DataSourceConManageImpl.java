@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
-import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -23,7 +22,6 @@ import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
 import com.fisk.datagovernance.enums.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
-import com.fisk.datagovernance.enums.dataquality.TemplateTypeEnum;
 import com.fisk.datagovernance.map.dataquality.DataSourceConMap;
 import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
@@ -433,29 +431,34 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @author dick
      * @date 2022/8/18 12:13
      * @version v1.0
-     * @params dataSourceConfigEnum
-     * @params dataTableFieldList
+     * @params dtoList
      */
-    public void setTableFieldName(DataSourceConfigEnum dataSourceConfigEnum, List<DataTableFielDTO> dataTableFieldList) {
-        if (dataSourceConfigEnum == DataSourceConfigEnum.NONE || !CollectionUtils.isNotEmpty(dataTableFieldList)) {
-            return;
+    public List<FiDataMetaDataDTO> getTableFieldName(List<DataTableFieldDTO> dtoList) {
+        List<FiDataMetaDataDTO> result = new ArrayList<>();
+        if (CollectionUtils.isEmpty(dtoList)) {
+            return result;
         }
-        List<FiDataMetaDataDTO> fiDataMetaData = null;
-        switch (dataSourceConfigEnum) {
-            case DMP_DW:
-                fiDataMetaData = redisUtil.getFiDataMetaData(String.valueOf(DataSourceConfigEnum.DMP_DW.getValue()));
-                break;
-            case DMP_ODS:
-                fiDataMetaData = redisUtil.getFiDataMetaData(String.valueOf(DataSourceConfigEnum.DMP_ODS.getValue()));
-                break;
-            case DMP_MDM:
-                fiDataMetaData = redisUtil.getFiDataMetaData(String.valueOf(DataSourceConfigEnum.DMP_MDM.getValue()));
-                break;
-            case DMP_OLAP:
-                fiDataMetaData = redisUtil.getFiDataMetaData(String.valueOf(DataSourceConfigEnum.DMP_OLAP.getValue()));
-                break;
+        List<DataSourceConfigEnum> dataSourceConfigEnums = dtoList.stream().map(DataTableFieldDTO::getDataSourceConfigEnum).distinct().collect(Collectors.toList());
+        for (int i = 0; i < dataSourceConfigEnums.size(); i++) {
+            List<FiDataMetaDataTreeDTO> fiDataMetaData = null;
+            DataSourceConfigEnum dataSourceConfigEnum = dataSourceConfigEnums.get(i);
+            fiDataMetaData = redisUtil.getFiDataTableMetaData(String.valueOf(dataSourceConfigEnum.getValue()));
+            if (CollectionUtils.isEmpty(fiDataMetaData)) {
+                continue;
+            }
+            FiDataMetaDataDTO fiDataMetaDataDTO = new FiDataMetaDataDTO();
+            List<FiDataMetaDataTreeDTO> children = new ArrayList<>();
+            List<DataTableFieldDTO> tableFieldDTOS = dtoList.stream().filter(t -> t.dataSourceConfigEnum == dataSourceConfigEnum).collect(Collectors.toList());
+            for (int j = 0; j < tableFieldDTOS.size(); j++) {
+                DataTableFieldDTO dataTableFieldDTO = tableFieldDTOS.get(j);
+                FiDataMetaDataTreeDTO fiDataMetaDataTreeDTO = fiDataMetaData.stream().filter(t -> t.getId() == dataTableFieldDTO.getId() && t.labelBusinessType == dataTableFieldDTO.getTableBusinessTypeEnum()).findFirst().orElse(null);
+                children.add(fiDataMetaDataTreeDTO);
+            }
+            fiDataMetaDataDTO.setDataSourceId(dataSourceConfigEnum.getValue());
+            fiDataMetaDataDTO.setChildren(children);
+            result.add(fiDataMetaDataDTO);
         }
-
+        return result;
     }
 
     /**

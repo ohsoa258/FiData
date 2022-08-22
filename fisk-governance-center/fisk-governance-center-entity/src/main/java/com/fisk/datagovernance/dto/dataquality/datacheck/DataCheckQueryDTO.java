@@ -3,7 +3,7 @@ package com.fisk.datagovernance.dto.dataquality.datacheck;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFielDTO;
+import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFieldDTO;
 import io.swagger.annotations.ApiModelProperty;
 
 /**
@@ -41,7 +41,7 @@ public class DataCheckQueryDTO {
      * 表字段信息
      */
     @ApiModelProperty(value = "表字段信息")
-    public DataTableFielDTO tableField;
+    public DataTableFieldDTO tableField;
 
     /**
      * 表业务类型 1：事实表、2：维度表、3、指标表  4、宽表

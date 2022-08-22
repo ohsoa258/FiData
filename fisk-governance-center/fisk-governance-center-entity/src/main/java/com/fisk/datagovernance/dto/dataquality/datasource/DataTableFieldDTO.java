@@ -1,6 +1,8 @@
 package com.fisk.datagovernance.dto.dataquality.datasource;
 
+import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -13,7 +15,20 @@ import java.util.List;
  * @date 2022/8/18 12:08
  */
 @Data
-public class DataTableFielDTO {
+public class DataTableFieldDTO {
+
+    /**
+     * 数据源Id
+     */
+    @ApiModelProperty(value = "数据源Id")
+    public int dataSourceId;
+
+    /**
+     * 数据源类型
+     */
+    @ApiModelProperty(value = "数据源类型")
+    public DataSourceConfigEnum dataSourceConfigEnum;
+
     /**
      * 表/字段 Id
      */
@@ -42,5 +57,5 @@ public class DataTableFielDTO {
      * 表字段集合
      */
     @ApiModelProperty(value = "表字段集合")
-    public List<DataTableFielDTO> fields;
+    public List<DataTableFieldDTO> fields;
 }

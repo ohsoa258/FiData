@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -854,17 +855,17 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
     @Override
-    public List<FiDataMetaDataDTO> getDataAccessTableStructure(FiDataMetaDataReqDTO reqDto) {
+    public List<FiDataMetaDataTreeDTO> getDataAccessTableStructure(FiDataMetaDataReqDTO reqDto) {
 
         boolean flag = redisUtil.hasKey(RedisKeyBuild.buildFiDataTableStructureKey(reqDto.dataSourceId));
         if (!flag) {
             // 将数据接入结构存入redis
             setDataAccessStructure(reqDto);
         }
-        List<FiDataMetaDataDTO> list = null;
+        List<FiDataMetaDataTreeDTO> list = null;
         String dataAccessStructure = redisUtil.get(RedisKeyBuild.buildFiDataTableStructureKey(reqDto.dataSourceId)).toString();
         if (StringUtils.isNotBlank(dataAccessStructure)) {
-            list = JSONObject.parseArray(dataAccessStructure, FiDataMetaDataDTO.class);
+            list = JSONObject.parseArray(dataAccessStructure, FiDataMetaDataTreeDTO.class);
         }
         return list;
     }
@@ -898,8 +899,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (!CollectionUtils.isEmpty(list)) {
             redisUtil.set(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId), JSON.toJSONString(list));
         }
-        if (!CollectionUtils.isEmpty(next.getKey())){
-            redisUtil.set(RedisKeyBuild.buildFiDataTableStructureKey(reqDto.dataSourceId), JSON.toJSONString(next.getKey()));
+        List<FiDataMetaDataTreeDTO> key = next.getKey();
+        if (!CollectionUtils.isEmpty(key)) {
+            String s = JSON.toJSONString(key);
+            redisUtil.set(RedisKeyBuild.buildFiDataTableStructureKey(reqDto.dataSourceId), s);
         }
 
         return true;
@@ -1006,9 +1009,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * @author Lock
      * @date 2022/6/15 17:46
      */
-    private  HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> buildChildren(String id) {
+    private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> buildChildren(String id) {
 
-        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap=new HashMap<>();
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = new HashMap<>();
 
         List<FiDataMetaDataTreeDTO> appTypeTreeList = new ArrayList<>();
 
@@ -1031,7 +1034,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 所有应用
         List<AppRegistrationPO> appPoList = this.query().orderByDesc("create_time").list();
         // 所有应用下表字段信息
-        List<FiDataMetaDataTreeDTO> tableFieldList=new ArrayList<>();
+        List<FiDataMetaDataTreeDTO> tableFieldList = new ArrayList<>();
 
         HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> fiDataMetaDataTreeByRealTime = getFiDataMetaDataTreeByRealTime(id, appPoList);
         Map.Entry<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> nextTreeByRealTime = fiDataMetaDataTreeByRealTime.entrySet().iterator().next();
@@ -1047,7 +1050,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         appTypeTreeList.add(appTreeByNonRealTime);
 
         // key是表字段 value是tree
-        hashMap.put(tableFieldList,appTypeTreeList);
+        hashMap.put(tableFieldList, appTypeTreeList);
         return hashMap;
     }
 
@@ -1131,6 +1134,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     }
                                                     tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
                                                     tableDtoTree.setLabelDesc(table.tableDes);
+                                                    tableDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
 
                                                     // 第四层: field层
                                                     List<FiDataMetaDataTreeDTO> fieldTreeList = this.tableFieldsImpl.query()
@@ -1154,6 +1158,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                                 fieldDtoTree.setSourceId(Integer.parseInt(id));
                                                                 fieldDtoTree.setParentName("ods_" + app.appAbbreviation + "_" + table.tableName);
                                                                 fieldDtoTree.setParentNameAlias(table.tableName);
+                                                                fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                                                                 return fieldDtoTree;
                                                             }).collect(Collectors.toList());
 
@@ -1268,6 +1273,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                         tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
                                                     }
                                                     tableDtoTree.setLabelDesc(table.tableDes);
+                                                    tableDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
 
                                                     // 第四层: field层
                                                     List<FiDataMetaDataTreeDTO> fieldTreeList = this.tableFieldsImpl.query()
@@ -1291,6 +1297,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                                 fieldDtoTree.setSourceId(Integer.parseInt(id));
                                                                 fieldDtoTree.setParentName("ods_" + app.appAbbreviation + "_" + table.tableName);
                                                                 fieldDtoTree.setParentNameAlias(table.tableName);
+                                                                fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                                                                 return fieldDtoTree;
                                                             }).collect(Collectors.toList());
 
@@ -1339,6 +1346,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                             tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
                                         }
                                         tableDtoTree.setLabelDesc(table.tableDes);
+                                        tableDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
 
                                         // 第四层: field层
                                         List<FiDataMetaDataTreeDTO> fieldTreeList = this.tableFieldsImpl.query()
@@ -1362,6 +1370,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     fieldDtoTree.setSourceId(Integer.parseInt(id));
                                                     fieldDtoTree.setParentName("ods_" + app.appAbbreviation + "_" + table.tableName);
                                                     fieldDtoTree.setParentNameAlias(table.tableName);
+                                                    fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                                                     return fieldDtoTree;
                                                 }).collect(Collectors.toList());
 

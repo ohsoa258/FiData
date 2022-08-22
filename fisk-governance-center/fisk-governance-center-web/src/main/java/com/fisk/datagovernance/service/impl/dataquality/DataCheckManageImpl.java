@@ -31,8 +31,7 @@ import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckTypeV0;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.SyncCheckInfoVO;
-import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFielDTO;
+import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFieldDTO;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import org.apache.commons.lang.StringUtils;
@@ -105,10 +104,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         e.getDataCheckExtends().stream().forEach(t -> {
                             if (e.datasourceType == SourceTypeEnum.FiData) {
                                 if (CollectionUtils.isNotEmpty(query.tableField.getFields())) {
-                                    DataTableFielDTO dataTableFielDTO = query.tableField.getFields().stream().filter(f -> f.id.equals(t.fieldUnique)).findFirst().orElse(null);
-                                    if (dataTableFielDTO != null) {
-                                        t.fieldName = dataTableFielDTO.getLabel();
-                                        t.fieldAlias = dataTableFielDTO.getLabelAlias();
+                                    DataTableFieldDTO dataTableFieldDTO = query.tableField.getFields().stream().filter(f -> f.id.equals(t.fieldUnique)).findFirst().orElse(null);
+                                    if (dataTableFieldDTO != null) {
+                                        t.fieldName = dataTableFieldDTO.getLabel();
+                                        t.fieldAlias = dataTableFieldDTO.getLabelAlias();
                                     }
                                 }
                             } else {
