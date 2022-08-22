@@ -381,24 +381,25 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
      * @params stateEnum 状态
      */
     public ResultEnum publishBuildunifiedControlTask(int id, int state) {
-        ResultEnum resultEnum = ResultEnum.TASK_NIFI_DISPATCH_ERROR;
-        //调用task服务提供的API生成调度任务
-        if (id == 0) {
-            return ResultEnum.SAVE_VERIFY_ERROR;
-        }
-        long userId = userHelper.getLoginUserInfo().getId();
-        boolean isDelTask = state != RuleStateEnum.Enable.getValue();
-        UnifiedControlDTO unifiedControlDTO = new UnifiedControlDTO();
-        unifiedControlDTO.setUserId(userId);
-        unifiedControlDTO.setId(id);
-        unifiedControlDTO.setScheduleType(SchedulingStrategyTypeEnum.CRON);
-        unifiedControlDTO.setTopic(MqConstants.QueueConstants.BUILD_GOVERNANCE_QUALITY_REPORT_FLOW);
-        unifiedControlDTO.setDataClassifyEnum(DataClassifyEnum.UNIFIEDCONTROL);
-        unifiedControlDTO.setDeleted(isDelTask);
-        ResultEntity<Object> result = publishTaskClient.publishBuildunifiedControlTask(unifiedControlDTO);
-        if (result != null) {
-            resultEnum = ResultEnum.getEnum(result.getCode());
-        }
-        return resultEnum;
+        return  ResultEnum.SUCCESS;
+//        ResultEnum resultEnum = ResultEnum.TASK_NIFI_DISPATCH_ERROR;
+//        //调用task服务提供的API生成调度任务
+//        if (id == 0) {
+//            return ResultEnum.SAVE_VERIFY_ERROR;
+//        }
+//        long userId = userHelper.getLoginUserInfo().getId();
+//        boolean isDelTask = state != RuleStateEnum.Enable.getValue();
+//        UnifiedControlDTO unifiedControlDTO = new UnifiedControlDTO();
+//        unifiedControlDTO.setUserId(userId);
+//        unifiedControlDTO.setId(id);
+//        unifiedControlDTO.setScheduleType(SchedulingStrategyTypeEnum.CRON);
+//        unifiedControlDTO.setTopic(MqConstants.QueueConstants.BUILD_GOVERNANCE_QUALITY_REPORT_FLOW);
+//        unifiedControlDTO.setDataClassifyEnum(DataClassifyEnum.UNIFIEDCONTROL);
+//        unifiedControlDTO.setDeleted(isDelTask);
+//        ResultEntity<Object> result = publishTaskClient.publishBuildunifiedControlTask(unifiedControlDTO);
+//        if (result != null) {
+//            resultEnum = ResultEnum.getEnum(result.getCode());
+//        }
+//        return resultEnum;
     }
 }
