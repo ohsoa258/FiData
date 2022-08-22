@@ -513,7 +513,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 if (fiDataMetaDataDTO == null) {
                     continue;
                 }
-                FiDataMetaDataTreeDTO fiDataMetaDataTree_Table = fiDataMetaDataDTO.getChildren().stream().filter(t -> t.getId() == dataCheckPO.getTableUnique() && t.getLabelBusinessType().getValue() == dataCheckPO.getTableBusinessType()).findFirst().orElse(null);
+                FiDataMetaDataTreeDTO fiDataMetaDataTree_Table = fiDataMetaDataDTO.getChildren().stream().filter(t -> t.getId() == dataCheckPO.getTableUnique() && t.getLabelBusinessType() == dataCheckPO.getTableBusinessType()).findFirst().orElse(null);
                 if (fiDataMetaDataTree_Table != null) {
                     tableName = fiDataMetaDataTree_Table.getLabel();
                     if (CollectionUtils.isNotEmpty(fiDataMetaDataTree_Table.getChildren())) {
