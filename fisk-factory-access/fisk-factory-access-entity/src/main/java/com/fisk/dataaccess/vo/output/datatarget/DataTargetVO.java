@@ -26,6 +26,10 @@ public class DataTargetVO {
      */
     public String description;
     /**
+     * 请求方式：1:Get 2:Post
+     */
+    public Integer requestWay;
+    /**
      * 主机地址
      */
     public String host;
@@ -45,6 +49,22 @@ public class DataTargetVO {
      * 连接面
      */
     public String connectPwd;
+    /**
+     * 请求方法：form-data or raw
+     */
+    public String requestMethod;
+    /**
+     * 身份验证方式: 0: 空; 1: OAuth 1.0; 2: OAuth 1.0;3: JWT;  4: Bearer Token;  5:无需身份验证
+     */
+    public Integer authenticationMethod;
+    /**
+     * 身份验证url
+     */
+    public String authenticationUrl;
+    /**
+     * Bearer Token验证方式的Token
+     */
+    public String token;
     /**
      * 配置集合
      */
