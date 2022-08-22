@@ -3,6 +3,7 @@ package com.fisk.datagovernance.service.impl.dataquality;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -398,20 +399,20 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         attachmentInfoPO.setRelativePath(echoPath);
         attachmentInfoPO.setObjectId(String.valueOf(id));
         switch (templateSceneEnum) {
-            case DATACHECK_QUALITYREPORT:
+            case NOTICE_DATACHECK:
                 // 生成数据校验质量报告
                 attachmentInfoPO.setOriginalName(String.format("数据校验质量报告%s.xlsx",
                         DateTimeUtils.getNowToShortDate().replace("-", "")));
                 attachmentInfoPO.setCategory(100);
                 createDataCheckQualityReport(noticeExtendPOS, allDataSource, attachmentInfoPO);
                 break;
-            case BUSINESSFILTER_FILTERREPORT:
+            case NOTICE_BUSINESSFILTER:
                 // 生成业务清洗质量报告
                 attachmentInfoPO.setOriginalName(String.format("业务清洗质量报告%s.xlsx",
                         DateTimeUtils.getNowToShortDate().replace("-", "")));
                 attachmentInfoPO.setCategory(200);
                 break;
-            case LIFECYCLE_REPORT:
+            case NOTICE_LIFECYCLE:
                 // 生成生命周期质量报告
                 attachmentInfoPO.setOriginalName(String.format("生命周期质量报告%s.xlsx",
                         DateTimeUtils.getNowToShortDate().replace("-", "")));
@@ -473,12 +474,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         List<Integer> fiDataIds = allDataSource.stream().filter(t -> t.getDatasourceType() == SourceTypeEnum.FiData).map(DataSourceConVO::getId).collect(Collectors.toList());
         for (int j = 0; j < dataCheckPOList.size(); j++) {
             DataCheckPO dataCheckPO = dataCheckPOList.get(j);
-            DataTableFieldDTO dataTableFieldDTO = dtoList.stream().filter(t -> t.getId().equals(String.valueOf(dataCheckPO.getId())) && t.getTableBusinessTypeEnum().getValue() == dataCheckPO.getTableBusinessType()).findFirst().orElse(null);
+            DataTableFieldDTO dataTableFieldDTO = dtoList.stream().filter(t -> t.getId().equals(dataCheckPO.getTableUnique()) && t.getTableBusinessTypeEnum().getValue() == dataCheckPO.getTableBusinessType()).findFirst().orElse(null);
             if (dataTableFieldDTO != null || !fiDataIds.contains(dataCheckPO.getDatasourceId())) {
                 continue;
             }
+            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
             dataTableFieldDTO = new DataTableFieldDTO();
             dataTableFieldDTO.setId(dataCheckPO.getTableUnique());
+            dataTableFieldDTO.setDataSourceConfigEnum(DataSourceConfigEnum.getEnum(dataSourceConVO.getDatasourceId()));
             dataTableFieldDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.getEnum(dataCheckPO.getTableBusinessType()));
             dtoList.add(dataTableFieldDTO);
         }
@@ -513,11 +516,18 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 if (fiDataMetaDataDTO == null) {
                     continue;
                 }
-                FiDataMetaDataTreeDTO fiDataMetaDataTree_Table = fiDataMetaDataDTO.getChildren().stream().filter(t -> t.getId() == dataCheckPO.getTableUnique() && t.getLabelBusinessType() == dataCheckPO.getTableBusinessType()).findFirst().orElse(null);
+                FiDataMetaDataTreeDTO fiDataMetaDataTree_Table = fiDataMetaDataDTO.getChildren().stream().filter(t -> t.getId().equals(dataCheckPO.getTableUnique()) && t.getLabelBusinessType() == dataCheckPO.getTableBusinessType()).findFirst().orElse(null);
                 if (fiDataMetaDataTree_Table != null) {
                     tableName = fiDataMetaDataTree_Table.getLabel();
                     if (CollectionUtils.isNotEmpty(fiDataMetaDataTree_Table.getChildren())) {
-                        fieldNames = fiDataMetaDataTree_Table.getChildren().stream().map(FiDataMetaDataTreeDTO::getLabel).collect(Collectors.toList());
+                        for (int k = 0; k < dataCheckExtendPOList.size(); k++) {
+                            DataCheckExtendPO dataCheckExtendPO1 = dataCheckExtendPOList.get(k);
+                            FiDataMetaDataTreeDTO fiDataMetaDataTree_Field = fiDataMetaDataTree_Table.getChildren().stream().
+                                    filter(f -> f.getId().equals(dataCheckExtendPO1.getFieldUnique())).findFirst().orElse(null);
+                            if (fiDataMetaDataTree_Field != null) {
+                                fieldNames.add(fiDataMetaDataTree_Field.label);
+                            }
+                        }
                     }
                 }
             } else {
@@ -526,7 +536,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             }
             TableRuleSqlDTO tableRuleSqlDTO = new TableRuleSqlDTO();
             tableRuleSqlDTO.setTableName(tableName);
-            if (CollectionUtils.isNotEmpty(fiDataIds)) {
+            if (CollectionUtils.isNotEmpty(fieldNames)) {
                 tableRuleSqlDTO.setFieldName(fieldNames.get(0));
                 tableRuleSqlDTO.setFieldNames(fieldNames);
             }

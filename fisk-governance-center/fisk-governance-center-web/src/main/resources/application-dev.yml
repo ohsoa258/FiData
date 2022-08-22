@@ -1,7 +1,3 @@
-dataquality:
-  excel:
-    # excel保存路径
-    path: /root/java/fisk-governance-center/dataquality/excel
 dataops:
   # pg数据库元数据对应 redis key
   pg_metadataentity_key: DataOps_PGMetaDataEntityKey
@@ -48,5 +44,5 @@ pgsql-mdm:
   password: Password01!
   driverClassName: org.postgresql.Driver
 file:
-  uploadUrl: /root/nginx/app/file/qualityreport/
-  echoPath: /file/qualityreport/
+  uploadUrl: D:/Excel/
+  echoPath: D:/Excel/

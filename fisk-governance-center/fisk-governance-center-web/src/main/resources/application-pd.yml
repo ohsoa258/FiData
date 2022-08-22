@@ -1,7 +1,3 @@
-dataquality:
-  excel:
-    # excel保存路径
-    path: /data/java/fisk-governance-center/dataquality/excel
 dataops:
   # pg数据库元数据对应 redis key
   pg_metadataentity_key: DataOps_PGMetaDataEntityKey

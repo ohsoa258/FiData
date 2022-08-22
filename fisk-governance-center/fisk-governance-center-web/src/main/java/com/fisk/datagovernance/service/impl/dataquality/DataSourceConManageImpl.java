@@ -451,7 +451,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             List<DataTableFieldDTO> tableFieldDTOS = dtoList.stream().filter(t -> t.dataSourceConfigEnum == dataSourceConfigEnum).collect(Collectors.toList());
             for (int j = 0; j < tableFieldDTOS.size(); j++) {
                 DataTableFieldDTO dataTableFieldDTO = tableFieldDTOS.get(j);
-                FiDataMetaDataTreeDTO fiDataMetaDataTreeDTO = fiDataMetaData.stream().filter(t -> t.getId() == dataTableFieldDTO.getId() && t.labelBusinessType == dataTableFieldDTO.getTableBusinessTypeEnum().getValue()).findFirst().orElse(null);
+                FiDataMetaDataTreeDTO fiDataMetaDataTreeDTO = fiDataMetaData.stream().filter(t -> t.getId().equals(dataTableFieldDTO.getId())
+                        && t.labelBusinessType == dataTableFieldDTO.getTableBusinessTypeEnum().getValue()).findFirst().orElse(null);
                 children.add(fiDataMetaDataTreeDTO);
             }
             fiDataMetaDataDTO.setDataSourceId(dataSourceConfigEnum.getValue());
