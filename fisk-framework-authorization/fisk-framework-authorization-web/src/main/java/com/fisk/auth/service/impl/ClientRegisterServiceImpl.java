@@ -3,6 +3,7 @@ package com.fisk.auth.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.auth.dto.GetConfigDTO;
 import com.fisk.auth.dto.clientregister.ClientRegisterDTO;
 import com.fisk.auth.dto.clientregister.ClientRegisterPageDTO;
 import com.fisk.auth.dto.clientregister.ClientRegisterQueryDTO;
@@ -24,7 +25,6 @@ import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
-import com.fisk.system.dto.GetConfigDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
