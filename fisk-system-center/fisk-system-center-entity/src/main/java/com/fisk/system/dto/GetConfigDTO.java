@@ -1,4 +1,4 @@
-package com.fisk.common.service.pageFilter.utils;
+package com.fisk.system.dto;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
