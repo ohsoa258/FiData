@@ -8,7 +8,7 @@ import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionMetaDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
-import com.fisk.datamodel.entity.DimensionPO;
+import com.fisk.datamodel.entity.dimension.DimensionPO;
 
 import java.util.List;
 

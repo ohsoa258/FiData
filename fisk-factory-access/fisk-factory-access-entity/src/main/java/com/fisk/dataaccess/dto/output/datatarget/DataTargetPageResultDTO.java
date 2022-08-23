@@ -2,6 +2,7 @@ package com.fisk.dataaccess.dto.output.datatarget;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fisk.common.core.baseObject.vo.BaseUserInfoVO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -11,36 +12,33 @@ import java.time.LocalDateTime;
  */
 @Data
 public class DataTargetPageResultDTO extends BaseUserInfoVO {
+
     public Long id;
-    /**
-     * 名称
-     */
+
+    @ApiModelProperty(value = "名称", required = true)
     public String name;
-    /**
-     * 负责人
-     */
+
+    @ApiModelProperty(value = "负责人", required = true)
     public String principal;
-    /**
-     * 描述
-     */
+
+    @ApiModelProperty(value = "描述")
     public String description;
-    /**
-     * 创建时间
-     */
+
+    @ApiModelProperty(value = "创建时间")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     public LocalDateTime createTime;
-    /**
-     * 更新时间
-     */
+
+    @ApiModelProperty(value = "更新时间")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     public LocalDateTime updateTime;
-    /**
-     * 主机地址
-     */
+
+    @ApiModelProperty(value = "服务地址")
     public String host;
-    /**
-     * ip请求接口
-     */
+
+    @ApiModelProperty(value = "api地址")
     public String apiAddress;
+
+    @ApiModelProperty(value = "目标数据类型：1:Oracle 2:SqlServer 3:MySql 4:FTP 5:API")
+    public Integer type;
 
 }

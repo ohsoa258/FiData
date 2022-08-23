@@ -2,7 +2,6 @@ package com.fisk.datamodel.map;
 
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsAddDTO;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsDTO;
-import com.fisk.datamodel.entity.DerivedIndicatorsPO;
 import com.fisk.datamodel.entity.IndicatorsPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;

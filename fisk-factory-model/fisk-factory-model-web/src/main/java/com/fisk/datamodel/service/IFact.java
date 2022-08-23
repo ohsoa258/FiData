@@ -10,7 +10,7 @@ import com.fisk.datamodel.dto.fact.FactDropDTO;
 import com.fisk.datamodel.dto.fact.FactListDTO;
 import com.fisk.datamodel.dto.fact.FactScreenDropDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
-import com.fisk.datamodel.entity.FactPO;
+import com.fisk.datamodel.entity.fact.FactPO;
 
 import java.util.List;
 

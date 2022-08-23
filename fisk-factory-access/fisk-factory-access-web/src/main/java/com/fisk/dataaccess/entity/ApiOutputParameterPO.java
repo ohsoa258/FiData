@@ -27,12 +27,16 @@ public class ApiOutputParameterPO extends BasePO {
      */
     public String requestMethod;
     /**
-     * header请求key
+     * 请求参数key
      */
     public String queryParamsKey;
     /**
-     * header请求value
+     * 请求参数value
      */
     public String queryParamsValue;
+    /**
+     * 请求参数描述
+     */
+    public String queryParamsDescribe;
 
 }

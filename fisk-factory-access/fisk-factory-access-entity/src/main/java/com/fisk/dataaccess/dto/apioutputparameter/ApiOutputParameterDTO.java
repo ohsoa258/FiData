@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.dto.apioutputparameter;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -8,21 +9,23 @@ import lombok.Data;
  */
 @Data
 public class ApiOutputParameterDTO {
-    /**
-     * 数据目标id
-     */
+
+    @ApiModelProperty(value = "默认不填")
     public Long dataTargetId;
-    /**
-     * 参数类型：header 或 body
-     */
+
+    @ApiModelProperty(value = "参数类型：header 或 body")
     public String parameterType;
-    /**
-     * header请求key
-     */
+
+    @ApiModelProperty(value = "参数key")
     public String queryParamsKey;
-    /**
-     * header请求value
-     */
+
+    @ApiModelProperty(value = "参数value")
     public String queryParamsValue;
+
+    @ApiModelProperty(value = "参数描述")
+    public String queryParamsDescribe;
+
+    @ApiModelProperty(value = "参数方法：form-data 或 raw ")
+    public String requestMethod;
 
 }
