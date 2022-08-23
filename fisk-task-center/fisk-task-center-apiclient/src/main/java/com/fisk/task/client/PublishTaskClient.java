@@ -247,7 +247,7 @@ public interface PublishTaskClient {
      * @param unifiedControlDTO unifiedControlDTO
      * @return
      */
-    @PostMapping("/publishBuildunifiedControlTask")
+    @PostMapping("/olapTask/publishBuildunifiedControlTask")
     public ResultEntity<Object> publishBuildunifiedControlTask(@RequestBody UnifiedControlDTO unifiedControlDTO);
 
     /**
