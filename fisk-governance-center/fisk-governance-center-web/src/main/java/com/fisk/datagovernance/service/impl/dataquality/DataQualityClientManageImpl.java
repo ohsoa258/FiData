@@ -1,6 +1,5 @@
 package com.fisk.datagovernance.service.impl.dataquality;
 
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
@@ -11,8 +10,6 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.common.core.utils.Dto.Excel.*;
 import com.fisk.common.core.utils.office.excel.ExcelReportUtil;
-import com.fisk.common.framework.redis.RedisKeyBuild;
-import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFieldDTO;
@@ -23,18 +20,15 @@ import com.fisk.datagovernance.enums.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataQualityClientManageService;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.datagovernance.vo.dataquality.rule.TableRuleTempVO;
-import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.io.File;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -78,9 +72,6 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
     @Resource
     private AttachmentInfoMapper attachmentInfoMapper;
-
-    @Resource
-    private RedisUtil redisUtil;
 
     @Value("${file.uploadUrl}")
     private String uploadUrl;

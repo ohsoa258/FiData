@@ -34,7 +34,7 @@ public class MailSenderUtils {
         // 设置邮件服务器主机名
         props.setProperty("mail.host", serveiceDTO.getHost());
         // 发送邮件协议名称
-        //props.setProperty("mail.transport.protocol", serveiceDTO.getProtocol().toLowerCase());
+        props.setProperty("mail.transport.protocol", serveiceDTO.getProtocol().toLowerCase());
         if (serveiceDTO.getPort() == 465 || serveiceDTO.getPort() == 587) {
             // PS: 某些邮箱服务器要求 SMTP 连接需要使用 SSL 安全认证 (为了提高安全性, 邮箱支持SSL连接, 也可以自己开启),
             // 如果无法连接邮件服务器, 仔细查看控制台打印的 log, 如果有有类似 “连接失败, 要求 SSL 安全连接” 等错误,
