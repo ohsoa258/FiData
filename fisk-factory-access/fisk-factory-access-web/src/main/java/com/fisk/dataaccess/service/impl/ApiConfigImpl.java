@@ -977,12 +977,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
             // TODO 第一步: 查询阶段,调用第三方api返回的数据
             JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
+            log.info("iBuildHttpRequest对象值:{},{},{}", JSON.toJSONString(apiHttpRequestDto), JSON.toJSONString(iBuildHttpRequest), JSON.toJSONString(jsonObject));
 
             ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
             receiveDataDTO.apiCode = dto.apiId;
             String data = String.valueOf(jsonObject);
-            System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-            System.out.println("data = " + data);
+            log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            log.info("data = " + data);
             receiveDataDTO.pushData = String.valueOf(data);
             //系统内部调用(非实时推送)
             receiveDataDTO.flag = true;
@@ -1015,12 +1016,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
             // 调用第三方api返回的数据
             JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
+            log.info("iBuildHttpRequest对象值:{},{},{}", JSON.toJSONString(apiHttpRequestDto), JSON.toJSONString(iBuildHttpRequest), JSON.toJSONString(jsonObject));
 
             ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
             receiveDataDTO.apiCode = dto.apiId;
             String data = String.valueOf(jsonObject);
-            System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-            System.out.println("data = " + data);
+            log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            log.info("data = " + data);
             receiveDataDTO.pushData = String.valueOf(data);
             // 系统内部调用(非实时推送)
             receiveDataDTO.flag = true;
@@ -1055,12 +1057,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
             // 调用第三方api返回的数据
             JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
-
+            log.info("iBuildHttpRequest对象值:{},{},{}", JSON.toJSONString(apiHttpRequestDto), JSON.toJSONString(iBuildHttpRequest), JSON.toJSONString(jsonObject));
             ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
             receiveDataDTO.apiCode = dto.apiId;
             String data = String.valueOf(jsonObject);
-            System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-            System.out.println("data = " + data);
+            log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            log.info("data = " + data);
             receiveDataDTO.pushData = String.valueOf(data);
             // 系统内部调用(非实时推送)
             receiveDataDTO.flag = true;
