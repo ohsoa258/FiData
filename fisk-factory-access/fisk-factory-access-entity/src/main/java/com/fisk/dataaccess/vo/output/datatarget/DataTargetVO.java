@@ -50,10 +50,6 @@ public class DataTargetVO {
      */
     public String connectPwd;
     /**
-     * 请求方法：form-data or raw
-     */
-    public String requestMethod;
-    /**
      * 身份验证方式: 0: 空; 1: OAuth 1.0; 2: OAuth 1.0;3: JWT;  4: Bearer Token;  5:无需身份验证
      */
     public Integer authenticationMethod;

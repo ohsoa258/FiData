@@ -23,6 +23,10 @@ public class ApiOutputParameterPO extends BasePO {
      */
     public String parameterType;
     /**
+     * form-data or raw
+     */
+    public String requestMethod;
+    /**
      * header请求key
      */
     public String queryParamsKey;
