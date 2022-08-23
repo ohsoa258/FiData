@@ -58,6 +58,8 @@ public class MqConstants {
 
         public static final String BUILD_GOVERNANCE_FIELD_STRONG_RULE_TEMPLATE_FLOW = "task.build.governance.fieldStrongRule.template.flow";
 
+        public static final String BUILD_GOVERNANCE_TEMPLATE_FLOW = "task.build.governance.template.flow";
+
         public static final String BUILD_GOVERNANCE_FIELD_AGGREGATE_THRESHOLD_TEMPLATE_FLOW = "task.build.governance.fieldAggregateThreshold.template.flow";
 
         public static final String BUILD_GOVERNANCE_ROWCOUNT_THRESHOLD_TEMPLATE_FLOW = "task.build.governance.rowCountThreshold.template.flow";
@@ -96,6 +98,20 @@ public class MqConstants {
 
 
     }
+
+    /**
+     * 任务发布中心,流组件触发topic所在地
+     */
+    public static final class FlowQueueConstants {
+//
+
+
+
+
+
+
+    }
+
 
     public static final class RouterConstants {
         public static final String INCREMENT_RESULT = "task.data.increment.#";

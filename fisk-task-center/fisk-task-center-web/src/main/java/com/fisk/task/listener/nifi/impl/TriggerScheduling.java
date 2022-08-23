@@ -55,7 +55,7 @@ public class TriggerScheduling implements ITriggerScheduling {
             UnifiedControlDTO unifiedControlDTO = JSON.parseObject(data, UnifiedControlDTO.class);
             int id = unifiedControlDTO.id;
             //流程type
-            int unifiedcontrol = unifiedControlDTO.templateModulesType.getValue();
+            int unifiedcontrol = unifiedControlDTO.type.getValue();
             String topic = unifiedControlDTO.topic;
             String dzGroupId = "";
             //1.创建大组
@@ -151,7 +151,7 @@ public class TriggerScheduling implements ITriggerScheduling {
         querySqlDto.name = "queryDispatchProcessor";
         querySqlDto.details = "queryDispatchProcessor";
         querySqlDto.groupId = groupId;
-        querySqlDto.querySql = "select " + unifiedControlDTO.id + " as id, " + unifiedControlDTO.templateModulesType + " as templateModulesType," + unifiedControlDTO.userId + " as userId";
+        querySqlDto.querySql = "select " + unifiedControlDTO.id + " as id, " + unifiedControlDTO.type + " as templateModulesType," + unifiedControlDTO.userId + " as userId";
         querySqlDto.dbConnectionId = cfgDbPoolId;
         querySqlDto.scheduleExpression = unifiedControlDTO.scheduleExpression;
         querySqlDto.scheduleType = unifiedControlDTO.scheduleType;
