@@ -193,7 +193,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         mailServeiceDTO.setProtocol(EmailServerTypeEnum.getEnum(emailServerPO.getEmailServerType()).getName());
         mailServeiceDTO.setUser(emailServerPO.getEmailServerAccount());
         mailServeiceDTO.setPassword(emailServerPO.getEmailServerPwd());
-        mailServeiceDTO.setPort(mailServeiceDTO.getPort());
+        mailServeiceDTO.setPort(emailServerPO.getEmailServerPort());
         MailSenderDTO mailSenderDTO = new MailSenderDTO();
         mailSenderDTO.setUser(emailServerPO.getEmailServerAccount());
         mailSenderDTO.setSubject(dto.emailSubject);

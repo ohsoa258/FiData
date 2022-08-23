@@ -365,7 +365,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     }
 
     @Override
-    public ResultEntity<Object> CreateQualityReport(int id) {
+    public ResultEntity<Object> createQualityReport(int id) {
         if (id == 0) {
             return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, "");
         }
@@ -493,7 +493,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         ExcelDto excelDto = new ExcelDto();
         excelDto.setExcelName(attachmentInfoPO.getCurrentFileName());
         List<SheetDto> sheets = new ArrayList<>();
-        for (int i = 0; i <= dataCheckPOList.size(); i++) {
+        for (int i = 0; i < dataCheckPOList.size(); i++) {
             DataCheckPO dataCheckPO = dataCheckPOList.get(i);
             List<DataCheckExtendPO> dataCheckExtendPOs = dataCheckExtendPOList.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).collect(Collectors.toList());
             if (CollectionUtils.isEmpty(dataCheckExtendPOs)) {
@@ -522,10 +522,12 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     if (CollectionUtils.isNotEmpty(fiDataMetaDataTree_Table.getChildren())) {
                         for (int k = 0; k < dataCheckExtendPOList.size(); k++) {
                             DataCheckExtendPO dataCheckExtendPO1 = dataCheckExtendPOList.get(k);
-                            FiDataMetaDataTreeDTO fiDataMetaDataTree_Field = fiDataMetaDataTree_Table.getChildren().stream().
-                                    filter(f -> f.getId().equals(dataCheckExtendPO1.getFieldUnique())).findFirst().orElse(null);
-                            if (fiDataMetaDataTree_Field != null) {
-                                fieldNames.add(fiDataMetaDataTree_Field.label);
+                            if (StringUtils.isNotEmpty(dataCheckExtendPO1.getFieldUnique())) {
+                                FiDataMetaDataTreeDTO fiDataMetaDataTree_Field = fiDataMetaDataTree_Table.getChildren().stream().
+                                        filter(f -> f.getId().equals(dataCheckExtendPO1.getFieldUnique())).findFirst().orElse(null);
+                                if (fiDataMetaDataTree_Field != null) {
+                                    fieldNames.add(fiDataMetaDataTree_Field.label);
+                                }
                             }
                         }
                     }
@@ -603,6 +605,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         rowDto.setRowIndex(4);
         Columns = new ArrayList<>();
         Columns.addAll(fields);
+        rowDto.setColumns(Columns);
         singRows.add(rowDto);
         return singRows;
     }

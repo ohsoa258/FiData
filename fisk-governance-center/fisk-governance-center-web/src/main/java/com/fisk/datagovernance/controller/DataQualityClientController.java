@@ -57,8 +57,8 @@ public class DataQualityClientController {
      * @return 操作结果
      */
     @ApiOperation("生成质量报告")
-    @GetMapping("/CreateQualityReport")
-    public ResultEntity<Object> CreateQualityReport(@RequestParam("id") int id) {
-        return service.CreateQualityReport(id);
+    @GetMapping("/createQualityReport")
+    public ResultEntity<Object> createQualityReport(@RequestParam("id") int id) {
+        return service.createQualityReport(id);
     }
 }

@@ -27,5 +27,5 @@ public interface IDataQualityClientManageService {
     /**
      * 生成质量报告
      */
-    ResultEntity<Object> CreateQualityReport(int id);
+    ResultEntity<Object> createQualityReport(int id);
 }
