@@ -427,7 +427,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     fiDataMetaDataTree_Table.setSourceId(Math.toIntExact(conPo.id));
                     fiDataMetaDataTree_Table.setSourceType(SourceTypeEnum.custom.getValue());
                     fiDataMetaDataTree_Table.setLevelType(LevelTypeEnum.TABLE);
-                    fiDataMetaDataTree_Table.setLabelBusinessType(TableBusinessTypeEnum.NONE);
+                    fiDataMetaDataTree_Table.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                     fiDataMetaDataTree_Table.setPublishState("1");
                     List<FiDataMetaDataTreeDTO> fiDataMetaDataTree_Table_Children = new ArrayList<>();
 
@@ -448,7 +448,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                             fiDataMetaDataTree_Field.setLabelDesc(field.fieldDes);
                             fiDataMetaDataTree_Field.setParentName(table.tableName);
                             fiDataMetaDataTree_Field.setParentNameAlias(table.tableName);
-                            fiDataMetaDataTree_Field.setLabelBusinessType(TableBusinessTypeEnum.NONE);
+                            fiDataMetaDataTree_Field.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                             fiDataMetaDataTree_Field.setPublishState("1");
                             if (CollectionUtils.isNotEmpty(tableFieldList)) {
                                 FieldInfoVO fieldInfoVO = tableFieldList.stream()
@@ -513,7 +513,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     fiDataMetaDataTree_View.setSourceId(Math.toIntExact(conPo.id));
                     fiDataMetaDataTree_View.setSourceType(SourceTypeEnum.custom.getValue());
                     fiDataMetaDataTree_View.setLevelType(LevelTypeEnum.VIEW);
-                    fiDataMetaDataTree_View.setLabelBusinessType(TableBusinessTypeEnum.NONE);
+                    fiDataMetaDataTree_View.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                     fiDataMetaDataTree_View.setPublishState("1");
                     List<FiDataMetaDataTreeDTO> fiDataMetaDataTree_View_Children = new ArrayList<>();
 
@@ -534,7 +534,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                             fiDataMetaDataTree_Field.setLabelDesc(field.fieldDes);
                             fiDataMetaDataTree_Field.setParentName(view.viewName);
                             fiDataMetaDataTree_Field.setParentNameAlias(view.viewName);
-                            fiDataMetaDataTree_Field.setLabelBusinessType(TableBusinessTypeEnum.NONE);
+                            fiDataMetaDataTree_Field.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                             fiDataMetaDataTree_Field.setPublishState("1");
                             fiDataMetaDataTree_View_Children.add(fiDataMetaDataTree_Field);
                         }
