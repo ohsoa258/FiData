@@ -60,4 +60,9 @@ public class MailSenderDTO {
      * 附件地址
      */
     public String attachmentPath;
+
+    /**
+     * 公司logo地址
+     */
+    public String companyLogoPath;
 }

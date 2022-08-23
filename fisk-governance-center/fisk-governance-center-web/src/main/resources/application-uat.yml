@@ -44,5 +44,6 @@ pgsql-mdm:
   password: PgPassword01!
   driverClassName: org.postgresql.Driver
 file:
-  uploadUrl: /opt/0226/soft/nginx/app/qualityreport/
+  uploadUrl: /opt/0226/soft/nginx/app/file/qualityreport/
   echoPath: /file/qualityreport/
+  logoPath: /opt/0226/soft/nginx/app/file/qualityreport/image/companyLogo.jpg

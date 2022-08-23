@@ -86,6 +86,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     private String uploadUrl;
     @Value("${file.echoPath}")
     private String echoPath;
+    @Value("${file.logoPath}")
+    private String logoPaht;
 
     @Override
     public ResultEntity<TableRuleInfoDTO> getTableRuleList(int dataSourceId, String tableUnique, int tableBusinessType) {
@@ -433,7 +435,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             noticeDTO.sendAttachment = true;
             noticeDTO.attachmentName = attachmentInfoPO.getCurrentFileName();
             noticeDTO.attachmentPath = attachmentInfoPO.getAbsolutePath();
-            noticeDTO.attachmentActualName=attachmentInfoPO.getOriginalName();
+            noticeDTO.attachmentActualName = attachmentInfoPO.getOriginalName();
+            noticeDTO.companyLogoPath = logoPaht;
             noticeManageImpl.sendEmailNotice(noticeDTO);
         }
 

@@ -49,3 +49,4 @@ pgsql-mdm:
 file:
   uploadUrl: /root/nginx/app/file/qualityreport/
   echoPath: /file/qualityreport/
+  logoPath: /root/nginx/app/file/qualityreport/image/companyLogo.jpg

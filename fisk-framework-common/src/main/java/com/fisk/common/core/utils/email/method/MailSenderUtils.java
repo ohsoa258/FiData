@@ -3,6 +3,7 @@ package com.fisk.common.core.utils.email.method;
 import com.fisk.common.core.utils.email.dto.MailSenderDTO;
 import com.fisk.common.core.utils.email.dto.MailServeiceDTO;
 import com.sun.mail.util.MailSSLSocketFactory;
+import org.apache.commons.lang.StringUtils;
 
 import javax.activation.DataHandler;
 import javax.activation.FileDataSource;
@@ -94,13 +95,43 @@ public class MailSenderUtils {
 
         // 7. 设置邮件正文
         Multipart multipart = new MimeMultipart();
-        BodyPart contentPart = new MimeBodyPart();
-        contentPart.setContent(senderDTO.getBody(), "text/html;charset=UTF-8");
-        multipart.addBodyPart(contentPart);
+
+        MimeBodyPart image = new MimeBodyPart();
+        if (StringUtils.isNotEmpty(senderDTO.getCompanyLogoPath())) {
+            DataHandler logo = new DataHandler(new FileDataSource(new File(senderDTO.getCompanyLogoPath())));
+            image.setDataHandler(logo);
+            // 为"节点"设置一个唯一编号（在文本"节点"将引用该ID）
+            image.setContentID("mailLogPic");
+        }
+
+        StringBuilder str = new StringBuilder();
+        str.append("<html>");
+        str.append("<head>");
+        str.append("<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>");
+        str.append("</head>");
+        str.append("<body>");
+        str.append("<div>");
+        str.append("<span style='font-weight:600; font-size:16px';font-family: \"宋体\";>Dear User,</span><br/><br/>");
+        str.append("<span style='font-size:14px';font-family: \"宋体\";>&nbsp;&nbsp;&nbsp;&nbsp;" + senderDTO.getBody()+"</span>");
+        str.append("<br/><br/>");
+        if (StringUtils.isNotEmpty(senderDTO.getCompanyLogoPath())) {
+            str.append("<img src='cid:mailLogPic' height='29' width='80' /><br/>");
+        }
+        str.append("<span style='font-size:14px';font-family: \"宋体\";>Thanks & Best Regards,<br/>FiData</span>");
+        str.append("</div>");
+        str.append("</body>");
+        str.append("</html>");
+        BodyPart content = new MimeBodyPart();
+        content.setContent(str.toString(), "text/html;charset=UTF-8");
+        multipart.addBodyPart(content);
+        if (StringUtils.isNotEmpty(senderDTO.getCompanyLogoPath())) {
+            multipart.addBodyPart(image);
+        }
+
         if (senderDTO.sendAttachment
                 && senderDTO.getAttachmentName() != null && !senderDTO.getAttachmentName().isEmpty()
                 && senderDTO.getAttachmentPath() != null && !senderDTO.getAttachmentPath().isEmpty()) {
-            File tmpFile = new File(senderDTO.getAttachmentPath()+senderDTO.getAttachmentName());
+            File tmpFile = new File(senderDTO.getAttachmentPath() + senderDTO.getAttachmentName());
             if (tmpFile.exists()) {
                 MimeBodyPart file1 = new MimeBodyPart();
                 DataHandler handler = new DataHandler(new FileDataSource(tmpFile.getPath()));
@@ -112,7 +143,6 @@ public class MailSenderUtils {
             }
         }
         mimeMessage.setContent(multipart);
-
 
         // 8. 设置发件时间
         mimeMessage.setSentDate(new Date());

@@ -205,6 +205,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         mailSenderDTO.setAttachmentName(dto.attachmentName);
         mailSenderDTO.setAttachmentPath(dto.attachmentPath);
         mailSenderDTO.setAttachmentActualName(dto.attachmentActualName);
+        mailSenderDTO.setCompanyLogoPath(dto.companyLogoPath);
         try {
             //第二步：调用邮件发送方法
             MailSenderUtils.send(mailServeiceDTO, mailSenderDTO);
