@@ -16,7 +16,7 @@ import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
-import com.fisk.dataaccess.dto.GetConfigDTO;
+import com.fisk.dataservice.dto.GetConfigDTO;
 import com.fisk.dataservice.dto.api.doc.*;
 import com.fisk.dataservice.dto.app.*;
 import com.fisk.dataservice.entity.*;
