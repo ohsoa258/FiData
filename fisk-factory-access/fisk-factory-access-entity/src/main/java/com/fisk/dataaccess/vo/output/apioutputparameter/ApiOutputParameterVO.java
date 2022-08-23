@@ -26,5 +26,9 @@ public class ApiOutputParameterVO {
      * header请求value
      */
     public String queryParamsValue;
+    /**
+     * 请求方法：form-data or raw
+     */
+    public String requestMethod;
 
 }
