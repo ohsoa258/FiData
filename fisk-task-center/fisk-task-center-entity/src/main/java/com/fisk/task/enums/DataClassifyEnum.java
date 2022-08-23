@@ -19,8 +19,7 @@ public enum DataClassifyEnum  implements BaseEnum {
     CUSTOMWORKDATAACCESS(5,"管道服务-数据接入"),
     CUSTOMWORKSTRUCTURE(6,"结构层级"),
     //scheduling component
-    CUSTOMWORKSCHEDULINGCOMPONENT(7,"管道服务-调度组件"),
-    QUALITYREPORT(12, "质量报告");
+    CUSTOMWORKSCHEDULINGCOMPONENT(7,"管道服务-调度组件");
 
     private final String name;
     private final int value;
