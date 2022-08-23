@@ -928,7 +928,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // Body: raw参数
         List<ApiParameterPO> rawParams = parameterPoList.stream().filter(e -> e.requestMethod.equalsIgnoreCase(rawString) && e.requestType.equalsIgnoreCase(bodyString)).collect(Collectors.toList());
         // Headers的参数
-        List<ApiParameterPO> headersParams = parameterPoList.stream().filter(e -> e.requestMethod.equalsIgnoreCase(headersString)).collect(Collectors.toList());
+        List<ApiParameterPO> headersParams = parameterPoList.stream().filter(e -> e.requestType.equalsIgnoreCase(headersString)).collect(Collectors.toList());
         // 封装请求头Headers的参数
         Map<String, String> params = new HashMap<>();
         if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(headersParams)) {
