@@ -7,7 +7,7 @@ import com.fisk.datamodel.dto.widetableconfig.WideTableConfigDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableListDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableQueryPageDTO;
-import com.fisk.datamodel.entity.WideTableConfigPO;
+import com.fisk.datamodel.entity.widetable.WideTableConfigPO;
 
 import java.util.List;
 

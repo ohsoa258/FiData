@@ -3,19 +3,21 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsAddDTO;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsDTO;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsListDTO;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsQueryDTO;
 import com.fisk.datamodel.dto.derivedindicatorslimited.DerivedIndicatorsLimitedDTO;
-import com.fisk.datamodel.entity.*;
+import com.fisk.datamodel.entity.DerivedIndicatorsLimitedPO;
+import com.fisk.datamodel.entity.IndicatorsPO;
 import com.fisk.datamodel.enums.DerivedIndicatorsEnum;
 import com.fisk.datamodel.map.DerivedIndicatorsLimitedMap;
 import com.fisk.datamodel.map.DerivedIndicatorsMap;
-import com.fisk.datamodel.mapper.*;
+import com.fisk.datamodel.mapper.DerivedIndicatorsLimitedMapper;
+import com.fisk.datamodel.mapper.DerivedIndicatorsMapper;
 import com.fisk.datamodel.service.IDerivedIndicators;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,11 +43,7 @@ public class DerivedIndicatorsImpl
     @Resource
     DerivedIndicatorsMapper mapper;
     @Resource
-    DerivedIndicatorsAttributeMapper attributeMapper;
-    @Resource
     DerivedIndicatorsLimitedMapper derivedIndicatorsLimitedMapper;
-    @Resource
-    FactAttributeMapper factAttributeMapper;
     @Resource
     UserHelper userHelper;
 

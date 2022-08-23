@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.dto.output.datatarget;
 
 import com.fisk.dataaccess.dto.apioutputparameter.ApiOutputParameterDTO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -12,42 +13,34 @@ import java.util.List;
 @Data
 public class DataTargetAddDTO {
 
+    @ApiModelProperty(value = "新增id,不填")
     public Integer id;
-    /**
-     * 名称
-     */
+
+    @ApiModelProperty(value = "名称", required = true)
     public String name;
-    /**
-     * 负责人
-     */
+
+    @ApiModelProperty(value = "负责人", required = true)
     public String principal;
-    /**
-     * 描述
-     */
+
+    @ApiModelProperty(value = "描述")
     public String description;
-    /**
-     * 主机地址
-     */
+
+    @ApiModelProperty(value = "服务地址")
     public String host;
-    /**
-     * 主机端口
-     */
+
+    @ApiModelProperty(value = "端口")
     public Integer port;
-    /**
-     * ip请求接口
-     */
+
+    @ApiModelProperty(value = "api请求地址")
     public String apiAddress;
-    /**
-     * 数据目标类型
-     */
+
+    @ApiModelProperty(value = "目标数据类型：1:Oracle 2:SqlServer 3:MySql 4:FTP 5:API")
     public Integer type;
-    /**
-     * 连接账号
-     */
+
+    @ApiModelProperty(value = "连接账号")
     public String connectAccount;
-    /**
-     * 连接面
-     */
+
+    @ApiModelProperty(value = "账号密码")
     public String connectPwd;
     /**
      * 请求参数配置

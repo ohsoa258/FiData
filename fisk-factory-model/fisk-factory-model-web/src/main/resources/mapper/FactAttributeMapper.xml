@@ -1,7 +1,7 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.fisk.datamodel.mapper.FactAttributeMapper">
+<mapper namespace="com.fisk.datamodel.mapper.fact.FactAttributeMapper">
     <select id="getFactAttributeList" resultType="com.fisk.datamodel.dto.factattribute.FactAttributeListDTO">
     SELECT
 	a.id,
