@@ -250,7 +250,7 @@ public class KafkaConsumer {
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_GOVERNANCE_TEMPLATE_FLOW, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog
-    public void buildFieldStrongTaskListener(String dataInfo, Acknowledgment acke) {
+    public void buildQualityReportTaskListener(String dataInfo, Acknowledgment acke) {
         // 数据质量--质量报告 消费类
         qualityReportListener.msg(dataInfo, acke);
     }
