@@ -28,6 +28,7 @@ import org.springframework.context.ConfigurableApplicationContext;
         "com.fisk.datamodel.client",
         "com.fisk.datafactory.client",
         "com.fisk.mdm.client",
+        "com.fisk.datagovernance.client",
         "com.fisk.datamanage.client"})
 @EnableHystrix
 public class FkTaskApplication {

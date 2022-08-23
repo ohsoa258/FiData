@@ -62,6 +62,6 @@ public interface DataQualityClient {
      *
      * @return 操作结果
      */
-    @GetMapping("/dataQualityClient/CreateQualityReport")
-    ResultEntity<Object> CreateQualityReport(@RequestParam("id") int id);
+    @GetMapping("/dataQualityClient/createQualityReport")
+    ResultEntity<Object> createQualityReport(@RequestParam("id") int id);
 }

@@ -1,7 +1,6 @@
 package com.fisk.task.dto.task;
 
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
-import com.fisk.datagovernance.enums.dataquality.ModuleTypeEnum;
 import com.fisk.task.dto.MQBaseDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
