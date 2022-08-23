@@ -10,6 +10,7 @@ import javax.mail.*;
 import javax.mail.internet.*;
 import java.io.File;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Properties;
 
 /**
@@ -27,12 +28,12 @@ public class MailSenderUtils {
         Properties props = new Properties();
         if (serveiceDTO.isOpenAuth()) {
             // 发送服务器需要身份验证
-            props.setProperty("mail.smtp.auth", "true");
+            props.put("mail.smtp.auth", true);
         }
         // 设置邮件服务器主机名
         props.setProperty("mail.host", serveiceDTO.getHost());
         // 发送邮件协议名称
-        props.setProperty("mail.transport.protocol", serveiceDTO.getProtocol());
+        //props.setProperty("mail.transport.protocol", serveiceDTO.getProtocol().toLowerCase());
         if (serveiceDTO.getPort() == 465 || serveiceDTO.getPort() == 587) {
             // PS: 某些邮箱服务器要求 SMTP 连接需要使用 SSL 安全认证 (为了提高安全性, 邮箱支持SSL连接, 也可以自己开启),
             // 如果无法连接邮件服务器, 仔细查看控制台打印的 log, 如果有有类似 “连接失败, 要求 SSL 安全连接” 等错误,
@@ -42,16 +43,18 @@ public class MailSenderUtils {
             // 需要改为对应邮箱的 SMTP 服务器的端口, 具体可查看对应邮箱服务的帮助, QQ邮箱的SMTP(SLL)端口为465或587,
             // 其他邮箱自行去查看)
             final String smtpPort = String.valueOf(serveiceDTO.getPort());
-            props.setProperty("mail.smtp.port", smtpPort);
-            props.setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-            props.setProperty("mail.smtp.socketFactory.fallback", "false");
-            props.setProperty("mail.smtp.socketFactory.port", smtpPort);
+            props.put("mail.smtp.port", smtpPort);
+            props.put("mail.smtp.timeout", "25000");
+            props.put("mail.smtp.starttls.enable", "true");
+//            props.setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+//            props.setProperty("mail.smtp.socketFactory.fallback", "false");
+//            props.setProperty("mail.smtp.socketFactory.port", smtpPort);
 
             // 配置ssl加密工厂
-            MailSSLSocketFactory sf = new MailSSLSocketFactory();
-            sf.setTrustAllHosts(true);
-            props.put("mail.smtp.ssl.enable", "true");
-            props.put("mail.smtp.ssl.socketFactory", sf);
+//            MailSSLSocketFactory sf = new MailSSLSocketFactory();
+//            sf.setTrustAllHosts(true);
+//            props.put("mail.smtp.ssl.enable", "true");
+//            props.put("mail.smtp.ssl.socketFactory", sf);
         }
         Session session = Session.getInstance(props,
                 new Authenticator() {
@@ -88,25 +91,28 @@ public class MailSenderUtils {
         }
         // 6. 邮件主题
         mimeMessage.setSubject(senderDTO.getSubject());
-        // 7. 设置邮件正文
-        mimeMessage.setText(senderDTO.getBody());
 
+        // 7. 设置邮件正文
+        Multipart multipart = new MimeMultipart();
+        BodyPart contentPart = new MimeBodyPart();
+        contentPart.setContent(senderDTO.getBody(), "text/html;charset=UTF-8");
+        multipart.addBodyPart(contentPart);
         if (senderDTO.sendAttachment
                 && senderDTO.getAttachmentName() != null && !senderDTO.getAttachmentName().isEmpty()
                 && senderDTO.getAttachmentPath() != null && !senderDTO.getAttachmentPath().isEmpty()) {
             File tmpFile = new File(senderDTO.getAttachmentPath()+senderDTO.getAttachmentName());
             if (tmpFile.exists()) {
-                MimeMultipart multipart = new MimeMultipart();
                 MimeBodyPart file1 = new MimeBodyPart();
                 DataHandler handler = new DataHandler(new FileDataSource(tmpFile.getPath()));
                 file1.setDataHandler(handler);
                 //对文件名进行编码，防止出现乱码
-                String fileName = MimeUtility.encodeWord(tmpFile.getName(), "utf-8", "B");
-                file1.setFileName(fileName);
+                // String fileName = MimeUtility.encodeWord(senderDTO.getAttachmentActualName(), "utf-8", "B");
+                file1.setFileName(senderDTO.getAttachmentActualName());
                 multipart.addBodyPart(file1);
-                mimeMessage.setContent(multipart);
             }
         }
+        mimeMessage.setContent(multipart);
+
 
         // 8. 设置发件时间
         mimeMessage.setSentDate(new Date());

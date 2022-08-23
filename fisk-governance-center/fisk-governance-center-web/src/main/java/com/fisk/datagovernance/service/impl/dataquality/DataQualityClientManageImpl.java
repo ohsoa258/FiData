@@ -433,6 +433,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             noticeDTO.sendAttachment = true;
             noticeDTO.attachmentName = attachmentInfoPO.getCurrentFileName();
             noticeDTO.attachmentPath = attachmentInfoPO.getAbsolutePath();
+            noticeDTO.attachmentActualName=attachmentInfoPO.getOriginalName();
             noticeManageImpl.sendEmailNotice(noticeDTO);
         }
 

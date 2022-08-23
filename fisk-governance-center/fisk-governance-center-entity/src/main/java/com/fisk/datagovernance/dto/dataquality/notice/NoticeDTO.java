@@ -92,6 +92,13 @@ public class NoticeDTO {
     @ApiModelProperty(value = "附件名称")
     public String attachmentName;
 
+
+    /**
+     * 附件实际名称
+     */
+    @ApiModelProperty(value = "附件实际名称")
+    public String attachmentActualName;
+
     /**
      * 附件地址
      */
