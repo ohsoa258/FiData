@@ -288,7 +288,7 @@ public class DataFactoryImpl implements IDataFactory {
      * 匹配当前主任务内的最后一个任务
      *
      * @param inportList   最终封装数据的对象集合
-     * @param listAllJob  所有的job
+     * @param listAllJob   所有的job
      * @param listAllTable 所有的task
      * @author Lock
      * @date 2022/6/15 15:01
@@ -306,6 +306,7 @@ public class DataFactoryImpl implements IDataFactory {
                     // 根据table_order降序
                     .sorted(Comparator.comparing(NifiCustomWorkflowDetailDTO::getTableOrder).reversed())
                     .collect(Collectors.toList());
+            log.info("datalakeTaskDtoList筛选后:" + JSON.toJSONString(datalakeTaskDtoList));
             if (!CollectionUtils.isEmpty(datalakeTaskDtoList)) {
                 inportList.add(datalakeTaskDtoList.get(0));
             }
@@ -321,6 +322,7 @@ public class DataFactoryImpl implements IDataFactory {
                     // 根据table_order降序
                     .sorted(Comparator.comparing(NifiCustomWorkflowDetailDTO::getTableOrder).reversed())
                     .collect(Collectors.toList());
+            log.info("datalakeTaskDtoList筛选后:" + JSON.toJSONString(dwDimensionTaskDtoList));
             if (!CollectionUtils.isEmpty(dwDimensionTaskDtoList)) {
                 inportList.add(dwDimensionTaskDtoList.get(0));
             }
@@ -336,6 +338,7 @@ public class DataFactoryImpl implements IDataFactory {
                     // 根据table_order降序
                     .sorted(Comparator.comparing(NifiCustomWorkflowDetailDTO::getTableOrder).reversed())
                     .collect(Collectors.toList());
+            log.info("datalakeTaskDtoList筛选后:" + JSON.toJSONString(olapTaskDtoList));
             if (!CollectionUtils.isEmpty(olapTaskDtoList)) {
                 inportList.add(olapTaskDtoList.get(0));
             }
@@ -644,6 +647,7 @@ public class DataFactoryImpl implements IDataFactory {
      * @date 2022/6/15 14:05
      */
     private List<NifiCustomWorkflowDetailDTO> buildPipeEndDto(Long id) {
+        log.info("管道id:" + id);
         List<NifiCustomWorkflowDetailDTO> list = new ArrayList<>();
 
         NifiCustomWorkflowPO nifiCustomWorkflowPo = nifiCustomWorkflowImpl.query().eq("id", id).select("workflow_id").one();
@@ -687,7 +691,7 @@ public class DataFactoryImpl implements IDataFactory {
                 // 当前组件的pid是开始组件的id
 //                .filter(e -> e.inport.equalsIgnoreCase(String.valueOf(scheduleTask.id)))
                 .collect(Collectors.toList()));
-
+        log.info("组装detailDtoList参数:{},{},{}" + JSON.toJSONString(list), JSON.toJSONString(listAllJob), JSON.toJSONString(listAllTable));
         matchingDetailDtoList(list, listAllJob, listAllTable);
         List<NifiCustomWorkflowDetailDTO> detailDtoList = Objects.requireNonNull(list.stream().distinct().collect(Collectors.toList()));
         // 填充workflowName、componentsName属性

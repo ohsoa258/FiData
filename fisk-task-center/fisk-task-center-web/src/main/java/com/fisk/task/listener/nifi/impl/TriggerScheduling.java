@@ -10,6 +10,7 @@ import com.fisk.common.core.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
+import com.fisk.task.dto.nifi.BuildConvertToJsonProcessorDTO;
 import com.fisk.task.dto.nifi.BuildExecuteSqlProcessorDTO;
 import com.fisk.task.dto.nifi.BuildProcessGroupDTO;
 import com.fisk.task.dto.nifi.BuildPublishKafkaProcessorDTO;
@@ -115,17 +116,22 @@ public class TriggerScheduling implements ITriggerScheduling {
                     ProcessGroupEntity data1 = res.data;
                     List<ProcessorEntity> entityList = new ArrayList<>();
                     ProcessorEntity processorEntity = queryDispatchProcessor(data1.getId(), nifiConfigPO1.componentId, unifiedControlDTO);
+                    ProcessorEntity convertDataToJson = convertDataToJson(data1.getId());
                     ProcessorEntity publishKafkaProcessor = createPublishKafkaProcessor(data1.getId(), topic);
-                    entityList.add(publishKafkaProcessor);
                     entityList.add(processorEntity);
-                    componentsBuild.buildConnectProcessors(data1.getId(), processorEntity.getId(), publishKafkaProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                    entityList.add(convertDataToJson);
+                    entityList.add(publishKafkaProcessor);
+                    componentsBuild.buildConnectProcessors(data1.getId(), processorEntity.getId(), convertDataToJson.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                    componentsBuild.buildConnectProcessors(data1.getId(), convertDataToJson.getId(), publishKafkaProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
                     componentsBuild.enabledProcessor(data1.getId(), entityList);
-                    TableNifiSettingPO tableNifiSettingPO1 = new TableNifiSettingPO();
-                    tableNifiSettingPO1.tableAccessId = id;
-                    tableNifiSettingPO1.type = unifiedcontrol;
-                    tableNifiSettingPO1.dispatchComponentId = processorEntity.getId();
-                    tableNifiSettingPO1.publishKafkaProcessorId = publishKafkaProcessor.getId();
-                    tableNifiSettingService.save(tableNifiSettingPO1);
+                    TableNifiSettingPO tableNifiSetting = new TableNifiSettingPO();
+                    tableNifiSetting.tableAccessId = id;
+                    tableNifiSetting.type = unifiedcontrol;
+                    tableNifiSetting.dispatchComponentId = processorEntity.getId();
+                    tableNifiSetting.convertDataToJsonProcessorId = convertDataToJson.getId();
+                    tableNifiSetting.publishKafkaProcessorId = publishKafkaProcessor.getId();
+                    tableNifiSetting.tableComponentId = data1.getId();
+                    tableNifiSettingService.save(tableNifiSetting);
                 } else {
                     throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
                 }
@@ -158,6 +164,22 @@ public class TriggerScheduling implements ITriggerScheduling {
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
         return querySqlRes.data;
+    }
+
+    /**
+     * 执行sql convertDataToJson
+     *
+     * @param groupId 组id
+     * @return 组件对象
+     */
+    private ProcessorEntity convertDataToJson(String groupId) {
+        BuildConvertToJsonProcessorDTO toJsonDto = new BuildConvertToJsonProcessorDTO();
+        toJsonDto.name = "Convert Data To Json";
+        toJsonDto.details = "query_phase";
+        toJsonDto.groupId = groupId;
+        toJsonDto.positionDTO = NifiPositionHelper.buildXYPositionDTO(1, 1);
+        BusinessResult<ProcessorEntity> toJsonRes = componentsBuild.buildConvertToJsonProcess(toJsonDto);
+        return toJsonRes.data;
     }
 
     /**
