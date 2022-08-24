@@ -86,12 +86,14 @@ public class TriggerScheduling implements ITriggerScheduling {
                 List<ProcessorEntity> entities = new ArrayList<>();
                 ProcessorEntity dispatchComponentProcessor = NifiHelper.getProcessorsApi().getProcessor(tableNifiSettingPO.dispatchComponentId);
                 ProcessorEntity publishKafkaProcessor = NifiHelper.getProcessorsApi().getProcessor(tableNifiSettingPO.publishKafkaProcessorId);
+                ProcessorEntity convertDataToJsonProcessor = NifiHelper.getProcessorsApi().getProcessor(tableNifiSettingPO.convertDataToJsonProcessorId);
                 entities.add(publishKafkaProcessor);
                 entities.add(dispatchComponentProcessor);
+                entities.add(convertDataToJsonProcessor);
                 componentsBuild.stopProcessor(tableNifiSettingPO.tableComponentId, entities);
                 componentsBuild.emptyNifiConnectionQueue(tableNifiSettingPO.tableComponentId);
                 ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId);
-                NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
+                NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), processGroup.getRevision().getClientId(), false);
                 tableNifiSettingService.removeById(tableNifiSettingPO.id);
             }
             //如果是禁用或者删除,就不会重新创建
@@ -141,7 +143,7 @@ public class TriggerScheduling implements ITriggerScheduling {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.ERROR;
         } finally {
-            acknowledgment.acknowledge();
+            //acknowledgment.acknowledge();
         }
     }
 
