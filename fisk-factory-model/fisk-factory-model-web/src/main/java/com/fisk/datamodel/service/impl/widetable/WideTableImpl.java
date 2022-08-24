@@ -217,7 +217,7 @@ public class WideTableImpl
     public WideTableQueryPageDTO getWideTableData(String sql, int pageSize) {
         WideTableQueryPageDTO data = new WideTableQueryPageDTO();
         try {
-            String newSql = sql.replace("external_", "");
+            String newSql = sql.replace("", "");
             Connection conn = dimensionImpl.getStatement(driver, url, userName, password);
             Statement st = conn.createStatement();
             switch (typeName.toLowerCase()) {
