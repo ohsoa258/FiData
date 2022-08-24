@@ -113,7 +113,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             noticeExtendManageImpl.saveBatch(noticeExtendPOS);
         }
         //第五步：保存调度任务
-        publishBuildunifiedControlTask(Math.toIntExact(noticePO.id), noticePO.noticeState);
+        publishBuildunifiedControlTask(Math.toIntExact(noticePO.id), noticePO.noticeState, noticePO.runTimeCron);
         return ResultEnum.SUCCESS;
     }
 
@@ -154,7 +154,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             noticeExtendManageImpl.saveBatch(noticeExtendPOS);
         }
         //第五步：保存调度任务
-        publishBuildunifiedControlTask(Math.toIntExact(noticePO.id), noticePO.noticeState);
+        publishBuildunifiedControlTask(Math.toIntExact(noticePO.id), noticePO.noticeState, noticePO.runTimeCron);
         return ResultEnum.SUCCESS;
     }
 
@@ -165,7 +165,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             return ResultEnum.DATA_NOTEXISTS;
         }
         noticePO.setNoticeState(dto.noticeState.getValue());
-        publishBuildunifiedControlTask(Math.toIntExact(noticePO.id), noticePO.noticeState);
+        publishBuildunifiedControlTask(Math.toIntExact(noticePO.id), noticePO.noticeState, noticePO.runTimeCron);
         return baseMapper.updateById(noticePO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -176,7 +176,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             return ResultEnum.DATA_NOTEXISTS;
         }
         noticeExtendMapper.updateByNoticeId(id);
-        publishBuildunifiedControlTask(Math.toIntExact(noticePO.id), RuleStateEnum.Disable.getValue());
+        publishBuildunifiedControlTask(Math.toIntExact(noticePO.id), RuleStateEnum.Disable.getValue(), noticePO.runTimeCron);
         return baseMapper.deleteByIdWithFill(noticePO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -383,7 +383,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
      * @params id 组件id
      * @params stateEnum 状态
      */
-    public ResultEnum publishBuildunifiedControlTask(int id, int state) {
+    public ResultEnum publishBuildunifiedControlTask(int id, int state, String cron) {
         ResultEnum resultEnum = ResultEnum.TASK_NIFI_DISPATCH_ERROR;
         //调用task服务提供的API生成调度任务
         if (id == 0) {
@@ -391,10 +391,14 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         }
         long userId = userHelper.getLoginUserInfo().getId();
         boolean isDelTask = state != RuleStateEnum.Enable.getValue();
+        if (cron == null) {
+            isDelTask = true;
+        }
         UnifiedControlDTO unifiedControlDTO = new UnifiedControlDTO();
         unifiedControlDTO.setUserId(userId);
         unifiedControlDTO.setId(id);
         unifiedControlDTO.setScheduleType(SchedulingStrategyTypeEnum.CRON);
+        unifiedControlDTO.setScheduleExpression(cron);
         unifiedControlDTO.setTopic(MqConstants.QueueConstants.BUILD_GOVERNANCE_TEMPLATE_FLOW);
         unifiedControlDTO.setType(OlapTableEnum.GOVERNANCE);
         unifiedControlDTO.setDataClassifyEnum(DataClassifyEnum.UNIFIEDCONTROL);
