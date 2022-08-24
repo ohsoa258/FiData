@@ -140,7 +140,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             log.info("此组启动失败" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.ERROR;
         } finally {
-            //acke.acknowledge();
+            acke.acknowledge();
         }
 
     }
