@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.service.impl.dataquality;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -30,6 +31,7 @@ import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.UnifiedControlDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +48,7 @@ import java.util.stream.Collectors;
  * @date 2022/3/23 12:56
  */
 @Service
+@Slf4j
 public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implements INoticeManageService {
 
     @Resource
@@ -403,6 +406,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         unifiedControlDTO.setType(OlapTableEnum.GOVERNANCE);
         unifiedControlDTO.setDataClassifyEnum(DataClassifyEnum.UNIFIEDCONTROL);
         unifiedControlDTO.setDeleted(isDelTask);
+        log.info("创建nifi调度任务请求参数：", JSON.toJSONString(unifiedControlDTO));
         ResultEntity<Object> result = publishTaskClient.publishBuildunifiedControlTask(unifiedControlDTO);
         if (result != null) {
             resultEnum = ResultEnum.getEnum(result.getCode());
