@@ -494,7 +494,6 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             if (CollectionUtils.isEmpty(dataCheckExtendPOs)) {
                 continue;
             }
-            DataCheckExtendPO dataCheckExtendPO = dataCheckExtendPOList.get(0);
             TemplatePO templatePO = templateMapper.selectById(dataCheckPO.templateId);
             if (templatePO == null) {
                 continue;
@@ -515,8 +514,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 if (fiDataMetaDataTree_Table != null) {
                     tableName = fiDataMetaDataTree_Table.getLabel();
                     if (CollectionUtils.isNotEmpty(fiDataMetaDataTree_Table.getChildren())) {
-                        for (int k = 0; k < dataCheckExtendPOList.size(); k++) {
-                            DataCheckExtendPO dataCheckExtendPO1 = dataCheckExtendPOList.get(k);
+                        for (int k = 0; k < dataCheckExtendPOs.size(); k++) {
+                            DataCheckExtendPO dataCheckExtendPO1 = dataCheckExtendPOs.get(k);
                             if (StringUtils.isNotEmpty(dataCheckExtendPO1.getFieldUnique())) {
                                 FiDataMetaDataTreeDTO fiDataMetaDataTree_Field = fiDataMetaDataTree_Table.getChildren().stream().
                                         filter(f -> f.getId().equals(dataCheckExtendPO1.getFieldUnique())).findFirst().orElse(null);
@@ -538,7 +537,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 tableRuleSqlDTO.setFieldNames(fieldNames);
             }
             tableRuleSqlDTO.setTemplateTypeEnum(TemplateTypeEnum.getEnum(templatePO.getTemplateType()));
-            tableRuleSqlDTO.setFieldAggregate(dataCheckExtendPO.getFieldAggregate());
+            tableRuleSqlDTO.setFieldAggregate(dataCheckExtendPOs.get(0).getFieldAggregate());
             tableRuleSqlDTO.setThresholdValue(dataCheckPO.getThresholdValue());
             tableRuleSqlDTO.setSql(dataCheckPO.getCreateRule());
             String roleSql = createRole(dataSourceConVO, tableRuleSqlDTO);
