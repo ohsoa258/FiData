@@ -46,7 +46,8 @@ public class ExcelReportUtil {
             //2.根据workbook创建sheet
             for (int i = 0; i < excelDto.getSheets().size(); i++) {
                 SheetDto sheet = excelDto.getSheets().get(i);
-                createSheet(workbook, i, sheet.getSheetName(), sheet.getSingRows(), sheet.getDataRows());
+                createSheet(workbook, i, sheet.getSheetName(), sheet.getSingRows(), sheet.getSingFields(),
+                        sheet.getDataRows());
             }
             //3.通过输出流写到文件里去
             File f = new File(uploadUrl);
@@ -83,7 +84,7 @@ public class ExcelReportUtil {
      * @version v1.0
      */
     public static void createSheet(XSSFWorkbook workbook, int sheetNum,
-                                   String sheetName, List<RowDto> headers, List<List<DataDto>> result) {
+                                   String sheetName, List<RowDto> headers,List<String> fields, List<List<DataDto>> result) {
         // 创建一个sheet
         XSSFSheet sheet = workbook.createSheet();
         workbook.setSheetName(sheetNum, sheetName);
@@ -92,6 +93,7 @@ public class ExcelReportUtil {
         // 创建sheet的行样式
         HashMap<String, CellStyle> cellStyle = getCellStyle(workbook);
         CellStyle style_header = cellStyle.get("style_header");
+        CellStyle style_header_1 = cellStyle.get("style_header_1");
         CellStyle style_data = cellStyle.get("style_data");
 
         XSSFRow row = null;
@@ -102,9 +104,14 @@ public class ExcelReportUtil {
             row = sheet.createRow(rowEntity.getRowIndex());
             row.setHeightInPoints(20);
             for (int cellIndex = 0; cellIndex < rowEntity.getColumns().size(); cellIndex++) {
+                String value=rowEntity.getColumns().get(cellIndex);
                 cell = row.createCell(cellIndex);
-                cell.setCellStyle(style_header);
-                cell.setCellValue(rowEntity.getColumns().get(cellIndex));
+                if (fields.contains(value)){
+                    cell.setCellStyle(style_header_1);
+                }else {
+                    cell.setCellStyle(style_header);
+                }
+                cell.setCellValue(value);
             }
         }
         // 创建数据行
@@ -160,6 +167,28 @@ public class ExcelReportUtil {
         // 设置自动换行
         style_header.setWrapText(true);
         cellStyleHashMap.put("style_header", style_header);
+
+        // 创建标识行规则字段样式
+        CellStyle style_header_1 = workbook.createCellStyle();
+        // 设置背景色
+        style_header_1.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
+        style_header_1.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
+        // 设置字体
+        Font boldFont_1 = workbook.createFont();
+        boldFont_1.setFontName("宋体");
+        boldFont_1.setFontHeightInPoints((short) 11);
+        style_header_1.setFont(boldFont_1);
+        // 设置边框
+        style_header_1.setBorderBottom((short) 1);
+        style_header_1.setBorderLeft((short) 1);
+        style_header_1.setBorderRight((short) 1);
+        style_header_1.setBorderTop((short) 1);
+        // 设置居中 水平居中/垂直居中
+        style_header_1.setAlignment(HSSFCellStyle.ALIGN_CENTER);
+        style_header_1.setVerticalAlignment(HSSFCellStyle.VERTICAL_CENTER);
+        // 设置自动换行
+        style_header_1.setWrapText(true);
+        cellStyleHashMap.put("style_header_1", style_header_1);
 
         // 创建数据行样式
         CellStyle style_data = workbook.createCellStyle();

@@ -551,6 +551,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             SheetDataDto sheetDataDto = resultSetToMap(dataSourceConVO, roleSql);
             List<RowDto> singRows = getSingRows(tableName, templatePO.templatenName, sheetDataDto.columns);
             sheet.setSingRows(singRows);
+            sheet.setSingFields(fieldNames);
             sheet.setDataRows(sheetDataDto.columnData);
             sheets.add(sheet);
         }

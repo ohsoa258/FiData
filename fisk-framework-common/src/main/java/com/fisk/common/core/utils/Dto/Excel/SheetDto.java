@@ -2,6 +2,7 @@ package com.fisk.common.core.utils.Dto.Excel;
 
 import lombok.Data;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -16,6 +17,9 @@ public class SheetDto {
 
     // 标识行
     public List<RowDto> singRows;
+
+    // 标识字段
+    public List<String> singFields;
 
     // 数据行
     public List<List<DataDto>> dataRows;
