@@ -84,7 +84,11 @@ public class MailSenderUtils {
         mimeMessage.setRecipients(MimeMessage.RecipientType.TO, InternetAddress.parse(senderDTO.getToAddress()));
         // 4. 抄送人
         if (senderDTO.getToCc() != null && senderDTO.getToCc() != "") {
-            mimeMessage.setRecipients(MimeMessage.RecipientType.CC, InternetAddress.parse(senderDTO.getToCc().replace(";",",")));
+            String cc = senderDTO.getToCc()
+                    .replace(";", ",")
+                    .replace("；", ",")
+                    .replace("，", ",");
+            mimeMessage.setRecipients(MimeMessage.RecipientType.CC, InternetAddress.parse(cc));
         }
         // 5. 密抄
         if (senderDTO.getToBcc() != null && senderDTO.getToBcc() != "") {
@@ -112,7 +116,7 @@ public class MailSenderUtils {
         str.append("<body>");
         str.append("<div>");
         str.append("<span style='font-weight:600; font-size:16px';font-family: \"宋体\";>Dear User,</span><br/><br/>");
-        str.append("<span style='font-size:14px';font-family: \"宋体\";>&nbsp;&nbsp;&nbsp;&nbsp;" + senderDTO.getBody()+"</span>");
+        str.append("<span style='font-size:14px';font-family: \"宋体\";>&nbsp;&nbsp;&nbsp;&nbsp;" + senderDTO.getBody() + "</span>");
         str.append("<br/><br/>");
         if (StringUtils.isNotEmpty(senderDTO.getCompanyLogoPath())) {
             str.append("<img src='cid:mailLogPic' height='29' width='80' /><br/>");
