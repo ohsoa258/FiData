@@ -84,7 +84,7 @@ public class MailSenderUtils {
         mimeMessage.setRecipients(MimeMessage.RecipientType.TO, InternetAddress.parse(senderDTO.getToAddress()));
         // 4. 抄送人
         if (senderDTO.getToCc() != null && senderDTO.getToCc() != "") {
-            mimeMessage.setRecipients(MimeMessage.RecipientType.CC, InternetAddress.parse(senderDTO.getToCc()));
+            mimeMessage.setRecipients(MimeMessage.RecipientType.CC, InternetAddress.parse(senderDTO.getToCc().replace(";",",")));
         }
         // 5. 密抄
         if (senderDTO.getToBcc() != null && senderDTO.getToBcc() != "") {
