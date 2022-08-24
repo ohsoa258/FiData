@@ -84,7 +84,7 @@ public class ExcelReportUtil {
      * @version v1.0
      */
     public static void createSheet(XSSFWorkbook workbook, int sheetNum,
-                                   String sheetName, List<RowDto> headers,List<String> fields, List<List<DataDto>> result) {
+                                   String sheetName, List<RowDto> headers, List<String> fields, List<List<DataDto>> result) {
         // 创建一个sheet
         XSSFSheet sheet = workbook.createSheet();
         workbook.setSheetName(sheetNum, sheetName);
@@ -104,12 +104,20 @@ public class ExcelReportUtil {
             row = sheet.createRow(rowEntity.getRowIndex());
             row.setHeightInPoints(20);
             for (int cellIndex = 0; cellIndex < rowEntity.getColumns().size(); cellIndex++) {
-                String value=rowEntity.getColumns().get(cellIndex);
+                String value = rowEntity.getColumns().get(cellIndex);
                 cell = row.createCell(cellIndex);
-                if (fields.contains(value)){
-                    cell.setCellStyle(style_header_1);
-                }else {
+                boolean[] isStyle = {true};
+                if (CollectionUtils.isNotEmpty(fields)) {
+                    fields.forEach(t -> {
+                        if (t.equalsIgnoreCase(value)) {
+                            isStyle[0] = false;
+                        }
+                    });
+                }
+                if (isStyle[0]) {
                     cell.setCellStyle(style_header);
+                } else {
+                    cell.setCellStyle(style_header_1);
                 }
                 cell.setCellValue(value);
             }
