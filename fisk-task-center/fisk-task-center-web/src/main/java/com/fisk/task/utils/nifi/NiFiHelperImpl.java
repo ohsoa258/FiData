@@ -2039,9 +2039,9 @@ public class NiFiHelperImpl implements INiFiHelper {
         }
 
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
-            if (targetTableName.startsWith("dim_")) {
+            if (targetTableName.startsWith("stg_dim_")) {
                 tableKey = targetTableName.substring(4) + "key";
-            } else if (targetTableName.startsWith("fact_")) {
+            } else if (targetTableName.startsWith("stg_fact_")) {
                 tableKey = targetTableName.substring(5) + "key";
             }
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
