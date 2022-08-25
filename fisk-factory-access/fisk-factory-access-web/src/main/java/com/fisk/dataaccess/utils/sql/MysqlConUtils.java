@@ -254,9 +254,9 @@ public class MysqlConUtils {
             Connection conn = DriverManager.getConnection(url, user, password);
 
             Statement stmt = conn.createStatement();
-            ResultSet resultSet = stmt.executeQuery("SHOW DATABASES;");
+            ResultSet resultSet = stmt.executeQuery("select * from pg_database;");
             while (resultSet.next()) {
-                dbName.add(resultSet.getString("Database"));
+                dbName.add(resultSet.getString("datname"));
             }
         } catch (ClassNotFoundException | SQLException e) {
             throw new FkException(ResultEnum.GET_DATABASE_ERROR);
