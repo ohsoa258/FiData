@@ -1252,6 +1252,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 // 同步方式
                 DataSourceConfig dataSourceConfig = new DataSourceConfig();
                 dataSourceConfig.syncMode = syncmodePo.syncMode;
+                // 装接入数据库api的字段
+                List<TableFieldsPO> list = tableFieldImpl.query().eq("table_access_id", e.id).eq("del_flag", 1).list();
+                dataSourceConfig.tableFieldsList = TableFieldsMap.INSTANCES.listPoToDto(list);
                 // 增量对象
                 if (syncmodePo.syncMode == 4) {
                     TableBusinessPO businessPo = tableBusinessImpl.query().eq("access_id", e.id).one();

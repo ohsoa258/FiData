@@ -2042,7 +2042,10 @@ public class NiFiHelperImpl implements INiFiHelper {
                 sql += "stg_" + targetTableName + "'";
                 sql += ",'" + targetTableName + "'";
             } else {
-                sql += targetTableName + "'";
+                String fieldList = config.modelPublishFieldDTOList.stream().filter(Objects::nonNull)
+                        .filter(e -> e.fieldEnName != null && !Objects.equals("", e.fieldEnName))
+                        .map(t -> t.fieldEnName).collect(Collectors.joining(","));
+                sql += fieldList + "','" + targetTableName + "'";
                 sql += ",'" + config.processorConfig.targetTableName.substring(4) + "'";
             }
         } else {
@@ -2050,7 +2053,10 @@ public class NiFiHelperImpl implements INiFiHelper {
                 sql += "stg_" + targetTableName + "'";
                 sql += ",'ods_" + targetTableName + "'";
             } else {
-                sql += targetTableName + "'";
+                String fieldList = config.targetDsConfig.tableFieldsList.stream().filter(Objects::nonNull)
+                        .filter(e -> e.fieldName != null && !Objects.equals("", e.fieldName))
+                        .map(t -> t.fieldName).collect(Collectors.joining(","));
+                sql += fieldList + "','" + targetTableName + "'";
                 sql += ",'ods_" + targetTableName.substring(4) + "'";
             }
         }
