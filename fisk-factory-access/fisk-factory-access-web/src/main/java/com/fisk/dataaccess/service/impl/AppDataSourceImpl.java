@@ -17,10 +17,12 @@ import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.service.IAppDataSource;
 import com.fisk.dataaccess.utils.sql.MysqlConUtils;
 import com.fisk.dataaccess.utils.sql.OracleUtils;
+import com.fisk.dataaccess.utils.sql.PgsqlUtils;
 import com.fisk.dataaccess.utils.sql.SqlServerPlusUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -34,6 +36,8 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     AppDataSourceMapper mapper;
     @Resource
     RedisUtil redisUtil;
+    @Resource
+    PgsqlUtils pgsqlUtils;
 
     @Override
     public DataSourceDTO getDataSourceMeta(long appId) {
@@ -91,6 +95,12 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 dataSource.tableDtoList = sqlServerPlusUtils.getTableNameAndColumnsPlus(po.connectStr, po.connectAccount, po.connectPwd, po.dbName);
                 // 视图结构
                 dataSource.viewDtoList = sqlServerPlusUtils.loadViewDetails(DriverTypeEnum.SQLSERVER, po.connectStr, po.connectAccount, po.connectPwd, po.dbName);
+            } else if (DataSourceTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(dataSource.driveType)) {
+                // 表结构
+                dataSource.tableDtoList = pgsqlUtils.getTableNameAndColumnsPlus(po.connectStr, po.connectAccount, po.connectPwd, po.dbName);
+                //视图结构
+                dataSource.viewDtoList = new ArrayList<>();
+
             }
 
             if (CollectionUtils.isNotEmpty(dataSource.tableDtoList)) {

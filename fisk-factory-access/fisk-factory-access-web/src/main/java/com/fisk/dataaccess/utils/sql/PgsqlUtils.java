@@ -11,16 +11,14 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
 import com.fisk.dataaccess.dto.json.JsonTableData;
 import com.fisk.dataaccess.dto.pgsqlmetadata.ApiSqlResultDTO;
+import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -75,6 +73,66 @@ public class PgsqlUtils {
             throw new FkException(ResultEnum.CREATE_PG_CONNECTION);
         }
         return conn;
+    }
+
+
+    /**
+     * 获取sqlserver表详情(表名+字段)
+     *
+     * @return java.util.List<com.fisk.dataaccess.table.TablePyhNameDTO>
+     * @description 获取sqlserver表详情(表名 + 字段)
+     * @author Lock
+     * @date 2022/4/1 14:56
+     * @version v1.0
+     * @params url
+     * @params user
+     * @params password
+     * @params dbName
+     */
+    public List<TablePyhNameDTO> getTableNameAndColumnsPlus(String url, String user, String password, String dbName) {
+
+        List<TablePyhNameDTO> list = new ArrayList<>();
+
+        try {
+            //1.加载驱动程序
+            Class.forName("org.postgresql.Driver");
+            //2.获得数据库的连接
+            Connection conn = DriverManager.getConnection(url, user, password);
+            Statement stmt = conn.createStatement();
+            list = new ArrayList<>();
+            ResultSet resultSet = null;
+            // 获取指定数据库所有表
+            if (dbName != null && dbName != "") {
+                resultSet = stmt.executeQuery("select tablename from pg_tables where schemaname = 'public' and tablename = '" + dbName + "' ORDER BY tablename;");
+            } else {
+                resultSet = stmt.executeQuery("select tablename from pg_tables where schemaname = 'public' ORDER BY tablename;");
+            }
+            while (resultSet.next()) {
+                TablePyhNameDTO tablePyhName = new TablePyhNameDTO();
+                String tablename = resultSet.getString("tablename");
+                tablePyhName.tableName = tablename;
+                list.add(tablePyhName);
+            }
+
+          /*  List<TablePyhNameDTO> finalList = list;
+
+            Iterator<Map.Entry<String, String>> iterator = mapList.entrySet().iterator();
+
+            while (iterator.hasNext()) {
+                Map.Entry<String, String> entry = iterator.next();
+                // 根据表名获取字段
+                List<TableStructureDTO> columnsName = getColumnsName(conn, entry.getKey());
+                TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+                tablePyhNameDTO.setTableName(entry.getValue() + "." + entry.getKey());
+                tablePyhNameDTO.setFields(columnsName);
+                finalList.add(tablePyhNameDTO);
+            }*/
+            conn.close();
+        } catch (ClassNotFoundException | SQLException e) {
+            log.error("【getTableNameAndColumnsPlus】获取表名及表字段失败, ex", e);
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        }
+        return list;
     }
 
     /**
