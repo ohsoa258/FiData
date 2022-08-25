@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.vo.output.datatarget;
 
 import com.fisk.dataaccess.vo.output.apioutputparameter.ApiOutputParameterVO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -13,57 +14,46 @@ import java.util.List;
 public class DataTargetVO {
 
     public Long id;
-    /**
-     * 名称
-     */
+
+    @ApiModelProperty(value = "名称")
     public String name;
-    /**
-     * 负责人
-     */
+
+    @ApiModelProperty(value = "负责人")
     public String principal;
-    /**
-     * 描述
-     */
+
+    @ApiModelProperty(value = "描述")
     public String description;
-    /**
-     * 请求方式：1:Get 2:Post
-     */
+
+    @ApiModelProperty(value = "请求方式：1:Get 2:Post")
     public Integer requestWay;
-    /**
-     * 主机地址
-     */
+
+    @ApiModelProperty(value = "服务地址")
     public String host;
-    /**
-     * ip请求接口
-     */
+
+    @ApiModelProperty(value = "端口")
+    public Integer port;
+
+    @ApiModelProperty(value = "api请求地址")
     public String apiAddress;
-    /**
-     * 数据目标类型
-     */
+
+    @ApiModelProperty(value = "目标数据类型：1:Oracle 2:SqlServer 3:MySql 4:FTP 5:API")
     public Integer type;
-    /**
-     * 连接账号
-     */
+
+    @ApiModelProperty(value = "连接账号")
     public String connectAccount;
-    /**
-     * 连接面
-     */
+
+    @ApiModelProperty(value = "账号密码")
     public String connectPwd;
-    /**
-     * 身份验证方式: 0: 空; 1: OAuth 1.0; 2: OAuth 1.0;3: JWT;  4: Bearer Token;  5:无需身份验证
-     */
+
+    @ApiModelProperty(value = "身份验证方式: 0: 空; 1: OAuth 1.0; 2: OAuth 1.0;3: JWT;  4: Bearer Token;  5:无需身份验证")
     public Integer authenticationMethod;
-    /**
-     * 身份验证url
-     */
+
+    @ApiModelProperty(value = "身份验证url")
     public String authenticationUrl;
-    /**
-     * Bearer Token验证方式的Token
-     */
+
+    @ApiModelProperty(value = "Bearer Token验证方式的Token")
     public String token;
-    /**
-     * 配置集合
-     */
+
     public List<ApiOutputParameterVO> parameters;
 
 }

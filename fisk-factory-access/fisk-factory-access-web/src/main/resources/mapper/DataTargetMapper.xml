@@ -31,6 +31,13 @@
         port,
         connect_account,
         connect_pwd,
+        request_way,
+        api_address,
+        authentication_method,
+        authentication_url,
+        token,
+        create_user,
+        create_time,
         del_flag)
         values
         (#{dataTargetDto.type},
@@ -41,6 +48,13 @@
         #{dataTargetDto.port},
         #{dataTargetDto.connectAccount},
         #{dataTargetDto.connectPwd},
+        #{dataTargetDto.requestWay},
+        #{dataTargetDto.apiAddress},
+        #{dataTargetDto.authenticationMethod},
+        #{dataTargetDto.authenticationUrl},
+        #{dataTargetDto.token},
+        #{dataTargetDto.createUserId},
+        #{dataTargetDto.createTime},
         1)
     </insert>
 

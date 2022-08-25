@@ -3,6 +3,7 @@ package com.fisk.dataaccess.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -42,6 +44,8 @@ public class DataTargetImpl implements IDataTarget {
     DataTargetMapper mapper;
     @Resource
     ApiOutputParameterImpl apiOutputParameter;
+    @Resource
+    UserHelper userHelper;
 
     @Resource
     GetMetadata getMetadata;
@@ -75,6 +79,8 @@ public class DataTargetImpl implements IDataTarget {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum addDataTarget(DataTargetAddDTO dto) {
+        dto.createUserId = userHelper.getLoginUserInfo().id;
+        dto.createTime = LocalDateTime.now();
         Integer flat = mapper.insertDataTarget(dto);
         if (flat == 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);

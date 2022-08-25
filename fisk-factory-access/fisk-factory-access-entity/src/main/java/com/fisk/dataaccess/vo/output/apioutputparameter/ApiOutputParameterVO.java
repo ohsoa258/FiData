@@ -30,5 +30,9 @@ public class ApiOutputParameterVO {
      * 请求方法：form-data or raw
      */
     public String requestMethod;
+    /**
+     * 请求参数描述
+     */
+    public String queryParamsDescribe;
 
 }

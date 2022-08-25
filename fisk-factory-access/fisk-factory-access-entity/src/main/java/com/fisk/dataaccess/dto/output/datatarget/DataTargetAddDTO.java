@@ -4,6 +4,7 @@ import com.fisk.dataaccess.dto.apioutputparameter.ApiOutputParameterDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -25,6 +26,9 @@ public class DataTargetAddDTO {
     @ApiModelProperty(value = "描述")
     public String description;
 
+    @ApiModelProperty(value = "请求方式：1:Get 2:Post")
+    public Integer requestWay;
+
     @ApiModelProperty(value = "服务地址")
     public String host;
 
@@ -42,6 +46,22 @@ public class DataTargetAddDTO {
 
     @ApiModelProperty(value = "账号密码")
     public String connectPwd;
+
+    @ApiModelProperty(value = "身份验证方式: 0: 空; 1: OAuth 1.0; 2: OAuth 1.0;3: JWT;  4: Bearer Token;  5:无需身份验证")
+    public Integer authenticationMethod;
+
+    @ApiModelProperty(value = "身份验证url")
+    public String authenticationUrl;
+
+    @ApiModelProperty(value = "Bearer Token验证方式的Token")
+    public String token;
+
+    @ApiModelProperty(value = "创建人id,默认不填")
+    public Long createUserId;
+
+    @ApiModelProperty(value = "创建时间,默认不填")
+    public LocalDateTime createTime;
+
     /**
      * 请求参数配置
      */
