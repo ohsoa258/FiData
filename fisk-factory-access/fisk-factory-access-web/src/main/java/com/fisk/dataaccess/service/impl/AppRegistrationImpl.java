@@ -662,6 +662,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     url = "jdbc:mysql://" + dto.host + ":" + dto.port;
                     allDatabases.addAll(mysqlConUtils.getAllDatabases(url, dto.connectAccount, dto.connectPwd));
                     break;
+                case POSTGRESQL:
+                    MysqlConUtils mysqlConUtils1 = new MysqlConUtils();
+                    url = "jdbc:postgresql://" + dto.host + ":" + dto.port;
+                    allDatabases.addAll(mysqlConUtils1.getPgDatabases(url, dto.connectAccount, dto.connectPwd));
+                    break;
                 case SQLSERVER:
                     url = "jdbc:sqlserver://" + dto.host + ":" + dto.port;
                     SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();

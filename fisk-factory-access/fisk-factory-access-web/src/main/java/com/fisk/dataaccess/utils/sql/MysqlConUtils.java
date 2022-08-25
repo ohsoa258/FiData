@@ -245,6 +245,26 @@ public class MysqlConUtils {
         return dbName;
     }
 
+    public List<String> getPgDatabases(String url, String user, String password) {
+
+        List<String> dbName = new ArrayList<>();
+
+        try {
+            Class.forName(DriverTypeEnum.PGSQL.getName());
+            Connection conn = DriverManager.getConnection(url, user, password);
+
+            Statement stmt = conn.createStatement();
+            ResultSet resultSet = stmt.executeQuery("SHOW DATABASES;");
+            while (resultSet.next()) {
+                dbName.add(resultSet.getString("Database"));
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new FkException(ResultEnum.GET_DATABASE_ERROR);
+        }
+
+        return dbName;
+    }
+
 //    public static void main(String[] args) {
 //        List<String> allDatabases = getAllDatabases("jdbc:mysql://192.168.11.130:3306", "root", "root123");
 //        allDatabases.forEach(System.out::println);
