@@ -2029,6 +2029,7 @@ public class NiFiHelperImpl implements INiFiHelper {
     @Override
     public String assemblySql(DataAccessConfigDTO config, SynchronousTypeEnum synchronousTypeEnum, String funcName, BuildNifiFlowDTO buildNifiFlow) {
         TableBusinessDTO business = config.businessDTO;
+        String tableKey = "";
         String targetTableName = config.processorConfig.targetTableName;
         String sql = "";
         if (buildNifiFlow != null && StringUtils.isNotEmpty(buildNifiFlow.updateSql)) {
@@ -2038,6 +2039,11 @@ public class NiFiHelperImpl implements INiFiHelper {
         }
 
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
+            if (targetTableName.startsWith("dim_")) {
+                tableKey = targetTableName.substring(4) + "key";
+            } else if (targetTableName.startsWith("fact_")) {
+                tableKey = targetTableName.substring(5) + "key";
+            }
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
                 sql += "stg_" + targetTableName + "'";
                 sql += ",'" + targetTableName + "'";
@@ -2045,10 +2051,11 @@ public class NiFiHelperImpl implements INiFiHelper {
                 String fieldList = config.modelPublishFieldDTOList.stream().filter(Objects::nonNull)
                         .filter(e -> e.fieldEnName != null && !Objects.equals("", e.fieldEnName))
                         .map(t -> t.fieldEnName).collect(Collectors.joining("'',''")).toLowerCase();
-                sql += fieldList + "','" + targetTableName + "'";
+                sql += fieldList + "','" + tableKey + "','" + targetTableName + "'";
                 sql += ",'" + config.processorConfig.targetTableName.substring(4) + "'";
             }
         } else {
+            tableKey = targetTableName.substring(4) + "key";
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
                 sql += "stg_" + targetTableName + "'";
                 sql += ",'ods_" + targetTableName + "'";
@@ -2056,7 +2063,7 @@ public class NiFiHelperImpl implements INiFiHelper {
                 String fieldList = config.targetDsConfig.tableFieldsList.stream().filter(Objects::nonNull)
                         .filter(e -> e.fieldName != null && !Objects.equals("", e.fieldName))
                         .map(t -> t.fieldName).collect(Collectors.joining("'',''")).toLowerCase();
-                sql += fieldList + "','" + targetTableName + "'";
+                sql += fieldList + "','" + tableKey + "','" + targetTableName + "'";
                 sql += ",'ods_" + targetTableName.substring(4) + "'";
             }
         }
