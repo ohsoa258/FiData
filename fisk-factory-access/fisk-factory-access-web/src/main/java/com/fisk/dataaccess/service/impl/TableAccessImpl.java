@@ -1753,7 +1753,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
                 st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
                 //st.setFetchSize(Integer.MIN_VALUE);
-                conn.setAutoCommit(false);
+//                conn.setAutoCommit(false);
                 st.setMaxRows(10);
             }
             assert st != null;
