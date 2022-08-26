@@ -223,7 +223,7 @@ public class KafkaConsumer {
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog
+    //@MQConsumerLog
     public ResultEntity<Object> buildUnifiedControlTaskListener(String dataInfo, Acknowledgment acke) {
         return ResultEntityBuild.build(iTriggerScheduling.unifiedControl(dataInfo, acke));
     }
@@ -249,7 +249,7 @@ public class KafkaConsumer {
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_GOVERNANCE_TEMPLATE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog
+    //@MQConsumerLog
     public void buildQualityReportTaskListener(String dataInfo, Acknowledgment acke) {
         // 数据质量--质量报告 消费类
         qualityReportListener.msg(dataInfo, acke);
