@@ -12,6 +12,7 @@ import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
 import com.fisk.dataaccess.dto.json.JsonTableData;
 import com.fisk.dataaccess.dto.pgsqlmetadata.ApiSqlResultDTO;
 import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
+import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -102,31 +103,27 @@ public class PgsqlUtils {
             list = new ArrayList<>();
             ResultSet resultSet = null;
             // 获取指定数据库所有表
-            if (dbName != null && dbName != "") {
-                resultSet = stmt.executeQuery("select tablename from pg_tables where schemaname = 'public' and tablename = '" + dbName + "' ORDER BY tablename;");
-            } else {
-                resultSet = stmt.executeQuery("select tablename from pg_tables where schemaname = 'public' ORDER BY tablename;");
-            }
+            resultSet = stmt.executeQuery("select tablename from pg_tables where schemaname = 'public'  ORDER BY tablename;");
             while (resultSet.next()) {
                 TablePyhNameDTO tablePyhName = new TablePyhNameDTO();
                 String tablename = resultSet.getString("tablename");
                 tablePyhName.tableName = tablename;
                 list.add(tablePyhName);
             }
+            for (TablePyhNameDTO tablePyhName : list) {
+                resultSet = stmt.executeQuery("select a.attname as fieldname, col_description(a.attrelid,a.attnum) as comment,format_type(a.atttypid,a.atttypmod) as type, a.attnotnull as notnull\n" +
+                        "from pg_class as c,pg_attribute as a\n" +
+                        "where c.relname = '" + tablePyhName.tableName + "' and a.attrelid = c.oid and a.attnum > 0;");
+                List<TableStructureDTO> tableStructures = new ArrayList<>();
+                while (resultSet.next()) {
+                    TableStructureDTO tableStructure = new TableStructureDTO();
+                    String fieldname = resultSet.getString("fieldname");
+                    tableStructure.fieldName = fieldname;
+                    tableStructures.add(tableStructure);
+                }
+                tablePyhName.fields = tableStructures;
+            }
 
-          /*  List<TablePyhNameDTO> finalList = list;
-
-            Iterator<Map.Entry<String, String>> iterator = mapList.entrySet().iterator();
-
-            while (iterator.hasNext()) {
-                Map.Entry<String, String> entry = iterator.next();
-                // 根据表名获取字段
-                List<TableStructureDTO> columnsName = getColumnsName(conn, entry.getKey());
-                TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-                tablePyhNameDTO.setTableName(entry.getValue() + "." + entry.getKey());
-                tablePyhNameDTO.setFields(columnsName);
-                finalList.add(tablePyhNameDTO);
-            }*/
             conn.close();
         } catch (ClassNotFoundException | SQLException e) {
             log.error("【getTableNameAndColumnsPlus】获取表名及表字段失败, ex", e);
