@@ -1758,20 +1758,20 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
             assert st != null;
             Instant inst2 = Instant.now();
-            System.out.println("流式设置执行时间 : " + Duration.between(inst1, inst2).toMillis());
+            log.info("流式设置执行时间 : " + Duration.between(inst1, inst2).toMillis());
             Instant inst3 = Instant.now();
 
             Map<String, String> converSql = publishTaskClient.converSql(query.tableName, query.querySql, po.driveType).data;
-            System.out.println("拼语句执行时间 : " + Duration.between(inst2, inst3).toMillis());
+            log.info("拼语句执行时间 : " + Duration.between(inst2, inst3).toMillis());
 
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             ResultSet rs = st.executeQuery(sql);
             Instant inst4 = Instant.now();
-            System.out.println("执行sql时间 : " + Duration.between(inst3, inst4).toMillis());
+            log.info("执行sql时间 : " + Duration.between(inst3, inst4).toMillis());
             //获取数据集
             array = resultSetToJsonArrayDataAccess(rs);
             Instant inst5 = Instant.now();
-            System.out.println("封装数据执行时间 : " + Duration.between(inst4, inst5).toMillis());
+            log.info("封装数据执行时间 : " + Duration.between(inst4, inst5).toMillis());
 
             array.sql = sql;
             rs.close();
