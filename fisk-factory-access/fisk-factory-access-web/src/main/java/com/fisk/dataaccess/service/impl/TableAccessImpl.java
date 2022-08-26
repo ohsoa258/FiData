@@ -1746,6 +1746,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 //                st.setFetchSize(Integer.MIN_VALUE);
                 st.setMaxRows(10);
+            } else if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())) {
+                //1.加载驱动程序
+                Class.forName("org.postgresql.Driver");
+                //2.获得数据库的连接
+                conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
+                st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+//                st.setFetchSize(Integer.MIN_VALUE);
+                st.setMaxRows(10);
             }
             assert st != null;
             Instant inst2 = Instant.now();
