@@ -1752,8 +1752,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 //2.获得数据库的连接
                 conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
                 st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-//                st.setFetchSize(Integer.MIN_VALUE);
-                st.setMaxRows(10);
+                st.setFetchSize(Integer.MIN_VALUE);
+                conn.setAutoCommit(false);
+                //st.setMaxRows(10);
             }
             assert st != null;
             Instant inst2 = Instant.now();
