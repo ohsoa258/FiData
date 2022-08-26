@@ -392,13 +392,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         attachmentInfoPO.setAbsolutePath(uploadUrl);
         attachmentInfoPO.setRelativePath(echoPath);
         attachmentInfoPO.setObjectId(String.valueOf(id));
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
         switch (templateSceneEnum) {
             case NOTICE_DATACHECK:
                 // 生成数据校验质量报告
                 attachmentInfoPO.setOriginalName(String.format("数据校验质量报告%s.xlsx",
                         DateTimeUtils.getNowToShortDate().replace("-", "")));
                 attachmentInfoPO.setCategory(100);
-                createDataCheckQualityReport(noticeExtendPOS, allDataSource, attachmentInfoPO);
+                resultEnum = createDataCheckQualityReport(noticeExtendPOS, allDataSource, attachmentInfoPO);
                 break;
             case NOTICE_BUSINESSFILTER:
                 // 生成业务清洗质量报告
@@ -412,6 +413,10 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         DateTimeUtils.getNowToShortDate().replace("-", "")));
                 attachmentInfoPO.setCategory(300);
                 break;
+        }
+        if (resultEnum != ResultEnum.SUCCESS) {
+            log.info("质量报告执行异常：" + resultEnum.getMsg());
+            return ResultEntityBuild.buildData(resultEnum, "");
         }
         // 第二步：保存质量报告信息到附件信息表
         attachmentInfoMapper.insert(attachmentInfoPO);
@@ -481,9 +486,12 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             dataTableFieldDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.getEnum(dataCheckPO.getTableBusinessType()));
             dtoList.add(dataTableFieldDTO);
         }
-        List<FiDataMetaDataDTO> fiDataMetaDatas = dataSourceConManageImpl.getTableFieldName(dtoList);
-        if (CollectionUtils.isEmpty(fiDataMetaDatas)) {
-            return ResultEnum.DATA_QUALITY_REDIS_NOTEXISTSTABLEFIELD;
+        List<FiDataMetaDataDTO> fiDataMetaDatas = null;
+        if (CollectionUtils.isNotEmpty(dtoList)) {
+            fiDataMetaDatas = dataSourceConManageImpl.getTableFieldName(dtoList);
+            if (CollectionUtils.isEmpty(fiDataMetaDatas)) {
+                return ResultEnum.DATA_QUALITY_REDIS_NOTEXISTSTABLEFIELD;
+            }
         }
 
         ExcelDto excelDto = new ExcelDto();
@@ -541,11 +549,17 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             tableRuleSqlDTO.setFieldAggregate(dataCheckExtendPOs.get(0).getFieldAggregate());
             tableRuleSqlDTO.setThresholdValue(dataCheckPO.getThresholdValue());
             tableRuleSqlDTO.setSql(dataCheckPO.getCreateRule());
-            String roleSql = createRole(dataSourceConVO, tableRuleSqlDTO);
-            if (StringUtils.isEmpty(roleSql)) {
+            String roleSql = "";
+            try {
+                roleSql = createRole(dataSourceConVO, tableRuleSqlDTO);
+            } catch (Exception ex) {
+                log.error("质量报告Sql执行异常：" + ex);
                 continue;
             }
-
+            if (StringUtils.isEmpty(roleSql)) {
+                log.info(dataCheckPO.getRuleName() + ",质量报告sql为空");
+                continue;
+            }
             SheetDto sheet = new SheetDto();
             sheet.setSheetName(dataCheckPO.getRuleName());
             SheetDataDto sheetDataDto = resultSetToMap(dataSourceConVO, roleSql);
@@ -712,6 +726,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params dto 请求参数DTO
      */
     public String createData_MissingRule(TableRuleSqlDTO tableRuleSqlDTO) {
+        if (tableRuleSqlDTO == null || StringUtils.isEmpty(tableRuleSqlDTO.getTableName()) || StringUtils.isEmpty(tableRuleSqlDTO.getFieldName())) {
+            return "";
+        }
         String sql = String.format("SELECT * FROM %s WHERE %s IS NULL OR %s = '' ",
                 tableRuleSqlDTO.getTableName(), tableRuleSqlDTO.getFieldName(), tableRuleSqlDTO.getFieldName());
         return sql;
@@ -729,7 +746,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params thresholdValue 波动阈值
      */
     public String createField_AggregateRule(DataSourceConVO dataSourceConVO, TableRuleSqlDTO tableRuleSqlDTO) {
-
+        if (tableRuleSqlDTO == null || StringUtils.isEmpty(tableRuleSqlDTO.getTableName()) || StringUtils.isEmpty(tableRuleSqlDTO.getFieldName())) {
+            return "";
+        }
         String sql = "SELECT\n" +
                 "\t'%s' AS checkDataBase,\n" +
                 "\t'%s' AS checkTable,\n" +
