@@ -359,6 +359,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
     @Override
     public ResultEntity<Object> createQualityReport(int id) {
+        log.info("质量报告开始执行");
         if (id == 0) {
             return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, "");
         }
@@ -430,7 +431,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             noticeDTO.companyLogoPath = logoPaht;
             noticeManageImpl.sendEmailNotice(noticeDTO);
         }
-
+        log.info("质量报告执行结束");
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "");
     }
 

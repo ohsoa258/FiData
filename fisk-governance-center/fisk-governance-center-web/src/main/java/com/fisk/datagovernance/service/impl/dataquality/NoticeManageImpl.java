@@ -11,6 +11,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.utils.CronUtils;
 import com.fisk.common.core.utils.email.dto.MailSenderDTO;
 import com.fisk.common.core.utils.email.dto.MailServeiceDTO;
 import com.fisk.common.core.utils.email.method.MailSenderUtils;
@@ -32,6 +33,7 @@ import com.fisk.task.dto.task.UnifiedControlDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,7 +82,17 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
 
     @Override
     public Page<NoticeVO> getAll(NoticeQueryDTO query) {
-        return baseMapper.getAll(query.page, query.keyword);
+        Page<NoticeVO> all = baseMapper.getAll(query.page, query.keyword);
+        if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
+            all.getRecords().forEach(t -> {
+                // cron下次执行时间
+                if (StringUtils.isNotEmpty(t.getRunTimeCron())) {
+                    String cronExpress = CronUtils.getCronExpress(t.getRunTimeCron());
+                    t.setNextTime(cronExpress);
+                }
+            });
+        }
+        return all;
     }
 
     @Override
