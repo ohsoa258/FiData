@@ -94,8 +94,11 @@ public class ExcelUtils {
                 Sheet sheet = wb.getSheetAt(index);
                 // 获取行数
                 int getRow = 0;
+                short lastCellNum = 0;
                 for (Row row : sheet) {
-                    short lastCellNum = row.getLastCellNum();
+                    if (getRow == 0) {
+                        lastCellNum = row.getLastCellNum();
+                    }
                     if (getRow == 10) {
                         break;
                     }
