@@ -4,22 +4,18 @@ import com.csvreader.CsvReader;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
+import com.monitorjbl.xlsx.StreamingReader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.IntStream;
-
-import static com.fisk.common.core.constants.ExcelConstants.EXCEL2003_SUFFIX_NAME;
 
 /**
  * @author Lock
@@ -63,14 +59,19 @@ public class ExcelUtils {
      */
     private static Workbook readFromInputStream(InputStream inputStream, String ext) {
         try {
-            if (EXCEL2003_SUFFIX_NAME.equals(ext)) {
+            Workbook wk = StreamingReader.builder()
+                    .rowCacheSize(100)  //缓存到内存中的行数，默认是10
+                    .bufferSize(4096)  //读取资源时，缓存到内存的字节大小，默认是1024
+                    .open(inputStream);
+            return wk;
+            /*if (EXCEL2003_SUFFIX_NAME.equals(ext)) {
                 // Excel 2003
                 return new HSSFWorkbook(inputStream);
             } else {
                 // Excel 2007
                 return new XSSFWorkbook(inputStream);
-            }
-        } catch (IOException e) {
+            }*/
+        } catch (Exception e) {
             log.error("从流中读取excel文件失败，【readFromInputStream】方法报错，", e);
         }
         return null;
@@ -87,34 +88,54 @@ public class ExcelUtils {
      */
     private static List<List<String>> readExcelContentList(Workbook wb, int index) {
         if (wb != null) {
-            List<List<String>> content = new ArrayList<>();
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            Sheet sheet = wb.getSheetAt(index);
-            // excel行对象，0：第一行对象
-            Row row = sheet.getRow(0);
-            // 获取sheet页所有行数
-            int rowNum = sheet.getLastRowNum();
-            // 获取当前行的列数
-            int colNum = row.getPhysicalNumberOfCells();
-            // for循环 0: 从表头开始读取  1: 从正文开始读取
-            // 正文内容应该从第二行开始, 第一行为表头的标题
-            // 默认只读取前十条
-            int tenLines = Math.min(rowNum, 10);
-            for (int ri = 0; ri <= tenLines; ri++) {
-                row = sheet.getRow(ri);
-                int ci = 0;
-                List<String> col = new ArrayList<>();
-                while (ci < colNum) {
-                    Object obj = getCellFormatValue(row.getCell(ci++));
-                    obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
-                    col.add((String) obj);
+            try {
+                List<List<String>> content = new ArrayList<>();
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                Sheet sheet = wb.getSheetAt(index);
+                // 获取行数
+                int getRow = 0;
+                for (Row row : sheet) {
+                    short lastCellNum = row.getLastCellNum();
+                    if (getRow == 10) {
+                        break;
+                    }
+                    List<String> col = new ArrayList<>();
+                    for (int j = 0; j < lastCellNum; j++) {
+                        Object obj = getCellFormatValue(row.getCell(j));
+                        obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
+                        col.add((String) obj);
+                    }
+                    long count = col.stream().filter(StringUtils::isNoneBlank).count();
+                    Optional.of(col).filter(x -> count > 0).ifPresent(content::add);
+                    getRow++;
                 }
-                // 如果行是纯空白字符串，将被过滤
-                // 但有空列，而不是全部空白，将不会破坏行信息，而不会被过滤。
-                long count = col.stream().filter(StringUtils::isNoneBlank).count();
-                Optional.of(col).filter(x -> count > 0).ifPresent(content::add);
+                /*// excel行对象，0：第一行对象
+                Row row = sheet.getRow(0);
+                // 获取当前行的列数
+                int colNum = row.getPhysicalNumberOfCells();
+                // for循环 0: 从表头开始读取  1: 从正文开始读取
+                // 正文内容应该从第二行开始, 第一行为表头的标题
+                // 默认只读取前十条
+                int tenLines = Math.min(rowNum, 10);
+                for (int ri = 0; ri <= tenLines; ri++) {
+                    row = sheet.getRow(ri);
+                    int ci = 0;
+                    List<String> col = new ArrayList<>();
+                    while (ci < colNum) {
+                        Object obj = getCellFormatValue(row.getCell(ci++));
+                        obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
+                        col.add((String) obj);
+                    }
+                    // 如果行是纯空白字符串，将被过滤
+                    // 但有空列，而不是全部空白，将不会破坏行信息，而不会被过滤。
+                    long count = col.stream().filter(StringUtils::isNoneBlank).count();
+                    Optional.of(col).filter(x -> count > 0).ifPresent(content::add);
+                }*/
+                return content;
+            } catch (Exception e) {
+                log.error("", e);
+
             }
-            return content;
         }
         return null;
     }
@@ -159,13 +180,13 @@ public class ExcelUtils {
         if (cell != null) {
             // 判断当前Cell的Type
             switch (cell.getCellType()) {
-                case Cell.CELL_TYPE_NUMERIC:
-                case Cell.CELL_TYPE_FORMULA:
+                case NUMERIC:
+                case FORMULA:
                     // 判断当前的cell为Date, 取时间类型；数字则转字符串
                     cellvalue = DateUtil.isCellDateFormatted(cell) ? cell.getDateCellValue() : String.valueOf(cell.getNumericCellValue());
                     break;
                 // 如果当前Cell的Type为STRING
-                case Cell.CELL_TYPE_STRING:
+                case STRING:
                     cellvalue = cell.getRichStringCellValue().getString();
                     break;
                 default:
