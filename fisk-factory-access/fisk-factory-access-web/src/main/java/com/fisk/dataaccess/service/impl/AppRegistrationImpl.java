@@ -663,8 +663,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     allDatabases.addAll(mysqlConUtils.getAllDatabases(url, dto.connectAccount, dto.connectPwd));
                     break;
                 case POSTGRESQL:
+                    log.info("开始查询pg数据库");
+                    url = "jdbc:postgresql://" + dto.host + ":" + dto.port + "/postgres" ;
                     MysqlConUtils mysqlConUtils1 = new MysqlConUtils();
-                    allDatabases.addAll(mysqlConUtils1.getPgDatabases(dto.connectStr, dto.connectAccount, dto.connectPwd));
+                    allDatabases.addAll(mysqlConUtils1.getPgDatabases(url, dto.connectAccount, dto.connectPwd));
                     break;
                 case SQLSERVER:
                     url = "jdbc:sqlserver://" + dto.host + ":" + dto.port;
@@ -679,6 +681,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     break;
             }
         } catch (Exception e) {
+            log.error("测试连接失败:{}", e);
             throw new FkException(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
         }
 
