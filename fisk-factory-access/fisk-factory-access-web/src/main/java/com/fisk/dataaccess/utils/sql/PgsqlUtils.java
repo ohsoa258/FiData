@@ -287,6 +287,10 @@ public class PgsqlUtils {
                     while (iter.hasNext()) {
                         Map.Entry entry = iter.next();
                         insertSqlIndex = insertSqlIndex + entry.getKey() + ",";
+                        if (StringUtils.isEmpty(entry.getValue() == null ? "" : entry.getValue().toString())) {
+                            insertSqlLast = insertSqlLast + "null" + ",";
+                            continue;
+                        }
                         insertSqlLast = insertSqlLast + "'" + entry.getValue() + "'" + ",";
                     }
                     insertSqlIndex = insertSqlIndex.substring(0, insertSqlIndex.lastIndexOf(",")) + ") values";
