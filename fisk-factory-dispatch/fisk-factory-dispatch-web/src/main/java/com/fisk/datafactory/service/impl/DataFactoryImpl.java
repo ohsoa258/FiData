@@ -131,13 +131,14 @@ public class DataFactoryImpl implements IDataFactory {
 
             // 封装当前组件的其他属性(componentFirstFlag、componentEndFlag、pipeEndFlag、pipeEndDto)
             buildNifiOtherPorts(detailPo, nifiPortsHierarchyDto);
+            log.info("封装当前组件的pipeEndDto" + JSON.toJSONString(nifiPortsHierarchyDto));
 
             // 封装当前任务的上一级主任务中的最后一个表任务集合
             buildInportList(detailPo, nifiPortsHierarchyDto);
-
+            log.info("第二次操作该对象之后的值" + JSON.toJSONString(nifiPortsHierarchyDto));
             // 填充当前task的其他属性(管道名称、组件名称、表名等信息)
             buildAttribute(nifiPortsHierarchyDto);
-
+            log.info("第三次操作该对象之后的值" + JSON.toJSONString(nifiPortsHierarchyDto));
             return ResultEntityBuild.build(ResultEnum.SUCCESS, nifiPortsHierarchyDto);
         }
 

@@ -167,6 +167,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         }
 
         // 将当前管道的task结构存入redis
+        log.info("即将要存入redis的管道id" + workflowDTO.id);
         dataFactoryImpl.setTaskLinkedList(workflowDTO.id);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, workListDTO);
