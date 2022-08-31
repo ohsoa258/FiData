@@ -251,7 +251,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                         if (ifexist) {
                             //如果map里面不存在,装进去
                             hmget.put(topicName1, topicName1);
-                            if (hmget.size() == data.pipeEndDto.size()) {
+                            if (!CollectionUtils.isEmpty(data.pipeEndDto) && hmget.size() == data.pipeEndDto.size()) {
                                 //如果结束支点就它一个,装进去等30秒
                                 redisUtil.hmsset(hmgetKey, hmget, Long.parseLong(waitTime));
                                 // 存一个真正的过期时间(最后一个task,job)
@@ -267,7 +267,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                             }
                         } else {
                             //如果map里面存在,判断map的记录个数,如果不是所有支点结束,刷新过期时间3000
-                            if (hmget.size() == data.pipeEndDto.size()) {
+                            if (!CollectionUtils.isEmpty(data.pipeEndDto) && hmget.size() == data.pipeEndDto.size()) {
                                 //如果满足有所有支点的条件了,就刷新过期时间30秒
                                 redisUtil.hmsset(hmgetKey, hmget, Long.parseLong(waitTime));
                                 // 刷新task和job的过期时间
