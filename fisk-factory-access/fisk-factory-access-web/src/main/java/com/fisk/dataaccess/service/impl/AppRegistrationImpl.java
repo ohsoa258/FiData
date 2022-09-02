@@ -493,7 +493,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         appDataSourceDTO.connectPwd = "";
 
         //jwt类型展示返回结果json配置
-        if (appDataSourceDTO.authenticationMethod == 3) {
+        if (appDataSourceDTO.authenticationMethod != null && appDataSourceDTO.authenticationMethod == 3) {
             appDataSourceDTO.apiResultConfigDtoList = apiResultConfig.getApiResultConfig(modelDataSource.id);
         }
 
