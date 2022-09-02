@@ -58,5 +58,5 @@ public class ApiConfigPO extends BasePO {
     /**
      * 是否全字段去重
      */
-    public Integer fieldDistinct;
+    public Boolean fieldDistinct;
 }
