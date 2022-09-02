@@ -128,6 +128,7 @@ public enum ResultEnum {
     FILE_NOT_SELECTED(5051, "请选择需要读取的文件"),
     DRIVETYPE_IS_NULL(5052, "请选择驱动类型"),
     GET_DATABASE_ERROR(5053, "获取数据库失败,请重新检查参数"),
+    RETURN_RESULT_DEFINITION(5054, "返回结果定义必须选中获取键值"),
 
     /**
      * 后台任务模块
@@ -137,7 +138,7 @@ public enum ResultEnum {
     TASK_NIFI_NO_COMPONENTS_FOUND(6003, "未找到组件"),
     TASK_NIFI_DISPATCH_ERROR(6004, "调度失败"),
     TASK_NIFI_EMPTY_ALL_CONNECTIONS_REQUESTS_ERROR(6005, "清空队列失败"),
-    TASK_NIFI_CONTROLLER_SERVICES_RUN_STATUS_ERROR(6006,"禁用控制器服务失败"),
+    TASK_NIFI_CONTROLLER_SERVICES_RUN_STATUS_ERROR(6006, "禁用控制器服务失败"),
     TASK_NIFI_DELETE_FLOW(6007,"nifi删除失败"),
     TASK_TABLE_NOT_EXIST(6008,"表不存在"),
     TASK_TABLE_CREATE_FAIL(6009,"表创建失败"),

@@ -20,6 +20,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -34,6 +35,7 @@ import java.util.Map;
  * @date 2022/4/28 11:30
  */
 @Slf4j
+@Component
 public class BuildHttpRequestImpl implements IBuildHttpRequest {
 
     @Override
@@ -73,7 +75,7 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
         }
     }
 
-    private String sendPostRequest(ApiHttpRequestDTO dto, String json) throws IOException {
+    public String sendPostRequest(ApiHttpRequestDTO dto, String json) throws IOException {
         String result = null;
         try {
             HttpClient client = new DefaultHttpClient();

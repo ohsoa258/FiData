@@ -41,6 +41,9 @@ public class ApiConfigDTO {
     @ApiModelProperty(value = "实时api的json结构示例")
     public String pushData;
 
+    @ApiModelProperty(value = "是否全字段去重")
+    public Integer fieldDistinct;
+
     @ApiModelProperty(value = "0: 保存;   1: 保存&发布", required = true)
     public int flag;
 

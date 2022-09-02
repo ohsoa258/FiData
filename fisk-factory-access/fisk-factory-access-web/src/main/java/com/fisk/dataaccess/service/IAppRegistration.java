@@ -247,4 +247,13 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return list
      */
     List<AppBusinessInfoDTO> getAppList();
+
+    /**
+     * 根据jwt身份验证地址,获取token
+     *
+     * @param dto
+     * @return
+     */
+    String getApiToken(AppDataSourceDTO dto);
+
 }

@@ -101,4 +101,9 @@ public class AppDataSourcePO extends BasePO {
      * Bearer Token验证方式的Token
      */
     public String token;
+
+    /**
+     * jwt类型下，设置token过期时间
+     */
+    public Integer expirationTime;
 }

@@ -54,4 +54,9 @@ public class ApiConfigPO extends BasePO {
      * 实时api的json结构示例
      */
     public String pushData;
+
+    /**
+     * 是否全字段去重
+     */
+    public Integer fieldDistinct;
 }

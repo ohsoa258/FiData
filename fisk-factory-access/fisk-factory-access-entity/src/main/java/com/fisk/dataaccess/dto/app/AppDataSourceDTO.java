@@ -2,6 +2,7 @@ package com.fisk.dataaccess.dto.app;
 
 import com.fisk.common.core.baseObject.dto.BaseDTO;
 import com.fisk.common.core.baseObject.entity.BaseEntity;
+import com.fisk.dataaccess.dto.apiresultconfig.ApiResultConfigDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -74,6 +75,12 @@ public class AppDataSourceDTO extends BaseDTO {
 
     @ApiModelProperty(value = "Bearer Token验证方式的Token", required = true)
     public String token;
+
+    @ApiModelProperty(value = "jwt类型下，设置token过期时间", required = true)
+    public Integer expirationTime;
+
+    @ApiModelProperty(value = "jwt类型下，配置返回的json串类型", required = true)
+    public List<ApiResultConfigDTO> apiResultConfigDtoList;
 
     public AppDataSourceDTO(BaseEntity entity) {
         super(entity);

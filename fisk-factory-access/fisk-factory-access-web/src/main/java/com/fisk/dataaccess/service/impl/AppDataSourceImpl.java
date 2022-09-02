@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,6 +14,7 @@ import com.fisk.dataaccess.dto.v3.DataSourceDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
+import com.fisk.dataaccess.map.AppDataSourceMap;
 import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.service.IAppDataSource;
 import com.fisk.dataaccess.utils.sql.MysqlConUtils;
@@ -142,4 +144,12 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
 
         return null;
     }
+
+    public AppDataSourceDTO getDataSourceByAppId(long appId) {
+        QueryWrapper<AppDataSourcePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(AppDataSourcePO::getAppId, appId);
+        AppDataSourcePO po = mapper.selectOne(queryWrapper);
+        return AppDataSourceMap.INSTANCES.poToDto(po);
+    }
+
 }

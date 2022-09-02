@@ -29,6 +29,9 @@ import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataaccess.dto.GetConfigDTO;
+import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
+import com.fisk.dataaccess.dto.api.httprequest.JwtRequestDTO;
+import com.fisk.dataaccess.dto.apiresultconfig.ApiResultConfigDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
@@ -39,6 +42,7 @@ import com.fisk.dataaccess.map.AppDataSourceMap;
 import com.fisk.dataaccess.map.AppRegistrationMap;
 import com.fisk.dataaccess.mapper.*;
 import com.fisk.dataaccess.service.IAppRegistration;
+import com.fisk.dataaccess.utils.httprequest.Impl.BuildHttpRequestImpl;
 import com.fisk.dataaccess.utils.sql.MysqlConUtils;
 import com.fisk.dataaccess.utils.sql.SqlServerPlusUtils;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
@@ -61,6 +65,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -69,7 +74,10 @@ import javax.annotation.Resource;
 import java.sql.DriverManager;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static com.fisk.dataaccess.enums.HttpRequestEnum.POST;
 
 /**
  * @author Lock
@@ -81,7 +89,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Resource
     private AppDataSourceMapper appDataSourceMapper;
     @Resource
+    BuildHttpRequestImpl buildHttpRequest;
+    @Resource
     private AppRegistrationMapper mapper;
+    @Resource
+    private ApiResultConfigImpl apiResultConfig;
     @Resource
     private AppDataSourceImpl appDataSourceImpl;
     @Resource
@@ -110,6 +122,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     private DataFactoryClient dataFactoryClient;
     @Resource
     private DataManageClient dataManageClient;
+    @Resource
+    private RedisTemplate redisTemplate;
     @Resource
     RedisUtil redisUtil;
     @Value("${metadata-instance.hostname}")
@@ -166,6 +180,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         int insert = appDataSourceMapper.insert(modelDataSource);
         if (insert <= 0) {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        //jtw类型配置返回结果json串
+        if (appRegistrationDTO.appDatasourceDTO.authenticationMethod == 3) {
+            AppDataSourceDTO dataSourceByAppId = appDataSourceImpl.getDataSourceByAppId(po.getId());
+            apiResultConfig.apiResultConfig(dataSourceByAppId.id, appRegistrationDTO.appDatasourceDTO.apiResultConfigDtoList);
         }
 
         AtlasEntityQueryVO vo = new AtlasEntityQueryVO();
@@ -275,6 +295,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         modelDataSource.setId(appDataSid);
         modelDataSource.setAppId(id);
 
+        //jtw类型配置返回结果json串
+        if (dto.appDatasourceDTO.authenticationMethod == 3) {
+            AppDataSourceDTO dataSourceByAppId = appDataSourceImpl.getDataSourceByAppId(po.getId());
+            apiResultConfig.apiResultConfig(dataSourceByAppId.id, dto.appDatasourceDTO.apiResultConfigDtoList);
+        }
+
         return appDataSourceMapper.updateById(modelDataSource) > 0 ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
@@ -326,6 +352,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         int delDataSource = appDataSourceMapper.deleteByIdWithFill(modelDataSource);
         if (delDataSource < 0) {
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        // 3.删除tb_api_result_config表数据
+        ResultEnum resultEnum = apiResultConfig.delApiResultConfig(modelDataSource.id);
+        if (resultEnum != ResultEnum.SUCCESS) {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
@@ -443,7 +475,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return listAppName;
     }
 
-
     @Override
     public AppRegistrationDTO getData(long id) {
 
@@ -460,6 +491,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         AppDataSourceDTO appDataSourceDTO = AppDataSourceMap.INSTANCES.poToDto(modelDataSource);
         // 数据库密码不展示
         appDataSourceDTO.connectPwd = "";
+
+        //jwt类型展示返回结果json配置
+        if (appDataSourceDTO.authenticationMethod == 3) {
+            appDataSourceDTO.apiResultConfigDtoList = apiResultConfig.getApiResultConfig(modelDataSource.id);
+        }
+
         appRegistrationDTO.setAppDatasourceDTO(appDataSourceDTO);
 
         return appRegistrationDTO;
@@ -500,7 +537,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         List<AppDriveTypePO> list = appDriveTypeMapper.listData();
         return AppDriveTypeDTO.convertEntityList(list);
     }
-
 
     @TraceType(type = TraceTypeEnum.DATAACCESS_GET_ATLAS_ENTITY)
     @Override
@@ -570,7 +606,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         return updateById ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
-
 
     @Override
     public Page<AppRegistrationVO> listData(AppRegistrationQueryDTO query) {
@@ -783,7 +818,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
         return targetPage;
     }
-
 
     @Override
     public List<LogMessageFilterVO> getTableNameListByAppIdAndApiId(PipelineTableQueryDTO dto) {
@@ -1006,6 +1040,42 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Override
     public List<AppBusinessInfoDTO> getAppList() {
         return AppRegistrationMap.INSTANCES.listDtoToAppBusinessInfoDto(baseMapper.getDataList());
+    }
+
+    @Override
+    public String getApiToken(AppDataSourceDTO dto) {
+        Optional<ApiResultConfigDTO> first = dto.apiResultConfigDtoList.stream().filter(e -> e.checked == true).findFirst();
+        if (!first.isPresent()) {
+            throw new FkException(ResultEnum.RETURN_RESULT_DEFINITION);
+        }
+        try {
+            // jwt身份验证方式对象
+            ApiHttpRequestDTO apiHttpRequestDto = new ApiHttpRequestDTO();
+            apiHttpRequestDto.httpRequestEnum = POST;
+            // 身份验证地址
+            apiHttpRequestDto.uri = dto.connectStr;
+            // jwt账号&密码
+            JwtRequestDTO jwtRequestDto = new JwtRequestDTO();
+            jwtRequestDto.username = dto.connectAccount;
+            jwtRequestDto.password = dto.connectPwd;
+            apiHttpRequestDto.jwtRequestDTO = jwtRequestDto;
+
+            String json = JSON.toJSONString(apiHttpRequestDto.jwtRequestDTO);
+
+            String result = buildHttpRequest.sendPostRequest(apiHttpRequestDto, json);
+
+            JSONObject jsonObject = JSONObject.parseObject(result);
+            String token = (String) jsonObject.get(first.get().name);
+            if (StringUtils.isEmpty(token)) {
+                throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            }
+            //token存Redis
+            redisTemplate.opsForValue().set(dto.connectStr, token, dto.expirationTime, TimeUnit.MINUTES);
+            return token;
+        } catch (Exception e) {
+            log.error("getApiToken ex", e);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
     }
 
     /**

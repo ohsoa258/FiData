@@ -44,4 +44,9 @@ public class ApiParameterPO extends BasePO {
      */
     public String parameterValue;
 
+    /**
+     * 参数类型：1常量 2表达式 3脚本
+     */
+    public Integer parameterType;
+
 }

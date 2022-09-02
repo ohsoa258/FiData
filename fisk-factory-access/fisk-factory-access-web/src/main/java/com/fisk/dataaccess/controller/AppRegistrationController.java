@@ -299,4 +299,11 @@ public class AppRegistrationController {
     public ResultEntity<List<AppBusinessInfoDTO>> getAppList() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppList());
     }
+
+    @PostMapping("/getApiToken")
+    @ApiOperation(value = "jwt验证方式,测试获取token")
+    public ResultEntity<Object> getApiToken(@RequestBody AppDataSourceDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getApiToken(dto));
+    }
+
 }
