@@ -729,8 +729,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         if (tableRuleSqlDTO == null || StringUtils.isEmpty(tableRuleSqlDTO.getTableName()) || StringUtils.isEmpty(tableRuleSqlDTO.getFieldName())) {
             return "";
         }
-        String sql = String.format("SELECT * FROM %s WHERE %s IS NULL OR %s = '' ",
-                tableRuleSqlDTO.getTableName(), tableRuleSqlDTO.getFieldName(), tableRuleSqlDTO.getFieldName());
+        String sql = String.format("SELECT * FROM %s WHERE %s IS NULL OR %s = '' OR %s = 'null' ",
+                tableRuleSqlDTO.getTableName(), tableRuleSqlDTO.getFieldName(), tableRuleSqlDTO.getFieldName(), tableRuleSqlDTO.getFieldName());
         return sql;
     }
 
