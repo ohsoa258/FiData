@@ -175,6 +175,9 @@ public class EntityImpl implements IEntity {
                                     continue;
                                 }
                             }
+                            if (first == null) {
+                                continue;
+                            }
                             EntityStagingDTO dbStag = new EntityStagingDTO();
                             dbStag.guid = dbObject.getString("guid") + "_" + first.get().name;
                             dbStag.parent = dbObject.getString("guid");
