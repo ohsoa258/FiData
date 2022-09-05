@@ -194,7 +194,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         // 添加元数据信息
         ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
-        classificationInfoDto.setName(appRegistrationDTO.appName + "(" + appRegistrationDTO.appAbbreviation + ")");
+        classificationInfoDto.setName(appRegistrationDTO.appName + "_" + appRegistrationDTO.appAbbreviation);
         classificationInfoDto.setDescription(appRegistrationDTO.appDes);
         classificationInfoDto.setSourceType(1);
         classificationInfoDto.setDelete(false);
