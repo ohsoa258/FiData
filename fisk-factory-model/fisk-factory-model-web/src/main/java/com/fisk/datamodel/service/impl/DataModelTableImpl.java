@@ -27,6 +27,7 @@ import com.fisk.datamodel.mapper.fact.FactMapper;
 import com.fisk.datamodel.mapper.widetable.WideTableMapper;
 import com.fisk.datamodel.service.IDataModelTable;
 import com.fisk.task.enums.OlapTableEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
  * @author JianWenYang
  */
 @Service
+@Slf4j
 public class DataModelTableImpl implements IDataModelTable {
 
     @Resource
@@ -373,6 +375,7 @@ public class DataModelTableImpl implements IDataModelTable {
      */
     @Override
     public TableRuleInfoDTO setTableRule(TableRuleParameterDTO parameterDto) {
+        log.info("开始推送业务元数据， 参数:{}", JSON.toJSONString(parameterDto));
         TableRuleInfoDTO data = new TableRuleInfoDTO();
         List<TableRuleInfoDTO> filedList = new ArrayList<>();
         if (parameterDto.type == 1 || parameterDto.type == 2) {
