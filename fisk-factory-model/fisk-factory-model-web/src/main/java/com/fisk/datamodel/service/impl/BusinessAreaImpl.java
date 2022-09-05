@@ -75,10 +75,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -630,17 +627,17 @@ public class BusinessAreaImpl
 
     @Override
     public boolean setDataModelStructure(FiDataMetaDataReqDTO reqDto) {
-
         List<FiDataMetaDataDTO> list = new ArrayList<>();
+
+        // 表字段信息
+        List<FiDataMetaDataTreeDTO> tableFieldList = new ArrayList<>();
+
         if ("1".equalsIgnoreCase(reqDto.dataSourceId)) {
             // 第一层 - 1: dmp_dw
             FiDataMetaDataDTO dwDto = new FiDataMetaDataDTO();
             // FiData数据源id: 数据资产自定义
             dwDto.setDataSourceId(Integer.parseInt(reqDto.dataSourceId));
-
             // 第一层id
-//            String dwGuid = UUID.randomUUID().toString();
-            // 第一层子级
             List<FiDataMetaDataTreeDTO> dwDataTreeList = new ArrayList<>();
             FiDataMetaDataTreeDTO dwDataTree = new FiDataMetaDataTreeDTO();
             dwDataTree.setId(reqDto.dataSourceId);
@@ -648,20 +645,20 @@ public class BusinessAreaImpl
             dwDataTree.setLabel(reqDto.dataSourceName);
             dwDataTree.setLabelAlias(reqDto.dataSourceName);
             dwDataTree.setLevelType(LevelTypeEnum.DATABASE);
-
             // 封装dw所有结构数据
-            dwDataTree.setChildren(buildBusinessChildren(reqDto.dataSourceId, "dw", TableBusinessTypeEnum.FACTTABLE));
+            HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> fiDataMetaDataTree_DW = buildBusinessChildren(reqDto.dataSourceId, "dw", TableBusinessTypeEnum.FACTTABLE);
+            Map.Entry<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> nextTree_DW = fiDataMetaDataTree_DW.entrySet().iterator().next();
+            tableFieldList.addAll(nextTree_DW.getKey());
+            dwDataTree.setChildren(nextTree_DW.getValue());
             dwDataTreeList.add(dwDataTree);
-
             dwDto.setChildren(dwDataTreeList);
             list.add(dwDto);
         } else if ("4".equalsIgnoreCase(reqDto.dataSourceId)) {
+            // 第一层 - 1: dmp_olap
             FiDataMetaDataDTO olapDto = new FiDataMetaDataDTO();
             // FiData数据源id: 数据资产自定义
-            olapDto.setDataSourceId(Integer.parseInt(StringUtils.isBlank(reqDto.dataSourceId) ? String.valueOf(0) : reqDto.dataSourceId));
-
+            olapDto.setDataSourceId(Integer.parseInt(reqDto.dataSourceId));
             // 第一层id
-//            String olapGuid = UUID.randomUUID().toString();
             List<FiDataMetaDataTreeDTO> olapDataTreeList = new ArrayList<>();
             FiDataMetaDataTreeDTO olapDataTree = new FiDataMetaDataTreeDTO();
             olapDataTree.setId(reqDto.dataSourceId);
@@ -669,17 +666,22 @@ public class BusinessAreaImpl
             olapDataTree.setLabel(reqDto.dataSourceName);
             olapDataTree.setLabelAlias(reqDto.dataSourceName);
             olapDataTree.setLevelType(LevelTypeEnum.DATABASE);
-
-            // 封装data-access所有结构数据
-            olapDataTree.setChildren(buildBusinessChildren(reqDto.dataSourceId, "olap", TableBusinessTypeEnum.QUOTATABLE));
+            // 封装olap、宽表 所有结构数据
+            HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> fiDataMetaDataTree_OLAP = buildBusinessChildren(reqDto.dataSourceId, "olap", TableBusinessTypeEnum.QUOTATABLE);
+            Map.Entry<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> nextTree_OLAP = fiDataMetaDataTree_OLAP.entrySet().iterator().next();
+            tableFieldList.addAll(nextTree_OLAP.getKey());
+            olapDataTree.setChildren(nextTree_OLAP.getValue());
             olapDataTreeList.add(olapDataTree);
-
             olapDto.setChildren(olapDataTreeList);
             list.add(olapDto);
         }
         // 入redis
         if (!CollectionUtils.isEmpty(list)) {
             redisUtil.set(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId), JSON.toJSONString(list));
+        }
+        if (!CollectionUtils.isEmpty(tableFieldList)) {
+            String s = JSON.toJSONString(tableFieldList);
+            redisUtil.set(RedisKeyBuild.buildFiDataTableStructureKey(reqDto.dataSourceId), s);
         }
         return true;
     }
@@ -727,11 +729,13 @@ public class BusinessAreaImpl
      * @params id FiData数据源id
      * @params businessPoList
      */
-    private List<FiDataMetaDataTreeDTO> buildBusinessChildren(String id, String dourceType, TableBusinessTypeEnum tableBusinessTypeEnum) {
+    private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> buildBusinessChildren(String id, String dourceType, TableBusinessTypeEnum tableBusinessTypeEnum) {
 
         List<BusinessAreaPO> businessPoList = this.query().orderByDesc("create_time").list();
 
-        List<FiDataMetaDataTreeDTO> collect = businessPoList.stream()
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = new HashMap<>();
+        List<FiDataMetaDataTreeDTO> key = new ArrayList<>();
+        List<FiDataMetaDataTreeDTO> value = businessPoList.stream()
                 .filter(Objects::nonNull)
                 .map(business -> {
                     // 第三层: 业务域
@@ -808,6 +812,10 @@ public class BusinessAreaImpl
 
                                 // 维度文件夹子级
                                 dimensionFolderTreeDto.setChildren(dimensionTreeList);
+                                // 表字段信息单独再保存一份
+                                if (!CollectionUtils.isEmpty(dimensionTreeList)) {
+                                    key.addAll(dimensionTreeList);
+                                }
                                 return dimensionFolderTreeDto;
                             }).collect(Collectors.toList());
 
@@ -889,6 +897,7 @@ public class BusinessAreaImpl
                                                             factAttributeTreeDto.setLabelDesc(field.factFieldDes);
                                                             factAttributeTreeDto.setSourceId(Integer.parseInt(id));
                                                             factAttributeTreeDto.setSourceType(1);
+                                                            factAttributeTreeDto.setLabelBusinessType(tableBusinessTypeEnum.getValue());
                                                             factAttributeTreeDto.setParentName(fact.factTabName);
                                                             factAttributeTreeDto.setParentNameAlias(fact.factTabName);
                                                             return factAttributeTreeDto;
@@ -902,6 +911,10 @@ public class BusinessAreaImpl
 
                                 // 事实文件夹子级
                                 businessProcessTreeDto.setChildren(factTreeList);
+                                // 表字段信息单独再保存一份
+                                if (!CollectionUtils.isEmpty(factTreeList)) {
+                                    key.addAll(factTreeList);
+                                }
                                 return businessProcessTreeDto;
                             }).collect(Collectors.toList());
 
@@ -971,7 +984,10 @@ public class BusinessAreaImpl
                                 }).collect(Collectors.toList());
                         // 宽表文件夹子级
                         wideTableFolderTreeDto.setChildren(wideTableTreeList);
-
+                        // 表字段信息单独再保存一份
+                        if (!CollectionUtils.isEmpty(wideTableTreeList)) {
+                            key.addAll(wideTableTreeList);
+                        }
                         // 业务域子级-宽表
                         folderList.add(wideTableFolderTreeDto);
                     }
@@ -984,7 +1000,9 @@ public class BusinessAreaImpl
                     businessPoTreeDto.setChildren(folderList);
                     return businessPoTreeDto;
                 }).collect(Collectors.toList());
-        return collect;
+
+        hashMap.put(key, value);
+        return hashMap;
     }
 
     @Override
