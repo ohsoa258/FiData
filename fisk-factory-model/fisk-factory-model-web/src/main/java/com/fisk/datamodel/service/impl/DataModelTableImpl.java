@@ -378,7 +378,7 @@ public class DataModelTableImpl implements IDataModelTable {
         log.info("开始推送业务元数据， 参数:{}", JSON.toJSONString(parameterDto));
         TableRuleInfoDTO data = new TableRuleInfoDTO();
         List<TableRuleInfoDTO> filedList = new ArrayList<>();
-        if (parameterDto.type == 1 || parameterDto.type == 2) {
+        if (parameterDto.type == 1 || parameterDto.type == 3) {
             DimensionPO dimensionPo = dimensionMapper.selectById(parameterDto.tableId);
             if (dimensionPo == null) {
                 return data;
@@ -402,7 +402,7 @@ public class DataModelTableImpl implements IDataModelTable {
                     filedList.add(dto);
                 }
             }
-        } else if (parameterDto.type == 3 || parameterDto.type == 4) {
+        } else if (parameterDto.type == 2 || parameterDto.type == 4) {
             FactPO factPo = factMapper.selectById(parameterDto.tableId);
             if (factPo == null) {
                 return data;
