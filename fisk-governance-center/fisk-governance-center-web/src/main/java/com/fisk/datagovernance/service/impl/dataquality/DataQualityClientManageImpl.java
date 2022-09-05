@@ -87,6 +87,13 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         if (dataSourceId == 0 || StringUtils.isEmpty(tableUnique)) {
             return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, null);
         }
+        int finldDataSourceId = dataSourceId;
+        DataSourceConVO dataSourceConVO = dataSourceConManageImpl.getAllDataSource().stream().filter(t -> t.getDatasourceId() == finldDataSourceId && t.getDatasourceType() == SourceTypeEnum.FiData).findFirst().orElse(null);
+        if (dataSourceConVO == null) {
+            return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, null);
+        }
+        dataSourceId = dataSourceConVO.getId();
+
         // 数据校验、业务清洗、生命周期所对应的模板Id
         List<Integer> templateIdList = new ArrayList<>();
         // 数据校验、业务清洗、生命周期所对应的Id
