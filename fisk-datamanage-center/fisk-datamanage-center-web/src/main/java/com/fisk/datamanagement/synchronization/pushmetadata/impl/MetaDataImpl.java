@@ -505,9 +505,11 @@ public class MetaDataImpl implements IMetaData {
             //同步业务分类
             associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
             //同步业务元数据
-            associatedBusinessMetaData(atlasGuid, dbName, dto.comment, dto.name);
+            associatedBusinessMetaData(atlasGuid, dbName, dto.name);
             return atlasGuid;
         }
+        //同步业务元数据
+        associatedBusinessMetaData(atlasGuid, dbName, dto.name);
         return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_TABLE, dto);
     }
 
@@ -516,9 +518,8 @@ public class MetaDataImpl implements IMetaData {
      *
      * @param atlasGuid
      * @param dbName
-     * @param tableId
      */
-    public void associatedBusinessMetaData(String atlasGuid, String dbName, String tableId, String tableName) {
+    public void associatedBusinessMetaData(String atlasGuid, String dbName, String tableName) {
         //获取业务元数据配置信息
         QueryWrapper<BusinessMetadataConfigPO> businessMetadataConfigPoWrapper = new QueryWrapper<>();
         List<BusinessMetadataConfigPO> poList = businessMetadataConfigMapper.selectList(businessMetadataConfigPoWrapper);
@@ -532,8 +533,7 @@ public class MetaDataImpl implements IMetaData {
         if (!sourceData.isPresent()) {
             return;
         }
-
-        Integer newTableId = Integer.parseInt(tableId);
+        Integer tableId = 0;
         //数据类型:1数据接入,2数据建模
         Integer dataType = 0;
         //表类型:1dw维度表,2dw事实表,3doris维度表,4doris指标表
@@ -549,10 +549,11 @@ public class MetaDataImpl implements IMetaData {
                 SourceTableDTO dto = MetadataMapAtlasMap.INSTANCES.dtoToDto(item);
                 list.add(dto);
             }
-            Optional<SourceTableDTO> first = list.stream().filter(e -> newTableId == e.id).findFirst();
+            Optional<SourceTableDTO> first = list.stream().filter(e -> tableName.equals(e.tableName)).findFirst();
             if (!first.isPresent()) {
                 return;
             }
+            tableId = (int) first.get().id;
             dataType = DataTypeEnum.DATA_INPUT.getValue();
             tableType = first.get().type;
         }
@@ -567,6 +568,7 @@ public class MetaDataImpl implements IMetaData {
             if (!first.isPresent()) {
                 return;
             }
+            tableId = (int) first.get().id;
             dataType = DataTypeEnum.DATA_MODEL.getValue();
             tableType = first.get().type;
         }
@@ -581,10 +583,11 @@ public class MetaDataImpl implements IMetaData {
             if (!first.isPresent()) {
                 return;
             }
+            tableId = (int) first.get().id;
             dataType = DataTypeEnum.DATA_MODEL.getValue();
             tableType = first.get().type;
         }
-        TableRuleInfoDTO tableRuleInfo = setTableRuleInfo(sourceData.get().id, Integer.parseInt(tableId), tableName, dataType, tableType);
+        TableRuleInfoDTO tableRuleInfo = setTableRuleInfo(sourceData.get().id, tableId, tableName, dataType, tableType);
         setBusinessMetaDataAttributeValue(atlasGuid, tableRuleInfo, poList);
     }
 
@@ -1185,7 +1188,7 @@ public class MetaDataImpl implements IMetaData {
                                              int dataType,
                                              int tableType) {
         TableRuleInfoDTO dto = new TableRuleInfoDTO();
-        ResultEntity<TableRuleInfoDTO> tableRule = dataQualityClient.getTableRuleList(dataSourceId, tableName, 0);
+        ResultEntity<TableRuleInfoDTO> tableRule = dataQualityClient.getTableRuleList(dataSourceId, tableName, tableType);
         if (tableRule.code == ResultEnum.SUCCESS.getCode()) {
             dto = tableRule.data;
         }
@@ -1208,11 +1211,13 @@ public class MetaDataImpl implements IMetaData {
             } else {
                 dto.businessName = result.data.businessName;
                 dto.dataResponsiblePerson = result.data.dataResponsiblePerson;
-                dto.fieldRules.stream().map(e -> {
-                    e.businessName = data.businessName;
-                    e.dataResponsiblePerson = data.dataResponsiblePerson;
-                    return e;
-                });
+                if (!CollectionUtils.isEmpty(dto.fieldRules)) {
+                    dto.fieldRules.stream().map(e -> {
+                        e.businessName = data.businessName;
+                        e.dataResponsiblePerson = data.dataResponsiblePerson;
+                        return e;
+                    });
+                }
             }
         }
         return dto;
