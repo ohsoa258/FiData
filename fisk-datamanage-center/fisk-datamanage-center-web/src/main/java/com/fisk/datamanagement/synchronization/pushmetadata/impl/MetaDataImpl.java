@@ -508,6 +508,8 @@ public class MetaDataImpl implements IMetaData {
             associatedBusinessMetaData(atlasGuid, dbName, dto.name);
             return atlasGuid;
         }
+        //同步业务分类
+        associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
         //同步业务元数据
         associatedBusinessMetaData(atlasGuid, dbName, dto.name);
         return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_TABLE, dto);
@@ -650,6 +652,9 @@ public class MetaDataImpl implements IMetaData {
                     return;
                 }
                 data.typeName = first.get().name;
+                if (!StringUtils.isEmpty(first.get().appAbbreviation)) {
+                    data.typeName = data.typeName + "_" + first.get().appAbbreviation;
+                }
             } else if (DataSourceConfigEnum.DMP_DW.getValue() == sourceData.get().id) {
                 if ("dim_".equals(tableName.substring(0, 4))) {
                     data.typeName = "维度";
