@@ -626,6 +626,22 @@ public class BusinessAreaImpl
     }
 
     @Override
+    public List<FiDataMetaDataTreeDTO> getDataModelTableStructure(FiDataMetaDataReqDTO reqDto) {
+
+        boolean flag = redisUtil.hasKey(RedisKeyBuild.buildFiDataTableStructureKey(reqDto.dataSourceId));
+        if (!flag) {
+            // 将数据接入结构存入redis
+            setDataModelStructure(reqDto);
+        }
+        List<FiDataMetaDataTreeDTO> list = null;
+        String dataAccessStructure = redisUtil.get(RedisKeyBuild.buildFiDataTableStructureKey(reqDto.dataSourceId)).toString();
+        if (StringUtils.isNotBlank(dataAccessStructure)) {
+            list = JSONObject.parseArray(dataAccessStructure, FiDataMetaDataTreeDTO.class);
+        }
+        return list;
+    }
+
+    @Override
     public boolean setDataModelStructure(FiDataMetaDataReqDTO reqDto) {
         List<FiDataMetaDataDTO> list = new ArrayList<>();
 

@@ -5,10 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
+import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
@@ -114,6 +111,12 @@ public class BusinessAreaController {
     @ApiOperation(value = "获取数据建模结构")
     public ResultEntity<List<FiDataMetaDataDTO>> getDataModelStructure(@RequestBody FiDataMetaDataReqDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataModelStructure(dto));
+    }
+
+    @PostMapping("/getDataTableStructure")
+    @ApiOperation(value = "获取数据建模表结构")
+    public ResultEntity<List<FiDataMetaDataTreeDTO>> getDataModelTableStructure(@RequestBody FiDataMetaDataReqDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataModelTableStructure(dto));
     }
 
     @PostMapping("/setDataStructure")
