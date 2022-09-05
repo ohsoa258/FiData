@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -345,6 +346,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
      * @return
      */
     public List<FiDataMetaDataTreeDTO> getModelData(String id) {
+        // 视图和自定义视图缺少视图字段
         List<ModelPO> modelPoList = baseMapper.selectList(null);
         List<FiDataMetaDataTreeDTO> modelDataList = modelPoList.stream().filter(Objects::nonNull)
                 .map(e -> {
@@ -380,6 +382,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                     entityDto.setLevelType(LevelTypeEnum.TABLE);
                                     entityDto.setSourceType(1);
                                     entityDto.setSourceId(Integer.parseInt(id));
+                                    entityDto.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
 
                                     // 获取实体下的属性
                                     List<AttributeInfoDTO> attributeList = entityService.getAttributeById(item.getId(), null).getAttributeList();
@@ -411,6 +414,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                                 attributeDto.setLabelDesc(iter.getDesc());
                                                 attributeDto.setSourceType(1);
                                                 attributeDto.setSourceId(Integer.parseInt(id));
+                                                attributeDto.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                                                 return attributeDto;
                                             }).collect(Collectors.toList());
 
@@ -434,6 +438,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                     entityDto.setLevelType(LevelTypeEnum.VIEW);
                                     entityDto.setSourceType(1);
                                     entityDto.setSourceId(Integer.parseInt(id));
+                                    entityDto.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                                     return entityDto;
                                 }).collect(Collectors.toList());
                         dataList.addAll(viwDataList);
@@ -462,6 +467,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                                 entityDto.setLevelType(LevelTypeEnum.VIEW);
                                                 entityDto.setSourceType(1);
                                                 entityDto.setSourceId(Integer.parseInt(id));
+                                                entityDto.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                                                 viwGroupDataList.add(entityDto);
                                             });
                                 });
