@@ -15,7 +15,7 @@ import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
 import com.fisk.datamanagement.service.IProcess;
-import com.fisk.datamanagement.synchronization.fidata.SynchronizationKinShip;
+import com.fisk.datamanagement.synchronization.pushmetadata.impl.MetaDataImpl;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +38,7 @@ public class ProcessImpl implements IProcess {
     @Resource
     AtlasClient atlasClient;
     @Resource
-    SynchronizationKinShip synchronizationPgKinShip;
+    MetaDataImpl metaData;
     @Resource
     MetadataMapAtlasMapper metadataMapAtlasMapper;
     @Resource
@@ -182,7 +182,7 @@ public class ProcessImpl implements IProcess {
                 continue;
             }
             //添加血缘关系连线
-            String relationShipGuid = synchronizationPgKinShip.addRelationShip(dto.entity.guid,
+            String relationShipGuid = metaData.addRelationShip(dto.entity.guid,
                     dto.entity.attributes.qualifiedName,
                     guid,
                     first.get().uniqueAttributes.qualifiedName);

@@ -9,22 +9,26 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceFieldDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.datagovernance.client.DataQualityClient;
 import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDTO;
-import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
-import com.fisk.datamanagement.dto.entity.EntityDTO;
-import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
-import com.fisk.datamanagement.dto.entity.EntityTypeDTO;
+import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.dto.process.*;
 import com.fisk.datamanagement.dto.relationship.RelationshipDTO;
+import com.fisk.datamanagement.entity.BusinessMetadataConfigPO;
 import com.fisk.datamanagement.entity.MetadataMapAtlasPO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
+import com.fisk.datamanagement.enums.DataTypeEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.map.MetaDataMap;
+import com.fisk.datamanagement.map.MetadataMapAtlasMap;
+import com.fisk.datamanagement.mapper.BusinessMetadataConfigMapper;
 import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
 import com.fisk.datamanagement.service.impl.ClassificationImpl;
 import com.fisk.datamanagement.service.impl.EntityImpl;
@@ -46,10 +50,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -68,6 +69,8 @@ public class MetaDataImpl implements IMetaData {
     @Resource
     MetadataMapAtlasMapper metadataMapAtlasMapper;
     @Resource
+    BusinessMetadataConfigMapper businessMetadataConfigMapper;
+    @Resource
     PublishTaskClient client;
     @Resource
     UserClient userClient;
@@ -75,6 +78,8 @@ public class MetaDataImpl implements IMetaData {
     DataAccessClient dataAccessClient;
     @Resource
     DataModelClient dataModelClient;
+    @Resource
+    DataQualityClient dataQualityClient;
 
     @Value("${atlas.entity}")
     private String entity;
@@ -499,9 +504,88 @@ public class MetaDataImpl implements IMetaData {
             atlasGuid = addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_TABLE, parentEntityGuid);
             //同步业务分类
             associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
+            //同步业务元数据
+            associatedBusinessMetaData(atlasGuid, dbName, dto.comment, dto.name);
             return atlasGuid;
         }
         return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_TABLE, dto);
+    }
+
+    /**
+     * 同步业务元数据
+     *
+     * @param atlasGuid
+     * @param dbName
+     * @param tableId
+     */
+    public void associatedBusinessMetaData(String atlasGuid, String dbName, String tableId, String tableName) {
+        //获取业务元数据配置信息
+        QueryWrapper<BusinessMetadataConfigPO> businessMetadataConfigPoWrapper = new QueryWrapper<>();
+        List<BusinessMetadataConfigPO> poList = businessMetadataConfigMapper.selectList(businessMetadataConfigPoWrapper);
+
+        //获取数据源列表
+        ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
+        if (allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
+            return;
+        }
+        Optional<DataSourceDTO> sourceData = allFiDataDataSource.data.stream().filter(e -> e.conDbname.equals(dbName)).findFirst();
+        if (!sourceData.isPresent()) {
+            return;
+        }
+
+        Integer newTableId = Integer.parseInt(tableId);
+        //数据类型:1数据接入,2数据建模
+        Integer dataType = 0;
+        //表类型:1dw维度表,2dw事实表,3doris维度表,4doris指标表
+        Integer tableType = 0;
+        //ods
+        if (sourceData.get().id == DataSourceConfigEnum.DMP_ODS.getValue()) {
+            ResultEntity<List<DataAccessSourceTableDTO>> result = dataAccessClient.getDataAccessMetaData();
+            if (result.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(result.data)) {
+                return;
+            }
+            List<SourceTableDTO> list = new ArrayList<>();
+            for (DataAccessSourceTableDTO item : result.data) {
+                SourceTableDTO dto = MetadataMapAtlasMap.INSTANCES.dtoToDto(item);
+                list.add(dto);
+            }
+            Optional<SourceTableDTO> first = list.stream().filter(e -> newTableId == e.id).findFirst();
+            if (!first.isPresent()) {
+                return;
+            }
+            dataType = DataTypeEnum.DATA_INPUT.getValue();
+            tableType = first.get().type;
+        }
+        //dw
+        else if (sourceData.get().id == DataSourceConfigEnum.DMP_DW.getValue()) {
+            ResultEntity<Object> result = dataModelClient.getDataModelTable(1);
+            if (result.code != ResultEnum.SUCCESS.getCode()) {
+                return;
+            }
+            List<SourceTableDTO> list = JSON.parseArray(JSON.toJSONString(result.data), SourceTableDTO.class);
+            Optional<SourceTableDTO> first = list.stream().filter(e -> tableName.equals(e.tableName)).findFirst();
+            if (!first.isPresent()) {
+                return;
+            }
+            dataType = DataTypeEnum.DATA_MODEL.getValue();
+            tableType = first.get().type;
+        }
+        //olap
+        else if (sourceData.get().id == DataSourceConfigEnum.DMP_OLAP.getValue()) {
+            ResultEntity<Object> result = dataModelClient.getDataModelTable(2);
+            if (result.code != ResultEnum.SUCCESS.getCode()) {
+                return;
+            }
+            List<SourceTableDTO> list = JSON.parseArray(JSON.toJSONString(result.data), SourceTableDTO.class);
+            Optional<SourceTableDTO> first = list.stream().filter(e -> tableName.equals(e.tableName)).findFirst();
+            if (!first.isPresent()) {
+                return;
+            }
+            dataType = DataTypeEnum.DATA_MODEL.getValue();
+            tableType = first.get().type;
+        }
+        TableRuleInfoDTO tableRuleInfo = setTableRuleInfo(sourceData.get().id, Integer.parseInt(tableId), tableName, dataType, tableType);
+        setBusinessMetaDataAttributeValue(atlasGuid, tableRuleInfo, poList);
     }
 
     /**
@@ -1087,5 +1171,87 @@ public class MetaDataImpl implements IMetaData {
         return data.getString("guid");
     }
 
+    /**
+     * 设置业务元数据表规则
+     *
+     * @param dataSourceId
+     * @param tableId
+     * @param tableName
+     * @param dataType
+     */
+    public TableRuleInfoDTO setTableRuleInfo(int dataSourceId,
+                                             int tableId,
+                                             String tableName,
+                                             int dataType,
+                                             int tableType) {
+        TableRuleInfoDTO dto = new TableRuleInfoDTO();
+        ResultEntity<TableRuleInfoDTO> tableRule = dataQualityClient.getTableRuleList(dataSourceId, tableName, 0);
+        if (tableRule.code == ResultEnum.SUCCESS.getCode()) {
+            dto = tableRule.data;
+        }
+        TableRuleParameterDTO parameter = new TableRuleParameterDTO();
+        parameter.type = tableType;
+        parameter.tableId = tableId;
+        ResultEntity<TableRuleInfoDTO> result = new ResultEntity<>();
+        TableRuleInfoDTO data = result.data;
+        //数仓建模
+        if (dataType == DataTypeEnum.DATA_MODEL.getValue()) {
+            result = dataModelClient.setTableRule(parameter);
+        }
+        //数据接入
+        else if (dataType == DataTypeEnum.DATA_INPUT.getValue()) {
+            result = dataAccessClient.buildTableRuleInfo(parameter);
+        }
+        if (result.code == ResultEnum.SUCCESS.getCode()) {
+            if (StringUtils.isEmpty(dto.name)) {
+                dto = result.data;
+            } else {
+                dto.businessName = result.data.businessName;
+                dto.dataResponsiblePerson = result.data.dataResponsiblePerson;
+                dto.fieldRules.stream().map(e -> {
+                    e.businessName = data.businessName;
+                    e.dataResponsiblePerson = data.dataResponsiblePerson;
+                    return e;
+                });
+            }
+        }
+        return dto;
+    }
+
+    public ResultEnum setBusinessMetaDataAttributeValue(String guid,
+                                                        TableRuleInfoDTO tableRuleInfoDTO,
+                                                        List<BusinessMetadataConfigPO> poList) {
+        EntityAssociatedMetaDataDTO dto = new EntityAssociatedMetaDataDTO();
+        dto.guid = guid;
+        Map<String, List<BusinessMetadataConfigPO>> collect = poList.stream()
+                .collect(Collectors.groupingBy(BusinessMetadataConfigPO::getBusinessMetadataName));
+        JSONObject jsonObject = new JSONObject();
+        for (String businessMetaDataName : collect.keySet()) {
+            JSONObject attributeJson = new JSONObject();
+            if ("QualityRules".equals(businessMetaDataName)) {
+                //校验规则
+                attributeJson.put("ValidationRules", tableRuleInfoDTO.checkRules);
+                attributeJson.put("CleaningRules", tableRuleInfoDTO.filterRules);
+                attributeJson.put("LifeCycle", tableRuleInfoDTO.lifecycleRules);
+                attributeJson.put("AlarmSet", tableRuleInfoDTO.noticeRules);
+            } else if ("BusinessDefinition".equals(businessMetaDataName)) {
+                attributeJson.put("BusinessName", tableRuleInfoDTO.businessName);
+            } else if ("BusinessRules".equals(businessMetaDataName)) {
+                attributeJson.put("UpdateRules", tableRuleInfoDTO.updateRules);
+                attributeJson.put("TransformationRules", tableRuleInfoDTO.transformationRules == null ? "" : tableRuleInfoDTO.transformationRules);
+                attributeJson.put("ComputationalFormula", "");
+                attributeJson.put("KnownDataProblem", tableRuleInfoDTO.knownDataProblem == null ? "" : tableRuleInfoDTO.knownDataProblem);
+                attributeJson.put("DirectionsForUse", tableRuleInfoDTO.directionsForUse == null ? "" : tableRuleInfoDTO.directionsForUse);
+                attributeJson.put("ValidValueConstraint", tableRuleInfoDTO.validValueConstraint);
+            } else {
+                attributeJson.put("DataResponsibilityDepartment", "");
+                attributeJson.put("DataResponsiblePerson", tableRuleInfoDTO.dataResponsiblePerson);
+                attributeJson.put("Stakeholders", tableRuleInfoDTO.stakeholders);
+            }
+            jsonObject.put(businessMetaDataName, attributeJson);
+        }
+        dto.businessMetaDataAttribute = jsonObject;
+        return entityImpl.entityAssociatedMetaData(dto);
+    }
 
 }
