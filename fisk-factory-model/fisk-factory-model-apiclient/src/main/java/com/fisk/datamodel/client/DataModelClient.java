@@ -218,8 +218,8 @@ public interface DataModelClient {
      * @param dto
      * @return
      */
-    @GetMapping("/DataManagement/setTableRule")
-    ResultEntity<TableRuleInfoDTO> setTableRule(TableRuleParameterDTO dto);
+    @PostMapping("/DataManagement/setTableRule")
+    ResultEntity<TableRuleInfoDTO> setTableRule(@RequestBody TableRuleParameterDTO dto);
 
     /**
      * 获取白泽数据源

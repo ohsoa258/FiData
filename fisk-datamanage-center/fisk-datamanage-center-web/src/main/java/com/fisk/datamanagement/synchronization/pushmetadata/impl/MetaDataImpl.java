@@ -1188,7 +1188,7 @@ public class MetaDataImpl implements IMetaData {
                                              int dataType,
                                              int tableType) {
         TableRuleInfoDTO dto = new TableRuleInfoDTO();
-        ResultEntity<TableRuleInfoDTO> tableRule = dataQualityClient.getTableRuleList(dataSourceId, tableName, tableType);
+        ResultEntity<TableRuleInfoDTO> tableRule = dataQualityClient.getTableRuleList(dataSourceId, String.valueOf(tableId), tableType);
         if (tableRule.code == ResultEnum.SUCCESS.getCode()) {
             dto = tableRule.data;
         }

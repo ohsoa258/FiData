@@ -9,10 +9,7 @@ import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.service.IDataModelTable;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
@@ -33,8 +30,8 @@ public class DataManagementController {
     }
 
     @ApiOperation("获取数仓中每个表中的业务元数据配置")
-    @GetMapping("/setTableRule")
-    public ResultEntity<TableRuleInfoDTO> setTableRule(TableRuleParameterDTO dto) {
+    @PostMapping("/setTableRule")
+    public ResultEntity<TableRuleInfoDTO> setTableRule(@RequestBody TableRuleParameterDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setTableRule(dto));
     }
 
