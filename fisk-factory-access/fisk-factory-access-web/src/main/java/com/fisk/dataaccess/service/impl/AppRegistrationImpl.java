@@ -356,9 +356,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
 
         // 3.删除tb_api_result_config表数据
-        ResultEnum resultEnum = apiResultConfig.delApiResultConfig(modelDataSource.id);
-        if (resultEnum != ResultEnum.SUCCESS) {
-            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+        if (modelDataSource.authenticationMethod != null && modelDataSource.authenticationMethod == 3) {
+            ResultEnum resultEnum = apiResultConfig.delApiResultConfig(modelDataSource.id);
+            if (resultEnum != ResultEnum.SUCCESS) {
+                return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+            }
         }
 
         // 删除应用下的api(api是新增的功能,在改动最少代码的情况下,只删除api)
@@ -439,7 +441,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         // 删除元数据信息
         ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
-        classificationInfoDto.setName(model.appName + "(" + model.appAbbreviation + ")");
+        classificationInfoDto.setName(model.appName + "_" + model.appAbbreviation);
         classificationInfoDto.setDescription(model.appDes);
         classificationInfoDto.setSourceType(1);
         classificationInfoDto.setDelete(true);
