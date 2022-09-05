@@ -79,7 +79,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     private String uploadUrl;
     @Value("${file.echoPath}")
     private String echoPath;
-    @Value("${file.logoPath}")
+    //@Value("${file.logoPath}")
     private String logoPaht;
 
     @Override
