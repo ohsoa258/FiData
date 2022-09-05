@@ -971,7 +971,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 应用负责人
         tableRuleInfoDto.dataResponsiblePerson = appRegistrationDto.appPrincipal;
         // 表名
-        StringBuilder tablePrefix = null;
+        StringBuilder tablePrefix = new StringBuilder();
         tablePrefix.append("ods_").append(appRegistrationDto.appAbbreviation).append("_");
         tableRuleInfoDto.name = tablePrefix + data.tableName;
         // 类型 1: 表
