@@ -509,7 +509,7 @@ public class MetaDataImpl implements IMetaData {
             return atlasGuid;
         }
         //同步业务分类
-        associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
+        //associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
         //同步业务元数据
         associatedBusinessMetaData(atlasGuid, dbName, dto.name);
         return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_TABLE, dto);
