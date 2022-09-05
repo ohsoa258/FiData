@@ -2302,9 +2302,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         filedValues += dto.queryStartTime == null ? ",'0000-01-01 00:00:00'" : (",'" + dto.queryStartTime + "'");
         filedValues += dto.queryEndTime == null ? ",now()" : (",'" + dto.queryEndTime + "'");
         if (dto.selectSql != null && dto.selectSql != "") {
-            filedValues += ",\"" + dto.selectSql + "\"";
+            filedValues += ",\"" + dto.selectSql.replaceAll("\"","\\\\\"") + "\"";
         } else {
-            filedValues += ",\"" + selectSql + "\"";
+            filedValues += ",\"" + selectSql.replaceAll("\"","\\\\\"") + "\"";
         }
 
         return "INSERT INTO tb_etl_log ( tablename, startdate, `status`,query_start_time,query_end_time,query_sql) " +
