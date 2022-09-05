@@ -27,9 +27,9 @@ public class DataCheckSyncDTO {
     public String tablePrefix;
 
     /**
-     * 表唯一标识：表名称/表ID
+     * 表唯一标识：表ID
      */
-    @ApiModelProperty(value = "表唯一标识：表名称/表ID")
+    @ApiModelProperty(value = "表唯一标识：表ID")
     public String tableUnique;
 
     /**

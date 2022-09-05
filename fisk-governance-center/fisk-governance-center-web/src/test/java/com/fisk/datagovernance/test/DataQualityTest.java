@@ -9,8 +9,15 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.mail.javamail.MimeMailMessage;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 import java.util.Properties;
 
 /**
@@ -42,27 +49,54 @@ public class DataQualityTest {
 
     @Test
     public void testSendEmail(){
-        JavaMailSenderImpl sender = new JavaMailSenderImpl();
-        sender.setHost("smtp.office365.com");
-        sender.setPort(587);
-        sender.setUsername("dick@fisksoft.com");
-        sender.setPassword("Lijiayun@0424...");
-        Properties properties = sender.getJavaMailProperties();
-        properties.put("mail.smtp.auth", true);
-        properties.put("mail.smtp.timeout", "25000");
-        properties.put("mail.smtp.starttls.enable", "true");
+//        JavaMailSenderImpl sender = new JavaMailSenderImpl();
+//        sender.setHost("192.168.1.45");
+//        sender.setPort(25);
+//        //sender.setUsername("dick@fisksoft.com");
+//        //sender.setPassword("Lijiayun@0424...");
+//        Properties properties = sender.getJavaMailProperties();
+//        properties.put("mail.smtp.auth", false);
+//        //properties.put("mail.smtp.timeout", "25000");
+//        //properties.put("mail.smtp.starttls.enable", "true");
+//
+//        SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+//        simpleMailMessage.setFrom("dick@fisksoft.com");
+//
+//        simpleMailMessage.setTo("jianwen@fisksoft.com.cn");
+//        simpleMailMessage.setSubject("test");
+//        String text = "email.getText()";
+//        simpleMailMessage.setText(text);
+//
+//        try{
+//            sender.send(simpleMailMessage);
+//        } catch (Exception e) {
+//            throw e;
+//        }
+        Properties  mailpro = new Properties();
 
-        SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
-        simpleMailMessage.setFrom("dick@fisksoft.com");
+        mailpro.setProperty("mail.smtp.host", "192.168.1.45");
+        mailpro.setProperty("mail.smtp.port", "25");
+        mailpro.setProperty("mail.smtp.auth", "false");
+        mailpro.setProperty("mail.smtp.starttls.enable", "false");
+        mailpro.setProperty("mail.transport.protocol", "smtp");
 
-        simpleMailMessage.setTo("jianwen@fisksoft.com.cn");
-        simpleMailMessage.setSubject("test");
-        String text = "email.getText()";
-        simpleMailMessage.setText(text);
+        Session session = Session.getDefaultInstance(mailpro);
 
-        try{
-            sender.send(simpleMailMessage);
+        session.setDebug(true);
+
+        Message msg = new MimeMessage(session);
+
+        try {
+            msg.setFrom(new InternetAddress("fiskcolud@fisksoft.com"));
+            msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse("dick@fisksoft.com"));
+
+            msg.setSubject("测试免认证方式发送邮件！！！");
+
+            msg.setText("测试一下，邮件来自 http://www.donews.net/lizongbo ");
+
+            Transport.send(msg);
         } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
