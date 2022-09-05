@@ -183,7 +183,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
 
         //jtw类型配置返回结果json串
-        if (appRegistrationDTO.appDatasourceDTO.authenticationMethod == 3) {
+        if (appRegistrationDTO.appDatasourceDTO.authenticationMethod != null && appRegistrationDTO.appDatasourceDTO.authenticationMethod == 3) {
             AppDataSourceDTO dataSourceByAppId = appDataSourceImpl.getDataSourceByAppId(po.getId());
             apiResultConfig.apiResultConfig(dataSourceByAppId.id, appRegistrationDTO.appDatasourceDTO.apiResultConfigDtoList);
         }
