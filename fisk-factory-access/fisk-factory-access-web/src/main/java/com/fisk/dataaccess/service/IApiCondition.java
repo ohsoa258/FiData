@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.service;
 
-import com.fisk.dataaccess.dto.apicondition.ApiConditionDTO;
+import com.fisk.dataaccess.dto.apicondition.ApiConditionInfoDTO;
 
 import java.util.List;
 
@@ -14,6 +14,6 @@ public interface IApiCondition {
      *
      * @return
      */
-    List<ApiConditionDTO> getApiConditionList();
+    List<ApiConditionInfoDTO> getApiConditionList();
 
 }

@@ -15,6 +15,10 @@ import lombok.EqualsAndHashCode;
 public class DataTargetPO extends BasePO {
 
     /**
+     * 数据目标应用id
+     */
+    public Integer dataTargetAppId;
+    /**
      * 1:Oracle 2:SqlServer 3:MySql 4:FTP 5:API
      */
     public Integer type;
