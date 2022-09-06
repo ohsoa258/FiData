@@ -19,9 +19,10 @@ public interface DataTargetMapper extends FKBaseMapper<DataTargetPO> {
      *
      * @param page
      * @param query
+     * @param dataTargetAppId
      * @return
      */
-    Page<DataTargetPageResultDTO> queryList(Page<DataTargetPageResultDTO> page, @Param("query") String query);
+    Page<DataTargetPageResultDTO> queryList(Page<DataTargetPageResultDTO> page, @Param("query") String query, @Param("dataTargetAppId") Long dataTargetAppId);
 
     /**
      * 新增数据目标

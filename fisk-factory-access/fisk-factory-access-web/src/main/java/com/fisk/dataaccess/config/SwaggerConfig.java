@@ -36,6 +36,7 @@ public class SwaggerConfig {
     public static final String API_CONFIG = "api-config-controller";
     public static final String API_PARAMETER = "api-parameter-controller";
     public static final String DATA_TARGET = "data-target-controller";
+    public static final String DATA_TARGET_APP = "data-target-app-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -55,6 +56,7 @@ public class SwaggerConfig {
                 .tags(new Tag(API_CONFIG, "api配置"))
                 .tags(new Tag(API_PARAMETER, "非实时api请求参数"))
                 .tags(new Tag(DATA_TARGET, "数据目标"))
+                .tags(new Tag(DATA_TARGET_APP, "数据目标应用"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

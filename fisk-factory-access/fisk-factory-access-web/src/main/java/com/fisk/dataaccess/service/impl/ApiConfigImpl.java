@@ -1187,9 +1187,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         ResultEntity<Object> excuteResult;
         try {
             if (importDataDto == null) {
-                excuteResult = pgsqlUtils.executeBatchPgsql(tablePrefixName, targetTable);
+                excuteResult = pgsqlUtils.executeBatchPgsql(tablePrefixName, targetTable, apiTableDtoList);
             } else {
-                excuteResult = pgsqlUtils.executeBatchPgsql(importDataDto, tablePrefixName, targetTable);
+                excuteResult = pgsqlUtils.executeBatchPgsql(importDataDto, tablePrefixName, targetTable, apiTableDtoList);
             }
         } catch (Exception e) {
             return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR);

@@ -9,21 +9,21 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
+import com.fisk.dataaccess.dto.json.ApiTableDTO;
 import com.fisk.dataaccess.dto.json.JsonTableData;
 import com.fisk.dataaccess.dto.pgsqlmetadata.ApiSqlResultDTO;
+import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
+import com.fisk.dataaccess.utils.json.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Lock
@@ -173,7 +173,7 @@ public class PgsqlUtils {
      * @author Lock
      * @date 2022/1/21 17:24
      */
-    public ResultEntity<Object> executeBatchPgsql(String tablePrefixName, List<JsonTableData> res) throws Exception {
+    public ResultEntity<Object> executeBatchPgsql(String tablePrefixName, List<JsonTableData> res, List<ApiTableDTO> apiTableDtoList) throws Exception {
         Connection con = getPgConn();
         Statement statement = con.createStatement();
         //这里必须设置为false，我们手动批量提交
@@ -185,12 +185,27 @@ public class PgsqlUtils {
         int countSql = 0;
         List<ApiSqlResultDTO> list = new ArrayList<>();
         try {
+            JSONArray data = new JSONArray();
             for (JsonTableData re : res) {
 
                 ApiSqlResultDTO apiSqlResultDto = new ApiSqlResultDTO();
-
+                for (ApiTableDTO apiTable : apiTableDtoList) {
+                    if (Objects.equals(apiTable.tableName, re.table)) {
+                        List<TableFieldsDTO> tableFields = apiTable.list;
+                        Map<String, String> map = new HashMap<>();
+                        for (TableFieldsDTO tableField : tableFields) {
+                            if (!Objects.equals(tableField.sourceFieldName, tableField.fieldName)) {
+                                map.put(tableField.sourceFieldName, tableField.fieldName);
+                            }
+                        }
+                        data = re.data;
+                        if (map.size() != 0) {
+                            String newData = JsonUtils.updateJsonArray(JSON.toJSONString(data), map);
+                            data = JSON.parseArray(newData);
+                        }
+                    }
+                }
                 String tableName = re.table;
-                JSONArray data = re.data;
                 for (Object datum : data) {
                     String insertSqlIndex = "insert into ";
                     String insertSqlLast = "(";
@@ -259,7 +274,7 @@ public class PgsqlUtils {
      * @author Lock
      * @date 2022/7/18 14:26
      */
-    public ResultEntity<Object> executeBatchPgsql(ApiImportDataDTO importDataDto, String tablePrefixName, List<JsonTableData> res) throws Exception {
+    public ResultEntity<Object> executeBatchPgsql(ApiImportDataDTO importDataDto, String tablePrefixName, List<JsonTableData> res, List<ApiTableDTO> apiTableDtoList) throws Exception {
         Connection con = getPgConn();
         Statement statement = con.createStatement();
         //这里必须设置为false，我们手动批量提交
@@ -271,12 +286,26 @@ public class PgsqlUtils {
         int countSql = 0;
         List<ApiSqlResultDTO> list = new ArrayList<>();
         try {
+            JSONArray data = new JSONArray();
             for (JsonTableData re : res) {
-
+                for (ApiTableDTO apiTable : apiTableDtoList) {
+                    if (Objects.equals(apiTable.tableName, re.table)) {
+                        List<TableFieldsDTO> tableFields = apiTable.list;
+                        Map<String, String> map = new HashMap<>();
+                        for (TableFieldsDTO tableField : tableFields) {
+                            if (!Objects.equals(tableField.sourceFieldName, tableField.fieldName)) {
+                                map.put(tableField.sourceFieldName, tableField.fieldName);
+                            }
+                        }
+                        data = re.data;
+                        if (map.size() != 0) {
+                            String newData = JsonUtils.updateJsonArray(JSON.toJSONString(data), map);
+                            data = JSON.parseArray(newData);
+                        }
+                    }
+                }
                 ApiSqlResultDTO apiSqlResultDto = new ApiSqlResultDTO();
-
                 String tableName = re.table;
-                JSONArray data = re.data;
                 for (Object datum : data) {
                     String insertSqlIndex = "insert into ";
                     String insertSqlLast = "(";

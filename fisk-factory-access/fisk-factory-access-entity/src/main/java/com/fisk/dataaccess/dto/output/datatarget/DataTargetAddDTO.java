@@ -17,6 +17,9 @@ public class DataTargetAddDTO {
     @ApiModelProperty(value = "新增id,不填")
     public Integer id;
 
+    @ApiModelProperty(value = "数据目标应用id", required = true)
+    public Integer dataTargetAppId;
+
     @ApiModelProperty(value = "名称", required = true)
     public String name;
 

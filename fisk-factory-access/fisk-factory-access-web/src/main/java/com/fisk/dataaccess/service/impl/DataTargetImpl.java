@@ -1,15 +1,13 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
-import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
-import com.fisk.common.service.pageFilter.utils.GetMetadata;
-import com.fisk.dataaccess.dto.GetConfigDTO;
 import com.fisk.dataaccess.dto.output.datatarget.DataTargetAddDTO;
 import com.fisk.dataaccess.dto.output.datatarget.DataTargetPageResultDTO;
 import com.fisk.dataaccess.dto.output.datatarget.DataTargetQueryDTO;
@@ -18,6 +16,7 @@ import com.fisk.dataaccess.map.ApiOutputParameterMap;
 import com.fisk.dataaccess.map.DataTargetMap;
 import com.fisk.dataaccess.mapper.DataTargetMapper;
 import com.fisk.dataaccess.service.IDataTarget;
+import com.fisk.dataaccess.utils.filterfield.FilterFieldUtils;
 import com.fisk.dataaccess.vo.output.datatarget.DataTargetVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
@@ -48,9 +47,7 @@ public class DataTargetImpl implements IDataTarget {
     UserHelper userHelper;
 
     @Resource
-    GetMetadata getMetadata;
-    @Resource
-    GetConfigDTO getConfig;
+    FilterFieldUtils utils;
 
     @Override
     public Page<DataTargetPageResultDTO> getDataList(DataTargetQueryDTO dto) {
@@ -58,7 +55,7 @@ public class DataTargetImpl implements IDataTarget {
         if (!CollectionUtils.isEmpty(dto.queryDTOList)) {
             query = generateCondition.getCondition(dto.queryDTOList);
         }
-        Page<DataTargetPageResultDTO> data = mapper.queryList(dto.page, query);
+        Page<DataTargetPageResultDTO> data = mapper.queryList(dto.page, query, dto.dataTargetAppId);
         //创建人/更新人id替换为名称
         ReplenishUserInfo.replenishUserName(data.getRecords(), client, UserFieldEnum.USER_NAME);
         return data;
@@ -66,14 +63,7 @@ public class DataTargetImpl implements IDataTarget {
 
     @Override
     public List<FilterFieldDTO> getDataTargetColumn() {
-        MetaDataConfigDTO dto = new MetaDataConfigDTO();
-        dto.url = getConfig.url;
-        dto.userName = getConfig.username;
-        dto.password = getConfig.password;
-        dto.driver = getConfig.driver;
-        dto.tableName = "tb_data_target";
-        dto.filterSql = FilterSqlConstants.DATA_TARGET;
-        return getMetadata.getMetadataList(dto);
+        return utils.getDataTargetColumn("tb_data_target", FilterSqlConstants.DATA_TARGET);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -86,6 +76,25 @@ public class DataTargetImpl implements IDataTarget {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         return apiOutputParameter.addApiOutputParameter(Long.valueOf(dto.id), dto.parameters);
+    }
+
+    /**
+     * 根据数据目标应用批量删除数据目标
+     *
+     * @param dataTargetAppId
+     * @return
+     */
+    public ResultEnum deleteBatchByAppId(long dataTargetAppId) {
+        QueryWrapper<DataTargetPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id").lambda().eq(DataTargetPO::getDataTargetAppId, dataTargetAppId);
+        List<Integer> poList = (List) mapper.selectObjs(queryWrapper);
+        if (CollectionUtils.isEmpty(poList)) {
+            return ResultEnum.SUCCESS;
+        }
+        for (Integer id : poList) {
+            this.delete(Long.valueOf(id));
+        }
+        return ResultEnum.SUCCESS;
     }
 
     @Transactional(rollbackFor = Exception.class)
