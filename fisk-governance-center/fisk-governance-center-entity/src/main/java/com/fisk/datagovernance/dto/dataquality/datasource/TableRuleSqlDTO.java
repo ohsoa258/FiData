@@ -4,6 +4,7 @@ import com.fisk.datagovernance.enums.dataquality.TemplateTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -27,10 +28,16 @@ public class TableRuleSqlDTO {
     public String fieldName;
 
     /**
+     * 字段类型
+     */
+    @ApiModelProperty(value = "字段类型")
+    public String fieldType;
+
+    /**
      * 字段名称集合
      */
     @ApiModelProperty(value = "字段名称集合")
-    public List<String> fieldNames;
+    public HashMap<String,String> fields;
 
     /**
      * 模板类型

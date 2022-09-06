@@ -763,6 +763,8 @@ public class BusinessAreaImpl
                     businessPoTreeDto.setLabelDesc(business.getBusinessDes());
                     businessPoTreeDto.setLevelType(LevelTypeEnum.FOLDER);
 
+                    List<FiDataMetaDataTreeDTO> folderList = new ArrayList<>();
+
                     // 第四层 - 1: 维度文件夹
                     List<FiDataMetaDataTreeDTO> dimensionFolderTreeList = dimensionFolderImpl.query()
                             .eq("business_id", business.id)
@@ -934,11 +936,10 @@ public class BusinessAreaImpl
                                 return businessProcessTreeDto;
                             }).collect(Collectors.toList());
 
-                    List<FiDataMetaDataTreeDTO> folderList = new ArrayList<>();
-
                     // 第四层 - 3: 宽表文件夹
+                    FiDataMetaDataTreeDTO wideTableFolderTreeDto = null;
                     if ("olap".equalsIgnoreCase(dourceType)) {
-                        FiDataMetaDataTreeDTO wideTableFolderTreeDto = new FiDataMetaDataTreeDTO();
+                        wideTableFolderTreeDto = new FiDataMetaDataTreeDTO();
                         wideTableFolderTreeDto.setId(wideTableGuid);
                         wideTableFolderTreeDto.setParentId(String.valueOf(business.id));
                         wideTableFolderTreeDto.setLabel("宽表");
@@ -1004,10 +1005,12 @@ public class BusinessAreaImpl
                         if (!CollectionUtils.isEmpty(wideTableTreeList)) {
                             key.addAll(wideTableTreeList);
                         }
-                        // 业务域子级-宽表
-                        folderList.add(wideTableFolderTreeDto);
                     }
 
+                    // 业务域子级-宽表
+                    if (wideTableFolderTreeDto != null) {
+                        folderList.add(wideTableFolderTreeDto);
+                    }
                     // 业务域子级-维度
                     folderList.addAll(dimensionFolderTreeList);
                     // 业务域子级-事实

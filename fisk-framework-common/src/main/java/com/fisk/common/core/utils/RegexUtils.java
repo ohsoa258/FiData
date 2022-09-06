@@ -4,8 +4,7 @@ import com.fisk.common.core.constants.RegexPatterns;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -80,6 +79,68 @@ public class RegexUtils {
             return false;
         }
         return str.matches(regex);
+    }
+
+    public static boolean isCharValid(String fieldType) {
+        boolean isChar = true;
+        if (StringUtils.isEmpty(fieldType)) {
+            return isChar;
+        }
+        fieldType = fieldType.toLowerCase();
+        if (fieldType.contains("int")) {
+            fieldType = "int";
+        }
+        if (fieldType.contains("float")) {
+            fieldType = "float";
+        }
+        String timeType = "date";
+
+        // 浮点型
+        List<String> floatType = new ArrayList<>();
+        floatType.add("double");
+
+        // 文本类型
+        List<String> textTpye = new ArrayList<>();
+        textTpye.add("text");
+
+        // 字符型
+        List<String> charType = new ArrayList<>();
+        charType.add("varchar");
+        charType.add("char");
+
+        // Number型
+        // 整型
+        List<String> integerType = new ArrayList<>();
+        integerType.add("tinyint");
+        integerType.add("smallint");
+        integerType.add("mediumint");
+        integerType.add("int");
+        integerType.add("integer");
+        integerType.add("bigint");
+        // 精确数值型
+        List<String> accurateType = new ArrayList<>();
+        accurateType.add("decimal");
+        accurateType.add("numeric");
+        // 货币、近似数值型
+        List<String> otherType = new ArrayList<>();
+        otherType.add("money");
+        otherType.add("smallmoney");
+        otherType.add("float");
+        otherType.add("real");
+
+        // boolean类型长度放开
+        if (integerType.contains(fieldType.toLowerCase())) {
+            isChar = false;
+        } else if (textTpye.contains(fieldType.toLowerCase())) {
+            isChar = true;
+        } else if (accurateType.contains(fieldType.toLowerCase()) || otherType.contains(fieldType.toLowerCase())) {
+            isChar = false;
+        } else if (charType.contains(fieldType.toLowerCase())) {
+            isChar = true;
+        } else if (fieldType.toLowerCase().contains(timeType)) {
+            isChar = false;
+        }
+        return isChar;
     }
 
 }

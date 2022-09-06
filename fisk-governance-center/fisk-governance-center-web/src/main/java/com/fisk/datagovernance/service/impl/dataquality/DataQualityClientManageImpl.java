@@ -9,6 +9,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.common.core.utils.Dto.Excel.*;
+import com.fisk.common.core.utils.RegexUtils;
 import com.fisk.common.core.utils.office.excel.ExcelReportUtil;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
@@ -30,9 +31,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -522,7 +521,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             }
 
             String tableName = "";
-            List<String> fieldNames = new ArrayList<>();
+            HashMap<String, String> fields = new HashMap<>();
             if (dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData) {
                 FiDataMetaDataDTO fiDataMetaDataDTO = fiDataMetaDatas.stream().filter(t -> t.getDataSourceId() == dataSourceConVO.getDatasourceId()).findFirst().orElse(null);
                 if (fiDataMetaDataDTO == null) {
@@ -538,7 +537,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                                 FiDataMetaDataTreeDTO fiDataMetaDataTree_Field = fiDataMetaDataTree_Table.getChildren().stream().
                                         filter(f -> f.getId().equals(dataCheckExtendPO1.getFieldUnique())).findFirst().orElse(null);
                                 if (fiDataMetaDataTree_Field != null) {
-                                    fieldNames.add(fiDataMetaDataTree_Field.label);
+                                    fields.put(fiDataMetaDataTree_Field.label, fiDataMetaDataTree_Field.getLabelType());
                                 }
                             }
                         }
@@ -546,13 +545,18 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 }
             } else {
                 tableName = dataCheckPO.getTableUnique();
-                fieldNames = dataCheckExtendPOs.stream().map(DataCheckExtendPO::getFieldUnique).collect(Collectors.toList());
+                List<String> collect = dataCheckExtendPOs.stream().map(DataCheckExtendPO::getFieldUnique).collect(Collectors.toList());
+                collect.forEach(t -> {
+                    fields.put(t, "");
+                });
             }
             TableRuleSqlDTO tableRuleSqlDTO = new TableRuleSqlDTO();
             tableRuleSqlDTO.setTableName(tableName);
-            if (CollectionUtils.isNotEmpty(fieldNames)) {
-                tableRuleSqlDTO.setFieldName(fieldNames.get(0));
-                tableRuleSqlDTO.setFieldNames(fieldNames);
+            if (CollectionUtils.isNotEmpty(fields)) {
+                Map.Entry<String, String> next = fields.entrySet().iterator().next();
+                tableRuleSqlDTO.setFieldName(next.getKey());
+                tableRuleSqlDTO.setFieldType(next.getValue());
+                tableRuleSqlDTO.setFields(fields);
             }
             tableRuleSqlDTO.setTemplateTypeEnum(TemplateTypeEnum.getEnum(templatePO.getTemplateType()));
             tableRuleSqlDTO.setFieldAggregate(dataCheckExtendPOs.get(0).getFieldAggregate());
@@ -574,7 +578,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             SheetDataDto sheetDataDto = resultSetToMap(dataSourceConVO, roleSql);
             List<RowDto> singRows = getSingRows(tableName, templatePO.templatenName, sheetDataDto.columns);
             sheet.setSingRows(singRows);
-            sheet.setSingFields(fieldNames);
+            sheet.setSingFields(fields.keySet().stream().collect(Collectors.toList()));
             sheet.setDataRows(sheetDataDto.columnData);
             sheets.add(sheet);
         }
@@ -711,7 +715,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         switch (templateTypeEnum) {
             case DATA_MISSING_TEMPLATE:
                 // 数据缺失模板
-                sql = createData_MissingRule(tableRuleSqlDTO);
+                sql = createData_MissingRule(dataSourceConVO, tableRuleSqlDTO);
                 break;
             case FIELD_AGGREGATE_TEMPLATE:
                 // 字段聚合波动阈值模板
@@ -734,12 +738,25 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params dataSourceTypeEnum 数据源类型
      * @params dto 请求参数DTO
      */
-    public String createData_MissingRule(TableRuleSqlDTO tableRuleSqlDTO) {
-        if (tableRuleSqlDTO == null || StringUtils.isEmpty(tableRuleSqlDTO.getTableName()) || StringUtils.isEmpty(tableRuleSqlDTO.getFieldName())) {
+    public String createData_MissingRule(DataSourceConVO dataSourceConVO, TableRuleSqlDTO tableRuleSqlDTO) {
+        if (tableRuleSqlDTO == null || StringUtils.isEmpty(tableRuleSqlDTO.getTableName())
+                || StringUtils.isEmpty(tableRuleSqlDTO.getFieldName())) {
             return "";
         }
-        String sql = String.format("SELECT * FROM %s WHERE %s IS NULL OR %s = '' OR %s = 'null' ",
-                tableRuleSqlDTO.getTableName(), tableRuleSqlDTO.getFieldName(), tableRuleSqlDTO.getFieldName(), tableRuleSqlDTO.getFieldName());
+        String fieldType = tableRuleSqlDTO.fieldType;
+        boolean charValid = true;
+        if (dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData) {
+            charValid = RegexUtils.isCharValid(fieldType);
+        }
+        String sql = "";
+        if (charValid) {
+            sql = String.format("SELECT * FROM %s WHERE %s IS NULL OR %s = '' OR %s = 'null' ",
+                    tableRuleSqlDTO.getTableName(), tableRuleSqlDTO.getFieldName(), tableRuleSqlDTO.getFieldName(), tableRuleSqlDTO.getFieldName());
+
+        } else {
+            sql = String.format("SELECT * FROM %s WHERE %s IS NULL",
+                    tableRuleSqlDTO.getTableName(), tableRuleSqlDTO.getFieldName(), tableRuleSqlDTO.getFieldName(), tableRuleSqlDTO.getFieldName());
+        }
         return sql;
     }
 
