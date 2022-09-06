@@ -49,6 +49,4 @@ public class GetMetadata {
         }
         return list;
     }
-
-    public
 }
