@@ -745,7 +745,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         }
         String fieldType = tableRuleSqlDTO.fieldType;
         boolean charValid = true;
-        if (dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData) {
+        if (dataSourceConVO.getConType() == DataSourceTypeEnum.POSTGRESQL) {
             charValid = RegexUtils.isCharValid(fieldType);
         }
         String sql = "";
