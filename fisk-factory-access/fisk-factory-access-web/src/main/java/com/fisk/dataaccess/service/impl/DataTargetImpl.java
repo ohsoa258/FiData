@@ -55,7 +55,7 @@ public class DataTargetImpl implements IDataTarget {
         if (!CollectionUtils.isEmpty(dto.queryDTOList)) {
             query = generateCondition.getCondition(dto.queryDTOList);
         }
-        Page<DataTargetPageResultDTO> data = mapper.queryList(dto.page, query);
+        Page<DataTargetPageResultDTO> data = mapper.queryList(dto.page, query, dto.dataTargetAppId);
         //创建人/更新人id替换为名称
         ReplenishUserInfo.replenishUserName(data.getRecords(), client, UserFieldEnum.USER_NAME);
         return data;
@@ -87,12 +87,12 @@ public class DataTargetImpl implements IDataTarget {
     public ResultEnum deleteBatchByAppId(long dataTargetAppId) {
         QueryWrapper<DataTargetPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("id").lambda().eq(DataTargetPO::getDataTargetAppId, dataTargetAppId);
-        List<Long> poList = (List) mapper.selectObjs(queryWrapper);
+        List<Integer> poList = (List) mapper.selectObjs(queryWrapper);
         if (CollectionUtils.isEmpty(poList)) {
             return ResultEnum.SUCCESS;
         }
-        for (Long id : poList) {
-            delete(id);
+        for (Integer id : poList) {
+            this.delete(Long.valueOf(id));
         }
         return ResultEnum.SUCCESS;
     }

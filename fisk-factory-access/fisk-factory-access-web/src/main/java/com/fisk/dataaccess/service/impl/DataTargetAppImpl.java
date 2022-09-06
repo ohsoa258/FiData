@@ -52,7 +52,7 @@ public class DataTargetAppImpl implements IDataTargetApp {
         queryWrapper.lambda().eq(DataTargetAppPO::getName, dto.name);
         DataTargetAppPO po = mapper.selectOne(queryWrapper);
         if (po != null) {
-            return ResultEnum.NAME_EXISTS;
+            throw new FkException(ResultEnum.NAME_EXISTS);
         }
         return mapper.insert(DataTargetAppMap.INSTANCES.dtoToPo(dto)) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }

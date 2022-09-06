@@ -2,6 +2,7 @@ package com.fisk.dataaccess.dto.output.datatarget;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -13,6 +14,8 @@ import java.util.List;
 @Data
 public class DataTargetQueryDTO {
 
+    @ApiModelProperty(value = "数据目标应用id", required = true)
+    public Long dataTargetAppId;
     /**
      * 数据过滤
      */

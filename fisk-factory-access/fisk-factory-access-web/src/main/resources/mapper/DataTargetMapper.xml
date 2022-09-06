@@ -15,7 +15,7 @@
         host,
         api_address
         from tb_data_target
-        where del_flag=1
+        where del_flag=1 and data_target_app_id = ${dataTargetAppId}
         <if test="query !=null and query.length()>0 ">
             ${query}
         </if>

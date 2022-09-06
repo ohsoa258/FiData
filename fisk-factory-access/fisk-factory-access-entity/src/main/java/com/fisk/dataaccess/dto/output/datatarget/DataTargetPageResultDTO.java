@@ -15,7 +15,7 @@ public class DataTargetPageResultDTO extends BaseUserInfoVO {
 
     public Long id;
 
-    @ApiModelProperty(value = "名数据目标应用id", required = true)
+    @ApiModelProperty(value = "数据目标应用id", required = true)
     public Integer dataTargetAppId;
 
     @ApiModelProperty(value = "名称", required = true)
