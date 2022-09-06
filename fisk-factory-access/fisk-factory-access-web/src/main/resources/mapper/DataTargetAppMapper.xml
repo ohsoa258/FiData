@@ -1,0 +1,20 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.dataaccess.mapper.DataTargetAppMapper">
+    <select id="queryList" resultType="com.fisk.dataaccess.dto.datatargetapp.DataTargetAppDTO">
+        SELECT
+        id,
+        name,
+        principal,
+        description,
+        email,
+        create_time
+        from tb_data_target_app
+        where del_flag=1
+        <if test="query !=null and query.length()>0 ">
+            ${query}
+        </if>
+    </select>
+
+</mapper>

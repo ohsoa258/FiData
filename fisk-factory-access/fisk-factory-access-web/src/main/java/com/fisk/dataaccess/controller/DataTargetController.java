@@ -56,7 +56,7 @@ public class DataTargetController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataTarget(id));
     }
 
-    @PostMapping("/updateDataTarget")
+    @PutMapping("/updateDataTarget")
     @ApiOperation(value = "编辑数据目标")
     public ResultEntity<Object> updateDataTarget(@RequestBody DataTargetVO vo) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.updateDataTarget(vo));

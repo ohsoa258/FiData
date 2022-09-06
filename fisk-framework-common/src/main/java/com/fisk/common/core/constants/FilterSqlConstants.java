@@ -42,4 +42,8 @@ public class FilterSqlConstants {
      * 数据目标
      */
     public static final String DATA_TARGET = " where Field in('name','principal','description','host','port','api_address')";
+    /**
+     * 数据目标应用
+     */
+    public static final String DATA_TARGET_APP = " where Field in('name','principal','email','description','create_time')";
 }
