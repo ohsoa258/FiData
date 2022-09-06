@@ -6,17 +6,16 @@ import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
-import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
-import com.fisk.common.service.pageFilter.utils.GetMetadata;
-import com.fisk.dataaccess.dto.GetConfigDTO;
 import com.fisk.dataaccess.dto.datatargetapp.DataTargetAppDTO;
 import com.fisk.dataaccess.dto.datatargetapp.DataTargetAppQueryDTO;
 import com.fisk.dataaccess.entity.DataTargetAppPO;
 import com.fisk.dataaccess.map.DataTargetAppMap;
 import com.fisk.dataaccess.mapper.DataTargetAppMapper;
 import com.fisk.dataaccess.service.IDataTargetApp;
+import com.fisk.dataaccess.utils.filterfield.FilterFieldUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -32,11 +31,11 @@ public class DataTargetAppImpl implements IDataTargetApp {
     GenerateCondition generateCondition;
     @Resource
     DataTargetAppMapper mapper;
+    @Resource
+    DataTargetImpl dataTarget;
 
     @Resource
-    GetMetadata getMetadata;
-    @Resource
-    GetConfigDTO getConfig;
+    FilterFieldUtils utils;
 
     @Override
     public Page<DataTargetAppDTO> getDataTargetAppList(DataTargetAppQueryDTO dto) {
@@ -84,24 +83,22 @@ public class DataTargetAppImpl implements IDataTargetApp {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum deleteDataTargetApp(long id) {
         DataTargetAppPO po = mapper.selectById(id);
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        return mapper.deleteByIdWithFill(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        if (mapper.deleteByIdWithFill(po) > 0) {
+            //删除应用下的数据目标配置
+            return dataTarget.deleteBatchByAppId(id);
+        }
+        return ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
     public List<FilterFieldDTO> getDataTargetAppColumn() {
-        MetaDataConfigDTO dto = new MetaDataConfigDTO();
-        dto.url = getConfig.url;
-        dto.userName = getConfig.username;
-        dto.password = getConfig.password;
-        dto.driver = getConfig.driver;
-        dto.tableName = "tb_data_target_app";
-        dto.filterSql = FilterSqlConstants.DATA_TARGET_APP;
-        return getMetadata.getMetadataList(dto);
+        return utils.getDataTargetColumn("tb_data_target_app", FilterSqlConstants.DATA_TARGET_APP);
     }
 
 

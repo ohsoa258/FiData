@@ -58,7 +58,7 @@ public class ApiOutputParameterImpl
         List<ApiOutputParameterPO> list = mapper.selectList(queryWrapper);
         if (!CollectionUtils.isEmpty(list)) {
             if (!this.remove(queryWrapper)) {
-                return ResultEnum.SAVE_DATA_ERROR;
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
             }
         }
         return ResultEnum.SUCCESS;

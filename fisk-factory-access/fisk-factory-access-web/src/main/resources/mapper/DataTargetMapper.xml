@@ -5,6 +5,7 @@
     <select id="queryList" resultType="com.fisk.dataaccess.dto.output.datatarget.DataTargetPageResultDTO">
         SELECT
         id,
+        data_target_app_id,
         name,
         principal,
         description,
@@ -24,6 +25,7 @@
             parameterType="com.fisk.dataaccess.dto.output.datatarget.DataTargetAddDTO">
         insert into tb_data_target
         (type,
+        data_target_app_id,
         name,
         principal,
         description,
@@ -41,6 +43,7 @@
         del_flag)
         values
         (#{dataTargetDto.type},
+        #{dataTargetDto.dataTargetAppId},
         #{dataTargetDto.name},
         #{dataTargetDto.principal},
         #{dataTargetDto.description},
