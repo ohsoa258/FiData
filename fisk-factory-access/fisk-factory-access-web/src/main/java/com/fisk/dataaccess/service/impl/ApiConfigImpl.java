@@ -1668,6 +1668,17 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         return apiDocDTO;
     }
 
+    /**
+     * 根据api id获取配置数据
+     *
+     * @param apiId
+     * @return
+     */
+    public ApiConfigDTO getAppIdByApiId(long apiId) {
+        return ApiConfigMap.INSTANCES.poToDto(this.getById(apiId));
+
+    }
+
 //    public static void main(String[] args) {
 //        JsonUtils jsonUtils = new JsonUtils();
 //        // 测试时间
