@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.api.ApiParameterDTO;
+import com.fisk.dataaccess.service.IApiCondition;
 import com.fisk.dataaccess.service.IApiParameter;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 
@@ -27,6 +29,8 @@ public class ApiParameterController {
 
     @Autowired
     private IApiParameter service;
+    @Resource
+    IApiCondition apiCondition;
 
     @GetMapping("/getList/{apiId}")
     @ApiOperation(value = "根据apiId查询请求参数集合")
@@ -54,6 +58,13 @@ public class ApiParameterController {
     public ResultEntity<Object> deleteData(@PathVariable("id") long id) {
 
         return ResultEntityBuild.build(service.deleteData(id));
+    }
+
+    @GetMapping("/getApiCondition/{id}")
+    @ApiOperation(value = "获取api row或form-data参数配置")
+    public ResultEntity<Object> getApiCondition(@PathVariable("id") long id) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, apiCondition.apiConditionAppend(id));
     }
 
 }

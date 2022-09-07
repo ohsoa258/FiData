@@ -1072,11 +1072,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
             }
             //token存Redis
-            redisTemplate.opsForValue().set(dto.connectStr, token, dto.expirationTime, TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set("ApiConfig:" + dto.id, token, dto.expirationTime, TimeUnit.MINUTES);
             return token;
         } catch (Exception e) {
-            log.error("getApiToken ex", e);
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            log.error("getApiToken ex:", e);
+            throw new FkException(ResultEnum.AUTH_TOKEN_PARSER_ERROR);
         }
     }
 

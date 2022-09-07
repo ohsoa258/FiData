@@ -8,6 +8,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
 import com.fisk.dataaccess.dto.json.ApiTableDTO;
 import com.fisk.dataaccess.dto.json.JsonTableData;
@@ -374,4 +375,15 @@ public class PgsqlUtils {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, JSON.toJSONString(list));
     }
+
+    /**
+     * 获取pg数据
+     *
+     * @param sql
+     * @return
+     */
+    public List<Map<String, Object>> executePgSql(String sql) {
+        return AbstractDbHelper.execQueryResultMaps(sql, getPgConn());
+    }
+
 }

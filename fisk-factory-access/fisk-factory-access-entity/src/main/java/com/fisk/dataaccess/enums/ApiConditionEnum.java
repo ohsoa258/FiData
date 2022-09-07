@@ -10,15 +10,15 @@ public enum ApiConditionEnum implements BaseEnum {
     /**
      * token
      */
-    TOKEN(1, "Token"),
-    PAGENUM(2, "PageNum"),
+    TOKEN(1, "TOKEN"),
+    PAGENUM(2, "PAGENUM"),
 
-    MAX(3, "Max"),
-    Min(4, "Min"),
-    SUM(5, "Sum"),
+    MAX(3, "MAX"),
+    MIN(4, "MIN"),
+    SUM(5, "SUM"),
 
-    GETDATE(6, "GetDate"),
-    GETDATETIME(7, "GetDateTime");
+    CURRENT_DATE(6, "CURRENT_DATE"),
+    CURRENT_TIMESTAMP(7, "CURRENT_TIMESTAMP");
 
     private final int value;
     private final String name;

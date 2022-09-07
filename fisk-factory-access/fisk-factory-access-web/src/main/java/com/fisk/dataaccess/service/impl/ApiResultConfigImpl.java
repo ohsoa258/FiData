@@ -53,7 +53,6 @@ public class ApiResultConfigImpl
     public ResultEnum addApiResultConfig(long appDatasourceId, List<ApiResultConfigDTO> dto) {
         List<ApiResultConfigPO> poList = ApiResultConfigMap.INSTANCES.dtoListToPoList(dto);
         poList.stream().map(e -> e.appDatasourceId = appDatasourceId).collect(Collectors.toList());
-        ;
         boolean flat = this.saveBatch(poList);
         if (!flat) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);

@@ -40,6 +40,8 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     RedisUtil redisUtil;
     @Resource
     PgsqlUtils pgsqlUtils;
+    @Resource
+    ApiResultConfigImpl apiResultConfig;
 
     @Override
     public DataSourceDTO getDataSourceMeta(long appId) {
@@ -149,7 +151,9 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         QueryWrapper<AppDataSourcePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(AppDataSourcePO::getAppId, appId);
         AppDataSourcePO po = mapper.selectOne(queryWrapper);
-        return AppDataSourceMap.INSTANCES.poToDto(po);
+        AppDataSourceDTO data = AppDataSourceMap.INSTANCES.poToDto(po);
+        data.apiResultConfigDtoList = apiResultConfig.getApiResultConfig(po.id);
+        return data;
     }
 
 }
