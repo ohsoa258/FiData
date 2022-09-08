@@ -15,7 +15,12 @@ public enum ApiParameterTypeEnum implements BaseEnum {
 
     EXPRESSION(2, "表达式"),
 
-    SCRIPT(3, "脚本");
+    SCRIPT(3, "脚本"),
+
+    /**
+     * 分页最大页数
+     */
+    MAX_PAGE(4, "50");
 
 
     private final int value;
