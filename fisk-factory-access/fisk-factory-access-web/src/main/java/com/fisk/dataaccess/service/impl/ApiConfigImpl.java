@@ -915,6 +915,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // 根据appId获取应用信息(身份验证方式,验证参数)
         // 根据apiId获取非实时api信息(uri 请求方式  请求参数  json解析  推送数据  同步方式)
         String data = "";
+        ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
         int pageNum = 1;
         AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", dto.appId).one();
         if (dataSourcePo == null) {
@@ -935,6 +936,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             apiParameters = ApiParameterMap.INSTANCES.listDtoToPo(iApiCondition.apiConditionAppend(dto.apiId));
             //找到那个value
             if (!CollectionUtils.isEmpty(collect)) {
+                // 校验完成后每次推送数据前,将stg数据删除;解析上游的数据为空,本次也不需要同步数据,stg临时表也不用删
+                pushDataStgToOds(dto.apiId, 0);
                 for (ApiParameterPO apiParameterPO : collect) {
                     for (ApiParameterPO apiParameterPO1 : apiParameters) {
                         if (Objects.equals(apiParameterPO.parameterKey, apiParameterPO1.parameterKey)) {
@@ -1019,7 +1022,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
             log.info("iBuildHttpRequest对象值:{},{},{}", JSON.toJSONString(apiHttpRequestDto), JSON.toJSONString(iBuildHttpRequest), JSON.toJSONString(jsonObject));
 
-            ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
+            receiveDataDTO = new ReceiveDataDTO();
             receiveDataDTO.apiCode = dto.apiId;
             data = String.valueOf(jsonObject);
             log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
@@ -1029,8 +1032,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             receiveDataDTO.flag = true;
             receiveDataDTO.executeConfigFlag = false;
 
-            // 推送数据
-            pushDataByImportData(dto, receiveDataDTO);
 
         } else if (dataSourcePo.authenticationMethod == 5) { // 没有身份验证方式
 
@@ -1058,7 +1059,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
             log.info("iBuildHttpRequest对象值:{},{},{}", JSON.toJSONString(apiHttpRequestDto), JSON.toJSONString(iBuildHttpRequest), JSON.toJSONString(jsonObject));
 
-            ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
+            receiveDataDTO = new ReceiveDataDTO();
             receiveDataDTO.apiCode = dto.apiId;
             data = String.valueOf(jsonObject);
             log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
@@ -1069,7 +1070,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             receiveDataDTO.executeConfigFlag = false;
 
             // 推送数据
-            pushDataByImportData(dto, receiveDataDTO);
+            //pushDataByImportData(dto, receiveDataDTO);
 
             // Bearer Token
         } else if (dataSourcePo.authenticationMethod == 4) {
@@ -1098,7 +1099,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 调用第三方api返回的数据
             JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
             log.info("iBuildHttpRequest对象值:{},{},{}", JSON.toJSONString(apiHttpRequestDto), JSON.toJSONString(iBuildHttpRequest), JSON.toJSONString(jsonObject));
-            ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
+            receiveDataDTO = new ReceiveDataDTO();
             receiveDataDTO.apiCode = dto.apiId;
             data = String.valueOf(jsonObject);
             log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
@@ -1108,7 +1109,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             receiveDataDTO.flag = true;
             receiveDataDTO.executeConfigFlag = false;
             // 推送数据
-            pushDataByImportData(dto, receiveDataDTO);
+            //pushDataByImportData(dto, receiveDataDTO);
         }
         log.info("data的值" + JSON.toJSONString(data));
         // json解析的根节点
@@ -1116,6 +1117,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         JSONArray jsonArray = JSON.parseObject(data).getJSONArray(jsonKey);
         log.info("动态参数再次调用:第几{}页", pageNum);
         if (!CollectionUtils.isEmpty(jsonArray) && jsonArray.size() != 0 && pageNum < Integer.parseInt(ApiParameterTypeEnum.MAX_PAGE.getName())) {
+            // 推送数据
+            pushDataByImportData(dto, receiveDataDTO);
             syncData(dto, apiParameters);
         }
         return ResultEnum.SUCCESS;
@@ -1221,8 +1224,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                         }
                     }
                 }
-                // 校验完成后每次推送数据前,将stg数据删除;解析上游的数据为空,本次也不需要同步数据,stg临时表也不用删
-                pushDataStgToOds(apiId, 0);
+
             }
         } catch (Exception e) {
             return ResultEntityBuild.build(ResultEnum.DATA_QUALITY_FEIGN_ERROR);
