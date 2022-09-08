@@ -51,6 +51,9 @@ public class ApiResultConfigImpl
     }
 
     public ResultEnum addApiResultConfig(long appDatasourceId, List<ApiResultConfigDTO> dto) {
+        if (CollectionUtils.isEmpty(dto)) {
+            return ResultEnum.SUCCESS;
+        }
         List<ApiResultConfigPO> poList = ApiResultConfigMap.INSTANCES.dtoListToPoList(dto);
         poList.stream().map(e -> e.appDatasourceId = appDatasourceId).collect(Collectors.toList());
         boolean flat = this.saveBatch(poList);
