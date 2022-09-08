@@ -526,22 +526,19 @@ public class MetaDataImpl implements IMetaData {
         QueryWrapper<BusinessMetadataConfigPO> businessMetadataConfigPoWrapper = new QueryWrapper<>();
         List<BusinessMetadataConfigPO> poList = businessMetadataConfigMapper.selectList(businessMetadataConfigPoWrapper);
 
-        //获取数据源列表
-        ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
-        if (allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
+        //获取数据源
+        DataSourceDTO sourceData = getDataSourceInfo(dbName);
+        if (sourceData == null) {
             return;
         }
-        Optional<DataSourceDTO> sourceData = allFiDataDataSource.data.stream().filter(e -> e.conDbname.equals(dbName)).findFirst();
-        if (!sourceData.isPresent()) {
-            return;
-        }
+
         Integer tableId = 0;
         //数据类型:1数据接入,2数据建模
         Integer dataType = 0;
         //表类型:1dw维度表,2dw事实表,3doris维度表,4doris指标表
         Integer tableType = 0;
         //ods
-        if (sourceData.get().id == DataSourceConfigEnum.DMP_ODS.getValue()) {
+        if (sourceData.id == DataSourceConfigEnum.DMP_ODS.getValue()) {
             ResultEntity<List<DataAccessSourceTableDTO>> result = dataAccessClient.getDataAccessMetaData();
             if (result.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(result.data)) {
                 return;
@@ -560,7 +557,7 @@ public class MetaDataImpl implements IMetaData {
             tableType = first.get().type;
         }
         //dw
-        else if (sourceData.get().id == DataSourceConfigEnum.DMP_DW.getValue()) {
+        else if (sourceData.id == DataSourceConfigEnum.DMP_DW.getValue()) {
             ResultEntity<Object> result = dataModelClient.getDataModelTable(1);
             if (result.code != ResultEnum.SUCCESS.getCode()) {
                 return;
@@ -575,7 +572,7 @@ public class MetaDataImpl implements IMetaData {
             tableType = first.get().type;
         }
         //olap
-        else if (sourceData.get().id == DataSourceConfigEnum.DMP_OLAP.getValue()) {
+        else if (sourceData.id == DataSourceConfigEnum.DMP_OLAP.getValue()) {
             ResultEntity<Object> result = dataModelClient.getDataModelTable(2);
             if (result.code != ResultEnum.SUCCESS.getCode()) {
                 return;
@@ -589,7 +586,7 @@ public class MetaDataImpl implements IMetaData {
             dataType = DataTypeEnum.DATA_MODEL.getValue();
             tableType = first.get().type;
         }
-        TableRuleInfoDTO tableRuleInfo = setTableRuleInfo(sourceData.get().id, tableId, tableName, dataType, tableType);
+        TableRuleInfoDTO tableRuleInfo = setTableRuleInfo(sourceData.id, tableId, tableName, dataType, tableType);
         setBusinessMetaDataAttributeValue(atlasGuid, tableRuleInfo, poList);
     }
 
@@ -839,7 +836,7 @@ public class MetaDataImpl implements IMetaData {
     }
 
     /**
-     * 根据表名,获取数据源配置信息
+     * 根据库名,获取数据源配置信息
      *
      * @param dbName
      * @return

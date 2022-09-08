@@ -60,9 +60,11 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
     @Override
     public String getRequestToken(ApiHttpRequestDTO dto) {
         try {
-            String json = JSON.toJSONString(dto.jwtRequestDTO);
+            JSONObject jsonObj = new JSONObject();
+            jsonObj.put(dto.jwtRequestDTO.userKey, dto.jwtRequestDTO.username);
+            jsonObj.put(dto.jwtRequestDTO.pwdKey, dto.jwtRequestDTO.password);
 
-            String result = sendPostRequest(dto, json);
+            String result = sendPostRequest(dto, JSON.toJSONString(jsonObj));
 
             JSONObject jsonObject = JSONObject.parseObject(result);
             String bearer = "Bearer ";

@@ -986,7 +986,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             apiHttpRequestDto.uri = dataSourcePo.connectStr;
             // jwt账号&密码
             JwtRequestDTO jwtRequestDto = new JwtRequestDTO();
+            jwtRequestDto.userKey = dataSourcePo.accountKey;
             jwtRequestDto.username = dataSourcePo.connectAccount;
+            jwtRequestDto.pwdKey = dataSourcePo.pwdKey;
             jwtRequestDto.password = dataSourcePo.connectPwd;
             apiHttpRequestDto.jwtRequestDTO = jwtRequestDto;
 

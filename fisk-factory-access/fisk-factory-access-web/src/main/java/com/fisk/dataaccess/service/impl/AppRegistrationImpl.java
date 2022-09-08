@@ -30,7 +30,6 @@ import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataaccess.dto.GetConfigDTO;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
-import com.fisk.dataaccess.dto.api.httprequest.JwtRequestDTO;
 import com.fisk.dataaccess.dto.apiresultconfig.ApiResultConfigDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
@@ -1046,10 +1045,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     @Override
     public String getApiToken(AppDataSourceDTO dto) {
-        Optional<ApiResultConfigDTO> first = dto.apiResultConfigDtoList.stream().filter(e -> e.checked == true).findFirst();
+        /*Optional<ApiResultConfigDTO> first = dto.apiResultConfigDtoList.stream().filter(e -> e.checked == true).findFirst();
         if (!first.isPresent()) {
             throw new FkException(ResultEnum.RETURN_RESULT_DEFINITION);
-        }
+        }*/
+        Optional<ApiResultConfigDTO> first = null;
         try {
             // jwt身份验证方式对象
             ApiHttpRequestDTO apiHttpRequestDto = new ApiHttpRequestDTO();
@@ -1057,14 +1057,17 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             // 身份验证地址
             apiHttpRequestDto.uri = dto.connectStr;
             // jwt账号&密码
-            JwtRequestDTO jwtRequestDto = new JwtRequestDTO();
+            /*JwtRequestDTO jwtRequestDto = new JwtRequestDTO();
             jwtRequestDto.username = dto.connectAccount;
             jwtRequestDto.password = dto.connectPwd;
             apiHttpRequestDto.jwtRequestDTO = jwtRequestDto;
+            String json = JSON.toJSONString(apiHttpRequestDto.jwtRequestDTO);*/
+            // jwt账号&密码
+            JSONObject jsonObj = new JSONObject();
+            jsonObj.put(dto.accountKey, dto.connectAccount);
+            jsonObj.put(dto.pwdKey, dto.connectPwd);
 
-            String json = JSON.toJSONString(apiHttpRequestDto.jwtRequestDTO);
-
-            String result = buildHttpRequest.sendPostRequest(apiHttpRequestDto, json);
+            String result = buildHttpRequest.sendPostRequest(apiHttpRequestDto, jsonObj.toJSONString());
 
             JSONObject jsonObject = JSONObject.parseObject(result);
             String token = (String) jsonObject.get(first.get().name);

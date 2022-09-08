@@ -11,8 +11,13 @@ import lombok.Data;
  */
 @Data
 public class JwtRequestDTO {
+
+    @ApiModelProperty(value = "api账户key", required = true)
+    public String userKey;
     @ApiModelProperty(value = "api账户", required = true)
     public String username;
+    @ApiModelProperty(value = "api密码key", required = true)
+    public String pwdKey;
     @ApiModelProperty(value = "api密码", required = true)
     public String password;
 }

@@ -48,9 +48,19 @@ public class AppDataSourcePO extends BasePO {
     public String connectStr;
 
     /**
+     * JWT账号key
+     */
+    public String accountKey;
+
+    /**
      * 连接账号(非实时、OAuth、JWT)
      */
     public String connectAccount;
+
+    /**
+     * JWT密码key
+     */
+    public String pwdKey;
 
     /**
      * 连接密码(非实时、OAuth、JWT)
