@@ -43,13 +43,13 @@ public class AppDataSourceDTO extends BaseDTO {
     @ApiModelProperty(value = "连接字符串", required = true)
     public String connectStr;
 
-    @ApiModelProperty(value = "jwt类型下,JWT账号key", required = true)
+    @ApiModelProperty(value = "jwt类型下,JWT账号key")
     public String accountKey;
 
     @ApiModelProperty(value = "连接账号(实时、OAuth、JWT)", required = true)
     public String connectAccount;
 
-    @ApiModelProperty(value = "jwt类型下,JWT密码key", required = true)
+    @ApiModelProperty(value = "jwt类型下,JWT密码key")
     public String pwdKey;
 
     @ApiModelProperty(value = "连接密码(实时、OAuth、JWT)", required = true)
