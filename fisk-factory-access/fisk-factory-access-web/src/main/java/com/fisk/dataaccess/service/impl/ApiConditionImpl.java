@@ -152,13 +152,14 @@ public class ApiConditionImpl implements IApiCondition {
             else if (item.parameterValue.toUpperCase().indexOf(ApiConditionEnum.CURRENT_DATE.getName()) > -1
                     || item.parameterValue.toUpperCase().indexOf(ApiConditionEnum.CURRENT_TIMESTAMP.getName()) > -1) {
                 sql = "select " + item.parameterValue + " as datas";
+            } else {
+                throw new FkException(ResultEnum.API_EXPRESSION_ERROR);
             }
             List<Map<String, Object>> maps = pgsqlUtils.executePgSql(sql.toLowerCase());
             if (CollectionUtils.isEmpty(maps)) {
                 throw new FkException(ResultEnum.SQL_ERROR);
             }
             item.parameterValue = maps.get(0).get("datas") == null ? "" : maps.get(0).get("datas").toString();
-
         }
         return parameterList;
     }

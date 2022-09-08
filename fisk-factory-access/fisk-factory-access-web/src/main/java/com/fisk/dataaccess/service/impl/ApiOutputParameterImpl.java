@@ -35,6 +35,9 @@ public class ApiOutputParameterImpl
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         //重新添加配置
+        if (CollectionUtils.isEmpty(dtoList)) {
+            return ResultEnum.SUCCESS;
+        }
         dtoList.stream().map(e -> e.dataTargetId = dataTargetId).collect(Collectors.toList());
         List<ApiOutputParameterPO> data = ApiOutputParameterMap.INSTANCES.dtoListToPoList(dtoList);
         boolean result = this.saveBatch(data);
