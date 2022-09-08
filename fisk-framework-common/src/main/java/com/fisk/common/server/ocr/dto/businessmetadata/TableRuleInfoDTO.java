@@ -19,6 +19,13 @@ public class TableRuleInfoDTO {
      */
     @ApiModelProperty(value = "利益相关方")
     public List<String> stakeholders;
+
+    /**
+     * 表/字段 ID
+     */
+    @ApiModelProperty(value = "表/字段 ID")
+    public String tableFieldUnique;
+
     /**
      * 表/字段 名称
      */
