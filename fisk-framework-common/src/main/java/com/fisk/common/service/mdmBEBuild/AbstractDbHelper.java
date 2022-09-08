@@ -238,6 +238,7 @@ public class AbstractDbHelper {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ex.getLocalizedMessage());
         } finally {
             closeStatement(st);
+            closeConnection(con);
             stopWatch.stop();
             log.info("【execQuery】【" + code + "】执行时间: 【" + stopWatch.getTotalTimeMillis() + "毫秒】");
         }
