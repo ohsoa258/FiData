@@ -34,11 +34,14 @@ import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.dto.table.TableSyncmodeDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.*;
+import com.fisk.dataaccess.enums.ApiConditionEnum;
+import com.fisk.dataaccess.enums.ApiParameterTypeEnum;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.map.*;
 import com.fisk.dataaccess.mapper.ApiConfigMapper;
 import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
+import com.fisk.dataaccess.service.IApiCondition;
 import com.fisk.dataaccess.service.IApiConfig;
 import com.fisk.dataaccess.utils.httprequest.ApiHttpRequestFactoryHelper;
 import com.fisk.dataaccess.utils.httprequest.IBuildHttpRequest;
@@ -137,6 +140,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private String dataQualityCheckIp;
     @Value("${data-quality-check.db-name}")
     private String dataQualityCheckName;
+    @Resource
+    private IApiCondition iApiCondition;
     // 实时api同步到stg的条数
     private Integer COUNT_SQL = 0;
 
@@ -737,11 +742,11 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             dto.workflowId = pipelApiDispatch.workflowId;
             dto.appId = pipelApiDispatch.appId;
             dto.apiId = pipelApiDispatch.apiId;
-            syncData(dto);
+            syncData(dto, null);
             consumer(dto);
         } else {
             // 接入模块调用
-            syncData(dto);
+            syncData(dto, null);
             if (dto.workflowId != null) {
                 consumer(dto);
             }
@@ -906,9 +911,11 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @version v1.0
      * @params dto
      */
-    public ResultEnum syncData(ApiImportDataDTO dto) {
+    public ResultEnum syncData(ApiImportDataDTO dto, List<ApiParameterPO> apiParameters) {
         // 根据appId获取应用信息(身份验证方式,验证参数)
         // 根据apiId获取非实时api信息(uri 请求方式  请求参数  json解析  推送数据  同步方式)
+        String data = "";
+        int pageNum = 1;
         AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", dto.appId).one();
         if (dataSourcePo == null) {
             return ResultEnum.DATASOURCE_INFORMATION_ISNULL;
@@ -917,8 +924,41 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         if (apiConfigPo == null) {
             return ResultEnum.APICONFIG_ISNULL;
         }
+        List<ApiParameterPO> parameterPoList = new ArrayList<>();
+        //范本
+        List<ApiParameterPO> collect = apiParameterServiceImpl.query().eq("api_id", dto.apiId).list().stream()
+                .filter(e -> e.parameterValue.toLowerCase().contains(ApiConditionEnum.PAGENUM.getName().toLowerCase())).collect(Collectors.toList());
         // api的请求参数(允许为空)
-        List<ApiParameterPO> parameterPoList = apiParameterServiceImpl.query().eq("api_id", dto.apiId).list();
+        // 用apiParameters里面的值覆盖parameterPoList
+        if (CollectionUtils.isEmpty(apiParameters)) {
+            //实际参数
+            apiParameters = ApiParameterMap.INSTANCES.listDtoToPo(iApiCondition.apiConditionAppend(dto.apiId));
+            //找到那个value
+            if (!CollectionUtils.isEmpty(collect)) {
+                for (ApiParameterPO apiParameterPO : collect) {
+                    for (ApiParameterPO apiParameterPO1 : apiParameters) {
+                        if (Objects.equals(apiParameterPO.parameterKey, apiParameterPO1.parameterKey)) {
+                            apiParameterPO1.parameterValue = "1";
+                            pageNum = Integer.parseInt(apiParameterPO1.parameterValue);
+                        }
+                    }
+                }
+            }
+            parameterPoList = apiParameters;
+        } else {
+            //加1
+            if (!CollectionUtils.isEmpty(collect)) {
+                for (ApiParameterPO apiParameterPO : collect) {
+                    for (ApiParameterPO apiParameterPO1 : apiParameters) {
+                        if (Objects.equals(apiParameterPO.parameterKey, apiParameterPO1.parameterKey)) {
+                            apiParameterPO1.parameterValue = String.valueOf(Integer.parseInt(apiParameterPO1.parameterValue) + 1);
+                            pageNum = Integer.parseInt(apiParameterPO1.parameterValue);
+                        }
+                    }
+                }
+            }
+            parameterPoList = apiParameters;
+        }
         String formDataString = "form-data";
         String rawString = "raw";
         String bodyString = "Body";
@@ -981,7 +1021,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
             ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
             receiveDataDTO.apiCode = dto.apiId;
-            String data = String.valueOf(jsonObject);
+            data = String.valueOf(jsonObject);
             log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             log.info("data = " + data);
             receiveDataDTO.pushData = String.valueOf(data);
@@ -1020,7 +1060,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
             ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
             receiveDataDTO.apiCode = dto.apiId;
-            String data = String.valueOf(jsonObject);
+            data = String.valueOf(jsonObject);
             log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             log.info("data = " + data);
             receiveDataDTO.pushData = String.valueOf(data);
@@ -1060,18 +1100,24 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             log.info("iBuildHttpRequest对象值:{},{},{}", JSON.toJSONString(apiHttpRequestDto), JSON.toJSONString(iBuildHttpRequest), JSON.toJSONString(jsonObject));
             ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
             receiveDataDTO.apiCode = dto.apiId;
-            String data = String.valueOf(jsonObject);
+            data = String.valueOf(jsonObject);
             log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             log.info("data = " + data);
             receiveDataDTO.pushData = String.valueOf(data);
             // 系统内部调用(非实时推送)
             receiveDataDTO.flag = true;
             receiveDataDTO.executeConfigFlag = false;
-
             // 推送数据
             pushDataByImportData(dto, receiveDataDTO);
         }
-
+        log.info("data的值" + JSON.toJSONString(data));
+        // json解析的根节点
+        String jsonKey = StringUtils.isNotBlank(apiConfigPo.jsonKey) ? apiConfigPo.jsonKey : "data";
+        JSONArray jsonArray = JSON.parseObject(data).getJSONArray(jsonKey);
+        log.info("动态参数再次调用:第几{}页", pageNum);
+        if (!CollectionUtils.isEmpty(jsonArray) && jsonArray.size() != 0 && pageNum < Integer.parseInt(ApiParameterTypeEnum.MAX_PAGE.getName())) {
+            syncData(dto, apiParameters);
+        }
         return ResultEnum.SUCCESS;
     }
 
