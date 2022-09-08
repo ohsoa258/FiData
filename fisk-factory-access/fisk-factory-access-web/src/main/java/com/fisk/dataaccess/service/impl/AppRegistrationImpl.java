@@ -1045,11 +1045,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     @Override
     public String getApiToken(AppDataSourceDTO dto) {
-        /*Optional<ApiResultConfigDTO> first = dto.apiResultConfigDtoList.stream().filter(e -> e.checked == true).findFirst();
+        Optional<ApiResultConfigDTO> first = dto.apiResultConfigDtoList.stream().filter(e -> e.checked == true).findFirst();
         if (!first.isPresent()) {
             throw new FkException(ResultEnum.RETURN_RESULT_DEFINITION);
-        }*/
-        Optional<ApiResultConfigDTO> first = null;
+        }
         try {
             // jwt身份验证方式对象
             ApiHttpRequestDTO apiHttpRequestDto = new ApiHttpRequestDTO();
