@@ -108,11 +108,12 @@ public class BuildDataInputPgTableListener {
                 sqlFileds.append("," + pksql.substring(0, pksql.length() - 1) + ")");
             }
             sqlFileds.append(")");
-            stgSql.append(")");
+            stgSql.append(");");
             sql.append(sqlFileds);
             String stg_sql1 = sql.toString().replace("fi_tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
             String stg_sql2 = stgSql.toString().replace("fi_tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
-            stg_sql2 = "DROP TABLE IF EXISTS " + "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + ";" + stg_sql2;
+            stg_sql2 = "DROP TABLE IF EXISTS " + "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + ";" + stg_sql2 +
+                    "create index enableflagsy on stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + " (enableflag);";
             BusinessResult Result = pg.postgreBuildTable(stg_sql2.toLowerCase(), BusinessTypeEnum.DATAINPUT);
             if (!Result.success) {
                 throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
