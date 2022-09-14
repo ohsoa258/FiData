@@ -129,6 +129,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         map.put("database-driver-locations", data.driverLocation);
         map.put("Database User", data.user);
         map.put("Password", data.pwd);
+        map.put("Max Total Connections", "100");
 
         ControllerServiceDTO dto = new ControllerServiceDTO();
         dto.setType(ControllerServiceTypeEnum.DBCP_CONNECTION_POOL.getName());
