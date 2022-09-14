@@ -929,14 +929,8 @@ public class ApiConstants {
             "        // set request parameters\n" +
             "        GetDataRequest getDataRequest = new GetDataRequest();\n" +
             "        getDataRequest.apiCode = \"94\";\n" +
-            "        getDataRequest.pushData = " + "\"{\"data\": [\n" +
-            "                                           {\n" +
-            "                                               \"id\": \"22\",\n" +
-            "                                               \"name\": \"1\",\n" +
-            "                                               \"age\": \"20\"\n" +
-            "                                                }\n" +
-            "                                               ]\n" +
-            "                                               }\"\n" + "\n" +
+            "        getDataRequest.pushData = "  +
+            "\"{\"data\": [\n {\n \"id\": \"22\",\n \"name\": \"1\",\n \"age\": \"20\"\n }\n ]\n}\n\""+
             "        String getDataParams = JSONObject.toJSONString(getDataRequest);\n" +
             "        // send request\n" +
             "        GetDataResponse getDataResponse = sendPostWebRequest(GetDataResponse.class,\n" +
