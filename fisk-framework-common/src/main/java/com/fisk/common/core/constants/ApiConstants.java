@@ -930,7 +930,7 @@ public class ApiConstants {
             "        GetDataRequest getDataRequest = new GetDataRequest();\n" +
             "        getDataRequest.apiCode = \"94\";\n" +
             "        getDataRequest.pushData = "  +
-            "\"{\\\"data\\\": [\\n {\\n \\\"id\\\": \\\"22\\\",\\n \\\"name\\\": \\\"1\\\",\\n \\\"age\\\": \\\"20\\\"\\n }\\n ]\\n}\\n\""+
+            "\"{\\\"data\\\": [\\n {\\n \\\"id\\\": \\\"22\\\",\\n \\\"name\\\": \\\"1\\\",\\n \\\"age\\\": \\\"20\\\"\\n }\\n ]\\n};\\n\""+
             "        String getDataParams = JSONObject.toJSONString(getDataRequest);\n" +
             "        // send request\n" +
             "        GetDataResponse getDataResponse = sendPostWebRequest(GetDataResponse.class,\n" +
@@ -979,9 +979,9 @@ public class ApiConstants {
             "\n" +
             "    public class GetTokenRequest\n" +
             "    {\n" +
-            "        public String appAccount;\n" +
+            "        public String useraccount;\n" +
             "\n" +
-            "        public String appPassword;\n" +
+            "        public String password;\n" +
             "    }\n" +
             "\n" +
             "    public static class GetTokenResponse\n" +
@@ -997,7 +997,7 @@ public class ApiConstants {
             "    {\n" +
             "        public String apiCode;\n" +
             "\n" +
-            "        public String pushdata;\n" +
+            "        public String pushData;\n" +
             "    }\n" +
             "\n" +
             "    public static class GetDataResponse\n" +
