@@ -567,7 +567,7 @@ public class ApiConstants {
             "    }\n" +
             "}\n";
 
-    public static final String DATASERVICE_APICODEEXAMPLES_JAVA= "\n" +
+    public static final String DATASERVICE_APICODEEXAMPLES_JAVA = "\n" +
             "package com.fisk.datagovernance.test;\n" +
             "\n" +
             "import com.alibaba.fastjson.JSONObject;\n" +
@@ -917,24 +917,26 @@ public class ApiConstants {
             "        String url = \"{api_prd_address}/dataAccess/apiConfig/getToken\";\n" +
             "        // set request parameters\n" +
             "        GetTokenRequest getTokenRequest = new GetTokenRequest();\n" +
-            "        getTokenRequest.appAccount = \"testLock\";\n" +
-            "        getTokenRequest.appPassword = \"testPwd\";\n" +
+            "        getTokenRequest.useraccount = \"testLock\";\n" +
+            "        getTokenRequest.password = \"testPwd\";\n" +
             "        String getTokenParams = JSONObject.toJSONString(getTokenRequest);\n" +
             "        // send request\n" +
             "        GetTokenResponse getTokenResponse = sendPostWebRequest(GetTokenResponse.class,\n" +
             "                url, getTokenParams, null);\n" +
             "\n" +
             "        /*pushData*/\n" +
-            "        url = \"{api_prd_address}/dataAccess/apiConfig/pushData\";\n" +
+            "        url = \"{api_prd_address}/dataAccess/apiConfig/pushdata\";\n" +
             "        // set request parameters\n" +
             "        GetDataRequest getDataRequest = new GetDataRequest();\n" +
-            "        getDataRequest.apiCode = \"47\";\n" +
-            "        HashMap<String, Object> parmList = new HashMap<>();\n" +
-            "        parmList.put(\"product_colour\", \"blue\");\n" +
-            "        parmList.put(\"product_price\", \"7000\");\n" +
-            "        getDataRequest.parmList = parmList;\n" +
-            "        getDataRequest.current = 1;\n" +
-            "        getDataRequest.size = 500;\n" +
+            "        getDataRequest.apiCode = \"94\";\n" +
+            "        getDataRequest.pushData = " + "{\"data\": [\n" +
+            " {\n" +
+            " \"id\": \"22\",\n" +
+            " \"name\": \"1\",\n" +
+            " \"age\": \"20\"\n" +
+            " }\n" +
+            " ]\n" +
+            "}\n" + "\n" +
             "        String getDataParams = JSONObject.toJSONString(getDataRequest);\n" +
             "        // send request\n" +
             "        GetDataResponse getDataResponse = sendPostWebRequest(GetDataResponse.class,\n" +
@@ -1001,11 +1003,7 @@ public class ApiConstants {
             "    {\n" +
             "        public String apiCode;\n" +
             "\n" +
-            "        public HashMap<String, Object> parmList;\n" +
-            "\n" +
-            "        public Integer current;\n" +
-            "\n" +
-            "        public Integer size;\n" +
+            "        public String pushdata;\n" +
             "    }\n" +
             "\n" +
             "    public static class GetDataResponse\n" +
