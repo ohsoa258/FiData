@@ -71,6 +71,7 @@ public class ApiConditionImpl implements IApiCondition {
             ApiConditionInfoDTO dto = new ApiConditionInfoDTO();
             dto.typeName = item;
             dto.parentTypeName = "";
+
             List<ApiConditionDTO> collect1 = dtoList.stream()
                     .filter(e -> item.equals(e.parent))
                     .distinct()

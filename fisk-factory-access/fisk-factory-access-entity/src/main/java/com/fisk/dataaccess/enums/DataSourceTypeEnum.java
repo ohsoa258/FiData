@@ -18,7 +18,8 @@ public enum DataSourceTypeEnum implements BaseEnum {
     ORACLE(4, "oracle"),
     RestfulAPI(5, "RestfulAPI"),
     API(6, "api"),
-    POSTGRESQL(7, "postgresql");
+    POSTGRESQL(7, "postgresql"),
+    ORACLE_CDC(8, "oracle_cdc");
 
     DataSourceTypeEnum(int value, String name) {
         this.name = name;

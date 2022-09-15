@@ -1,6 +1,7 @@
 package com.fisk.datamanage.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
@@ -75,6 +76,14 @@ public interface DataManageClient {
      */
     @PostMapping("/MetaData/consumeMetaData")
     ResultEntity<Object> consumeMetaData(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto);
+
+    /**
+     * 同步表级业务元数据
+     *
+     * @param dto
+     */
+    @PostMapping("/BusinessMetaData/synchronousTableBusinessMetaData")
+    void synchronousTableBusinessMetaData(@Validated @RequestBody BusinessMetaDataInfoDTO dto);
 
     /**
      * 删除元数据实体

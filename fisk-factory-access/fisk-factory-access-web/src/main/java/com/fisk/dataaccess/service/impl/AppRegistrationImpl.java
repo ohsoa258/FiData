@@ -43,6 +43,7 @@ import com.fisk.dataaccess.mapper.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.utils.httprequest.Impl.BuildHttpRequestImpl;
 import com.fisk.dataaccess.utils.sql.MysqlConUtils;
+import com.fisk.dataaccess.utils.sql.OracleUtils;
 import com.fisk.dataaccess.utils.sql.SqlServerPlusUtils;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
@@ -713,6 +714,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     Class.forName(DriverTypeEnum.ORACLE.getName());
                     DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
                     return null;
+                case ORACLE_CDC:
+                    OracleUtils oracleUtils = new OracleUtils();
+                    allDatabases.addAll(oracleUtils.getAllDatabases(dto.connectStr, dto.connectAccount, dto.connectPwd));
                 default:
                     break;
             }

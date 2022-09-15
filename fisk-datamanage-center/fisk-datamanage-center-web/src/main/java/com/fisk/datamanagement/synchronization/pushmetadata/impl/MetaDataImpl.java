@@ -9,6 +9,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.metadata.dto.metadata.*;
@@ -136,6 +137,11 @@ public class MetaDataImpl implements IMetaData {
         //更新Redis
         entityImpl.updateRedis();
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public void synchronousTableBusinessMetaData(BusinessMetaDataInfoDTO dto) {
+        associatedBusinessMetaData(null, dto.dbName, dto.tableName);
     }
 
     /**
@@ -490,6 +496,7 @@ public class MetaDataImpl implements IMetaData {
      */
     public String metaDataTable(MetaDataTableAttributeDTO dto, String parentEntityGuid, String dbName) {
         String atlasGuid = getMetaDataConfig(dto.qualifiedName);
+        boolean isAdd = false;
         if (StringUtils.isEmpty(atlasGuid)) {
             EntityDTO entityDTO = new EntityDTO();
             EntityTypeDTO entityTypeDTO = new EntityTypeDTO();
@@ -502,16 +509,15 @@ public class MetaDataImpl implements IMetaData {
             entityTypeDTO.attributes = attributesDTO;
             entityDTO.entity = entityTypeDTO;
             atlasGuid = addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_TABLE, parentEntityGuid);
-            //同步业务分类
-            associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
-            //同步业务元数据
-            associatedBusinessMetaData(atlasGuid, dbName, dto.name);
-            return atlasGuid;
+            isAdd = true;
         }
         //同步业务分类
-        //associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
+        associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
         //同步业务元数据
         associatedBusinessMetaData(atlasGuid, dbName, dto.name);
+        if (isAdd) {
+            return atlasGuid;
+        }
         return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_TABLE, dto);
     }
 
@@ -586,7 +592,18 @@ public class MetaDataImpl implements IMetaData {
             dataType = DataTypeEnum.DATA_MODEL.getValue();
             tableType = first.get().type;
         }
-        TableRuleInfoDTO tableRuleInfo = setTableRuleInfo(sourceData.id, tableId, tableName, dataType, tableType);
+        if (StringUtils.isEmpty(atlasGuid)) {
+            String qualifiedName = sourceData.conIp + "_" + sourceData.conDbname + "_" + tableType + "_" + tableId;
+            QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(MetadataMapAtlasPO::getQualifiedName, qualifiedName)
+                    .eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_TABLE.getValue());
+            MetadataMapAtlasPO po = metadataMapAtlasMapper.selectOne(queryWrapper);
+            if (po == null) {
+                return;
+            }
+            atlasGuid = po.atlasGuid;
+        }
+        TableRuleInfoDTO tableRuleInfo = setTableRuleInfo(sourceData.id, tableId, dataType, tableType);
         setBusinessMetaDataAttributeValue(atlasGuid, tableRuleInfo, poList);
     }
 
@@ -1181,12 +1198,10 @@ public class MetaDataImpl implements IMetaData {
      *
      * @param dataSourceId
      * @param tableId
-     * @param tableName
      * @param dataType
      */
     public TableRuleInfoDTO setTableRuleInfo(int dataSourceId,
                                              int tableId,
-                                             String tableName,
                                              int dataType,
                                              int tableType) {
         TableRuleInfoDTO dto = new TableRuleInfoDTO();

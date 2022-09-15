@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Lock
@@ -21,6 +22,25 @@ import java.util.List;
  */
 @Slf4j
 public class OracleUtils {
+
+    public List<String> getAllDatabases(String url, String user, String password) {
+        List<String> dbName = new ArrayList<>();
+        try {
+            Class.forName(DriverTypeEnum.ORACLE.getName());
+            Connection conn = DriverManager.getConnection(url, user, password);
+            Statement stmt = conn.createStatement();
+            ResultSet resultSet = stmt.executeQuery("select OWNER from all_tables where OWNER not in ('SYS','SYSTEM')");
+            while (resultSet.next()) {
+                dbName.add(resultSet.getString("OWNER"));
+            }
+            if (!CollectionUtils.isEmpty(dbName)) {
+                dbName = dbName.stream().distinct().collect(Collectors.toList());
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new FkException(ResultEnum.GET_DATABASE_ERROR);
+        }
+        return dbName;
+    }
 
     /**
      * 获取表及表字段

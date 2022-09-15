@@ -3,9 +3,11 @@ package com.fisk.datamanagement.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.businessmetadata.BusinessMetaDataDTO;
 import com.fisk.datamanagement.service.IBusinessMetaData;
+import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -23,6 +25,8 @@ public class BusinessMetaDataController {
 
     @Resource
     IBusinessMetaData service;
+    @Resource
+    IMetaData metaData;
 
     @ApiOperation("获取业务元数据列表")
     @GetMapping("/getBusinessMetaDataList")
@@ -52,6 +56,12 @@ public class BusinessMetaDataController {
     @GetMapping("/synchronousBusinessMetaData")
     public ResultEntity<Object> synchronousBusinessMetaData() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.synchronousBusinessMetaData());
+    }
+
+    @ApiOperation("同步业务元数据")
+    @PostMapping("/synchronousTableBusinessMetaData")
+    public void synchronousTableBusinessMetaData(@Validated @RequestBody BusinessMetaDataInfoDTO dto) {
+        metaData.synchronousTableBusinessMetaData(dto);
     }
 
 }
