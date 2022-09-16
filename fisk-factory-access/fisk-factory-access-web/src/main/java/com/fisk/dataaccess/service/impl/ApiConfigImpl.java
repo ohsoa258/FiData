@@ -995,6 +995,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
             // 获取token
             String requestToken = iBuildHttpRequest.getRequestToken(apiHttpRequestDto);
+            log.info("token参数:" + JSON.toJSONString(apiHttpRequestDto) + "token值" + requestToken);
             if (StringUtils.isBlank(requestToken)) {
                 return ResultEnum.GET_JWT_TOKEN_ERROR;
             }
