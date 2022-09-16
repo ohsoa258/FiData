@@ -105,6 +105,9 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 //视图结构
                 dataSource.viewDtoList = new ArrayList<>();
 
+            } else if (DataSourceTypeEnum.ORACLE_CDC.getName().equalsIgnoreCase(dataSource.driveType)) {
+                // 表结构
+                dataSource.tableDtoList = oracleUtils.getTableNameAndColumns(po.connectStr, po.connectAccount, po.connectPwd, DriverTypeEnum.ORACLE);
             }
 
             if (CollectionUtils.isNotEmpty(dataSource.tableDtoList)) {

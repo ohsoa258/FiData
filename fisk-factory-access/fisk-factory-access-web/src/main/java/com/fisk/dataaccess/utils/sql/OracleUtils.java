@@ -52,7 +52,7 @@ public class OracleUtils {
      */
     public List<TablePyhNameDTO> getTableNameAndColumns(String url, String user, String password, DriverTypeEnum driverTypeEnum) {
 
-        List<TablePyhNameDTO> list = null;
+        List<TablePyhNameDTO> list;
         try {
             Class.forName(driverTypeEnum.getName());
             Connection conn = DriverManager.getConnection(url, user, password);

@@ -85,6 +85,9 @@ public class AppDataSourceDTO extends BaseDTO {
     @ApiModelProperty(value = "jwt类型下，设置token过期时间", required = true)
     public Integer expirationTime;
 
+    @ApiModelProperty(value = "服务名(只有oracle有服务名)", required = true)
+    public String serviceName;
+
     @ApiModelProperty(value = "jwt类型下，配置返回的json串类型", required = true)
     public List<ApiResultConfigDTO> apiResultConfigDtoList;
 
