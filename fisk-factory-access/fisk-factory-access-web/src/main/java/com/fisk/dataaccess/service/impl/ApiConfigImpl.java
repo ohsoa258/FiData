@@ -24,6 +24,7 @@ import com.fisk.dataaccess.dto.api.*;
 import com.fisk.dataaccess.dto.api.doc.*;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.api.httprequest.JwtRequestDTO;
+import com.fisk.dataaccess.dto.apiresultconfig.ApiResultConfigDTO;
 import com.fisk.dataaccess.dto.json.ApiTableDTO;
 import com.fisk.dataaccess.dto.json.JsonSchema;
 import com.fisk.dataaccess.dto.json.JsonTableData;
@@ -120,6 +121,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private TableBusinessImpl tableBusinessImpl;
     @Resource
     private ApiParameterServiceImpl apiParameterServiceImpl;
+    @Resource
+    private ApiResultConfigImpl apiResultConfigImpl;
     @Resource
     private UserHelper userHelper;
     @Resource
@@ -993,6 +996,15 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             apiHttpRequestDto.jwtRequestDTO = jwtRequestDto;
 
             IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
+
+            //获取token返回json串格式
+            List<ApiResultConfigDTO> apiResultConfig = apiResultConfigImpl.getApiResultConfig(dataSourcePo.id);
+            Optional<ApiResultConfigDTO> first = apiResultConfig.stream().filter(e -> e.checked == true).findFirst();
+            if (!first.isPresent()) {
+                throw new FkException(ResultEnum.RETURN_RESULT_DEFINITION);
+            }
+            apiHttpRequestDto.jsonDataKey = first.get().name;
+
             // 获取token
             String requestToken = iBuildHttpRequest.getRequestToken(apiHttpRequestDto);
             log.info("token参数:" + JSON.toJSONString(apiHttpRequestDto) + "token值" + requestToken);

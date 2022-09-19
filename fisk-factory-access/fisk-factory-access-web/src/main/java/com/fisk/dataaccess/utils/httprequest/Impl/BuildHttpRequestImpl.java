@@ -68,7 +68,7 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
 
             JSONObject jsonObject = JSONObject.parseObject(result);
             String bearer = "Bearer ";
-            String token = (String) jsonObject.get("token");
+            String token = (String) jsonObject.get(dto.jsonDataKey);
 
             return bearer + token;
         } catch (Exception e) {
