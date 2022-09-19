@@ -1000,10 +1000,11 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             //获取token返回json串格式
             List<ApiResultConfigDTO> apiResultConfig = apiResultConfigImpl.getApiResultConfig(dataSourcePo.id);
             Optional<ApiResultConfigDTO> first = apiResultConfig.stream().filter(e -> e.checked == true).findFirst();
-            if (!first.isPresent()) {
-                throw new FkException(ResultEnum.RETURN_RESULT_DEFINITION);
+            apiHttpRequestDto.jsonDataKey = "token";
+            if (first.isPresent()) {
+                apiHttpRequestDto.jsonDataKey = first.get().name;
+                //throw new FkException(ResultEnum.RETURN_RESULT_DEFINITION);
             }
-            apiHttpRequestDto.jsonDataKey = first.get().name;
 
             // 获取token
             String requestToken = iBuildHttpRequest.getRequestToken(apiHttpRequestDto);
