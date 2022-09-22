@@ -31,6 +31,8 @@ public class BuildDataInputDeletePgTableListener {
     IDorisBuild doris;
     @Resource
     TaskPgTableStructureMapper taskPgTableStructureMapper;
+    @Resource
+    PostgreHelper postgreHelper;
 
 
     public ResultEnum msg(String dataInfo, Acknowledgment acke) {
@@ -53,7 +55,7 @@ public class BuildDataInputDeletePgTableListener {
                     });
                     String delSqlStr = buildDelSqlStr.toString();
                     delSqlStr = delSqlStr.substring(0, delSqlStr.lastIndexOf(",")) + " ;";
-                    PostgreHelper.postgreExecuteSql(delSqlStr.toLowerCase(), BusinessTypeEnum.DATAINPUT);
+                    postgreHelper.postgreExecuteSql(delSqlStr.toLowerCase(), BusinessTypeEnum.DATAINPUT);
                     log.info("delsql:" + delSqlStr);
                     log.info("执行pg delete table 完成");
                 } else {
@@ -67,7 +69,7 @@ public class BuildDataInputDeletePgTableListener {
                     });
                     String delSqlStr = buildDelSqlStr.toString();
                     delSqlStr = delSqlStr.substring(0, delSqlStr.lastIndexOf(",")) + " ;";
-                    PostgreHelper.postgreExecuteSql(delSqlStr.toLowerCase(), BusinessTypeEnum.DATAMODEL);
+                    postgreHelper.postgreExecuteSql(delSqlStr.toLowerCase(), BusinessTypeEnum.DATAMODEL);
                     log.info("delsql:" + delSqlStr);
                     log.info("执行pg delete table 完成");
                 }

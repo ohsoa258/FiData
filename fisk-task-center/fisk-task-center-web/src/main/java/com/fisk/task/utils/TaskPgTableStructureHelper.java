@@ -2,7 +2,10 @@ package com.fisk.task.utils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
@@ -31,6 +34,8 @@ public class TaskPgTableStructureHelper
 
     @Resource
     TaskPgTableStructureMapper taskPgTableStructureMapper;
+    @Resource
+    UserClient userClient;
 
 
     public static String taskdbUrl;
@@ -42,6 +47,8 @@ public class TaskPgTableStructureHelper
     public static String driverClassName;
 
     public static String datainputDriverClassName;
+
+    public static String datamodelDriverClassName;
 
     public static String pgsqlDatainputUrl;
 
@@ -81,7 +88,12 @@ public class TaskPgTableStructureHelper
         TaskPgTableStructureHelper.datainputDriverClassName = datainputDriverClassName;
     }
 
-    @Value("${pgsql-datainput.url}")
+    @Value("${pgsql-datamodel.driverClassName}")
+    public void setDatamodelDriverClassName(String datamodelDriverClassName) {
+        TaskPgTableStructureHelper.datamodelDriverClassName = datamodelDriverClassName;
+    }
+
+    @Value("${pgsql-datainput.url}")//
     public void setPgsqlDatainputUrl(String pgsqlDatainputUrl) {
         TaskPgTableStructureHelper.pgsqlDatainputUrl = pgsqlDatainputUrl;
     }
@@ -244,18 +256,33 @@ public class TaskPgTableStructureHelper
      * @return
      */
     public ResultEnum updatePgTableStructure(String sql, String version, int createType) throws Exception {
-        Class.forName(datainputDriverClassName);
-        String pgsqlDwUrl = pgsqlDatamodelUrl;
-        String pgsqlOdsUrl = pgsqlDatainputUrl;
+        String pgsqlOdsUrl = "";
+        String pgsqlOdsUsername = "";
+        String pgsqlOdsPassword = "";
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+            DataSourceDTO data = fiDataDataSource.data;
+            pgsqlOdsUrl = data.conStr;
+            pgsqlOdsUsername = data.conAccount;
+            pgsqlOdsPassword = data.conPassword;
+        } else {
+            log.error("userclient无法查询到ods库的连接信息");
+            return ResultEnum.ERROR;
+        }
+/*        String pgsqlOdsUrl = pgsqlDatainputUrl;
         String pgsqlOdsUsername = pgsqlDatainputUsername;
+        String pgsqlOdsPassword = pgsqlDatainputPassword;*/
+        String pgsqlDwUrl = pgsqlDatamodelUrl;
         String pgsqlDwUsername = pgsqlDatamodelUsername;
         String pgsqlDwPassword = pgsqlDatamodelPassword;
-        String pgsqlOdsPassword = pgsqlDatainputPassword;
         Connection conn;
+        Statement st = null;
         if (createType == 3 || createType == 4) {
+            Class.forName(datainputDriverClassName);
             // 数据接入
             conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlOdsPassword);
         } else {
+            Class.forName(datamodelDriverClassName);
             // 数据建模
             conn = DriverManager.getConnection(pgsqlDwUrl, pgsqlDwUsername, pgsqlDwPassword);
         }
@@ -268,7 +295,7 @@ public class TaskPgTableStructureHelper
             log.info("执行存储过程返回修改语句:" + sql);
             //修改表结构
             if (sql != null && sql.length() > 0) {
-                Statement st = conn.createStatement();
+                st = conn.createStatement();
                 //无需判断ddl语句执行结果,因为如果执行失败会进catch
                 st.execute(sql);
             }
@@ -277,6 +304,7 @@ public class TaskPgTableStructureHelper
             log.error("updatePgTableStructure:" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.SQL_ERROR;
         } finally {
+            st.close();
             conn.close();
         }
     }

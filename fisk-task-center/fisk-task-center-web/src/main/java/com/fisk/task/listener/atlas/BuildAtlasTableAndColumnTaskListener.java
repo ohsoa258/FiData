@@ -78,7 +78,12 @@ public class BuildAtlasTableAndColumnTaskListener
                 tableNifiSettingPO = one;
             }
             tableNifiSettingPO.appId = Integer.valueOf(buildPhysicalTableDTO.appId);
-            tableNifiSettingPO.tableName = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
+            if (buildPhysicalTableDTO.whetherSchema) {
+                tableNifiSettingPO.tableName = buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName;
+            } else {
+                tableNifiSettingPO.tableName = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
+            }
+
             tableNifiSettingPO.tableAccessId = Integer.valueOf(buildPhysicalTableDTO.dbId);
             tableNifiSettingPO.selectSql = physicalSelect;
             tableNifiSettingPO.type = OlapTableEnum.PHYSICS.getValue();

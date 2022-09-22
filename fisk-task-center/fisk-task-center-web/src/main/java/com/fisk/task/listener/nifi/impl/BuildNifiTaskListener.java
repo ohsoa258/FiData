@@ -26,6 +26,8 @@ import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
@@ -134,6 +136,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     KafkaTemplateHelper kafkaTemplateHelper;
     @Resource
     PublishTaskController pc;
+    @Resource
+    UserClient userClient;
 
     @Resource
     RestTemplate httpClient;
@@ -418,6 +422,16 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             targetDbPoolConfig.user = pgsqlDatainputUsername;
             targetDbPoolConfig.password = pgsqlDatainputPassword;
             targetDbPoolConfig.jdbcStr = pgsqlDatainputUrl;
+            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+            if(fiDataDataSource.code == ResultEnum.SUCCESS.getCode()){
+                DataSourceDTO dataSource = fiDataDataSource.data;
+                targetDbPoolConfig.type = DriverTypeEnum.valueOf(dataSource.conType.getDriverName());
+                targetDbPoolConfig.user = dataSource.conAccount;
+                targetDbPoolConfig.password = dataSource.conPassword;
+                targetDbPoolConfig.jdbcStr = dataSource.conStr;
+            }else {
+                log.error("userclient无法查询到ods库的连接信息");
+            }
             targetDbPoolConfig.tableFieldsList = res.data.targetDsConfig.tableFieldsList;
             TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
             if (buildNifiFlowDTO.workflowDetailId != null) {
@@ -483,6 +497,16 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             sourceDsConfig.jdbcStr = pgsqlDatainputUrl;
             sourceDsConfig.user = pgsqlDatainputUsername;
             sourceDsConfig.password = pgsqlDatainputPassword;
+            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+            if(fiDataDataSource.code == ResultEnum.SUCCESS.getCode()){
+                DataSourceDTO dataSource = fiDataDataSource.data;
+                sourceDsConfig.type = DriverTypeEnum.valueOf(dataSource.conType.getDriverName());
+                sourceDsConfig.user = dataSource.conAccount;
+                sourceDsConfig.password = dataSource.conPassword;
+                sourceDsConfig.jdbcStr = dataSource.conStr;
+            }else {
+                log.error("userclient无法查询到ods库的连接信息");
+            }
             targetDbPoolConfig.type = DriverTypeEnum.POSTGRESQL;
             targetDbPoolConfig.user = pgsqlDatamodelUsername;
             targetDbPoolConfig.password = pgsqlDatamodelPassword;

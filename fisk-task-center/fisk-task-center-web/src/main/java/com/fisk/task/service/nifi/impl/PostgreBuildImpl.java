@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+
 @Service
 @Slf4j
 public class PostgreBuildImpl implements IPostgreBuild {
@@ -20,13 +22,15 @@ public class PostgreBuildImpl implements IPostgreBuild {
     public void setPgsqlDatainputUrl(String pgsqlDatainputUrl) {
         DatainputUrl = pgsqlDatainputUrl;
     }
+    @Resource
+    public PostgreHelper postgreHelper;
 
     @Override
     public BusinessResult postgreBuildTable(String executsql, BusinessTypeEnum businessTypeEnum) {
         boolean re = false;
         String msg = null;
         try {
-            PostgreHelper.postgreExecuteSql(executsql,businessTypeEnum);
+            postgreHelper.postgreExecuteSql(executsql,businessTypeEnum);
             re = true;
         } catch (Exception e) {
             //捕捉错误
@@ -43,7 +47,7 @@ public class PostgreBuildImpl implements IPostgreBuild {
         String msg = null;
         BusinessResult res = null;
         try {
-            data = PostgreHelper.postgreQuery(executsql, businessTypeEnum, data);
+            data = postgreHelper.postgreQuery(executsql, businessTypeEnum, data);
             re = true;
         } catch (Exception e) {
             //捕捉错误
@@ -61,7 +65,7 @@ public class PostgreBuildImpl implements IPostgreBuild {
         BusinessResult res = null;
         JSONArray resultSet=null;
         try {
-             resultSet = PostgreHelper.postgreQuery(executsql, businessTypeEnum);
+             resultSet = postgreHelper.postgreQuery(executsql, businessTypeEnum);
             re = true;
         } catch (Exception e) {
             //捕捉错误
