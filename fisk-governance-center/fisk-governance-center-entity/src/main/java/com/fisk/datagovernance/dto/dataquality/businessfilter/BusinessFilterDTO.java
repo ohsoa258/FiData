@@ -1,7 +1,9 @@
 package com.fisk.datagovernance.dto.dataquality.businessfilter;
 
 import com.fisk.datagovernance.enums.dataquality.RuleStateEnum;
+import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 /**
  * @author dick
@@ -9,6 +11,7 @@ import io.swagger.annotations.ApiModelProperty;
  * @description 业务清洗DTO
  * @date 2022/3/24 13:48
  */
+@Data
 public class BusinessFilterDTO {
     /**
      * 模板id
@@ -21,6 +24,13 @@ public class BusinessFilterDTO {
      */
     @ApiModelProperty(value = "数据源表主键id")
     public int datasourceId;
+
+    /**
+     * 数据源类型
+     */
+    @ApiModelProperty(value = "数据源类型")
+    public SourceTypeEnum sourceTypeEnum;
+
 
     /**
      * 规则名称
