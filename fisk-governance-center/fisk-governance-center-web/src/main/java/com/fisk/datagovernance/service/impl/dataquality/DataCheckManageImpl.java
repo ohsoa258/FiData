@@ -100,7 +100,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     if (CollectionUtils.isNotEmpty(dataCheckExtendFilters)) {
                         e.setDataCheckExtends(DataCheckExtendMap.INSTANCES.poToVo(dataCheckExtendFilters));
                         e.getDataCheckExtends().stream().forEach(t -> {
-                            if (e.datasourceType == SourceTypeEnum.FiData) {
+                            if (e.sourceTypeEnum == SourceTypeEnum.FiData) {
                                 if (CollectionUtils.isNotEmpty(query.tableField.getFields())) {
                                     DataTableFieldDTO dataTableFieldDTO = query.tableField.getFields().stream().filter(f -> f.id.equals(t.fieldUnique)).findFirst().orElse(null);
                                     if (dataTableFieldDTO != null) {

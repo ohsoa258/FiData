@@ -51,6 +51,7 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
 
     @Override
     public Page<LifecycleVO> getAll(LifecycleQueryDTO query) {
+        // 返回增加数据源类型
         return baseMapper.getAll(query.page, query.datasourceId, query.tableUnique,
                 query.tableBusinessType,query.keyword);
     }

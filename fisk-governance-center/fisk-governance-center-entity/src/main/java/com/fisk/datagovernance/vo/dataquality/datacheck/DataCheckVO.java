@@ -37,7 +37,7 @@ public class DataCheckVO {
      * 数据源类型
      */
     @ApiModelProperty(value = "数据源类型")
-    public SourceTypeEnum datasourceType;
+    public SourceTypeEnum sourceTypeEnum;
 
     /**
      * 规则名称

@@ -56,6 +56,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
 
     @Override
     public Page<BusinessFilterVO> getAll(BusinessFilterQueryDTO query) {
+        // 返回增加数据源类型
         return baseMapper.getAll(query.page, query.datasourceId, query.tableUnique,
                 query.tableBusinessType,query.keyword);
     }
