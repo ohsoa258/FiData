@@ -294,6 +294,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             AppRegistrationPO registration = iAppRegistration.getById(appId);
             AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("app_id", appId).one();
             String odsTableName = "ods_" + registration.appAbbreviation + "_" + tableName;
+            if (registration.whetherSchema) {
+                odsTableName = "ods_" + registration.appAbbreviation + "." + tableName;
+            }
             data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
 
             // 执行发布
@@ -304,7 +307,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     TableAccessPO accessPo = tableAccessImpl.query().eq("id", accessId).one();
                     List<TableAccessPO> tablePoList = tableAccessImpl.query().eq("api_id", accessPo.apiId).list();
                     // api下所有表
-                    data.apiTableNames = tablePoList.stream().map(e -> registration.appAbbreviation + "_" + e.tableName).collect(Collectors.toList());
+                    data.apiTableNames = tablePoList.stream().map(e -> e.tableName).collect(Collectors.toList());
                     data.appType = registration.appType;
                     data.apiId = accessPo.apiId;
                     // 创建表流程
@@ -484,4 +487,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         dto.fieldList = fieldList;
         return dto;
     }
+
+
 }

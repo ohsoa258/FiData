@@ -2,6 +2,7 @@ package com.fisk.dataaccess.utils.sql;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -118,5 +119,37 @@ public class SqlServerConUtils {
         }
         return list;
     }
+
+    /**
+     * 创建schema
+     *
+     * @param conn
+     * @param schemaName
+     * @return
+     */
+    public static void operationSchema(Connection conn, String schemaName, boolean delete) {
+        Statement stmt = null;
+        try {
+            stmt = conn.createStatement();
+            StringBuilder str = new StringBuilder();
+            if (!delete) {
+                str.append("CREATE SCHEMA ods_" + schemaName + ";");
+                str.append("CREATE SCHEMA stg_" + schemaName + ";");
+            } else {
+                str.append("DROP SCHEMA ods_" + schemaName + ";");
+                str.append("DROP SCHEMA stg_" + schemaName + ";");
+            }
+            if (!stmt.execute(str.toString())) {
+                throw new FkException(ResultEnum.SCHEMA_ERROR);
+            }
+        } catch (SQLException e) {
+            log.error("operationSchema ex:", e);
+            throw new FkException(ResultEnum.SCHEMA_ERROR);
+        } finally {
+            AbstractDbHelper.closeStatement(stmt);
+            AbstractDbHelper.closeConnection(conn);
+        }
+    }
+
 
 }

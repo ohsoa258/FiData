@@ -15,7 +15,8 @@ public enum DbTypeEnum implements BaseEnum {
     oracle(3, "oracle"),
     RestfulAPI(4, "RestfulAPI"),
     ftp(5, "ftp"),
-    api(6, "api");
+    api(6, "api"),
+    oracle_cdc(8, "oracle-cdc");
 
     DbTypeEnum(int value, String name) {
         this.value = value;

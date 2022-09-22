@@ -24,15 +24,19 @@ import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
+import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataaccess.dto.GetConfigDTO;
+import com.fisk.dataaccess.dto.OdsDbConfigDTO;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.apiresultconfig.ApiResultConfigDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
+import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
+import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
@@ -42,9 +46,7 @@ import com.fisk.dataaccess.map.AppRegistrationMap;
 import com.fisk.dataaccess.mapper.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.utils.httprequest.Impl.BuildHttpRequestImpl;
-import com.fisk.dataaccess.utils.sql.MysqlConUtils;
-import com.fisk.dataaccess.utils.sql.OracleUtils;
-import com.fisk.dataaccess.utils.sql.SqlServerPlusUtils;
+import com.fisk.dataaccess.utils.sql.*;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
@@ -71,6 +73,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -125,6 +128,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Resource
     private RedisTemplate redisTemplate;
     @Resource
+    OracleCdcUtils oracleCdcUtils;
+    @Resource
     RedisUtil redisUtil;
     @Value("${metadata-instance.hostname}")
     private String hostname;
@@ -132,6 +137,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     private String dbName;
     @Resource
     GetConfigDTO getConfig;
+    @Resource
+    OdsDbConfigDTO odsDbConfig;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -191,6 +198,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         AtlasEntityQueryVO vo = new AtlasEntityQueryVO();
         vo.userId = userId;
         vo.appId = String.valueOf(po.getId());
+
+        //是否添加schema
+        if (appRegistrationDTO.whetherSchema) {
+            AbstractDbHelper helper = new AbstractDbHelper();
+            Connection connection = helper.connection(odsDbConfig.url, odsDbConfig.username, odsDbConfig.password, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+            SqlServerConUtils.operationSchema(connection, appRegistrationDTO.appAbbreviation, false);
+        }
 
         // 添加元数据信息
         ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
@@ -438,6 +452,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         vo.qualifiedNames = qualifiedNames;
         log.info("删除的应用信息,{}", vo);
 
+        //删除schema
+        if (model.whetherSchema) {
+            AbstractDbHelper helper = new AbstractDbHelper();
+            Connection connection = helper.connection(odsDbConfig.url, odsDbConfig.username, odsDbConfig.password, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+            SqlServerConUtils.operationSchema(connection, model.appAbbreviation, true);
+        }
 
         // 删除元数据信息
         ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
@@ -1084,6 +1104,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             log.error("getApiToken ex:", e);
             throw new FkException(ResultEnum.AUTH_TOKEN_PARSER_ERROR);
         }
+    }
+
+    @Override
+    public CdcJobScriptDTO buildCdcJobScript(CdcJobParameterDTO dto) {
+        AppDataSourceDTO dataSourceData = appDataSourceImpl.getDataSourceByAppId(dto.dataSourceId);
+        dto.targetTable = tableAccessImpl.getAccessTableName(dto.tableAccessId);
+        return oracleCdcUtils.createCdcJobScript(dto, dataSourceData);
     }
 
     /**

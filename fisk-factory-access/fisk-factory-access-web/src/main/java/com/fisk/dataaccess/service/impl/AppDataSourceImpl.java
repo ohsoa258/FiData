@@ -91,7 +91,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 dataSource.viewDtoList = mysqlConUtils.loadViewDetails(DriverTypeEnum.MYSQL, po.connectStr, po.connectAccount, po.connectPwd, po.dbName);
             } else if (DataSourceTypeEnum.ORACLE.getName().equalsIgnoreCase(dataSource.driveType)) {
                 // 表结构
-                dataSource.tableDtoList = oracleUtils.getTableNameAndColumns(po.connectStr, po.connectAccount, po.connectPwd, DriverTypeEnum.ORACLE);
+                dataSource.tableDtoList = oracleUtils.getTableNameAndColumns(po.connectStr, po.connectAccount, po.connectPwd, po.dbName, DriverTypeEnum.ORACLE);
                 //视图结构
                 dataSource.viewDtoList = oracleUtils.loadViewDetails(DriverTypeEnum.ORACLE, po.connectStr, po.connectAccount, po.connectPwd, po.dbName);
             } else if (DataSourceTypeEnum.SQLSERVER.getName().equalsIgnoreCase(dataSource.driveType)) {

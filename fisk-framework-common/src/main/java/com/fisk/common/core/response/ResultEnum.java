@@ -130,6 +130,7 @@ public enum ResultEnum {
     GET_DATABASE_ERROR(5053, "获取数据库失败,请重新检查参数"),
     RETURN_RESULT_DEFINITION(5054, "返回结果定义必须选中获取键值"),
     API_EXPRESSION_ERROR(5055, "API表达式格式错误"),
+    SCHEMA_ERROR(5056, "创建或删除schema失败"),
 
     /**
      * 后台任务模块

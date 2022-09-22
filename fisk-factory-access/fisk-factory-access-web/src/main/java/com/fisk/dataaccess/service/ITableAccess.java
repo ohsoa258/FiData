@@ -314,4 +314,12 @@ public interface ITableAccess extends IService<TableAccessPO> {
      */
     List<FieldNameDTO> getFieldList(TableAccessNonDTO dto);
 
+    /**
+     * 获取物理表表名
+     *
+     * @param tableAccessId
+     * @return
+     */
+    String getAccessTableName(Long tableAccessId);
+
 }

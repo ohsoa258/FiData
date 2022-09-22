@@ -2,6 +2,7 @@ package com.fisk.dataaccess.dto.table;
 
 import com.fisk.common.core.baseObject.dto.BaseDTO;
 import com.fisk.common.core.baseObject.entity.BaseEntity;
+import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -100,6 +101,11 @@ public class TableAccessNonDTO extends BaseDTO {
      * 同步方式对象
      */
     public TableSyncmodeDTO tableSyncmodeDTO;
+
+    /**
+     * oracle-cdc任务脚本
+     */
+    public CdcJobScriptDTO cdcJobScript;
 
     /**
      * 0: 保存;   1: 保存&发布

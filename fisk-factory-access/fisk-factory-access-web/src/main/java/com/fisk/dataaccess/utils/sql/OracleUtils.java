@@ -3,6 +3,7 @@ package com.fisk.dataaccess.utils.sql;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.dataaccess.dto.table.DataBaseViewDTO;
 import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
@@ -191,6 +192,61 @@ public class OracleUtils {
     }
 
     /**
+     * 获取oracle主键
+     *
+     * @param url
+     * @param account
+     * @param password
+     * @param dbName
+     * @param tableName
+     * @return
+     */
+    public static List<String> getTablePrimaryKey(String url, String account, String password, String dbName, String tableName) {
+        Connection conn = null;
+        Statement st = null;
+        List<String> list = new ArrayList<>();
+        try {
+            Class.forName(DriverTypeEnum.ORACLE.getName());
+            conn = DriverManager.getConnection(url, account, password);
+            st = conn.createStatement();
+            ResultSet rs = st.executeQuery(buildSelectTablePrimaryKeySql(dbName, tableName));
+            list = new ArrayList<>();
+            while (rs.next()) {
+                list.add(rs.getString("COLUMN_NAME"));
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+            log.error("【getTablePrimaryKey】获取表主键报错, ex", e);
+            throw new FkException(ResultEnum.SQL_ERROR);
+        } finally {
+            AbstractDbHelper.closeStatement(st);
+            AbstractDbHelper.closeConnection(conn);
+            return list;
+        }
+    }
+
+    /**
+     * 拼接查询表主键信息
+     *
+     * @param dbName
+     * @param tableName
+     * @return
+     */
+    public static String buildSelectTablePrimaryKeySql(String dbName, String tableName) {
+        StringBuilder str = new StringBuilder();
+        str.append(" SELECT ");
+        str.append(" a.COLUMN_NAME ");
+        str.append(" FROM ");
+        str.append(" ALL_CONS_COLUMNS a, ");
+        str.append(" ALL_CONSTRAINTS b ");
+        str.append(" WHERE ");
+        str.append(" a.CONSTRAINT_NAME = b.CONSTRAINT_NAME ");
+        str.append(" AND b.CONSTRAINT_TYPE = 'P' ");
+        str.append(" AND a.table_name ='" + tableName + "' ");
+        str.append(" AND a.OWNER = '" + dbName + "'");
+        return str.toString();
+    }
+
+    /**
      * 获取表中所有字段名称
      *
      * @param rs rs
@@ -211,6 +267,7 @@ public class OracleUtils {
                 tableStructureDTO.fieldType = metaData.getColumnTypeName(i);
                 // 字段长度
                 tableStructureDTO.fieldLength = metaData.getColumnDisplaySize(i);
+                tableStructureDTO.fieldDes = metaData.getCatalogName(i);
                 colNameList.add(tableStructureDTO);
             }
             rs.close();
@@ -219,4 +276,83 @@ public class OracleUtils {
         }
         return colNameList;
     }
+
+    /**
+     * 读取Oracle表、字段信息
+     *
+     * @param url
+     * @param account
+     * @param password
+     * @param dbName
+     * @param driverTypeEnum
+     * @return
+     */
+    public List<TablePyhNameDTO> getTableNameAndColumns(String url, String account, String password, String dbName, DriverTypeEnum driverTypeEnum) {
+        Connection conn = null;
+        Statement st = null;
+        List<TablePyhNameDTO> list = new ArrayList<>();
+        try {
+            Class.forName(driverTypeEnum.getName());
+            conn = DriverManager.getConnection(url, account, password);
+            // 获取数据库中所有表名称
+            List<String> tableList = getTables(conn, dbName);
+            if (CollectionUtils.isEmpty(tableList)) {
+                return null;
+            }
+            st = conn.createStatement();
+            list = new ArrayList<>();
+            for (String tableName : tableList) {
+                TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+                tablePyhNameDTO.setTableName(tableName);
+                ResultSet rs = st.executeQuery(this.buildSelectTableColumnSql(dbName, tableName));
+                List<TableStructureDTO> colNameList = new ArrayList<>();
+                while (rs.next()) {
+                    TableStructureDTO dto = new TableStructureDTO();
+                    dto.fieldName = rs.getString("COLUMN_NAME");
+                    dto.fieldType = rs.getString("DATA_TYPE");
+                    dto.fieldLength = Integer.parseInt(rs.getString("DATA_LENGTH"));
+                    dto.fieldDes = rs.getString("COMMENTS");
+                    colNameList.add(dto);
+                }
+                tablePyhNameDTO.setFields(colNameList);
+                list.add(tablePyhNameDTO);
+                rs.close();
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+            log.error("【getTableNameAndColumns】获取表名报错, ex", e);
+            throw new FkException(ResultEnum.SQL_ERROR);
+        } finally {
+            AbstractDbHelper.closeStatement(st);
+            AbstractDbHelper.closeConnection(conn);
+            return list;
+        }
+    }
+
+    /**
+     * 拼接查询表字段信息sql
+     *
+     * @param dbName
+     * @param tableName
+     * @return
+     */
+    public String buildSelectTableColumnSql(String dbName, String tableName) {
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT ");
+        str.append("a.TABLE_NAME ");
+        str.append(",b.COLUMN_NAME ");
+        str.append(",b.DATA_TYPE ");
+        str.append(",b.DATA_LENGTH ");
+        str.append(",a.COMMENTS ");
+        str.append("FROM ");
+        str.append("ALL_COL_COMMENTS a,ALL_TAB_COLUMNS b ");
+        str.append("WHERE a.TABLE_NAME = b.TABLE_NAME ");
+        str.append("AND a.OWNER = b.OWNER ");
+        str.append("AND a.COLUMN_NAME = b.COLUMN_NAME ");
+        str.append("AND ");
+        str.append("a.OWNER='" + dbName + "' ");
+        str.append("AND ");
+        str.append("a.TABLE_NAME='" + tableName + "' ");
+        return str.toString();
+    }
+
 }

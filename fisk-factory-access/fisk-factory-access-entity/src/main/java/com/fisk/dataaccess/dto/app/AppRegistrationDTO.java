@@ -47,6 +47,8 @@ public class AppRegistrationDTO extends BaseDTO {
     public String appPrincipalEmail;
     @ApiModelProperty(value = "创建时间")
     public Date createTime;
+    @ApiModelProperty(value = "是否将应用简称作为schema使用")
+    public Boolean whetherSchema;
 
     public AppDataSourceDTO appDatasourceDTO;
 

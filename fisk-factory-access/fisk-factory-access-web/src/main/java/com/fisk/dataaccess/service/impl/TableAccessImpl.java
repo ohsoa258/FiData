@@ -1532,16 +1532,20 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.sourceTableName = metaData.getTableName(i);
             // 源字段
             dto.sourceFieldName = metaData.getColumnLabel(i);
+            dto.sourceFieldType = metaData.getColumnTypeName(i);
             dto.fieldName = metaData.getColumnLabel(i);
             String tableName = metaData.getTableName(i) + "key";
             if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equals(dto.fieldName) || tableName.equals("ods_" + dto.fieldName)) {
                 continue;
             }
             dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
-            if (dto.fieldType.contains("INT2") || dto.fieldType.contains("INT4") || dto.fieldType.contains("INT8")) {
+            if (dto.fieldType.contains("INT2")
+                    || dto.fieldType.contains("INT4")
+                    || dto.fieldType.contains("INT8")) {
                 dto.fieldType = "INT";
             }
-            if (dto.fieldType.toLowerCase().contains(fieldType1) || dto.fieldType.toLowerCase().contains(fieldType2)) {
+            if (dto.fieldType.toLowerCase().contains(fieldType1)
+                    || dto.fieldType.toLowerCase().contains(fieldType2)) {
                 dto.fieldLength = "50";
             } else {
                 dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
@@ -1552,7 +1556,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.fieldType = list.get(0);
             dto.fieldLength = list.get(1);
 
-            dto.sourceFieldType = dto.fieldType;
+            ////dto.sourceFieldType = dto.fieldType;
 
             fieldNameDTOList.add(dto);
         }
@@ -1755,6 +1759,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 //st.setFetchSize(Integer.MIN_VALUE);
 //                conn.setAutoCommit(false);
                 st.setMaxRows(10);
+            } else if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE_CDC.getName())) {
+                //1.加载驱动程序
+                Class.forName(com.fisk.dataaccess.enums.DriverTypeEnum.ORACLE.getName());
+                //2.获得数据库的连接
+                conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
+                st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                //st.setFetchSize(Integer.MIN_VALUE);
+                st.setMaxRows(10);
             }
             assert st != null;
             Instant inst2 = Instant.now();
@@ -1770,6 +1782,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             log.info("执行sql时间 : " + Duration.between(inst3, inst4).toMillis());
             //获取数据集
             array = resultSetToJsonArrayDataAccess(rs);
+            if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE_CDC.getName())
+                    && !CollectionUtils.isEmpty(array.fieldNameDTOList)) {
+                array.fieldNameDTOList.stream().map(e -> e.sourceTableName = query.tableName).collect(Collectors.toList());
+            }
             Instant inst5 = Instant.now();
             log.info("封装数据执行时间 : " + Duration.between(inst4, inst5).toMillis());
 
@@ -1905,6 +1921,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return filterSqlFieldList(listField, queryDto);
         }
         return null;
+    }
+
+    @Override
+    public String getAccessTableName(Long tableAccessId) {
+        TableAccessPO po = accessMapper.selectById(tableAccessId);
+        if (po == null) {
+            throw new FkException(ResultEnum.TASK_TABLE_NOT_EXIST);
+        }
+        return po.tableName;
     }
 
     /**
