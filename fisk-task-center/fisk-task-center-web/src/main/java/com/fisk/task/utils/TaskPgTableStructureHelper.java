@@ -17,10 +17,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.sql.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -306,7 +303,9 @@ public class TaskPgTableStructureHelper
             log.error("updatePgTableStructure:" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.SQL_ERROR;
         } finally {
-            st.close();
+            if (st != null) {
+                st.close();
+            }
             conn.close();
         }
     }
