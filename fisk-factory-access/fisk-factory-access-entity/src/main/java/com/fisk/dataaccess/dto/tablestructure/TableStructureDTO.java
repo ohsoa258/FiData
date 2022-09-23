@@ -32,4 +32,11 @@ public class TableStructureDTO {
      */
     @ApiModelProperty(value = "字段描述", required = true)
     public String fieldDes;
+
+    /**
+     * 字段精度
+     */
+    @ApiModelProperty(value = "字段精度", required = true)
+    public Integer fieldPrecision;
+
 }

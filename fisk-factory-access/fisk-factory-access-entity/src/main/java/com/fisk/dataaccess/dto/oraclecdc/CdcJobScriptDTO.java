@@ -8,16 +8,8 @@ import lombok.Data;
 @Data
 public class CdcJobScriptDTO {
     /**
-     * flink创建来源表脚本
+     * oracle-cdc任务脚本
      */
-    public String sourceTableScript;
-    /**
-     * flink创建目标表脚本
-     */
-    public String targetTableScript;
-    /**
-     * 执行sql
-     */
-    public String sqlScript;
+    public String jobScript;
 
 }

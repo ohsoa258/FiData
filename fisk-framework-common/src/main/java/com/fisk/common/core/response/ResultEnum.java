@@ -71,6 +71,7 @@ public enum ResultEnum {
      */
     USER_ACCOUNTPASSWORD_ERROR(4001, "用户名或密码不正确"),
     ORIGINAL_PASSWORD_ERROR(4002, "用户原密码错误"),
+    DATA_SOURCE_ERROR(4003, "获取数据源配置失败"),
 
     /**
      * 数据接入模块
@@ -131,6 +132,7 @@ public enum ResultEnum {
     RETURN_RESULT_DEFINITION(5054, "返回结果定义必须选中获取键值"),
     API_EXPRESSION_ERROR(5055, "API表达式格式错误"),
     SCHEMA_ERROR(5056, "创建或删除schema失败"),
+    UPLOAD_FLINK_ERROR(5057, "脚本上传flink失败"),
 
     /**
      * 后台任务模块

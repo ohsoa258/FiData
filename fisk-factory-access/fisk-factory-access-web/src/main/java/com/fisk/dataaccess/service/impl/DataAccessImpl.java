@@ -32,8 +32,6 @@ public class DataAccessImpl implements IDataAccess {
     @Resource
     TableAccessMapper tableAccessMapper;
     @Resource
-    TableAccessImpl tableAccessImpl;
-    @Resource
     TableFieldsMapper tableFieldsMapper;
     @Resource
     TableFieldsImpl tableFieldsImpl;

@@ -88,6 +88,9 @@ public class AppDataSourceDTO extends BaseDTO {
     @ApiModelProperty(value = "服务名(只有oracle有服务名)", required = true)
     public String serviceName;
 
+    @ApiModelProperty(value = "oracle服务类型：0:服务名、1:SID", required = true)
+    public Integer serviceType;
+
     @ApiModelProperty(value = "jwt类型下，配置返回的json串类型", required = true)
     public List<ApiResultConfigDTO> apiResultConfigDtoList;
 

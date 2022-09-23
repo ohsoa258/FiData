@@ -28,6 +28,7 @@ import com.fisk.dataaccess.dto.access.DataAccessTreeDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.*;
@@ -53,6 +54,8 @@ import com.fisk.dataaccess.vo.pgsql.TableListVO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
@@ -102,6 +105,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Resource
     private PublishTaskClient publishTaskClient;
     @Resource
+    private UserClient userClient;
+    @Resource
     private UserHelper userHelper;
     @Resource
     private TableBusinessImpl businessImpl;
@@ -133,13 +138,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public String pgsqlDatamodelUsername;
     @Value("${pgsql-datamodel.password}")
     public String pgsqlDatamodelPassword;
-
-    @Value("${pgsql-ods.url}")
-    public String pgsqlOdsUrl;
-    @Value("${pgsql-ods.username}")
-    public String pgsqlOdsUsername;
-    @Value("${pgsql-ods.password}")
-    public String pgsqlOdsPassword;
 
     @Value("${metadata-instance.hostname}")
     private String hostname;
@@ -1465,8 +1463,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public OdsResultDTO getTableFieldByQuery(OdsQueryDTO query) {
         OdsResultDTO array = new OdsResultDTO();
         try {
-            Class.forName("org.postgresql.Driver");
-            Connection conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlDatamodelPassword);
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(5);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+            }
+            Class.forName(dataSourceConfig.data.conType.getDriverName());
+            Connection conn = DriverManager.getConnection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword);
             Statement st = conn.createStatement();
             Map<String, String> converSql = publishTaskClient.converSql(query.tableName, query.querySql, "").data;
             query.querySql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
@@ -1479,8 +1481,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
             rSet.close();
             //分页获取数据
-            int offset = (query.pageIndex - 1) * query.pageSize;
-            query.querySql = query.querySql + " limit " + query.pageSize + " offset " + offset;
+            if (dataSourceConfig.data.conType.getName().equalsIgnoreCase("SQLSERVER")) {
+                query.querySql = query.querySql + " ORDER BY 1 OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY;";
+            } else if (dataSourceConfig.data.conType.getName().equalsIgnoreCase("POSTGRESQL")) {
+                int offset = (query.pageIndex - 1) * query.pageSize;
+                query.querySql = query.querySql + " limit " + query.pageSize + " offset " + offset;
+            }
             ResultSet rs = st.executeQuery(query.querySql);
             //获取数据集
             array = resultSetToJsonArrayDataModel(rs);
@@ -1923,15 +1929,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return null;
     }
 
-    @Override
-    public String getAccessTableName(Long tableAccessId) {
-        TableAccessPO po = accessMapper.selectById(tableAccessId);
-        if (po == null) {
-            throw new FkException(ResultEnum.TASK_TABLE_NOT_EXIST);
-        }
-        return po.tableName;
-    }
-
     /**
      * 连接数据库
      *
@@ -1951,4 +1948,18 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
         return conn;
     }
+
+    @Override
+    public ResultEnum cdcHeadConfig(CdcHeadConfigDTO dto) {
+        TableAccessPO po = accessMapper.selectById(dto.dataAccessId);
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        po.checkPointInterval = dto.checkPointInterval;
+        po.checkPointUnit = dto.checkPointUnit;
+        po.pipelineName = dto.pipelineName;
+        po.scanStartupMode = dto.scanStartupMode;
+        return accessMapper.updateById(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
 }

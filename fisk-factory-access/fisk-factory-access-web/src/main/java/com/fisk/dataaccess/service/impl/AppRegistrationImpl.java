@@ -30,7 +30,6 @@ import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataaccess.dto.GetConfigDTO;
-import com.fisk.dataaccess.dto.OdsDbConfigDTO;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.apiresultconfig.ApiResultConfigDTO;
 import com.fisk.dataaccess.dto.app.*;
@@ -38,6 +37,7 @@ import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
+import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
@@ -57,6 +57,8 @@ import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
@@ -126,6 +128,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Resource
     private DataManageClient dataManageClient;
     @Resource
+    private UserClient userClient;
+    @Resource
     private RedisTemplate redisTemplate;
     @Resource
     OracleCdcUtils oracleCdcUtils;
@@ -137,8 +141,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     private String dbName;
     @Resource
     GetConfigDTO getConfig;
-    @Resource
-    OdsDbConfigDTO odsDbConfig;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -201,8 +203,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         //是否添加schema
         if (appRegistrationDTO.whetherSchema) {
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(5);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+            }
             AbstractDbHelper helper = new AbstractDbHelper();
-            Connection connection = helper.connection(odsDbConfig.url, odsDbConfig.username, odsDbConfig.password, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+            Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
             SqlServerConUtils.operationSchema(connection, appRegistrationDTO.appAbbreviation, false);
         }
 
@@ -454,8 +460,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         //删除schema
         if (model.whetherSchema) {
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(5);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+            }
             AbstractDbHelper helper = new AbstractDbHelper();
-            Connection connection = helper.connection(odsDbConfig.url, odsDbConfig.username, odsDbConfig.password, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+            Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
             SqlServerConUtils.operationSchema(connection, model.appAbbreviation, true);
         }
 
@@ -1109,8 +1119,16 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Override
     public CdcJobScriptDTO buildCdcJobScript(CdcJobParameterDTO dto) {
         AppDataSourceDTO dataSourceData = appDataSourceImpl.getDataSourceByAppId(dto.dataSourceId);
-        dto.targetTable = tableAccessImpl.getAccessTableName(dto.tableAccessId);
-        return oracleCdcUtils.createCdcJobScript(dto, dataSourceData);
+        TbTableAccessDTO tableAccessData = tableAccessImpl.getTableAccessData(dto.tableAccessId);
+        if (tableAccessData == null) {
+
+        }
+        dto.targetTable = tableAccessData.tableName;
+        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(5);
+        if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        return oracleCdcUtils.createCdcJobScript(dto, dataSourceData, dataSourceConfig.data, tableAccessData);
     }
 
     /**

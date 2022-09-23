@@ -122,4 +122,9 @@ public class AppDataSourcePO extends BasePO {
      */
     public String serviceName;
 
+    /**
+     * oracle服务类型：0:服务名、1:SID
+     */
+    public Integer serviceType;
+
 }

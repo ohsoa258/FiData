@@ -17,6 +17,7 @@ import com.fisk.dataaccess.dto.access.OperateTableDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewPageDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
+import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
@@ -29,6 +30,7 @@ import com.fisk.dataaccess.mapper.TableFieldsMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.service.ITableFields;
+import com.fisk.dataaccess.utils.files.FileTxtUtils;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
@@ -91,6 +93,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     private String dbName;
     @Value("${metadata-instance.protocol}")
     private String protocol;
+    @Value("${flink-script.path}")
+    private String flinkScriptPath;
 
     @Override
     public Page<DataReviewVO> listData(DataReviewQueryDTO query) {
@@ -163,7 +167,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         tableAccessImpl.updateById(accessPo);
 
         // 发布
-        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission);
+        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, dto.cdcJobScript);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -234,7 +238,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         tableAccessImpl.updateById(model);
 
         // 发布
-        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission);
+        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, dto.cdcJobScript);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
@@ -279,7 +283,13 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      * @param tableName 物理表tableName
      * @param flag      0: 保存;  1: 发布
      */
-    private void publish(boolean success, long appId, long accessId, String tableName, int flag, boolean openTransmission) {
+    private void publish(boolean success,
+                         long appId,
+                         long accessId,
+                         String tableName,
+                         int flag,
+                         boolean openTransmission,
+                         CdcJobScriptDTO cdcDto) {
         if (success && flag == 1) {
             UserInfo userInfo = userHelper.getLoginUserInfo();
             ResultEntity<BuildPhysicalTableDTO> result = tableAccessImpl.getBuildPhysicalTableDTO(accessId, appId);
@@ -298,6 +308,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 odsTableName = "ods_" + registration.appAbbreviation + "." + tableName;
             }
             data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
+            data.whetherSchema = registration.whetherSchema;
+            //oracle-cdc类型需要上产脚本
+            if (dataSourcePo.driveType.equalsIgnoreCase("ORACLE-CDC")) {
+                cdcScriptUploadFlink(cdcDto, tableName);
+            }
 
             // 执行发布
             try {
@@ -333,6 +348,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 throw new FkException(ResultEnum.TASK_EXEC_FAILURE);
             }
         }
+    }
+
+    public void cdcScriptUploadFlink(CdcJobScriptDTO cdcJobScript, String fileName) {
+        String path = "D:\\Driver";
+        FileTxtUtils.setFiles(path + "\\" + fileName + ".txt", cdcJobScript.jobScript);
     }
 
     /**

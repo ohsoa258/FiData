@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.utils.sql;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.common.core.enums.dbdatatype.OracleTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
@@ -307,12 +308,7 @@ public class OracleUtils {
                 ResultSet rs = st.executeQuery(this.buildSelectTableColumnSql(dbName, tableName));
                 List<TableStructureDTO> colNameList = new ArrayList<>();
                 while (rs.next()) {
-                    TableStructureDTO dto = new TableStructureDTO();
-                    dto.fieldName = rs.getString("COLUMN_NAME");
-                    dto.fieldType = rs.getString("DATA_TYPE");
-                    dto.fieldLength = Integer.parseInt(rs.getString("DATA_LENGTH"));
-                    dto.fieldDes = rs.getString("COMMENTS");
-                    colNameList.add(dto);
+                    colNameList.add(conversionType(rs));
                 }
                 tablePyhNameDTO.setFields(colNameList);
                 list.add(tablePyhNameDTO);
@@ -342,6 +338,8 @@ public class OracleUtils {
         str.append(",b.COLUMN_NAME ");
         str.append(",b.DATA_TYPE ");
         str.append(",b.DATA_LENGTH ");
+        str.append(",b.DATA_PRECISION ");
+        str.append(",b.DATA_SCALE ");
         str.append(",a.COMMENTS ");
         str.append("FROM ");
         str.append("ALL_COL_COMMENTS a,ALL_TAB_COLUMNS b ");
@@ -354,5 +352,42 @@ public class OracleUtils {
         str.append("a.TABLE_NAME='" + tableName + "' ");
         return str.toString();
     }
+
+    /**
+     * 根据类型判断精度
+     *
+     * @param rs
+     * @return
+     */
+    public TableStructureDTO conversionType(ResultSet rs) {
+        try {
+            TableStructureDTO dto = new TableStructureDTO();
+            dto.fieldDes = rs.getString("COMMENTS");
+            dto.fieldName = rs.getString("COLUMN_NAME");
+            dto.fieldType = rs.getString("DATA_TYPE");
+            dto.fieldLength = Integer.parseInt(rs.getString("DATA_LENGTH"));
+            dto.fieldPrecision = 0;
+            OracleTypeEnum typeEnum = OracleTypeEnum.getValue(dto.fieldType);
+            switch (typeEnum) {
+                case NUMBER:
+                    if (rs.getString("DATA_PRECISION") == null) {
+                        dto.fieldLength = 0;
+                        dto.fieldPrecision = 0;
+                        break;
+                    }
+                    dto.fieldLength = Integer.parseInt(rs.getString("DATA_PRECISION"));
+                    dto.fieldPrecision = Integer.parseInt(rs.getString("DATA_SCALE"));
+                    break;
+                default:
+                    break;
+            }
+            return dto;
+        } catch (SQLException e) {
+            log.error("conversionType ex:", e);
+        }
+        return null;
+
+    }
+
 
 }

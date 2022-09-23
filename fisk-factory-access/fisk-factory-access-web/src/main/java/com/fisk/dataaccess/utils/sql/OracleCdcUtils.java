@@ -2,16 +2,16 @@ package com.fisk.dataaccess.utils.sql;
 
 import com.fisk.common.core.enums.dbdatatype.FlinkTypeEnum;
 import com.fisk.common.core.enums.dbdatatype.OracleTypeEnum;
-import com.fisk.dataaccess.dto.OdsDbConfigDTO;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.dto.table.FieldNameDTO;
+import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,9 +22,6 @@ import java.util.stream.Collectors;
  */
 @Component
 public class OracleCdcUtils {
-
-    @Resource
-    OdsDbConfigDTO odsDbConfig;
 
     /**
      * oracle字段类型映射flink类型
@@ -72,12 +69,21 @@ public class OracleCdcUtils {
         return flinkTypeEnum;
     }
 
-    public CdcJobScriptDTO createCdcJobScript(CdcJobParameterDTO dto, AppDataSourceDTO dataSourceDto) {
+    public CdcJobScriptDTO createCdcJobScript(CdcJobParameterDTO dto,
+                                              AppDataSourceDTO dataSourceDto,
+                                              DataSourceDTO dataSource,
+                                              TbTableAccessDTO tableAccessData) {
         CdcJobScriptDTO data = new CdcJobScriptDTO();
+        StringBuilder str = new StringBuilder();
+        str.append("SET pipeline.name ='" + tableAccessData.pipelineName);
+        str.append("\n");
+        str.append("SET execution.checkpointing.interval =" + tableAccessData.checkPointInterval + tableAccessData.checkPointUnit);
+        str.append("\n");
         //来源表脚本
-        data.sourceTableScript = buildSourceTableScript(dto, dataSourceDto);
-        data.targetTableScript = buildTargetTableScript(dto);
-        data.sqlScript = buildSqlScript(dto);
+        str.append(buildSourceTableScript(dto, dataSourceDto, tableAccessData));
+        //目标表脚本
+        str.append(buildTargetTableScript(dto, dataSource));
+        str.append(buildSqlScript(dto));
         return data;
     }
 
@@ -88,7 +94,9 @@ public class OracleCdcUtils {
      * @param dataSourceDto
      * @return
      */
-    public String buildSourceTableScript(CdcJobParameterDTO dto, AppDataSourceDTO dataSourceDto) {
+    public String buildSourceTableScript(CdcJobParameterDTO dto,
+                                         AppDataSourceDTO dataSourceDto,
+                                         TbTableAccessDTO tableAccessData) {
         String sourceTable = dto.fieldNameDTOList.get(0).sourceTableName;
         //获取oracle主键字段
         List<String> tablePrimaryKeyList = OracleUtils.getTablePrimaryKey(dataSourceDto.connectStr,
@@ -125,7 +133,7 @@ public class OracleCdcUtils {
         str.append("'database-name'=" + "'" + dataSourceDto.serviceName + "',");
         str.append("'schema-name'=" + "'" + dataSourceDto.dbName + "',");
         str.append("'table-name'=" + "'" + sourceTable + "',");
-        str.append("'scan.startup.mode'=" + "'latest-offset'");
+        str.append("'scan.startup.mode'=" + "'" + tableAccessData.scanStartupMode.getName() + "'");
         str.append(");");
 
         return str.toString();
@@ -137,7 +145,7 @@ public class OracleCdcUtils {
      * @param dto
      * @return
      */
-    public String buildTargetTableScript(CdcJobParameterDTO dto) {
+    public String buildTargetTableScript(CdcJobParameterDTO dto, DataSourceDTO dataSource) {
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE ");
         str.append(dto.targetTable);
@@ -166,9 +174,9 @@ public class OracleCdcUtils {
         str.append("WITH");
         str.append("(");
         str.append("'connector'=" + "'jdbc',");
-        str.append("'url'=" + "'" + odsDbConfig.url + "',");
-        str.append("'username'=" + "'" + odsDbConfig.username + "',");
-        str.append("'password'=" + "'" + odsDbConfig.password + "',");
+        str.append("'url'=" + "'" + dataSource.conStr + "',");
+        str.append("'username'=" + "'" + dataSource.conAccount + "',");
+        str.append("'password'=" + "'" + dataSource.conPassword + "',");
         str.append("'table-name'=" + "'" + dto.fieldNameDTOList.get(0).sourceTableName + "'");
         str.append(");");
 

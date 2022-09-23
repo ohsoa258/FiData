@@ -15,7 +15,7 @@ public class CdcJobParameterDTO {
     /**
      * 目标表id
      */
-    public Long tableAccessId;
+    public Integer tableAccessId;
 
     /**
      * 目标表名称

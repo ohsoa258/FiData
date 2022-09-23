@@ -8,6 +8,7 @@ import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.dataaccess.dto.access.DataAccessTreeDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.*;
@@ -315,11 +316,11 @@ public interface ITableAccess extends IService<TableAccessPO> {
     List<FieldNameDTO> getFieldList(TableAccessNonDTO dto);
 
     /**
-     * 获取物理表表名
+     * oracle-cdc脚本头配置
      *
-     * @param tableAccessId
+     * @param dto
      * @return
      */
-    String getAccessTableName(Long tableAccessId);
+    ResultEnum cdcHeadConfig(CdcHeadConfigDTO dto);
 
 }
