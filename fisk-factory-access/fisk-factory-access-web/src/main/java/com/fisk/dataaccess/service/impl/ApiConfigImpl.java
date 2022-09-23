@@ -280,7 +280,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             String pushData = dto.pushData;
             if (StringUtils.isNotBlank(pushData)) {
                 String pushDataStr = pushData.replace("&nbsp;", "").replace("<br/>", "").replace("\\\\n\\n", "");
-                System.out.println("pushDataStr = " + pushDataStr);
+                log.info("pushDataStr = " + pushDataStr);
                 receiveDataDto.pushData = pushDataStr;
             }
             pushData(receiveDataDto);
@@ -488,6 +488,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // stg同步到ods(联调task)
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
                 ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
+                log.info("stg表数据用完即删");
+                pushDataStgToOds(dto.apiCode, 0);
                 msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
             }
 
@@ -577,6 +579,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // stg同步到ods(联调task)
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
                 ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
+                log.info("stg表数据用完即删");
+                pushDataStgToOds(dto.apiCode, 0);
                 msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
             }
 

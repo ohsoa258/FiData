@@ -149,8 +149,8 @@ public class PgsqlUtils {
         Statement statement = pgConn.createStatement();
         try {
             // 执行sql
-            System.out.println("操作类型AE86: 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods;  " + flag);
-            System.out.println("pg推送数据的函数: " + sqlList.get(flag));
+            log.info("操作类型AE86: 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods;  " + flag);
+            log.info("pg推送数据的函数: " + sqlList.get(flag));
             statement.executeUpdate(sqlList.get(flag));
 
             statement.close();
@@ -243,7 +243,7 @@ public class PgsqlUtils {
 
                 list.add(apiSqlResultDto);
             }
-            System.out.println("本次添加的sql个数为: " + countSql);
+            log.info("本次添加的sql个数为: " + countSql);
             // 提交要执行的批处理，防止 JDBC 执行事务处理
             con.commit();
             statement.close();
