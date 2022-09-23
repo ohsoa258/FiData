@@ -1136,8 +1136,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         String jsonKey = StringUtils.isNotBlank(apiConfigPo.jsonKey) ? apiConfigPo.jsonKey : "data";
         JSONArray jsonArray = JSON.parseObject(data).getJSONArray(jsonKey);
         log.info("动态参数再次调用:第几{}页", pageNum);
-        if (!CollectionUtils.isEmpty(jsonArray) && jsonArray.size() != 0 && pageNum < Integer.parseInt(ApiParameterTypeEnum.MAX_PAGE.getName())) {
+        if (Objects.equals(dataSourcePo.driveType, DataSourceTypeEnum.API.getName()) && !CollectionUtils.isEmpty(jsonArray) && jsonArray.size() != 0 && pageNum < Integer.parseInt(ApiParameterTypeEnum.MAX_PAGE.getName())) {
             // 推送数据
+            log.info("进入下次推送");
             pushDataByImportData(dto, receiveDataDTO);
             syncData(dto, apiParameters);
         }
