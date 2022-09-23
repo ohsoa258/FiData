@@ -259,12 +259,14 @@ public class TaskPgTableStructureHelper
         String pgsqlOdsUrl = "";
         String pgsqlOdsUsername = "";
         String pgsqlOdsPassword = "";
+        String pgsqlOdsDriverClass = "";
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO data = fiDataDataSource.data;
             pgsqlOdsUrl = data.conStr;
             pgsqlOdsUsername = data.conAccount;
             pgsqlOdsPassword = data.conPassword;
+            pgsqlOdsDriverClass = data.conType.getDriverName();
         } else {
             log.error("userclient无法查询到ods库的连接信息");
             return ResultEnum.ERROR;
@@ -277,8 +279,8 @@ public class TaskPgTableStructureHelper
         String pgsqlDwPassword = pgsqlDatamodelPassword;
         Connection conn;
         Statement st = null;
-        if (createType == 3 || createType == 4) {
-            Class.forName(datainputDriverClassName);
+        if (createType == 3) {
+            Class.forName(pgsqlOdsDriverClass);
             // 数据接入
             conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlOdsPassword);
         } else {
