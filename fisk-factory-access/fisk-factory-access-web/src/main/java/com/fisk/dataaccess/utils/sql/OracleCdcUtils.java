@@ -1,7 +1,10 @@
 package com.fisk.dataaccess.utils.sql;
 
+import com.fisk.common.core.enums.dbdatatype.FiDataDataTypeEnum;
 import com.fisk.common.core.enums.dbdatatype.FlinkTypeEnum;
 import com.fisk.common.core.enums.dbdatatype.OracleTypeEnum;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
@@ -23,6 +26,8 @@ import java.util.stream.Collectors;
 @Component
 public class OracleCdcUtils {
 
+    private static String ln = "\n";
+
     /**
      * oracle字段类型映射flink类型
      *
@@ -31,9 +36,10 @@ public class OracleCdcUtils {
      * @param precision    精度
      * @return
      */
-    public static FlinkTypeEnum oracleTypeMappingFlinkType(String dataTypeName, String dataLength, String precision) {
+    public static String oracleTypeMappingFlinkType(String dataTypeName, Integer dataLength, Integer precision) {
         OracleTypeEnum typeEnum = OracleTypeEnum.getValue(dataTypeName);
-        FlinkTypeEnum flinkTypeEnum = null;
+        String dataType = null;
+        int length = dataLength - precision;
         switch (typeEnum) {
             case CHAR:
             case NCHAR:
@@ -43,47 +49,83 @@ public class OracleCdcUtils {
             case CLOB:
             case NCLOB:
             case XMLType:
+                dataType = FlinkTypeEnum.STRING.getName();
+                break;
             case NUMBER:
-                flinkTypeEnum = FlinkTypeEnum.STRING;
+                if (precision <= 0 && length < 3) {
+                    dataType = FlinkTypeEnum.TINYINT.getName();
+                } else if (precision <= 0 && length < 5) {
+                    dataType = FlinkTypeEnum.SMALLINT.getName();
+                } else if (precision <= 0 && length < 10) {
+                    dataType = FlinkTypeEnum.INT.getName();
+                } else if (precision <= 0 && length < 19) {
+                    dataType = FlinkTypeEnum.BIGINT.getName();
+                } else if (precision <= 0 && length <= 38 && length > 19) {
+                    dataType = FlinkTypeEnum.DECIMAL.getName() + "(" + length + "," + 0 + ")";
+                } else if (precision > 0) {
+                    dataType = FlinkTypeEnum.DECIMAL.getName() + "(" + dataLength + "," + precision + ")";
+                } else {
+                    dataType = FlinkTypeEnum.STRING.getName();
+                }
                 break;
             case FLOAT:
             case BINARY_FLOAT:
-                flinkTypeEnum = FlinkTypeEnum.FLOAT;
+                dataType = FlinkTypeEnum.FLOAT.getName();
+                break;
+            case DATE:
+            case TIMESTAMP:
+                dataType = "TIMESTAMP [(" + dataLength + ")] [WITHOUT TIMEZONE]";
+                break;
+            case TIMESTAMPWITHTIMEZONE:
+                dataType = "TIMESTAMP [(" + dataLength + ")] WITH TIME ZONE";
+                break;
+            case TIMESTAMPWITHLOCALTIMEZONE:
+                dataType = "TIMESTAMP_LTZ[(" + dataLength + ")]";
                 break;
             case DOUBLEPRECISION:
             case BINARY_DOUBLE:
-                flinkTypeEnum = FlinkTypeEnum.DOUBLE;
+                dataType = FlinkTypeEnum.DOUBLE.getName();
                 break;
             case BLOB:
             case ROWID:
-                flinkTypeEnum = FlinkTypeEnum.BYTES;
+                dataType = FlinkTypeEnum.BYTES.getName();
                 break;
             case INTERVALDAYTOSECOND:
             case INTERVALYEARTOMONTH:
-                flinkTypeEnum = FlinkTypeEnum.BIGINT;
+                dataType = FlinkTypeEnum.BIGINT.getName();
                 break;
             default:
-                flinkTypeEnum = FlinkTypeEnum.STRING;
+                dataType = FlinkTypeEnum.STRING.getName();
                 break;
         }
-        return flinkTypeEnum;
+        return dataType;
     }
 
+    /**
+     * 拼接cdc任务脚本
+     *
+     * @param dto
+     * @param dataSourceDto
+     * @param dataSource
+     * @param tableAccessData
+     * @return
+     */
     public CdcJobScriptDTO createCdcJobScript(CdcJobParameterDTO dto,
                                               AppDataSourceDTO dataSourceDto,
                                               DataSourceDTO dataSource,
                                               TbTableAccessDTO tableAccessData) {
         CdcJobScriptDTO data = new CdcJobScriptDTO();
         StringBuilder str = new StringBuilder();
-        str.append("SET pipeline.name ='" + tableAccessData.pipelineName);
-        str.append("\n");
-        str.append("SET execution.checkpointing.interval =" + tableAccessData.checkPointInterval + tableAccessData.checkPointUnit);
-        str.append("\n");
+        str.append("SET pipeline.name ='" + tableAccessData.pipelineName + ";");
+        str.append(ln);
+        str.append("SET execution.checkpointing.interval =" + tableAccessData.checkPointInterval + tableAccessData.checkPointUnit + ";");
         //来源表脚本
         str.append(buildSourceTableScript(dto, dataSourceDto, tableAccessData));
         //目标表脚本
-        str.append(buildTargetTableScript(dto, dataSource));
-        str.append(buildSqlScript(dto));
+        str.append(buildTargetTableScript(dto, dataSource, tableAccessData.tableName));
+        //insert select语句
+        str.append(buildSqlScript(dto, tableAccessData.tableName));
+        data.jobScript = str.toString();
         return data;
     }
 
@@ -105,36 +147,40 @@ public class OracleCdcUtils {
                 dataSourceDto.dbName, sourceTable);
 
         StringBuilder str = new StringBuilder();
+        str.append(ln);
         str.append("CREATE TABLE ");
         str.append(dto.fieldNameDTOList.get(0).sourceTableName + " (");
+        str.append(ln);
         List<String> columnList = new ArrayList<>();
         for (FieldNameDTO item : dto.fieldNameDTOList) {
-            FlinkTypeEnum flinkTypeEnum = oracleTypeMappingFlinkType(item.sourceFieldType, null, null);
-            columnList.add(item.sourceFieldName + " " + flinkTypeEnum.getName());
+            String dataType = oracleTypeMappingFlinkType(item.sourceFieldType, item.sourceFieldLength, item.sourceFieldPrecision);
+            columnList.add(item.sourceFieldName + " " + dataType);
         }
         //拼接主键
         List<String> collect = dto.fieldNameDTOList.stream().map(e -> e.sourceFieldName).collect(Collectors.toList());
         //取交集
         collect.retainAll(tablePrimaryKeyList);
         if (!CollectionUtils.isEmpty(collect)) {
-            columnList.add("PRIMARY KEY (" + StringUtils.join(collect, ",") + ") NOT ENFORCED");
+            columnList.add("PRIMARY KEY (" + StringUtils.join(collect, ",") + ") NOT ENFORCED" + ln);
         }
 
-        str.append(StringUtils.join(columnList, ","));
+        str.append(StringUtils.join(columnList, "," + ln + ""));
         str.append(")");
         str.append("WITH");
         str.append("(");
-        str.append("'connector'=" + "'" + dataSourceDto.driveType + "',");
-        str.append("'hostname'=" + "'" + dataSourceDto.host + "',");
-        str.append("'port'=" + "'" + dataSourceDto.port + "',");
-        str.append("'username'=" + "'" + dataSourceDto.connectAccount + "',");
-        str.append("'password'=" + "'" + dataSourceDto.connectPwd + "',");
+        str.append(ln);
+        str.append("'connector'=" + "'" + dataSourceDto.driveType + "'," + ln);
+        str.append("'hostname'=" + "'" + dataSourceDto.host + "'," + ln);
+        str.append("'port'=" + "'" + dataSourceDto.port + "'," + ln);
+        str.append("'username'=" + "'" + dataSourceDto.connectAccount + "'," + ln);
+        str.append("'password'=" + "'" + dataSourceDto.connectPwd + "'," + ln);
         //服务名
-        str.append("'database-name'=" + "'" + dataSourceDto.serviceName + "',");
-        str.append("'schema-name'=" + "'" + dataSourceDto.dbName + "',");
-        str.append("'table-name'=" + "'" + sourceTable + "',");
-        str.append("'scan.startup.mode'=" + "'" + tableAccessData.scanStartupMode.getName() + "'");
+        str.append("'database-name'=" + "'" + dataSourceDto.serviceName + "'," + ln);
+        str.append("'schema-name'=" + "'" + dataSourceDto.dbName + "'," + ln);
+        str.append("'table-name'=" + "'" + sourceTable + "'," + ln);
+        str.append("'scan.startup.mode'=" + "'" + tableAccessData.scanStartupMode.getName() + "'" + ln);
         str.append(");");
+        str.append(ln);
 
         return str.toString();
     }
@@ -145,39 +191,50 @@ public class OracleCdcUtils {
      * @param dto
      * @return
      */
-    public String buildTargetTableScript(CdcJobParameterDTO dto, DataSourceDTO dataSource) {
+    public String buildTargetTableScript(CdcJobParameterDTO dto, DataSourceDTO dataSource, String targetTable) {
         StringBuilder str = new StringBuilder();
+        str.append(ln);
         str.append("CREATE TABLE ");
-        str.append(dto.targetTable);
+        str.append(targetTable);
         str.append("(");
         List<String> columnList = new ArrayList<>();
+
         for (FieldNameDTO item : dto.fieldNameDTOList) {
-            if (item.sourceFieldType.equalsIgnoreCase("VARCHAR")
-                    || item.sourceFieldType.equalsIgnoreCase("TEXT")) {
-                columnList.add(item.sourceFieldName + " " + "STRING");
-                continue;
-            } else if (item.sourceFieldType.equalsIgnoreCase("NUMERIC")) {
-
-            } else if (item.sourceFieldType.equalsIgnoreCase("timestamp")) {
-
+            FiDataDataTypeEnum typeEnum = FiDataDataTypeEnum.getValue(item.fieldType);
+            switch (typeEnum) {
+                case VARCHAR:
+                    columnList.add(item.fieldName + " " + FlinkTypeEnum.VARCHAR.getName() + "(" + item.fieldLength + ")" + ln);
+                    break;
+                case TEXT:
+                    columnList.add(item.fieldName + " " + FlinkTypeEnum.STRING.getName() + ln);
+                    break;
+                case FLOAT:
+                    columnList.add(item.fieldName + " " + FlinkTypeEnum.NUMERIC.getName() + ln);
+                    break;
+                case TIMESTAMP:
+                    columnList.add(item.fieldName + " " + FlinkTypeEnum.TIMESTAMP.getName() + "(" + item.fieldLength + ")" + ln);
+                    break;
+                case INT:
+                    columnList.add(item.fieldName + " " + FlinkTypeEnum.INT.getName() + ln);
+                    break;
+                default:
+                    throw new FkException(ResultEnum.NO_MATCHING_DATA_TYPE);
             }
-            columnList.add(item.sourceFieldName + " " + item.sourceFieldType);
         }
         //拼接主键
         List<FieldNameDTO> collect = dto.fieldNameDTOList.stream().filter(e -> e.isPrimarykey == 1).collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(collect)) {
             columnList.add("PRIMARY KEY (" + StringUtils.join(collect.stream().map(e -> e.fieldName).collect(Collectors.toList()), ",") + ") NOT ENFORCED");
         }
-
         str.append(StringUtils.join(columnList, ","));
         str.append(")");
         str.append("WITH");
         str.append("(");
-        str.append("'connector'=" + "'jdbc',");
-        str.append("'url'=" + "'" + dataSource.conStr + "',");
-        str.append("'username'=" + "'" + dataSource.conAccount + "',");
-        str.append("'password'=" + "'" + dataSource.conPassword + "',");
-        str.append("'table-name'=" + "'" + dto.fieldNameDTOList.get(0).sourceTableName + "'");
+        str.append("'connector'=" + "'jdbc'," + ln);
+        str.append("'url'=" + "'" + dataSource.conStr + "'," + ln);
+        str.append("'username'=" + "'" + dataSource.conAccount + "'," + ln);
+        str.append("'password'=" + "'" + dataSource.conPassword + "'," + ln);
+        str.append("'table-name'=" + "'" + dto.fieldNameDTOList.get(0).sourceTableName + "'" + ln);
         str.append(");");
 
         return str.toString();
@@ -189,10 +246,11 @@ public class OracleCdcUtils {
      * @param dto
      * @return
      */
-    public String buildSqlScript(CdcJobParameterDTO dto) {
+    public String buildSqlScript(CdcJobParameterDTO dto, String targetTable) {
         StringBuilder str = new StringBuilder();
+        str.append(ln);
         str.append("INSERT INTO ");
-        str.append(dto.targetTable);
+        str.append(targetTable);
         str.append("(");
         List<String> collect = dto.fieldNameDTOList.stream().map(e -> e.sourceFieldName).collect(Collectors.toList());
         str.append(StringUtils.join(collect, ","));

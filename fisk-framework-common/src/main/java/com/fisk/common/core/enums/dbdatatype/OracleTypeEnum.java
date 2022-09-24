@@ -28,6 +28,8 @@ public enum OracleTypeEnum implements BaseEnum {
     INTERVALDAYTOSECOND(18, "INTERVAL DAY TO SECOND"),
     INTERVALYEARTOMONTH(19, "INTERVAL YEAR TO MONTH"),
     DOUBLEPRECISION(20, "DOUBLE PRECISION"),
+    TIMESTAMPWITHLOCALTIMEZONE(21, "TIMESTAMP WITH LOCAL TIME ZONE"),
+    TIMESTAMPWITHTIMEZONE(22, "TIMESTAMP WITH TIME ZONE"),
     OTHER(-1, "OTHER");
 
     private final String name;
@@ -36,6 +38,16 @@ public enum OracleTypeEnum implements BaseEnum {
     OracleTypeEnum(int value, String name) {
         this.value = value;
         this.name = name;
+    }
+
+    @Override
+    public int getValue() {
+        return value;
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 
     public static OracleTypeEnum getValue(String value) {
@@ -47,16 +59,6 @@ public enum OracleTypeEnum implements BaseEnum {
             }
         }
         return OracleTypeEnum.OTHER;
-    }
-
-    @Override
-    public int getValue() {
-        return value;
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
 
 }

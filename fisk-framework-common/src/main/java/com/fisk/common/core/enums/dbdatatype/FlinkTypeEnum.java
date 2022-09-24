@@ -24,7 +24,8 @@ public enum FlinkTypeEnum implements BaseEnum {
     BYTES(12, "BYTES"),
     TIME(13, "TIME"),
     CHAR(14, "CHAR"),
-    VARCHAR(15, "VARCHAR");
+    VARCHAR(15, "VARCHAR"),
+    NUMERIC(16, "NUMERIC");
 
     private final String name;
     private final int value;

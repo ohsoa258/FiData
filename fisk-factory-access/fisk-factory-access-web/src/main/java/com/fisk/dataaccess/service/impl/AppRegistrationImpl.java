@@ -1118,12 +1118,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     @Override
     public CdcJobScriptDTO buildCdcJobScript(CdcJobParameterDTO dto) {
-        AppDataSourceDTO dataSourceData = appDataSourceImpl.getDataSourceByAppId(dto.dataSourceId);
+        AppDataSourceDTO dataSourceData = appDataSourceImpl.getDataSourceByAppId(dto.appId);
         TbTableAccessDTO tableAccessData = tableAccessImpl.getTableAccessData(dto.tableAccessId);
         if (tableAccessData == null) {
-
+            throw new FkException(ResultEnum.TASK_TABLE_NOT_EXIST);
         }
-        dto.targetTable = tableAccessData.tableName;
         ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(5);
         if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);

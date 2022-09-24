@@ -11,17 +11,11 @@ import java.util.List;
 @Data
 public class CdcJobParameterDTO {
 
-    public Integer dataSourceId;
+    public Integer appId;
     /**
      * 目标表id
      */
     public Integer tableAccessId;
-
-    /**
-     * 目标表名称
-     */
-    public String targetTable;
-
     /**
      * 表字段
      */

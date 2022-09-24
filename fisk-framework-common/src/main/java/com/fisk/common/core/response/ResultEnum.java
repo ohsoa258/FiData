@@ -45,6 +45,7 @@ public enum ResultEnum {
     SYSTEM_PARAMS_ISEMPTY(1021, "系统参数为空"),
     DATASOURCE_CONNECTERROR(1022, "数据源连接建立异常"),
     DATASOURCE_CONNECTCLOSEERROR(1022, "数据源连接关闭异常"),
+    NO_MATCHING_DATA_TYPE(1023, "没有匹配的数据类型"),
 
     /**
      * 报表可视化服务，错误码从2000开始

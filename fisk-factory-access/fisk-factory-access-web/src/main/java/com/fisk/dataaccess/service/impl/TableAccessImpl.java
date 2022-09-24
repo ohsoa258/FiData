@@ -32,6 +32,7 @@ import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.*;
+import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
@@ -1561,9 +1562,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             List<String> list = transformField(dto.fieldType, dto.fieldLength);
             dto.fieldType = list.get(0);
             dto.fieldLength = list.get(1);
-
-            ////dto.sourceFieldType = dto.fieldType;
-
             fieldNameDTOList.add(dto);
         }
         data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());
@@ -1790,7 +1788,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             array = resultSetToJsonArrayDataAccess(rs);
             if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE_CDC.getName())
                     && !CollectionUtils.isEmpty(array.fieldNameDTOList)) {
-                array.fieldNameDTOList.stream().map(e -> e.sourceTableName = query.tableName).collect(Collectors.toList());
+                array = cdcSetSourceInfo(array, query);
             }
             Instant inst5 = Instant.now();
             log.info("封装数据执行时间 : " + Duration.between(inst4, inst5).toMillis());
@@ -1960,6 +1958,26 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         po.pipelineName = dto.pipelineName;
         po.scanStartupMode = dto.scanStartupMode;
         return accessMapper.updateById(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    public OdsResultDTO cdcSetSourceInfo(OdsResultDTO data, OdsQueryDTO dto) {
+
+        com.fisk.dataaccess.dto.v3.DataSourceDTO dataSourceDTO = appDataSourceImpl.setDataSourceMeta(dto.appId);
+        Optional<TablePyhNameDTO> first = dataSourceDTO.tableDtoList.stream().filter(e -> e.tableName.equals(dto.tableName)).findFirst();
+        if (!first.isPresent()) {
+            throw new FkException(ResultEnum.TASK_TABLE_NOT_EXIST);
+        }
+        for (FieldNameDTO item : data.fieldNameDTOList) {
+            Optional<TableStructureDTO> column = first.get().fields.stream().filter(e -> e.fieldName.equals(item.fieldName)).findFirst();
+            if (!column.isPresent()) {
+                throw new FkException(ResultEnum.TASK_TABLE_NOT_EXIST);
+            }
+            item.sourceTableName = first.get().tableName;
+            item.sourceFieldLength = column.get().fieldLength;
+            item.sourceFieldPrecision = column.get().fieldPrecision;
+        }
+
+        return data;
     }
 
 }
