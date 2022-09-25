@@ -10,8 +10,11 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.RegexUtils;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.flinkupload.FlinkFactoryHelper;
+import com.fisk.common.service.flinkupload.IFlinkUpload;
 import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.dataaccess.dto.FlinkConfigDTO;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
@@ -24,6 +27,7 @@ import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.dto.table.TableSyncmodeDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
+import com.fisk.dataaccess.map.FlinkParameterMap;
 import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.TableFieldsMapper;
@@ -93,8 +97,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     private String dbName;
     @Value("${metadata-instance.protocol}")
     private String protocol;
-    @Value("${flink-script.path}")
-    private String flinkScriptPath;
+
+    @Resource
+    FlinkConfigDTO flinkConfig;
 
     @Override
     public Page<DataReviewVO> listData(DataReviewQueryDTO query) {
@@ -350,9 +355,18 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
     }
 
+    /**
+     * cdc脚本上传flink
+     *
+     * @param cdcJobScript
+     * @param fileName
+     */
     public void cdcScriptUploadFlink(CdcJobScriptDTO cdcJobScript, String fileName) {
-        String path = "D:\\Driver";
-        FileTxtUtils.setFiles(path + "\\" + fileName + ".txt", cdcJobScript.jobScript);
+        //上传文件
+        FileTxtUtils.setFiles(flinkConfig.uploadPath + "\\" + fileName + ".txt", cdcJobScript.jobScript);
+        //先根据job id,先停止任务
+        IFlinkUpload upload = FlinkFactoryHelper.flinkUpload(flinkConfig.uploadWay);
+        upload.submitJob(FlinkParameterMap.INSTANCES.dtoToDto(flinkConfig));
     }
 
     /**

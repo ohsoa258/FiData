@@ -1953,6 +1953,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
+
+        //判断job名称是否已存在
+        QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id").lambda().eq(TableAccessPO::getPipelineName, dto.pipelineName);
+        TableAccessPO selectOne = accessMapper.selectOne(queryWrapper);
+        if (selectOne != null && selectOne.id != po.id) {
+            throw new FkException(ResultEnum.PIPELINENAME_EXISTING);
+        }
+
         po.checkPointInterval = dto.checkPointInterval;
         po.checkPointUnit = dto.checkPointUnit;
         po.pipelineName = dto.pipelineName;
@@ -1976,6 +1985,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             item.sourceFieldLength = column.get().fieldLength;
             item.sourceFieldPrecision = column.get().fieldPrecision;
         }
+
 
         return data;
     }

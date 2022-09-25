@@ -134,6 +134,8 @@ public enum ResultEnum {
     API_EXPRESSION_ERROR(5055, "API表达式格式错误"),
     SCHEMA_ERROR(5056, "创建或删除schema失败"),
     UPLOAD_FLINK_ERROR(5057, "脚本上传flink失败"),
+    PIPELINENAME_EXISTING(5058, "Job名称已存在"),
+
 
     /**
      * 后台任务模块
