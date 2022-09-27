@@ -36,7 +36,7 @@ import com.fisk.task.po.AppNifiSettingPO;
 import com.fisk.task.po.NifiConfigPO;
 import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.doris.IDorisBuild;
-import com.fisk.task.service.nifi.IPostgreBuild;
+import com.fisk.task.service.nifi.IJdbcBuild;
 import com.fisk.task.service.nifi.ITaskDwDim;
 import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
@@ -71,7 +71,7 @@ public class BuildDataModelDorisTableListener
     @Resource
     IDorisBuild doris;
     @Resource
-    IPostgreBuild iPostgreBuild;
+    IJdbcBuild iPostgreBuild;
     @Resource
     ITaskDwDim iTaskDwDim;
     @Resource

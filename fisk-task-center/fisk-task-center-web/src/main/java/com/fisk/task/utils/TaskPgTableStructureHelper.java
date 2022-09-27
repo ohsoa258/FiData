@@ -9,6 +9,8 @@ import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
+import com.fisk.task.listener.postgre.datainput.IbuildTable;
+import com.fisk.task.listener.postgre.datainput.impl.BuildFactoryHelper;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -144,6 +146,9 @@ public class TaskPgTableStructureHelper
                 if ("VARCHAR".equals(item.fieldType)) {
                     po.fieldType = item.fieldType + "(" + item.fieldLength + ")";
                 }
+                if ("FLOAT".equals(item.fieldType)) {
+                    po.fieldType = item.fieldType + "(18,9)";
+                }
                 poList.add(po);
                 if (item.associateDimensionId != 0 && item.associateDimensionFieldId != 0) {
                     TaskPgTableStructurePO po2 = new TaskPgTableStructurePO();
@@ -197,8 +202,17 @@ public class TaskPgTableStructureHelper
             //拼接SQL
             StringBuilder str = new StringBuilder();
             List<String> sqlList = new ArrayList<>();
+            CallableStatement cs = null;
             //调用过程stu_pro
-            CallableStatement cs = (CallableStatement) conn.prepareCall("call pg_check_table_structure(?,?)");
+            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+            if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+                DataSourceDTO dataSource = fiDataDataSource.data;
+                IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSource.conType);
+                cs = (CallableStatement) conn.prepareCall(dbCommand.prepareCallSql());
+            } else {
+                log.error("userclient无法查询到ods库的连接信息");
+            }
+
             cs.setString(1, version);
             cs.setInt(2, type);
             cs.execute();

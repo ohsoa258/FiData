@@ -425,7 +425,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
             if(fiDataDataSource.code == ResultEnum.SUCCESS.getCode()){
                 DataSourceDTO dataSource = fiDataDataSource.data;
-                targetDbPoolConfig.type = DriverTypeEnum.valueOf(dataSource.conType.getDriverName());
+                //com.microsoft.sqlserver.jdbc.SQLServerDriver
+                targetDbPoolConfig.type = DriverTypeEnum.valueOf(dataSource.conType.getName());
                 targetDbPoolConfig.user = dataSource.conAccount;
                 targetDbPoolConfig.password = dataSource.conPassword;
                 targetDbPoolConfig.jdbcStr = dataSource.conStr;
@@ -500,7 +501,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
             if(fiDataDataSource.code == ResultEnum.SUCCESS.getCode()){
                 DataSourceDTO dataSource = fiDataDataSource.data;
-                sourceDsConfig.type = DriverTypeEnum.valueOf(dataSource.conType.getDriverName());
+                sourceDsConfig.type = DriverTypeEnum.valueOf(dataSource.conType.getName());
                 sourceDsConfig.user = dataSource.conAccount;
                 sourceDsConfig.password = dataSource.conPassword;
                 sourceDsConfig.jdbcStr = dataSource.conStr;

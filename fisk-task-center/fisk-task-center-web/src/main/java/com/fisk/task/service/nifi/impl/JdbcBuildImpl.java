@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.task.dto.doris.UpdateLogAndImportDataDTO;
-import com.fisk.task.service.nifi.IPostgreBuild;
+import com.fisk.task.service.nifi.IJdbcBuild;
 import com.fisk.task.utils.PostgreHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +14,7 @@ import javax.annotation.Resource;
 
 @Service
 @Slf4j
-public class PostgreBuildImpl implements IPostgreBuild {
+public class JdbcBuildImpl implements IJdbcBuild {
 
 
     private static String DatainputUrl;
