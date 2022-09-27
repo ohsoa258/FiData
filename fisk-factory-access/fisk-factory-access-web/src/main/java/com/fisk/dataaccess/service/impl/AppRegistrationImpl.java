@@ -14,6 +14,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
@@ -1118,11 +1119,19 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     @Override
     public CdcJobScriptDTO buildCdcJobScript(CdcJobParameterDTO dto) {
+
         AppDataSourceDTO dataSourceData = appDataSourceImpl.getDataSourceByAppId(dto.appId);
+
         TbTableAccessDTO tableAccessData = tableAccessImpl.getTableAccessData(dto.tableAccessId);
-        if (tableAccessData == null) {
+
+        AppRegistrationPO registrationPo = mapper.selectById(dto.appId);
+
+        if (tableAccessData == null || registrationPo == null) {
             throw new FkException(ResultEnum.TASK_TABLE_NOT_EXIST);
         }
+        //拼接ods表名
+        tableAccessData.tableName = TableNameGenerateUtils.buildOdsTableName(tableAccessData.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
+
         ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(5);
         if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);

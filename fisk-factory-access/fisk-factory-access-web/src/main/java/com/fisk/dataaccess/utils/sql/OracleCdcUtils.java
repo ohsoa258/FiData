@@ -1,10 +1,7 @@
 package com.fisk.dataaccess.utils.sql;
 
-import com.fisk.common.core.enums.dbdatatype.FiDataDataTypeEnum;
 import com.fisk.common.core.enums.dbdatatype.FlinkTypeEnum;
 import com.fisk.common.core.enums.dbdatatype.OracleTypeEnum;
-import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
@@ -74,13 +71,14 @@ public class OracleCdcUtils {
                 break;
             case DATE:
             case TIMESTAMP:
-                dataType = "TIMESTAMP [(" + dataLength + ")] [WITHOUT TIMEZONE]";
-                break;
+                //dataType = "TIMESTAMP(" + dataLength + ") WITHOUT TIMEZONE";
+                //break;
             case TIMESTAMPWITHTIMEZONE:
-                dataType = "TIMESTAMP [(" + dataLength + ")] WITH TIME ZONE";
+                dataType = "TIMESTAMP(" + dataLength + ")";
+                //dataType = "TIMESTAMP(" + dataLength + ") WITH TIME ZONE";
                 break;
             case TIMESTAMPWITHLOCALTIMEZONE:
-                dataType = "TIMESTAMP_LTZ[(" + dataLength + ")]";
+                dataType = "TIMESTAMP_LTZ(" + dataLength + ")";
                 break;
             case DOUBLEPRECISION:
             case BINARY_DOUBLE:
@@ -200,27 +198,10 @@ public class OracleCdcUtils {
         List<String> columnList = new ArrayList<>();
 
         for (FieldNameDTO item : dto.fieldNameDTOList) {
-            FiDataDataTypeEnum typeEnum = FiDataDataTypeEnum.getValue(item.fieldType);
-            switch (typeEnum) {
-                case VARCHAR:
-                    columnList.add(item.fieldName + " " + FlinkTypeEnum.VARCHAR.getName() + "(" + item.fieldLength + ")" + ln);
-                    break;
-                case TEXT:
-                    columnList.add(item.fieldName + " " + FlinkTypeEnum.STRING.getName() + ln);
-                    break;
-                case FLOAT:
-                    columnList.add(item.fieldName + " " + FlinkTypeEnum.NUMERIC.getName() + ln);
-                    break;
-                case TIMESTAMP:
-                    columnList.add(item.fieldName + " " + FlinkTypeEnum.TIMESTAMP.getName() + "(" + item.fieldLength + ")" + ln);
-                    break;
-                case INT:
-                    columnList.add(item.fieldName + " " + FlinkTypeEnum.INT.getName() + ln);
-                    break;
-                default:
-                    throw new FkException(ResultEnum.NO_MATCHING_DATA_TYPE);
-            }
+            String dataType = oracleTypeMappingFlinkType(item.sourceFieldType, item.sourceFieldLength, item.sourceFieldPrecision);
+            columnList.add(item.fieldName + " " + dataType);
         }
+
         //拼接主键
         List<FieldNameDTO> collect = dto.fieldNameDTOList.stream().filter(e -> e.isPrimarykey == 1).collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(collect)) {

@@ -1844,6 +1844,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             case api:
                 dto.driveType = DbTypeEnum.api;
                 break;
+            case oracle_cdc:
+                dto.driveType = DbTypeEnum.oracle_cdc;
+                break;
             default:
                 break;
         }

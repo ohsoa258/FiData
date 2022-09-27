@@ -42,10 +42,6 @@ public class FileTxtUtils {
             out.write(data);
             //把缓存区内容压入文件
             out.flush();
-
-            //InputStream client_fileInput = new FileInputStream(path);
-            //uploadFile("192.168.1.92",22,"root","p/q2-q4!","/root/flink-job/sql/",fileName,client_fileInput);
-
         } catch (IOException e) {
             log.error("setFiles ex:", e);
         } finally {

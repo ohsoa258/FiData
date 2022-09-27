@@ -64,16 +64,18 @@ metadata-instance:
   protocol: http
 
 flink-config:
-  host: 192.168.1.92
+  host: 192.168.11.131
   port: 22
   user: root
-  password: p/q2-q4!
+  password: Password01!
   upload-path: /root/flink-job/sql/
   upload-way: ssh
   savepoints-path: /root/flink-job/savepoint/
+  command: dev
+  command-path: /root/flink/flink-1.15.2/bin/sql-client.sh
 
 flink-api-config:
-  host: http://192.168.1.92
+  host: http://192.168.11.131
   port: 8081
   savepoints: /jobs/:jobid/savepoints
   savepoint-status: /jobs/:jobid/savepoints/:triggerid

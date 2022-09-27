@@ -136,6 +136,7 @@ public enum ResultEnum {
     SCHEMA_ERROR(5056, "创建或删除schema失败"),
     UPLOAD_FLINK_ERROR(5057, "脚本上传flink失败"),
     PIPELINENAME_EXISTING(5058, "Job名称已存在"),
+    UPLOADFILE_REMOTE_ERROR(5059, "文件上传远程失败"),
 
 
     /**

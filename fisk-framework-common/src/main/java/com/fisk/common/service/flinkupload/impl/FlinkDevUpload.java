@@ -1,5 +1,7 @@
 package com.fisk.common.service.flinkupload.impl;
 
+import com.fisk.common.service.flinkupload.FlinkFactoryHelper;
+import com.fisk.common.service.flinkupload.IFlinkCommand;
 import com.fisk.common.service.flinkupload.IFlinkJobUpload;
 import com.fisk.common.service.flinkupload.dto.FlinkUploadParameterDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +21,10 @@ public class FlinkDevUpload implements IFlinkJobUpload {
         Process process = null;
         String jobId = null;
         try {
+            IFlinkCommand flinkCommand = FlinkFactoryHelper.flinkCommand(dto.commandEnum);
+            String command = flinkCommand.buildFlinkCommand(dto);
             //执行命令
-            process = Runtime.getRuntime().exec("/root/flink-1.14.0/bin/sql-client.sh -f " + dto.uploadPath + "/" + dto.fileName);
+            process = Runtime.getRuntime().exec(command);
             InputStreamReader ips = new InputStreamReader(process.getInputStream());
             BufferedReader br = new BufferedReader(ips);
             String line;

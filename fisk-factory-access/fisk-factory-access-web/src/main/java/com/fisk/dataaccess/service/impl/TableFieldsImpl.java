@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.flink.UploadWayEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
@@ -52,6 +53,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -377,10 +381,20 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
         //上传文件
         FileTxtUtils.setFiles(flinkConfig.uploadPath, fileName, cdcJobScript.jobScript);
+        //ssh上传,需要上传至远程服务器
+        if (flinkConfig.uploadWay.getValue() == UploadWayEnum.SSH.getValue()) {
+            try {
+                InputStream client_fileInput = new FileInputStream(flinkConfig.uploadPath + fileName);
+                FileTxtUtils.uploadFile(flinkConfig.host, flinkConfig.port, flinkConfig.user, flinkConfig.password, flinkConfig.uploadPath, fileName, client_fileInput);
+            } catch (FileNotFoundException e) {
+                log.error("uploadFile remote ex:", e);
+                throw new FkException(ResultEnum.UPLOADFILE_REMOTE_ERROR);
+            }
+        }
         IFlinkJobUpload upload = FlinkFactoryHelper.flinkUpload(flinkConfig.uploadWay);
         flinkConfig.fileName = fileName;
         String jobId = upload.submitJob(FlinkParameterMap.INSTANCES.dtoToDto(flinkConfig));
-
+        log.info("*****jonId:", jobId);
         if (!StringUtils.isEmpty(jobId)) {
             accessPo.jobId = jobId;
             tableAccessImpl.updateById(accessPo);
@@ -391,10 +405,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     @Override
     public void test() {
         IFlinkJobUpload upload = FlinkFactoryHelper.flinkUpload(flinkConfig.uploadWay);
-        flinkConfig.fileName = "test";
+        flinkConfig.fileName = "cdc_test_1547";
         String jobId = upload.submitJob(FlinkParameterMap.INSTANCES.dtoToDto(flinkConfig));
-        String aa = "";
-
     }
 
     /**
