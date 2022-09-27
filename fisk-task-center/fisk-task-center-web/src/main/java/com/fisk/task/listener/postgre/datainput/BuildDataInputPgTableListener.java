@@ -81,6 +81,7 @@ public class BuildDataInputPgTableListener {
         log.info("保存版本号方法执行成功");
         try {
             List<String> sqlList = dbCommand.buildStgAndOdsTable(buildPhysicalTableDTO);
+            log.info("建表语句:" + JSON.toJSONString(sqlList));
             BusinessResult Result = iJdbcBuild.postgreBuildTable(sqlList.get(1).toLowerCase(), BusinessTypeEnum.DATAINPUT);
             if (!Result.success) {
                 throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
@@ -93,6 +94,8 @@ public class BuildDataInputPgTableListener {
             //实时应用改状态
             if (Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.oracle_cdc)) {
                 log.info("oracle_cdc建表完成");
+                modelPublishStatusDTO.apiId = buildPhysicalTableDTO.apiId;
+                dc.updateApiPublishStatus(modelPublishStatusDTO);
             } else if (((buildPhysicalTableDTO.apiId != null && buildPhysicalTableDTO.appType == 0) || Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.api))) {
                 int tableCount = 0;
                 modelPublishStatusDTO.apiId = buildPhysicalTableDTO.apiId;

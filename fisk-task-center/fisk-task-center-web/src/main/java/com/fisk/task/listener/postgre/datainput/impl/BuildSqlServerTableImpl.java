@@ -36,19 +36,22 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         //ods与stg类型不变,不然有的值,类型转换不来
         tableFieldsDTOS.forEach((l) -> {
             if (l.fieldType.contains("FLOAT")) {
-                sqlFileds.append("\"" + l.fieldName + "\" " + " numeric(18,9) ,");
+                sqlFileds.append("\"" + l.fieldName + "\" " + " numeric(18,9) ");
             } else if (l.fieldType.contains("INT")) {
-                sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + ",");
+                sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + " ");
             } else if (l.fieldType.contains("TEXT")) {
-                sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + ",");
+                sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + " ");
             } else if (l.fieldType.contains("TIMESTAMP")) {
-                sqlFileds.append("\"" + l.fieldName + "\" datetime,");
+                sqlFileds.append("\"" + l.fieldName + "\" datetime ");
             } else {
-                sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + "(" + l.fieldLength + "),");
+                sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + "(" + l.fieldLength + ") ");
             }
             stgSql.append("\"" + l.fieldName + "\" text,");
             if (l.isPrimarykey == 1) {
                 pksql.append("\"" + l.fieldName + "\",");
+                sqlFileds.append("not null ,");
+            }else{
+                sqlFileds.append(",");
             }
 
         });
@@ -79,7 +82,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         List<String> sqlList = new ArrayList<>();
         //alter table Date add constraint PK_Date primary key(ID)
         if (StringUtils.isNotEmpty(havePk)) {
-            stg_sql1 += ";alter table " + odsTableName + " add constraint" + odsTableName + "_pkey primary key(" + havePk.substring(0, havePk.length() - 2) + ")";
+            stg_sql1 += ";alter table " + odsTableName + " add constraint " + odsTableName + "_pkey primary key(" + havePk.substring(0, havePk.length() - 2) + "\")";
         }
         sqlList.add(stg_sql1);
         sqlList.add(stg_sql2);
