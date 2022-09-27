@@ -94,4 +94,9 @@ public class TableAccessPO extends BasePO {
      */
     public ScanStartupModeEnum scanStartupMode;
 
+    /**
+     * oracle-cdc任务id
+     */
+    public String jobId;
+
 }

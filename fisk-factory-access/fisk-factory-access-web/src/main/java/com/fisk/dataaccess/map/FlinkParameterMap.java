@@ -1,7 +1,7 @@
 package com.fisk.dataaccess.map;
 
 import com.fisk.common.service.flinkupload.dto.FlinkUploadParameterDTO;
-import com.fisk.dataaccess.dto.FlinkConfigDTO;
+import com.fisk.dataaccess.dto.flink.FlinkConfigDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;

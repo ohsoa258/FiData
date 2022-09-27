@@ -11,15 +11,15 @@ import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.RegexUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.flinkupload.FlinkFactoryHelper;
-import com.fisk.common.service.flinkupload.IFlinkUpload;
+import com.fisk.common.service.flinkupload.IFlinkJobUpload;
 import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
-import com.fisk.dataaccess.dto.FlinkConfigDTO;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewPageDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
+import com.fisk.dataaccess.dto.flink.FlinkConfigDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
@@ -309,15 +309,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             AppRegistrationPO registration = iAppRegistration.getById(appId);
             AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("app_id", appId).one();
             String odsTableName = "ods_" + registration.appAbbreviation + "_" + tableName;
-            if (registration.whetherSchema) {
+            if (registration.whetherSchema != null && registration.whetherSchema) {
                 odsTableName = "ods_" + registration.appAbbreviation + "." + tableName;
             }
             data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
             data.whetherSchema = registration.whetherSchema;
-            //oracle-cdc类型需要上产脚本
-            if (dataSourcePo.driveType.equalsIgnoreCase("ORACLE-CDC")) {
-                cdcScriptUploadFlink(cdcDto, tableName);
-            }
 
             // 执行发布
             try {
@@ -347,6 +343,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     // 构建元数据实时同步数据对象
                     buildMetaDataInstanceAttribute(registration, accessId, 2);
                 }
+
+                //oracle-cdc类型需要上传脚本
+                if (dataSourcePo.driveType.equalsIgnoreCase("ORACLE-CDC")) {
+                    cdcScriptUploadFlink(cdcDto, tableName, accessId);
+                }
             } catch (Exception e) {
                 log.info("发布失败", e);
                 log.info("发布失败,{}", ResultEnum.TASK_EXEC_FAILURE.getMsg());
@@ -360,13 +361,40 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      *
      * @param cdcJobScript
      * @param fileName
+     * @param accessId
      */
-    public void cdcScriptUploadFlink(CdcJobScriptDTO cdcJobScript, String fileName) {
-        //上传文件
-        FileTxtUtils.setFiles(flinkConfig.uploadPath + "\\" + fileName + ".txt", cdcJobScript.jobScript);
+    public void cdcScriptUploadFlink(CdcJobScriptDTO cdcJobScript,
+                                     String fileName,
+                                     long accessId) {
+        TableAccessPO accessPo = tableAccessImpl.query().eq("id", accessId).one();
+        if (accessPo == null) {
+            throw new FkException(ResultEnum.TASK_TABLE_NOT_EXIST);
+        }
+
         //先根据job id,先停止任务
-        IFlinkUpload upload = FlinkFactoryHelper.flinkUpload(flinkConfig.uploadWay);
-        upload.submitJob(FlinkParameterMap.INSTANCES.dtoToDto(flinkConfig));
+        if (!StringUtils.isEmpty(accessPo.jobId)) {
+
+        }
+        //上传文件
+        FileTxtUtils.setFiles(flinkConfig.uploadPath, fileName, cdcJobScript.jobScript);
+        IFlinkJobUpload upload = FlinkFactoryHelper.flinkUpload(flinkConfig.uploadWay);
+        flinkConfig.fileName = fileName;
+        String jobId = upload.submitJob(FlinkParameterMap.INSTANCES.dtoToDto(flinkConfig));
+
+        if (!StringUtils.isEmpty(jobId)) {
+            accessPo.jobId = jobId;
+            tableAccessImpl.updateById(accessPo);
+        }
+
+    }
+
+    @Override
+    public void test() {
+        IFlinkJobUpload upload = FlinkFactoryHelper.flinkUpload(flinkConfig.uploadWay);
+        flinkConfig.fileName = "test";
+        String jobId = upload.submitJob(FlinkParameterMap.INSTANCES.dtoToDto(flinkConfig));
+        String aa = "";
+
     }
 
     /**

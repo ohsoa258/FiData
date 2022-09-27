@@ -35,6 +35,7 @@ public class FlinkUploadUtils {
 
     public static String ExecCommand(Session session, String command) {
         try {
+            String jobId = null;
             // 打开通道，设置通道类型，和执行的命令
             ChannelExec channelExec = (ChannelExec) session.openChannel("exec");
             channelExec.setCommand(command);
@@ -45,9 +46,13 @@ public class FlinkUploadUtils {
             String line;
             while ((line = br.readLine()) != null) {
                 System.out.println(line);
+                line = line.replaceAll(" ", "");
+                if (line.indexOf("JobID") > -1) {
+                    jobId = line.split(":")[1];
+                }
             }
             channelExec.disconnect();
-            return null;
+            return jobId;
         } catch (Exception e) {
             e.printStackTrace();
             return e.toString();

@@ -12,7 +12,8 @@ public enum ResultEnum {
      * 返回码
      */
     SUCCESS(0, "成功"),
-    REQUEST_SUCCESS(200,"请求成功"),
+    REQUEST_SUCCESS(200, "请求成功"),
+    ACCEPTED(202, "接收成功"),
     UNAUTHENTICATE(401, "认证失败"),
     NOTFOUND(404, "未找到资源"),
     ERROR(500, "系统报错"),

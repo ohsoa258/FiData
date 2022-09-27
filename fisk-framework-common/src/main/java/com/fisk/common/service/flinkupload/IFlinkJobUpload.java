@@ -5,13 +5,14 @@ import com.fisk.common.service.flinkupload.dto.FlinkUploadParameterDTO;
 /**
  * @author JianWenYang
  */
-public interface IFlinkUpload {
+public interface IFlinkJobUpload {
 
     /**
      * 提交任务脚本到flink
      *
      * @param dto
+     * @return
      */
-    void submitJob(FlinkUploadParameterDTO dto);
+    String submitJob(FlinkUploadParameterDTO dto);
 
 }

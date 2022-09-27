@@ -234,7 +234,7 @@ public class OracleCdcUtils {
         str.append("'url'=" + "'" + dataSource.conStr + "'," + ln);
         str.append("'username'=" + "'" + dataSource.conAccount + "'," + ln);
         str.append("'password'=" + "'" + dataSource.conPassword + "'," + ln);
-        str.append("'table-name'=" + "'" + dto.fieldNameDTOList.get(0).sourceTableName + "'" + ln);
+        str.append("'table-name'=" + "'" + targetTable + "'" + ln);
         str.append(");");
 
         return str.toString();

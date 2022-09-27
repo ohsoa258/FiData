@@ -1851,7 +1851,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.appAbbreviation = registrationPo.appAbbreviation;
         dto.tableName = tableAccessPo.tableName;
         // 非实时物理表才有sql
-        if (!dbTypeEnum.getName().equals(DbTypeEnum.RestfulAPI.getName()) && !dbTypeEnum.getName().equals(DbTypeEnum.api.getName())) {
+        if (!dbTypeEnum.getName().equals(DbTypeEnum.RestfulAPI.getName())
+                && !dbTypeEnum.getName().equals(DbTypeEnum.api.getName())
+                && !dbTypeEnum.getName().equals(DbTypeEnum.oracle_cdc.getName())) {
             Map<String, String> converSql = publishTaskClient.converSql(registrationPo.appAbbreviation + "_" + tableAccessPo.tableName, tableAccessPo.sqlScript, dataSourcePo.driveType).data;
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             dto.selectSql = sql;

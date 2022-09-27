@@ -20,4 +20,6 @@ public class FlinkUploadParameterDTO {
 
     public String uploadWay;
 
+    public String fileName;
+
 }
