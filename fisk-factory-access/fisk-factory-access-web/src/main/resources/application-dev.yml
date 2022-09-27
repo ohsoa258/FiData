@@ -68,5 +68,12 @@ flink-config:
   port: 22
   user: root
   password: p/q2-q4!
-  upload-path: D:\Driver
-  upload-way: dev
+  upload-path: /root/flink-job/sql/
+  upload-way: ssh
+  savepoints-path: /root/flink-job/savepoint/
+
+flink-api-config:
+  host: http://192.168.1.92
+  port: 8081
+  savepoints: /jobs/:jobid/savepoints
+  savepoint-status: /jobs/:jobid/savepoints/:triggerid

@@ -55,4 +55,6 @@ public interface ITableFields extends IService<TableFieldsPO> {
      */
     OperateMsgDTO loadDepend(OperateTableDTO dto);
 
+    void test();
+
 }

@@ -11,7 +11,7 @@ import com.fisk.common.service.flinkupload.impl.FlinkSSHUpload;
  */
 public class FlinkFactoryHelper {
 
-    public static IFlinkUpload flinkUpload(UploadWayEnum wayEnum) {
+    public static IFlinkJobUpload flinkUpload(UploadWayEnum wayEnum) {
         switch (wayEnum) {
             case DEV:
                 return new FlinkDevUpload();

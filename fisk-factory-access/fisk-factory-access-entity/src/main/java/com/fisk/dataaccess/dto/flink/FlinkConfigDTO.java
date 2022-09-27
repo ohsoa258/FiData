@@ -1,4 +1,4 @@
-package com.fisk.dataaccess.dto;
+package com.fisk.dataaccess.dto.flink;
 
 import com.fisk.common.core.enums.flink.UploadWayEnum;
 import lombok.Data;
@@ -29,6 +29,11 @@ public class FlinkConfigDTO {
 
     @Value("${flink-config.upload-way}")
     public UploadWayEnum uploadWay;
+
+    @Value("${flink-config.savepoints-path}")
+    public String savePointsPath;
+
+    public String fileName;
 
 }
 
