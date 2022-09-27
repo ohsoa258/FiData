@@ -11,10 +11,11 @@ import com.fisk.common.core.enums.BaseEnum;
 public enum TableBusinessTypeEnum implements BaseEnum {
 
     NONE(0, "NONE"), //空
-    FACTTABLE(1, "FACTTABLE"), //事实表
-    DIMENSIONTABLE(2, "DIMENSIONTABLE"), //维度表
-    QUOTATABLE(3, "QUOTATABLE"), //指标表
-    WIDETABLE(4, "WIDETABLE"); //宽表
+    DW_DIMENSION(1, "dw_dimension"), //dw维度表
+    DW_FACT(2, "dw_fact"), //dw事实表
+    DORIS_DIMENSION(3, "doris_dimension"), //doris维度表
+    DORIS_FACT(4, "doris_fact"), //doris事实表
+    WIDE_TABLE(5, "wide_table"); //宽表
 
     TableBusinessTypeEnum(int value, String name) {
         this.value = value;

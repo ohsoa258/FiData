@@ -1,6 +1,5 @@
 package com.fisk.dataservice.dto.api;
 
-import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;

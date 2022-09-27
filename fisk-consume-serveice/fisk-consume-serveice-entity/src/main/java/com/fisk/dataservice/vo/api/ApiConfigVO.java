@@ -1,10 +1,7 @@
 package com.fisk.dataservice.vo.api;
 
-import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
-import com.fisk.dataservice.enums.SourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 
 import java.time.LocalDateTime;
 

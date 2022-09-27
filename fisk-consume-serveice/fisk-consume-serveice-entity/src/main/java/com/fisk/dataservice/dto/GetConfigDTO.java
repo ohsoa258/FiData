@@ -22,5 +22,4 @@ public class GetConfigDTO {
 
     @Value("${spring.datasource.driver-class-name}")
     public String driver;
-
 }
