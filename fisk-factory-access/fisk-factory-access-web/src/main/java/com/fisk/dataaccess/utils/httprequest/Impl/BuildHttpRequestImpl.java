@@ -61,15 +61,23 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
     public String getRequestToken(ApiHttpRequestDTO dto) {
         try {
             JSONObject jsonObj = new JSONObject();
+            if (StringUtils.isEmpty(dto.jwtRequestDTO.userKey) || StringUtils.isEmpty(dto.jwtRequestDTO.pwdKey)) {
+                dto.jwtRequestDTO.userKey = "username";
+                dto.jwtRequestDTO.pwdKey = "password";
+            }
             jsonObj.put(dto.jwtRequestDTO.userKey, dto.jwtRequestDTO.username);
             jsonObj.put(dto.jwtRequestDTO.pwdKey, dto.jwtRequestDTO.password);
 
             String result = sendPostRequest(dto, JSON.toJSONString(jsonObj));
-
             JSONObject jsonObject = JSONObject.parseObject(result);
             String bearer = "Bearer ";
-            String token = (String) jsonObject.get("token");
-
+            String token = (String) jsonObject.get(dto.jsonDataKey);
+            if (StringUtils.isEmpty(token)) {
+                token = (String) jsonObject.get("data");
+            }
+            if (StringUtils.isEmpty(token)) {
+                throw new FkException(ResultEnum.GET_JWT_TOKEN_ERROR);
+            }
             return bearer + token;
         } catch (Exception e) {
             log.error("AE90: 当前api获取token失败,请检查api的配置信息,【失败原因为：】", e);

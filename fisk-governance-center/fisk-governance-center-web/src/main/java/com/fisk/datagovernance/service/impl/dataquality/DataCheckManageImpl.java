@@ -73,6 +73,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     private DataCheckExtendManageImpl dataCheckExtendManageImpl;
 
     @Resource
+    private ExternalInterfaceImpl externalInterfaceImpl;
+
+    @Resource
     UserHelper userHelper;
 
     @Override
@@ -97,7 +100,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     if (CollectionUtils.isNotEmpty(dataCheckExtendFilters)) {
                         e.setDataCheckExtends(DataCheckExtendMap.INSTANCES.poToVo(dataCheckExtendFilters));
                         e.getDataCheckExtends().stream().forEach(t -> {
-                            if (e.datasourceType == SourceTypeEnum.FiData) {
+                            if (e.sourceTypeEnum == SourceTypeEnum.FiData) {
                                 if (CollectionUtils.isNotEmpty(query.tableField.getFields())) {
                                     DataTableFieldDTO dataTableFieldDTO = query.tableField.getFields().stream().filter(f -> f.id.equals(t.fieldUnique)).findFirst().orElse(null);
                                     if (dataTableFieldDTO != null) {
@@ -153,6 +156,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             });
             dataCheckExtendManageImpl.saveBatch(dataCheckExtends);
         }
+        //第五步：调用元数据接口获取最新的规则信息
+        externalInterfaceImpl.synchronousTableBusinessMetaData(dto.getDatasourceId(), dto.getSourceTypeEnum(), dto.getTableBusinessType(), dto.getTableUnique());
         return ResultEnum.SUCCESS;
     }
 
@@ -184,6 +189,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             List<DataCheckExtendPO> dataCheckExtends = DataCheckExtendMap.INSTANCES.dtoToPo(dto.dataCheckExtends);
             dataCheckExtendManageImpl.saveBatch(dataCheckExtends);
         }
+        //第五步：调用元数据接口获取最新的规则信息
+        externalInterfaceImpl.synchronousTableBusinessMetaData(dto.getDatasourceId(), dto.getSourceTypeEnum(), dto.getTableBusinessType(), dto.getTableUnique());
         return ResultEnum.SUCCESS;
     }
 
@@ -196,6 +203,12 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
         // 删除数据校验扩展属性
         dataCheckExtendMapper.updateByRuleId(id);
+        // 调用元数据接口获取最新的规则信息
+        DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(dataCheckPO.getDatasourceId());
+        if (dataSourceConPO != null) {
+            SourceTypeEnum sourceTypeEnum = SourceTypeEnum.getEnum(dataSourceConPO.getDatasourceType());
+            externalInterfaceImpl.synchronousTableBusinessMetaData(dataCheckPO.getDatasourceId(), sourceTypeEnum, dataCheckPO.getTableBusinessType(), dataCheckPO.getTableUnique());
+        }
         return baseMapper.deleteByIdWithFill(dataCheckPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -292,7 +305,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     dataTableFieldDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.getEnum(dataCheckPO.getTableBusinessType()));
                     dtoList.add(dataTableFieldDTO);
                 }
-                List<FiDataMetaDataDTO> fiDataMetaDatas = fiDataMetaDatas = dataSourceConManageImpl.getTableFieldName(dtoList);
+                List<FiDataMetaDataDTO> fiDataMetaDatas = dataSourceConManageImpl.getTableFieldName(dtoList);
                 if (CollectionUtils.isEmpty(fiDataMetaDatas)) {
                     return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_REDIS_NOTEXISTSTABLEFIELD, null);
                 }
@@ -333,7 +346,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                             }
                         }
                     }
-                }else{
+                } else {
                     tableName = dataCheckPO.getTableUnique();
                     fieldNames = dataCheckExtendFilters.stream().map(DataCheckExtendPO::getFieldUnique).collect(Collectors.toList());
                 }

@@ -24,6 +24,7 @@ import com.fisk.dataaccess.dto.api.*;
 import com.fisk.dataaccess.dto.api.doc.*;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.api.httprequest.JwtRequestDTO;
+import com.fisk.dataaccess.dto.apiresultconfig.ApiResultConfigDTO;
 import com.fisk.dataaccess.dto.json.ApiTableDTO;
 import com.fisk.dataaccess.dto.json.JsonSchema;
 import com.fisk.dataaccess.dto.json.JsonTableData;
@@ -120,6 +121,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private TableBusinessImpl tableBusinessImpl;
     @Resource
     private ApiParameterServiceImpl apiParameterServiceImpl;
+    @Resource
+    private ApiResultConfigImpl apiResultConfigImpl;
     @Resource
     private UserHelper userHelper;
     @Resource
@@ -277,7 +280,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             String pushData = dto.pushData;
             if (StringUtils.isNotBlank(pushData)) {
                 String pushDataStr = pushData.replace("&nbsp;", "").replace("<br/>", "").replace("\\\\n\\n", "");
-                System.out.println("pushDataStr = " + pushDataStr);
+                log.info("pushDataStr = " + pushDataStr);
                 receiveDataDto.pushData = pushDataStr;
             }
             pushData(receiveDataDto);
@@ -485,6 +488,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // stg同步到ods(联调task)
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
                 ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
+                log.info("stg表数据用完即删");
+                pushDataStgToOds(dto.apiCode, 0);
                 msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
             }
 
@@ -574,6 +579,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // stg同步到ods(联调task)
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
                 ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
+                log.info("stg表数据用完即删");
+                pushDataStgToOds(dto.apiCode, 0);
                 msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
             }
 
@@ -993,8 +1000,19 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             apiHttpRequestDto.jwtRequestDTO = jwtRequestDto;
 
             IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
+
+            //获取token返回json串格式
+            List<ApiResultConfigDTO> apiResultConfig = apiResultConfigImpl.getApiResultConfig(dataSourcePo.id);
+            Optional<ApiResultConfigDTO> first = apiResultConfig.stream().filter(e -> e.checked == true).findFirst();
+            apiHttpRequestDto.jsonDataKey = "token";
+            if (first.isPresent()) {
+                apiHttpRequestDto.jsonDataKey = first.get().name;
+                //throw new FkException(ResultEnum.RETURN_RESULT_DEFINITION);
+            }
+
             // 获取token
             String requestToken = iBuildHttpRequest.getRequestToken(apiHttpRequestDto);
+            log.info("token参数:" + JSON.toJSONString(apiHttpRequestDto) + "token值" + requestToken);
             if (StringUtils.isBlank(requestToken)) {
                 return ResultEnum.GET_JWT_TOKEN_ERROR;
             }
@@ -1118,8 +1136,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         String jsonKey = StringUtils.isNotBlank(apiConfigPo.jsonKey) ? apiConfigPo.jsonKey : "data";
         JSONArray jsonArray = JSON.parseObject(data).getJSONArray(jsonKey);
         log.info("动态参数再次调用:第几{}页", pageNum);
-        if (!CollectionUtils.isEmpty(jsonArray) && jsonArray.size() != 0 && pageNum < Integer.parseInt(ApiParameterTypeEnum.MAX_PAGE.getName())) {
+        //collect无参数不用进第二次,无数据不用进第二次,大于最大页数不用进第二页
+        if (!CollectionUtils.isEmpty(collect) && Objects.equals(dataSourcePo.driveType, DataSourceTypeEnum.API.getName()) && !CollectionUtils.isEmpty(jsonArray) && jsonArray.size() != 0 && pageNum < Integer.parseInt(ApiParameterTypeEnum.MAX_PAGE.getName())) {
             // 推送数据
+            log.info("进入下次推送");
             pushDataByImportData(dto, receiveDataDTO);
             syncData(dto, apiParameters);
         }
