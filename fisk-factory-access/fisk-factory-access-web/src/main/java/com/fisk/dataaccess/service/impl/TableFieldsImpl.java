@@ -82,6 +82,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     @Resource
     private AppDataSourceImpl dataSourceImpl;
     @Resource
+    FlinkApiImpl flinkApi;
+    @Resource
     private PublishTaskClient publishTaskClient;
     @Resource
     private UserHelper userHelper;
@@ -377,6 +379,19 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
         //先根据job id,先停止任务
         if (!StringUtils.isEmpty(accessPo.jobId)) {
+            String triggerId = flinkApi.savePoints(accessPo.jobId, String.valueOf(accessId));
+            boolean flat = true;
+            long startTime = System.currentTimeMillis();
+            while (flat || (System.currentTimeMillis() - startTime) < 10000) {
+                ResultEnum resultEnum = flinkApi.savePointsStatus(accessPo.jobId, triggerId);
+                if (resultEnum == ResultEnum.SUCCESS) {
+                    flat = false;
+                }
+            }
+            if (flat) {
+                throw new FkException(ResultEnum.SAVE_POINTS_UPDATE_ERROR);
+            }
+            //保存到检查点历史表
 
         }
         //上传文件
@@ -404,9 +419,12 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
     @Override
     public void test() {
-        IFlinkJobUpload upload = FlinkFactoryHelper.flinkUpload(flinkConfig.uploadWay);
+        String jobId = "147fe1e44653987c5fe971bd0be29b60";
+        String triggerId = flinkApi.savePoints(jobId, "");
+        ResultEnum resultEnum = flinkApi.savePointsStatus(jobId, triggerId);
+        /*IFlinkJobUpload upload = FlinkFactoryHelper.flinkUpload(flinkConfig.uploadWay);
         flinkConfig.fileName = "cdc_test_1547";
-        String jobId = upload.submitJob(FlinkParameterMap.INSTANCES.dtoToDto(flinkConfig));
+        String jobId = upload.submitJob(FlinkParameterMap.INSTANCES.dtoToDto(flinkConfig));*/
     }
 
     /**

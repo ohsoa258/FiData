@@ -114,9 +114,11 @@ public class OracleCdcUtils {
                                               TbTableAccessDTO tableAccessData) {
         CdcJobScriptDTO data = new CdcJobScriptDTO();
         StringBuilder str = new StringBuilder();
-        str.append("SET pipeline.name ='" + tableAccessData.pipelineName + ";");
+        str.append("SET pipeline.name =" + tableAccessData.pipelineName + ";");
         str.append(ln);
         str.append("SET execution.checkpointing.interval =" + tableAccessData.checkPointInterval + tableAccessData.checkPointUnit + ";");
+        str.append(ln);
+        str.append(ln);
         //来源表脚本
         str.append(buildSourceTableScript(dto, dataSourceDto, tableAccessData));
         //目标表脚本
@@ -145,7 +147,6 @@ public class OracleCdcUtils {
                 dataSourceDto.dbName, sourceTable);
 
         StringBuilder str = new StringBuilder();
-        str.append(ln);
         str.append("CREATE TABLE ");
         str.append(dto.fieldNameDTOList.get(0).sourceTableName + " (");
         str.append(ln);
@@ -164,6 +165,7 @@ public class OracleCdcUtils {
 
         str.append(StringUtils.join(columnList, "," + ln + ""));
         str.append(")");
+        str.append(ln);
         str.append("WITH");
         str.append("(");
         str.append(ln);
@@ -195,6 +197,7 @@ public class OracleCdcUtils {
         str.append("CREATE TABLE ");
         str.append(targetTable);
         str.append("(");
+        str.append(ln);
         List<String> columnList = new ArrayList<>();
 
         for (FieldNameDTO item : dto.fieldNameDTOList) {
@@ -207,16 +210,19 @@ public class OracleCdcUtils {
         if (!CollectionUtils.isEmpty(collect)) {
             columnList.add("PRIMARY KEY (" + StringUtils.join(collect.stream().map(e -> e.fieldName).collect(Collectors.toList()), ",") + ") NOT ENFORCED");
         }
-        str.append(StringUtils.join(columnList, ","));
+        str.append(StringUtils.join(columnList, "," + ln + ""));
         str.append(")");
+        str.append(ln);
         str.append("WITH");
         str.append("(");
+        str.append(ln);
         str.append("'connector'=" + "'jdbc'," + ln);
         str.append("'url'=" + "'" + dataSource.conStr + "'," + ln);
         str.append("'username'=" + "'" + dataSource.conAccount + "'," + ln);
         str.append("'password'=" + "'" + dataSource.conPassword + "'," + ln);
         str.append("'table-name'=" + "'" + targetTable + "'" + ln);
         str.append(");");
+        str.append(ln);
 
         return str.toString();
     }

@@ -137,6 +137,7 @@ public enum ResultEnum {
     UPLOAD_FLINK_ERROR(5057, "脚本上传flink失败"),
     PIPELINENAME_EXISTING(5058, "Job名称已存在"),
     UPLOADFILE_REMOTE_ERROR(5059, "文件上传远程失败"),
+    SAVE_POINTS_UPDATE_ERROR(5060, "检查点保存失败"),
 
 
     /**
