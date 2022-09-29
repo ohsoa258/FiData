@@ -57,8 +57,8 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             }
 
         });
-        stgSql.append("fi_createtime varchar(50) DEFAULT (getdate()),fi_updatetime varchar(50),enableflag varchar(50)," +
-                "error_message varchar(250),fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), sync_type varchar(50) DEFAULT '2',verify_type varchar(50) DEFAULT '3'," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT (newid())");
+        stgSql.append("fi_createtime varchar(50) DEFAULT (getdate()),fi_updatetime varchar(50),fi_enableflag varchar(50)," +
+                "fi_error_message varchar(250),fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3'," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT (newid())");
 
         sqlFileds.append("fi_createtime varchar(50) DEFAULT (getdate()),fi_updatetime varchar(50),fidata_batch_code varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT (newid())");
         String havePk = pksql.toString();
@@ -73,13 +73,13 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             stg_sql1 = sql.toString().replace("fi_tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName);
             stg_sql2 = stgSql.toString().replace("fi_tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName);
             stg_sql2 = "DROP TABLE IF EXISTS " + "stg_" + buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName + ";" + stg_sql2 +
-                    "create index enableflagsy on stg_" + buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName + " (enableflag);";
+                    "create index enableflagsy on stg_" + buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName + " (fi_enableflag);";
         } else {
             odsTableName = "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
             stg_sql1 = sql.toString().replace("fi_tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
             stg_sql2 = stgSql.toString().replace("fi_tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
             stg_sql2 = "DROP TABLE IF EXISTS " + "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + ";" + stg_sql2 +
-                    "create index enableflagsy on stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + " (enableflag);";
+                    "create index enableflagsy on stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + " (fi_enableflag);";
         }
         List<String> sqlList = new ArrayList<>();
         //alter table Date add constraint PK_Date primary key(ID)

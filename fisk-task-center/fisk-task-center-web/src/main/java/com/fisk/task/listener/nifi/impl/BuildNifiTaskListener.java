@@ -1876,14 +1876,14 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     private ProcessorEntity replaceTextProcess(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
         HashMap<String, Object> updateFieldMap_Y = new HashMap<>();
-        updateFieldMap_Y.put("verify_type", "3");
-        updateFieldMap_Y.put("sync_type", "2");
+        updateFieldMap_Y.put("fi_verify_type", "3");
+        updateFieldMap_Y.put("fi_sync_type", "2");
         HashMap<String, Object> updateFieldMap_N = new HashMap<>();
-        updateFieldMap_N.put("sync_type", 3);
-        updateFieldMap_N.put("verify_type", 2);
+        updateFieldMap_N.put("fi_sync_type", 3);
+        updateFieldMap_N.put("fi_verify_type", 2);
         HashMap<String, Object> updateFieldMap_R = new HashMap<>();
-        updateFieldMap_R.put("sync_type", 2);
-        updateFieldMap_R.put("verify_type", 4);
+        updateFieldMap_R.put("fi_sync_type", 2);
+        updateFieldMap_R.put("fi_verify_type", 4);
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
         checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
@@ -1919,19 +1919,19 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     private ProcessorEntity replaceTextForDwProcess(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
         HashMap<String, Object> updateFieldMap_Y = new HashMap<>();
-        updateFieldMap_Y.put("verify_type", "3");
-        updateFieldMap_Y.put("sync_type", "2");
+        updateFieldMap_Y.put("fi_verify_type", "3");
+        updateFieldMap_Y.put("fi_sync_type", "2");
         HashMap<String, Object> updateFieldMap_N = new HashMap<>();
-        updateFieldMap_N.put("sync_type", 3);
-        updateFieldMap_N.put("verify_type", 2);
+        updateFieldMap_N.put("fi_sync_type", 3);
+        updateFieldMap_N.put("fi_verify_type", 2);
         HashMap<String, Object> updateFieldMap_R = new HashMap<>();
-        updateFieldMap_R.put("sync_type", 2);
-        updateFieldMap_R.put("verify_type", 4);
+        updateFieldMap_R.put("fi_sync_type", 2);
+        updateFieldMap_R.put("fi_verify_type", 4);
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
         checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
         dataCheckSyncDTO.dataSourceId = "1";
-        dataCheckSyncDTO.msgField = "error_message";
+        dataCheckSyncDTO.msgField = "fi_error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
         dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
@@ -1960,19 +1960,19 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      */
     private ProcessorEntity generateFlowFileProcessor(DataAccessConfigDTO config, String groupId) {
         HashMap<String, Object> updateFieldMap_Y = new HashMap<>();
-        updateFieldMap_Y.put("verify_type", "3");
-        updateFieldMap_Y.put("sync_type", "2");
+        updateFieldMap_Y.put("fi_verify_type", "3");
+        updateFieldMap_Y.put("fi_sync_type", "2");
         HashMap<String, Object> updateFieldMap_N = new HashMap<>();
-        updateFieldMap_N.put("sync_type", 3);
-        updateFieldMap_N.put("verify_type", 2);
+        updateFieldMap_N.put("fi_sync_type", 3);
+        updateFieldMap_N.put("fi_verify_type", 2);
         HashMap<String, Object> updateFieldMap_R = new HashMap<>();
-        updateFieldMap_R.put("sync_type", 2);
-        updateFieldMap_R.put("verify_type", 4);
+        updateFieldMap_R.put("fi_sync_type", 2);
+        updateFieldMap_R.put("fi_verify_type", 4);
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
         checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
         dataCheckSyncDTO.dataSourceId = null;
-        dataCheckSyncDTO.msgField = "error_message";
+        dataCheckSyncDTO.msgField = "fi_error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
         dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
