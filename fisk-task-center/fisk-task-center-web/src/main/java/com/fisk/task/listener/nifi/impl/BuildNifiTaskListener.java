@@ -39,6 +39,8 @@ import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.enums.PortComponentEnum;
 import com.fisk.task.listener.nifi.INifiTaskListener;
+import com.fisk.task.listener.postgre.datainput.IbuildTable;
+import com.fisk.task.listener.postgre.datainput.impl.BuildFactoryHelper;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
 import com.fisk.task.po.AppNifiSettingPO;
 import com.fisk.task.po.NifiConfigPO;
@@ -423,14 +425,14 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             targetDbPoolConfig.password = pgsqlDatainputPassword;
             targetDbPoolConfig.jdbcStr = pgsqlDatainputUrl;
             ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
-            if(fiDataDataSource.code == ResultEnum.SUCCESS.getCode()){
+            if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
                 DataSourceDTO dataSource = fiDataDataSource.data;
                 //com.microsoft.sqlserver.jdbc.SQLServerDriver
                 targetDbPoolConfig.type = DriverTypeEnum.valueOf(dataSource.conType.getName());
                 targetDbPoolConfig.user = dataSource.conAccount;
                 targetDbPoolConfig.password = dataSource.conPassword;
                 targetDbPoolConfig.jdbcStr = dataSource.conStr;
-            }else {
+            } else {
                 log.error("userclient无法查询到ods库的连接信息");
             }
             targetDbPoolConfig.tableFieldsList = res.data.targetDsConfig.tableFieldsList;
@@ -499,13 +501,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             sourceDsConfig.user = pgsqlDatainputUsername;
             sourceDsConfig.password = pgsqlDatainputPassword;
             ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
-            if(fiDataDataSource.code == ResultEnum.SUCCESS.getCode()){
+            if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
                 DataSourceDTO dataSource = fiDataDataSource.data;
                 sourceDsConfig.type = DriverTypeEnum.valueOf(dataSource.conType.getName());
                 sourceDsConfig.user = dataSource.conAccount;
                 sourceDsConfig.password = dataSource.conPassword;
                 sourceDsConfig.jdbcStr = dataSource.conStr;
-            }else {
+            } else {
                 log.error("userclient无法查询到ods库的连接信息");
             }
             targetDbPoolConfig.type = DriverTypeEnum.POSTGRESQL;
@@ -1721,23 +1723,16 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         querySqlDto.details = "insert_phase";
         querySqlDto.groupId = groupId;
         //接入需要数据校验,查的是ods表,其他的不变
-        if (Objects.equals(dto.type, OlapTableEnum.WIDETABLE) || Objects.equals(dto.type, OlapTableEnum.KPI)) {
-            querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,now() as end_time," +
-                    "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                    "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+            DataSourceDTO data = fiDataDataSource.data;
+            IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(data.conType);
+            String sql = dbCommand.queryNumbersField(dto, config);
+            querySqlDto.querySql = sql;
         } else {
-            if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
-                querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
-                        "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from ods_" + config.processorConfig.targetTableName.substring(4) + " where fidata_batch_code='${fidata_batch_code}'";
-            } else {
-                querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
-                        "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName + " where fidata_batch_code='${fidata_batch_code}'";
-            }
-
+            log.error("ods数据源查询出错");
+            throw new FkException(ResultEnum.ERROR);
         }
-
         querySqlDto.dbConnectionId = targetDbPoolId;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(13);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
@@ -2327,9 +2322,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         filedValues += dto.queryStartTime == null ? ",'0000-01-01 00:00:00'" : (",'" + dto.queryStartTime + "'");
         filedValues += dto.queryEndTime == null ? ",now()" : (",'" + dto.queryEndTime + "'");
         if (dto.selectSql != null && dto.selectSql != "") {
-            filedValues += ",\"" + dto.selectSql.replaceAll("\"","\\\\\"") + "\"";
+            filedValues += ",\"" + dto.selectSql.replaceAll("\"", "\\\\\"") + "\"";
         } else {
-            filedValues += ",\"" + selectSql.replaceAll("\"","\\\\\"") + "\"";
+            filedValues += ",\"" + selectSql.replaceAll("\"", "\\\\\"") + "\"";
         }
 
         return "INSERT INTO tb_etl_log ( tablename, startdate, `status`,query_start_time,query_end_time,query_sql) " +

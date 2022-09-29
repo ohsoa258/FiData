@@ -1,5 +1,6 @@
 package com.fisk.task.extend.actuators;
 
+import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
@@ -72,6 +73,7 @@ public class DefiningCommonVariablesImpl implements ApplicationRunner {
             configMap.put(ComponentIdTypeEnum.CFG_DB_POOL_URL.getName(), jdbcStr);
             //pg-ods
             ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+            log.info("查询数据源:" + JSON.toJSONString(fiDataDataSource));
             configMap.put(ComponentIdTypeEnum.PG_ODS_DB_POOL_PASSWORD.getName(), pgsqlDatainputPassword);
             configMap.put(ComponentIdTypeEnum.PG_ODS_DB_POOL_USERNAME.getName(), pgsqlDatainputUsername);
             configMap.put(ComponentIdTypeEnum.PG_ODS_DB_POOL_URL.getName(), pgsqlDatainputUrl);
@@ -80,6 +82,8 @@ public class DefiningCommonVariablesImpl implements ApplicationRunner {
                 configMap.put(ComponentIdTypeEnum.PG_ODS_DB_POOL_PASSWORD.getName(), data.conPassword);
                 configMap.put(ComponentIdTypeEnum.PG_ODS_DB_POOL_USERNAME.getName(), data.conAccount);
                 configMap.put(ComponentIdTypeEnum.PG_ODS_DB_POOL_URL.getName(), data.conStr);
+            } else {
+                log.error("数据源查询失败");
             }
 
 

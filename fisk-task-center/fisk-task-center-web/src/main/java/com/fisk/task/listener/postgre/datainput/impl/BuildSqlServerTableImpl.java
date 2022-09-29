@@ -8,6 +8,7 @@ import com.fisk.dataaccess.enums.syncModeTypeEnum;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
+import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.postgre.datainput.IbuildTable;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -46,11 +47,12 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             } else {
                 sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + "(" + l.fieldLength + ") ");
             }
-            stgSql.append("\"" + l.fieldName + "\" text,");
+            //todo 修改stg表,字段类型
+            stgSql.append("\"" + l.fieldName + "\" varchar(4000),");
             if (l.isPrimarykey == 1) {
                 pksql.append("\"" + l.fieldName + "\",");
                 sqlFileds.append("not null ,");
-            }else{
+            } else {
                 sqlFileds.append(",");
             }
 
@@ -142,7 +144,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                 sql += ",'" + config.processorConfig.targetTableName.substring(4) + "'";
             }
         } else {
-            sql = sql.replaceFirst("call public." + funcName + "(", "exec [dbo]." + funcName);
+            sql = sql.replaceFirst("call public." + funcName + "\\(", "exec [dbo]." + funcName);
             tableKey = targetTableName.substring(4) + "key";
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
                 sql += "stg_" + targetTableName + "'";
@@ -206,7 +208,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                 sql += ",'')";
             }
         }
-        sql.replaceFirst("\\)", "");
+        sql = sql.replaceFirst("\\)", "");
         log.info("函数语句:" + sql);
         return sql;
     }
@@ -214,6 +216,30 @@ public class BuildSqlServerTableImpl implements IbuildTable {
     @Override
     public String prepareCallSql() {
         return "call pg_check_table_structure_sqlserver(?,?)";
+    }
+
+    @Override
+    public String queryNumbersField(BuildNifiFlowDTO dto, DataAccessConfigDTO config) {
+        //convert(varchar(100),getdate(),120)
+        String querySql = "";
+        if (Objects.equals(dto.type, OlapTableEnum.WIDETABLE) || Objects.equals(dto.type, OlapTableEnum.KPI)) {
+            querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,now() as end_time," +
+                    "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
+                    "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
+        } else {
+            if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
+                querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,convert(varchar(100),getdate(),120) as end_time," +
+                        "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from ods_" + config.processorConfig.targetTableName.substring(4) + " where fidata_batch_code='${fidata_batch_code}'";
+            } else {
+                querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
+                        "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName + " where fidata_batch_code='${fidata_batch_code}'";
+            }
+
+        }
+        return querySql;
+
     }
 
 

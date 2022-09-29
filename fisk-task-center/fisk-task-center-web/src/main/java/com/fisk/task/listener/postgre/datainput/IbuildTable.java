@@ -45,4 +45,11 @@ public interface IbuildTable {
      * @return String
      */
     String prepareCallSql();
+
+    /**
+     * 查询同步数据条数语句
+     *
+     * @return String
+     */
+    String queryNumbersField(BuildNifiFlowDTO dto, DataAccessConfigDTO config);
 }
