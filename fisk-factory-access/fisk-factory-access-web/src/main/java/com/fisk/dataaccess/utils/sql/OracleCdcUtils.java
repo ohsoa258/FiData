@@ -29,7 +29,7 @@ public class OracleCdcUtils {
 
     private static String passwordPlaceholder = "******";
     private static String ln = "\n";
-    private static String redisPrefix = "Cdc";
+    public static String redisPrefix = "Cdc";
     @Resource
     private RedisTemplate redisTemplate;
 

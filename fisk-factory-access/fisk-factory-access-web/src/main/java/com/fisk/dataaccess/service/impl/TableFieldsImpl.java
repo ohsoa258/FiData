@@ -388,8 +388,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 
         //替换脚本
-        OracleCdcUtils oracleCdcUtils = new OracleCdcUtils();
-        cdcJobScript.jobScript = oracleCdcUtils.getCdcRedis(accessId);
+        Boolean exist = redisTemplate.hasKey(OracleCdcUtils.redisPrefix + ":" + accessId);
+        if (!exist) {
+            throw new FkException(ResultEnum.DATA_QUALITY_DATACHECK_CHECKRESULT_EXISTS);
+        }
+        cdcJobScript.jobScript = redisTemplate.opsForValue().get(OracleCdcUtils.redisPrefix + ":" + accessId).toString();
 
         //先根据job id,先停止任务
         if (!StringUtils.isEmpty(accessPo.jobId)) {
@@ -405,11 +408,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 if (!first.isPresent()) {
                     throw new FkException(ResultEnum.DATA_NOTEXISTS);
                 }
-                str.append("SET 'execution.savepoint.path' = '" + first.get().savepointPath + "';");
+                str.append("SET execution.savepoint.path = '" + first.get().savepointPath + "';");
             } else {
-                str.append("SET 'execution.savepoint.path' = '" + savepointHistory.get(0).savepointPath + "';");
+                str.append("SET execution.savepoint.path = '" + savepointHistory.get(0).savepointPath + "';");
             }
-            str.append("\n");
             str.append("\n");
             str.append(cdcJobScript.jobScript);
             cdcJobScript.jobScript = str.toString();
@@ -447,9 +449,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         String triggerId = flinkApi.savePoints(jobId, String.valueOf(accessId));
         boolean flat = true;
         long startTime = System.currentTimeMillis();
+        String savePointsPath = null;
         while (flat || (System.currentTimeMillis() - startTime) < 10000) {
-            ResultEnum resultEnum = flinkApi.savePointsStatus(jobId, triggerId);
-            if (resultEnum == ResultEnum.SUCCESS) {
+            savePointsPath = flinkApi.savePointsStatus(jobId, triggerId);
+            if (!StringUtils.isEmpty(savePointsPath)) {
                 flat = false;
                 break;
             }
@@ -459,7 +462,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
         //保存到检查点历史表
         SavepointHistoryDTO dto = new SavepointHistoryDTO();
-        dto.savepointPath = flinkConfig.savePointsPath + accessId + "/savepoint-" + jobId;
+        dto.savepointPath = savePointsPath;
         dto.tableAccessId = accessId;
         dto.savepointDate = LocalDateTime.now();
         savepointHistory.addSavepointHistory(dto);
@@ -467,34 +470,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
     @Override
     public void test() {
-        /*String jobId = "147fe1e44653987c5fe971bd0be29b60";
-        String triggerId = flinkApi.savePoints(jobId, "");
-        ResultEnum resultEnum = flinkApi.savePointsStatus(jobId, triggerId);*/
-        /*IFlinkJobUpload upload = FlinkFactoryHelper.flinkUpload(flinkConfig.uploadWay);
-        flinkConfig.fileName = "cdc_test_1547";
-        String jobId = upload.submitJob(FlinkParameterMap.INSTANCES.dtoToDto(flinkConfig));*/
-        /*String jobId = "cd4cd187bb6fa188f54c0137c57d9d97";
-        int accessId = 67;
-        String triggerId = flinkApi.savePoints(jobId, String.valueOf("67"));
-        boolean flat = true;
-        long startTime = System.currentTimeMillis();
-        while (flat || (System.currentTimeMillis() - startTime) < 10000) {
-            ResultEnum resultEnum = flinkApi.savePointsStatus(jobId, triggerId);
-            if (resultEnum == ResultEnum.SUCCESS) {
-                flat = false;
-                break;
-            }
-        }
-        if (flat) {
-            throw new FkException(ResultEnum.SAVE_POINTS_UPDATE_ERROR);
-        }
-        //保存到检查点历史表
-        SavepointHistoryDTO dto = new SavepointHistoryDTO();
-        dto.savepointPath = flinkConfig.savePointsPath + accessId + "/savepoint-" + jobId;
-        dto.tableAccessId = Long.valueOf(accessId);
-        dto.savepointDate = LocalDateTime.now();
-        savepointHistory.addSavepointHistory(dto);*/
-
+        CdcJobScriptDTO cdcJobScript = new CdcJobScriptDTO();
+        String fileName = "cdc_test001";
+        long accessId = 4041;
+        cdcScriptUploadFlink(cdcJobScript, fileName, accessId);
     }
 
     /**

@@ -1,7 +1,5 @@
 package com.fisk.dataaccess.service;
 
-import com.fisk.common.core.response.ResultEnum;
-
 /**
  * @author JianWenYang
  */
@@ -16,6 +14,13 @@ public interface IFlinkApi {
      */
     String savePoints(String jobId, String folder);
 
-    ResultEnum savePointsStatus(String jobId, String triggerId);
+    /**
+     * 检查点状态
+     *
+     * @param jobId
+     * @param triggerId
+     * @return
+     */
+    String savePointsStatus(String jobId, String triggerId);
 
 }

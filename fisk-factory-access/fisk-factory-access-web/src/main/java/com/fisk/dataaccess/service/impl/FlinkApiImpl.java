@@ -1,7 +1,6 @@
 package com.fisk.dataaccess.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.flink.FlinkApiConfigDTO;
 import com.fisk.dataaccess.dto.flink.FlinkConfigDTO;
 import com.fisk.dataaccess.service.IFlinkApi;
@@ -39,15 +38,19 @@ public class FlinkApiImpl implements IFlinkApi {
     }
 
     @Override
-    public ResultEnum savePointsStatus(String jobId, String triggerId) {
+    public String savePointsStatus(String jobId, String triggerId) {
         String url = flinkApiConfig.host + ":" + flinkApiConfig.port + flinkApiConfig.savepointStatus;
         //参数占位符替换
         url = url.replace(":jobid", jobId).replaceAll(":triggerid", triggerId);
         String result = HttpRequestHelper.get(url);
         if (result.indexOf(savePointStatus) > -1) {
-            return ResultEnum.SUCCESS;
+            JSONObject resultJson = JSONObject.parseObject(result);
+            String operation = resultJson.getString("operation");
+            JSONObject operationJson = JSONObject.parseObject(operation);
+            String location = operationJson.getString("location");
+            return location.replace("file:", "");
         }
-        return ResultEnum.SAVE_VERIFY_ERROR;
+        return null;
     }
 
 }
