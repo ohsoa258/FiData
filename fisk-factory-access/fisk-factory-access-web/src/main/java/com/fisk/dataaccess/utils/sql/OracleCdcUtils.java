@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 public class OracleCdcUtils {
 
     private static String passwordPlaceholder = "******";
-
     private static String ln = "\n";
     private static String redisPrefix = "Cdc";
     @Resource

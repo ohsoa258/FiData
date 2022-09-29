@@ -1091,12 +1091,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             // 身份验证地址
             apiHttpRequestDto.uri = dto.connectStr;
             // jwt账号&密码
-            /*JwtRequestDTO jwtRequestDto = new JwtRequestDTO();
-            jwtRequestDto.username = dto.connectAccount;
-            jwtRequestDto.password = dto.connectPwd;
-            apiHttpRequestDto.jwtRequestDTO = jwtRequestDto;
-            String json = JSON.toJSONString(apiHttpRequestDto.jwtRequestDTO);*/
-            // jwt账号&密码
             JSONObject jsonObj = new JSONObject();
             jsonObj.put(dto.accountKey, dto.connectAccount);
             jsonObj.put(dto.pwdKey, dto.connectPwd);

@@ -50,6 +50,7 @@ import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -112,6 +113,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
     @Resource
     FlinkConfigDTO flinkConfig;
+
+    @Resource
+    private RedisTemplate redisTemplate;
 
     @Override
     public Page<DataReviewVO> listData(DataReviewQueryDTO query) {
@@ -341,7 +345,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     // 创建表流程
                     publishTaskClient.publishBuildPhysicsTableTask(data);
                     // 构建元数据实时同步数据对象
-                    buildMetaDataInstanceAttribute(registration, accessId, 1);
+                    //buildMetaDataInstanceAttribute(registration, accessId, 1);
                 } else if (registration.appType == 1) {
                     // 非实时物理表发布
                     // 创建表流程
@@ -353,7 +357,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     //log.info(JSON.toJSONString(data));
                     //publishTaskClient.publishBuildAtlasTableTask(data);
                     // 构建元数据实时同步数据对象
-                    buildMetaDataInstanceAttribute(registration, accessId, 2);
+                    //buildMetaDataInstanceAttribute(registration, accessId, 2);
                 }
 
                 //oracle-cdc类型需要上传脚本
@@ -389,25 +393,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
         //先根据job id,先停止任务
         if (!StringUtils.isEmpty(accessPo.jobId)) {
-            String triggerId = flinkApi.savePoints(accessPo.jobId, String.valueOf(accessId));
-            boolean flat = true;
-            long startTime = System.currentTimeMillis();
-            while (flat || (System.currentTimeMillis() - startTime) < 10000) {
-                ResultEnum resultEnum = flinkApi.savePointsStatus(accessPo.jobId, triggerId);
-                if (resultEnum == ResultEnum.SUCCESS) {
-                    flat = false;
-                    break;
-                }
-            }
-            if (flat) {
-                throw new FkException(ResultEnum.SAVE_POINTS_UPDATE_ERROR);
-            }
-            //保存到检查点历史表
-            SavepointHistoryDTO dto = new SavepointHistoryDTO();
-            dto.savepointPath = flinkConfig.savePointsPath + accessId + "/savepoint-" + accessPo.jobId;
-            dto.tableAccessId = accessId;
-            dto.savepointDate = LocalDateTime.now();
-            savepointHistory.addSavepointHistory(dto);
+            cancelJob(accessPo.jobId, accessPo.id);
         }
 
         //获取检查点集合
@@ -449,6 +435,34 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             tableAccessImpl.updateById(accessPo);
         }
 
+    }
+
+    /**
+     * 取消job,并创建检查点
+     *
+     * @param jobId
+     * @param accessId
+     */
+    public void cancelJob(String jobId, long accessId) {
+        String triggerId = flinkApi.savePoints(jobId, String.valueOf(accessId));
+        boolean flat = true;
+        long startTime = System.currentTimeMillis();
+        while (flat || (System.currentTimeMillis() - startTime) < 10000) {
+            ResultEnum resultEnum = flinkApi.savePointsStatus(jobId, triggerId);
+            if (resultEnum == ResultEnum.SUCCESS) {
+                flat = false;
+                break;
+            }
+        }
+        if (flat) {
+            throw new FkException(ResultEnum.SAVE_POINTS_UPDATE_ERROR);
+        }
+        //保存到检查点历史表
+        SavepointHistoryDTO dto = new SavepointHistoryDTO();
+        dto.savepointPath = flinkConfig.savePointsPath + accessId + "/savepoint-" + jobId;
+        dto.tableAccessId = accessId;
+        dto.savepointDate = LocalDateTime.now();
+        savepointHistory.addSavepointHistory(dto);
     }
 
     @Override

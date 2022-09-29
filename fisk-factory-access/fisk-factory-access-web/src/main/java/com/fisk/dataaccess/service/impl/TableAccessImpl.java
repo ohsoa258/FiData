@@ -665,6 +665,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
+        //停止cdc任务
+        if (!StringUtils.isEmpty(modelAccess.jobId)) {
+            tableFieldsImpl.cancelJob(modelAccess.jobId, modelAccess.id);
+        }
+
         // 查询tb_table_syncmode
         TableSyncmodePO modelSync = this.syncmodeMapper.getData(id);
         int businessTimeType = 4;
