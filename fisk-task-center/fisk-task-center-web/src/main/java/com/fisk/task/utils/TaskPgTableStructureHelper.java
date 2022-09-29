@@ -2,6 +2,7 @@ package com.fisk.task.utils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.client.UserClient;
@@ -127,7 +128,7 @@ public class TaskPgTableStructureHelper
      *
      * @param
      */
-    public ResultEnum saveTableStructure(ModelPublishTableDTO dto, String version) {
+    public ResultEnum saveTableStructure(ModelPublishTableDTO dto, String version, DataSourceTypeEnum dataSourceType) {
         try {
             List<TaskPgTableStructurePO> poList = new ArrayList<>();
             Thread.sleep(200);
@@ -167,7 +168,7 @@ public class TaskPgTableStructureHelper
                 return ResultEnum.SAVE_DATA_ERROR;
             }
             //执行存储过程
-            String sql = execProcedure(version, type);
+            String sql = execProcedure(version, type, dataSourceType);
             log.info("查看执行表结构方法,sql: {}, version: {},type: {}", sql, version, type);
             //判断是否有修改语句
             return updatePgTableStructure(sql, version, dto.createType);
@@ -190,7 +191,7 @@ public class TaskPgTableStructureHelper
      * @param version
      * @return
      */
-    public String execProcedure(String version, int type) throws Exception {
+    public String execProcedure(String version, int type, DataSourceTypeEnum dataSourceType) throws Exception {
         //配置数据库参数
         Class.forName(driverClassName);
         String url = taskdbUrl;
@@ -203,16 +204,8 @@ public class TaskPgTableStructureHelper
             StringBuilder str = new StringBuilder();
             List<String> sqlList = new ArrayList<>();
             CallableStatement cs = null;
-            //调用过程stu_pro
-            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
-            if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
-                DataSourceDTO dataSource = fiDataDataSource.data;
-                IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSource.conType);
-                cs = (CallableStatement) conn.prepareCall(dbCommand.prepareCallSql());
-            } else {
-                log.error("userclient无法查询到ods库的连接信息");
-            }
-
+            IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSourceType);
+            cs = (CallableStatement) conn.prepareCall(dbCommand.prepareCallSql());
             cs.setString(1, version);
             cs.setInt(2, type);
             cs.execute();

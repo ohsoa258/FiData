@@ -6,6 +6,7 @@ import com.davis.client.ApiException;
 import com.davis.client.model.*;
 import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.constants.NifiConstants;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
@@ -134,7 +135,7 @@ public class BuildDataModelDorisTableListener
                 DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
                 Calendar calendar = Calendar.getInstance();
                 String version = df.format(calendar.getTime());
-                ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO, version);
+                ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO, version, DataSourceTypeEnum.POSTGRESQL);
                 if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
                     taskPgTableStructureMapper.updatevalidVersion(version);
                     throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);

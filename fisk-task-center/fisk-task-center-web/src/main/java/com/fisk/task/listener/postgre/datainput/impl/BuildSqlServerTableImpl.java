@@ -208,7 +208,9 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                 sql += ",'')";
             }
         }
-        sql = sql.replaceFirst("\\)", "");
+        if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
+            sql = sql.replaceFirst("\\)", "");
+        }
         log.info("函数语句:" + sql);
         return sql;
     }

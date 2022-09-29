@@ -63,7 +63,14 @@ public class BuildDataInputPgTableListener {
         modelPublishStatusDTO.apiId = buildPhysicalTableDTO.apiId;
         ModelPublishTableDTO dto = buildPhysicalTableDTO.modelPublishTableDTO;
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
-        DataSourceTypeEnum conType = fiDataDataSource.data.conType;
+        DataSourceTypeEnum conType = null;
+        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+            DataSourceDTO dataSource = fiDataDataSource.data;
+            conType = dataSource.conType;
+        } else {
+            log.error("userclient无法查询到ods库的连接信息");
+            throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+        }
         //分辨库的类别
         IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(conType);
         log.info("开始保存ods版本号,参数为{}", dto);
@@ -72,7 +79,7 @@ public class BuildDataInputPgTableListener {
         DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
         Calendar calendar = Calendar.getInstance();
         String version = df.format(calendar.getTime());
-        ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(dto, version);
+        ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(dto, version,conType);
         log.info("执行修改语句返回结果:" + resultEnum);
         if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
             taskPgTableStructureMapper.updatevalidVersion(version);
