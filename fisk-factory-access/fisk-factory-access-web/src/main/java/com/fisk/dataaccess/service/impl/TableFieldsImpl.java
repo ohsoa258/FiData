@@ -22,6 +22,7 @@ import com.fisk.dataaccess.dto.datareview.DataReviewPageDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
 import com.fisk.dataaccess.dto.flink.FlinkConfigDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
+import com.fisk.dataaccess.dto.savepointhistory.SavepointHistoryDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
@@ -36,6 +37,7 @@ import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.service.ITableFields;
 import com.fisk.dataaccess.utils.files.FileTxtUtils;
+import com.fisk.dataaccess.utils.sql.OracleCdcUtils;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
@@ -56,9 +58,11 @@ import javax.annotation.Resource;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -81,6 +85,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     private TableSyncmodeImpl syncmodeImpl;
     @Resource
     private AppDataSourceImpl dataSourceImpl;
+    @Resource
+    SavepointHistoryImpl savepointHistory;
     @Resource
     FlinkApiImpl flinkApi;
     @Resource
@@ -377,6 +383,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             throw new FkException(ResultEnum.TASK_TABLE_NOT_EXIST);
         }
 
+        //替换脚本
+        OracleCdcUtils oracleCdcUtils = new OracleCdcUtils();
+        cdcJobScript.jobScript = oracleCdcUtils.getCdcRedis(accessId);
+
         //先根据job id,先停止任务
         if (!StringUtils.isEmpty(accessPo.jobId)) {
             String triggerId = flinkApi.savePoints(accessPo.jobId, String.valueOf(accessId));
@@ -386,14 +396,39 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 ResultEnum resultEnum = flinkApi.savePointsStatus(accessPo.jobId, triggerId);
                 if (resultEnum == ResultEnum.SUCCESS) {
                     flat = false;
+                    break;
                 }
             }
             if (flat) {
                 throw new FkException(ResultEnum.SAVE_POINTS_UPDATE_ERROR);
             }
             //保存到检查点历史表
-
+            SavepointHistoryDTO dto = new SavepointHistoryDTO();
+            dto.savepointPath = flinkConfig.savePointsPath + accessId + "/savepoint-" + accessPo.jobId;
+            dto.tableAccessId = accessId;
+            dto.savepointDate = LocalDateTime.now();
+            savepointHistory.addSavepointHistory(dto);
         }
+
+        //获取检查点集合
+        List<SavepointHistoryDTO> savepointHistory = this.savepointHistory.getSavepointHistory(accessId);
+        if (!CollectionUtils.isEmpty(savepointHistory)) {
+            StringBuilder str = new StringBuilder();
+            if (cdcJobScript.savepointHistoryId != 0) {
+                Optional<SavepointHistoryDTO> first = savepointHistory.stream().filter(e -> e.id.equals(cdcJobScript.savepointHistoryId)).findFirst();
+                if (!first.isPresent()) {
+                    throw new FkException(ResultEnum.DATA_NOTEXISTS);
+                }
+                str.append("SET 'execution.savepoint.path' = '" + first.get().savepointPath + "';");
+            } else {
+                str.append("SET 'execution.savepoint.path' = '" + savepointHistory.get(0).savepointPath + "';");
+            }
+            str.append("\n");
+            str.append("\n");
+            str.append(cdcJobScript.jobScript);
+            cdcJobScript.jobScript = str.toString();
+        }
+
         //上传文件
         FileTxtUtils.setFiles(flinkConfig.uploadPath, fileName, cdcJobScript.jobScript);
         //ssh上传,需要上传至远程服务器
@@ -409,7 +444,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         IFlinkJobUpload upload = FlinkFactoryHelper.flinkUpload(flinkConfig.uploadWay);
         flinkConfig.fileName = fileName;
         String jobId = upload.submitJob(FlinkParameterMap.INSTANCES.dtoToDto(flinkConfig));
-        log.info("*****jonId:", jobId);
         if (!StringUtils.isEmpty(jobId)) {
             accessPo.jobId = jobId;
             tableAccessImpl.updateById(accessPo);
@@ -419,12 +453,34 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
     @Override
     public void test() {
-        String jobId = "147fe1e44653987c5fe971bd0be29b60";
+        /*String jobId = "147fe1e44653987c5fe971bd0be29b60";
         String triggerId = flinkApi.savePoints(jobId, "");
-        ResultEnum resultEnum = flinkApi.savePointsStatus(jobId, triggerId);
+        ResultEnum resultEnum = flinkApi.savePointsStatus(jobId, triggerId);*/
         /*IFlinkJobUpload upload = FlinkFactoryHelper.flinkUpload(flinkConfig.uploadWay);
         flinkConfig.fileName = "cdc_test_1547";
         String jobId = upload.submitJob(FlinkParameterMap.INSTANCES.dtoToDto(flinkConfig));*/
+        /*String jobId = "cd4cd187bb6fa188f54c0137c57d9d97";
+        int accessId = 67;
+        String triggerId = flinkApi.savePoints(jobId, String.valueOf("67"));
+        boolean flat = true;
+        long startTime = System.currentTimeMillis();
+        while (flat || (System.currentTimeMillis() - startTime) < 10000) {
+            ResultEnum resultEnum = flinkApi.savePointsStatus(jobId, triggerId);
+            if (resultEnum == ResultEnum.SUCCESS) {
+                flat = false;
+                break;
+            }
+        }
+        if (flat) {
+            throw new FkException(ResultEnum.SAVE_POINTS_UPDATE_ERROR);
+        }
+        //保存到检查点历史表
+        SavepointHistoryDTO dto = new SavepointHistoryDTO();
+        dto.savepointPath = flinkConfig.savePointsPath + accessId + "/savepoint-" + jobId;
+        dto.tableAccessId = Long.valueOf(accessId);
+        dto.savepointDate = LocalDateTime.now();
+        savepointHistory.addSavepointHistory(dto);*/
+
     }
 
     /**

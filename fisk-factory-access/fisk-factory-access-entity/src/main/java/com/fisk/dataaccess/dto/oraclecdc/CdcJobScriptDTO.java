@@ -12,4 +12,6 @@ public class CdcJobScriptDTO {
      */
     public String jobScript;
 
+    public Integer savepointHistoryId = 0;
+
 }

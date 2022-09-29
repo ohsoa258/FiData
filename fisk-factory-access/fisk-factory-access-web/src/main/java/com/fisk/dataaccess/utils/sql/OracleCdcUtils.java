@@ -2,6 +2,8 @@ package com.fisk.dataaccess.utils.sql;
 
 import com.fisk.common.core.enums.dbdatatype.FlinkTypeEnum;
 import com.fisk.common.core.enums.dbdatatype.OracleTypeEnum;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
@@ -9,9 +11,11 @@ import com.fisk.dataaccess.dto.table.FieldNameDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,7 +27,12 @@ import java.util.stream.Collectors;
 @Component
 public class OracleCdcUtils {
 
+    private static String passwordPlaceholder = "******";
+
     private static String ln = "\n";
+    private static String redisPrefix = "Cdc";
+    @Resource
+    private RedisTemplate redisTemplate;
 
     /**
      * oracle字段类型映射flink类型
@@ -114,19 +123,48 @@ public class OracleCdcUtils {
                                               TbTableAccessDTO tableAccessData) {
         CdcJobScriptDTO data = new CdcJobScriptDTO();
         StringBuilder str = new StringBuilder();
+        StringBuilder redisStr = new StringBuilder();
         str.append("SET pipeline.name =" + tableAccessData.pipelineName + ";");
         str.append(ln);
         str.append("SET execution.checkpointing.interval =" + tableAccessData.checkPointInterval + tableAccessData.checkPointUnit + ";");
         str.append(ln);
         str.append(ln);
+        redisStr.append(str);
         //来源表脚本
-        str.append(buildSourceTableScript(dto, dataSourceDto, tableAccessData));
+        String sourceTable = buildSourceTableScript(dto, dataSourceDto, tableAccessData);
+        str.append(sourceTable);
+
+        sourceTable = sourceTable.replace(passwordPlaceholder, dataSourceDto.connectPwd);
+        redisStr.append(sourceTable);
+
         //目标表脚本
-        str.append(buildTargetTableScript(dto, dataSource, tableAccessData.tableName));
+        String targetTable = buildTargetTableScript(dto, dataSource, tableAccessData.tableName);
+        str.append(targetTable);
+
+        targetTable = targetTable.replace(passwordPlaceholder, dataSource.conPassword);
+        redisStr.append(targetTable);
+
         //insert select语句
-        str.append(buildSqlScript(dto, tableAccessData.tableName));
+        String sql = buildSqlScript(dto, tableAccessData.tableName);
+        str.append(sql);
+
+        redisStr.append(sql);
+        setCdcRedis(redisStr, tableAccessData.id);
+
         data.jobScript = str.toString();
         return data;
+    }
+
+    public void setCdcRedis(StringBuilder redisStr, long id) {
+        redisTemplate.opsForValue().set(redisPrefix + ":" + id, redisStr.toString());
+    }
+
+    public String getCdcRedis(long id) {
+        Boolean exist = redisTemplate.hasKey(redisPrefix + ":" + id);
+        if (!exist) {
+            throw new FkException(ResultEnum.DATA_QUALITY_DATACHECK_CHECKRESULT_EXISTS);
+        }
+        return redisTemplate.opsForValue().get(redisPrefix + ":" + id).toString();
     }
 
     /**
@@ -173,7 +211,7 @@ public class OracleCdcUtils {
         str.append("'hostname'=" + "'" + dataSourceDto.host + "'," + ln);
         str.append("'port'=" + "'" + dataSourceDto.port + "'," + ln);
         str.append("'username'=" + "'" + dataSourceDto.connectAccount + "'," + ln);
-        str.append("'password'=" + "'" + dataSourceDto.connectPwd + "'," + ln);
+        str.append("'password'=" + "'" + passwordPlaceholder + "'," + ln);
         //服务名
         str.append("'database-name'=" + "'" + dataSourceDto.serviceName + "'," + ln);
         str.append("'schema-name'=" + "'" + dataSourceDto.dbName + "'," + ln);
@@ -219,7 +257,7 @@ public class OracleCdcUtils {
         str.append("'connector'=" + "'jdbc'," + ln);
         str.append("'url'=" + "'" + dataSource.conStr + "'," + ln);
         str.append("'username'=" + "'" + dataSource.conAccount + "'," + ln);
-        str.append("'password'=" + "'" + dataSource.conPassword + "'," + ln);
+        str.append("'password'=" + "'" + passwordPlaceholder + "'," + ln);
         str.append("'table-name'=" + "'" + targetTable + "'" + ln);
         str.append(");");
         str.append(ln);
