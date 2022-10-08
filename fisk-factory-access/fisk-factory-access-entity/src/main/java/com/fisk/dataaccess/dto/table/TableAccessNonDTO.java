@@ -2,6 +2,8 @@ package com.fisk.dataaccess.dto.table;
 
 import com.fisk.common.core.baseObject.dto.BaseDTO;
 import com.fisk.common.core.baseObject.entity.BaseEntity;
+import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
+import com.fisk.dataaccess.enums.ScanStartupModeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -100,6 +102,31 @@ public class TableAccessNonDTO extends BaseDTO {
      * 同步方式对象
      */
     public TableSyncmodeDTO tableSyncmodeDTO;
+
+    /**
+     * oracle-cdc任务脚本
+     */
+    public CdcJobScriptDTO cdcJobScript;
+
+    /**
+     * oracle-cdc管道名称
+     */
+    public String pipelineName;
+
+    /**
+     * oracle-cdc检查点时间
+     */
+    public Integer checkPointInterval;
+
+    /**
+     * oracle-cdc检查点时间单位
+     */
+    public String checkPointUnit;
+
+    /**
+     * 0:从最开始读 1:从最新的读
+     */
+    public ScanStartupModeEnum scanStartupMode;
 
     /**
      * 0: 保存;   1: 保存&发布

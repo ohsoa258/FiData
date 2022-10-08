@@ -26,6 +26,8 @@ import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
@@ -37,6 +39,8 @@ import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.enums.PortComponentEnum;
 import com.fisk.task.listener.nifi.INifiTaskListener;
+import com.fisk.task.listener.postgre.datainput.IbuildTable;
+import com.fisk.task.listener.postgre.datainput.impl.BuildFactoryHelper;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
 import com.fisk.task.po.AppNifiSettingPO;
 import com.fisk.task.po.NifiConfigPO;
@@ -134,6 +138,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     KafkaTemplateHelper kafkaTemplateHelper;
     @Resource
     PublishTaskController pc;
+    @Resource
+    UserClient userClient;
 
     @Resource
     RestTemplate httpClient;
@@ -418,6 +424,17 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             targetDbPoolConfig.user = pgsqlDatainputUsername;
             targetDbPoolConfig.password = pgsqlDatainputPassword;
             targetDbPoolConfig.jdbcStr = pgsqlDatainputUrl;
+            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+            if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+                DataSourceDTO dataSource = fiDataDataSource.data;
+                //com.microsoft.sqlserver.jdbc.SQLServerDriver
+                targetDbPoolConfig.type = DriverTypeEnum.valueOf(dataSource.conType.getName());
+                targetDbPoolConfig.user = dataSource.conAccount;
+                targetDbPoolConfig.password = dataSource.conPassword;
+                targetDbPoolConfig.jdbcStr = dataSource.conStr;
+            } else {
+                log.error("userclient无法查询到ods库的连接信息");
+            }
             targetDbPoolConfig.tableFieldsList = res.data.targetDsConfig.tableFieldsList;
             TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
             if (buildNifiFlowDTO.workflowDetailId != null) {
@@ -459,7 +476,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             targetDbPoolConfig.user = dorisUser;
             targetDbPoolConfig.password = dorisPwd;
             targetDbPoolConfig.jdbcStr = dorisUrl;
-            targetDbPoolConfig.targetTableName = tableName.toLowerCase();
+            targetDbPoolConfig.targetTableName = tableName;
             targetDbPoolConfig.tableFieldsList = null;
             data.groupConfig = groupConfig;
             data.cfgDsConfig = cfgDsConfig;
@@ -483,11 +500,21 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             sourceDsConfig.jdbcStr = pgsqlDatainputUrl;
             sourceDsConfig.user = pgsqlDatainputUsername;
             sourceDsConfig.password = pgsqlDatainputPassword;
+            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+            if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+                DataSourceDTO dataSource = fiDataDataSource.data;
+                sourceDsConfig.type = DriverTypeEnum.valueOf(dataSource.conType.getName());
+                sourceDsConfig.user = dataSource.conAccount;
+                sourceDsConfig.password = dataSource.conPassword;
+                sourceDsConfig.jdbcStr = dataSource.conStr;
+            } else {
+                log.error("userclient无法查询到ods库的连接信息");
+            }
             targetDbPoolConfig.type = DriverTypeEnum.POSTGRESQL;
             targetDbPoolConfig.user = pgsqlDatamodelUsername;
             targetDbPoolConfig.password = pgsqlDatamodelPassword;
             targetDbPoolConfig.jdbcStr = pgsqlDatamodelUrl;
-            targetDbPoolConfig.targetTableName = tableName.toLowerCase();
+            targetDbPoolConfig.targetTableName = tableName;
             targetDbPoolConfig.tableFieldsList = null;
             targetDbPoolConfig.syncMode = buildNifiFlowDTO.synMode;
             data.groupConfig = groupConfig;
@@ -1489,9 +1516,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         putDatabaseRecordDTO.databaseType = "MS SQL 2012+";//数据库类型,定义枚举
         putDatabaseRecordDTO.recordReader = id;
         putDatabaseRecordDTO.statementType = "INSERT";
-        putDatabaseRecordDTO.TableName = "stg_" + config.processorConfig.targetTableName.toLowerCase();
+        putDatabaseRecordDTO.TableName = "stg_" + config.processorConfig.targetTableName;
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
-            putDatabaseRecordDTO.TableName = config.processorConfig.targetTableName.toLowerCase();
+            putDatabaseRecordDTO.TableName = config.processorConfig.targetTableName;
         }
         putDatabaseRecordDTO.concurrentTasks = ConcurrentTasks;
         putDatabaseRecordDTO.synchronousTypeEnum = synchronousTypeEnum;
@@ -1696,23 +1723,16 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         querySqlDto.details = "insert_phase";
         querySqlDto.groupId = groupId;
         //接入需要数据校验,查的是ods表,其他的不变
-        if (Objects.equals(dto.type, OlapTableEnum.WIDETABLE) || Objects.equals(dto.type, OlapTableEnum.KPI)) {
-            querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,now() as end_time," +
-                    "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                    "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+            DataSourceDTO data = fiDataDataSource.data;
+            IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(data.conType);
+            String sql = dbCommand.queryNumbersField(dto, config);
+            querySqlDto.querySql = sql;
         } else {
-            if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
-                querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
-                        "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from ods_" + config.processorConfig.targetTableName.substring(4) + " where fidata_batch_code='${fidata_batch_code}'";
-            } else {
-                querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
-                        "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName + " where fidata_batch_code='${fidata_batch_code}'";
-            }
-
+            log.error("ods数据源查询出错");
+            throw new FkException(ResultEnum.ERROR);
         }
-
         querySqlDto.dbConnectionId = targetDbPoolId;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(13);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
@@ -1728,7 +1748,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //调用存储过程sql,存日志
         String executsql1 = "UPDATE tb_etl_log SET `status` =1,enddate='${" + NifiConstants.AttrConstants.END_TIME + "}',datarows='${" + NifiConstants.AttrConstants.NUMBERS + "}',topic_name='${" + NifiConstants.AttrConstants.KAFKA_TOPIC + "}' ";
         executsql1 += "WHERE\n" +
-                "\tid=(SELECT a.mid FROM(SELECT MAX(id) as mid from tb_etl_log where tablename='" + config.targetDsConfig.targetTableName.toLowerCase() + "') a );\n";
+                "\tid=(SELECT a.mid FROM(SELECT MAX(id) as mid from tb_etl_log where tablename='" + config.targetDsConfig.targetTableName + "') a );\n";
         executsql1 += "update tb_etl_Incremental l1 INNER JOIN tb_etl_Incremental l2 on l1.id=l2.id set l1.incremental_objectivescore_end='${" + NifiConstants.AttrConstants.START_TIME +
                 "}' ,l1.incremental_objectivescore_start=ifnull(l2.incremental_objectivescore_end,'1970-01-01 00:00:00'), l1.enable_flag=2 " +
                 "where l1.object_name = '" + config.targetDsConfig.targetTableName + "' ;";
@@ -1755,7 +1775,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         toSqlDto.details = "Convert data to sql";
         toSqlDto.dbConnectionId = targetDbPoolId;
         toSqlDto.groupId = groupId;
-        toSqlDto.tableName = config.processorConfig.targetTableName.toLowerCase();
+        toSqlDto.tableName = config.processorConfig.targetTableName;
         toSqlDto.sqlType = StatementSqlTypeEnum.INSERT;
         toSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(9);
         BusinessResult<ProcessorEntity> toSqlRes = componentsBuild.buildConvertJsonToSqlProcess(toSqlDto);
@@ -1856,14 +1876,14 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     private ProcessorEntity replaceTextProcess(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
         HashMap<String, Object> updateFieldMap_Y = new HashMap<>();
-        updateFieldMap_Y.put("verify_type", "3");
-        updateFieldMap_Y.put("sync_type", "2");
+        updateFieldMap_Y.put("fi_verify_type", "3");
+        updateFieldMap_Y.put("fi_sync_type", "2");
         HashMap<String, Object> updateFieldMap_N = new HashMap<>();
-        updateFieldMap_N.put("sync_type", 3);
-        updateFieldMap_N.put("verify_type", 2);
+        updateFieldMap_N.put("fi_sync_type", 3);
+        updateFieldMap_N.put("fi_verify_type", 2);
         HashMap<String, Object> updateFieldMap_R = new HashMap<>();
-        updateFieldMap_R.put("sync_type", 2);
-        updateFieldMap_R.put("verify_type", 4);
+        updateFieldMap_R.put("fi_sync_type", 2);
+        updateFieldMap_R.put("fi_verify_type", 4);
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
         checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
@@ -1899,19 +1919,19 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     private ProcessorEntity replaceTextForDwProcess(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
         HashMap<String, Object> updateFieldMap_Y = new HashMap<>();
-        updateFieldMap_Y.put("verify_type", "3");
-        updateFieldMap_Y.put("sync_type", "2");
+        updateFieldMap_Y.put("fi_verify_type", "3");
+        updateFieldMap_Y.put("fi_sync_type", "2");
         HashMap<String, Object> updateFieldMap_N = new HashMap<>();
-        updateFieldMap_N.put("sync_type", 3);
-        updateFieldMap_N.put("verify_type", 2);
+        updateFieldMap_N.put("fi_sync_type", 3);
+        updateFieldMap_N.put("fi_verify_type", 2);
         HashMap<String, Object> updateFieldMap_R = new HashMap<>();
-        updateFieldMap_R.put("sync_type", 2);
-        updateFieldMap_R.put("verify_type", 4);
+        updateFieldMap_R.put("fi_sync_type", 2);
+        updateFieldMap_R.put("fi_verify_type", 4);
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
         checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
         dataCheckSyncDTO.dataSourceId = "1";
-        dataCheckSyncDTO.msgField = "error_message";
+        dataCheckSyncDTO.msgField = "fi_error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
         dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
@@ -1940,19 +1960,19 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      */
     private ProcessorEntity generateFlowFileProcessor(DataAccessConfigDTO config, String groupId) {
         HashMap<String, Object> updateFieldMap_Y = new HashMap<>();
-        updateFieldMap_Y.put("verify_type", "3");
-        updateFieldMap_Y.put("sync_type", "2");
+        updateFieldMap_Y.put("fi_verify_type", "3");
+        updateFieldMap_Y.put("fi_sync_type", "2");
         HashMap<String, Object> updateFieldMap_N = new HashMap<>();
-        updateFieldMap_N.put("sync_type", 3);
-        updateFieldMap_N.put("verify_type", 2);
+        updateFieldMap_N.put("fi_sync_type", 3);
+        updateFieldMap_N.put("fi_verify_type", 2);
         HashMap<String, Object> updateFieldMap_R = new HashMap<>();
-        updateFieldMap_R.put("sync_type", 2);
-        updateFieldMap_R.put("verify_type", 4);
+        updateFieldMap_R.put("fi_sync_type", 2);
+        updateFieldMap_R.put("fi_verify_type", 4);
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
         checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
         dataCheckSyncDTO.dataSourceId = null;
-        dataCheckSyncDTO.msgField = "error_message";
+        dataCheckSyncDTO.msgField = "fi_error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
         dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
@@ -2302,9 +2322,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         filedValues += dto.queryStartTime == null ? ",'0000-01-01 00:00:00'" : (",'" + dto.queryStartTime + "'");
         filedValues += dto.queryEndTime == null ? ",now()" : (",'" + dto.queryEndTime + "'");
         if (dto.selectSql != null && dto.selectSql != "") {
-            filedValues += ",\"" + dto.selectSql.replaceAll("\"","\\\\\"") + "\"";
+            filedValues += ",\"" + dto.selectSql.replaceAll("\"", "\\\\\"") + "\"";
         } else {
-            filedValues += ",\"" + selectSql.replaceAll("\"","\\\\\"") + "\"";
+            filedValues += ",\"" + selectSql.replaceAll("\"", "\\\\\"") + "\"";
         }
 
         return "INSERT INTO tb_etl_log ( tablename, startdate, `status`,query_start_time,query_end_time,query_sql) " +

@@ -6,6 +6,7 @@ import com.davis.client.ApiException;
 import com.davis.client.model.*;
 import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.constants.NifiConstants;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
@@ -36,7 +37,7 @@ import com.fisk.task.po.AppNifiSettingPO;
 import com.fisk.task.po.NifiConfigPO;
 import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.doris.IDorisBuild;
-import com.fisk.task.service.nifi.IPostgreBuild;
+import com.fisk.task.service.nifi.IJdbcBuild;
 import com.fisk.task.service.nifi.ITaskDwDim;
 import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
@@ -71,7 +72,7 @@ public class BuildDataModelDorisTableListener
     @Resource
     IDorisBuild doris;
     @Resource
-    IPostgreBuild iPostgreBuild;
+    IJdbcBuild iPostgreBuild;
     @Resource
     ITaskDwDim iTaskDwDim;
     @Resource
@@ -134,7 +135,7 @@ public class BuildDataModelDorisTableListener
                 DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
                 Calendar calendar = Calendar.getInstance();
                 String version = df.format(calendar.getTime());
-                ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO, version);
+                ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO, version, DataSourceTypeEnum.POSTGRESQL);
                 if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
                     taskPgTableStructureMapper.updatevalidVersion(version);
                     throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
@@ -142,12 +143,12 @@ public class BuildDataModelDorisTableListener
                 log.info("执行存储过程返回结果" + resultEnum.getCode());
                 //生成建表语句
                 List<String> pgdbTable2 = createPgdbTable2(modelPublishTableDTO);
-                BusinessResult businessResult = iPostgreBuild.postgreBuildTable(pgdbTable2.get(0).toLowerCase(), BusinessTypeEnum.DATAMODEL);
+                BusinessResult businessResult = iPostgreBuild.postgreBuildTable(pgdbTable2.get(0), BusinessTypeEnum.DATAMODEL);
                 if (!businessResult.success) {
                     throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
                 }
                 if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
-                    BusinessResult businessResult1 = iPostgreBuild.postgreBuildTable(pgdbTable2.get(1).toLowerCase(), BusinessTypeEnum.DATAMODEL);
+                    BusinessResult businessResult1 = iPostgreBuild.postgreBuildTable(pgdbTable2.get(1), BusinessTypeEnum.DATAMODEL);
                     if (!businessResult1.success) {
                         throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
                     }
@@ -419,8 +420,8 @@ public class BuildDataModelDorisTableListener
         //创建表
         log.info("pg_dw建表语句" + sql1);
         //String stgTable = sql1.replaceFirst(tableName, "stg_" + tableName);
-        String stgTable = "DROP TABLE IF EXISTS stg_" + tableName + "; CREATE TABLE stg_" + tableName + " (" + tablePk + " varchar(50) NOT NULL DEFAULT sys_guid()," + stgSqlFileds.toString() + associatedKey + "fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),enableflag varchar(50),error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), sync_type varchar(50) DEFAULT '2',verify_type varchar(50) DEFAULT '3');";
-        stgTable += "create index " + tableName + "enableflagsy on stg_" + tableName + " (enableflag);";
+        String stgTable = "DROP TABLE IF EXISTS stg_" + tableName + "; CREATE TABLE stg_" + tableName + " (" + tablePk + " varchar(50) NOT NULL DEFAULT sys_guid()," + stgSqlFileds.toString() + associatedKey + "fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3');";
+        stgTable += "create index " + tableName + "enableflagsy on stg_" + tableName + " (fi_enableflag);";
         sqlList.add(stgTable);
         sqlList.add(sql1);
         HashMap<String, Object> map = new HashMap<>();

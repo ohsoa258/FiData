@@ -59,10 +59,19 @@ public interface TableFieldsMap {
 
     /**
      * poList==>Dto
+     *
      * @param list
      * @return
      */
     List<FieldNameDTO> poListToDto(List<TableFieldsPO> list);
+
+    /**
+     * dtoList==>PoList
+     *
+     * @param dtoList
+     * @return
+     */
+    List<TableFieldsPO> dtoListToPoList(List<FieldNameDTO> dtoList);
 
 
 }

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
+import com.fisk.dataaccess.enums.ScanStartupModeEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -72,4 +73,30 @@ public class TableAccessPO extends BasePO {
      * 发布错误信息
      */
     public String publishErrorMsg;
+
+    /**
+     * oracle-cdc管道名称
+     */
+    public String pipelineName;
+
+    /**
+     * oracle-cdc检查点时间
+     */
+    public Integer checkPointInterval;
+
+    /**
+     * oracle-cdc检查点时间单位
+     */
+    public String checkPointUnit;
+
+    /**
+     * 0:从最开始读 1:从最新的读
+     */
+    public ScanStartupModeEnum scanStartupMode;
+
+    /**
+     * oracle-cdc任务id
+     */
+    public String jobId;
+
 }

@@ -2,65 +2,90 @@ package com.fisk.task.utils;
 
 import com.alibaba.fastjson.JSONArray;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.sql.*;
+import java.util.Objects;
+
 @Slf4j
 @Component
 public class PostgreHelper {
+    //改类名称
 
+
+    @Resource
+    UserClient userClient;
     private static String pgsqlDatamodelUrl;
-    private static String pgsqlDriverClassName;
+    private static String pgsqlDatamodelDriverClassName;
+    private static String pgsqlDatamodelUsername;
+    private static String pgsqlDatamodelPassword;
+
     private static String pgsqlDatainputUrl;
-    private static String pgsqlUsername;
-    private static String pgsqlPassword;
+    private static String pgsqlDatainputDriverClassName;
+    private static String pgsqlDatainputUsername;
+    private static String pgsqlDatainputPassword;
 
     @Value("${pgsql-datamodel.url}")
     public void setPgsqlDatamodelUrl(String pgsqlDatamodelUrl) {
         PostgreHelper.pgsqlDatamodelUrl = pgsqlDatamodelUrl;
     }
-    @Value("${pgsql-datainput.driverClassName}")
-    public void setPgsqlDriverClassName(String pgsqlDriverClassName) {
-        PostgreHelper.pgsqlDriverClassName = pgsqlDriverClassName;
-    }
-    @Value("${pgsql-datainput.url}")
-    public void setPgsqlDatainputUrl(String pgsqlDatainputUrl) {
-        PostgreHelper.pgsqlDatainputUrl = pgsqlDatainputUrl;
-    }
-    @Value("${pgsql-datainput.username}")
-    public void setPgsqlUsername(String pgsqlUsername) {
-        PostgreHelper.pgsqlUsername = pgsqlUsername;
-    }
-    @Value("${pgsql-datainput.password}")
-    public void setPgsqlPassword(String pgsqlPassword) {
-        PostgreHelper.pgsqlPassword = pgsqlPassword;
+
+    @Value("${pgsql-datamodel.driverClassName}")
+    public void setPgsqlDatamodelDriverClassName(String pgsqlDatamodelDriverClassName) {
+        PostgreHelper.pgsqlDatamodelDriverClassName = pgsqlDatamodelDriverClassName;
     }
 
-    public static Connection getConnection(String url) {
+    @Value("${pgsql-datamodel.username}")
+    public void setPgsqlDatamodelUsername(String pgsqlDatamodelUsername) {
+        PostgreHelper.pgsqlDatamodelUsername = pgsqlDatamodelUsername;
+    }
+
+    @Value("${pgsql-datamodel.password}")
+    public void setPgsqlDatamodelPassword(String pgsqlDatamodelPassword) {
+        PostgreHelper.pgsqlDatamodelPassword = pgsqlDatamodelPassword;
+    }
+
+
+    public Connection getConnection(BusinessTypeEnum businessTypeEnum) {
         Connection conn = null;
         try {
-            // 加载驱动类
-            Class.forName(pgsqlDriverClassName);
-            conn = DriverManager.getConnection(url, pgsqlUsername, pgsqlPassword);
+            if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAMODEL)) {
+                // 加载驱动类
+                Class.forName(pgsqlDatamodelDriverClassName);
+                conn = DriverManager.getConnection(pgsqlDatamodelUrl, pgsqlDatamodelUsername, pgsqlDatamodelPassword);
+            } else if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAINPUT)) {
+                ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+                if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+                    DataSourceDTO data = fiDataDataSource.data;
+                    // 加载驱动类
+                    Class.forName(data.conType.getDriverName());
+                    conn = DriverManager.getConnection(data.conStr, data.conAccount, data.conPassword);
+                }
+            }
+
         } catch (ClassNotFoundException e) {
-            System.out.println("找不到驱动程序类 ，加载驱动失败！" + StackTraceHelper.getStackTraceInfo(e));
+            log.error("找不到驱动程序类 ，加载驱动失败！" + StackTraceHelper.getStackTraceInfo(e));
         } catch (SQLException e) {
-            System.out.println("数据库连接失败！" + StackTraceHelper.getStackTraceInfo(e));
+            log.error("数据库连接失败！" + StackTraceHelper.getStackTraceInfo(e));
         }
         return conn;
     }
 
-    public static <T> T postgreQuery(String executsql, BusinessTypeEnum businessTypeEnum, T data) {
+    public <T> T postgreQuery(String executsql, BusinessTypeEnum businessTypeEnum, T data) {
         Connection conn = null;
         Statement stmt = null;
         ResultSet resultSet = null;
         try {
             // 1获得连接
-            conn = getConnection(businessTypeEnum==BusinessTypeEnum.DATAMODEL?pgsqlDatamodelUrl:pgsqlDatainputUrl);
+            conn = getConnection(businessTypeEnum);
             // 2执行对象
             stmt = conn.createStatement();
             // 3执行,executeUpdate用来执行除了查询的操作,executeQuery用来执行查询操作
@@ -83,14 +108,14 @@ public class PostgreHelper {
         return data;
     }
 
-    public static JSONArray postgreQuery(String executsql, BusinessTypeEnum businessTypeEnum) {
+    public JSONArray postgreQuery(String executsql, BusinessTypeEnum businessTypeEnum) {
         Connection conn = null;
         Statement stmt = null;
         ResultSet resultSet = null;
-        JSONArray objects=null;
+        JSONArray objects = null;
         try {
             // 1获得连接
-            conn = getConnection(businessTypeEnum==BusinessTypeEnum.DATAMODEL?pgsqlDatamodelUrl:pgsqlDatainputUrl);
+            conn = getConnection(businessTypeEnum);
             // 2执行对象
             stmt = conn.createStatement();
             // 3执行,executeUpdate用来执行除了查询的操作,executeQuery用来执行查询操作
@@ -113,12 +138,12 @@ public class PostgreHelper {
         return objects;
     }
 
-    public static void postgreUpdate(String executsql, BusinessTypeEnum businessTypeEnum) {
+    public void postgreUpdate(String executsql, BusinessTypeEnum businessTypeEnum) {
         Connection conn = null;
         Statement stmt = null;
         try {
             // 1获得连接
-            conn = getConnection(businessTypeEnum==BusinessTypeEnum.DATAMODEL?pgsqlDatamodelUrl:pgsqlDatainputUrl);
+            conn = getConnection(businessTypeEnum);
             // 2执行对象
             stmt = conn.createStatement();
             // 3执行,executeUpdate用来执行除了查询的操作,executeQuery用来执行查询操作
@@ -136,15 +161,16 @@ public class PostgreHelper {
 
     /**
      * 执行pgsql语句 2021年08月27日10:29:12 Dennyhui
+     *
      * @param executsql
      * @param businessTypeEnum
      */
-    public static void postgreExecuteSql(String executsql, BusinessTypeEnum businessTypeEnum) {
+    public void postgreExecuteSql(String executsql, BusinessTypeEnum businessTypeEnum) {
         Connection conn = null;
         Statement stmt = null;
         try {
             // 1获得连接
-            conn = getConnection(businessTypeEnum==BusinessTypeEnum.DATAMODEL?pgsqlDatamodelUrl:pgsqlDatainputUrl);
+            conn = getConnection(businessTypeEnum);
             // 2执行对象
             stmt = conn.createStatement();
             // 3执行,executeUpdate用来执行除了查询的操作,executeQuery用来执行查询操作

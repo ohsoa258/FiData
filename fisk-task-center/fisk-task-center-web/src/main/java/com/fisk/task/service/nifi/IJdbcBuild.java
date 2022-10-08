@@ -6,7 +6,7 @@ import com.fisk.task.dto.doris.UpdateLogAndImportDataDTO;
 
 import java.sql.ResultSet;
 
-public interface IPostgreBuild {
+public interface IJdbcBuild {
 
      /**
       * executsql   执行的sql语句

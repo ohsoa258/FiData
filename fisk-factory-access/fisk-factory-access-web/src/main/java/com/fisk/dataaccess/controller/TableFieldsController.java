@@ -51,4 +51,11 @@ public class TableFieldsController {
     public ResultEntity<Object> loadDepend(@RequestBody OperateTableDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.loadDepend(dto));
     }
+
+    @GetMapping("/test")
+    @ApiOperation(value = "对表进行操作时,查询依赖")
+    public void test() {
+        service.test();
+    }
+
 }

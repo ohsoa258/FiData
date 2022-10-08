@@ -16,13 +16,15 @@ import com.fisk.dataaccess.dto.pgsqlmetadata.ApiSqlResultDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
-import com.fisk.dataaccess.enums.DriverTypeEnum;
 import com.fisk.dataaccess.utils.json.JsonUtils;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.sql.*;
 import java.util.*;
 
@@ -36,24 +38,10 @@ import java.util.*;
 @Component
 public class PgsqlUtils {
 
-    private static String pgUrl;
-    private static String pgUsername;
-    private static String pgPpassword;
-
-    @Value("${pgsql-ods.url}")
-    public void setPgUrl(String pgUrl) {
-        PgsqlUtils.pgUrl = pgUrl;
-    }
-
-    @Value("${pgsql-ods.username}")
-    public void setPgUsername(String pgUsername) {
-        PgsqlUtils.pgUsername = pgUsername;
-    }
-
-    @Value("${pgsql-ods.password}")
-    public void setPgPpassword(String pgPpassword) {
-        PgsqlUtils.pgPpassword = pgPpassword;
-    }
+    @Resource
+    UserClient userClient;
+    @Value("${fiData-data-ods-source}")
+    private Integer odsSource;
 
     /**
      * 创建pgsql连接驱动
@@ -65,11 +53,13 @@ public class PgsqlUtils {
      * @version v1.0
      * @params
      */
-    public static Connection getPgConn() {
+
+    public Connection getPgConn() {
         Connection conn = null;
         try {
-            Class.forName(DriverTypeEnum.PGSQL.getName());
-            conn = DriverManager.getConnection(pgUrl, pgUsername, pgPpassword);
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+            Class.forName(dataSourceConfig.data.conType.getDriverName());
+            conn = DriverManager.getConnection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword);
         } catch (ClassNotFoundException | SQLException e) {
             log.error("【getPgConn】创建pgsql连接驱动失败, ex", e);
             throw new FkException(ResultEnum.CREATE_PG_CONNECTION);

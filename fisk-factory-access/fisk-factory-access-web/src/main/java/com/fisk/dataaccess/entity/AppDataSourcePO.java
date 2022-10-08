@@ -116,4 +116,15 @@ public class AppDataSourcePO extends BasePO {
      * jwt类型下，设置token过期时间
      */
     public Integer expirationTime;
+
+    /**
+     * 服务名(只有oracle有服务名)
+     */
+    public String serviceName;
+
+    /**
+     * oracle服务类型：0:服务名、1:SID
+     */
+    public Integer serviceType;
+
 }

@@ -1,6 +1,11 @@
 package com.fisk.task.extend.actuators;
 
+import com.alibaba.fastjson.JSON;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.utils.StackTraceHelper;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +57,8 @@ public class DefiningCommonVariablesImpl implements ApplicationRunner {
     private String dorisPwd;
     @Value("${datamodeldorisconstr.driver_class_name}")
     private String dorisDriver;
+    @Resource
+    UserClient userClient;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -65,9 +72,21 @@ public class DefiningCommonVariablesImpl implements ApplicationRunner {
             configMap.put(ComponentIdTypeEnum.CFG_DB_POOL_USERNAME.getName(), user);
             configMap.put(ComponentIdTypeEnum.CFG_DB_POOL_URL.getName(), jdbcStr);
             //pg-ods
+            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+            log.info("查询数据源:" + JSON.toJSONString(fiDataDataSource));
             configMap.put(ComponentIdTypeEnum.PG_ODS_DB_POOL_PASSWORD.getName(), pgsqlDatainputPassword);
             configMap.put(ComponentIdTypeEnum.PG_ODS_DB_POOL_USERNAME.getName(), pgsqlDatainputUsername);
             configMap.put(ComponentIdTypeEnum.PG_ODS_DB_POOL_URL.getName(), pgsqlDatainputUrl);
+            if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+                DataSourceDTO data = fiDataDataSource.data;
+                configMap.put(ComponentIdTypeEnum.PG_ODS_DB_POOL_PASSWORD.getName(), data.conPassword);
+                configMap.put(ComponentIdTypeEnum.PG_ODS_DB_POOL_USERNAME.getName(), data.conAccount);
+                configMap.put(ComponentIdTypeEnum.PG_ODS_DB_POOL_URL.getName(), data.conStr);
+            } else {
+                log.error("数据源查询失败");
+            }
+
+
             //pg-dw
             configMap.put(ComponentIdTypeEnum.PG_DW_DB_POOL_PASSWORD.getName(), pgsqlDatamodelPassword);
             configMap.put(ComponentIdTypeEnum.PG_DW_DB_POOL_USERNAME.getName(), pgsqlDatamodelUsername);

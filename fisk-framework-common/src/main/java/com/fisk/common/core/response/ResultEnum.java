@@ -12,7 +12,8 @@ public enum ResultEnum {
      * 返回码
      */
     SUCCESS(0, "成功"),
-    REQUEST_SUCCESS(200,"请求成功"),
+    REQUEST_SUCCESS(200, "请求成功"),
+    ACCEPTED(202, "接收成功"),
     UNAUTHENTICATE(401, "认证失败"),
     NOTFOUND(404, "未找到资源"),
     ERROR(500, "系统报错"),
@@ -45,6 +46,7 @@ public enum ResultEnum {
     SYSTEM_PARAMS_ISEMPTY(1021, "系统参数为空"),
     DATASOURCE_CONNECTERROR(1022, "数据源连接建立异常"),
     DATASOURCE_CONNECTCLOSEERROR(1022, "数据源连接关闭异常"),
+    NO_MATCHING_DATA_TYPE(1023, "没有匹配的数据类型"),
 
     /**
      * 报表可视化服务，错误码从2000开始
@@ -71,6 +73,7 @@ public enum ResultEnum {
      */
     USER_ACCOUNTPASSWORD_ERROR(4001, "用户名或密码不正确"),
     ORIGINAL_PASSWORD_ERROR(4002, "用户原密码错误"),
+    DATA_SOURCE_ERROR(4003, "获取数据源配置失败"),
 
     /**
      * 数据接入模块
@@ -130,6 +133,12 @@ public enum ResultEnum {
     GET_DATABASE_ERROR(5053, "获取数据库失败,请重新检查参数"),
     RETURN_RESULT_DEFINITION(5054, "返回结果定义必须选中获取键值"),
     API_EXPRESSION_ERROR(5055, "API表达式格式错误"),
+    SCHEMA_ERROR(5056, "创建或删除schema失败"),
+    UPLOAD_FLINK_ERROR(5057, "脚本上传flink失败"),
+    PIPELINENAME_EXISTING(5058, "Job名称已存在"),
+    UPLOADFILE_REMOTE_ERROR(5059, "文件上传远程失败"),
+    SAVE_POINTS_UPDATE_ERROR(5060, "检查点保存失败"),
+
 
     /**
      * 后台任务模块

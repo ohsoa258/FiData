@@ -12,7 +12,9 @@ import com.fisk.common.core.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.core.enums.task.nifi.ControllerServiceTypeEnum;
 import com.fisk.common.core.enums.task.nifi.ProcessorTypeEnum;
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
@@ -20,6 +22,8 @@ import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.enums.syncModeTypeEnum;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.dto.daconfig.AssociatedConditionDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -30,6 +34,8 @@ import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.TableNifiSettingDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.enums.OlapTableEnum;
+import com.fisk.task.listener.postgre.datainput.IbuildTable;
+import com.fisk.task.listener.postgre.datainput.impl.BuildFactoryHelper;
 import com.fisk.task.po.AppNifiSettingPO;
 import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
@@ -53,6 +59,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
+import java.sql.DriverManager;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -73,6 +80,8 @@ public class NiFiHelperImpl implements INiFiHelper {
     TableTopicImpl tableTopic;
     @Value("${nifi.basePath}")
     public String basePath;
+    @Resource
+    public UserClient userClient;
 
 
     @Override
@@ -761,7 +770,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         map.put("Destination", "flowfile-attribute");
         List<TableFieldsDTO> tableFieldsList = dataAccessConfigDTO.targetDsConfig.tableFieldsList;
         for (TableFieldsDTO tableFieldsDTO : tableFieldsList) {
-            map.put(tableFieldsDTO.fieldName.toLowerCase(), "$." + tableFieldsDTO.fieldName.toLowerCase());
+            map.put(tableFieldsDTO.fieldName, "$." + tableFieldsDTO.fieldName);
         }
         map.put("fk_doris_increment_code", "$.fk_doris_increment_code");
         //组件配置信息
@@ -788,7 +797,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         List<String> autoRes = new ArrayList<>();
         autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
         Map<String, String> map = new HashMap<>();
-        String sql = "insert into " + dataAccessConfigDTO.targetDsConfig.targetTableName.toLowerCase();
+        String sql = "insert into " + dataAccessConfigDTO.targetDsConfig.targetTableName;
         String sqlfiled = " (";
         String sqlValue = " values (";
         //后面把fieldName替换成字段
@@ -796,8 +805,8 @@ public class NiFiHelperImpl implements INiFiHelper {
         List<TableFieldsDTO> tableFieldsList = dataAccessConfigDTO.targetDsConfig.tableFieldsList;
         System.out.println("第二次拿到list长度" + tableFieldsList.size());
         for (TableFieldsDTO tableFieldsDTO : tableFieldsList) {
-            sqlfiled += tableFieldsDTO.fieldName.toLowerCase() + ",";
-            sqlValue += "${" + tableFieldsDTO.fieldName.toLowerCase() + ":isEmpty():ifElse('null',${" + tableFieldsDTO.fieldName.toLowerCase() + ":replace(\"'\",\"''\"):append(\"'\"):prepend(\"'\")})},";
+            sqlfiled += tableFieldsDTO.fieldName + ",";
+            sqlValue += "${" + tableFieldsDTO.fieldName + ":isEmpty():ifElse('null',${" + tableFieldsDTO.fieldName + ":replace(\"'\",\"''\"):append(\"'\"):prepend(\"'\")})},";
         }
         sqlfiled += "fk_doris_increment_code) ";
         sqlValue += "${fk_doris_increment_code:isEmpty():ifElse('null',${fk_doris_increment_code:replace(\"'\",\"''\"):append(\"'\"):prepend(\"'\")})});";
@@ -2029,97 +2038,16 @@ public class NiFiHelperImpl implements INiFiHelper {
 
     @Override
     public String assemblySql(DataAccessConfigDTO config, SynchronousTypeEnum synchronousTypeEnum, String funcName, BuildNifiFlowDTO buildNifiFlow) {
-        TableBusinessDTO business = config.businessDTO;
-        String tableKey = "";
-        String targetTableName = config.processorConfig.targetTableName;
         String sql = "";
-        if (buildNifiFlow != null && StringUtils.isNotEmpty(buildNifiFlow.updateSql)) {
-            sql += "call public." + funcName + "('" + buildNifiFlow.updateSql + "','";
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+            DataSourceDTO data = fiDataDataSource.data;
+            IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(data.conType);
+            sql = dbCommand.assemblySql(config, synchronousTypeEnum, funcName, buildNifiFlow);
         } else {
-            sql += "call public." + funcName + "('','";
-        }
-
-        if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
-            if (targetTableName.startsWith("stg_dim_")) {
-                tableKey = targetTableName.substring(8) + "key";
-            } else if (targetTableName.startsWith("stg_fact_")) {
-                tableKey = targetTableName.substring(9) + "key";
-            }
-            if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
-                sql += "stg_" + targetTableName + "'";
-                sql += ",'" + targetTableName + "'";
-            } else {
-                String fieldList = config.modelPublishFieldDTOList.stream().filter(Objects::nonNull)
-                        .filter(e -> e.fieldEnName != null && !Objects.equals("", e.fieldEnName))
-                        .map(t -> t.fieldEnName).collect(Collectors.joining("'',''")).toLowerCase();
-                sql += fieldList + "','" + tableKey + "','" + targetTableName + "'";
-                sql += ",'" + config.processorConfig.targetTableName.substring(4) + "'";
-            }
-        } else {
-            tableKey = targetTableName.substring(4) + "key";
-            if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
-                sql += "stg_" + targetTableName + "'";
-                sql += ",'ods_" + targetTableName + "'";
-            } else {
-                String fieldList = config.targetDsConfig.tableFieldsList.stream().filter(Objects::nonNull)
-                        .filter(e -> e.fieldName != null && !Objects.equals("", e.fieldName))
-                        .map(t -> t.fieldName).collect(Collectors.joining("'',''")).toLowerCase();
-                sql += fieldList + "','" + tableKey + "','" + targetTableName + "'";
-                sql += ",'ods_" + targetTableName.substring(4) + "'";
-            }
-        }
-        //同步方式
-        String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
-        sql += ",'" + syncMode + "'";
-        //主键
-        sql += config.businessKeyAppend == null ? ",''" : ",'" + config.businessKeyAppend + "'";
-        if (business == null) {
-            if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
-                sql += ",0,'',0,'','',0,'','',0,'')";
-            } else if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName())) {
-                sql += ",0,'',0,'','',0,'','',0,'')";
-            }
-        } else {
-            //模式
-            sql += "," + business.otherLogic;
-            //年月日
-            sql += (business.businessTimeFlag == null ? ",''" : ",'" + business.businessTimeFlag) + "'";
-            //具体日期
-            sql += "," + business.businessDate;
-            //业务时间覆盖字段
-            sql += (business.businessTimeField == null ? ",''" : ",'" + business.businessTimeField) + "'";
-            //businessOperator
-            String businessOperator = business.businessOperator;
-            sql += (businessOperator == null ? ",''" : ",'" + businessOperator) + "'";
-            //业务覆盖范围
-            sql += "," + business.businessRange;
-            //业务覆盖单位
-            sql += (business.rangeDateUnit == null ? ",''" : ",'" + business.rangeDateUnit) + "'";
-            //其他逻辑,逻辑符号
-            String businessOperatorStandby = business.businessOperatorStandby;
-            sql += (businessOperatorStandby == null ? ",''" : ",'" + businessOperatorStandby) + "'";
-            //其他逻辑  业务覆盖范围
-            sql += "," + business.businessRangeStandby;
-            //其他逻辑  业务覆盖单位
-            sql += (business.rangeDateUnitStandby == null ? ",''" : ",'" + business.rangeDateUnitStandby) + "')";
-        }
-        if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName())) {
-            if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
-                //String s = associatedConditions(config);
-                String s = "";
-                sql = sql.substring(0, sql.length() - 1);
-                //预先留住这个判断  s == null && s.length() < 2
-                if (StringUtils.isEmpty(s)) {
-                    sql += ",'')";
-                } else {
-                    sql += ",'{\"AssociatedConditionDTO\":" + s + "}')";
-                }
-            } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
-                sql = sql.substring(0, sql.length() - 1);
-                sql += ",'')";
-            }
-        }
-        log.info("函数语句:" + sql);
+            log.error("stg-ods语句拼接出错或数据源查询报错");
+            throw new FkException(ResultEnum.ERROR);
+        } 
         return sql;
     }
 

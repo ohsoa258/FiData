@@ -68,7 +68,7 @@ public class AbstractDbHelper {
     private Connection getConnectionByType(String connectionStr, String acc, String pwd,DataSourceTypeEnum type) throws Exception {
         switch (type) {
             case SQLSERVER:
-                return DriverManager.getConnection(connectionStr);
+                return DriverManager.getConnection(connectionStr, acc, pwd);
             case PG:
                 return DriverManager.getConnection(connectionStr, acc, pwd);
             default:

@@ -14,6 +14,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
@@ -24,6 +25,7 @@ import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
+import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -33,7 +35,10 @@ import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.apiresultconfig.ApiResultConfigDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
+import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
+import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
+import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
@@ -42,9 +47,7 @@ import com.fisk.dataaccess.map.AppRegistrationMap;
 import com.fisk.dataaccess.mapper.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.utils.httprequest.Impl.BuildHttpRequestImpl;
-import com.fisk.dataaccess.utils.sql.MysqlConUtils;
-import com.fisk.dataaccess.utils.sql.OracleUtils;
-import com.fisk.dataaccess.utils.sql.SqlServerPlusUtils;
+import com.fisk.dataaccess.utils.sql.*;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
@@ -55,6 +58,8 @@ import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
@@ -71,6 +76,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -123,13 +129,19 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Resource
     private DataManageClient dataManageClient;
     @Resource
+    private UserClient userClient;
+    @Resource
     private RedisTemplate redisTemplate;
+    @Resource
+    OracleCdcUtils oracleCdcUtils;
     @Resource
     RedisUtil redisUtil;
     @Value("${metadata-instance.hostname}")
     private String hostname;
     @Value("${metadata-instance.dbName}")
     private String dbName;
+    @Value("${fiData-data-ods-source}")
+    private Integer odsSource;
     @Resource
     GetConfigDTO getConfig;
 
@@ -191,6 +203,17 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         AtlasEntityQueryVO vo = new AtlasEntityQueryVO();
         vo.userId = userId;
         vo.appId = String.valueOf(po.getId());
+
+        //是否添加schema
+        if (appRegistrationDTO.whetherSchema) {
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+            }
+            AbstractDbHelper helper = new AbstractDbHelper();
+            Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+            SqlServerConUtils.operationSchema(connection, appRegistrationDTO.appAbbreviation, false);
+        }
 
         // 添加元数据信息
         ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
@@ -438,6 +461,16 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         vo.qualifiedNames = qualifiedNames;
         log.info("删除的应用信息,{}", vo);
 
+        //删除schema
+        if (model.whetherSchema) {
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+            }
+            AbstractDbHelper helper = new AbstractDbHelper();
+            Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+            SqlServerConUtils.operationSchema(connection, model.appAbbreviation, true);
+        }
 
         // 删除元数据信息
         ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
@@ -1060,12 +1093,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             // 身份验证地址
             apiHttpRequestDto.uri = dto.connectStr;
             // jwt账号&密码
-            /*JwtRequestDTO jwtRequestDto = new JwtRequestDTO();
-            jwtRequestDto.username = dto.connectAccount;
-            jwtRequestDto.password = dto.connectPwd;
-            apiHttpRequestDto.jwtRequestDTO = jwtRequestDto;
-            String json = JSON.toJSONString(apiHttpRequestDto.jwtRequestDTO);*/
-            // jwt账号&密码
             JSONObject jsonObj = new JSONObject();
             jsonObj.put(dto.accountKey, dto.connectAccount);
             jsonObj.put(dto.pwdKey, dto.connectPwd);
@@ -1084,6 +1111,28 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             log.error("getApiToken ex:", e);
             throw new FkException(ResultEnum.AUTH_TOKEN_PARSER_ERROR);
         }
+    }
+
+    @Override
+    public CdcJobScriptDTO buildCdcJobScript(CdcJobParameterDTO dto) {
+
+        AppDataSourceDTO dataSourceData = appDataSourceImpl.getDataSourceByAppId(dto.appId);
+
+        TbTableAccessDTO tableAccessData = tableAccessImpl.getTableAccessData(dto.tableAccessId);
+
+        AppRegistrationPO registrationPo = mapper.selectById(dto.appId);
+
+        if (tableAccessData == null || registrationPo == null) {
+            throw new FkException(ResultEnum.TASK_TABLE_NOT_EXIST);
+        }
+        //拼接ods表名
+        tableAccessData.tableName = TableNameGenerateUtils.buildOdsTableName(tableAccessData.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
+
+        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+        if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        return oracleCdcUtils.createCdcJobScript(dto, dataSourceData, dataSourceConfig.data, tableAccessData);
     }
 
     /**

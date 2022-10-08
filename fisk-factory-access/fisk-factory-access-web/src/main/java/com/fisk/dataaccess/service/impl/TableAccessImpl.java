@@ -28,9 +28,11 @@ import com.fisk.dataaccess.dto.access.DataAccessTreeDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.*;
+import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
@@ -53,6 +55,8 @@ import com.fisk.dataaccess.vo.pgsql.TableListVO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
@@ -102,6 +106,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Resource
     private PublishTaskClient publishTaskClient;
     @Resource
+    private UserClient userClient;
+    @Resource
     private UserHelper userHelper;
     @Resource
     private TableBusinessImpl businessImpl;
@@ -109,16 +115,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private TableBusinessMapper businessMapper;
     @Resource
     private ApiConfigImpl apiConfigImpl;
-    @Resource
-    private NifiConfigMapper nifiConfigMapper;
-    @Resource
-    private NifiConfigImpl nifiConfigImpl;
     @Value("${spring.datasource.dynamic.datasource.taskdb.url}")
     private String jdbcStr;
     @Value("${spring.datasource.dynamic.datasource.taskdb.username}")
     private String user;
     @Value("${spring.datasource.dynamic.datasource.taskdb.password}")
     private String password;
+    @Value("${fiData-data-ods-source}")
+    private Integer odsSource;
     @Resource
     private GenerateCondition generateCondition;
     @Resource
@@ -127,20 +131,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private TableSyncmodeImpl tableSyncmodeImpl;
     @Resource
     private FtpImpl ftpImpl;
-    @Value("${pgsql-datamodel.url}")
-    public String pgsqlDatamodelUrl;
-    @Value("${pgsql-datamodel.username}")
-    public String pgsqlDatamodelUsername;
-    @Value("${pgsql-datamodel.password}")
-    public String pgsqlDatamodelPassword;
-
-    @Value("${pgsql-ods.url}")
-    public String pgsqlOdsUrl;
-    @Value("${pgsql-ods.username}")
-    public String pgsqlOdsUsername;
-    @Value("${pgsql-ods.password}")
-    public String pgsqlOdsPassword;
-
     @Value("${metadata-instance.hostname}")
     private String hostname;
     @Value("${metadata-instance.dbName}")
@@ -664,6 +654,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
         } catch (Exception e) {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        //停止cdc任务
+        if (!StringUtils.isEmpty(modelAccess.jobId)) {
+            tableFieldsImpl.cancelJob(modelAccess.jobId, modelAccess.id);
         }
 
         // 查询tb_table_syncmode
@@ -1465,8 +1460,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public OdsResultDTO getTableFieldByQuery(OdsQueryDTO query) {
         OdsResultDTO array = new OdsResultDTO();
         try {
-            Class.forName("org.postgresql.Driver");
-            Connection conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlDatamodelPassword);
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+            }
+            Class.forName(dataSourceConfig.data.conType.getDriverName());
+            Connection conn = DriverManager.getConnection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword);
             Statement st = conn.createStatement();
             Map<String, String> converSql = publishTaskClient.converSql(query.tableName, query.querySql, "").data;
             query.querySql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
@@ -1479,8 +1478,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
             rSet.close();
             //分页获取数据
-            int offset = (query.pageIndex - 1) * query.pageSize;
-            query.querySql = query.querySql + " limit " + query.pageSize + " offset " + offset;
+            if (dataSourceConfig.data.conType.getName().equalsIgnoreCase("SQLSERVER")) {
+                query.querySql = query.querySql + " ORDER BY 1 OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY;";
+            } else if (dataSourceConfig.data.conType.getName().equalsIgnoreCase("POSTGRESQL")) {
+                int offset = (query.pageIndex - 1) * query.pageSize;
+                query.querySql = query.querySql + " limit " + query.pageSize + " offset " + offset;
+            }
             ResultSet rs = st.executeQuery(query.querySql);
             //获取数据集
             array = resultSetToJsonArrayDataModel(rs);
@@ -1532,16 +1535,20 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.sourceTableName = metaData.getTableName(i);
             // 源字段
             dto.sourceFieldName = metaData.getColumnLabel(i);
+            dto.sourceFieldType = metaData.getColumnTypeName(i);
             dto.fieldName = metaData.getColumnLabel(i);
             String tableName = metaData.getTableName(i) + "key";
             if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equals(dto.fieldName) || tableName.equals("ods_" + dto.fieldName)) {
                 continue;
             }
             dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
-            if (dto.fieldType.contains("INT2") || dto.fieldType.contains("INT4") || dto.fieldType.contains("INT8")) {
+            if (dto.fieldType.contains("INT2")
+                    || dto.fieldType.contains("INT4")
+                    || dto.fieldType.contains("INT8")) {
                 dto.fieldType = "INT";
             }
-            if (dto.fieldType.toLowerCase().contains(fieldType1) || dto.fieldType.toLowerCase().contains(fieldType2)) {
+            if (dto.fieldType.toLowerCase().contains(fieldType1)
+                    || dto.fieldType.toLowerCase().contains(fieldType2)) {
                 dto.fieldLength = "50";
             } else {
                 dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
@@ -1551,9 +1558,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             List<String> list = transformField(dto.fieldType, dto.fieldLength);
             dto.fieldType = list.get(0);
             dto.fieldLength = list.get(1);
-
-            dto.sourceFieldType = dto.fieldType;
-
             fieldNameDTOList.add(dto);
         }
         data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());
@@ -1755,6 +1759,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 //st.setFetchSize(Integer.MIN_VALUE);
 //                conn.setAutoCommit(false);
                 st.setMaxRows(10);
+            } else if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE_CDC.getName())) {
+                //1.加载驱动程序
+                Class.forName(com.fisk.dataaccess.enums.DriverTypeEnum.ORACLE.getName());
+                //2.获得数据库的连接
+                query.querySql = "SELECT * FROM " + query.querySql;
+                conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
+                st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                //st.setFetchSize(Integer.MIN_VALUE);
+                st.setMaxRows(10);
             }
             assert st != null;
             Instant inst2 = Instant.now();
@@ -1770,6 +1783,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             log.info("执行sql时间 : " + Duration.between(inst3, inst4).toMillis());
             //获取数据集
             array = resultSetToJsonArrayDataAccess(rs);
+            if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE_CDC.getName())
+                    && !CollectionUtils.isEmpty(array.fieldNameDTOList)) {
+                array = cdcSetSourceInfo(array, query);
+            }
             Instant inst5 = Instant.now();
             log.info("封装数据执行时间 : " + Duration.between(inst4, inst5).toMillis());
 
@@ -1824,6 +1841,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             case api:
                 dto.driveType = DbTypeEnum.api;
                 break;
+            case oracle_cdc:
+                dto.driveType = DbTypeEnum.oracle_cdc;
+                break;
             default:
                 break;
         }
@@ -1831,7 +1851,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.appAbbreviation = registrationPo.appAbbreviation;
         dto.tableName = tableAccessPo.tableName;
         // 非实时物理表才有sql
-        if (!dbTypeEnum.getName().equals(DbTypeEnum.RestfulAPI.getName()) && !dbTypeEnum.getName().equals(DbTypeEnum.api.getName())) {
+        if (!dbTypeEnum.getName().equals(DbTypeEnum.RestfulAPI.getName())
+                && !dbTypeEnum.getName().equals(DbTypeEnum.api.getName())
+                && !dbTypeEnum.getName().equals(DbTypeEnum.oracle_cdc.getName())) {
             Map<String, String> converSql = publishTaskClient.converSql(registrationPo.appAbbreviation + "_" + tableAccessPo.tableName, tableAccessPo.sqlScript, dataSourcePo.driveType).data;
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             dto.selectSql = sql;
@@ -1926,4 +1948,48 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
         return conn;
     }
+
+    @Override
+    public ResultEnum cdcHeadConfig(CdcHeadConfigDTO dto) {
+        TableAccessPO po = accessMapper.selectById(dto.dataAccessId);
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        //判断job名称是否已存在
+        QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id").lambda().eq(TableAccessPO::getPipelineName, dto.pipelineName);
+        TableAccessPO selectOne = accessMapper.selectOne(queryWrapper);
+        if (selectOne != null && selectOne.id != po.id) {
+            throw new FkException(ResultEnum.PIPELINENAME_EXISTING);
+        }
+
+        po.checkPointInterval = dto.checkPointInterval;
+        po.checkPointUnit = dto.checkPointUnit;
+        po.pipelineName = dto.pipelineName;
+        po.scanStartupMode = dto.scanStartupMode;
+        return accessMapper.updateById(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    public OdsResultDTO cdcSetSourceInfo(OdsResultDTO data, OdsQueryDTO dto) {
+
+        com.fisk.dataaccess.dto.v3.DataSourceDTO dataSourceDTO = appDataSourceImpl.setDataSourceMeta(dto.appId);
+        Optional<TablePyhNameDTO> first = dataSourceDTO.tableDtoList.stream().filter(e -> e.tableName.equals(dto.tableName)).findFirst();
+        if (!first.isPresent()) {
+            throw new FkException(ResultEnum.TASK_TABLE_NOT_EXIST);
+        }
+        for (FieldNameDTO item : data.fieldNameDTOList) {
+            Optional<TableStructureDTO> column = first.get().fields.stream().filter(e -> e.fieldName.equals(item.fieldName)).findFirst();
+            if (!column.isPresent()) {
+                throw new FkException(ResultEnum.TASK_TABLE_NOT_EXIST);
+            }
+            item.sourceTableName = first.get().tableName;
+            item.sourceFieldLength = column.get().fieldLength;
+            item.sourceFieldPrecision = column.get().fieldPrecision;
+        }
+
+
+        return data;
+    }
+
 }

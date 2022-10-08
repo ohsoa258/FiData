@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
 import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  * @author gy
@@ -29,7 +30,9 @@ import org.springframework.context.ConfigurableApplicationContext;
         "com.fisk.datafactory.client",
         "com.fisk.mdm.client",
         "com.fisk.datagovernance.client",
+        "com.fisk.system.client",
         "com.fisk.datamanage.client"})
+@EnableTransactionManagement
 @EnableHystrix
 public class FkTaskApplication {
     public static void main(String[] args) {

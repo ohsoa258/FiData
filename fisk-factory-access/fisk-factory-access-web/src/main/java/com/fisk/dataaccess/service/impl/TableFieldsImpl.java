@@ -4,12 +4,16 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.flink.UploadWayEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.RegexUtils;
+import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.flinkupload.FlinkFactoryHelper;
+import com.fisk.common.service.flinkupload.IFlinkJobUpload;
 import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
@@ -17,18 +21,24 @@ import com.fisk.dataaccess.dto.access.OperateTableDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewPageDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
+import com.fisk.dataaccess.dto.flink.FlinkConfigDTO;
+import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
+import com.fisk.dataaccess.dto.savepointhistory.SavepointHistoryDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.dto.table.TableSyncmodeDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
+import com.fisk.dataaccess.map.FlinkParameterMap;
 import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.TableFieldsMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.service.ITableFields;
+import com.fisk.dataaccess.utils.files.FileTxtUtils;
+import com.fisk.dataaccess.utils.sql.OracleCdcUtils;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
@@ -41,14 +51,20 @@ import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -72,6 +88,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     @Resource
     private AppDataSourceImpl dataSourceImpl;
     @Resource
+    SavepointHistoryImpl savepointHistory;
+    @Resource
+    FlinkApiImpl flinkApi;
+    @Resource
     private PublishTaskClient publishTaskClient;
     @Resource
     private UserHelper userHelper;
@@ -91,6 +111,12 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     private String dbName;
     @Value("${metadata-instance.protocol}")
     private String protocol;
+
+    @Resource
+    FlinkConfigDTO flinkConfig;
+
+    @Resource
+    private RedisTemplate redisTemplate;
 
     @Override
     public Page<DataReviewVO> listData(DataReviewQueryDTO query) {
@@ -163,7 +189,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         tableAccessImpl.updateById(accessPo);
 
         // 发布
-        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission);
+        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, dto.cdcJobScript);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -234,7 +260,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         tableAccessImpl.updateById(model);
 
         // 发布
-        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission);
+        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, dto.cdcJobScript);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
@@ -279,7 +305,13 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      * @param tableName 物理表tableName
      * @param flag      0: 保存;  1: 发布
      */
-    private void publish(boolean success, long appId, long accessId, String tableName, int flag, boolean openTransmission) {
+    private void publish(boolean success,
+                         long appId,
+                         long accessId,
+                         String tableName,
+                         int flag,
+                         boolean openTransmission,
+                         CdcJobScriptDTO cdcDto) {
         if (success && flag == 1) {
             UserInfo userInfo = userHelper.getLoginUserInfo();
             ResultEntity<BuildPhysicalTableDTO> result = tableAccessImpl.getBuildPhysicalTableDTO(accessId, appId);
@@ -293,8 +325,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             List<TableFieldsPO> list = this.query().eq("table_access_id", accessId).list();
             AppRegistrationPO registration = iAppRegistration.getById(appId);
             AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("app_id", appId).one();
-            String odsTableName = "ods_" + registration.appAbbreviation + "_" + tableName;
+            //拼接ods表名
+            String odsTableName = TableNameGenerateUtils.buildOdsTableName(tableName, registration.appAbbreviation, registration.whetherSchema);
             data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
+            data.whetherSchema = registration.whetherSchema;
 
             // 执行发布
             try {
@@ -304,7 +338,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     TableAccessPO accessPo = tableAccessImpl.query().eq("id", accessId).one();
                     List<TableAccessPO> tablePoList = tableAccessImpl.query().eq("api_id", accessPo.apiId).list();
                     // api下所有表
-                    data.apiTableNames = tablePoList.stream().map(e -> registration.appAbbreviation + "_" + e.tableName).collect(Collectors.toList());
+                    data.apiTableNames = tablePoList.stream().map(e -> e.tableName).collect(Collectors.toList());
                     data.appType = registration.appType;
                     data.apiId = accessPo.apiId;
                     // 创建表流程
@@ -324,12 +358,121 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     // 构建元数据实时同步数据对象
                     buildMetaDataInstanceAttribute(registration, accessId, 2);
                 }
+
+                //oracle-cdc类型需要上传脚本
+                if (dataSourcePo.driveType.equalsIgnoreCase("ORACLE-CDC")) {
+                    cdcScriptUploadFlink(cdcDto, tableName, accessId);
+                }
             } catch (Exception e) {
                 log.info("发布失败", e);
                 log.info("发布失败,{}", ResultEnum.TASK_EXEC_FAILURE.getMsg());
                 throw new FkException(ResultEnum.TASK_EXEC_FAILURE);
             }
         }
+    }
+
+    /**
+     * cdc脚本上传flink
+     *
+     * @param cdcJobScript
+     * @param fileName
+     * @param accessId
+     */
+    public void cdcScriptUploadFlink(CdcJobScriptDTO cdcJobScript,
+                                     String fileName,
+                                     long accessId) {
+        TableAccessPO accessPo = tableAccessImpl.query().eq("id", accessId).one();
+        if (accessPo == null) {
+            throw new FkException(ResultEnum.TASK_TABLE_NOT_EXIST);
+        }
+
+        //替换脚本
+        Boolean exist = redisTemplate.hasKey(OracleCdcUtils.redisPrefix + ":" + accessId);
+        if (!exist) {
+            throw new FkException(ResultEnum.DATA_QUALITY_DATACHECK_CHECKRESULT_EXISTS);
+        }
+        cdcJobScript.jobScript = redisTemplate.opsForValue().get(OracleCdcUtils.redisPrefix + ":" + accessId).toString();
+
+        //先根据job id,先停止任务
+        if (!StringUtils.isEmpty(accessPo.jobId)) {
+            cancelJob(accessPo.jobId, accessPo.id);
+        }
+
+        //获取检查点集合
+        List<SavepointHistoryDTO> savepointHistory = this.savepointHistory.getSavepointHistory(accessId);
+        if (!CollectionUtils.isEmpty(savepointHistory)) {
+            StringBuilder str = new StringBuilder();
+            if (cdcJobScript.savepointHistoryId != 0) {
+                Optional<SavepointHistoryDTO> first = savepointHistory.stream().filter(e -> e.id.equals(cdcJobScript.savepointHistoryId)).findFirst();
+                if (!first.isPresent()) {
+                    throw new FkException(ResultEnum.DATA_NOTEXISTS);
+                }
+                str.append("SET execution.savepoint.path = '" + first.get().savepointPath + "';");
+            } else {
+                str.append("SET execution.savepoint.path = '" + savepointHistory.get(0).savepointPath + "';");
+            }
+            str.append("\n");
+            str.append(cdcJobScript.jobScript);
+            cdcJobScript.jobScript = str.toString();
+        }
+
+        //上传文件
+        FileTxtUtils.setFiles(flinkConfig.uploadPath, fileName, cdcJobScript.jobScript);
+        //ssh上传,需要上传至远程服务器
+        if (flinkConfig.uploadWay.getValue() == UploadWayEnum.SSH.getValue()) {
+            try {
+                InputStream client_fileInput = new FileInputStream(flinkConfig.uploadPath + fileName);
+                FileTxtUtils.uploadFile(flinkConfig.host, flinkConfig.port, flinkConfig.user, flinkConfig.password, flinkConfig.uploadPath, fileName, client_fileInput);
+            } catch (FileNotFoundException e) {
+                log.error("uploadFile remote ex:", e);
+                throw new FkException(ResultEnum.UPLOADFILE_REMOTE_ERROR);
+            }
+        }
+        IFlinkJobUpload upload = FlinkFactoryHelper.flinkUpload(flinkConfig.uploadWay);
+        flinkConfig.fileName = fileName;
+        String jobId = upload.submitJob(FlinkParameterMap.INSTANCES.dtoToDto(flinkConfig));
+        if (!StringUtils.isEmpty(jobId)) {
+            accessPo.jobId = jobId;
+            tableAccessImpl.updateById(accessPo);
+        }
+
+    }
+
+    /**
+     * 取消job,并创建检查点
+     *
+     * @param jobId
+     * @param accessId
+     */
+    public void cancelJob(String jobId, long accessId) {
+        String triggerId = flinkApi.savePoints(jobId, String.valueOf(accessId));
+        boolean flat = true;
+        long startTime = System.currentTimeMillis();
+        String savePointsPath = null;
+        while (flat || (System.currentTimeMillis() - startTime) < 10000) {
+            savePointsPath = flinkApi.savePointsStatus(jobId, triggerId);
+            if (!StringUtils.isEmpty(savePointsPath)) {
+                flat = false;
+                break;
+            }
+        }
+        if (flat) {
+            throw new FkException(ResultEnum.SAVE_POINTS_UPDATE_ERROR);
+        }
+        //保存到检查点历史表
+        SavepointHistoryDTO dto = new SavepointHistoryDTO();
+        dto.savepointPath = savePointsPath;
+        dto.tableAccessId = accessId;
+        dto.savepointDate = LocalDateTime.now();
+        savepointHistory.addSavepointHistory(dto);
+    }
+
+    @Override
+    public void test() {
+        CdcJobScriptDTO cdcJobScript = new CdcJobScriptDTO();
+        String fileName = "cdc_test001";
+        long accessId = 4041;
+        cdcScriptUploadFlink(cdcJobScript, fileName, accessId);
     }
 
     /**
@@ -484,4 +627,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         dto.fieldList = fieldList;
         return dto;
     }
+
+
 }

@@ -2,10 +2,16 @@ package com.fisk.task.utils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
+import com.fisk.task.listener.postgre.datainput.IbuildTable;
+import com.fisk.task.listener.postgre.datainput.impl.BuildFactoryHelper;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,10 +20,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.sql.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +34,8 @@ public class TaskPgTableStructureHelper
 
     @Resource
     TaskPgTableStructureMapper taskPgTableStructureMapper;
+    @Resource
+    UserClient userClient;
 
 
     public static String taskdbUrl;
@@ -42,6 +47,8 @@ public class TaskPgTableStructureHelper
     public static String driverClassName;
 
     public static String datainputDriverClassName;
+
+    public static String datamodelDriverClassName;
 
     public static String pgsqlDatainputUrl;
 
@@ -81,7 +88,12 @@ public class TaskPgTableStructureHelper
         TaskPgTableStructureHelper.datainputDriverClassName = datainputDriverClassName;
     }
 
-    @Value("${pgsql-datainput.url}")
+    @Value("${pgsql-datamodel.driverClassName}")
+    public void setDatamodelDriverClassName(String datamodelDriverClassName) {
+        TaskPgTableStructureHelper.datamodelDriverClassName = datamodelDriverClassName;
+    }
+
+    @Value("${pgsql-datainput.url}")//
     public void setPgsqlDatainputUrl(String pgsqlDatainputUrl) {
         TaskPgTableStructureHelper.pgsqlDatainputUrl = pgsqlDatainputUrl;
     }
@@ -116,7 +128,7 @@ public class TaskPgTableStructureHelper
      *
      * @param
      */
-    public ResultEnum saveTableStructure(ModelPublishTableDTO dto, String version) {
+    public ResultEnum saveTableStructure(ModelPublishTableDTO dto, String version, DataSourceTypeEnum dataSourceType) {
         try {
             List<TaskPgTableStructurePO> poList = new ArrayList<>();
             Thread.sleep(200);
@@ -127,13 +139,16 @@ public class TaskPgTableStructureHelper
                 //判断是否为维度
                 po.tableType = type;
                 po.tableId = String.valueOf(dto.tableId);
-                po.tableName = dto.tableName.toLowerCase();
+                po.tableName = dto.tableName;
                 po.fieldId = String.valueOf(item.fieldId);
-                po.fieldName = item.fieldEnName.toLowerCase();
+                po.fieldName = item.fieldEnName;
                 po.fieldType = item.fieldType;
                 po.primaryKey = item.isPrimaryKey == 0 ? false : true;
                 if ("VARCHAR".equals(item.fieldType)) {
                     po.fieldType = item.fieldType + "(" + item.fieldLength + ")";
+                }
+                if ("FLOAT".equals(item.fieldType)) {
+                    po.fieldType = item.fieldType + "(18,9)";
                 }
                 poList.add(po);
                 if (item.associateDimensionId != 0 && item.associateDimensionFieldId != 0) {
@@ -141,9 +156,9 @@ public class TaskPgTableStructureHelper
                     po2.version = version;
                     po2.tableType = type;
                     po2.tableId = String.valueOf(dto.tableId);
-                    po2.tableName = dto.tableName.toLowerCase();
+                    po2.tableName = dto.tableName;
                     po2.fieldId = String.valueOf(item.associateDimensionId);
-                    po2.fieldName = (item.associateDimensionName.substring(4) + "key").toLowerCase();
+                    po2.fieldName = (item.associateDimensionName.substring(4) + "key");
                     po2.fieldType = "VARCHAR(255)";
                     poList.add(po2);
                 }
@@ -153,7 +168,7 @@ public class TaskPgTableStructureHelper
                 return ResultEnum.SAVE_DATA_ERROR;
             }
             //执行存储过程
-            String sql = execProcedure(version, type);
+            String sql = execProcedure(version, type, dataSourceType);
             log.info("查看执行表结构方法,sql: {}, version: {},type: {}", sql, version, type);
             //判断是否有修改语句
             return updatePgTableStructure(sql, version, dto.createType);
@@ -176,7 +191,7 @@ public class TaskPgTableStructureHelper
      * @param version
      * @return
      */
-    public String execProcedure(String version, int type) throws Exception {
+    public String execProcedure(String version, int type, DataSourceTypeEnum dataSourceType) throws Exception {
         //配置数据库参数
         Class.forName(driverClassName);
         String url = taskdbUrl;
@@ -188,8 +203,9 @@ public class TaskPgTableStructureHelper
             //拼接SQL
             StringBuilder str = new StringBuilder();
             List<String> sqlList = new ArrayList<>();
-            //调用过程stu_pro
-            CallableStatement cs = (CallableStatement) conn.prepareCall("call pg_check_table_structure(?,?)");
+            CallableStatement cs = null;
+            IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSourceType);
+            cs = (CallableStatement) conn.prepareCall(dbCommand.prepareCallSql());
             cs.setString(1, version);
             cs.setInt(2, type);
             cs.execute();
@@ -200,7 +216,7 @@ public class TaskPgTableStructureHelper
             while (rs.next()) {
                 String value = rs.getString(1);
                 if (value != null && value.length() > 0) {
-                    sqlList.add(value.toLowerCase());
+                    sqlList.add(value);
                 }
             }
             //这个判断会自动指向下一个游标
@@ -211,7 +227,7 @@ public class TaskPgTableStructureHelper
                 while (rs1.next()) {
                     String value = rs1.getString(1);
                     if (value != null && value.length() > 0) {
-                        sqlList.add(value.toLowerCase());
+                        sqlList.add(value);
                     }
                     try {//关闭rs1
                         if (rs1 == null) {
@@ -244,18 +260,35 @@ public class TaskPgTableStructureHelper
      * @return
      */
     public ResultEnum updatePgTableStructure(String sql, String version, int createType) throws Exception {
-        Class.forName(datainputDriverClassName);
-        String pgsqlDwUrl = pgsqlDatamodelUrl;
-        String pgsqlOdsUrl = pgsqlDatainputUrl;
+        String pgsqlOdsUrl = "";
+        String pgsqlOdsUsername = "";
+        String pgsqlOdsPassword = "";
+        String pgsqlOdsDriverClass = "";
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+            DataSourceDTO data = fiDataDataSource.data;
+            pgsqlOdsUrl = data.conStr;
+            pgsqlOdsUsername = data.conAccount;
+            pgsqlOdsPassword = data.conPassword;
+            pgsqlOdsDriverClass = data.conType.getDriverName();
+        } else {
+            log.error("userclient无法查询到ods库的连接信息");
+            return ResultEnum.ERROR;
+        }
+/*        String pgsqlOdsUrl = pgsqlDatainputUrl;
         String pgsqlOdsUsername = pgsqlDatainputUsername;
+        String pgsqlOdsPassword = pgsqlDatainputPassword;*/
+        String pgsqlDwUrl = pgsqlDatamodelUrl;
         String pgsqlDwUsername = pgsqlDatamodelUsername;
         String pgsqlDwPassword = pgsqlDatamodelPassword;
-        String pgsqlOdsPassword = pgsqlDatainputPassword;
         Connection conn;
-        if (createType == 3 || createType == 4) {
+        Statement st = null;
+        if (createType == 3) {
+            Class.forName(pgsqlOdsDriverClass);
             // 数据接入
             conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlOdsPassword);
         } else {
+            Class.forName(datamodelDriverClassName);
             // 数据建模
             conn = DriverManager.getConnection(pgsqlDwUrl, pgsqlDwUsername, pgsqlDwPassword);
         }
@@ -268,7 +301,7 @@ public class TaskPgTableStructureHelper
             log.info("执行存储过程返回修改语句:" + sql);
             //修改表结构
             if (sql != null && sql.length() > 0) {
-                Statement st = conn.createStatement();
+                st = conn.createStatement();
                 //无需判断ddl语句执行结果,因为如果执行失败会进catch
                 st.execute(sql);
             }
@@ -277,6 +310,9 @@ public class TaskPgTableStructureHelper
             log.error("updatePgTableStructure:" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.SQL_ERROR;
         } finally {
+            if (st != null) {
+                st.close();
+            }
             conn.close();
         }
     }

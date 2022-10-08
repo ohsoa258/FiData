@@ -4,6 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
+import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.service.ITableAccess;
@@ -58,4 +59,11 @@ public class TableAccessController {
     public ResultEntity<Object> getFieldList(@RequestBody TableAccessNonDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFieldList(dto));
     }
+
+    @ApiOperation("oracle-cdc脚本头配置")
+    @PutMapping("/cdcHeadConfig")
+    public ResultEntity<Object> buildFiDataTableMetaData(@RequestBody CdcHeadConfigDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.cdcHeadConfig(dto));
+    }
+
 }

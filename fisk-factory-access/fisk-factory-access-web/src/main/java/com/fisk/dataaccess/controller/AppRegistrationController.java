@@ -15,6 +15,7 @@ import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
+import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
@@ -304,6 +305,12 @@ public class AppRegistrationController {
     @ApiOperation(value = "jwt验证方式,测试获取token")
     public ResultEntity<Object> getApiToken(@RequestBody AppDataSourceDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getApiToken(dto));
+    }
+
+    @PostMapping("/buildCdcJobScript")
+    @ApiOperation(value = "获取cdc任务脚本")
+    public ResultEntity<Object> buildCdcJobScript(@RequestBody CdcJobParameterDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.buildCdcJobScript(dto));
     }
 
 }

@@ -12,6 +12,8 @@ import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
+import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
+import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
@@ -255,5 +257,13 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return
      */
     String getApiToken(AppDataSourceDTO dto);
+
+    /**
+     * 获取cdc任务脚本
+     *
+     * @param dto
+     * @return
+     */
+    CdcJobScriptDTO buildCdcJobScript(CdcJobParameterDTO dto);
 
 }
