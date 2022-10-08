@@ -115,10 +115,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private TableBusinessMapper businessMapper;
     @Resource
     private ApiConfigImpl apiConfigImpl;
-    @Resource
-    private NifiConfigMapper nifiConfigMapper;
-    @Resource
-    private NifiConfigImpl nifiConfigImpl;
     @Value("${spring.datasource.dynamic.datasource.taskdb.url}")
     private String jdbcStr;
     @Value("${spring.datasource.dynamic.datasource.taskdb.username}")
@@ -133,13 +129,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private TableSyncmodeImpl tableSyncmodeImpl;
     @Resource
     private FtpImpl ftpImpl;
-    @Value("${pgsql-datamodel.url}")
-    public String pgsqlDatamodelUrl;
-    @Value("${pgsql-datamodel.username}")
-    public String pgsqlDatamodelUsername;
-    @Value("${pgsql-datamodel.password}")
-    public String pgsqlDatamodelPassword;
-
     @Value("${metadata-instance.hostname}")
     private String hostname;
     @Value("${metadata-instance.dbName}")

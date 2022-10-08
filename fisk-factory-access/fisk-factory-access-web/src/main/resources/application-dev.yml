@@ -28,13 +28,6 @@ dataservice:
     uat_address: http://192.168.11.130:8083
     prd_address: https://prdHost
 
-# pg数据源配置
-pgsql-datamodel:
-  driverClassName: org.postgresql.Driver
-  url: jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified
-  username: postgres
-  password: Password01!
-
 # 数据质量校验的信息(ip: pg数据源的ip地址; dbName: 连接的ods库)
 data-quality-check:
   ip: 192.168.1.250
