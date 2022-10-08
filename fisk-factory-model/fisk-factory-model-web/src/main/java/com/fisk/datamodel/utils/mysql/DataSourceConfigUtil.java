@@ -6,6 +6,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
@@ -14,6 +15,7 @@ import java.sql.DriverManager;
 /**
  * @author JianWenYang
  */
+@Component
 public class DataSourceConfigUtil {
 
     @Resource
