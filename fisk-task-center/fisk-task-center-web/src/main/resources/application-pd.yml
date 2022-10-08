@@ -20,13 +20,7 @@ nifi-ConcurrentTasks: 3
 nifi-FetchSize: 30000
 nifi-MaxRowsPerFlowFile: 10000
 nifi-OutputBatchSize: 1
-pgsql-datainput:
-  driverClassName: org.postgresql.Driver
-  password: .FdF_r&tj4)+
-  url: jdbc:postgresql://100.102.201.107:5433/dmp_ods?stringtype=unspecified
-  username: adminuser
-  ip: 100.102.201.107
-  dbName: dmp_ods
+fiData-data-ods-source: 2
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
   password: .FdF_r&tj4)+

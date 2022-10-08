@@ -33,12 +33,6 @@ public class DefiningCommonVariablesImpl implements ApplicationRunner {
     private String pgsqlDatamodelUsername;
     @Value("${pgsql-datamodel.password}")
     private String pgsqlDatamodelPassword;
-    @Value("${pgsql-datainput.url}")
-    private String pgsqlDatainputUrl;
-    @Value("${pgsql-datainput.username}")
-    private String pgsqlDatainputUsername;
-    @Value("${pgsql-datainput.password}")
-    private String pgsqlDatainputPassword;
     @Value("${spring.kafka.producer.bootstrap-servers}")
     private String KafkaBrokers;
     @Value("${spring.datasource.dynamic.datasource.taskdb.url}")
@@ -59,6 +53,8 @@ public class DefiningCommonVariablesImpl implements ApplicationRunner {
     private String dorisDriver;
     @Resource
     UserClient userClient;
+    @Value("fiData-data-ods-source")
+    private int dataSourceOdsId;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -72,18 +68,15 @@ public class DefiningCommonVariablesImpl implements ApplicationRunner {
             configMap.put(ComponentIdTypeEnum.CFG_DB_POOL_USERNAME.getName(), user);
             configMap.put(ComponentIdTypeEnum.CFG_DB_POOL_URL.getName(), jdbcStr);
             //pg-ods
-            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dataSourceOdsId);
             log.info("查询数据源:" + JSON.toJSONString(fiDataDataSource));
-            configMap.put(ComponentIdTypeEnum.PG_ODS_DB_POOL_PASSWORD.getName(), pgsqlDatainputPassword);
-            configMap.put(ComponentIdTypeEnum.PG_ODS_DB_POOL_USERNAME.getName(), pgsqlDatainputUsername);
-            configMap.put(ComponentIdTypeEnum.PG_ODS_DB_POOL_URL.getName(), pgsqlDatainputUrl);
             if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
                 DataSourceDTO data = fiDataDataSource.data;
                 configMap.put(ComponentIdTypeEnum.PG_ODS_DB_POOL_PASSWORD.getName(), data.conPassword);
                 configMap.put(ComponentIdTypeEnum.PG_ODS_DB_POOL_USERNAME.getName(), data.conAccount);
                 configMap.put(ComponentIdTypeEnum.PG_ODS_DB_POOL_URL.getName(), data.conStr);
             } else {
-                log.error("数据源查询失败");
+                log.error("userclient无法查询到ods库的连接信息");
             }
 
 

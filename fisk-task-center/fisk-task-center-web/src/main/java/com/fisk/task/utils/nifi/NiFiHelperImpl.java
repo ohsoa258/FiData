@@ -82,6 +82,8 @@ public class NiFiHelperImpl implements INiFiHelper {
     public String basePath;
     @Resource
     public UserClient userClient;
+    @Value("fiData-data-ods-source")
+    private int dataSourceOdsId;
 
 
     @Override
@@ -2039,13 +2041,13 @@ public class NiFiHelperImpl implements INiFiHelper {
     @Override
     public String assemblySql(DataAccessConfigDTO config, SynchronousTypeEnum synchronousTypeEnum, String funcName, BuildNifiFlowDTO buildNifiFlow) {
         String sql = "";
-        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dataSourceOdsId);
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO data = fiDataDataSource.data;
             IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(data.conType);
             sql = dbCommand.assemblySql(config, synchronousTypeEnum, funcName, buildNifiFlow);
         } else {
-            log.error("stg-ods语句拼接出错或数据源查询报错");
+            log.error("userclient无法查询到ods库的连接信息");
             throw new FkException(ResultEnum.ERROR);
         } 
         return sql;

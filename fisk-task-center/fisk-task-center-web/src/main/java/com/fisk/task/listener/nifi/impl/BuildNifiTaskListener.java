@@ -81,20 +81,11 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     private String dorisUser;
     @Value("${datamodeldorisconstr.password}")
     private String dorisPwd;
-    @Value("${pgsql-datainput.url}")
-    private String pgsqlDatainputUrl;
-    @Value("${pgsql-datainput.ip}")
-    private String pgsqlDatainputIp;
-    @Value("${pgsql-datainput.dbName}")
     private String pgsqlDatainputDbName;
     @Value("${pgsql-datamodel.ip}")
     private String pgsqlDatamodelIp;
     @Value("${pgsql-datamodel.dbName}")
     private String pgsqlDatamodelDbName;
-    @Value("${pgsql-datainput.username}")
-    private String pgsqlDatainputUsername;
-    @Value("${pgsql-datainput.password}")
-    private String pgsqlDatainputPassword;
 
     @Value("${nifi-MaxRowsPerFlowFile}")
     public String MaxRowsPerFlowFile;
@@ -118,6 +109,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     public String nifiToken;
     @Value("${nifi.pipeline.data-governance-url}")
     public String dataGovernanceUrl;
+    @Value("fiData-data-ods-source")
+    private int dataSourceOdsId;
     @Resource
     INiFiHelper componentsBuild;
     @Resource
@@ -420,11 +413,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //target doris
         //各种数据源,首先入pg_ods
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
-            targetDbPoolConfig.type = DriverTypeEnum.POSTGRESQL;
-            targetDbPoolConfig.user = pgsqlDatainputUsername;
-            targetDbPoolConfig.password = pgsqlDatainputPassword;
-            targetDbPoolConfig.jdbcStr = pgsqlDatainputUrl;
-            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dataSourceOdsId);
             if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
                 DataSourceDTO dataSource = fiDataDataSource.data;
                 //com.microsoft.sqlserver.jdbc.SQLServerDriver
@@ -496,11 +485,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             taskGroupConfig.appName = tableName;
             processorConfig.targetTableName = tableName;
             processorConfig.sourceExecSqlQuery = selectSql;
-            sourceDsConfig.type = DriverTypeEnum.POSTGRESQL;
-            sourceDsConfig.jdbcStr = pgsqlDatainputUrl;
-            sourceDsConfig.user = pgsqlDatainputUsername;
-            sourceDsConfig.password = pgsqlDatainputPassword;
-            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dataSourceOdsId);
             if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
                 DataSourceDTO dataSource = fiDataDataSource.data;
                 sourceDsConfig.type = DriverTypeEnum.valueOf(dataSource.conType.getName());
@@ -1723,14 +1708,14 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         querySqlDto.details = "insert_phase";
         querySqlDto.groupId = groupId;
         //接入需要数据校验,查的是ods表,其他的不变
-        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dataSourceOdsId);
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO data = fiDataDataSource.data;
             IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(data.conType);
             String sql = dbCommand.queryNumbersField(dto, config);
             querySqlDto.querySql = sql;
         } else {
-            log.error("ods数据源查询出错");
+            log.error("userclient无法查询到ods库的连接信息");
             throw new FkException(ResultEnum.ERROR);
         }
         querySqlDto.dbConnectionId = targetDbPoolId;

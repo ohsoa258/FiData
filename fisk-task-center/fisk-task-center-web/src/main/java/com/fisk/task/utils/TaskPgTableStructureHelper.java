@@ -46,21 +46,16 @@ public class TaskPgTableStructureHelper
 
     public static String driverClassName;
 
-    public static String datainputDriverClassName;
-
     public static String datamodelDriverClassName;
-
-    public static String pgsqlDatainputUrl;
-
-    public static String pgsqlDatainputUsername;
-
-    public static String pgsqlDatainputPassword;
 
     public static String pgsqlDatamodelUrl;
 
     public static String pgsqlDatamodelUsername;
 
     public static String pgsqlDatamodelPassword;
+
+
+    public static int dataSourceOdsId;
 
 
     @Value("${spring.datasource.dynamic.datasource.taskdb.url}")
@@ -83,30 +78,13 @@ public class TaskPgTableStructureHelper
         TaskPgTableStructureHelper.driverClassName = driverClassName;
     }
 
-    @Value("${pgsql-datainput.driverClassName}")
-    public void setDatainputDriverClassName(String datainputDriverClassName) {
-        TaskPgTableStructureHelper.datainputDriverClassName = datainputDriverClassName;
-    }
+
 
     @Value("${pgsql-datamodel.driverClassName}")
     public void setDatamodelDriverClassName(String datamodelDriverClassName) {
         TaskPgTableStructureHelper.datamodelDriverClassName = datamodelDriverClassName;
     }
 
-    @Value("${pgsql-datainput.url}")//
-    public void setPgsqlDatainputUrl(String pgsqlDatainputUrl) {
-        TaskPgTableStructureHelper.pgsqlDatainputUrl = pgsqlDatainputUrl;
-    }
-
-    @Value("${pgsql-datainput.username}")
-    public void setPgsqlDatainputUsername(String pgsqlDatainputUsername) {
-        TaskPgTableStructureHelper.pgsqlDatainputUsername = pgsqlDatainputUsername;
-    }
-
-    @Value("${pgsql-datainput.password}")
-    public void setPgsqlDatainputPassword(String pgsqlDatainputPassword) {
-        TaskPgTableStructureHelper.pgsqlDatainputPassword = pgsqlDatainputPassword;
-    }
 
     @Value("${pgsql-datamodel.url}")
     public void setPgsqlDatamodelUrl(String pgsqlDatamodelUrl) {
@@ -121,6 +99,11 @@ public class TaskPgTableStructureHelper
     @Value("${pgsql-datamodel.password}")
     public void setPgsqlDatamodelPassword(String pgsqlDatamodelPassword) {
         TaskPgTableStructureHelper.pgsqlDatamodelPassword = pgsqlDatamodelPassword;
+    }
+
+    @Value("fiData-data-ods-source")
+    public static void setDataSourceOdsId(int dataSourceOdsId) {
+        TaskPgTableStructureHelper.dataSourceOdsId = dataSourceOdsId;
     }
 
     /**
@@ -264,7 +247,7 @@ public class TaskPgTableStructureHelper
         String pgsqlOdsUsername = "";
         String pgsqlOdsPassword = "";
         String pgsqlOdsDriverClass = "";
-        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dataSourceOdsId);
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO data = fiDataDataSource.data;
             pgsqlOdsUrl = data.conStr;

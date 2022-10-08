@@ -27,11 +27,7 @@ public class PostgreHelper {
     private static String pgsqlDatamodelDriverClassName;
     private static String pgsqlDatamodelUsername;
     private static String pgsqlDatamodelPassword;
-
-    private static String pgsqlDatainputUrl;
-    private static String pgsqlDatainputDriverClassName;
-    private static String pgsqlDatainputUsername;
-    private static String pgsqlDatainputPassword;
+    private static int dataSourceOdsId;
 
     @Value("${pgsql-datamodel.url}")
     public void setPgsqlDatamodelUrl(String pgsqlDatamodelUrl) {
@@ -53,6 +49,10 @@ public class PostgreHelper {
         PostgreHelper.pgsqlDatamodelPassword = pgsqlDatamodelPassword;
     }
 
+    @Value("fiData-data-ods-source")
+    public static void setDataSourceOdsId(int dataSourceOdsId) {
+        PostgreHelper.dataSourceOdsId = dataSourceOdsId;
+    }
 
     public Connection getConnection(BusinessTypeEnum businessTypeEnum) {
         Connection conn = null;
@@ -62,12 +62,15 @@ public class PostgreHelper {
                 Class.forName(pgsqlDatamodelDriverClassName);
                 conn = DriverManager.getConnection(pgsqlDatamodelUrl, pgsqlDatamodelUsername, pgsqlDatamodelPassword);
             } else if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAINPUT)) {
-                ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+                ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dataSourceOdsId);
                 if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
                     DataSourceDTO data = fiDataDataSource.data;
                     // 加载驱动类
                     Class.forName(data.conType.getDriverName());
                     conn = DriverManager.getConnection(data.conStr, data.conAccount, data.conPassword);
+                } else {
+                    log.error("userclient无法查询到ods库的连接信息");
+                    throw new FkException(ResultEnum.ERROR);
                 }
             }
 

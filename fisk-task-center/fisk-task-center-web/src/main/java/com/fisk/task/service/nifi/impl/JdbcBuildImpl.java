@@ -17,11 +17,6 @@ import javax.annotation.Resource;
 public class JdbcBuildImpl implements IJdbcBuild {
 
 
-    private static String DatainputUrl;
-    @Value("${pgsql-datainput.url}")
-    public void setPgsqlDatainputUrl(String pgsqlDatainputUrl) {
-        DatainputUrl = pgsqlDatainputUrl;
-    }
     @Resource
     public PostgreHelper postgreHelper;
 

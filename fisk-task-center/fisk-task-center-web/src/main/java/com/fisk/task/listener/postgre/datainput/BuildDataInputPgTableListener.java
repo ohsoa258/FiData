@@ -23,6 +23,7 @@ import com.fisk.task.service.nifi.IJdbcBuild;
 import com.fisk.task.utils.StackTraceHelper;
 import com.fisk.task.utils.TaskPgTableStructureHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
@@ -51,6 +52,8 @@ public class BuildDataInputPgTableListener {
     BuildAtlasTableAndColumnTaskListener buildAtlasTableAndColumnTaskListener;
     @Resource
     UserClient userClient;
+    @Value("fiData-data-ods-source")
+    private int dataSourceOdsId;
 
 
     public ResultEnum msg(String dataInfo, Acknowledgment acke) {
@@ -62,7 +65,7 @@ public class BuildDataInputPgTableListener {
         modelPublishStatusDTO.tableId = Long.parseLong(buildPhysicalTableDTO.dbId);
         modelPublishStatusDTO.apiId = buildPhysicalTableDTO.apiId;
         ModelPublishTableDTO dto = buildPhysicalTableDTO.modelPublishTableDTO;
-        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(5);
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dataSourceOdsId);
         DataSourceTypeEnum conType = null;
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO dataSource = fiDataDataSource.data;
