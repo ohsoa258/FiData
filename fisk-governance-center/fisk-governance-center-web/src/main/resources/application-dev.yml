@@ -1,6 +1,6 @@
 dataops:
-  # pg数据库元数据对应 redis key
-  pg_metadataentity_key: DataOps_PGMetaDataEntityKey
+  # 数据库元数据对应 redis key
+  metadataentity_key: DataOps_MetaDataEntityKey
   # 执行时间 凌晨12点半
   schedule: 0 30 0 * * ?
   # 是否启用
@@ -15,34 +15,12 @@ spring:
     driver-class-name: com.mysql.jdbc.Driver
   redis:
     host: 192.168.11.130
-# pg数据源配置
-pgsql-dw:
-  id: 1
-  ip: 192.168.1.250
-  port: 5432
-  dbName: dmp_dw
-  url: jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified #&connectTimeout=60&socketTimeout=60超时等待60s
-  username: postgres
-  password: Password01!
-  driverClassName: org.postgresql.Driver
-pgsql-ods:
-  id: 2
-  ip: 192.168.1.250
-  port: 5432
-  dbName: dmp_ods
-  url: jdbc:postgresql://192.168.1.250:5432/dmp_ods?stringtype=unspecified #&connectTimeout=60&socketTimeout=60超时等待60s
-  username: postgres
-  password: Password01!
-  driverClassName: org.postgresql.Driver
-pgsql-mdm:
-  id: 3
-  ip: 192.168.1.250
-  port: 5432
-  dbName: dmp_mdm
-  url: jdbc:postgresql://192.168.1.250:5432/dmp_mdm?stringtype=unspecified #&connectTimeout=60&socketTimeout=60超时等待60s
-  username: postgres
-  password: Password01!
-  driverClassName: org.postgresql.Driver
+# 数据源配置
+database:
+  dw_id: 1
+  ods_id: 5
+  mdm_id: 3
+  olap_id: 4
 file:
   uploadUrl: D:/Excel/
   echoPath: D:/Excel/

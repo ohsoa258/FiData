@@ -6,7 +6,7 @@ import lombok.Data;
 /**
  * @author dick
  * @version 1.0
- * @description PostgreDTO
+ * @description PG/SQL SERVICE
  * @date 2022/4/22 13:48
  */
 @Data
@@ -16,7 +16,7 @@ public class PostgreDTO {
     public String ip;
     public String dbName;
     public DataSourceTypeEnum dataSourceTypeEnum;
-    public String pgsqlUrl;
-    public String pgsqlUsername;
-    public String pgsqlPassword;
+    public String sqlUrl;
+    public String sqlUsername;
+    public String sqlPassword;
 }

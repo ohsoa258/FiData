@@ -19,33 +19,11 @@ spring:
     port: 16380
     password: test123456
 # pg数据源配置
-pgsql-dw:
-  id: 1
-  ip: 100.102.201.107
-  port: 5433
-  dbName: dmp_dw
-  url: jdbc:postgresql://100.102.201.107:5433/dmp_dw?stringtype=unspecified #&connectTimeout=60&socketTimeout=60超时等待60s
-  username: adminuser
-  password: .FdF_r&tj4)+
-  driverClassName: org.postgresql.Driver
-pgsql-ods:
-  id: 2
-  ip: 100.102.201.107
-  port: 5433
-  dbName: dmp_ods
-  url: jdbc:postgresql://100.102.201.107:5433/dmp_ods?stringtype=unspecified #&connectTimeout=60&socketTimeout=60超时等待60s
-  username: adminuser
-  password: .FdF_r&tj4)+
-  driverClassName: org.postgresql.Driver
-pgsql-mdm:
-  id: 3
-  ip: 100.102.201.107
-  port: 5433
-  dbName: dmp_mdm
-  url: jdbc:postgresql://100.102.201.107:5433/dmp_mdm?stringtype=unspecified #&connectTimeout=60&socketTimeout=60超时等待60s
-  username: adminuser
-  password: .FdF_r&tj4)+
-  driverClassName: org.postgresql.Driver
+database:
+  dw_id: 1
+  ods_id: 2
+  mdm_id: 3
+  olap_id: 4
 file:
   uploadUrl: /root/nginx/app/file/qualityreport/
   echoPath: /file/qualityreport/

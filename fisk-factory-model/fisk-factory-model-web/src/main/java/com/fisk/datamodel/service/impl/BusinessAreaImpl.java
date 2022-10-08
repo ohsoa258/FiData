@@ -994,7 +994,6 @@ public class BusinessAreaImpl
                                             wideTableFieldTreeList.addAll(fieldList);
                                         });
                                     }
-
                                     // 宽表子级
                                     wideTableTreeDto.setChildren(wideTableFieldTreeList);
                                     return wideTableTreeDto;
