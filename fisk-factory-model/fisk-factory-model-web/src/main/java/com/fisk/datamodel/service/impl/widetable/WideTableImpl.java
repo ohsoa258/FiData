@@ -27,9 +27,10 @@ import com.fisk.datamodel.service.IWideTable;
 import com.fisk.datamodel.service.impl.AtomicIndicatorsImpl;
 import com.fisk.datamodel.service.impl.dimension.DimensionAttributeImpl;
 import com.fisk.datamodel.service.impl.dimension.DimensionImpl;
+import com.fisk.datamodel.utils.mysql.DataSourceConfigUtil;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -66,27 +67,17 @@ public class WideTableImpl
     WideTableFieldConfigImpl wideTableFieldConfig;
     @Resource
     private DataFactoryClient dataFactoryClient;
-
-    @Value("${generate.date-dimension.datasource.typeName}")
-    private String typeName;
-    @Value("${generate.date-dimension.datasource.driver}")
-    private String driver;
-    @Value("${generate.date-dimension.datasource.url}")
-    private String url;
-    @Value("${generate.date-dimension.datasource.userName}")
-    private String userName;
-    @Value("${generate.date-dimension.datasource.password}")
-    private String password;
+    @Resource
+    DataSourceConfigUtil dataSourceConfigUtil;
     @Resource
     PublishTaskClient publishTaskClient;
 
     @Override
-    public List<WideTableListDTO> getWideTableList(int businessId)
-    {
-        List<WideTableListDTO> list=new ArrayList<>();
-        QueryWrapper<WideTableConfigPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(WideTableConfigPO::getBusinessId,businessId);
-        List<WideTableConfigPO> wideTableConfigPoList=mapper.selectList(queryWrapper);
+    public List<WideTableListDTO> getWideTableList(int businessId) {
+        List<WideTableListDTO> list = new ArrayList<>();
+        QueryWrapper<WideTableConfigPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(WideTableConfigPO::getBusinessId, businessId);
+        List<WideTableConfigPO> wideTableConfigPoList = mapper.selectList(queryWrapper);
         for (WideTableConfigPO item:wideTableConfigPoList)
         {
             WideTableListDTO dto=new WideTableListDTO();
@@ -108,8 +99,7 @@ public class WideTableImpl
     @Override
     public WideTableQueryPageDTO executeWideTableSql(WideTableFieldConfigDTO dto)
     {
-        if (CollectionUtils.isEmpty(dto.entity) || CollectionUtils.isEmpty(dto.relations))
-        {
+        if (CollectionUtils.isEmpty(dto.entity) || CollectionUtils.isEmpty(dto.relations)) {
             throw new FkException(ResultEnum.PARAMTER_NOTNULL);
         }
         StringBuilder appendSql=new StringBuilder();
@@ -159,8 +149,8 @@ public class WideTableImpl
      * @return
      */
     public StringBuilder appendRelateTable(List<WideTableSourceRelationsDTO> relations) {
-        DataBaseTypeEnum value = DataBaseTypeEnum.getValue(typeName.toLowerCase());
-        if (value.getValue() == DataBaseTypeEnum.MYSQL.getValue()) {
+        DataSourceDTO odsSource = dataSourceConfigUtil.getDwSource();
+        if (odsSource.conType.getValue() == DataBaseTypeEnum.MYSQL.getValue()) {
             List<WideTableSourceRelationsDTO> fullJoin = relations.stream().filter(e -> RelateTableTypeEnum.FULL_JOIN.getName().equals(e.joinType)).collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(fullJoin)) {
                 throw new FkException(ResultEnum.NOT_SUPPORT_FULL_JOIN);
@@ -218,20 +208,21 @@ public class WideTableImpl
         WideTableQueryPageDTO data = new WideTableQueryPageDTO();
         try {
             String newSql = sql.replace("external_", "");
-            Connection conn = dimensionImpl.getStatement(driver, url, userName, password);
+            Connection conn = dataSourceConfigUtil.getStatement();
             Statement st = conn.createStatement();
-            switch (typeName.toLowerCase()) {
-                case "mysql":
+            DataSourceDTO odsSource = dataSourceConfigUtil.getDwSource();
+            switch (odsSource.conType) {
+                case MYSQL:
                     newSql = newSql + " limit " + pageSize;
                     break;
-                case "postgresql":
-                    newSql=newSql+" limit  "+pageSize;
+                case POSTGRESQL:
+                    newSql = newSql + " limit  " + pageSize;
                     break;
-                case "doris":
-                    newSql=newSql+"  limit "+pageSize;
+                case DORIS:
+                    newSql = newSql + "  limit " + pageSize;
                     break;
-                case "sqlserver":
-                    newSql="select top "+pageSize+" * from ("+sql+") as tabInfo";
+                case SQLSERVER:
+                    newSql = "select top " + pageSize + " * from (" + sql + ") as tabInfo";
                     break;
                 default:
                     throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
@@ -273,21 +264,21 @@ public class WideTableImpl
     public WideTableQueryPageDTO getWideTableData(String sql,int pageSize,String aliasName) {
         WideTableQueryPageDTO data=new WideTableQueryPageDTO();
         try {
-            String newSql=sql.replace("external_","");
-            Connection conn = dimensionImpl.getStatement(driver, url, userName, password);
+            String newSql = sql.replace("external_", "");
+            Connection conn = dataSourceConfigUtil.getStatement();
             Statement st = conn.createStatement();
-            switch (typeName.toLowerCase())
-            {
-                case "mysql":
-                    newSql=newSql+" limit "+pageSize;
+            DataSourceDTO odsSource = dataSourceConfigUtil.getDwSource();
+            switch (odsSource.conType) {
+                case MYSQL:
+                    newSql = newSql + " limit " + pageSize;
                     break;
-                case "postgresql":
-                    newSql=newSql+" limit  "+pageSize;
+                case POSTGRESQL:
+                    newSql = newSql + " limit  " + pageSize;
                     break;
-                case "doris":
-                    newSql=newSql+"  limit "+pageSize;
+                case DORIS:
+                    newSql = newSql + "  limit " + pageSize;
                     break;
-                case "sqlserver":
+                case SQLSERVER:
                     newSql="select top "+pageSize+" * from ("+sql+") as tabInfo";
                     break;
                 default:
@@ -402,7 +393,7 @@ public class WideTableImpl
             if (po == null) {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
-            Connection conn = dimensionImpl.getStatement(driver, url, userName, password);
+            Connection conn = dataSourceConfigUtil.getStatement();
             Statement st = conn.createStatement();
             String delSql="drop table "+po.name;
             boolean execute = st.execute(delSql);
