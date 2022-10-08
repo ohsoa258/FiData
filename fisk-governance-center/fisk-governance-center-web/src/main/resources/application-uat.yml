@@ -18,7 +18,7 @@ spring:
 # pg数据源配置
 database:
   dw_id: 1
-  ods_id: 2
+  ods_id: 5
   mdm_id: 3
   olap_id: 4
 file:
