@@ -113,3 +113,6 @@ hystrix:
         sleepWindowInMilliseconds: 5000
         # 当请求错误比例到达n%时，开启熔断（默认50%）
         errorThresholdPercentage: 50
+
+# 数据源ods配置
+fiData-data-dw-source: 1

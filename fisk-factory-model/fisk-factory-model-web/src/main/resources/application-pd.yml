@@ -24,13 +24,3 @@ fk:
     crypt:
       secret: ${random.uuid}
       strength: 6
-
-#dw配置
-generate:
-  date-dimension:
-    datasource:
-      typeName: postgresql
-      driver: org.postgresql.Driver
-      url: jdbc:postgresql://100.102.201.107:5433/dmp_dw?stringtype=unspecified
-      userName: adminuser
-      password: .FdF_r&tj4)+

@@ -25,7 +25,6 @@ import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.entity.dimension.DimensionAttributePO;
 import com.fisk.datamodel.entity.dimension.DimensionPO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
-import com.fisk.datamodel.enums.DataBaseTypeEnum;
 import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
@@ -34,6 +33,7 @@ import com.fisk.datamodel.mapper.dimension.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.dimension.DimensionMapper;
 import com.fisk.datamodel.mapper.fact.FactAttributeMapper;
 import com.fisk.datamodel.service.IDimension;
+import com.fisk.datamodel.utils.mysql.DataSourceConfigUtil;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.system.client.UserClient;
@@ -44,14 +44,12 @@ import com.fisk.task.dto.pgsql.TableListDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.ParseException;
@@ -88,26 +86,17 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
     @Resource
     DataManageClient dataManageClient;
 
-    @Value("${generate.date-dimension.datasource.typeName}")
-    private String typeName;
-    @Value("${generate.date-dimension.datasource.driver}")
-    private String driver;
-    @Value("${generate.date-dimension.datasource.url}")
-    private String url;
-    @Value("${generate.date-dimension.datasource.userName}")
-    private String userName;
-    @Value("${generate.date-dimension.datasource.password}")
-    private String password;
+    @Resource
+    DataSourceConfigUtil dataSourceConfigUtil;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ResultEnum addDimension(DimensionDTO dto){
-        QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
+    public ResultEnum addDimension(DimensionDTO dto) {
+        QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(DimensionPO::getDimensionTabName,dto.dimensionTabName);
-        DimensionPO po=mapper.selectOne(queryWrapper);
-        if (po !=null)
-        {
+                .eq(DimensionPO::getDimensionTabName, dto.dimensionTabName);
+        DimensionPO po = mapper.selectOne(queryWrapper);
+        if (po != null) {
             return ResultEnum.DIMENSION_EXIST;
         }
         dto.isPublish= PublicStatusEnum.UN_PUBLIC.getValue();
@@ -131,7 +120,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
     {
 
         try {
-            Connection conn=getStatement(driver,url,userName,password);
+            Connection conn = dataSourceConfigUtil.getStatement();
             Statement stat = conn.createStatement();
             if (!dto.dimensionTabName.equals(oldTimeTable))
             {
@@ -171,12 +160,12 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
      */
     public String buildTableSql(String dimensionTabName)
     {
-        DataBaseTypeEnum dataBaseTypeEnum = DataBaseTypeEnum.getValue(typeName.toLowerCase());
+        DataSourceDTO odsSource = dataSourceConfigUtil.getDwSource();
         String sql = null;
-        switch (dataBaseTypeEnum) {
+        switch (odsSource.conType) {
             case MYSQL:
                 break;
-            case SQL_SERVER:
+            case SQLSERVER:
                 sql = "CREATE TABLE " + dimensionTabName + "("
                         + "FullDateAlternateKey date not null,"
                         + "DayNumberOfWeek int not null,"
@@ -382,24 +371,24 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
     public ResultEnum addTimeTableAttribute(DimensionDTO dto){
         QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(DimensionPO::getDimensionTabName,dto.dimensionTabName)
-                .eq(DimensionPO::getBusinessId,dto.businessId);
-        DimensionPO po=mapper.selectOne(queryWrapper);
+                .eq(DimensionPO::getBusinessId, dto.businessId);
+        DimensionPO po = mapper.selectOne(queryWrapper);
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         String[] columnList = {"FullDateAlternateKey", "DayNumberOfWeek",
                 "EnglishDayNameOfWeek", "DayNumberOfMonth", "DayNumberOfYear", "WeekNumberOfYear", "EnglishMonthName",
                 "MonthNumberOfYear", "CalendarQuarter", "CalendarYear"};
-        String[] columnDataTypeList={"DATE","INT","VARCHAR","INT","INT","INT","VARCHAR","INT","INT","INT"};
-        String[] columnDataTypeLengthList={"0","0","10","0","0","0","10","0","0","0"};
-        DataBaseTypeEnum dataBaseTypeEnum = DataBaseTypeEnum.getValue(typeName.toLowerCase());
-        switch (dataBaseTypeEnum) {
+        String[] columnDataTypeList = {"DATE", "INT", "VARCHAR", "INT", "INT", "INT", "VARCHAR", "INT", "INT", "INT"};
+        String[] columnDataTypeLengthList = {"0", "0", "10", "0", "0", "0", "10", "0", "0", "0"};
+        DataSourceDTO odsSource = dataSourceConfigUtil.getDwSource();
+        switch (odsSource.conType) {
             case MYSQL:
                 break;
             case ORACLE:
                 columnDataTypeList = new String[]{"DATE", "NUMBER", "VARCHAR2", "NUMBER", "NUMBER", "NUMBER", "VARCHAR2", "NUMBER", "NUMBER", "NUMBER"};
                 break;
-            case SQL_SERVER:
+            case SQLSERVER:
                 columnDataTypeList = new String[]{"DATE", "INT", "VARCHAR", "INT", "INT", "INT", "VARCHAR", "INT", "INT", "INT"};
                 break;
             case POSTGRESQL:
@@ -425,26 +414,6 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
             synchronousMetadata(DataSourceConfigEnum.DMP_DW.getValue(), po, DataModelTableTypeEnum.DW_DIMENSION.getValue());
         }
         return result;
-    }
-
-    /**
-     * 连接数据库
-     *
-     * @param driver   driver
-     * @param url      url
-     * @param username username
-     * @param password password
-     * @return statement
-     */
-    public Connection getStatement(String driver, String url, String username, String password) {
-        Connection conn;
-        try {
-            Class.forName(driver);
-            conn = DriverManager.getConnection(url, username, password);
-        } catch (Exception e) {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,e);
-        }
-        return conn;
     }
 
     @Override

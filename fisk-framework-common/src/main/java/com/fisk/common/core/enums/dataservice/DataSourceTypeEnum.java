@@ -23,7 +23,9 @@ public enum DataSourceTypeEnum implements BaseEnum {
 
     POSTGRESQL(4, "POSTGRESQL", "org.postgresql.Driver"),
 
-    DORIS(5, "DORIS", "com.mysql.jdbc.Driver");
+    DORIS(5, "DORIS", "com.mysql.jdbc.Driver"),
+
+    ORACLE(6, "ORACLE", "oracle.jdbc.driver.OracleDriver");
 
     DataSourceTypeEnum(int value, String name, String driverName) {
         this.driverName = driverName;

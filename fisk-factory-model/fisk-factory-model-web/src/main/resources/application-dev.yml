@@ -21,21 +21,3 @@ fk:
     crypt:
       secret: ${random.uuid}
       strength: 6
-
-#dw配置
-generate:
-  date-dimension:
-    datasource:
-      typeName: PostgreSql
-      driver: org.postgresql.Driver
-      url: jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified
-      userName: postgres
-      password: Password01!
-
-#feign接口超时配置
-#feign:
-#  client:
-#    config:
-#      default:
-#        connectTimeout: 20000
-#        readTimeout: 24000
