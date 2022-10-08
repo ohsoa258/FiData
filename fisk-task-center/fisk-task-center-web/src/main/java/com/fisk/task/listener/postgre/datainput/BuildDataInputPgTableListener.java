@@ -89,12 +89,12 @@ public class BuildDataInputPgTableListener {
         try {
             List<String> sqlList = dbCommand.buildStgAndOdsTable(buildPhysicalTableDTO);
             log.info("建表语句:" + JSON.toJSONString(sqlList));
-            BusinessResult Result = iJdbcBuild.postgreBuildTable(sqlList.get(1).toLowerCase(), BusinessTypeEnum.DATAINPUT);
+            BusinessResult Result = iJdbcBuild.postgreBuildTable(sqlList.get(1), BusinessTypeEnum.DATAINPUT);
             if (!Result.success) {
                 throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
             }
             if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
-                iJdbcBuild.postgreBuildTable(sqlList.get(0).toLowerCase(), BusinessTypeEnum.DATAINPUT);
+                iJdbcBuild.postgreBuildTable(sqlList.get(0), BusinessTypeEnum.DATAINPUT);
                 log.info("【PGSTG】" + sqlList.get(0));
                 log.info("pg：建表完成");
             }

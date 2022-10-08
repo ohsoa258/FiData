@@ -55,7 +55,7 @@ public class BuildDataInputDeletePgTableListener {
                     });
                     String delSqlStr = buildDelSqlStr.toString();
                     delSqlStr = delSqlStr.substring(0, delSqlStr.lastIndexOf(",")) + " ;";
-                    postgreHelper.postgreExecuteSql(delSqlStr.toLowerCase(), BusinessTypeEnum.DATAINPUT);
+                    postgreHelper.postgreExecuteSql(delSqlStr, BusinessTypeEnum.DATAINPUT);
                     log.info("delsql:" + delSqlStr);
                     log.info("执行pg delete table 完成");
                 } else {
@@ -69,7 +69,7 @@ public class BuildDataInputDeletePgTableListener {
                     });
                     String delSqlStr = buildDelSqlStr.toString();
                     delSqlStr = delSqlStr.substring(0, delSqlStr.lastIndexOf(",")) + " ;";
-                    postgreHelper.postgreExecuteSql(delSqlStr.toLowerCase(), BusinessTypeEnum.DATAMODEL);
+                    postgreHelper.postgreExecuteSql(delSqlStr, BusinessTypeEnum.DATAMODEL);
                     log.info("delsql:" + delSqlStr);
                     log.info("执行pg delete table 完成");
                 }
@@ -79,7 +79,7 @@ public class BuildDataInputDeletePgTableListener {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.ERROR;
         } finally {
-            //acke.acknowledge();
+            acke.acknowledge();
         }
 
     }

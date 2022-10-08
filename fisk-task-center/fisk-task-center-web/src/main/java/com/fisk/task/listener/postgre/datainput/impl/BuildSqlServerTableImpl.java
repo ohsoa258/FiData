@@ -101,14 +101,14 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                     + buildPhysicalTableDTO.appAbbreviation + " and ";
             for (String tableName : buildPhysicalTableDTO.apiTableNames) {
 
-                selectTable += " st.name='ods_" + buildPhysicalTableDTO.appAbbreviation + "." + tableName.toLowerCase() + "' or";
+                selectTable += " st.name='ods_" + buildPhysicalTableDTO.appAbbreviation + "." + tableName + "' or";
             }
             selectTable = selectTable.substring(0, selectTable.length() - 2);
         } else {
             //select * from sys.schemas ss left join sys.tables st on ss.schema_id=st.schema_id where ss.name ='dbo' and st.name='stg_dim_ghs3'
             selectTable = "select count(*) from sys.tables st left join sys.schemas ss on ss.schema_id=st.schema_id where ss.name = 'dbo' ";
             for (String tableName : buildPhysicalTableDTO.apiTableNames) {
-                selectTable += " st.name='dbo.ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + tableName.toLowerCase() + "' or";
+                selectTable += " st.name='dbo.ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + tableName + "' or";
             }
             selectTable = selectTable.substring(0, selectTable.length() - 2);
         }
@@ -139,7 +139,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             } else {
                 String fieldList = config.modelPublishFieldDTOList.stream().filter(Objects::nonNull)
                         .filter(e -> e.fieldEnName != null && !Objects.equals("", e.fieldEnName))
-                        .map(t -> t.fieldEnName).collect(Collectors.joining("'',''")).toLowerCase();
+                        .map(t -> t.fieldEnName).collect(Collectors.joining("'',''"));
                 sql += fieldList + "','" + tableKey + "','" + targetTableName + "'";
                 sql += ",'" + config.processorConfig.targetTableName.substring(4) + "'";
             }
@@ -152,7 +152,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             } else {
                 String fieldList = config.targetDsConfig.tableFieldsList.stream().filter(Objects::nonNull)
                         .filter(e -> e.fieldName != null && !Objects.equals("", e.fieldName))
-                        .map(t -> t.fieldName).collect(Collectors.joining("'',''")).toLowerCase();
+                        .map(t -> t.fieldName).collect(Collectors.joining("'',''"));
                 sql += fieldList + "','" + tableKey + "','" + targetTableName + "'";
                 sql += ",'ods_" + targetTableName.substring(4) + "'";
             }

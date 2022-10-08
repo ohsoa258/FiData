@@ -476,7 +476,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             targetDbPoolConfig.user = dorisUser;
             targetDbPoolConfig.password = dorisPwd;
             targetDbPoolConfig.jdbcStr = dorisUrl;
-            targetDbPoolConfig.targetTableName = tableName.toLowerCase();
+            targetDbPoolConfig.targetTableName = tableName;
             targetDbPoolConfig.tableFieldsList = null;
             data.groupConfig = groupConfig;
             data.cfgDsConfig = cfgDsConfig;
@@ -514,7 +514,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             targetDbPoolConfig.user = pgsqlDatamodelUsername;
             targetDbPoolConfig.password = pgsqlDatamodelPassword;
             targetDbPoolConfig.jdbcStr = pgsqlDatamodelUrl;
-            targetDbPoolConfig.targetTableName = tableName.toLowerCase();
+            targetDbPoolConfig.targetTableName = tableName;
             targetDbPoolConfig.tableFieldsList = null;
             targetDbPoolConfig.syncMode = buildNifiFlowDTO.synMode;
             data.groupConfig = groupConfig;
@@ -1516,9 +1516,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         putDatabaseRecordDTO.databaseType = "MS SQL 2012+";//数据库类型,定义枚举
         putDatabaseRecordDTO.recordReader = id;
         putDatabaseRecordDTO.statementType = "INSERT";
-        putDatabaseRecordDTO.TableName = "stg_" + config.processorConfig.targetTableName.toLowerCase();
+        putDatabaseRecordDTO.TableName = "stg_" + config.processorConfig.targetTableName;
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
-            putDatabaseRecordDTO.TableName = config.processorConfig.targetTableName.toLowerCase();
+            putDatabaseRecordDTO.TableName = config.processorConfig.targetTableName;
         }
         putDatabaseRecordDTO.concurrentTasks = ConcurrentTasks;
         putDatabaseRecordDTO.synchronousTypeEnum = synchronousTypeEnum;
@@ -1748,7 +1748,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //调用存储过程sql,存日志
         String executsql1 = "UPDATE tb_etl_log SET `status` =1,enddate='${" + NifiConstants.AttrConstants.END_TIME + "}',datarows='${" + NifiConstants.AttrConstants.NUMBERS + "}',topic_name='${" + NifiConstants.AttrConstants.KAFKA_TOPIC + "}' ";
         executsql1 += "WHERE\n" +
-                "\tid=(SELECT a.mid FROM(SELECT MAX(id) as mid from tb_etl_log where tablename='" + config.targetDsConfig.targetTableName.toLowerCase() + "') a );\n";
+                "\tid=(SELECT a.mid FROM(SELECT MAX(id) as mid from tb_etl_log where tablename='" + config.targetDsConfig.targetTableName + "') a );\n";
         executsql1 += "update tb_etl_Incremental l1 INNER JOIN tb_etl_Incremental l2 on l1.id=l2.id set l1.incremental_objectivescore_end='${" + NifiConstants.AttrConstants.START_TIME +
                 "}' ,l1.incremental_objectivescore_start=ifnull(l2.incremental_objectivescore_end,'1970-01-01 00:00:00'), l1.enable_flag=2 " +
                 "where l1.object_name = '" + config.targetDsConfig.targetTableName + "' ;";
@@ -1775,7 +1775,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         toSqlDto.details = "Convert data to sql";
         toSqlDto.dbConnectionId = targetDbPoolId;
         toSqlDto.groupId = groupId;
-        toSqlDto.tableName = config.processorConfig.targetTableName.toLowerCase();
+        toSqlDto.tableName = config.processorConfig.targetTableName;
         toSqlDto.sqlType = StatementSqlTypeEnum.INSERT;
         toSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(9);
         BusinessResult<ProcessorEntity> toSqlRes = componentsBuild.buildConvertJsonToSqlProcess(toSqlDto);

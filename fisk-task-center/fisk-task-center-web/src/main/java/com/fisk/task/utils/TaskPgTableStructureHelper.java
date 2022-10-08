@@ -139,9 +139,9 @@ public class TaskPgTableStructureHelper
                 //判断是否为维度
                 po.tableType = type;
                 po.tableId = String.valueOf(dto.tableId);
-                po.tableName = dto.tableName.toLowerCase();
+                po.tableName = dto.tableName;
                 po.fieldId = String.valueOf(item.fieldId);
-                po.fieldName = item.fieldEnName.toLowerCase();
+                po.fieldName = item.fieldEnName;
                 po.fieldType = item.fieldType;
                 po.primaryKey = item.isPrimaryKey == 0 ? false : true;
                 if ("VARCHAR".equals(item.fieldType)) {
@@ -156,9 +156,9 @@ public class TaskPgTableStructureHelper
                     po2.version = version;
                     po2.tableType = type;
                     po2.tableId = String.valueOf(dto.tableId);
-                    po2.tableName = dto.tableName.toLowerCase();
+                    po2.tableName = dto.tableName;
                     po2.fieldId = String.valueOf(item.associateDimensionId);
-                    po2.fieldName = (item.associateDimensionName.substring(4) + "key").toLowerCase();
+                    po2.fieldName = (item.associateDimensionName.substring(4) + "key");
                     po2.fieldType = "VARCHAR(255)";
                     poList.add(po2);
                 }
@@ -216,7 +216,7 @@ public class TaskPgTableStructureHelper
             while (rs.next()) {
                 String value = rs.getString(1);
                 if (value != null && value.length() > 0) {
-                    sqlList.add(value.toLowerCase());
+                    sqlList.add(value);
                 }
             }
             //这个判断会自动指向下一个游标
@@ -227,7 +227,7 @@ public class TaskPgTableStructureHelper
                 while (rs1.next()) {
                     String value = rs1.getString(1);
                     if (value != null && value.length() > 0) {
-                        sqlList.add(value.toLowerCase());
+                        sqlList.add(value);
                     }
                     try {//关闭rs1
                         if (rs1 == null) {

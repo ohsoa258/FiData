@@ -88,7 +88,7 @@ public class BuildPgTableImpl implements IbuildTable {
 
         String selectTable = "select count(*) from pg_class where ";
         for (String tableName : buildPhysicalTableDTO.apiTableNames) {
-            selectTable += " relname='ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + tableName.toLowerCase() + "' or";
+            selectTable += " relname='ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + tableName + "' or";
         }
         return selectTable;
     }
@@ -118,7 +118,7 @@ public class BuildPgTableImpl implements IbuildTable {
             } else {
                 String fieldList = config.modelPublishFieldDTOList.stream().filter(Objects::nonNull)
                         .filter(e -> e.fieldEnName != null && !Objects.equals("", e.fieldEnName))
-                        .map(t -> t.fieldEnName).collect(Collectors.joining("'',''")).toLowerCase();
+                        .map(t -> t.fieldEnName).collect(Collectors.joining("'',''"));
                 sql += fieldList + "','" + tableKey + "','" + targetTableName + "'";
                 sql += ",'" + config.processorConfig.targetTableName.substring(4) + "'";
             }
@@ -130,7 +130,7 @@ public class BuildPgTableImpl implements IbuildTable {
             } else {
                 String fieldList = config.targetDsConfig.tableFieldsList.stream().filter(Objects::nonNull)
                         .filter(e -> e.fieldName != null && !Objects.equals("", e.fieldName))
-                        .map(t -> t.fieldName).collect(Collectors.joining("'',''")).toLowerCase();
+                        .map(t -> t.fieldName).collect(Collectors.joining("'',''"));
                 sql += fieldList + "','" + tableKey + "','" + targetTableName + "'";
                 sql += ",'ods_" + targetTableName.substring(4) + "'";
             }
