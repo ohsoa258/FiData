@@ -140,6 +140,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     private String hostname;
     @Value("${metadata-instance.dbName}")
     private String dbName;
+    @Value("${fiData-data-ods-source}")
+    private Integer odsSource;
     @Resource
     GetConfigDTO getConfig;
 
@@ -204,7 +206,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         //是否添加schema
         if (appRegistrationDTO.whetherSchema) {
-            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(5);
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
             if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
@@ -461,7 +463,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         //删除schema
         if (model.whetherSchema) {
-            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(5);
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
             if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
@@ -1126,7 +1128,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         //拼接ods表名
         tableAccessData.tableName = TableNameGenerateUtils.buildOdsTableName(tableAccessData.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
 
-        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(5);
+        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
         if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }

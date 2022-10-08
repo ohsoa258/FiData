@@ -21,6 +21,7 @@ import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -39,6 +40,8 @@ public class PgsqlUtils {
 
     @Resource
     UserClient userClient;
+    @Value("${fiData-data-ods-source}")
+    private Integer odsSource;
 
     /**
      * 创建pgsql连接驱动
@@ -54,7 +57,7 @@ public class PgsqlUtils {
     public Connection getPgConn() {
         Connection conn = null;
         try {
-            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(5);
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
             Class.forName(dataSourceConfig.data.conType.getDriverName());
             conn = DriverManager.getConnection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword);
         } catch (ClassNotFoundException | SQLException e) {

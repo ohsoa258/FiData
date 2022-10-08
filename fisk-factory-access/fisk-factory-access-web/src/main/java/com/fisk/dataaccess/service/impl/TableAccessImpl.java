@@ -121,6 +121,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private String user;
     @Value("${spring.datasource.dynamic.datasource.taskdb.password}")
     private String password;
+    @Value("${fiData-data-ods-source}")
+    private Integer odsSource;
     @Resource
     private GenerateCondition generateCondition;
     @Resource
@@ -1458,7 +1460,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public OdsResultDTO getTableFieldByQuery(OdsQueryDTO query) {
         OdsResultDTO array = new OdsResultDTO();
         try {
-            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(5);
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
             if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
