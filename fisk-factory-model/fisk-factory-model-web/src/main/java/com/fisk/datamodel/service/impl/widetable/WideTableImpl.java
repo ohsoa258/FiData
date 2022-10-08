@@ -213,13 +213,9 @@ public class WideTableImpl
             DataSourceDTO odsSource = dataSourceConfigUtil.getDwSource();
             switch (odsSource.conType) {
                 case MYSQL:
-                    newSql = newSql + " limit " + pageSize;
-                    break;
                 case POSTGRESQL:
-                    newSql = newSql + " limit  " + pageSize;
-                    break;
                 case DORIS:
-                    newSql = newSql + "  limit " + pageSize;
+                    newSql = newSql + " limit " + pageSize;
                     break;
                 case SQLSERVER:
                     newSql = "select top " + pageSize + " * from (" + sql + ") as tabInfo";
@@ -270,13 +266,9 @@ public class WideTableImpl
             DataSourceDTO odsSource = dataSourceConfigUtil.getDwSource();
             switch (odsSource.conType) {
                 case MYSQL:
-                    newSql = newSql + " limit " + pageSize;
-                    break;
                 case POSTGRESQL:
-                    newSql = newSql + " limit  " + pageSize;
-                    break;
                 case DORIS:
-                    newSql = newSql + "  limit " + pageSize;
+                    newSql = newSql + " limit " + pageSize;
                     break;
                 case SQLSERVER:
                     newSql="select top "+pageSize+" * from ("+sql+") as tabInfo";
