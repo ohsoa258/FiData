@@ -109,8 +109,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     public String nifiToken;
     @Value("${nifi.pipeline.data-governance-url}")
     public String dataGovernanceUrl;
-    @Value("fiData-data-ods-source")
-    private int dataSourceOdsId;
+    @Value("${fiData-data-ods-source}")
+    private String dataSourceOdsId;
     @Resource
     INiFiHelper componentsBuild;
     @Resource
@@ -413,7 +413,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //target doris
         //各种数据源,首先入pg_ods
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
-            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dataSourceOdsId);
+            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
             if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
                 DataSourceDTO dataSource = fiDataDataSource.data;
                 //com.microsoft.sqlserver.jdbc.SQLServerDriver
@@ -485,7 +485,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             taskGroupConfig.appName = tableName;
             processorConfig.targetTableName = tableName;
             processorConfig.sourceExecSqlQuery = selectSql;
-            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dataSourceOdsId);
+            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
             if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
                 DataSourceDTO dataSource = fiDataDataSource.data;
                 sourceDsConfig.type = DriverTypeEnum.valueOf(dataSource.conType.getName());
@@ -1708,7 +1708,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         querySqlDto.details = "insert_phase";
         querySqlDto.groupId = groupId;
         //接入需要数据校验,查的是ods表,其他的不变
-        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dataSourceOdsId);
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO data = fiDataDataSource.data;
             IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(data.conType);

@@ -55,7 +55,7 @@ public class TaskPgTableStructureHelper
     public static String pgsqlDatamodelPassword;
 
 
-    public static int dataSourceOdsId;
+    public static String dataSourceOdsId;
 
 
     @Value("${spring.datasource.dynamic.datasource.taskdb.url}")
@@ -101,8 +101,8 @@ public class TaskPgTableStructureHelper
         TaskPgTableStructureHelper.pgsqlDatamodelPassword = pgsqlDatamodelPassword;
     }
 
-    @Value("fiData-data-ods-source")
-    public static void setDataSourceOdsId(int dataSourceOdsId) {
+    @Value("${fiData-data-ods-source}")
+    public static void setDataSourceOdsId(String dataSourceOdsId) {
         TaskPgTableStructureHelper.dataSourceOdsId = dataSourceOdsId;
     }
 
@@ -247,7 +247,7 @@ public class TaskPgTableStructureHelper
         String pgsqlOdsUsername = "";
         String pgsqlOdsPassword = "";
         String pgsqlOdsDriverClass = "";
-        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dataSourceOdsId);
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO data = fiDataDataSource.data;
             pgsqlOdsUrl = data.conStr;

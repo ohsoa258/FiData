@@ -52,8 +52,8 @@ public class BuildDataInputPgTableListener {
     BuildAtlasTableAndColumnTaskListener buildAtlasTableAndColumnTaskListener;
     @Resource
     UserClient userClient;
-    @Value("fiData-data-ods-source")
-    private int dataSourceOdsId;
+    @Value("${fiData-data-ods-source}")
+    private String dataSourceOdsId;
 
 
     public ResultEnum msg(String dataInfo, Acknowledgment acke) {
@@ -65,7 +65,7 @@ public class BuildDataInputPgTableListener {
         modelPublishStatusDTO.tableId = Long.parseLong(buildPhysicalTableDTO.dbId);
         modelPublishStatusDTO.apiId = buildPhysicalTableDTO.apiId;
         ModelPublishTableDTO dto = buildPhysicalTableDTO.modelPublishTableDTO;
-        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dataSourceOdsId);
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
         DataSourceTypeEnum conType = null;
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO dataSource = fiDataDataSource.data;

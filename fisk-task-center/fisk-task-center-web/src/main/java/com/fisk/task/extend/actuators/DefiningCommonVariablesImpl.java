@@ -53,8 +53,8 @@ public class DefiningCommonVariablesImpl implements ApplicationRunner {
     private String dorisDriver;
     @Resource
     UserClient userClient;
-    @Value("fiData-data-ods-source")
-    private int dataSourceOdsId;
+    @Value("${fiData-data-ods-source}")
+    private String dataSourceOdsId;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -68,7 +68,7 @@ public class DefiningCommonVariablesImpl implements ApplicationRunner {
             configMap.put(ComponentIdTypeEnum.CFG_DB_POOL_USERNAME.getName(), user);
             configMap.put(ComponentIdTypeEnum.CFG_DB_POOL_URL.getName(), jdbcStr);
             //pg-ods
-            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dataSourceOdsId);
+            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
             log.info("查询数据源:" + JSON.toJSONString(fiDataDataSource));
             if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
                 DataSourceDTO data = fiDataDataSource.data;

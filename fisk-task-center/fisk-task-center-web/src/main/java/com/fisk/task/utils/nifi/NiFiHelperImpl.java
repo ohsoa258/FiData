@@ -82,8 +82,8 @@ public class NiFiHelperImpl implements INiFiHelper {
     public String basePath;
     @Resource
     public UserClient userClient;
-    @Value("fiData-data-ods-source")
-    private int dataSourceOdsId;
+    @Value("${fiData-data-ods-source}")
+    private String dataSourceOdsId;
 
 
     @Override
@@ -2041,7 +2041,7 @@ public class NiFiHelperImpl implements INiFiHelper {
     @Override
     public String assemblySql(DataAccessConfigDTO config, SynchronousTypeEnum synchronousTypeEnum, String funcName, BuildNifiFlowDTO buildNifiFlow) {
         String sql = "";
-        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dataSourceOdsId);
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO data = fiDataDataSource.data;
             IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(data.conType);

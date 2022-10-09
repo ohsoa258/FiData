@@ -27,7 +27,7 @@ public class PostgreHelper {
     private static String pgsqlDatamodelDriverClassName;
     private static String pgsqlDatamodelUsername;
     private static String pgsqlDatamodelPassword;
-    private static int dataSourceOdsId;
+    private static String dataSourceOdsId;
 
     @Value("${pgsql-datamodel.url}")
     public void setPgsqlDatamodelUrl(String pgsqlDatamodelUrl) {
@@ -49,8 +49,8 @@ public class PostgreHelper {
         PostgreHelper.pgsqlDatamodelPassword = pgsqlDatamodelPassword;
     }
 
-    @Value("fiData-data-ods-source")
-    public static void setDataSourceOdsId(int dataSourceOdsId) {
+    @Value("${fiData-data-ods-source}")
+    public static void setDataSourceOdsId(String dataSourceOdsId) {
         PostgreHelper.dataSourceOdsId = dataSourceOdsId;
     }
 
@@ -62,7 +62,7 @@ public class PostgreHelper {
                 Class.forName(pgsqlDatamodelDriverClassName);
                 conn = DriverManager.getConnection(pgsqlDatamodelUrl, pgsqlDatamodelUsername, pgsqlDatamodelPassword);
             } else if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAINPUT)) {
-                ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dataSourceOdsId);
+                ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
                 if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
                     DataSourceDTO data = fiDataDataSource.data;
                     // 加载驱动类
