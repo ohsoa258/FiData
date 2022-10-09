@@ -1,6 +1,7 @@
 package com.fisk.datagovernance.vo.dataquality.businessfilter;
 
 import com.fisk.datagovernance.enums.dataquality.*;
+import com.fisk.datagovernance.vo.dataquality.businessfilter.apifilter.BusinessFilterQueryApiVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -130,7 +131,9 @@ public class BusinessFilterVO {
      * 104、表更新校验模板
      * 105、表血缘断裂校验模板
      * 106、业务验证模板
-     * 200、业务清洗模板
+     * 200、API清洗模板
+     * 201、同步清洗模板
+     * 202、清洗报告模板
      * 300、指定时间回收模板
      * 301、空表回收模板
      * 302、数据无刷新回收模板
@@ -158,4 +161,10 @@ public class BusinessFilterVO {
      */
     @ApiModelProperty(value = "创建人")
     public String createUser;
+
+    /**
+     * API信息
+     */
+    @ApiModelProperty(value = "API信息")
+    public BusinessFilterQueryApiVO apiInfo;
 }

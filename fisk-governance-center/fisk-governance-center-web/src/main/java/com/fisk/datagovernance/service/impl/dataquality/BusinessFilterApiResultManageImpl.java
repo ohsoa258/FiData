@@ -13,5 +13,5 @@ import org.springframework.stereotype.Service;
  * @date 2022/10/8 17:06
  */
 @Service
-public class BusinessFilterApiResultManageImpl  extends ServiceImpl<BusinessFilterApiResultMapper, BusinessFilterApiResultPO> implements IBusinessFilterApiResultManageService {
+public class BusinessFilterApiResultManageImpl extends ServiceImpl<BusinessFilterApiResultMapper, BusinessFilterApiResultPO> implements IBusinessFilterApiResultManageService {
 }

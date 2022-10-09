@@ -432,7 +432,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             if (templatePO != null) {
                 TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
                 switch (templateType) {
-                    case BUSINESS_FILTER_TEMPLATE:
+                    case API_FILTER_TEMPLATE:
+                        break;
+                    case SYNC_FILTER_TEMPLATE:
+                        break;
+                    case FILTER_REPORT_TEMPLATE:
                         break;
                 }
             }

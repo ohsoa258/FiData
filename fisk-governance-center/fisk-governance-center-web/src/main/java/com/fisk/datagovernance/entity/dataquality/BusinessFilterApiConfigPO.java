@@ -32,7 +32,7 @@ public class BusinessFilterApiConfigPO extends BasePO {
     public String apiAuthBodyType;
 
     /**
-     * api授权时间
+     * api授权有效时间，页面自行判断，当前时间<授权有效时间
      */
     public LocalDateTime apiAuthExpirTime;
 
@@ -45,6 +45,11 @@ public class BusinessFilterApiConfigPO extends BasePO {
      * api授权票据
      */
     public String apiAuthTicket;
+
+    /**
+     * api授权票据状态 1：有效 2：无效
+     */
+    // public int apiAuthTicketState;
 
     /**
      * api地址

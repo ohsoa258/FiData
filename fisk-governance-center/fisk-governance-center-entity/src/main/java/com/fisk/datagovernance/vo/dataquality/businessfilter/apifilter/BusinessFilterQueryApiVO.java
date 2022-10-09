@@ -14,6 +14,12 @@ import java.util.List;
 @Data
 public class BusinessFilterQueryApiVO {
     /**
+     * 清洗规则ID
+     */
+    @ApiModelProperty(value = "清洗规则ID")
+    public Integer ruleId;
+
+    /**
      * API基础信息配置
      */
     @ApiModelProperty(value = "API基础信息配置")

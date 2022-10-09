@@ -14,6 +14,11 @@ import lombok.Data;
 @TableName("tb_bizfilter_api_parm")
 public class BusinessFilterApiParmPO extends BasePO {
     /**
+     * tb_bizfilter_rule表主键ID
+     */
+    public String ruleId;
+
+    /**
      * tb_bizfilter_api_config表主键ID
      */
     public int apiId;

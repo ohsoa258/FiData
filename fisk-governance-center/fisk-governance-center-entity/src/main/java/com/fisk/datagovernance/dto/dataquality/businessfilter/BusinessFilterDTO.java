@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.dto.dataquality.businessfilter;
 
+import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterSaveDTO;
 import com.fisk.datagovernance.enums.dataquality.RuleStateEnum;
 import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
@@ -73,4 +74,10 @@ public class BusinessFilterDTO {
      */
     @ApiModelProperty(value = "规则状态")
     public RuleStateEnum ruleState;
+
+    /**
+     * API信息
+     */
+    @ApiModelProperty(value = "API信息")
+    public BusinessFilterSaveDTO apiInfo;
 }

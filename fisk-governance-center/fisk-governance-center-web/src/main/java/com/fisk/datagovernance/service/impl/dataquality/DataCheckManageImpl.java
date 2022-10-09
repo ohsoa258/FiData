@@ -76,7 +76,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     private ExternalInterfaceImpl externalInterfaceImpl;
 
     @Resource
-    UserHelper userHelper;
+    private UserHelper userHelper;
 
     @Override
     public Page<DataCheckVO> getAll(DataCheckQueryDTO query) {

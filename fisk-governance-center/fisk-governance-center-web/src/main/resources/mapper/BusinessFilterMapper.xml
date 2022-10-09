@@ -23,7 +23,8 @@
         t2.templaten_name,
         t2.template_desc,
         t1.create_time,
-        t1.create_user
+        t1.create_user,
+        t3.datasource_type AS sourceTypeEnum
         FROM
         tb_bizfilter_rule t1
         LEFT JOIN tb_template_config t2 ON t1.template_id = t2.id

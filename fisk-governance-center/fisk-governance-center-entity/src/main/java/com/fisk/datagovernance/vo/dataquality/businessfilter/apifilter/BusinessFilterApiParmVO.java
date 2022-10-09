@@ -18,6 +18,12 @@ public class BusinessFilterApiParmVO {
     public int id;
 
     /**
+     * tb_bizfilter_rule表主键ID
+     */
+    @ApiModelProperty(value = "tb_bizfilter_rule表主键ID")
+    public String ruleId;
+
+    /**
      * tb_bizfilter_api_config表主键ID
      */
     @ApiModelProperty(value = "tb_bizfilter_api_config表主键ID")

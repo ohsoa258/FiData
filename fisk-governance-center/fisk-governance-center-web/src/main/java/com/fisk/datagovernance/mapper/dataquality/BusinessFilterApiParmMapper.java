@@ -3,6 +3,8 @@ package com.fisk.datagovernance.mapper.dataquality;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datagovernance.entity.dataquality.BusinessFilterApiParmPO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 /**
  * @author dick
@@ -12,4 +14,11 @@ import org.apache.ibatis.annotations.Mapper;
  */
 @Mapper
 public interface BusinessFilterApiParmMapper extends FKBaseMapper<BusinessFilterApiParmPO> {
+    /**
+     * 修改数据有效性
+     *
+     * @return 执行结果
+     */
+    @Update("UPDATE tb_bizfilter_api_parm SET del_flag=0 WHERE rule_id = #{ruleId};")
+    int updateByRuleId(@Param("ruleId") int ruleId);
 }

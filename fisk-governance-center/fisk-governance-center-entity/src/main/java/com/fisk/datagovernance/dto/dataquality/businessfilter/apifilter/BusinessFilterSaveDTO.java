@@ -14,12 +14,6 @@ import java.util.List;
 @Data
 public class BusinessFilterSaveDTO {
     /**
-     * 新增/修改
-     */
-    @ApiModelProperty(value = "新增/修改:add/edit")
-    public String addOrEdit;
-
-    /**
      * API基础信息配置
      */
     @ApiModelProperty(value = "API基础信息配置")
