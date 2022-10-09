@@ -58,7 +58,7 @@ spring:
     time-zone: GMT+8
   kafka:
     consumer:
-      bootstrap-servers: 192.168.1.92:9092
+      bootstrap-servers: 192.168.11.130:9092
       enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       session:
@@ -67,7 +67,7 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
       acks: all
-      bootstrap-servers: 192.168.1.92:9092
+      bootstrap-servers: 192.168.11.130:9092
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       retries: 3
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
