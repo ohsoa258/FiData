@@ -3,7 +3,15 @@ package com.fisk.datagovernance.service.impl.dataquality;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.redis.RedisKeyBuild;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterDTO;
+import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterApiConfigDTO;
+import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterApiParmDTO;
+import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterApiResultDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterSaveDTO;
 import com.fisk.datagovernance.entity.dataquality.BusinessFilterApiConfigPO;
 import com.fisk.datagovernance.entity.dataquality.BusinessFilterApiParmPO;
@@ -16,6 +24,8 @@ import com.fisk.datagovernance.mapper.dataquality.BusinessFilterApiParmMapper;
 import com.fisk.datagovernance.mapper.dataquality.BusinessFilterApiResultMapper;
 import com.fisk.datagovernance.service.dataquality.IBusinessFilterApiManageService;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.apifilter.BusinessFilterQueryApiVO;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -43,6 +53,12 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
 
     @Resource
     private BusinessFilterApiResultManageImpl businessFilterApiResultManageImpl;
+
+    @Resource
+    private RedisTemplate redisTemplate;
+
+    @Resource
+    private DataAccessClient dataAccessClient;
 
     @Override
     public List<BusinessFilterQueryApiVO> getApiListByRuleIds(List<Integer> ruleIds) {
@@ -132,5 +148,33 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
         businessFilterApiParmMapper.updateByRuleId(ruleId);
         businessFilterApiResultMapper.updateByRuleId(ruleId);
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public  ResultEntity<String> collAuthApi(BusinessFilterDTO dto) {
+        String token = "";
+        if (dto == null) {
+            return ResultEntityBuild.buildData(ResultEnum.PARAMTER_NOTNULL, token);
+        }
+        BusinessFilterApiConfigDTO apiConfig = dto.getApiInfo().getApiConfig();
+        List<BusinessFilterApiParmDTO> apiParmConfig = dto.getApiInfo().getApiParmConfig();
+        List<BusinessFilterApiResultDTO> apiResultConfig = dto.getApiInfo().getApiResultConfig();
+
+        // 验证授权票据是否过期
+        String authRedisKey = "BusinessFilterApiConfig:" + apiConfig.getRuleId();
+        boolean flag = redisTemplate.hasKey(RedisKeyBuild.buildFiDataStructureKey(authRedisKey));
+        if (flag) {
+            token = redisTemplate.opsForValue().get(authRedisKey).toString();
+        }
+        // 票据已过期，重新获取授权票据
+        if (StringUtils.isEmpty(token)){
+
+        }
+        return ResultEntityBuild.buildData(ResultEnum.PARAMTER_NOTNULL, token);
+    }
+
+    @Override
+    public ResultEnum collApi(BusinessFilterDTO dto) {
+        return null;
     }
 }

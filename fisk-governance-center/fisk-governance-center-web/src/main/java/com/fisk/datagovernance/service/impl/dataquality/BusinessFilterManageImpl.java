@@ -62,9 +62,6 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     @Resource
     private BusinessFilterApiManageImpl businessFilterApiManageImpl;
 
-    @Resource
-    private UserHelper userHelper;
-
     @Override
     public Page<BusinessFilterVO> getAll(BusinessFilterQueryDTO query) {
         Page<BusinessFilterVO> all = baseMapper.getAll(query.page, query.datasourceId, query.tableUnique,
@@ -112,17 +109,14 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             return ResultEnum.SAVE_DATA_ERROR;
         }
         //第三步：保存业务清洗信息
-        UserInfo loginUserInfo = userHelper.getLoginUserInfo();
-        businessFilterPO.setCreateTime(LocalDateTime.now());
-        businessFilterPO.setCreateUser(String.valueOf(loginUserInfo.getId()));
-        int i = baseMapper.insertOne(businessFilterPO);
+        int i = baseMapper.insert(businessFilterPO);
         if (i <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
         //第四步：保存业务清洗API信息
         if (templatePO.getTemplateType() == TemplateTypeEnum.API_FILTER_TEMPLATE.getValue() &&
                 dto.getApiInfo() != null) {
-            resultEnum = businessFilterApiManageImpl.saveApiInfo(Math.toIntExact(businessFilterPO.getId()), dto.getApiInfo());
+            resultEnum = businessFilterApiManageImpl.saveApiInfo(0, dto.getApiInfo());
             if (resultEnum != ResultEnum.SUCCESS) {
                 return resultEnum;
             }
@@ -135,6 +129,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum editData(BusinessFilterEditDTO dto) {
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
         //第一步：验证模板是否存在
         TemplatePO templatePO = templateMapper.selectById(dto.templateId);
         if (templatePO == null) {
@@ -154,9 +149,17 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
         if (i <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
-        //第四步：调用元数据接口获取最新的规则信息
+        //第四步：保存业务清洗API信息
+        if (templatePO.getTemplateType() == TemplateTypeEnum.API_FILTER_TEMPLATE.getValue() &&
+                dto.getApiInfo() != null) {
+            resultEnum = businessFilterApiManageImpl.saveApiInfo(Math.toIntExact(businessFilterPO.getId()), dto.getApiInfo());
+            if (resultEnum != ResultEnum.SUCCESS) {
+                return resultEnum;
+            }
+        }
+        //第五步：调用元数据接口获取最新的规则信息
         externalInterfaceImpl.synchronousTableBusinessMetaData(dto.getDatasourceId(), dto.getSourceTypeEnum(), dto.getTableBusinessType(), dto.getTableUnique());
-        return ResultEnum.SUCCESS;
+        return resultEnum;
     }
 
     @Override
@@ -172,6 +175,8 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             SourceTypeEnum sourceTypeEnum = SourceTypeEnum.getEnum(dataSourceConPO.getDatasourceType());
             externalInterfaceImpl.synchronousTableBusinessMetaData(businessFilterPO.getDatasourceId(), sourceTypeEnum, businessFilterPO.getTableBusinessType(), businessFilterPO.getTableUnique());
         }
+        // 删除API清洗模板扩展规则
+        businessFilterApiManageImpl.deleteApiInfo(id);
         return baseMapper.deleteByIdWithFill(businessFilterPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 

@@ -46,6 +46,7 @@ import com.fisk.dataaccess.service.IApiCondition;
 import com.fisk.dataaccess.service.IApiConfig;
 import com.fisk.dataaccess.utils.httprequest.ApiHttpRequestFactoryHelper;
 import com.fisk.dataaccess.utils.httprequest.IBuildHttpRequest;
+import com.fisk.dataaccess.utils.httprequest.Impl.BuildHttpRequestImpl;
 import com.fisk.dataaccess.utils.json.JsonUtils;
 import com.fisk.dataaccess.utils.sql.PgsqlUtils;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
@@ -147,6 +148,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private IApiCondition iApiCondition;
     // 实时api同步到stg的条数
     private Integer COUNT_SQL = 0;
+    @Resource
+    private BuildHttpRequestImpl buildHttpRequest;
 
     @Override
     public ApiConfigDTO getData(long id) {
@@ -906,6 +909,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         });
 
         return ApiConfigMap.INSTANCES.listPoToApiSelectDto(appRegistrationPoList);
+    }
+
+    @Override
+    public ResultEntity<String> getHttpRequestResult(ApiHttpRequestDTO dto) {
+        String data = buildHttpRequest.getHttpRequest(dto);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, data);
     }
 
     /**

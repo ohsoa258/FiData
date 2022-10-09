@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.api.*;
+import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.service.IApiConfig;
 import io.swagger.annotations.Api;
@@ -138,5 +139,11 @@ public class ApiConfigController {
     @ApiOperation(value = "api复制功能: 保存")
     public ResultEntity<Object> copyApi(@NotNull @RequestBody CopyApiDTO dto) {
         return ResultEntityBuild.build(service.copyApi(dto));
+    }
+
+    @PostMapping("/getHttpRequestResult")
+    @ApiOperation(value = "获取http请求返回的结果")
+    public ResultEntity<String> getHttpRequestResult(@RequestBody ApiHttpRequestDTO dto){
+        return service.getHttpRequestResult(dto);
     }
 }

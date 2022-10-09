@@ -39,22 +39,10 @@ public class BusinessFilterApiConfigDTO {
     public String apiAuthBodyType;
 
     /**
-     * api授权时间
-     */
-    @ApiModelProperty(value = "api授权时间")
-    public LocalDateTime apiAuthExpirTime;
-
-    /**
      * api授权有效时间，分钟
      */
     @ApiModelProperty(value = "api授权有效时间，分钟")
     public int apiAuthExpirMinute;
-
-    /**
-     * api授权票据
-     */
-    @ApiModelProperty(value = "api授权票据")
-    public String apiAuthTicket;
 
     /**
      * api地址

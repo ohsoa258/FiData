@@ -58,6 +58,25 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
     }
 
     @Override
+    public String getHttpRequest(ApiHttpRequestDTO dto) {
+        try {
+            // Body: raw-json参数
+            String json = JSON.toJSONString(dto.jsonObject);
+            String result = null;
+
+            if (dto.httpRequestEnum.getValue() == 2) { // post
+                result = sendPostRequest(dto, json);
+            } else { // get
+                result = sendGetRequest(dto, json);
+            }
+            return result;
+        } catch (Exception e) {
+            log.error("AE89: 执行httpRequest方法失败,【失败原因为：】", e);
+            throw new FkException(ResultEnum.EXECUTE_HTTP_REQUEST_ERROR);
+        }
+    }
+
+    @Override
     public String getRequestToken(ApiHttpRequestDTO dto) {
         try {
             JSONObject jsonObj = new JSONObject();

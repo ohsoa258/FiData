@@ -9,6 +9,7 @@ import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
 import com.fisk.dataaccess.dto.access.NifiAccessDTO;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
+import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.app.LogMessageFilterVO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
@@ -299,4 +300,14 @@ public interface DataAccessClient {
     @GetMapping("/appRegistration/getAppList")
     @ApiOperation(value = "获取所有应用信息")
     ResultEntity<List<AppBusinessInfoDTO>> getAppList();
+
+    /**
+     * 获取http请求返回的结果
+     *
+     * @param dto dto
+     * @return 查询结果
+     */
+    @PostMapping("/apiConfig/getHttpRequestResult")
+    @ApiOperation(value = "获取http请求返回的结果")
+    ResultEntity<String> getHttpRequestResult(@RequestBody ApiHttpRequestDTO dto);
 }
