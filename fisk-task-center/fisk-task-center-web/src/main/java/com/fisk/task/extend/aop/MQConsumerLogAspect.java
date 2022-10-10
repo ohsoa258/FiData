@@ -71,6 +71,7 @@ public class MQConsumerLogAspect {
                 log.error("后台任务：{}, 参数为空", name);
                 throw new FkException(ResultEnum.PARAMTER_NOTNULL);
             }
+            log.info("切面参数:{}", JSON.toJSONString(args));
             //获取方法参数
             data = JSON.parseObject((String) args[0], MQBaseDTO.class);
             if (data.logId != null) {
