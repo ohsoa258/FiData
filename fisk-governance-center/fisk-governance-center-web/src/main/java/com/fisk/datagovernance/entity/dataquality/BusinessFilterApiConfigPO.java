@@ -19,7 +19,7 @@ public class BusinessFilterApiConfigPO extends BasePO {
     /**
      * tb_bizfilter_rule表主键ID
      */
-    public String ruleId;
+    public int ruleId;
 
     /**
      * api授权地址
@@ -27,7 +27,7 @@ public class BusinessFilterApiConfigPO extends BasePO {
     public String apiAuthAddress;
 
     /**
-     * api授权body类型
+     * api授权body类型  from-data/row
      */
     public String apiAuthBodyType;
 
@@ -42,7 +42,7 @@ public class BusinessFilterApiConfigPO extends BasePO {
     public String apiAddress;
 
     /**
-     * api body类型
+     * api body类型  from-data/row
      */
     public String apiBodyType;
 }

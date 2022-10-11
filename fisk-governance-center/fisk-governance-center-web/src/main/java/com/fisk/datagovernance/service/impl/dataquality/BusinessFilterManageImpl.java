@@ -62,6 +62,9 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     @Resource
     private BusinessFilterApiManageImpl businessFilterApiManageImpl;
 
+    @Resource
+    private UserHelper userHelper;
+
     @Override
     public Page<BusinessFilterVO> getAll(BusinessFilterQueryDTO query) {
         Page<BusinessFilterVO> all = baseMapper.getAll(query.page, query.datasourceId, query.tableUnique,
@@ -109,14 +112,17 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             return ResultEnum.SAVE_DATA_ERROR;
         }
         //第三步：保存业务清洗信息
-        int i = baseMapper.insert(businessFilterPO);
+        UserInfo loginUserInfo = userHelper.getLoginUserInfo();
+        businessFilterPO.setCreateTime(LocalDateTime.now());
+        businessFilterPO.setCreateUser(String.valueOf(loginUserInfo.getId()));
+        int i = baseMapper.insertOne(businessFilterPO);
         if (i <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
         //第四步：保存业务清洗API信息
         if (templatePO.getTemplateType() == TemplateTypeEnum.API_FILTER_TEMPLATE.getValue() &&
                 dto.getApiInfo() != null) {
-            resultEnum = businessFilterApiManageImpl.saveApiInfo(0, dto.getApiInfo());
+            resultEnum = businessFilterApiManageImpl.saveApiInfo("add", Math.toIntExact(businessFilterPO.getId()), dto.getApiInfo());
             if (resultEnum != ResultEnum.SUCCESS) {
                 return resultEnum;
             }
@@ -152,7 +158,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
         //第四步：保存业务清洗API信息
         if (templatePO.getTemplateType() == TemplateTypeEnum.API_FILTER_TEMPLATE.getValue() &&
                 dto.getApiInfo() != null) {
-            resultEnum = businessFilterApiManageImpl.saveApiInfo(Math.toIntExact(businessFilterPO.getId()), dto.getApiInfo());
+            resultEnum = businessFilterApiManageImpl.saveApiInfo("edit", Math.toIntExact(businessFilterPO.getId()), dto.getApiInfo());
             if (resultEnum != ResultEnum.SUCCESS) {
                 return resultEnum;
             }

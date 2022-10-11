@@ -58,9 +58,9 @@ public class BusinessFilterVO {
     public int tableType;
 
     /**
-     * 表业务类型 1：事实表、2：维度表、3、指标表  4、宽表
+     * 表业务类型 1：dw维度表、2：dw事实表、3、doris维度表  4、doris事实表 5、宽表
      */
-    @ApiModelProperty(value = "表业务类型 1：事实表、2：维度表、3、指标表  4、宽表")
+    @ApiModelProperty(value = "表业务类型 1：dw维度表、2：dw事实表、3、doris维度表  4、doris事实表 5、宽表")
     public int tableBusinessType;
 
     /**

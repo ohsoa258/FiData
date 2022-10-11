@@ -14,7 +14,7 @@ import com.fisk.datagovernance.dto.dataquality.lifecycle.LifecycleQueryDTO;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
 import com.fisk.datagovernance.entity.dataquality.LifecyclePO;
 import com.fisk.datagovernance.entity.dataquality.TemplatePO;
-import com.fisk.datagovernance.enums.DataSourceTypeEnum;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.map.dataquality.LifecycleMap;
 import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;

@@ -3,6 +3,8 @@ package com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author dick
  * @version 1.0
@@ -22,7 +24,7 @@ public class BusinessFilterApiResultDTO {
      * tb_bizfilter_rule表主键ID
      */
     @ApiModelProperty(value = "tb_bizfilter_rule表主键ID")
-    public String ruleId;
+    public int ruleId;
 
     /**
      * tb_bizfilter_api_config表主键ID
@@ -55,10 +57,16 @@ public class BusinessFilterApiResultDTO {
     public String targetFieldUnique;
 
     /**
-     * 父级参数id
+     * code
      */
-    @ApiModelProperty(value = "父级参数id")
-    public int parentId;
+    @ApiModelProperty(value = "code")
+    public String code;
+
+    /**
+     * 父级参数code
+     */
+    @ApiModelProperty(value = "父级参数code")
+    public String parentCode;
 
     /**
      * 授权字段 1:是  2:否
@@ -71,4 +79,10 @@ public class BusinessFilterApiResultDTO {
      */
     @ApiModelProperty(value = "更新标识字段")
     public String primaryKeyField;
+
+    /**
+     * 子级
+     */
+    @ApiModelProperty(value = "子级")
+    public List<BusinessFilterApiResultDTO> children;
 }

@@ -23,7 +23,7 @@ public class BusinessFilterApiConfigVO {
      * tb_bizfilter_rule表主键ID
      */
     @ApiModelProperty(value = "tb_bizfilter_rule表主键ID")
-    public String ruleId;
+    public int ruleId;
 
     /**
      * api授权地址
@@ -32,9 +32,9 @@ public class BusinessFilterApiConfigVO {
     public String apiAuthAddress;
 
     /**
-     * api授权body类型
+     * api授权body类型 from-data/row
      */
-    @ApiModelProperty(value = "api授权body类型")
+    @ApiModelProperty(value = "api授权body类型 from-data/row")
     public String apiAuthBodyType;
 
     /**
@@ -50,8 +50,8 @@ public class BusinessFilterApiConfigVO {
     public String apiAddress;
 
     /**
-     * api body类型
+     * api body类型 from-data/row
      */
-    @ApiModelProperty(value = "api body类型")
+    @ApiModelProperty(value = "api body类型 from-data/row")
     public String apiBodyType;
 }
