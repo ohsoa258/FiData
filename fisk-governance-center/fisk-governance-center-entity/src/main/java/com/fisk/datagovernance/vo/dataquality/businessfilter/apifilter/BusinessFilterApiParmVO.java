@@ -21,7 +21,7 @@ public class BusinessFilterApiParmVO {
      * tb_bizfilter_rule表主键ID
      */
     @ApiModelProperty(value = "tb_bizfilter_rule表主键ID")
-    public String ruleId;
+    public int ruleId;
 
     /**
      * tb_bizfilter_api_config表主键ID
@@ -34,12 +34,6 @@ public class BusinessFilterApiParmVO {
      */
     @ApiModelProperty(value = "api 参数类型 1：授权请求参数  2：正文请求参数")
     public int apiParmType;
-
-    /**
-     * 参数正文类型 formData/row
-     */
-    @ApiModelProperty(value = "参数正文类型 formData/row")
-    public String apiParmBodyType;
 
     /**
      * 参数key

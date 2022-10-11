@@ -2,7 +2,9 @@ package com.fisk.datagovernance.test;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.utils.similarity.CosineSimilarity;
+import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterApiResultDTO;
 import com.fisk.datagovernance.service.impl.dataops.DataOpsDataSourceManageImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,7 +20,11 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author dick
@@ -48,7 +54,7 @@ public class DataQualityTest {
     }
 
     @Test
-    public void testSendEmail(){
+    public void testSendEmail() {
 //        JavaMailSenderImpl sender = new JavaMailSenderImpl();
 //        sender.setHost("192.168.1.45");
 //        sender.setPort(25);
@@ -72,7 +78,7 @@ public class DataQualityTest {
 //        } catch (Exception e) {
 //            throw e;
 //        }
-        Properties  mailpro = new Properties();
+        Properties mailpro = new Properties();
 
         mailpro.setProperty("mail.smtp.host", "192.168.1.45");
         mailpro.setProperty("mail.smtp.port", "25");
@@ -137,10 +143,72 @@ public class DataQualityTest {
         jSONArray.add(j1);
         for (int i = 0; i < jSONArray.size(); i++) {
             JSONObject jsonObject = jSONArray.getJSONObject(i);
-            String a1= jsonObject.getString("id");
-            String a2= jsonObject.getString("name");
-            String a3= jsonObject.getString("nameM");
-            System.out.println(a1+","+a2+","+a3);
+            String a1 = jsonObject.getString("id");
+            String a2 = jsonObject.getString("name");
+            String a3 = jsonObject.getString("nameM");
+            System.out.println(a1 + "," + a2 + "," + a3);
         }
+    }
+
+    // 递归
+    @Test
+    public void testChild() {
+        List<BusinessFilterApiResultDTO> dtoList = new ArrayList<>();
+        BusinessFilterApiResultDTO dto = new BusinessFilterApiResultDTO();
+        dto.setSourceField("第一层_1");
+
+        List<BusinessFilterApiResultDTO> dtoList2 = new ArrayList<>();
+        BusinessFilterApiResultDTO dto2 = new BusinessFilterApiResultDTO();
+        dto2.setSourceField("第一层_2");
+
+        List<BusinessFilterApiResultDTO> dtoList3 = new ArrayList<>();
+        BusinessFilterApiResultDTO dto3 = new BusinessFilterApiResultDTO();
+        dto3.setSourceField("第一层_2_1");
+        dtoList3.add(dto3);
+        dto2.setChildren(dtoList3);
+
+        BusinessFilterApiResultDTO dto22 = new BusinessFilterApiResultDTO();
+        dto22.setSourceField("第一层_22");
+        dtoList2.add(dto2);
+        dtoList2.add(dto22);
+
+        dto.setChildren(dtoList2);
+        dtoList.add(dto);
+
+        List<BusinessFilterApiResultDTO> resultDTOS = authRecursionResult("1", dtoList);
+        int j = 200;
+         List<BusinessFilterApiResultDTO> resultDTOS1 = recursionResult_get("1", resultDTOS);
+
+        int i = 200;
+    }
+
+    public List<BusinessFilterApiResultDTO> recursionResult_get(String parentCode, List<BusinessFilterApiResultDTO> source) {
+        List<BusinessFilterApiResultDTO> result = new ArrayList<>();
+        List<BusinessFilterApiResultDTO> list = source.stream().filter(t -> t.getParentCode().equals(parentCode)).collect(Collectors.toList());
+        for (int i = 0; i < list.size(); i++) {
+            BusinessFilterApiResultDTO model = list.get(i);
+            if (CollectionUtils.isNotEmpty(model.getChildren())) {
+                model.setChildren(recursionResult_get(model.getCode(), model.getChildren()));
+            }
+            result.add(model);
+        }
+        return result;
+    }
+
+    public List<BusinessFilterApiResultDTO> authRecursionResult(String parentCode, List<BusinessFilterApiResultDTO> source) {
+        List<BusinessFilterApiResultDTO> list = new ArrayList<>();
+        for (int i = 0; i < source.size(); i++) {
+            String code = UUID.randomUUID().toString().replace("-", "");
+
+            BusinessFilterApiResultDTO model = new BusinessFilterApiResultDTO();
+            model = source.get(i);
+            model.setCode(code);
+            model.setParentCode(parentCode);
+            list.add(model);
+            if (CollectionUtils.isNotEmpty(model.getChildren())) {
+                list.addAll(authRecursionResult(code, model.getChildren()));
+            }
+        }
+        return list;
     }
 }

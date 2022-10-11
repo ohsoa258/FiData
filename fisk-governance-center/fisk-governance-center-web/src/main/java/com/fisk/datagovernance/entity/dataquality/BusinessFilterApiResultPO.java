@@ -16,7 +16,7 @@ public class BusinessFilterApiResultPO extends BasePO {
     /**
      * tb_bizfilter_rule表主键ID
      */
-    public String ruleId;
+    public int ruleId;
 
     /**
      * tb_bizfilter_api_config表主键ID
@@ -44,9 +44,14 @@ public class BusinessFilterApiResultPO extends BasePO {
     public String targetFieldUnique;
 
     /**
-     * 父级参数id
+     * code
      */
-    public int parentId;
+    public String code;
+
+    /**
+     * 父级参数code
+     */
+    public String parentCode;
 
     /**
      * 授权字段 1:是  2:否
