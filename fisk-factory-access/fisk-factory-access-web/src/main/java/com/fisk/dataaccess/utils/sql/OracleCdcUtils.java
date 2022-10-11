@@ -205,11 +205,14 @@ public class OracleCdcUtils {
         str.append("'database-name'=" + "'" + dataSourceDto.serviceName + "'," + ln);
         str.append("'schema-name'=" + "'" + dataSourceDto.dbName + "'," + ln);
         str.append("'table-name'=" + "'" + sourceTable + "'," + ln);
-        str.append("'scan.startup.mode'=" + "'" + tableAccessData.scanStartupMode.getName() + "'" + ln);
+        str.append("'scan.startup.mode'=" + "'" + tableAccessData.scanStartupMode.getName() + "'," + ln);
         if (dataSourceDto.pattern == 1) {
             str.append("'debezium.database.pdb.name'=" + "'" + dataSourceDto.pdbName + "'," + ln);
+            str.append("'debezium.database.url'=" + "'" + dataSourceDto.connectStr + "'," + ln);
         }
-        str.append("'debezium.database.url'=" + "'" + dataSourceDto.connectStr + "'" + ln);
+        str.append("'debezium.log.mining.strategy'=" + "'online_catalog'," + ln);
+        str.append("'debezium.log.mining.sleep.time.min.ms'=" + "'0'," + ln);
+        str.append("'debezium.log.mining.sleep.time.max.ms'=" + "'1000'");
         str.append(");");
         str.append(ln);
 
