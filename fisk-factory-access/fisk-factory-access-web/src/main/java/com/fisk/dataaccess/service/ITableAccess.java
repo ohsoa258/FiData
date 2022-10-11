@@ -323,4 +323,6 @@ public interface ITableAccess extends IService<TableAccessPO> {
      */
     ResultEnum cdcHeadConfig(CdcHeadConfigDTO dto);
 
+    List<String> getUseExistTable();
+
 }

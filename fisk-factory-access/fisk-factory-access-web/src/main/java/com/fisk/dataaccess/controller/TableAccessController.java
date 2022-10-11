@@ -66,4 +66,11 @@ public class TableAccessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.cdcHeadConfig(dto));
     }
 
+    @GetMapping("/getUseExistTable")
+    @ApiOperation(value = "获取现有表")
+    public ResultEntity<Object> getUseExistTable() {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getUseExistTable());
+    }
+
 }

@@ -3,6 +3,7 @@ package com.fisk.common.service.flinkupload;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
@@ -12,6 +13,7 @@ import java.io.InputStreamReader;
  * @author JianWenYang
  */
 @Component
+@Slf4j
 public class FlinkUploadUtils {
 
     public static Session SSHConnection(String host, int port, String user, String password) {
@@ -28,7 +30,7 @@ public class FlinkUploadUtils {
             session.connect();
             return session;
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("远程连接Flink失败:" + e);
             return null;
         }
     }
@@ -45,7 +47,7 @@ public class FlinkUploadUtils {
             BufferedReader br = new BufferedReader(reader);
             String line;
             while ((line = br.readLine()) != null) {
-                System.out.println(line);
+                log.info("SSH创建任务返回信息:" + line);
                 line = line.replaceAll(" ", "");
                 if (line.indexOf("JobID") > -1) {
                     jobId = line.split(":")[1];
@@ -54,7 +56,7 @@ public class FlinkUploadUtils {
             channelExec.disconnect();
             return jobId;
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("SSH方式,创建Flink任务失败:" + e);
             return e.toString();
         }
     }

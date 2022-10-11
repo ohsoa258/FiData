@@ -189,7 +189,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         tableAccessImpl.updateById(accessPo);
 
         // 发布
-        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, dto.cdcJobScript);
+        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, dto.cdcJobScript, dto.useExistTable);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -260,7 +260,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         tableAccessImpl.updateById(model);
 
         // 发布
-        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, dto.cdcJobScript);
+        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, dto.cdcJobScript, dto.useExistTable);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
@@ -311,8 +311,13 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                          String tableName,
                          int flag,
                          boolean openTransmission,
-                         CdcJobScriptDTO cdcDto) {
-        if (success && flag == 1) {
+                         CdcJobScriptDTO cdcDto,
+                         boolean useExistTable) {
+        AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("app_id", appId).one();
+        if (dataSourcePo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        if (success && flag == 1 && !useExistTable) {
             UserInfo userInfo = userHelper.getLoginUserInfo();
             ResultEntity<BuildPhysicalTableDTO> result = tableAccessImpl.getBuildPhysicalTableDTO(accessId, appId);
             BuildPhysicalTableDTO data = result.data;
@@ -324,7 +329,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             // 版本号入库、调用存储存储过程  
             List<TableFieldsPO> list = this.query().eq("table_access_id", accessId).list();
             AppRegistrationPO registration = iAppRegistration.getById(appId);
-            AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("app_id", appId).one();
+
             //拼接ods表名
             String odsTableName = TableNameGenerateUtils.buildOdsTableName(tableName, registration.appAbbreviation, registration.whetherSchema);
             data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
@@ -359,15 +364,17 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     buildMetaDataInstanceAttribute(registration, accessId, 2);
                 }
 
-                //oracle-cdc类型需要上传脚本
-                if (dataSourcePo.driveType.equalsIgnoreCase("ORACLE-CDC")) {
-                    cdcScriptUploadFlink(cdcDto, tableName, accessId);
-                }
+
             } catch (Exception e) {
                 log.info("发布失败", e);
                 log.info("发布失败,{}", ResultEnum.TASK_EXEC_FAILURE.getMsg());
                 throw new FkException(ResultEnum.TASK_EXEC_FAILURE);
             }
+        }
+
+        //oracle-cdc类型需要上传脚本
+        if (dataSourcePo.driveType.equalsIgnoreCase("ORACLE-CDC")) {
+            cdcScriptUploadFlink(cdcDto, accessId);
         }
     }
 
@@ -375,17 +382,15 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      * cdc脚本上传flink
      *
      * @param cdcJobScript
-     * @param fileName
      * @param accessId
      */
     public void cdcScriptUploadFlink(CdcJobScriptDTO cdcJobScript,
-                                     String fileName,
                                      long accessId) {
         TableAccessPO accessPo = tableAccessImpl.query().eq("id", accessId).one();
         if (accessPo == null) {
             throw new FkException(ResultEnum.TASK_TABLE_NOT_EXIST);
         }
-
+        String fileName = accessPo.pipelineName;
         //替换脚本
         Boolean exist = redisTemplate.hasKey(OracleCdcUtils.redisPrefix + ":" + accessId);
         if (!exist) {
@@ -431,11 +436,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         IFlinkJobUpload upload = FlinkFactoryHelper.flinkUpload(flinkConfig.uploadWay);
         flinkConfig.fileName = fileName;
         String jobId = upload.submitJob(FlinkParameterMap.INSTANCES.dtoToDto(flinkConfig));
-        if (!StringUtils.isEmpty(jobId)) {
-            accessPo.jobId = jobId;
-            tableAccessImpl.updateById(accessPo);
+        if (StringUtils.isEmpty(jobId)) {
+            throw new FkException(ResultEnum.CREATE_JOB_ERROR);
         }
-
+        accessPo.jobId = jobId;
+        tableAccessImpl.updateById(accessPo);
     }
 
     /**
@@ -470,9 +475,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     @Override
     public void test() {
         CdcJobScriptDTO cdcJobScript = new CdcJobScriptDTO();
-        String fileName = "cdc_test001";
         long accessId = 4041;
-        cdcScriptUploadFlink(cdcJobScript, fileName, accessId);
+        cdcScriptUploadFlink(cdcJobScript, accessId);
     }
 
     /**

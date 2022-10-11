@@ -129,6 +129,11 @@ public class TableAccessNonDTO extends BaseDTO {
     public ScanStartupModeEnum scanStartupMode;
 
     /**
+     * 是否使用已存在表
+     */
+    public boolean useExistTable = false;
+
+    /**
      * 0: 保存;   1: 保存&发布
      */
     public int flag;

@@ -19,6 +19,10 @@ import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
+import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
+import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
+import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -1459,14 +1463,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public OdsResultDTO getTableFieldByQuery(OdsQueryDTO query) {
         OdsResultDTO array = new OdsResultDTO();
+        Connection conn = null;
+        Statement st = null;
         try {
             ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
             if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
-            Class.forName(dataSourceConfig.data.conType.getDriverName());
-            Connection conn = DriverManager.getConnection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword);
-            Statement st = conn.createStatement();
+            conn = getConnection(dataSourceConfig.data);
+            st = conn.createStatement();
             Map<String, String> converSql = publishTaskClient.converSql(query.tableName, query.querySql, "").data;
             query.querySql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             //获取总条数
@@ -1477,13 +1482,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 rowCount = rSet.getInt("total");
             }
             rSet.close();
-            //分页获取数据
-            if (dataSourceConfig.data.conType.getName().equalsIgnoreCase("SQLSERVER")) {
-                query.querySql = query.querySql + " ORDER BY 1 OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY;";
-            } else if (dataSourceConfig.data.conType.getName().equalsIgnoreCase("POSTGRESQL")) {
-                int offset = (query.pageIndex - 1) * query.pageSize;
-                query.querySql = query.querySql + " limit " + query.pageSize + " offset " + offset;
-            }
+
+            int offset = (query.pageIndex - 1) * query.pageSize;
+            IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceConfig.data.conType);
+            query.querySql = dbCommand.buildPaging(query.querySql, query.pageSize, offset);
+
             ResultSet rs = st.executeQuery(query.querySql);
             //获取数据集
             array = resultSetToJsonArrayDataModel(rs);
@@ -1491,8 +1494,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             array.pageSize = query.pageSize;
             array.total = rowCount;
             rs.close();
-        } catch (ClassNotFoundException | SQLException e) {
+        } catch (SQLException e) {
+            log.error("getTableFieldByQuery ex:", e);
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ":" + e.getMessage());
+        } finally {
+            AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeConnection(conn);
         }
         return array;
     }
@@ -1988,8 +1995,35 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             item.sourceFieldPrecision = column.get().fieldPrecision;
         }
 
-
         return data;
+    }
+
+    @Override
+    public List<String> getUseExistTable() {
+        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+        if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+
+        List<String> list = new ArrayList<>();
+
+        IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceConfig.data.conType);
+        String sql = dbCommand.buildUseExistTable();
+        log.info("查询现有表sql:", sql);
+
+        List<Map<String, Object>> resultMaps = AbstractDbHelper.execQueryResultMaps(sql, getConnection(dataSourceConfig.data));
+        for (Map<String, Object> item : resultMaps) {
+            list.add(item.get("name").toString());
+        }
+
+        return list;
+    }
+
+    public Connection getConnection(DataSourceDTO dto) {
+        AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
+        Connection connection = dbHelper.connection(dto.conStr, dto.conAccount,
+                dto.conPassword, dto.conType);
+        return connection;
     }
 
 }

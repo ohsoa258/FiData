@@ -2,8 +2,6 @@ package com.fisk.dataaccess.utils.sql;
 
 import com.fisk.common.core.enums.dbdatatype.FlinkTypeEnum;
 import com.fisk.common.core.enums.dbdatatype.OracleTypeEnum;
-import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
@@ -158,14 +156,6 @@ public class OracleCdcUtils {
         redisTemplate.opsForValue().set(redisPrefix + ":" + id, redisStr.toString());
     }
 
-    public String getCdcRedis(long id) {
-        Boolean exist = redisTemplate.hasKey(redisPrefix + ":" + id);
-        if (!exist) {
-            throw new FkException(ResultEnum.DATA_QUALITY_DATACHECK_CHECKRESULT_EXISTS);
-        }
-        return redisTemplate.opsForValue().get(redisPrefix + ":" + id).toString();
-    }
-
     /**
      * 来源表脚本配置
      *
@@ -216,6 +206,10 @@ public class OracleCdcUtils {
         str.append("'schema-name'=" + "'" + dataSourceDto.dbName + "'," + ln);
         str.append("'table-name'=" + "'" + sourceTable + "'," + ln);
         str.append("'scan.startup.mode'=" + "'" + tableAccessData.scanStartupMode.getName() + "'" + ln);
+        if (dataSourceDto.pattern == 1) {
+            str.append("'debezium.database.pdb.name'=" + "'" + dataSourceDto.pdbName + "'," + ln);
+        }
+        str.append("'debezium.database.url'=" + "'" + dataSourceDto.connectStr + "'" + ln);
         str.append(");");
         str.append(ln);
 
@@ -254,6 +248,7 @@ public class OracleCdcUtils {
         str.append("(");
         str.append(ln);
         str.append("'connector'=" + "'jdbc'," + ln);
+        str.append("'driver'=" + "'" + dataSource.conType.getDriverName() + "'," + ln);
         str.append("'url'=" + "'" + dataSource.conStr + "'," + ln);
         str.append("'username'=" + "'" + dataSource.conAccount + "'," + ln);
         str.append("'password'=" + "'" + passwordPlaceholder + "'," + ln);

@@ -127,4 +127,14 @@ public class AppDataSourcePO extends BasePO {
      */
     public Integer serviceType;
 
+    /**
+     * oracle连接模式，0:非CDB、1:CDB/PDB
+     */
+    public Integer pattern;
+
+    /**
+     * CDB/PDB名称
+     */
+    public String pdbName;
+
 }

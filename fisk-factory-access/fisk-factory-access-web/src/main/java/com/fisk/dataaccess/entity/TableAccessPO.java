@@ -99,4 +99,9 @@ public class TableAccessPO extends BasePO {
      */
     public String jobId;
 
+    /**
+     * 是否使用已存在表
+     */
+    public Boolean useExistTable;
+
 }

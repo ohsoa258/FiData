@@ -14,7 +14,8 @@ import java.io.InputStreamReader;
  * @author JianWenYang
  */
 @Slf4j
-public class FlinkDevUpload implements IFlinkJobUpload {
+public class
+FlinkDevUpload implements IFlinkJobUpload {
 
     @Override
     public String submitJob(FlinkUploadParameterDTO dto) {
@@ -29,14 +30,14 @@ public class FlinkDevUpload implements IFlinkJobUpload {
             BufferedReader br = new BufferedReader(ips);
             String line;
             while ((line = br.readLine()) != null) {
-                System.out.println(line);
+                log.info("本地方式创建任务返回信息:" + line);
                 line = line.replaceAll(" ", "");
                 if (line.indexOf("JobID") > -1) {
                     jobId = line.split(":")[1];
                 }
             }
         } catch (IOException e) {
-            log.error("FlinkDevUpload ex:", e);
+            log.error("本地方式创建Flink任务失败:" + e);
         }
         return jobId;
     }

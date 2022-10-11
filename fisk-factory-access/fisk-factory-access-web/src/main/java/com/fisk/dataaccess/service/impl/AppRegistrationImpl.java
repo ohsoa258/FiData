@@ -1126,7 +1126,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             throw new FkException(ResultEnum.TASK_TABLE_NOT_EXIST);
         }
         //拼接ods表名
-        tableAccessData.tableName = TableNameGenerateUtils.buildOdsTableName(tableAccessData.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
+        if (!tableAccessData.useExistTable) {
+            tableAccessData.tableName = TableNameGenerateUtils.buildOdsTableName(tableAccessData.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
+        }
 
         ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
         if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {

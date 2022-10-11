@@ -93,5 +93,10 @@ public class TbTableAccessDTO {
      */
     public ScanStartupModeEnum scanStartupMode;
 
+    /**
+     * 现有表
+     */
+    public boolean useExistTable;
+
 
 }
