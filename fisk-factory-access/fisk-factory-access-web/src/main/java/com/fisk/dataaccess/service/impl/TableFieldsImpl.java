@@ -212,7 +212,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 
         TableSyncmodeDTO tableSyncmodeDTO = dto.getTableSyncmodeDTO();
-        if (CollectionUtils.isEmpty(dto.list) || tableSyncmodeDTO == null || tableSyncmodeDTO.syncMode < 1) {
+        if (CollectionUtils.isEmpty(dto.list) || tableSyncmodeDTO == null) {
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
@@ -349,7 +349,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     // 创建表流程
                     publishTaskClient.publishBuildPhysicsTableTask(data);
                     // 构建元数据实时同步数据对象
-                    buildMetaDataInstanceAttribute(registration, accessId, 1);
+                    //buildMetaDataInstanceAttribute(registration, accessId, 1);
                 } else if (registration.appType == 1) {
                     // 非实时物理表发布
                     // 创建表流程
@@ -361,7 +361,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     //log.info(JSON.toJSONString(data));
                     //publishTaskClient.publishBuildAtlasTableTask(data);
                     // 构建元数据实时同步数据对象
-                    buildMetaDataInstanceAttribute(registration, accessId, 2);
+                    //buildMetaDataInstanceAttribute(registration, accessId, 2);
                 }
 
 
@@ -436,10 +436,12 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         IFlinkJobUpload upload = FlinkFactoryHelper.flinkUpload(flinkConfig.uploadWay);
         flinkConfig.fileName = fileName;
         String jobId = upload.submitJob(FlinkParameterMap.INSTANCES.dtoToDto(flinkConfig));
+        log.info("创建任务返回jobId:" + jobId);
         if (StringUtils.isEmpty(jobId)) {
             throw new FkException(ResultEnum.CREATE_JOB_ERROR);
         }
         accessPo.jobId = jobId;
+        log.info("修改AccessPO参数:{}", JSON.toJSON(accessPo));
         tableAccessImpl.updateById(accessPo);
     }
 
@@ -475,7 +477,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     @Override
     public void test() {
         CdcJobScriptDTO cdcJobScript = new CdcJobScriptDTO();
-        long accessId = 4041;
+        long accessId = 4112;
         cdcScriptUploadFlink(cdcJobScript, accessId);
     }
 

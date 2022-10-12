@@ -10,7 +10,11 @@ public class FlinkYarnCommand implements IFlinkCommand {
 
     @Override
     public String buildFlinkCommand(FlinkUploadParameterDTO dto) {
-        return null;
+        StringBuilder str = new StringBuilder();
+        str.append(dto.commandPath);
+        str.append(" -s yarn-session -f ");
+        str.append(dto.uploadPath + dto.fileName);
+        return str.toString();
     }
 
 }

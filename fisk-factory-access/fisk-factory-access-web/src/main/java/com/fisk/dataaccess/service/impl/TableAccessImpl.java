@@ -9,6 +9,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.constants.NifiConstants;
+import com.fisk.common.core.enums.dbdatatype.FiDataDataTypeEnum;
+import com.fisk.common.core.enums.dbdatatype.OracleTypeEnum;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -141,6 +143,19 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private String dbName;
     @Resource
     GetConfigDTO getConfig;
+
+    /**
+     * 数据库连接
+     *
+     * @param dto
+     * @return
+     */
+    public Connection getConnection(DataSourceDTO dto) {
+        AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
+        Connection connection = dbHelper.connection(dto.conStr, dto.conAccount,
+                dto.conPassword, dto.conType);
+        return connection;
+    }
 
     /**
      * 添加物理表(实时)
@@ -1993,9 +2008,51 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             item.sourceTableName = first.get().tableName;
             item.sourceFieldLength = column.get().fieldLength;
             item.sourceFieldPrecision = column.get().fieldPrecision;
-        }
 
+            oracleMappingFiDataFieldType(item);
+
+        }
         return data;
+    }
+
+    /**
+     * Oracle数据类型映射fiData类型
+     *
+     * @param dto
+     * @return
+     */
+    public FieldNameDTO oracleMappingFiDataFieldType(FieldNameDTO dto) {
+        OracleTypeEnum typeEnum = OracleTypeEnum.getValue(dto.sourceFieldType);
+        switch (typeEnum) {
+            case NUMBER:
+                if (dto.sourceFieldPrecision > 0) {
+                    dto.fieldType = FiDataDataTypeEnum.FLOAT.getName();
+                    break;
+                }
+                dto.fieldType = FiDataDataTypeEnum.INT.getName();
+                break;
+            case VARCHAR:
+            case VARCHAR2:
+            case NVARCHAR2:
+            case NCHAR:
+            case CHAR:
+                dto.fieldType = FiDataDataTypeEnum.VARCHAR.getName();
+                break;
+            case TIMESTAMP:
+            case TIMESTAMPWITHLOCALTIMEZONE:
+            case TIMESTAMPWITHTIMEZONE:
+            case DATE:
+                dto.fieldType = FiDataDataTypeEnum.TIMESTAMP.getName();
+                break;
+            case FLOAT:
+            case BINARY_DOUBLE:
+            case BINARY_FLOAT:
+                dto.fieldType = FiDataDataTypeEnum.FLOAT.getName();
+                break;
+            default:
+                break;
+        }
+        return dto;
     }
 
     @Override
@@ -2017,13 +2074,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         return list;
-    }
-
-    public Connection getConnection(DataSourceDTO dto) {
-        AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
-        Connection connection = dbHelper.connection(dto.conStr, dto.conAccount,
-                dto.conPassword, dto.conType);
-        return connection;
     }
 
 }
