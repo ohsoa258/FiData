@@ -212,7 +212,7 @@ public class OracleCdcUtils {
         }
         str.append("'debezium.log.mining.strategy'=" + "'online_catalog'," + ln);
         str.append("'debezium.log.mining.sleep.time.min.ms'=" + "'0'," + ln);
-        str.append("'debezium.log.mining.sleep.time.max.ms'=" + "'1000'");
+        str.append("'debezium.log.mining.sleep.time.max.ms'=" + "'1000'" + ln);
         str.append(");");
         str.append(ln);
 
