@@ -5,6 +5,7 @@ import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFieldDTO;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 /**
  * @author dick
@@ -12,6 +13,7 @@ import io.swagger.annotations.ApiModelProperty;
  * @description 数据校验查询DTO
  * @date 2022/3/24 13:21
  */
+@Data
 public class DataCheckQueryDTO {
     /**
      * 搜索条件

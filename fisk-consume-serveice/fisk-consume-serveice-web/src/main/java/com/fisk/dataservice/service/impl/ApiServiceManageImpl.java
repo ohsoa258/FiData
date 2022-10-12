@@ -62,9 +62,6 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
     private ApiBuiltinParmMapper apiBuiltinParmMapper;
 
     @Resource
-    private DataSourceConMapper dataSourceConMapper;
-
-    @Resource
     private DataSourceConManageImpl dataSourceConManageImpl;
 
     @Resource
@@ -215,17 +212,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
 
             // 第九步：判断数据源类型，加载数据库驱动，执行查询SQL
             Statement st = null;
-            Connection conn = null;
-            DataSourceTypeEnum typeEnum = DataSourceTypeEnum.MYSQL;
-            if (dataSourceConVO.getConType() == DataSourceTypeEnum.MYSQL) {
-                conn = getStatement(DataSourceTypeEnum.MYSQL.getDriverName(), dataSourceConVO.conStr, dataSourceConVO.conAccount, dataSourceConVO.conPassword);
-            } else if (dataSourceConVO.getConType() == DataSourceTypeEnum.SQLSERVER) {
-                conn = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), dataSourceConVO.conStr, dataSourceConVO.conAccount, dataSourceConVO.conPassword);
-                typeEnum = DataSourceTypeEnum.SQLSERVER;
-            } else if (dataSourceConVO.getConType() == DataSourceTypeEnum.POSTGRESQL) {
-                conn = getStatement(DataSourceTypeEnum.POSTGRESQL.getDriverName(), dataSourceConVO.conStr, dataSourceConVO.conAccount, dataSourceConVO.conPassword);
-                typeEnum = DataSourceTypeEnum.POSTGRESQL;
-            }
+            Connection conn = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             assert st != null;
             ResultSet rs = st.executeQuery(sql);
@@ -274,25 +261,5 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             logsManageImpl.saveLog(logPO);
         }
         return ResultEntityBuild.buildData(resultEnum, responseVO);
-    }
-
-    /**
-     * 连接数据库
-     *
-     * @param driver   driver
-     * @param url      url
-     * @param username username
-     * @param password password
-     * @return statement
-     */
-    private Connection getStatement(String driver, String url, String username, String password) {
-        Connection conn;
-        try {
-            Class.forName(driver);
-            conn = DriverManager.getConnection(url, username, password);
-        } catch (Exception e) {
-            throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR);
-        }
-        return conn;
     }
 }

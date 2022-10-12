@@ -304,6 +304,7 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
         }
 
         // 获取源数据
+        JSONArray jsonArray = null;
 
         // 数据拼接成参数调用API
 
@@ -317,14 +318,14 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
     public JSONArray getData(String tableName, DataSourceConVO dataSource, List<BusinessFilterApiParmDTO> apiParmConfig) {
         JSONArray array = new JSONArray();
         try {
-            String sql="SELECT ";
-            apiParmConfig.forEach(t->{
-                if (StringUtils.isNotEmpty(t.getApiParmValueUnique())){
+            String sql = "SELECT ";
+            apiParmConfig.forEach(t -> {
+                if (StringUtils.isNotEmpty(t.getApiParmValueUnique())) {
 
                 }
             });
 
-            Connection conn = getStatement(dataSource.getConType().getDriverName(),dataSource.getConStr(),dataSource.getConAccount(),dataSource.getConPassword());
+            Connection conn = getStatement(dataSource.getConType().getDriverName(), dataSource.getConStr(), dataSource.getConAccount(), dataSource.getConPassword());
             Statement st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             assert st != null;
             ResultSet rs = st.executeQuery(sql);

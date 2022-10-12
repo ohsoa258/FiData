@@ -11,6 +11,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
@@ -457,7 +458,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     children.add(fiDataMetaDataTreeDTO);
                 }
             }
-            if (CollectionUtils.isNotEmpty(children)){
+            if (CollectionUtils.isNotEmpty(children)) {
                 fiDataMetaDataDTO.setDataSourceId(dataSourceConfigEnum.getValue());
                 fiDataMetaDataDTO.setChildren(children);
                 result.add(fiDataMetaDataDTO);
@@ -469,20 +470,21 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     /**
      * 连接数据库
      *
-     * @param driver   driver
-     * @param url      url
-     * @param username username
-     * @param password password
+     * @param dataSourceTypeEnum
+     * @param connectionStr
+     * @param account
+     * @param password
      * @return statement
      */
-    public static Connection getStatement(String driver, String url, String username, String password) {
+    public static Connection getStatement(DataSourceTypeEnum dataSourceTypeEnum, String connectionStr, String account, String password) {
         Connection conn;
         try {
-            Class.forName(driver);
-            conn = DriverManager.getConnection(url, username, password);
+            AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
+            Connection connection = dbHelper.connection(connectionStr, account,
+                    password, dataSourceTypeEnum);
+            return connection;
         } catch (Exception e) {
             throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR);
         }
-        return conn;
     }
 }
