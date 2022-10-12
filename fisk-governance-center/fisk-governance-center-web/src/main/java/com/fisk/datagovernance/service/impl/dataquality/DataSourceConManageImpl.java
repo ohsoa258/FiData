@@ -139,27 +139,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     public ResultEnum testConnection(TestConnectionDTO dto) {
         Connection conn = null;
         try {
-            switch (dto.conType) {
-                case MYSQL:
-                case DORIS:
-                    Class.forName(DataSourceTypeEnum.MYSQL.getDriverName());
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    return ResultEnum.SUCCESS;
-                case SQLSERVER:
-                    //1.加载驱动程序
-                    Class.forName(DataSourceTypeEnum.SQLSERVER.getDriverName());
-                    //2.获得数据库的连接
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    return ResultEnum.SUCCESS;
-                case POSTGRESQL:
-                    //1.加载驱动程序
-                    Class.forName(DataSourceTypeEnum.POSTGRESQL.getDriverName());
-                    //2.获得数据库的连接
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    return ResultEnum.SUCCESS;
-                default:
-                    return ResultEnum.DS_DATASOURCE_CON_WARN;
-            }
+            conn = getStatement(dto.getConType(), dto.getConStr(), dto.getConAccount(), dto.getConPassword());
+            return ResultEnum.SUCCESS;
         } catch (Exception e) {
             if (conn != null) {
                 conn.close();
@@ -317,37 +298,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     /**
-     * 根据数据源配置信息查询数据源
-     *
-     * @author dick
-     * @date 2022/4/15 11:59
-     * @version v1.0
-     * @params conIp
-     * @params conPort
-     * @params conDbname
-     */
-    public DataSourceConPO getDataSourceInfo(String conIp, String conDbname) {
-        DataSourceConPO dataSourceConPO = new DataSourceConPO();
-        List<DataSourceConVO> allDataSource = getAllDataSource();
-        if (CollectionUtils.isNotEmpty(allDataSource)) {
-            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getConIp().equals(conIp) && t.getConDbname().equals(conDbname)).findFirst().orElse(null);
-            if (dataSourceConVO != null) {
-                dataSourceConPO.setId(dataSourceConVO.getId());
-                dataSourceConPO.setName(dataSourceConVO.getName());
-                dataSourceConPO.setConIp(dataSourceConVO.getConIp());
-                dataSourceConPO.setConPort(dataSourceConVO.getConPort());
-                dataSourceConPO.setDatasourceId(dataSourceConVO.getDatasourceId());
-                dataSourceConPO.setDatasourceType(dataSourceConVO.getDatasourceType().getValue());
-                dataSourceConPO.setConDbname(dataSourceConVO.getConDbname());
-                dataSourceConPO.setConType(dataSourceConVO.getConType().getValue());
-                dataSourceConPO.setConAccount(dataSourceConVO.getConAccount());
-                dataSourceConPO.setConPassword(dataSourceConVO.getConPassword());
-            }
-        }
-        return dataSourceConPO;
-    }
-
-    /**
      * 查询数据质量所有数据源信息，含FiData系统数据源
      *
      * @return java.util.List<com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO>
@@ -477,7 +427,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @return statement
      */
     public static Connection getStatement(DataSourceTypeEnum dataSourceTypeEnum, String connectionStr, String account, String password) {
-        Connection conn;
         try {
             AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
             Connection connection = dbHelper.connection(connectionStr, account,

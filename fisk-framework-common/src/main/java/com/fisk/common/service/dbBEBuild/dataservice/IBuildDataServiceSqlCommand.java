@@ -1,5 +1,7 @@
 package com.fisk.common.service.dbBEBuild.dataservice;
 
+import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
+
 import java.util.List;
 import java.util.Map;
 
@@ -77,4 +79,6 @@ public interface IBuildDataServiceSqlCommand {
      * @return sql
      */
     String buildUseExistTableFiled(String dbName,String tableName);
+
+    List<TablePyhNameDTO> tableNameAndColumns();
 }

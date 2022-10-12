@@ -184,27 +184,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     public ResultEnum testConnection(TestConnectionDTO dto) {
         Connection conn = null;
         try {
-            switch (dto.conType) {
-                case MYSQL:
-                case DORIS:
-                    Class.forName(DataSourceTypeEnum.MYSQL.getDriverName());
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    return ResultEnum.SUCCESS;
-                case SQLSERVER:
-                    //1.加载驱动程序
-                    Class.forName(DataSourceTypeEnum.SQLSERVER.getDriverName());
-                    //2.获得数据库的连接
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    return ResultEnum.SUCCESS;
-                case POSTGRESQL:
-                    //1.加载驱动程序
-                    Class.forName(DataSourceTypeEnum.POSTGRESQL.getDriverName());
-                    //2.获得数据库的连接
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    return ResultEnum.SUCCESS;
-                default:
-                    return ResultEnum.DS_DATASOURCE_CON_WARN;
-            }
+            conn = getStatement(dto.getConType(), dto.getConStr(), dto.getConAccount(), dto.getConPassword());
+            return ResultEnum.SUCCESS;
         } catch (Exception e) {
             if (conn != null) {
                 conn.close();
@@ -395,7 +376,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         PostgresConUtils postgresConUtils = new PostgresConUtils();
         try {
             DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.values()[conPo.conType];
-            Connection connection  = getStatement(dataSourceTypeEnum, conPo.getConStr(), conPo.getConAccount(), conPo.getConPassword());;
+            Connection connection = getStatement(dataSourceTypeEnum, conPo.getConStr(), conPo.getConAccount(), conPo.getConPassword());
+            ;
             List<TablePyhNameDTO> tableNameAndColumns = null;
             switch (dataSourceTypeEnum) {
                 case MYSQL:
@@ -639,7 +621,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConPO dataSource) {
         List<FieldInfoVO> fieldlist = new ArrayList<>();
         String sql = "";
-       DataSourceTypeEnum value = DataSourceTypeEnum.values()[dataSource.getConType()];
+        DataSourceTypeEnum value = DataSourceTypeEnum.values()[dataSource.getConType()];
         switch (value) {
             case MYSQL:
                 sql = String.format("SELECT\n" +
