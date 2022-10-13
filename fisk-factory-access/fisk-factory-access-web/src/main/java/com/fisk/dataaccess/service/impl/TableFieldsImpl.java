@@ -64,7 +64,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -401,24 +400,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         //先根据job id,先停止任务
         if (!StringUtils.isEmpty(accessPo.jobId)) {
             cancelJob(accessPo.jobId, accessPo.id);
-        }
-
-        //获取检查点集合
-        List<SavepointHistoryDTO> savepointHistory = this.savepointHistory.getSavepointHistory(accessId);
-        if (!CollectionUtils.isEmpty(savepointHistory)) {
-            StringBuilder str = new StringBuilder();
-            if (cdcJobScript.savepointHistoryId != 0) {
-                Optional<SavepointHistoryDTO> first = savepointHistory.stream().filter(e -> e.id.equals(cdcJobScript.savepointHistoryId)).findFirst();
-                if (!first.isPresent()) {
-                    throw new FkException(ResultEnum.DATA_NOTEXISTS);
-                }
-                str.append("SET execution.savepoint.path = '" + first.get().savepointPath + "';");
-            } else {
-                str.append("SET execution.savepoint.path = '" + savepointHistory.get(0).savepointPath + "';");
-            }
-            str.append("\n");
-            str.append(cdcJobScript.jobScript);
-            cdcJobScript.jobScript = str.toString();
         }
 
         //上传文件

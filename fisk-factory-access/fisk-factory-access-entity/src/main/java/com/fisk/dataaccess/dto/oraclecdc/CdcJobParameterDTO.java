@@ -16,6 +16,11 @@ public class CdcJobParameterDTO {
      * 目标表id
      */
     public Integer tableAccessId;
+
+    /**
+     * 检查点id
+     */
+    public Integer savepointHistoryId = 0;
     /**
      * 表字段
      */

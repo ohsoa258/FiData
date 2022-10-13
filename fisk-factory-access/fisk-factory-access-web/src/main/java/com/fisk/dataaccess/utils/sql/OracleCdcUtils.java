@@ -5,8 +5,10 @@ import com.fisk.common.core.enums.dbdatatype.OracleTypeEnum;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
+import com.fisk.dataaccess.dto.savepointhistory.SavepointHistoryDTO;
 import com.fisk.dataaccess.dto.table.FieldNameDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
+import com.fisk.dataaccess.service.impl.SavepointHistoryImpl;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -30,6 +32,8 @@ public class OracleCdcUtils {
     public static String redisPrefix = "Cdc";
     @Resource
     private RedisTemplate redisTemplate;
+    @Resource
+    SavepointHistoryImpl savepointHistory;
 
     /**
      * oracle字段类型映射flink类型
@@ -125,6 +129,10 @@ public class OracleCdcUtils {
         str.append(ln);
         str.append("SET execution.checkpointing.interval =" + tableAccessData.checkPointInterval + tableAccessData.checkPointUnit + ";");
         str.append(ln);
+        SavepointHistoryDTO savepointHistoryDetails = savepointHistory.getSavepointHistoryDetails(dto.tableAccessId, dto.savepointHistoryId);
+        if (savepointHistoryDetails != null) {
+            str.append("SET execution.savepoint.path = '" + savepointHistoryDetails.savepointPath + "';");
+        }
         str.append(ln);
         redisStr.append(str);
         //来源表脚本
