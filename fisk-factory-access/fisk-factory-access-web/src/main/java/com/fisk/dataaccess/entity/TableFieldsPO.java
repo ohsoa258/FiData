@@ -80,4 +80,10 @@ public class TableFieldsPO extends BasePO {
      * 1是时间戳，0非时间戳
      */
     public int isTimestamp;
+
+    /**
+     * 物理表字段显示名称
+     */
+    public String displayName;
+
 }
