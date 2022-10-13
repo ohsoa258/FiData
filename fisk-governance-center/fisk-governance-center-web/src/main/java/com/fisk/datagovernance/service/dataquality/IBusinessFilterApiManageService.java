@@ -30,7 +30,7 @@ public interface IBusinessFilterApiManageService extends IService<BusinessFilter
      *
      * @return API清洗规则
      */
-    ResultEnum saveApiInfo(int ruleId, BusinessFilterSaveDTO dto);
+    ResultEnum saveApiInfo(String operationType, int ruleId, BusinessFilterSaveDTO dto);
 
     /**
      * 删除API清洗规则

@@ -9,5 +9,6 @@ import lombok.Data;
 public class TableFieldDataDTO {
     public long id;
     public String fieldName;
+    public String fieldType;
     public int type;
 }

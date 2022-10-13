@@ -16,6 +16,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
@@ -183,27 +184,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     public ResultEnum testConnection(TestConnectionDTO dto) {
         Connection conn = null;
         try {
-            switch (dto.conType) {
-                case MYSQL:
-                case DORIS:
-                    Class.forName(DataSourceTypeEnum.MYSQL.getDriverName());
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    return ResultEnum.SUCCESS;
-                case SQLSERVER:
-                    //1.加载驱动程序
-                    Class.forName(DataSourceTypeEnum.SQLSERVER.getDriverName());
-                    //2.获得数据库的连接
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    return ResultEnum.SUCCESS;
-                case POSTGRESQL:
-                    //1.加载驱动程序
-                    Class.forName(DataSourceTypeEnum.POSTGRESQL.getDriverName());
-                    //2.获得数据库的连接
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    return ResultEnum.SUCCESS;
-                default:
-                    return ResultEnum.DS_DATASOURCE_CON_WARN;
-            }
+            conn = getStatement(dto.getConType(), dto.getConStr(), dto.getConAccount(), dto.getConPassword());
+            return ResultEnum.SUCCESS;
         } catch (Exception e) {
             if (conn != null) {
                 conn.close();
@@ -393,22 +375,21 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
         PostgresConUtils postgresConUtils = new PostgresConUtils();
         try {
-            Connection connection = null;
+            DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.values()[conPo.conType];
+            Connection connection = getStatement(dataSourceTypeEnum, conPo.getConStr(), conPo.getConAccount(), conPo.getConPassword());
+            ;
             List<TablePyhNameDTO> tableNameAndColumns = null;
-            switch (DataSourceTypeEnum.values()[conPo.conType]) {
+            switch (dataSourceTypeEnum) {
                 case MYSQL:
                     // 表结构
-                    connection = getStatement(DataSourceTypeEnum.MYSQL.getDriverName(), conPo.getConStr(), conPo.getConAccount(), conPo.getConPassword());
                     tableNameAndColumns = mysqlConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DriverTypeEnum.MYSQL);
                     break;
                 case SQLSERVER:
                     // 表结构
-                    connection = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), conPo.getConStr(), conPo.getConAccount(), conPo.getConPassword());
                     tableNameAndColumns = sqlServerPlusUtils.getTableNameAndColumnsPlus(conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
                     break;
                 case POSTGRESQL:
                     // 表结构
-                    connection = getStatement(DataSourceTypeEnum.POSTGRESQL.getDriverName(), conPo.getConStr(), conPo.getConAccount(), conPo.getConPassword());
                     tableNameAndColumns = postgresConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DriverTypeEnum.POSTGRESQL);
                     break;
             }
@@ -618,15 +599,14 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @params username
      * @params password
      */
-    private Connection getStatement(String driver, String url, String username, String password) {
-        Connection conn;
+    public Connection getStatement(DataSourceTypeEnum dataSourceTypeEnum, String connectionStr, String account, String password) {
         try {
-            Class.forName(driver);
-            conn = DriverManager.getConnection(url, username, password);
+            AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
+            Connection connection = dbHelper.connection(connectionStr, account, password, dataSourceTypeEnum);
+            return connection;
         } catch (Exception e) {
             throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR);
         }
-        return conn;
     }
 
     /**
@@ -641,7 +621,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConPO dataSource) {
         List<FieldInfoVO> fieldlist = new ArrayList<>();
         String sql = "";
-       DataSourceTypeEnum value = DataSourceTypeEnum.values()[dataSource.getConType()];
+        DataSourceTypeEnum value = DataSourceTypeEnum.values()[dataSource.getConType()];
         switch (value) {
             case MYSQL:
                 sql = String.format("SELECT\n" +

@@ -1,6 +1,7 @@
 package com.fisk.datagovernance.vo.dataquality.datacheck;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 /**
  * @author dick
@@ -8,6 +9,7 @@ import io.swagger.annotations.ApiModelProperty;
  * @description 数据校验规则扩展属性
  * @date 2022/4/2 11:07
  */
+@Data
 public class DataCheckExtendVO {
     /**
      * id

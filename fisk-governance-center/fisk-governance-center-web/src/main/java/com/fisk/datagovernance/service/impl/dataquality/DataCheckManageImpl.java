@@ -21,7 +21,7 @@ import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.entity.dataquality.*;
-import com.fisk.datagovernance.enums.DataSourceTypeEnum;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.map.dataquality.DataCheckExtendMap;
 import com.fisk.datagovernance.map.dataquality.DataCheckMap;
@@ -86,38 +86,45 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
         Page<DataCheckVO> all = baseMapper.getAll(query.page, query.datasourceId, query.tableUnique, query.tableBusinessType, query.keyword);
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
-            List<Integer> ruleIds = all.getRecords().stream().map(DataCheckVO::getId).collect(Collectors.toList());
-            // 数据校验规则扩展属性
-            QueryWrapper<DataCheckExtendPO> dataCheckExtendPOQueryWrapper = new QueryWrapper<>();
-            dataCheckExtendPOQueryWrapper.lambda().eq(DataCheckExtendPO::getDelFlag, 1)
-                    .in(DataCheckExtendPO::getRuleId, ruleIds);
-            List<DataCheckExtendPO> dataCheckExtends = dataCheckExtendMapper.selectList(dataCheckExtendPOQueryWrapper);
-            if (CollectionUtils.isNotEmpty(dataCheckExtends)) {
-                all.getRecords().forEach(e -> {
-                    e.setTableName(query.tableField.getLabel());
-                    e.setTableAlias(query.tableField.getLabelAlias());
-                    List<DataCheckExtendPO> dataCheckExtendFilters = dataCheckExtends.stream().filter(item -> item.getRuleId() == e.getId()).collect(Collectors.toList());
-                    if (CollectionUtils.isNotEmpty(dataCheckExtendFilters)) {
-                        e.setDataCheckExtends(DataCheckExtendMap.INSTANCES.poToVo(dataCheckExtendFilters));
-                        e.getDataCheckExtends().stream().forEach(t -> {
-                            if (e.sourceTypeEnum == SourceTypeEnum.FiData) {
-                                if (CollectionUtils.isNotEmpty(query.tableField.getFields())) {
-                                    DataTableFieldDTO dataTableFieldDTO = query.tableField.getFields().stream().filter(f -> f.id.equals(t.fieldUnique)).findFirst().orElse(null);
-                                    if (dataTableFieldDTO != null) {
-                                        t.fieldName = dataTableFieldDTO.getLabel();
-                                        t.fieldAlias = dataTableFieldDTO.getLabelAlias();
-                                    }
-                                }
-                            } else {
-                                t.fieldName = t.fieldUnique;
-                                t.fieldAlias = t.fieldUnique;
-                            }
-                        });
-                    }
-                });
-            }
+            List<DataCheckVO> allExtends = getAllExtends(query, all.getRecords());
+            all.setRecords(allExtends);
         }
         return all;
+    }
+
+    private List<DataCheckVO> getAllExtends(DataCheckQueryDTO query, List<DataCheckVO> source) {
+        List<DataCheckVO> result = source;
+        List<Integer> ruleIds = source.stream().map(DataCheckVO::getId).collect(Collectors.toList());
+        // 数据校验规则扩展属性
+        QueryWrapper<DataCheckExtendPO> dataCheckExtendPOQueryWrapper = new QueryWrapper<>();
+        dataCheckExtendPOQueryWrapper.lambda().eq(DataCheckExtendPO::getDelFlag, 1)
+                .in(DataCheckExtendPO::getRuleId, ruleIds);
+        List<DataCheckExtendPO> dataCheckExtends = dataCheckExtendMapper.selectList(dataCheckExtendPOQueryWrapper);
+        if (CollectionUtils.isNotEmpty(dataCheckExtends)) {
+            source.forEach(e -> {
+                e.setTableName(query.getTableField().getLabel());
+                e.setTableAlias(query.getTableField().getLabelAlias());
+                List<DataCheckExtendPO> dataCheckExtendFilters = dataCheckExtends.stream().filter(item -> item.getRuleId() == e.getId()).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(dataCheckExtendFilters)) {
+                    e.setDataCheckExtends(DataCheckExtendMap.INSTANCES.poToVo(dataCheckExtendFilters));
+                    e.getDataCheckExtends().stream().forEach(t -> {
+                        if (e.getSourceTypeEnum() == SourceTypeEnum.FiData) {
+                            if (CollectionUtils.isNotEmpty(query.getTableField().getFields())) {
+                                DataTableFieldDTO dataTableFieldDTO = query.getTableField().getFields().stream().filter(f -> f.id.equals(t.fieldUnique)).findFirst().orElse(null);
+                                if (dataTableFieldDTO != null) {
+                                    t.setFieldName(dataTableFieldDTO.getLabel());
+                                    t.setFieldAlias(dataTableFieldDTO.getLabelAlias());
+                                }
+                            }
+                        } else {
+                            t.setFieldName(t.getFieldUnique());
+                            t.setFieldAlias(t.getFieldUnique());
+                        }
+                    });
+                }
+            });
+        }
+        return result;
     }
 
     @Override
@@ -532,19 +539,16 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_SYNCCHECK_NOOPERATION, null);
             }
             // 第一步：查询数据源信息
-            QueryWrapper<DataSourceConPO> dataSourceConPOQueryWrapper = new QueryWrapper<>();
-            dataSourceConPOQueryWrapper.lambda()
-                    .eq(DataSourceConPO::getDelFlag, 1)
-                    .eq(DataSourceConPO::getDatasourceId, dto.dataSourceId)
-                    .eq(DataSourceConPO::getDatasourceType, SourceTypeEnum.FiData.getValue());
-            DataSourceConPO dataSourceInfo = dataSourceConMapper.selectOne(dataSourceConPOQueryWrapper);
+            List<DataSourceConVO> allDataSource = dataSourceConManageImpl.getAllDataSource();
+            if (allDataSource == null) {
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_EXISTS, null);
+            }
+            DataSourceConVO dataSourceInfo = allDataSource.stream().filter(t -> t.getDatasourceId() == Integer.parseInt(dto.getDataSourceId())).findFirst().orElse(null);
             if (dataSourceInfo == null) {
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_EXISTS, null);
             }
-
-            DataSourceTypeEnum dataSourceType = DataSourceTypeEnum.getEnum(dataSourceInfo.getConType());
-            SourceTypeEnum sourceTypeEnum = SourceTypeEnum.getEnum(dataSourceInfo.getDatasourceType());
-            Connection connection = dataSourceConManageImpl.getStatement(dataSourceType.getDriverName(), dataSourceInfo.getConStr(), dataSourceInfo.getConAccount(), dataSourceInfo.getConPassword());
+            DataSourceTypeEnum dataSourceType = dataSourceInfo.getConType();
+            Connection connection = dataSourceConManageImpl.getStatement(dataSourceType, dataSourceInfo.getConStr(), dataSourceInfo.getConAccount(), dataSourceInfo.getConPassword());
             // 第二步：查询数据校验模块下同步校验场景下的模板
             QueryWrapper<TemplatePO> templatePOQueryWrapper = new QueryWrapper<>();
             templatePOQueryWrapper.lambda()
@@ -878,7 +882,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params dataCheckPO
      * @params dataCheckExtendFilters
      */
-    public ResultEntity<List<SyncCheckInfoVO>> GetCheckFieldRule_Sync(TemplatePO templatePO, DataSourceConPO dataSourceConPO,
+    public ResultEntity<List<SyncCheckInfoVO>> GetCheckFieldRule_Sync(TemplatePO templatePO, DataSourceConVO dataSourceConPO,
                                                                       DataSourceTypeEnum dataSourceTypeEnum, DataCheckPO dataCheckPO,
                                                                       DataCheckExtendPO dataCheckExtend,
                                                                       String tableFullNameReq, String fieldNameReq) {

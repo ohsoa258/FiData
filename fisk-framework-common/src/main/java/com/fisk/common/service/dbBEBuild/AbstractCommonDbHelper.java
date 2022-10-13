@@ -218,6 +218,10 @@ public class AbstractCommonDbHelper {
                 return DriverManager.getConnection(connectionStr, acc, pwd);
             case POSTGRESQL:
                 return DriverManager.getConnection(connectionStr, acc, pwd);
+            case MYSQL:
+                return DriverManager.getConnection(connectionStr, acc, pwd);
+            case DORIS:
+                return DriverManager.getConnection(connectionStr, acc, pwd);
             default:
                 return null;
         }

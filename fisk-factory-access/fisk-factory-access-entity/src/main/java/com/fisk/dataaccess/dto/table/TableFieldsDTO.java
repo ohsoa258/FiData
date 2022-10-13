@@ -55,6 +55,9 @@ public class TableFieldsDTO extends BaseDTO {
     @ApiModelProperty(value = "字段名称", required = true)
     public String fieldName;
 
+    @ApiModelProperty(value = "物理表字段显示名称", required = true)
+    public String displayName;
+
     /**
      * 字段描述
      */

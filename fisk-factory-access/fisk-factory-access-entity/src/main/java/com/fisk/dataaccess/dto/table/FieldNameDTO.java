@@ -36,4 +36,6 @@ public class FieldNameDTO {
     public int isPrimarykey;
     @ApiModelProperty(value = "0是实时物理表，1是非实时物理表", required = true)
     public int isRealtime;
+    @ApiModelProperty(value = "物理表显示名称", required = true)
+    public String displayName;
 }

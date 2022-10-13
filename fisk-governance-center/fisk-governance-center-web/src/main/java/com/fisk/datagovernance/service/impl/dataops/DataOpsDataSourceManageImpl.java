@@ -16,7 +16,7 @@ import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
 import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
 import com.fisk.datagovernance.dto.dataops.PostgreDTO;
 import com.fisk.datagovernance.entity.dataops.DataOpsLogPO;
-import com.fisk.datagovernance.enums.DataSourceTypeEnum;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.datagovernance.service.dataops.IDataOpsDataSourceManageService;
 import com.fisk.datagovernance.vo.dataops.*;
 import com.fisk.system.client.UserClient;

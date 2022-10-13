@@ -11,6 +11,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
@@ -20,7 +21,7 @@ import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
-import com.fisk.datagovernance.enums.DataSourceTypeEnum;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import com.fisk.datagovernance.map.dataquality.DataSourceConMap;
 import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
@@ -138,27 +139,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     public ResultEnum testConnection(TestConnectionDTO dto) {
         Connection conn = null;
         try {
-            switch (dto.conType) {
-                case MYSQL:
-                case DORIS:
-                    Class.forName(DataSourceTypeEnum.MYSQL.getDriverName());
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    return ResultEnum.SUCCESS;
-                case SQLSERVER:
-                    //1.加载驱动程序
-                    Class.forName(DataSourceTypeEnum.SQLSERVER.getDriverName());
-                    //2.获得数据库的连接
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    return ResultEnum.SUCCESS;
-                case POSTGRESQL:
-                    //1.加载驱动程序
-                    Class.forName(DataSourceTypeEnum.POSTGRESQL.getDriverName());
-                    //2.获得数据库的连接
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    return ResultEnum.SUCCESS;
-                default:
-                    return ResultEnum.DS_DATASOURCE_CON_WARN;
-            }
+            conn = getStatement(dto.getConType(), dto.getConStr(), dto.getConAccount(), dto.getConPassword());
+            return ResultEnum.SUCCESS;
         } catch (Exception e) {
             if (conn != null) {
                 conn.close();
@@ -316,37 +298,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     /**
-     * 根据数据源配置信息查询数据源
-     *
-     * @author dick
-     * @date 2022/4/15 11:59
-     * @version v1.0
-     * @params conIp
-     * @params conPort
-     * @params conDbname
-     */
-    public DataSourceConPO getDataSourceInfo(String conIp, String conDbname) {
-        DataSourceConPO dataSourceConPO = new DataSourceConPO();
-        List<DataSourceConVO> allDataSource = getAllDataSource();
-        if (CollectionUtils.isNotEmpty(allDataSource)) {
-            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getConIp().equals(conIp) && t.getConDbname().equals(conDbname)).findFirst().orElse(null);
-            if (dataSourceConVO != null) {
-                dataSourceConPO.setId(dataSourceConVO.getId());
-                dataSourceConPO.setName(dataSourceConVO.getName());
-                dataSourceConPO.setConIp(dataSourceConVO.getConIp());
-                dataSourceConPO.setConPort(dataSourceConVO.getConPort());
-                dataSourceConPO.setDatasourceId(dataSourceConVO.getDatasourceId());
-                dataSourceConPO.setDatasourceType(dataSourceConVO.getDatasourceType().getValue());
-                dataSourceConPO.setConDbname(dataSourceConVO.getConDbname());
-                dataSourceConPO.setConType(dataSourceConVO.getConType().getValue());
-                dataSourceConPO.setConAccount(dataSourceConVO.getConAccount());
-                dataSourceConPO.setConPassword(dataSourceConVO.getConPassword());
-            }
-        }
-        return dataSourceConPO;
-    }
-
-    /**
      * 查询数据质量所有数据源信息，含FiData系统数据源
      *
      * @return java.util.List<com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO>
@@ -457,7 +408,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     children.add(fiDataMetaDataTreeDTO);
                 }
             }
-            if (CollectionUtils.isNotEmpty(children)){
+            if (CollectionUtils.isNotEmpty(children)) {
                 fiDataMetaDataDTO.setDataSourceId(dataSourceConfigEnum.getValue());
                 fiDataMetaDataDTO.setChildren(children);
                 result.add(fiDataMetaDataDTO);
@@ -469,20 +420,20 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     /**
      * 连接数据库
      *
-     * @param driver   driver
-     * @param url      url
-     * @param username username
-     * @param password password
+     * @param dataSourceTypeEnum
+     * @param connectionStr
+     * @param account
+     * @param password
      * @return statement
      */
-    public static Connection getStatement(String driver, String url, String username, String password) {
-        Connection conn;
+    public static Connection getStatement(DataSourceTypeEnum dataSourceTypeEnum, String connectionStr, String account, String password) {
         try {
-            Class.forName(driver);
-            conn = DriverManager.getConnection(url, username, password);
+            AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
+            Connection connection = dbHelper.connection(connectionStr, account,
+                    password, dataSourceTypeEnum);
+            return connection;
         } catch (Exception e) {
             throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR);
         }
-        return conn;
     }
 }

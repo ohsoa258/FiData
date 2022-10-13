@@ -1,7 +1,7 @@
 package com.fisk.datagovernance.vo.dataquality.datasource;
 
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
-import com.fisk.datagovernance.enums.DataSourceTypeEnum;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

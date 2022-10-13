@@ -50,6 +50,9 @@ public class TableAccessNonDTO extends BaseDTO {
     @ApiModelProperty(value = "物理表名", required = true)
     public String tableName;
 
+    @ApiModelProperty(value = "物理表显示名称", required = true)
+    public String displayName;
+
     /**
      * 物理表描述
      */

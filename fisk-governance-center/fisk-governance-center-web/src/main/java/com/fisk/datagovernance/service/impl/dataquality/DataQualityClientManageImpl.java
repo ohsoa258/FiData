@@ -18,7 +18,7 @@ import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFieldDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.TableRuleSqlDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
-import com.fisk.datagovernance.enums.DataSourceTypeEnum;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataQualityClientManageService;
@@ -27,7 +27,6 @@ import com.fisk.datagovernance.vo.dataquality.rule.TableRuleTempVO;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +34,6 @@ import javax.annotation.Resource;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author dick
@@ -215,7 +213,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                                 if (fiDataMetaData_Field != null) {
                                     fieldName = fiDataMetaData_Field.getLabel();
                                 }
-                                if (StringUtils.isEmpty(fieldName)){
+                                if (StringUtils.isEmpty(fieldName)) {
                                     continue;
                                 }
                                 if (StringUtils.isNotEmpty(dataCheckExtendPO.getCheckType())) {
@@ -265,7 +263,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                                 if (fiDataMetaData_Field != null) {
                                     fieldName = fiDataMetaData_Field.getLabel();
                                 }
-                                if (StringUtils.isEmpty(fieldName)){
+                                if (StringUtils.isEmpty(fieldName)) {
                                     continue;
                                 }
                                 tempVO_TableField = new TableRuleTempVO();
@@ -350,7 +348,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                                 if (fiDataMetaData_Field != null) {
                                     fieldName = fiDataMetaData_Field.getLabel();
                                 }
-                                if (StringUtils.isEmpty(fieldName)){
+                                if (StringUtils.isEmpty(fieldName)) {
                                     continue;
                                 }
                                 tempVO_TableField = new TableRuleTempVO();
@@ -662,8 +660,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params templatePO 模板PO
      * @params attachmentInfoPO 附件PO
      */
-    public ResultEnum createDataCheckQualityReport
-    (List<NoticeExtendPO> noticeExtendPOS, List<DataSourceConVO> allDataSource, AttachmentInfoPO
+    public ResultEnum createDataCheckQualityReport(List<NoticeExtendPO> noticeExtendPOS, List<DataSourceConVO> allDataSource, AttachmentInfoPO
             attachmentInfoPO) {
 
         List<Integer> ruleIds = noticeExtendPOS.stream().map(NoticeExtendPO::getRuleId).collect(Collectors.toList());
@@ -855,10 +852,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         Statement st = null;
         Connection conn = null;
         try {
-            // 数据源类型
-            DataSourceTypeEnum sourceTypeEnum = dataSourceCon.getConType();
             // 数据库连接对象
-            conn = dataSourceConManageImpl.getStatement(sourceTypeEnum.getDriverName(), dataSourceCon.getConStr(),
+            conn = dataSourceConManageImpl.getStatement(dataSourceCon.getConType(), dataSourceCon.getConStr(),
                     dataSourceCon.getConAccount(), dataSourceCon.getConPassword());
             // JDBC 读取大量数据时的 ResultSet resultSetType 设置TYPE_FORWARD_ONLY
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
@@ -1040,7 +1035,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             DataSourceTypeEnum sourceTypeEnum = DataSourceTypeEnum.values()[dataSourceConPO.getConType()];
             // 数据库连接对象
 
-            conn = dataSourceConManageImpl.getStatement(sourceTypeEnum.getDriverName(), dataSourceConPO.getConStr(),
+            conn = dataSourceConManageImpl.getStatement(sourceTypeEnum, dataSourceConPO.getConStr(),
                     dataSourceConPO.getConAccount(), dataSourceConPO.getConPassword());
             st = conn.createStatement();
             assert st != null;

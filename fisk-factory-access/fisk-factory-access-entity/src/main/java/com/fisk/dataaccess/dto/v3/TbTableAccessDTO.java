@@ -98,5 +98,10 @@ public class TbTableAccessDTO {
      */
     public boolean useExistTable;
 
+    /**
+     * 物理表显示名称
+     */
+    public String displayName;
+
 
 }

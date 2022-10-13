@@ -17,6 +17,10 @@ import com.fisk.common.core.utils.Dto.SqlParmDto;
 import com.fisk.common.core.utils.Dto.SqlWhereDto;
 import com.fisk.common.core.utils.SqlParmUtils;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbBEBuild.dataservice.BuildDataServiceHelper;
+import com.fisk.common.service.dbBEBuild.dataservice.IBuildDataServiceSqlCommand;
+import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
+import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.dataservice.dto.api.*;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.ApiTypeEnum;
@@ -387,14 +391,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
 
         try {
             Statement st = null;
-            Connection conn = null;
-            if (dataSourceConVO.getConType() == DataSourceTypeEnum.MYSQL) {
-                conn = getStatement(DataSourceTypeEnum.MYSQL.getDriverName(), dataSourceConVO.conStr, dataSourceConVO.conAccount, dataSourceConVO.conPassword);
-            } else if (dataSourceConVO.getConType() == DataSourceTypeEnum.SQLSERVER) {
-                conn = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), dataSourceConVO.conStr, dataSourceConVO.conAccount, dataSourceConVO.conPassword);
-            } else if (dataSourceConVO.getConType() == DataSourceTypeEnum.POSTGRESQL) {
-                conn = getStatement(DataSourceTypeEnum.POSTGRESQL.getDriverName(), dataSourceConVO.conStr, dataSourceConVO.conAccount, dataSourceConVO.conPassword);
-            }
+            Connection conn = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
             /*
                 以流的形式 TYPE_FORWARD_ONLY: 只可向前滚动查询 CONCUR_READ_ONLY: 指定不可以更新 ResultSet
                 如果PreparedStatement对象初始化时resultSetType参数设置为TYPE_FORWARD_ONLY，
@@ -505,26 +502,6 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     }
 
     /**
-     * 连接数据库
-     *
-     * @param driver   driver
-     * @param url      url
-     * @param username username
-     * @param password password
-     * @return statement
-     */
-    private static Connection getStatement(String driver, String url, String username, String password) {
-        Connection conn;
-        try {
-            Class.forName(driver);
-            conn = DriverManager.getConnection(url, username, password);
-        } catch (Exception e) {
-            throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR);
-        }
-        return conn;
-    }
-
-    /**
      * 查询表字段信息
      *
      * @param conn       连接
@@ -532,52 +509,12 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
      * @param tableNames 查询的表
      * @return statement
      */
-    private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConVO
-            dataSource, List<String> tableNames) throws SQLException {
+    private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConVO dataSource, List<String> tableNames) throws SQLException {
         List<FieldInfoVO> fieldlist = new ArrayList<>();
         if (CollectionUtils.isEmpty(tableNames))
             return fieldlist;
-        String sql = "";
-        DataSourceTypeEnum value = dataSource.getConType();
-        switch (value) {
-            case MYSQL:
-                sql = String.format("SELECT\n" +
-                        "\tTABLE_NAME AS originalTableName,\n" +
-                        "\tCOLUMN_NAME AS originalFieldName,\n" +
-                        "\tCOLUMN_COMMENT AS originalFieldDesc,\n" +
-                        "\t'' AS originalFramework \n" +
-                        "FROM\n" +
-                        "\tinformation_schema.`COLUMNS` \n" +
-                        "WHERE\n" +
-                        "\tTABLE_SCHEMA = '%s' \n" +
-                        "\tAND TABLE_NAME = '%s'", dataSource.conDbname, tableNames.get(0));
-                break;
-            case SQLSERVER:
-                sql = String.format("SELECT\n" +
-                        "\td.name AS originalTableName,\n" +
-                        "\ta.name AS originalFieldName,\n" +
-                        "\tisnull( g.[value], '' ) AS originalFieldDesc,\n" +
-                        "\tschema_name( tb.schema_id ) AS originalFramework \n" +
-                        "FROM\n" +
-                        "\tsyscolumns a\n" +
-                        "\tLEFT JOIN systypes b ON a.xusertype= b.xusertype\n" +
-                        "\tINNER JOIN sysobjects d ON a.id= d.id \n" +
-                        "\tAND d.xtype= 'U' \n" +
-                        "\tAND d.name<> 'dtproperties'\n" +
-                        "\tLEFT JOIN sys.tables tb ON tb.name= d.name\n" +
-                        "\tLEFT JOIN syscomments e ON a.cdefault= e.id\n" +
-                        "\tLEFT JOIN sys.extended_properties g ON a.id= g.major_id \n" +
-                        "\tAND a.colid= g.minor_id\n" +
-                        "\tLEFT JOIN sys.extended_properties f ON d.id= f.major_id \n" +
-                        "\tAND f.minor_id= 0\n" +
-                        "\tWHERE d.name = '%s'", tableNames.get(0));
-                break;
-            case POSTGRESQL:
-                sql = String.format("SELECT c.relname as originalTableName,a.attname as originalFieldName,col_description(a.attrelid,a.attnum) as originalFieldDesc,'' AS originalFramework \n" +
-                        "FROM pg_class as c,pg_attribute as a inner join pg_type on pg_type.oid = a.atttypid\n" +
-                        "where c.relname in  (SELECT tablename FROM pg_tables ) and a.attrelid = c.oid and a.attnum>0\n" +
-                        "and c.relname ='%s'", tableNames.get(0));
-        }
+        IBuildDataServiceSqlCommand dbCommand = BuildDataServiceHelper.getDBCommand(dataSource.getConType());
+        String sql = dbCommand.buildUseExistTableFiled(dataSource.conDbname, tableNames.get(0));
         if (sql == null || sql.isEmpty())
             return fieldlist;
         try {
