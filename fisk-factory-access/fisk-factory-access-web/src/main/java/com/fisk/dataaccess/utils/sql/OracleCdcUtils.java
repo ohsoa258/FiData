@@ -206,7 +206,11 @@ public class OracleCdcUtils {
         str.append("(");
         str.append(ln);
         str.append("'connector'=" + "'" + dataSourceDto.driveType + "'," + ln);
-        str.append("'hostname'=" + "'" + dataSourceDto.host + "'," + ln);
+        if (!StringUtils.isEmpty(dataSourceDto.domainName)) {
+            str.append("'hostname'=" + "'" + dataSourceDto.domainName + "'," + ln);
+        } else {
+            str.append("'hostname'=" + "'" + dataSourceDto.host + "'," + ln);
+        }
         str.append("'port'=" + "'" + dataSourceDto.port + "'," + ln);
         str.append("'username'=" + "'" + dataSourceDto.connectAccount + "'," + ln);
         str.append("'password'=" + "'" + passwordPlaceholder + "'," + ln);

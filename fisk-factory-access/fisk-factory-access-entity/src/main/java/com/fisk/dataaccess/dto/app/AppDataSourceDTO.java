@@ -97,6 +97,9 @@ public class AppDataSourceDTO extends BaseDTO {
     @ApiModelProperty(value = "CDB/PDB名称", required = true)
     public String pdbName;
 
+    @ApiModelProperty(value = "域名", required = true)
+    public String domainName;
+
     @ApiModelProperty(value = "jwt类型下，配置返回的json串类型", required = true)
     public List<ApiResultConfigDTO> apiResultConfigDtoList;
 

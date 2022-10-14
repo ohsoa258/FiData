@@ -137,4 +137,9 @@ public class AppDataSourcePO extends BasePO {
      */
     public String pdbName;
 
+    /**
+     * 域名
+     */
+    public String domainName;
+
 }
