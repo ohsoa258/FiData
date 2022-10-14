@@ -51,6 +51,7 @@ import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.*;
 import com.fisk.dataaccess.service.ITableAccess;
+import com.fisk.dataaccess.utils.sql.DbConnectionHelper;
 import com.fisk.dataaccess.utils.sql.MysqlConUtils;
 import com.fisk.dataaccess.utils.sql.SqlServerConUtils;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
@@ -597,12 +598,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<TablePyhNameDTO> list = new ArrayList<>();
         switch (modelDataSource.driveType) {
             case "mysql":
-                // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
-                MysqlConUtils mysqlConUtils = new MysqlConUtils();
-////                list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
                 break;
             case "sqlserver":
-                list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd, dbName);
+                Connection conn = DbConnectionHelper.connection(url, user, pwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
+                list = new SqlServerConUtils().getTableNameAndColumns(conn, dbName);
                 break;
             default:
                 break;
@@ -623,15 +622,18 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
         List<TablePyhNameDTO> list = new ArrayList<>();
+        Connection conn = null;
         switch (modelDataSource.driveType) {
             case "mysql":
             case "oracle":
                 // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
                 MysqlConUtils mysqlConUtils = new MysqlConUtils();
-                list = mysqlConUtils.getTableNameAndColumns(url, user, pwd, com.fisk.dataaccess.enums.DriverTypeEnum.MYSQL);
+                conn = DbConnectionHelper.connection(url, user, pwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL);
+                list = mysqlConUtils.getTableNameAndColumns(conn);
                 break;
             case "sqlserver":
-                list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd, dbName);
+                conn = DbConnectionHelper.connection(url, user, pwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
+                list = new SqlServerConUtils().getTableNameAndColumns(conn, dbName);
                 break;
             default:
                 return null;

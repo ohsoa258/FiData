@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -177,9 +178,11 @@ public class OracleCdcUtils {
                                          TbTableAccessDTO tableAccessData) {
         String sourceTable = dto.fieldNameDTOList.get(0).sourceTableName;
         //获取oracle主键字段
-        List<String> tablePrimaryKeyList = OracleUtils.getTablePrimaryKey(dataSourceDto.connectStr,
+        Connection conn = DbConnectionHelper.connection(dataSourceDto.connectStr,
                 dataSourceDto.connectAccount,
                 dataSourceDto.connectPwd,
+                com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL);
+        List<String> tablePrimaryKeyList = OracleUtils.getTablePrimaryKey(conn,
                 dataSourceDto.dbName, sourceTable);
 
         StringBuilder str = new StringBuilder();

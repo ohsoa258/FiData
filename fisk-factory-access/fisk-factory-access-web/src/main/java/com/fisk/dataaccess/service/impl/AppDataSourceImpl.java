@@ -13,17 +13,14 @@ import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.v3.DataSourceDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
-import com.fisk.dataaccess.enums.DriverTypeEnum;
 import com.fisk.dataaccess.map.AppDataSourceMap;
 import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.service.IAppDataSource;
-import com.fisk.dataaccess.utils.sql.MysqlConUtils;
-import com.fisk.dataaccess.utils.sql.OracleUtils;
-import com.fisk.dataaccess.utils.sql.PgsqlUtils;
-import com.fisk.dataaccess.utils.sql.SqlServerPlusUtils;
+import com.fisk.dataaccess.utils.sql.*;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -86,28 +83,28 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             dataSource.appName = po.dbName;
             if (DataSourceTypeEnum.MYSQL.getName().equalsIgnoreCase(dataSource.driveType)) {
                 // 表结构
-                dataSource.tableDtoList = mysqlConUtils.getTableNameAndColumns(po.connectStr, po.connectAccount, po.connectPwd, DriverTypeEnum.MYSQL);
+                dataSource.tableDtoList = mysqlConUtils.getTableNameAndColumns(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL));
                 //视图结构
-                dataSource.viewDtoList = mysqlConUtils.loadViewDetails(DriverTypeEnum.MYSQL, po.connectStr, po.connectAccount, po.connectPwd, po.dbName);
+                dataSource.viewDtoList = mysqlConUtils.loadViewDetails(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL));
             } else if (DataSourceTypeEnum.ORACLE.getName().equalsIgnoreCase(dataSource.driveType)) {
                 // 表结构
-                dataSource.tableDtoList = oracleUtils.getTableNameAndColumns(po.connectStr, po.connectAccount, po.connectPwd, DriverTypeEnum.ORACLE);
+                dataSource.tableDtoList = oracleUtils.getTableNameAndColumns(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE), po.connectAccount);
                 //视图结构
-                dataSource.viewDtoList = oracleUtils.loadViewDetails(DriverTypeEnum.ORACLE, po.connectStr, po.connectAccount, po.connectPwd, po.dbName);
+                dataSource.viewDtoList = oracleUtils.loadViewDetails(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE), po.connectAccount);
             } else if (DataSourceTypeEnum.SQLSERVER.getName().equalsIgnoreCase(dataSource.driveType)) {
                 // 表结构
-                dataSource.tableDtoList = sqlServerPlusUtils.getTableNameAndColumnsPlus(po.connectStr, po.connectAccount, po.connectPwd, po.dbName);
+                dataSource.tableDtoList = sqlServerPlusUtils.getTableNameAndColumnsPlus(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER), po.dbName);
                 // 视图结构
-                dataSource.viewDtoList = sqlServerPlusUtils.loadViewDetails(DriverTypeEnum.SQLSERVER, po.connectStr, po.connectAccount, po.connectPwd, po.dbName);
+                dataSource.viewDtoList = sqlServerPlusUtils.loadViewDetails(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER));
             } else if (DataSourceTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(dataSource.driveType)) {
                 // 表结构
-                dataSource.tableDtoList = pgsqlUtils.getTableNameAndColumnsPlus(po.connectStr, po.connectAccount, po.connectPwd, po.dbName);
+                dataSource.tableDtoList = pgsqlUtils.getTableNameAndColumnsPlus(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL));
                 //视图结构
                 dataSource.viewDtoList = new ArrayList<>();
 
             } else if (DataSourceTypeEnum.ORACLE_CDC.getName().equalsIgnoreCase(dataSource.driveType)) {
                 // 表结构
-                dataSource.tableDtoList = oracleUtils.getTableNameAndColumns(po.connectStr, po.connectAccount, po.connectPwd, po.dbName, DriverTypeEnum.ORACLE);
+                dataSource.tableDtoList = oracleUtils.getTableNameAndColumn(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE), po.dbName);
             }
 
             if (CollectionUtils.isNotEmpty(dataSource.tableDtoList)) {
@@ -136,11 +133,13 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             case MYSQL:
                 MysqlConUtils mysqlConUtils = new MysqlConUtils();
                 url = "jdbc:mysql://" + dto.host + ":" + dto.port;
-                return mysqlConUtils.getAllDatabases(url, dto.connectAccount, dto.connectPwd);
+                Connection conn = DbConnectionHelper.connection(url, dto.connectAccount, dto.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL);
+                return mysqlConUtils.getAllDatabases(conn);
             case SQLSERVER:
                 url = "jdbc:sqlserver://" + dto.host + ":" + dto.port;
                 SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
-                return sqlServerPlusUtils.getAllDatabases(url, dto.connectAccount, dto.connectPwd);
+                conn = DbConnectionHelper.connection(url, dto.connectAccount, dto.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
+                return sqlServerPlusUtils.getAllDatabases(conn);
             case ORACLE:
                 return null;
             default:
