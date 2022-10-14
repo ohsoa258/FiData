@@ -14,6 +14,7 @@ import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 import java.util.Map;
@@ -138,4 +139,26 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
             "join tb_app_registration b on a.app_id=b.id\n" +
             "where a.del_flag=1 and a.publish=1")
     List<DataAccessSourceTableDTO> listTableMetaData();
+
+    /**
+     * 修改jobId
+     *
+     * @param id
+     * @param jobId
+     * @return
+     */
+    @Update("update tb_table_access set job_id = #{jobId} where id = #{id} ")
+    Integer updateJobId(@Param("id") long id, @Param("jobId") String jobId);
+
+    /**
+     * 更新表发布状态
+     *
+     * @param id
+     * @param publish
+     * @param publishErrorMsg
+     * @return
+     */
+    @Update("update tb_table_access set publish = #{publish},publish_error_msg = #{publishErrorMsg} where id = #{id} ")
+    Integer updatePublishStatus(@Param("id") long id, @Param("publish") int publish, @Param("publishErrorMsg") String publishErrorMsg);
+
 }

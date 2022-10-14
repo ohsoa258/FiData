@@ -132,6 +132,7 @@ public class OracleCdcUtils {
         SavepointHistoryDTO savepointHistoryDetails = savepointHistory.getSavepointHistoryDetails(dto.tableAccessId, dto.savepointHistoryId);
         if (savepointHistoryDetails != null) {
             str.append("SET execution.savepoint.path = '" + savepointHistoryDetails.savepointPath + "';");
+            str.append(ln);
         }
         str.append(ln);
         redisStr.append(str);

@@ -33,6 +33,7 @@ import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.map.FlinkParameterMap;
 import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
+import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.mapper.TableFieldsMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
@@ -78,6 +79,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     private ITableAccess iTableAccess;
     @Resource
     private TableAccessImpl tableAccessImpl;
+    @Resource
+    private TableAccessMapper tableAccessMapper;
     @Resource
     private IAppRegistration iAppRegistration;
     @Resource
@@ -348,7 +351,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     // 创建表流程
                     publishTaskClient.publishBuildPhysicsTableTask(data);
                     // 构建元数据实时同步数据对象
-                    //buildMetaDataInstanceAttribute(registration, accessId, 1);
+                    buildMetaDataInstanceAttribute(registration, accessId, 1);
                 } else if (registration.appType == 1) {
                     // 非实时物理表发布
                     // 创建表流程
@@ -360,7 +363,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     //log.info(JSON.toJSONString(data));
                     //publishTaskClient.publishBuildAtlasTableTask(data);
                     // 构建元数据实时同步数据对象
-                    //buildMetaDataInstanceAttribute(registration, accessId, 2);
+                    buildMetaDataInstanceAttribute(registration, accessId, 2);
                 }
 
 
@@ -414,6 +417,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 throw new FkException(ResultEnum.UPLOADFILE_REMOTE_ERROR);
             }
         }
+        log.info("创建任务前jobId:" + accessPo.jobId);
         IFlinkJobUpload upload = FlinkFactoryHelper.flinkUpload(flinkConfig.uploadWay);
         flinkConfig.fileName = fileName;
         String jobId = upload.submitJob(FlinkParameterMap.INSTANCES.dtoToDto(flinkConfig));
@@ -423,7 +427,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
         accessPo.jobId = jobId;
         log.info("修改AccessPO参数:{}", JSON.toJSON(accessPo));
-        tableAccessImpl.updateById(accessPo);
+        tableAccessMapper.updateJobId(accessId, jobId);
     }
 
     /**

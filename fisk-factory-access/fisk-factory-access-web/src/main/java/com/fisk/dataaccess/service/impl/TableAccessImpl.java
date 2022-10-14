@@ -1890,9 +1890,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public void updateTablePublishStatus(ModelPublishStatusDTO dto) {
         TableAccessPO model = baseMapper.selectById(dto.tableId);
         if (model != null) {
-            model.publish = dto.publish;
+            /*model.publish = dto.publish;
             model.publishErrorMsg = StringUtils.isNotBlank(dto.publishErrorMsg) ? dto.publishErrorMsg : "";
-            baseMapper.updateById(model);
+            baseMapper.updateById(model);*/
+            baseMapper.updatePublishStatus(dto.tableId, dto.publish, StringUtils.isNotBlank(dto.publishErrorMsg) ? dto.publishErrorMsg : "");
         }
     }
 
