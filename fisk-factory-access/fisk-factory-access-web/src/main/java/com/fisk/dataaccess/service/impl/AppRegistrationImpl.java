@@ -718,7 +718,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     return null;
                 case ORACLE_CDC:
                     OracleUtils oracleUtils = new OracleUtils();
-                    conn = DbConnectionHelper.connection(url, dto.connectAccount, dto.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE);
+                    conn = DbConnectionHelper.connection(dto.connectStr, dto.connectAccount, dto.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE);
                     allDatabases.addAll(oracleUtils.getAllDatabases(conn));
                 default:
                     break;
