@@ -70,20 +70,47 @@ public class ApiConditionImpl implements IApiCondition {
         for (String item : collect) {
             ApiConditionInfoDTO dto = new ApiConditionInfoDTO();
             dto.typeName = item;
-            dto.parentTypeName = "";
-
+            dto.parentTypeName = "1";
+            dto.data = new ArrayList<>();
+            dto.child = new ArrayList<>();
             List<ApiConditionDTO> collect1 = dtoList.stream()
                     .filter(e -> item.equals(e.parent))
                     .distinct()
                     .collect(Collectors.toList());
             if (CollectionUtils.isEmpty(collect1)) {
-                dto.data = new ArrayList<>();
                 continue;
             }
-            for (ApiConditionDTO child : collect1) {
-
+            //查询没有子集的数据
+            List<ApiConditionDTO> collect2 = collect1
+                    .stream()
+                    .filter(e -> StringUtils.isEmpty(e.typeName))
+                    .collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(collect2)) {
+                for (ApiConditionDTO child : collect2) {
+                    if (StringUtils.isEmpty(child.typeName)) {
+                        dto.data.add(ApiConditionMap.INSTANCES.dtoToDetail(child));
+                        continue;
+                    }
+                }
             }
 
+            //查询有子集的数据
+            Map<String, List<ApiConditionDTO>> collect3 = collect1
+                    .stream()
+                    .filter(e -> !StringUtils.isEmpty(e.typeName))
+                    .collect(Collectors.groupingBy(p -> p.getTypeName()));
+            if (!CollectionUtils.isEmpty(collect3)) {
+                for (Map.Entry<String, List<ApiConditionDTO>> map : collect3.entrySet()) {
+                    ApiConditionInfoDTO dto1 = new ApiConditionInfoDTO();
+                    dto1.typeName = map.getKey();
+                    dto1.parentTypeName = collect1.get(0).parent;
+                    dto1.data = new ArrayList<>();
+                    dto1.data.addAll(ApiConditionMap.INSTANCES.dtoListToDetailList(map.getValue()));
+                    dto.child.add(dto1);
+                }
+            }
+
+            list.add(dto);
 
         }
         return list;

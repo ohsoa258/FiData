@@ -98,7 +98,7 @@ public class OracleUtils {
 
             list = new ArrayList<>();
             for (String tableName : tableNames) {
-                ResultSet rs = st.executeQuery("select * from " + tableName + " OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY");
+                ResultSet rs = st.executeQuery("select * from " + tableName + " WHERE ROWNUM=1;");
                 List<TableStructureDTO> colNames = getColNames(rs);
                 if (CollectionUtils.isEmpty(colNames)) {
                     break;
@@ -374,8 +374,6 @@ public class OracleUtils {
         } catch (SQLException e) {
             log.error("conversionType ex:", e);
             throw new FkException(ResultEnum.DATA_OPS_SQL_EXECUTE_ERROR);
-        } finally {
-            AbstractCommonDbHelper.closeResultSet(rs);
         }
 
     }

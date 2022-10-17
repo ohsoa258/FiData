@@ -16,4 +16,6 @@ public class ApiConditionInfoDTO {
 
     public List<ApiConditionDetailDTO> data;
 
+    public List<ApiConditionInfoDTO> child;
+
 }

@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.map;
 
 import com.fisk.dataaccess.dto.apicondition.ApiConditionDTO;
+import com.fisk.dataaccess.dto.apicondition.ApiConditionDetailDTO;
 import com.fisk.dataaccess.entity.ApiConditionPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -23,5 +24,21 @@ public interface ApiConditionMap {
      * @return
      */
     List<ApiConditionDTO> poListToDtoList(List<ApiConditionPO> poList);
+
+    /**
+     * dto==>Detail
+     *
+     * @param dto
+     * @return
+     */
+    ApiConditionDetailDTO dtoToDetail(ApiConditionDTO dto);
+
+    /**
+     * dtoList==>DetailList
+     *
+     * @param dto
+     * @return
+     */
+    List<ApiConditionDetailDTO> dtoListToDetailList(List<ApiConditionDTO> dto);
 
 }
