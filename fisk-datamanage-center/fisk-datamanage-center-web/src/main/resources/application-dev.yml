@@ -44,20 +44,7 @@ atlas:
     terms: /api/atlas/v2/glossary/terms
     category: /api/atlas/v2/glossary/category
   request:
-    url: http://192.168.11.160/:21000
-
-#元数据对象配置
-fidata:
-  database:
-    name: 192.168.1.250,192.168.1.250,192.168.11.134
-    hostname: 192.168.1.250,192.168.1.250,192.168.11.134
-    port: 5432,5432,9030
-    platform: Linux,Linux,Linux
-    protocol: http,http,http
-    rdbmstype: postgresql,postgresql,doris
-    username: postgres,postgres,root
-    password: Password01!,Password01!,Password01!
-    db: dmp_ods,dmp_dw,dmp_olap
+    url: http://192.168.11.160:21000
 
 #血缘同步
 scheduling:
