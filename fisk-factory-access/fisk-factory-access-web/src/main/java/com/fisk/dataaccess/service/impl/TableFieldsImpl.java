@@ -45,6 +45,8 @@ import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
@@ -101,18 +103,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     private DataFactoryClient dataFactoryClient;
     @Resource
     private DataManageClient dataManageClient;
-    @Value("${metadata-instance.rdbmsType}")
-    private String rdbmsType;
-    @Value("${metadata-instance.platform}")
-    private String platform;
-    @Value("${metadata-instance.hostname}")
-    private String hostname;
-    @Value("${metadata-instance.port}")
-    private String port;
-    @Value("${metadata-instance.dbName}")
-    private String dbName;
-    @Value("${metadata-instance.protocol}")
-    private String protocol;
+    @Resource
+    private UserClient userClient;
+    @Value("${fiData-data-ods-source}")
+    private Integer odsSource;
 
     @Resource
     FlinkConfigDTO flinkConfig;
@@ -480,6 +474,17 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         int apiType = 1;
         int tableType = 2;
 
+        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+        if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+
+        String rdbmsType = dataSourceConfig.data.conType.getName();
+        String platform = dataSourceConfig.data.platform;
+        String hostname = dataSourceConfig.data.conIp;
+        String port = dataSourceConfig.data.conPort.toString();
+        String protocol = dataSourceConfig.data.protocol;
+        String dbName = dataSourceConfig.data.conDbname;
         // 实例
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
         MetaDataInstanceAttributeDTO instance = new MetaDataInstanceAttributeDTO();
