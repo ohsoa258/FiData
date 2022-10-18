@@ -36,7 +36,7 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
         String firstLevel = UUID.randomUUID().toString();
         //第一级目录
         data.add(setAssetsDirectory(firstLevel, "资产目录", "", 1, true, null));
-        return aa(data, firstLevel);
+        return getChildAssets(data, firstLevel);
     }
 
     /**
@@ -85,7 +85,7 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
         return data;
     }
 
-    public List<AssetsDirectoryDTO> aa(List<AssetsDirectoryDTO> data, String firstCode) {
+    public List<AssetsDirectoryDTO> getChildAssets(List<AssetsDirectoryDTO> data, String firstCode) {
         //获取第一级
         List<AssetsDirectoryDTO> firstLevel =
                 data.stream()
