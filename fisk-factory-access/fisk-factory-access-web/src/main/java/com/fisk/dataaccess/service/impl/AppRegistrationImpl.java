@@ -692,6 +692,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         DataSourceTypeEnum driveType = DataSourceTypeEnum.getValue(dto.driveType);
         try {
             Connection conn = null;
+            OracleUtils oracleUtils = new OracleUtils();
             switch (Objects.requireNonNull(driveType)) {
                 case MYSQL:
                     MysqlConUtils mysqlConUtils = new MysqlConUtils();
@@ -714,10 +715,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     break;
                 case ORACLE:
                     Class.forName(DriverTypeEnum.ORACLE.getName());
-                    DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
-                    return null;
+                    Connection connection = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
+                    allDatabases.addAll(oracleUtils.getAllDatabases(connection));
                 case ORACLE_CDC:
-                    OracleUtils oracleUtils = new OracleUtils();
                     conn = DbConnectionHelper.connection(dto.connectStr, dto.connectAccount, dto.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE);
                     allDatabases.addAll(oracleUtils.getAllDatabases(conn));
                 default:
