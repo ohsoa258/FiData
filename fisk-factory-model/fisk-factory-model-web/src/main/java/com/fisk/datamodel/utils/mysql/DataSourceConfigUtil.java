@@ -3,6 +3,7 @@ package com.fisk.datamodel.utils.mysql;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
-import java.sql.DriverManager;
 
 /**
  * @author JianWenYang
@@ -43,14 +43,8 @@ public class DataSourceConfigUtil {
      */
     public Connection getStatement() {
         DataSourceDTO dwSource = getDwSource();
-        Connection conn;
-        try {
-            Class.forName(dwSource.conType.getDriverName());
-            conn = DriverManager.getConnection(dwSource.conStr, dwSource.conAccount, dwSource.conPassword);
-        } catch (Exception e) {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e);
-        }
-        return conn;
+        AbstractCommonDbHelper commonDbHelper = new AbstractCommonDbHelper();
+        return commonDbHelper.connection(dwSource.conStr, dwSource.conAccount, dwSource.conPassword, dwSource.conType);
     }
 
 }

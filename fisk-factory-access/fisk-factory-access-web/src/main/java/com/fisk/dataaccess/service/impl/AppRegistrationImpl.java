@@ -24,8 +24,8 @@ import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbMetaData.dto.*;
-import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -210,8 +210,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
-            AbstractDbHelper helper = new AbstractDbHelper();
-            Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+            AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
+            Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
             SqlServerConUtils.operationSchema(connection, appRegistrationDTO.appAbbreviation, false);
         }
 
@@ -467,8 +467,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
-            AbstractDbHelper helper = new AbstractDbHelper();
-            Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+            AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
+            Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
             SqlServerConUtils.operationSchema(connection, model.appAbbreviation, true);
         }
 
@@ -681,41 +681,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @SneakyThrows
     @Override
     public List<DbNameDTO> connectDb(DbConnectionDTO dto) {
-/*        Connection conn = null;
-        try {
-            switch (dto.driveType) {
-                case "mysql":
-                    Class.forName(DriverTypeEnum.MYSQL.getName());
-                    conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
-                    return ResultEntityBuild.build(ResultEnum.SUCCESS);
-                case "sqlserver":
-                    //1.加载驱动程序
-                    Class.forName(DriverTypeEnum.SQLSERVER.getName());
-                    //2.获得数据库的连接
-                    conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
-                    return ResultEntityBuild.build(ResultEnum.SUCCESS);
-                case "oracle":
-                    Class.forName(DriverTypeEnum.ORACLE.getName());
-                    conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
-                    return ResultEntityBuild.build(ResultEnum.SUCCESS);
-                default:
-                    return ResultEntityBuild.build(ResultEnum.DATAACCESS_CONNECTDB_WARN);
-            }
-        } catch (Exception e) {
-            if (conn != null) {
-                conn.close();
-            }
-            return ResultEntityBuild.build(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
-        } finally {
-            try {
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                throw new FkException(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
-            }
-        }*/
-
         if (StringUtils.isBlank(dto.driveType)) {
             throw new FkException(ResultEnum.DRIVETYPE_IS_NULL);
         }
@@ -726,30 +691,35 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         DataSourceTypeEnum driveType = DataSourceTypeEnum.getValue(dto.driveType);
         try {
+            Connection conn = null;
+            OracleUtils oracleUtils = new OracleUtils();
             switch (Objects.requireNonNull(driveType)) {
                 case MYSQL:
                     MysqlConUtils mysqlConUtils = new MysqlConUtils();
                     url = "jdbc:mysql://" + dto.host + ":" + dto.port;
-                    allDatabases.addAll(mysqlConUtils.getAllDatabases(url, dto.connectAccount, dto.connectPwd));
+                    conn = DbConnectionHelper.connection(url, dto.connectAccount, dto.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL);
+                    allDatabases.addAll(mysqlConUtils.getAllDatabases(conn));
                     break;
                 case POSTGRESQL:
                     log.info("开始查询pg数据库");
-                    url = "jdbc:postgresql://" + dto.host + ":" + dto.port + "/postgres" ;
-                    MysqlConUtils mysqlConUtils1 = new MysqlConUtils();
-                    allDatabases.addAll(mysqlConUtils1.getPgDatabases(url, dto.connectAccount, dto.connectPwd));
+                    url = "jdbc:postgresql://" + dto.host + ":" + dto.port + "/postgres";
+                    PgsqlUtils pgsqlUtils = new PgsqlUtils();
+                    conn = DbConnectionHelper.connection(url, dto.connectAccount, dto.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL);
+                    allDatabases.addAll(pgsqlUtils.getPgDatabases(conn));
                     break;
                 case SQLSERVER:
                     url = "jdbc:sqlserver://" + dto.host + ":" + dto.port;
                     SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
-                    allDatabases.addAll(sqlServerPlusUtils.getAllDatabases(url, dto.connectAccount, dto.connectPwd));
+                    conn = DbConnectionHelper.connection(url, dto.connectAccount, dto.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
+                    allDatabases.addAll(sqlServerPlusUtils.getAllDatabases(conn));
                     break;
                 case ORACLE:
                     Class.forName(DriverTypeEnum.ORACLE.getName());
-                    DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
-                    return null;
+                    Connection connection = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
+                    allDatabases.addAll(oracleUtils.getAllDatabases(connection));
                 case ORACLE_CDC:
-                    OracleUtils oracleUtils = new OracleUtils();
-                    allDatabases.addAll(oracleUtils.getAllDatabases(dto.connectStr, dto.connectAccount, dto.connectPwd));
+                    conn = DbConnectionHelper.connection(dto.connectStr, dto.connectAccount, dto.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE);
+                    allDatabases.addAll(oracleUtils.getAllDatabases(conn));
                 default:
                     break;
             }

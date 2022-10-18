@@ -67,4 +67,11 @@ public class ApiParameterController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, apiCondition.apiConditionAppend(id));
     }
 
+    @GetMapping("/getApiConditionList")
+    @ApiOperation(value = "获取api表达式数据")
+    public ResultEntity<Object> getApiConditionList() {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, apiCondition.getApiConditionList());
+    }
+
 }

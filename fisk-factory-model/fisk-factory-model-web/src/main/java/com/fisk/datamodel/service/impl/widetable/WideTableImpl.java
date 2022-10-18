@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
@@ -206,10 +207,12 @@ public class WideTableImpl
      */
     public WideTableQueryPageDTO getWideTableData(String sql, int pageSize) {
         WideTableQueryPageDTO data = new WideTableQueryPageDTO();
+        Connection conn = null;
+        Statement st = null;
         try {
             String newSql = sql.replace("external_", "");
-            Connection conn = dataSourceConfigUtil.getStatement();
-            Statement st = conn.createStatement();
+            conn = dataSourceConfigUtil.getStatement();
+            st = conn.createStatement();
             DataSourceDTO odsSource = dataSourceConfigUtil.getDwSource();
             switch (odsSource.conType) {
                 case MYSQL:
@@ -244,25 +247,30 @@ public class WideTableImpl
             data.dataArray=array;
             data.sqlScript=sql;
             //获取列名
-            List<String> columnList=new ArrayList<>();
+            List<String> columnList = new ArrayList<>();
             for (int i = 1; i <= columnCount; i++) {
                 columnList.add(metaData.getColumnLabel(i));
             }
-            data.columnList=columnList;
+            data.columnList = columnList;
         } catch (SQLException e) {
             log.error("getWideTableData:", e);
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e.getMessage());
+        } finally {
+            AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeConnection(conn);
         }
         return data;
     }
 
 
     public WideTableQueryPageDTO getWideTableData(String sql,int pageSize,String aliasName) {
-        WideTableQueryPageDTO data=new WideTableQueryPageDTO();
+        WideTableQueryPageDTO data = new WideTableQueryPageDTO();
+        Connection conn = null;
+        Statement st = null;
         try {
             String newSql = sql.replace("external_", "");
-            Connection conn = dataSourceConfigUtil.getStatement();
-            Statement st = conn.createStatement();
+            conn = dataSourceConfigUtil.getStatement();
+            st = conn.createStatement();
             DataSourceDTO odsSource = dataSourceConfigUtil.getDwSource();
             switch (odsSource.conType) {
                 case MYSQL:
@@ -271,7 +279,7 @@ public class WideTableImpl
                     newSql = newSql + " limit " + pageSize;
                     break;
                 case SQLSERVER:
-                    newSql="select top "+pageSize+" * from ("+sql+") as tabInfo";
+                    newSql = "select top " + pageSize + " * from (" + sql + ") as tabInfo";
                     break;
                 default:
                     throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
@@ -294,16 +302,20 @@ public class WideTableImpl
                 }
                 array.add(jsonObj);
             }
-            data.dataArray=array;
-            data.sqlScript=sql;
+            data.dataArray = array;
+            data.sqlScript = sql;
             //获取列名
-            List<String> columnList=new ArrayList<>();
+            List<String> columnList = new ArrayList<>();
             for (int i = 1; i <= columnCount; i++) {
-                columnList.add(aliasName+metaData.getColumnLabel(i));
+                columnList.add(aliasName + metaData.getColumnLabel(i));
             }
-            data.columnList=columnList;
+            data.columnList = columnList;
         } catch (SQLException e) {
             log.error("getWideTableData ex:", e);
+            throw new FkException(ResultEnum.SQL_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeConnection(conn);
         }
         return data;
     }
@@ -380,14 +392,16 @@ public class WideTableImpl
 
     @Override
     public ResultEnum deleteWideTable(int id) {
+        Connection conn = null;
+        Statement st = null;
         try {
             WideTableConfigPO po = mapper.selectById(id);
             if (po == null) {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
-            Connection conn = dataSourceConfigUtil.getStatement();
-            Statement st = conn.createStatement();
-            String delSql="drop table "+po.name;
+            conn = dataSourceConfigUtil.getStatement();
+            st = conn.createStatement();
+            String delSql = "drop table " + po.name;
             boolean execute = st.execute(delSql);
             if (execute) {
                 throw new FkException(ResultEnum.SQL_ERROR);
@@ -405,8 +419,11 @@ public class WideTableImpl
             return mapper.deleteByIdWithFill(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         } catch (SQLException e) {
             log.error("deleteWideTable ex:", e);
+            throw new FkException(ResultEnum.SQL_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeConnection(conn);
         }
-        return ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**

@@ -9,6 +9,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
@@ -116,18 +117,16 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         return flat>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
-    public void editDateDimension(DimensionDTO dto, String oldTimeTable)
-    {
-
+    public void editDateDimension(DimensionDTO dto, String oldTimeTable) {
+        Connection conn = null;
+        Statement stat = null;
         try {
-            Connection conn = dataSourceConfigUtil.getStatement();
-            Statement stat = conn.createStatement();
-            if (!dto.dimensionTabName.equals(oldTimeTable))
-            {
+            conn = dataSourceConfigUtil.getStatement();
+            stat = conn.createStatement();
+            if (!dto.dimensionTabName.equals(oldTimeTable)) {
                 //删除表
                 boolean execute = stat.execute("drop table " + oldTimeTable);
-                if (execute)
-                {
+                if (execute) {
                     throw new FkException(ResultEnum.DELETE_ERROR);
                 }
             }
@@ -143,13 +142,12 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
                 stat.addBatch(strSql);
                 stat.executeBatch();
             }
-            stat.close();
-            conn.close();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             log.error("editDateDimension ex:", e);
             throw new FkException(ResultEnum.VISUAL_CONNECTION_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(stat);
+            AbstractCommonDbHelper.closeConnection(conn);
         }
     }
 

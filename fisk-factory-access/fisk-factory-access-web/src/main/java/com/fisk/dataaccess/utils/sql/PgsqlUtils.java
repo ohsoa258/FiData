@@ -4,10 +4,12 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.constants.NifiConstants;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
 import com.fisk.dataaccess.dto.json.ApiTableDTO;
@@ -25,7 +27,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 
 /**
@@ -55,16 +60,16 @@ public class PgsqlUtils {
      */
 
     public Connection getPgConn() {
-        Connection conn = null;
-        try {
-            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
-            Class.forName(dataSourceConfig.data.conType.getDriverName());
-            conn = DriverManager.getConnection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword);
-        } catch (ClassNotFoundException | SQLException e) {
-            log.error("【getPgConn】创建pgsql连接驱动失败, ex", e);
-            throw new FkException(ResultEnum.CREATE_PG_CONNECTION);
+
+        AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
+        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+        if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
-        return conn;
+        return helper.connection(dataSourceConfig.data.conStr,
+                dataSourceConfig.data.conAccount,
+                dataSourceConfig.data.conPassword,
+                DataSourceTypeEnum.POSTGRESQL);
     }
 
 
@@ -81,16 +86,13 @@ public class PgsqlUtils {
      * @params password
      * @params dbName
      */
-    public List<TablePyhNameDTO> getTableNameAndColumnsPlus(String url, String user, String password, String dbName) {
+    public List<TablePyhNameDTO> getTableNameAndColumnsPlus(Connection conn) {
 
         List<TablePyhNameDTO> list = new ArrayList<>();
-
+        Statement stmt = null;
         try {
-            //1.加载驱动程序
-            Class.forName("org.postgresql.Driver");
-            //2.获得数据库的连接
-            Connection conn = DriverManager.getConnection(url, user, password);
-            Statement stmt = conn.createStatement();
+
+            stmt = conn.createStatement();
             list = new ArrayList<>();
             ResultSet resultSet = null;
             // 获取指定数据库所有表
@@ -114,11 +116,12 @@ public class PgsqlUtils {
                 }
                 tablePyhName.fields = tableStructures;
             }
-
-            conn.close();
-        } catch (ClassNotFoundException | SQLException e) {
+        } catch (SQLException e) {
             log.error("【getTableNameAndColumnsPlus】获取表名及表字段失败, ex", e);
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(stmt);
+            AbstractCommonDbHelper.closeConnection(conn);
         }
         return list;
     }
@@ -142,14 +145,12 @@ public class PgsqlUtils {
             log.info("操作类型AE86: 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods;  " + flag);
             log.info("pg推送数据的函数: " + sqlList.get(flag));
             statement.executeUpdate(sqlList.get(flag));
-
-            statement.close();
-            pgConn.close();
         } catch (SQLException e) {
             log.error("批量执行SQL异常: " + e);
-            statement.close();
-            pgConn.close();
             return ResultEnum.STG_TO_ODS_ERROR;
+        } finally {
+            AbstractCommonDbHelper.closeStatement(statement);
+            AbstractCommonDbHelper.closeConnection(pgConn);
         }
 
         return ResultEnum.SUCCESS;
@@ -236,13 +237,8 @@ public class PgsqlUtils {
             log.info("本次添加的sql个数为: " + countSql);
             // 提交要执行的批处理，防止 JDBC 执行事务处理
             con.commit();
-            statement.close();
-            // 关闭相关连接
-            con.close();
         } catch (SQLException e) {
             log.error("批量执行SQL异常: {}", e.getMessage());
-            statement.close();
-            con.close();
             // 执行sql异常,重置记录的条数
             countSql = 0;
             ApiSqlResultDTO apiSqlResultDto = new ApiSqlResultDTO();
@@ -250,6 +246,9 @@ public class PgsqlUtils {
             apiSqlResultDto.setCount(0);
             list.add(apiSqlResultDto);
             return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR, list);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(statement);
+            AbstractCommonDbHelper.closeConnection(con);
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, JSON.toJSONString(list));
@@ -347,13 +346,8 @@ public class PgsqlUtils {
             System.out.println("本次添加的sql个数为: " + countSql);
             // 提交要执行的批处理，防止 JDBC 执行事务处理
             con.commit();
-            statement.close();
-            // 关闭相关连接
-            con.close();
         } catch (SQLException e) {
             log.error("批量执行SQL异常: {}", e.getMessage());
-            statement.close();
-            con.close();
             // 执行sql异常,重置记录的条数
             countSql = 0;
             ApiSqlResultDTO apiSqlResultDto = new ApiSqlResultDTO();
@@ -361,6 +355,9 @@ public class PgsqlUtils {
             apiSqlResultDto.setCount(0);
             list.add(apiSqlResultDto);
             return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR, list);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(statement);
+            AbstractCommonDbHelper.closeConnection(con);
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, JSON.toJSONString(list));
@@ -374,6 +371,27 @@ public class PgsqlUtils {
      */
     public List<Map<String, Object>> executePgSql(String sql) {
         return AbstractDbHelper.execQueryResultMaps(sql, getPgConn());
+    }
+
+    public List<String> getPgDatabases(Connection conn) {
+
+        List<String> dbName = new ArrayList<>();
+        Statement stmt = null;
+        try {
+            stmt = conn.createStatement();
+            ResultSet resultSet = stmt.executeQuery("select * from pg_database;");
+            while (resultSet.next()) {
+                dbName.add(resultSet.getString("datname"));
+            }
+        } catch (SQLException e) {
+            log.error("pg获取数据库集合失败,{}", e);
+            throw new FkException(ResultEnum.GET_DATABASE_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(stmt);
+            AbstractCommonDbHelper.closeConnection(conn);
+        }
+
+        return dbName;
     }
 
 }

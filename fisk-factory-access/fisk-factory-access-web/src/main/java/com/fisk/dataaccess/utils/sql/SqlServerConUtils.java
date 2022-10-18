@@ -2,7 +2,7 @@ package com.fisk.dataaccess.utils.sql;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +19,8 @@ import java.util.List;
 @Slf4j
 public class SqlServerConUtils {
 
-    private static Connection conn = null;
-    private static Statement stmt = null;
+    private static String prefix_ods = "ods_";
+    private static String prefix_stg = "stg_";
 
     /**
      * 获取SQL server具体库中所有表名
@@ -77,23 +77,48 @@ public class SqlServerConUtils {
     }
 
     /**
+     * 创建schema
+     *
+     * @param conn
+     * @param schemaName
+     * @return
+     */
+    public static void operationSchema(Connection conn, String schemaName, boolean delete) {
+        Statement stmt = null;
+        try {
+            stmt = conn.createStatement();
+            StringBuilder str = new StringBuilder();
+            if (!delete) {
+                str.append("CREATE SCHEMA " + prefix_ods + " " + schemaName + ";");
+                str.append("CREATE SCHEMA " + prefix_stg + " " + schemaName + ";");
+            } else {
+                str.append("DROP SCHEMA " + prefix_ods + " " + schemaName + ";");
+                str.append("DROP SCHEMA " + prefix_stg + " " + schemaName + ";");
+            }
+            if (!stmt.execute(str.toString())) {
+                throw new FkException(ResultEnum.SCHEMA_ERROR);
+            }
+        } catch (SQLException e) {
+            log.error("operationSchema ex:", e);
+            throw new FkException(ResultEnum.SCHEMA_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(stmt);
+            AbstractCommonDbHelper.closeConnection(conn);
+        }
+    }
+
+    /**
      * 根据库名获取下属表及表字段
      *
-     * @param url      url
-     * @param user     user
-     * @param password password
-     * @param dbName   库名
+     * @param conn
+     * @param dbName 库名
      * @return 下属表及表字段
      */
-    public List<TablePyhNameDTO> getTableNameAndColumns(String url, String user, String password, String dbName) {
+    public List<TablePyhNameDTO> getTableNameAndColumns(Connection conn, String dbName) {
 
         List<TablePyhNameDTO> list = null;
-
+        Statement stmt = null;
         try {
-            //1.加载驱动程序
-            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            //2.获得数据库的连接
-            conn = DriverManager.getConnection(url, user, password);
             stmt = conn.createStatement();
             list = new ArrayList<>();
 
@@ -111,44 +136,14 @@ public class SqlServerConUtils {
                 tag++;
                 list.add(tablePyhNameDTO);
             }
-
-            conn.close();
-        } catch (ClassNotFoundException | SQLException e) {
+        } catch (SQLException e) {
             log.error("【getTableNameAndColumns】获取表及表字段报错, ex", e);
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(stmt);
+            AbstractCommonDbHelper.closeConnection(conn);
         }
         return list;
-    }
-
-    /**
-     * 创建schema
-     *
-     * @param conn
-     * @param schemaName
-     * @return
-     */
-    public static void operationSchema(Connection conn, String schemaName, boolean delete) {
-        Statement stmt = null;
-        try {
-            stmt = conn.createStatement();
-            StringBuilder str = new StringBuilder();
-            if (!delete) {
-                str.append("CREATE SCHEMA ods_" + schemaName + ";");
-                str.append("CREATE SCHEMA stg_" + schemaName + ";");
-            } else {
-                str.append("DROP SCHEMA ods_" + schemaName + ";");
-                str.append("DROP SCHEMA stg_" + schemaName + ";");
-            }
-            if (!stmt.execute(str.toString())) {
-                throw new FkException(ResultEnum.SCHEMA_ERROR);
-            }
-        } catch (SQLException e) {
-            log.error("operationSchema ex:", e);
-            throw new FkException(ResultEnum.SCHEMA_ERROR);
-        } finally {
-            AbstractDbHelper.closeStatement(stmt);
-            AbstractDbHelper.closeConnection(conn);
-        }
     }
 
 
