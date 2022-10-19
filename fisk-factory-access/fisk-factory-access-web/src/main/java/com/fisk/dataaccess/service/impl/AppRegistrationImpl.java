@@ -14,6 +14,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.core.utils.CreateSchemaSqlUtils;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
@@ -211,8 +212,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
             AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
-            Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
-            SqlServerConUtils.operationSchema(connection, appRegistrationDTO.appAbbreviation, false);
+            Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, dataSourceConfig.data.conType);
+            CreateSchemaSqlUtils.buildSchemaSql(connection, appRegistrationDTO.appAbbreviation, false, dataSourceConfig.data.conType);
         }
 
         // 添加元数据信息
@@ -469,7 +470,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             }
             AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
             Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
-            SqlServerConUtils.operationSchema(connection, model.appAbbreviation, true);
+            CreateSchemaSqlUtils.buildSchemaSql(connection, model.appAbbreviation, true, dataSourceConfig.data.conType);
         }
 
         // 删除元数据信息
