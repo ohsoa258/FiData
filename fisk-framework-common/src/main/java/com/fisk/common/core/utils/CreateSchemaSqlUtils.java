@@ -20,14 +20,15 @@ public class CreateSchemaSqlUtils {
         StringBuilder str = new StringBuilder();
         switch (dataSourceTypeEnum) {
             case SQLSERVER:
-                if (!delete) {
-                    str.append("CREATE SCHEMA " + schemaName + ";");
-                    break;
-                }
-                str.append("DROP SCHEMA " + schemaName + ";");
+                str.append(delete == true ? "DROP SCHEMA " : "CREATE SCHEMA ");
+                str.append(schemaName);
+                break;
+            case POSTGRESQL:
+                str.append(delete == true ? "DROP SCHEMA " : "CREATE SCHEMA IF NOT EXISTS ");
+                str.append(schemaName);
                 break;
             default:
-                break;
+                throw new FkException(ResultEnum.SCHEMA_ERROR);
         }
         Statement stmt = null;
         try {
