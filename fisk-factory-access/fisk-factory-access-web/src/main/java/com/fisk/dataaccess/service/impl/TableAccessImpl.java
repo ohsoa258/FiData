@@ -138,10 +138,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private TableSyncmodeImpl tableSyncmodeImpl;
     @Resource
     private FtpImpl ftpImpl;
-    @Value("${metadata-instance.hostname}")
-    private String hostname;
-    @Value("${metadata-instance.dbName}")
-    private String dbName;
     @Resource
     GetConfigDTO getConfig;
 
@@ -711,6 +707,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         vo.userId = userInfo.id;
         vo.tableList = voList;
         vo.tableIdList = tableIdList;
+
+        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+        if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        String hostname = dataSourceConfig.data.conIp;
+        String dbName = dataSourceConfig.data.conDbname;
 
         List<String> qualifiedNames = new ArrayList<>();
         qualifiedNames.add(hostname + "_" + dbName + "_" + id);

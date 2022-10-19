@@ -137,10 +137,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     OracleCdcUtils oracleCdcUtils;
     @Resource
     RedisUtil redisUtil;
-    @Value("${metadata-instance.hostname}")
-    private String hostname;
-    @Value("${metadata-instance.dbName}")
-    private String dbName;
     @Value("${fiData-data-ods-source}")
     private Integer odsSource;
     @Resource
@@ -417,6 +413,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             // 删表之前,要将所有的数据提前查出来,不然会导致空指针异常
             tableIdList = accessList.stream().map(TableAccessPO::getId).collect(Collectors.toList());
 
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+            }
+            String hostname = dataSourceConfig.data.conIp;
+            String dbName = dataSourceConfig.data.conDbname;
             for (Long tableId : tableIdList) {
                 TableListVO tableVO = new TableListVO();
                 TableAccessPO po = tableAccessImpl.query().eq("id", tableId).eq("del_flag", 1).one();

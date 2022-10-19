@@ -33,21 +33,6 @@ data-quality-check:
   ip: 192.168.1.250
   dbName: dmp_ods
 
-# 元数据实例信息
-metadata-instance:
-  # 数据库类型
-  rdbmsType: postgresql
-  # 平台
-  platform: Linux
-  # 主机
-  hostname: 192.168.1.250
-  # 端口
-  port: 5432
-  # 数据库
-  dbName: dmp_ods
-  # 网络协议
-  protocol: http
-
 flink-config:
   host: 192.168.11.131
   port: 22
