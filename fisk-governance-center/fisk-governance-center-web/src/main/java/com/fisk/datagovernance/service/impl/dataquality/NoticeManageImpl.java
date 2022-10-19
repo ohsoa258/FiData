@@ -418,7 +418,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         unifiedControlDTO.setType(OlapTableEnum.GOVERNANCE);
         unifiedControlDTO.setDataClassifyEnum(DataClassifyEnum.UNIFIEDCONTROL);
         unifiedControlDTO.setDeleted(isDelTask);
-        log.info("创建nifi调度任务请求参数：", JSON.toJSONString(unifiedControlDTO));
+        log.info("创建nifi调度任务请求参数："+ JSON.toJSONString(unifiedControlDTO));
         ResultEntity<Object> result = publishTaskClient.publishBuildunifiedControlTask(unifiedControlDTO);
         if (result != null) {
             resultEnum = ResultEnum.getEnum(result.getCode());
