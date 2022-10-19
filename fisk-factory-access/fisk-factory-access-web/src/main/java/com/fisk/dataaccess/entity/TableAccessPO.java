@@ -109,4 +109,9 @@ public class TableAccessPO extends BasePO {
      */
     public String displayName;
 
+    /**
+     * stg数据保留天数
+     */
+    public Integer keepNumber;
+
 }
