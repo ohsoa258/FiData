@@ -1,9 +1,14 @@
 package com.fisk.common.core.utils;
 
+import org.junit.Test;
+
 /**
  * @author JianWenYang
  */
 public class TableNameGenerateUtils {
+
+    private static String ods = "ods_";
+    private static String stg = "stg_";
 
     /**
      * 生成ods表名
@@ -15,11 +20,12 @@ public class TableNameGenerateUtils {
      */
     public static String buildOdsTableName(String tableName, String appAbbreviation, Boolean whetherSchema) {
         StringBuilder str = new StringBuilder();
-        str.append("ods_");
-        str.append(appAbbreviation);
         if (whetherSchema) {
+            str.append(appAbbreviation);
             str.append(".");
         } else {
+            str.append(ods);
+            str.append(appAbbreviation);
             str.append("_");
         }
         str.append(tableName);
@@ -36,15 +42,22 @@ public class TableNameGenerateUtils {
      */
     public static String buildStgTableName(String tableName, String appAbbreviation, Boolean whetherSchema) {
         StringBuilder str = new StringBuilder();
-        str.append("stg_");
-        str.append(appAbbreviation);
         if (whetherSchema) {
+            str.append(appAbbreviation);
             str.append(".");
+            str.append(stg);
         } else {
+            str.append(stg);
+            str.append(appAbbreviation);
             str.append("_");
         }
         str.append(tableName);
         return str.toString();
+    }
+
+    @Test
+    public void test() {
+        buildStgTableName("test", "pp", true);
     }
 
 }

@@ -22,10 +22,8 @@ public class CreateSchemaSqlUtils {
             case SQLSERVER:
                 if (!delete) {
                     str.append("CREATE SCHEMA " + schemaName + ";");
-                    str.append("CREATE SCHEMA " + schemaName + ";");
                     break;
                 }
-                str.append("DROP SCHEMA " + schemaName + ";");
                 str.append("DROP SCHEMA " + schemaName + ";");
                 break;
             default:
@@ -34,7 +32,8 @@ public class CreateSchemaSqlUtils {
         Statement stmt = null;
         try {
             stmt = conn.createStatement();
-            if (!stmt.execute(str.toString())) {
+            boolean execute = stmt.execute(str.toString());
+            if (execute) {
                 throw new FkException(ResultEnum.SCHEMA_ERROR);
             }
         } catch (SQLException e) {
