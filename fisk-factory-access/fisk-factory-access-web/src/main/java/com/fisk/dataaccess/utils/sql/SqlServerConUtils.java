@@ -19,9 +19,6 @@ import java.util.List;
 @Slf4j
 public class SqlServerConUtils {
 
-    private static String prefix_ods = "ods_";
-    private static String prefix_stg = "stg_";
-
     /**
      * 获取SQL server具体库中所有表名
      *
@@ -74,37 +71,6 @@ public class SqlServerConUtils {
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
         }
         return colNameList;
-    }
-
-    /**
-     * 创建schema
-     *
-     * @param conn
-     * @param schemaName
-     * @return
-     */
-    public static void operationSchema(Connection conn, String schemaName, boolean delete) {
-        Statement stmt = null;
-        try {
-            stmt = conn.createStatement();
-            StringBuilder str = new StringBuilder();
-            if (!delete) {
-                str.append("CREATE SCHEMA " + prefix_ods + " " + schemaName + ";");
-                str.append("CREATE SCHEMA " + prefix_stg + " " + schemaName + ";");
-            } else {
-                str.append("DROP SCHEMA " + prefix_ods + " " + schemaName + ";");
-                str.append("DROP SCHEMA " + prefix_stg + " " + schemaName + ";");
-            }
-            if (!stmt.execute(str.toString())) {
-                throw new FkException(ResultEnum.SCHEMA_ERROR);
-            }
-        } catch (SQLException e) {
-            log.error("operationSchema ex:", e);
-            throw new FkException(ResultEnum.SCHEMA_ERROR);
-        } finally {
-            AbstractCommonDbHelper.closeStatement(stmt);
-            AbstractCommonDbHelper.closeConnection(conn);
-        }
     }
 
     /**

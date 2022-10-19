@@ -44,8 +44,6 @@ public class DataAssetsImpl implements IDataAssets {
             JSONObject instanceEntity = this.entity.getEntity(dto.instanceGuid);
             JSONObject entity = JSON.parseObject(instanceEntity.getString("entity"));
             JSONObject attributes = JSON.parseObject(entity.getString("attributes"));
-            //获取数据库类型
-            String rdbmsType = attributes.getString("rdbms_type").toLowerCase();
             //获取账号密码
             ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
             if (allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
@@ -55,16 +53,17 @@ public class DataAssetsImpl implements IDataAssets {
             if (!first.isPresent()) {
                 throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
             }
-            ConnectionInformationDTO connectionDTO = jointConnection(rdbmsType, attributes.getString("hostname"), attributes.getString("port"), dto.dbName);
+            //获取数据库类型
+            String rdbmsType = first.get().conType.getName().toLowerCase();
             //连接数据源
-            Connection conn = getStatement(connectionDTO.driver, connectionDTO.url, first.get().conAccount, first.get().conPassword);
+            Connection conn = getStatement(first.get().conType.getDriverName(), first.get().conStr, first.get().conAccount, first.get().conPassword);
             Statement st = conn.createStatement();
             //拼接筛选条件
             String condition = " where 1=1 ";
             if (CollectionUtils.isNotEmpty(dto.filterQueryDTOList)) {
                 condition += generateCondition.getCondition(dto.filterQueryDTOList);
             }
-            String sql="";
+            String sql = "";
             //是否导出
             if (dto.export)
             {

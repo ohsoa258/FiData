@@ -14,6 +14,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.core.utils.CreateSchemaSqlUtils;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
@@ -211,8 +212,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
             AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
-            Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
-            SqlServerConUtils.operationSchema(connection, appRegistrationDTO.appAbbreviation, false);
+            Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, dataSourceConfig.data.conType);
+            CreateSchemaSqlUtils.buildSchemaSql(connection, appRegistrationDTO.appAbbreviation, false, dataSourceConfig.data.conType);
         }
 
         // 添加元数据信息
@@ -469,7 +470,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             }
             AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
             Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
-            SqlServerConUtils.operationSchema(connection, model.appAbbreviation, true);
+            CreateSchemaSqlUtils.buildSchemaSql(connection, model.appAbbreviation, true, dataSourceConfig.data.conType);
         }
 
         // 删除元数据信息
@@ -977,9 +978,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 应用负责人
         tableRuleInfoDto.dataResponsiblePerson = appRegistrationDto.appPrincipal;
         // 表名
-        StringBuilder tablePrefix = new StringBuilder();
-        tablePrefix.append("ods_").append(appRegistrationDto.appAbbreviation).append("_");
-        tableRuleInfoDto.name = tablePrefix + data.tableName;
+        tableRuleInfoDto.name = TableNameGenerateUtils.buildOdsTableName(data.tableName,
+                appRegistrationDto.appAbbreviation, appRegistrationDto.whetherSchema);
         // 类型 1: 表
         tableRuleInfoDto.type = 1;
 
@@ -1029,7 +1029,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     }
                     AppRegistrationPO app = this.query().eq("id", data.appId).select("app_abbreviation").one();
                     tableMetaDataDto.id = e;
-                    tableMetaDataDto.name = "ods_" + (app.appAbbreviation == null ? "" : app.appAbbreviation) + data.tableName;
+                    tableMetaDataDto.name = TableNameGenerateUtils.buildOdsTableName(data.tableName, app.appAbbreviation, app.whetherSchema);
                     tableMetaDataDto.nameAlias = data.tableName;
 
                     // 字段信息
@@ -1229,7 +1229,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
                                                     tableDtoTree.setId(String.valueOf(table.id));
                                                     tableDtoTree.setParentId(String.valueOf(api.id));
-                                                    tableDtoTree.setLabel("ods_" + app.appAbbreviation + "_" + table.tableName);
+                                                    tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
                                                     tableDtoTree.setLabelAlias(table.tableName);
                                                     tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
                                                     tableDtoTree.setSourceType(1);
@@ -1262,7 +1262,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                                 fieldDtoTree.setLabelDesc(field.fieldDes);
                                                                 fieldDtoTree.setSourceType(1);
                                                                 fieldDtoTree.setSourceId(Integer.parseInt(id));
-                                                                fieldDtoTree.setParentName("ods_" + app.appAbbreviation + "_" + table.tableName);
+                                                                fieldDtoTree.setParentName(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                                                fieldDtoTree.setParentName(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
                                                                 fieldDtoTree.setParentNameAlias(table.tableName);
                                                                 fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                                                                 return fieldDtoTree;
@@ -1367,7 +1368,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
                                                     tableDtoTree.setId(String.valueOf(table.id));
                                                     tableDtoTree.setParentId(String.valueOf(api.id));
-                                                    tableDtoTree.setLabel("ods_" + app.appAbbreviation + "_" + table.tableName);
+                                                    tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
                                                     tableDtoTree.setLabelAlias(table.tableName);
                                                     tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
                                                     tableDtoTree.setSourceType(1);
@@ -1401,7 +1402,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                                 fieldDtoTree.setLabelDesc(field.fieldDes);
                                                                 fieldDtoTree.setSourceType(1);
                                                                 fieldDtoTree.setSourceId(Integer.parseInt(id));
-                                                                fieldDtoTree.setParentName("ods_" + app.appAbbreviation + "_" + table.tableName);
+                                                                fieldDtoTree.setParentName(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
                                                                 fieldDtoTree.setParentNameAlias(table.tableName);
                                                                 fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                                                                 return fieldDtoTree;
@@ -1440,7 +1441,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                         FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
                                         tableDtoTree.setId(String.valueOf(table.id));
                                         tableDtoTree.setParentId(String.valueOf(app.id));
-                                        tableDtoTree.setLabel("ods_" + app.appAbbreviation + "_" + table.tableName);
+                                        tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
                                         tableDtoTree.setLabelAlias(table.tableName);
                                         tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
                                         tableDtoTree.setSourceType(1);
@@ -1474,7 +1475,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     fieldDtoTree.setLabelDesc(field.fieldDes);
                                                     fieldDtoTree.setSourceType(1);
                                                     fieldDtoTree.setSourceId(Integer.parseInt(id));
-                                                    fieldDtoTree.setParentName("ods_" + app.appAbbreviation + "_" + table.tableName);
+                                                    fieldDtoTree.setParentName(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
                                                     fieldDtoTree.setParentNameAlias(table.tableName);
                                                     fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                                                     return fieldDtoTree;

@@ -340,7 +340,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         List<Integer> datasourceId = new ArrayList<>();
         datasourceId.add(dwId);
         datasourceId.add(odsId);
-        
+
         datasourceId.forEach(t -> {
             DataSourceDTO dataSourceDTO = fiDataDataSources.stream().filter(item -> item.getId() == t).findFirst().orElse(null);
             if (dataSourceDTO != null) {
