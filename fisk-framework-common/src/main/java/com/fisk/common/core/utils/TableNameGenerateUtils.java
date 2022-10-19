@@ -1,7 +1,5 @@
 package com.fisk.common.core.utils;
 
-import org.junit.Test;
-
 /**
  * @author JianWenYang
  */
@@ -53,11 +51,6 @@ public class TableNameGenerateUtils {
         }
         str.append(tableName);
         return str.toString();
-    }
-
-    @Test
-    public void test() {
-        buildStgTableName("test", "pp", true);
     }
 
 }

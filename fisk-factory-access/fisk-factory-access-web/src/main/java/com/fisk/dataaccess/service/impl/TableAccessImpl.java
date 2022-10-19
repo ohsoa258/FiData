@@ -39,7 +39,6 @@ import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.*;
-import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
@@ -1561,7 +1560,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             // 源字段
             dto.sourceFieldName = metaData.getColumnLabel(i);
             dto.sourceFieldType = metaData.getColumnTypeName(i);
+            dto.sourceFieldPrecision = metaData.getScale(i);
             dto.fieldName = metaData.getColumnLabel(i);
+            //int precision = metaData.getScale(i);
+            //System.out.println("精度:" + precision + ",类型名称:" + metaData.getColumnTypeName(i) + ",长度:" + metaData.getPrecision(i));
             String tableName = metaData.getTableName(i) + "key";
             if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equals(dto.fieldName) || tableName.equals("ods_" + dto.fieldName)) {
                 continue;
@@ -1737,62 +1739,20 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Override
     public OdsResultDTO getDataAccessQueryList(OdsQueryDTO query) {
-        String mysqlDriver = "mysql";
-        String sqlserverDriver = "sqlserver";
         AppDataSourcePO po = appDataSourceImpl.query().eq("app_id", query.appId).one();
-
         OdsResultDTO array = new OdsResultDTO();
         Instant inst1 = Instant.now();
+        Connection conn = null;
+        Statement st = null;
+        ResultSet rs = null;
         try {
-            Connection conn = null;
-            Statement st = null;
-            if (po.driveType.equalsIgnoreCase(mysqlDriver)) {
-                conn = getStatement(DriverTypeEnum.MYSQL.getName(), po.connectStr, po.connectAccount, po.connectPwd);
-                // 以流的形式    第一个参数: 只可向前滚动查询     第二个参数: 指定不可以更新 ResultSet
-                /*
-                如果PreparedStatement对象初始化时resultSetType参数设置为TYPE_FORWARD_ONLY，
-                在从ResultSet（结果集）中读取记录的时，对于访问过的记录就自动释放了内存。
-                而设置为TYPE_SCROLL_INSENSITIVE或TYPE_SCROLL_SENSITIVE时为了保证能游标能向上移动到任意位置，
-                已经访问过的所有都保留在内存中不能释放。所以大量数据加载的时候，就OOM了
-                 */
-                st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-                // 每次流10条
-//                st.setFetchSize(Integer.MIN_VALUE);
-                st.setMaxRows(10);
-            } else if (po.driveType.equalsIgnoreCase(sqlserverDriver)) {
-                //1.加载驱动程序
-                Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-                //2.获得数据库的连接
-                conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
-                st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-//                st.setFetchSize(Integer.MIN_VALUE);
-                st.setMaxRows(10);
-            } else if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName())) {
-                //1.加载驱动程序
-                Class.forName(com.fisk.dataaccess.enums.DriverTypeEnum.ORACLE.getName());
-                //2.获得数据库的连接
-                conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
-                st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-//                st.setFetchSize(Integer.MIN_VALUE);
-                st.setMaxRows(10);
-            } else if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())) {
-                //1.加载驱动程序
-                Class.forName("org.postgresql.Driver");
-                //2.获得数据库的连接
-                conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
-                st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-                //st.setFetchSize(Integer.MIN_VALUE);
-//                conn.setAutoCommit(false);
-                st.setMaxRows(10);
-            } else if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE_CDC.getName())) {
-                //1.加载驱动程序
-                Class.forName(com.fisk.dataaccess.enums.DriverTypeEnum.ORACLE.getName());
-                //2.获得数据库的连接
+            com.fisk.common.core.enums.dataservice.DataSourceTypeEnum dataSourceTypeEnum = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.getEnum(po.driveType.toUpperCase());
+            AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
+            conn = helper.connection(po.connectStr, po.connectAccount, po.connectPwd, dataSourceTypeEnum);
+            st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            st.setMaxRows(10);
+            if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE_CDC.getName())) {
                 query.querySql = "SELECT * FROM " + query.querySql;
-                conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
-                st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-                //st.setFetchSize(Integer.MIN_VALUE);
-                st.setMaxRows(10);
             }
             assert st != null;
             Instant inst2 = Instant.now();
@@ -1803,27 +1763,25 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             log.info("拼语句执行时间 : " + Duration.between(inst2, inst3).toMillis());
 
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
-            ResultSet rs = st.executeQuery(sql);
+            rs = st.executeQuery(sql);
             Instant inst4 = Instant.now();
             log.info("执行sql时间 : " + Duration.between(inst3, inst4).toMillis());
             //获取数据集
             array = resultSetToJsonArrayDataAccess(rs);
-            if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE_CDC.getName())
+            if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName())
                     && !CollectionUtils.isEmpty(array.fieldNameDTOList)) {
-                array = cdcSetSourceInfo(array, query);
+                array = cdcSetSourceInfo(array);
             }
             Instant inst5 = Instant.now();
             log.info("封装数据执行时间 : " + Duration.between(inst4, inst5).toMillis());
 
             array.sql = sql;
-            rs.close();
-            System.out.println("关闭rs");
-            st.close();
-            System.out.println("关闭st");
-            conn.close();
-            System.out.println("关闭conn");
         } catch (Exception e) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e.getMessage());
+        } finally {
+            AbstractCommonDbHelper.closeResultSet(rs);
+            AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeConnection(conn);
         }
         Instant inst5 = Instant.now();
         System.out.println("最终执行时间 : " + Duration.between(inst1, inst5).toMillis());
@@ -1893,9 +1851,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public void updateTablePublishStatus(ModelPublishStatusDTO dto) {
         TableAccessPO model = baseMapper.selectById(dto.tableId);
         if (model != null) {
-            /*model.publish = dto.publish;
-            model.publishErrorMsg = StringUtils.isNotBlank(dto.publishErrorMsg) ? dto.publishErrorMsg : "";
-            baseMapper.updateById(model);*/
             baseMapper.updatePublishStatus(dto.tableId, dto.publish, StringUtils.isNotBlank(dto.publishErrorMsg) ? dto.publishErrorMsg : "");
         }
     }
@@ -1997,24 +1952,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return accessMapper.updateById(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
-    public OdsResultDTO cdcSetSourceInfo(OdsResultDTO data, OdsQueryDTO dto) {
-
-        com.fisk.dataaccess.dto.v3.DataSourceDTO dataSourceDTO = appDataSourceImpl.setDataSourceMeta(dto.appId);
-        Optional<TablePyhNameDTO> first = dataSourceDTO.tableDtoList.stream().filter(e -> e.tableName.equals(dto.tableName)).findFirst();
-        if (!first.isPresent()) {
-            throw new FkException(ResultEnum.TASK_TABLE_NOT_EXIST);
-        }
+    public OdsResultDTO cdcSetSourceInfo(OdsResultDTO data) {
         for (FieldNameDTO item : data.fieldNameDTOList) {
-            Optional<TableStructureDTO> column = first.get().fields.stream().filter(e -> e.fieldName.equals(item.fieldName)).findFirst();
-            if (!column.isPresent()) {
-                throw new FkException(ResultEnum.TASK_TABLE_NOT_EXIST);
-            }
-            item.sourceTableName = first.get().tableName;
-            item.sourceFieldLength = column.get().fieldLength;
-            item.sourceFieldPrecision = column.get().fieldPrecision;
-
             oracleMappingFiDataFieldType(item);
-
         }
         return data;
     }
