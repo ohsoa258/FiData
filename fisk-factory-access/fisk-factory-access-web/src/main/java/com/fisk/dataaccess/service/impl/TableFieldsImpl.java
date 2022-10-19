@@ -185,7 +185,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         tableAccessImpl.updateById(accessPo);
 
         // 发布
-        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, dto.cdcJobScript, dto.useExistTable);
+        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -256,7 +256,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         tableAccessImpl.updateById(model);
 
         // 发布
-        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, dto.cdcJobScript, dto.useExistTable);
+        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
