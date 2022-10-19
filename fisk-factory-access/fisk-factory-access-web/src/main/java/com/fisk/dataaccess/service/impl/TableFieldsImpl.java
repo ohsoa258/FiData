@@ -517,7 +517,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
             MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
             table.setQualifiedName(hostname + "_" + dbName + "_" + tableAccess.getId());
-            table.setName("ods_" + app.appAbbreviation + "_" + tableAccess.getTableName());
+            table.setName(TableNameGenerateUtils.buildOdsTableName(tableAccess.getTableName(),
+                    app.appAbbreviation,
+                    app.whetherSchema));
             table.setContact_info(app.getAppPrincipal());
             table.setDescription(tableAccess.getTableDes());
             table.setComment(String.valueOf(app.getId()));
@@ -550,7 +552,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         // 表
                         MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
                         table.setQualifiedName(hostname + "_" + dbName + "_" + tb.getId());
-                        table.setName("ods_" + app.appAbbreviation + "_" + tb.getTableName());
+                        table.setName(TableNameGenerateUtils.buildOdsTableName(tb.getTableName(),
+                                app.appAbbreviation,
+                                app.whetherSchema));
                         table.setContact_info(app.getAppPrincipal());
                         table.setDescription(tb.getTableDes());
                         table.setComment(String.valueOf(app.getId()));

@@ -3,6 +3,7 @@ package com.fisk.dataaccess.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.api.ApiConfigDTO;
 import com.fisk.dataaccess.dto.api.ApiParameterDTO;
@@ -172,8 +173,10 @@ public class ApiConditionImpl implements IApiCondition {
                 StringBuilder str = new StringBuilder();
                 str.append("select ");
                 str.append(item.parameterValue);
-                str.append(" as datas from ods_");
-                str.append(appRegistrationData.appAbbreviation + "_" + tableAccess.tableName);
+                str.append(" as datas from ");
+                str.append(TableNameGenerateUtils.buildOdsTableName(tableAccess.tableName,
+                        appRegistrationData.appAbbreviation,
+                        appRegistrationData.whetherSchema));
                 sql = str.toString();
             }
             //CurrentDate、CurrentTimeStamp

@@ -18,6 +18,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
@@ -1361,7 +1362,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         for (AppRegistrationDataDTO item : list) {
             item.tableDtoList = TableAccessMap.INSTANCES.poListToDtoList(tableAccessList.stream()
                     .filter(e -> e.appId == item.id).collect(Collectors.toList()));
-            item.tableDtoList.stream().map(e -> e.tableName = "ods_" + item.appAbbreviation + "_" + e.tableName).collect(Collectors.toList());
+            item.tableDtoList.stream().map(e -> e.tableName = TableNameGenerateUtils.buildOdsTableName(e.tableName, item.appAbbreviation, item.whetherSchema)).collect(Collectors.toList());
             if (item.tableDtoList.size() == 0 || tableFieldsList == null || tableFieldsList.size() == 0) {
                 continue;
             }

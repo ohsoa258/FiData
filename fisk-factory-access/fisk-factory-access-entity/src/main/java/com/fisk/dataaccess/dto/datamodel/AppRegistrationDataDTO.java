@@ -1,7 +1,6 @@
 package com.fisk.dataaccess.dto.datamodel;
 
 import lombok.Data;
-import org.omg.CORBA.PUBLIC_MEMBER;
 
 import java.util.List;
 
@@ -14,6 +13,7 @@ public class AppRegistrationDataDTO {
     public long id;
     public String appName;
     public String appAbbreviation;
+    public boolean whetherSchema;
     public List<TableAccessDataDTO> tableDtoList;
 
 }

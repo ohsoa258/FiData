@@ -26,4 +26,25 @@ public class TableNameGenerateUtils {
         return str.toString();
     }
 
+    /**
+     * 生成stg表名
+     *
+     * @param tableName
+     * @param appAbbreviation
+     * @param whetherSchema
+     * @return
+     */
+    public static String buildStgTableName(String tableName, String appAbbreviation, Boolean whetherSchema) {
+        StringBuilder str = new StringBuilder();
+        str.append("stg_");
+        str.append(appAbbreviation);
+        if (whetherSchema) {
+            str.append(".");
+        } else {
+            str.append("_");
+        }
+        str.append(tableName);
+        return str.toString();
+    }
+
 }

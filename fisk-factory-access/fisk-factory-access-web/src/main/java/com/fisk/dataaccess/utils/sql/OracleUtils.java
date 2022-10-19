@@ -134,7 +134,7 @@ public class OracleUtils {
             ResultSet tables = databaseMetaData.getTables(null, user, null, types);
             tablesList = new ArrayList<>();
             while (tables.next()) {
-                tablesList.add(tables.getString("TABLE_NAME"));
+                tablesList.add(user + "." + tables.getString("TABLE_NAME"));
             }
         } catch (SQLException e) {
             throw new FkException(ResultEnum.DATAACCESS_GETTABLE_ERROR);
