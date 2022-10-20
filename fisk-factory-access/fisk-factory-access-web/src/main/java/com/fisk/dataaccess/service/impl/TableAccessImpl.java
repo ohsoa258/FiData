@@ -1844,8 +1844,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 && !dbTypeEnum.getName().equals(DbTypeEnum.oracle_cdc.getName())) {
             String tableName = TableNameGenerateUtils.buildTableName(tableAccessPo.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
             Map<String, String> converSql = publishTaskClient.converSql(tableName, tableAccessPo.sqlScript, dataSourcePo.driveType).data;
-            String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
-            dto.selectSql = sql;
+            //String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
+            dto.selectSql = tableAccessPo.sqlScript;
             dto.queryStartTime = converSql.get(SystemVariableTypeEnum.START_TIME.getValue());
             dto.queryEndTime = converSql.get(SystemVariableTypeEnum.END_TIME.getValue());
         }
