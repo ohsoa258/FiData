@@ -134,7 +134,7 @@ public class OracleUtils {
             ResultSet tables = databaseMetaData.getTables(null, user, null, types);
             tablesList = new ArrayList<>();
             while (tables.next()) {
-                tablesList.add(user + "." + tables.getString("TABLE_NAME"));
+                tablesList.add(tables.getString("TABLE_NAME"));
             }
         } catch (SQLException e) {
             throw new FkException(ResultEnum.DATAACCESS_GETTABLE_ERROR);
@@ -294,13 +294,14 @@ public class OracleUtils {
             list = new ArrayList<>();
             for (String tableName : tableList) {
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-                tablePyhNameDTO.setTableName(tableName);
                 ResultSet rs = st.executeQuery(this.buildSelectTableColumnSql(dbName, tableName));
                 List<TableStructureDTO> colNameList = new ArrayList<>();
                 while (rs.next()) {
                     colNameList.add(conversionType(rs));
                 }
                 tablePyhNameDTO.setFields(colNameList);
+                tableName = dbName + "." + tableName;
+                tablePyhNameDTO.setTableName(tableName);
                 list.add(tablePyhNameDTO);
             }
         } catch (SQLException e) {
