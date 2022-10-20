@@ -53,4 +53,19 @@ public class TableNameGenerateUtils {
         return str.toString();
     }
 
+    /**
+     * 生成表名(不加ods或stg前缀)
+     *
+     * @param tableName
+     * @param appAbbreviation
+     * @param whetherSchema
+     * @return
+     */
+    public static String buildTableName(String tableName, String appAbbreviation, Boolean whetherSchema) {
+        if (whetherSchema) {
+            return appAbbreviation + "." + tableName;
+        }
+        return appAbbreviation + "_" + tableName;
+    }
+
 }

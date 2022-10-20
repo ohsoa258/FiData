@@ -698,7 +698,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableListVO tableListVO = new TableListVO();
 
         tableListVO.userId = userInfo.id;
-        tableListVO.tableName = registrationPo.appAbbreviation + "_" + modelAccess.tableName;
+        tableListVO.tableName = TableNameGenerateUtils.buildTableName(modelAccess.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
         voList.add(tableListVO);
         List<Long> tableIdList = new ArrayList<>();
         tableIdList.add(id);
@@ -1840,7 +1840,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (!dbTypeEnum.getName().equals(DbTypeEnum.RestfulAPI.getName())
                 && !dbTypeEnum.getName().equals(DbTypeEnum.api.getName())
                 && !dbTypeEnum.getName().equals(DbTypeEnum.oracle_cdc.getName())) {
-            Map<String, String> converSql = publishTaskClient.converSql(registrationPo.appAbbreviation + "_" + tableAccessPo.tableName, tableAccessPo.sqlScript, dataSourcePo.driveType).data;
+            String tableName = TableNameGenerateUtils.buildTableName(tableAccessPo.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
+            Map<String, String> converSql = publishTaskClient.converSql(tableName, tableAccessPo.sqlScript, dataSourcePo.driveType).data;
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             dto.selectSql = sql;
             dto.queryStartTime = converSql.get(SystemVariableTypeEnum.START_TIME.getValue());
@@ -1907,7 +1908,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             OdsQueryDTO queryDto = new OdsQueryDTO();
             queryDto.appId = modelReg.id;
             queryDto.querySql = modelAccess.sqlScript;
-            queryDto.tableName = modelReg.appAbbreviation + "_" + modelAccess.tableName;
+            queryDto.tableName = TableNameGenerateUtils.buildTableName(modelAccess.tableName, modelReg.appAbbreviation, modelReg.whetherSchema);
             return filterSqlFieldList(listField, queryDto);
         }
         return null;

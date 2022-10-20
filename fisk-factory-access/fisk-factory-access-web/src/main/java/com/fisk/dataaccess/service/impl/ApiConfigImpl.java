@@ -16,6 +16,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.core.utils.office.pdf.component.PDFHeaderFooter;
 import com.fisk.common.core.utils.office.pdf.component.PDFKit;
 import com.fisk.common.framework.exception.FkException;
@@ -484,7 +485,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 防止\未被解析
             String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
             // 将数据同步到pgsql
-            ResultEntity<Object> result = pushPgSql(null, jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_", jsonKey, dto.apiCode);
+            String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
+            ResultEntity<Object> result = pushPgSql(null, jsonStr, apiTableDtoList, stgName, jsonKey, dto.apiCode);
             resultEnum = ResultEnum.getEnum(result.code);
             msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
 
@@ -575,7 +577,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 防止\未被解析
             String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
             // 将数据同步到pgsql
-            ResultEntity<Object> result = pushPgSql(importDataDto, jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_", jsonKey, dto.apiCode);
+            String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
+            ResultEntity<Object> result = pushPgSql(importDataDto, jsonStr, apiTableDtoList, stgName, jsonKey, dto.apiCode);
             resultEnum = ResultEnum.getEnum(result.code);
             msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
 
@@ -1327,7 +1330,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 DataAccessConfigDTO configDTO = new DataAccessConfigDTO();
                 // 表名
                 ProcessorConfig processorConfig = new ProcessorConfig();
-                processorConfig.targetTableName = app.appAbbreviation + "_" + e.tableName;
+                processorConfig.targetTableName = TableNameGenerateUtils.buildTableName(e.tableName, app.appAbbreviation, app.whetherSchema);
                 // 同步方式
                 DataSourceConfig dataSourceConfig = new DataSourceConfig();
                 dataSourceConfig.syncMode = syncmodePo.syncMode;
