@@ -1,6 +1,5 @@
 package com.fisk.common.core.utils;
 
-import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
@@ -10,8 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author JianWenYang
@@ -68,16 +65,12 @@ public class CreateSchemaSqlUtils {
                 sql = "SELECT count(1) as num FROM sys.schemas where name = '" + schemaName + "'";
                 break;
             case POSTGRESQL:
-                sql = "SELECT count(1) FROM pg_namespace WHERE nspname = '" + schemaName + "'";
+                sql = "SELECT count(1) as num FROM pg_namespace WHERE nspname = '" + schemaName + "'";
                 break;
             default:
                 throw new FkException(ResultEnum.SCHEMA_ERROR);
         }
-        Integer count = 0;
-        List<Map<String, Object>> resultMaps = AbstractCommonDbHelper.execQueryResultMaps(sql, conn);
-        if (!CollectionUtils.isEmpty(resultMaps)) {
-            count = Integer.valueOf(resultMaps.get(0).get("num").toString()).intValue();
-        }
+        Integer count = AbstractCommonDbHelper.executeTotalSql(sql, conn);
         return count > 0 ? true : false;
     }
 
