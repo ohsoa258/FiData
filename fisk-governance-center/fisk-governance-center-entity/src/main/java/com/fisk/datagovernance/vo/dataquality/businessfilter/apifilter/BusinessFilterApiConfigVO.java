@@ -34,7 +34,7 @@ public class BusinessFilterApiConfigVO {
     /**
      * api授权body类型 from-data/row
      */
-    @ApiModelProperty(value = "api授权body类型 from-data/row")
+    @ApiModelProperty(value = "api授权body类型 from-data/raw")
     public String apiAuthBodyType;
 
     /**
@@ -52,6 +52,6 @@ public class BusinessFilterApiConfigVO {
     /**
      * api body类型 from-data/row
      */
-    @ApiModelProperty(value = "api body类型 from-data/row")
+    @ApiModelProperty(value = "api body类型 from-data/raw")
     public String apiBodyType;
 }

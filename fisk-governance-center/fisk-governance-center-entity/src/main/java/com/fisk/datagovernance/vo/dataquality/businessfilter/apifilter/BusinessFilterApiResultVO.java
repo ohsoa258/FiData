@@ -74,10 +74,10 @@ public class BusinessFilterApiResultVO {
     public int authField;
 
     /**
-     * 更新标识字段
+     * 更新标识字段 1:是  2:否
      */
-    @ApiModelProperty(value = "更新标识字段")
-    public String primaryKeyField;
+    @ApiModelProperty(value = "更新标识字段 1:是  2:否")
+    public int primaryKeyField;
 
     /**
      * 子级

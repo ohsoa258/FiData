@@ -66,28 +66,39 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     private UserHelper userHelper;
 
     @Override
-    public Page<BusinessFilterVO> getAll(BusinessFilterQueryDTO query) {
+    public Page<BusinessFilterVO> getAll(BusinessFilterQueryDTO query)
+    {
+        int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(query.sourceTypeEnum, query.datasourceId);
+        if (query.sourceTypeEnum == SourceTypeEnum.FiData) {
+            query.datasourceId = idByDataSourceId;
+        }
         Page<BusinessFilterVO> all = baseMapper.getAll(query.page, query.datasourceId, query.tableUnique,
                 query.tableBusinessType, query.keyword);
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
-            // 查询API清洗规则
-            List<BusinessFilterQueryApiVO> apiListByRuleIds = null;
-            List<BusinessFilterVO> apiRules = all.getRecords().stream().filter(t -> t.getTemplateType() == TemplateTypeEnum.API_FILTER_TEMPLATE).collect(Collectors.toList());
-            if (CollectionUtils.isNotEmpty(apiRules)) {
-                List<Integer> apiRuleIds = apiRules.stream().map(BusinessFilterVO::getId).collect(Collectors.toList());
-                apiListByRuleIds = businessFilterApiManageImpl.getApiListByRuleIds(apiRuleIds);
-            }
-            if (CollectionUtils.isNotEmpty(apiListByRuleIds)) {
-                for (int i = 0; i < all.getRecords().size(); i++) {
-                    BusinessFilterVO businessFilterVO = all.getRecords().get(i);
-                    BusinessFilterQueryApiVO apiVO = apiListByRuleIds.stream().filter(t -> t.getRuleId() == businessFilterVO.getId()).findFirst().orElse(null);
-                    if (apiVO != null) {
-                        businessFilterVO.setApiInfo(apiVO);
-                    }
+            List<BusinessFilterVO> allExtends = getAllExtends(all.getRecords());
+            all.setRecords(allExtends);
+        }
+        return all;
+    }
+
+    private List<BusinessFilterVO> getAllExtends(List<BusinessFilterVO> source){
+        List<BusinessFilterVO> result = source;
+        List<BusinessFilterQueryApiVO> apiListByRuleIds = null;
+        List<BusinessFilterVO> apiRules = source.stream().filter(t -> t.getTemplateType() == TemplateTypeEnum.API_FILTER_TEMPLATE).collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(apiRules)) {
+            List<Integer> apiRuleIds = apiRules.stream().map(BusinessFilterVO::getId).collect(Collectors.toList());
+            apiListByRuleIds = businessFilterApiManageImpl.getApiListByRuleIds(apiRuleIds);
+        }
+        if (CollectionUtils.isNotEmpty(apiListByRuleIds)) {
+            for (int i = 0; i < source.size(); i++) {
+                BusinessFilterVO businessFilterVO = source.get(i);
+                BusinessFilterQueryApiVO apiVO = apiListByRuleIds.stream().filter(t -> t.getRuleId() == businessFilterVO.getId()).findFirst().orElse(null);
+                if (apiVO != null) {
+                    businessFilterVO.setApiInfo(apiVO);
                 }
             }
         }
-        return all;
+        return result;
     }
 
     @Override
@@ -150,7 +161,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
         if (businessFilterPO == null) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
-        //第三步：保存数据校验信息
+        //第三步：保存业务清洗信息
         int i = baseMapper.updateById(businessFilterPO);
         if (i <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;

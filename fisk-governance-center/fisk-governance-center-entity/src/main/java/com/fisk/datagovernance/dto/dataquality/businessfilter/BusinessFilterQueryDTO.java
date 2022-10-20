@@ -1,8 +1,10 @@
 package com.fisk.datagovernance.dto.dataquality.businessfilter;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 /**
  * @author dick
@@ -10,6 +12,7 @@ import io.swagger.annotations.ApiModelProperty;
  * @description 业务清洗查询DTO
  * @date 2022/3/24 13:47
  */
+@Data
 public class BusinessFilterQueryDTO {
     /**
      * 搜索条件
@@ -22,6 +25,12 @@ public class BusinessFilterQueryDTO {
      */
     @ApiModelProperty(value = "数据源表主键id")
     public int datasourceId;
+
+    /**
+     * 数据源类型
+     */
+    @ApiModelProperty(value = "数据源类型")
+    public SourceTypeEnum sourceTypeEnum;
 
     /**
      * 表名称/表Id
