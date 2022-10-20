@@ -125,7 +125,7 @@ public class NoticeVO {
      * 模板名称
      */
     @ApiModelProperty(value = "模板名称")
-    public String templatenName;
+    public String templateName;
 
     /**
      * 模板类型

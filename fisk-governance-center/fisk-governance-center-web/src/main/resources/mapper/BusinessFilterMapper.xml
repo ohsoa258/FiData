@@ -20,7 +20,7 @@
         t2.scene_name,
         t2.scene_desc,
         t2.template_type,
-        t2.templaten_name,
+        t2.template_name,
         t2.template_desc,
         t1.create_time,
         t1.create_user,

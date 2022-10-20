@@ -59,7 +59,7 @@ public class BusinessFilterApiResultPO extends BasePO {
     public int authField;
 
     /**
-     * 更新标识字段
+     * 更新标识字段 1:是  2:否
      */
-    public String primaryKeyField;
+    public int primaryKeyField;
 }

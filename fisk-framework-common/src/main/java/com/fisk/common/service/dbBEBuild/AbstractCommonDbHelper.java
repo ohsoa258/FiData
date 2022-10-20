@@ -246,4 +246,30 @@ public class AbstractCommonDbHelper {
         statement = connection.createStatement();
         statement.execute(sql);
     }
+
+    /**
+     * 获取count条数
+     *
+     * @param sql
+     * @param connection
+     * @return
+     */
+    public static int executeTotalSql(String sql, Connection connection) {
+        Statement st = null;
+        ResultSet rs = null;
+        int rowCount = 0;
+        try {
+            st = connection.createStatement();
+            rs = st.executeQuery(sql);
+            if (rs.next()) {
+                rowCount = rs.getInt("num");
+            }
+        } catch (SQLException e) {
+            log.error("");
+        } finally {
+            AbstractCommonDbHelper.closeResultSet(rs);
+            AbstractCommonDbHelper.closeStatement(st);
+        }
+        return rowCount;
+    }
 }
