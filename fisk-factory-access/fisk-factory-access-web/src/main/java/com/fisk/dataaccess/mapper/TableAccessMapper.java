@@ -161,4 +161,13 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
     @Update("update tb_table_access set publish = #{publish},publish_error_msg = #{publishErrorMsg} where id = #{id} ")
     Integer updatePublishStatus(@Param("id") long id, @Param("publish") int publish, @Param("publishErrorMsg") String publishErrorMsg);
 
+    /**
+     * 设置stg数据保留天数s
+     *
+     * @param id
+     * @param keepNumber
+     * @return
+     */
+    @Update("update tb_table_access set keep_number = #{keepNumber} where id = #{id} ")
+    Integer setKeepNumber(@Param("id") long id, @Param("keepNumber") int keepNumber);
 }

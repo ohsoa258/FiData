@@ -323,6 +323,19 @@ public interface ITableAccess extends IService<TableAccessPO> {
      */
     ResultEnum cdcHeadConfig(CdcHeadConfigDTO dto);
 
+    /**
+     * 获取已存在表
+     *
+     * @return
+     */
     List<String> getUseExistTable();
+
+    /**
+     * 设置stg数据保留天数
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum setKeepNumber(TableKeepNumberDTO dto);
 
 }

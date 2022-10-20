@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
+import com.fisk.dataaccess.dto.table.TableKeepNumberDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.service.ITableAccess;
 import io.swagger.annotations.Api;
@@ -69,8 +70,13 @@ public class TableAccessController {
     @GetMapping("/getUseExistTable")
     @ApiOperation(value = "获取现有表")
     public ResultEntity<Object> getUseExistTable() {
-
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getUseExistTable());
+    }
+
+    @PostMapping("/setKeepNumber")
+    @ApiOperation(value = "设置stg数据保留天数")
+    public ResultEntity<Object> setKeepNumber(@RequestBody TableKeepNumberDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setKeepNumber(dto));
     }
 
 }

@@ -432,11 +432,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // TODO 新增tb_table_business业务时间表
         // 4.保存tb_table_business数据
-        TableBusinessDTO businessDTO = dto.getBusinessDTO();
-        TableBusinessPO modelBusiness = TableBusinessMap.INSTANCES.dtoToPo(businessDTO);
-        boolean updateBusiness = this.businessImpl.updateById(modelBusiness);
-        if (!updateBusiness) {
-            return ResultEnum.SAVE_DATA_ERROR;
+        if (dto.getBusinessDTO() != null) {
+            TableBusinessDTO businessDTO = dto.getBusinessDTO();
+            TableBusinessPO modelBusiness = TableBusinessMap.INSTANCES.dtoToPo(businessDTO);
+            boolean updateBusiness = this.businessImpl.updateById(modelBusiness);
+            if (!updateBusiness) {
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
         }
 
         // 5.保存tb_table_syncmode数据
@@ -2022,6 +2024,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         return list;
+    }
+
+    @Override
+    public ResultEnum setKeepNumber(TableKeepNumberDTO dto) {
+        TableAccessPO model = baseMapper.selectById(dto.id);
+        if (model == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return baseMapper.setKeepNumber(dto.id, dto.keepNumber) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
 }
