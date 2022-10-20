@@ -69,7 +69,6 @@ public class CreateSchemaSqlUtils {
                 break;
             case POSTGRESQL:
                 sql = "SELECT count(1) FROM pg_namespace WHERE nspname = '" + schemaName + "'";
-                ;
                 break;
             default:
                 throw new FkException(ResultEnum.SCHEMA_ERROR);
