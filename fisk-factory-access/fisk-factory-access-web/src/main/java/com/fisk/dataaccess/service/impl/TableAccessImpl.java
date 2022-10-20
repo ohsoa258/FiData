@@ -1986,7 +1986,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             case NVARCHAR2:
             case NCHAR:
             case CHAR:
-                dto.fieldType = FiDataDataTypeEnum.VARCHAR.getName();
+                dto.fieldType = FiDataDataTypeEnum.NVARCHAR.getName();
                 break;
             case TIMESTAMP:
             case TIMESTAMPWITHLOCALTIMEZONE:

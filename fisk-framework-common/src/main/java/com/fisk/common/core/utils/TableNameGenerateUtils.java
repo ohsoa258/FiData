@@ -54,7 +54,7 @@ public class TableNameGenerateUtils {
     }
 
     /**
-     * 生成表名(不加ods或stg前缀)
+     * 生成ods表名(不加ods或stg前缀)
      *
      * @param tableName
      * @param appAbbreviation
