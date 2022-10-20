@@ -7,7 +7,6 @@ import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.app.AppNameDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
@@ -254,9 +253,9 @@ public class PhysicalTableController {
         dataFactoryClient.editByDeleteTable(list);
 
         // 删除元数据
-        MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
+       /* MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
         metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.qualifiedNames);
-        dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
+        dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);*/
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS,result);
     }
