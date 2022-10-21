@@ -1745,6 +1745,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public OdsResultDTO getDataAccessQueryList(OdsQueryDTO query) {
         AppDataSourcePO po = appDataSourceImpl.query().eq("app_id", query.appId).one();
+        AppRegistrationPO registration = appRegistrationImpl.query().eq("id", query.appId).one();
         OdsResultDTO array = new OdsResultDTO();
         Instant inst1 = Instant.now();
         Connection conn = null;
@@ -1763,8 +1764,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             Instant inst2 = Instant.now();
             log.info("流式设置执行时间 : " + Duration.between(inst1, inst2).toMillis());
             Instant inst3 = Instant.now();
-
-            Map<String, String> converSql = publishTaskClient.converSql(query.tableName, query.querySql, po.driveType).data;
+            String tableName = TableNameGenerateUtils.buildTableName(query.tableName, registration.appAbbreviation, registration.whetherSchema);
+            Map<String, String> converSql = publishTaskClient.converSql(tableName, query.querySql, po.driveType).data;
             log.info("拼语句执行时间 : " + Duration.between(inst2, inst3).toMillis());
 
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
