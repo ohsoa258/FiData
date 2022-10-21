@@ -96,7 +96,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     public ResultEnum insertDataSource(DataSourceDTO dto) {
         QueryWrapper<DataSourcePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DataSourcePO::getName, dto.name)
-                .ne(DataSourcePO::getSourceType, dto.sourceType)
+                .eq(DataSourcePO::getSourceType, dto.sourceType)
                 .eq(DataSourcePO::getDelFlag, 1);
         DataSourcePO data = baseMapper.selectOne(queryWrapper);
         if (data != null) {
