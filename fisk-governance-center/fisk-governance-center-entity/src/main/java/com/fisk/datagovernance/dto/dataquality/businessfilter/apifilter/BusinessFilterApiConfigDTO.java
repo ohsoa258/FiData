@@ -31,9 +31,9 @@ public class BusinessFilterApiConfigDTO {
     public String apiAuthAddress;
 
     /**
-     * api授权body类型  from-data/raw
+     * api授权body类型  form-data/raw
      */
-    @ApiModelProperty(value = "api授权body类型  from-data/raw")
+    @ApiModelProperty(value = "api授权body类型  form-data/raw")
     public String apiAuthBodyType;
 
     /**
@@ -55,9 +55,9 @@ public class BusinessFilterApiConfigDTO {
     public String apiAddress;
 
     /**
-     * api body类型  from-data/raw
+     * api body类型  form-data/raw
      */
-    @ApiModelProperty(value = "api body类型  from-data/raw")
+    @ApiModelProperty(value = "api body类型  form-data/raw")
     public String apiBodyType;
 
     /**

@@ -233,7 +233,7 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
                         rawDataParams.put(t.getApiParamKey(), t.getApiParamValue());
                     });
                     apiHttpRequestDto.setJsonObject(rawDataParams);
-                } else if (apiConfig.getApiAuthBodyType() == "from-data") {
+                } else if (apiConfig.getApiAuthBodyType() == "form-data") {
                     apiParmConfig.forEach(t -> {
                         formDataParams.put(t.getApiParamKey(), t.getApiParamValue());
                     });

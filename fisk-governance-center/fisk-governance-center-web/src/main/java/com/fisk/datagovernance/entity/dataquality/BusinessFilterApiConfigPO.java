@@ -27,7 +27,7 @@ public class BusinessFilterApiConfigPO extends BasePO {
     public String apiAuthAddress;
 
     /**
-     * api授权body类型  from-data/raw
+     * api授权body类型  form-data/raw
      */
     public String apiAuthBodyType;
 
@@ -42,7 +42,7 @@ public class BusinessFilterApiConfigPO extends BasePO {
     public String apiAddress;
 
     /**
-     * api body类型  from-data/raw
+     * api body类型  form-data/raw
      */
     public String apiBodyType;
 
