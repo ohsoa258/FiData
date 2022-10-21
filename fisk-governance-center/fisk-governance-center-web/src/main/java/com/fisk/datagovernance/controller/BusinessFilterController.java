@@ -62,13 +62,13 @@ public class BusinessFilterController {
     }
 
     @ApiOperation("API清洗,调用授权API获取Token")
-    @PutMapping("/collAuthApi")
+    @PostMapping("/collAuthApi")
     public ResultEntity<String> collAuthApi(@RequestBody BusinessFilterDTO dto) {
         return service.collAuthApi(dto);
     }
 
     @ApiOperation("API清洗，调用API清洗数据")
-    @PutMapping("/collApi")
+    @PostMapping("/collApi")
     public ResultEntity<Object> collApi(@RequestBody BusinessFilterDTO dto) {
         return ResultEntityBuild.build(service.collApi(dto));
     }
