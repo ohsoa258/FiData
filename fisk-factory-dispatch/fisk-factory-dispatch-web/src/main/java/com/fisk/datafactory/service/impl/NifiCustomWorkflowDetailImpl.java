@@ -143,6 +143,9 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             if (e.schedule == null || e.script == null || "".equals(e.script)) {
                 return ResultEntityBuild.build(ResultEnum.SCHEDULE_PARAME_NULL);
             }
+            if (!VerifyCronUtils.isValidExpression(e.script)) {
+                return ResultEntityBuild.build(ResultEnum.CRON_ERROR);
+            }
         }
 
         // 批量保存tb_nifi_custom_wokflow_detail
