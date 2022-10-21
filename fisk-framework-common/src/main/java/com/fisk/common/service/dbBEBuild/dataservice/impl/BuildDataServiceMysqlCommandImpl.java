@@ -57,4 +57,18 @@ public class BuildDataServiceMysqlCommandImpl implements IBuildDataServiceSqlCom
                 "\tAND TABLE_NAME = '%s'", dbName, tableName);
        return  sql;
     }
+
+    @Override
+    public String buildUseExistAllTableFiled(String dbName) {
+        String sql = String.format("SELECT\n" +
+                "\tTABLE_NAME AS originalTableName,\n" +
+                "\tCOLUMN_NAME AS originalFieldName,\n" +
+                "\tCOLUMN_COMMENT AS originalFieldDesc,\n" +
+                "\t'' AS originalFramework \n" +
+                "FROM\n" +
+                "\tinformation_schema.`COLUMNS` \n" +
+                "WHERE\n" +
+                "\tTABLE_SCHEMA = '%s'", dbName);
+        return  sql;
+    }
 }

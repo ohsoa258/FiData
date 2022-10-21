@@ -23,7 +23,7 @@ public class BusinessFilterSaveDTO {
      * API请求参数配置
      */
     @ApiModelProperty(value = "API请求参数配置")
-    public List<BusinessFilterApiParmDTO> apiParmConfig;
+    public List<BusinessFilterApiParamDTO> apiParamConfig;
 
     /**
      * API返回结果配置

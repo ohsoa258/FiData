@@ -78,4 +78,11 @@ public interface IBuildDataServiceSqlCommand {
      */
     String buildUseExistTableFiled(String dbName,String tableName);
 
+    /**
+     * 查询指定库下表的字段信息
+     *
+     * @param dbName 库名称
+     * @return sql
+     */
+    String buildUseExistAllTableFiled(String dbName);
 }

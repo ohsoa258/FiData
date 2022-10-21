@@ -17,6 +17,8 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
+import com.fisk.common.service.dbBEBuild.dataservice.BuildDataServiceHelper;
+import com.fisk.common.service.dbBEBuild.dataservice.IBuildDataServiceSqlCommand;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
@@ -622,43 +624,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         List<FieldInfoVO> fieldlist = new ArrayList<>();
         String sql = "";
         DataSourceTypeEnum value = DataSourceTypeEnum.values()[dataSource.getConType()];
-        switch (value) {
-            case MYSQL:
-                sql = String.format("SELECT\n" +
-                        "\tTABLE_NAME AS originalTableName,\n" +
-                        "\tCOLUMN_NAME AS originalFieldName,\n" +
-                        "\tCOLUMN_COMMENT AS originalFieldDesc,\n" +
-                        "\t'' AS originalFramework \n" +
-                        "FROM\n" +
-                        "\tinformation_schema.`COLUMNS` \n" +
-                        "WHERE\n" +
-                        "\tTABLE_SCHEMA = '%s'", dataSource.conDbname);
-                break;
-            case SQLSERVER:
-                sql = "SELECT\n" +
-                        "\td.name AS originalTableName,\n" +
-                        "\ta.name AS originalFieldName,\n" +
-                        "\tisnull( g.[value], '' ) AS originalFieldDesc,\n" +
-                        "\tschema_name(tb.schema_id) AS originalFramework\n" +
-                        "FROM\n" +
-                        "\tsyscolumns a\n" +
-                        "\tLEFT JOIN systypes b ON a.xusertype= b.xusertype\n" +
-                        "\tINNER JOIN sysobjects d ON a.id= d.id \n" +
-                        "\tAND d.xtype= 'U' \n" +
-                        "\tAND d.name<> 'dtproperties'\n" +
-                        "\tLEFT JOIN  sys.tables tb ON tb.name=d.name\n" +
-                        "\tLEFT JOIN syscomments e ON a.cdefault= e.id\n" +
-                        "\tLEFT JOIN sys.extended_properties g ON a.id= g.major_id \n" +
-                        "\tAND a.colid= g.minor_id\n" +
-                        "\tLEFT JOIN sys.extended_properties f ON d.id= f.major_id \n" +
-                        "\tAND f.minor_id= 0";
-                break;
-            case POSTGRESQL:
-                sql = "SELECT c.relname as originalTableName,a.attname as originalFieldName,col_description(a.attrelid,a.attnum) as originalFieldDesc,'' AS originalFramework \n" +
-                        "FROM pg_class as c,pg_attribute as a inner join pg_type on pg_type.oid = a.atttypid\n" +
-                        "where c.relname in  (SELECT tablename FROM pg_tables ) and a.attrelid = c.oid and a.attnum>0";
-                break;
-        }
+        IBuildDataServiceSqlCommand dbCommand = BuildDataServiceHelper.getDBCommand(value);
+        sql = dbCommand.buildUseExistAllTableFiled(dataSource.getConDbname());
         if (sql == null || sql.isEmpty())
             return fieldlist;
         try {

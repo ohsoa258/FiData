@@ -11,8 +11,8 @@ import lombok.Data;
  * @date 2022/10/8 15:33
  */
 @Data
-@TableName("tb_bizfilter_api_parm")
-public class BusinessFilterApiParmPO extends BasePO {
+@TableName("tb_bizfilter_api_param")
+public class BusinessFilterApiParamPO extends BasePO {
     /**
      * tb_bizfilter_rule表主键ID
      */
@@ -26,20 +26,20 @@ public class BusinessFilterApiParmPO extends BasePO {
     /**
      * api 参数类型 1：授权请求参数  2：正文请求参数
      */
-    public int apiParmType;
+    public int apiParamType;
 
     /**
      * 参数key
      * */
-    public String apiParmKey;
+    public String apiParamKey;
 
     /**
      * 参数value
      * */
-    public String apiParmValue;
+    public String apiParamValue;
 
     /**
      * 参数value标识
      * */
-    public String apiParmValueUnique;
+    public String apiParamValueUnique;
 }

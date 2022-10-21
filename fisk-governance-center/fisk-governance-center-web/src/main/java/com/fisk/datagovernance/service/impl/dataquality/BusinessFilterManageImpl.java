@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterEditDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterQueryDTO;
@@ -66,8 +68,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     private UserHelper userHelper;
 
     @Override
-    public Page<BusinessFilterVO> getAll(BusinessFilterQueryDTO query)
-    {
+    public Page<BusinessFilterVO> getAll(BusinessFilterQueryDTO query) {
         int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(query.sourceTypeEnum, query.datasourceId);
         if (query.sourceTypeEnum == SourceTypeEnum.FiData) {
             query.datasourceId = idByDataSourceId;
@@ -81,7 +82,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
         return all;
     }
 
-    private List<BusinessFilterVO> getAllExtends(List<BusinessFilterVO> source){
+    private List<BusinessFilterVO> getAllExtends(List<BusinessFilterVO> source) {
         List<BusinessFilterVO> result = source;
         List<BusinessFilterQueryApiVO> apiListByRuleIds = null;
         List<BusinessFilterVO> apiRules = source.stream().filter(t -> t.getTemplateType() == TemplateTypeEnum.API_FILTER_TEMPLATE).collect(Collectors.toList());
@@ -105,41 +106,46 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(BusinessFilterDTO dto) {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
-        if (dto.sourceTypeEnum == SourceTypeEnum.FiData) {
-            int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.sourceTypeEnum, dto.datasourceId);
-            if (idByDataSourceId == 0) {
-                return ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS;
+        try {
+            if (dto.sourceTypeEnum == SourceTypeEnum.FiData) {
+                int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.sourceTypeEnum, dto.datasourceId);
+                if (idByDataSourceId == 0) {
+                    return ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS;
+                }
+                dto.datasourceId = idByDataSourceId;
             }
-            dto.datasourceId = idByDataSourceId;
-        }
-        //第一步：验证模板是否存在
-        TemplatePO templatePO = templateMapper.selectById(dto.templateId);
-        if (templatePO == null) {
-            return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
-        }
-        //第二步：转换DTO对象为PO对象
-        BusinessFilterPO businessFilterPO = BusinessFilterMap.INSTANCES.dtoToPo(dto);
-        if (businessFilterPO == null) {
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
-        //第三步：保存业务清洗信息
-        UserInfo loginUserInfo = userHelper.getLoginUserInfo();
-        businessFilterPO.setCreateTime(LocalDateTime.now());
-        businessFilterPO.setCreateUser(String.valueOf(loginUserInfo.getId()));
-        int i = baseMapper.insertOne(businessFilterPO);
-        if (i <= 0) {
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
-        //第四步：保存业务清洗API信息
-        if (templatePO.getTemplateType() == TemplateTypeEnum.API_FILTER_TEMPLATE.getValue() &&
-                dto.getApiInfo() != null) {
-            resultEnum = businessFilterApiManageImpl.saveApiInfo("add", Math.toIntExact(businessFilterPO.getId()), dto.getApiInfo());
-            if (resultEnum != ResultEnum.SUCCESS) {
-                return resultEnum;
+            //第一步：验证模板是否存在
+            TemplatePO templatePO = templateMapper.selectById(dto.templateId);
+            if (templatePO == null) {
+                return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
             }
+            //第二步：转换DTO对象为PO对象
+            BusinessFilterPO businessFilterPO = BusinessFilterMap.INSTANCES.dtoToPo(dto);
+            if (businessFilterPO == null) {
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
+            //第三步：保存业务清洗信息
+            UserInfo loginUserInfo = userHelper.getLoginUserInfo();
+            businessFilterPO.setCreateTime(LocalDateTime.now());
+            businessFilterPO.setCreateUser(String.valueOf(loginUserInfo.getId()));
+            int i = baseMapper.insertOne(businessFilterPO);
+            if (i <= 0) {
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
+            //第四步：保存业务清洗API信息
+            if (templatePO.getTemplateType() == TemplateTypeEnum.API_FILTER_TEMPLATE.getValue() &&
+                    dto.getApiInfo() != null) {
+                resultEnum = businessFilterApiManageImpl.saveApiInfo("add", Math.toIntExact(businessFilterPO.getId()), dto.getApiInfo());
+                if (resultEnum != ResultEnum.SUCCESS) {
+                    return resultEnum;
+                }
+            }
+            //第五步：调用元数据接口获取最新的规则信息
+            externalInterfaceImpl.synchronousTableBusinessMetaData(dto.getDatasourceId(), dto.getSourceTypeEnum(), dto.getTableBusinessType(), dto.getTableUnique());
+        } catch (Exception ex) {
+            log.error("[businessFilter]-[addData]-ex:" + ex);
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, ex);
         }
-        //第五步：调用元数据接口获取最新的规则信息
-        externalInterfaceImpl.synchronousTableBusinessMetaData(dto.getDatasourceId(), dto.getSourceTypeEnum(), dto.getTableBusinessType(), dto.getTableUnique());
         return resultEnum;
     }
 
@@ -147,54 +153,64 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum editData(BusinessFilterEditDTO dto) {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
-        //第一步：验证模板是否存在
-        TemplatePO templatePO = templateMapper.selectById(dto.templateId);
-        if (templatePO == null) {
-            return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
-        }
-        BusinessFilterPO businessFilterPO = baseMapper.selectById(dto.id);
-        if (businessFilterPO == null) {
-            return ResultEnum.DATA_NOTEXISTS;
-        }
-        //第二步：转换DTO对象为PO对象
-        businessFilterPO = BusinessFilterMap.INSTANCES.dtoToPo_Edit(dto);
-        if (businessFilterPO == null) {
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
-        //第三步：保存业务清洗信息
-        int i = baseMapper.updateById(businessFilterPO);
-        if (i <= 0) {
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
-        //第四步：保存业务清洗API信息
-        if (templatePO.getTemplateType() == TemplateTypeEnum.API_FILTER_TEMPLATE.getValue() &&
-                dto.getApiInfo() != null) {
-            resultEnum = businessFilterApiManageImpl.saveApiInfo("edit", Math.toIntExact(businessFilterPO.getId()), dto.getApiInfo());
-            if (resultEnum != ResultEnum.SUCCESS) {
-                return resultEnum;
+        try {
+            //第一步：验证模板是否存在
+            TemplatePO templatePO = templateMapper.selectById(dto.templateId);
+            if (templatePO == null) {
+                return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
             }
+            BusinessFilterPO businessFilterPO = baseMapper.selectById(dto.id);
+            if (businessFilterPO == null) {
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            //第二步：转换DTO对象为PO对象
+            businessFilterPO = BusinessFilterMap.INSTANCES.dtoToPo_Edit(dto);
+            if (businessFilterPO == null) {
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
+            //第三步：保存业务清洗信息
+            int i = baseMapper.updateById(businessFilterPO);
+            if (i <= 0) {
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
+            //第四步：保存业务清洗API信息
+            if (templatePO.getTemplateType() == TemplateTypeEnum.API_FILTER_TEMPLATE.getValue() &&
+                    dto.getApiInfo() != null) {
+                resultEnum = businessFilterApiManageImpl.saveApiInfo("edit", Math.toIntExact(businessFilterPO.getId()), dto.getApiInfo());
+                if (resultEnum != ResultEnum.SUCCESS) {
+                    return resultEnum;
+                }
+            }
+            //第五步：调用元数据接口获取最新的规则信息
+            externalInterfaceImpl.synchronousTableBusinessMetaData(dto.getDatasourceId(), dto.getSourceTypeEnum(), dto.getTableBusinessType(), dto.getTableUnique());
+        } catch (Exception ex) {
+            log.error("[businessFilter]-[editData]-ex:" + ex);
+            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, ex);
         }
-        //第五步：调用元数据接口获取最新的规则信息
-        externalInterfaceImpl.synchronousTableBusinessMetaData(dto.getDatasourceId(), dto.getSourceTypeEnum(), dto.getTableBusinessType(), dto.getTableUnique());
         return resultEnum;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum deleteData(int id) {
-        BusinessFilterPO businessFilterPO = baseMapper.selectById(id);
-        if (businessFilterPO == null) {
-            return ResultEnum.DATA_NOTEXISTS;
+        try {
+            BusinessFilterPO businessFilterPO = baseMapper.selectById(id);
+            if (businessFilterPO == null) {
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            // 调用元数据接口获取最新的规则信息
+            DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(businessFilterPO.getDatasourceId());
+            if (dataSourceConPO != null) {
+                SourceTypeEnum sourceTypeEnum = SourceTypeEnum.getEnum(dataSourceConPO.getDatasourceType());
+                externalInterfaceImpl.synchronousTableBusinessMetaData(businessFilterPO.getDatasourceId(), sourceTypeEnum, businessFilterPO.getTableBusinessType(), businessFilterPO.getTableUnique());
+            }
+            // 删除API清洗模板扩展规则
+            businessFilterApiManageImpl.deleteApiInfo(id);
+            return baseMapper.deleteByIdWithFill(businessFilterPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.DELETE_ERROR;
+        } catch (Exception ex) {
+            log.error("[businessFilter]-[deleteData]-ex:" + ex);
+            throw new FkException(ResultEnum.DELETE_ERROR, ex);
         }
-        // 调用元数据接口获取最新的规则信息
-        DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(businessFilterPO.getDatasourceId());
-        if (dataSourceConPO != null) {
-            SourceTypeEnum sourceTypeEnum = SourceTypeEnum.getEnum(dataSourceConPO.getDatasourceType());
-            externalInterfaceImpl.synchronousTableBusinessMetaData(businessFilterPO.getDatasourceId(), sourceTypeEnum, businessFilterPO.getTableBusinessType(), businessFilterPO.getTableUnique());
-        }
-        // 删除API清洗模板扩展规则
-        businessFilterApiManageImpl.deleteApiInfo(id);
-        return baseMapper.deleteByIdWithFill(businessFilterPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -221,5 +237,15 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
         });
         boolean b = businessFilterManageImpl.updateBatchById(businessFilterPOS);
         return b ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public ResultEntity<String> collAuthApi(BusinessFilterDTO dto) {
+        return businessFilterApiManageImpl.collAuthApi(dto);
+    }
+
+    @Override
+    public ResultEnum collApi(BusinessFilterDTO dto) {
+        return businessFilterApiManageImpl.collApi(dto);
     }
 }

@@ -1,7 +1,7 @@
 package com.fisk.datagovernance.mapper.dataquality;
 
 import com.fisk.common.framework.mybatis.FKBaseMapper;
-import com.fisk.datagovernance.entity.dataquality.BusinessFilterApiParmPO;
+import com.fisk.datagovernance.entity.dataquality.BusinessFilterApiParamPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
@@ -13,7 +13,7 @@ import org.apache.ibatis.annotations.Update;
  * @date 2022/10/8 16:58
  */
 @Mapper
-public interface BusinessFilterApiParmMapper extends FKBaseMapper<BusinessFilterApiParmPO> {
+public interface BusinessFilterApiParamMapper extends FKBaseMapper<BusinessFilterApiParamPO> {
     /**
      * 修改数据有效性
      *

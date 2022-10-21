@@ -162,6 +162,46 @@ public class AbstractCommonDbHelper {
      *
      * @param sql 查询语句
      * @param con 数据库连接
+     * @return 查询结果Map
+     */
+    public static List<Map<String, Object>> batchExecQueryResultMaps(String sql, Connection con) {
+        return batchQuery(sql, con, BeanHelper::resultSetToMaps);
+    }
+
+    /**
+     * 执行sql
+     *
+     * @param sql     sql
+     * @param con     连接器
+     * @param func<T>
+     * @return
+     */
+    private static <T> T batchQuery(String sql, Connection con, Function<ResultSet, T> func) {
+        Statement st = null;
+        String code = UUID.randomUUID().toString();
+        StopWatch stopWatch = new StopWatch();
+        try {
+            stopWatch.start();
+            log.info("【execQuery】【" + code + "】执行sql: 【" + sql + "】");
+            st = con.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            ResultSet res = st.executeQuery(sql);
+            return func.apply(res);
+        } catch (SQLException ex) {
+            log.error("【execQuery】【" + code + "】执行sql查询报错, ex", ex);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ex.getLocalizedMessage());
+        } finally {
+            closeStatement(st);
+            closeConnection(con);
+            stopWatch.stop();
+            log.info("【execQuery】【" + code + "】执行时间: 【" + stopWatch.getTotalTimeMillis() + "毫秒】");
+        }
+    }
+
+    /**
+     * 执行查询
+     *
+     * @param sql 查询语句
+     * @param con 数据库连接
      * @return 查询结果List
      */
     public static <T> List<T> execQueryResultList(String sql, Connection con, Class<T> tClass) {
@@ -215,13 +255,9 @@ public class AbstractCommonDbHelper {
     private Connection getConnectionByType(String connectionStr, String acc, String pwd, DataSourceTypeEnum type) throws Exception {
         switch (type) {
             case SQLSERVER:
-                return DriverManager.getConnection(connectionStr, acc, pwd);
             case POSTGRESQL:
-                return DriverManager.getConnection(connectionStr, acc, pwd);
             case MYSQL:
-                return DriverManager.getConnection(connectionStr, acc, pwd);
             case DORIS:
-                return DriverManager.getConnection(connectionStr, acc, pwd);
             case ORACLE:
                 return DriverManager.getConnection(connectionStr, acc, pwd);
             default:
@@ -245,6 +281,34 @@ public class AbstractCommonDbHelper {
         log.info("【execCreate】【" + code + "】执行sql: 【" + sql + "】");
         statement = connection.createStatement();
         statement.execute(sql);
+    }
+
+    /**
+     * 事务批处理执行sql
+     *
+     * @param sql
+     * @param connection
+     * @return
+     */
+    public void executeSql(List<String> sql, Connection connection) {
+        Statement statement = null;
+        try {
+            //设为手动提交
+            connection.setAutoCommit(false);
+            statement = connection.createStatement();
+            for (int i = 0; i < sql.size(); i++) {
+                statement.addBatch(sql.get(i));
+            }
+            statement.executeBatch();
+            connection.commit(); //提交事务
+        } catch (SQLException e) {
+            log.info("执行发生了异常，回滚撤销事务");
+            rollbackConnection(connection);
+            log.error(e.toString());
+        } finally {
+            AbstractCommonDbHelper.closeStatement(statement);
+            AbstractCommonDbHelper.closeConnection(connection);
+        }
     }
 
     /**

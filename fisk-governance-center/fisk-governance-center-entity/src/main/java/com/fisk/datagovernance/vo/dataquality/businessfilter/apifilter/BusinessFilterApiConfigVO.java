@@ -54,4 +54,16 @@ public class BusinessFilterApiConfigVO {
      */
     @ApiModelProperty(value = "api body类型 from-data/raw")
     public String apiBodyType;
+
+    /**
+     * api请求类型：Post/Get
+     */
+    @ApiModelProperty(value = "api请求类型：Post/Get")
+    public String apiRequestType;
+
+    /**
+     * api参数范围：Headers/Body
+     */
+    @ApiModelProperty(value = "api参数范围：Headers/Body")
+    public String apiParamRange;
 }

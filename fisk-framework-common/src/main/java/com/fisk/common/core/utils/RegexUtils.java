@@ -143,4 +143,19 @@ public class RegexUtils {
         return isChar;
     }
 
+    /**
+     * @description 集合中是否包含某个值，忽略大小写
+     * @author dick
+     * @date 2022/10/21 11:33
+     * @version v1.0
+     * @params list
+     * @params str
+     * @return boolean
+     */
+    public static boolean isContains(List<String> list,String str){
+        if (CollectionUtils.isEmpty(list)){
+            return false;
+        }
+         return  list.stream().anyMatch(str::equalsIgnoreCase);
+    }
 }

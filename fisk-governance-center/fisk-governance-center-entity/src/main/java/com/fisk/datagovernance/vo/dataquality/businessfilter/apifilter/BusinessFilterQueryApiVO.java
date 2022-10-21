@@ -29,7 +29,7 @@ public class BusinessFilterQueryApiVO {
      * API请求参数配置
      */
     @ApiModelProperty(value = "API请求参数配置")
-    public List<BusinessFilterApiParmVO> apiParmConfig;
+    public List<BusinessFilterApiParamVO> apiParmConfig;
 
     /**
      * API返回结果配置

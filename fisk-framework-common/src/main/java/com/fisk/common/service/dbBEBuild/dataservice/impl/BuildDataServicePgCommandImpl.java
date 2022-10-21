@@ -106,6 +106,14 @@ public class BuildDataServicePgCommandImpl implements IBuildDataServiceSqlComman
        return sql;
     }
 
+    @Override
+    public String buildUseExistAllTableFiled(String dbName) {
+        String  sql = "SELECT c.relname as originalTableName,a.attname as originalFieldName,col_description(a.attrelid,a.attnum) as originalFieldDesc,'' AS originalFramework \n" +
+                "FROM pg_class as c,pg_attribute as a inner join pg_type on pg_type.oid = a.atttypid\n" +
+                "where c.relname in  (SELECT tablename FROM pg_tables ) and a.attrelid = c.oid and a.attnum>0";
+        return  sql;
+    }
+
     /**
      * 单条新增SQL语句
      *

@@ -36,7 +36,7 @@ public class BusinessFilterApiResultDTO {
      * 结果参数类型 1：授权result参数  2：正文result参数
      */
     @ApiModelProperty(value = "结果参数类型 1：授权result参数  2：正文result参数")
-    public int resultParmType;
+    public int resultParamType;
 
     /**
      * 源字段
