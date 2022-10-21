@@ -48,7 +48,7 @@ public class SwaggerConfig {
                 .tags(new Tag(DATAVIEW,"视图过滤"))
                 .tags(new Tag(KEYWORD,"SQL关键字管理"))
                 .tags(new Tag(UPLOAD,"上传管理"))
-                .tags(new Tag(DATASOURCE,"FiData数据源管理"))
+                .tags(new Tag(DATASOURCE,"数据源管理"))
                 .securitySchemes(apiKey())
                 .securityContexts(securityContexts());
 
