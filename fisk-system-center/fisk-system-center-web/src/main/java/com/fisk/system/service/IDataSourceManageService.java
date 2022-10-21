@@ -52,6 +52,14 @@ public interface IDataSourceManageService extends IService<DataSourcePO> {
     ResultEnum updateDataSource(DataSourceDTO dto);
 
     /**
+     * 删除数据
+     *
+     * @param id
+     * @return 执行结果
+     */
+    ResultEnum deleteDataSource(int id);
+
+    /**
      * 新增数据
      *
      * @param dto dto

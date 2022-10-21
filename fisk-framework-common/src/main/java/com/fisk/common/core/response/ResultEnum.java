@@ -75,6 +75,7 @@ public enum ResultEnum {
     USER_ACCOUNTPASSWORD_ERROR(4001, "用户名或密码不正确"),
     ORIGINAL_PASSWORD_ERROR(4002, "用户原密码错误"),
     DATA_SOURCE_ERROR(4003, "获取数据源配置失败"),
+    SYSTEM_DATA_SOURCE_NOT_OPERATION(4004, "系统数据源不允许此操作"),
 
     /**
      * 数据接入模块

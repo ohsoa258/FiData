@@ -70,6 +70,12 @@ public class DataSourceController {
         return ResultEntityBuild.build(service.updateDataSource(dto));
     }
 
+    @DeleteMapping("/delete/{id}")
+    @ApiOperation("删除数据源")
+    public ResultEntity<Object> deleteDate(@PathVariable("id") int id) {
+        return ResultEntityBuild.build(service.deleteDataSource(id));
+    }
+
     @PostMapping("/test")
     @ApiOperation("测试数据源连接")
     public ResultEntity<Object> testConnection(@Validated @RequestBody DataSourceDTO dto) {

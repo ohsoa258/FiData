@@ -70,23 +70,40 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         QueryWrapper<DataSourcePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(DataSourcePO::getName, dto.name)
+                .eq(DataSourcePO::getSourceType, dto.sourceType)
                 .ne(DataSourcePO::getId, dto.id);
         DataSourcePO data = baseMapper.selectOne(queryWrapper);
         if (data != null) {
             return ResultEnum.NAME_EXISTS;
         }
         DataSourceMap.INSTANCES.editDtoToPo(dto, model);
-        return baseMapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return baseMapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+    }
+
+    @Override
+    public ResultEnum deleteDataSource(int id) {
+        DataSourcePO model = baseMapper.selectById(id);
+        if (model == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        if (model.getSourceType() == 1) {
+            return ResultEnum.SYSTEM_DATA_SOURCE_NOT_OPERATION;
+        }
+        return baseMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.DELETE_ERROR;
     }
 
     @Override
     public ResultEnum insertDataSource(DataSourceDTO dto) {
         QueryWrapper<DataSourcePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DataSourcePO::getName, dto.name)
+                .ne(DataSourcePO::getSourceType, dto.sourceType)
                 .eq(DataSourcePO::getDelFlag, 1);
         DataSourcePO data = baseMapper.selectOne(queryWrapper);
         if (data != null) {
             return ResultEnum.NAME_EXISTS;
+        }
+        if (data.getSourceType() == 1) {
+            return ResultEnum.SYSTEM_DATA_SOURCE_NOT_OPERATION;
         }
         DataSourcePO model = dtoToPo(dto);
         return baseMapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
