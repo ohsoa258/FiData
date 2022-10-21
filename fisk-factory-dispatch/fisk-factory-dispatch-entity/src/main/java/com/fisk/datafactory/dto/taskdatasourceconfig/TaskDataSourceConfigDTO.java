@@ -1,6 +1,6 @@
 package com.fisk.datafactory.dto.taskdatasourceconfig;
 
-import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -8,49 +8,41 @@ import lombok.Data;
  */
 @Data
 public class TaskDataSourceConfigDTO {
-    /**
-     * 主键
-     */
-    public long id;
-    /**
-     * 数据类型
-     */
-    public DataSourceTypeEnum type;
-    /**
-     * 服务器地址
-     */
+
+    @ApiModelProperty(value = "主键id,大于0为编辑,等于=新增", required = true)
+    public long id = 0;
+
+    @ApiModelProperty(value = "数据类型", required = true)
+    public String type;
+
+    @ApiModelProperty(value = "服务器地址", required = true)
     public String host;
-    /**
-     * 端口
-     */
+
+    @ApiModelProperty(value = "端口", required = true)
     public String port;
-    /**
-     * 数据库名
-     */
+
+    @ApiModelProperty(value = "数据库", required = true)
     public String dbName;
-    /**
-     * 连接字符串
-     */
+
+    @ApiModelProperty(value = "连接字符串", required = true)
     public String connectStr;
-    /**
-     * 连接账号
-     */
+
+    @ApiModelProperty(value = "连接账号", required = true)
     public String connectAccount;
-    /**
-     * 连接密码
-     */
+
+    @ApiModelProperty(value = "连接密码", required = true)
     public String connectPwd;
-    /**
-     * oracle服务类型：0服务名 1SID
-     */
+
+    @ApiModelProperty(value = "oracle服务类型：0服务名 1SID", required = false)
     public Integer serviceType;
-    /**
-     * oracle服务名
-     */
+
+    @ApiModelProperty(value = "oracle服务名", required = false)
     public String serviceName;
-    /**
-     * 组件id
-     */
+
+    @ApiModelProperty(value = "组件id", required = true)
     public Integer taskId;
+
+    @ApiModelProperty(value = "域名", required = true)
+    public String domainName;
 
 }

@@ -1727,16 +1727,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             fieldList.add("FLOAT");
             fieldList.add("0");
         } else if (Integer.parseInt(fieldLength) <= 1) {
-            fieldList.add("NVARCHAR");
+            fieldList.add("VARCHAR");
             fieldList.add("20");
         } else if (Integer.parseInt(fieldLength) >= textLength) {
-            fieldList.add("NVARCHAR");
+            fieldList.add("VARCHAR");
             fieldList.add("5000");
         } else if (fieldType.toLowerCase().contains(timeType)) {
             fieldList.add("TIMESTAMP");
             fieldList.add("6");
         } else {
-            fieldList.add("NVARCHAR");
+            fieldList.add("VARCHAR");
             fieldList.add(fieldLength);
         }
         return fieldList;
@@ -1745,6 +1745,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public OdsResultDTO getDataAccessQueryList(OdsQueryDTO query) {
         AppDataSourcePO po = appDataSourceImpl.query().eq("app_id", query.appId).one();
+        AppRegistrationPO registration = appRegistrationImpl.query().eq("id", query.appId).one();
         OdsResultDTO array = new OdsResultDTO();
         Instant inst1 = Instant.now();
         Connection conn = null;
@@ -1763,8 +1764,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             Instant inst2 = Instant.now();
             log.info("流式设置执行时间 : " + Duration.between(inst1, inst2).toMillis());
             Instant inst3 = Instant.now();
-
-            Map<String, String> converSql = publishTaskClient.converSql(query.tableName, query.querySql, po.driveType).data;
+            String tableName = TableNameGenerateUtils.buildTableName(query.tableName, registration.appAbbreviation, registration.whetherSchema);
+            Map<String, String> converSql = publishTaskClient.converSql(tableName, query.querySql, po.driveType).data;
             log.info("拼语句执行时间 : " + Duration.between(inst2, inst3).toMillis());
 
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
@@ -1844,8 +1845,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 && !dbTypeEnum.getName().equals(DbTypeEnum.oracle_cdc.getName())) {
             String tableName = TableNameGenerateUtils.buildTableName(tableAccessPo.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
             Map<String, String> converSql = publishTaskClient.converSql(tableName, tableAccessPo.sqlScript, dataSourcePo.driveType).data;
-            String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
-            dto.selectSql = sql;
+            //String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
+            dto.selectSql = tableAccessPo.sqlScript;
             dto.queryStartTime = converSql.get(SystemVariableTypeEnum.START_TIME.getValue());
             dto.queryEndTime = converSql.get(SystemVariableTypeEnum.END_TIME.getValue());
         }
@@ -1986,7 +1987,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             case NVARCHAR2:
             case NCHAR:
             case CHAR:
-                dto.fieldType = FiDataDataTypeEnum.NVARCHAR.getName();
+                dto.fieldType = FiDataDataTypeEnum.VARCHAR.getName();
                 break;
             case TIMESTAMP:
             case TIMESTAMPWITHLOCALTIMEZONE:

@@ -2,7 +2,6 @@ package com.fisk.datafactory.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
-import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -16,7 +15,7 @@ public class TaskDataSourceConfigPO extends BasePO {
     /**
      * 数据类型
      */
-    public DataSourceTypeEnum type;
+    public String type;
     /**
      * 服务器地址
      */
@@ -53,5 +52,10 @@ public class TaskDataSourceConfigPO extends BasePO {
      * 组件id
      */
     public Integer taskId;
+
+    /**
+     * 域名
+     */
+    public String domainName;
 
 }

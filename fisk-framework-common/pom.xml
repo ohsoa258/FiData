@@ -183,6 +183,13 @@
         </dependency>
         <!--相似度计算-->
 
+        <!--MySQL数据库驱动-->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+        <!--MySQL数据库驱动-->
+
         <!--pg数据库驱动-->
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -190,6 +197,25 @@
             <version>42.2.5</version>
         </dependency>
         <!--pg数据库驱动-->
+
+        <!-- sql server驱动 -->
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>6.4.0.jre7</version>
+        </dependency>
+        <!-- sql server驱动 -->
+
+        <!-- oracle驱动 -->
+        <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>ojdbc7</artifactId>
+            <version>11.1.0.7.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/lib/ojdbc7.jar</systemPath>
+        </dependency>
+        <!-- oracle驱动 -->
+
 
         <!-- jcraft start -->
         <dependency>
@@ -211,6 +237,10 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
             <version>4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.quartz-scheduler</groupId>
+            <artifactId>quartz</artifactId>
         </dependency>
 
     </dependencies>

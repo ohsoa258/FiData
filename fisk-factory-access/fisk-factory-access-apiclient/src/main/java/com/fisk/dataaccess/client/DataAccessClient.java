@@ -10,6 +10,7 @@ import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
 import com.fisk.dataaccess.dto.access.NifiAccessDTO;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
+import com.fisk.dataaccess.dto.app.AppDriveTypeDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.app.LogMessageFilterVO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
@@ -310,4 +311,14 @@ public interface DataAccessClient {
     @PostMapping("/apiConfig/getHttpRequestResult")
     @ApiOperation(value = "获取http请求返回的结果")
     ResultEntity<String> getHttpRequestResult(@RequestBody ApiHttpRequestDTO dto);
+
+    /**
+     * 数据源驱动类型
+     *
+     * @return
+     */
+    @GetMapping("/appRegistration/getDriveType")
+    @ApiOperation(value = "数据源驱动类型")
+    ResultEntity<List<AppDriveTypeDTO>> getDriveType();
+
 }
