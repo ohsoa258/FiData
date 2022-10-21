@@ -61,7 +61,7 @@ public class BusinessFilterController {
         return ResultEntityBuild.build(service.editModuleExecSort(dto));
     }
 
-    @ApiOperation("API清洗,调用授权API获取Token")
+    @ApiOperation("API清洗，调用授权API获取Token")
     @PostMapping("/collAuthApi")
     public ResultEntity<String> collAuthApi(@RequestBody BusinessFilterDTO dto) {
         return service.collAuthApi(dto);
