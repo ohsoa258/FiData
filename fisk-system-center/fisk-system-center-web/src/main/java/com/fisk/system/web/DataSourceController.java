@@ -5,7 +5,6 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.dto.datasource.DataSourceDTO;
-import com.fisk.system.dto.datasource.TestConnectionDTO;
 import com.fisk.system.service.IDataSourceManageService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -29,33 +28,51 @@ public class DataSourceController {
     @Resource
     private IDataSourceManageService service;
 
+    @GetMapping("/getById/{datasourceId}")
+    @ApiOperation("获取单条数据源连接信息")
+    public ResultEntity<DataSourceDTO> getById(@RequestParam("datasourceId") int datasourceId) {
+        return service.getById(datasourceId);
+    }
+
     @PostMapping("/getAll")
-    @ApiOperation("获取所有数据源连接信息,外部接口")
+    @ApiOperation("外部接口，获取所有数据源连接信息")
     public ResultEntity<List<DataSourceDTO>> getAll() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAll());
     }
 
-    @PostMapping("/getAllDataSourec")
+    @PostMapping("/getAllFiDataDataSource")
+    @ApiOperation("外部接口，获取系统数据源连接信息")
+    public ResultEntity<List<DataSourceDTO>> getAllFiDataDataSource() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getSystemDataSource());
+    }
+
+    @PostMapping("/getAllExternalDataSource")
+    @ApiOperation("外部接口，获取外部数据源连接信息")
+    public ResultEntity<List<DataSourceDTO>> getAllExternalDataSource() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getExternalDataSource());
+    }
+
+    @PostMapping("/getAllDataSource")
     @ApiOperation("获取所有数据源连接信息")
-    public ResultEntity<List<DataSourceDTO>> getAllDataSourec() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllDataSourec());
+    public ResultEntity<List<DataSourceDTO>> getAllDataSource() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllDataSource());
+    }
+
+    @PostMapping("/add")
+    @ApiOperation("添加数据源")
+    public ResultEntity<Object> addDate(@Validated @RequestBody DataSourceDTO dto) {
+        return ResultEntityBuild.build(service.insertDataSource(dto));
     }
 
     @PutMapping("/edit")
-    @ApiOperation("编辑数据源连接信息")
+    @ApiOperation("编辑数据源")
     public ResultEntity<Object> editData(@Validated @RequestBody DataSourceDTO dto) {
         return ResultEntityBuild.build(service.updateDataSource(dto));
     }
 
     @PostMapping("/test")
     @ApiOperation("测试数据源连接")
-    public ResultEntity<Object> testConnection(@Validated @RequestBody TestConnectionDTO dto) {
+    public ResultEntity<Object> testConnection(@Validated @RequestBody DataSourceDTO dto) {
         return ResultEntityBuild.build(service.testConnection(dto));
-    }
-
-    @GetMapping("/getById/{datasourceId}")
-    @ApiOperation("获取单条数据源连接信息")
-    public ResultEntity<DataSourceDTO> getById(@RequestParam("datasourceId") int datasourceId) {
-        return service.getById(datasourceId);
     }
 }

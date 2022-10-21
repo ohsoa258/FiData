@@ -96,4 +96,30 @@ public class DataSourceDTO
     @ApiModelProperty(value = "平台")
     @Length(min = 0, max = 20, message = "长度最多20")
     public String platform;
+
+    /**
+     * oracle服务类型：0服务名 1SID
+     */
+    @ApiModelProperty(value = " oracle服务类型：0服务名 1SID")
+    public int serviceType;
+
+    /**
+     * oracle服务名
+     */
+    @ApiModelProperty(value = "oracle服务名")
+    @Length(min = 0, max = 20, message = "长度最多100")
+    public String serviceName;
+
+    /**
+     * oracle域名
+     */
+    @ApiModelProperty(value = "oracle域名")
+    @Length(min = 0, max = 100, message = "长度最多20")
+    public String domainName;
+
+    /**
+     * 数据源类型：1系统数据源 2外部数据源
+     */
+    @ApiModelProperty(value = "数据源类型：1系统数据源 2外部数据源")
+    public int sourceType;
 }

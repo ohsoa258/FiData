@@ -66,11 +66,25 @@ public interface UserClient {
     ResultEntity<List<UserDropDTO>> listUserDrops();
 
     /**
-     * 查询FiData所有数据源信息
+     * 查询所有数据源信息
      * @return
      */
     @PostMapping("/datasource/getAll")
+    ResultEntity<List<DataSourceDTO>> getAll();
+
+    /**
+     * 查询FiData数据源信息
+     * @return
+     */
+    @PostMapping("/datasource/getAllFiDataDataSource")
     ResultEntity<List<DataSourceDTO>> getAllFiDataDataSource();
+
+    /**
+     * 查询外部数据源信息
+     * @return
+     */
+    @PostMapping("/datasource/getAllExternalDataSource")
+    ResultEntity<List<DataSourceDTO>> getAllExternalDataSource();
 
     /**
      * 查询FiData指定数据源信息
