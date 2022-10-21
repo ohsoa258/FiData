@@ -18,7 +18,7 @@ public interface AppDriveTypeMapper extends BaseMapper<AppDriveTypePO> {
      *
      * @return 驱动类型
      */
-    @Select("SELECT id,`name`,connect_str FROM tb_app_drivetype;")
+    @Select("SELECT id,`name`,connect_str,type FROM tb_app_drivetype;")
     List<AppDriveTypePO> listData();
 
 }

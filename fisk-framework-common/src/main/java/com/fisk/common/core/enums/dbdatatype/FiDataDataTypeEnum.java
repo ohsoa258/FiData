@@ -10,7 +10,7 @@ public enum FiDataDataTypeEnum implements BaseEnum {
     /**
      * 字符串
      */
-    NVARCHAR(1, "NVARCHAR"),
+    VARCHAR(1, "VARCHAR"),
     FLOAT(2, "FLOAT"),
     TIMESTAMP(3, "TIMESTAMP"),
     TEXT(4, "TEXT"),

@@ -38,6 +38,9 @@ public class AppDriveTypeDTO extends BaseDTO {
     @ApiModelProperty(value = "连接模板", required = true)
     public String connectStr;
 
+    @ApiModelProperty(value = "类型: 0数据库 1非数据库", required = true)
+    public Integer type;
+
 
     public AppDriveTypeDTO(BaseEntity entity) {
         super(entity);

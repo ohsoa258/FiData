@@ -22,4 +22,12 @@ public interface TaskDataSourceConfigMap {
      */
     TaskDataSourceConfigPO dtoToPo(TaskDataSourceConfigDTO dto);
 
+    /**
+     * po==>Dto
+     *
+     * @param po
+     * @return
+     */
+    TaskDataSourceConfigDTO poToDto(TaskDataSourceConfigPO po);
+
 }

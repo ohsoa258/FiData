@@ -142,6 +142,26 @@ public class OracleUtils {
         return tablesList;
     }
 
+    private List<String> getTables(Connection conn) {
+        Statement st = null;
+        ResultSet rs = null;
+        List<String> list = new ArrayList<>();
+        try {
+            st = conn.createStatement();
+            rs = st.executeQuery(buildAllTableSql());
+            while (rs.next()) {
+                list.add(rs.getString("table_name"));
+            }
+        } catch (SQLException e) {
+            log.error("getTables ex:{}", e);
+            throw new FkException(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeResultSet(rs);
+            AbstractCommonDbHelper.closeStatement(st);
+        }
+        return list;
+    }
+
     /**
      * @return java.util.List<com.fisk.dataaccess.table.DataBaseViewDTO>
      * @description 加载视图详情
@@ -286,7 +306,7 @@ public class OracleUtils {
         List<TablePyhNameDTO> list = new ArrayList<>();
         try {
             // 获取数据库中所有表名称
-            List<String> tableList = getTables(conn, dbName);
+            List<String> tableList = getTables(conn);
             if (CollectionUtils.isEmpty(tableList)) {
                 return null;
             }
@@ -294,7 +314,7 @@ public class OracleUtils {
             list = new ArrayList<>();
             for (String tableName : tableList) {
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-                ResultSet rs = st.executeQuery(this.buildSelectTableColumnSql(dbName, tableName));
+                ResultSet rs = st.executeQuery(this.buildUserSelectTableColumnSql(dbName));
                 List<TableStructureDTO> colNameList = new ArrayList<>();
                 while (rs.next()) {
                     colNameList.add(conversionType(rs));
@@ -315,7 +335,7 @@ public class OracleUtils {
     }
 
     /**
-     * 拼接查询表字段信息sql
+     * 根据ALL_COL_COMMENTS表,拼接查询表字段信息sql
      *
      * @param dbName
      * @param tableName
@@ -344,6 +364,43 @@ public class OracleUtils {
     }
 
     /**
+     * 根据user_tab_cols表,拼接查询表字段信息sql
+     *
+     * @param dbName
+     * @return
+     */
+    public String buildUserSelectTableColumnSql(String dbName) {
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT ");
+        str.append("a.TABLE_NAME,");
+        str.append("a.DATA_PRECISION,");
+        str.append("a.DATA_SCALE,");
+        str.append("a.COLUMN_NAME,");
+        str.append("a.DATA_TYPE,");
+        str.append("a.DATA_LENGTH ");
+        str.append("FROM ");
+        str.append("user_tab_cols a ");
+        str.append("LEFT JOIN ALL_COL_COMMENTS b ON a.TABLE_NAME = b.TABLE_NAME ");
+        str.append("WHERE ");
+        str.append("b.owner='" + dbName + "' ");
+        return str.toString();
+    }
+
+    /**
+     * 获取该用户下所有表sql
+     *
+     * @return
+     */
+    public String buildAllTableSql() {
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT ");
+        str.append("table_name ");
+        str.append("FROM ");
+        str.append("user_tables");
+        return str.toString();
+    }
+
+    /**
      * 根据类型判断精度
      *
      * @param rs
@@ -352,7 +409,7 @@ public class OracleUtils {
     public TableStructureDTO conversionType(ResultSet rs) {
         try {
             TableStructureDTO dto = new TableStructureDTO();
-            dto.fieldDes = rs.getString("COMMENTS");
+            //dto.fieldDes = rs.getString("COMMENTS");
             dto.fieldName = rs.getString("COLUMN_NAME");
             dto.fieldType = rs.getString("DATA_TYPE");
             dto.fieldLength = Integer.parseInt(rs.getString("DATA_LENGTH"));
