@@ -11,6 +11,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.core.utils.VerifyCronUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
@@ -612,6 +613,14 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+
+        //校验cron格式是否正确
+        if (!StringUtils.isEmpty(dto.script)) {
+            if (!VerifyCronUtils.isValidExpression(dto.script)) {
+                throw new FkException(ResultEnum.CRON_ERROR);
+            }
+        }
+
         // dto -> po
         NifiCustomWorkflowDetailPO po = NifiCustomWorkflowDetailMap.INSTANCES.dtoToPo(dto);
         // 执行修改

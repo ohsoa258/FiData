@@ -47,6 +47,7 @@ public enum ResultEnum {
     DATASOURCE_CONNECTERROR(1022, "数据源连接建立异常"),
     DATASOURCE_CONNECTCLOSEERROR(1022, "数据源连接关闭异常"),
     NO_MATCHING_DATA_TYPE(1023, "没有匹配的数据类型"),
+    CRON_ERROR(1024, "cron格式错误"),
 
     /**
      * 报表可视化服务，错误码从2000开始
