@@ -17,6 +17,8 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
+import com.fisk.common.framework.redis.RedisKeyEnum;
+import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.enums.syncModeTypeEnum;
@@ -84,6 +86,12 @@ public class NiFiHelperImpl implements INiFiHelper {
     public UserClient userClient;
     @Value("${fiData-data-ods-source}")
     private String dataSourceOdsId;
+    @Value("${nifi.username}")
+    private String nifiUsername;
+    @Value("${nifi.password}")
+    private String nifiPassword;
+    @Resource
+    public RedisUtil redisUtil;
 
 
     @Override
@@ -1918,8 +1926,10 @@ public class NiFiHelperImpl implements INiFiHelper {
             VariableRegistryEntity variableRegistry = NifiHelper.getProcessGroupsApi().getVariableRegistry(NifiConstants.ApiConstants.ROOT_NODE, true);
             VariableRegistryDTO registry = variableRegistry.getVariableRegistry();
             List<VariableEntity> variables = registry.getVariables();
+            List<VariableEntity> variableEntities = new ArrayList<>();
             Iterator<Map.Entry<String, String>> externalStructureMap = variable.entrySet().iterator();
-
+            VariableRegistryEntity variableRegistryEntity = new VariableRegistryEntity();
+            VariableRegistryDTO registryDTO = new VariableRegistryDTO();
             while (externalStructureMap.hasNext()) {
                 Map.Entry<String, String> next = externalStructureMap.next();
                 String key = next.getKey();
@@ -1933,29 +1943,26 @@ public class NiFiHelperImpl implements INiFiHelper {
                     }
                 }
                 if (!existent) {
-                    VariableRegistryEntity variableRegistryEntity = new VariableRegistryEntity();
-                    VariableRegistryDTO registryDTO = new VariableRegistryDTO();
-                    List<VariableEntity> variableEntities = new ArrayList<>();
                     VariableEntity variableEntity = new VariableEntity();
                     VariableDTO variableDTO = new VariableDTO();
                     variableDTO.setName(key);
                     variableDTO.setValue(variable.get(key));
                     variableEntity.setVariable(variableDTO);
                     variableEntities.add(variableEntity);
-                    registryDTO.setVariables(variableEntities);
-                    registryDTO.setProcessGroupId(variableRegistry.getVariableRegistry().getProcessGroupId());
-                    variableRegistryEntity.setDisconnectedNodeAcknowledged(null);
-                    variableRegistryEntity.setVariableRegistry(registryDTO);
-                    //连续插入变量查询最新版本
-                    VariableRegistryEntity newVariableRegistry = NifiHelper.getProcessGroupsApi().getVariableRegistry(NifiConstants.ApiConstants.ROOT_NODE, true);
-                    RevisionDTO processGroupRevision = newVariableRegistry.getProcessGroupRevision();
-                    variableRegistryEntity.setProcessGroupRevision(processGroupRevision);
-                    System.out.println(JSON.toJSONString(variableRegistryEntity));
-                    NifiHelper.getProcessGroupsApi().updateVariableRegistry(variableRegistry.getVariableRegistry().getProcessGroupId(), variableRegistryEntity);
                 }
             }
+            registryDTO.setVariables(variableEntities);
+            registryDTO.setProcessGroupId(variableRegistry.getVariableRegistry().getProcessGroupId());
+            variableRegistryEntity.setDisconnectedNodeAcknowledged(null);
+            variableRegistryEntity.setVariableRegistry(registryDTO);
+            //连续插入变量查询最新版本
+            VariableRegistryEntity newVariableRegistry = NifiHelper.getProcessGroupsApi().getVariableRegistry(NifiConstants.ApiConstants.ROOT_NODE, true);
+            RevisionDTO processGroupRevision = newVariableRegistry.getProcessGroupRevision();
+            variableRegistryEntity.setProcessGroupRevision(processGroupRevision);
+            log.info(JSON.toJSONString(variableRegistryEntity));
+            NifiHelper.getProcessGroupsApi().updateVariableRegistry(variableRegistry.getVariableRegistry().getProcessGroupId(), variableRegistryEntity);
         } catch (ApiException e) {
-            log.error("查询全局变量失败." + e.getResponseBody());
+            log.error("创建全局变量失败", e);
         }
     }
 
@@ -2049,7 +2056,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         } else {
             log.error("userclient无法查询到ods库的连接信息");
             throw new FkException(ResultEnum.ERROR);
-        } 
+        }
         return sql;
     }
 
