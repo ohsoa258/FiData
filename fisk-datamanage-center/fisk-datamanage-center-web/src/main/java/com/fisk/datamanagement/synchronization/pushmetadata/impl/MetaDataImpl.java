@@ -594,6 +594,9 @@ public class MetaDataImpl implements IMetaData {
         }
         if (StringUtils.isEmpty(atlasGuid)) {
             String qualifiedName = sourceData.conIp + "_" + sourceData.conDbname + "_" + tableType + "_" + tableId;
+            if (sourceData.id == DataSourceConfigEnum.DMP_ODS.getValue()) {
+                qualifiedName = sourceData.conIp + "_" + sourceData.conDbname + "_" + tableId;
+            }
             QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda().eq(MetadataMapAtlasPO::getQualifiedName, qualifiedName)
                     .eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_TABLE.getValue());
