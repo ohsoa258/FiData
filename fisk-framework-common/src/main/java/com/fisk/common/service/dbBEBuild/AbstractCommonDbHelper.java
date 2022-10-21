@@ -329,7 +329,7 @@ public class AbstractCommonDbHelper {
                 rowCount = rs.getInt("num");
             }
         } catch (SQLException e) {
-            log.error("");
+            log.error("executeTotalSql ex:{}", e);
         } finally {
             AbstractCommonDbHelper.closeResultSet(rs);
             AbstractCommonDbHelper.closeStatement(st);
