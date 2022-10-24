@@ -85,4 +85,14 @@ public class DataSourcePO extends BasePO
      * 数据源类型：1系统数据源 2外部数据源
      */
     public int sourceType;
+
+    /**
+     * 数据源用途
+     */
+    public String purpose;
+
+    /**
+     * 负责人
+     */
+    public String principal;
 }

@@ -194,6 +194,8 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         dataSourceDTO.setServiceName(t.getServiceName());
         dataSourceDTO.setDomainName(t.getDomainName());
         dataSourceDTO.setSourceType(t.getSourceType());
+        dataSourceDTO.setPurpose(t.getPurpose());
+        dataSourceDTO.setPrincipal(t.getPrincipal());
         if (isShowPwd) {
             dataSourceDTO.setConPassword(t.getConPassword());
         }
@@ -216,6 +218,8 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         dataSourcePO.setDomainName(t.getDomainName());
         dataSourcePO.setSourceType(t.getSourceType());
         dataSourcePO.setConPassword(t.getConPassword());
+        dataSourcePO.setPurpose(t.getPurpose());
+        dataSourcePO.setPrincipal(t.getPrincipal());
         return dataSourcePO;
     }
 }

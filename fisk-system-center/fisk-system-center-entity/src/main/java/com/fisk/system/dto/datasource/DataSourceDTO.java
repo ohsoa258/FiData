@@ -107,14 +107,14 @@ public class DataSourceDTO
      * oracle服务名
      */
     @ApiModelProperty(value = "oracle服务名")
-    @Length(min = 0, max = 20, message = "长度最多100")
+    @Length(min = 0, max = 20, message = "长度最多20")
     public String serviceName;
 
     /**
      * oracle域名
      */
     @ApiModelProperty(value = "oracle域名")
-    @Length(min = 0, max = 100, message = "长度最多20")
+    @Length(min = 0, max = 100, message = "长度最多100")
     public String domainName;
 
     /**
@@ -122,4 +122,19 @@ public class DataSourceDTO
      */
     @ApiModelProperty(value = "数据源类型：1系统数据源 2外部数据源")
     public int sourceType;
+
+    /**
+     * 数据源用途
+     */
+    @ApiModelProperty(value = "数据源用途")
+    @Length(min = 0, max = 20, message = "长度最多255")
+    public String purpose;
+
+    /**
+     * 负责人
+     */
+    @ApiModelProperty(value = "负责人")
+    @Length(min = 0, max = 50, message = "长度最多50")
+    public String principal;
+
 }
