@@ -3,6 +3,7 @@ package com.fisk.common.service.dbBEBuild.factoryaccess;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbBEBuild.factoryaccess.impl.BuildAccessPgCommandImpl;
 import com.fisk.common.service.dbBEBuild.factoryaccess.impl.BuildAccessSqlServerCommandImpl;
 
 /**
@@ -15,7 +16,7 @@ public class BuildFactoryAccessHelper {
             case SQLSERVER:
                 return new BuildAccessSqlServerCommandImpl();
             case POSTGRESQL:
-                //return new BuildPgCommandImpl();
+                return new BuildAccessPgCommandImpl();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

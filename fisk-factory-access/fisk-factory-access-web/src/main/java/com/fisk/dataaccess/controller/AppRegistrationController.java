@@ -225,8 +225,9 @@ public class AppRegistrationController {
 
     @ApiOperation("判断应用简称是否重复")
     @PostMapping("/getRepeatAppAbbreviation")
-    public ResultEntity<Object> getRepeatAppAbbreviation(@RequestParam("appAbbreviation") String appAbbreviation) {
-        return service.getRepeatAppAbbreviation(appAbbreviation);
+    public ResultEntity<Object> getRepeatAppAbbreviation(@RequestParam("appAbbreviation") String appAbbreviation,
+                                                         @RequestParam("whetherSchema") boolean whetherSchema) {
+        return service.getRepeatAppAbbreviation(appAbbreviation, whetherSchema);
     }
 
     @ApiOperation(value = "获取所有应用以及表、字段数据")
