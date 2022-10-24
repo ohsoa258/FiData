@@ -62,7 +62,7 @@ public class DataSourceController {
 
     @PostMapping("/getAllDataSource")
     @ApiOperation("获取所有数据源连接信息")
-    public ResultEntity<Page<DataSourceDTO>> getAllDataSource(DataSourceQueryDTO dto) {
+    public ResultEntity<Page<DataSourceDTO>> getAllDataSource(@RequestBody DataSourceQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllDataSource(dto));
     }
 

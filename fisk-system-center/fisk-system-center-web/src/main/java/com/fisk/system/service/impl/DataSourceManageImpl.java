@@ -11,6 +11,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
@@ -23,6 +24,7 @@ import com.fisk.system.map.DataSourceMap;
 import com.fisk.system.mapper.DataSourceMapper;
 import com.fisk.system.service.IDataSourceManageService;
 import lombok.SneakyThrows;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -89,6 +91,30 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     @Override
     public Page<DataSourceDTO> getAllDataSource(DataSourceQueryDTO queryDTO) {
         StringBuilder querySql = new StringBuilder();
+        if (CollectionUtils.isNotEmpty(queryDTO.getDto())) {
+            List<FilterQueryDTO> filterQueryDTOS = queryDTO.getDto().stream().filter(t -> t.columnName == "`con_type`").collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(filterQueryDTOS)) {
+                filterQueryDTOS.forEach(filterQueryDTO -> {
+                    if (StringUtils.isNotEmpty(filterQueryDTO.getColumnValue())) {
+                        if (filterQueryDTO.getColumnValue().toUpperCase() == "MYSQL") {
+                            filterQueryDTO.setColumnValue("0");
+                        } else if (filterQueryDTO.getColumnValue().toUpperCase() == "SQLSERVER"
+                                || filterQueryDTO.getColumnValue().toUpperCase() == "SSMS") {
+                            filterQueryDTO.setColumnValue("1");
+                        } else if (filterQueryDTO.getColumnValue().toUpperCase() == "POSTGRESQL"
+                                || filterQueryDTO.getColumnValue().toUpperCase() == "PG"
+                                || filterQueryDTO.getColumnValue().toUpperCase() == "PGSQL") {
+                            filterQueryDTO.setColumnValue("4");
+                        } else if (filterQueryDTO.getColumnValue().toUpperCase() == "DORIS") {
+                            filterQueryDTO.setColumnValue("5");
+                        } else if (filterQueryDTO.getColumnValue().toUpperCase() == "ORACLE") {
+                            filterQueryDTO.setColumnValue("6");
+                        }
+                    }
+                });
+            }
+        }
+
         // 拼接原生筛选条件
         querySql.append(generateCondition.getCondition(queryDTO.getDto()));
         DataSourcePageDTO data = new DataSourcePageDTO();
@@ -97,8 +123,8 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         data.where = querySql.toString();
 
         Page<DataSourceDTO> filter = baseMapper.filter(queryDTO.getPage(), data);
-        if (filter!=null && CollectionUtils.isNotEmpty(filter.getRecords())){
-            filter.getRecords().stream().forEach(t-> t.setConTypeName(t.getConType().getName()));
+        if (filter != null && CollectionUtils.isNotEmpty(filter.getRecords())) {
+            filter.getRecords().stream().forEach(t -> t.setConTypeName(t.getConType().getName()));
         }
         return filter;
     }
