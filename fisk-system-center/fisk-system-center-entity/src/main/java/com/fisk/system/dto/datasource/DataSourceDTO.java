@@ -65,9 +65,15 @@ public class DataSourceDTO
     public DataSourceTypeEnum conType;
 
     /**
+     * 连接类型值
+     */
+    @ApiModelProperty(value = "连接类型值，仅查询")
+    public int conTypeValue;
+
+    /**
      * 连接类型名称
      */
-    @ApiModelProperty(value = "连接类型名称")
+    @ApiModelProperty(value = "连接类型名称，仅查询")
     public String conTypeName;
 
     /**
@@ -141,18 +147,18 @@ public class DataSourceDTO
     /**
      * 创建时间
      */
-    @ApiModelProperty(value = "创建时间")
+    @ApiModelProperty(value = "创建时间，仅查询")
     public LocalDateTime createTime;
 
     /**
      * 创建人
      */
-    @ApiModelProperty(value = "创建人")
+    @ApiModelProperty(value = "创建人，仅查询")
     public String createUser;
 
     /**
      * 修改时间
      */
-    @ApiModelProperty(value = "修改时间")
+    @ApiModelProperty(value = "修改时间，仅查询")
     public LocalDateTime updateTime;
 }

@@ -11,7 +11,7 @@
         ds.con_ip AS conIp,
         ds.con_port AS conPort,
         ds.con_dbname AS conDbname,
-        ds.con_type AS conType,
+        ds.con_type AS ConTypeValue,
         ds.con_account AS conAccount,
         ds.protocol,
         ds.platform,
