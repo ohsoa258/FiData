@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto.widetableconfig;
+package com.fisk.common.service.dbBEBuild.datamodel.dto;
 
 import lombok.Data;
 
@@ -6,7 +6,7 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class WideTableSourceFieldConfigDTO {
+public class TableSourceFieldConfigDTO {
 
     public int fieldId;
 
@@ -17,9 +17,5 @@ public class WideTableSourceFieldConfigDTO {
     public int fieldLength;
 
     public String alias;
-    /**
-     * 可视化数据类型：文本、日期、数值
-     */
-    public String dataType;
 
 }

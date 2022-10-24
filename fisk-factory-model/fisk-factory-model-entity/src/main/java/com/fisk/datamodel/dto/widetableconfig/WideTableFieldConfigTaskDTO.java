@@ -1,5 +1,7 @@
 package com.fisk.datamodel.dto.widetableconfig;
 
+import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceTableConfigDTO;
 import com.fisk.task.dto.MQBaseDTO;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.Data;
@@ -24,8 +26,8 @@ public class WideTableFieldConfigTaskDTO extends MQBaseDTO {
 
     public OlapTableEnum wideTable;
 
-    public List<WideTableSourceTableConfigDTO> entity;
+    public List<TableSourceTableConfigDTO> entity;
 
-    public List<WideTableSourceRelationsDTO> relations;
+    public List<TableSourceRelationsDTO> relations;
 
 }

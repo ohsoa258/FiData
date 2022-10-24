@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto.widetableconfig;
+package com.fisk.common.service.dbBEBuild.datamodel.dto;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -7,7 +7,7 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class WideTableSourceRelationsDTO {
+public class TableSourceRelationsDTO {
 
     @ApiModelProperty(value = "源表名")
     public String sourceTable;

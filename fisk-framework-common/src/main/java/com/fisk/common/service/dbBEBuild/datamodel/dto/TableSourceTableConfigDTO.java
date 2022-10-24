@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto.widetableconfig;
+package com.fisk.common.service.dbBEBuild.datamodel.dto;
 
 import lombok.Data;
 
@@ -8,7 +8,7 @@ import java.util.List;
  * @author JianWenYang
  */
 @Data
-public class WideTableSourceTableConfigDTO {
+public class TableSourceTableConfigDTO {
 
     public int tableId;
 
@@ -18,6 +18,6 @@ public class WideTableSourceTableConfigDTO {
      */
     public int tableType;
 
-    public List<WideTableSourceFieldConfigDTO> columnConfig;
+    public List<TableSourceFieldConfigDTO> columnConfig;
 
 }

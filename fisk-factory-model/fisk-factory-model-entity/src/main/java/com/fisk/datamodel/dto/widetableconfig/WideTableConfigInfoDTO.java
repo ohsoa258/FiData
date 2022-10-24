@@ -1,6 +1,6 @@
 package com.fisk.datamodel.dto.widetableconfig;
 
-import com.fisk.datamodel.dto.widetablefieldconfig.WideTableFieldConfigsDTO;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceTableConfigDTO;
 import com.fisk.datamodel.dto.widetablerelationconfig.WideTableRelationConfigDTO;
 import lombok.Data;
 
@@ -14,7 +14,7 @@ public class WideTableConfigInfoDTO {
 
     public int pageSize;
 
-    public List<WideTableSourceTableConfigDTO> entity;
+    public List<TableSourceTableConfigDTO> entity;
 
     public List<WideTableRelationConfigDTO> relations;
 

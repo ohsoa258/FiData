@@ -4,12 +4,12 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceFieldConfigDTO;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceTableConfigDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorPushDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceFieldDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigDTO;
-import com.fisk.datamodel.dto.widetableconfig.WideTableSourceFieldConfigDTO;
-import com.fisk.datamodel.dto.widetableconfig.WideTableSourceTableConfigDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.dimension.DimensionAttributePO;
 import com.fisk.datamodel.entity.dimension.DimensionPO;
@@ -353,8 +353,8 @@ public class DataModelTableImpl implements IDataModelTable {
             if (wideTableFieldDto == null || CollectionUtils.isEmpty(wideTableFieldDto.entity)) {
                 continue;
             }
-            for (WideTableSourceTableConfigDTO fieldTableDto : wideTableFieldDto.entity) {
-                for (WideTableSourceFieldConfigDTO fieldConfigDTO : fieldTableDto.columnConfig) {
+            for (TableSourceTableConfigDTO fieldTableDto : wideTableFieldDto.entity) {
+                for (TableSourceFieldConfigDTO fieldConfigDTO : fieldTableDto.columnConfig) {
                     SourceFieldDTO field = new SourceFieldDTO();
                     field.id = fieldConfigDTO.fieldId;
                     field.attributeType = fieldTableDto.tableType;

@@ -10,6 +10,8 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
+import com.fisk.common.service.dbBEBuild.datamodel.BuildDataModelHelper;
+import com.fisk.common.service.dbBEBuild.datamodel.IBuildDataModelSqlCommand;
 import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
@@ -156,71 +158,10 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
      * @param dimensionTabName
      * @return
      */
-    public String buildTableSql(String dimensionTabName)
-    {
-        DataSourceDTO odsSource = dataSourceConfigUtil.getDwSource();
-        String sql = null;
-        switch (odsSource.conType) {
-            case MYSQL:
-                break;
-            case SQLSERVER:
-                sql = "CREATE TABLE " + dimensionTabName + "("
-                        + "FullDateAlternateKey date not null,"
-                        + "DayNumberOfWeek int not null,"
-                        + "EnglishDayNameOfWeek varchar(10) not null,"
-                        + "DayNumberOfMonth int not null,"
-                        + "DayNumberOfYear int not null,"
-                        + "WeekNumberOfYear int not null,"
-                        + "EnglishMonthName varchar(10) not null,"
-                        + "MonthNumberOfYear int not null,"
-                        + "CalendarQuarter int not null,"
-                        + "CalendarYear int not null)";
-                break;
-            case ORACLE:
-                sql = "CREATE TABLE " + dimensionTabName + "("
-                        + "FullDateAlternateKey date not null,"
-                        + "DayNumberOfWeek number  not null,"
-                        + "EnglishDayNameOfWeek varchar2(10) not null,"
-                        + "DayNumberOfMonth number not null,"
-                        + "DayNumberOfYear number not null,"
-                        + "WeekNumberOfYear number not null,"
-                        + "EnglishMonthName varchar2(10) not null,"
-                        +"MonthNumberOfYear number not null,"
-                        +"CalendarQuarter number not null,"
-                        +"CalendarYear number not null)";
-                break;
-            case POSTGRESQL:
-                sql="CREATE TABLE "+dimensionTabName +"("
-                        +"FullDateAlternateKey date not null,"
-                        +"DayNumberOfWeek int2  not null,"
-                        +"EnglishDayNameOfWeek varchar(10) not null,"
-                        +"DayNumberOfMonth int2 not null,"
-                        +"DayNumberOfYear int2 not null,"
-                        +"WeekNumberOfYear int2 not null,"
-                        +"EnglishMonthName varchar(10) not null,"
-                        +"MonthNumberOfYear int2 not null,"
-                        +"CalendarQuarter int2 not null,"
-                        +"CalendarYear int2 not null)";
-                break;
-            case DORIS:
-                sql="CREATE TABLE "+dimensionTabName +"("
-                        +"FullDateAlternateKey date not null,"
-                        +"DayNumberOfWeek int  not null,"
-                        +"EnglishDayNameOfWeek varchar(10) not null,"
-                        +"DayNumberOfMonth int not null,"
-                        +"DayNumberOfYear int not null,"
-                        +"WeekNumberOfYear int not null,"
-                        +"EnglishMonthName varchar(10) not null,"
-                        +"MonthNumberOfYear int not null,"
-                        +"CalendarQuarter int not null,"
-                        +"CalendarYear int not null) DISTRIBUTED BY HASH ( `FullDateAlternateKey` )"
-                        +"BUCKETS 16 PROPERTIES (\"replication_num\" = \"1\")";
-                break;
-            default:
-                sql="";
-                break;
-        }
-        return sql;
+    public String buildTableSql(String dimensionTabName) {
+        DataSourceDTO dwSource = dataSourceConfigUtil.getDwSource();
+        IBuildDataModelSqlCommand command = BuildDataModelHelper.getDBCommand(dwSource.conType);
+        return command.buildTimeDimensionCreateTable(dimensionTabName);
     }
 
     /**

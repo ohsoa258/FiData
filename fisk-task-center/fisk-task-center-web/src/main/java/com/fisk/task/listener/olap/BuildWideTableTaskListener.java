@@ -5,11 +5,11 @@ import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceFieldConfigDTO;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceTableConfigDTO;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
-import com.fisk.datamodel.dto.widetableconfig.WideTableSourceFieldConfigDTO;
-import com.fisk.datamodel.dto.widetableconfig.WideTableSourceTableConfigDTO;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
@@ -89,10 +89,10 @@ public class BuildWideTableTaskListener {
         String fistfield = wideTableFieldConfigDTO.entity.get(0).columnConfig.get(0).fieldName.toLowerCase();
         String createTableSql = "DROP TABLE IF EXISTS " + tableName + "; create table " + tableName + " (";
         String field = "";
-        List<WideTableSourceTableConfigDTO> entity = wideTableFieldConfigDTO.entity;
-        for (WideTableSourceTableConfigDTO wideTableSourceTableConfigDTO : entity) {
-            List<WideTableSourceFieldConfigDTO> columnConfig = wideTableSourceTableConfigDTO.columnConfig;
-            for (WideTableSourceFieldConfigDTO wideTableSourceFieldConfigDTO : columnConfig) {
+        List<TableSourceTableConfigDTO> entity = wideTableFieldConfigDTO.entity;
+        for (TableSourceTableConfigDTO wideTableSourceTableConfigDTO : entity) {
+            List<TableSourceFieldConfigDTO> columnConfig = wideTableSourceTableConfigDTO.columnConfig;
+            for (TableSourceFieldConfigDTO wideTableSourceFieldConfigDTO : columnConfig) {
                 if ("float".equalsIgnoreCase(wideTableSourceFieldConfigDTO.fieldType)) {
                     if (wideTableSourceFieldConfigDTO.alias != null && wideTableSourceFieldConfigDTO.alias.length() > 0) {
                         field += "," + wideTableSourceFieldConfigDTO.alias.toLowerCase() + " decimal ";
@@ -118,10 +118,10 @@ public class BuildWideTableTaskListener {
         String sql = wideTableFieldConfigDTO.sqlScript;
         String tableName = wideTableFieldConfigDTO.name.toLowerCase();
         String fieldSql = "";
-        List<WideTableSourceTableConfigDTO> entity = wideTableFieldConfigDTO.entity;
-        for (WideTableSourceTableConfigDTO wideTableSourceTableConfigDTO : entity) {
-            List<WideTableSourceFieldConfigDTO> columnConfig = wideTableSourceTableConfigDTO.columnConfig;
-            for (WideTableSourceFieldConfigDTO wideTableSourceFieldConfigDTO : columnConfig) {
+        List<TableSourceTableConfigDTO> entity = wideTableFieldConfigDTO.entity;
+        for (TableSourceTableConfigDTO wideTableSourceTableConfigDTO : entity) {
+            List<TableSourceFieldConfigDTO> columnConfig = wideTableSourceTableConfigDTO.columnConfig;
+            for (TableSourceFieldConfigDTO wideTableSourceFieldConfigDTO : columnConfig) {
                 if (wideTableSourceFieldConfigDTO.alias != null && wideTableSourceFieldConfigDTO.alias.length() > 0) {
                     fieldSql += wideTableSourceFieldConfigDTO.alias.toLowerCase() + ",";
                 } else {

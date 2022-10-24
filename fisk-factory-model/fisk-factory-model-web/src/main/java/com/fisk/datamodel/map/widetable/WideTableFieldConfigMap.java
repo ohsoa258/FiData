@@ -1,6 +1,6 @@
 package com.fisk.datamodel.map.widetable;
 
-import com.fisk.datamodel.dto.widetableconfig.WideTableSourceFieldConfigDTO;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceFieldConfigDTO;
 import com.fisk.datamodel.dto.widetablefieldconfig.WideTableFieldConfigsDTO;
 import com.fisk.datamodel.entity.widetable.WideTableFieldConfigPO;
 import org.mapstruct.Mapper;
@@ -39,7 +39,7 @@ public interface WideTableFieldConfigMap {
      * @param dto
      * @return
      */
-    WideTableFieldConfigsDTO sourceToDto(WideTableSourceFieldConfigDTO dto);
+    WideTableFieldConfigsDTO sourceToDto(TableSourceFieldConfigDTO dto);
 
 
 }

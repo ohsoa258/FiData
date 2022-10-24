@@ -6,7 +6,6 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.datamodel.dto.dimension.DimensionListDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDataDTO;
@@ -68,8 +67,6 @@ public class DimensionFolderImpl
     PublishTaskClient publishTaskClient;
     @Resource
     DimensionImpl dimensionImpl;
-    @Resource
-    DataAccessClient dataAccessClient;
     @Resource
     SyncModeMapper syncModeMapper;
 
