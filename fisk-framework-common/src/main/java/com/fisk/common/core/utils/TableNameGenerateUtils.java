@@ -1,8 +1,14 @@
 package com.fisk.common.core.utils;
 
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author JianWenYang
  */
+@Slf4j
 public class TableNameGenerateUtils {
 
     private static String ods = "ods_";
@@ -66,6 +72,31 @@ public class TableNameGenerateUtils {
             return appAbbreviation + "." + tableName;
         }
         return appAbbreviation + "_" + tableName;
+    }
+
+    public static List<String> getStgAndTableName(String tableName) {
+        String stgTableName = "";
+        String odsTableName = "";
+        String tableKey = "";
+        List<String> tableNames = new ArrayList<>();
+        log.info("getStgTableName的表名称{}", tableName);
+        if (tableName.contains(".")) {
+            String[] split = tableName.split("\\.");
+            stgTableName = split[0] + ".stg_" + split[1];
+            odsTableName = tableName;
+            tableKey = split[0] + "_" + split[1] + "key";
+            tableNames.add(stgTableName);
+            tableNames.add(odsTableName);
+            tableNames.add(tableKey);
+        } else {
+            stgTableName = "stg_" + tableName;
+            odsTableName = "ods_" + tableName;
+            tableKey = tableName + "key";
+            tableNames.add(stgTableName);
+            tableNames.add(odsTableName);
+            tableNames.add(tableKey);
+        }
+        return tableNames;
     }
 
 }

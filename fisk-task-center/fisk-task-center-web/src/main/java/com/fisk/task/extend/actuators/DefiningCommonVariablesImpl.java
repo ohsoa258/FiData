@@ -1,11 +1,17 @@
 package com.fisk.task.extend.actuators;
 
 import com.alibaba.fastjson.JSON;
+import com.davis.client.model.ControllerServiceEntity;
+import com.fisk.common.core.baseObject.entity.BusinessResult;
+import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.task.dto.nifi.BuildKeytabCredentialsServiceDTO;
+import com.fisk.task.po.NifiConfigPO;
+import com.fisk.task.service.pipeline.impl.NifiConfigServiceImpl;
 import com.fisk.task.utils.StackTraceHelper;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +23,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.Objects;
 
 /**
  * @author cfk
@@ -55,6 +62,14 @@ public class DefiningCommonVariablesImpl implements ApplicationRunner {
     UserClient userClient;
     @Value("${fiData-data-ods-source}")
     private String dataSourceOdsId;
+    @Value("${nifi.Enable-Authentication}")
+    public String enableAuthentication;
+    @Value("${nifi.kerberos.Keytab}")
+    public String kerberosKeytab;
+    @Value("${nifi.kerberosprincipal}")
+    public String kerberosprincipal;
+    @Resource
+    NifiConfigServiceImpl nifiConfigService;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -88,10 +103,40 @@ public class DefiningCommonVariablesImpl implements ApplicationRunner {
             configMap.put(ComponentIdTypeEnum.DORIS_OLAP_DB_POOL_PASSWORD.getName(), dorisPwd);
             configMap.put(ComponentIdTypeEnum.DORIS_OLAP_DB_POOL_USERNAME.getName(), dorisUser);
             configMap.put(ComponentIdTypeEnum.DORIS_OLAP_DB_POOL_URL.getName(), dorisUrl);
+            if (Objects.equals(enableAuthentication, NifiConstants.enableAuthentication.ENABLE)) {
+                NifiConfigPO one = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.KEYTAB_CREDENTIALS_SERVICE_ID.getName()).eq("del_flag", 1).one();
+                if (Objects.isNull(one)) {
+                    NifiConfigPO nifiConfig = new NifiConfigPO();
+                    nifiConfig.componentId = getKeytabCredentialsServiceId();
+                    nifiConfig.componentKey = ComponentIdTypeEnum.KEYTAB_CREDENTIALS_SERVICE_ID.getName();
+                    nifiConfig.delFlag = 1;
+                    nifiConfigService.save(nifiConfig);
+                }
+            }
+
             iNiFiHelper.buildNifiGlobalVariable(configMap);
             log.info("创建变量完成");
         } catch (Exception e) {
             log.error("创建常量报错:" + StackTraceHelper.getStackTraceInfo(e));
         }
+    }
+
+    public String getKeytabCredentialsServiceId() {
+        BuildKeytabCredentialsServiceDTO buildKeytabCredentialsService = new BuildKeytabCredentialsServiceDTO();
+        buildKeytabCredentialsService.groupId = "root";
+        buildKeytabCredentialsService.kerberosKeytab = kerberosKeytab;
+        buildKeytabCredentialsService.kerberosprincipal = kerberosprincipal;
+        buildKeytabCredentialsService.name = "KeytabCredentialsService";
+        buildKeytabCredentialsService.details = "KeytabCredentialsService";
+        BusinessResult<ControllerServiceEntity> controllerServiceEntity =
+                iNiFiHelper.buildKeytabCredentialsService(buildKeytabCredentialsService);
+        if (controllerServiceEntity.success == true) {
+            return controllerServiceEntity.data.getId();
+        } else {
+            log.error("创建broker认证控制器服务报错");
+            return "";
+        }
+
+
     }
 }

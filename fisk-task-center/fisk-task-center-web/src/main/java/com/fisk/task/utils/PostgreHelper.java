@@ -50,7 +50,7 @@ public class PostgreHelper {
     }
 
     @Value("${fiData-data-ods-source}")
-    public static void setDataSourceOdsId(String dataSourceOdsId) {
+    public void setDataSourceOdsId(String dataSourceOdsId) {
         PostgreHelper.dataSourceOdsId = dataSourceOdsId;
     }
 

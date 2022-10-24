@@ -2,6 +2,7 @@ package com.fisk.task.consumer;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.constants.MqConstants;
+import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -53,6 +54,7 @@ import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author cfk
@@ -81,6 +83,12 @@ public class KafkaConsumer {
     private String sessionTimeoutMs;
     @Value("${nifi.pipeline.waitTime}")
     private String waitTime;
+    @Value("${nifi.Enable-Authentication}")
+    public String enableAuthentication;
+    @Value("${nifi.kerberos.login.config}")
+    public String loginConfigPath;
+    @Value("${nifi.kerberos.krb5.conf}")
+    public String krb5ConfigPath;
     @Resource
     BuildNifiTaskListener buildNifiTaskListener;
     @Resource
@@ -146,6 +154,12 @@ public class KafkaConsumer {
 
     @Bean
     public Map<String, Object> consumerConfigs() {
+        if (Objects.equals(enableAuthentication, NifiConstants.enableAuthentication.ENABLE)) {
+            System.setProperty("java.security.auth.login.config", loginConfigPath);
+            System.setProperty("java.security.krb5.conf", krb5ConfigPath);
+        }
+
+
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, consumerBootstrapServer);
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, enableAutoCommit);
@@ -155,6 +169,11 @@ public class KafkaConsumer {
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valueDeserializer);
         // props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-091231");
         //每一批数量
+        if (Objects.equals(enableAuthentication, NifiConstants.enableAuthentication.ENABLE)) {
+            props.put("sasl.kerberos.service.name", "kafka");     //认证代码
+            props.put("sasl.mechanism", "GSSAPI");                //认证代码
+            props.put("security.protocol", "SASL_PLAINTEXT");
+        }
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 500);
         props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, sessionTimeoutMs);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");

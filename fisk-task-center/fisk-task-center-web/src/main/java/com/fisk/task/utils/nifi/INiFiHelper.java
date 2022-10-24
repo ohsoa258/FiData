@@ -553,5 +553,13 @@ public interface INiFiHelper {
      */
     public BusinessResult<ProcessorEntity> buildInvokeHTTPProcessor(BuildInvokeHttpProcessorDTO data, List<String> autoEnd);
 
+    /**
+     * buildKeytabCredentialsService
+     *
+     * @param data 创建Kerberos认证控制器服务
+     * @return ProcessorEntity
+     */
+    public BusinessResult<ControllerServiceEntity> buildKeytabCredentialsService(BuildKeytabCredentialsServiceDTO data);
+
 
 }

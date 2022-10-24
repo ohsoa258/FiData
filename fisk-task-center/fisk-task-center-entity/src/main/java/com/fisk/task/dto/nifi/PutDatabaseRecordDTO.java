@@ -14,5 +14,6 @@ public class PutDatabaseRecordDTO   extends BaseProcessorDTO{
     public String TableName;
     public String concurrentTasks;
     public SynchronousTypeEnum synchronousTypeEnum;
+    public String schemaName;
 
 }

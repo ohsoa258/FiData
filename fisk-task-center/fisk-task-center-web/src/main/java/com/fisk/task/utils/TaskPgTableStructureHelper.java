@@ -102,7 +102,7 @@ public class TaskPgTableStructureHelper
     }
 
     @Value("${fiData-data-ods-source}")
-    public static void setDataSourceOdsId(String dataSourceOdsId) {
+    public void setDataSourceOdsId(String dataSourceOdsId) {
         TaskPgTableStructureHelper.dataSourceOdsId = dataSourceOdsId;
     }
 

@@ -52,4 +52,11 @@ public interface IbuildTable {
      * @return String
      */
     String queryNumbersField(BuildNifiFlowDTO dto, DataAccessConfigDTO config);
+
+    /**
+     * tableName 一般是简称_表名,或简称.表名,如果是.要从中间切开,简称.stg_表名.或者stg_简称_表名
+     *
+     * @return String
+     */
+    List<String> getStgAndTableName(String tableName);
 }

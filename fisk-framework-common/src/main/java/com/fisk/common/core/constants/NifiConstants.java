@@ -5,6 +5,11 @@ package com.fisk.common.core.constants;
  */
 public class NifiConstants {
 
+    public static final class enableAuthentication {
+        public static final String ENABLE = "1";
+        public static final String NOT_ENABLE = "0";
+    }
+
     public static final class ApiConstants {
 
         public static final String BASE_PATH = "http://192.168.11.130:9090/nifi-api";
@@ -29,10 +34,10 @@ public class NifiConstants {
     }
 
     public static final class DriveConstants {
-        public static final String MYSQL_DRIVE_PATH = "/opt/nifi/nifi-current/jdbcdriver/mysql-connector-java-8.0.25.jar";
-        public static final String SQLSERVER_DRIVE_PATH = "/opt/nifi/nifi-current/jdbcdriver/sqljdbc42.jar";
-        public static final String POSTGRESQL_DRIVE_PATH = "/opt/nifi/nifi-current/jdbcdriver/postgresql-42.2.23.jar";
-        public static final String ORACLE_DRIVE_PATH = "/opt/nifi/nifi-current/jdbcdriver/ojdbc7.jar";
+        public static final String MYSQL_DRIVE_PATH = "opt/nifi/nifi-current/jdbcdriver/mysql-connector-java-8.0.25.jar";
+        public static final String SQLSERVER_DRIVE_PATH = "opt/nifi/nifi-current/jdbcdriver/sqljdbc42.jar";
+        public static final String POSTGRESQL_DRIVE_PATH = "opt/nifi/nifi-current/jdbcdriver/postgresql-42.2.23.jar";
+        public static final String ORACLE_DRIVE_PATH = "opt/nifi/nifi-current/jdbcdriver/ojdbc7.jar";
 
     }
 
@@ -58,6 +63,8 @@ public class NifiConstants {
         public static final String PIPEL_JOB_TRACE_ID="pipelJobTraceId";
         public static final String PIPEL_TASK_TRACE_ID="pipelTaskTraceId";
         public static final String PIPEL_STAGE_TRACE_ID="pipelStageTraceId";
+        public static final String INCREMENTAL_OBJECTIVESCORE_END="incremental_objectivescore_end";
+        public static final String INCREMENTAL_OBJECTIVESCORE_START="incremental_objectivescore_start";
         public static final String TOPIC_TYPE="topicType";
 
         public static final int POSITION_X_MAX = 5;

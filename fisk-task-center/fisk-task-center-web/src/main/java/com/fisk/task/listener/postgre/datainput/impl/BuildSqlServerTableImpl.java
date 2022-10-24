@@ -2,6 +2,7 @@ package com.fisk.task.listener.postgre.datainput.impl;
 
 import com.fisk.common.core.enums.task.FuncNameEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
+import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.enums.syncModeTypeEnum;
@@ -37,20 +38,20 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         //ods与stg类型不变,不然有的值,类型转换不来
         tableFieldsDTOS.forEach((l) -> {
             if (l.fieldType.contains("FLOAT")) {
-                sqlFileds.append("\"" + l.fieldName + "\" " + " numeric(18,9) ");
+                sqlFileds.append("" + l.fieldName + " " + " numeric(18,9) ");
             } else if (l.fieldType.contains("INT")) {
-                sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + " ");
+                sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + " ");
             } else if (l.fieldType.contains("TEXT")) {
-                sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + " ");
+                sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + " ");
             } else if (l.fieldType.contains("TIMESTAMP")) {
-                sqlFileds.append("\"" + l.fieldName + "\" datetime ");
+                sqlFileds.append("" + l.fieldName + " datetime ");
             } else {
-                sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + "(" + l.fieldLength + ") ");
+                sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + "(" + l.fieldLength + ") ");
             }
             //todo 修改stg表,字段类型
-            stgSql.append("\"" + l.fieldName + "\" varchar(4000),");
+            stgSql.append("" + l.fieldName + " nvarchar(4000),");
             if (l.isPrimarykey == 1) {
-                pksql.append("\"" + l.fieldName + "\",");
+                pksql.append("" + l.fieldName + ",");
                 sqlFileds.append("not null ,");
             } else {
                 sqlFileds.append(",");
@@ -69,11 +70,11 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         String stg_sql2 = "";
         String odsTableName = "";
         if (buildPhysicalTableDTO.whetherSchema) {
-            odsTableName = "ods_" + buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName;
-            stg_sql1 = sql.toString().replace("fi_tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName);
-            stg_sql2 = stgSql.toString().replace("fi_tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName);
-            stg_sql2 = "DROP TABLE IF EXISTS " + "stg_" + buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName + ";" + stg_sql2 +
-                    "create index enableflagsy on stg_" + buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName + " (fi_enableflag);";
+            odsTableName = buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName;
+            stg_sql1 = sql.toString().replace("fi_tableName", buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName);
+            stg_sql2 = stgSql.toString().replace("fi_tableName", buildPhysicalTableDTO.appAbbreviation + ".stg_" + buildPhysicalTableDTO.tableName);
+            stg_sql2 = "DROP TABLE IF EXISTS " + buildPhysicalTableDTO.appAbbreviation + ".stg_" + buildPhysicalTableDTO.tableName + ";" + stg_sql2 +
+                    "create index enableflagsy on stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + " (fi_enableflag);";
         } else {
             odsTableName = "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
             stg_sql1 = sql.toString().replace("fi_tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
@@ -84,7 +85,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         List<String> sqlList = new ArrayList<>();
         //alter table Date add constraint PK_Date primary key(ID)
         if (StringUtils.isNotEmpty(havePk)) {
-            stg_sql1 += ";alter table " + odsTableName + " add constraint " + odsTableName + "_pkey primary key(" + havePk.substring(0, havePk.length() - 2) + "\")";
+            // stg_sql1 += ";alter table " + odsTableName + " add constraint " + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "_pkey primary key(" + havePk.substring(0, havePk.length() - 1) + ")";
         }
         sqlList.add(stg_sql1);
         sqlList.add(stg_sql2);
@@ -97,11 +98,11 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         selectTable = selectTable.substring(0, selectTable.length() - 2);
         if (buildPhysicalTableDTO.whetherSchema) {
             //select * from sys.schemas ss left join sys.tables st on ss.schema_id=st.schema_id where ss.name ='dbo' and st.name='stg_dim_ghs3'
-            selectTable = "select count(*) from sys.tables st left join sys.schemas ss on ss.schema_id=st.schema_id where ss.name = ods_"
-                    + buildPhysicalTableDTO.appAbbreviation + " and ";
+            selectTable = "select count(*) from sys.tables st left join sys.schemas ss on ss.schema_id=st.schema_id where ss.name = '"
+                    + buildPhysicalTableDTO.appAbbreviation + "' and ";
             for (String tableName : buildPhysicalTableDTO.apiTableNames) {
 
-                selectTable += " st.name='ods_" + buildPhysicalTableDTO.appAbbreviation + "." + tableName + "' or";
+                selectTable += " st.name='" + buildPhysicalTableDTO.appAbbreviation + "." + tableName + "' or";
             }
             selectTable = selectTable.substring(0, selectTable.length() - 2);
         } else {
@@ -120,6 +121,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         TableBusinessDTO business = config.businessDTO;
         String tableKey = "";
         String targetTableName = config.processorConfig.targetTableName;
+        List<String> stgAndTableName = getStgAndTableName(targetTableName);
         String sql = "";
         if (buildNifiFlow != null && StringUtils.isNotEmpty(buildNifiFlow.updateSql)) {
             sql += "call public." + funcName + "('" + buildNifiFlow.updateSql + "','";
@@ -145,16 +147,18 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             }
         } else {
             sql = sql.replaceFirst("call public." + funcName + "\\(", "exec [dbo]." + funcName);
-            tableKey = targetTableName.substring(4) + "key";
+            tableKey = stgAndTableName.get(2);
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
-                sql += "stg_" + targetTableName + "'";
-                sql += ",'ods_" + targetTableName + "'";
+                sql += stgAndTableName.get(0) + "'";
+                sql += ",'" + stgAndTableName.get(1) + "'";
             } else {
+                //sql +="${fragment.index}','${fidata_batch_code}','";
+                sql += "${fragment.index}','''";
                 String fieldList = config.targetDsConfig.tableFieldsList.stream().filter(Objects::nonNull)
                         .filter(e -> e.fieldName != null && !Objects.equals("", e.fieldName))
-                        .map(t -> t.fieldName).collect(Collectors.joining("'',''"));
-                sql += fieldList + "','" + tableKey + "','" + targetTableName + "'";
-                sql += ",'ods_" + targetTableName.substring(4) + "'";
+                        .map(t -> t.fieldName).collect(Collectors.joining("'''',''''"));
+                sql += fieldList + "''','" + tableKey + "','" + stgAndTableName.get(0) + "'";
+                sql += ",'" + stgAndTableName.get(1) + "'";
             }
         }
         //同步方式
@@ -223,6 +227,9 @@ public class BuildSqlServerTableImpl implements IbuildTable {
     @Override
     public String queryNumbersField(BuildNifiFlowDTO dto, DataAccessConfigDTO config) {
         //convert(varchar(100),getdate(),120)
+        List<String> stgAndTableName = getStgAndTableName(config.processorConfig.targetTableName);
+        if (config.processorConfig.targetTableName.contains("\\.")) {
+        }
         String querySql = "";
         if (Objects.equals(dto.type, OlapTableEnum.WIDETABLE) || Objects.equals(dto.type, OlapTableEnum.KPI)) {
             querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,now() as end_time," +
@@ -232,7 +239,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
                 querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,convert(varchar(100),getdate(),120) as end_time," +
                         "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from ods_" + config.processorConfig.targetTableName.substring(4) + " where fidata_batch_code='${fidata_batch_code}'";
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + stgAndTableName.get(1) + " where fidata_batch_code='${fidata_batch_code}'";
             } else {
                 querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
                         "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
@@ -244,5 +251,9 @@ public class BuildSqlServerTableImpl implements IbuildTable {
 
     }
 
+    @Override
+    public List<String> getStgAndTableName(String tableName) {
+        return TableNameGenerateUtils.getStgAndTableName(tableName);
+    }
 
 }

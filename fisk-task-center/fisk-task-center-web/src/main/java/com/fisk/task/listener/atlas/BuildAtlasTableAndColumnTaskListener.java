@@ -60,7 +60,11 @@ public class BuildAtlasTableAndColumnTaskListener
             String physicalSelect = createPhysicalTable(buildPhysicalTableDTO);
             //endregion
             TBETLIncrementalPO ETLIncremental = new TBETLIncrementalPO();
-            ETLIncremental.objectName = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
+            if (buildPhysicalTableDTO.whetherSchema) {
+                ETLIncremental.objectName = buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName;
+            } else {
+                ETLIncremental.objectName = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
+            }
             ETLIncremental.enableFlag = "1";
             ETLIncremental.incrementalObjectivescoreBatchno = UUID.randomUUID().toString();
             Map<String, Object> conditionHashMap = new HashMap<>();

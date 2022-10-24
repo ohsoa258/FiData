@@ -12,6 +12,7 @@ import java.util.List;
 
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 
@@ -48,6 +49,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+@Slf4j
 public class HttpClientUtil {
 
     public static String doGet(String url, Map<String, String> param) {
@@ -76,7 +78,7 @@ public class HttpClientUtil {
                 resultString = EntityUtils.toString(response.getEntity(), "UTF-8");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("nifi请求报错" + StackTraceHelper.getStackTraceInfo(e));
         } finally {
             try {
                 if (response != null) {
@@ -84,7 +86,7 @@ public class HttpClientUtil {
                 }
                 httpclient.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("nifi请求报错" + StackTraceHelper.getStackTraceInfo(e));
             }
         }
         return resultString;
@@ -120,13 +122,12 @@ public class HttpClientUtil {
             response = httpClient.execute(httpPost);
             resultString = EntityUtils.toString(response.getEntity(), "utf-8");
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("nifi请求报错" + StackTraceHelper.getStackTraceInfo(e));
         } finally {
             try {
                 response.close();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                log.error("nifi请求报错" + StackTraceHelper.getStackTraceInfo(e));
             }
         }
         return resultString;
@@ -136,21 +137,20 @@ public class HttpClientUtil {
      * 原生字符串发送put请求
      *
      * @param url
-     * @param token
      * @param jsonStr
      * @return
      * @throws ClientProtocolException
      * @throws IOException
      */
-    public static String doPut(String url, String token, String jsonStr) {
-
-        CloseableHttpClient httpClient = HttpClients.createDefault();
+    public static String doPut(String url, String jsonStr) {
+        log.info("put请求参数与地址,{},{}", url, jsonStr);
+        CloseableHttpClient httpClient = (CloseableHttpClient) wrapClient();
         HttpPut httpPut = new HttpPut(url);
-        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(35000).setConnectionRequestTimeout(35000).setSocketTimeout(60000).build();
-        httpPut.setConfig(requestConfig);
-        httpPut.setHeader("Content-type", "application/json");
-        httpPut.setHeader("DataEncoding", "UTF-8");
-        httpPut.setHeader("token", token);
+        //RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(35000).setConnectionRequestTimeout(35000).setSocketTimeout(60000).build();
+        //httpPut.setConfig(requestConfig);
+        String nifiToken = NifiHelper.getNifiToken();
+        httpPut.setHeader("Content-Type", String.valueOf(MediaType.APPLICATION_JSON_UTF8));
+        httpPut.setHeader("Authorization", nifiToken);
 
         CloseableHttpResponse httpResponse = null;
         try {
@@ -158,33 +158,30 @@ public class HttpClientUtil {
             httpResponse = httpClient.execute(httpPut);
             HttpEntity entity = httpResponse.getEntity();
             String result = EntityUtils.toString(entity);
+            log.info("put请求返回结果" + result);
             return result;
         } catch (ClientProtocolException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("nifi请求报错" + StackTraceHelper.getStackTraceInfo(e));
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("nifi请求报错" + StackTraceHelper.getStackTraceInfo(e));
         } finally {
             if (httpResponse != null) {
                 try {
                     httpResponse.close();
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    log.error("nifi请求报错" + StackTraceHelper.getStackTraceInfo(e));
                 }
             }
             if (null != httpClient) {
                 try {
                     httpClient.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    log.error("nifi请求报错" + StackTraceHelper.getStackTraceInfo(e));
                 }
             }
         }
         return null;
     }
-
 
 
     public static String doPost(String url) {
@@ -209,13 +206,12 @@ public class HttpClientUtil {
             response = httpClient.execute(httpPost);
             resultString = EntityUtils.toString(response.getEntity(), "utf-8");
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("nifi请求报错" + StackTraceHelper.getStackTraceInfo(e));
         } finally {
             try {
                 response.close();
             } catch (IOException e) {
-                // TODO Auto-generated catch bloc
-                e.printStackTrace();
+                log.error("nifi请求报错" + StackTraceHelper.getStackTraceInfo(e));
             }
         }
         return resultString;

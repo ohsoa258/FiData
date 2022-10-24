@@ -62,5 +62,6 @@ public class TableNifiSettingPO extends BasePO {
     public String updateFieldForCodeProcessorId;
     public String convertAvroRecordSetWriterForCodeId;
     public String convertPutDatabaseRecordForCodeId;
+    public String evaluateTimeVariablesProcessorId;
 
 }

@@ -33,6 +33,7 @@ public class TBETLIncrementalImpl extends ServiceImpl<TBETLIncrementalMapper, TB
         List<TBETLIncrementalPO> list = new ArrayList<>();
         TBETLIncrementalPO tbetlIncremental = new TBETLIncrementalPO();
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        Date d = new Date();
         try {
             if (sql.contains(SystemVariableTypeEnum.START_TIME.getValue()) || sql.contains(SystemVariableTypeEnum.END_TIME.getValue())) {
                 //task提供方法
@@ -50,18 +51,19 @@ public class TBETLIncrementalImpl extends ServiceImpl<TBETLIncrementalMapper, TB
                         sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'" + NifiConstants.AttrConstants.INITIAL_TIME + "'");
                         paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
                     }
-                    if (endTime != null) {
+                   /* if (endTime != null) {
                         String endDate = getStringDate(endTime);
                         sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'" + endDate + "'");
                         paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), endDate);
-                    } else {
-                        sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'" + NifiConstants.AttrConstants.INITIAL_TIME + "'");
-                        paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
-                    }
+                    } else {*/
+
+                        sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'" + formatter.format(d) + "'");
+                        paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), formatter.format(d));
+                    //}
                 } else {
                     sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'" + NifiConstants.AttrConstants.INITIAL_TIME + "'");
-                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'" + NifiConstants.AttrConstants.INITIAL_TIME + "'");
-                    paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
+                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'" + formatter.format(d) + "'");
+                    paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), formatter.format(d));
                     paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
                     Date parse = formatter.parse(NifiConstants.AttrConstants.INITIAL_TIME);
                     tbetlIncremental.incrementalObjectivescoreEnd = parse;

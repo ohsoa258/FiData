@@ -12,6 +12,14 @@ nifi:
   username: fisk
   password: fiskpassword01!
   token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJkMjc2Mjk3N2U4YjU0YTQ0YjYyZGU2ODlmZTk0OTRjNiIsInVzZXIiOiJ7XCJpZFwiOjE4LFwidXNlckFjY291bnRcIjpcImNma1wifSIsImlkIjoiMTgifQ.SRkIbNgKrvo1TI-WSufy4mZGLst6ed0Y6Fs0QoQ8m_g
+  Enable-Authentication: 0
+  kerberos:
+    Keytab: /opt/fidata/java/fisk-task-center/kafka.keytab
+    login:
+      config: /opt/fidata/java/fisk-task-center/kafka-jaas.conf
+    krb5:
+      conf: /opt/fidata/java/fisk-task-center/krb5.conf
+  kerberosprincipal: kafka/admin@AUTOEXPR.COM
   pipeline:
     topicName: my-topic
     waitTime: 20
@@ -37,7 +45,7 @@ pgsql-mdm:
   username: postgres
   type: PG
 server:
-  port: 8099
+  port: 7003
 spring:
   application:
     name: task-center
