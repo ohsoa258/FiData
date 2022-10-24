@@ -46,4 +46,8 @@ public class FilterSqlConstants {
      * 数据目标应用
      */
     public static final String DATA_TARGET_APP = " where Field in('name','principal','email','description','create_time')";
+    /**
+     * 平台管理--数据源
+     */
+    public static final String PLATFORM_DATASOURCE_SQL = " where Field in('name','con_dbname','con_type','principal')";
 }

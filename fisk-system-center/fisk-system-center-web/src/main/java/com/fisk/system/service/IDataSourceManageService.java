@@ -1,9 +1,12 @@
 package com.fisk.system.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.datasource.DataSourceQueryDTO;
 import com.fisk.system.entity.DataSourcePO;
 
 import java.util.List;
@@ -37,11 +40,17 @@ public interface IDataSourceManageService extends IService<DataSourcePO> {
     List<DataSourceDTO> getExternalDataSource();
 
     /**
+     * 获取过滤器表字段
+     * @return 字段
+     */
+    List<FilterFieldDTO> getSearchColumn();
+
+    /**
      * 获取全部数据源
      *
      * @return 查询结果
      */
-    List<DataSourceDTO> getAllDataSource();
+    Page<DataSourceDTO> getAllDataSource(DataSourceQueryDTO queryDTO);
 
     /**
      * 更新数据

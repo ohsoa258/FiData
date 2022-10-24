@@ -6,6 +6,7 @@ import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 
 /**
  * @author dick
@@ -127,7 +128,7 @@ public class DataSourceDTO
      * 数据源用途
      */
     @ApiModelProperty(value = "数据源用途")
-    @Length(min = 0, max = 20, message = "长度最多255")
+    @Length(min = 0, max = 255, message = "长度最多255")
     public String purpose;
 
     /**
@@ -137,4 +138,21 @@ public class DataSourceDTO
     @Length(min = 0, max = 50, message = "长度最多50")
     public String principal;
 
+    /**
+     * 创建时间
+     */
+    @ApiModelProperty(value = "创建时间")
+    public LocalDateTime createTime;
+
+    /**
+     * 创建人
+     */
+    @ApiModelProperty(value = "创建人")
+    public String createUser;
+
+    /**
+     * 修改时间
+     */
+    @ApiModelProperty(value = "修改时间")
+    public LocalDateTime updateTime;
 }

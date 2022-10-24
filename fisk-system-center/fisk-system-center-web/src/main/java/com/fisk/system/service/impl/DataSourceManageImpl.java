@@ -2,13 +2,22 @@ package com.fisk.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
+import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.common.service.pageFilter.utils.GetMetadata;
+import com.fisk.system.dto.GetConfigDTO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.datasource.DataSourcePageDTO;
+import com.fisk.system.dto.datasource.DataSourceQueryDTO;
 import com.fisk.system.entity.DataSourcePO;
 import com.fisk.system.map.DataSourceMap;
 import com.fisk.system.mapper.DataSourceMapper;
@@ -16,6 +25,7 @@ import com.fisk.system.service.IDataSourceManageService;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -30,6 +40,15 @@ import java.util.stream.Collectors;
  */
 @Service
 public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSourcePO> implements IDataSourceManageService {
+
+    @Resource
+    private GetConfigDTO getConfig;
+
+    @Resource
+    private GetMetadata getMetadata;
+
+    @Resource
+    private GenerateCondition generateCondition;
 
     @Override
     public List<DataSourceDTO> getSystemDataSource() {
@@ -56,9 +75,32 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     }
 
     @Override
-    public List<DataSourceDTO> getAllDataSource() {
-        List<DataSourceDTO> all = getAll(false);
-        return all;
+    public List<FilterFieldDTO> getSearchColumn() {
+        MetaDataConfigDTO dto = new MetaDataConfigDTO();
+        dto.url = getConfig.url;
+        dto.userName = getConfig.username;
+        dto.password = getConfig.password;
+        dto.driver = getConfig.driver;
+        dto.tableName = "tb_datasource_config";
+        dto.filterSql = FilterSqlConstants.PLATFORM_DATASOURCE_SQL;
+        return getMetadata.getMetadataList(dto);
+    }
+
+    @Override
+    public Page<DataSourceDTO> getAllDataSource(DataSourceQueryDTO queryDTO) {
+        StringBuilder querySql = new StringBuilder();
+        // 拼接原生筛选条件
+        querySql.append(generateCondition.getCondition(queryDTO.getDto()));
+        DataSourcePageDTO data = new DataSourcePageDTO();
+        data.page = queryDTO.getPage();
+        // 筛选器左边的模糊搜索查询SQL拼接
+        data.where = querySql.toString();
+
+        Page<DataSourceDTO> filter = baseMapper.filter(queryDTO.getPage(), data);
+        if (filter!=null && CollectionUtils.isNotEmpty(filter.getRecords())){
+            filter.getRecords().stream().forEach(t-> t.setConTypeName(t.getConType().getName()));
+        }
+        return filter;
     }
 
     @Override

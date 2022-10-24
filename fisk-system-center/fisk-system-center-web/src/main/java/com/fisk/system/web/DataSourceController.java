@@ -1,10 +1,12 @@
 package com.fisk.system.web;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.datasource.DataSourceQueryDTO;
 import com.fisk.system.service.IDataSourceManageService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -52,10 +54,16 @@ public class DataSourceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getExternalDataSource());
     }
 
+    @GetMapping("/getSearchColumn")
+    @ApiOperation(value = "获取搜索条件字段")
+    public ResultEntity<Object> getSearchColumn() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getSearchColumn());
+    }
+
     @PostMapping("/getAllDataSource")
     @ApiOperation("获取所有数据源连接信息")
-    public ResultEntity<List<DataSourceDTO>> getAllDataSource() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllDataSource());
+    public ResultEntity<Page<DataSourceDTO>> getAllDataSource(DataSourceQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllDataSource(dto));
     }
 
     @PostMapping("/add")
