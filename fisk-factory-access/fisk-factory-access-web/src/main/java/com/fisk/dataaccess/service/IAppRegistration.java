@@ -168,9 +168,10 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * 判断应用简称是否重复
      *
      * @param appAbbreviation appAbbreviation
+     * @param whetherSchema
      * @return 执行结果
      */
-    ResultEntity<Object> getRepeatAppAbbreviation(String appAbbreviation);
+    ResultEntity<Object> getRepeatAppAbbreviation(String appAbbreviation, boolean whetherSchema);
 
     /**
      * 查询数据接入下所有业务系统个数

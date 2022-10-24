@@ -213,7 +213,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
 
         // 添加元数据信息
-        /*ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
+        ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
         classificationInfoDto.setName(appRegistrationDTO.appName + "_" + appRegistrationDTO.appAbbreviation);
         classificationInfoDto.setDescription(appRegistrationDTO.appDes);
         classificationInfoDto.setSourceType(1);
@@ -223,7 +223,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         } catch (Exception e) {
             // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
             log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
-        }*/
+        }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
     }
@@ -752,7 +752,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
     @Override
-    public ResultEntity<Object> getRepeatAppAbbreviation(String appAbbreviation) {
+    public ResultEntity<Object> getRepeatAppAbbreviation(String appAbbreviation, boolean whetherSchema) {
+        if (whetherSchema) {
+            return ResultEntityBuild.build(ResultEnum.DATAACCESS_APPABBREVIATION_SUCCESS);
+        }
+
         List<String> appAbbreviationList = baseMapper.getAppAbbreviation();
 
         return appAbbreviationList.contains(appAbbreviation) ? ResultEntityBuild.build(ResultEnum.DATAACCESS_APPABBREVIATION_ERROR) : ResultEntityBuild.build(ResultEnum.DATAACCESS_APPABBREVIATION_SUCCESS);
