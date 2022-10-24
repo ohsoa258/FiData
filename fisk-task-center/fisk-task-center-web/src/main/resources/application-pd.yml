@@ -10,6 +10,14 @@ external-table-link: '"host" = "100.102.201.107","port" = "5433","user" = "admin
 nifi:
   basePath: http://100.102.201.108:8081/nifi-api
   token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJiMmVmNDFjZDgzOWI0ZjFjOTQ5Y2U1NzgzYWM5MDc3NCIsInVzZXIiOiJ7XCJpZFwiOjE4LFwidXNlckFjY291bnRcIjpcIm5pZmlfdG9rZW5cIn0iLCJpZCI6IjE4In0.Zp5nzRO9VeHhqsQ98NejOyl_-Q8LEHRu8KfCbbcLvH4
+  Enable-Authentication: 0
+  kerberos:
+    Keytab: /opt/fidata/java/fisk-task-center/kafka.keytab
+    login:
+      config: /opt/fidata/java/fisk-task-center/kafka-jaas.conf
+    krb5:
+      conf: /opt/fidata/java/fisk-task-center/krb5.conf
+  kerberosprincipal: kafka/admin@AUTOEXPR.COM
   pipeline:
     topicName: my-topic
     waitTime: 20

@@ -16,7 +16,8 @@ public enum ControllerServiceTypeEnum implements BaseEnum {
     AVRORECORDSETWRITER(2, "org.apache.nifi.avro.AvroRecordSetWriter"),
     REDISCONNECTIONPOOL(3,"org.apache.nifi.redis.service.RedisConnectionPoolService"),
     REDISDISTRIBUTEMAPCACHECLIENTSERVICE(4,"org.apache.nifi.redis.service.RedisDistributedMapCacheClientService"),
-    CSVREADER(5,"org.apache.nifi.csv.CSVReader");;
+    CSVREADER(5,"org.apache.nifi.csv.CSVReader"),
+    KEYTABCREDENTIALSSERVICE(6,"org.apache.nifi.kerberos.KeytabCredentialsService");
 
 
     ControllerServiceTypeEnum(int value, String name) {
