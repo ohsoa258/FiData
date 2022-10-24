@@ -1727,16 +1727,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             fieldList.add("FLOAT");
             fieldList.add("0");
         } else if (Integer.parseInt(fieldLength) <= 1) {
-            fieldList.add("VARCHAR");
+            fieldList.add("NVARCHAR");
             fieldList.add("20");
         } else if (Integer.parseInt(fieldLength) >= textLength) {
-            fieldList.add("VARCHAR");
+            fieldList.add("NVARCHAR");
             fieldList.add("5000");
         } else if (fieldType.toLowerCase().contains(timeType)) {
             fieldList.add("TIMESTAMP");
             fieldList.add("6");
         } else {
-            fieldList.add("VARCHAR");
+            fieldList.add("NVARCHAR");
             fieldList.add(fieldLength);
         }
         return fieldList;
@@ -1987,7 +1987,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             case NVARCHAR2:
             case NCHAR:
             case CHAR:
-                dto.fieldType = FiDataDataTypeEnum.VARCHAR.getName();
+                dto.fieldType = FiDataDataTypeEnum.NVARCHAR.getName();
                 break;
             case TIMESTAMP:
             case TIMESTAMPWITHLOCALTIMEZONE:
