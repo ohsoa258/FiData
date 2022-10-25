@@ -334,7 +334,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (!registrationPo.whetherSchema) {
             return;
         }
-        List<Long> idList = (List) appRegistrationImpl.query()
+        List<AppRegistrationPO> idList = appRegistrationImpl.query()
                 .select("id")
                 .ne("id", appId)
                 .eq("whether_schema", true)
@@ -343,9 +343,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (CollectionUtils.isEmpty(idList)) {
             return;
         }
+        List<Long> collect1 = idList.stream().map(e -> e.id).collect(Collectors.toList());
         List<TableNameVO> tableNameVoList = this.baseMapper.getAppIdAndTableName();
         List<TableNameVO> collect = tableNameVoList.stream()
-                .filter(e -> idList.contains(e.appId) && e.tableName.equals(tableName))
+                .filter(e -> collect1.contains(e.appId) && e.tableName.equals(tableName))
                 .collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(collect)) {
             throw new FkException(ResultEnum.SCHEMA_TABLE_REPEAT);
