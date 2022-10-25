@@ -302,7 +302,7 @@ public class DimensionFolderImpl
                 pushDto.tableId = Integer.parseInt(String.valueOf(item.id));
                 pushDto.tableName = item.dimensionTabName;
                 pushDto.createType = CreateTypeEnum.CREATE_DIMENSION.getValue();
-                ResultEntity<Map<String, String>> converMap = publishTaskClient.converSql(pushDto.tableName, item.sqlScript, "");
+                ResultEntity<Map<String, String>> converMap = publishTaskClient.converSql(pushDto.tableName, item.sqlScript, "", null);
                 Map<String, String> data1 = converMap.data;
                 pushDto.queryEndTime = data1.get(SystemVariableTypeEnum.END_TIME.getValue());
                 pushDto.sqlScript = data1.get(SystemVariableTypeEnum.QUERY_SQL.getValue());

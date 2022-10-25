@@ -3,6 +3,7 @@ package com.fisk.task.listener.postgre.datainput;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import com.fisk.task.service.doris.IDorisBuild;
@@ -39,6 +40,7 @@ public class BuildDataInputDeletePgTableListener {
         log.info("执行pg delete table");
         log.info("dataInfo:" + dataInfo);
         try {
+
             StringBuilder buildDelSqlStr = new StringBuilder("DROP TABLE IF EXISTS ");
             PgsqlDelTableDTO inputData = JSON.parseObject(dataInfo, PgsqlDelTableDTO.class);
             if (inputData.tableList != null && inputData.tableList.size() != 0) {
@@ -46,11 +48,12 @@ public class BuildDataInputDeletePgTableListener {
                 if (Objects.equals(inputData.businessTypeEnum, BusinessTypeEnum.DATAINPUT)) {
                     List<String> atlasEntityId = new ArrayList();
                     inputData.tableList.forEach((t) -> {
-                        buildDelSqlStr.append("stg_" + t.tableName + ",ods_" + t.tableName + ", ");
+                        List<String> stgAndTableName = TableNameGenerateUtils.getStgAndTableName(t.tableName);
+                        buildDelSqlStr.append(stgAndTableName.get(0) + "," + stgAndTableName.get(1) + ", ");
                         atlasEntityId.add(t.tableAtlasId);
-                        conditionHashMap.put("table_name", "stg_" + t.tableName);
+                        conditionHashMap.put("table_name", stgAndTableName.get(0));
                         taskPgTableStructureMapper.deleteByMap(conditionHashMap);
-                        conditionHashMap.put("table_name", "ods_" + t.tableName);
+                        conditionHashMap.put("table_name", stgAndTableName.get(1));
                         taskPgTableStructureMapper.deleteByMap(conditionHashMap);
                     });
                     String delSqlStr = buildDelSqlStr.toString();

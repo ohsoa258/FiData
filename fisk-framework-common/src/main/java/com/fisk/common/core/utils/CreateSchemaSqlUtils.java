@@ -70,7 +70,7 @@ public class CreateSchemaSqlUtils {
             default:
                 throw new FkException(ResultEnum.SCHEMA_ERROR);
         }
-        Integer count = AbstractCommonDbHelper.executeTotalSql(sql, conn);
+        Integer count = Integer.parseInt(AbstractCommonDbHelper.executeTotalSql(sql, conn, "num"));
         return count > 0 ? true : false;
     }
 

@@ -1,6 +1,7 @@
 package com.fisk.task.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
@@ -185,7 +186,10 @@ public interface PublishTaskClient {
      */
     @GetMapping("/TBETLIncremental/converSql")
     ResultEntity<Map<String, String>> converSql(
-            @RequestParam("tableName") String tableName, @RequestParam("sql") String sql, @RequestParam(value = "driveType", required = false) String driveType);
+            @RequestParam("tableName") String tableName,
+            @RequestParam("sql") String sql,
+            @RequestParam(value = "driveType", required = false) String driveType,
+            @RequestParam("deltaTimes") List<DeltaTimeDTO> deltaTimes);
 
     /**
      * getSqlForPgOds

@@ -1,9 +1,12 @@
 package com.fisk.dataaccess.dto.pgsqlmetadata;
 
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.enums.FtpFileTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -24,4 +27,9 @@ public class OdsQueryDTO {
     public FtpFileTypeEnum fileTypeEnum;
     @ApiModelProperty(value = "数据源类型", required = true)
     public DataSourceTypeEnum dataSourceTypeEnum;
+
+    /*
+     * 接入的增量时间参数
+     */
+    public List<DeltaTimeDTO> deltaTimes;
 }

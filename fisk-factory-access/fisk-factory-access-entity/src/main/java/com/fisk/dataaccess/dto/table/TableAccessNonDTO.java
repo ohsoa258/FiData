@@ -2,6 +2,7 @@ package com.fisk.dataaccess.dto.table;
 
 import com.fisk.common.core.baseObject.dto.BaseDTO;
 import com.fisk.common.core.baseObject.entity.BaseEntity;
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -106,6 +107,11 @@ public class TableAccessNonDTO extends BaseDTO {
      * 同步方式对象
      */
     public TableSyncmodeDTO tableSyncmodeDTO;
+
+    /*
+     * 接入的增量时间参数
+     */
+    public List<DeltaTimeDTO> deltaTimes;
 
     /**
      * 字段精度
