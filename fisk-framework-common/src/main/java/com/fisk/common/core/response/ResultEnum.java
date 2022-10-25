@@ -141,6 +141,7 @@ public enum ResultEnum {
     UPLOADFILE_REMOTE_ERROR(5059, "文件上传远程失败"),
     SAVE_POINTS_UPDATE_ERROR(5060, "检查点保存失败"),
     CREATE_JOB_ERROR(5061, "创建Flink任务失败"),
+    SCHEMA_TABLE_REPEAT(5062, "应用下已存在该表名"),
 
 
     /**

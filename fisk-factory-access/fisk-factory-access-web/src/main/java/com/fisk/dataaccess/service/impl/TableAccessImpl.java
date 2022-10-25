@@ -167,12 +167,17 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         UserInfo userInfo = userHelper.getLoginUserInfo();
         Long userId = userInfo.id;
 
+
         // 1.dto->po
         TableAccessPO modelAccess = tableAccessDTO.toEntity(TableAccessPO.class);
 
         // 数据保存: 添加应用的时候,相同的表名不可以再次添加
         List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
         String tableName = modelAccess.getTableName();
+
+        //校验相同schema,不同应用是否存在表名重复问题
+        verifySchemaTable(tableAccessDTO.appId, appIdAndTableNameList, tableAccessDTO.tableName);
+
         // 查询表名对应的应用注册id
         TableNameVO tableNameVO = new TableNameVO();
         tableNameVO.appId = tableAccessDTO.appId;
@@ -234,10 +239,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         UserInfo userInfo = userHelper.getLoginUserInfo();
         Long userId = userInfo.id;
 
-        // 1.dto->po
-        TableAccessPO modelAccess = tableAccessNonDTO.toEntity(TableAccessPO.class);
         // 判断table_name是否已存在(不同应用注册下,名称可以相同)
         List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
+
+        //校验相同schema,不同应用是否存在表名重复问题
+        verifySchemaTable(tableAccessNonDTO.appId, appIdAndTableNameList, tableAccessNonDTO.tableName);
+
+        // 1.dto->po
+        TableAccessPO modelAccess = tableAccessNonDTO.toEntity(TableAccessPO.class);
+
         // TODO: tableName 物理表名称
         String tableName = modelAccess.getTableName();
         // 查询表名对应的应用注册id
@@ -313,6 +323,39 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         atlasIdsVO.tableName = tableName;
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, atlasIdsVO);
+    }
+
+    /**
+     * 校验相同schema,不同应用是否存在表名重复问题
+     *
+     * @param appId
+     * @param tableNameVoList
+     * @param tableName
+     */
+    public void verifySchemaTable(long appId, List<TableNameVO> tableNameVoList, String tableName) {
+        AppRegistrationPO registrationPo = appRegistrationImpl.query().eq("id", appId).one();
+        if (registrationPo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        //是否使用schema,判断相同schema，不同应用是否存在相同表名问题
+        if (!registrationPo.whetherSchema) {
+            return;
+        }
+        List<Long> idList = (List) appRegistrationImpl.query()
+                .select("id")
+                .ne("id", appId)
+                .eq("whether_schema", true)
+                .eq("app_abbreviation", registrationPo.appAbbreviation)
+                .list();
+        if (CollectionUtils.isEmpty(idList)) {
+            return;
+        }
+        List<TableNameVO> collect = tableNameVoList.stream()
+                .filter(e -> idList.contains(e.appId) && e.tableName.equals(tableName))
+                .collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(collect)) {
+            throw new FkException(ResultEnum.SCHEMA_TABLE_REPEAT);
+        }
     }
 
     /**
