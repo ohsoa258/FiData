@@ -318,15 +318,15 @@ public class AbstractCommonDbHelper {
      * @param connection
      * @return
      */
-    public static int executeTotalSql(String sql, Connection connection) {
+    public static String executeTotalSql(String sql, Connection connection, String labelName) {
         Statement st = null;
         ResultSet rs = null;
-        int rowCount = 0;
+        String result = null;
         try {
             st = connection.createStatement();
             rs = st.executeQuery(sql);
             if (rs.next()) {
-                rowCount = rs.getInt("num");
+                result = rs.getString(labelName);
             }
         } catch (SQLException e) {
             log.error("executeTotalSql ex:{}", e);
@@ -334,6 +334,6 @@ public class AbstractCommonDbHelper {
             AbstractCommonDbHelper.closeResultSet(rs);
             AbstractCommonDbHelper.closeStatement(st);
         }
-        return rowCount;
+        return result;
     }
 }

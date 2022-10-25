@@ -32,6 +32,7 @@ import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataaccess.dto.GetConfigDTO;
 import com.fisk.dataaccess.dto.access.DataAccessTreeDTO;
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
@@ -44,6 +45,7 @@ import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
+import com.fisk.dataaccess.enums.DeltaTimeParameterTypeEnum;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.dataaccess.map.AppRegistrationMap;
 import com.fisk.dataaccess.map.TableAccessMap;
@@ -140,6 +142,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private FtpImpl ftpImpl;
     @Resource
     GetConfigDTO getConfig;
+
+    private static String start_time = "incremental_objectivescore_start";
+    private static String end_time = "incremental_objectivescore_end";
 
     /**
      * 数据库连接
@@ -1494,7 +1499,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
             conn = getConnection(dataSourceConfig.data);
             st = conn.createStatement();
-            Map<String, String> converSql = publishTaskClient.converSql(query.tableName, query.querySql, "").data;
+            Map<String, String> converSql = publishTaskClient.converSql(query.tableName, query.querySql, "", null).data;
             query.querySql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             //获取总条数
             String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
@@ -1760,12 +1765,24 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE_CDC.getName())) {
                 query.querySql = "SELECT * FROM " + query.querySql;
             }
+
+            //系统变量替换
+            if (!CollectionUtils.isEmpty(query.deltaTimes)) {
+                for (DeltaTimeDTO item : query.deltaTimes) {
+                    if (item.deltaTimeParameterTypeEnum != DeltaTimeParameterTypeEnum.VARIABLE) {
+                        continue;
+                    }
+                    String labelName = item.systemVariableTypeEnum == SystemVariableTypeEnum.STARTTIME ? start_time : end_time;
+                    item.variableValue = AbstractCommonDbHelper.executeTotalSql(item.variableValue, conn, labelName);
+                }
+            }
+
             assert st != null;
             Instant inst2 = Instant.now();
             log.info("流式设置执行时间 : " + Duration.between(inst1, inst2).toMillis());
             Instant inst3 = Instant.now();
             String tableName = TableNameGenerateUtils.buildTableName(query.tableName, registration.appAbbreviation, registration.whetherSchema);
-            Map<String, String> converSql = publishTaskClient.converSql(tableName, query.querySql, po.driveType).data;
+            Map<String, String> converSql = publishTaskClient.converSql(tableName, query.querySql, po.driveType, query.deltaTimes).data;
             log.info("拼语句执行时间 : " + Duration.between(inst2, inst3).toMillis());
 
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
@@ -1844,7 +1861,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 && !dbTypeEnum.getName().equals(DbTypeEnum.api.getName())
                 && !dbTypeEnum.getName().equals(DbTypeEnum.oracle_cdc.getName())) {
             String tableName = TableNameGenerateUtils.buildTableName(tableAccessPo.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
-            Map<String, String> converSql = publishTaskClient.converSql(tableName, tableAccessPo.sqlScript, dataSourcePo.driveType).data;
+            Map<String, String> converSql = publishTaskClient.converSql(tableName, tableAccessPo.sqlScript, dataSourcePo.driveType, null).data;
             //String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             dto.selectSql = tableAccessPo.sqlScript;
             dto.queryStartTime = converSql.get(SystemVariableTypeEnum.START_TIME.getValue());
