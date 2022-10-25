@@ -117,6 +117,9 @@ public class TableFieldsDTO extends BaseDTO {
     @ApiModelProperty(value = "源表名")
     public String originalTableName;
 
+    @ApiModelProperty(value = "字段精度")
+    public Integer fieldPrecision;
+
     public TableFieldsDTO(BaseEntity entity) {
         super(entity);
     }
