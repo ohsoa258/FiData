@@ -154,11 +154,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         po.setCreateUser(String.valueOf(userId));
 
         // 数据保存需求更改: 添加应用的时候，相同的应用名称不可以再次添加
-        List<String> appNameList = baseMapper.getAppName();
-        String appName = po.getAppName();
-        boolean contains = appNameList.contains(appName);
-        if (contains) {
-            return ResultEntityBuild.build(ResultEnum.DATA_EXISTS);
+        if (!po.whetherSchema) {
+            List<String> appNameList = baseMapper.getAppName();
+            String appName = po.getAppName();
+            boolean contains = appNameList.contains(appName);
+            if (contains) {
+                return ResultEntityBuild.build(ResultEnum.DATA_EXISTS);
+            }
         }
 
         // 判断
