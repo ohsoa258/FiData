@@ -51,4 +51,11 @@ public class NifiCustomWorkflowDetailDTO {
     public String inport;
     public String outport;
     public Boolean flag;
+
+    @ApiModelProperty(value = "外部数据源id", required = true)
+    public Integer dataSourceId;
+
+    @ApiModelProperty(value = "自定义脚本任务", required = true)
+    public String customScript;
+
 }

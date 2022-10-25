@@ -124,4 +124,12 @@ public class NifiCustomWorkflowDetailController {
     public ResultEntity<Object> editByDeleteTable(@Validated @RequestBody List<DeleteTableDetailDTO> list) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.editDataByDeleteTable(list));
     }
+
+    @GetMapping("/getExternalDataSourceList")
+    @ApiOperation(value = "获取外部数据源")
+    public ResultEntity<Object> getExternalDataSourceList() {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getExternalDataSourceList());
+    }
+
 }

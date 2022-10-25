@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.ExternalDataSourceDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
@@ -105,4 +106,12 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
      * @return 执行结果
      */
     ResultEnum editDataByDeleteTable(List<DeleteTableDetailDTO> list);
+
+    /**
+     * 获取外部数据源集合
+     *
+     * @return
+     */
+    List<ExternalDataSourceDTO> getExternalDataSourceList();
+
 }

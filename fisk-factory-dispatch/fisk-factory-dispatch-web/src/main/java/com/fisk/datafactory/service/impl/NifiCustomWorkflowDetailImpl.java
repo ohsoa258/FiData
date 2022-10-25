@@ -18,6 +18,7 @@ import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.ExternalDataSourceDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
@@ -30,6 +31,8 @@ import com.fisk.datafactory.service.INifiCustomWorkflow;
 import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.BuildNifiCustomWorkFlowDTO;
 import com.fisk.task.dto.task.NifiCustomWorkDTO;
@@ -69,6 +72,9 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     DataAccessClient dataAccessClient;
     @Resource
     DataFactoryImpl dataFactoryImpl;
+
+    @Resource
+    UserClient userClient;
 
 
     @Override
@@ -750,4 +756,21 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                                 }));
         return ResultEnum.SUCCESS;
     }
+
+    @Override
+    public List<ExternalDataSourceDTO> getExternalDataSourceList() {
+        ResultEntity<List<DataSourceDTO>> allExternalDataSource = userClient.getAllExternalDataSource();
+        if (allExternalDataSource.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        List<ExternalDataSourceDTO> list = new ArrayList<>();
+        for (DataSourceDTO item : allExternalDataSource.data) {
+            ExternalDataSourceDTO data = new ExternalDataSourceDTO();
+            data.id = item.id;
+            data.name = item.name;
+            list.add(data);
+        }
+        return list;
+    }
+
 }

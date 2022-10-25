@@ -49,4 +49,8 @@ public class NifiCustomWorkflowDetailPO extends BasePO {
      * 自定义脚本
      */
     public String customScript;
+    /**
+     * 数据源id
+     */
+    public Integer dataSourceId;
 }
