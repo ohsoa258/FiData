@@ -175,9 +175,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
         String tableName = modelAccess.getTableName();
 
-        //校验相同schema,不同应用是否存在表名重复问题
-        verifySchemaTable(tableAccessDTO.appId, appIdAndTableNameList, tableAccessDTO.tableName);
-
         // 查询表名对应的应用注册id
         TableNameVO tableNameVO = new TableNameVO();
         tableNameVO.appId = tableAccessDTO.appId;
@@ -241,9 +238,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // 判断table_name是否已存在(不同应用注册下,名称可以相同)
         List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
-
-        //校验相同schema,不同应用是否存在表名重复问题
-        verifySchemaTable(tableAccessNonDTO.appId, appIdAndTableNameList, tableAccessNonDTO.tableName);
 
         // 1.dto->po
         TableAccessPO modelAccess = tableAccessNonDTO.toEntity(TableAccessPO.class);
@@ -329,10 +323,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * 校验相同schema,不同应用是否存在表名重复问题
      *
      * @param appId
-     * @param tableNameVoList
      * @param tableName
      */
-    public void verifySchemaTable(long appId, List<TableNameVO> tableNameVoList, String tableName) {
+    public void verifySchemaTable(long appId, String tableName) {
         AppRegistrationPO registrationPo = appRegistrationImpl.query().eq("id", appId).one();
         if (registrationPo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -350,6 +343,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (CollectionUtils.isEmpty(idList)) {
             return;
         }
+        List<TableNameVO> tableNameVoList = this.baseMapper.getAppIdAndTableName();
         List<TableNameVO> collect = tableNameVoList.stream()
                 .filter(e -> idList.contains(e.appId) && e.tableName.equals(tableName))
                 .collect(Collectors.toList());
@@ -1438,6 +1432,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
         }
 
+        //校验相同schema,不同应用是否存在表名重复问题
+        verifySchemaTable(dto.appId, dto.tableName);
+
         // 同一应用下表名不可重复
         boolean flag = this.checkTableName(dto);
         if (flag) {
@@ -1472,6 +1469,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (dto.sqlFlag == 1 && "".equals(dto.sqlScript)) {
             return ResultEnum.SQL_EXCEPT_CLEAR;
         }
+
+        //校验相同schema,不同应用是否存在表名重复问题
+        verifySchemaTable(dto.appId, dto.tableName);
 
         // 前端操作多了未命名,不传物理表id,提前保存物理表的sql脚本,导致更新失败
         if (dto.id > 0) {
