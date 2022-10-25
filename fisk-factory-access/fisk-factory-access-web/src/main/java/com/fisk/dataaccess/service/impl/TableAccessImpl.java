@@ -143,9 +143,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Resource
     GetConfigDTO getConfig;
 
-    private static String start_time = "incremental_objectivescore_start";
-    private static String end_time = "incremental_objectivescore_end";
-
     /**
      * 数据库连接
      *
@@ -1772,8 +1769,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                     if (item.deltaTimeParameterTypeEnum != DeltaTimeParameterTypeEnum.VARIABLE) {
                         continue;
                     }
-                    String labelName = item.systemVariableTypeEnum == SystemVariableTypeEnum.STARTTIME ? start_time : end_time;
-                    item.variableValue = AbstractCommonDbHelper.executeTotalSql(item.variableValue, conn, labelName);
+                    item.variableValue = AbstractCommonDbHelper.executeTotalSql(item.variableValue, conn, item.systemVariableTypeEnum.getName());
                 }
             }
 

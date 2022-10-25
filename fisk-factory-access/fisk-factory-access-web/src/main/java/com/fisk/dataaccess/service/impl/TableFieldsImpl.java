@@ -16,6 +16,7 @@ import com.fisk.common.service.flinkupload.FlinkFactoryHelper;
 import com.fisk.common.service.flinkupload.IFlinkJobUpload;
 import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
@@ -185,7 +186,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         tableAccessImpl.updateById(accessPo);
 
         // 发布
-        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false);
+        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -256,7 +257,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         tableAccessImpl.updateById(model);
 
         // 发布
-        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false);
+        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
@@ -308,7 +309,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                          int flag,
                          boolean openTransmission,
                          CdcJobScriptDTO cdcDto,
-                         boolean useExistTable) {
+                         boolean useExistTable,
+                         List<DeltaTimeDTO> deltaTimes) {
         AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("app_id", appId).one();
         if (dataSourcePo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -321,6 +323,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.dbId = String.valueOf(accessId);
             data.userId = userInfo.id;
             data.openTransmission = openTransmission;
+            data.deltaTimes = deltaTimes;
 
             // 版本号入库、调用存储存储过程  
             List<TableFieldsPO> list = this.query().eq("table_access_id", accessId).list();
