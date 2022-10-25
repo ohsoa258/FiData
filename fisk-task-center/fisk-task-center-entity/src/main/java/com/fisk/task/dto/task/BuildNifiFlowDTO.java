@@ -1,6 +1,7 @@
 package com.fisk.task.dto.task;
 
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.task.dto.MQBaseDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;

@@ -1,4 +1,5 @@
-package com.fisk.task.dto.task;
+package com.fisk.dataaccess.dto.access;
+
 
 import com.fisk.dataaccess.enums.DeltaTimeParameterTypeEnum;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
