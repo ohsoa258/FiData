@@ -753,6 +753,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     @Override
     public ResultEntity<Object> getRepeatAppAbbreviation(String appAbbreviation, boolean whetherSchema) {
+
+        if (whetherSchema) {
+            return ResultEntityBuild.build(ResultEnum.DATAACCESS_APPABBREVIATION_SUCCESS);
+        }
+
         List<String> appAbbreviationList = baseMapper.getAppAbbreviation();
 
         return appAbbreviationList.contains(appAbbreviation) ? ResultEntityBuild.build(ResultEnum.DATAACCESS_APPABBREVIATION_ERROR) : ResultEntityBuild.build(ResultEnum.DATAACCESS_APPABBREVIATION_SUCCESS);
