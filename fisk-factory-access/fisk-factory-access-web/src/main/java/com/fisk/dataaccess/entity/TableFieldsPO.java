@@ -86,4 +86,9 @@ public class TableFieldsPO extends BasePO {
      */
     public String displayName;
 
+    /**
+     * 字段精度
+     */
+    public Integer fieldPrecision;
+
 }
