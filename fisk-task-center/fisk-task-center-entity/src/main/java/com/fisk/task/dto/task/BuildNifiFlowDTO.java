@@ -7,6 +7,8 @@ import com.fisk.task.enums.OlapTableEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+
 /**
  * @author gy
  */
@@ -21,17 +23,17 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
      * */
     public SynchronousTypeEnum synchronousTypeEnum;
     /*
-    * 表类别
-    * */
+     * 表类别
+     * */
     public OlapTableEnum type;
     /*
-    * 数据来源类别
-    * */
+     * 数据来源类别
+     * */
     public DataClassifyEnum dataClassifyEnum;
 
     /*
-    * selectsql(只有toDoris,todw用得到)
-    * */
+     * selectsql(只有toDoris,todw用得到)
+     * */
     public String selectSql;
     /*
      * 同步方式(只有toDoris,todw用得到)
@@ -39,22 +41,22 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
     public int synMode;
 
     /*
-    * groupComponentId(管道,如果不为null,就子组里建立nifi流程)
-    * */
+     * groupComponentId(管道,如果不为null,就子组里建立nifi流程)
+     * */
     public String groupComponentId;
     /*
-    * tb_nifi_custom_workflow_detail表的主键,用来区分同一张表被多次使用
-    * */
+     * tb_nifi_custom_workflow_detail表的主键,用来区分同一张表被多次使用
+     * */
     public String workflowDetailId;
 
     /*
-    * 管道英文id(workflowId)
-    * */
+     * 管道英文id(workflowId)
+     * */
     public String nifiCustomWorkflowId;
 
     /*
-    * 最大单位大组id
-    * */
+     * 最大单位大组id
+     * */
     public String groupStructureId;
 
     /*
@@ -68,8 +70,8 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
     public String queryEndTime;
 
     /*
-    * 应用名称(pgtopg)
-    * */
+     * 应用名称(pgtopg)
+     * */
     public String appName;
 
     /**
@@ -87,6 +89,9 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
      */
     public String updateSql;
 
-
+    /*
+     * 接入的增量时间参数
+     */
+    public List<DeltaTimeDTO> deltaTimes;
 
 }

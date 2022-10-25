@@ -65,4 +65,11 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
      * 是否是schema结构
      */
     public boolean whetherSchema;
+
+
+    /*
+     * 接入的增量时间参数
+     */
+    public List<DeltaTimeDTO> deltaTimes;
+
 }
