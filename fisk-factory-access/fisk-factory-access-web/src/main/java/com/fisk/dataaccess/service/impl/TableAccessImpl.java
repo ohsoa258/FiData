@@ -327,7 +327,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @param appId
      * @param tableName
      */
-    public void verifySchemaTable(long appId, String tableName) {
+    public void verifySchemaTable(Long appId, String tableName) {
+        if (appId == null || StringUtils.isEmpty(tableName)) {
+            return;
+        }
         AppRegistrationPO registrationPo = appRegistrationImpl.query().eq("id", appId).one();
         if (registrationPo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
