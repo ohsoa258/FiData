@@ -1561,6 +1561,14 @@ public class NiFiHelperImpl implements INiFiHelper {
                 ProcessIds.add(tableNifiSettingPO.queryIncrementProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertDataToJsonProcessorId);
                 ProcessIds.add(tableNifiSettingPO.evaluateTimeVariablesProcessorId);
+                //---------------------------------------
+                ProcessIds.add(tableNifiSettingPO.queryStratTimeProcessorId);
+                ProcessIds.add(tableNifiSettingPO.convertStratTimeToJsonProcessorId);
+                ProcessIds.add(tableNifiSettingPO.setStratTimeProcessorId);
+                ProcessIds.add(tableNifiSettingPO.queryEndTimeProcessorId);
+                ProcessIds.add(tableNifiSettingPO.convertEndTimeToJsonProcessorId);
+                ProcessIds.add(tableNifiSettingPO.setEndTimeProcessorId);
+                //-----------------------------------------
                 ProcessIds.add(tableNifiSettingPO.putLogToConfigDbProcessorId);
                 ProcessIds.add(tableNifiSettingPO.executeTargetDeleteProcessorId);
                 ProcessIds.add(tableNifiSettingPO.executeSqlRecordProcessorId);
