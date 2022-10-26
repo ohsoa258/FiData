@@ -23,7 +23,7 @@ public interface ITBETLIncremental extends IService<TBETLIncrementalPO> {
      * @param driveType
      * @return Map<String, String>
      */
-    Map<String, String> converSql(String tableName, String sql, String driveType, List<DeltaTimeDTO> deltaTimes);
+    Map<String, String> converSql(String tableName, String sql, String driveType, String deltaTime);
     /**
      * addEtlIncremental
      *

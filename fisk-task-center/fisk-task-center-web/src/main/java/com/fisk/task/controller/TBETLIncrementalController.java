@@ -40,7 +40,7 @@ public class TBETLIncrementalController {
             @RequestParam("tableName") String tableName,
             @RequestParam("sql") String sql,
             @RequestParam(value = "driveType", required = false) String driveType,
-            @RequestParam(value = "deltaTimes", required = false) List<DeltaTimeDTO> deltaTimes) {
+            @RequestParam(value = "deltaTimes", required = false) String deltaTimes) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,itbetlIncremental.converSql(tableName,sql, driveType,deltaTimes));
     }
 }
