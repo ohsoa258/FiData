@@ -26,4 +26,10 @@ public class DataSourceQueryDTO {
      */
     @ApiModelProperty(value = "分页对象")
     public Page<DataSourceDTO> page;
+
+    /**
+     * 数据源类型：1系统数据源 2外部数据源
+     */
+    @ApiModelProperty(value = "数据源类型：1系统数据源 2外部数据源")
+    public int sourceType;
 }

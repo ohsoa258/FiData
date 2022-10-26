@@ -121,6 +121,9 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         data.page = queryDTO.getPage();
         // 筛选器左边的模糊搜索查询SQL拼接
         data.where = querySql.toString();
+        if (queryDTO.getSourceType()>0) {
+            data.setWhere(" AND ds.source_type=" + queryDTO.getSourceType());
+        }
 
         Page<DataSourceDTO> filter = baseMapper.filter(queryDTO.getPage(), data);
         if (filter != null && CollectionUtils.isNotEmpty(filter.getRecords())) {
