@@ -1779,6 +1779,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             log.info("流式设置执行时间 : " + Duration.between(inst1, inst2).toMillis());
             Instant inst3 = Instant.now();
             String tableName = TableNameGenerateUtils.buildTableName(query.tableName, registration.appAbbreviation, registration.whetherSchema);
+            log.info("时间增量值:{}", JSON.toJSONString(query.deltaTimes));
             Map<String, String> converSql = publishTaskClient.converSql(tableName, query.querySql, po.driveType, JSON.toJSONString(query.deltaTimes)).data;
             log.info("拼语句执行时间 : " + Duration.between(inst2, inst3).toMillis());
 
