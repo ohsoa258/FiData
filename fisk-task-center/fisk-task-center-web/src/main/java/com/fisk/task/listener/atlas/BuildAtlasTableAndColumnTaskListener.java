@@ -10,9 +10,12 @@ import com.cronutils.parser.CronParser;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.enums.DeltaTimeParameterTypeEnum;
+import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.task.entity.TBETLIncrementalPO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
 import com.fisk.task.enums.DataClassifyEnum;
@@ -29,6 +32,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.cronutils.model.CronType.QUARTZ;
@@ -56,6 +60,7 @@ public class BuildAtlasTableAndColumnTaskListener
         log.info("进入Atlas生成表和字段");
         log.info("dataInfo:" + dataInfo);
         try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             BuildPhysicalTableDTO buildPhysicalTableDTO = JSON.parseObject(dataInfo, BuildPhysicalTableDTO.class);
             String physicalSelect = createPhysicalTable(buildPhysicalTableDTO);
             //endregion
@@ -64,6 +69,17 @@ public class BuildAtlasTableAndColumnTaskListener
                 ETLIncremental.objectName = buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName;
             } else {
                 ETLIncremental.objectName = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
+            }
+            List<DeltaTimeDTO> deltaTimes = buildPhysicalTableDTO.deltaTimes;
+            for (DeltaTimeDTO dto : deltaTimes) {
+                if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT) &&
+                        Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.START_TIME)) {
+                    ETLIncremental.incrementalObjectivescoreStart = sdf.parse(dto.variableValue);
+                }
+                if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT) &&
+                        Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.END_TIME)) {
+                    ETLIncremental.incrementalObjectivescoreEnd = sdf.parse(dto.variableValue);
+                }
             }
             ETLIncremental.enableFlag = "1";
             ETLIncremental.incrementalObjectivescoreBatchno = UUID.randomUUID().toString();

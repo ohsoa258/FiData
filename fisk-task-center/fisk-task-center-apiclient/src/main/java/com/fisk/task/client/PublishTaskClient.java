@@ -189,7 +189,7 @@ public interface PublishTaskClient {
             @RequestParam("tableName") String tableName,
             @RequestParam("sql") String sql,
             @RequestParam(value = "driveType", required = false) String driveType,
-            @RequestParam("deltaTimes") List<DeltaTimeDTO> deltaTimes);
+            @RequestParam(value = "deltaTimes", required = false) String deltaTimes);
 
     /**
      * getSqlForPgOds

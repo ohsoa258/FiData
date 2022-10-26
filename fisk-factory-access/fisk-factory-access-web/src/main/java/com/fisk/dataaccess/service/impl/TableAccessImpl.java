@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
@@ -110,6 +111,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private AppDataSourceImpl appDataSourceImpl;
     @Resource
     private TableSyncmodeImpl syncmodeImpl;
+    @Resource
+    private SystemVariablesImpl systemVariables;
     @Resource
     private TableSyncmodeMapper syncmodeMapper;
     @Resource
@@ -560,6 +563,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.setBusinessDTO(businessDTO);
         }*/
 
+        dto.deltaTimes = systemVariables.getSystemVariable(id);
+
         return dto;
     }
 
@@ -573,6 +578,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @params queryDto
      */
     private List<FieldNameDTO> filterSqlFieldList(List<TableFieldsDTO> sourceFieldList, OdsQueryDTO queryDto) {
+
+        queryDto.deltaTimes = systemVariables.getSystemVariable(sourceFieldList.get(0).tableAccessId);
 
         OdsResultDTO resultDto = getDataAccessQueryList(queryDto);
         // 执行sql
@@ -1826,7 +1833,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             log.info("流式设置执行时间 : " + Duration.between(inst1, inst2).toMillis());
             Instant inst3 = Instant.now();
             String tableName = TableNameGenerateUtils.buildTableName(query.tableName, registration.appAbbreviation, registration.whetherSchema);
-            Map<String, String> converSql = publishTaskClient.converSql(tableName, query.querySql, po.driveType, query.deltaTimes).data;
+            log.info("时间增量值:{}", JSON.toJSONString(query.deltaTimes));
+            Map<String, String> converSql = publishTaskClient.converSql(tableName, query.querySql, po.driveType, JSON.toJSONString(query.deltaTimes)).data;
             log.info("拼语句执行时间 : " + Duration.between(inst2, inst3).toMillis());
 
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());

@@ -20,6 +20,7 @@ import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
+import com.fisk.dataaccess.enums.DeltaTimeParameterTypeEnum;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.dataaccess.enums.syncModeTypeEnum;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckSyncDTO;
@@ -35,6 +36,7 @@ import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
@@ -61,6 +63,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
@@ -828,8 +831,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //原变量字段
         ProcessorEntity evaluateJsonPathProcessor = evaluateJsonPathProcessor(groupId);
         tableNifiSettingPO.setIncrementProcessorId = evaluateJsonPathProcessor.getId();
-        //读取增量字段组件
-        ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId, dto);
+
         //接受消息ConsumeKafka
         ProcessorEntity consumeKafkaProcessor = createConsumeKafkaProcessor(config, dto, groupId);
         List<ProcessorEntity> processorEntityList = new ArrayList<>();
@@ -846,8 +848,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR);
         }
+
         componentConnector(groupId, consumeKafkaProcessor.getId(), evaluateJsonPathProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        componentConnector(groupId, evaluateJsonPathProcessor.getId(), queryField.getId(), AutoEndBranchTypeEnum.MATCHED);
+
         tableNifiSettingPO.consumeKafkaProcessorId = consumeKafkaProcessor.getId();
         if (dto.groupStructureId != null) {
             //  创建input_port(组)
@@ -855,7 +858,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             //inputPortId = buildPortComponent(config.taskGroupConfig.appName, groupId, position.getX(), position.getY(),
             //PortComponentEnum.COMPONENT_INPUT_PORT_COMPONENT);
         }
-
+        //读取增量字段组件
+        ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId, dto);
+        componentConnector(groupId, evaluateJsonPathProcessor.getId(), queryField.getId(), AutoEndBranchTypeEnum.MATCHED);
         tableNifiSettingPO.queryIncrementProcessorId = queryField.getId();
         //创建数据转换json组件
         ProcessorEntity jsonRes = convertJsonProcessor(groupId, 0, 5);
@@ -864,7 +869,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         componentConnector(groupId, queryField.getId(), jsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //componentsConnector(groupId, queryField.getId(), supervisionId, autoEndBranchTypeEnums);
         //字段转换nifi变量
-        ProcessorEntity evaluateJson = evaluateTimeVariablesProcessor(groupId);
+        List<String> strings = new ArrayList<>();
+        strings.add(NifiConstants.AttrConstants.INCREMENTAL_OBJECTIVESCORE_END);
+        strings.add(NifiConstants.AttrConstants.INCREMENTAL_OBJECTIVESCORE_START);
+        ProcessorEntity evaluateJson = evaluateTimeVariablesProcessor(groupId, strings);
         tableNifiSettingPO.evaluateTimeVariablesProcessorId = evaluateJson.getId();
         res.add(evaluateJsonPathProcessor);
         res.add(queryField);
@@ -876,7 +884,15 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         ProcessorEntity logProcessor = putLogProcessor(groupId, cfgDbPoolId, dto, config);
         tableNifiSettingPO.putLogToConfigDbProcessorId = logProcessor.getId();
         //连接器
-        componentConnector(groupId, evaluateJson.getId(), logProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
+        //todo 这里要换,上面是evaluateJson,下面是logProcessor.接下来的组件赋予的变量值会覆盖上面的
+        List<ProcessorEntity> processorEntities1 = buildDeltaTimeProcessorEntity(dto.deltaTimes, groupId, sourceDbPoolId, res, tableNifiSettingPO);
+        if (CollectionUtils.isEmpty(processorEntities1)) {
+            componentConnector(groupId, evaluateJson.getId(), logProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
+        } else {
+            componentConnector(groupId, evaluateJson.getId(), processorEntities1.get(0).getId(), AutoEndBranchTypeEnum.MATCHED);
+            componentConnector(groupId, processorEntities1.get(processorEntities1.size() - 1).getId(), logProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
+        }
+
         //创建执行删除组件
         ProcessorEntity delSqlRes = execDeleteSqlProcessor(config, groupId, targetDbPoolId, synchronousTypeEnum);
         tableNifiSettingPO.executeTargetDeleteProcessorId = delSqlRes.getId();
@@ -2055,10 +2071,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      * @param groupId 组id
      * @return 组件对象
      */
-    private ProcessorEntity evaluateTimeVariablesProcessor(String groupId) {
-        ArrayList<String> strings = new ArrayList<>();
-        strings.add(NifiConstants.AttrConstants.INCREMENTAL_OBJECTIVESCORE_END);
-        strings.add(NifiConstants.AttrConstants.INCREMENTAL_OBJECTIVESCORE_START);
+    private ProcessorEntity evaluateTimeVariablesProcessor(String groupId, List<String> strings) {
 
         BuildProcessEvaluateJsonPathDTO dto = new BuildProcessEvaluateJsonPathDTO();
         dto.name = "Set Increment Field";
@@ -2575,5 +2588,85 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         }
         return null;
     }
+
+    public List<ProcessorEntity> buildDeltaTimeProcessorEntity(List<DeltaTimeDTO> deltaTimes, String groupId, String sourceId, List<ProcessorEntity> res, TableNifiSettingPO tableNifiSettingPO) {
+        List<ProcessorEntity> processorEntities = new ArrayList<>();
+        for (DeltaTimeDTO dto : deltaTimes) {
+            //变量和变量的值都不为空
+            if (Objects.nonNull(dto) && Objects.nonNull(dto.deltaTimeParameterTypeEnum) &&
+                    Objects.nonNull(dto.systemVariableTypeEnum) && StringUtils.isNotEmpty(dto.variableValue)) {
+                //此变量为开始时间
+                if (Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.START_TIME)) {
+
+                    if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT)) {
+                        //todo 该变量的值为常量,常量的话去增量表里查,需要在保存并发布的时候向增量表插入一条数据,此时不用添加组件
+
+
+                    } else if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.VARIABLE)) {
+                        //todo 该变量的值为表达式,需要去数据源查,需要加三个组件
+                        ProcessorEntity processorEntity = queryIncrementTimeProcessor(dto.variableValue, groupId, sourceId);
+                        ProcessorEntity jsonRes = convertJsonProcessor(groupId, 0, 5);
+                        List<String> strings = new ArrayList<>();
+                        strings.add(NifiConstants.AttrConstants.INCREMENT_DB_FIELD_START);
+                        ProcessorEntity evaluateJson = evaluateTimeVariablesProcessor(groupId, strings);
+                        processorEntities.add(processorEntity);
+                        processorEntities.add(jsonRes);
+                        processorEntities.add(evaluateJson);
+                        tableNifiSettingPO.queryStratTimeProcessorId = processorEntity.getId();
+                        tableNifiSettingPO.convertStratTimeToJsonProcessorId = jsonRes.getId();
+                        tableNifiSettingPO.setStratTimeProcessorId = evaluateJson.getId();
+                    } else {
+                        //todo 该变量的值未定义,未定义的话用前面情况5查出来的值,此时不用加组件
+
+                    }
+                } else if (Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.END_TIME)) {
+                    if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT)) {
+                        //todo 该变量的值为常量,常量的话去增量表里查,需要在保存并发布的时候向增量表插入一条数据,此时不用添加组件
+
+                    } else if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.VARIABLE)) {
+                        //todo 该变量的值为表达式,需要去数据源查,需要加三个组件
+                        ProcessorEntity processorEntity = queryIncrementTimeProcessor(dto.variableValue, groupId, sourceId);
+                        ProcessorEntity jsonRes = convertJsonProcessor(groupId, 0, 5);
+                        List<String> strings = new ArrayList<>();
+                        strings.add(NifiConstants.AttrConstants.INCREMENT_DB_FIELD_END);
+                        ProcessorEntity evaluateJson = evaluateTimeVariablesProcessor(groupId, strings);
+                        processorEntities.add(processorEntity);
+                        processorEntities.add(jsonRes);
+                        processorEntities.add(evaluateJson);
+                        tableNifiSettingPO.queryEndTimeProcessorId = processorEntity.getId();
+                        tableNifiSettingPO.convertEndTimeToJsonProcessorId = jsonRes.getId();
+                        tableNifiSettingPO.setEndTimeProcessorId = evaluateJson.getId();
+                    } else {
+                        //todo 该变量的值未定义,未定义的话用前面情况5查出来的值,此时不用加组件
+
+                    }
+                }
+            }
+        }
+        res.addAll(processorEntities);
+        return processorEntities;
+    }
+
+    /**
+     * 执行sql 查询增量字段组件
+     *
+     * @param sql            查询语句
+     * @param groupId        组id
+     * @param sourceDbPoolId 增量配置库连接池id
+     * @return 组件对象
+     */
+    private ProcessorEntity queryIncrementTimeProcessor(String sql, String groupId, String sourceDbPoolId) {
+        BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
+        querySqlDto.name = "Query Increment Field";
+        querySqlDto.details = "query_phase";
+        querySqlDto.groupId = groupId;
+        querySqlDto.querySql = sql;
+        querySqlDto.dbConnectionId = sourceDbPoolId;
+        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(4);
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
+        verifyProcessorResult(querySqlRes);
+        return querySqlRes.data;
+    }
+
 
 }
