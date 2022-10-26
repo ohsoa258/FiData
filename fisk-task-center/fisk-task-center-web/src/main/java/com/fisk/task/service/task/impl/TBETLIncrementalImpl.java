@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.task.entity.TBETLIncrementalPO;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
@@ -28,7 +29,7 @@ public class TBETLIncrementalImpl extends ServiceImpl<TBETLIncrementalMapper, TB
     TBETLIncrementalMapper tbetlIncrementalMapper;
 
     @Override
-    public Map<String, String> converSql(String tableName, String sql, String driveType) {
+    public Map<String, String> converSql(String tableName, String sql, String driveType, List<DeltaTimeDTO> deltaTimes) {
         Map<String, String> paramMap = new HashMap<>();
         List<TBETLIncrementalPO> list = new ArrayList<>();
         TBETLIncrementalPO tbetlIncremental = new TBETLIncrementalPO();
@@ -57,8 +58,8 @@ public class TBETLIncrementalImpl extends ServiceImpl<TBETLIncrementalMapper, TB
                         paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), endDate);
                     } else {*/
 
-                        sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'" + formatter.format(d) + "'");
-                        paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), formatter.format(d));
+                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'" + formatter.format(d) + "'");
+                    paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), formatter.format(d));
                     //}
                 } else {
                     sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'" + NifiConstants.AttrConstants.INITIAL_TIME + "'");
@@ -76,6 +77,7 @@ public class TBETLIncrementalImpl extends ServiceImpl<TBETLIncrementalMapper, TB
                 tbetlIncremental.incrementalObjectivescoreStart = parse;
                 list.add(tbetlIncremental);
             }
+
             paramMap.put(SystemVariableTypeEnum.HISTORICAL_TIME.getValue(), JSON.toJSONString(list));
             paramMap.put(SystemVariableTypeEnum.QUERY_SQL.getValue(), sql);
             log.info("map返回:" + JSON.toJSONString(paramMap));
