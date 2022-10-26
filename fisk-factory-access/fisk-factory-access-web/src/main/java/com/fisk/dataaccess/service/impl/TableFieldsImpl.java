@@ -188,7 +188,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         tableAccessImpl.updateById(accessPo);
 
         //系统变量
-        systemVariables.addSystemVariables(tableAccessId, dto.deltaTimes);
+        if (!CollectionUtils.isEmpty(dto.deltaTimes)) {
+            systemVariables.addSystemVariables(tableAccessId, dto.deltaTimes);
+        }
 
         // 发布
         publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes);
@@ -262,7 +264,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         tableAccessImpl.updateById(model);
 
         //系统变量
-        systemVariables.addSystemVariables(dto.id, dto.deltaTimes);
+        if (!CollectionUtils.isEmpty(dto.deltaTimes)) {
+            systemVariables.addSystemVariables(dto.id, dto.deltaTimes);
+        }
 
         // 发布
         publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes);
