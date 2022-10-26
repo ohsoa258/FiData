@@ -1838,6 +1838,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             log.info("拼语句执行时间 : " + Duration.between(inst2, inst3).toMillis());
 
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
+            log.info("返回查询sql:{}", sql);
             rs = st.executeQuery(sql);
             Instant inst4 = Instant.now();
             log.info("执行sql时间 : " + Duration.between(inst3, inst4).toMillis());
