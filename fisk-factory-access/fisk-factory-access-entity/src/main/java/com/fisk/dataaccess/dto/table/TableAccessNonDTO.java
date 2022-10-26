@@ -114,11 +114,6 @@ public class TableAccessNonDTO extends BaseDTO {
     public List<DeltaTimeDTO> deltaTimes;
 
     /**
-     * 字段精度
-     */
-    public Integer fieldPrecision;
-
-    /**
      * 0: 保存;   1: 保存&发布
      */
     public int flag;

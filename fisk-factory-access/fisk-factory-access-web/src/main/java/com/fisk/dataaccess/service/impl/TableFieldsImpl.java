@@ -93,6 +93,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     @Resource
     private AppDataSourceImpl dataSourceImpl;
     @Resource
+    SystemVariablesImpl systemVariables;
+    @Resource
     SavepointHistoryImpl savepointHistory;
     @Resource
     FlinkApiImpl flinkApi;
@@ -185,6 +187,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
         tableAccessImpl.updateById(accessPo);
 
+        //系统变量
+        systemVariables.addSystemVariables(tableAccessId, dto.deltaTimes);
+
         // 发布
         publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes);
 
@@ -255,6 +260,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         // 修改发布状态
         model.publish = 0;
         tableAccessImpl.updateById(model);
+
+        //系统变量
+        systemVariables.addSystemVariables(dto.id, dto.deltaTimes);
 
         // 发布
         publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes);

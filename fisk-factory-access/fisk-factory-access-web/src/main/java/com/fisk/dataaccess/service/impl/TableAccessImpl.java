@@ -112,6 +112,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Resource
     private TableSyncmodeImpl syncmodeImpl;
     @Resource
+    private SystemVariablesImpl systemVariables;
+    @Resource
     private TableSyncmodeMapper syncmodeMapper;
     @Resource
     private PublishTaskClient publishTaskClient;
@@ -561,6 +563,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.setBusinessDTO(businessDTO);
         }*/
 
+        dto.deltaTimes = systemVariables.getSystemVariable(id);
+
         return dto;
     }
 
@@ -574,6 +578,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @params queryDto
      */
     private List<FieldNameDTO> filterSqlFieldList(List<TableFieldsDTO> sourceFieldList, OdsQueryDTO queryDto) {
+
+        queryDto.deltaTimes = systemVariables.getSystemVariable(sourceFieldList.get(0).tableAccessId);
 
         OdsResultDTO resultDto = getDataAccessQueryList(queryDto);
         // 执行sql
