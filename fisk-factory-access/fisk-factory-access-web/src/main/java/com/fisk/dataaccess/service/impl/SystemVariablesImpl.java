@@ -11,6 +11,7 @@ import com.fisk.dataaccess.mapper.SystemVariablesMapper;
 import com.fisk.dataaccess.service.ISystemVariables;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,7 +44,10 @@ public class SystemVariablesImpl extends ServiceImpl<SystemVariablesMapper, Syst
 
     public void deleteSystemVariables(Long tableAccessId) {
         QueryChainWrapper<SystemVariablesPO> data = this.query().eq("table_access_id", tableAccessId);
-
+        List<SystemVariablesPO> list = data.list();
+        if (CollectionUtils.isEmpty(list)) {
+            return;
+        }
         if (!this.remove(data)) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
