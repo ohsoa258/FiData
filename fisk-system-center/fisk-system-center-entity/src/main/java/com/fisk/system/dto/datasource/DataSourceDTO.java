@@ -3,9 +3,7 @@ package com.fisk.system.dto.datasource;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 /**
@@ -18,30 +16,24 @@ import java.time.LocalDateTime;
 public class DataSourceDTO
 {
     @ApiModelProperty(value = "数据源id")
-    @NotNull(message = "id不可为null")
     public Integer id;
 
     /**
      * 连接名称
      */
     @ApiModelProperty(value = "连接名称")
-    @Length(min = 0, max = 50, message = "长度最多50")
-    @NotNull()
     public String name;
 
     /**
      * 连接字符串
      */
     @ApiModelProperty(value = "连接字符串")
-    @Length(min = 0, max = 500, message = "长度最多500")
-    @NotNull()
     public String conStr;
 
     /**
      * ip
      */
     @ApiModelProperty(value = "ip")
-    @Length(min = 0, max = 50, message = "长度最多50")
     public String conIp;
 
     /**
@@ -54,14 +46,12 @@ public class DataSourceDTO
      * 数据库名称
      */
     @ApiModelProperty(value = "数据库名称")
-    @Length(min = 0, max = 50, message = "长度最多50")
     public String conDbname;
 
     /**
      * 连接类型
      */
     @ApiModelProperty(value = "连接类型")
-    @NotNull
     public DataSourceTypeEnum conType;
 
     /**
@@ -80,28 +70,24 @@ public class DataSourceDTO
      * 账号
      */
     @ApiModelProperty(value = "账号")
-    @Length(min = 0, max = 50, message = "长度最多50")
     public String conAccount;
 
     /**
      * 密码
      */
     @ApiModelProperty(value = "密码")
-    @Length(min = 0, max = 50, message = "长度最多50")
     public String conPassword;
 
     /**
      * 请求协议
      */
     @ApiModelProperty(value = "请求协议")
-    @Length(min = 0, max = 20, message = "长度最多20")
     public String protocol;
 
     /**
      * 平台
      */
     @ApiModelProperty(value = "平台")
-    @Length(min = 0, max = 20, message = "长度最多20")
     public String platform;
 
     /**
@@ -114,14 +100,12 @@ public class DataSourceDTO
      * oracle服务名
      */
     @ApiModelProperty(value = "oracle服务名")
-    @Length(min = 0, max = 20, message = "长度最多20")
     public String serviceName;
 
     /**
      * oracle域名
      */
     @ApiModelProperty(value = "oracle域名")
-    @Length(min = 0, max = 100, message = "长度最多100")
     public String domainName;
 
     /**
@@ -134,14 +118,12 @@ public class DataSourceDTO
      * 数据源用途
      */
     @ApiModelProperty(value = "数据源用途")
-    @Length(min = 0, max = 255, message = "长度最多255")
     public String purpose;
 
     /**
      * 负责人
      */
     @ApiModelProperty(value = "负责人")
-    @Length(min = 0, max = 50, message = "长度最多50")
     public String principal;
 
     /**
