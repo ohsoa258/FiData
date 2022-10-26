@@ -4,7 +4,6 @@ import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.core.response.ResultEntity;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Lock
@@ -21,10 +20,10 @@ public interface UserAuthService {
 
     /**
      * 登出
+     *
      * @param request 请求参数
-     * @param response 响应数据，写cookie用
      */
-    void logout(HttpServletRequest request, HttpServletResponse response);
+    void logout(HttpServletRequest request);
 
     /**
      * 获取token

@@ -77,7 +77,7 @@ public class UserAuthServiceImpl implements UserAuthService {
     }
 
     @Override
-    public void logout(HttpServletRequest request, HttpServletResponse response) {
+    public void logout(HttpServletRequest request) {
         // 1.获取token
         String token = request.getHeader(SystemConstants.HTTP_HEADER_AUTH).replace(SystemConstants.AUTH_TOKEN_HEADER, "");
         // 2.校验token的有效性
