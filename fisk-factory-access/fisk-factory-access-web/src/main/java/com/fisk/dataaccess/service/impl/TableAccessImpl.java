@@ -1813,7 +1813,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             //系统变量替换
             if (!CollectionUtils.isEmpty(query.deltaTimes)) {
                 for (DeltaTimeDTO item : query.deltaTimes) {
-                    if (item.deltaTimeParameterTypeEnum != DeltaTimeParameterTypeEnum.VARIABLE) {
+                    boolean empty = StringUtils.isEmpty(item.variableValue);
+                    if (item.deltaTimeParameterTypeEnum != DeltaTimeParameterTypeEnum.VARIABLE && empty) {
                         continue;
                     }
                     item.variableValue = AbstractCommonDbHelper.executeTotalSql(item.variableValue, conn, item.systemVariableTypeEnum.getName());
