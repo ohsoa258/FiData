@@ -9,8 +9,8 @@ public enum DeltaTimeParameterTypeEnum implements BaseEnum {
     /*
      *增量时间参数类型
      */
-    CONSTANT(1,"固定值"),
-    VARIABLE(2,"脚本"),
+    CONSTANT(1,"常量"),
+    VARIABLE(2,"变量"),
     THE_DEFAULT_EMPTY(3,"默认值");
 
     DeltaTimeParameterTypeEnum(int value, String name) {
