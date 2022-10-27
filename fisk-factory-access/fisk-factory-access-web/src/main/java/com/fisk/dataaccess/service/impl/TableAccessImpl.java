@@ -342,6 +342,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (!registrationPo.whetherSchema) {
             return;
         }
+
+        //存在应用换ods数据源情况
+        appRegistrationImpl.VerifySchema(registrationPo.appAbbreviation);
+
         List<AppRegistrationPO> idList = appRegistrationImpl.query()
                 .select("id")
                 .ne("id", appId)

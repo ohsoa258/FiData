@@ -205,13 +205,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         //是否添加schema
         if (appRegistrationDTO.whetherSchema) {
-            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
-            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
-                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
-            }
-            AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
-            Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, dataSourceConfig.data.conType);
-            CreateSchemaSqlUtils.buildSchemaSql(connection, appRegistrationDTO.appAbbreviation, dataSourceConfig.data.conType);
+            VerifySchema(po.appAbbreviation);
         }
 
         // 添加元数据信息
@@ -1497,4 +1491,20 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         hashMap.put(key, value);
         return hashMap;
     }
+
+    /**
+     * 校验schema
+     *
+     * @param schemaName
+     */
+    public void VerifySchema(String schemaName) {
+        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+        if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
+        Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, dataSourceConfig.data.conType);
+        CreateSchemaSqlUtils.buildSchemaSql(connection, schemaName, dataSourceConfig.data.conType);
+    }
+
 }
