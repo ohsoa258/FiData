@@ -34,12 +34,6 @@ import java.util.Objects;
 public class DefiningCommonVariablesImpl implements ApplicationRunner {
     @Resource
     INiFiHelper iNiFiHelper;
-    @Value("${pgsql-datamodel.url}")
-    private String pgsqlDatamodelUrl;
-    @Value("${pgsql-datamodel.username}")
-    private String pgsqlDatamodelUsername;
-    @Value("${pgsql-datamodel.password}")
-    private String pgsqlDatamodelPassword;
     @Value("${spring.kafka.producer.bootstrap-servers}")
     private String KafkaBrokers;
     @Value("${spring.datasource.dynamic.datasource.taskdb.url}")
@@ -62,6 +56,8 @@ public class DefiningCommonVariablesImpl implements ApplicationRunner {
     UserClient userClient;
     @Value("${fiData-data-ods-source}")
     private String dataSourceOdsId;
+    @Value("${fiData-data-dw-source}")
+    private String dataSourceDwId;
     @Value("${nifi.Enable-Authentication}")
     public String enableAuthentication;
     @Value("${nifi.kerberos.Keytab}")
@@ -94,11 +90,19 @@ public class DefiningCommonVariablesImpl implements ApplicationRunner {
                 log.error("userclient无法查询到ods库的连接信息");
             }
 
-
             //pg-dw
-            configMap.put(ComponentIdTypeEnum.PG_DW_DB_POOL_PASSWORD.getName(), pgsqlDatamodelPassword);
-            configMap.put(ComponentIdTypeEnum.PG_DW_DB_POOL_USERNAME.getName(), pgsqlDatamodelUsername);
-            configMap.put(ComponentIdTypeEnum.PG_DW_DB_POOL_URL.getName(), pgsqlDatamodelUrl);
+            ResultEntity<DataSourceDTO> fiDataDataDwSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+            log.info("查询数据源:" + JSON.toJSONString(fiDataDataSource));
+            if (fiDataDataDwSource.code == ResultEnum.SUCCESS.getCode()) {
+                DataSourceDTO data = fiDataDataDwSource.data;
+                configMap.put(ComponentIdTypeEnum.PG_DW_DB_POOL_PASSWORD.getName(), data.conPassword);
+                configMap.put(ComponentIdTypeEnum.PG_DW_DB_POOL_USERNAME.getName(), data.conAccount);
+                configMap.put(ComponentIdTypeEnum.PG_DW_DB_POOL_URL.getName(), data.conStr);
+            } else {
+                log.error("userclient无法查询到dw库的连接信息");
+            }
+
+
             //doris-olap
             configMap.put(ComponentIdTypeEnum.DORIS_OLAP_DB_POOL_PASSWORD.getName(), dorisPwd);
             configMap.put(ComponentIdTypeEnum.DORIS_OLAP_DB_POOL_USERNAME.getName(), dorisUser);

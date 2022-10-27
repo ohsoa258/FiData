@@ -46,16 +46,10 @@ public class TaskPgTableStructureHelper
 
     public static String driverClassName;
 
-    public static String datamodelDriverClassName;
-
-    public static String pgsqlDatamodelUrl;
-
-    public static String pgsqlDatamodelUsername;
-
-    public static String pgsqlDatamodelPassword;
-
 
     public static String dataSourceOdsId;
+
+    public static String dataSourceDwId;
 
 
     @Value("${spring.datasource.dynamic.datasource.taskdb.url}")
@@ -79,32 +73,16 @@ public class TaskPgTableStructureHelper
     }
 
 
-
-    @Value("${pgsql-datamodel.driverClassName}")
-    public void setDatamodelDriverClassName(String datamodelDriverClassName) {
-        TaskPgTableStructureHelper.datamodelDriverClassName = datamodelDriverClassName;
-    }
-
-
-    @Value("${pgsql-datamodel.url}")
-    public void setPgsqlDatamodelUrl(String pgsqlDatamodelUrl) {
-        TaskPgTableStructureHelper.pgsqlDatamodelUrl = pgsqlDatamodelUrl;
-    }
-
-    @Value("${pgsql-datamodel.username}")
-    public void setPgsqlDatamodelUsername(String pgsqlDatamodelUsername) {
-        TaskPgTableStructureHelper.pgsqlDatamodelUsername = pgsqlDatamodelUsername;
-    }
-
-    @Value("${pgsql-datamodel.password}")
-    public void setPgsqlDatamodelPassword(String pgsqlDatamodelPassword) {
-        TaskPgTableStructureHelper.pgsqlDatamodelPassword = pgsqlDatamodelPassword;
-    }
-
     @Value("${fiData-data-ods-source}")
     public void setDataSourceOdsId(String dataSourceOdsId) {
         TaskPgTableStructureHelper.dataSourceOdsId = dataSourceOdsId;
     }
+
+    @Value("${fiData-data-dw-source}")
+    public void setDataSourceDwId(String dataSourceDwId) {
+        TaskPgTableStructureHelper.dataSourceDwId = dataSourceDwId;
+    }
+
 
     /**
      * 保存建模相关表结构数据(保存版本号)
@@ -247,6 +225,10 @@ public class TaskPgTableStructureHelper
         String pgsqlOdsUsername = "";
         String pgsqlOdsPassword = "";
         String pgsqlOdsDriverClass = "";
+        String pgsqlDwUrl = "";
+        String pgsqlDwUsername = "";
+        String pgsqlDwPassword = "";
+        String pgsqlDwDriverClass = "";
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO data = fiDataDataSource.data;
@@ -258,12 +240,19 @@ public class TaskPgTableStructureHelper
             log.error("userclient无法查询到ods库的连接信息");
             return ResultEnum.ERROR;
         }
-/*        String pgsqlOdsUrl = pgsqlDatainputUrl;
-        String pgsqlOdsUsername = pgsqlDatainputUsername;
-        String pgsqlOdsPassword = pgsqlDatainputPassword;*/
-        String pgsqlDwUrl = pgsqlDatamodelUrl;
-        String pgsqlDwUsername = pgsqlDatamodelUsername;
-        String pgsqlDwPassword = pgsqlDatamodelPassword;
+
+        ResultEntity<DataSourceDTO> fiDataDataDwSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+        if (fiDataDataDwSource.code == ResultEnum.SUCCESS.getCode()) {
+            DataSourceDTO data = fiDataDataDwSource.data;
+            pgsqlDwUrl = data.conStr;
+            pgsqlDwUsername = data.conAccount;
+            pgsqlDwPassword = data.conPassword;
+            pgsqlDwDriverClass = data.conType.getDriverName();
+        } else {
+            log.error("userclient无法查询到dw库的连接信息");
+            return ResultEnum.ERROR;
+        }
+
         Connection conn;
         Statement st = null;
         if (createType == 3) {
@@ -271,7 +260,7 @@ public class TaskPgTableStructureHelper
             // 数据接入
             conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlOdsPassword);
         } else {
-            Class.forName(datamodelDriverClassName);
+            Class.forName(pgsqlDwDriverClass);
             // 数据建模
             conn = DriverManager.getConnection(pgsqlDwUrl, pgsqlDwUsername, pgsqlDwPassword);
         }

@@ -7,15 +7,21 @@ import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.enums.syncModeTypeEnum;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
+import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
+import com.fisk.task.entity.TaskDwDimPO;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.postgre.datainput.IbuildTable;
+import com.fisk.task.mapper.TaskDwDimMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -26,6 +32,9 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 public class BuildPgTableImpl implements IbuildTable {
+
+    @Resource
+    TaskDwDimMapper taskDwDimMapper;
 
     @Override
     public List<String> buildStgAndOdsTable(BuildPhysicalTableDTO buildPhysicalTableDTO) {
@@ -222,5 +231,78 @@ public class BuildPgTableImpl implements IbuildTable {
     @Override
     public List<String> getStgAndTableName(String tableName) {
         return TableNameGenerateUtils.getStgAndTableName(tableName);
+    }
+
+    @Override
+    public List<String> buildDwStgAndOdsTable(ModelPublishTableDTO modelPublishTableDTO) {
+
+        List<String> sqlList = new ArrayList<>();
+        List<ModelPublishFieldDTO> fieldList = modelPublishTableDTO.fieldList;
+        String tableName = modelPublishTableDTO.tableName;
+        String tablePk = "";
+        if (modelPublishTableDTO.createType == 0) {
+            tablePk = "\"" + tableName.substring(4) + "key\"";
+        } else {
+            tablePk = "\"" + tableName.substring(5) + "key\"";
+        }
+
+        StringBuilder sql = new StringBuilder();
+        StringBuilder pksql = new StringBuilder("PRIMARY KEY ( ");
+        sql.append("CREATE TABLE " + modelPublishTableDTO.tableName + " ( " + tablePk + " varchar(50), ");
+        StringBuilder sqlFileds = new StringBuilder();
+        StringBuilder sqlFileds1 = new StringBuilder();
+        StringBuilder stgSqlFileds = new StringBuilder();
+        log.info("pg_dw建表字段信息:" + fieldList);
+        fieldList.forEach((l) -> {
+            if (l.fieldType.contains("INT") || l.fieldType.contains("TEXT")) {
+                sqlFileds.append("\"" + l.fieldEnName + "\" " + l.fieldType.toLowerCase() + ",");
+                stgSqlFileds.append("\"" + l.fieldEnName + "\" text,");
+            } else if (l.fieldType.toLowerCase().contains("numeric") || l.fieldType.toLowerCase().contains("float")) {
+                sqlFileds.append("\"" + l.fieldEnName + "\" float ,");
+                stgSqlFileds.append("\"" + l.fieldEnName + "\" text,");
+            } else {
+                sqlFileds.append("\"" + l.fieldEnName + "\" " + l.fieldType.toLowerCase() + "(" + l.fieldLength + ") ,");
+                stgSqlFileds.append("\"" + l.fieldEnName + "\" text,");
+            }
+            if (l.isPrimaryKey == 1) {
+                pksql.append("" + l.fieldEnName + " ,");
+            }
+
+        });
+
+        String sql1 = sql.toString();
+        //String associatedKey = associatedConditions(fieldList);
+        String associatedKey = "";
+        String sql2 = sqlFileds.toString() + associatedKey;
+        sql2 += "fi_createtime varchar(50),fi_updatetime varchar(50)";
+        sql2 += ",fidata_batch_code varchar(50)";
+        String sql3 = sqlFileds1.toString();
+        if (Objects.equals("", sql3)) {
+            sql1 += sql2;
+        } else {
+            sql1 += sql2 + sql3;
+        }
+        String havePk = pksql.toString();
+        if (havePk.length() != 14) {
+            sql1 += "," + havePk.substring(0, havePk.length() - 1) + ")";
+        }
+        sql1 += ")";
+        //创建表
+        log.info("pg_dw建表语句" + sql1);
+        //String stgTable = sql1.replaceFirst(tableName, "stg_" + tableName);
+        String stgTable = "DROP TABLE IF EXISTS stg_" + tableName + "; CREATE TABLE stg_" + tableName + " (" + tablePk + " varchar(50) NOT NULL DEFAULT sys_guid()," + stgSqlFileds.toString() + associatedKey + "fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3');";
+        stgTable += "create index " + tableName + "enableflagsy on stg_" + tableName + " (fi_enableflag);";
+        sqlList.add(stgTable);
+        sqlList.add(sql1);
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("table_name", tableName);
+        taskDwDimMapper.deleteByMap(map);
+        TaskDwDimPO taskDwDimPO = new TaskDwDimPO();
+        //taskDwDimPO.areaBusinessName=businessAreaName;//业务域名
+        taskDwDimPO.sqlContent = sql1;//创建表的sql
+        taskDwDimPO.tableName = tableName;
+        taskDwDimPO.storedProcedureName = "update" + tableName + "()";
+        taskDwDimMapper.insert(taskDwDimPO);
+        return sqlList;
     }
 }

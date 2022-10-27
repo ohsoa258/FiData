@@ -31,6 +31,7 @@ nifi-FetchSize: 30000
 nifi-MaxRowsPerFlowFile: 10000
 nifi-OutputBatchSize: 1
 fiData-data-ods-source: 5
+fiData-data-dw-source: 1
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
   password: postgres123

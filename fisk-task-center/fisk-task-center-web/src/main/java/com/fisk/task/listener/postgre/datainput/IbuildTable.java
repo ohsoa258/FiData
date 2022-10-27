@@ -2,6 +2,7 @@ package com.fisk.task.listener.postgre.datainput;
 
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 
@@ -59,4 +60,14 @@ public interface IbuildTable {
      * @return String
      */
     List<String> getStgAndTableName(String tableName);
+
+    /**
+     * 创建建模stg和ods表
+     *
+     * @param modelPublishTableDTO modelPublishTableDTO
+     * @return List<String>  返回两条建表语句
+     */
+    List<String> buildDwStgAndOdsTable(ModelPublishTableDTO modelPublishTableDTO);
+
+
 }

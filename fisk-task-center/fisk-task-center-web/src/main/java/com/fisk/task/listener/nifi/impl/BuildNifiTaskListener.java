@@ -86,10 +86,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     @Value("${datamodeldorisconstr.password}")
     private String dorisPwd;
     private String pgsqlDatainputDbName;
-    @Value("${pgsql-datamodel.ip}")
-    private String pgsqlDatamodelIp;
-    @Value("${pgsql-datamodel.dbName}")
-    private String pgsqlDatamodelDbName;
 
     @Value("${nifi-MaxRowsPerFlowFile}")
     public String MaxRowsPerFlowFile;
@@ -99,12 +95,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     public String FetchSize;
     @Value("${nifi-ConcurrentTasks}")
     public String ConcurrentTasks;
-    @Value("${pgsql-datamodel.url}")
-    public String pgsqlDatamodelUrl;
-    @Value("${pgsql-datamodel.username}")
-    public String pgsqlDatamodelUsername;
-    @Value("${pgsql-datamodel.password}")
-    public String pgsqlDatamodelPassword;
     @Value("${spring.kafka.producer.bootstrap-servers}")
     public String KafkaBrokers;
     @Value("${nifi.pipeline.topicName}")
@@ -115,6 +105,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     public String dataGovernanceUrl;
     @Value("${fiData-data-ods-source}")
     private String dataSourceOdsId;
+    @Value("${fiData-data-dw-source}")
+    private String dataSourceDwId;
     @Resource
     INiFiHelper componentsBuild;
     @Resource
@@ -461,10 +453,18 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             taskGroupConfig.appName = tableName;
             processorConfig.targetTableName = tableName;
             processorConfig.sourceExecSqlQuery = selectSql;
-            sourceDsConfig.type = DriverTypeEnum.POSTGRESQL;
-            sourceDsConfig.jdbcStr = pgsqlDatamodelUrl;
-            sourceDsConfig.user = pgsqlDatamodelUsername;
-            sourceDsConfig.password = pgsqlDatamodelPassword;
+            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+            if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+                DataSourceDTO dwData = fiDataDataSource.data;
+                sourceDsConfig.type = DriverTypeEnum.valueOf(dwData.conType.getName());
+                sourceDsConfig.jdbcStr = dwData.conStr;
+                sourceDsConfig.user = dwData.conAccount;
+                sourceDsConfig.password = dwData.conPassword;
+            } else {
+                log.error("userclient无法查询到dw库的连接信息");
+                throw new FkException(ResultEnum.ERROR);
+            }
+
             targetDbPoolConfig.type = DriverTypeEnum.MYSQL;
             targetDbPoolConfig.user = dorisUser;
             targetDbPoolConfig.password = dorisPwd;
@@ -499,10 +499,19 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             } else {
                 log.error("userclient无法查询到ods库的连接信息");
             }
-            targetDbPoolConfig.type = DriverTypeEnum.POSTGRESQL;
-            targetDbPoolConfig.user = pgsqlDatamodelUsername;
-            targetDbPoolConfig.password = pgsqlDatamodelPassword;
-            targetDbPoolConfig.jdbcStr = pgsqlDatamodelUrl;
+
+            ResultEntity<DataSourceDTO> fiDataDataDwSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+            if (fiDataDataDwSource.code == ResultEnum.SUCCESS.getCode()) {
+                DataSourceDTO dwData = fiDataDataDwSource.data;
+                targetDbPoolConfig.type = DriverTypeEnum.valueOf(dwData.conType.getName());
+                targetDbPoolConfig.user = dwData.conAccount;
+                targetDbPoolConfig.password = dwData.conPassword;
+                targetDbPoolConfig.jdbcStr = dwData.conStr;
+            } else {
+                log.error("userclient无法查询到dw库的连接信息");
+                throw new FkException(ResultEnum.ERROR);
+            }
+
             targetDbPoolConfig.targetTableName = tableName;
             targetDbPoolConfig.tableFieldsList = null;
             targetDbPoolConfig.syncMode = buildNifiFlowDTO.synMode;

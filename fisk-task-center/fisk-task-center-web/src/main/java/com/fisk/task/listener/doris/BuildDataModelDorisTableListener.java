@@ -10,6 +10,7 @@ import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.client.DataAccessClient;
@@ -19,6 +20,8 @@ import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
@@ -30,6 +33,8 @@ import com.fisk.task.entity.TaskPgTableStructurePO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.enums.PortComponentEnum;
+import com.fisk.task.listener.postgre.datainput.IbuildTable;
+import com.fisk.task.listener.postgre.datainput.impl.BuildFactoryHelper;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
 import com.fisk.task.mapper.TaskDwDimMapper;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
@@ -83,12 +88,6 @@ public class BuildDataModelDorisTableListener
     TaskPgTableStructureMapper taskPgTableStructureMapper;
     @Resource
     INiFiHelper componentsBuild;
-    @Value("${pgsql-datamodel.url}")
-    public String pgsqlDatamodelUrl;
-    @Value("${pgsql-datamodel.username}")
-    public String pgsqlDatamodelUsername;
-    @Value("${pgsql-datamodel.password}")
-    public String pgsqlDatamodelPassword;
     @Resource
     TaskPgTableStructureHelper taskPgTableStructureHelper;
     @Resource
@@ -103,6 +102,10 @@ public class BuildDataModelDorisTableListener
     PublishTaskController pc;
     @Resource
     private TBETLIncrementalMapper incrementalMapper;
+    @Resource
+    public UserClient userClient;
+    @Value("${fiData-data-dw-source}")
+    public String dataSourceDwId;
     public String appParentGroupId;
     public String appGroupId;
     public String groupEntityId;
@@ -142,7 +145,14 @@ public class BuildDataModelDorisTableListener
                 }
                 log.info("执行存储过程返回结果" + resultEnum.getCode());
                 //生成建表语句
-                List<String> pgdbTable2 = createPgdbTable2(modelPublishTableDTO);
+                List<String> pgdbTable2 = new ArrayList<>();
+                ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+                if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+                    DataSourceDTO dataSource = fiDataDataSource.data;
+                    IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSource.conType);
+                    pgdbTable2 = dbCommand.buildDwStgAndOdsTable(modelPublishTableDTO);
+                    log.info("建模创表语句:" + JSON.toJSONString(pgdbTable2));
+                }
                 BusinessResult businessResult = iPostgreBuild.postgreBuildTable(pgdbTable2.get(0), BusinessTypeEnum.DATAMODEL);
                 if (!businessResult.success) {
                     throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
@@ -531,10 +541,20 @@ public class BuildDataModelDorisTableListener
             } else {
                 throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
             }
-            buildDbControllerServiceDTO.driverLocation = NifiConstants.DriveConstants.POSTGRESQL_DRIVE_PATH;
-            buildDbControllerServiceDTO.conUrl = pgsqlDatamodelUrl;
-            buildDbControllerServiceDTO.driverName = DriverTypeEnum.POSTGRESQL.getName();
-            buildDbControllerServiceDTO.pwd = pgsqlDatamodelPassword;
+
+            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+            if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+                DataSourceDTO dwData = fiDataDataSource.data;
+                buildDbControllerServiceDTO.driverLocation = dwData.conType.getDriverLocation();
+                buildDbControllerServiceDTO.driverName = dwData.conType.getDriverName();
+                buildDbControllerServiceDTO.conUrl = dwData.conStr;
+                buildDbControllerServiceDTO.pwd = dwData.conPassword;
+                buildDbControllerServiceDTO.user = dwData.conAccount;
+            } else {
+                log.error("userclient无法查询到dw库的连接信息");
+                throw new FkException(ResultEnum.ERROR);
+            }
+
             buildDbControllerServiceDTO.name = businessAreaName;
             buildDbControllerServiceDTO.enabled = true;
        /*     if(modelMetaDataDTO.groupStructureId!=null){
@@ -544,7 +564,7 @@ public class BuildDataModelDorisTableListener
             }*/
             buildDbControllerServiceDTO.groupId = NifiConstants.ApiConstants.ROOT_NODE;
             buildDbControllerServiceDTO.details = businessAreaName;
-            buildDbControllerServiceDTO.user = pgsqlDatamodelUsername;
+
             NifiConfigPO nifiConfigPO = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.PG_DW_DB_POOL_COMPONENT_ID.getName()).one();
             if (nifiConfigPO != null) {
                 data.setId(nifiConfigPO.componentId);
