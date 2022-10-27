@@ -67,7 +67,7 @@ public class DataSourcePO extends BasePO
     public String platform;
 
     /**
-     * oracle服务类型：0服务名 1SID
+     * oracle服务类型：1服务名 2SID
      */
     public int serviceType;
 
@@ -85,6 +85,11 @@ public class DataSourcePO extends BasePO
      * 数据源类型：1系统数据源 2外部数据源
      */
     public int sourceType;
+
+    /**
+     * 数据源业务类型：1dw 2ods 3mdm 4olap
+     */
+    public int sourceBusinessType;
 
     /**
      * 数据源用途

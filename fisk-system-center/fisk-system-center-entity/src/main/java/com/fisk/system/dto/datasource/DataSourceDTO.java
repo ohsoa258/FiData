@@ -1,6 +1,7 @@
 package com.fisk.system.dto.datasource;
 
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -91,9 +92,9 @@ public class DataSourceDTO
     public String platform;
 
     /**
-     * oracle服务类型：0服务名 1SID
+     * oracle服务类型：1服务名 2SID
      */
-    @ApiModelProperty(value = " oracle服务类型：0服务名 1SID")
+    @ApiModelProperty(value = " oracle服务类型：1服务名 2SID")
     public int serviceType;
 
     /**
@@ -113,6 +114,18 @@ public class DataSourceDTO
      */
     @ApiModelProperty(value = "数据源类型：1系统数据源 2外部数据源")
     public int sourceType;
+
+    /**
+     * 数据源类型：1系统数据源 2外部数据源
+     */
+    @ApiModelProperty(value = "数据源类型：1系统数据源 2外部数据源")
+    public SourceBusinessTypeEnum sourceBusinessType;
+
+    /**
+     * 数据源类型：1系统数据源 2外部数据源，仅查询
+     */
+    @ApiModelProperty(value = "数据源类型：1系统数据源 2外部数据源，仅查询")
+    public int sourceBusinessTypeValue;
 
     /**
      * 数据源用途

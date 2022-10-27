@@ -21,7 +21,8 @@ public interface DataSourceMap {
      */
     @Mappings({
             @Mapping(target = "id", ignore = true), // 某个属性不想映射，可以加上 ignore=true；
-            @Mapping(source = "conType.value", target = "conType")
+            @Mapping(source = "conType.value", target = "conType"),
+            @Mapping(source = "sourceBusinessType.value", target = "sourceBusinessType"),
     })
     void editDtoToPo(DataSourceDTO dto, @MappingTarget DataSourcePO po);
 }
