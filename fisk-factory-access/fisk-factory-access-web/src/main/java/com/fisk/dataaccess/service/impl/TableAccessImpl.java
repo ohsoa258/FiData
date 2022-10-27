@@ -1511,10 +1511,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Override
     public List<TbTableAccessDTO> getTableAccessListData(long appId) {
-
-        List<TableAccessPO> list = this.query().eq("app_id", appId).list();
-
-        return TableAccessMap.INSTANCES.listTbPoToDto(list);
+        return baseMapper.getTableAccessListData(appId);
     }
 
     /**

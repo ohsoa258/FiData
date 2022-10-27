@@ -58,16 +58,10 @@ public class DataAccessImpl implements IDataAccess {
         List<FiDataTableMetaDataDTO> fiDataTableMetaDataDtoList = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(dto.tableUniques)) {
             List<TableAccessPO> tableAccessPoList = new ArrayList<>();
-            // SELECT table_name,id FROM tb_table_access WHERE del_flag=1 AND (id = ?)
-            // dto.tableUniques.forEach(tableId -> tableAccessPoList.add(tableAccessImpl.query().eq("id", tableId).select("table_name", "id").one()));
-
             tableAccessPoList.forEach(po -> {
-                // table: po => dto
                 FiDataTableMetaDataDTO tableMeta = DataAccessMap.INSTANCES.tablePoToFiDataTableMetaData(po);
                 if (tableMeta != null) {
-                    // SELECT field_name,id FROM tb_table_fields WHERE del_flag=1 AND (table_access_id = ?)
                     List<TableFieldsPO> tableFieldsPoList = tableFieldsImpl.query().eq("table_access_id", po.id).select("field_name", "id").list();
-                    // listField: po -> dto
                     tableMeta.setFieldList(DataAccessMap.INSTANCES.fieldListPoToFiDataTableMetaData(tableFieldsPoList));
                     fiDataTableMetaDataDtoList.add(tableMeta);
                 }

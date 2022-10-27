@@ -259,7 +259,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 总条数
         pageDTO.setTotal(pageReg.getTotal());
         // 总页数
-        // long totalPage = (long) (records1.size() + rows - 1) / rows;
         pageDTO.setTotalPage(pageReg.getPages());
         pageDTO.setItems(AppRegistrationMap.INSTANCES.listPoToDto(records2));
 
@@ -466,17 +465,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         vo.qualifiedNames = qualifiedNames;
         log.info("删除的应用信息,{}", vo);
 
-        /*//删除schema
-        if (model.whetherSchema) {
-            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
-            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
-                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
-            }
-            AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
-            Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
-            CreateSchemaSqlUtils.buildSchemaSql(connection, model.appAbbreviation, dataSourceConfig.data.conType);
-        }*/
-
         // 删除元数据信息
         ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
         classificationInfoDto.setName(model.appName + "_" + model.appAbbreviation);
@@ -627,7 +615,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (modelReg == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-//        modelReg.atlasInstanceId = atlasInstanceId;
         // 保存tb_app_registration
         boolean update = this.updateById(modelReg);
         if (!update) {

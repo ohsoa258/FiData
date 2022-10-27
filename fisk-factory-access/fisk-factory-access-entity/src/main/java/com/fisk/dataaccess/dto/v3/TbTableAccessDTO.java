@@ -103,5 +103,10 @@ public class TbTableAccessDTO {
      */
     public String displayName;
 
+    /**
+     * 同步方式
+     */
+    public Integer syncMode;
+
 
 }
