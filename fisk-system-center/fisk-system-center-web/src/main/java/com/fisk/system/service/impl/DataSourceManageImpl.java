@@ -152,7 +152,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         if (data != null) {
             return ResultEnum.NAME_EXISTS;
         }
-        DataSourceMap.INSTANCES.editDtoToPo(dto, model);
+        DataSourceMap.INSTANCES.dtoToPo(dto, model);
         return baseMapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
@@ -178,7 +178,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         if (model != null && model.getSourceType() == 2) {
             return ResultEnum.NAME_EXISTS;
         }
-        DataSourceMap.INSTANCES.editDtoToPo(dto, model);
+        DataSourceMap.INSTANCES.dtoToPo(dto, model);
         return baseMapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
