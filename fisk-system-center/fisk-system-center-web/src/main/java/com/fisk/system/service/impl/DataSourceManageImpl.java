@@ -20,6 +20,7 @@ import com.fisk.system.dto.GetConfigDTO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.datasource.DataSourcePageDTO;
 import com.fisk.system.dto.datasource.DataSourceQueryDTO;
+import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.system.entity.DataSourcePO;
 import com.fisk.system.map.DataSourceMap;
 import com.fisk.system.mapper.DataSourceMapper;
@@ -138,7 +139,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     }
 
     @Override
-    public ResultEnum updateDataSource(DataSourceDTO dto) {
+    public ResultEnum updateDataSource(DataSourceSaveDTO dto) {
         DataSourcePO model = baseMapper.selectById(dto.id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
@@ -169,7 +170,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     }
 
     @Override
-    public ResultEnum insertDataSource(DataSourceDTO dto) {
+    public ResultEnum insertDataSource(DataSourceSaveDTO dto) {
         QueryWrapper<DataSourcePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DataSourcePO::getName, dto.name)
                 .eq(DataSourcePO::getSourceType, dto.sourceType)
@@ -178,6 +179,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         if (model != null && model.getSourceType() == 2) {
             return ResultEnum.NAME_EXISTS;
         }
+        model = new DataSourcePO();
         DataSourceMap.INSTANCES.dtoToPo(dto, model);
         return baseMapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
