@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.datasource.DataSourceQueryDTO;
+import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.system.service.IDataSourceManageService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -68,13 +69,13 @@ public class DataSourceController {
 
     @PostMapping("/add")
     @ApiOperation("添加数据源")
-    public ResultEntity<Object> addDate(@Validated @RequestBody DataSourceDTO dto) {
+    public ResultEntity<Object> addDate(@RequestBody DataSourceSaveDTO dto) {
         return ResultEntityBuild.build(service.insertDataSource(dto));
     }
 
     @PutMapping("/edit")
     @ApiOperation("编辑数据源")
-    public ResultEntity<Object> editData(@Validated @RequestBody DataSourceDTO dto) {
+    public ResultEntity<Object> editData(@RequestBody DataSourceSaveDTO dto) {
         return ResultEntityBuild.build(service.updateDataSource(dto));
     }
 

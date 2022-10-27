@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -19,6 +20,7 @@ import com.fisk.system.dto.GetConfigDTO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.datasource.DataSourcePageDTO;
 import com.fisk.system.dto.datasource.DataSourceQueryDTO;
+import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.system.entity.DataSourcePO;
 import com.fisk.system.map.DataSourceMap;
 import com.fisk.system.mapper.DataSourceMapper;
@@ -130,13 +132,14 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
             filter.getRecords().stream().forEach(t -> {
                 t.setConType(DataSourceTypeEnum.getEnum(t.getConTypeValue()));
                 t.setConTypeName(t.getConType().getName());
+                t.setSourceBusinessType(SourceBusinessTypeEnum.getEnum(t.getSourceBusinessTypeValue()));
             });
         }
         return filter;
     }
 
     @Override
-    public ResultEnum updateDataSource(DataSourceDTO dto) {
+    public ResultEnum updateDataSource(DataSourceSaveDTO dto) {
         DataSourcePO model = baseMapper.selectById(dto.id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
@@ -150,7 +153,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         if (data != null) {
             return ResultEnum.NAME_EXISTS;
         }
-        DataSourceMap.INSTANCES.editDtoToPo(dto, model);
+        DataSourceMap.INSTANCES.dtoToPo(dto, model);
         return baseMapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
@@ -167,19 +170,17 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     }
 
     @Override
-    public ResultEnum insertDataSource(DataSourceDTO dto) {
+    public ResultEnum insertDataSource(DataSourceSaveDTO dto) {
         QueryWrapper<DataSourcePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DataSourcePO::getName, dto.name)
                 .eq(DataSourcePO::getSourceType, dto.sourceType)
                 .eq(DataSourcePO::getDelFlag, 1);
-        DataSourcePO data = baseMapper.selectOne(queryWrapper);
-        if (data != null) {
+        DataSourcePO model = baseMapper.selectOne(queryWrapper);
+        if (model != null && model.getSourceType() == 2) {
             return ResultEnum.NAME_EXISTS;
         }
-        if (data.getSourceType() == 1) {
-            return ResultEnum.SYSTEM_DATA_SOURCE_NOT_OPERATION;
-        }
-        DataSourcePO model = dtoToPo(dto);
+        model = new DataSourcePO();
+        DataSourceMap.INSTANCES.dtoToPo(dto, model);
         return baseMapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -265,6 +266,8 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         dataSourceDTO.setPlatform(t.getPlatform());
         dataSourceDTO.setProtocol(t.getProtocol());
         dataSourceDTO.setSourceType(t.getSourceType());
+        dataSourceDTO.setSourceBusinessType(SourceBusinessTypeEnum.getEnum(t.getSourceBusinessType()));
+        dataSourceDTO.setSourceBusinessTypeValue(t.getSourceBusinessType());
         dataSourceDTO.setServiceName(t.getServiceName());
         dataSourceDTO.setDomainName(t.getDomainName());
         dataSourceDTO.setSourceType(t.getSourceType());
@@ -274,26 +277,5 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
             dataSourceDTO.setConPassword(t.getConPassword());
         }
         return dataSourceDTO;
-    }
-
-    private DataSourcePO dtoToPo(DataSourceDTO t) {
-        DataSourcePO dataSourcePO = new DataSourcePO();
-        dataSourcePO.setName(t.getName());
-        dataSourcePO.setConStr(t.getConStr());
-        dataSourcePO.setConIp(t.getConIp());
-        dataSourcePO.setConPort(t.getConPort());
-        dataSourcePO.setConDbname(t.getConDbname());
-        dataSourcePO.setConType(t.getConType().getValue());
-        dataSourcePO.setConAccount(t.getConAccount());
-        dataSourcePO.setPlatform(t.getPlatform());
-        dataSourcePO.setProtocol(t.getProtocol());
-        dataSourcePO.setSourceType(t.getSourceType());
-        dataSourcePO.setServiceName(t.getServiceName());
-        dataSourcePO.setDomainName(t.getDomainName());
-        dataSourcePO.setSourceType(t.getSourceType());
-        dataSourcePO.setConPassword(t.getConPassword());
-        dataSourcePO.setPurpose(t.getPurpose());
-        dataSourcePO.setPrincipal(t.getPrincipal());
-        return dataSourcePO;
     }
 }

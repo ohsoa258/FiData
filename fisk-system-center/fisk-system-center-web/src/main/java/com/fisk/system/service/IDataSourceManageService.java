@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.datasource.DataSourceQueryDTO;
+import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.system.entity.DataSourcePO;
 
 import java.util.List;
@@ -58,7 +59,7 @@ public interface IDataSourceManageService extends IService<DataSourcePO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum updateDataSource(DataSourceDTO dto);
+    ResultEnum updateDataSource(DataSourceSaveDTO dto);
 
     /**
      * 删除数据
@@ -74,7 +75,7 @@ public interface IDataSourceManageService extends IService<DataSourcePO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum insertDataSource(DataSourceDTO dto);
+    ResultEnum insertDataSource(DataSourceSaveDTO dto);
 
 
     /**

@@ -19,6 +19,7 @@
         ds.service_name AS serviceName,
         ds.domain_name AS domainName,
         ds.source_type AS sourceType,
+        ds.source_business_type as sourceBusinessTypeValue,
         ds.purpose,
         ds.principal,
         ds.create_time AS createTime,

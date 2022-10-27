@@ -1,6 +1,6 @@
 package com.fisk.system.map;
 
-import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.system.entity.DataSourcePO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
@@ -21,7 +21,8 @@ public interface DataSourceMap {
      */
     @Mappings({
             @Mapping(target = "id", ignore = true), // 某个属性不想映射，可以加上 ignore=true；
-            @Mapping(source = "conType.value", target = "conType")
+            @Mapping(source = "conType.value", target = "conType"),
+            @Mapping(source = "sourceBusinessType.value", target = "sourceBusinessType"),
     })
-    void editDtoToPo(DataSourceDTO dto, @MappingTarget DataSourcePO po);
+    void dtoToPo(DataSourceSaveDTO dto, @MappingTarget DataSourcePO po);
 }
