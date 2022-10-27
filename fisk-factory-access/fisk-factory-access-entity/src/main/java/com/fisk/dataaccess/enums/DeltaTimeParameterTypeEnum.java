@@ -31,4 +31,16 @@ public enum DeltaTimeParameterTypeEnum implements BaseEnum {
     public String getName() {
         return name;
     }
+
+    public static DeltaTimeParameterTypeEnum getName(String name) {
+        DeltaTimeParameterTypeEnum[] enums = values();
+        for (DeltaTimeParameterTypeEnum typeEnum : enums) {
+            String queryName = typeEnum.name();
+            if (queryName.equals(name)) {
+                return typeEnum;
+            }
+        }
+        return null;
+    }
+
 }
