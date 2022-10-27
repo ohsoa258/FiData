@@ -2,8 +2,6 @@ package com.fisk.dataaccess.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
-import com.fisk.dataaccess.enums.DeltaTimeParameterTypeEnum;
-import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -20,12 +18,12 @@ public class SystemVariablesPO extends BasePO {
     /**
      * 系统变量类型:START_TIME, STARTTIME, END_TIME, ENDTIME, QUERY_SQL, HISTORICAL_TIME
      */
-    public SystemVariableTypeEnum systemVariableType;
+    public String systemVariableType;
 
     /**
      * 变量类别:CONSTANT, VARIABLE, THE_DEFAULT_EMPTY
      */
-    public DeltaTimeParameterTypeEnum deltaTimeParameterType;
+    public String deltaTimeParameterType;
 
     /**
      * 变量值

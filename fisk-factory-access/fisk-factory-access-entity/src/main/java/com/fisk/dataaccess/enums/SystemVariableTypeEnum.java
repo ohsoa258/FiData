@@ -29,4 +29,15 @@ public enum SystemVariableTypeEnum {
     public String getName() {
         return name;
     }
+
+    public static SystemVariableTypeEnum getName(String name) {
+        SystemVariableTypeEnum[] enums = values();
+        for (SystemVariableTypeEnum typeEnum : enums) {
+            String queryName = typeEnum.name();
+            if (queryName.equals(name)) {
+                return typeEnum;
+            }
+        }
+        return null;
+    }
 }
