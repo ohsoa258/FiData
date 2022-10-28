@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.TriggerUtils;
 import org.quartz.impl.triggers.CronTriggerImpl;
+import org.springframework.scheduling.support.CronSequenceGenerator;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -20,6 +21,30 @@ import java.util.List;
  */
 @Slf4j
 public class CronUtils {
+
+    /**
+     * @return java.lang.String
+     * @description 获取cron表达式下次执行时间
+     * @author dick
+     * @date 2022/4/24 19:48
+     * @version v1.0
+     * @params jobCronExpress
+     */
+    public static String getCronExpress(String jobCronExpress) {
+        String dateString = null;
+        try {
+            CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(jobCronExpress);
+            Date now = new Date();
+            // 任务下次执行时间
+            Date nextTime = cronSequenceGenerator.next(now);
+            SimpleDateFormat dataFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            dateString = dataFormat.format(nextTime);
+        } catch (Exception ex) {
+            log.error("【getCronExpress error】：" + ex);
+            dateString = "cron表达式解析异常";
+        }
+        return dateString;
+    }
 
     /**
      * 校验cron格式是否正确
