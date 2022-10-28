@@ -209,6 +209,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                 case ORACLE:
                     Class.forName(DataSourceTypeEnum.ORACLE.getDriverName());
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    return ResultEnum.SUCCESS;
                 default:
                     return ResultEnum.DS_DATASOURCE_CON_WARN;
             }
