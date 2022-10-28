@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.datasource.ExternalDataSourceDTO;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
@@ -266,5 +267,12 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return
      */
     CdcJobScriptDTO buildCdcJobScript(CdcJobParameterDTO dto);
+
+    /**
+     * 获取ods数据源集合
+     *
+     * @return
+     */
+    List<ExternalDataSourceDTO> getFiDataDataSource();
 
 }

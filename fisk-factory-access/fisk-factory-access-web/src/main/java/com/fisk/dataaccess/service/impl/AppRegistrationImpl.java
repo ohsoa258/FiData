@@ -9,6 +9,7 @@ import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
+import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -21,6 +22,7 @@ import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.common.server.datasource.ExternalDataSourceDTO;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
@@ -1505,6 +1507,28 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
         Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, dataSourceConfig.data.conType);
         CreateSchemaSqlUtils.buildSchemaSql(connection, schemaName, dataSourceConfig.data.conType);
+    }
+
+    @Override
+    public List<ExternalDataSourceDTO> getFiDataDataSource() {
+        ResultEntity<List<DataSourceDTO>> allExternalDataSource = userClient.getAllFiDataDataSource();
+        if (allExternalDataSource.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        List<DataSourceDTO> collect = allExternalDataSource.data.stream()
+                .filter(e -> SourceBusinessTypeEnum.ODS.getName().equals(e.sourceBusinessType.getName()))
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(collect)) {
+            return new ArrayList<>();
+        }
+        List<ExternalDataSourceDTO> list = new ArrayList<>();
+        for (DataSourceDTO item : collect) {
+            ExternalDataSourceDTO data = new ExternalDataSourceDTO();
+            data.id = item.id;
+            data.name = item.name;
+            list.add(data);
+        }
+        return list;
     }
 
 }

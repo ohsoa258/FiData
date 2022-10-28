@@ -1,4 +1,4 @@
-package com.fisk.datafactory.dto.customworkflowdetail;
+package com.fisk.common.server.datasource;
 
 import lombok.Data;
 
