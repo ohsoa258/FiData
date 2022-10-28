@@ -43,6 +43,29 @@
             <artifactId>mysql-connector-java</artifactId>
         </dependency>
 
+        <!-- sql server驱动 -->
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>9.2.1.jre8</version>
+        </dependency>
+
+        <!-- pg驱动 -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.5</version>
+        </dependency>
+
+        <!-- oracle驱动 -->
+        <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>ojdbc7</artifactId>
+            <version>11.1.0.7.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/lib/ojdbc7.jar</systemPath>
+        </dependency>
+
         <!-- feign接口调用 -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
