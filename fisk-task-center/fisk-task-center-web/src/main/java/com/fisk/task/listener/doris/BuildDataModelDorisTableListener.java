@@ -151,6 +151,15 @@ public class BuildDataModelDorisTableListener
                     DataSourceDTO dataSource = fiDataDataSource.data;
                     IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSource.conType);
                     pgdbTable2 = dbCommand.buildDwStgAndOdsTable(modelPublishTableDTO);
+                    HashMap<String, Object> map = new HashMap<>();
+                    map.put("table_name", modelPublishTableDTO.tableName);
+                    taskDwDimMapper.deleteByMap(map);
+                    TaskDwDimPO taskDwDimPO = new TaskDwDimPO();
+                    //taskDwDimPO.areaBusinessName=businessAreaName;//业务域名
+                    taskDwDimPO.sqlContent = pgdbTable2.get(1);//创建表的sql
+                    taskDwDimPO.tableName = modelPublishTableDTO.tableName;
+                    taskDwDimPO.storedProcedureName = "update" + modelPublishTableDTO.tableName + "()";
+                    taskDwDimMapper.insert(taskDwDimPO);
                     log.info("建模创表语句:" + JSON.toJSONString(pgdbTable2));
                 }
                 BusinessResult businessResult = iPostgreBuild.postgreBuildTable(pgdbTable2.get(0), BusinessTypeEnum.DATAMODEL);

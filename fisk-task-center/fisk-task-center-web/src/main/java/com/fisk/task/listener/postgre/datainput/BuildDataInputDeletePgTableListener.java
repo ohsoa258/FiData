@@ -5,6 +5,7 @@ import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
+import com.fisk.task.mapper.TBETLIncrementalMapper;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import com.fisk.task.service.doris.IDorisBuild;
 import com.fisk.task.utils.PostgreHelper;
@@ -34,6 +35,8 @@ public class BuildDataInputDeletePgTableListener {
     TaskPgTableStructureMapper taskPgTableStructureMapper;
     @Resource
     PostgreHelper postgreHelper;
+    @Resource
+    TBETLIncrementalMapper tbetlIncremental;
 
 
     public ResultEnum msg(String dataInfo, Acknowledgment acke) {
@@ -53,8 +56,10 @@ public class BuildDataInputDeletePgTableListener {
                         atlasEntityId.add(t.tableAtlasId);
                         conditionHashMap.put("table_name", stgAndTableName.get(0));
                         taskPgTableStructureMapper.deleteByMap(conditionHashMap);
+                        tbetlIncremental.delEtlIncrementalList(stgAndTableName.get(0));
                         conditionHashMap.put("table_name", stgAndTableName.get(1));
                         taskPgTableStructureMapper.deleteByMap(conditionHashMap);
+                        tbetlIncremental.delEtlIncrementalList(stgAndTableName.get(1));
                     });
                     String delSqlStr = buildDelSqlStr.toString();
                     delSqlStr = delSqlStr.substring(0, delSqlStr.lastIndexOf(",")) + " ;";
@@ -67,6 +72,7 @@ public class BuildDataInputDeletePgTableListener {
                         buildDelSqlStr.append("stg_" + t.tableName + ", ");
                         conditionHashMap.put("table_name", t.tableName);
                         taskPgTableStructureMapper.deleteByMap(conditionHashMap);
+                        tbetlIncremental.delEtlIncrementalList(t.tableName);
                         //doris.dorisBuildTable("DROP TABLE IF EXISTS " + t.tableName + ";");
                         //doris.dorisBuildTable("DROP TABLE IF EXISTS external_" + t.tableName + ";");
                     });

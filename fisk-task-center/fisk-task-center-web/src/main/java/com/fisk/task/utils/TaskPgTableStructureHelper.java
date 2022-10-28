@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -313,7 +314,8 @@ public class TaskPgTableStructureHelper
                 if (!CollectionUtils.isEmpty(taskPgTableStructurePOList1)) {
                     //判断表是否存在
                     DatabaseMetaData metaData = conn.getMetaData();
-                    ResultSet set = metaData.getTables(null, null, taskPgTableStructurePOList1.get(0).tableName, null);
+                    List<String> schemaAndTableName = TableNameGenerateUtils.getSchemaAndTableName(taskPgTableStructurePOList1.get(0).tableName);
+                    ResultSet set = metaData.getTables(null, schemaAndTableName.get(0), schemaAndTableName.get(1), null);
                     if (set.next()) {
                         return ResultEnum.SUCCESS;
                     }
@@ -324,6 +326,30 @@ public class TaskPgTableStructureHelper
             log.error("checkVersion:" + e);
         }
         return ResultEnum.PARAMTER_ERROR;
+    }
+
+
+    public static void main(String[] args) throws SQLException {
+        Connection conn = null;
+        Statement st = null;
+        try {
+
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            // 数据接入
+            conn = DriverManager.getConnection("jdbc:sqlserver://172.31.6.132:1433;DatabaseName=YF_ODS;encrypt=true;trustServerCertificate=true", "fisk_dev", "password01!");
+
+
+            DatabaseMetaData metaData = conn.getMetaData();
+            ResultSet set = metaData.getTables(null, "YuG", "PCHANGEITEMREVISION2", null);
+            if (set.next()) {
+                System.out.println("此表存在");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            st.close();
+            conn.close();
+        }
     }
 
 }

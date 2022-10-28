@@ -167,6 +167,7 @@ public class KafkaConsumer {
         //props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "15000");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valueDeserializer);
+        props.put("fetch.message.max.bytes","6291456");
         // props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-091231");
         //每一批数量
         if (Objects.equals(enableAuthentication, NifiConstants.enableAuthentication.ENABLE)) {

@@ -33,8 +33,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BuildPgTableImpl implements IbuildTable {
 
-    @Resource
-    TaskDwDimMapper taskDwDimMapper;
+
 
     @Override
     public List<String> buildStgAndOdsTable(BuildPhysicalTableDTO buildPhysicalTableDTO) {
@@ -294,15 +293,7 @@ public class BuildPgTableImpl implements IbuildTable {
         stgTable += "create index " + tableName + "enableflagsy on stg_" + tableName + " (fi_enableflag);";
         sqlList.add(stgTable);
         sqlList.add(sql1);
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("table_name", tableName);
-        taskDwDimMapper.deleteByMap(map);
-        TaskDwDimPO taskDwDimPO = new TaskDwDimPO();
-        //taskDwDimPO.areaBusinessName=businessAreaName;//业务域名
-        taskDwDimPO.sqlContent = sql1;//创建表的sql
-        taskDwDimPO.tableName = tableName;
-        taskDwDimPO.storedProcedureName = "update" + tableName + "()";
-        taskDwDimMapper.insert(taskDwDimPO);
+
         return sqlList;
     }
 }

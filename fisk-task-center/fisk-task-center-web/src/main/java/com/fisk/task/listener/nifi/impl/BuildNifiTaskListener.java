@@ -2378,7 +2378,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         String filedValues = "";
         // filedValues += dto.queryStartTime == null ? ",'0000-01-01 00:00:00'" : (",'" + dto.queryStartTime + "'");
         //filedValues += dto.queryEndTime == null ? ",now()" : (",'" + dto.queryEndTime + "'");
-        filedValues += ",'${incremental_objectivescore_start}',CONCAT(current_timestamp(),'')";
+        filedValues += ",'${incremental_objectivescore_start}','${incremental_objectivescore_end}'";
         if (dto.selectSql != null && dto.selectSql != "") {
             filedValues += ",\"" + dto.selectSql.replaceAll("\"", "\\\\\"") + "\"";
         } else {
@@ -2600,54 +2600,65 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     public List<ProcessorEntity> buildDeltaTimeProcessorEntity(List<DeltaTimeDTO> deltaTimes, String groupId, String sourceId, List<ProcessorEntity> res, TableNifiSettingPO tableNifiSettingPO) {
         List<ProcessorEntity> processorEntities = new ArrayList<>();
-        for (DeltaTimeDTO dto : deltaTimes) {
-            //变量和变量的值都不为空
-            if (Objects.nonNull(dto) && Objects.nonNull(dto.deltaTimeParameterTypeEnum) &&
-                    Objects.nonNull(dto.systemVariableTypeEnum) && StringUtils.isNotEmpty(dto.variableValue)) {
-                //此变量为开始时间
-                if (Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.START_TIME)) {
+        String connectId = "";
+        if(!CollectionUtils.isEmpty(deltaTimes)){
+            for (DeltaTimeDTO dto : deltaTimes) {
+                //变量和变量的值都不为空
+                if (Objects.nonNull(dto) && Objects.nonNull(dto.deltaTimeParameterTypeEnum) &&
+                        Objects.nonNull(dto.systemVariableTypeEnum) && StringUtils.isNotEmpty(dto.variableValue)) {
+                    //此变量为开始时间
+                    if (Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.START_TIME)) {
 
-                    if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT)) {
-                        //todo 该变量的值为常量,常量的话去增量表里查,需要在保存并发布的时候向增量表插入一条数据,此时不用添加组件
+                        if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT)) {
+                            //该变量的值为常量,常量的话去增量表里查,需要在保存并发布的时候向增量表插入一条数据,此时不用添加组件
 
 
-                    } else if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.VARIABLE)) {
-                        //todo 该变量的值为表达式,需要去数据源查,需要加三个组件
-                        ProcessorEntity processorEntity = queryIncrementTimeProcessor(dto.variableValue, groupId, sourceId);
-                        ProcessorEntity jsonRes = convertJsonProcessor(groupId, 0, 5);
-                        List<String> strings = new ArrayList<>();
-                        strings.add(NifiConstants.AttrConstants.INCREMENT_DB_FIELD_START);
-                        ProcessorEntity evaluateJson = evaluateTimeVariablesProcessor(groupId, strings);
-                        processorEntities.add(processorEntity);
-                        processorEntities.add(jsonRes);
-                        processorEntities.add(evaluateJson);
-                        tableNifiSettingPO.queryStratTimeProcessorId = processorEntity.getId();
-                        tableNifiSettingPO.convertStratTimeToJsonProcessorId = jsonRes.getId();
-                        tableNifiSettingPO.setStratTimeProcessorId = evaluateJson.getId();
-                    } else {
-                        //todo 该变量的值未定义,未定义的话用前面情况5查出来的值,此时不用加组件
+                        } else if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.VARIABLE)) {
+                            //该变量的值为表达式,需要去数据源查,需要加三个组件
+                            ProcessorEntity processorEntity = queryIncrementTimeProcessor(dto.variableValue, groupId, sourceId);
+                            ProcessorEntity jsonRes = convertJsonProcessor(groupId, 0, 5);
+                            List<String> strings = new ArrayList<>();
+                            strings.add(NifiConstants.AttrConstants.INCREMENT_DB_FIELD_START);
+                            ProcessorEntity evaluateJson = evaluateTimeVariablesProcessor(groupId, strings);
+                            processorEntities.add(processorEntity);
+                            processorEntities.add(jsonRes);
+                            processorEntities.add(evaluateJson);
+                            tableNifiSettingPO.queryStratTimeProcessorId = processorEntity.getId();
+                            tableNifiSettingPO.convertStratTimeToJsonProcessorId = jsonRes.getId();
+                            tableNifiSettingPO.setStratTimeProcessorId = evaluateJson.getId();
+                            componentConnector(groupId, processorEntity.getId(), jsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                            componentConnector(groupId, jsonRes.getId(), evaluateJson.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                            connectId = evaluateJson.getId();
+                        } else {
+                            //该变量的值未定义,未定义的话用前面情况5查出来的值,此时不用加组件
 
-                    }
-                } else if (Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.END_TIME)) {
-                    if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT)) {
-                        //todo 该变量的值为常量,常量的话去增量表里查,需要在保存并发布的时候向增量表插入一条数据,此时不用添加组件
+                        }
+                    } else if (Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.END_TIME)) {
+                        if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT)) {
+                            //该变量的值为常量,常量的话去增量表里查,需要在保存并发布的时候向增量表插入一条数据,此时不用添加组件
 
-                    } else if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.VARIABLE)) {
-                        //todo 该变量的值为表达式,需要去数据源查,需要加三个组件
-                        ProcessorEntity processorEntity = queryIncrementTimeProcessor(dto.variableValue, groupId, sourceId);
-                        ProcessorEntity jsonRes = convertJsonProcessor(groupId, 0, 5);
-                        List<String> strings = new ArrayList<>();
-                        strings.add(NifiConstants.AttrConstants.INCREMENT_DB_FIELD_END);
-                        ProcessorEntity evaluateJson = evaluateTimeVariablesProcessor(groupId, strings);
-                        processorEntities.add(processorEntity);
-                        processorEntities.add(jsonRes);
-                        processorEntities.add(evaluateJson);
-                        tableNifiSettingPO.queryEndTimeProcessorId = processorEntity.getId();
-                        tableNifiSettingPO.convertEndTimeToJsonProcessorId = jsonRes.getId();
-                        tableNifiSettingPO.setEndTimeProcessorId = evaluateJson.getId();
-                    } else {
-                        //todo 该变量的值未定义,未定义的话用前面情况5查出来的值,此时不用加组件
+                        } else if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.VARIABLE)) {
+                            //该变量的值为表达式,需要去数据源查,需要加三个组件
+                            ProcessorEntity processorEntity = queryIncrementTimeProcessor(dto.variableValue, groupId, sourceId);
+                            ProcessorEntity jsonRes = convertJsonProcessor(groupId, 0, 5);
+                            List<String> strings = new ArrayList<>();
+                            strings.add(NifiConstants.AttrConstants.INCREMENT_DB_FIELD_END);
+                            ProcessorEntity evaluateJson = evaluateTimeVariablesProcessor(groupId, strings);
+                            processorEntities.add(processorEntity);
+                            processorEntities.add(jsonRes);
+                            processorEntities.add(evaluateJson);
+                            tableNifiSettingPO.queryEndTimeProcessorId = processorEntity.getId();
+                            tableNifiSettingPO.convertEndTimeToJsonProcessorId = jsonRes.getId();
+                            tableNifiSettingPO.setEndTimeProcessorId = evaluateJson.getId();
+                            if(connectId!=""){
+                                componentConnector(groupId, connectId, processorEntity.getId(), AutoEndBranchTypeEnum.MATCHED);
+                            }
+                            componentConnector(groupId, processorEntity.getId(), jsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                            componentConnector(groupId, jsonRes.getId(), evaluateJson.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                        } else {
+                            //该变量的值未定义,未定义的话用前面情况5查出来的值,此时不用加组件
 
+                        }
                     }
                 }
             }

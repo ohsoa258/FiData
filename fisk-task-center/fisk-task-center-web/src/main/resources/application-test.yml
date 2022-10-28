@@ -8,6 +8,8 @@ external-table-link: '"host" = "192.168.1.250","port" = "5432","user" = "postgre
   = "Password01!","database" = "dmp_dw"'
 
 nifi:
+  username: fisk
+  password: fiskpassword01!
   basePath: http://192.168.11.130:9090/nifi-api
   token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJkMjc2Mjk3N2U4YjU0YTQ0YjYyZGU2ODlmZTk0OTRjNiIsInVzZXIiOiJ7XCJpZFwiOjE4LFwidXNlckFjY291bnRcIjpcImNma1wifSIsImlkIjoiMTgifQ.SRkIbNgKrvo1TI-WSufy4mZGLst6ed0Y6Fs0QoQ8m_g
   Enable-Authentication: 0

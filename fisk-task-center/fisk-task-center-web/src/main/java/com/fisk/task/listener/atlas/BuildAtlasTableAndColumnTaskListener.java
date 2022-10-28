@@ -29,6 +29,7 @@ import org.quartz.TriggerUtils;
 import org.quartz.impl.triggers.CronTriggerImpl;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.text.ParseException;
@@ -71,14 +72,17 @@ public class BuildAtlasTableAndColumnTaskListener
                 ETLIncremental.objectName = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
             }
             List<DeltaTimeDTO> deltaTimes = buildPhysicalTableDTO.deltaTimes;
-            for (DeltaTimeDTO dto : deltaTimes) {
-                if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT) &&
-                        Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.START_TIME)) {
-                    ETLIncremental.incrementalObjectivescoreStart = sdf.parse(dto.variableValue);
-                }
-                if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT) &&
-                        Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.END_TIME)) {
-                    ETLIncremental.incrementalObjectivescoreEnd = sdf.parse(dto.variableValue);
+            if (!CollectionUtils.isEmpty(deltaTimes)) {
+
+                for (DeltaTimeDTO dto : deltaTimes) {
+                    if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT) &&
+                            Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.START_TIME)) {
+                        ETLIncremental.incrementalObjectivescoreStart = sdf.parse(dto.variableValue);
+                    }
+                    if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT) &&
+                            Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.END_TIME)) {
+                        ETLIncremental.incrementalObjectivescoreEnd = sdf.parse(dto.variableValue);
+                    }
                 }
             }
             ETLIncremental.enableFlag = "1";
@@ -124,6 +128,7 @@ public class BuildAtlasTableAndColumnTaskListener
             bfd.queryEndTime = buildPhysicalTableDTO.queryEndTime;
             bfd.openTransmission = buildPhysicalTableDTO.openTransmission;
             bfd.excelFlow = buildPhysicalTableDTO.excelFlow;
+            bfd.deltaTimes = deltaTimes;
             log.info("nifi传入参数：" + JSON.toJSONString(bfd));
             pc.publishBuildNifiFlowTask(bfd);
             log.info("执行完成");

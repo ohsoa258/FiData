@@ -46,7 +46,7 @@ pgsql-mdm:
   username: postgres
   type: PG
 server:
-  port: 7003
+  port: 8099
 spring:
   application:
     name: task-center

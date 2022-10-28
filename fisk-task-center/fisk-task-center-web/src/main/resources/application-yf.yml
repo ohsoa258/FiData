@@ -24,7 +24,7 @@ nifi:
 
   pipeline:
     topicName: my-topic
-    waitTime: 20GenerateFlowFileProcessor
+    waitTime: 20
     operation-interval: 2000
     number-of-operations: 5
     data-governance-url: http://10.178.188.31:8083
