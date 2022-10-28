@@ -186,7 +186,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
 
     @SneakyThrows
     @Override
-    public ResultEnum testConnection(DataSourceDTO dto) {
+    public ResultEnum testConnection(DataSourceSaveDTO dto) {
         Connection conn = null;
         try {
             switch (dto.conType) {

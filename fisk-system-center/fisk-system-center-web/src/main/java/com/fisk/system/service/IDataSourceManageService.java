@@ -84,7 +84,7 @@ public interface IDataSourceManageService extends IService<DataSourcePO> {
      * @param dto 连接信息
      * @return 是否连接成功
      */
-    ResultEnum testConnection(DataSourceDTO dto);
+    ResultEnum testConnection(DataSourceSaveDTO dto);
 
     /**
      * 获取单条数据源
