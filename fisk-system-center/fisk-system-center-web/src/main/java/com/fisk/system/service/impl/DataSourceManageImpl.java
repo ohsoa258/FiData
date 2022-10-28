@@ -26,6 +26,7 @@ import com.fisk.system.map.DataSourceMap;
 import com.fisk.system.mapper.DataSourceMapper;
 import com.fisk.system.service.IDataSourceManageService;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +44,7 @@ import java.util.stream.Collectors;
  * @author dick
  */
 @Service
+@Slf4j
 public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSourcePO> implements IDataSourceManageService {
 
     @Resource
@@ -217,6 +219,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
             if (conn != null) {
                 conn.close();
             }
+            log.error("测试连接异常：" + e);
             return ResultEnum.DATASOURCE_CONNECTERROR;
         } finally {
             try {
