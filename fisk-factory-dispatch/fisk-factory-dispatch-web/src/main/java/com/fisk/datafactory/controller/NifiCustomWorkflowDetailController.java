@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.Dto.cron.NextCronTimeDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
@@ -130,6 +131,13 @@ public class NifiCustomWorkflowDetailController {
     public ResultEntity<Object> getExternalDataSourceList() {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getExternalDataSourceList());
+    }
+
+    @PostMapping("/getNextCronExeTime")
+    @ApiOperation(value = "获取cron下次执行时间")
+    public ResultEntity<Object> getNextCronExeTime(@Validated @RequestBody NextCronTimeDTO dto) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getNextCronExeTime(dto));
     }
 
 }
