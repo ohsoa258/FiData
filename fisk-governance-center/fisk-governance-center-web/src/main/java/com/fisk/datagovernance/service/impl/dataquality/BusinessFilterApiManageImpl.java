@@ -228,21 +228,21 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
                 // jwt账号&密码
                 JSONObject rawDataParams = new JSONObject();
                 Map<String, String> formDataParams = new IdentityHashMap<>();
-                if (apiConfig.getApiAuthBodyType() == "raw") {
+                if (apiConfig.getApiAuthBodyType().equals("raw")) {
                     apiParmConfig.forEach(t -> {
                         rawDataParams.put(t.getApiParamKey(), t.getApiParamValue());
                     });
                     apiHttpRequestDto.setJsonObject(rawDataParams);
-                } else if (apiConfig.getApiAuthBodyType() == "form-data") {
+                } else if (apiConfig.getApiAuthBodyType().equals("form-data")) {
                     apiParmConfig.forEach(t -> {
                         formDataParams.put(t.getApiParamKey(), t.getApiParamValue());
                     });
                     apiHttpRequestDto.setFormDataParams(formDataParams);
                 }
-                ResultEntity<String> httpRequestResult = dataAccessClient.getHttpRequestResult(apiHttpRequestDto);
-                if (httpRequestResult.getCode() == ResultEnum.SUCCESS.getCode() && StringUtils.isNotEmpty(httpRequestResult.getData())) {
-                    JSONObject jsonObject = JSONObject.parseObject(httpRequestResult.getData());
-                    token = (String) jsonObject.get(apiResultConfig.getSourceField());
+                String httpRequestResult = dataAccessClient.getHttpRequestResult(apiHttpRequestDto);
+                if (StringUtils.isNotEmpty(httpRequestResult)) {
+                    JSONObject jsonObject = JSONObject.parseObject(httpRequestResult);
+                    token = jsonObject.getString(apiResultConfig.getSourceField());
                     if (StringUtils.isEmpty(token)) {
                         throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
                     }
@@ -384,9 +384,9 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
                 requestDTO.setJsonObject(rawParams);
                 requestDTO.setHeadersParams(headersParams);
                 requestDTO.setFormDataParams(formDataParams);
-                ResultEntity<String> httpRequestResult = dataAccessClient.getHttpRequestResult(requestDTO);
-                if (httpRequestResult.getCode() == ResultEnum.SUCCESS.getCode() && StringUtils.isNotEmpty(httpRequestResult.getData())) {
-                    JSONObject jsonObject = JSONObject.parseObject(httpRequestResult.getData());
+                String httpRequestResult = dataAccessClient.getHttpRequestResult(requestDTO);
+                if (StringUtils.isNotEmpty(httpRequestResult)) {
+                    JSONObject jsonObject = JSONObject.parseObject(httpRequestResult);
                     // 第四步：通过配置参数解析API数据
                     if (jsonObject != null) {
                         Map<String, Object> fieldMap = new IdentityHashMap<>();

@@ -310,7 +310,7 @@ public interface DataAccessClient {
      */
     @PostMapping("/apiConfig/getHttpRequestResult")
     @ApiOperation(value = "获取http请求返回的结果")
-    ResultEntity<String> getHttpRequestResult(@RequestBody ApiHttpRequestDTO dto);
+    String getHttpRequestResult(@RequestBody ApiHttpRequestDTO dto);
 
     /**
      * 数据源驱动类型

@@ -915,9 +915,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     @Override
-    public ResultEntity<String> getHttpRequestResult(ApiHttpRequestDTO dto) {
+    public String getHttpRequestResult(ApiHttpRequestDTO dto) {
         String data = buildHttpRequest.getHttpRequest(dto);
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, data);
+        return data;
     }
 
     /**
