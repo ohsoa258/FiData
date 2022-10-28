@@ -674,7 +674,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
 
         // jdbc连接信息
-        String url = "";
+        String url = null;
         List<String> allDatabases = new ArrayList<>();
 
         DataSourceTypeEnum driveType = DataSourceTypeEnum.getValue(dto.driveType);
@@ -689,7 +689,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     allDatabases.addAll(mysqlConUtils.getAllDatabases(conn));
                     break;
                 case POSTGRESQL:
-                    log.info("开始查询pg数据库");
                     url = "jdbc:postgresql://" + dto.host + ":" + dto.port + "/postgres";
                     PgsqlUtils pgsqlUtils = new PgsqlUtils();
                     conn = DbConnectionHelper.connection(url, dto.connectAccount, dto.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL);
