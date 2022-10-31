@@ -72,7 +72,6 @@ import com.fisk.task.enums.OlapTableEnum;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -139,8 +138,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     OracleCdcUtils oracleCdcUtils;
     @Resource
     RedisUtil redisUtil;
-    @Value("${fiData-data-ods-source}")
-    private Integer odsSource;
     @Resource
     GetConfigDTO getConfig;
 
@@ -207,7 +204,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         //是否添加schema
         if (appRegistrationDTO.whetherSchema) {
-            VerifySchema(po.appAbbreviation);
+            VerifySchema(po.appAbbreviation, po.targetDbId);
         }
 
         // 添加元数据信息
@@ -410,7 +407,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             // 删表之前,要将所有的数据提前查出来,不然会导致空指针异常
             tableIdList = accessList.stream().map(TableAccessPO::getId).collect(Collectors.toList());
 
-            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(model.targetDbId);
             if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
@@ -1091,7 +1088,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             tableAccessData.tableName = TableNameGenerateUtils.buildOdsTableName(tableAccessData.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
         }
 
-        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(registrationPo.targetDbId);
         if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
@@ -1497,9 +1494,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * 校验schema
      *
      * @param schemaName
+     * @param targetDbId
      */
-    public void VerifySchema(String schemaName) {
-        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+    public void VerifySchema(String schemaName, Integer targetDbId) {
+        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(targetDbId);
         if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }

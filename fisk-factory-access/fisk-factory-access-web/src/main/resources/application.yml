@@ -112,6 +112,3 @@ data-access-job:
   schedule: 0 30 0 * * ?
   # 是否启用
   enabled: true
-
-# 数据源ods配置
-fiData-data-ods-source: 2

@@ -26,7 +26,6 @@ import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
-import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -133,8 +132,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private String user;
     @Value("${spring.datasource.dynamic.datasource.taskdb.password}")
     private String password;
-    @Value("${fiData-data-ods-source}")
-    private Integer odsSource;
     @Resource
     private GenerateCondition generateCondition;
     @Resource
@@ -344,7 +341,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         //存在应用换ods数据源情况
-        appRegistrationImpl.VerifySchema(registrationPo.appAbbreviation);
+        appRegistrationImpl.VerifySchema(registrationPo.appAbbreviation, registrationPo.targetDbId);
 
         List<AppRegistrationPO> idList = appRegistrationImpl.query()
                 .select("id")
@@ -764,7 +761,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         vo.tableList = voList;
         vo.tableIdList = tableIdList;
 
-        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(registrationPo.targetDbId);
         if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
@@ -1545,7 +1542,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         Connection conn = null;
         Statement st = null;
         try {
-            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+            AppRegistrationPO appRegistrationPo = registrationMapper.selectById(query.appId);
+            if (appRegistrationPo == null) {
+                throw new FkException(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
+            }
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(appRegistrationPo.targetDbId);
             if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
@@ -2078,23 +2079,24 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Override
     public List<String> getUseExistTable() {
-        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+        //TODO cdc类型使用
+       /* ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
         if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
 
         List<String> list = new ArrayList<>();
 
-        IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceConfig.data.conType);
+       IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceConfig.data.conType);
         String sql = dbCommand.buildUseExistTable();
         log.info("查询现有表sql:", sql);
 
         List<Map<String, Object>> resultMaps = AbstractDbHelper.execQueryResultMaps(sql, getConnection(dataSourceConfig.data));
         for (Map<String, Object> item : resultMaps) {
             list.add(item.get("name").toString());
-        }
+        }*/
 
-        return list;
+        return new ArrayList<>();
     }
 
     @Override
