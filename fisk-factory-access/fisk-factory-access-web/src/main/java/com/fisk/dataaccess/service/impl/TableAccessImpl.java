@@ -1446,8 +1446,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
         }
 
-        //校验相同schema,不同应用是否存在表名重复问题
-        verifySchemaTable(dto.appId, dto.tableName);
+        if (appDataSourceImpl.getDataSourceMeta(dto.appId) != null) {
+            //校验相同schema,不同应用是否存在表名重复问题
+            verifySchemaTable(dto.appId, dto.tableName);
+        }
 
         // 同一应用下表名不可重复
         boolean flag = this.checkTableName(dto);
@@ -1484,8 +1486,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEnum.SQL_EXCEPT_CLEAR;
         }
 
-        //校验相同schema,不同应用是否存在表名重复问题
-        verifySchemaTable(dto.appId, dto.tableName);
+        if (appDataSourceImpl.getDataSourceMeta(dto.appId) != null) {
+            //校验相同schema,不同应用是否存在表名重复问题
+            verifySchemaTable(dto.appId, dto.tableName);
+        }
 
         // 前端操作多了未命名,不传物理表id,提前保存物理表的sql脚本,导致更新失败
         if (dto.id > 0) {

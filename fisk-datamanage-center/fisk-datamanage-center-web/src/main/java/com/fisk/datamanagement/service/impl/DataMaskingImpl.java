@@ -30,8 +30,6 @@ public class DataMaskingImpl implements IDataMasking {
     @Resource
     EntityImpl entityImpl;
     @Resource
-    DataAssetsImpl dataAssetImpl;
-    @Resource
     MetadataMapAtlasMapper mapper;
 
     @Override
@@ -49,7 +47,7 @@ public class DataMaskingImpl implements IDataMasking {
             //获取attributes
             JSONObject attributes=JSON.parseObject(entity.getString("attributes"));
             //拼接连接字符串
-            ConnectionInformationDTO connectionInformationDTO = dataAssetImpl.jointConnection(
+            ConnectionInformationDTO connectionInformationDTO = jointConnection(
                     attributes.getString("rdbms_type").toLowerCase(),
                     attributes.getString("hostname"),
                     attributes.getString("port"), dbAndTableName[0]);
@@ -113,12 +111,49 @@ public class DataMaskingImpl implements IDataMasking {
                 dto.tableGuid = po.atlasGuid;
             }
             return dto;
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             log.error("getTableData ex:", e);
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,e);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e);
         }
+    }
+
+    /**
+     * 返回数据库连接驱动以及拼接连接地址
+     *
+     * @param rdbmsType
+     * @param hostname
+     * @param port
+     * @param dbName
+     * @return
+     */
+    public ConnectionInformationDTO jointConnection(String rdbmsType, String hostname, String port, String dbName) {
+        String driver = null;
+        String url = null;
+        switch (rdbmsType) {
+            case "mysql":
+            case "doris":
+                driver = "com.mysql.jdbc.Driver";
+                url = "jdbc:mysql://" + hostname + ":" + port + "/" + dbName;
+                break;
+            case "sqlserver":
+                driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+                url = "jdbc:sqlserver://" + hostname + ":" + port + ";DatabaseName=" + dbName;
+                break;
+            case "oracle":
+                driver = "oracle.jdbc.OracleDriver";
+                url = "jdbc:oracle:thin:@" + hostname + ":" + port + ":" + "ORCLCDB";
+                break;
+            case "postgresql":
+                driver = "org.postgresql.Driver";
+                url = "jdbc:postgresql://" + hostname + ":" + port + "/" + dbName;
+                break;
+            default:
+                throw new FkException(ResultEnum.NOT_SUPPORT);
+        }
+        ConnectionInformationDTO data = new ConnectionInformationDTO();
+        data.driver = driver;
+        data.url = url;
+        return data;
     }
 
 }
