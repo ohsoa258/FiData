@@ -125,7 +125,7 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
             if (CollectionUtils.isNotEmpty(businessFilterApiParmPOS)) {
                 List<BusinessFilterApiParamPO> paramList = businessFilterApiParmPOS.stream().filter(parm -> parm.getApiId() == t.getId()).collect(Collectors.toList());
                 if (CollectionUtils.isNotEmpty(paramList)) {
-                    apiVO.setApiParmConfig(BusinessFilterApiParamMap.INSTANCES.poToVo(paramList));
+                    apiVO.setApiParamConfig(BusinessFilterApiParamMap.INSTANCES.poToVo(paramList));
                 }
             }
             if (CollectionUtils.isNotEmpty(businessFilterApiResultPOS)) {
