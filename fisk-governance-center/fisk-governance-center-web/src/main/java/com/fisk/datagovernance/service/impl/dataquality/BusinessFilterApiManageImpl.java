@@ -181,8 +181,9 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
                 businessFilterApiResultManageImpl.saveBatch(businessFilterApiResultPOS);
             }
         }
-        if (StringUtils.isNotEmpty(dto.getApiConfig().getApiAuthTicket())) {
-            String authRedisKey = "BusinessFilterApiConfig:" + dto.getApiConfig().getRuleId();
+        if (StringUtils.isNotEmpty(dto.getApiConfig().getApiAuthTicket()) &&
+                dto.getApiConfig().getApiAuthExpirMinute() > 0) {
+            String authRedisKey = "BusinessFilterApiConfig:" + ruleId;
             // token存Redis
             redisTemplate.opsForValue().set(authRedisKey, dto.getApiConfig().getApiAuthTicket(), dto.getApiConfig().getApiAuthExpirMinute(), TimeUnit.MINUTES);
         }
@@ -198,7 +199,7 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
         businessFilterApiParamMapper.updateByRuleId(ruleId);
         businessFilterApiResultMapper.updateByRuleId(ruleId);
         String authRedisKey = "BusinessFilterApiConfig:" + ruleId;
-        boolean flag = redisTemplate.hasKey(RedisKeyBuild.buildFiDataStructureKey(authRedisKey));
+        boolean flag = redisTemplate.hasKey(authRedisKey);
         if (flag) {
             redisTemplate.delete(authRedisKey);
         }
@@ -226,7 +227,7 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
 
             // 验证授权票据是否过期
             String authRedisKey = "BusinessFilterApiConfig:" + apiConfig.getRuleId();
-            boolean flag = redisTemplate.hasKey(RedisKeyBuild.buildFiDataStructureKey(authRedisKey));
+            boolean flag = redisTemplate.hasKey(authRedisKey);
             if (flag) {
                 token = redisTemplate.opsForValue().get(authRedisKey).toString();
             }
@@ -294,7 +295,7 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
                 token = apiConfig.getApiAuthTicket();
             } else if (apiConfig.getRuleId() != 0) {
                 String authRedisKey = "BusinessFilterApiConfig:" + apiConfig.getRuleId();
-                boolean flag = redisTemplate.hasKey(RedisKeyBuild.buildFiDataStructureKey(authRedisKey));
+                boolean flag = redisTemplate.hasKey(authRedisKey);
                 if (flag) {
                     token = redisTemplate.opsForValue().get(authRedisKey).toString();
                 }
