@@ -10,6 +10,8 @@ import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.RegexUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
@@ -48,6 +50,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -82,6 +85,9 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
 
     @Resource
     private DataSourceConManageImpl dataSourceConManageImpl;
+
+    @Resource
+    private UserHelper userHelper;
 
     @Override
     public List<BusinessFilterQueryApiVO> getApiListByRuleIds(List<Integer> ruleIds) {
@@ -149,15 +155,19 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
         int insertCount = 0;
         BusinessFilterApiConfigPO businessFilterApiConfigPO = BusinessFilterApiMap.INSTANCES.dtoToPo(dto.getApiConfig());
         if (businessFilterApiConfigPO != null) {
+            UserInfo loginUserInfo = userHelper.getLoginUserInfo();
+            businessFilterApiConfigPO.setCreateTime(LocalDateTime.now());
+            businessFilterApiConfigPO.setCreateUser(String.valueOf(loginUserInfo.getId()));
             businessFilterApiConfigPO.setRuleId(ruleId);
-            insertCount = baseMapper.insert(businessFilterApiConfigPO);
+            insertCount = baseMapper.insertOne(businessFilterApiConfigPO);
         }
         if (insertCount > 0) {
+            int apiId = Math.toIntExact(businessFilterApiConfigPO.getId());
             if (CollectionUtils.isNotEmpty(dto.getApiParamConfig())) {
                 List<BusinessFilterApiParamPO> businessFilterApiParamPOS = BusinessFilterApiParamMap.INSTANCES.dtoToPo(dto.getApiParamConfig());
-                //
                 businessFilterApiParamPOS.forEach(t -> {
                     t.setRuleId(ruleId);
+                    t.setApiId(apiId);
                 });
                 businessFilterApiParamManageImpl.saveBatch(businessFilterApiParamPOS);
             }
@@ -166,6 +176,7 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
                 List<BusinessFilterApiResultPO> businessFilterApiResultPOS = BusinessFilterApiResultMap.INSTANCES.dtoToPo(resultDTOS);
                 businessFilterApiResultPOS.forEach(t -> {
                     t.setRuleId(ruleId);
+                    t.setApiId(apiId);
                 });
                 businessFilterApiResultManageImpl.saveBatch(businessFilterApiResultPOS);
             }
@@ -240,11 +251,15 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
                     apiHttpRequestDto.setFormDataParams(formDataParams);
                 }
                 String httpRequestResult = dataAccessClient.getHttpRequestResult(apiHttpRequestDto);
+                String bearer = "Bearer ";
                 if (StringUtils.isNotEmpty(httpRequestResult)) {
                     JSONObject jsonObject = JSONObject.parseObject(httpRequestResult);
                     token = jsonObject.getString(apiResultConfig.getSourceField());
                     if (StringUtils.isEmpty(token)) {
                         throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+                    }
+                    if (!token.contains(bearer)) {
+                        token = bearer + token;
                     }
                 }
             }
@@ -478,9 +493,7 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
         List<BusinessFilterApiResultVO> list = source.stream().filter(t -> t.getParentCode().equals(parentCode)).collect(Collectors.toList());
         for (int i = 0; i < list.size(); i++) {
             BusinessFilterApiResultVO model = list.get(i);
-            if (CollectionUtils.isNotEmpty(model.getChildren())) {
-                model.setChildren(queryApiRecursionResult(model.getCode(), model.getChildren()));
-            }
+            model.setChildren(queryApiRecursionResult(model.getCode(), source));
             result.add(model);
         }
         return result;

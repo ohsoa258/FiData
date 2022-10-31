@@ -19,6 +19,6 @@ public interface BusinessFilterApiParamMapper extends FKBaseMapper<BusinessFilte
      *
      * @return 执行结果
      */
-    @Update("UPDATE tb_bizfilter_api_parm SET del_flag=0 WHERE rule_id = #{ruleId};")
+    @Update("UPDATE tb_bizfilter_api_param SET del_flag=0 WHERE rule_id = #{ruleId};")
     int updateByRuleId(@Param("ruleId") int ruleId);
 }
