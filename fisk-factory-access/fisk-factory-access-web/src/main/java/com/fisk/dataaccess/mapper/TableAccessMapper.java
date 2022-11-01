@@ -8,6 +8,7 @@ import com.fisk.dataaccess.dto.table.TableAccessPageDTO;
 import com.fisk.dataaccess.dto.table.TableNameDTO;
 import com.fisk.dataaccess.dto.table.TableNameTreeDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
+import com.fisk.dataaccess.dto.v3.TbTableAccessQueryDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.TableNameVO;
@@ -175,10 +176,10 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
     /**
      * 根据appId获取物理表列表
      *
-     * @param appId
+     * @param page
+     * @param query
      * @return
      */
-    @Select("SELECT a.*,b.sync_mode FROM tb_table_access a join tb_table_syncmode b on a.id=b.id where a.app_id = #{appId} and a.del_flag=1")
-    List<TbTableAccessDTO> getTableAccessListData(@Param("appId") long appId);
+    Page<TbTableAccessDTO> getTableAccessListData(Page<TbTableAccessDTO> page, @Param("query") TbTableAccessQueryDTO query);
 
 }

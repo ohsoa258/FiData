@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -8,13 +9,13 @@ import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.table.TableKeepNumberDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
+import com.fisk.dataaccess.dto.v3.TbTableAccessQueryDTO;
 import com.fisk.dataaccess.service.ITableAccess;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * @author Lock
@@ -47,12 +48,10 @@ public class TableAccessController {
         return ResultEntityBuild.build(service.updateTableAccessData(dto));
     }
 
-    @GetMapping("/getList/{appId}")
+    @PostMapping("/getList")
     @ApiOperation(value = "根据appId获取物理表列表")
-    public ResultEntity<List<TbTableAccessDTO>> getTableAccessListData(
-            @PathVariable("appId") long appId) {
-
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableAccessListData(appId));
+    public ResultEntity<Page<TbTableAccessDTO>> getTableAccessListData(@RequestBody TbTableAccessQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableAccessListData(dto));
     }
 
     @PostMapping("/getFieldList")
