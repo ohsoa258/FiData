@@ -15,6 +15,7 @@ import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
+import com.fisk.dataaccess.dto.v3.TbTableAccessQueryDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
@@ -262,10 +263,10 @@ public interface ITableAccess extends IService<TableAccessPO> {
     /**
      * 根据appId获取物理表列表
      *
-     * @param appId appId
+     * @param dto
      * @return 返回值
      */
-    List<TbTableAccessDTO> getTableAccessListData(long appId);
+    Page<TbTableAccessDTO> getTableAccessListData(TbTableAccessQueryDTO dto);
 
     /**
      * 根据SQL,获取结果集

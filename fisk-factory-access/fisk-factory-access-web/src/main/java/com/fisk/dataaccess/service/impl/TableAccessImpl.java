@@ -43,6 +43,7 @@ import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
+import com.fisk.dataaccess.dto.v3.TbTableAccessQueryDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.enums.DeltaTimeParameterTypeEnum;
@@ -1515,8 +1516,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     @Override
-    public List<TbTableAccessDTO> getTableAccessListData(long appId) {
-        return baseMapper.getTableAccessListData(appId);
+    public Page<TbTableAccessDTO> getTableAccessListData(TbTableAccessQueryDTO dto) {
+        return baseMapper.getTableAccessListData(dto.page, dto);
     }
 
     /**
