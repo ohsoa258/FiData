@@ -50,7 +50,7 @@
         <if test="query.syncMode>0 and query.syncMode != null">
             and b.sync_mode = ${query.syncMode}
         </if>
-        <if test="query.publish>0 and query.publish != null">
+        <if test="query.publish != null">
             and a.publish = ${query.publish}
         </if>
     </select>
