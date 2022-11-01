@@ -45,7 +45,7 @@
         a.app_id = ${query.appId}
         and a.del_flag=1
         <if test="query.tableName != null and query.tableName.length()>0">
-            and a.table_name like '%'#{query.tableName}'%'
+            and a.table_name like CONCAT('%',#{query.tableName},'%')
         </if>
         <if test="query.syncMode != null and query.syncMode>0">
             and b.sync_mode = ${query.syncMode}
