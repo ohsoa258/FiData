@@ -1482,22 +1482,24 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public ResultEnum updateTableAccessData(TbTableAccessDTO dto) {
 
+        TableAccessPO model = this.getById(dto.id);
+        if (model == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
         // sql保存时丢失
         if (dto.sqlFlag == 1 && "".equals(dto.sqlScript)) {
             return ResultEnum.SQL_EXCEPT_CLEAR;
         }
 
-        if (appDataSourceImpl.getDataSourceMeta(dto.appId) != null) {
+        if (appDataSourceImpl.getDataSourceMeta(model.appId) != null) {
             //校验相同schema,不同应用是否存在表名重复问题
             verifySchemaTable(dto.appId, dto.tableName);
         }
 
         // 前端操作多了未命名,不传物理表id,提前保存物理表的sql脚本,导致更新失败
         if (dto.id > 0) {
-            TableAccessPO model = this.getById(dto.id);
-            if (model == null) {
-                return ResultEnum.DATA_NOTEXISTS;
-            }
+
             // 判断名称是否重复
             QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
             // 限制在同一应用下
