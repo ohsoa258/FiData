@@ -47,7 +47,7 @@
         <if test="query.tableName != null and query.tableName.length()>0">
             and a.table_name like '%'#{query.tableName}'%'
         </if>
-        <if test="query.syncMode>0 and query.syncMode != null">
+        <if test="query.syncMode != null and query.syncMode>0">
             and b.sync_mode = ${query.syncMode}
         </if>
         <if test="query.publish != null">
