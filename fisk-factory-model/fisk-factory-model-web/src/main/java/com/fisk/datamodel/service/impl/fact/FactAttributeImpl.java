@@ -204,8 +204,8 @@ public class FactAttributeImpl
         if (po == null) {
             return data;
         }
-        data.tableName =po.factTableEnName;
-        data.id=po.id;
+        data.tableName = po.factTabName;
+        data.id = po.id;
 
         //查找业务域id
         BusinessProcessPO businessProcessPo=businessProcessMapper.selectById(po.businessProcessId);

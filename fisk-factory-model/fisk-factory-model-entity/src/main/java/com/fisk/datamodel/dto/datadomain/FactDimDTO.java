@@ -10,7 +10,7 @@ import lombok.Data;
 @Data
 public class FactDimDTO {
     public Long factId;
-    public String factTableEnName;
+    public String factTabName;
     /**
      * 7.业务域  8.维度  9.业务过程  10.事实表
      */

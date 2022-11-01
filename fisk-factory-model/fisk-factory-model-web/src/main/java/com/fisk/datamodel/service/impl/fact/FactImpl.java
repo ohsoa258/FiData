@@ -255,12 +255,13 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     @Override
     public ResultEnum updateFactSql(DimensionSqlDTO dto)
     {
-        FactPO model=mapper.selectById(dto.id);
+        FactPO model = mapper.selectById(dto.id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        model.sqlScript=dto.sqlScript;
-        return mapper.updateById(model)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        model.sqlScript = dto.sqlScript;
+        model.appId = dto.appId;
+        return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override

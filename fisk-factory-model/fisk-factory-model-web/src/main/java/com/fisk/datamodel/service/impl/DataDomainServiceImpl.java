@@ -381,7 +381,7 @@ public class DataDomainServiceImpl implements DataDomainService {
                                         .map(c -> {
                                             FactDimDTO fact = new FactDimDTO();
                                             fact.setFactId(c.getId());
-                                            fact.setFactTableEnName(c.getFactTableEnName());
+                                            fact.setFactTabName(c.getFactTabName());
                                             fact.setFlag(10);
                                             fact.setPid(b.getId());
                                             return fact;
@@ -457,7 +457,7 @@ public class DataDomainServiceImpl implements DataDomainService {
                                         .map(b -> {
                                             FactNameDTO factName = new FactNameDTO();
                                             factName.setFactId(b.getId());
-                                            factName.setFactTableEnName(b.getFactTableEnName());
+                                            factName.setFactTabName(b.getFactTabName());
                                             factName.setFlag(5);
                                             factName.setPid(a.getId());
                                             return factName;
@@ -501,7 +501,7 @@ public class DataDomainServiceImpl implements DataDomainService {
         QueryWrapper<FactPO> query = new QueryWrapper<>();
         query.lambda()
                 .eq(FactPO::getBusinessProcessId, businessProcessId)
-                .select(FactPO::getId, FactPO::getFactTableEnName);
+                .select(FactPO::getId, FactPO::getFactTabName);
         List<FactPO> factList = factMapper.selectList(query);
         if (CollectionUtils.isEmpty(factList)) {
             return null;

@@ -26,10 +26,6 @@ public class DimensionPO extends BasePO {
      */
     public String dimensionCnName;
     /**
-     * 维度英文名称
-     */
-    public String dimensionEnName;
-    /**
      * 维度逻辑表名称
      */
     public String dimensionTabName;
@@ -69,4 +65,8 @@ public class DimensionPO extends BasePO {
      * 截止时间
      */
     public String endTime;
+    /**
+     * 数据接入应用id
+     */
+    public Integer appId;
 }
