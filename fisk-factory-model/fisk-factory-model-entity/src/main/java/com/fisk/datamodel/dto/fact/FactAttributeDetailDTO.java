@@ -19,4 +19,6 @@ public class FactAttributeDetailDTO {
     public List<FactAttributeDTO> attributeDTO;
 
     public SyncModeDTO syncModeDTO;
+
+    public Integer appId;
 }
