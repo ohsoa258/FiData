@@ -283,12 +283,12 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
             if (apiConfig == null || CollectionUtils.isEmpty(apiParamConfig) || CollectionUtils.isEmpty(apiResultConfig)) {
                 return ResultEnum.PARAMTER_ERROR;
             }
+            apiResultConfig = tileApiRecursionResult(apiResultConfig);
             List<String> rspFieldKeys = apiResultConfig.stream().filter(t -> t.getPrimaryKeyField() == 1).map(f -> f.getTargetField()).collect(Collectors.toList());
             if (CollectionUtils.isEmpty(rspFieldKeys)) {
                 return ResultEnum.DATA_QUALITY_UPDATE_PRIMARY_KEY_ISNOTSET;
             }
 
-            apiResultConfig = tileApiRecursionResult(apiResultConfig);
             // 获取授权token
             String token = "";
             if (StringUtils.isNotEmpty(apiConfig.getApiAuthTicket())) {
@@ -340,14 +340,14 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
             // 拼接sql语句，查询表数据
             List<String> reqFieldNames = apiParamConfig.stream().filter(t -> StringUtils.isNotEmpty(t.getApiParamValue()) && t.getApiParamKey() != "pageNum" && t.getApiParamKey() != "pageSize").map(f -> f.getApiParamValue()).collect(Collectors.toList());
             reqFieldNames.addAll(rspFieldKeys);
-            BusinessFilterApiParamDTO pageNumDto = apiParamConfig.stream().filter(t -> t.getApiParamKey() == "pageNum").findFirst().orElse(null);
-            BusinessFilterApiParamDTO pageSizeDto = apiParamConfig.stream().filter(t -> t.getApiParamKey() == "pageSize").findFirst().orElse(null);
+            BusinessFilterApiParamDTO pageNumDto = apiParamConfig.stream().filter(t -> t.getApiParamKey().equals("pageNum")).findFirst().orElse(null);
+            BusinessFilterApiParamDTO pageSizeDto = apiParamConfig.stream().filter(t -> t.getApiParamKey().equals("pageSize")).findFirst().orElse(null);
             Integer pageNum = 0, pageSize = Integer.MAX_VALUE;
             if (pageNumDto != null) {
                 pageNum = Integer.valueOf(pageNumDto.getApiParamValue());
             }
             if (pageSizeDto != null) {
-                pageSize = Integer.valueOf(pageNumDto.getApiParamValue());
+                pageSize = Integer.valueOf(pageSizeDto.getApiParamValue());
             }
             IBuildGovernanceSqlCommand dbCommand = BuildGovernanceHelper.getDBCommand(dataSourceConVO.getConType());
             String sql = dbCommand.buildPagingSql(tableName, reqFieldNames, "", pageNum, pageSize);
