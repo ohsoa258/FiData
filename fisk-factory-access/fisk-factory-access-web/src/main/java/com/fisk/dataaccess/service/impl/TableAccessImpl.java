@@ -1632,10 +1632,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.sourceFieldType = metaData.getColumnTypeName(i);
             dto.sourceFieldPrecision = metaData.getScale(i);
             dto.fieldName = metaData.getColumnLabel(i);
-            //int precision = metaData.getScale(i);
-            //System.out.println("精度:" + precision + ",类型名称:" + metaData.getColumnTypeName(i) + ",长度:" + metaData.getPrecision(i));
             String tableName = metaData.getTableName(i) + "key";
-            if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equals(dto.fieldName) || tableName.equals("ods_" + dto.fieldName)) {
+            if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equals(dto.fieldName)
+                    || tableName.equals("ods_" + dto.fieldName)) {
                 continue;
             }
             dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
@@ -1810,7 +1809,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public OdsResultDTO getDataAccessQueryList(OdsQueryDTO query) {
         AppDataSourcePO po = appDataSourceImpl.query().eq("app_id", query.appId).one();
+        if (po == null) {
+            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
+        }
         AppRegistrationPO registration = appRegistrationImpl.query().eq("id", query.appId).one();
+        if (registration == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
         OdsResultDTO array = new OdsResultDTO();
         Instant inst1 = Instant.now();
         Connection conn = null;
@@ -1994,26 +1999,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return filterSqlFieldList(listField, queryDto);
         }
         return null;
-    }
-
-    /**
-     * 连接数据库
-     *
-     * @param driver   driver
-     * @param url      url
-     * @param username username
-     * @param password password
-     * @return statement
-     */
-    private Connection getStatement(String driver, String url, String username, String password) {
-        Connection conn;
-        try {
-            Class.forName(driver);
-            conn = DriverManager.getConnection(url, username, password);
-        } catch (Exception e) {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
-        }
-        return conn;
     }
 
     @Override
