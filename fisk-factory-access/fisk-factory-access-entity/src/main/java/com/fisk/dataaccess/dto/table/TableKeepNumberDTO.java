@@ -12,6 +12,6 @@ public class TableKeepNumberDTO {
     /**
      * stg数据保留天数
      */
-    public Integer keepNumber;
+    public String keepNumber;
 
 }
