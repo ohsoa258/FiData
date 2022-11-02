@@ -204,8 +204,8 @@ public class FactAttributeImpl
         if (po == null) {
             return data;
         }
-        data.tableName =po.factTableEnName;
-        data.id=po.id;
+        data.tableName = po.factTabName;
+        data.id = po.id;
 
         //查找业务域id
         BusinessProcessPO businessProcessPo=businessProcessMapper.selectById(po.businessProcessId);
@@ -252,21 +252,22 @@ public class FactAttributeImpl
     @Override
     public FactAttributeDetailDTO getFactAttributeDataList(int factId)
     {
-        FactAttributeDetailDTO data=new FactAttributeDetailDTO();
-        FactPO po=factMapper.selectById(factId);
+        FactAttributeDetailDTO data = new FactAttributeDetailDTO();
+        FactPO po = factMapper.selectById(factId);
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        data.sqlScript=po.sqlScript;
-        QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(FactAttributePO::getFactId,factId);
-        List<FactAttributePO> list=mapper.selectList(queryWrapper);
-        data.attributeDTO= FactAttributeMap.INSTANCES.poListsToDtoList(list);
+        data.sqlScript = po.sqlScript;
+        data.appId = po.appId;
+        QueryWrapper<FactAttributePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(FactAttributePO::getFactId, factId);
+        List<FactAttributePO> list = mapper.selectList(queryWrapper);
+        data.attributeDTO = FactAttributeMap.INSTANCES.poListsToDtoList(list);
         //获取增量配置信息
-        QueryWrapper<SyncModePO> syncModePoQueryWrapper=new QueryWrapper<>();
-        syncModePoQueryWrapper.lambda().eq(SyncModePO::getSyncTableId,po.id)
+        QueryWrapper<SyncModePO> syncModePoQueryWrapper = new QueryWrapper<>();
+        syncModePoQueryWrapper.lambda().eq(SyncModePO::getSyncTableId, po.id)
                 .eq(SyncModePO::getTableType, TableHistoryTypeEnum.TABLE_FACT);
-        SyncModePO syncModePo=syncMode.getOne(syncModePoQueryWrapper);
+        SyncModePO syncModePo = syncMode.getOne(syncModePoQueryWrapper);
         if (syncModePo == null) {
             return data;
         }

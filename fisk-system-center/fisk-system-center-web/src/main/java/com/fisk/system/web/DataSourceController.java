@@ -87,7 +87,7 @@ public class DataSourceController {
 
     @PostMapping("/test")
     @ApiOperation("测试数据源连接")
-    public ResultEntity<Object> testConnection(@Validated @RequestBody DataSourceDTO dto) {
+    public ResultEntity<Object> testConnection(@RequestBody DataSourceSaveDTO dto) {
         return ResultEntityBuild.build(service.testConnection(dto));
     }
 }

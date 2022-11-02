@@ -49,6 +49,8 @@ public class AppRegistrationDTO extends BaseDTO {
     public Date createTime;
     @ApiModelProperty(value = "是否将应用简称作为schema使用")
     public Boolean whetherSchema = false;
+    @ApiModelProperty(value = "目标ods数据源id")
+    public Integer targetDbId;
 
     public AppDataSourceDTO appDatasourceDTO;
 

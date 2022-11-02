@@ -314,4 +314,11 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.buildCdcJobScript(dto));
     }
 
+    @GetMapping("/getFiDataDataSource")
+    @ApiOperation(value = "获取fidata数据源")
+    public ResultEntity<Object> getFiDataDataSource() {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataDataSource());
+    }
+
 }

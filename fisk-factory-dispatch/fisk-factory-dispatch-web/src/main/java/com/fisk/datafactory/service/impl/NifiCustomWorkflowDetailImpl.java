@@ -11,14 +11,15 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
-import com.fisk.common.core.utils.VerifyCronUtils;
+import com.fisk.common.core.utils.CronUtils;
+import com.fisk.common.core.utils.Dto.cron.NextCronTimeDTO;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.server.datasource.ExternalDataSourceDTO;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.ExternalDataSourceDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
@@ -149,7 +150,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             if (e.schedule == null || e.script == null || "".equals(e.script)) {
                 return ResultEntityBuild.build(ResultEnum.SCHEDULE_PARAME_NULL);
             }
-            if (!VerifyCronUtils.isValidExpression(e.script)) {
+            if (!CronUtils.isValidExpression(e.script)) {
                 return ResultEntityBuild.build(ResultEnum.CRON_ERROR);
             }
         }
@@ -625,7 +626,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
         //校验cron格式是否正确
         if (!StringUtils.isEmpty(dto.script)) {
-            if (!VerifyCronUtils.isValidExpression(dto.script)) {
+            if (!CronUtils.isValidExpression(dto.script)) {
                 throw new FkException(ResultEnum.CRON_ERROR);
             }
         }
@@ -771,6 +772,11 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             list.add(data);
         }
         return list;
+    }
+
+    @Override
+    public List<String> getNextCronExeTime(NextCronTimeDTO dto) {
+        return CronUtils.nextCronExeTime(dto);
     }
 
 }

@@ -143,7 +143,7 @@ public class ApiConfigController {
 
     @PostMapping("/getHttpRequestResult")
     @ApiOperation(value = "获取http请求返回的结果")
-    public ResultEntity<String> getHttpRequestResult(@RequestBody ApiHttpRequestDTO dto){
+    public String getHttpRequestResult(@RequestBody ApiHttpRequestDTO dto){
         return service.getHttpRequestResult(dto);
     }
 }

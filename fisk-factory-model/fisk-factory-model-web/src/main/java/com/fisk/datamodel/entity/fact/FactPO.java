@@ -29,10 +29,6 @@ public class FactPO extends BasePO {
      */
     public String factTableCnName;
     /**
-     * 事实表英文名称
-     */
-    public String factTableEnName;
-    /**
      * 事实表描述
      */
     public String factTableDesc;
@@ -48,5 +44,9 @@ public class FactPO extends BasePO {
      * Doris发布状态 0: 未发布  1: 发布成功  2: 发布失败  3: 正在发布
      */
     public int dorisPublish;
+    /**
+     * 数据接入应用id
+     */
+    public int appId;
 
 }

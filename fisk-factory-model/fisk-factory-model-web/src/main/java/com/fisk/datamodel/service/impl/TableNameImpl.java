@@ -73,7 +73,7 @@ public class TableNameImpl implements ITableName {
                 tableDataDTO.id = id;
                 tableDataDTO.type = DataDoFieldTypeEnum.VALUE;
                 tableDataDTO.tableField = field;
-                tableDataDTO.tableName = fact.factTableEnName;
+                tableDataDTO.tableName = fact.factTabName;
                 return ResultEntityBuild.buildData(ResultEnum.SUCCESS, tableDataDTO);
             case WHERE:
             case COLUMN:

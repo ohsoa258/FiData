@@ -9,7 +9,7 @@
         a.indicators_name,
         a.indicators_des,
         b.fact_field_en_name as factFieldName,
-        c.fact_table_en_name as factName
+        c.fact_tab_name as factName
         from tb_indicators a
         LEFT JOIN tb_fact_attribute b on a.fact_attribute_id=b.id
         LEFT JOIN tb_fact c on b.fact_id=c.id

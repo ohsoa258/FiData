@@ -186,7 +186,7 @@ public class ApiConditionImpl implements IApiCondition {
             } else {
                 throw new FkException(ResultEnum.API_EXPRESSION_ERROR);
             }
-            List<Map<String, Object>> maps = pgsqlUtils.executePgSql(sql.toLowerCase());
+            List<Map<String, Object>> maps = pgsqlUtils.executePgSql(sql.toLowerCase(), appRegistrationData.targetDbId);
             if (CollectionUtils.isEmpty(maps)) {
                 throw new FkException(ResultEnum.SQL_ERROR);
             }

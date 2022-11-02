@@ -9,6 +9,7 @@ import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
+import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -21,6 +22,7 @@ import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.common.server.datasource.ExternalDataSourceDTO;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
@@ -70,7 +72,6 @@ import com.fisk.task.enums.OlapTableEnum;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -137,8 +138,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     OracleCdcUtils oracleCdcUtils;
     @Resource
     RedisUtil redisUtil;
-    @Value("${fiData-data-ods-source}")
-    private Integer odsSource;
     @Resource
     GetConfigDTO getConfig;
 
@@ -205,7 +204,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         //是否添加schema
         if (appRegistrationDTO.whetherSchema) {
-            VerifySchema(po.appAbbreviation);
+            VerifySchema(po.appAbbreviation, po.targetDbId);
         }
 
         // 添加元数据信息
@@ -408,7 +407,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             // 删表之前,要将所有的数据提前查出来,不然会导致空指针异常
             tableIdList = accessList.stream().map(TableAccessPO::getId).collect(Collectors.toList());
 
-            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(model.targetDbId);
             if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
@@ -672,7 +671,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
 
         // jdbc连接信息
-        String url = "";
+        String url = null;
         List<String> allDatabases = new ArrayList<>();
 
         DataSourceTypeEnum driveType = DataSourceTypeEnum.getValue(dto.driveType);
@@ -687,7 +686,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     allDatabases.addAll(mysqlConUtils.getAllDatabases(conn));
                     break;
                 case POSTGRESQL:
-                    log.info("开始查询pg数据库");
                     url = "jdbc:postgresql://" + dto.host + ":" + dto.port + "/postgres";
                     PgsqlUtils pgsqlUtils = new PgsqlUtils();
                     conn = DbConnectionHelper.connection(url, dto.connectAccount, dto.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL);
@@ -1090,7 +1088,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             tableAccessData.tableName = TableNameGenerateUtils.buildOdsTableName(tableAccessData.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
         }
 
-        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(registrationPo.targetDbId);
         if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
@@ -1496,15 +1494,38 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * 校验schema
      *
      * @param schemaName
+     * @param targetDbId
      */
-    public void VerifySchema(String schemaName) {
-        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+    public void VerifySchema(String schemaName, Integer targetDbId) {
+        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(targetDbId);
         if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
         AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
         Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, dataSourceConfig.data.conType);
         CreateSchemaSqlUtils.buildSchemaSql(connection, schemaName, dataSourceConfig.data.conType);
+    }
+
+    @Override
+    public List<ExternalDataSourceDTO> getFiDataDataSource() {
+        ResultEntity<List<DataSourceDTO>> allExternalDataSource = userClient.getAllFiDataDataSource();
+        if (allExternalDataSource.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        List<DataSourceDTO> collect = allExternalDataSource.data.stream()
+                .filter(e -> SourceBusinessTypeEnum.ODS.getName().equals(e.sourceBusinessType.getName()))
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(collect)) {
+            return new ArrayList<>();
+        }
+        List<ExternalDataSourceDTO> list = new ArrayList<>();
+        for (DataSourceDTO item : collect) {
+            ExternalDataSourceDTO data = new ExternalDataSourceDTO();
+            data.id = item.id;
+            data.name = item.name;
+            list.add(data);
+        }
+        return list;
     }
 
 }

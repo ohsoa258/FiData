@@ -3,10 +3,11 @@ package com.fisk.datafactory.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.Dto.cron.NextCronTimeDTO;
+import com.fisk.common.server.datasource.ExternalDataSourceDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.ExternalDataSourceDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
@@ -113,5 +114,13 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
      * @return
      */
     List<ExternalDataSourceDTO> getExternalDataSourceList();
+
+    /**
+     * 获取cron下次执行时间
+     *
+     * @param dto
+     * @return
+     */
+    List<String> getNextCronExeTime(NextCronTimeDTO dto);
 
 }

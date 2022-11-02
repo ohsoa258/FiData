@@ -486,7 +486,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
             // 将数据同步到pgsql
             String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
-            ResultEntity<Object> result = pushPgSql(null, jsonStr, apiTableDtoList, stgName, jsonKey, dto.apiCode);
+            ResultEntity<Object> result = pushPgSql(null, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId);
             resultEnum = ResultEnum.getEnum(result.code);
             msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
 
@@ -578,7 +578,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
             // 将数据同步到pgsql
             String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
-            ResultEntity<Object> result = pushPgSql(importDataDto, jsonStr, apiTableDtoList, stgName, jsonKey, dto.apiCode);
+            ResultEntity<Object> result = pushPgSql(importDataDto, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId);
             resultEnum = ResultEnum.getEnum(result.code);
             msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
 
@@ -915,9 +915,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     @Override
-    public ResultEntity<String> getHttpRequestResult(ApiHttpRequestDTO dto) {
+    public String getHttpRequestResult(ApiHttpRequestDTO dto) {
         String data = buildHttpRequest.getHttpRequest(dto);
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, data);
+        return data;
     }
 
     /**
@@ -1196,15 +1196,16 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @param jsonStr         json数据
      * @param apiTableDtoList 当前api下的所有表(父子级结构)
      * @param tablePrefixName stg_应用简称
-     * @param apiId           apiId
+     * @param targetDbId      targetDbId
      * @param jsonKey         json解析的根节点(一般为data)
      * @return void
      * @description 将数据同步到pgsql
      * @author Lock
      * @date 2022/2/16 19:17
      */
-    private ResultEntity<Object> pushPgSql(ApiImportDataDTO importDataDto, String jsonStr, List<ApiTableDTO> apiTableDtoList,
-                                           String tablePrefixName, String jsonKey, Long apiId) {
+    private ResultEntity<Object> pushPgSql(ApiImportDataDTO importDataDto,
+                                           String jsonStr, List<ApiTableDTO> apiTableDtoList,
+                                           String tablePrefixName, String jsonKey, Integer targetDbId) {
         ResultEnum resultEnum;
         // 初始化数据
         StringBuilder checkResultMsg = new StringBuilder();
@@ -1213,10 +1214,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         List<String> tableNameList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tableName).collect(Collectors.toList());
         JsonUtils jsonUtils = new JsonUtils();
         List<JsonTableData> targetTable = jsonUtils.getTargetTable(tableNameList);
-//            targetTable.forEach(System.out::println);
         // 获取Json的schema信息
         List<JsonSchema> schemas = jsonUtils.getJsonSchema(apiTableDtoList, jsonKey);
-//            schemas.forEach(System.out::println);
         // json根节点处理
         try {
             JSONObject json = JSON.parseObject(jsonStr);
@@ -1269,9 +1268,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         ResultEntity<Object> excuteResult;
         try {
             if (importDataDto == null) {
-                excuteResult = pgsqlUtils.executeBatchPgsql(tablePrefixName, targetTable, apiTableDtoList);
+                excuteResult = pgsqlUtils.executeBatchPgsql(tablePrefixName, targetTable, apiTableDtoList, targetDbId);
             } else {
-                excuteResult = pgsqlUtils.executeBatchPgsql(importDataDto, tablePrefixName, targetTable, apiTableDtoList);
+                excuteResult = pgsqlUtils.executeBatchPgsql(importDataDto, tablePrefixName, targetTable, apiTableDtoList, targetDbId);
             }
         } catch (Exception e) {
             return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR);
@@ -1357,7 +1356,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 configDTO.targetDsConfig = dataSourceConfig;
 
                 // 获取同步数据的sql并执行
-                return getSynchroDataSqlAndExcute(configDTO, flag);
+                return getSynchroDataSqlAndExcute(configDTO, flag, app.targetDbId);
             }
         } catch (Exception e) {
             return ResultEnum.PUSH_DATA_ERROR;
@@ -1375,7 +1374,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @author Lock
      * @date 2022/2/25 16:06
      */
-    private ResultEnum getSynchroDataSqlAndExcute(DataAccessConfigDTO configDTO, int flag) {
+    private ResultEnum getSynchroDataSqlAndExcute(DataAccessConfigDTO configDTO, int flag, int targetDbId) {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
         try {
             // 调用task,获取同步数据的sql
@@ -1386,7 +1385,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 List<String> sqlList = JSON.parseObject(JSON.toJSONString(result.data), List.class);
                 if (!CollectionUtils.isEmpty(sqlList)) {
                     PgsqlUtils pgsqlUtils = new PgsqlUtils();
-                    resultEnum = pgsqlUtils.stgToOds(sqlList, flag);
+                    resultEnum = pgsqlUtils.stgToOds(sqlList, flag, targetDbId);
                 }
             }
         } catch (SQLException e) {

@@ -179,21 +179,20 @@ public class DataFactoryImpl implements IDataFactory {
     @Override
     public ResultEntity<ComponentIdDTO> getBusinessAreaNameAndTableName(DataAccessIdsDTO dto)
     {
-        ComponentIdDTO componentIdDTO=new ComponentIdDTO();
-        BusinessAreaPO businessAreaPo=businessAreaMapper.selectById(dto.appId);
-        componentIdDTO.appName=businessAreaPo==null?"":businessAreaPo.getBusinessName();
-        if (dto.flag==DataFactoryEnum.NUMBER_DIMENSION.getValue() || dto.flag==DataFactoryEnum.ANALYSIS_DIMENSION.getValue())
-        {
-            DimensionPO dimensionPo=dimensionMapper.selectById(dto.tableId);
-            componentIdDTO.tableName=dimensionPo==null?"":dimensionPo.dimensionTabName;
-        }else if (dto.flag==DataFactoryEnum.NUMBER_FACT.getValue() || dto.flag==DataFactoryEnum.ANALYSIS_FACT.getValue()){
-            FactPO factPo=factMapper.selectById(dto.tableId);
-            componentIdDTO.tableName=factPo==null?"":factPo.factTabName;
-        }
-        else if (dto.flag==DataFactoryEnum.WIDE_TABLE.getValue())
-        {
-            WideTableConfigPO po=wideTableMapper.selectById(dto.tableId);
-            componentIdDTO.tableName=po==null?"":po.name;
+        ComponentIdDTO componentIdDTO = new ComponentIdDTO();
+        BusinessAreaPO businessAreaPo = businessAreaMapper.selectById(dto.appId);
+        componentIdDTO.appName = businessAreaPo == null ? "" : businessAreaPo.getBusinessName();
+        if (dto.flag == DataFactoryEnum.NUMBER_DIMENSION.getValue()
+                || dto.flag == DataFactoryEnum.ANALYSIS_DIMENSION.getValue()) {
+            DimensionPO dimensionPo = dimensionMapper.selectById(dto.tableId);
+            componentIdDTO.tableName = dimensionPo == null ? "" : dimensionPo.dimensionTabName;
+        } else if (dto.flag == DataFactoryEnum.NUMBER_FACT.getValue()
+                || dto.flag == DataFactoryEnum.ANALYSIS_FACT.getValue()) {
+            FactPO factPo = factMapper.selectById(dto.tableId);
+            componentIdDTO.tableName = factPo == null ? "" : factPo.factTabName;
+        } else if (dto.flag == DataFactoryEnum.WIDE_TABLE.getValue()) {
+            WideTableConfigPO po = wideTableMapper.selectById(dto.tableId);
+            componentIdDTO.tableName = po == null ? "" : po.name;
         }
         return ResultEntityBuild.build(ResultEnum.SUCCESS, componentIdDTO);
     }

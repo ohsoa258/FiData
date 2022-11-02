@@ -11,12 +11,14 @@ import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterQuer
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterSortDto;
 import com.fisk.datagovernance.service.dataquality.IBusinessFilterManageService;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO;
+import com.fisk.datagovernance.vo.dataquality.businessfilter.apifilter.TestVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author dick
@@ -71,5 +73,14 @@ public class BusinessFilterController {
     @PostMapping("/collApi")
     public ResultEntity<Object> collApi(@RequestBody BusinessFilterDTO dto) {
         return ResultEntityBuild.build(service.collApi(dto));
+    }
+
+    @ApiOperation("API清洗，获取测试数据")
+    @PostMapping("/getCollApiTestData")
+    public Object getCollApiTestData(@RequestBody TestVO dto){
+        TestVO testVO=new TestVO();
+        testVO.setId(dto.getId());
+        testVO.setSource("AAD");
+        return testVO;
     }
 }

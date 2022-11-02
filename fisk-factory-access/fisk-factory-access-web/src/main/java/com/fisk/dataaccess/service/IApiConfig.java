@@ -143,6 +143,6 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      *
      * @return String
      */
-    ResultEntity<String> getHttpRequestResult(ApiHttpRequestDTO dto);
+    String getHttpRequestResult(ApiHttpRequestDTO dto);
 }
 

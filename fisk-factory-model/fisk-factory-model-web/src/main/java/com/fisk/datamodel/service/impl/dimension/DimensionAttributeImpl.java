@@ -91,7 +91,7 @@ public class DimensionAttributeImpl
             QueryWrapper<DimensionAttributePO> queryWrapper = new QueryWrapper<>();
             queryWrapper.notIn("id", ids).lambda().eq(DimensionAttributePO::getDimensionId, dto.dimensionId);
             List<DimensionAttributePO> list = attributeMapper.selectList(queryWrapper);
-            if (list != null && list.size() > 0) {
+            if (!CollectionUtils.isEmpty(list)) {
                 boolean flat = this.remove(queryWrapper);
                 if (!flat) {
                     return ResultEnum.SAVE_DATA_ERROR;
@@ -188,25 +188,25 @@ public class DimensionAttributeImpl
     }
 
     @Override
-    public DimensionAttributeListDTO getDimensionAttributeList(int dimensionId)
-    {
-        DimensionAttributeListDTO data=new DimensionAttributeListDTO();
-        DimensionPO dimensionPo=mapper.selectById(dimensionId);
+    public DimensionAttributeListDTO getDimensionAttributeList(int dimensionId) {
+        DimensionAttributeListDTO data = new DimensionAttributeListDTO();
+        DimensionPO dimensionPo = mapper.selectById(dimensionId);
         if (dimensionPo == null) {
             return data;
         }
         //获取sql脚本
-        data.sqlScript=dimensionPo.sqlScript;
+        data.sqlScript = dimensionPo.sqlScript;
+        data.appId = dimensionPo.appId;
         //获取表字段详情
-        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,dimensionId);
-        List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
-        data.attributeDTOList=DimensionAttributeMap.INSTANCES.poListToDtoList(list);
+        QueryWrapper<DimensionAttributePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId, dimensionId);
+        List<DimensionAttributePO> list = attributeMapper.selectList(queryWrapper);
+        data.attributeDTOList = DimensionAttributeMap.INSTANCES.poListToDtoList(list);
         //获取增量配置信息
-        QueryWrapper<SyncModePO> syncModePoQueryWrapper=new QueryWrapper<>();
-        syncModePoQueryWrapper.lambda().eq(SyncModePO::getSyncTableId,dimensionPo.id)
+        QueryWrapper<SyncModePO> syncModePoQueryWrapper = new QueryWrapper<>();
+        syncModePoQueryWrapper.lambda().eq(SyncModePO::getSyncTableId, dimensionPo.id)
                 .eq(SyncModePO::getTableType, TableHistoryTypeEnum.TABLE_DIMENSION);
-        SyncModePO syncModePo=syncMode.getOne(syncModePoQueryWrapper);
+        SyncModePO syncModePo = syncMode.getOne(syncModePoQueryWrapper);
         if (syncModePo == null) {
             return data;
         }

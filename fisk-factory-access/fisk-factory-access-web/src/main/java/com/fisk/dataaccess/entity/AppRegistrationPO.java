@@ -53,4 +53,9 @@ public class AppRegistrationPO extends BasePO {
      */
     public Boolean whetherSchema;
 
+    /**
+     * 目标ods数据源id
+     */
+    public Integer targetDbId;
+
 }

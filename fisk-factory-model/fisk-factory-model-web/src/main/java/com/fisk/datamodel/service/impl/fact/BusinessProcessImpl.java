@@ -442,8 +442,8 @@ public class BusinessProcessImpl
             {
                 DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
                 pushDto.dimensionId=Integer.parseInt(String.valueOf(item.id));;
-                pushDto.dimensionName=item.factTableEnName;
-                pushDto.businessAreaName=businessAreaPo.getBusinessName();
+                pushDto.dimensionName = item.factTabName;
+                pushDto.businessAreaName = businessAreaPo.getBusinessName();
                 pushDto.createType= CreateTypeEnum.CREATE_FACT.getValue();
                 pushDto.userId=userHelper.getLoginUserInfo().id;
                 list.add(pushDto);
@@ -492,7 +492,7 @@ public class BusinessProcessImpl
         {
             throw new FkException(ResultEnum.DATA_NOTEXISTS, "事实表不存在");
         }
-        dto.factTableName=po.factTableEnName;
+        dto.factTableName = po.factTabName;
         //查询业务过程id
         BusinessProcessPO businessProcessPo=businessProcessMapper.selectById(po.businessProcessId);
         if (po==null)

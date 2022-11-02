@@ -23,7 +23,6 @@ import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -45,8 +44,6 @@ public class PgsqlUtils {
 
     @Resource
     UserClient userClient;
-    @Value("${fiData-data-ods-source}")
-    private Integer odsSource;
 
     /**
      * 创建pgsql连接驱动
@@ -59,10 +56,10 @@ public class PgsqlUtils {
      * @params
      */
 
-    public Connection getPgConn() {
+    public Connection getPgConn(Integer targetDbId) {
 
         AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
-        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(targetDbId);
         if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
@@ -137,8 +134,8 @@ public class PgsqlUtils {
      * @params sqlList sql集合
      * @params flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
      */
-    public ResultEnum stgToOds(List<String> sqlList, int flag) throws SQLException {
-        Connection pgConn = getPgConn();
+    public ResultEnum stgToOds(List<String> sqlList, int flag, int targetDbId) throws SQLException {
+        Connection pgConn = getPgConn(targetDbId);
         Statement statement = pgConn.createStatement();
         try {
             // 执行sql
@@ -165,8 +162,11 @@ public class PgsqlUtils {
      * @author Lock
      * @date 2022/1/21 17:24
      */
-    public ResultEntity<Object> executeBatchPgsql(String tablePrefixName, List<JsonTableData> res, List<ApiTableDTO> apiTableDtoList) throws Exception {
-        Connection con = getPgConn();
+    public ResultEntity<Object> executeBatchPgsql(String tablePrefixName,
+                                                  List<JsonTableData> res,
+                                                  List<ApiTableDTO> apiTableDtoList,
+                                                  Integer targetDbId) throws Exception {
+        Connection con = getPgConn(targetDbId);
         Statement statement = con.createStatement();
         //这里必须设置为false，我们手动批量提交
         con.setAutoCommit(false);
@@ -264,8 +264,12 @@ public class PgsqlUtils {
      * @author Lock
      * @date 2022/7/18 14:26
      */
-    public ResultEntity<Object> executeBatchPgsql(ApiImportDataDTO importDataDto, String tablePrefixName, List<JsonTableData> res, List<ApiTableDTO> apiTableDtoList) throws Exception {
-        Connection con = getPgConn();
+    public ResultEntity<Object> executeBatchPgsql(ApiImportDataDTO importDataDto,
+                                                  String tablePrefixName,
+                                                  List<JsonTableData> res,
+                                                  List<ApiTableDTO> apiTableDtoList,
+                                                  Integer targetDbId) throws Exception {
+        Connection con = getPgConn(targetDbId);
         Statement statement = con.createStatement();
         //这里必须设置为false，我们手动批量提交
         con.setAutoCommit(false);
@@ -369,8 +373,8 @@ public class PgsqlUtils {
      * @param sql
      * @return
      */
-    public List<Map<String, Object>> executePgSql(String sql) {
-        return AbstractDbHelper.execQueryResultMaps(sql, getPgConn());
+    public List<Map<String, Object>> executePgSql(String sql, Integer targetDbId) {
+        return AbstractDbHelper.execQueryResultMaps(sql, getPgConn(targetDbId));
     }
 
     public List<String> getPgDatabases(Connection conn) {

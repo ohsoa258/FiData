@@ -26,6 +26,7 @@ import com.fisk.system.map.DataSourceMap;
 import com.fisk.system.mapper.DataSourceMapper;
 import com.fisk.system.service.IDataSourceManageService;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +44,7 @@ import java.util.stream.Collectors;
  * @author dick
  */
 @Service
+@Slf4j
 public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSourcePO> implements IDataSourceManageService {
 
     @Resource
@@ -186,7 +188,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
 
     @SneakyThrows
     @Override
-    public ResultEnum testConnection(DataSourceDTO dto) {
+    public ResultEnum testConnection(DataSourceSaveDTO dto) {
         Connection conn = null;
         try {
             switch (dto.conType) {
@@ -207,8 +209,12 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
                 case ORACLE:
-                    Class.forName(DataSourceTypeEnum.ORACLE.getName());
+                    log.info("ORACLE驱动开始加载");
+                    log.info("ORACLE驱动基本信息：" + DataSourceTypeEnum.ORACLE.getDriverName());
+                    Class.forName(DataSourceTypeEnum.ORACLE.getDriverName());
+                    log.info("ORACLE驱动加载完毕");
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    return ResultEnum.SUCCESS;
                 default:
                     return ResultEnum.DS_DATASOURCE_CON_WARN;
             }
@@ -216,6 +222,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
             if (conn != null) {
                 conn.close();
             }
+            log.error("测试连接异常：" + e);
             return ResultEnum.DATASOURCE_CONNECTERROR;
         } finally {
             try {

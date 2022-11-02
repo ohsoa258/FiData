@@ -44,6 +44,7 @@ import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
+import com.fisk.dataaccess.dto.v3.TbTableAccessQueryDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.enums.DeltaTimeParameterTypeEnum;
@@ -133,8 +134,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private String user;
     @Value("${spring.datasource.dynamic.datasource.taskdb.password}")
     private String password;
-    @Value("${fiData-data-ods-source}")
-    private Integer odsSource;
     @Resource
     private GenerateCondition generateCondition;
     @Resource
@@ -344,7 +343,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         //存在应用换ods数据源情况
-        appRegistrationImpl.VerifySchema(registrationPo.appAbbreviation);
+        appRegistrationImpl.VerifySchema(registrationPo.appAbbreviation, registrationPo.targetDbId);
 
         List<AppRegistrationPO> idList = appRegistrationImpl.query()
                 .select("id")
@@ -764,7 +763,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         vo.tableList = voList;
         vo.tableIdList = tableIdList;
 
-        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(registrationPo.targetDbId);
         if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
@@ -1501,6 +1500,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // 前端操作多了未命名,不传物理表id,提前保存物理表的sql脚本,导致更新失败
         if (dto.id > 0) {
+
             // 判断名称是否重复
             QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
             // 限制在同一应用下
@@ -1519,8 +1519,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     @Override
-    public List<TbTableAccessDTO> getTableAccessListData(long appId) {
-        return baseMapper.getTableAccessListData(appId);
+    public Page<TbTableAccessDTO> getTableAccessListData(TbTableAccessQueryDTO dto) {
+        return baseMapper.getTableAccessListData(dto.page, dto);
     }
 
     /**
@@ -1550,7 +1550,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         Connection conn = null;
         Statement st = null;
         try {
-            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+            AppRegistrationPO appRegistrationPo = registrationMapper.selectById(query.appId);
+            if (appRegistrationPo == null) {
+                throw new FkException(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
+            }
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(appRegistrationPo.targetDbId);
             if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
@@ -1844,7 +1848,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             log.info("拼语句执行时间 : " + Duration.between(inst2, inst3).toMillis());
 
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
-            log.info("返回查询sql:{}", sql);
             rs = st.executeQuery(sql);
             Instant inst4 = Instant.now();
             log.info("执行sql时间 : " + Duration.between(inst3, inst4).toMillis());
@@ -1859,6 +1862,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
             array.sql = sql;
         } catch (Exception e) {
+            log.error("数据接入执行自定义sql失败,ex:{}", e);
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e.getMessage());
         } finally {
             AbstractCommonDbHelper.closeResultSet(rs);
@@ -1923,8 +1927,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             Map<String, String> converSql = publishTaskClient.converSql(tableName, tableAccessPo.sqlScript, dataSourcePo.driveType, null).data;
             //String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             dto.selectSql = tableAccessPo.sqlScript;
-            //dto.queryStartTime = converSql.get(SystemVariableTypeEnum.START_TIME.getValue());
-            //dto.queryEndTime = converSql.get(SystemVariableTypeEnum.END_TIME.getValue());
+            dto.queryStartTime = converSql.get(SystemVariableTypeEnum.START_TIME.getValue());
+            dto.queryEndTime = converSql.get(SystemVariableTypeEnum.END_TIME.getValue());
         }
         //        dto.selectSql = tableAccessPo.sqlScript;
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
@@ -2084,23 +2088,24 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Override
     public List<String> getUseExistTable() {
-        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
+        //TODO cdc类型使用
+       /* ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(odsSource);
         if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
 
         List<String> list = new ArrayList<>();
 
-        IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceConfig.data.conType);
+       IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceConfig.data.conType);
         String sql = dbCommand.buildUseExistTable();
         log.info("查询现有表sql:", sql);
 
         List<Map<String, Object>> resultMaps = AbstractDbHelper.execQueryResultMaps(sql, getConnection(dataSourceConfig.data));
         for (Map<String, Object> item : resultMaps) {
             list.add(item.get("name").toString());
-        }
+        }*/
 
-        return list;
+        return new ArrayList<>();
     }
 
     @Override
