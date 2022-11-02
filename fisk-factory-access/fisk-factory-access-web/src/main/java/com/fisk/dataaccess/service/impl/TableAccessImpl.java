@@ -1449,8 +1449,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
         }
 
-        //校验相同schema,不同应用是否存在表名重复问题
-        verifySchemaTable(dto.appId, dto.tableName);
+        if (appDataSourceImpl.getDataSourceMeta(dto.appId) != null) {
+            //校验相同schema,不同应用是否存在表名重复问题
+            verifySchemaTable(dto.appId, dto.tableName);
+        }
 
         // 同一应用下表名不可重复
         boolean flag = this.checkTableName(dto);
