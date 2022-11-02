@@ -91,7 +91,7 @@ public class TableAccessNonDTO extends BaseDTO {
     public String publishErrorMsg;
 
     @ApiModelProperty(value = "stg数据保留天数", required = true)
-    public Integer keepNumber;
+    public String keepNumber;
 
     /**
      * 表字段对象
