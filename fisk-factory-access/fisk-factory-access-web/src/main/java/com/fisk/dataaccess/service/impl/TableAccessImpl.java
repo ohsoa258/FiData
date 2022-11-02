@@ -1861,6 +1861,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
             array.sql = sql;
         } catch (Exception e) {
+            log.error("数据接入执行自定义sql失败,ex:{}", e);
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e.getMessage());
         } finally {
             AbstractCommonDbHelper.closeResultSet(rs);
