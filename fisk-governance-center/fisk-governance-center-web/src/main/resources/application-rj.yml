@@ -1,3 +1,5 @@
+server:
+  port: 7011
 dataops:
   # 数据库元数据对应 redis key
   metadataentity_key: DataOps_MetaDataEntityKey
@@ -22,6 +24,6 @@ database:
   mdm_id: 3
   olap_id: 4
 file:
-  uploadUrl: D:/Fidata/java/file/datagovernance-service/qualityreport/
+  uploadUrl: D:/Fidata/java/file/fisk-datagovernance-service/qualityreport/
   echoPath:
   logoPath:
