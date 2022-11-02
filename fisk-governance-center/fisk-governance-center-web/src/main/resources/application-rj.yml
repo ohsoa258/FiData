@@ -22,6 +22,6 @@ database:
   mdm_id: 3
   olap_id: 4
 file:
-  uploadUrl: D:/Excel/
-  echoPath: D:/Excel/
-  logoPath: D:/image/companyLogo.jpg
+  uploadUrl: D:/Fidata/java/file/datagovernance-service/qualityreport/
+  echoPath:
+  logoPath:
