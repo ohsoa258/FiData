@@ -24,6 +24,6 @@ database:
   mdm_id: 3
   olap_id: 4
 file:
-  uploadUrl: D:/Fidata/java/file/fisk-datagovernance-service/qualityreport/
+  uploadUrl: D:/Fidata/java/file/datagovernance-service/qualityreport/
   echoPath:
   logoPath:
