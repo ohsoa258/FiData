@@ -6,29 +6,29 @@ public enum OlapTableEnum implements BaseEnum {
     /**
      * 任务状态
      */
-    KPI(0,"指标表"),
-    DIMENSION(1,"维度表"),
+    KPI(0, "指标表"),
+    DIMENSION(1, "维度表"),
     /*
-    * 物理表,事实表physics
-    * */
-    FACT(2,"事实表"),
-    PHYSICS(3,"物理表"),
-    PHYSICS_API(10,"非实时api"),
-    PHYSICS_RESTAPI(11,"实时api"),
-    WIDETABLE(9,"宽表"),
+     * 物理表,事实表physics
+     * */
+    FACT(2, "事实表"),
+    PHYSICS(3, "物理表"),
+    PHYSICS_API(10, "非实时api"),
+    PHYSICS_RESTAPI(11, "实时api"),
+    WIDETABLE(9, "宽表"),
     //CustomWork管道服务
     /**
      * 任务状态
      */
-    CUSTOMWORKDIMENSIONKPI(4,"管道服务-维度指标表"),
-    CUSTOMWORKFACTKPI(8,"管道服务-事实指标表"),
-    CUSTOMWORKDIMENSION(5,"管道服务-维度表"),
+    CUSTOMWORKDIMENSIONKPI(4, "管道服务-维度指标表"),
+    CUSTOMWORKFACTKPI(8, "管道服务-事实指标表"),
+    CUSTOMWORKDIMENSION(5, "管道服务-维度表"),
     /*
      * 物理表,事实表physics
      * */
-    CUSTOMWORKFACT(6,"管道服务-事实表"),
-    CUSTOMWORKPHYSICS(7,"管道服务-物理表"),
-    GOVERNANCE(12,"数据质量");
+    CUSTOMWORKFACT(6, "管道服务-事实表"),
+    CUSTOMWORKPHYSICS(7, "管道服务-物理表"),
+    GOVERNANCE(12, "数据质量");
 
 
     OlapTableEnum(int value, String name) {
@@ -36,11 +36,11 @@ public enum OlapTableEnum implements BaseEnum {
         this.name = name;
     }
 
-    public static OlapTableEnum getNameByValue(int value){
-        switch (value){
+    public static OlapTableEnum getNameByValue(int value) {
+        switch (value) {
             /*
-            * 表类别
-            * */
+             * 表类别
+             * */
             case 0:
                 return KPI;
             case 1:
@@ -63,6 +63,8 @@ public enum OlapTableEnum implements BaseEnum {
                 return WIDETABLE;
             case 10:
                 return PHYSICS_API;
+            case 11:
+                return PHYSICS_RESTAPI;
             default:
                 return null;
         }

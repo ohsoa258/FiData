@@ -22,4 +22,23 @@ public interface IBuildAccessSqlCommand {
      */
     String buildPaging(String sql, Integer pageSize, Integer offset);
 
+    /**
+     * @description 创建版本
+     * @author dick
+     * @date 2022/11/2 10:30
+     * @version v1.0
+     * @params
+     * @return java.lang.String
+     */
+    String buildVersionSql(String type,String value);
+
+    /**
+     * @description 获取周数
+     * @author dick
+     * @date 2022/11/2 18:49
+     * @version v1.0
+     * @params
+     * @return java.lang.String
+     */
+    String buildWeekSql();
 }

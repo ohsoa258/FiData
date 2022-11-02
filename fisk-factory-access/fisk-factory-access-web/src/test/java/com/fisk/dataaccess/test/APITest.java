@@ -15,7 +15,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
+import javax.xml.crypto.Data;
 import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -127,6 +131,47 @@ public class APITest {
 //        System.out.println("json: \n" + json);
         List<JsonTableData> res = home.get(json);
 //        res.forEach(System.out::println);
+    }
+
+    @Test
+    public void sp() {
+        String keyStr = "dmp.datafactoy.nifi.290.3.47.65";
+        String[] keyList = keyStr.split("\\.");
+        if (keyList == null || keyList.length == 0) {
+            return;
+        }
+
+        int a = 4 / 3 + 1;
+        Calendar calendar = Calendar.getInstance();
+        int week_of_year = calendar.get(Calendar.WEEK_OF_YEAR);
+        int dayWeek = calendar.get(Calendar.DAY_OF_WEEK);
+        int i = dayWeek - 7;
+        calendar.add(Calendar.DATE, i);
+        int month = calendar.get(Calendar.DATE);
+
+        String tableId = keyList[keyList.length - 1];
+        String appId = keyList[keyList.length - 2];
+        String tableType = keyList[keyList.length - 3];
+    }
+
+    /**
+     * parseDate
+     *
+     * @param strDate
+     * @param pattern
+     * @return
+     */
+    public static Date parseDate(String strDate, String pattern) {
+        Date date = null;
+        try {
+            if (pattern == null) {
+                pattern = "YYYYMMDD";
+            }
+            SimpleDateFormat format = new SimpleDateFormat(pattern);
+            date = (Date) format.parse(strDate);
+        } catch (Exception e) {
+        }
+        return date;
     }
 
     @Test

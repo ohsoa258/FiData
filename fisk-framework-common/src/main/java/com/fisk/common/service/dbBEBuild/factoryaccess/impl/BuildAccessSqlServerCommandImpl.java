@@ -37,4 +37,42 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
         return str.toString();
     }
 
+    @Override
+    public String buildVersionSql(String type, String value) {
+        if (type.equals("年")) {
+            value = "SELECT YEAR\n" +
+                    "\t( GETDATE( ) ) AS version;";
+        } else if (type.equals("季")) {
+            value = "SELECT CAST\n" +
+                    "\t( YEAR ( GETDATE( ) ) AS VARCHAR ) + '/Q' +\n" +
+                    "CASE\n" +
+                    "\t\t\n" +
+                    "\t\tWHEN MONTH ( GETDATE( ) ) <= 3 THEN\n" +
+                    "\t\t'01' \n" +
+                    "\t\tWHEN MONTH ( GETDATE( ) ) <= 6 THEN\n" +
+                    "\t\t'02' \n" +
+                    "\t\tWHEN MONTH ( GETDATE( ) ) <= 9 THEN\n" +
+                    "\t\t'03' ELSE '04' \n" +
+                    "\tEND AS version;";
+        } else if (type.equals("月")) {
+            value = "SELECT CAST\n" +
+                    "\t( YEAR ( GETDATE( ) ) AS VARCHAR ) + '/' + CAST ( MONTH ( GETDATE( ) ) AS VARCHAR ) AS version;";
+        } else if (type.equals("周")) {
+            value = "SELECT CAST\n" +
+                    "\t( YEAR ( GETDATE( ) ) AS VARCHAR ) + '/W' + Datename( week, GetDate( ) ) AS version;";
+        } else if (type.equals("日")) {
+            value = "SELECT CONVERT\n" +
+                    "\t( CHAR ( 10 ), GetDate( ), 111 ) AS version;";
+        } else if (type.equals("自定义")) {
+
+        }
+        return value;
+    }
+
+    @Override
+    public String buildWeekSql() {
+        String sql = "SELECT Datename( week, GetDate( ) ) AS WeekValue;";
+        return sql;
+    }
+
 }

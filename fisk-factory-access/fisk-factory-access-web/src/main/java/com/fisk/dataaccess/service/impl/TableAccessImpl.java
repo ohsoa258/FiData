@@ -571,6 +571,19 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     /**
+     * @return com.fisk.dataaccess.entity.TableSyncmodePO
+     * @description 查询单条TableSyncmode信息
+     * @author dick
+     * @date 2022/11/1 17:13
+     * @version v1.0
+     * @params
+     */
+    public TableSyncmodePO getTableSyncmode(long id) {
+        TableSyncmodePO modelSync = this.syncmodeMapper.getData(id);
+        return modelSync;
+    }
+
+    /**
      * @return java.util.List<com.fisk.dataaccess.table.TableFieldsDTO>
      * @description sql语句更新后，过滤已删除的源字段
      * @author Lock
