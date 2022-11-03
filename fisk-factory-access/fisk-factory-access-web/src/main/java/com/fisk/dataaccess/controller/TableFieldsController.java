@@ -7,6 +7,7 @@ import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
+import com.fisk.dataaccess.dto.table.TableVersionDTO;
 import com.fisk.dataaccess.service.ITableFields;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -58,4 +59,9 @@ public class TableFieldsController {
         service.test();
     }
 
+    @PostMapping("/delTableVersion")
+    @ApiOperation(value = "删除表版本")
+    public ResultEnum delVersionData(TableVersionDTO dto) {
+        return service.delVersionData(dto);
+    }
 }

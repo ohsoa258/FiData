@@ -2,12 +2,14 @@ package com.fisk.dataaccess.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
+import com.fisk.dataaccess.dto.table.TableVersionDTO;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 
@@ -54,6 +56,14 @@ public interface ITableFields extends IService<TableFieldsPO> {
      * @return 执行结果
      */
     OperateMsgDTO loadDepend(OperateTableDTO dto);
+
+    /**
+     * 删除表版本
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum delVersionData(TableVersionDTO dto);
 
     void test();
 

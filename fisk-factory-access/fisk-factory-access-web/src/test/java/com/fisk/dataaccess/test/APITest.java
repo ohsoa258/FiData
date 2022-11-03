@@ -135,23 +135,23 @@ public class APITest {
 
     @Test
     public void sp() {
-        String keyStr = "dmp.datafactoy.nifi.290.3.47.65";
-        String[] keyList = keyStr.split("\\.");
-        if (keyList == null || keyList.length == 0) {
-            return;
+        Calendar c = Calendar.getInstance();
+        String str = "yyyy/MM/dd";
+        SimpleDateFormat format = new SimpleDateFormat(str);
+        java.util.Date date = null;
+        try {
+            date = format.parse("2022/01/12");
+            c.setTime(date);
+        } catch (Exception ex) {
         }
-
-        int a = 4 / 3 + 1;
-        Calendar calendar = Calendar.getInstance();
-        int week_of_year = calendar.get(Calendar.WEEK_OF_YEAR);
-        int dayWeek = calendar.get(Calendar.DAY_OF_WEEK);
-        int i = dayWeek - 7;
-        calendar.add(Calendar.DATE, i);
-        int month = calendar.get(Calendar.DATE);
-
-        String tableId = keyList[keyList.length - 1];
-        String appId = keyList[keyList.length - 2];
-        String tableType = keyList[keyList.length - 3];
+        int year = c.get(Calendar.YEAR);
+        int month = c.get(Calendar.MONTH) + 1;
+        int dates = c.get(Calendar.DAY_OF_MONTH);
+        int hour = c.get(Calendar.HOUR_OF_DAY);
+        int minute = c.get(Calendar.MINUTE);
+        int second = c.get(Calendar.SECOND);
+        int week = c.get(Calendar.DAY_OF_WEEK);
+        System.out.printf("%d年%02d月%02d日 %02d:%02d:%02d %tA", year, month, dates, hour, minute, second, c);
     }
 
     /**

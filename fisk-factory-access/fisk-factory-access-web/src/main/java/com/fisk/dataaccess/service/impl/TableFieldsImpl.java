@@ -28,10 +28,7 @@ import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
 import com.fisk.dataaccess.dto.flink.FlinkConfigDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.dto.savepointhistory.SavepointHistoryDTO;
-import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
-import com.fisk.dataaccess.dto.table.TableBusinessDTO;
-import com.fisk.dataaccess.dto.table.TableFieldsDTO;
-import com.fisk.dataaccess.dto.table.TableSyncmodeDTO;
+import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.map.FlinkParameterMap;
@@ -57,6 +54,7 @@ import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.fisk.task.enums.OlapTableEnum;
+import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.apache.bcel.generic.RET;
@@ -655,149 +653,308 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      * @version v1.0
      * @params dto
      */
-    private String createVersionSql(TableSyncmodeDTO tableSyncmodeDto, String tableName, int targetDbId) {
+    private String getVersionSql(TableSyncmodeDTO tableSyncmodeDto, int tableId) {
         String versionSql = "";
-        // 非全量模式 || 未启用版本功能 || 保留0天 || 表名称为空 || 数据源为空
-        if (tableSyncmodeDto.getSyncMode() != 1 || tableSyncmodeDto.getRetainHistoryData() != 1
-                || tableSyncmodeDto.getRetainTime() == 0 || StringUtils.isEmpty(tableName) || targetDbId == 0) {
-            return versionSql;
-        }
-        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(targetDbId);
-        if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
-            return versionSql;
-        }
-        DataSourceDTO dataSourceDTO = dataSourceConfig.getData();
-        // 版本设置是否变更，如变更则需要清空ODS数据重新按照版本规则生成版本数据
-        TableSyncmodePO tableSyncmodePO = tableAccessImpl.getTableSyncmode(tableSyncmodeDto.getId());
-        if (tableSyncmodePO != null) {
-            if (!tableSyncmodeDto.getVersionUnit().equals(tableSyncmodePO.getVersionUnit())) {
-                Connection conn = DbConnectionHelper.connection(dataSourceDTO.getConStr(), dataSourceDTO.getConAccount(), dataSourceDTO.getConPassword(), dataSourceDTO.getConType());
-                String sql = String.format("TRUNCATE TABLE %s", tableName);
-                AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
-                try {
+        try {
+            if (tableSyncmodeDto == null || tableId == 0) {
+                log.info("【getVersionSql】参数为空异常");
+                return versionSql;
+            }
+            // 非全量模式 || 未启用版本功能 || 保留0天 || 表名称为空 || 数据源为空
+            if (tableSyncmodeDto.getSyncMode() != 1 || tableSyncmodeDto.getRetainHistoryData() != 1 || tableSyncmodeDto.getRetainTime() == 0) {
+                log.info("【getVersionSql】参数值异常");
+                return versionSql;
+            }
+            TableAccessPO tableAccessPO = tableAccessImpl.getById(tableId);
+            if (tableAccessPO == null || StringUtils.isEmpty(tableAccessPO.getTableName())) {
+                log.info("【getVersionSql】tableAccess配置不存在");
+                return versionSql;
+            }
+            String appId = String.valueOf(tableAccessPO.getAppId());
+            AppRegistrationPO appRegistrationPO = iAppRegistration.getById(appId);
+            if (appRegistrationPO == null) {
+                log.info("【getVersionSql】appRegistration配置不存在");
+                return versionSql;
+            }
+            String tableName = TableNameGenerateUtils.buildOdsTableName(tableAccessPO.getTableName(), appRegistrationPO.getAppAbbreviation(), appRegistrationPO.getWhetherSchema());
+            int targetDbId = appRegistrationPO.getTargetDbId();
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(targetDbId);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode() || dataSourceConfig.getData() == null) {
+                log.info("【getVersionSql】DataSource配置不存在");
+                return versionSql;
+            }
+            DataSourceDTO dataSourceDTO = dataSourceConfig.getData();
+            // 版本设置是否变更，如变更则需要清空ODS数据重新按照版本规则生成版本数据
+            TableSyncmodePO tableSyncmodePO = tableAccessImpl.getTableSyncmode(tableSyncmodeDto.getId());
+            if (tableSyncmodePO != null) {
+                if (!tableSyncmodeDto.getVersionUnit().equals(tableSyncmodePO.getVersionUnit())) {
+                    log.info("【getVersionSql】配置发生变更，清空表数据");
+                    Connection conn = DbConnectionHelper.connection(dataSourceDTO.getConStr(), dataSourceDTO.getConAccount(), dataSourceDTO.getConPassword(), dataSourceDTO.getConType());
+                    String sql = String.format("TRUNCATE TABLE %s", tableName);
+                    AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
                     dbHelper.executeSql(sql, conn);
-                } catch (SQLException ex) {
-                    log.error("【createVersionSql】版本变更执行清空ods异常：" + ex);
                 }
             }
+            IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceDTO.getConType());
+            versionSql = dbCommand.buildVersionSql(tableSyncmodeDto.getVersionUnit(), tableSyncmodeDto.getVersionCustomRule());
+        } catch (Exception ex) {
+            log.error("【getVersionSql】触发异常：" + ex);
         }
-        IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceDTO.getConType());
-        versionSql = dbCommand.buildVersionSql(tableSyncmodeDto.getVersionUnit(), tableSyncmodeDto.getVersionCustomRule());
+        log.info("【getVersionSql】versionSql：" + versionSql);
         return versionSql;
     }
 
     /**
      * @return com.fisk.common.core.response.ResultEnum
-     * @description 检查版本数据
+     * @description 删除版本数据
      * @author dick
      * @date 2022/11/2 11:35
      * @version v1.0
      * @params tableId
      * @params tableType
      */
-    public void checkVersionData(String keyStr) {
-        log.info("【checkVersionData】请求参数：" + keyStr);
-        if (StringUtils.isEmpty(keyStr)) {
-            return;
-        }
-        String[] keyList = keyStr.split("\\.");
-        if (keyList == null || keyList.length == 0) {
-            return;
-        }
-        // tb_table_access id
-        String tableId = keyList[keyList.length - 1];
-        // 应用id
-        String appId = keyList[keyList.length - 2];
-        // 表类型 属于接入还是建模
-        String tableType = keyList[keyList.length - 3];
-        // 表名称
-        String tableName = "";
-        OlapTableEnum tableTypeEnum = OlapTableEnum.getNameByValue(Integer.parseInt(tableType));
-        if (StringUtils.isEmpty(tableId) || StringUtils.isEmpty(appId)
-                || (tableTypeEnum != OlapTableEnum.PHYSICS && tableTypeEnum != OlapTableEnum.PHYSICS_API && tableTypeEnum != OlapTableEnum.PHYSICS_RESTAPI)) {
-            return;
-        }
-        TableSyncmodePO tableSyncmodePO = tableAccessImpl.getTableSyncmode(Long.parseLong(tableId));
-        if (tableSyncmodePO == null || tableSyncmodePO.getRetainTime() == 0) {
-            return;
-        }
-        int targetDbId = 0;
-        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(targetDbId);
-        if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
-            return;
-        }
-        DataSourceDTO dataSourceDTO = dataSourceConfig.getData();
+    @Override
+    public ResultEnum delVersionData(TableVersionDTO dto) {
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
+        try {
+            if (dto == null || StringUtils.isEmpty(dto.getKeyStr())) {
+                log.info("【delVersionData】参数为空异常");
+                return ResultEnum.PARAMTER_ERROR;
+            }
+            String keyStr = dto.getKeyStr();
+            log.info("【delVersionData】请求参数：" + keyStr);
 
-        // 生成删除SQL语句
-        Connection conn = DbConnectionHelper.connection(dataSourceDTO.getConStr(), dataSourceDTO.getConAccount(), dataSourceDTO.getConPassword(), dataSourceDTO.getConType());
-        AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
-        String retainUnit = tableSyncmodePO.getRetainUnit();
-        int retainTime = tableSyncmodePO.getRetainTime();
-        Calendar calendar = Calendar.getInstance();
-        String sql = String.format("DELETE FROM %s WHERE version NOT IN", tableName);
-        List<String> sqlConditions = new ArrayList<>();
-        int i = 1;
-        if (retainUnit.equals("年")) {
-            int year = calendar.get(Calendar.YEAR);
-            while (i <= retainTime) {
-                sqlConditions.add(String.format("'%s'", year - i));
-                i++;
+            String[] keyList = keyStr.split("\\.");
+            if (keyList == null || keyList.length == 0) {
+                log.info("【delVersionData】参数分割异常");
+                return ResultEnum.PARAMTER_ERROR;
             }
-        } else if (retainUnit.equals("季")) {
-            int month = calendar.get(Calendar.MONTH) + 1;
-            int currentQuarter = month % 3 == 0 ? month / 3 : month / 3 + 1;
-            if (currentQuarter == 1) {
-                calendar.set(Calendar.MONTH, 0);
-            } else if (currentQuarter == 2) {
-                calendar.set(Calendar.MONTH, 3);
-            } else if (currentQuarter == 3) {
-                calendar.set(Calendar.MONTH, 6);
-            } else {
-                calendar.set(Calendar.MONTH, 9);
+            // tb_table_access id
+            String tableId = keyList[keyList.length - 1];
+            // 应用id
+            String appId = keyList[keyList.length - 2];
+            // 表类型 属于接入还是建模
+            String tableType = keyList[keyList.length - 3];
+            // 表名称
+            String tableName = "";
+            // 数据源ID dmp_ods
+            int targetDbId = 0;
+
+            OlapTableEnum tableTypeEnum = OlapTableEnum.getNameByValue(Integer.parseInt(tableType));
+            if (StringUtils.isEmpty(tableId) || (tableTypeEnum != OlapTableEnum.PHYSICS && tableTypeEnum != OlapTableEnum.PHYSICS_API && tableTypeEnum != OlapTableEnum.PHYSICS_RESTAPI)) {
+                log.info("【checkVersionData】参数值验证不通过");
+                return ResultEnum.PARAMTER_ERROR;
             }
-            while (i <= retainTime) {
-                calendar.add(Calendar.MONTH, -3);
-                month = calendar.get(Calendar.MONTH) + 1;
-                int year = calendar.get(Calendar.YEAR);
-                int quarter = month % 3 == 0 ? month / 3 : month / 3 + 1;
-                sqlConditions.add(String.format("'%s/Q0%s'", year, quarter));
-                i++;
+            TableAccessPO tableAccessPO = tableAccessImpl.getById(tableId);
+            if (tableAccessPO == null || StringUtils.isEmpty(tableAccessPO.getTableName())) {
+                log.info("【delVersionData】tableAccess配置不存在");
+                return ResultEnum.DATA_NOTEXISTS;
             }
-        } else if (retainUnit.equals("月")) {
-            while (i <= retainTime) {
-                calendar.add(Calendar.MONTH, -1);
-                int year = calendar.get(Calendar.YEAR);
-                int month = calendar.get(Calendar.MONTH) + 1;
-                sqlConditions.add(String.format("'%s/Q0%s'", year, month));
-                i++;
+            appId = StringUtils.isEmpty(appId) ? String.valueOf(tableAccessPO.getAppId()) : appId;
+            AppRegistrationPO appRegistrationPO = iAppRegistration.getById(appId);
+            if (appRegistrationPO == null) {
+                log.info("【delVersionData】appRegistration配置不存在");
+                return ResultEnum.DATA_NOTEXISTS;
             }
-        } else if (retainUnit.equals("周")) {
-            // pg和sqlserver获取周时不一样，因此要通过数据库查询
+            tableName = TableNameGenerateUtils.buildOdsTableName(tableAccessPO.getTableName(), appRegistrationPO.getAppAbbreviation(), appRegistrationPO.getWhetherSchema());
+            targetDbId = appRegistrationPO.getTargetDbId();
+            log.info("【delVersionData】表名称：" + tableName);
+            log.info("【delVersionData】数据源ID：" + targetDbId);
+            TableSyncmodePO tableSyncmodePO = tableAccessImpl.getTableSyncmode(Long.parseLong(tableId));
+            if (tableSyncmodePO == null || tableSyncmodePO.getRetainTime() == 0) {
+                log.info("【delVersionData】tableSyncmode配置不存在");
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(targetDbId);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode() || dataSourceConfig.getData() == null) {
+                log.info("【delVersionData】DataSource配置不存在");
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+
+            DataSourceDTO dataSourceDTO = dataSourceConfig.getData();
+            Connection conn = DbConnectionHelper.connection(dataSourceDTO.getConStr(), dataSourceDTO.getConAccount(), dataSourceDTO.getConPassword(), dataSourceDTO.getConType());
+            AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
             IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceDTO.getConType());
-            String versionSql = dbCommand.buildWeekSql();
-            List<Map<String, Object>> data = dbHelper.batchExecQueryResultMaps(versionSql, conn);
-            if (CollectionUtils.isEmpty(data)) {
-                return;
+
+            String retainUnit = tableSyncmodePO.getRetainUnit();
+            int retainTime = tableSyncmodePO.getRetainTime();
+            String versionUnit = tableSyncmodePO.getVersionUnit();
+            String versionCustomRule = tableSyncmodePO.getVersionCustomRule();
+
+            // 日期操作函数
+            Calendar calendar = Calendar.getInstance();
+            String sql = String.format("DELETE FROM %s WHERE version NOT IN", tableName);
+            List<String> sqlConditions = new ArrayList<>();
+            int i = 1;
+
+            // 如果版本规则是按照自定义模式生成的，则需要根据保留规则和版本规则生成条件语句
+            if (versionUnit.equals("自定义")) {
+                log.info("【delVersionData】自定义模式");
+                if (StringUtils.isNotEmpty(versionCustomRule)) {
+                    log.info("【delVersionData】自定义模式下自定义规则配置为空");
+                    return ResultEnum.DATA_NOTEXISTS;
+                }
+                versionCustomRule = String.format("SELECT (%s) AS version", versionCustomRule);
+                log.info("【delVersionData】自定义模式下自定义规则：" + versionCustomRule);
+                List<Map<String, Object>> data = dbHelper.batchExecQueryResultMaps(versionCustomRule, conn);
+                Object versionObj = data.get(0).get("version");
+                if (versionObj == null || versionObj == "") {
+                    log.info("【delVersionData】自定义模式下自定义规则查询结果为空");
+                    return ResultEnum.DATA_NOTEXISTS;
+                }
+                if (retainUnit.equals("年")) {
+                    // 2022、2023、2024
+                    int year = Integer.parseInt(versionObj.toString());
+                    while (i <= retainTime) {
+                        sqlConditions.add(String.format("'%s'", year - i));
+                        i++;
+                    }
+                } else if (retainUnit.equals("季")) {
+                    // 2022/Q01、2022/Q02、2022/Q03、2022/Q04
+                    String[] split = versionObj.toString().split("/");
+                    String yearStr = split[0];
+                    String quarterStr = split[1];
+                    String dateStr = "";
+                    if (quarterStr.equals("Q01")) {
+                        dateStr = yearStr + "-01-01";
+                    } else if (quarterStr.equals("Q02")) {
+                        dateStr = yearStr + "-04-01";
+                    } else if (quarterStr.equals("Q03")) {
+                        dateStr = yearStr + "-07-01";
+                    } else if (quarterStr.equals("Q04")) {
+                        dateStr = yearStr + "-10-01";
+                    }
+                    String str = "yyyy-MM-dd";
+                    SimpleDateFormat format = new SimpleDateFormat(str);
+                    Date date = format.parse(dateStr);
+                    calendar.setTime(date);
+                    while (i <= retainTime) {
+                        calendar.add(Calendar.MONTH, -3);
+                        int month = calendar.get(Calendar.MONTH);
+                        int year = calendar.get(Calendar.YEAR);
+                        int quarter = month % 3 == 0 ? month / 3 : month / 3 + 1;
+                        sqlConditions.add(String.format("'%s/Q0%s'", year, quarter));
+                        i++;
+                    }
+                } else if (retainUnit.equals("月")) {
+                    String str = "yyyy/MM";
+                    SimpleDateFormat format = new SimpleDateFormat(str);
+                    Date date = format.parse(versionObj.toString());
+                    calendar.setTime(date);
+                    while (i <= retainTime) {
+                        calendar.add(Calendar.MONTH, -1);
+                        int year = calendar.get(Calendar.YEAR);
+                        int month = calendar.get(Calendar.MONTH);
+                        sqlConditions.add(String.format("'%s/%s'", year, month));
+                        i++;
+                    }
+                } else if (retainUnit.equals("周")) {
+                    // 2022/11/01
+                    String str = "yyyy/MM/dd";
+                    SimpleDateFormat format = new SimpleDateFormat(str);
+                    Date date = format.parse(versionObj.toString());
+                    calendar.setTime(date);
+                    // pg和sqlserver获取周时不一样，因此要通过数据库查询
+                    while (i <= retainTime) {
+                        calendar.add(Calendar.DATE, -7);
+                        // 查询该时间是当年的第几周
+                        int year = calendar.get(Calendar.YEAR);
+                        int month = calendar.get(Calendar.MONTH) + 1;
+                        int day = calendar.get(Calendar.DAY_OF_MONTH);
+                        String dataStr = year + "/" + month + "/" + day;
+                        String versionSql = dbCommand.buildWeekSql(dataStr);
+                        List<Map<String, Object>> weekData = dbHelper.batchExecQueryResultMaps(versionSql, conn);
+                        int weekValue = Integer.parseInt(weekData.get(0).get("WeekValue").toString());
+                        sqlConditions.add(String.format("'%s/W%s'", year, weekValue));
+                        i++;
+                    }
+                } else if (retainUnit.equals("日")) {
+                    // 2022/11/01
+                    String str = "yyyy/MM/dd";
+                    SimpleDateFormat format = new SimpleDateFormat(str);
+                    Date date = format.parse(versionObj.toString());
+                    calendar.setTime(date);
+                    while (i <= retainTime) {
+                        calendar.add(Calendar.DATE, -1);
+                        SimpleDateFormat s = new SimpleDateFormat("yyyy/MM/dd");
+                        String curDate = s.format(calendar.getTime());
+                        sqlConditions.add(String.format("'%s'", curDate));
+                        i++;
+                    }
+                }
+            } else {
+                log.info("【delVersionData】系统模式");
+                if (retainUnit.equals("年")) {
+                    int year = calendar.get(Calendar.YEAR);
+                    while (i <= retainTime) {
+                        sqlConditions.add(String.format("'%s'", year - i));
+                        i++;
+                    }
+                } else if (retainUnit.equals("季")) {
+                    int month = calendar.get(Calendar.MONTH) + 1;
+                    int currentQuarter = month % 3 == 0 ? month / 3 : month / 3 + 1;
+                    if (currentQuarter == 1) {
+                        calendar.set(Calendar.MONTH, 0);
+                    } else if (currentQuarter == 2) {
+                        calendar.set(Calendar.MONTH, 3);
+                    } else if (currentQuarter == 3) {
+                        calendar.set(Calendar.MONTH, 6);
+                    } else {
+                        calendar.set(Calendar.MONTH, 9);
+                    }
+                    while (i <= retainTime) {
+                        calendar.add(Calendar.MONTH, -3);
+                        month = calendar.get(Calendar.MONTH) + 1;
+                        int year = calendar.get(Calendar.YEAR);
+                        int quarter = month % 3 == 0 ? month / 3 : month / 3 + 1;
+                        sqlConditions.add(String.format("'%s/Q0%s'", year, quarter));
+                        i++;
+                    }
+                } else if (retainUnit.equals("月")) {
+                    while (i <= retainTime) {
+                        calendar.add(Calendar.MONTH, -1);
+                        int year = calendar.get(Calendar.YEAR);
+                        int month = calendar.get(Calendar.MONTH) + 1;
+                        sqlConditions.add(String.format("'%s/%s'", year, month));
+                        i++;
+                    }
+                } else if (retainUnit.equals("周")) {
+                    // pg和sqlserver获取周时不一样，因此要通过数据库查询
+                    while (i <= retainTime) {
+                        calendar.add(Calendar.DATE, -7);
+                        // 查询该时间是当年的第几周
+                        int year = calendar.get(Calendar.YEAR);
+                        int month = calendar.get(Calendar.MONTH) + 1;
+                        int day = calendar.get(Calendar.DAY_OF_MONTH);
+                        String dataStr = year + "/" + month + "/" + day;
+                        String versionSql = dbCommand.buildWeekSql(dataStr);
+                        List<Map<String, Object>> data = dbHelper.batchExecQueryResultMaps(versionSql, conn);
+                        int weekValue = Integer.parseInt(data.get(0).get("WeekValue").toString());
+                        sqlConditions.add(String.format("'%s/W%s'", year, weekValue));
+                        i++;
+                    }
+                } else if (retainUnit.equals("日")) {
+                    while (i <= retainTime) {
+                        calendar.add(Calendar.DATE, -1);
+                        SimpleDateFormat s = new SimpleDateFormat("yyyy/MM/dd");
+                        String curDate = s.format(calendar.getTime());
+                        sqlConditions.add(String.format("'%s'", curDate));
+                        i++;
+                    }
+                }
             }
-            Object weekValueObj = data.get(0).get("WeekValue");
-            if (weekValueObj == null || weekValueObj == "") {
-                return;
+            if (CollectionUtils.isEmpty(sqlConditions)) {
+                log.info("【delVersionData】条件语句为空，删除终止");
+                return ResultEnum.SQL_ERROR;
             }
-            int weekValue = Integer.parseInt(weekValueObj.toString());
-            while (i <= retainTime) {
-                calendar.add(Calendar.DATE, -7);
-                int year = calendar.get(Calendar.YEAR);
-                sqlConditions.add(String.format("'%s/W%s'", year, retainTime - i));
-                i++;
-            }
-        } else if (retainUnit.equals("日")) {
-            while (i <= retainTime) {
-                calendar.add(Calendar.DATE, -1);
-                SimpleDateFormat s = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                String curDate = s.format(calendar.getTime());
-                sqlConditions.add(String.format("'%s'", curDate));
-                i++;
-            }
+            String sqlConditionStr = Joiner.on(",").join(sqlConditions);
+            sql += String.format("(%s)", sqlConditionStr);
+            log.info("【delVersionData】删除语句：" + sql);
+            dbHelper.executeSql(sql, conn);
+        } catch (Exception ex) {
+            log.error("【delVersionData】触发异常：" + ex);
+            return ResultEnum.ERROR;
         }
+        return resultEnum;
     }
 }

@@ -64,14 +64,14 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
             value = "SELECT CONVERT\n" +
                     "\t( CHAR ( 10 ), GetDate( ), 111 ) AS version;";
         } else if (type.equals("自定义")) {
-
+            value = String.format("SELECT (%s) AS version", value);
         }
         return value;
     }
 
     @Override
-    public String buildWeekSql() {
-        String sql = "SELECT Datename( week, GetDate( ) ) AS WeekValue;";
+    public String buildWeekSql(String date) {
+        String sql = String.format("SELECT Datename( week, '%s' ) AS WeekValue;", date);
         return sql;
     }
 

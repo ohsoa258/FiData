@@ -47,14 +47,14 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
             value = "SELECT\n" +
                     "\tto_char( now( ) :: TIMESTAMP, 'YYYY/MM/DD' ) AS VERSION;";
         } else if (type.equals("自定义")) {
-
+            value = String.format("SELECT (%s) AS version", value);
         }
         return value;
     }
 
     @Override
-    public String buildWeekSql(){
-        String sql="SELECT date_part( 'week', now( ) :: TIMESTAMP ) AS WeekValue";
-        return  sql;
+    public String buildWeekSql(String date) {
+        String sql = String.format("SELECT date_part( 'week', '%s' :: TIMESTAMP ) AS WeekValue",date);
+        return sql;
     }
 }

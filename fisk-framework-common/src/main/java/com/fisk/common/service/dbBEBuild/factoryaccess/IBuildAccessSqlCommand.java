@@ -40,5 +40,5 @@ public interface IBuildAccessSqlCommand {
      * @params
      * @return java.lang.String
      */
-    String buildWeekSql();
+    String buildWeekSql(String date);
 }
