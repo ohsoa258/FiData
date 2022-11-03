@@ -332,8 +332,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         if (dataSource.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_OPS_CONFIG_EXISTS);
         }
-
-        dataSource.data.conType = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL;
         //数据库时间
         Integer businessDate = 0;
 
