@@ -853,7 +853,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 if (retainUnit.equals("年")) {
                     // 2022、2023、2024
                     int year = Integer.parseInt(versionObj.toString());
-                    while (i <= retainTime) {
+                    while (i < retainTime) {
                         sqlConditions.add(String.format("'%s'", year - i));
                         i++;
                     }
@@ -876,7 +876,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     SimpleDateFormat format = new SimpleDateFormat(str);
                     Date date = format.parse(dateStr);
                     calendar.setTime(date);
-                    while (i <= retainTime) {
+                    while (i < retainTime) {
                         calendar.add(Calendar.MONTH, -3);
                         int month = calendar.get(Calendar.MONTH);
                         int year = calendar.get(Calendar.YEAR);
@@ -889,7 +889,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     SimpleDateFormat format = new SimpleDateFormat(str);
                     Date date = format.parse(versionObj.toString());
                     calendar.setTime(date);
-                    while (i <= retainTime) {
+                    while (i < retainTime) {
                         calendar.add(Calendar.MONTH, -1);
                         int year = calendar.get(Calendar.YEAR);
                         int month = calendar.get(Calendar.MONTH);
@@ -903,7 +903,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     Date date = format.parse(versionObj.toString());
                     calendar.setTime(date);
                     // pg和sqlserver获取周时不一样，因此要通过数据库查询
-                    while (i <= retainTime) {
+                    while (i < retainTime) {
                         calendar.add(Calendar.DATE, -7);
                         // 查询该时间是当年的第几周
                         int year = calendar.get(Calendar.YEAR);
@@ -922,7 +922,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     SimpleDateFormat format = new SimpleDateFormat(str);
                     Date date = format.parse(versionObj.toString());
                     calendar.setTime(date);
-                    while (i <= retainTime) {
+                    while (i < retainTime) {
                         calendar.add(Calendar.DATE, -1);
                         SimpleDateFormat s = new SimpleDateFormat("yyyy/MM/dd");
                         String curDate = s.format(calendar.getTime());
@@ -934,7 +934,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 log.info("【delVersionData】系统模式");
                 if (retainUnit.equals("年")) {
                     int year = calendar.get(Calendar.YEAR);
-                    while (i <= retainTime) {
+                    while (i < retainTime) {
                         sqlConditions.add(String.format("'%s'", year - i));
                         i++;
                     }
@@ -950,7 +950,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     } else {
                         calendar.set(Calendar.MONTH, 9);
                     }
-                    while (i <= retainTime) {
+                    while (i < retainTime) {
                         calendar.add(Calendar.MONTH, -3);
                         month = calendar.get(Calendar.MONTH) + 1;
                         int year = calendar.get(Calendar.YEAR);
@@ -959,7 +959,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         i++;
                     }
                 } else if (retainUnit.equals("月")) {
-                    while (i <= retainTime) {
+                    while (i < retainTime) {
                         calendar.add(Calendar.MONTH, -1);
                         int year = calendar.get(Calendar.YEAR);
                         int month = calendar.get(Calendar.MONTH) + 1;
@@ -968,7 +968,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     }
                 } else if (retainUnit.equals("周")) {
                     // pg和sqlserver获取周时不一样，因此要通过数据库查询
-                    while (i <= retainTime) {
+                    while (i < retainTime) {
                         calendar.add(Calendar.DATE, -7);
                         // 查询该时间是当年的第几周
                         int year = calendar.get(Calendar.YEAR);
@@ -982,7 +982,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         i++;
                     }
                 } else if (retainUnit.equals("日")) {
-                    while (i <= retainTime) {
+                    while (i < retainTime) {
                         calendar.add(Calendar.DATE, -1);
                         SimpleDateFormat s = new SimpleDateFormat("yyyy/MM/dd");
                         String curDate = s.format(calendar.getTime());
