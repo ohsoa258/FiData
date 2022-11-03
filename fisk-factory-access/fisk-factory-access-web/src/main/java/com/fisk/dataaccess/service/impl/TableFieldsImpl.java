@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.factory.BusinessTimeEnum;
 import com.fisk.common.core.enums.flink.UploadWayEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -57,7 +58,6 @@ import com.fisk.task.enums.OlapTableEnum;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.aspectj.apache.bcel.generic.RET;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,7 +68,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -100,6 +99,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     SystemVariablesImpl systemVariables;
     @Resource
     SavepointHistoryImpl savepointHistory;
+    @Resource
+    AppRegistrationImpl appRegistration;
     @Resource
     FlinkApiImpl flinkApi;
     @Resource
@@ -314,6 +315,47 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         return operateMsgDTO;
     }
 
+    @Override
+    public Object previewCoverCondition(TableBusinessDTO dto) {
+
+        TableAccessPO tableAccess = tableAccessImpl.getById(dto.accessId);
+        if (tableAccess == null) {
+            throw new FkException(ResultEnum.TASK_TABLE_NOT_EXIST);
+        }
+
+        AppRegistrationPO registration = appRegistration.getById(tableAccess.appId);
+        if (registration == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        ResultEntity<DataSourceDTO> dataSource = userClient.getFiDataDataSourceById(registration.targetDbId);
+        if (dataSource.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_OPS_CONFIG_EXISTS);
+        }
+
+        dataSource.data.conType = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL;
+        //数据库时间
+        Integer businessDate = 0;
+
+        IBuildAccessSqlCommand command = BuildFactoryAccessHelper.getDBCommand(dataSource.data.conType);
+
+        //高级模式
+        if (dto.otherLogic != 1) {
+            //查询数据库时间sql
+            String timeSql = command.buildQueryTimeSql(BusinessTimeEnum.getValue(dto.businessTimeFlag));
+
+            AbstractCommonDbHelper commonDbHelper = new AbstractCommonDbHelper();
+            Connection connection = commonDbHelper.connection(dataSource.data.conStr, dataSource.data.conAccount, dataSource.data.conPassword, dataSource.data.conType);
+            businessDate = Integer.parseInt(AbstractCommonDbHelper.executeTotalSql(timeSql, connection, "tmp"));
+        }
+
+
+        String str = command.buildBusinessCoverCondition(TableFieldsMap.INSTANCES.businessTime(dto), businessDate);
+        log.info("预览业务时间覆盖,where条件:{}", str);
+
+        return str.toUpperCase();
+    }
+
     /**
      * 调用发布和存储过程
      *
@@ -475,13 +517,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         dto.tableAccessId = accessId;
         dto.savepointDate = LocalDateTime.now();
         savepointHistory.addSavepointHistory(dto);
-    }
-
-    @Override
-    public void test() {
-        CdcJobScriptDTO cdcJobScript = new CdcJobScriptDTO();
-        long accessId = 4112;
-        cdcScriptUploadFlink(cdcJobScript, accessId);
     }
 
     /**
@@ -972,4 +1007,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
         return resultEnum;
     }
+
+
 }

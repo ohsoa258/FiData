@@ -1,6 +1,10 @@
 package com.fisk.common.service.dbBEBuild.factoryaccess.impl;
 
+import com.fisk.common.core.enums.factory.BusinessTimeEnum;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
+import com.fisk.common.service.dbBEBuild.factoryaccess.dto.TableBusinessTimeDTO;
 
 /**
  * @author JianWenYang
@@ -17,6 +21,59 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
         StringBuilder str = new StringBuilder();
         str.append(sql);
         str.append(" limit " + pageSize + " offset " + offset);
+        return str.toString();
+    }
+
+    @Override
+    public String buildQueryTimeSql(BusinessTimeEnum timeEnum) {
+        String sql = null;
+        switch (timeEnum) {
+            case YEAR:
+                sql = "SELECT EXTRACT(MONTH FROM now()) as tmp";
+                break;
+            case MONTH:
+                sql = "SELECT EXTRACT(DAY FROM now()) AS tmp";
+                break;
+            case DAY:
+                sql = "SELECT EXTRACT(HOUR FROM now()) AS tmp";
+                break;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+        return sql;
+    }
+
+    @Override
+    public String buildBusinessCoverCondition(TableBusinessTimeDTO dto, Integer businessDate) {
+        StringBuilder str = new StringBuilder();
+        str.append("WHERE (CASE WHEN LENGTH(");
+        str.append(dto.businessTimeField);
+        str.append(")=13 THEN TO_TIMESTAMP(TO_NUMBER(");
+        str.append(dto.businessTimeField);
+        str.append(",");
+        str.append("''9999999999999'')/1000) ELSE TO_TIMESTAMP(");
+        str.append(dto.businessTimeField);
+        str.append(",''YYYY-MM-DD HH24:MI:SS'') END)");
+
+        //普通模式
+        if (dto.otherLogic == 1 || businessDate < dto.businessDate) {
+            str.append(dto.businessOperator);
+            str.append("now() + (");
+            str.append(dto.businessRange);
+            str.append(" * interval ''1 ");
+            str.append(dto.rangeDateUnit);
+            str.append(" '') and enableflag=''Y'' and sync_type=''2'' and verify_type =''3'' or  verify_type =''4'';");
+
+            return str.toString();
+        }
+
+        str.append(dto.businessOperatorStandby);
+        str.append("now() + (");
+        str.append(dto.businessRangeStandby);
+        str.append(" * interval ''1");
+        str.append(dto.rangeDateUnitStandby);
+        str.append(" '') and enableflag=''Y'' and sync_type=''2'' and verify_type =''3'' or  verify_type =''4'';");
+
         return str.toString();
     }
 

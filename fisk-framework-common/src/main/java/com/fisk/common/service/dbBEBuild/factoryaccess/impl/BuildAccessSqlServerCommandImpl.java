@@ -1,6 +1,10 @@
 package com.fisk.common.service.dbBEBuild.factoryaccess.impl;
 
+import com.fisk.common.core.enums.factory.BusinessTimeEnum;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
+import com.fisk.common.service.dbBEBuild.factoryaccess.dto.TableBusinessTimeDTO;
 
 /**
  * @author JianWenYang
@@ -34,6 +38,54 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
         StringBuilder str = new StringBuilder();
         str.append(sql);
         str.append(" ORDER BY 1 OFFSET 0 ROWS FETCH NEXT " + pageSize + " ROWS ONLY;");
+        return str.toString();
+    }
+
+    @Override
+    public String buildQueryTimeSql(BusinessTimeEnum timeEnum) {
+        String sql = null;
+        switch (timeEnum) {
+            case YEAR:
+                sql = "SELECT MONTH(GETDATE()) AS tmp";
+                break;
+            case MONTH:
+                sql = "SELECT DAY(GETDATE()) AS tmp";
+                break;
+            case DAY:
+                sql = "SELECT DATEPART(HOUR,GETDATE()) AS tmp";
+                break;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+        return sql;
+    }
+
+    @Override
+    public String buildBusinessCoverCondition(TableBusinessTimeDTO dto, Integer businessDate) {
+        StringBuilder str = new StringBuilder();
+        str.append("where ");
+        str.append(dto.businessTimeField + " ");
+
+        //普通模式
+        if (dto.otherLogic == 1 || businessDate < dto.businessDate) {
+            str.append(dto.businessOperator + " ");
+            str.append("DATEADD");
+            str.append("(");
+            str.append(dto.rangeDateUnit);
+            str.append(",");
+            str.append(dto.businessRange);
+            str.append(",GETDATE()) AND enableflag='Y';");
+            return str.toString();
+        }
+        //高级模式
+        str.append(dto.businessOperatorStandby);
+        str.append("DATEADD");
+        str.append("(");
+        str.append(dto.rangeDateUnitStandby);
+        str.append(",");
+        str.append(dto.businessRangeStandby);
+        str.append(",GETDATE()) AND enableflag='Y';");
+
         return str.toString();
     }
 

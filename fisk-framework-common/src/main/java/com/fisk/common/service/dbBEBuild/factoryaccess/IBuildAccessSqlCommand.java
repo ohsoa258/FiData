@@ -1,5 +1,8 @@
 package com.fisk.common.service.dbBEBuild.factoryaccess;
 
+import com.fisk.common.core.enums.factory.BusinessTimeEnum;
+import com.fisk.common.service.dbBEBuild.factoryaccess.dto.TableBusinessTimeDTO;
+
 /**
  * @author JianWenYang
  */
@@ -33,12 +36,12 @@ public interface IBuildAccessSqlCommand {
     String buildVersionSql(String type,String value);
 
     /**
+     * @return java.lang.String
      * @description 获取周数
      * @author dick
      * @date 2022/11/2 18:49
      * @version v1.0
      * @params
-     * @return java.lang.String
      */
     String buildWeekSql(String date);
 
@@ -51,4 +54,22 @@ public interface IBuildAccessSqlCommand {
      * @return boolean
      */
     String buildExistTableSql(String tableName);
+
+    /**
+     * 查询数据库时间
+     *
+     * @param timeEnum
+     * @return
+     */
+    String buildQueryTimeSql(BusinessTimeEnum timeEnum);
+
+    /**
+     * 业务时间覆盖条件语句
+     *
+     * @param dto
+     * @param businessDate
+     * @return
+     */
+    String buildBusinessCoverCondition(TableBusinessTimeDTO dto, Integer businessDate);
+
 }
