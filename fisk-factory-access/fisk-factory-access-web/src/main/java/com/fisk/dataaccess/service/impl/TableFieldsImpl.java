@@ -194,6 +194,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             systemVariables.addSystemVariables(tableAccessId, dto.deltaTimes);
         }
 
+        // 版本语句
+        // String versionSql = getVersionSql(syncmodePo);
+
         // 发布
         publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes);
 
@@ -259,6 +262,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
         // 保存tb_table_syncmode
         TableSyncmodePO modelSync = tableSyncmodeDTO.toEntity(TableSyncmodePO.class);
+
+        // 版本语句。位置不要调整，在保存之前与历史数据做对比
+        // String versionSql = getVersionSql(modelSync);
+
         success = syncmodeImpl.saveOrUpdate(modelSync);
 
         // 修改发布状态
@@ -653,13 +660,14 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      * @version v1.0
      * @params dto
      */
-    private String getVersionSql(TableSyncmodeDTO tableSyncmodeDto, int tableId) {
+    private String getVersionSql(TableSyncmodePO tableSyncmodeDto) {
         String versionSql = "";
         try {
-            if (tableSyncmodeDto == null || tableId == 0) {
+            if (tableSyncmodeDto == null || tableSyncmodeDto.getId() == 0) {
                 log.info("【getVersionSql】参数为空异常");
                 return versionSql;
             }
+            long tableId=tableSyncmodeDto.getId();
             // 非全量模式 || 未启用版本功能 || 保留0天 || 表名称为空 || 数据源为空
             if (tableSyncmodeDto.getSyncMode() != 1 || tableSyncmodeDto.getRetainHistoryData() != 1 || tableSyncmodeDto.getRetainTime() == 0) {
                 log.info("【getVersionSql】参数值异常");
@@ -684,18 +692,26 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 return versionSql;
             }
             DataSourceDTO dataSourceDTO = dataSourceConfig.getData();
-            // 版本设置是否变更，如变更则需要清空ODS数据重新按照版本规则生成版本数据
             TableSyncmodePO tableSyncmodePO = tableAccessImpl.getTableSyncmode(tableSyncmodeDto.getId());
-            if (tableSyncmodePO != null) {
-                if (!tableSyncmodeDto.getVersionUnit().equals(tableSyncmodePO.getVersionUnit())) {
-                    log.info("【getVersionSql】配置发生变更，清空表数据");
-                    Connection conn = DbConnectionHelper.connection(dataSourceDTO.getConStr(), dataSourceDTO.getConAccount(), dataSourceDTO.getConPassword(), dataSourceDTO.getConType());
+            if (tableSyncmodePO == null || tableSyncmodePO.getRetainTime() == 0) {
+                log.info("【getVersionSql】tableSyncmode配置不存在");
+                return versionSql;
+            }
+            // 版本设置是否变更，如变更则需要清空ODS数据重新按照版本规则生成版本数据
+            IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceDTO.getConType());
+            if (!tableSyncmodeDto.getVersionUnit().equals(tableSyncmodePO.getVersionUnit())) {
+                log.info("【getVersionSql】配置发生变更，清空表数据");
+                Connection conn = DbConnectionHelper.connection(dataSourceDTO.getConStr(), dataSourceDTO.getConAccount(), dataSourceDTO.getConPassword(), dataSourceDTO.getConType());
+                // 检查表是否存在
+                AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
+                String existTableSql = dbCommand.buildExistTableSql(tableName);
+                List<Map<String, Object>> maps = dbHelper.execQueryResultMaps(existTableSql, conn);
+                boolean isExists = maps.get(0).get("isExists").toString() != "0";
+                if (isExists) {
                     String sql = String.format("TRUNCATE TABLE %s", tableName);
-                    AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
                     dbHelper.executeSql(sql, conn);
                 }
             }
-            IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceDTO.getConType());
             versionSql = dbCommand.buildVersionSql(tableSyncmodeDto.getVersionUnit(), tableSyncmodeDto.getVersionCustomRule());
         } catch (Exception ex) {
             log.error("【getVersionSql】触发异常：" + ex);

@@ -57,4 +57,10 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
         String sql = String.format("SELECT date_part( 'week', '%s' :: TIMESTAMP ) AS WeekValue",date);
         return sql;
     }
+
+    @Override
+    public String buildExistTableSql(String tableName) {
+        String sql=String.format("select count(*) as isExists from pg_class where relname = '%s';",tableName);
+        return sql;
+    }
 }

@@ -75,4 +75,10 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
         return sql;
     }
 
+    @Override
+    public String buildExistTableSql(String tableName) {
+        String sql = String.format("select COUNT(*) as isExists from sysobjects where id = object_id('%s') and id is not null and id<>'';", tableName);
+        return sql;
+    }
+
 }

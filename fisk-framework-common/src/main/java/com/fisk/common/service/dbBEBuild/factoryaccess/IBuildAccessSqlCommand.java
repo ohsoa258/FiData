@@ -41,4 +41,14 @@ public interface IBuildAccessSqlCommand {
      * @return java.lang.String
      */
     String buildWeekSql(String date);
+
+    /**
+     * @description 判断表是否存在
+     * @author dick
+     * @date 2022/11/3 17:33
+     * @version v1.0
+     * @params tableName
+     * @return boolean
+     */
+    String buildExistTableSql(String tableName);
 }
