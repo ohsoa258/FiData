@@ -1,0 +1,51 @@
+spring:
+  metadataentity: MetaDataEntity
+  schedule: 0 0 1 * * ?
+  datasource:
+    url: jdbc:mysql://172.17.1.248:3306/dmp_datamanagement_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: Password01!
+    driver-class-name: com.mysql.jdbc.Driver
+
+  # redis
+  redis:
+    host: 172.17.1.248
+  # 防止模板报空错误
+  freemarker:
+    settings:
+      classic_compatible: true
+#授权
+fk:
+  auth:
+    clientId: data-management-service
+    secret: 1234
+  encoder:
+    crypt:
+      secret: ${random.uuid}
+      strength: 6
+
+#atlas配置
+atlas:
+  account: admin
+  password: admin
+  searchBasic: /api/atlas/v2/search/basic
+  entityByGuid: /api/atlas/v2/entity/guid
+  entity: /api/atlas/v2/entity
+  typedefs: /api/atlas/v2/types/typedefs
+  delTypeDefs: /api/atlas/v2/types/typedef/name/
+  bulkClassification: /api/atlas/v2/entity/bulk/classification
+  lineage: /api/atlas/v2/lineage
+  relationship: /api/atlas/v2/relationship
+  searchQuick: /api/atlas/v2/search/quick
+  searchSuggestions: /api/atlas/v2/search/suggestions
+  glossary:
+    url: /api/atlas/v2/glossary
+    term: /api/atlas/v2/glossary/term
+    terms: /api/atlas/v2/glossary/terms
+    category: /api/atlas/v2/glossary/category
+  request:
+    url: http://172.17.1.244:21000
+
+#血缘同步
+scheduling:
+  enabled: false

@@ -40,7 +40,7 @@
         a.*,b.sync_mode
         from
         tb_table_access a
-        join tb_table_syncmode b on a.id=b.id
+        left join tb_table_syncmode b on a.id=b.id
         where
         a.app_id = ${query.appId}
         and a.del_flag=1
