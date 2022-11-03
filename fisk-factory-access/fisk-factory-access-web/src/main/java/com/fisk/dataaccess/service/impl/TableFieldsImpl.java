@@ -723,7 +723,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             }
             String keyStr = dto.getKeyStr();
             log.info("【delVersionData】请求参数：" + keyStr);
-
             String[] keyList = keyStr.split("\\.");
             if (keyList == null || keyList.length == 0) {
                 log.info("【delVersionData】参数分割异常");
