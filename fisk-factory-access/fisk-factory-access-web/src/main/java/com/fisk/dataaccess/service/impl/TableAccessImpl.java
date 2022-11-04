@@ -1495,9 +1495,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public ResultEnum updateTableAccessData(TbTableAccessDTO dto) {
 
-        TableAccessPO model = this.getById(dto.id);
-        if (model == null) {
-            return ResultEnum.DATA_NOTEXISTS;
+        TableAccessPO model = null;
+        if (dto.getId() > 0) {
+            model = this.getById(dto.id);
+            if (model == null) {
+                return ResultEnum.DATA_NOTEXISTS;
+            }
         }
 
         // sql保存时丢失
@@ -1505,7 +1508,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEnum.SQL_EXCEPT_CLEAR;
         }
 
-        if (appDataSourceImpl.getDataSourceMeta(model.appId) != null) {
+        if (model != null && appDataSourceImpl.getDataSourceMeta(model.appId) != null) {
             //校验相同schema,不同应用是否存在表名重复问题
             verifySchemaTable(dto.appId, dto.tableName);
         }
