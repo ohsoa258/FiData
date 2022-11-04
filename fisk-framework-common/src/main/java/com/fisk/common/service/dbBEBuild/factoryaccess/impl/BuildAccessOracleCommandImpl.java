@@ -165,10 +165,10 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
         switch (typeEnum) {
             case NUMBER:
                 if (dto.precision > 0) {
-                    data[0] = OracleTypeEnum.FLOAT.getName();
+                    data[0] = OracleTypeEnum.NUMBER.getName();
                     break;
                 }
-                data[0] = OracleTypeEnum.NUMBER.getName();
+                data[0] = OracleTypeEnum.INT.getName();
                 break;
             case FLOAT:
             case BINARY_DOUBLE:
