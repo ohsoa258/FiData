@@ -1,7 +1,9 @@
 package com.fisk.dataaccess.map;
 
+import com.fisk.common.service.dbBEBuild.factoryaccess.dto.TableBusinessTimeDTO;
 import com.fisk.dataaccess.dto.datamodel.TableFieldDataDTO;
 import com.fisk.dataaccess.dto.table.FieldNameDTO;
+import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import org.mapstruct.Mapper;
@@ -72,6 +74,14 @@ public interface TableFieldsMap {
      * @return
      */
     List<TableFieldsPO> dtoListToPoList(List<FieldNameDTO> dtoList);
+
+    /**
+     * 业务时间覆盖
+     *
+     * @param dto
+     * @return
+     */
+    TableBusinessTimeDTO businessTime(TableBusinessDTO dto);
 
 
 }

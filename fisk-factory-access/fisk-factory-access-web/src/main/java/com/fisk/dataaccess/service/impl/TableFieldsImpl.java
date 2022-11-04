@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.factory.BusinessTimeEnum;
 import com.fisk.common.core.enums.flink.UploadWayEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -12,6 +13,9 @@ import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.RegexUtils;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
+import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
+import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.flinkupload.FlinkFactoryHelper;
 import com.fisk.common.service.flinkupload.IFlinkJobUpload;
 import com.fisk.common.service.metadata.dto.metadata.*;
@@ -25,10 +29,7 @@ import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
 import com.fisk.dataaccess.dto.flink.FlinkConfigDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.dto.savepointhistory.SavepointHistoryDTO;
-import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
-import com.fisk.dataaccess.dto.table.TableBusinessDTO;
-import com.fisk.dataaccess.dto.table.TableFieldsDTO;
-import com.fisk.dataaccess.dto.table.TableSyncmodeDTO;
+import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.map.FlinkParameterMap;
@@ -40,6 +41,7 @@ import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.service.ITableFields;
 import com.fisk.dataaccess.utils.files.FileTxtUtils;
+import com.fisk.dataaccess.utils.sql.DbConnectionHelper;
 import com.fisk.dataaccess.utils.sql.OracleCdcUtils;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 import com.fisk.datafactory.client.DataFactoryClient;
@@ -52,6 +54,8 @@ import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
+import com.fisk.task.enums.OlapTableEnum;
+import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -63,10 +67,10 @@ import javax.annotation.Resource;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.sql.Connection;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -95,6 +99,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     SystemVariablesImpl systemVariables;
     @Resource
     SavepointHistoryImpl savepointHistory;
+    @Resource
+    AppRegistrationImpl appRegistration;
     @Resource
     FlinkApiImpl flinkApi;
     @Resource
@@ -189,6 +195,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             systemVariables.addSystemVariables(tableAccessId, dto.deltaTimes);
         }
 
+        // 版本语句
+        // String versionSql = getVersionSql(syncmodePo);
+
         // 发布
         publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes);
 
@@ -254,6 +263,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
         // 保存tb_table_syncmode
         TableSyncmodePO modelSync = tableSyncmodeDTO.toEntity(TableSyncmodePO.class);
+
+        // 版本语句。位置不要调整，在保存之前与历史数据做对比
+        // String versionSql = getVersionSql(modelSync);
+
         success = syncmodeImpl.saveOrUpdate(modelSync);
 
         // 修改发布状态
@@ -300,6 +313,45 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             throw new FkException(ResultEnum.DATA_FACTORY_FEIGN_EXCEPTION);
         }
         return operateMsgDTO;
+    }
+
+    @Override
+    public Object previewCoverCondition(TableBusinessDTO dto) {
+
+        TableAccessPO tableAccess = tableAccessImpl.getById(dto.accessId);
+        if (tableAccess == null) {
+            throw new FkException(ResultEnum.TASK_TABLE_NOT_EXIST);
+        }
+
+        AppRegistrationPO registration = appRegistration.getById(tableAccess.appId);
+        if (registration == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        ResultEntity<DataSourceDTO> dataSource = userClient.getFiDataDataSourceById(registration.targetDbId);
+        if (dataSource.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_OPS_CONFIG_EXISTS);
+        }
+        //数据库时间
+        Integer businessDate = 0;
+
+        IBuildAccessSqlCommand command = BuildFactoryAccessHelper.getDBCommand(dataSource.data.conType);
+
+        //高级模式
+        if (dto.otherLogic != 1) {
+            //查询数据库时间sql
+            String timeSql = command.buildQueryTimeSql(BusinessTimeEnum.getValue(dto.businessTimeFlag));
+
+            AbstractCommonDbHelper commonDbHelper = new AbstractCommonDbHelper();
+            Connection connection = commonDbHelper.connection(dataSource.data.conStr, dataSource.data.conAccount, dataSource.data.conPassword, dataSource.data.conType);
+            businessDate = Integer.parseInt(AbstractCommonDbHelper.executeTotalSql(timeSql, connection, "tmp"));
+        }
+
+
+        String str = command.buildBusinessCoverCondition(TableFieldsMap.INSTANCES.businessTime(dto), businessDate);
+        log.info("预览业务时间覆盖,where条件:{}", str);
+
+        return str.toUpperCase();
     }
 
     /**
@@ -466,13 +518,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         dto.tableAccessId = accessId;
         dto.savepointDate = LocalDateTime.now();
         savepointHistory.addSavepointHistory(dto);
-    }
-
-    @Override
-    public void test() {
-        CdcJobScriptDTO cdcJobScript = new CdcJobScriptDTO();
-        long accessId = 4112;
-        cdcScriptUploadFlink(cdcJobScript, accessId);
     }
 
     /**
@@ -643,5 +688,338 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         return dto;
     }
 
+    /**
+     * @return java.lang.String
+     * @description 创建生成版本SQL
+     * @author dick
+     * @date 2022/11/1 17:02
+     * @version v1.0
+     * @params dto
+     */
+    public String getVersionSql(TableSyncmodePO tableSyncmodeDto) {
+        String versionSql = "";
+        try {
+            if (tableSyncmodeDto == null || tableSyncmodeDto.getId() == 0) {
+                log.info("【getVersionSql】参数为空异常");
+                return versionSql;
+            }
+            long tableId = tableSyncmodeDto.getId();
+            // 非全量模式 || 未启用版本功能 || 保留0天 || 表名称为空 || 数据源为空
+            if (tableSyncmodeDto.getSyncMode() != 1 || tableSyncmodeDto.getRetainHistoryData() != 1 || tableSyncmodeDto.getRetainTime() == 0) {
+                log.info("【getVersionSql】参数值异常");
+                return versionSql;
+            }
+            TableAccessPO tableAccessPO = tableAccessImpl.getById(tableId);
+            if (tableAccessPO == null || StringUtils.isEmpty(tableAccessPO.getTableName())) {
+                log.info("【getVersionSql】tableAccess配置不存在");
+                return versionSql;
+            }
+            String appId = String.valueOf(tableAccessPO.getAppId());
+            AppRegistrationPO appRegistrationPO = iAppRegistration.getById(appId);
+            if (appRegistrationPO == null) {
+                log.info("【getVersionSql】appRegistration配置不存在");
+                return versionSql;
+            }
+            String tableName = TableNameGenerateUtils.buildOdsTableName(tableAccessPO.getTableName(), appRegistrationPO.getAppAbbreviation(), appRegistrationPO.getWhetherSchema());
+            int targetDbId = appRegistrationPO.getTargetDbId();
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(targetDbId);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode() || dataSourceConfig.getData() == null) {
+                log.info("【getVersionSql】DataSource配置不存在");
+                return versionSql;
+            }
+            DataSourceDTO dataSourceDTO = dataSourceConfig.getData();
+            TableSyncmodePO tableSyncmodePO = tableAccessImpl.getTableSyncmode(tableSyncmodeDto.getId());
+            if (tableSyncmodePO == null) {
+                log.info("【getVersionSql】tableSyncmode配置不存在");
+                return versionSql;
+            }
+            // 版本设置是否变更，如变更则需要清空ODS数据重新按照版本规则生成版本数据
+            IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceDTO.getConType());
+            if (!tableSyncmodeDto.getVersionUnit().equals(tableSyncmodePO.getVersionUnit())) {
+                log.info("【getVersionSql】配置发生变更，清空表数据");
+                Connection conn = DbConnectionHelper.connection(dataSourceDTO.getConStr(), dataSourceDTO.getConAccount(), dataSourceDTO.getConPassword(), dataSourceDTO.getConType());
+                // 检查表是否存在
+                AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
+                String existTableSql = dbCommand.buildExistTableSql(tableName);
+                List<Map<String, Object>> maps = dbHelper.execQueryResultMaps(existTableSql, conn);
+                boolean isExists = !maps.get(0).get("isExists").toString().equals("0");
+                if (isExists) {
+                    String sql = String.format("TRUNCATE TABLE %s", tableName);
+                    dbHelper.executeSql(sql, conn);
+                }
+            }
+            versionSql = dbCommand.buildVersionSql(tableSyncmodeDto.getVersionUnit(), tableSyncmodeDto.getVersionCustomRule());
+        } catch (Exception ex) {
+            log.error("【getVersionSql】触发异常：" + ex);
+        }
+        log.info("【getVersionSql】versionSql：" + versionSql);
+        return versionSql;
+    }
 
+    /**
+     * @return com.fisk.common.core.response.ResultEnum
+     * @description 删除版本数据
+     * @author dick
+     * @date 2022/11/2 11:35
+     * @version v1.0
+     * @params tableId
+     * @params tableType
+     */
+    @Override
+    public ResultEnum delVersionData(String keyStr) {
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
+        Connection conn = null;
+        AbstractCommonDbHelper dbHelper = null;
+        try {
+            if (StringUtils.isEmpty(keyStr)) {
+                log.info("【delVersionData】参数为空异常");
+                return ResultEnum.PARAMTER_ERROR;
+            }
+            log.info("【delVersionData】请求参数：" + keyStr);
+            String[] keyList = keyStr.split("\\.");
+            if (keyList == null || keyList.length == 0) {
+                log.info("【delVersionData】参数分割异常");
+                return ResultEnum.PARAMTER_ERROR;
+            }
+            // tb_table_access id
+            String tableId = keyList[keyList.length - 1];
+            // 应用id
+            String appId = keyList[keyList.length - 2];
+            // 表类型 属于接入还是建模
+            String tableType = keyList[keyList.length - 3];
+            // 表名称
+            String tableName = "";
+            // 数据源ID dmp_ods
+            int targetDbId = 0;
+
+            OlapTableEnum tableTypeEnum = OlapTableEnum.getNameByValue(Integer.parseInt(tableType));
+            if (StringUtils.isEmpty(tableId) || (tableTypeEnum != OlapTableEnum.PHYSICS && tableTypeEnum != OlapTableEnum.PHYSICS_API && tableTypeEnum != OlapTableEnum.PHYSICS_RESTAPI)) {
+                log.info("【checkVersionData】参数值验证不通过");
+                return ResultEnum.PARAMTER_ERROR;
+            }
+            TableAccessPO tableAccessPO = tableAccessImpl.getById(tableId);
+            if (tableAccessPO == null || StringUtils.isEmpty(tableAccessPO.getTableName())) {
+                log.info("【delVersionData】tableAccess配置不存在");
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            appId = StringUtils.isEmpty(appId) ? String.valueOf(tableAccessPO.getAppId()) : appId;
+            AppRegistrationPO appRegistrationPO = iAppRegistration.getById(appId);
+            if (appRegistrationPO == null) {
+                log.info("【delVersionData】appRegistration配置不存在");
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            tableName = TableNameGenerateUtils.buildOdsTableName(tableAccessPO.getTableName(), appRegistrationPO.getAppAbbreviation(), appRegistrationPO.getWhetherSchema());
+            targetDbId = appRegistrationPO.getTargetDbId();
+            log.info("【delVersionData】表名称：" + tableName);
+            log.info("【delVersionData】数据源ID：" + targetDbId);
+
+            TableSyncmodePO tableSyncmodePO = tableAccessImpl.getTableSyncmode(Long.parseLong(tableId));
+            if (tableSyncmodePO == null || tableSyncmodePO.getRetainTime() == 0) {
+                log.info("【delVersionData】tableSyncmode配置不存在");
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(targetDbId);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode() || dataSourceConfig.getData() == null) {
+                log.info("【delVersionData】DataSource配置不存在");
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+
+            DataSourceDTO dataSourceDTO = dataSourceConfig.getData();
+            conn = DbConnectionHelper.connection(dataSourceDTO.getConStr(), dataSourceDTO.getConAccount(), dataSourceDTO.getConPassword(), dataSourceDTO.getConType());
+            dbHelper = new AbstractCommonDbHelper();
+            IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceDTO.getConType());
+
+            String retainUnit = tableSyncmodePO.getRetainUnit();
+            int retainTime = tableSyncmodePO.getRetainTime();
+            String versionUnit = tableSyncmodePO.getVersionUnit();
+            String versionCustomRule = tableSyncmodePO.getVersionCustomRule();
+
+            // 日期操作函数
+            Calendar calendar = Calendar.getInstance();
+            String sql = String.format("DELETE FROM %s WHERE version NOT IN", tableName);
+            List<String> sqlConditions = new ArrayList<>();
+            int i = 1;
+
+            // 如果版本规则是按照自定义模式生成的，则需要根据保留规则和版本规则生成条件语句
+            if (versionUnit.equals("自定义")) {
+                log.info("【delVersionData】自定义模式");
+                if (StringUtils.isNotEmpty(versionCustomRule)) {
+                    log.info("【delVersionData】自定义模式下自定义规则配置为空");
+                    return ResultEnum.DATA_NOTEXISTS;
+                }
+                versionCustomRule = String.format("SELECT (%s) AS version", versionCustomRule);
+                log.info("【delVersionData】自定义模式下自定义规则：" + versionCustomRule);
+                List<Map<String, Object>> data = dbHelper.batchExecQueryResultMaps_noClose(versionCustomRule, conn);
+                Object versionObj = data.get(0).get("version");
+                if (versionObj == null || versionObj == "") {
+                    log.info("【delVersionData】自定义模式下自定义规则查询结果为空");
+                    return ResultEnum.DATA_NOTEXISTS;
+                }
+                if (retainUnit.equals("年")) {
+                    // 2022、2023、2024
+                    int year = Integer.parseInt(versionObj.toString());
+                    while (i < retainTime) {
+                        sqlConditions.add(String.format("'%s'", year - i));
+                        i++;
+                    }
+                } else if (retainUnit.equals("季")) {
+                    // 2022/Q01、2022/Q02、2022/Q03、2022/Q04
+                    String[] split = versionObj.toString().split("/");
+                    String yearStr = split[0];
+                    String quarterStr = split[1];
+                    String dateStr = "";
+                    if (quarterStr.equals("Q01")) {
+                        dateStr = yearStr + "-01-01";
+                    } else if (quarterStr.equals("Q02")) {
+                        dateStr = yearStr + "-04-01";
+                    } else if (quarterStr.equals("Q03")) {
+                        dateStr = yearStr + "-07-01";
+                    } else if (quarterStr.equals("Q04")) {
+                        dateStr = yearStr + "-10-01";
+                    }
+                    String str = "yyyy-MM-dd";
+                    SimpleDateFormat format = new SimpleDateFormat(str);
+                    Date date = format.parse(dateStr);
+                    calendar.setTime(date);
+                    while (i < retainTime) {
+                        calendar.add(Calendar.MONTH, -3);
+                        int month = calendar.get(Calendar.MONTH);
+                        int year = calendar.get(Calendar.YEAR);
+                        int quarter = month % 3 == 0 ? month / 3 : month / 3 + 1;
+                        sqlConditions.add(String.format("'%s/Q0%s'", year, quarter));
+                        i++;
+                    }
+                } else if (retainUnit.equals("月")) {
+                    String str = "yyyy/MM";
+                    SimpleDateFormat format = new SimpleDateFormat(str);
+                    Date date = format.parse(versionObj.toString());
+                    calendar.setTime(date);
+                    while (i < retainTime) {
+                        calendar.add(Calendar.MONTH, -1);
+                        int year = calendar.get(Calendar.YEAR);
+                        int month = calendar.get(Calendar.MONTH);
+                        sqlConditions.add(String.format("'%s/%s'", year, month));
+                        i++;
+                    }
+                } else if (retainUnit.equals("周")) {
+                    // 2022/11/01
+                    String str = "yyyy/MM/dd";
+                    SimpleDateFormat format = new SimpleDateFormat(str);
+                    Date date = format.parse(versionObj.toString());
+                    calendar.setTime(date);
+                    // pg和sqlserver获取周时不一样，因此要通过数据库查询
+                    while (i < retainTime) {
+                        calendar.add(Calendar.DATE, -7);
+                        // 查询该时间是当年的第几周
+                        int year = calendar.get(Calendar.YEAR);
+                        int month = calendar.get(Calendar.MONTH) + 1;
+                        int day = calendar.get(Calendar.DAY_OF_MONTH);
+                        String dataStr = year + "/" + month + "/" + day;
+                        String versionSql = dbCommand.buildWeekSql(dataStr);
+                        List<Map<String, Object>> weekData = dbHelper.batchExecQueryResultMaps_noClose(versionSql, conn);
+                        int weekValue = Integer.parseInt(weekData.get(0).get("WeekValue").toString());
+                        sqlConditions.add(String.format("'%s/W%s'", year, weekValue));
+                        i++;
+                    }
+                } else if (retainUnit.equals("日")) {
+                    // 2022/11/01
+                    String str = "yyyy/MM/dd";
+                    SimpleDateFormat format = new SimpleDateFormat(str);
+                    Date date = format.parse(versionObj.toString());
+                    calendar.setTime(date);
+                    while (i < retainTime) {
+                        calendar.add(Calendar.DATE, -1);
+                        SimpleDateFormat s = new SimpleDateFormat("yyyy/MM/dd");
+                        String curDate = s.format(calendar.getTime());
+                        sqlConditions.add(String.format("'%s'", curDate));
+                        i++;
+                    }
+                }
+            } else {
+                log.info("【delVersionData】系统模式");
+                if (retainUnit.equals("年")) {
+                    int year = calendar.get(Calendar.YEAR);
+                    while (i < retainTime) {
+                        sqlConditions.add(String.format("'%s'", year - i));
+                        i++;
+                    }
+                } else if (retainUnit.equals("季")) {
+                    int month = calendar.get(Calendar.MONTH) + 1;
+                    int currentQuarter = month % 3 == 0 ? month / 3 : month / 3 + 1;
+                    if (currentQuarter == 1) {
+                        calendar.set(Calendar.MONTH, 0);
+                    } else if (currentQuarter == 2) {
+                        calendar.set(Calendar.MONTH, 3);
+                    } else if (currentQuarter == 3) {
+                        calendar.set(Calendar.MONTH, 6);
+                    } else {
+                        calendar.set(Calendar.MONTH, 9);
+                    }
+                    while (i < retainTime) {
+                        calendar.add(Calendar.MONTH, -3);
+                        month = calendar.get(Calendar.MONTH) + 1;
+                        int year = calendar.get(Calendar.YEAR);
+                        int quarter = month % 3 == 0 ? month / 3 : month / 3 + 1;
+                        sqlConditions.add(String.format("'%s/Q0%s'", year, quarter));
+                        i++;
+                    }
+                } else if (retainUnit.equals("月")) {
+                    while (i < retainTime) {
+                        calendar.add(Calendar.MONTH, -1);
+                        int year = calendar.get(Calendar.YEAR);
+                        int month = calendar.get(Calendar.MONTH) + 1;
+                        sqlConditions.add(String.format("'%s/%s'", year, month));
+                        i++;
+                    }
+                } else if (retainUnit.equals("周")) {
+                    // pg和sqlserver获取周时不一样，因此要通过数据库查询
+                    while (i < retainTime) {
+                        calendar.add(Calendar.DATE, -7);
+                        // 查询该时间是当年的第几周
+                        int year = calendar.get(Calendar.YEAR);
+                        int month = calendar.get(Calendar.MONTH) + 1;
+                        int day = calendar.get(Calendar.DAY_OF_MONTH);
+                        String dataStr = year + "/" + month + "/" + day;
+                        String versionSql = dbCommand.buildWeekSql(dataStr);
+                        List<Map<String, Object>> data = dbHelper.batchExecQueryResultMaps_noClose(versionSql, conn);
+                        int weekValue = Integer.parseInt(data.get(0).get("WeekValue").toString());
+                        sqlConditions.add(String.format("'%s/W%s'", year, weekValue));
+                        i++;
+                    }
+                } else if (retainUnit.equals("日")) {
+                    while (i < retainTime) {
+                        calendar.add(Calendar.DATE, -1);
+                        SimpleDateFormat s = new SimpleDateFormat("yyyy/MM/dd");
+                        String curDate = s.format(calendar.getTime());
+                        sqlConditions.add(String.format("'%s'", curDate));
+                        i++;
+                    }
+                }
+            }
+            if (CollectionUtils.isEmpty(sqlConditions)) {
+                log.info("【delVersionData】条件语句为空，删除终止");
+                return ResultEnum.SQL_ERROR;
+            }
+            String sqlConditionStr = Joiner.on(",").join(sqlConditions);
+            sql += String.format("(%s)", sqlConditionStr);
+            log.info("【delVersionData】删除语句：" + sql);
+
+            String existTableSql = dbCommand.buildExistTableSql(tableName);
+            List<Map<String, Object>> maps = dbHelper.batchExecQueryResultMaps_noClose(existTableSql, conn);
+            boolean isExists = !maps.get(0).get("isExists").toString().equals("0");
+            if (isExists) {
+                dbHelper.executeSql(sql, conn);
+            } else {
+                log.info("【delVersionData】删除的表不存在，表名称：" + tableName);
+            }
+        } catch (Exception ex) {
+            log.error("【delVersionData】触发异常：" + ex);
+            return ResultEnum.ERROR;
+        } finally {
+            if (conn != null) {
+                dbHelper.closeConnection(conn);
+            }
+        }
+        return resultEnum;
+    }
 }

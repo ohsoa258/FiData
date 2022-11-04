@@ -1,0 +1,29 @@
+server:
+  port: 7011
+dataops:
+  # 数据库元数据对应 redis key
+  metadataentity_key: DataOps_MetaDataEntityKey
+  # 执行时间 凌晨12点半
+  schedule: 0 30 0 * * ?
+  # 是否启用
+  enabled: true
+spring:
+  application:
+    name: datagovernance-service
+  datasource:
+    url: jdbc:mysql://172.17.1.248:3306/dmp_datagovernance_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: Password01!
+    driver-class-name: com.mysql.jdbc.Driver
+  redis:
+    host: 172.17.1.248
+# 数据源配置
+database:
+  dw_id: 1
+  ods_id: 2
+  mdm_id: 3
+  olap_id: 4
+file:
+  uploadUrl: D:/Fidata/java/file/datagovernance-service/qualityreport/
+  echoPath:
+  logoPath:

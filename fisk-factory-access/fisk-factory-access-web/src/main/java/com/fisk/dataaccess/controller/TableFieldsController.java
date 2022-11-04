@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
+import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.service.ITableFields;
 import io.swagger.annotations.Api;
@@ -52,10 +53,15 @@ public class TableFieldsController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.loadDepend(dto));
     }
 
-    @GetMapping("/test")
-    @ApiOperation(value = "对表进行操作时,查询依赖")
-    public void test() {
-        service.test();
+    @PostMapping("/previewCoverCondition")
+    @ApiOperation(value = "预览业务时间覆盖")
+    public ResultEntity<Object> previewCoverCondition(@Validated @RequestBody TableBusinessDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.previewCoverCondition(dto));
     }
 
+    @PostMapping("/delTableVersion")
+    @ApiOperation(value = "删除表版本")
+    public ResultEnum delVersionData(@RequestParam("keyStr") String keyStr) {
+        return service.delVersionData(keyStr);
+    }
 }

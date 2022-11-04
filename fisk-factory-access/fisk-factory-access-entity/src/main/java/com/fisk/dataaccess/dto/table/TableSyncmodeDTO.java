@@ -55,12 +55,44 @@ public class TableSyncmodeDTO extends BaseDTO {
     /**
      * timer driver
      */
+    @ApiModelProperty(value = "timer driver")
     public String timerDriver;
 
     /**
      * corn表达式
      */
+    @ApiModelProperty(value = "corn表达式")
     public String cornExpression;
+
+    /**
+     * 保留历史数据 0 不保留历史版本 1 保留历史版本
+     */
+    @ApiModelProperty(value = "保留历史数据 0 不保留历史版本 1 保留历史版本")
+    public int retainHistoryData;
+
+    /**
+     * 保留时间
+     */
+    @ApiModelProperty(value = "保留时间")
+    public  int retainTime;
+
+    /**
+     * 保留单位 年/季/月/周/日
+     */
+    @ApiModelProperty(value = "保留单位 年/季/月/周/日")
+    public String retainUnit;
+
+    /**
+     * 版本单位 年/季/月/周/日/自定义
+     */
+    @ApiModelProperty(value = "版本单位 年/季/月/周/日/自定义")
+    public String versionUnit;
+
+    /**
+     * 版本自定义规则
+     */
+    @ApiModelProperty(value = "版本自定义规则")
+    public String versionCustomRule;
 
     public TableSyncmodeDTO(BaseEntity entity) {
         super(entity);

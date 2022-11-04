@@ -625,7 +625,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         }
 
         //校验cron格式是否正确
-        if (!StringUtils.isEmpty(dto.script)) {
+        if (model.schedule == SchedulingStrategyTypeEnum.CRON.getValue() && !StringUtils.isEmpty(dto.script)) {
             if (!CronUtils.isValidExpression(dto.script)) {
                 throw new FkException(ResultEnum.CRON_ERROR);
             }

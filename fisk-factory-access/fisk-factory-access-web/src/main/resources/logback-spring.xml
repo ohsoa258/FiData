@@ -75,7 +75,7 @@
     </appender>
     -->
 
-    <springProfile name="uat,test,pd,demo,dev,yf">
+    <springProfile name="uat,test,pd,demo,dev,yf,rj">
         <logger name="org" level="info">
             <appender-ref ref="Console"/>
             <appender-ref ref="FILE"/>

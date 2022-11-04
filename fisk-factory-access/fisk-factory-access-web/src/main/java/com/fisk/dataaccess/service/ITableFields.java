@@ -7,6 +7,7 @@ import com.fisk.dataaccess.dto.access.OperateMsgDTO;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
+import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
@@ -55,6 +56,20 @@ public interface ITableFields extends IService<TableFieldsPO> {
      */
     OperateMsgDTO loadDepend(OperateTableDTO dto);
 
-    void test();
+    /**
+     * 删除表版本
+     *
+     * @param keyStr keyStr
+     * @return 执行结果
+     */
+    ResultEnum delVersionData(String keyStr);
+
+    /**
+     * 预览业务时间覆盖
+     *
+     * @param dto
+     * @return
+     */
+    Object previewCoverCondition(TableBusinessDTO dto);
 
 }
