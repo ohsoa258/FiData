@@ -24,8 +24,6 @@ public class FieldNameDTO {
     public String fieldName;
     @ApiModelProperty(value = "字段类型", required = true)
     public String fieldType;
-    @ApiModelProperty(value = "字段类型描述")
-    public String fieldTypeDescribe;
     @ApiModelProperty(value = "字段长度", required = true)
     public String fieldLength;
     @ApiModelProperty(value = "字段精度", required = true)

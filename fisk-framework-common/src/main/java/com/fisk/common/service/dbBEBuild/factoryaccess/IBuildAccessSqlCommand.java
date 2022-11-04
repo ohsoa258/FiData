@@ -1,5 +1,6 @@
 package com.fisk.common.service.dbBEBuild.factoryaccess;
 
+import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.factory.BusinessTimeEnum;
 import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
@@ -82,6 +83,13 @@ public interface IBuildAccessSqlCommand {
      * @return
      */
     String[] dataTypeConversion(DataTypeConversionDTO dto, DataSourceTypeEnum typeEnum);
+
+    /**
+     * 数据类型下拉集合
+     *
+     * @return
+     */
+    JSONObject dataTypeList();
 
 
 }

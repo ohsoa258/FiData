@@ -1922,8 +1922,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.dataType = field.fieldType;
             dto.precision = field.sourceFieldPrecision;
             String[] data = command.dataTypeConversion(dto, targetDataSource.data.conType);
-            field.fieldTypeDescribe = data[0];
-            field.fieldType = data[1];
+            field.fieldType = data[0].toUpperCase();
         }
 
     }
