@@ -6,7 +6,9 @@ import com.fisk.common.core.enums.BaseEnum;
  * @author JianWenYang
  */
 public enum PgTypeEnum implements BaseEnum {
-
+    /**
+     * bit
+     */
     BIT(1, "bit"),
     BOOL(2, "bool"),
     BOX(3, "box"),
@@ -47,7 +49,8 @@ public enum PgTypeEnum implements BaseEnum {
     UUID(39, "uuid"),
     VARBIT(40, "varbit"),
     VARCHAR(41, "varchar"),
-    XML(42, "xml");
+    XML(42, "xml"),
+    OTHER(43, "other");
 
     private final String name;
     private final int value;
@@ -65,6 +68,17 @@ public enum PgTypeEnum implements BaseEnum {
     @Override
     public String getName() {
         return name;
+    }
+
+    public static PgTypeEnum getValue(String value) {
+        PgTypeEnum[] typeEnums = values();
+        for (PgTypeEnum typeEnum : typeEnums) {
+            String queryValue = typeEnum.getName();
+            if (queryValue.equals(value)) {
+                return typeEnum;
+            }
+        }
+        return PgTypeEnum.OTHER;
     }
 
 }

@@ -1,9 +1,12 @@
 package com.fisk.common.service.dbBEBuild.factoryaccess.impl;
 
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.common.core.enums.dbdatatype.*;
 import com.fisk.common.core.enums.factory.BusinessTimeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
+import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
 import com.fisk.common.service.dbBEBuild.factoryaccess.dto.TableBusinessTimeDTO;
 
 /**
@@ -131,6 +134,179 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
     public String buildExistTableSql(String tableName) {
         String sql = String.format("select COUNT(*) as isExists from sysobjects where id = object_id('%s') and id is not null and id<>'';", tableName);
         return sql;
+    }
+
+    @Override
+    public String[] dataTypeConversion(DataTypeConversionDTO dto, DataSourceTypeEnum typeEnum) {
+        switch (typeEnum) {
+            case SQLSERVER:
+                return sqlServerConversionSqlServer(dto);
+            case POSTGRESQL:
+                return sqlServerConversionPg(dto);
+            case ORACLE:
+                return sqlServerConversionOracle(dto);
+            case MYSQL:
+                return sqlServerConversionMySQL(dto);
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+
+    }
+
+    /**
+     * SqlServer转pg
+     *
+     * @param dto
+     * @return
+     */
+    private String[] sqlServerConversionPg(DataTypeConversionDTO dto) {
+        SqlServerTypeEnum typeEnum = SqlServerTypeEnum.getValue(dto.dataType);
+        String[] data = new String[2];
+        switch (typeEnum) {
+            case INT:
+            case SMALLINT:
+            case BIGINT:
+                data[0] = FiDataDataTypeEnum.INT.getDescription();
+                data[1] = PgTypeEnum.INT4.getName();
+                break;
+            case TEXT:
+                data[0] = FiDataDataTypeEnum.TEXT.getDescription();
+                data[1] = PgTypeEnum.TEXT.getName();
+                break;
+            case DATE:
+            case TIME:
+            case TIMESTAMP:
+            case DATETIME:
+                data[0] = FiDataDataTypeEnum.TIMESTAMP.getDescription();
+                data[1] = PgTypeEnum.TIMESTAMP.getName();
+                break;
+            case NUMERIC:
+            case DECIMAL:
+                data[0] = FiDataDataTypeEnum.FLOAT.getDescription();
+                data[1] = PgTypeEnum.NUMERIC.getName();
+                break;
+            default:
+                data[0] = FiDataDataTypeEnum.NVARCHAR.getDescription();
+                data[1] = PgTypeEnum.VARCHAR.getName();
+        }
+        return data;
+    }
+
+    /**
+     * SqlServer转SqlServer
+     *
+     * @param dto
+     * @return
+     */
+    private String[] sqlServerConversionSqlServer(DataTypeConversionDTO dto) {
+        SqlServerTypeEnum typeEnum = SqlServerTypeEnum.getValue(dto.dataType);
+        String[] data = new String[2];
+        switch (typeEnum) {
+            case INT:
+            case SMALLINT:
+            case BIGINT:
+                data[0] = FiDataDataTypeEnum.INT.getDescription();
+                data[1] = SqlServerTypeEnum.INT.getName();
+                break;
+            case TEXT:
+                data[0] = FiDataDataTypeEnum.TEXT.getDescription();
+                data[1] = SqlServerTypeEnum.TEXT.getName();
+                break;
+            case DATE:
+            case TIME:
+            case TIMESTAMP:
+            case DATETIME:
+                data[0] = FiDataDataTypeEnum.TIMESTAMP.getDescription();
+                data[1] = SqlServerTypeEnum.TIMESTAMP.getName();
+                break;
+            case NUMERIC:
+            case DECIMAL:
+                data[0] = FiDataDataTypeEnum.FLOAT.getDescription();
+                data[1] = SqlServerTypeEnum.NUMERIC.getName();
+                break;
+            default:
+                data[0] = FiDataDataTypeEnum.NVARCHAR.getDescription();
+                data[1] = SqlServerTypeEnum.NVARCHAR.getName();
+        }
+        return data;
+    }
+
+    /**
+     * SqlServer转MySQL
+     *
+     * @param dto
+     * @return
+     */
+    private String[] sqlServerConversionMySQL(DataTypeConversionDTO dto) {
+        SqlServerTypeEnum typeEnum = SqlServerTypeEnum.getValue(dto.dataType);
+        String[] data = new String[2];
+        switch (typeEnum) {
+            case INT:
+            case SMALLINT:
+            case BIGINT:
+                data[0] = FiDataDataTypeEnum.INT.getDescription();
+                data[1] = MySqlTypeEnum.INT.getName();
+                break;
+            case TEXT:
+                data[0] = FiDataDataTypeEnum.TEXT.getDescription();
+                data[1] = MySqlTypeEnum.TEXT.getName();
+                break;
+            case DATE:
+            case TIME:
+            case TIMESTAMP:
+            case DATETIME:
+                data[0] = FiDataDataTypeEnum.TIMESTAMP.getDescription();
+                data[1] = MySqlTypeEnum.TIMESTAMP.getName();
+                break;
+            case NUMERIC:
+            case DECIMAL:
+                data[0] = FiDataDataTypeEnum.FLOAT.getDescription();
+                data[1] = MySqlTypeEnum.NUMERIC.getName();
+                break;
+            default:
+                data[0] = FiDataDataTypeEnum.NVARCHAR.getDescription();
+                data[1] = MySqlTypeEnum.VARCHAR.getName();
+        }
+        return data;
+    }
+
+    /**
+     * SqlServer转Oracle
+     *
+     * @param dto
+     * @return
+     */
+    private String[] sqlServerConversionOracle(DataTypeConversionDTO dto) {
+        SqlServerTypeEnum typeEnum = SqlServerTypeEnum.getValue(dto.dataType);
+        String[] data = new String[2];
+        switch (typeEnum) {
+            case INT:
+            case SMALLINT:
+            case BIGINT:
+                data[0] = FiDataDataTypeEnum.INT.getDescription();
+                data[1] = OracleTypeEnum.NUMBER.getName();
+                break;
+            case TEXT:
+                data[0] = FiDataDataTypeEnum.TEXT.getDescription();
+                data[1] = OracleTypeEnum.CLOB.getName();
+                break;
+            case DATE:
+            case TIME:
+            case TIMESTAMP:
+            case DATETIME:
+                data[0] = FiDataDataTypeEnum.TIMESTAMP.getDescription();
+                data[1] = OracleTypeEnum.TIMESTAMP.getName();
+                break;
+            case NUMERIC:
+            case DECIMAL:
+                data[0] = FiDataDataTypeEnum.FLOAT.getDescription();
+                data[1] = OracleTypeEnum.NUMBER.getName();
+                break;
+            default:
+                data[0] = FiDataDataTypeEnum.NVARCHAR.getDescription();
+                data[1] = OracleTypeEnum.VARCHAR2.getName();
+        }
+        return data;
     }
 
 }

@@ -49,7 +49,8 @@ public enum MySqlTypeEnum implements BaseEnum {
     TINYTEXT(36, "tinytext"),
     VARBINARY(37, "varbinary"),
     VARCHAR(38, "varchar"),
-    YEAR(39, "year");
+    YEAR(39, "year"),
+    OTHER(40, "other");
 
     private final String name;
     private final int value;
@@ -67,6 +68,17 @@ public enum MySqlTypeEnum implements BaseEnum {
     @Override
     public String getName() {
         return name;
+    }
+
+    public static MySqlTypeEnum getValue(String value) {
+        MySqlTypeEnum[] typeEnums = values();
+        for (MySqlTypeEnum typeEnum : typeEnums) {
+            String queryValue = typeEnum.getName();
+            if (queryValue.equals(value)) {
+                return typeEnum;
+            }
+        }
+        return MySqlTypeEnum.OTHER;
     }
 
 }

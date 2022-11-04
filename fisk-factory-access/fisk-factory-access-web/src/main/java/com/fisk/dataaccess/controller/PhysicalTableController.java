@@ -21,7 +21,6 @@ import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
-import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
@@ -61,8 +60,6 @@ public class PhysicalTableController {
     private PublishTaskClient publishTaskClient;
     @Resource
     private DataFactoryClient dataFactoryClient;
-    @Resource
-    private DataManageClient dataManageClient;
 
     /**
      * 根据是否为实时,查询应用名称集合

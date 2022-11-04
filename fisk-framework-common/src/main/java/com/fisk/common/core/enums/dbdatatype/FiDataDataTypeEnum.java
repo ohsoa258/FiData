@@ -10,19 +10,21 @@ public enum FiDataDataTypeEnum implements BaseEnum {
     /**
      * 字符串
      */
-    NVARCHAR(1, "NVARCHAR"),
-    FLOAT(2, "FLOAT"),
-    TIMESTAMP(3, "TIMESTAMP"),
-    TEXT(4, "TEXT"),
-    INT(5, "INT"),
-    OTHER(-1, "OTHER");
+    NVARCHAR(1, "NVARCHAR", "字符串型"),
+    FLOAT(2, "FLOAT", "浮点型"),
+    TIMESTAMP(3, "TIMESTAMP", "时间戳类型"),
+    TEXT(4, "TEXT", "文本型"),
+    INT(5, "INT", "整型"),
+    OTHER(-1, "OTHER", "其他");
 
     private final String name;
     private final int value;
+    private final String description;
 
-    FiDataDataTypeEnum(int value, String name) {
+    FiDataDataTypeEnum(int value, String name, String description) {
         this.value = value;
         this.name = name;
+        this.description = description;
     }
 
     public static FiDataDataTypeEnum getValue(String value) {
@@ -44,6 +46,10 @@ public enum FiDataDataTypeEnum implements BaseEnum {
     @Override
     public String getName() {
         return name;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
 }

@@ -42,7 +42,8 @@ public enum SqlServerTypeEnum implements BaseEnum {
     UNIQUEIDENTIFIER(30, "uniqueidentifier"),
     VARBINARY(31, "varbinary"),
     VARCHAR(32, "varchar"),
-    XML(33, "xml");
+    XML(33, "xml"),
+    OTHER(34, "other");
 
     private final String name;
     private final int value;
@@ -60,6 +61,17 @@ public enum SqlServerTypeEnum implements BaseEnum {
     @Override
     public String getName() {
         return name;
+    }
+
+    public static SqlServerTypeEnum getValue(String value) {
+        SqlServerTypeEnum[] typeEnums = values();
+        for (SqlServerTypeEnum typeEnum : typeEnums) {
+            String queryValue = typeEnum.getName();
+            if (queryValue.equals(value)) {
+                return typeEnum;
+            }
+        }
+        return SqlServerTypeEnum.OTHER;
     }
 
 }

@@ -26,6 +26,7 @@ import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
+import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -514,60 +515,73 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return pageMap.setRecords(baseMapper.queryByPage(pageMap, key));
     }
 
-    /**
-     * 回显实时表
-     *
-     * @param id 请求参数
-     * @return 返回值
-     */
-    @Override
-    public TableAccessNonDTO getData(long id) {
-
-        // 查询tb_table_access数据
-        TableAccessPO modelAccess = this.query().eq("id", id).eq("del_flag", 1).one();
-        if (modelAccess == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+    public static OdsResultDTO resultSetToJsonArrayDataAccess(ResultSet rs) throws SQLException, JSONException {
+        OdsResultDTO data = new OdsResultDTO();
+        // json数组
+        JSONArray array = new JSONArray();
+        // 获取列数
+        ResultSetMetaData metaData = rs.getMetaData();
+        int columnCount = metaData.getColumnCount();
+        List<FieldNameDTO> fieldNameDTOList = new ArrayList<>();
+        // 遍历ResultSet中的每条数据
+        int count = 1;
+        // 预览展示10行
+        int row = 10;
+        while (rs.next() && count <= row) {
+            JSONObject jsonObj = new JSONObject();
+            // 遍历每一列
+            for (int i = 1; i <= columnCount; i++) {
+                String columnName = metaData.getColumnLabel(i);
+                //过滤ods表中pk和code默认字段
+                String tableName = metaData.getTableName(i) + "key";
+                if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equals(columnName) || tableName.equals("ods_" + columnName)) {
+                    continue;
+                }
+                //获取sql查询数据集合
+                String value = rs.getString(columnName);
+                jsonObj.put(columnName, value);
+            }
+            count++;
+            array.add(jsonObj);
         }
-        TableAccessNonDTO dto = TableAccessMap.INSTANCES.poToDtoNon(modelAccess);
+        //获取列名
+        for (int i = 1; i <= columnCount; i++) {
+            FieldNameDTO dto = new FieldNameDTO();
+            //源表
+            dto.sourceTableName = metaData.getTableName(i);
+            // 源字段
+            dto.sourceFieldName = metaData.getColumnLabel(i);
+            dto.sourceFieldType = metaData.getColumnTypeName(i);
+            dto.sourceFieldPrecision = metaData.getScale(i);
+            dto.fieldName = metaData.getColumnLabel(i);
+            String tableName = metaData.getTableName(i) + "key";
+            if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equals(dto.fieldName)
+                    || tableName.equals("ods_" + dto.fieldName)) {
+                continue;
+            }
+            dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
+            dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
+            /*if (dto.fieldType.contains("INT2")
+                    || dto.fieldType.contains("INT4")
+                    || dto.fieldType.contains("INT8")) {
+                dto.fieldType = "INT";
+            }
+            if (dto.fieldType.toLowerCase().contains(fieldType1)
+                    || dto.fieldType.toLowerCase().contains(fieldType2)) {
+                dto.fieldLength = "50";
+            } else {
+                dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
+            }*/
 
-        // 将应用名称封装进去
-        AppRegistrationPO modelReg = appRegistrationImpl.query().eq("id", modelAccess.getAppId()).one();
-        if (modelReg == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            // 转换表字段类型和长度
+            /*List<String> list = transformField(dto.fieldType, dto.fieldLength);
+            dto.fieldType = list.get(0);
+            dto.fieldLength = list.get(1);*/
+            fieldNameDTOList.add(dto);
         }
-        dto.setAppName(modelReg.getAppName());
-
-        // 查询tb_table_fields数据
-        List<TableFieldsPO> list = tableFieldsImpl.query().eq("table_access_id", id).eq("del_flag", 1).list();
-
-        List<TableFieldsDTO> listField = new ArrayList<>();
-        for (TableFieldsPO modelField : list) {
-            TableFieldsDTO tableFieldsDTO = TableFieldsMap.INSTANCES.poToDto(modelField);
-
-            listField.add(tableFieldsDTO);
-        }
-
-        dto.setList(listField);
-
-        // 查询tb_table_syncmode
-        TableSyncmodePO modelSync = this.syncmodeMapper.getData(id);
-        TableSyncmodeDTO sdto = new TableSyncmodeDTO(modelSync);
-        dto.setTableSyncmodeDTO(sdto);
-
-        // 只有存在业务时间覆盖时,才会给前端展示
-        /*int businessTimeType = 4;
-        if (modelSync != null && modelSync.syncMode == businessTimeType) {
-            // 查询tb_table_business
-            QueryWrapper<TableBusinessPO> queryWrapper = new QueryWrapper<>();
-            queryWrapper.lambda().eq(TableBusinessPO::getAccessId, id);
-            TableBusinessPO modelBusiness = businessMapper.selectOne(queryWrapper);
-            TableBusinessDTO businessDTO = TableBusinessMap.INSTANCES.poToDto(modelBusiness);
-            dto.setBusinessDTO(businessDTO);
-        }*/
-
-        dto.deltaTimes = systemVariables.getSystemVariable(id);
-
-        return dto;
+        data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());
+        data.dataArray = array;
+        return data;
     }
 
     /**
@@ -1609,74 +1623,61 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return array;
     }
 
-    public static OdsResultDTO resultSetToJsonArrayDataAccess(ResultSet rs) throws SQLException, JSONException {
-        OdsResultDTO data = new OdsResultDTO();
-        // json数组
-        JSONArray array = new JSONArray();
-        // 获取列数
-        ResultSetMetaData metaData = rs.getMetaData();
-        int columnCount = metaData.getColumnCount();
-        List<FieldNameDTO> fieldNameDTOList = new ArrayList<>();
-        // 遍历ResultSet中的每条数据
-        int count = 1;
-        // 预览展示10行
-        int row = 10;
-        while (rs.next() && count <= row) {
-            JSONObject jsonObj = new JSONObject();
-            // 遍历每一列
-            for (int i = 1; i <= columnCount; i++) {
-                String columnName = metaData.getColumnLabel(i);
-                //过滤ods表中pk和code默认字段
-                String tableName = metaData.getTableName(i) + "key";
-                if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equals(columnName) || tableName.equals("ods_" + columnName)) {
-                    continue;
-                }
-                //获取sql查询数据集合
-                String value = rs.getString(columnName);
-                jsonObj.put(columnName, value);
-            }
-            count++;
-            array.add(jsonObj);
-        }
-        //获取列名
-        for (int i = 1; i <= columnCount; i++) {
-            FieldNameDTO dto = new FieldNameDTO();
-            String fieldType1 = "date";
-            String fieldType2 = "time";
-            //源表
-            dto.sourceTableName = metaData.getTableName(i);
-            // 源字段
-            dto.sourceFieldName = metaData.getColumnLabel(i);
-            dto.sourceFieldType = metaData.getColumnTypeName(i);
-            dto.sourceFieldPrecision = metaData.getScale(i);
-            dto.fieldName = metaData.getColumnLabel(i);
-            String tableName = metaData.getTableName(i) + "key";
-            if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equals(dto.fieldName)
-                    || tableName.equals("ods_" + dto.fieldName)) {
-                continue;
-            }
-            dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
-            if (dto.fieldType.contains("INT2")
-                    || dto.fieldType.contains("INT4")
-                    || dto.fieldType.contains("INT8")) {
-                dto.fieldType = "INT";
-            }
-            if (dto.fieldType.toLowerCase().contains(fieldType1)
-                    || dto.fieldType.toLowerCase().contains(fieldType2)) {
-                dto.fieldLength = "50";
-            } else {
-                dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
-            }
+    /**
+     * 回显实时表
+     *
+     * @param id 请求参数
+     * @return 返回值
+     */
+    @Override
+    public TableAccessNonDTO getData(long id) {
 
-            // 转换表字段类型和长度
-            List<String> list = transformField(dto.fieldType, dto.fieldLength);
-            dto.fieldType = list.get(0);
-            dto.fieldLength = list.get(1);
-            fieldNameDTOList.add(dto);
+        // 查询tb_table_access数据
+        TableAccessPO modelAccess = this.query().eq("id", id).eq("del_flag", 1).one();
+        if (modelAccess == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());
-        data.dataArray = array;
-        return data;
+        TableAccessNonDTO dto = TableAccessMap.INSTANCES.poToDtoNon(modelAccess);
+
+        // 将应用名称封装进去
+        AppRegistrationPO modelReg = appRegistrationImpl.query().eq("id", modelAccess.getAppId()).one();
+        if (modelReg == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        dto.setAppName(modelReg.getAppName());
+
+        // 查询tb_table_fields数据
+        List<TableFieldsPO> list = tableFieldsImpl.query().eq("table_access_id", id).eq("del_flag", 1).list();
+
+        List<TableFieldsDTO> listField = new ArrayList<>();
+        for (TableFieldsPO modelField : list) {
+            TableFieldsDTO tableFieldsDTO = TableFieldsMap.INSTANCES.poToDto(modelField);
+
+            listField.add(tableFieldsDTO);
+        }
+
+        dto.setList(listField);
+
+        // 查询tb_table_syncmode
+        TableSyncmodePO modelSync = this.syncmodeMapper.getData(id);
+        TableSyncmodeDTO sdto = new TableSyncmodeDTO(modelSync);
+        dto.setTableSyncmodeDTO(sdto);
+
+        // 只有存在业务时间覆盖时,才会给前端展示
+        if (modelSync != null && modelSync.syncMode == 4) {
+            // 查询tb_table_business
+            QueryWrapper<TableBusinessPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(TableBusinessPO::getAccessId, id);
+            List<TableBusinessPO> modelBusiness = businessMapper.selectList(queryWrapper);
+            if (!CollectionUtils.isEmpty(modelBusiness)) {
+                TableBusinessDTO businessDTO = TableBusinessMap.INSTANCES.poToDto(modelBusiness.get(0));
+                dto.setBusinessDTO(businessDTO);
+            }
+        }
+
+        dto.deltaTimes = systemVariables.getSystemVariable(id);
+
+        return dto;
     }
 
     public static OdsResultDTO resultSetToJsonArrayDataModel(ResultSet rs) throws SQLException, JSONException {
@@ -1875,10 +1876,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             log.info("执行sql时间 : " + Duration.between(inst3, inst4).toMillis());
             //获取数据集
             array = resultSetToJsonArrayDataAccess(rs);
-            if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName())
-                    && !CollectionUtils.isEmpty(array.fieldNameDTOList)) {
-                array = cdcSetSourceInfo(array);
-            }
+
+            //类型转换
+            typeConversion(dataSourceTypeEnum, array.fieldNameDTOList, registration.targetDbId);
+
             Instant inst5 = Instant.now();
             log.info("封装数据执行时间 : " + Duration.between(inst4, inst5).toMillis());
 
@@ -1895,6 +1896,36 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         System.out.println("最终执行时间 : " + Duration.between(inst1, inst5).toMillis());
 
         return array;
+    }
+
+    /**
+     * 不同数据库类型转换
+     *
+     * @param dataSourceTypeEnum
+     * @param fieldList
+     * @param targetDbId
+     */
+    public void typeConversion(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum dataSourceTypeEnum,
+                               List<FieldNameDTO> fieldList,
+                               Integer targetDbId) {
+
+        //目标数据源
+        ResultEntity<DataSourceDTO> targetDataSource = userClient.getFiDataDataSourceById(targetDbId);
+        if (targetDataSource.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_OPS_CONFIG_EXISTS);
+        }
+
+        IBuildAccessSqlCommand command = BuildFactoryAccessHelper.getDBCommand(dataSourceTypeEnum);
+        DataTypeConversionDTO dto = new DataTypeConversionDTO();
+        for (FieldNameDTO field : fieldList) {
+            dto.dataLength = field.fieldLength;
+            dto.dataType = field.fieldType;
+            dto.precision = field.sourceFieldPrecision;
+            String[] data = command.dataTypeConversion(dto, targetDataSource.data.conType);
+            field.fieldTypeDescribe = data[0];
+            field.fieldType = data[1];
+        }
+
     }
 
 

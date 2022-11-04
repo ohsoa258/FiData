@@ -1,6 +1,8 @@
 package com.fisk.common.service.dbBEBuild.factoryaccess;
 
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.factory.BusinessTimeEnum;
+import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
 import com.fisk.common.service.dbBEBuild.factoryaccess.dto.TableBusinessTimeDTO;
 
 /**
@@ -71,5 +73,15 @@ public interface IBuildAccessSqlCommand {
      * @return
      */
     String buildBusinessCoverCondition(TableBusinessTimeDTO dto, Integer businessDate);
+
+    /**
+     * 数据类型转换
+     *
+     * @param dto
+     * @param typeEnum
+     * @return
+     */
+    String[] dataTypeConversion(DataTypeConversionDTO dto, DataSourceTypeEnum typeEnum);
+
 
 }
