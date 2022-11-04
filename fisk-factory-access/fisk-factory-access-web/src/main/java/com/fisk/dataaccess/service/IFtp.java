@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.service;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.app.DbConnectionDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
@@ -39,4 +40,14 @@ public interface IFtp {
      * @return dto
      */
     ExcelTreeDTO loadFtpFileSystem(FtpPathDTO dto);
+
+    /**
+     * @description 复制文件到新目录
+     * @author dick
+     * @date 2022/11/4 17:06
+     * @version v1.0
+     * @params tableAccessId
+     * @return com.fisk.common.core.response.ResultEnum
+     */
+    ResultEnum copyFtpFile(int tableAccessId);
 }

@@ -10,18 +10,27 @@ import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
 import com.fisk.dataaccess.dto.ftp.FtpPathDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
+import com.fisk.dataaccess.entity.AppRegistrationPO;
+import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.enums.FtpFileTypeEnum;
+import com.fisk.dataaccess.mapper.AppRegistrationMapper;
+import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.service.IFtp;
 import com.fisk.dataaccess.utils.ftp.ExcelUtils;
 import com.fisk.dataaccess.utils.ftp.FtpUtils;
+import com.google.common.base.Joiner;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.ftp.FTPClient;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import static com.fisk.dataaccess.utils.ftp.FtpUtils.getInputStreamByName;
@@ -32,11 +41,17 @@ import static com.fisk.dataaccess.utils.ftp.FtpUtils.getInputStreamByName;
  * @description ftp数据源实现类
  * @date 2021/12/28 10:50
  */
+@Slf4j
 @Service
 public class FtpImpl implements IFtp {
 
     @Resource
     AppDataSourceImpl dataSourceImpl;
+
+    @Resource
+    TableAccessMapper tableAccessMapper;
+
+    AppRegistrationMapper appRegistrationMapper;
 
     @Override
     public ResultEntity<Object> connectFtp(DbConnectionDTO dto) {
@@ -90,6 +105,58 @@ public class FtpImpl implements IFtp {
         // 数据源配置不同的文件后缀名,展示相对应的文件系统
         FtpFileTypeEnum fileTypeEnum = FtpFileTypeEnum.getValue(dataSourcePo.fileSuffix);
         return FtpUtils.listFilesAndDirectorys(ftpClient, dto.fullPath, fileTypeEnum.getName());
+    }
+
+    @Override
+    public ResultEnum copyFtpFile(int tableAccessId) {
+        log.info("【copyFtpFile】请求参数：" + tableAccessId);
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
+        try {
+            if (tableAccessId == 0) {
+                return ResultEnum.PARAMTER_NOTNULL;
+            }
+            TableAccessPO tableAccessPO = tableAccessMapper.selectById(tableAccessId);
+            if (tableAccessPO == null || StringUtils.isEmpty(tableAccessPO.getSqlScript())) {
+                log.info("【copyFtpFile】tableAccess为空");
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            AppRegistrationPO appRegistrationPO = appRegistrationMapper.selectById(tableAccessPO.getAppId());
+            if (appRegistrationPO == null) {
+                log.info("【copyFtpFile】appRegistration为空");
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            FTPClient ftpClient = getFtpClient(appRegistrationPO.getId());
+            if (ftpClient == null) {
+                log.info("【copyFtpFile】ftpClient建立连接失败");
+                return ResultEnum.FTP_CONNECTION_ERROR;
+            }
+            // 判断根目录是否存在Archive文件夹，不存在则创建
+            boolean isExist = ftpClient.changeWorkingDirectory("/Archive");
+            if (!isExist) {
+                log.info("【copyFtpFile】文件目录不存在，创建Archive目录");
+                ftpClient.makeDirectory("/Archive");
+            }
+            // 将源文件复制到Archive文件夹下
+            log.info("【copyFtpFile】文件信息：" + tableAccessPO.getSqlScript());
+            String[] filePathList = tableAccessPO.getSqlScript().split("/");
+            String fileNameValue = filePathList[filePathList.length - 1];
+            String[] split = fileNameValue.split("\\.");
+            List<String> list = Arrays.asList(split);
+
+            Date t = new Date();
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String format = df.format(t);
+
+            String suffixName = "." + list.get(list.size() - 1);
+            list.remove(list.size() - 1);
+            String fileName = Joiner.on(".").join(list) + "_" + format + suffixName;
+            String toPath = "/Archive/" + fileName;
+            ftpClient.rename(tableAccessPO.getSqlScript(), toPath);
+        } catch (Exception ex) {
+            log.error("【copyFtpFile】触发系统异常：" + ex);
+            resultEnum = ResultEnum.ERROR;
+        }
+        return resultEnum;
     }
 
     /**
