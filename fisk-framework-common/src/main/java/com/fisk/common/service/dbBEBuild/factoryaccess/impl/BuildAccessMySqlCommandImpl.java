@@ -64,6 +64,12 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
         }
     }
 
+    /**
+     * mySql转MySQL
+     *
+     * @param dto
+     * @return
+     */
     private String[] mySqlConversionMySQL(DataTypeConversionDTO dto) {
         MySqlTypeEnum typeEnum = MySqlTypeEnum.getValue(dto.dataType);
         String[] data = new String[2];
@@ -98,6 +104,12 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
         return data;
     }
 
+    /**
+     * mySql转Pg
+     *
+     * @param dto
+     * @return
+     */
     private String[] mySqlConversionPg(DataTypeConversionDTO dto) {
         MySqlTypeEnum typeEnum = MySqlTypeEnum.getValue(dto.dataType);
         String[] data = new String[2];
@@ -132,6 +144,12 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
         return data;
     }
 
+    /**
+     * mySql转Oracle
+     *
+     * @param dto
+     * @return
+     */
     private String[] mySqlConversionOracle(DataTypeConversionDTO dto) {
         MySqlTypeEnum typeEnum = MySqlTypeEnum.getValue(dto.dataType);
         String[] data = new String[2];
@@ -166,6 +184,12 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
         return data;
     }
 
+    /**
+     * mySql转SqlServer
+     *
+     * @param dto
+     * @return
+     */
     private String[] mySqlConversionSqlServer(DataTypeConversionDTO dto) {
         MySqlTypeEnum typeEnum = MySqlTypeEnum.getValue(dto.dataType);
         String[] data = new String[2];

@@ -64,6 +64,12 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
         }
     }
 
+    /**
+     * oracle转SqlServer
+     *
+     * @param dto
+     * @return
+     */
     private String[] oracleConversionSqlServer(DataTypeConversionDTO dto) {
         OracleTypeEnum typeEnum = OracleTypeEnum.getValue(dto.dataType);
         String[] data = new String[2];
@@ -101,6 +107,12 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
         return data;
     }
 
+    /**
+     * oracle转Pg
+     *
+     * @param dto
+     * @return
+     */
     private String[] oracleConversionPg(DataTypeConversionDTO dto) {
         OracleTypeEnum typeEnum = OracleTypeEnum.getValue(dto.dataType);
         String[] data = new String[2];
@@ -138,6 +150,12 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
         return data;
     }
 
+    /**
+     * oracle转Oracle
+     *
+     * @param dto
+     * @return
+     */
     private String[] oracleConversionOracle(DataTypeConversionDTO dto) {
         OracleTypeEnum typeEnum = OracleTypeEnum.getValue(dto.dataType);
         String[] data = new String[2];
@@ -175,6 +193,12 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
         return data;
     }
 
+    /**
+     * oracle转MySql
+     *
+     * @param dto
+     * @return
+     */
     private String[] oracleConversionMySQL(DataTypeConversionDTO dto) {
         OracleTypeEnum typeEnum = OracleTypeEnum.getValue(dto.dataType);
         String[] data = new String[2];
