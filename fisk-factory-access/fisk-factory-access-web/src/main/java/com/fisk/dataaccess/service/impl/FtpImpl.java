@@ -3,6 +3,7 @@ package com.fisk.dataaccess.service.impl;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.app.DbConnectionDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
@@ -51,6 +52,7 @@ public class FtpImpl implements IFtp {
     @Resource
     TableAccessMapper tableAccessMapper;
 
+    @Resource
     AppRegistrationMapper appRegistrationMapper;
 
     @Override
@@ -143,14 +145,15 @@ public class FtpImpl implements IFtp {
             String fileNameValue = filePathList[filePathList.length - 1];
             String[] split = fileNameValue.split("\\.");
             List<String> list = Arrays.asList(split);
+            List arrList = new ArrayList(list);
 
-            Date t = new Date();
-            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String format = df.format(t);
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date date = simpleDateFormat.parse(DateTimeUtils.getNow());
+            String format = String.valueOf(date.getTime());
 
-            String suffixName = "." + list.get(list.size() - 1);
-            list.remove(list.size() - 1);
-            String fileName = Joiner.on(".").join(list) + "_" + format + suffixName;
+            String suffixName = "." + arrList.get(arrList.size() - 1);
+            arrList.remove(arrList.size() - 1);
+            String fileName = Joiner.on(".").join(arrList) + "_" + format + suffixName;
             String toPath = "/Archive/" + fileName;
             ftpClient.rename(tableAccessPO.getSqlScript(), toPath);
         } catch (Exception ex) {
