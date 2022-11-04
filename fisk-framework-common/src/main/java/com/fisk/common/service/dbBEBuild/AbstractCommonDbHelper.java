@@ -202,6 +202,46 @@ public class AbstractCommonDbHelper {
      *
      * @param sql 查询语句
      * @param con 数据库连接
+     * @return 查询结果Map
+     */
+    public static List<Map<String, Object>> batchExecQueryResultMaps_noClose(String sql, Connection con) {
+        return batchQuery_noClose(sql, con, BeanHelper::resultSetToMaps);
+    }
+
+    /**
+     * 执行sql
+     *
+     * @param sql     sql
+     * @param con     连接器
+     * @param func<T>
+     * @return
+     */
+    private static <T> T batchQuery_noClose(String sql, Connection con, Function<ResultSet, T> func) {
+        Statement st = null;
+        String code = UUID.randomUUID().toString();
+        StopWatch stopWatch = new StopWatch();
+        try {
+            stopWatch.start();
+            log.info("【execQuery】【" + code + "】执行sql: 【" + sql + "】");
+            st = con.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            ResultSet res = st.executeQuery(sql);
+            return func.apply(res);
+        } catch (SQLException ex) {
+            log.error("【execQuery】【" + code + "】执行sql查询报错, ex", ex);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ex.getLocalizedMessage());
+        } finally {
+            closeStatement(st);
+//            closeConnection(con);
+            stopWatch.stop();
+            log.info("【execQuery】【" + code + "】执行时间: 【" + stopWatch.getTotalTimeMillis() + "毫秒】");
+        }
+    }
+
+    /**
+     * 执行查询
+     *
+     * @param sql 查询语句
+     * @param con 数据库连接
      * @return 查询结果List
      */
     public static <T> List<T> execQueryResultList(String sql, Connection con, Class<T> tClass) {

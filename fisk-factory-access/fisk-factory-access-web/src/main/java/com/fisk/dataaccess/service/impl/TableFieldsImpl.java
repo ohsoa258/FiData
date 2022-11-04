@@ -693,14 +693,14 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      * @version v1.0
      * @params dto
      */
-    private String getVersionSql(TableSyncmodePO tableSyncmodeDto) {
+    public String getVersionSql(TableSyncmodePO tableSyncmodeDto) {
         String versionSql = "";
         try {
             if (tableSyncmodeDto == null || tableSyncmodeDto.getId() == 0) {
                 log.info("【getVersionSql】参数为空异常");
                 return versionSql;
             }
-            long tableId=tableSyncmodeDto.getId();
+            long tableId = tableSyncmodeDto.getId();
             // 非全量模式 || 未启用版本功能 || 保留0天 || 表名称为空 || 数据源为空
             if (tableSyncmodeDto.getSyncMode() != 1 || tableSyncmodeDto.getRetainHistoryData() != 1 || tableSyncmodeDto.getRetainTime() == 0) {
                 log.info("【getVersionSql】参数值异常");
@@ -726,7 +726,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             }
             DataSourceDTO dataSourceDTO = dataSourceConfig.getData();
             TableSyncmodePO tableSyncmodePO = tableAccessImpl.getTableSyncmode(tableSyncmodeDto.getId());
-            if (tableSyncmodePO == null || tableSyncmodePO.getRetainTime() == 0) {
+            if (tableSyncmodePO == null) {
                 log.info("【getVersionSql】tableSyncmode配置不存在");
                 return versionSql;
             }
@@ -739,7 +739,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
                 String existTableSql = dbCommand.buildExistTableSql(tableName);
                 List<Map<String, Object>> maps = dbHelper.execQueryResultMaps(existTableSql, conn);
-                boolean isExists = maps.get(0).get("isExists").toString() != "0";
+                boolean isExists = !maps.get(0).get("isExists").toString().equals("0");
                 if (isExists) {
                     String sql = String.format("TRUNCATE TABLE %s", tableName);
                     dbHelper.executeSql(sql, conn);
@@ -763,14 +763,15 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      * @params tableType
      */
     @Override
-    public ResultEnum delVersionData(TableVersionDTO dto) {
+    public ResultEnum delVersionData(String keyStr) {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
+        Connection conn = null;
+        AbstractCommonDbHelper dbHelper = null;
         try {
-            if (dto == null || StringUtils.isEmpty(dto.getKeyStr())) {
+            if (StringUtils.isEmpty(keyStr)) {
                 log.info("【delVersionData】参数为空异常");
                 return ResultEnum.PARAMTER_ERROR;
             }
-            String keyStr = dto.getKeyStr();
             log.info("【delVersionData】请求参数：" + keyStr);
             String[] keyList = keyStr.split("\\.");
             if (keyList == null || keyList.length == 0) {
@@ -808,6 +809,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             targetDbId = appRegistrationPO.getTargetDbId();
             log.info("【delVersionData】表名称：" + tableName);
             log.info("【delVersionData】数据源ID：" + targetDbId);
+
             TableSyncmodePO tableSyncmodePO = tableAccessImpl.getTableSyncmode(Long.parseLong(tableId));
             if (tableSyncmodePO == null || tableSyncmodePO.getRetainTime() == 0) {
                 log.info("【delVersionData】tableSyncmode配置不存在");
@@ -820,8 +822,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             }
 
             DataSourceDTO dataSourceDTO = dataSourceConfig.getData();
-            Connection conn = DbConnectionHelper.connection(dataSourceDTO.getConStr(), dataSourceDTO.getConAccount(), dataSourceDTO.getConPassword(), dataSourceDTO.getConType());
-            AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
+            conn = DbConnectionHelper.connection(dataSourceDTO.getConStr(), dataSourceDTO.getConAccount(), dataSourceDTO.getConPassword(), dataSourceDTO.getConType());
+            dbHelper = new AbstractCommonDbHelper();
             IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceDTO.getConType());
 
             String retainUnit = tableSyncmodePO.getRetainUnit();
@@ -844,7 +846,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 }
                 versionCustomRule = String.format("SELECT (%s) AS version", versionCustomRule);
                 log.info("【delVersionData】自定义模式下自定义规则：" + versionCustomRule);
-                List<Map<String, Object>> data = dbHelper.batchExecQueryResultMaps(versionCustomRule, conn);
+                List<Map<String, Object>> data = dbHelper.batchExecQueryResultMaps_noClose(versionCustomRule, conn);
                 Object versionObj = data.get(0).get("version");
                 if (versionObj == null || versionObj == "") {
                     log.info("【delVersionData】自定义模式下自定义规则查询结果为空");
@@ -911,7 +913,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         int day = calendar.get(Calendar.DAY_OF_MONTH);
                         String dataStr = year + "/" + month + "/" + day;
                         String versionSql = dbCommand.buildWeekSql(dataStr);
-                        List<Map<String, Object>> weekData = dbHelper.batchExecQueryResultMaps(versionSql, conn);
+                        List<Map<String, Object>> weekData = dbHelper.batchExecQueryResultMaps_noClose(versionSql, conn);
                         int weekValue = Integer.parseInt(weekData.get(0).get("WeekValue").toString());
                         sqlConditions.add(String.format("'%s/W%s'", year, weekValue));
                         i++;
@@ -976,7 +978,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         int day = calendar.get(Calendar.DAY_OF_MONTH);
                         String dataStr = year + "/" + month + "/" + day;
                         String versionSql = dbCommand.buildWeekSql(dataStr);
-                        List<Map<String, Object>> data = dbHelper.batchExecQueryResultMaps(versionSql, conn);
+                        List<Map<String, Object>> data = dbHelper.batchExecQueryResultMaps_noClose(versionSql, conn);
                         int weekValue = Integer.parseInt(data.get(0).get("WeekValue").toString());
                         sqlConditions.add(String.format("'%s/W%s'", year, weekValue));
                         i++;
@@ -998,13 +1000,23 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             String sqlConditionStr = Joiner.on(",").join(sqlConditions);
             sql += String.format("(%s)", sqlConditionStr);
             log.info("【delVersionData】删除语句：" + sql);
-            dbHelper.executeSql(sql, conn);
+
+            String existTableSql = dbCommand.buildExistTableSql(tableName);
+            List<Map<String, Object>> maps = dbHelper.batchExecQueryResultMaps_noClose(existTableSql, conn);
+            boolean isExists = !maps.get(0).get("isExists").toString().equals("0");
+            if (isExists) {
+                dbHelper.executeSql(sql, conn);
+            } else {
+                log.info("【delVersionData】删除的表不存在，表名称：" + tableName);
+            }
         } catch (Exception ex) {
             log.error("【delVersionData】触发异常：" + ex);
             return ResultEnum.ERROR;
+        } finally {
+            if (conn != null) {
+                dbHelper.closeConnection(conn);
+            }
         }
         return resultEnum;
     }
-
-
 }

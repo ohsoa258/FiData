@@ -9,7 +9,6 @@ import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
-import com.fisk.dataaccess.dto.table.TableVersionDTO;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 
@@ -60,10 +59,10 @@ public interface ITableFields extends IService<TableFieldsPO> {
     /**
      * 删除表版本
      *
-     * @param dto dto
+     * @param keyStr keyStr
      * @return 执行结果
      */
-    ResultEnum delVersionData(TableVersionDTO dto);
+    ResultEnum delVersionData(String keyStr);
 
     /**
      * 预览业务时间覆盖
