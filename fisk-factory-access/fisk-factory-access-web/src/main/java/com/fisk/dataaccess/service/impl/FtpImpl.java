@@ -111,6 +111,7 @@ public class FtpImpl implements IFtp {
     public ResultEnum copyFtpFile(int tableAccessId) {
         log.info("【copyFtpFile】请求参数：" + tableAccessId);
         ResultEnum resultEnum = ResultEnum.SUCCESS;
+        FTPClient ftpClient = null;
         try {
             if (tableAccessId == 0) {
                 return ResultEnum.PARAMTER_NOTNULL;
@@ -125,7 +126,7 @@ public class FtpImpl implements IFtp {
                 log.info("【copyFtpFile】appRegistration为空");
                 return ResultEnum.DATA_NOTEXISTS;
             }
-            FTPClient ftpClient = getFtpClient(appRegistrationPO.getId());
+            ftpClient = getFtpClient(appRegistrationPO.getId());
             if (ftpClient == null) {
                 log.info("【copyFtpFile】ftpClient建立连接失败");
                 return ResultEnum.FTP_CONNECTION_ERROR;
@@ -155,6 +156,10 @@ public class FtpImpl implements IFtp {
         } catch (Exception ex) {
             log.error("【copyFtpFile】触发系统异常：" + ex);
             resultEnum = ResultEnum.ERROR;
+        } finally {
+            if (ftpClient != null) {
+                FtpUtils.closeFtpConnect(ftpClient);
+            }
         }
         return resultEnum;
     }

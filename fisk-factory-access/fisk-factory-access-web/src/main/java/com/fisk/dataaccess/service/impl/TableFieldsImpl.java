@@ -833,7 +833,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
             // 日期操作函数
             Calendar calendar = Calendar.getInstance();
-            String sql = String.format("DELETE FROM %s WHERE version NOT IN", tableName);
+            String sql = String.format("DELETE FROM %s WHERE fi_version NOT IN", tableName);
             List<String> sqlConditions = new ArrayList<>();
             int i = 1;
 
@@ -844,10 +844,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     log.info("【delVersionData】自定义模式下自定义规则配置为空");
                     return ResultEnum.DATA_NOTEXISTS;
                 }
-                versionCustomRule = String.format("SELECT (%s) AS version", versionCustomRule);
+                versionCustomRule = String.format("SELECT (%s) AS fi_version", versionCustomRule);
                 log.info("【delVersionData】自定义模式下自定义规则：" + versionCustomRule);
                 List<Map<String, Object>> data = dbHelper.batchExecQueryResultMaps_noClose(versionCustomRule, conn);
-                Object versionObj = data.get(0).get("version");
+                Object versionObj = data.get(0).get("fi_version");
                 if (versionObj == null || versionObj == "") {
                     log.info("【delVersionData】自定义模式下自定义规则查询结果为空");
                     return ResultEnum.DATA_NOTEXISTS;

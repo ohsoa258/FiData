@@ -96,7 +96,7 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
     public String buildVersionSql(String type, String value) {
         if (type.equals("年")) {
             value = "SELECT YEAR\n" +
-                    "\t( GETDATE( ) ) AS version;";
+                    "\t( GETDATE( ) ) AS fi_version;";
         } else if (type.equals("季")) {
             value = "SELECT CAST\n" +
                     "\t( YEAR ( GETDATE( ) ) AS VARCHAR ) + '/Q' +\n" +
@@ -108,18 +108,18 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
                     "\t\t'02' \n" +
                     "\t\tWHEN MONTH ( GETDATE( ) ) <= 9 THEN\n" +
                     "\t\t'03' ELSE '04' \n" +
-                    "\tEND AS version;";
+                    "\tEND AS fi_version;";
         } else if (type.equals("月")) {
             value = "SELECT CAST\n" +
-                    "\t( YEAR ( GETDATE( ) ) AS VARCHAR ) + '/' + CAST ( MONTH ( GETDATE( ) ) AS VARCHAR ) AS version;";
+                    "\t( YEAR ( GETDATE( ) ) AS VARCHAR ) + '/' + CAST ( MONTH ( GETDATE( ) ) AS VARCHAR ) AS fi_version;";
         } else if (type.equals("周")) {
             value = "SELECT CAST\n" +
-                    "\t( YEAR ( GETDATE( ) ) AS VARCHAR ) + '/W' + Datename( week, GetDate( ) ) AS version;";
+                    "\t( YEAR ( GETDATE( ) ) AS VARCHAR ) + '/W' + Datename( week, GetDate( ) ) AS fi_version;";
         } else if (type.equals("日")) {
             value = "SELECT CONVERT\n" +
-                    "\t( CHAR ( 10 ), GetDate( ), 111 ) AS version;";
+                    "\t( CHAR ( 10 ), GetDate( ), 111 ) AS fi_version;";
         } else if (type.equals("自定义")) {
-            value = String.format("SELECT (%s) AS version", value);
+            value = String.format("SELECT (%s) AS fi_version", value);
         }
         return value;
     }

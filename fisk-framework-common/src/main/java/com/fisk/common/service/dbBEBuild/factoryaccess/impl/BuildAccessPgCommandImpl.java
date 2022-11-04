@@ -84,7 +84,7 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
     public String buildVersionSql(String type, String value) {
         if (type.equals("年")) {
             value = "SELECT EXTRACT\n" +
-                    "\t( YEAR FROM now( ) :: TIMESTAMP ) AS VERSION;";
+                    "\t( YEAR FROM now( ) :: TIMESTAMP ) AS fi_version;";
         } else if (type.equals("季")) {
             value = "SELECT EXTRACT\n" +
                     "\t( YEAR FROM now( ) :: TIMESTAMP ) || '/Q' ||\n" +
@@ -96,18 +96,18 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
                     "\t\t'02' \n" +
                     "\t\tWHEN EXTRACT ( MONTH FROM now( ) :: TIMESTAMP ) <= 9 THEN\n" +
                     "\t\t'03' ELSE'04' \n" +
-                    "\tEND AS VERSION;";
+                    "\tEND AS fi_version;";
         } else if (type.equals("月")) {
             value = "SELECT EXTRACT\n" +
-                    "\t( YEAR FROM now( ) :: TIMESTAMP ) || '/' || EXTRACT ( MONTH FROM now( ) :: TIMESTAMP ) AS VERSION;";
+                    "\t( YEAR FROM now( ) :: TIMESTAMP ) || '/' || EXTRACT ( MONTH FROM now( ) :: TIMESTAMP ) AS fi_version;";
         } else if (type.equals("周")) {
             value = "SELECT EXTRACT\n" +
-                    "\t( YEAR FROM now( ) :: TIMESTAMP ) || '/W' || date_part( 'week', now( ) :: TIMESTAMP ) AS VERSION;";
+                    "\t( YEAR FROM now( ) :: TIMESTAMP ) || '/W' || date_part( 'week', now( ) :: TIMESTAMP ) AS fi_version;";
         } else if (type.equals("日")) {
             value = "SELECT\n" +
-                    "\tto_char( now( ) :: TIMESTAMP, 'YYYY/MM/DD' ) AS VERSION;";
+                    "\tto_char( now( ) :: TIMESTAMP, 'YYYY/MM/DD' ) AS fi_version;";
         } else if (type.equals("自定义")) {
-            value = String.format("SELECT (%s) AS version", value);
+            value = String.format("SELECT (%s) AS fi_version", value);
         }
         return value;
     }
