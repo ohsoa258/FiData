@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -20,13 +21,16 @@ import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.service.IFtp;
 import com.fisk.dataaccess.utils.ftp.ExcelUtils;
 import com.fisk.dataaccess.utils.ftp.FtpUtils;
-import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -114,6 +118,8 @@ public class FtpImpl implements IFtp {
         log.info("【copyFtpFile】请求参数：" + tableAccessId);
         ResultEnum resultEnum = ResultEnum.SUCCESS;
         FTPClient ftpClient = null;
+        ByteArrayOutputStream fos = null;
+        ByteArrayInputStream in = null;
         try {
             if (tableAccessId == 0) {
                 return ResultEnum.PARAMTER_NOTNULL;
@@ -128,6 +134,13 @@ public class FtpImpl implements IFtp {
                 log.info("【copyFtpFile】appRegistration为空");
                 return ResultEnum.DATA_NOTEXISTS;
             }
+            // 将源文件复制到Archive文件夹下
+            log.info("【copyFtpFile】文件信息：" + tableAccessPO.getSqlScript());
+            List<String> excelParam = encapsulationExcelParam(tableAccessPO.getSqlScript());
+            if (CollectionUtils.isEmpty(excelParam) || excelParam.size() < 4) {
+                log.error("【copyFtpFile】文件参数解析异常：" + JSON.toJSONString(excelParam));
+                return ResultEnum.SQL_ERROR;
+            }
             ftpClient = getFtpClient(appRegistrationPO.getId());
             if (ftpClient == null) {
                 log.info("【copyFtpFile】ftpClient建立连接失败");
@@ -139,29 +152,36 @@ public class FtpImpl implements IFtp {
                 log.info("【copyFtpFile】文件目录不存在，创建Archive目录");
                 ftpClient.makeDirectory("/Archive");
             }
-            // 将源文件复制到Archive文件夹下
-            log.info("【copyFtpFile】文件信息：" + tableAccessPO.getSqlScript());
-            String[] filePathList = tableAccessPO.getSqlScript().split("/");
-            String fileNameValue = filePathList[filePathList.length - 1];
-            String[] split = fileNameValue.split("\\.");
-            List<String> list = Arrays.asList(split);
-            List arrList = new ArrayList(list);
-
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             Date date = simpleDateFormat.parse(DateTimeUtils.getNow());
             String format = String.valueOf(date.getTime());
-
-            String suffixName = "." + arrList.get(arrList.size() - 1);
-            arrList.remove(arrList.size() - 1);
-            String fileName = Joiner.on(".").join(arrList) + "_" + format + suffixName;
-            String toPath = "/Archive/" + fileName;
-            ftpClient.rename(tableAccessPO.getSqlScript(), toPath);
+            String toPath = "/Archive/" + excelParam.get(3) + "_" + format + excelParam.get(2);
+            // 设置被动模式，开通一个端口来传输数据
+            ftpClient.enterLocalPassiveMode();
+            ftpClient.setBufferSize(1024);
+            fos = new ByteArrayOutputStream();
+            ftpClient.retrieveFile(tableAccessPO.getSqlScript(), fos);
+            in = new ByteArrayInputStream(fos.toByteArray());
+            // 复制文件
+            ftpClient.storeFile(toPath, in);
+            // 移动文件到新目录
+            // ftpClient.rename(String from, String to);
         } catch (Exception ex) {
             log.error("【copyFtpFile】触发系统异常：" + ex);
             resultEnum = ResultEnum.ERROR;
         } finally {
-            if (ftpClient != null) {
-                FtpUtils.closeFtpConnect(ftpClient);
+            try {
+                if (fos != null) {
+                    fos.close();
+                }
+                if (in != null) {
+                    in.close();
+                }
+                if (ftpClient != null) {
+                    FtpUtils.closeFtpConnect(ftpClient);
+                }
+            } catch (Exception ex) {
+                log.error("【copyFtpFile】关闭文件流异常");
             }
         }
         return resultEnum;
