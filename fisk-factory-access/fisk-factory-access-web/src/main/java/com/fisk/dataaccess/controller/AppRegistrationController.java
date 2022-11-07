@@ -323,7 +323,7 @@ public class AppRegistrationController {
 
     @GetMapping("/getDataTypeList/{appId}")
     @ApiOperation(value = "获取FiData ODS数据类型")
-    public ResultEntity<Object> getDataTypeList(Integer appId) {
+    public ResultEntity<Object> getDataTypeList(@PathVariable("appId") Integer appId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dataTypeList(appId));
     }
 
