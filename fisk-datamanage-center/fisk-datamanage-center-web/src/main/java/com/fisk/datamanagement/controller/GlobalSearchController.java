@@ -4,6 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.config.SwaggerConfig;
+import com.fisk.datamanagement.dto.search.SearchDslDTO;
 import com.fisk.datamanagement.service.IGlobalSearch;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -46,6 +47,12 @@ public class GlobalSearchController {
     @GetMapping("/searchTerms")
     public ResultEntity<Object> searchTerms(String keyword) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchTerms(keyword));
+    }
+
+    @ApiOperation("全局搜索-根据Type类型查询")
+    @GetMapping("/searchDsl")
+    public ResultEntity<Object> searchDsl(SearchDslDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchDsl(dto));
     }
 
 }

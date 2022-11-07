@@ -372,5 +372,38 @@ public class DimensionFolderImpl
         tableHistory.addTableHistory(list);
     }
 
+    /**
+     * 新增公共域维度
+     */
+    public void addPublicDimensionFolder() {
+        List<DimensionFolderPO> list = this.query().eq("share", true).list();
+        if (!CollectionUtils.isEmpty(list)) {
+            return;
+        }
+        DimensionFolderPO po = new DimensionFolderPO();
+        po.dimensionFolderCnName = "公共域维度";
+        po.dimensionFolderEnName = "Common domain dimension";
+        po.share = true;
+        if (!this.save(po)) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+    }
+
+    /**
+     * 新增业务域系统文件夹
+     *
+     * @param businessAreaId
+     */
+    public void addSystemDimensionFolder(long businessAreaId) {
+        DimensionFolderPO po = new DimensionFolderPO();
+        po.share = false;
+        po.dimensionFolderEnName = "Current domain dimension";
+        po.dimensionFolderCnName = "当前域维度";
+        po.businessId = (int) businessAreaId;
+        if (!this.save(po)) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+    }
+
 
 }
