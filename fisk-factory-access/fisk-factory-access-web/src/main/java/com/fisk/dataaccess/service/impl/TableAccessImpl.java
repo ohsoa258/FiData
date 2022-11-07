@@ -1846,6 +1846,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             conn = helper.connection(po.connectStr, po.connectAccount, po.connectPwd, dataSourceTypeEnum);
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             st.setMaxRows(10);
+
+            //cdc模式
             if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE_CDC.getName())) {
                 query.querySql = "SELECT * FROM " + query.querySql;
             }
@@ -1974,7 +1976,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 非实时物理表才有sql
         if (!dbTypeEnum.getName().equals(DbTypeEnum.RestfulAPI.getName())
                 && !dbTypeEnum.getName().equals(DbTypeEnum.api.getName())
-                && !dbTypeEnum.getName().equals(DbTypeEnum.oracle_cdc.getName())) {
+                && !dbTypeEnum.getName().equals(DbTypeEnum.oracle_cdc.getName())
+                && !dbTypeEnum.getName().equals(DbTypeEnum.ftp.getName())) {
             String tableName = TableNameGenerateUtils.buildTableName(tableAccessPo.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
             Map<String, String> converSql = publishTaskClient.converSql(tableName, tableAccessPo.sqlScript, dataSourcePo.driveType, null).data;
             //String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());

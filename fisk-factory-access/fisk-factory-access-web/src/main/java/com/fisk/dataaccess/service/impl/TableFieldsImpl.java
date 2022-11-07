@@ -29,7 +29,10 @@ import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
 import com.fisk.dataaccess.dto.flink.FlinkConfigDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.dto.savepointhistory.SavepointHistoryDTO;
-import com.fisk.dataaccess.dto.table.*;
+import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
+import com.fisk.dataaccess.dto.table.TableBusinessDTO;
+import com.fisk.dataaccess.dto.table.TableFieldsDTO;
+import com.fisk.dataaccess.dto.table.TableSyncmodeDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.map.FlinkParameterMap;
@@ -398,7 +401,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             // 执行发布
             try {
                 // 实时--RestfulAPI类型  or  非实时--api类型
-                if ((registration.appType == 0 && DataSourceTypeEnum.RestfulAPI.getName().equals(dataSourcePo.driveType)) || (registration.appType == 1 && DataSourceTypeEnum.API.getName().equals(dataSourcePo.driveType))) {
+                //0实时
+                if ((registration.appType == 0
+                        && DataSourceTypeEnum.RestfulAPI.getName().equals(dataSourcePo.driveType))
+                        || (registration.appType == 1
+                        && DataSourceTypeEnum.API.getName().equals(dataSourcePo.driveType))) {
                     // 传入apiId和api下所有表
                     TableAccessPO accessPo = tableAccessImpl.query().eq("id", accessId).one();
                     List<TableAccessPO> tablePoList = tableAccessImpl.query().eq("api_id", accessPo.apiId).list();
@@ -411,12 +418,12 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     // 构建元数据实时同步数据对象
                     buildMetaDataInstanceAttribute(registration, accessId, 1);
                 } else if (registration.appType == 1) {
-                    // 非实时物理表发布
-                    // 创建表流程
-                    publishTaskClient.publishBuildPhysicsTableTask(data);
                     if (DataSourceTypeEnum.FTP.getName().equals(dataSourcePo.driveType)) {
                         data.excelFlow = true;
                     }
+                    // 非实时物理表发布
+                    // 创建表流程
+                    publishTaskClient.publishBuildPhysicsTableTask(data);
                     // 生成nifi流程
                     //log.info(JSON.toJSONString(data));
                     //publishTaskClient.publishBuildAtlasTableTask(data);
