@@ -279,7 +279,7 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
         try {
             BusinessFilterApiConfigDTO apiConfig = dto.getApiInfo().getApiConfig();
             List<BusinessFilterApiParamDTO> apiParamConfig = dto.getApiInfo().getApiParamConfig().stream().filter(t -> t.getApiParamType() == 2).collect(Collectors.toList());
-            List<BusinessFilterApiResultDTO> apiResultConfig = dto.getApiInfo().getApiResultConfig().stream().filter(t -> StringUtils.isNotEmpty(t.getTargetField()) && t.getResultParamType() == 2).collect(Collectors.toList());
+            List<BusinessFilterApiResultDTO> apiResultConfig = dto.getApiInfo().getApiResultConfig().stream().filter(t -> t.getResultParamType() == 2).collect(Collectors.toList());
             if (apiConfig == null || CollectionUtils.isEmpty(apiParamConfig) || CollectionUtils.isEmpty(apiResultConfig)) {
                 return ResultEnum.PARAMTER_ERROR;
             }
@@ -299,12 +299,6 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
                 if (flag) {
                     token = redisTemplate.opsForValue().get(authRedisKey).toString();
                 }
-            } else {
-                ResultEntity<String> result = collAuthApi(dto);
-                token = result.getData();
-            }
-            if (StringUtils.isEmpty(token)) {
-                return ResultEnum.AUTH_TOKEN_IS_NOTNULL;
             }
             DataSourceConVO dataSourceConVO = dataSourceConManageImpl.getAllDataSource().stream().filter(t -> t.getId() == dto.getDatasourceId()).findFirst().orElse(null);
 
@@ -338,8 +332,21 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
             }
 
             // 拼接sql语句，查询表数据
-            List<String> reqFieldNames = apiParamConfig.stream().filter(t -> StringUtils.isNotEmpty(t.getApiParamValue()) && t.getApiParamKey() != "pageNum" && t.getApiParamKey() != "pageSize").map(f -> f.getApiParamValue()).collect(Collectors.toList());
-            reqFieldNames.addAll(rspFieldKeys);
+            List<String> reqFieldNames = apiParamConfig.stream().filter(t -> StringUtils.isNotEmpty(t.getApiParamValue())
+                            && !t.getApiParamKey().equals("pageNum") && !t.getApiParamKey().equals("pageSize"))
+                    .map(f -> f.getApiParamKey()).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(rspFieldKeys)) {
+                // 主键条件写入到查询字段里去，查询出来的结果用于最后的数据更新
+                List<String> keys = new ArrayList<>();
+                rspFieldKeys.stream().forEach(t -> {
+                    if (!RegexUtils.isContains(reqFieldNames, t)) {
+                        keys.add(t);
+                    }
+                });
+                if (CollectionUtils.isNotEmpty(keys)) {
+                    reqFieldNames.addAll(keys);
+                }
+            }
             BusinessFilterApiParamDTO pageNumDto = apiParamConfig.stream().filter(t -> t.getApiParamKey().equals("pageNum")).findFirst().orElse(null);
             BusinessFilterApiParamDTO pageSizeDto = apiParamConfig.stream().filter(t -> t.getApiParamKey().equals("pageSize")).findFirst().orElse(null);
             Integer pageNum = 0, pageSize = Integer.MAX_VALUE;
@@ -354,17 +361,17 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
             log.info("[collApi]-sql:" + sql);
             AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
             Connection conn = dbHelper.connection(dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword(), dataSourceConVO.getConType());
-            List<Map<String, Object>> data = dbHelper.batchExecQueryResultMaps(sql, conn);
+            List<Map<String, Object>> data = dbHelper.batchExecQueryResultMaps_noClose(sql, conn);
             if (CollectionUtils.isEmpty(data)) {
                 return ResultEnum.SUCCESS;
             }
 
             // 循环表数据拼接成参数调用API
             ApiHttpRequestDTO requestDTO = new ApiHttpRequestDTO();
-            HttpRequestEnum apiRequestType = apiConfig.getApiRequestType() == "POST" ? HttpRequestEnum.POST : HttpRequestEnum.GET;
+            HttpRequestEnum apiRequestType = apiConfig.getApiRequestType().equals("Post") ? HttpRequestEnum.POST : HttpRequestEnum.GET;
             requestDTO.setHttpRequestEnum(apiRequestType);
             requestDTO.setUri(apiConfig.getApiAddress());
-            if (!StringUtils.isNotEmpty(token)) {
+            if (StringUtils.isNotEmpty(token)) {
                 requestDTO.setRequestHeader(token);
             }
             Map<String, String> headersParams = new IdentityHashMap<>();
@@ -385,14 +392,13 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
                     boolean isContainsKey = RegexUtils.isContains(rspFieldKeys, key);
                     if (isContainsKey) {
                         keyMap.put(key, value);
-                        continue;
                     }
-                    if (apiConfig.getApiParamRange() == "Headers") {
+                    if (apiConfig.getApiParamRange().equals("Headers")) {
                         headersParams.put(key, value);
-                    } else if (apiConfig.getApiParamRange() == "Body") {
-                        if (apiConfig.getApiBodyType() == "form-data") {
+                    } else if (apiConfig.getApiParamRange().equals("Body")) {
+                        if (apiConfig.getApiBodyType().equals("form-data")) {
                             formDataParams.put(key, value);
-                        } else if (apiConfig.getApiBodyType() == "raw") {
+                        } else if (apiConfig.getApiBodyType().equals("raw")) {
                             rawParams.put(key, value);
                         }
                     }
@@ -418,12 +424,18 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
                             Object value = jsonObject.get(apiResult.getSourceField());
                             fieldMap.put(key, value);
                         }
-                        String sqlWhere = "";
-                        for (Map.Entry entry : keyMap.entrySet()) {
-                            sqlWhere += " AND " + entry.getKey() + "=" + "'" + entry.getValue() + "'";
+                        if (CollectionUtils.isNotEmpty(fieldMap)) {
+                            String sqlWhere = "";
+                            for (Map.Entry entry : keyMap.entrySet()) {
+                                sqlWhere += " AND " + entry.getKey() + "=" + "'" + entry.getValue() + "'";
+                            }
+                            if (StringUtils.isNotEmpty(sqlWhere)) {
+                                String updateSql = dbCommand.buildSingleUpdateSql(tableName, fieldMap, sqlWhere);
+                                updateSqlList.add(updateSql);
+                            }
+                        } else {
+                            log.error("[collApi]-更新的字段key不存在，请检查是否是token过期导致查询未返回数据");
                         }
-                        String updateSql = dbCommand.buildSingleUpdateSql(tableName, fieldMap, sqlWhere);
-                        updateSqlList.add(updateSql);
                     }
                 } else {
                     // 记录失败的数据
@@ -434,6 +446,8 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
             // 保存更新数据
             if (CollectionUtils.isNotEmpty(updateSqlList)) {
                 dbHelper.executeSql(updateSqlList, conn);
+            }else{
+                log.info("[collApi]sql为空，取消执行");
             }
         } catch (Exception ex) {
             log.error("[collApi]-ex:" + ex);

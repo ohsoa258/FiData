@@ -1,4 +1,4 @@
-package com.fisk.datagovernance.dto.dataquality.emailserver;
+package com.fisk.system.dto.emailserver;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.EqualsAndHashCode;

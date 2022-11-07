@@ -11,9 +11,11 @@ import java.util.Map;
 
 /**
  * @author dick
+ * @version 1.0
+ * @description mysql
+ * @date 2022/11/7 18:06
  */
-public class BuildGovernancePgCommandImpl implements IBuildGovernanceSqlCommand {
-
+public class BuildGovernanceMySqlCommandImpl implements IBuildGovernanceSqlCommand {
     @Override
     public String buildPagingSql(String tableName, String fields, String orderBy, Integer pageIndex, Integer pageSize) {
         StringBuilder str = new StringBuilder();
@@ -24,7 +26,7 @@ public class BuildGovernancePgCommandImpl implements IBuildGovernanceSqlCommand 
         if (StringUtils.isNotEmpty(orderBy)) {
             str.append(" ORDER BY " + orderBy);
         }
-        // OFFSET 从0开始
+        // OFFSET从0开始
         str.append(String.format(" LIMIT %s OFFSET %s ", pageSize, (pageIndex - 1) * pageSize));
         return str.toString();
     }
@@ -45,44 +47,17 @@ public class BuildGovernancePgCommandImpl implements IBuildGovernanceSqlCommand 
 
     @Override
     public String buildQueryCountSql(String tableName, String queryConditions) {
-        StringBuilder str = new StringBuilder();
-        str.append("SELECT COUNT(*) AS totalNum FROM ");
-        str.append(tableName);
-        str.append(" WHERE 1=1 ");
-        if (!StringUtils.isEmpty(queryConditions)) {
-            str.append(queryConditions);
-        }
-        return str.toString();
+        return null;
     }
 
     @Override
     public String buildQuerySql(String tableName, String fields, String queryConditions) {
-        StringBuilder str = new StringBuilder();
-        str.append(" SELECT ");
-        if (StringUtils.isNotEmpty(fields)) {
-            str.append(fields);
-        } else {
-            str.append(" * ");
-        }
-        str.append(" FROM " + tableName);
-        str.append(" WHERE 1=1 " + queryConditions);
-        return str.toString();
+        return null;
     }
 
     @Override
     public String buildSingleInsertSql(String tableName, Map<String, Object> member) {
-        StringBuilder str = new StringBuilder();
-        str.append("INSERT INTO ");
-        str.append(tableName);
-        str.append("(");
-        String column = singleInsertSql(member, 0);
-        str.append(column);
-        str.append(")");
-        str.append("VALUES(");
-        String data = singleInsertSql(member, 1);
-        str.append(data);
-        str.append(")");
-        return str.toString();
+        return null;
     }
 
     @Override
@@ -96,35 +71,6 @@ public class BuildGovernancePgCommandImpl implements IBuildGovernanceSqlCommand 
         str.append(" WHERE 1=1 ");
         str.append(editConditions);
         return str.toString();
-    }
-
-    /**
-     * 单条新增SQL语句
-     *
-     * @param member
-     * @param type
-     * @return
-     */
-    private static String singleInsertSql(Map<String, Object> member, int type) {
-        List<String> columnList = new ArrayList<>();
-        Iterator iter = member.entrySet().iterator();
-        while (iter.hasNext()) {
-            Map.Entry entry = (Map.Entry) iter.next();
-            String name = entry.getKey().toString();
-            //获取列名
-            if (type == 0) {
-                columnList.add(name);
-            }
-            //拼接value
-            else {
-                if (StringUtils.isEmpty(entry.getValue() == null ? "" : entry.getValue().toString())) {
-                    columnList.add("null");
-                } else {
-                    columnList.add("'" + entry.getValue().toString() + "'");
-                }
-            }
-        }
-        return Joiner.on(",").join(columnList);
     }
 
     /**
