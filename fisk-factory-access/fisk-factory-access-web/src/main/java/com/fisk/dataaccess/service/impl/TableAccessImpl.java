@@ -1973,6 +1973,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(listPo);
         dto.appAbbreviation = registrationPo.appAbbreviation;
         dto.tableName = tableAccessPo.tableName;
+        dto.selectSql = tableAccessPo.sqlScript;
         // 非实时物理表才有sql
         if (!dbTypeEnum.getName().equals(DbTypeEnum.RestfulAPI.getName())
                 && !dbTypeEnum.getName().equals(DbTypeEnum.api.getName())
