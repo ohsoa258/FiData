@@ -91,6 +91,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         try {
             baseMapper.insert(model);
         } catch (Exception e) {
+            log.error("调度报错", e );
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         dto.id = model.id;
@@ -125,7 +126,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     @Override
     public ResultEntity<NifiCustomWorkListDTO> editData(NifiCustomWorkflowDetailVO dto) {
 
-        String componentType = "开始";
+        String componentType = "触发器";
 
         // 修改tb_nifi_custom_wokflow
         NifiCustomWorkflowDTO workflowDTO = dto.dto;
@@ -139,6 +140,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             }
             workflowService.editData(workflowDTO);
         } catch (Exception e) {
+            log.error("修改管道报错", e);
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
@@ -158,6 +160,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         // 批量保存tb_nifi_custom_wokflow_detail
         boolean success = this.updateBatchById(list);
         if (!success) {
+            log.error("修改管道报错2");
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
@@ -406,7 +409,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
      */
     private BuildNifiCustomWorkFlowDTO getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailDTO dto) {
 
-        String scheduleType = "开始";
+        String scheduleType = "触发器";
         String taskGroupTpye = "任务组";
         BuildNifiCustomWorkFlowDTO flow = new BuildNifiCustomWorkFlowDTO();
         // 调用组装操作类型方法

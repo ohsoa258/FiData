@@ -15,7 +15,7 @@ public class NifiStageMessageDTO {
     public String groupId;
     public Date startTime;
     public Date endTime;
-    public Integer counts;
+    public int counts;
     public NifiStageDTO nifiStageDTO;
     /*
      * 管道批次号

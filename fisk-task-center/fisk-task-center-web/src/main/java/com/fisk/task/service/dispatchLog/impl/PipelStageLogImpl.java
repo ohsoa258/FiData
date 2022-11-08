@@ -83,6 +83,7 @@ public class PipelStageLogImpl extends ServiceImpl<PipelStateLogMapper, PipelSta
             List<PipelStageLogVO> pipelStateLogs = pipelStateLogMapper.getPipelStateLogs(list.get(0).taskTraceId);
             pipelStateLogs.stream()
                     .filter(Objects::nonNull)
+                    .sorted(Comparator.comparing(PipelStageLogVO::getCreateTime).reversed())
                     .forEach(f -> {
                         f.typeName = DispatchLogEnum.getName(f.type).getName();
                         f.msg = NifiStageTypeEnum.getName(Integer.parseInt(f.msg)).getName();

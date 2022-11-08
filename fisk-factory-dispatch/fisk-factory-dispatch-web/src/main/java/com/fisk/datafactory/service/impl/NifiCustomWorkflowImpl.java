@@ -282,6 +282,7 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                 redisUtil.del(RedisKeyBuild.buildDispatchStructureKey(id));
             }
         } catch (Exception e) {
+            log.error("调度报错", e );
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
@@ -319,15 +320,15 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
             if (CollectionUtils.isNotEmpty(filter.getRecords())) {
                 // 分页对象添加子表组件id集合
                 // TODO 调用task feign接口,查询呼吸灯状态
-                Instant late = Instant.now();
-                ResultEntity<List<NifiCustomWorkflowVO>> result = publishTaskClient.getNifiCustomWorkflowDetails(buildRecords(filter.getRecords()));
-                Instant now = Instant.now();
-                log.info("呼吸灯时间(秒): " + Duration.between(late, now).getSeconds());
-                log.info("呼吸灯时间(毫秒): " + Duration.between(late, now).toMillis());
-                if (result.code == ResultEnum.SUCCESS.getCode()) {
-                    filter.setRecords(result.data);
-                    return filter;
-                }
+                //Instant late = Instant.now();
+                //ResultEntity<List<NifiCustomWorkflowVO>> result = publishTaskClient.getNifiCustomWorkflowDetails(buildRecords(filter.getRecords()));
+                //Instant now = Instant.now();
+                //log.info("呼吸灯时间(秒): " + Duration.between(late, now).getSeconds());
+                //log.info("呼吸灯时间(毫秒): " + Duration.between(late, now).toMillis());
+                //if (result.code == ResultEnum.SUCCESS.getCode()) {
+                //    filter.setRecords(result.data);
+                //    return filter;
+                //}
             }
         } catch (Exception e) {
             // 此时task异常保存,不查询呼吸灯状态

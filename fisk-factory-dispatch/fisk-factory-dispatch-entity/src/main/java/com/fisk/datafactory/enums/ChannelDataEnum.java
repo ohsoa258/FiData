@@ -14,7 +14,7 @@ public enum ChannelDataEnum implements BaseEnum {
     /**
      * 开始
      */
-    SCHEDULE_TASK(1, "开始"),
+    SCHEDULE_TASK(1, "触发器"),
     /**
      * 任务组
      */
@@ -61,7 +61,13 @@ public enum ChannelDataEnum implements BaseEnum {
     /**
      * 数据湖非实时api任务
      */
-    DATALAKE_API_TASK(10, "数据湖非实时api任务");
+    DATALAKE_API_TASK(10, "数据湖非实时api任务"),
+
+    /**
+     * 自定义脚本任务
+     */
+    CUSTOMIZE_SCRIPT_TASK(13,"自定义脚本任务")
+    ;
 
     ChannelDataEnum(int value, String name) {
         this.name = name;
@@ -144,6 +150,7 @@ public enum ChannelDataEnum implements BaseEnum {
         list.add(ChannelDataEnum.OLAP_DIMENSION_TASK.getName());
         list.add(ChannelDataEnum.OLAP_FACT_TASK.getName());
         list.add(ChannelDataEnum.OLAP_WIDETABLE_TASK.getName());
+        list.add(ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName());
         return list;
     }
 }

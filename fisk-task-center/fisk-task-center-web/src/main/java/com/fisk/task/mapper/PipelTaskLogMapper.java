@@ -3,6 +3,7 @@ package com.fisk.task.mapper;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 import com.fisk.task.entity.PipelTaskLogPO;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -12,6 +13,6 @@ import java.util.List;
  */
 public interface PipelTaskLogMapper extends FKBaseMapper<PipelTaskLogPO> {
 
-    @Select("select * from tb_pipel_task_log where task_id=#{taskId} order by create_time desc")
-    List<PipelTaskLogVO> getByTaskId(String taskId);
+
+    List<PipelTaskLogVO> getByTaskId(@Param("taskId") String taskId, @Param("jobTraceId") String jobTraceId);
 }

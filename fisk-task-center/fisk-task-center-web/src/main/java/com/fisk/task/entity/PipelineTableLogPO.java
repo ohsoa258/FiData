@@ -19,7 +19,7 @@ public class PipelineTableLogPO extends BasePO {
     public String comment;
     public Date startTime;
     public Date endTime;
-    public Integer counts;
+    public int counts;
     public Integer appId;
     public Integer dispatchType;
 

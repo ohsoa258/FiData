@@ -161,6 +161,9 @@ public class BuildDataModelDorisTableListener
                     taskDwDimPO.storedProcedureName = "update" + modelPublishTableDTO.tableName + "()";
                     taskDwDimMapper.insert(taskDwDimPO);
                     log.info("建模创表语句:" + JSON.toJSONString(pgdbTable2));
+                } else {
+                    log.error("userclient无法查询到dw库的连接信息");
+                    throw new FkException(ResultEnum.ERROR);
                 }
                 BusinessResult businessResult = iPostgreBuild.postgreBuildTable(pgdbTable2.get(0), BusinessTypeEnum.DATAMODEL);
                 if (!businessResult.success) {

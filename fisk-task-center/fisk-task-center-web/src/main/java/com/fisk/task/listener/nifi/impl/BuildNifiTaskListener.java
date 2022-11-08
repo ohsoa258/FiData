@@ -1021,7 +1021,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         tableNifiSettingPO.saveNumbersProcessorId = processorEntity.getId();
         //连接器
         componentConnector(groupId, evaluateJsons.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.MATCHED);
-        componentsConnector(groupId, processorEntity.getId(), supervisionId, autoEndBranchTypeEnums);
+        //componentsConnector(groupId, processorEntity.getId(), supervisionId, autoEndBranchTypeEnums);
         ProcessorEntity publishKafkaForPipelineProcessor = createPublishKafkaForPipelineProcessor(config, dto, groupId, 16);
         tableNifiSettingPO.publishKafkaPipelineProcessorId = publishKafkaForPipelineProcessor.getId();
         //连接器
@@ -1787,9 +1787,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //调用存储过程sql,存日志
         String executsql1 = "UPDATE tb_etl_log SET `status` =1,enddate='${" + NifiConstants.AttrConstants.END_TIME + "}',datarows='${" + NifiConstants.AttrConstants.NUMBERS + "}',topic_name='${" + NifiConstants.AttrConstants.KAFKA_TOPIC + "}' ";
         executsql1 += "WHERE\n" +
-                "\tid=(SELECT a.mid FROM(SELECT MAX(id) as mid from tb_etl_log where tablename='" + config.targetDsConfig.targetTableName + "') a );\n";
-        executsql1 += "update tb_etl_Incremental l1 INNER JOIN tb_etl_Incremental l2 on l1.id=l2.id set l1.incremental_objectivescore_start='${incremental_objectivescore_end}', l1.enable_flag=2 " +
-                "where l1.object_name = '" + config.targetDsConfig.targetTableName + "' ;";
+                "\tcode='${fidata_batch_code}';\n";
+        executsql1 += "update tb_etl_Incremental  set incremental_objectivescore_start='${incremental_objectivescore_end}', enable_flag=2 " +
+                "where object_name = '" + config.targetDsConfig.targetTableName + "' ;";
         callDbProcedureProcessorDTO.dbConnectionId = cfgDbPoolId;
         callDbProcedureProcessorDTO.executsql = executsql1;
         callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(16);
@@ -2385,8 +2385,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             filedValues += ",\"" + selectSql.replaceAll("\"", "\\\\\"") + "\"";
         }
 
-        return "INSERT INTO tb_etl_log ( tablename, startdate, `status`,query_start_time,query_end_time,query_sql) " +
-                "VALUES ('" + dto.tableName + "', '${" + NifiConstants.AttrConstants.START_TIME + "}', 1" + filedValues + ")";
+        return "INSERT INTO tb_etl_log ( tablename, startdate, `status`,query_start_time,query_end_time,query_sql,code) " +
+                "VALUES ('" + dto.tableName + "', '${" + NifiConstants.AttrConstants.START_TIME + "}', 1" + filedValues + ",'${fidata_batch_code}')";
     }
 
     /**
@@ -2601,7 +2601,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     public List<ProcessorEntity> buildDeltaTimeProcessorEntity(List<DeltaTimeDTO> deltaTimes, String groupId, String sourceId, List<ProcessorEntity> res, TableNifiSettingPO tableNifiSettingPO) {
         List<ProcessorEntity> processorEntities = new ArrayList<>();
         String connectId = "";
-        if(!CollectionUtils.isEmpty(deltaTimes)){
+        if (!CollectionUtils.isEmpty(deltaTimes)) {
             for (DeltaTimeDTO dto : deltaTimes) {
                 //变量和变量的值都不为空
                 if (Objects.nonNull(dto) && Objects.nonNull(dto.deltaTimeParameterTypeEnum) &&
@@ -2611,7 +2611,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
                         if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT)) {
                             //该变量的值为常量,常量的话去增量表里查,需要在保存并发布的时候向增量表插入一条数据,此时不用添加组件
-
+                            tableNifiSettingPO.queryStratTimeProcessorId = null;
+                            tableNifiSettingPO.convertStratTimeToJsonProcessorId = null;
+                            tableNifiSettingPO.setStratTimeProcessorId = null;
 
                         } else if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.VARIABLE)) {
                             //该变量的值为表达式,需要去数据源查,需要加三个组件
@@ -2631,12 +2633,16 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                             connectId = evaluateJson.getId();
                         } else {
                             //该变量的值未定义,未定义的话用前面情况5查出来的值,此时不用加组件
-
+                            tableNifiSettingPO.queryStratTimeProcessorId = null;
+                            tableNifiSettingPO.convertStratTimeToJsonProcessorId = null;
+                            tableNifiSettingPO.setStratTimeProcessorId = null;
                         }
                     } else if (Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.END_TIME)) {
                         if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT)) {
                             //该变量的值为常量,常量的话去增量表里查,需要在保存并发布的时候向增量表插入一条数据,此时不用添加组件
-
+                            tableNifiSettingPO.queryStratTimeProcessorId = null;
+                            tableNifiSettingPO.convertStratTimeToJsonProcessorId = null;
+                            tableNifiSettingPO.setStratTimeProcessorId = null;
                         } else if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.VARIABLE)) {
                             //该变量的值为表达式,需要去数据源查,需要加三个组件
                             ProcessorEntity processorEntity = queryIncrementTimeProcessor(dto.variableValue, groupId, sourceId);
@@ -2650,14 +2656,16 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                             tableNifiSettingPO.queryEndTimeProcessorId = processorEntity.getId();
                             tableNifiSettingPO.convertEndTimeToJsonProcessorId = jsonRes.getId();
                             tableNifiSettingPO.setEndTimeProcessorId = evaluateJson.getId();
-                            if(connectId!=""){
+                            if (connectId != "") {
                                 componentConnector(groupId, connectId, processorEntity.getId(), AutoEndBranchTypeEnum.MATCHED);
                             }
                             componentConnector(groupId, processorEntity.getId(), jsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
                             componentConnector(groupId, jsonRes.getId(), evaluateJson.getId(), AutoEndBranchTypeEnum.SUCCESS);
                         } else {
                             //该变量的值未定义,未定义的话用前面情况5查出来的值,此时不用加组件
-
+                            tableNifiSettingPO.queryStratTimeProcessorId = null;
+                            tableNifiSettingPO.convertStratTimeToJsonProcessorId = null;
+                            tableNifiSettingPO.setStratTimeProcessorId = null;
                         }
                     }
                 }

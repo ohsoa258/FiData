@@ -561,5 +561,14 @@ public interface INiFiHelper {
      */
     public BusinessResult<ControllerServiceEntity> buildKeytabCredentialsService(BuildKeytabCredentialsServiceDTO data);
 
+    /**
+     * 停止单个组件
+     *
+     * @param groupId         groupId
+     * @param processorEntity processorEntity
+     * @return ProcessorEntity
+     */
+    public List<ProcessorEntity> stopProcessor(String groupId, ProcessorEntity processorEntity);
+
 
 }

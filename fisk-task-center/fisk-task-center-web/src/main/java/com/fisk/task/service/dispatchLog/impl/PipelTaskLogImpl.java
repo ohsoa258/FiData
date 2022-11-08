@@ -91,8 +91,9 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
     public List<PipelTaskLogVO> getPipelTaskLogVos(List<PipelTaskLogVO> pipelTaskLogs) {
         List<PipelTaskLogVO> pipelTaskLogVos = new ArrayList<>();
         for (PipelTaskLogVO pipelTaskLog : pipelTaskLogs) {
-            List<PipelTaskLogVO> byTaskId = pipelTaskLogMapper.getByTaskId(pipelTaskLog.taskId);
+            List<PipelTaskLogVO> byTaskId = pipelTaskLogMapper.getByTaskId(pipelTaskLog.taskId, pipelTaskLog.jobTraceId);
             byTaskId.stream().filter(Objects::nonNull)
+                    .sorted(Comparator.comparing(PipelTaskLogVO::getCreateTime).reversed())
                     //.filter(e -> e.taskId.equalsIgnoreCase(pipelTaskLog.taskId))
                     .forEach(f -> {
                         f.taskName = pipelTaskLog.taskName;
@@ -100,8 +101,12 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
                         f.tableId = pipelTaskLog.tableId;
                         f.typeName = DispatchLogEnum.getName(f.type).getName();
                     });
-            pipelTaskLogVos.addAll(byTaskId);
+            //等于一个新对象
+
+            pipelTaskLogVos.addAll(JSON.parseArray(JSON.toJSONString(byTaskId), PipelTaskLogVO.class));
         }
+        pipelTaskLogVos.sort((a, b) -> a.getCreateTime().compareTo(b.getCreateTime()));
+        Collections.reverse(pipelTaskLogVos);
         return pipelTaskLogVos;
     }
 

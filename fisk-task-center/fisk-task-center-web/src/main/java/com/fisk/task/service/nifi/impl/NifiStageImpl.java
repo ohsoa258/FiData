@@ -1,6 +1,7 @@
 package com.fisk.task.service.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -129,127 +130,151 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
         NifiStagePO nifiStagePO = new NifiStagePO();
         String pipleName = "";
         String JobName = "";
-        NifiStageMessageDTO nifiStageMessageDTO = new NifiStageMessageDTO();
-        try {
-            nifiStageMessageDTO = JSON.parseObject(data, NifiStageMessageDTO.class);
-            String topicName = nifiStageMessageDTO.topic;
-            if (StringUtils.isEmpty(nifiStageMessageDTO.pipelStageTraceId)) {
-                nifiStageMessageDTO.pipelStageTraceId = UUID.randomUUID().toString();
-            }
-            String[] topic = topicName.split("\\.");
-            int type = 0;
-            Integer tableAccessId = 0;
-            Integer appId = 0;
-            //分类,长度为6的是普通调度,其他的是管道调度 4 6 7
-            if (topic.length == 6) {
-                tableAccessId = Integer.valueOf(topic[5]);
-                type = Integer.parseInt(topic[3]);
-                appId = Integer.valueOf(topic[4]);
-            } else if (topic.length == 7) {
-                String pipelineId = topic[3];
-                //通过应用简称+表类别+表id,查到组件id
-                tableAccessId = Integer.valueOf(topic[6]);
-                type = Integer.parseInt(topic[4]);
-                appId = Integer.valueOf(topic[5]);
-                NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = olap.getNifiGetPortHierarchy(pipelineId, type, null, tableAccessId);
-                //三个阶段,默认正在运行
-                NifiPortsHierarchyDTO nIfiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchyDTO, nifiStageMessageDTO.pipelTraceId);
-                NifiCustomWorkflowDetailDTO itselfPort = nIfiPortHierarchy.itselfPort;
-                nifiStagePO.componentId = Math.toIntExact(itselfPort.id);
-            } else if (topic.length == 4) {
-                //长度为4的只可能为nifi流程,可以通过groupid区分
-                String pipelineId = topic[3];
-                TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query()
-                        .eq("table_component_id", nifiStageMessageDTO.groupId).eq("del_flag", 1).one();
-                //通过应用简称+表类别+表id,查到组件id
-                String tableName = tableNifiSettingPO.tableName;
-                tableAccessId = tableNifiSettingPO.tableAccessId;
-                type = tableNifiSettingPO.type;
-                appId = tableNifiSettingPO.appId;
-                NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = olap.getNifiGetPortHierarchy(pipelineId, type, tableName, tableAccessId);
-                //三个阶段,默认正在运行
-                NifiPortsHierarchyDTO nIfiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchyDTO, nifiStageMessageDTO.pipelTraceId);
-                NifiCustomWorkflowDetailDTO itselfPort = nIfiPortHierarchy.itselfPort;
-                nifiStagePO.componentId = Math.toIntExact(itselfPort.id);
-            }
+        //转成集合
+        data ="[" + data + "]";
+        List<NifiStageMessageDTO>  nifiStageMessages = JSON.parseArray(data, NifiStageMessageDTO.class);
+        for (NifiStageMessageDTO nifiStageMessageDTO : nifiStageMessages) {
+            try {
+                String topicName = nifiStageMessageDTO.topic;
+                if (StringUtils.isEmpty(nifiStageMessageDTO.pipelStageTraceId)) {
+                    nifiStageMessageDTO.pipelStageTraceId = UUID.randomUUID().toString();
+                }
+                String[] topic = topicName.split("\\.");
+                int type = 0;
+                Integer tableAccessId = 0;
+                Integer appId = 0;
+                //分类,长度为6的是普通调度,其他的是管道调度 4 6 7
+                if (topic.length == 6) {
+                    tableAccessId = Integer.valueOf(topic[5]);
+                    type = Integer.parseInt(topic[3]);
+                    appId = Integer.valueOf(topic[4]);
+                } else if (topic.length == 7) {
+                    String pipelineId = topic[3];
+                    //通过应用简称+表类别+表id,查到组件id
+                    tableAccessId = Integer.valueOf(topic[6]);
+                    type = Integer.parseInt(topic[4]);
+                    appId = Integer.valueOf(topic[5]);
+                    NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = olap.getNifiGetPortHierarchy(pipelineId, type, null, tableAccessId);
+                    //三个阶段,默认正在运行
+                    NifiPortsHierarchyDTO nIfiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchyDTO, nifiStageMessageDTO.pipelTraceId);
+                    NifiCustomWorkflowDetailDTO itselfPort = nIfiPortHierarchy.itselfPort;
+                    nifiStagePO.componentId = Math.toIntExact(itselfPort.id);
+                } else if (topic.length == 4) {
+                    //长度为4的只可能为nifi流程,可以通过groupid区分
+                    String pipelineId = topic[3];
+                    TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query()
+                            .eq("table_component_id", nifiStageMessageDTO.groupId).eq("del_flag", 1).one();
+                    //通过应用简称+表类别+表id,查到组件id
+                    String tableName = tableNifiSettingPO.tableName;
+                    tableAccessId = tableNifiSettingPO.tableAccessId;
+                    type = tableNifiSettingPO.type;
+                    appId = tableNifiSettingPO.appId;
+                    NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = olap.getNifiGetPortHierarchy(pipelineId, type, tableName, tableAccessId);
+                    //三个阶段,默认正在运行
+                    NifiPortsHierarchyDTO nIfiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchyDTO, nifiStageMessageDTO.pipelTraceId);
+                    NifiCustomWorkflowDetailDTO itselfPort = nIfiPortHierarchy.itselfPort;
+                    nifiStagePO.componentId = Math.toIntExact(itselfPort.id);
+                }
 
-            if (nifiStageMessageDTO.message == null || "".equals(nifiStageMessageDTO.message)) {
-                nifiStagePO.comment = "运行成功";
-                nifiStagePO.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
-                nifiStagePO.insertPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
-                nifiStagePO.transitionPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
-            } else {
-                nifiStagePO.comment = nifiStageMessageDTO.message;
-                if (nifiStageMessageDTO.nifiStageDTO != null) {
-                    NifiStageDTO nifiStageDTO = nifiStageMessageDTO.nifiStageDTO;
-                    nifiStagePO = NifiStageMapImpl.INSTANCES.dtoToPo(nifiStageDTO);
+                if (nifiStageMessageDTO.message == null || "".equals(nifiStageMessageDTO.message)) {
+                    nifiStagePO.comment = "运行成功";
+                    nifiStagePO.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+                    nifiStagePO.insertPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+                    nifiStagePO.transitionPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
                 } else {
-                    ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiStageMessageDTO.groupId);
-                    List<BulletinEntity> bulletins = processGroup.getBulletins();
-                    if (bulletins != null && bulletins.size() != 0) {
-                        String sourceId = bulletins.get(bulletins.size() - 1).getSourceId();
-                        ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(sourceId);
-                        String description = processor.getComponent().getConfig().getComments();
-                        if (Objects.equals(description, NifiStageTypeEnum.QUERY_PHASE.getName())) {
-                            nifiStagePO.queryPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
-                            nifiStagePO.insertPhase = NifiStageTypeEnum.NOT_RUN.getValue();
-                            nifiStagePO.transitionPhase = NifiStageTypeEnum.NOT_RUN.getValue();
-                        } else if (Objects.equals(description, NifiStageTypeEnum.TRANSITION_PHASE.getName())) {
-                            nifiStagePO.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
-                            nifiStagePO.insertPhase = NifiStageTypeEnum.NOT_RUN.getValue();
-                            nifiStagePO.transitionPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
-                        } else if (Objects.equals(description, NifiStageTypeEnum.INSERT_PHASE.getName())) {
-                            nifiStagePO.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
-                            nifiStagePO.insertPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
-                            nifiStagePO.insertPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
+                    nifiStagePO.comment = nifiStageMessageDTO.message;
+                    if (nifiStageMessageDTO.nifiStageDTO != null) {
+                        NifiStageDTO nifiStageDTO = nifiStageMessageDTO.nifiStageDTO;
+                        nifiStagePO = NifiStageMapImpl.INSTANCES.dtoToPo(nifiStageDTO);
+                    } else {
+                        ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiStageMessageDTO.groupId);
+                        List<BulletinEntity> bulletins = processGroup.getBulletins();
+                        if (bulletins != null && bulletins.size() != 0) {
+                            String sourceId = bulletins.get(bulletins.size() - 1).getSourceId();
+                            ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(sourceId);
+                            String description = processor.getComponent().getConfig().getComments();
+                            if (Objects.equals(description, NifiStageTypeEnum.QUERY_PHASE.getName())) {
+                                nifiStagePO.queryPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
+                                nifiStagePO.insertPhase = NifiStageTypeEnum.NOT_RUN.getValue();
+                                nifiStagePO.transitionPhase = NifiStageTypeEnum.NOT_RUN.getValue();
+                            } else if (Objects.equals(description, NifiStageTypeEnum.TRANSITION_PHASE.getName())) {
+                                nifiStagePO.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+                                nifiStagePO.insertPhase = NifiStageTypeEnum.NOT_RUN.getValue();
+                                nifiStagePO.transitionPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
+                            } else if (Objects.equals(description, NifiStageTypeEnum.INSERT_PHASE.getName())) {
+                                nifiStagePO.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+                                nifiStagePO.insertPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+                                nifiStagePO.insertPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
+                            }
                         }
                     }
                 }
-            }
 
 
-            PipelineTableLogPO pipelineTableLogPO = new PipelineTableLogPO();
-            pipelineTableLogPO.comment = nifiStagePO.comment;
-            pipelineTableLogPO.componentId = nifiStagePO.componentId;
-            pipelineTableLogPO.tableId = tableAccessId;
-            pipelineTableLogPO.tableType = type;
-            pipelineTableLogPO.appId = appId;
-            if (Objects.equals(nifiStagePO.insertPhase, NifiStageTypeEnum.RUN_FAILED.getValue()) ||
-                    Objects.equals(nifiStagePO.queryPhase, NifiStageTypeEnum.RUN_FAILED.getValue()) ||
-                    Objects.equals(nifiStagePO.transitionPhase, NifiStageTypeEnum.RUN_FAILED.getValue())) {
-                pipelineTableLogPO.state = NifiStageTypeEnum.RUN_FAILED.getValue();
-            } else if (Objects.equals(nifiStagePO.insertPhase, NifiStageTypeEnum.RUNNING.getValue()) ||
-                    Objects.equals(nifiStagePO.queryPhase, NifiStageTypeEnum.RUNNING.getValue()) ||
-                    Objects.equals(nifiStagePO.transitionPhase, NifiStageTypeEnum.RUNNING.getValue())) {
-                pipelineTableLogPO.state = NifiStageTypeEnum.RUNNING.getValue();
-            } else if (Objects.equals(nifiStagePO.insertPhase, NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue()) &&
-                    Objects.equals(nifiStagePO.queryPhase, NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue()) &&
-                    Objects.equals(nifiStagePO.transitionPhase, NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue())) {
-                pipelineTableLogPO.state = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
-            } else if (Objects.equals(nifiStagePO.insertPhase, NifiStageTypeEnum.NOT_RUN.getValue()) &&
-                    Objects.equals(nifiStagePO.queryPhase, NifiStageTypeEnum.NOT_RUN.getValue()) &&
-                    Objects.equals(nifiStagePO.transitionPhase, NifiStageTypeEnum.NOT_RUN.getValue())) {
-                pipelineTableLogPO.state = NifiStageTypeEnum.NOT_RUN.getValue();
-            }
-            pipelineTableLogPO.counts = nifiStageMessageDTO.counts;
-            pipelineTableLogPO.endTime = nifiStageMessageDTO.endTime;
-            pipelineTableLogPO.startTime = nifiStageMessageDTO.startTime;
-            pipelineTableLogPO.appId = appId;
-            if (nifiStagePO.componentId == null || nifiStagePO.componentId == 0) {
-                pipelineTableLogPO.dispatchType = 0;
-            } else {
-                pipelineTableLogPO.dispatchType = 1;
-            }
-            pipelineTableLog.insert(pipelineTableLogPO);
+                PipelineTableLogPO pipelineTableLogPO = new PipelineTableLogPO();
+                pipelineTableLogPO.comment = nifiStagePO.comment;
+                pipelineTableLogPO.componentId = nifiStagePO.componentId;
+                pipelineTableLogPO.tableId = tableAccessId;
+                pipelineTableLogPO.tableType = type;
+                pipelineTableLogPO.appId = appId;
+                if (Objects.equals(nifiStagePO.insertPhase, NifiStageTypeEnum.RUN_FAILED.getValue()) ||
+                        Objects.equals(nifiStagePO.queryPhase, NifiStageTypeEnum.RUN_FAILED.getValue()) ||
+                        Objects.equals(nifiStagePO.transitionPhase, NifiStageTypeEnum.RUN_FAILED.getValue())) {
+                    pipelineTableLogPO.state = NifiStageTypeEnum.RUN_FAILED.getValue();
+                } else if (Objects.equals(nifiStagePO.insertPhase, NifiStageTypeEnum.RUNNING.getValue()) ||
+                        Objects.equals(nifiStagePO.queryPhase, NifiStageTypeEnum.RUNNING.getValue()) ||
+                        Objects.equals(nifiStagePO.transitionPhase, NifiStageTypeEnum.RUNNING.getValue())) {
+                    pipelineTableLogPO.state = NifiStageTypeEnum.RUNNING.getValue();
+                } else if (Objects.equals(nifiStagePO.insertPhase, NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue()) &&
+                        Objects.equals(nifiStagePO.queryPhase, NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue()) &&
+                        Objects.equals(nifiStagePO.transitionPhase, NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue())) {
+                    pipelineTableLogPO.state = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+                } else if (Objects.equals(nifiStagePO.insertPhase, NifiStageTypeEnum.NOT_RUN.getValue()) &&
+                        Objects.equals(nifiStagePO.queryPhase, NifiStageTypeEnum.NOT_RUN.getValue()) &&
+                        Objects.equals(nifiStagePO.transitionPhase, NifiStageTypeEnum.NOT_RUN.getValue())) {
+                    pipelineTableLogPO.state = NifiStageTypeEnum.NOT_RUN.getValue();
+                }
+                pipelineTableLogPO.counts = nifiStageMessageDTO.counts;
+                pipelineTableLogPO.endTime = nifiStageMessageDTO.endTime;
+                pipelineTableLogPO.startTime = nifiStageMessageDTO.startTime;
+                pipelineTableLogPO.appId = appId;
+                if (nifiStagePO.componentId == null || nifiStagePO.componentId == 0) {
+                    pipelineTableLogPO.dispatchType = 0;
+                } else {
+                    pipelineTableLogPO.dispatchType = 1;
+                }
+                pipelineTableLog.insert(pipelineTableLogPO);
 
-            //----------------------------------------------
-            HashMap<Integer, Object> taskMap = new HashMap<>();
-            //nifiStageMessageDTO.pipelTaskTraceId
+                //----------------------------------------------
+                HashMap<Integer, Object> taskMap = new HashMap<>();
+                //nifiStageMessageDTO.pipelTaskTraceId
+                taskMap.put(DispatchLogEnum.taskcount.getValue(), nifiStageMessageDTO.counts);
+                taskMap.put(DispatchLogEnum.entrydate.getValue(), nifiStageMessageDTO.entryDate);
+                if (StringUtils.isEmpty(nifiStagePO.comment) || !nifiStagePO.comment.contains("成功")) {
+                    taskMap.put(DispatchLogEnum.taskcomment.getValue(), nifiStagePO.comment);
+                    DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = new DispatchExceptionHandlingDTO();
+                    dispatchExceptionHandlingDTO.comment = nifiStagePO.comment;
+                    dispatchExceptionHandlingDTO.pipelTraceId = nifiStageMessageDTO.pipelTraceId;
+                    dispatchExceptionHandlingDTO.pipelJobTraceId = nifiStageMessageDTO.pipelJobTraceId;
+                    dispatchExceptionHandlingDTO.pipelStageTraceId = nifiStageMessageDTO.pipelStageTraceId;
+                    dispatchExceptionHandlingDTO.pipelTaskTraceId = nifiStageMessageDTO.pipelTaskTraceId;
+                    iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
+                }
+                HashMap<Integer, Object> stagekMap = new HashMap<>();
+                stagekMap.put(DispatchLogEnum.stageinsert.getValue(), nifiStagePO.insertPhase);
+                stagekMap.put(DispatchLogEnum.stagestart.getValue(), nifiStagePO.queryPhase);
+                stagekMap.put(DispatchLogEnum.stagestate.getValue(), pipelineTableLogPO.state);
+                stagekMap.put(DispatchLogEnum.stagetransition.getValue(), nifiStagePO.transitionPhase);
+                stagekMap.put(DispatchLogEnum.entrydate.getValue(), nifiStageMessageDTO.entryDate);
+                if (!StringUtils.isEmpty(nifiStageMessageDTO.pipelTaskTraceId)) {
+                    //iPipelStageLog.savePipelTaskStageLog(nifiStageMessageDTO.pipelStageTraceId, nifiStageMessageDTO.pipelTaskTraceId, stagekMap);
+                }
+                //-----------------------------------------------
+                nifiStagePO.pipelineTableLogId = Math.toIntExact(pipelineTableLogPO.id);
 
-            taskMap.put(DispatchLogEnum.taskcount.getValue(), nifiStageMessageDTO.counts);
-            taskMap.put(DispatchLogEnum.entrydate.getValue(), nifiStageMessageDTO.entryDate);
-            if (StringUtils.isEmpty(nifiStagePO.comment) || !nifiStagePO.comment.contains("成功")) {
-                taskMap.put(DispatchLogEnum.taskcomment.getValue(), nifiStagePO.comment);
+                //this.save(nifiStagePO);
+
+            } catch (Exception e) {
                 DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = new DispatchExceptionHandlingDTO();
                 dispatchExceptionHandlingDTO.comment = nifiStagePO.comment;
                 dispatchExceptionHandlingDTO.pipelTraceId = nifiStageMessageDTO.pipelTraceId;
@@ -257,36 +282,15 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                 dispatchExceptionHandlingDTO.pipelStageTraceId = nifiStageMessageDTO.pipelStageTraceId;
                 dispatchExceptionHandlingDTO.pipelTaskTraceId = nifiStageMessageDTO.pipelTaskTraceId;
                 iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
-            }
-            HashMap<Integer, Object> stagekMap = new HashMap<>();
-            stagekMap.put(DispatchLogEnum.stageinsert.getValue(), nifiStagePO.insertPhase);
-            stagekMap.put(DispatchLogEnum.stagestart.getValue(), nifiStagePO.queryPhase);
-            stagekMap.put(DispatchLogEnum.stagestate.getValue(), pipelineTableLogPO.state);
-            stagekMap.put(DispatchLogEnum.stagetransition.getValue(), nifiStagePO.transitionPhase);
-            stagekMap.put(DispatchLogEnum.entrydate.getValue(), nifiStageMessageDTO.entryDate);
-            if (!StringUtils.isEmpty(nifiStageMessageDTO.pipelTaskTraceId)) {
-                iPipelStageLog.savePipelTaskStageLog(nifiStageMessageDTO.pipelStageTraceId, nifiStageMessageDTO.pipelTaskTraceId, stagekMap);
-            }
-            //-----------------------------------------------
-            nifiStagePO.pipelineTableLogId = Math.toIntExact(pipelineTableLogPO.id);
-
-            this.save(nifiStagePO);
-
-        } catch (Exception e) {
-            DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = new DispatchExceptionHandlingDTO();
-            dispatchExceptionHandlingDTO.comment = nifiStagePO.comment;
-            dispatchExceptionHandlingDTO.pipelTraceId = nifiStageMessageDTO.pipelTraceId;
-            dispatchExceptionHandlingDTO.pipelJobTraceId = nifiStageMessageDTO.pipelJobTraceId;
-            dispatchExceptionHandlingDTO.pipelStageTraceId = nifiStageMessageDTO.pipelStageTraceId;
-            dispatchExceptionHandlingDTO.pipelTaskTraceId = nifiStageMessageDTO.pipelTaskTraceId;
-            iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
-            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
-        } finally {
-            if (acke != null) {
-                acke.acknowledge();
+                log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
+            } finally {
+                if (acke != null) {
+                    acke.acknowledge();
+                }
             }
         }
         return nifiStagePO;
     }
+
 
 }

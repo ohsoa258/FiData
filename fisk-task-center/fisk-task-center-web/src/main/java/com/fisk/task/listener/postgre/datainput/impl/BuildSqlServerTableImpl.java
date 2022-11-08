@@ -1,5 +1,6 @@
 package com.fisk.task.listener.postgre.datainput.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.enums.task.FuncNameEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
@@ -67,10 +68,10 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             }
 
         });
-        stgSql.append("fi_createtime varchar(50) DEFAULT (getdate()),fi_updatetime varchar(50),fi_enableflag varchar(50)," +
+        stgSql.append("fi_createtime varchar(50) DEFAULT (format(GETDATE(),'yyyy-MM-dd HH:mm:ss') ),fi_updatetime varchar(50),fi_enableflag varchar(50)," +
                 "fi_error_message varchar(250),fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3'," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT (newid())");
 
-        sqlFileds.append("fi_createtime varchar(50) DEFAULT (getdate()),fi_updatetime varchar(50),fidata_batch_code varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT (newid())");
+        sqlFileds.append("fi_createtime varchar(50) DEFAULT (format(GETDATE(),'yyyy-MM-dd HH:mm:ss')),fi_updatetime varchar(50),fidata_batch_code varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT (newid())");
         String havePk = pksql.toString();
         sqlFileds.append(")");
         stgSql.append(");");
@@ -127,6 +128,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
 
     @Override
     public String assemblySql(DataAccessConfigDTO config, SynchronousTypeEnum synchronousTypeEnum, String funcName, BuildNifiFlowDTO buildNifiFlow) {
+        log.info("assemblySql方法参数,{},{},{},{}", JSON.toJSONString(config), JSON.toJSONString(synchronousTypeEnum), JSON.toJSONString(funcName), JSON.toJSONString(buildNifiFlow));
         TableBusinessDTO business = config.businessDTO;
         String tableKey = "";
         String targetTableName = config.processorConfig.targetTableName;
@@ -137,25 +139,26 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         } else {
             sql += "call public." + funcName + "('','";
         }
-
+        sql = sql.replaceFirst("call public." + funcName + "\\(", "exec [dbo]." + funcName);
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
-            if (targetTableName.startsWith("stg_dim_")) {
-                tableKey = targetTableName.substring(8) + "key";
-            } else if (targetTableName.startsWith("stg_fact_")) {
-                tableKey = targetTableName.substring(9) + "key";
+            if (targetTableName.startsWith("dim_")) {
+                tableKey = targetTableName.substring(4) + "key";
+            } else if (targetTableName.startsWith("fact_")) {
+                tableKey = targetTableName.substring(5) + "key";
             }
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
                 sql += "stg_" + targetTableName + "'";
                 sql += ",'" + targetTableName + "'";
             } else {
+                sql += "${fragment.index}','''";
                 String fieldList = config.modelPublishFieldDTOList.stream().filter(Objects::nonNull)
                         .filter(e -> e.fieldEnName != null && !Objects.equals("", e.fieldEnName))
-                        .map(t -> t.fieldEnName).collect(Collectors.joining("'',''"));
-                sql += fieldList + "','" + tableKey + "','" + targetTableName + "'";
-                sql += ",'" + config.processorConfig.targetTableName.substring(4) + "'";
+                        .map(t -> t.fieldEnName).collect(Collectors.joining("'''',''''"));
+                sql += fieldList + "''','" + tableKey + "','stg_" + targetTableName + "'";
+                sql += ",'" + config.processorConfig.targetTableName + "'";
             }
         } else {
-            sql = sql.replaceFirst("call public." + funcName + "\\(", "exec [dbo]." + funcName);
+
             tableKey = stgAndTableName.get(2);
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
                 sql += stgAndTableName.get(0) + "'";
@@ -221,7 +224,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                 sql += ",'')";
             }
         }
-        if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
+        if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS) || Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
             sql = sql.replaceFirst("\\)", "");
         }
         log.info("函数语句:" + sql);
@@ -261,7 +264,6 @@ public class BuildSqlServerTableImpl implements IbuildTable {
     }
 
 
-
     @Override
     public List<String> getStgAndTableName(String tableName) {
         return TableNameGenerateUtils.getStgAndTableName(tableName);
@@ -290,13 +292,16 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         fieldList.forEach((l) -> {
             if (l.fieldType.contains("INT") || l.fieldType.contains("TEXT")) {
                 sqlFileds.append("\"" + l.fieldEnName + "\" " + l.fieldType.toLowerCase() + ",");
-                stgSqlFileds.append("\"" + l.fieldEnName + "\" text,");
+                stgSqlFileds.append("\"" + l.fieldEnName + "\" varchar(4000),");
             } else if (l.fieldType.toLowerCase().contains("numeric") || l.fieldType.toLowerCase().contains("float")) {
                 sqlFileds.append("\"" + l.fieldEnName + "\" numeric(18,9) ,");
-                stgSqlFileds.append("\"" + l.fieldEnName + "\" text,");
+                stgSqlFileds.append("\"" + l.fieldEnName + "\" varchar(4000),");
+            } else if (l.fieldType.contains("TIMESTAMP")) {
+                sqlFileds.append("" + l.fieldEnName + " datetime ,");
+                stgSqlFileds.append("\"" + l.fieldEnName + "\" varchar(4000),");
             } else {
                 sqlFileds.append("\"" + l.fieldEnName + "\" " + l.fieldType.toLowerCase() + "(" + l.fieldLength + ") ,");
-                stgSqlFileds.append("\"" + l.fieldEnName + "\" text,");
+                stgSqlFileds.append("\"" + l.fieldEnName + "\" varchar(4000),");
             }
             if (l.isPrimaryKey == 1) {
                 pksql.append("" + l.fieldEnName + " ,");
@@ -324,19 +329,10 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         //创建表
         log.info("pg_dw建表语句" + sql1);
         //String stgTable = sql1.replaceFirst(tableName, "stg_" + tableName);
-        String stgTable = "DROP TABLE IF EXISTS stg_" + tableName + "; CREATE TABLE stg_" + tableName + " (" + tablePk + " varchar(50) NOT NULL DEFAULT sys_guid()," + stgSqlFileds.toString() + associatedKey + "fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3');";
+        String stgTable = "DROP TABLE IF EXISTS stg_" + tableName + "; CREATE TABLE stg_" + tableName + " (" + tablePk + " varchar(50) NOT NULL DEFAULT(newid())," + stgSqlFileds.toString() + associatedKey + "fi_createtime varchar(50) DEFAULT(format(GETDATE(),'yyyy-MM-dd HH:mm:ss')),fi_updatetime varchar(50),fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3');";
         stgTable += "create index " + tableName + "enableflagsy on stg_" + tableName + " (fi_enableflag);";
         sqlList.add(stgTable);
         sqlList.add(sql1);
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("table_name", tableName);
-        taskDwDimMapper.deleteByMap(map);
-        TaskDwDimPO taskDwDimPO = new TaskDwDimPO();
-        //taskDwDimPO.areaBusinessName=businessAreaName;//业务域名
-        taskDwDimPO.sqlContent = sql1;//创建表的sql
-        taskDwDimPO.tableName = tableName;
-        taskDwDimPO.storedProcedureName = "update" + tableName + "()";
-        taskDwDimMapper.insert(taskDwDimPO);
         return sqlList;
     }
 
