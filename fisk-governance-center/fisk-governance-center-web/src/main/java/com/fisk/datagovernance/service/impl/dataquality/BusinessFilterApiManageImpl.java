@@ -387,8 +387,8 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
                 Map<String, String> keyMap = new IdentityHashMap<>();
                 for (Map.Entry entry : objectMap.entrySet()) {
                     // 如果是更新标识参数，跳过
-                    String key = entry.getKey() != null ? entry.getKey().toString() : "";
-                    String value = entry.getValue() != null ? entry.getValue().toString() : "";
+                    String key = entry.getKey() == null ? null : entry.getKey().toString();
+                    String value = entry.getValue() == null ? null : entry.getValue().toString();
                     boolean isContainsKey = RegexUtils.isContains(rspFieldKeys, key);
                     if (isContainsKey) {
                         keyMap.put(key, value);
@@ -427,7 +427,11 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
                         if (CollectionUtils.isNotEmpty(fieldMap)) {
                             String sqlWhere = "";
                             for (Map.Entry entry : keyMap.entrySet()) {
-                                sqlWhere += " AND " + entry.getKey() + "=" + "'" + entry.getValue() + "'";
+                                if (entry.getValue() == null) {
+                                    sqlWhere += " AND " + entry.getKey() + " IS NULL ";
+                                } else {
+                                    sqlWhere += " AND " + entry.getKey() + "=" + "'" + entry.getValue() + "'";
+                                }
                             }
                             if (StringUtils.isNotEmpty(sqlWhere)) {
                                 String updateSql = dbCommand.buildSingleUpdateSql(tableName, fieldMap, sqlWhere);
@@ -446,7 +450,7 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
             // 保存更新数据
             if (CollectionUtils.isNotEmpty(updateSqlList)) {
                 dbHelper.executeSql(updateSqlList, conn);
-            }else{
+            } else {
                 log.info("[collApi]sql为空，取消执行");
             }
         } catch (Exception ex) {
