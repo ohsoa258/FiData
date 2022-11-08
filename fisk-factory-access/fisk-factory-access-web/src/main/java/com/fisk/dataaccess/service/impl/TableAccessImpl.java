@@ -561,22 +561,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
             dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
             dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
-            /*if (dto.fieldType.contains("INT2")
-                    || dto.fieldType.contains("INT4")
-                    || dto.fieldType.contains("INT8")) {
-                dto.fieldType = "INT";
-            }
-            if (dto.fieldType.toLowerCase().contains(fieldType1)
-                    || dto.fieldType.toLowerCase().contains(fieldType2)) {
-                dto.fieldLength = "50";
-            } else {
-                dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
-            }*/
-
-            // 转换表字段类型和长度
-            /*List<String> list = transformField(dto.fieldType, dto.fieldLength);
-            dto.fieldType = list.get(0);
-            dto.fieldLength = list.get(1);*/
             fieldNameDTOList.add(dto);
         }
         data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());
@@ -1583,7 +1567,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         try {
             AppRegistrationPO appRegistrationPo = registrationMapper.selectById(query.appId);
             if (appRegistrationPo == null) {
-                throw new FkException(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
+                throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR);
             }
             ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(appRegistrationPo.targetDbId);
             if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
