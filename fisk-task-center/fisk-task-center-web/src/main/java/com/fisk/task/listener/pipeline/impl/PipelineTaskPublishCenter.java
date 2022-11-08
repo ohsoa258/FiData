@@ -107,15 +107,15 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                     String pipelineId = split1[3];
                     if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.DAILY_NIFI_FLOW.getValue())) {
                         //卡夫卡的内容在发布时就定义好了
-                        log.info("打印topic内容:" + JSON.toJSONString(kafkaReceiveDTO));
+                        String msg = JSON.toJSONString(kafkaReceiveDTO);
+                        log.info("打印topic内容:" + msg);
                         if (kafkaReceiveDTO.ifTaskStart) {
-                            log.info("发送的topic1:{},内容:{}", topicName, mapString);
                             HashMap<Integer, Object> taskMap = new HashMap<>();
                             taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN + " - " + simpleDateFormat.format(new Date()));
                             log.info("第二处调用保存task日志");
                             iPipelTaskLog.savePipelTaskLog(null, kafkaReceiveDTO.pipelTaskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
                             //任务中心发布任务,通知任务开始执行
-                            kafkaTemplateHelper.sendMessageAsync(topicName, mapString);
+                            kafkaTemplateHelper.sendMessageAsync(topicName, msg);
                         } else {
                             redisUtil.heartbeatDetection("nowExec" + kafkaReceiveDTO.pipelTaskTraceId + "," + topicName, topicName, Long.parseLong(waitTime));
                             //存一个真正的过期时间,不断刷新 这里key是pipelTaskTraceId.因为手动调度没有jobId和taskId;
