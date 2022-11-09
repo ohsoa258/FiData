@@ -562,6 +562,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         instance.setContact_info(app.getAppPrincipal());
         instance.setDescription(app.getAppDes());
         instance.setComment(app.getAppDes());
+        instance.setOwner(app.createUser);
 
         // 库
         List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
@@ -571,6 +572,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         db.setContact_info(app.getAppPrincipal());
         db.setDescription(app.getAppDes());
         db.setComment(app.getAppDes());
+        db.setOwner(app.createUser);
 
         TableAccessPO tableAccess = tableAccessImpl.query().eq("id", accessId).one();
         if (tableAccess == null) {
@@ -585,6 +587,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     app.appAbbreviation,
                     app.whetherSchema));
             table.setContact_info(app.getAppPrincipal());
+            table.setOwner(tableAccess.createUser);
             table.setDescription(tableAccess.getTableDes());
             table.setComment(String.valueOf(app.getId()));
 
