@@ -11,4 +11,10 @@ public class BuildCommonOracleCommand implements IBuildCommonSqlCommand {
     public String buildAllDbSql() {
         return "select OWNER as dbname from all_tables where OWNER not in ('SYS','SYSTEM')";
     }
+
+    @Override
+    public Object druidAnalyseSql(String sql) {
+        return null;
+    }
+
 }

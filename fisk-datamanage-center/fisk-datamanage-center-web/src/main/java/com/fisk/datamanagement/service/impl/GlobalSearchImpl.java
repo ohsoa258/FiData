@@ -7,6 +7,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryAttributeDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryTermAttributeDTO;
+import com.fisk.datamanagement.dto.search.SearchDslDTO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.service.IGlobalSearch;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
@@ -37,6 +38,8 @@ public class GlobalSearchImpl implements IGlobalSearch {
     private String searchQuick;
     @Value("${atlas.searchSuggestions}")
     private String searchSuggestions;
+    @Value("${atlas.searchDsl}")
+    private String searchDsl;
 
     @Override
     public JSONObject searchQuick(String query, int limit, int offset) {
@@ -86,6 +89,17 @@ public class GlobalSearchImpl implements IGlobalSearch {
             list.add(item);
         }
         return list;
+    }
+
+    @Override
+    public JSONObject searchDsl(SearchDslDTO dto) {
+        String parameter = "?limit=" + dto.limit + "&offset=" + dto.offset + "&query=" + dto.query;
+        ResultDataDTO<String> result = atlasClient.get(searchDsl + parameter);
+        if (result.code != AtlasResultEnum.REQUEST_SUCCESS) {
+            JSONObject msg = JSON.parseObject(result.data);
+            throw new FkException(ResultEnum.BAD_REQUEST, msg.getString("errorMessage"));
+        }
+        return JSON.parseObject(result.data);
     }
 
 }

@@ -58,6 +58,12 @@ public class ApiConfigDTO
     public int tableBusinessType;
 
     /**
+     * 表路径
+     */
+    @ApiModelProperty(value = "表路径")
+    public String tablePath;
+
+    /**
      * sql语句
      */
     @ApiModelProperty(value = "sql语句")

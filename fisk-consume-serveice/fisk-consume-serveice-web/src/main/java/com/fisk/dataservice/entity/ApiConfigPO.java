@@ -60,6 +60,11 @@ public class ApiConfigPO extends BasePO
     public int tableBusinessType;
 
     /**
+     * 表路径
+     */
+    public String tablePath;
+
+    /**
      * sql语句
      */
     public String createSql;

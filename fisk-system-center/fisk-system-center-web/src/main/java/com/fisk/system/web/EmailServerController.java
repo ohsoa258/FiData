@@ -1,20 +1,21 @@
-package com.fisk.datagovernance.controller;
+package com.fisk.system.web;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.datagovernance.config.SwaggerConfig;
-import com.fisk.datagovernance.dto.dataquality.emailserver.EmailServerDTO;
-import com.fisk.datagovernance.dto.dataquality.emailserver.EmailServerEditDTO;
-import com.fisk.datagovernance.dto.dataquality.emailserver.EmailServerQueryDTO;
-import com.fisk.datagovernance.service.dataquality.IEmailServerManageService;
-import com.fisk.datagovernance.vo.dataquality.emailserver.EmailServerVO;
+import com.fisk.system.config.SwaggerConfig;
+import com.fisk.system.dto.emailserver.EmailServerDTO;
+import com.fisk.system.dto.emailserver.EmailServerEditDTO;
+import com.fisk.system.dto.emailserver.EmailServerQueryDTO;
+import com.fisk.system.service.IEmailServerManageService;
+import com.fisk.system.vo.emailserver.EmailServerVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author dick
@@ -51,5 +52,17 @@ public class EmailServerController {
     @DeleteMapping("/delete/{id}")
     public ResultEntity<Object> deleteData(@PathVariable("id") int id) {
         return ResultEntityBuild.build(service.deleteData(id));
+    }
+
+    @ApiOperation("查询所有邮件服务器信息")
+    @PostMapping("/getEmailServerList")
+    public ResultEntity<List<EmailServerVO>> getEmailServerList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getEmailServerList());
+    }
+
+    @ApiOperation("根据ID查询邮件服务器信息")
+    @GetMapping("/getById/{id}")
+    public ResultEntity<EmailServerVO> getEmailServerById(@RequestParam("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getEmailServerById(id));
     }
 }

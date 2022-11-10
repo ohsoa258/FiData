@@ -75,6 +75,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -128,6 +129,8 @@ public class BusinessAreaImpl
     @Resource
     BusinessProcessImpl businessProcessImpl;
     @Resource
+    DimensionFolderImpl dimensionFolder;
+    @Resource
     WideTableImpl wideTable;
     @Resource
     private DataFactoryClient dataFactoryClient;
@@ -140,18 +143,21 @@ public class BusinessAreaImpl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultEnum addData(BusinessAreaDTO businessAreaDTO) {
+    public ResultEnum addData(BusinessAreaDTO dto) {
         //判断名称是否重复
         QueryWrapper<BusinessAreaPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(BusinessAreaPO::getBusinessName, businessAreaDTO.businessName);
+        queryWrapper.lambda().eq(BusinessAreaPO::getBusinessName, dto.businessName);
         BusinessAreaPO businessAreaPo = mapper.selectOne(queryWrapper);
         if (businessAreaPo != null) {
             return ResultEnum.BUSINESS_AREA_EXIST;
         }
-        BusinessAreaPO po = businessAreaDTO.toEntity(BusinessAreaPO.class);
-        boolean save = this.save(po);
-
-        return save ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        Integer flat = mapper.insertBusinessArea(dto, userHelper.getLoginUserInfo().id, LocalDateTime.now());
+        if (flat == 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        dimensionFolder.addPublicDimensionFolder();
+        dimensionFolder.addSystemDimensionFolder(dto.id);
+        return ResultEnum.SUCCESS;
     }
 
     @Override

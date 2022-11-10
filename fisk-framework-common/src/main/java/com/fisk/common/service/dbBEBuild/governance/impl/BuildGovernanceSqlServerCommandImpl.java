@@ -26,7 +26,8 @@ public class BuildGovernanceSqlServerCommandImpl implements IBuildGovernanceSqlC
         } else {
             str.append(" ORDER BY 1");
         }
-        str.append(" OFFSET " + pageIndex + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY;");
+        // OFFSET 从0开始
+        str.append(" OFFSET " + (pageIndex - 1) * pageSize + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY;");
         return str.toString();
     }
 
@@ -42,7 +43,7 @@ public class BuildGovernanceSqlServerCommandImpl implements IBuildGovernanceSqlC
         } else {
             str.append(" ORDER BY 1");
         }
-        str.append(" OFFSET " + pageIndex + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY;");
+        str.append(" OFFSET " + (pageIndex - 1) * pageSize + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY;");
         return str.toString();
     }
 
@@ -96,7 +97,7 @@ public class BuildGovernanceSqlServerCommandImpl implements IBuildGovernanceSqlC
         str.append(" SET ");
         String column = singleUpdateSql(member);
         str.append(column);
-        str.append(" WHERE ");
+        str.append(" WHERE 1=1 ");
         str.append(editConditions);
         return str.toString();
     }

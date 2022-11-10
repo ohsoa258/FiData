@@ -27,7 +27,6 @@ public class SwaggerConfig {
     public static final String BUSINESS_FILTER_CONTROLLER = "business-filter-controller";
     public static final String DATA_CHECK_CONTROLLER = "data-check-controller";
     public static final String DATASOURCE_CONTROLLER = "datasource-controller";
-    public static final String EMAIL_SERVER_CONTROLLER = "email-server-controller";
     public static final String LIFECYCLE_CONTROLLER = "lifecycle-controller";
     public static final String NOTICE_CONTROLLER = "notice-controller";
     public static final String TEMPLATE_CONTROLLER = "template-controller";
@@ -50,7 +49,6 @@ public class SwaggerConfig {
                 .tags(new Tag(BUSINESS_FILTER_CONTROLLER, "业务清洗API"))
                 .tags(new Tag(DATA_CHECK_CONTROLLER, "数据校验API"))
                 .tags(new Tag(DATASOURCE_CONTROLLER, "数据源API"))
-                .tags(new Tag(EMAIL_SERVER_CONTROLLER, "邮件服务器API"))
                 .tags(new Tag(LIFECYCLE_CONTROLLER, "生命周期API"))
                 .tags(new Tag(NOTICE_CONTROLLER, "告警通知API"))
                 .tags(new Tag(TEMPLATE_CONTROLLER, "模板配置API"))

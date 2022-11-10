@@ -3,6 +3,7 @@ package com.fisk.datamanagement.service;
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryAttributeDTO;
+import com.fisk.datamanagement.dto.search.SearchDslDTO;
 
 import java.util.List;
 
@@ -44,5 +45,13 @@ public interface IGlobalSearch {
      * @return
      */
     List<GlossaryAttributeDTO> searchTerms(String keyword);
+
+    /**
+     * 根据Type查询数据
+     *
+     * @param dto
+     * @return
+     */
+    JSONObject searchDsl(SearchDslDTO dto);
 
 }

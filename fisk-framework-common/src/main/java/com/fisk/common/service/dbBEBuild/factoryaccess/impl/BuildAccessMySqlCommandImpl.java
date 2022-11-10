@@ -1,7 +1,11 @@
 package com.fisk.common.service.dbBEBuild.factoryaccess.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
-import com.fisk.common.core.enums.dbdatatype.*;
+import com.fisk.common.core.enums.dbdatatype.MySqlTypeEnum;
+import com.fisk.common.core.enums.dbdatatype.OracleTypeEnum;
+import com.fisk.common.core.enums.dbdatatype.PgTypeEnum;
+import com.fisk.common.core.enums.dbdatatype.SqlServerTypeEnum;
 import com.fisk.common.core.enums.factory.BusinessTimeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
@@ -64,6 +68,17 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
         }
     }
 
+    @Override
+    public JSONObject dataTypeList() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("字符串型", "VARCHAR");
+        jsonObject.put("整型", "INT");
+        jsonObject.put("时间戳类型", "TIMESTAMP");
+        jsonObject.put("浮点型", "FLOAT");
+        jsonObject.put("文本型", "TEXT");
+        return jsonObject;
+    }
+
     /**
      * mySql转MySQL
      *
@@ -72,34 +87,29 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] mySqlConversionMySQL(DataTypeConversionDTO dto) {
         MySqlTypeEnum typeEnum = MySqlTypeEnum.getValue(dto.dataType);
-        String[] data = new String[2];
+        String[] data = new String[1];
         switch (typeEnum) {
             case INT:
             case BIT:
             case SMALLINT:
             case BIGINT:
-                data[0] = FiDataDataTypeEnum.INT.getDescription();
-                data[1] = MySqlTypeEnum.INT.getName();
+                data[0] = MySqlTypeEnum.INT.getName();
                 break;
             case NUMERIC:
             case DECIMAL:
-                data[0] = FiDataDataTypeEnum.FLOAT.getDescription();
-                data[1] = MySqlTypeEnum.FLOAT.getName();
+                data[0] = MySqlTypeEnum.FLOAT.getName();
                 break;
             case TEXT:
-                data[0] = FiDataDataTypeEnum.TEXT.getDescription();
-                data[1] = MySqlTypeEnum.TEXT.getName();
+                data[0] = MySqlTypeEnum.TEXT.getName();
                 break;
             case DATE:
             case TIMESTAMP:
             case TIME:
             case DATETIME:
-                data[0] = FiDataDataTypeEnum.TIMESTAMP.getDescription();
-                data[1] = MySqlTypeEnum.TIMESTAMP.getName();
+                data[0] = MySqlTypeEnum.TIMESTAMP.getName();
                 break;
             default:
-                data[0] = FiDataDataTypeEnum.NVARCHAR.getDescription();
-                data[1] = MySqlTypeEnum.VARCHAR.getName();
+                data[0] = MySqlTypeEnum.VARCHAR.getName();
         }
         return data;
     }
@@ -112,34 +122,29 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] mySqlConversionPg(DataTypeConversionDTO dto) {
         MySqlTypeEnum typeEnum = MySqlTypeEnum.getValue(dto.dataType);
-        String[] data = new String[2];
+        String[] data = new String[1];
         switch (typeEnum) {
             case INT:
             case BIT:
             case SMALLINT:
             case BIGINT:
-                data[0] = FiDataDataTypeEnum.INT.getDescription();
-                data[1] = PgTypeEnum.INT4.getName();
+                data[0] = PgTypeEnum.INT4.getName();
                 break;
             case NUMERIC:
             case DECIMAL:
-                data[0] = FiDataDataTypeEnum.FLOAT.getDescription();
-                data[1] = PgTypeEnum.FLOAT4.getName();
+                data[0] = PgTypeEnum.FLOAT4.getName();
                 break;
             case TEXT:
-                data[0] = FiDataDataTypeEnum.TEXT.getDescription();
-                data[1] = PgTypeEnum.TEXT.getName();
+                data[0] = PgTypeEnum.TEXT.getName();
                 break;
             case DATE:
             case TIMESTAMP:
             case TIME:
             case DATETIME:
-                data[0] = FiDataDataTypeEnum.TIMESTAMP.getDescription();
-                data[1] = PgTypeEnum.TIMESTAMP.getName();
+                data[0] = PgTypeEnum.TIMESTAMP.getName();
                 break;
             default:
-                data[0] = FiDataDataTypeEnum.NVARCHAR.getDescription();
-                data[1] = PgTypeEnum.VARCHAR.getName();
+                data[0] = PgTypeEnum.VARCHAR.getName();
         }
         return data;
     }
@@ -152,34 +157,29 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] mySqlConversionOracle(DataTypeConversionDTO dto) {
         MySqlTypeEnum typeEnum = MySqlTypeEnum.getValue(dto.dataType);
-        String[] data = new String[2];
+        String[] data = new String[1];
         switch (typeEnum) {
             case INT:
             case BIT:
             case SMALLINT:
             case BIGINT:
-                data[0] = FiDataDataTypeEnum.INT.getDescription();
-                data[1] = OracleTypeEnum.NUMBER.getName();
+                data[0] = OracleTypeEnum.INT.getName();
                 break;
             case NUMERIC:
             case DECIMAL:
-                data[0] = FiDataDataTypeEnum.FLOAT.getDescription();
-                data[1] = OracleTypeEnum.NUMBER.getName();
+                data[0] = OracleTypeEnum.NUMBER.getName();
                 break;
             case TEXT:
-                data[0] = FiDataDataTypeEnum.TEXT.getDescription();
-                data[1] = OracleTypeEnum.CLOB.getName();
+                data[0] = OracleTypeEnum.CLOB.getName();
                 break;
             case DATE:
             case TIMESTAMP:
             case TIME:
             case DATETIME:
-                data[0] = FiDataDataTypeEnum.TIMESTAMP.getDescription();
-                data[1] = OracleTypeEnum.TIMESTAMP.getName();
+                data[0] = OracleTypeEnum.TIMESTAMP.getName();
                 break;
             default:
-                data[0] = FiDataDataTypeEnum.NVARCHAR.getDescription();
-                data[1] = OracleTypeEnum.VARCHAR2.getName();
+                data[0] = OracleTypeEnum.VARCHAR2.getName();
         }
         return data;
     }
@@ -192,34 +192,29 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] mySqlConversionSqlServer(DataTypeConversionDTO dto) {
         MySqlTypeEnum typeEnum = MySqlTypeEnum.getValue(dto.dataType);
-        String[] data = new String[2];
+        String[] data = new String[1];
         switch (typeEnum) {
             case INT:
             case BIT:
             case SMALLINT:
             case BIGINT:
-                data[0] = FiDataDataTypeEnum.INT.getDescription();
-                data[1] = SqlServerTypeEnum.INT.getName();
+                data[0] = SqlServerTypeEnum.INT.getName();
                 break;
             case NUMERIC:
             case DECIMAL:
-                data[0] = FiDataDataTypeEnum.FLOAT.getDescription();
-                data[1] = SqlServerTypeEnum.FLOAT.getName();
+                data[0] = SqlServerTypeEnum.FLOAT.getName();
                 break;
             case TEXT:
-                data[0] = FiDataDataTypeEnum.TEXT.getDescription();
-                data[1] = SqlServerTypeEnum.TEXT.getName();
+                data[0] = SqlServerTypeEnum.TEXT.getName();
                 break;
             case DATE:
             case TIMESTAMP:
             case TIME:
             case DATETIME:
-                data[0] = FiDataDataTypeEnum.TIMESTAMP.getDescription();
-                data[1] = SqlServerTypeEnum.TIMESTAMP.getName();
+                data[0] = SqlServerTypeEnum.TIMESTAMP.getName();
                 break;
             default:
-                data[0] = FiDataDataTypeEnum.NVARCHAR.getDescription();
-                data[1] = SqlServerTypeEnum.NVARCHAR.getName();
+                data[0] = SqlServerTypeEnum.NVARCHAR.getName();
         }
         return data;
     }

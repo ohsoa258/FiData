@@ -1,6 +1,6 @@
-package com.fisk.datagovernance.vo.dataquality.emailserver;
+package com.fisk.system.vo.emailserver;
 
-import com.fisk.datagovernance.enums.dataquality.EmailServerTypeEnum;
+import com.fisk.system.enums.EmailServerTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -55,6 +55,12 @@ public class EmailServerVO {
      */
     @ApiModelProperty(value = "邮件服务器类型")
     public EmailServerTypeEnum emailServerType;
+
+    /**
+     * 邮件服务器类型，仅查询
+     */
+    @ApiModelProperty(value = "邮件服务器类型，仅查询")
+    public int emailServerTypeValue;
 
     /**
      * 是否启用SSL加密连接

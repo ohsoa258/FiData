@@ -1,18 +1,22 @@
-package com.fisk.datagovernance.service.impl.dataquality;
+package com.fisk.system.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.datagovernance.dto.dataquality.emailserver.EmailServerDTO;
-import com.fisk.datagovernance.dto.dataquality.emailserver.EmailServerEditDTO;
-import com.fisk.datagovernance.dto.dataquality.emailserver.EmailServerQueryDTO;
-import com.fisk.datagovernance.entity.dataquality.EmailServerPO;
-import com.fisk.datagovernance.map.dataquality.EmailServerMap;
-import com.fisk.datagovernance.mapper.dataquality.EmailServerMapper;
-import com.fisk.datagovernance.service.dataquality.IEmailServerManageService;
-import com.fisk.datagovernance.vo.dataquality.emailserver.EmailServerVO;
+import com.fisk.system.dto.emailserver.EmailServerDTO;
+import com.fisk.system.dto.emailserver.EmailServerEditDTO;
+import com.fisk.system.dto.emailserver.EmailServerQueryDTO;
+import com.fisk.system.entity.EmailServerPO;
+import com.fisk.system.enums.EmailServerTypeEnum;
+import com.fisk.system.map.EmailServerMap;
+import com.fisk.system.mapper.EmailServerMapper;
+import com.fisk.system.service.IEmailServerManageService;
+import com.fisk.system.vo.emailserver.EmailServerVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+
+import java.util.List;
 
 /**
  * @author dick
@@ -25,7 +29,13 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
 
     @Override
     public Page<EmailServerVO> getAll(EmailServerQueryDTO query) {
-        return baseMapper.getAll(query.page, query.keyword);
+        Page<EmailServerVO> pageAll = baseMapper.getPageAll(query.page, query.keyword);
+        if (pageAll != null && !CollectionUtils.isEmpty(pageAll.getOrders())) {
+            pageAll.getRecords().forEach(t -> {
+                t.setEmailServerType(EmailServerTypeEnum.getEnum(t.getEmailServerTypeValue()));
+            });
+        }
+        return pageAll;
     }
 
     @Override
@@ -70,5 +80,25 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
             return ResultEnum.DATA_NOTEXISTS;
         }
         return baseMapper.deleteByIdWithFill(emailServerPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public List<EmailServerVO> getEmailServerList() {
+        List<EmailServerVO> all = baseMapper.getAll();
+        if (!CollectionUtils.isEmpty(all)) {
+            all.forEach(t -> {
+                t.setEmailServerType(EmailServerTypeEnum.getEnum(t.getEmailServerTypeValue()));
+            });
+        }
+        return all;
+    }
+
+    @Override
+    public EmailServerVO getEmailServerById(int id) {
+        EmailServerVO byId = baseMapper.getById(id);
+        if (byId != null) {
+            byId.setEmailServerType(EmailServerTypeEnum.getEnum(byId.getEmailServerTypeValue()));
+        }
+        return byId;
     }
 }

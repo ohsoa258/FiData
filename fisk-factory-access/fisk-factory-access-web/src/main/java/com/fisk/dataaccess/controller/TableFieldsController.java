@@ -61,7 +61,7 @@ public class TableFieldsController {
 
     @PostMapping("/delTableVersion")
     @ApiOperation(value = "删除表版本")
-    public ResultEnum delVersionData(@RequestParam("keyStr") String keyStr) {
-        return service.delVersionData(keyStr);
+    public ResultEntity<Object> delVersionData(@RequestParam("keyStr") String keyStr) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delVersionData(keyStr));
     }
 }

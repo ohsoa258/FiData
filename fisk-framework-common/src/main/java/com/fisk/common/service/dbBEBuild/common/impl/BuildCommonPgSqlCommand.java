@@ -11,4 +11,10 @@ public class BuildCommonPgSqlCommand implements IBuildCommonSqlCommand {
     public String buildAllDbSql() {
         return "select datname as dbname from pg_database;";
     }
+
+    @Override
+    public Object druidAnalyseSql(String sql) {
+        return null;
+    }
+
 }

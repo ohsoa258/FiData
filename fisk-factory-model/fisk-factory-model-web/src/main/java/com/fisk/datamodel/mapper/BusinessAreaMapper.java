@@ -2,6 +2,7 @@ package com.fisk.datamodel.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessPageDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessPageResultDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
@@ -11,6 +12,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -57,5 +59,18 @@ public interface BusinessAreaMapper extends FKBaseMapper<BusinessAreaPO> {
      * @return
      */
     Page<PipelineTableLogVO> businessAreaTable(Page<PipelineTableLogVO> page, @Param("query") PipelineTableQueryDTO query);
+
+    /**
+     * 新增业务域
+     *
+     * @param dto
+     * @param createUser
+     * @param time
+     * @return
+     */
+    Integer insertBusinessArea(@Param("dto") BusinessAreaDTO dto,
+                               @Param("creator") Long createUser,
+                               @Param("time") LocalDateTime time);
+
 
 }

@@ -1,11 +1,13 @@
-package com.fisk.datagovernance.mapper.dataquality;
+package com.fisk.system.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
-import com.fisk.datagovernance.entity.dataquality.EmailServerPO;
-import com.fisk.datagovernance.vo.dataquality.emailserver.EmailServerVO;
+import com.fisk.system.entity.EmailServerPO;
+import com.fisk.system.vo.emailserver.EmailServerVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * @author dick
@@ -22,5 +24,9 @@ public interface EmailServerMapper extends FKBaseMapper<EmailServerPO> {
      * @param keyword where条件
      * @return 查询结果
      */
-    Page<EmailServerVO> getAll(Page<EmailServerVO> page,  @Param("keyword") String keyword);
+    Page<EmailServerVO> getPageAll(Page<EmailServerVO> page, @Param("keyword") String keyword);
+
+    List<EmailServerVO> getAll();
+
+    EmailServerVO getById(@Param("id") int id);
 }

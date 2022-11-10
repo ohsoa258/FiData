@@ -11,4 +11,10 @@ public class BuildCommonMySqlCommand implements IBuildCommonSqlCommand {
     public String buildAllDbSql() {
         return "SELECT `SCHEMA_NAME` as dbname FROM `information_schema`.`SCHEMATA`;";
     }
+
+    @Override
+    public Object druidAnalyseSql(String sql) {
+        return null;
+    }
+
 }

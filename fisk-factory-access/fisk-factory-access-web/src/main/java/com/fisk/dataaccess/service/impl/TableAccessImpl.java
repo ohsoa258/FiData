@@ -561,22 +561,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
             dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
             dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
-            /*if (dto.fieldType.contains("INT2")
-                    || dto.fieldType.contains("INT4")
-                    || dto.fieldType.contains("INT8")) {
-                dto.fieldType = "INT";
-            }
-            if (dto.fieldType.toLowerCase().contains(fieldType1)
-                    || dto.fieldType.toLowerCase().contains(fieldType2)) {
-                dto.fieldLength = "50";
-            } else {
-                dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
-            }*/
-
-            // 转换表字段类型和长度
-            /*List<String> list = transformField(dto.fieldType, dto.fieldLength);
-            dto.fieldType = list.get(0);
-            dto.fieldLength = list.get(1);*/
             fieldNameDTOList.add(dto);
         }
         data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());
@@ -1542,7 +1526,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // dto -> po
         TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
-        /*if(po.getTableName() == null) {
+        /*if (po.getTableName() == null) {
             po.setTableName("");
         }*/
         //po.setPublish(0);
@@ -1583,7 +1567,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         try {
             AppRegistrationPO appRegistrationPo = registrationMapper.selectById(query.appId);
             if (appRegistrationPo == null) {
-                throw new FkException(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
+                throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR);
             }
             ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(appRegistrationPo.targetDbId);
             if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
@@ -1846,6 +1830,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             conn = helper.connection(po.connectStr, po.connectAccount, po.connectPwd, dataSourceTypeEnum);
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             st.setMaxRows(10);
+
+            //cdc模式
             if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE_CDC.getName())) {
                 query.querySql = "SELECT * FROM " + query.querySql;
             }
@@ -1922,8 +1908,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.dataType = field.fieldType;
             dto.precision = field.sourceFieldPrecision;
             String[] data = command.dataTypeConversion(dto, targetDataSource.data.conType);
-            //field.fieldTypeDescribe = data[0];
-            field.fieldType = data[1].toUpperCase();
+            field.fieldType = data[0].toUpperCase();
         }
 
     }
@@ -1972,10 +1957,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(listPo);
         dto.appAbbreviation = registrationPo.appAbbreviation;
         dto.tableName = tableAccessPo.tableName;
+        dto.selectSql = tableAccessPo.sqlScript;
         // 非实时物理表才有sql
         if (!dbTypeEnum.getName().equals(DbTypeEnum.RestfulAPI.getName())
                 && !dbTypeEnum.getName().equals(DbTypeEnum.api.getName())
-                && !dbTypeEnum.getName().equals(DbTypeEnum.oracle_cdc.getName())) {
+                && !dbTypeEnum.getName().equals(DbTypeEnum.oracle_cdc.getName())
+                && !dbTypeEnum.getName().equals(DbTypeEnum.ftp.getName())) {
             String tableName = TableNameGenerateUtils.buildTableName(tableAccessPo.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
             Map<String, String> converSql = publishTaskClient.converSql(tableName, tableAccessPo.sqlScript, dataSourcePo.driveType, null).data;
             //String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
