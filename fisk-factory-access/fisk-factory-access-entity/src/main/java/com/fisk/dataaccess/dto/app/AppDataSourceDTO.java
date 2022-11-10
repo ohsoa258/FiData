@@ -2,6 +2,7 @@ package com.fisk.dataaccess.dto.app;
 
 import com.fisk.common.core.baseObject.dto.BaseDTO;
 import com.fisk.common.core.baseObject.entity.BaseEntity;
+import com.fisk.dataaccess.dto.apiresultconfig.ApiResultConfigDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -42,8 +43,14 @@ public class AppDataSourceDTO extends BaseDTO {
     @ApiModelProperty(value = "连接字符串", required = true)
     public String connectStr;
 
+    @ApiModelProperty(value = "jwt类型下,JWT账号key")
+    public String accountKey;
+
     @ApiModelProperty(value = "连接账号(实时、OAuth、JWT)", required = true)
     public String connectAccount;
+
+    @ApiModelProperty(value = "jwt类型下,JWT密码key")
+    public String pwdKey;
 
     @ApiModelProperty(value = "连接密码(实时、OAuth、JWT)", required = true)
     public String connectPwd;
@@ -74,6 +81,27 @@ public class AppDataSourceDTO extends BaseDTO {
 
     @ApiModelProperty(value = "Bearer Token验证方式的Token", required = true)
     public String token;
+
+    @ApiModelProperty(value = "jwt类型下，设置token过期时间", required = true)
+    public Integer expirationTime;
+
+    @ApiModelProperty(value = "服务名(只有oracle有服务名)", required = true)
+    public String serviceName;
+
+    @ApiModelProperty(value = "oracle服务类型：0:服务名、1:SID", required = true)
+    public Integer serviceType;
+
+    @ApiModelProperty(value = "oracle连接模式，0:非CDB、1:CDB/PDB", required = true)
+    public Integer pattern;
+
+    @ApiModelProperty(value = "CDB/PDB名称", required = true)
+    public String pdbName;
+
+    @ApiModelProperty(value = "域名", required = true)
+    public String domainName;
+
+    @ApiModelProperty(value = "jwt类型下，配置返回的json串类型", required = true)
+    public List<ApiResultConfigDTO> apiResultConfigDtoList;
 
     public AppDataSourceDTO(BaseEntity entity) {
         super(entity);

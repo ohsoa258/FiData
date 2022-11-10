@@ -44,4 +44,14 @@ public class ApiParameterPO extends BasePO {
      */
     public String parameterValue;
 
+    /**
+     * 参数类型：1常量 2表达式 3脚本
+     */
+    public Integer parameterType;
+
+    /**
+     * 参数类型为表达式,表达式的类型为聚合函数,聚合字段所属的表id
+     */
+    public Integer tableAccessId;
+
 }

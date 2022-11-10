@@ -5,9 +5,9 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.api.*;
+import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.service.IApiConfig;
-import com.fisk.task.client.PublishTaskClient;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -31,8 +31,6 @@ public class ApiConfigController {
 
     @Resource
     private IApiConfig service;
-    @Resource
-    private PublishTaskClient publishTaskClient;
 
     /**
      * 基于构造器注入
@@ -141,5 +139,11 @@ public class ApiConfigController {
     @ApiOperation(value = "api复制功能: 保存")
     public ResultEntity<Object> copyApi(@NotNull @RequestBody CopyApiDTO dto) {
         return ResultEntityBuild.build(service.copyApi(dto));
+    }
+
+    @PostMapping("/getHttpRequestResult")
+    @ApiOperation(value = "获取http请求返回的结果")
+    public String getHttpRequestResult(@RequestBody ApiHttpRequestDTO dto){
+        return service.getHttpRequestResult(dto);
     }
 }

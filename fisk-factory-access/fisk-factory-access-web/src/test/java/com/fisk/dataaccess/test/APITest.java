@@ -15,7 +15,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
+import javax.xml.crypto.Data;
 import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -127,6 +131,47 @@ public class APITest {
 //        System.out.println("json: \n" + json);
         List<JsonTableData> res = home.get(json);
 //        res.forEach(System.out::println);
+    }
+
+    @Test
+    public void sp() {
+        Calendar c = Calendar.getInstance();
+        String str = "yyyy/MM/dd";
+        SimpleDateFormat format = new SimpleDateFormat(str);
+        java.util.Date date = null;
+        try {
+            date = format.parse("2022/01/12");
+            c.setTime(date);
+        } catch (Exception ex) {
+        }
+        int year = c.get(Calendar.YEAR);
+        int month = c.get(Calendar.MONTH) + 1;
+        int dates = c.get(Calendar.DAY_OF_MONTH);
+        int hour = c.get(Calendar.HOUR_OF_DAY);
+        int minute = c.get(Calendar.MINUTE);
+        int second = c.get(Calendar.SECOND);
+        int week = c.get(Calendar.DAY_OF_WEEK);
+        System.out.printf("%d年%02d月%02d日 %02d:%02d:%02d %tA", year, month, dates, hour, minute, second, c);
+    }
+
+    /**
+     * parseDate
+     *
+     * @param strDate
+     * @param pattern
+     * @return
+     */
+    public static Date parseDate(String strDate, String pattern) {
+        Date date = null;
+        try {
+            if (pattern == null) {
+                pattern = "YYYYMMDD";
+            }
+            SimpleDateFormat format = new SimpleDateFormat(pattern);
+            date = (Date) format.parse(strDate);
+        } catch (Exception e) {
+        }
+        return date;
     }
 
     @Test

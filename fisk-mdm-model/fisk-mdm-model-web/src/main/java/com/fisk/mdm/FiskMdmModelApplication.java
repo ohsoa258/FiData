@@ -3,8 +3,11 @@ package com.fisk.mdm;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
+@EnableScheduling
 @SpringBootApplication(scanBasePackages = {
         "com.fisk.mdm",
         "com.fisk.common.framework.advice",
@@ -24,6 +27,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * @author WangYan
  * @date 2022/4/13 10:10
  */
+@EnableHystrix
 public class FiskMdmModelApplication {
 
     public static void main(String[] args) {

@@ -1,5 +1,7 @@
 package com.fisk.dataaccess.map;
 
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.dataaccess.dto.app.AppNameDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
@@ -54,6 +56,7 @@ public interface AppRegistrationMap {
 
     /**
      * listPo==>DtoList
+     *
      * @param list
      * @return
      */
@@ -72,8 +75,28 @@ public interface AppRegistrationMap {
 
     /**
      * list: po -> dto
+     *
      * @param list source
      * @return target
      */
     List<ChannelDataDTO> listPoToChannelDataDto(List<AppRegistrationPO> list);
+
+    /**
+     * dto -> dto
+     *
+     * @param dto source
+     * @return target
+     */
+    @Mappings({
+            @Mapping(source = "appName", target = "name")
+    })
+    AppBusinessInfoDTO dtoToAppBusinessInfoDto(AppNameDTO dto);
+
+    /**
+     * list: dto -> dto
+     *
+     * @param list source
+     * @return target
+     */
+    List<AppBusinessInfoDTO> listDtoToAppBusinessInfoDto(List<AppNameDTO> list);
 }

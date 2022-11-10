@@ -1,5 +1,6 @@
 package com.fisk.task.service.pipeline.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.task.dto.task.TableTopicDTO;
@@ -31,8 +32,8 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicDTO>
         if (tableTopicDTO.topicType != 0) {
             conditionMap.put("topic_type", tableTopicDTO.topicType);
         }
-        List<TableTopicDTO> tableTopicDTOS = tableTopicMapper.selectByMap(conditionMap);
-        return tableTopicDTOS;
+        List<TableTopicDTO> tableTopicDtos = tableTopicMapper.selectByMap(conditionMap);
+        return tableTopicDtos;
     }
 
     @Override
@@ -103,6 +104,40 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicDTO>
             return tableTopicDTOS.get(0);
         }
         return topicDTO;
+    }
+
+    @Override
+    public List<TableTopicDTO> getByTopicName(String topicName) {
+        List<TableTopicDTO> tableTopics = new ArrayList<>();
+        List<TableTopicDTO> list = this.query().eq("topic_name", topicName).eq("del_flag", 1).list();
+        for (TableTopicDTO dto : list) {
+            int tableId = dto.tableId;
+            int tableType = dto.tableType;
+            int topicType = dto.topicType;
+            List<TableTopicDTO> list1 = this.query().eq("table_id", tableId).eq("table_type", tableType)
+                    .eq("topic_type", topicType).eq("del_flag", 1).like("topic_name", topicName).list();
+            for (TableTopicDTO dto1 : list1) {
+                if (!Objects.equals(dto.topicName, dto1.topicName)) {
+                    tableTopics.add(dto1);
+                }
+            }
+        }
+        return tableTopics;
+    }
+
+    @Override
+    public boolean deleteTableTopicGroup(List<TableTopicDTO> dtos) {
+        boolean ifsuccess = true;
+        for (TableTopicDTO topic : dtos) {
+            QueryWrapper<TableTopicDTO> TableTopicWrapper = new QueryWrapper<>();
+            TableTopicWrapper.lambda().eq(TableTopicDTO::getTableId, topic.tableId).eq(TableTopicDTO::getTableType, topic.tableType)
+                    .eq(TableTopicDTO::getTopicType, topic.topicType).like(TableTopicDTO::getTopicName, topic.topicName);
+            boolean remove = this.remove(TableTopicWrapper);
+            if (!remove) {
+                ifsuccess = false;
+            }
+        }
+        return ifsuccess;
     }
 
 

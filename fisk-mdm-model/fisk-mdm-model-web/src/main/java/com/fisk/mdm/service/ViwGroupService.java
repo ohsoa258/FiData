@@ -1,6 +1,7 @@
 package com.fisk.mdm.service;
 
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityQueryDTO;
 import com.fisk.mdm.dto.viwGroup.*;
 import com.fisk.mdm.vo.viwGroup.ViwGroupVO;
@@ -26,7 +27,7 @@ public interface ViwGroupService {
      * @param entityId
      * @return
      */
-    List<ViwGroupVO> getDataByEntityId(Integer entityId);
+    List<ViwGroupVO> getDataByEntityId(Integer entityId,String name);
 
     /**
      * 创建自定义视图组
@@ -76,4 +77,18 @@ public interface ViwGroupService {
      * @return
      */
     ResultEnum createCustomView(Integer id);
+
+    /**
+     * 根据视图组id查询,通过关联关系展示出来
+     * @param dto
+     * @return
+     */
+    List<EntityQueryDTO> getRelationDataById(ViwGroupQueryDTO dto);
+
+    /**
+     * 获取已经发布得实体
+     * @param modelId
+     * @return
+     */
+    List<EntityDTO> getReleaseData(Integer modelId);
 }

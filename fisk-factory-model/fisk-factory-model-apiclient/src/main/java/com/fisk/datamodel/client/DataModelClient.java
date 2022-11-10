@@ -8,6 +8,12 @@ import com.fisk.chartvisual.dto.chartvisual.TableDataDTO;
 import com.fisk.chartvisual.enums.DataDoFieldTypeEnum;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
@@ -20,6 +26,7 @@ import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -70,6 +77,7 @@ public interface DataModelClient {
 
     /**
      * 获取事实表下所有原子指标以及事实表关联维度
+     *
      * @param id
      * @return
      */
@@ -77,7 +85,8 @@ public interface DataModelClient {
     ResultEntity<Object> getAtomicIndicators(@RequestParam("id") int id);
 
     /**
-     *根据同步方式id获取相关数据
+     * 根据同步方式id获取相关数据
+     *
      * @param id
      * @return
      */
@@ -86,6 +95,7 @@ public interface DataModelClient {
 
     /**
      * 根据业务域id获取相关维度以及原子指标
+     *
      * @param id
      * @return
      */
@@ -95,8 +105,8 @@ public interface DataModelClient {
     /**
      * 获取表字段
      *
-     * @param id   id
-     * @param type type
+     * @param id    id
+     * @param type  type
      * @param field field
      * @return 执行结果
      */
@@ -108,6 +118,7 @@ public interface DataModelClient {
 
     /**
      * 查询聚合条件
+     *
      * @param id
      * @return
      */
@@ -115,15 +126,17 @@ public interface DataModelClient {
     ResultEntity<String> getAggregation(@RequestParam("id") Integer id);
 
     /**
-     *根据业务过程获取业务域低
+     * 根据业务过程获取业务域低
+     *
      * @param id
      * @return
      */
     @GetMapping("/businessProcess/getBusinessId/{id}")
-    ResultEntity<Object> getBusinessId(@PathVariable("id")int id);
+    ResultEntity<Object> getBusinessId(@PathVariable("id") int id);
 
     /**
      * 获取指标
+     *
      * @param dto
      * @return
      */
@@ -132,6 +145,7 @@ public interface DataModelClient {
 
     /**
      * 判断维度与维度、事实与维度是否存在关联
+     *
      * @param dto
      * @return
      */
@@ -140,6 +154,7 @@ public interface DataModelClient {
 
     /**
      * 根据派生指标id,获取该业务域下日期维度以及字段
+     *
      * @param id
      * @return
      */
@@ -148,6 +163,7 @@ public interface DataModelClient {
 
     /**
      * 根据时间维度表名称获取所有字段
+     *
      * @param tableName
      * @return
      */
@@ -156,6 +172,7 @@ public interface DataModelClient {
 
     /**
      * 修改维度发布状态
+     *
      * @param dto
      */
     @PutMapping("/dimension/updateDimensionPublishStatus")
@@ -163,6 +180,7 @@ public interface DataModelClient {
 
     /**
      * 修改事实发布状态
+     *
      * @param dto
      */
     @PutMapping("/fact/updateFactPublishStatus")
@@ -170,6 +188,7 @@ public interface DataModelClient {
 
     /**
      * 修改宽表发布状态
+     *
      * @param dto
      */
     @PutMapping("/wideTable/updateWideTablePublishStatus")
@@ -177,6 +196,7 @@ public interface DataModelClient {
 
     /**
      * 根据appId和tableId 获取appName和tableName
+     *
      * @param dto
      * @return
      */
@@ -185,6 +205,7 @@ public interface DataModelClient {
 
     /**
      * 获取数据建模表数据
+     *
      * @param publishStatus
      * @return
      */
@@ -192,7 +213,17 @@ public interface DataModelClient {
     ResultEntity<Object> getDataModelTable(@PathVariable("publishStatus") int publishStatus);
 
     /**
+     * 获取数仓中每个表中的业务元数据配置
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/DataManagement/setTableRule")
+    ResultEntity<TableRuleInfoDTO> setTableRule(@RequestBody TableRuleParameterDTO dto);
+
+    /**
      * 获取白泽数据源
+     *
      * @return
      */
     @GetMapping("/Datamation/getAll")
@@ -200,6 +231,7 @@ public interface DataModelClient {
 
     /**
      * 获取表增量配置信息
+     *
      * @param tableId
      * @param tableType
      * @return
@@ -208,10 +240,11 @@ public interface DataModelClient {
     ResultEntity<GetTableBusinessDTO> getTableBusiness(@RequestParam("tableId") int tableId, @RequestParam("tableType") int tableType);
 
     /**
-    *根据维度id获取维度字段及其关联详情(nifi)
-    * @param dimensionId
-    * @return
-    * */
+     * 根据维度id获取维度字段及其关联详情(nifi)
+     *
+     * @param dimensionId
+     * @return
+     */
     @GetMapping("/attribute/selectDimensionAttributeList")
     ResultEntity<List<ModelPublishFieldDTO>> selectDimensionAttributeList(@RequestParam("dimensionId") int dimensionId);
 
@@ -251,6 +284,28 @@ public interface DataModelClient {
      */
     @PostMapping("/business/getBusinessAreaTableDetail")
     ResultEntity<BusinessAreaTableDetailDTO> getBusinessAreaTableDetail(@RequestBody BusinessAreaQueryTableDTO dto);
+
+    /**
+     * 刷新数据建模结构
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/business/setDataStructure")
+    ResultEntity<Object> setDataModelStructure(@RequestBody FiDataMetaDataReqDTO dto);
+
+    @PostMapping("/business/getFiDataTableMetaData")
+    @ApiOperation(value = "根据表信息/字段ID,获取表/字段基本信息")
+    ResultEntity<List<FiDataTableMetaDataDTO>> getFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto);
+
+    /**
+     * 获取业务域下拉列表
+     *
+     * @return
+     */
+    @GetMapping("/business/getBusinessAreaList")
+    @ApiOperation(value = "获取业务域下拉列表")
+    ResultEntity<List<AppBusinessInfoDTO>> getBusinessAreaList();
 
 
 }

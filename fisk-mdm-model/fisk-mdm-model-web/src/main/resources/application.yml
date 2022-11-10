@@ -12,9 +12,8 @@ spring:
 fk:
   jwt:
     key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
-# 授权中心
   auth:
-    clientId: mdmmodel-service
+    clientId: mdm-model-service
     secret: 1234
   encoder:
     crypt:
@@ -24,19 +23,77 @@ fk:
 # 注册中心
 eureka:
   client:
-    service-url:
+    healthcheck:
+      enabled: true
+    serviceUrl:
+      # eureka服务端地址
       defaultZone: http://127.0.0.1:8082/eureka
+    # 自己去服务端获取其他服务注册信息间隔时间，默认30秒
+    registry-fetch-interval-seconds: 2
+    # 客户端连接eureka服务端超时时间，默认为5秒
+    eureka-server-connect-timeout-seconds: 5
+    # 客户端读取eureka服务端超时时间
+    eureka-server-read-timeout-seconds: 5
   instance:
-    lease-expiration-duration-in-seconds: 5
-    lease-renewal-interval-in-seconds: 5
+    metadata-map:
+      cluster: ${spring.application.name}
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+    # status-page-url-path: ${server.servletPath}/info
+    # 该服务实例安全健康检查地址
+    # health-check-url-path: ${server.servletPath}/health
+    # 不使用主机名来定义注册中心的地址，而使用IP地址的形式，如果设置了
+    # eureka.instance.ip-address 属性，则使用该属性配置的IP，否则自动获取除环路IP外的第一个IP地址
+    prefer-ip-address: true
+    # 每隔n秒，发送一次心跳 （spring cloud 默认配置30s）
+    lease-renewal-interval-in-seconds: 2
+    # 告诉eureka服务端，n秒内未收到心跳，就将该服务剔除 （spring cloud 默认配置90s）
+    lease-expiration-duration-in-seconds: 4
 
 # feign接口超时
+#feign:
+#  client:
+#    config:
+#      default:
+#        connectTimeout: 10000
+#        readTimeout: 30000
 feign:
   client:
     config:
       default:
-        connectTimeout: 10000
-        readTimeout: 30000
+        loggerLevel: basic
+  hystrix:
+    enabled: true
+
+ribbon:
+  ConnectTimeout: 3000
+  ReadTimeout: 15000
+  NIWSServerListClassName: com.netflix.niws.loadbalancer.DiscoveryEnabledNIWSServerList
+  ServerListRefreshInterval: 3000
+  MaxAutoRetries: 0
+  MaxAutoRetriesNextServer: 0
+
+hystrix:
+  command:
+    default:
+      execution:
+        timeout:
+          enabled: true
+        isolation:
+          # 线程隔离 THREAD， SEMAPHORE
+          strategy: THREAD
+          thread:
+            # 超时时间
+            timeoutInMilliseconds: 15500
+            # 超时时是否应中断执行（默认true）
+            interruptOnTimeout: true
+      circuitBreaker:
+        enabled: true
+        # 在滚动窗口中启用熔断的最小请求数（默认20次）
+        requestVolumeThreshold: 10
+        # 熔断后，多少ms后进行一次请求尝试（默认5000ms）
+        sleepWindowInMilliseconds: 5000
+        # 当请求错误比例到达n%时，开启熔断（默认50%）
+        errorThresholdPercentage: 50
 
 # mybatis-plus 配置
 mybatis-plus:
@@ -53,3 +110,7 @@ mybatis-plus:
       update-strategy: not_null
   mapper-locations: classpath:mapper/*.xml
   type-enums-package: com.fisk.mdm.enums
+
+# 定时任务执行时间
+timed:
+  setDataStructure: "0 0 0 1 * ? "

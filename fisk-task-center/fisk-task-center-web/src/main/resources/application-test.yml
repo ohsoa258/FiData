@@ -10,25 +10,32 @@ external-table-link: '"host" = "192.168.1.250","port" = "5432","user" = "postgre
 nifi:
   basePath: http://192.168.11.130:9090/nifi-api
   token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJkMjc2Mjk3N2U4YjU0YTQ0YjYyZGU2ODlmZTk0OTRjNiIsInVzZXIiOiJ7XCJpZFwiOjE4LFwidXNlckFjY291bnRcIjpcImNma1wifSIsImlkIjoiMTgifQ.SRkIbNgKrvo1TI-WSufy4mZGLst6ed0Y6Fs0QoQ8m_g
+  Enable-Authentication: 0
+  kerberos:
+    Keytab: /opt/fidata/java/fisk-task-center/kafka.keytab
+    login:
+      config: /opt/fidata/java/fisk-task-center/kafka-jaas.conf
+    krb5:
+      conf: /opt/fidata/java/fisk-task-center/krb5.conf
+  kerberosprincipal: kafka/admin@AUTOEXPR.COM
   pipeline:
     topicName: my-topic
     waitTime: 20
+    operation-interval: 2000
+    number-of-operations: 5
+    data-governance-url: http://192.168.11.130:8083
 nifi-ConcurrentTasks: 3
 nifi-FetchSize: 30000
 nifi-MaxRowsPerFlowFile: 10000
 nifi-OutputBatchSize: 1
-pgsql-datainput:
-  driverClassName: org.postgresql.Driver
-  password: Password01!
-  url: jdbc:postgresql://192.168.1.250:5432/dmp_ods?stringtype=unspecified
-  username: postgres
-  ip: 192.168.1.250
-  dbName: dmp_ods
+fiData-data-ods-source: 5
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
   password: Password01!
   url: jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified
   username: postgres
+  ip: 192.168.1.250
+  dbName: dmp_dw
 pgsql-mdm:
   password: Password01!
   url: jdbc:postgresql://192.168.1.250:5432/dmp_mdm?stringtype=unspecified
@@ -59,7 +66,7 @@ spring:
     time-zone: GMT+8
   kafka:
     consumer:
-      bootstrap-servers: 192.168.1.92:9092
+      bootstrap-servers: 192.168.11.130:9092
       enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       session:
@@ -68,7 +75,7 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
       acks: all
-      bootstrap-servers: 192.168.1.92:9092
+      bootstrap-servers: 192.168.11.130:9092
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       retries: 3
       value-serializer: org.apache.kafka.common.serialization.StringSerializer

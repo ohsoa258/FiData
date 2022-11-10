@@ -119,5 +119,11 @@ public class GlossaryController {
         return ResultEntityBuild.build(iCategory.updateCategory(dto));
     }
 
+    @ApiOperation("获取术语库或类别关联术语")
+    @GetMapping("/getTermList")
+    public ResultEntity<Object> getTermList(@RequestParam(value = "guid") String guid, @RequestParam(value = "parent") Boolean parent) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTermList(guid, parent));
+    }
+
 
 }

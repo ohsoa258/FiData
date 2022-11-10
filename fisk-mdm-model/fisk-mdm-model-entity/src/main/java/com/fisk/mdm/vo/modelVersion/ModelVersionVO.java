@@ -28,20 +28,14 @@ public class ModelVersionVO extends BaseUserInfoVO {
     public String desc;
 
     @ApiModelProperty(value = "版本状态，0 打开、1 锁定、2 发布")
-    public String status;
+    public Integer status;
 
     @ApiModelProperty(value = "版本类型，1 用户创建、2 自动创建")
-    public String type;
-
-    @ApiModelProperty(value = "创建人")
-    public String createUser;
+    public Integer type;
 
     @ApiModelProperty(value = "创建时间")
     @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     public LocalDateTime createTime;
-
-    @ApiModelProperty(value = "更新人")
-    public String updateUser;
 
     @ApiModelProperty(value = "更新时间")
     @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")

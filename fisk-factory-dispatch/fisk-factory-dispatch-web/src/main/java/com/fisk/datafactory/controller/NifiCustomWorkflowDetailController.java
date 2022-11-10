@@ -4,7 +4,9 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.Dto.cron.NextCronTimeDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
 import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
@@ -13,6 +15,7 @@ import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -110,14 +113,31 @@ public class NifiCustomWorkflowDetailController {
         return ResultEntityBuild.build(service.deleteDataList(dto));
     }
 
-    /**
-     * 根据不同类型获取数仓对应的表
-     *
-     * @param dto dto
-     * @return 结果
-     */
+    @ApiOperation(value = "根据不同的类型,获取不同tree")
     @PostMapping("/getTableId")
     public ResultEntity<Object> getTableId(@RequestBody NifiComponentsDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableIds(dto));
     }
+
+
+    @ApiOperation("access or model 删除操作时,task要同步删除这些数据")
+    @PostMapping("/editByDeleteTable")
+    public ResultEntity<Object> editByDeleteTable(@Validated @RequestBody List<DeleteTableDetailDTO> list) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.editDataByDeleteTable(list));
+    }
+
+    @GetMapping("/getExternalDataSourceList")
+    @ApiOperation(value = "获取外部数据源")
+    public ResultEntity<Object> getExternalDataSourceList() {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getExternalDataSourceList());
+    }
+
+    @PostMapping("/getNextCronExeTime")
+    @ApiOperation(value = "获取cron下次执行时间")
+    public ResultEntity<Object> getNextCronExeTime(@Validated @RequestBody NextCronTimeDTO dto) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getNextCronExeTime(dto));
+    }
+
 }

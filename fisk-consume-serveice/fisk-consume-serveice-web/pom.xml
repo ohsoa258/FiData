@@ -24,6 +24,16 @@
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
+        <!-- hystrix -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-hystrix-dashboard</artifactId>
+        </dependency>
+
         <!-- jdbc -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -38,7 +48,12 @@
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
-            <version>8.2.0.jre8</version>
+            <version>9.2.1.jre8</version>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.5</version>
         </dependency>
 
         <!--mybatis plus-->
@@ -47,28 +62,10 @@
             <artifactId>mybatis-plus-boot-starter</artifactId>
         </dependency>
 
-        <!-- redis -->
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.boot</groupId>-->
-<!--            <artifactId>spring-boot-starter-data-redis</artifactId>-->
-<!--        </dependency>-->
-        <!-- amqp -->
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.boot</groupId>-->
-<!--            <artifactId>spring-boot-starter-amqp</artifactId>-->
-<!--        </dependency>-->
-
         <!-- 全局工具类 -->
         <dependency>
             <groupId>com.fisk</groupId>
             <artifactId>fisk-framework-common</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
-
-        <!-- 全局工具类 -->
-        <dependency>
-            <groupId>com.fisk</groupId>
-            <artifactId>fisk-task-center-apiclient</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
@@ -78,6 +75,7 @@
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
 
+        <!-- 系统和授权服务feign接口 -->
         <dependency>
             <groupId>com.fisk</groupId>
             <artifactId>fisk-framework-authorization-apiclient</artifactId>
@@ -88,52 +86,38 @@
             <artifactId>fisk-system-center-apiclient</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-system-center-entity</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- 主数据feign接口 -->
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-mdm-model-apiclient</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- 数据接入feign接口 -->
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-factory-access-apiclient</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- 数据建模feign接口 -->
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-factory-model-apiclient</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
 
         <!-- 本模块实体类 -->
         <dependency>
             <groupId>com.fisk</groupId>
             <artifactId>fisk-consume-serveice-entity</artifactId>
             <version>1.0.0-SNAPSHOT</version>
-        </dependency>
-
-        <!--中英文转换-->
-        <dependency>
-            <groupId>com.belerweb</groupId>
-            <artifactId>pinyin4j</artifactId>
-            <version>2.5.1</version>
-        </dependency>
-        <!--token-->
-        <dependency>
-            <groupId>com.auth0</groupId>
-            <artifactId>java-jwt</artifactId>
-            <version>3.4.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.ctrip.framework.apollo</groupId>
-            <artifactId>apollo-client</artifactId>
-            <version>1.8.1</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/lib/apollo-client-1.8.1.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>com.ctrip.framework.apollo</groupId>
-            <artifactId>apollo-core</artifactId>
-            <version>1.8.1</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/lib/apollo-core-1.8.1.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>org.olap4j</groupId>
-            <artifactId>olap4j</artifactId>
-            <version>1.2.0</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.2.5</version>
         </dependency>
 
     </dependencies>

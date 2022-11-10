@@ -25,10 +25,6 @@ public class MetadataMapAtlasPO extends BasePO {
      */
     public int type;
     /**
-     * 数据类型:1数据接入,2数据建模
-     */
-    public int dataType;
-    /**
      * 表id
      */
     public long tableId;
@@ -45,16 +41,8 @@ public class MetadataMapAtlasPO extends BasePO {
      */
     public int tableType;
     /**
-     * 数据库名称类型:1ods,2dw
+     * 客户id
      */
-    public int dbNameType;
-    /**
-     * 指标字段类型:1退化维度,2关联维度,3指标
-     */
-    public int attributeType;
-    /**
-     * 维度key
-     */
-    public String dimensionKey;
+    public int clientId;
 
 }

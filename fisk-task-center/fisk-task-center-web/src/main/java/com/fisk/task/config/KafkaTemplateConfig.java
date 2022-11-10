@@ -1,5 +1,6 @@
 package com.fisk.task.config;
 
+import com.fisk.common.core.constants.NifiConstants;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Configuration
 @Component
@@ -24,6 +26,12 @@ public class KafkaTemplateConfig {
     private String keySerializer;
     @Value("${spring.kafka.producer.value-serializer}")
     private String valueSerializer;
+    @Value("${nifi.Enable-Authentication}")
+    public String enableAuthentication;
+    @Value("${nifi.kerberos.login.config}")
+    public String loginConfigPath;
+    @Value("${nifi.kerberos.krb5.conf}")
+    public String krb5ConfigPath;
 
     /**
      * Producer Template 配置
@@ -46,6 +54,10 @@ public class KafkaTemplateConfig {
      */
     @Bean
     public Map<String, Object> producerConfigs() {
+        if (Objects.equals(enableAuthentication, NifiConstants.enableAuthentication.ENABLE)) {
+            System.setProperty(" java.security.auth.login.config", loginConfigPath);
+            System.setProperty("java.security.krb5.conf", krb5ConfigPath);
+        }
         Map<String, Object> props = new HashMap<>();
         // 指定多个kafka集群多个地址
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, producerBootstrapServers);
@@ -71,6 +83,11 @@ public class KafkaTemplateConfig {
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, keySerializer);
         // 值的序列化方式
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, valueSerializer);
+        if (Objects.equals(enableAuthentication, NifiConstants.enableAuthentication.ENABLE)) {
+            props.put("sasl.kerberos.service.name", "kafka");     //认证代码
+            props.put("sasl.mechanism", "GSSAPI");                //认证代码
+            props.put("security.protocol", "SASL_PLAINTEXT");
+        }
         // 压缩消息，支持四种类型，分别为：none、lz4、gzip、snappy，默认为none。
         // 消费者默认支持解压，所以压缩设置在生产者，消费者无需设置。
         props.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "none");

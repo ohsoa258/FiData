@@ -32,10 +32,40 @@ public class ApiConfigVO {
     public String tableName;
 
     /**
+     * 表别名
+     */
+    @ApiModelProperty(value = "表别名")
+    public String tableNameAlias;
+
+    /**
+     * 表类型 1：表  2：视图
+     */
+    @ApiModelProperty(value = "表类型 1：表  2：视图")
+    public int tableType;
+
+    /**
+     * 表业务类型 1：事实表、2：维度表、3、指标表  4、宽表
+     */
+    @ApiModelProperty(value = "表业务类型 1：事实表、2：维度表、3、指标表  4、宽表")
+    public int tableBusinessType;
+
+    /**
+     * 表路径
+     */
+    @ApiModelProperty(value = "表路径")
+    public String tablePath;
+
+    /**
      * 数据源id
      */
     @ApiModelProperty(value = "数据源id")
     public int datasourceId;
+
+    /**
+     * 数据源类型
+     */
+    @ApiModelProperty(value = "数据源类型")
+    public int datasourceType;
 
     /**
      * api标识code

@@ -1,8 +1,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.fisk.datamodel.mapper.DimensionAttributeMapper">
-    <select id="getDimensionAttributeList" resultType="com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeListDTO">
+<mapper namespace="com.fisk.datamodel.mapper.dimension.DimensionAttributeMapper">
+    <select id="getDimensionAttributeList"
+            resultType="com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeListDTO">
     SELECT
 	a.id,
 	a.table_source_field_id,

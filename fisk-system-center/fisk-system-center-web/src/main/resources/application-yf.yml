@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://10.178.188.31:3306/dmp_system_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: fisksoft
+    password: Fisksoft@hsd06
+
+  redis:
+    host: 10.178.188.31
+    port: 6379
+    password: redis@test
+
+# 图片上传
+file:
+  uploadurl: /root/nginx/app/file/dmp/images

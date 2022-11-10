@@ -3,18 +3,27 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamodel.dto.atomicindicator.*;
-import com.fisk.datamodel.entity.*;
+import com.fisk.datamodel.entity.IndicatorsPO;
+import com.fisk.datamodel.entity.businesslimited.BusinessLimitedAttributePO;
+import com.fisk.datamodel.entity.dimension.DimensionPO;
+import com.fisk.datamodel.entity.fact.FactAttributePO;
+import com.fisk.datamodel.entity.fact.FactPO;
 import com.fisk.datamodel.enums.DerivedIndicatorsEnum;
 import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.enums.IndicatorsTypeEnum;
 import com.fisk.datamodel.map.AtomicIndicatorsMap;
-import com.fisk.datamodel.map.FactAttributeMap;
-import com.fisk.datamodel.mapper.*;
+import com.fisk.datamodel.map.fact.FactAttributeMap;
+import com.fisk.datamodel.mapper.AtomicIndicatorsMapper;
+import com.fisk.datamodel.mapper.IndicatorsMapper;
+import com.fisk.datamodel.mapper.businesslimited.BusinessLimitedAttributeMapper;
+import com.fisk.datamodel.mapper.dimension.DimensionMapper;
+import com.fisk.datamodel.mapper.fact.FactAttributeMapper;
+import com.fisk.datamodel.mapper.fact.FactMapper;
 import com.fisk.datamodel.service.IAtomicIndicators;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -224,6 +233,7 @@ public class AtomicIndicatorsImpl
             for (DimensionPO item : dimensionPoList) {
                 AtomicIndicatorPushDTO dto = new AtomicIndicatorPushDTO();
                 dto.attributeType = FactAttributeEnum.DIMENSION_KEY.getValue();
+                dto.dimensionTableId = item.id;
                 dto.dimensionTableName = item.dimensionTabName;
                 dto.id = item.id;
                 data.add(dto);
@@ -250,7 +260,6 @@ public class AtomicIndicatorsImpl
                     for (FactAttributePO po : factAttributePoList) {
                         AtomicIndicatorPushDTO dto = new AtomicIndicatorPushDTO();
                         dto.attributeType = FactAttributeEnum.DEGENERATION_DIMENSION.getValue();
-                        ;
                         dto.factFieldName = po.factFieldEnName;
                         dto.factFieldType = po.factFieldType;
                         dto.factFieldLength = po.factFieldLength;
@@ -270,7 +279,6 @@ public class AtomicIndicatorsImpl
         for (IndicatorsPO item : indicatorsPo) {
             AtomicIndicatorPushDTO dto = new AtomicIndicatorPushDTO();
             dto.attributeType = FactAttributeEnum.MEASURE.getValue();
-            ;
             dto.atomicIndicatorName = item.indicatorsName;
             dto.aggregationLogic = item.calculationLogic;
             //获取聚合字段
@@ -282,6 +290,32 @@ public class AtomicIndicatorsImpl
             dto.factFieldType = factAttributePo.factFieldType;
             dto.factFieldLength = factAttributePo.factFieldLength;
             dto.id = item.id;
+            dto.dimensionTableId = item.factAttributeId;
+            data.add(dto);
+        }
+        return data;
+    }
+
+    /**
+     * 根据事实表id,获取派生指标
+     *
+     * @param factId
+     * @return
+     */
+    public List<AtomicIndicatorPushDTO> getDerivedIndicators(int factId) {
+        List<AtomicIndicatorPushDTO> data = new ArrayList<>();
+        QueryWrapper<IndicatorsPO> indicatorsQueryWrapper = new QueryWrapper<>();
+        indicatorsQueryWrapper.lambda().eq(IndicatorsPO::getFactId, factId)
+                .eq(IndicatorsPO::getIndicatorsType, IndicatorsTypeEnum.DERIVED_INDICATORS.getValue());
+        List<IndicatorsPO> indicatorsPo = indicatorsMapper.selectList(indicatorsQueryWrapper);
+        for (IndicatorsPO item : indicatorsPo) {
+            AtomicIndicatorPushDTO dto = new AtomicIndicatorPushDTO();
+            dto.id = item.id;
+            dto.attributeType = 3;
+            dto.atomicIndicatorName = item.indicatorsName;
+            //时间周期
+            dto.aggregationLogic = item.timePeriod;
+            dto.atomicId = item.atomicId;
             data.add(dto);
         }
         return data;

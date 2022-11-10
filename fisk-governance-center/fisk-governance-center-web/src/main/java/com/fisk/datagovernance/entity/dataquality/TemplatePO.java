@@ -53,7 +53,7 @@ public class TemplatePO extends BasePO
     /**
      * 模板名称
      */
-    public String templatenName;
+    public String templateName;
 
     /**
      * 模板类型

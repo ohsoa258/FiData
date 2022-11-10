@@ -119,8 +119,8 @@ public class MasterDataController {
 
     @ApiOperation("获取域字段code和name数据")
     @GetMapping("/listEntityCodeAndName")
-    public ResultEntity<Object> listEntityCodeAndName(Integer entityId) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listEntityCodeAndName(entityId));
+    public ResultEntity<Object> listEntityCodeAndName(MasterDataBaseDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listEntityCodeAndName(dto));
     }
 
     @ApiOperation("获取筛选条件")

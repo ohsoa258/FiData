@@ -9,7 +9,8 @@ import com.cronutils.parser.CronParser;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.task.dto.doris.UpdateLogAndImportDataDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
-import com.fisk.task.service.nifi.IPostgreBuild;
+import com.fisk.task.service.nifi.IJdbcBuild;
+import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.TriggerUtils;
 import org.quartz.impl.triggers.CronTriggerImpl;
@@ -35,7 +36,7 @@ import static com.cronutils.model.CronType.QUARTZ;
 @Slf4j
 public class BuildDataInputStgToOdsListener {
     @Resource
-    IPostgreBuild pg;
+    IJdbcBuild pg;
 
 
     @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_STGTOODS_BUILD)
@@ -59,7 +60,7 @@ public class BuildDataInputStgToOdsListener {
             try {
                 nextExecTime = getNextExecTime(expressiion, 1);
             } catch (ParseException e) {
-                e.printStackTrace();
+                log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             }
             nextExecTime.stream().forEach(d -> {
                 System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d));

@@ -2,6 +2,7 @@ package com.fisk.dataaccess.utils.httprequest.Impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
@@ -19,6 +20,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -33,6 +35,7 @@ import java.util.Map;
  * @date 2022/4/28 11:30
  */
 @Slf4j
+@Component
 public class BuildHttpRequestImpl implements IBuildHttpRequest {
 
     @Override
@@ -55,16 +58,45 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
     }
 
     @Override
+    public String getHttpRequest(ApiHttpRequestDTO dto) {
+        try {
+            // Body: raw-json参数
+            String json = JSON.toJSONString(dto.jsonObject);
+            String result = null;
+
+            if (dto.httpRequestEnum.getValue() == 2) { // post
+                result = sendPostRequest(dto, json);
+            } else { // get
+                result = sendGetRequest(dto, json);
+            }
+            return result;
+        } catch (Exception e) {
+            log.error("AE89: 执行httpRequest方法失败,【失败原因为：】", e);
+            throw new FkException(ResultEnum.EXECUTE_HTTP_REQUEST_ERROR);
+        }
+    }
+
+    @Override
     public String getRequestToken(ApiHttpRequestDTO dto) {
         try {
-            String json = JSON.toJSONString(dto.jwtRequestDTO);
+            JSONObject jsonObj = new JSONObject();
+            if (StringUtils.isEmpty(dto.jwtRequestDTO.userKey) || StringUtils.isEmpty(dto.jwtRequestDTO.pwdKey)) {
+                dto.jwtRequestDTO.userKey = "username";
+                dto.jwtRequestDTO.pwdKey = "password";
+            }
+            jsonObj.put(dto.jwtRequestDTO.userKey, dto.jwtRequestDTO.username);
+            jsonObj.put(dto.jwtRequestDTO.pwdKey, dto.jwtRequestDTO.password);
 
-            String result = sendPostRequest(dto, json);
-
+            String result = sendPostRequest(dto, JSON.toJSONString(jsonObj));
             JSONObject jsonObject = JSONObject.parseObject(result);
             String bearer = "Bearer ";
-            String token = (String) jsonObject.get("token");
-
+            String token = (String) jsonObject.get(dto.jsonDataKey);
+            if (StringUtils.isEmpty(token)) {
+                token = (String) jsonObject.get("data");
+            }
+            if (StringUtils.isEmpty(token)) {
+                throw new FkException(ResultEnum.GET_JWT_TOKEN_ERROR);
+            }
             return bearer + token;
         } catch (Exception e) {
             log.error("AE90: 当前api获取token失败,请检查api的配置信息,【失败原因为：】", e);
@@ -72,7 +104,7 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
         }
     }
 
-    private String sendPostRequest(ApiHttpRequestDTO dto, String json) throws IOException {
+    public String sendPostRequest(ApiHttpRequestDTO dto, String json) throws IOException {
         String result = null;
         try {
             HttpClient client = new DefaultHttpClient();
@@ -124,7 +156,7 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
             request.setHeader("Content-Type", "application/json; charset=utf-8");
 
             // 页面自定义的请求头信息
-            if (!dto.headersParams.isEmpty()) {
+            if (CollectionUtils.isNotEmpty(dto.headersParams)) {
                 dto.headersParams.forEach(request::setHeader);
             }
 

@@ -1,8 +1,5 @@
 package com.fisk.dataservice.dto.datasource;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.dataservice.enums.DataSourceTypeEnum;
-import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import io.swagger.annotations.ApiModelProperty;
 
 /**
@@ -19,8 +16,14 @@ public class DataSourceConQuery {
     public String keyword;
 
     /**
-     * 分页对象
+     * 页码
      */
-    @ApiModelProperty(value = "分页对象")
-    public Page<DataSourceConVO> page;
+    @ApiModelProperty(value = "页码")
+    public int current;
+
+    /**
+     * 页数
+     */
+    @ApiModelProperty(value = "页数")
+    public int size;
 }

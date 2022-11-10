@@ -3,6 +3,7 @@ package com.fisk.task.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.service.pipeline.ITableTopicService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +27,11 @@ public class TableTopicController {
     @PostMapping("/deleteTableTopicByComponentId")
     public ResultEntity<Object> deleteTableTopicByComponentId(@RequestParam("ids") List<Integer> ids) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableTopicService.deleteTableTopicByComponentId(ids));
+    }
+
+    @PostMapping("/deleteTableTopicGroup")
+    public ResultEntity<Object> deleteTableTopicGroup(@RequestParam("dtos") List<TableTopicDTO> dtos) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableTopicService.deleteTableTopicGroup(dtos));
     }
 
 }

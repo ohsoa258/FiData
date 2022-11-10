@@ -4,24 +4,34 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.datamanagement.dto.dataassets.DataAssetsParameterDTO;
 import com.fisk.datamanagement.dto.dataassets.DataAssetsResultDTO;
 import com.fisk.datamanagement.service.IDataAssets;
-import com.fisk.datamanagement.vo.ConnectionInformationDTO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author JianWenYang
  */
 @Service
+@Slf4j
 public class DataAssetsImpl implements IDataAssets {
 
     @Resource
@@ -29,34 +39,44 @@ public class DataAssetsImpl implements IDataAssets {
     @Resource
     EntityImpl entity;
 
+    @Resource
+    UserClient userClient;
+
     @Override
-    public DataAssetsResultDTO getDataAssetsTableList(DataAssetsParameterDTO dto)
-    {
-        DataAssetsResultDTO data=new DataAssetsResultDTO();
+    public DataAssetsResultDTO getDataAssetsTableList(DataAssetsParameterDTO dto) {
+        DataAssetsResultDTO data = new DataAssetsResultDTO();
+        Connection conn = null;
+        Statement st = null;
         try {
             //获取实例配置信息
             JSONObject instanceEntity = this.entity.getEntity(dto.instanceGuid);
-            JSONObject entity= JSON.parseObject(instanceEntity.getString("entity"));
-            JSONObject attributes= JSON.parseObject(entity.getString("attributes"));
-            //获取数据库类型
-            String rdbmsType = attributes.getString("rdbms_type").toLowerCase();
+            JSONObject entity = JSON.parseObject(instanceEntity.getString("entity"));
+            JSONObject attributes = JSON.parseObject(entity.getString("attributes"));
+            String hostname = attributes.getString("hostname");
             //获取账号密码
-            String[] comments = attributes.getString("comment").split("\\\\");
-            ConnectionInformationDTO connectionDTO = jointConnection(rdbmsType, attributes.getString("hostname"), attributes.getString("port"), dto.dbName);
+            ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
+            if (allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            }
+            Optional<DataSourceDTO> first = allFiDataDataSource.data
+                    .stream()
+                    .filter(e -> dto.dbName.equals(e.conDbname) && hostname.equals(e.conIp))
+                    .findFirst();
+            if (!first.isPresent()) {
+                throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            }
             //连接数据源
-            Connection conn=getStatement(connectionDTO.driver,connectionDTO.url,comments[0],comments[1]);
-            Statement st = conn.createStatement();
+            conn = getConnection(first.get());
+            st = conn.createStatement();
             //拼接筛选条件
-            String condition=" where 1=1 ";
-            if (CollectionUtils.isNotEmpty(dto.filterQueryDTOList))
-            {
+            String condition = " where 1=1 ";
+            if (CollectionUtils.isNotEmpty(dto.filterQueryDTOList)) {
                 condition += generateCondition.getCondition(dto.filterQueryDTOList);
             }
-            String sql="";
+            String sql = null;
             //是否导出
-            if (dto.export)
-            {
-                sql="select * from "+dto.tableName+condition;
+            if (dto.export) {
+                sql = "select * from " + dto.tableName + condition;
             }else {
                 //获取总条数
                 String getTotalSql = "select count(*) as totalNum from " + dto.tableName+condition;
@@ -68,29 +88,7 @@ public class DataAssetsImpl implements IDataAssets {
                 rSet.close();
                 data.total=rowCount;
                 //分页获取数据
-                int offset = (dto.pageIndex - 1) * dto.pageSize;
-                int skipCount=dto.pageIndex*dto.pageSize;
-                sql = "select * from "+ dto.tableName+condition+" order by "+dto.columnName+ " limit " + dto.pageSize + " offset " + offset;
-                switch (rdbmsType)
-                {
-                    case "mysql":
-                    case "sqlserver":
-                        sql="select top "+dto.pageSize+" * from (select row_number() over(order by "
-                                +dto.columnName+" asc "
-                                +") as rownumber,* from "
-                                +dto.tableName+") temp_row "+condition
-                                +" and rownumber>"+offset;
-                        break;
-                    case "oracle":
-                        sql="select * from ( select rownum, t.* from "+dto.tableName
-                                +" t "
-                                +condition
-                                +" and rownum <= "+skipCount
-                                +" ) table_alias where table_alias.\"ROWNUM\" >= "+offset+"";
-                    case "postgresql":
-                    case "doris":
-                    default:
-                }
+                sql = buildSelectSql(dto, condition, first.get().conType);
             }
             ResultSet rs = st.executeQuery(sql);
             // 获取列数
@@ -102,54 +100,16 @@ public class DataAssetsImpl implements IDataAssets {
             for (int i = 1; i <= columnCount; i++) {
                 columnList.add(metaData.getColumnLabel(i));
             }
-            data.columnList=columnList;
-            data.pageIndex=dto.pageIndex;
-            data.pageSize=dto.pageSize;
+            data.columnList = columnList;
+            data.pageIndex = dto.pageIndex;
+            data.pageSize = dto.pageSize;
+        } catch (Exception e) {
+            log.error("数据资产,查询表数据失败:{}", e);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeConnection(conn);
         }
-        catch (Exception e)
-        {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,e);
-        }
-        return data;
-    }
-
-    /**
-     * 返回数据库连接驱动以及拼接连接地址
-     * @param rdbmsType
-     * @param hostname
-     * @param port
-     * @param dbName
-     * @return
-     */
-    public ConnectionInformationDTO jointConnection(String rdbmsType,String hostname,String port,String dbName)
-    {
-        String driver="";
-        String url="";
-        switch (rdbmsType)
-        {
-            case "mysql":
-            case "doris":
-                driver="com.mysql.jdbc.Driver";
-                url="jdbc:mysql://"+hostname+":"+port+"/"+dbName;
-                break;
-            case "sqlserver":
-                driver="com.microsoft.sqlserver.jdbc.SQLServerDriver";
-                url="jdbc:sqlserver://"+hostname+":"+port+";DatabaseName="+dbName;
-                break;
-            case "oracle":
-                driver="oracle.jdbc.OracleDriver";
-                url="jdbc:oracle:thin:@" +hostname+":"+port+":"+"ORCLCDB";
-                break;
-            case "postgresql":
-                driver="org.postgresql.Driver";
-                url="jdbc:postgresql://"+hostname+":"+port+"/"+dbName;
-                break;
-            default:
-                throw new FkException(ResultEnum.NOT_SUPPORT);
-        }
-        ConnectionInformationDTO data=new ConnectionInformationDTO();
-        data.driver=driver;
-        data.url=url;
         return data;
     }
 
@@ -186,21 +146,62 @@ public class DataAssetsImpl implements IDataAssets {
     /**
      * 连接数据库
      *
-     * @param driver   driver
-     * @param url      url
-     * @param username username
-     * @param password password
+     * @param dto
      * @return statement
      */
-    private Connection getStatement(String driver, String url, String username, String password) {
-        Connection conn;
-        try {
-            Class.forName(driver);
-            conn = DriverManager.getConnection(url, username, password);
-        } catch (Exception e) {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,e);
+    private Connection getConnection(DataSourceDTO dto) {
+        AbstractCommonDbHelper commonDbHelper = new AbstractCommonDbHelper();
+        return commonDbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
+    }
+
+    /**
+     * 拼接分页语句
+     *
+     * @param dto
+     * @param condition
+     * @param typeEnum
+     * @return
+     */
+    public String buildSelectSql(DataAssetsParameterDTO dto, String condition, DataSourceTypeEnum typeEnum) {
+        StringBuilder str = new StringBuilder();
+        //分页获取数据
+        int offset = (dto.pageIndex - 1) * dto.pageSize;
+        int skipCount = dto.pageIndex * dto.pageSize;
+        switch (typeEnum) {
+            case SQLSERVER:
+                str.append("select top ");
+                str.append(dto.pageSize);
+                str.append(" * from (select row_number() over(order by ");
+                str.append(dto.columnName + " asc ) as rownumber,* from ");
+                str.append(dto.tableName);
+                str.append(") temp_row ");
+                str.append(condition);
+                str.append(" and rownumber>");
+                str.append(offset);
+                break;
+            case ORACLE:
+                str.append("select * from ( select rownum, t.* from ");
+                str.append(dto.tableName);
+                str.append(" t ");
+                str.append(condition);
+                str.append(" and rownum <= " + skipCount);
+                str.append(" ) table_alias where table_alias.\"ROWNUM\" >= " + offset);
+                break;
+            case MYSQL:
+            case POSTGRESQL:
+            case DORIS:
+                str.append("select * from ");
+                str.append(dto.tableName + condition);
+                str.append(" order by " + dto.columnName);
+                str.append(" limit ");
+                str.append(dto.pageSize);
+                str.append(" offset ");
+                str.append(offset);
+                break;
+            default:
+                throw new FkException(ResultEnum.DATA_OPS_CONFIG_EXISTS);
         }
-        return conn;
+        return str.toString();
     }
 
 }

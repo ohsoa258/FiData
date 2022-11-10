@@ -7,17 +7,23 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
+import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityQueryDTO;
 import com.fisk.mdm.dto.viwGroup.*;
-import com.fisk.mdm.entity.ViwGroupDetailsPO;
-import com.fisk.mdm.entity.ViwGroupPO;
+import com.fisk.mdm.entity.*;
+import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.ViwGroupMap;
+import com.fisk.mdm.mapper.AttributeMapper;
+import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.mapper.ViwGroupDetailsMapper;
 import com.fisk.mdm.mapper.ViwGroupMapper;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.ViwGroupService;
+import com.fisk.mdm.utils.mdmBEBuild.BuildFactoryHelper;
+import com.fisk.mdm.utils.mdmBEBuild.IBuildSqlCommand;
+import com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.vo.entity.EntityVO;
@@ -40,6 +46,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.closeConnection;
+import static com.fisk.mdm.utils.mdmBEBuild.impl.BuildPgCommandImpl.MARK;
 import static com.fisk.mdm.utils.mdmBEBuild.impl.BuildPgCommandImpl.PUBLIC;
 
 /**
@@ -71,9 +79,14 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     @Resource
     AttributeService attributeService;
     @Resource
+    AttributeMapper attributeMapper;
+    @Resource
     UserClient userClient;
+    @Resource
+    EntityMapper entityMapper;
 
     public static final String ALIAS_MARK = "a";
+    public static int count = 0;
 
     @Override
     public List<ViwGroupVO> getDataByGroupId(Integer id) {
@@ -116,7 +129,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     }
 
     @Override
-    public List<ViwGroupVO> getDataByEntityId(Integer entityId) {
+    public List<ViwGroupVO> getDataByEntityId(Integer entityId,String name) {
         if (entityId == null){
             return null;
         }
@@ -124,6 +137,15 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         QueryWrapper<ViwGroupPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(ViwGroupPO::getEntityId,entityId);
+
+        // 追加模糊搜索条件
+        if (com.baomidou.mybatisplus.core.toolkit.StringUtils.isNotBlank(name)){
+            queryWrapper.lambda().and(wq -> wq
+                    .like(ViwGroupPO::getName, name)
+                    .or()
+                    .like(ViwGroupPO::getDetails,name));
+        }
+
         List<ViwGroupPO> viwGroupPoList = viwGroupMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(viwGroupPoList)){
             List<ViwGroupVO> collect = viwGroupPoList.stream().filter(e -> e.getId() != 0).map(e -> {
@@ -163,8 +185,8 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum deleteGroupById(Integer id) {
-        boolean existViwGroup = this.isExistViwGroup(id);
-        if (existViwGroup == false){
+        ViwGroupPO viwGroupPo = viwGroupMapper.selectById(id);
+        if (viwGroupPo == null){
             return ResultEnum.DATA_NOTEXISTS;
         }
 
@@ -179,7 +201,65 @@ public class ViwGroupServiceImpl implements ViwGroupService {
                 .eq(ViwGroupDetailsPO::getGroupId,id);
         detailsMapper.delete(queryWrapper);
 
+        // 删除后台视图
+        this.deleteView(viwGroupPo.getName());
+
         return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 删除后台视图
+     * @param viwName
+     */
+    public void deleteView(String viwName){
+
+        Connection connection = null;
+        String sql = null;
+        try{
+
+            // 声明工厂
+            IBuildSqlCommand sqlCommand = BuildFactoryHelper.getDBCommand(type);
+
+            // 创建连接对象
+            AbstractDbHelper dbHelper = new AbstractDbHelper();
+            connection = dbHelper.connection(connectionStr, acc,
+                    pwd,type);
+
+            // 判断视图是否存在
+            boolean exits = this.isExits(sqlCommand, dbHelper, connection, viwName);
+            if (exits == true) {
+                // 1.创建Sql(删除视图Sql)
+                sql = sqlCommand.dropViw(viwName);
+
+                // 2.执行SQL
+                dbHelper.executeSql(sql, connection);
+            }
+        }catch (SQLException ex){
+            log.error("【删除自定义视图Sql】:" + sql + "【删除自定义视图失败,异常信息】:" + ex);
+            ex.printStackTrace();
+        }finally {
+            // 关闭数据库连接
+            closeConnection(connection);
+        }
+    }
+
+    /**
+     * 判断表是否存在
+     *
+     * @param sqlBuilder
+     * @param tableName
+     * @return
+     */
+    public boolean isExits(IBuildSqlCommand sqlBuilder, AbstractDbHelper abstractDbHelper,
+                           Connection connection, String tableName) {
+        try {
+            // 1.查询表是否存在
+            String querySql = sqlBuilder.queryData(tableName);
+            abstractDbHelper.executeSql(querySql, connection);
+            return true;
+        } catch (SQLException ex) {
+            return false;
+        }
     }
 
     @Override
@@ -212,13 +292,32 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         detailsDto.setGroupId(dto.getGroupId());
         dto.getDetailsNameList().stream().forEach(e -> {
             detailsDto.setAttributeId(e.getAttributeId());
-            detailsDto.setAliasName(e.getAliasName());
+
+            // 用户没输,默认使用属性显示名称
+            if (StringUtils.isBlank(e.getAliasName())){
+                AttributeVO data = attributeService.getById(e.getAttributeId()).getData();
+                detailsDto.setAliasName(data.getDisplayName());
+            }else {
+                detailsDto.setAliasName(e.getAliasName());
+            }
+
             ViwGroupDetailsPO detailsPo = ViwGroupMap.INSTANCES.detailsDtoToDto(detailsDto);
             int res = detailsMapper.insert(detailsPo);
             if (res <= 0){
                 throw new FkException(ResultEnum.SAVE_DATA_ERROR);
             }
         });
+
+
+        ViwGroupPO viwGroupPO = viwGroupMapper.selectById(dto.getGroupId());
+        if (viwGroupPO != null){
+
+            // 1.删除视图
+            this.deleteView(viwGroupPO.getName());
+
+            // 2.创建视图
+            viwGroupService.createCustomView((int) viwGroupPO.getId());
+        }
 
         return ResultEnum.SUCCESS;
     }
@@ -237,11 +336,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         EntityQueryDTO attributeInfo = this.getAttributeInfo(dto.getEntityId(),attributeIds,dto.getGroupId());
 
         // 获取出选中属性的id
-        List<ViwGroupCheckDTO> checkedIds = new ArrayList<>();
-        for (EntityQueryDTO child : attributeInfo.getChildren()) {
-            List<ViwGroupCheckDTO> dtoList = this.getCheckedIds(child);
-            checkedIds.addAll(dtoList);
-        }
+        List<ViwGroupCheckDTO> checkedIds = this.getCheckedIds(attributeInfo);
 
         List<EntityQueryDTO> relationList = new ArrayList<>();
         relationList.add(attributeInfo);
@@ -259,15 +354,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     public List<ViwGroupCheckDTO> getCheckedIds(EntityQueryDTO child){
         List<ViwGroupCheckDTO> checkIds = new ArrayList<>();
 
-        // 获取同级
-        if (child.getType().equals(ObjectTypeEnum.ATTRIBUTES.getName()) && child.getIsCheck().equals(1)){
-            ViwGroupCheckDTO dto = new ViwGroupCheckDTO();
-            dto.setId(child.getId());
-            dto.setAliasName(child.getAliasName());
-            checkIds.add(dto);
-        }
-
-        // 获取子级
+        // 获取数据
         List<EntityQueryDTO> children = child.getChildren();
         if (CollectionUtils.isNotEmpty(children)){
             children.stream().filter(e -> e.getType().equals(ObjectTypeEnum.ATTRIBUTES.getName()) && e.getIsCheck().equals(1))
@@ -275,13 +362,40 @@ public class ViwGroupServiceImpl implements ViwGroupService {
                         ViwGroupCheckDTO dto = new ViwGroupCheckDTO();
                         dto.setId(e.getId());
                         dto.setAliasName(e.getAliasName());
+                        dto.setName(e.getName());
+                        dto.setDisplayName(e.getDisplayName());
+                        dto.setDesc(e.getDesc());
+                        dto.setDataType(e.getDataType());
+                        dto.setDataTypeLength(e.getDataTypeLength());
+                        dto.setDataTypeDecimalLength(e.getDataTypeDecimalLength());
+                        dto.setDomainEntityId(e.getDomainEntityId());
+                        dto.setDomainName(e.getDomainName());
+                        dto.setMapType(e.getMapType());
+
+                        // 根据属性id查询实体信息
+                        Integer entityId = attributeMapper.selectById(e.getId()).getEntityId();
+                        if (entityId != null){
+                            EntityPO entityPo = entityMapper.selectById(entityId);
+                            dto.setEntityId((int) entityPo.getId());
+                            dto.setEntityName(entityPo.getName());
+                            dto.setEntityDisplayName(entityPo.getDisplayName());
+                        }
+
                         checkIds.add(dto);
                     });
+        }
+
+        if (CollectionUtils.isNotEmpty(child.getChildren())){
+            for (EntityQueryDTO childChild : child.getChildren()) {
+                List<ViwGroupCheckDTO> checkedIds = this.getCheckedIds(childChild);
+                checkIds.addAll(checkedIds);
+            }
         }
 
         return checkIds;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum createCustomView(Integer id) {
         ViwGroupVO viwGroupVo = viwGroupService.getDataByGroupId(id).get(0);
@@ -289,6 +403,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
+        Connection connection = null;
         String sql = null;
         try {
             // 1.拼接自定义视图Sql
@@ -296,17 +411,62 @@ public class ViwGroupServiceImpl implements ViwGroupService {
 
             // 2.连接对象
             AbstractDbHelper dbHelper = new AbstractDbHelper();
-            Connection connection = dbHelper.connection(connectionStr, acc,
+            connection = dbHelper.connection(connectionStr, acc,
                     pwd,type);
 
             // 3.执行Sql
             dbHelper.executeSql(sql, connection);
+
+            // 回写自定义视图表名
+            ViwGroupPO groupPo = new ViwGroupPO();
+            groupPo.setId(id);
+            groupPo.setColumnName(TableNameGenerateUtils.generateCustomizeViwTableName(viwGroupVo.getEntityId(),viwGroupVo.getId()));
+            viwGroupMapper.updateById(groupPo);
         }catch (SQLException ex){
             log.error("【创建自定义视图Sql】:" + sql + "【创建自定义视图失败,异常信息】:" + ex);
             ex.printStackTrace();
+        }finally {
+            // 关闭数据库连接
+            closeConnection(connection);
         }
 
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public List<EntityQueryDTO> getRelationDataById(ViwGroupQueryDTO dto) {
+        List<EntityQueryDTO> list = new ArrayList<>();
+        // 查询出视图组中的属性
+        QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(ViwGroupDetailsPO::getGroupId,dto.getGroupId());
+        List<ViwGroupDetailsPO> detailsPoList = detailsMapper.selectList(queryWrapper);
+        // 视图组id集合
+        List<Integer> attributeIds = detailsPoList.stream().filter(e -> e.getAttributeId() != null).map(e -> e.getAttributeId()).collect(Collectors.toList());
+        // 实体id集合
+        Set<Integer> entityIds = detailsPoList.stream().filter(e -> e.getAttributeId() != null)
+                .map(e -> {
+                    return attributeMapper.selectById(e.getAttributeId()).getEntityId();
+                }).collect(Collectors.toSet());
+
+        // 查询出域字段关联的实体
+        EntityQueryDTO attributeInfo = this.getRelationAttributeInfo(dto.getEntityId(),attributeIds,entityIds,dto.getGroupId());
+
+        if (attributeInfo == null){
+            return null;
+        }else {
+            list.add(attributeInfo);
+            return list;
+        }
+    }
+
+    @Override
+    public List<EntityDTO> getReleaseData(Integer modelId) {
+        if (modelId == null){
+            return null;
+        }
+
+        return viwGroupMapper.getReleaseData(modelId);
     }
 
     /**
@@ -317,13 +477,13 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     public String buildCreateCustomViw(ViwGroupVO viwGroupVo) {
         StringBuilder str = new StringBuilder();
         str.append("CREATE VIEW " + PUBLIC + ".");
-        str.append(viwGroupVo.getName());
+        str.append(TableNameGenerateUtils.generateCustomizeViwTableName(viwGroupVo.getEntityId(),viwGroupVo.getId()));
         str.append(" AS ").append("SELECT ");
 
         // 获取主实体下的属性
         List<ViwGroupDetailsDTO> mainDetailsList = new ArrayList<>();
         List<ViwGroupDetailsDTO> groupDetailsList = viwGroupVo.getGroupDetailsList();
-        EntityInfoVO infoVo = entityService.getAttributeById(viwGroupVo.getEntityId());
+        EntityInfoVO infoVo = entityService.getAttributeById(viwGroupVo.getEntityId(),null);
         infoVo.getAttributeList().stream().forEach(e -> {
             groupDetailsList.stream().forEach(item -> {
                 if (e.getId().equals(item.getAttributeId())){
@@ -351,31 +511,33 @@ public class ViwGroupServiceImpl implements ViwGroupService {
                 , LinkedHashMap::new,Collectors.toList()));
 
         // 存储的是别名对应的字段名
-        Map<String,String> aliasMap = new HashMap<>(16);
+        Map<String,Integer> aliasMap = new HashMap<>(16);
 
         AtomicInteger count = new AtomicInteger(0);
         int secondaryCount = count.incrementAndGet();
         String mainName = mainDetailsList.stream().map(e -> {
-            String columnName = attributeService.getById(e.getAttributeId()).getData().getColumnName();
+            AttributeVO data = attributeService.getById(e.getAttributeId()).getData();
+            EntityVO entityVo = entityService.getDataById(data.getEntityId());
             String alias = ALIAS_MARK + secondaryCount;
-            String name = alias + "." + columnName + " AS " + e.getAliasName();
-            aliasMap.put(columnName,alias);
+            String name = alias + "." + data.getColumnName() + " AS " + entityVo.getName()  + "_" + e.getName();
+            aliasMap.put(alias,data.getEntityId());
             return name;
         }).collect(Collectors.joining(","));
 
         // 追加主表属性
         str.append(mainName);
-        str.append(",");
 
         // 所有从表字段的集合,统一拼接
         List<String> list = new ArrayList<>();
         for (Integer entityIdKey : secondaryMap.keySet()) {
+
+            String alias = ALIAS_MARK + count.incrementAndGet();
             List<ViwGroupDetailsDTO> detailsList = secondaryMap.get(entityIdKey);
             String collect = detailsList.stream().map(e -> {
-                String columnName = attributeService.getById(e.getAttributeId()).getData().getColumnName();
-                String alias = ALIAS_MARK + count.incrementAndGet();
-                String name = alias + "." + columnName + " AS " + e.getAliasName();
-                aliasMap.put(columnName,alias);
+                AttributeVO data = attributeService.getById(e.getAttributeId()).getData();
+                EntityVO entityVo = entityService.getDataById(data.getEntityId());
+                String name = alias + "." + data.getColumnName() + " AS " + entityVo.getName() + "_" + e.getName();
+                aliasMap.put(alias,data.getEntityId());
                 return name;
             }).collect(Collectors.joining(","));
 
@@ -384,7 +546,14 @@ public class ViwGroupServiceImpl implements ViwGroupService {
 
         // 追加从表属性
         String secondaryFields = list.stream().collect(Collectors.joining(","));
+        if (StringUtils.isNotBlank(secondaryFields) && StringUtils.isNotBlank(mainName)){
+            str.append(",");
+        }
         str.append(secondaryFields);
+
+        // 主表基础字段
+        str.append(",");
+        str.append(this.baseField("a1"));
 
         // 主表表名称
         AtomicInteger count1 = new AtomicInteger(0);
@@ -430,12 +599,41 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             int res = count1.get() - 1;
             String aliasReduce = ALIAS_MARK + res;
             AttributeVO data = attributeService.getById(detailsDto.getAttributeId()).getData();
-            EntityInfoVO entityVo1 = entityService.getAttributeById(data.getEntityId());
+            EntityInfoVO entityVo1 = entityService.getAttributeById(data.getEntityId(),null);
 
             StringBuilder secondaryStr = new StringBuilder();
             secondaryStr.append(entityVo1.getTableName() + " " + aliasAdd);
             secondaryStr.append(" ON ");
             secondaryStr.append(aliasReduce + "." + "fidata_version_id = " + aliasAdd + "." + "fidata_version_id");
+
+            // 1.根据实体查询出该实体的code，得到属性id
+            QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda()
+                    .eq(AttributePO::getEntityId,e)
+                    .eq(AttributePO::getName,"code");
+            int attributeId = (int) attributeMapper.selectOne(queryWrapper).getId();
+
+            // 2.根据attributeId匹配到域属性
+            QueryWrapper<AttributePO> queryWrapper1 = new QueryWrapper<>();
+            queryWrapper1.lambda()
+                    .eq(AttributePO::getDomainId,attributeId)
+                    .last(" limit 1");
+            AttributePO attributePo = attributeMapper.selectOne(queryWrapper1);
+
+            // 获取域属性别名
+            String doMainAlias = null;
+            for (String key : aliasMap.keySet()) {
+                Integer value = aliasMap.get(key);
+                if (value.equals(attributePo.getEntityId())){
+                    doMainAlias = key;
+                }
+            }
+
+            // 查询属性
+            secondaryStr.append(" AND ");
+            secondaryStr.append(doMainAlias + "." + attributePo.getColumnName());
+            secondaryStr.append(" = ");
+            secondaryStr.append(aliasAdd + "." + "fidata_id");
 
             return secondaryStr.toString();
         }).collect(Collectors.joining(" LEFT JOIN "));
@@ -452,7 +650,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             AttributeVO data = attributeService.getById(detailsDto.getAttributeId()).getData();
             AttributeVO doMainData = attributeService.getById(e).getData();
             // 查询域属性的实体名称
-            EntityInfoVO entityVo1 = entityService.getAttributeById(doMainData.getEntityId());
+            EntityInfoVO entityVo1 = entityService.getAttributeById(doMainData.getEntityId(),null);
 
             StringBuilder secondaryStr = new StringBuilder();
             secondaryStr.append(entityVo1.getTableName() + " " + aliasAdd);
@@ -486,14 +684,114 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     }
 
     /**
+     * 自定义视图基础字段
+     * @return
+     */
+    public String baseField(String alias){
+        StringBuilder str = new StringBuilder();
+        str.append(alias + "." + MARK + "id").append(",");
+        str.append(alias + "." + MARK + "version_id").append(",");
+        str.append(alias + "." + MARK + "create_time").append(",");
+        str.append(alias + "." + MARK + "create_user").append(",");
+        str.append(alias + "." + MARK + "update_time").append(",");
+        str.append(alias + "." + MARK + "update_user").append(",");
+        str.append(alias + "." + MARK + "del_flag");
+        return str.toString();
+    }
+
+    /**
      * 根据实体id获取属性,拼接成需要返回的参数
      * @param entityId
      * @param attributeIds
      * @return
      */
     public EntityQueryDTO getAttributeInfo(Integer entityId,List<Integer> attributeIds,Integer groupId){
-        EntityInfoVO entityInfoVo = entityService.getAttributeById(entityId);
+        EntityInfoVO entityInfoVo = entityService.getAttributeById(entityId,null);
         if (entityInfoVo == null){
+            return null;
+        }
+
+        EntityQueryDTO dto = new EntityQueryDTO();
+        dto.setId(entityInfoVo.getId());
+        dto.setName(entityInfoVo.getName());
+        dto.setDisplayName(entityInfoVo.getDisplayName());
+        dto.setType(ObjectTypeEnum.ENTITY.getName());
+        if (++count == 1){
+            dto.setIsMainEntity(0);
+        }else {
+            dto.setIsMainEntity(1);
+        }
+
+        // 属性信息
+        List<AttributeInfoDTO> attributeList = entityInfoVo.getAttributeList();
+        if (CollectionUtils.isNotEmpty(attributeList)){
+            List<EntityQueryDTO> collect = attributeList.stream().filter(e -> e.getDomainId() == null
+            && e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName())).map(e -> {
+                EntityQueryDTO dto1 = new EntityQueryDTO();
+                dto1.setId(e.getId());
+                dto1.setName(e.getName());
+                dto1.setType(ObjectTypeEnum.ATTRIBUTES.getName());
+                dto1.setDisplayName(e.getDisplayName());
+                dto1.setDesc(e.getDesc());
+                dto1.setDataType(e.getDataType());
+                dto1.setDataTypeLength(e.getDataTypeLength());
+                dto1.setDataTypeDecimalLength(e.getDataTypeDecimalLength());
+                dto1.setDomainEntityId(e.getDomainEntityId());
+                dto1.setDomainName(e.getDomainName());
+                dto1.setMapType(e.getMapType());
+                dto1.setEntityId(entityInfoVo.getId());
+                dto1.setEntityName(entityInfoVo.getName());
+                dto1.setEntityDisplayName(entityInfoVo.getDisplayName());
+
+                // 查询别名
+                QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
+                queryWrapper.lambda()
+                        .eq(ViwGroupDetailsPO::getGroupId,groupId)
+                        .eq(ViwGroupDetailsPO::getAttributeId,e.getId());
+                ViwGroupDetailsPO detailsPo = detailsMapper.selectOne(queryWrapper);
+                if (detailsPo != null){
+                    dto1.setAliasName(detailsPo.getAliasName());
+                }
+
+                // 判断是否在视图组中存在
+                if (attributeIds.contains(e.getId())){
+                    dto1.setIsCheck(1);
+                }else {
+                    dto1.setIsCheck(0);
+                }
+
+                return dto1;
+            }).collect(Collectors.toList());
+
+            // 域字段递归
+            List<EntityQueryDTO> doMainList = attributeList.stream().filter(e -> e.getDomainId() != null
+                    && e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName())).map(e -> {
+                AttributeVO data = attributeService.getById(e.getDomainId()).getData();
+                EntityQueryDTO attributeInfo = this.getAttributeInfo(data.getEntityId(),attributeIds,groupId);
+                return attributeInfo;
+            }).collect(Collectors.toList());
+            collect.addAll(doMainList);
+            dto.setChildren(collect);
+        }
+
+        return dto;
+    }
+
+    /**
+     * 查询每个属性的实体
+     * @param entityId
+     * @param attributeIds
+     * @param groupId
+     * @return
+     */
+    public EntityQueryDTO getRelationAttributeInfo(Integer entityId,List<Integer> attributeIds,Set<Integer> entityIds,Integer groupId){
+        EntityInfoVO entityInfoVo = entityService.getAttributeById(entityId,null);
+        if (entityInfoVo == null){
+            return null;
+        }
+
+        // 实体不存在
+        if (!entityIds.contains(entityInfoVo.getId())){
             return null;
         }
 
@@ -504,40 +802,44 @@ public class ViwGroupServiceImpl implements ViwGroupService {
 
         // 属性信息
         List<AttributeInfoDTO> attributeList = entityInfoVo.getAttributeList();
-        List<EntityQueryDTO> collect = attributeList.stream().filter(e -> e.getDomainId() == null).map(e -> {
-            EntityQueryDTO dto1 = new EntityQueryDTO();
-            dto1.setId(e.getId());
-            dto1.setName(e.getName());
-            dto1.setType(ObjectTypeEnum.ATTRIBUTES.getName());
+        if (CollectionUtils.isNotEmpty(attributeList)){
+            List<EntityQueryDTO> collect = attributeList.stream().filter(e -> e.getDomainId() == null).map(e -> {
+                // 判断是否在视图组中存在
+                if (attributeIds.contains(e.getId())){
+                    EntityQueryDTO dto1 = new EntityQueryDTO();
+                    dto1.setId(e.getId());
+                    dto1.setName(e.getName());
+                    dto1.setType(ObjectTypeEnum.ATTRIBUTES.getName());
+                    dto1.setDataType(e.getDataType());
+                    dto1.setDisplayName(e.getDisplayName());
 
-            // 查询别名
-            QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
-            queryWrapper.lambda()
-                    .eq(ViwGroupDetailsPO::getGroupId,groupId)
-                    .eq(ViwGroupDetailsPO::getAttributeId,e.getId());
-            ViwGroupDetailsPO detailsPo = detailsMapper.selectOne(queryWrapper);
-            if (detailsPo != null){
-                dto1.setAliasName(detailsPo.getAliasName());
-            }
+                    // 查询别名
+                    QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
+                    queryWrapper.lambda()
+                            .eq(ViwGroupDetailsPO::getGroupId,groupId)
+                            .eq(ViwGroupDetailsPO::getAttributeId,e.getId());
+                    ViwGroupDetailsPO detailsPo = detailsMapper.selectOne(queryWrapper);
+                    if (detailsPo != null){
+                        dto1.setAliasName(detailsPo.getAliasName());
+                    }
 
-            // 判断是否在视图组中存在
-            if (attributeIds.contains(e.getId())){
-                dto1.setIsCheck(1);
-            }else {
-                dto1.setIsCheck(0);
-            }
+                    return dto1;
+                }
 
-            return dto1;
-        }).collect(Collectors.toList());
+                return null;
+            }).collect(Collectors.toList());
 
-        // 域字段递归
-        List<EntityQueryDTO> doMainList = attributeList.stream().filter(e -> e.getDomainId() != null).map(e -> {
-            AttributeVO data = attributeService.getById(e.getDomainId()).getData();
-            EntityQueryDTO attributeInfo = this.getAttributeInfo(data.getEntityId(),attributeIds,groupId);
-            return attributeInfo;
-        }).collect(Collectors.toList());
-        collect.addAll(doMainList);
-        dto.setChildren(collect);
+            // 域字段递归
+            List<EntityQueryDTO> doMainList = attributeList.stream().filter(e -> e.getDomainId() != null).map(e -> {
+                AttributeVO data = attributeService.getById(e.getDomainId()).getData();
+                EntityQueryDTO attributeInfo = this.getRelationAttributeInfo(data.getEntityId(),attributeIds,entityIds,groupId);
+                return attributeInfo;
+            }).collect(Collectors.toList());
+            collect.addAll(doMainList);
+
+            List<EntityQueryDTO> collect1 = collect.stream().filter(Objects::nonNull).collect(Collectors.toList());
+            dto.setChildren(collect1);
+        }
 
         return dto;
     }

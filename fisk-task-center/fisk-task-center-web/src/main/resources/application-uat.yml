@@ -10,25 +10,32 @@ external-table-link: '"host" = "192.168.21.13","port" = "5432","user" = "postgre
 nifi:
   basePath: http://192.168.21.13:8080/nifi-api
   token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiI5YjNkMjY3NjExNDc0NWU2ODg3MDlkODkzNmUzYmQ4MiIsInVzZXIiOiJ7XCJpZFwiOjE5LFwidXNlckFjY291bnRcIjpcInRhc2vkuJPnlKh0b2tlblwifSIsImlkIjoiMTkifQ.d5g6oMU3a_XsjpOouZu1R1YlVO_E_ZjwUUJROR1XbRo
+  Enable-Authentication: 0
+  kerberos:
+    Keytab: /opt/fidata/java/fisk-task-center/kafka.keytab
+    login:
+      config: /opt/fidata/java/fisk-task-center/kafka-jaas.conf
+    krb5:
+      conf: /opt/fidata/java/fisk-task-center/krb5.conf
+  kerberosprincipal: kafka/admin@AUTOEXPR.COM
   pipeline:
-    topicName: my-topic2
+    topicName: my-topic
     waitTime: 20
+    operation-interval: 2000
+    number-of-operations: 5
+    data-governance-url: http://192.168.21.13:8083
 nifi-ConcurrentTasks: 3
 nifi-FetchSize: 30000
 nifi-MaxRowsPerFlowFile: 10000
 nifi-OutputBatchSize: 1
-pgsql-datainput:
-  driverClassName: org.postgresql.Driver
-  password: PgPassword01!
-  url: jdbc:postgresql://192.168.21.13:5432/dmp_ods_UAT?stringtype=unspecified
-  username: postgres
-  ip: 192.168.21.13
-  dbName: dmp_ods_UAT
+fiData-data-ods-source: 2
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
   password: PgPassword01!
   url: jdbc:postgresql://192.168.21.13:5432/dmp_dw_UAT?stringtype=unspecified
   username: postgres
+  ip: 192.168.21.13
+  dbName: dmp_dw_UAT
 pgsql-mdm:
   driverClassName: org.postgresql.Driver
   password: PgPassword01!

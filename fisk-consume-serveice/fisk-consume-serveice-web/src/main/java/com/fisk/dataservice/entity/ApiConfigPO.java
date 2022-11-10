@@ -45,6 +45,26 @@ public class ApiConfigPO extends BasePO
     public String tableName;
 
     /**
+     * 表别名
+     */
+    public String tableNameAlias;
+
+    /**
+     * 表类型 1：表  2：视图
+     */
+    public int tableType;
+
+    /**
+     * 表业务类型 1：事实表、2：维度表、3、指标表  4、宽表
+     */
+    public int tableBusinessType;
+
+    /**
+     * 表路径
+     */
+    public String tablePath;
+
+    /**
      * sql语句
      */
     public String createSql;

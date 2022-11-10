@@ -4,6 +4,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
+import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
 /**
@@ -22,7 +23,12 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @MapperScan("com.fisk.datamodel.mapper")
 @EnableFeignClients(basePackages = {"com.fisk.auth.client",
         "com.fisk.task.client",
-        "com.fisk.dataaccess.client"})
+        "com.fisk.dataaccess.client",
+        "com.fisk.datafactory.client",
+        "com.fisk.system.client",
+        "com.fisk.datamanage.client"
+})
+@EnableHystrix
 public class FkDataModelApplication {
 
     public static void main(String[] args) {

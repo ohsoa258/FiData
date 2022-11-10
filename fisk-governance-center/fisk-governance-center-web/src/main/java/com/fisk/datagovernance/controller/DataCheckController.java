@@ -59,12 +59,14 @@ public class DataCheckController {
     @PostMapping("/interfaceCheckData")
     public ResultEntity<List<DataCheckResultVO>> interfaceCheckData(@Validated @RequestBody DataCheckWebDTO dto) {
         return service.interfaceCheckData(dto);
+        //return ResultEntityBuild.buildData(ResultEnum.SUCCESS, null);
     }
 
     @ApiOperation("同步验证")
     @PostMapping("/syncCheckData")
     public ResultEntity<List<DataCheckResultVO>> syncCheckData(@Validated @RequestBody DataCheckSyncDTO dto) {
         return service.syncCheckData(dto);
+        //return ResultEntityBuild.buildData(ResultEnum.SUCCESS, null);
     }
 
     @ApiOperation("获取校验类型")

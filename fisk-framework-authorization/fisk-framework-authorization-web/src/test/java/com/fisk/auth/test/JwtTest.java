@@ -1,8 +1,8 @@
 package com.fisk.auth.test;
 
-import com.fisk.auth.dto.Payload;
-import com.fisk.auth.dto.UserDetail;
-import com.fisk.auth.utils.JwtUtils;
+import com.fisk.common.framework.jwt.JwtUtils;
+import com.fisk.common.framework.jwt.model.Payload;
+import com.fisk.common.framework.jwt.model.UserDetail;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

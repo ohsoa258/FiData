@@ -1,9 +1,9 @@
 package com.fisk.datagovernance.dto.dataquality.datacheck;
 
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 
 /**
@@ -15,25 +15,28 @@ import java.util.HashMap;
 @Data
 public class DataCheckSyncDTO {
     /**
-     * 服务器IP
+     * FiData系统数据源ID
      */
-    @ApiModelProperty(value = "服务器IP")
-    @NotNull()
-    public String ip;
+    @ApiModelProperty(value = "FiData系统数据源ID")
+    public String dataSourceId;
 
     /**
-     * 数据库名称
+     * 表前缀
      */
-    @ApiModelProperty(value = "数据库名称")
-    @NotNull()
-    public String dbName;
+    @ApiModelProperty(value = "表前缀")
+    public String tablePrefix;
 
     /**
-     * 表名称
+     * 表唯一标识：表ID
      */
-    @ApiModelProperty(value = "表名称")
-    @NotNull()
-    public String tableName;
+    @ApiModelProperty(value = "表唯一标识：表ID")
+    public String tableUnique;
+
+    /**
+     * 表业务类型
+     */
+    @ApiModelProperty(value = "表业务类型")
+    public TableBusinessTypeEnum tableBusinessType;
 
     /**
      * 校验通过修改字段集合，key：字段名称 value：字段值

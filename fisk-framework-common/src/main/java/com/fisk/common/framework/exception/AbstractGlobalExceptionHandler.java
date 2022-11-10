@@ -58,7 +58,6 @@ public abstract class AbstractGlobalExceptionHandler {
     public ResultEntity<Object> handle1(FkException ex) {
         String traceId = MDCHelper.getTraceId();
         log.error("全局异常拦截：" + ex.toString());
-        ex.printStackTrace();
         MDCHelper.clear();
         if (StringUtils.isNotEmpty(ex.getErrorMsg())) {
             ResultEntity<Object> res = ResultEntityBuild.build(ex.getResultEnum(), ex.getErrorMsg());
@@ -80,7 +79,6 @@ public abstract class AbstractGlobalExceptionHandler {
     public ResultEntity<Object> handle1(Exception ex) {
         String traceId = MDCHelper.getTraceId();
         log.error("全局异常拦截：" + ex.toString());
-        ex.printStackTrace();
         MDCHelper.clear();
         ResultEntity<Object> res = ResultEntityBuild.build(ResultEnum.ERROR, ex.getMessage());
         res.traceId = traceId;

@@ -7,14 +7,23 @@ import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
+import com.fisk.common.service.dbMetaData.dto.*;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.app.*;
+import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
+import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.impl.TableAccessImpl;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
@@ -50,13 +59,9 @@ public class AppRegistrationController {
     private TableAccessImpl tableAccessImpl;
     @Resource
     private PublishTaskClient publishTaskClient;
+    @Resource
+    private DataManageClient dataManageClient;
 
-    /**
-     * 添加应用
-     *
-     * @param dto 请求参数
-     * @return 返回值
-     */
     @PostMapping("/add")
     @ApiOperation(value = "添加")
     public ResultEntity<Object> addData(@RequestBody AppRegistrationDTO dto) {
@@ -70,12 +75,6 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, resultEntity);
     }
 
-    /**
-     * 根据id查询数据,用于数据回显
-     *
-     * @param id 请求参数
-     * @return 返回值
-     */
     @GetMapping("/get/{id}")
     @ApiOperation(value = "回显")
     public ResultEntity<AppRegistrationDTO> getData(
@@ -83,14 +82,6 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
     }
 
-    /**
-     * 分页查询
-     *
-     * @param key  搜索条件
-     * @param page 当前页码
-     * @param rows 每页显示条数
-     * @return 返回值
-     */
     @GetMapping("/page")
     @ApiOperation(value = "分页")
     public ResultEntity<PageDTO<AppRegistrationDTO>> queryByPageAppRes(
@@ -103,24 +94,18 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, data);
     }
 
-    /**
-     * 应用注册-修改
-     *
-     * @param dto 请求参数
-     * @return 返回值
-     */
     @PutMapping("/edit")
     @ApiOperation(value = "修改")
     public ResultEntity<Object> editData(@Validated @RequestBody AppRegistrationEditDTO dto) {
         return ResultEntityBuild.build(service.updateAppRegistration(dto));
     }
 
-    /**
-     * 删除
-     *
-     * @param id 请求参数
-     * @return 返回值
-     */
+    @PutMapping("/editAppBasicInfo")
+    @ApiOperation(value = "修改应用基本信息")
+    public ResultEntity<Object> editAppBasicInfo(@Validated @RequestBody AppRegistrationEditDTO dto) {
+        return ResultEntityBuild.build(service.editAppBasicInfo(dto));
+    }
+
     @DeleteMapping("/delete/{id}")
     @ApiOperation(value = "删除")
     public ResultEntity<Object> deleteData(
@@ -167,17 +152,18 @@ public class AppRegistrationController {
             // 删除nifi流程
             publishTaskClient.deleteNifiFlow(dataModelVO);
             log.info("task删除应用{}", task);
-            System.out.println(task);
+        }
+
+        // 删除元数据
+        if (CollectionUtils.isNotEmpty(nifiVO.qualifiedNames)) {
+            MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
+            metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.getQualifiedNames());
+            dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
 
-    /**
-     * 查询应用数据，按照创建时间倒序排序，查出top 10的数据
-     *
-     * @return 返回值
-     */
     @GetMapping("/getDescDate")
     @ApiOperation(value = "查询应用数据，按照创建时间倒序排序，查出top 10的数据")
     public ResultEntity<List<AppRegistrationDTO>> getDescDate() {
@@ -228,7 +214,7 @@ public class AppRegistrationController {
     @PostMapping("/connect")
     public ResultEntity<Object> connectDb(@RequestBody DbConnectionDTO dto) {
 
-        return service.connectDb(dto);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.connectDb(dto));
     }
 
     @ApiOperation("判断应用名称是否重复")
@@ -239,8 +225,9 @@ public class AppRegistrationController {
 
     @ApiOperation("判断应用简称是否重复")
     @PostMapping("/getRepeatAppAbbreviation")
-    public ResultEntity<Object> getRepeatAppAbbreviation(@RequestParam("appAbbreviation") String appAbbreviation) {
-        return service.getRepeatAppAbbreviation(appAbbreviation);
+    public ResultEntity<Object> getRepeatAppAbbreviation(@RequestParam("appAbbreviation") String appAbbreviation,
+                                                         @RequestParam("whetherSchema") boolean whetherSchema) {
+        return service.getRepeatAppAbbreviation(appAbbreviation, whetherSchema);
     }
 
     @ApiOperation(value = "获取所有应用以及表、字段数据")
@@ -251,7 +238,7 @@ public class AppRegistrationController {
 
     @ApiOperation(value = "根据sql语句,获取字段列表(数据建模)")
     @PostMapping("/getTableAccessQueryList")
-    public ResultEntity<Object> getTableAccessQueryList(@RequestBody OdsQueryDTO query) {
+    public ResultEntity<OdsResultDTO> getTableAccessQueryList(@RequestBody OdsQueryDTO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.getTableFieldByQuery(query));
     }
 
@@ -272,4 +259,72 @@ public class AppRegistrationController {
     public ResultEntity<List<LogMessageFilterVO>> getTableNameListByAppIdAndApiId(@RequestBody PipelineTableQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableNameListByAppIdAndApiId(dto));
     }
+
+    @PostMapping("/redirect")
+    @ApiOperation(value = "跳转页面: 查询出当前(表、api、ftp)具体在哪个管道中使用,并给跳转页面提供数据")
+    public ResultEntity<Object> redirect(@Validated @RequestBody AccessRedirectDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.redirect(dto));
+    }
+
+    @PostMapping("/getDataStructure")
+    @ApiOperation(value = "获取数据接入结构")
+    public ResultEntity<List<FiDataMetaDataDTO>> getDataAccessStructure(@RequestBody FiDataMetaDataReqDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataAccessStructure(dto));
+    }
+
+    @PostMapping("/getDataTableStructure")
+    @ApiOperation(value = "获取数据接入表结构")
+    public ResultEntity<List<FiDataMetaDataTreeDTO>> getDataAccessTableStructure(@RequestBody FiDataMetaDataReqDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataAccessTableStructure(dto));
+    }
+
+    @PostMapping("/setDataStructure")
+    @ApiOperation(value = "刷新数据接入结构")
+    public ResultEntity<Object> setDataAccessStructure(@RequestBody FiDataMetaDataReqDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setDataAccessStructure(dto));
+    }
+
+    @PostMapping("/buildTableRuleInfo")
+    @ApiOperation(value = "构建业务元数据其他数据信息")
+    public ResultEntity<TableRuleInfoDTO> buildTableRuleInfo(@RequestBody TableRuleParameterDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.buildTableRuleInfo(dto));
+    }
+
+    @PostMapping("/getFiDataTableMetaData")
+    @ApiOperation(value = "根据表信息/字段ID,获取表/字段基本信息")
+    public ResultEntity<List<FiDataTableMetaDataDTO>> getFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataTableMetaData(dto));
+    }
+
+    @GetMapping("/getAppList")
+    @ApiOperation(value = "获取所有应用信息")
+    public ResultEntity<List<AppBusinessInfoDTO>> getAppList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppList());
+    }
+
+    @PostMapping("/getApiToken")
+    @ApiOperation(value = "jwt验证方式,测试获取token")
+    public ResultEntity<Object> getApiToken(@RequestBody AppDataSourceDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getApiToken(dto));
+    }
+
+    @PostMapping("/buildCdcJobScript")
+    @ApiOperation(value = "获取cdc任务脚本")
+    public ResultEntity<Object> buildCdcJobScript(@RequestBody CdcJobParameterDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.buildCdcJobScript(dto));
+    }
+
+    @GetMapping("/getFiDataDataSource")
+    @ApiOperation(value = "获取fidata数据源")
+    public ResultEntity<Object> getFiDataDataSource() {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataDataSource());
+    }
+
+    @GetMapping("/getDataTypeList/{appId}")
+    @ApiOperation(value = "获取FiData ODS数据类型")
+    public ResultEntity<Object> getDataTypeList(@PathVariable("appId") Integer appId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dataTypeList(appId));
+    }
+
 }

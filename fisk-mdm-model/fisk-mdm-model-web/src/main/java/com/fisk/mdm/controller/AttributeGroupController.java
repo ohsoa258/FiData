@@ -8,6 +8,7 @@ import com.fisk.mdm.dto.attributeGroup.*;
 import com.fisk.mdm.service.AttributeGroupService;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupVO;
 import com.fisk.mdm.vo.attributeGroup.QueryAttributeGroupVO;
+import com.fisk.mdm.vo.entity.EntityViewVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -74,8 +75,8 @@ public class AttributeGroupController {
     @ApiOperation("根据模型id查询属性组")
     @GetMapping("/getDataByModelId")
     @ResponseBody
-    public ResultEntity<List<AttributeGroupVO>> getDataByModelId(Integer id) {
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,groupService.getDataByModelId(id));
+    public ResultEntity<List<AttributeGroupVO>> getDataByModelId(Integer id,String name) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,groupService.getDataByModelId(id,name));
     }
 
     @ApiOperation("根据组id查询属性组(根据实体进行分组)")
@@ -88,7 +89,7 @@ public class AttributeGroupController {
     @ApiOperation("获取出属性组存在的属性")
     @PostMapping("/getAttributeExists")
     @ResponseBody
-    public ResultEntity<List<AttributeInfoDTO>> getAttributeExists(@RequestBody AttributeInfoQueryDTO dto) {
+    public ResultEntity<AttributeQueryRelationDTO> getAttributeExists(@RequestBody AttributeInfoQueryDTO dto) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,groupService.getAttributeExists(dto));
     }
 }

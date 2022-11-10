@@ -1,7 +1,7 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.fisk.datamodel.mapper.BusinessLimitedMapper">
+<mapper namespace="com.fisk.datamodel.mapper.businesslimited.BusinessLimitedMapper">
 
     <select id="queryList" resultType="com.fisk.datamodel.dto.businesslimited.BusinessLimitedDTO">
         SELECT

@@ -4,12 +4,16 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelQueryDTO;
 import com.fisk.mdm.vo.model.ModelInfoVO;
 import com.fisk.mdm.vo.model.ModelVO;
+
+import java.util.List;
 
 /**
  * @author ChenYa
@@ -56,6 +60,17 @@ public interface IModelService extends IService<ModelPO> {
      * @param modelId 模型id
      * @return {@link ModelInfoVO}
      */
-    ModelInfoVO getEntityById(Integer modelId);
+    ModelInfoVO getEntityById(Integer modelId,String name);
 
+    /**
+     * 获取主数据结构
+     * @return
+     */
+    List<FiDataMetaDataDTO> getDataStructure(FiDataMetaDataReqDTO reqDto);
+
+    /**
+     * 刷新主数据结构
+     * @return
+     */
+    boolean setDataStructure(FiDataMetaDataReqDTO reqDto);
 }

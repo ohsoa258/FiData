@@ -2,10 +2,10 @@ package com.fisk.dataaccess.utils.sql;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.dataaccess.dto.table.DataBaseViewDTO;
 import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
-import com.fisk.dataaccess.enums.DriverTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
@@ -21,9 +21,6 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class SqlServerPlusUtils {
-
-    private static Connection conn = null;
-    private static Statement stmt = null;
 
     /**
      * 根据tableName获取tableFields
@@ -41,9 +38,6 @@ public class SqlServerPlusUtils {
             while (resultSet.next()) {
                 TableStructureDTO dto = new TableStructureDTO();
                 dto.fieldName = resultSet.getString("COLUMN_NAME");
-////                dto.fieldType = resultSet.getString("TYPE_NAME");
-////                dto.fieldLength = Integer.parseInt(resultSet.getString("COLUMN_SIZE"));
-///               dto.fieldDes = resultSet.getString("REMARKS");
                 colNameList.add(dto);
             }
 
@@ -100,7 +94,7 @@ public class SqlServerPlusUtils {
      * @params conn
      * @params dbName
      */
-    public List<String> getSchemaList(Connection conn, String dbName) {
+    public List<String> getSchemaList(Connection conn) {
         List<String> schemaList = new ArrayList<>();
         try {
             Statement stmt = conn.createStatement();
@@ -109,7 +103,6 @@ public class SqlServerPlusUtils {
                     "(\n" +
                     "select name, schema_name(schema_id) as field from sys.tables\n" +
                     ") as tabl");
-//            tableList = new ArrayList<>();
             while (resultSet.next()) {
                 // 架构名
                 String field2 = resultSet.getString("field");
@@ -137,15 +130,11 @@ public class SqlServerPlusUtils {
      * @params password
      * @params dbName
      */
-    public List<TablePyhNameDTO> getTableNameAndColumnsPlus(String url, String user, String password, String dbName) {
+    public List<TablePyhNameDTO> getTableNameAndColumnsPlus(Connection conn, String dbName) {
 
         List<TablePyhNameDTO> list = null;
-
+        Statement stmt = null;
         try {
-            //1.加载驱动程序
-            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            //2.获得数据库的连接
-            conn = DriverManager.getConnection(url, user, password);
             stmt = conn.createStatement();
             list = new ArrayList<>();
 
@@ -165,10 +154,12 @@ public class SqlServerPlusUtils {
                 tablePyhNameDTO.setFields(columnsName);
                 finalList.add(tablePyhNameDTO);
             }
-            conn.close();
-        } catch (ClassNotFoundException | SQLException e) {
+        } catch (SQLException e) {
             log.error("【getTableNameAndColumnsPlus】获取表名及表字段失败, ex", e);
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(stmt);
+            AbstractCommonDbHelper.closeConnection(conn);
         }
         return list;
     }
@@ -187,17 +178,16 @@ public class SqlServerPlusUtils {
      * @params password
      * @params dbName
      */
-    public List<DataBaseViewDTO> loadViewDetails(DriverTypeEnum driverTypeEnum, String url, String user, String password, String dbName) {
+    public List<DataBaseViewDTO> loadViewDetails(Connection conn) {
 
         List<DataBaseViewDTO> list = null;
+        Statement st = null;
         try {
-            Class.forName(driverTypeEnum.getName());
-            Connection conn = DriverManager.getConnection(url, user, password);
             // 获取所有架构名
-            List<String> schemaList = getSchemaList(conn, dbName);
+            List<String> schemaList = getSchemaList(conn);
             // 获取数据库中所有视图名称
-            List<String> viewNameList = loadViewNameList(driverTypeEnum, conn, dbName, schemaList);
-            Statement st = conn.createStatement();
+            List<String> viewNameList = loadViewNameList(conn, schemaList);
+            st = conn.createStatement();
 
             list = new ArrayList<>();
 
@@ -215,21 +205,17 @@ public class SqlServerPlusUtils {
                 } catch (SQLException e) {
                     log.error("无效的视图: " + viewName);
                     dto.flag = 2;
-                    list.add(dto);
-                    continue;
+                } finally {
+                    AbstractCommonDbHelper.closeResultSet(resultSql);
                 }
-
-                // 关闭当前结果集
-                resultSql.close();
-
                 list.add(dto);
             }
-
-            st.close();
-            conn.close();
-        } catch (ClassNotFoundException | SQLException e) {
+        } catch (SQLException e) {
             log.error("【loadViewDetails】获取表名报错, ex", e);
             throw new FkException(ResultEnum.LOAD_VIEW_STRUCTURE_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeConnection(conn);
         }
 
         return list;
@@ -248,7 +234,7 @@ public class SqlServerPlusUtils {
      * @params dbName 数据库名
      * @params schema 架构名
      */
-    private List<String> loadViewNameList(DriverTypeEnum driverTypeEnum, Connection conn, String dbName, List<String> schemaList) {
+    private List<String> loadViewNameList(Connection conn, List<String> schemaList) {
         ArrayList<String> viewNameList = null;
         try {
             viewNameList = new ArrayList<>();
@@ -265,8 +251,8 @@ public class SqlServerPlusUtils {
                 rs.close();
             }
 
-
         } catch (SQLException e) {
+            log.error("获取SqlServer视图失败,{}", e);
             throw new FkException(ResultEnum.LOAD_VIEW_NAME_ERROR);
         }
 
@@ -301,10 +287,41 @@ public class SqlServerPlusUtils {
                 tableStructureDTO.fieldLength = metaData.getColumnDisplaySize(i);
                 colNameList.add(tableStructureDTO);
             }
-            rs.close();
         } catch (SQLException e) {
+            log.error("获取SqlServer视图字段失败,{}", e);
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeResultSet(rs);
         }
         return colNameList;
+    }
+
+    /**
+     * 获取所有数据库
+     *
+     * @param conn
+     * @return java.util.List<java.lang.String>
+     * @author Lock
+     * @date 2022/8/9 13:59
+     */
+    public List<String> getAllDatabases(Connection conn) {
+
+        List<String> dbName = new ArrayList<>();
+        Statement stmt = null;
+        try {
+            stmt = conn.createStatement();
+            ResultSet resultSet = stmt.executeQuery("SELECT name FROM  master..sysdatabases WHERE name NOT IN ( 'master', 'model', 'msdb', 'tempdb', 'northwind','pubs' )");
+            while (resultSet.next()) {
+                dbName.add(resultSet.getString("name"));
+            }
+        } catch (SQLException e) {
+            log.error("获取SqlServer所有库失败,{}", e);
+            throw new FkException(ResultEnum.GET_DATABASE_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(stmt);
+            AbstractCommonDbHelper.closeConnection(conn);
+        }
+
+        return dbName;
     }
 }

@@ -63,11 +63,10 @@ public class PipelineTableLogImpl extends ServiceImpl<PipelineTableLogMapper, Pi
         NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO = new NifiCustomWorkflowDetailDTO();
         List<PipelineTableLogDTO> pipelineTableLogs = new ArrayList<>();
         for (Long id : componentIds) {
-            nifiCustomWorkflowDetailDTO.id = id;
-            List<PipelineTableLogDTO> pipelineTableLog = this.getPipelineTableLog(nifiCustomWorkflowDetailDTO);
+            PipelineTableLogDTO pipelineTableLog = pipelineTableLogMapper.selectByComponentId(id);
 
-            if (pipelineTableLog != null && pipelineTableLog.size() != 0) {
-                pipelineTableLogs.addAll(pipelineTableLog);
+            if (pipelineTableLog != null) {
+                pipelineTableLogs.add(pipelineTableLog);
             }
         }
         //List<Integer> status = pipelineTableLogs.stream().map(a -> a.state).collect(Collectors.toList());

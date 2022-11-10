@@ -22,5 +22,5 @@ public class ApiImportDataDTO extends MQBaseDTO {
     public String workflowId;
 
 
-    public String workflowIdAppIdApiId;
+    public String pipelApiDispatch;
 }

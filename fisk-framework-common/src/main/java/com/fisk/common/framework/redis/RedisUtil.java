@@ -1,7 +1,12 @@
 package com.fisk.common.framework.redis;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -92,6 +97,50 @@ public class RedisUtil {
      */
     public Object get(String key) {
         return key == null ? null : redisTemplate.opsForValue().get(key);
+    }
+
+    /**
+     * 获取FidataMetaData
+     *
+     * @param dataSourceId dataSourceId
+     * @return 值
+     */
+    public List<FiDataMetaDataDTO> getFiDataMetaData(String dataSourceId) {
+
+        List<FiDataMetaDataDTO> list = null;
+        // 判断key对应的value是否存在
+        boolean flag = redisTemplate.hasKey(RedisKeyBuild.buildFiDataStructureKey(dataSourceId));
+        if (!flag) {
+            return null;
+        }
+
+        String s = redisTemplate.opsForValue().get(RedisKeyBuild.buildFiDataStructureKey(dataSourceId)).toString();
+        if (StringUtils.isNotBlank(s)) {
+            list = JSONObject.parseArray(s, FiDataMetaDataDTO.class);
+        }
+        return list;
+    }
+
+    /**
+     * 获取FidataMetaData
+     *
+     * @param dataSourceId dataSourceId
+     * @return 值
+     */
+    public List<FiDataMetaDataTreeDTO> getFiDataTableMetaData(String dataSourceId) {
+
+        List<FiDataMetaDataTreeDTO> list = null;
+        // 判断key对应的value是否存在
+        boolean flag = redisTemplate.hasKey(RedisKeyBuild.buildFiDataStructureKey(dataSourceId));
+        if (!flag) {
+            return null;
+        }
+
+        String s = redisTemplate.opsForValue().get(RedisKeyBuild.buildFiDataTableStructureKey(dataSourceId)).toString();
+        if (StringUtils.isNotBlank(s)) {
+            list = JSONObject.parseArray(s, FiDataMetaDataTreeDTO.class);
+        }
+        return list;
     }
 
     /**
@@ -212,6 +261,27 @@ public class RedisUtil {
     public boolean hmset(String key, Map<String, Object> map) {
         try {
             redisTemplate.opsForHash().putAll(key, map);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * HashSet 并设置时间
+     *
+     * @param key  键
+     * @param map  对应多个键值
+     * @param time 时间(秒)
+     * @return true成功 false失败
+     */
+    public boolean hmsset(String key, Map<Object, Object> map, long time) {
+        try {
+            redisTemplate.opsForHash().putAll(key, map);
+            if (time > 0) {
+                expire(key, time);
+            }
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -625,10 +695,45 @@ public class RedisUtil {
             System.out.println(key);
             UserInfo value = (UserInfo) redisTemplate.opsForValue().get(key);
             System.out.println(value);
-            if(Objects.equals(token,value.token)){
+            if (Objects.equals(token, value.token)) {
                 return value;
             }
         }
         return null;
     }
+
+    /**
+     * 心跳检测,流检测使用
+     *
+     * @param key   键
+     * @param value 值
+     * @return boolean
+     */
+    public boolean heartbeatDetection(String key, String value, long time) {
+        try {
+            if (time > 0) {
+                redisTemplate.opsForValue().set(key, value, time, TimeUnit.SECONDS);
+            } else {
+                set(key, value);
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * 普通缓存获取,然后删除
+     *
+     * @param key 键
+     * @return 值
+     */
+    public Map<Object, Object> getAndDel(String key) {
+        Map<Object, Object> entries = redisTemplate.opsForHash().entries(key);
+        log.info("map中内容:" + JSON.toJSONString(entries));
+        redisTemplate.delete(key);
+        return entries;
+    }
+
 }

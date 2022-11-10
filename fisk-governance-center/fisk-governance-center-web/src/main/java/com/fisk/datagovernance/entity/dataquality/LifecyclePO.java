@@ -19,7 +19,7 @@ public class LifecyclePO extends BasePO {
     public int templateId;
 
     /**
-     * 数据源id
+     * 数据源表主键id
      */
     public int datasourceId;
 
@@ -29,9 +29,19 @@ public class LifecyclePO extends BasePO {
     public String ruleName;
 
     /**
-     * 表名称
+     * 表名称/表Id
      */
-    public String tableName;
+    public String tableUnique;
+
+    /**
+     * 表类型 1：表  2：视图
+     */
+    public int tableType;
+
+    /**
+     * 表业务类型 1：事实表、2：维度表、3、指标表  4、宽表
+     */
+    public int tableBusinessType;
 
     /**
      * 回收时间

@@ -8,5 +8,6 @@ import lombok.Data;
 @Data
 public class DimensionSqlDTO {
     public long id;
+    public Integer appId;
     public String sqlScript;
 }

@@ -46,4 +46,15 @@ public enum DataFactoryEnum implements BaseEnum {
         return DataFactoryEnum.OTHER;
     }
 
+    public static DataFactoryEnum getName(String name) {
+        DataFactoryEnum[] carTypeEnums = values();
+        for (DataFactoryEnum carTypeEnum : carTypeEnums) {
+            String queryName=carTypeEnum.name;
+            if (queryName.equalsIgnoreCase(name)) {
+                return carTypeEnum;
+            }
+        }
+        return DataFactoryEnum.OTHER;
+    }
+
 }

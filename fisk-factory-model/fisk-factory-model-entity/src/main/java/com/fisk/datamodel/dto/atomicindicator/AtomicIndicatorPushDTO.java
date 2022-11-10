@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class AtomicIndicatorPushDTO {
     /**
-     * 字段类型：0 退化指标 1维度键 2 原子指标
+     * 字段类型：0 退化指标 1维度键 2 原子指标 3 派生指标
      */
     public int attributeType;
     /**
@@ -23,6 +23,11 @@ public class AtomicIndicatorPushDTO {
      * 退化维度字段类型长度
      */
     public int factFieldLength;
+
+    /**
+     * 关联维度表id
+     */
+    public long dimensionTableId;
 
     /**
      * 关联维度名称
@@ -43,5 +48,9 @@ public class AtomicIndicatorPushDTO {
     public String aggregationLogic;
 
     public long id;
+    /**
+     * 原子指标id
+     */
+    public int atomicId;
 
 }

@@ -6,7 +6,7 @@ import com.fisk.dataaccess.dto.table.TableHistoryDTO;
 import java.util.List;
 
 /**
- * @author JianWenYang
+ * @author Lock
  */
 public interface ITableHistory {
 

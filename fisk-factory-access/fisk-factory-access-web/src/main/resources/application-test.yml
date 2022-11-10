@@ -27,18 +27,39 @@ dataservice:
     uat_address: http://192.168.11.130:8083
     prd_address: https://prdHost
 
-# pg数据源配置
-pgsql-datamodel:
-  driverClassName: org.postgresql.Driver
-  url: jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified
-  username: postgres
-  password: Password01!
-pgsql-ods:
-  url: jdbc:postgresql://192.168.1.250:5432/dmp_ods?stringtype=unspecified
-  username: postgres
-  password: Password01!
-
 # 数据质量校验的信息(ip: pg数据源的ip地址; dbName: 连接的ods库)
 Data-quality-check:
   ip: 192.168.1.250
   dbName: dmp_ods
+
+# 元数据实例信息
+metadata-instance:
+  # 数据库类型
+  rdbmsType: postgresql
+  # 平台
+  platform: Linux
+  # 主机
+  hostname: 192.168.1.250
+  # 端口
+  port: 5432
+  # 数据库
+  dbName: dmp_ods
+  # 网络协议
+  protocol: http
+
+flink-config:
+  host: 192.168.11.131
+  port: 22
+  user: root
+  password: Password01!
+  upload-path: /root/flink-job/sql/
+  upload-way: ssh
+  savepoints-path: /root/flink-job/savepoint/
+  command: dev
+  command-path: /root/flink/flink-1.15.2/bin/sql-client.sh
+
+flink-api-config:
+  host: http://192.168.11.131
+  port: 8081
+  savepoints: /jobs/:jobid/savepoints
+  savepoint-status: /jobs/:jobid/savepoints/:triggerid

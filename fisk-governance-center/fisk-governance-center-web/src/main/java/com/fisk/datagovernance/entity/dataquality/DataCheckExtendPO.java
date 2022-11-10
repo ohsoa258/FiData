@@ -19,9 +19,9 @@ public class DataCheckExtendPO extends BasePO {
     public int ruleId;
 
     /**
-     * 字段名称
+     * 字段名称/字段Id
      */
-    public String fieldName;
+    public String fieldUnique;
 
     /**
      * 字段条件值

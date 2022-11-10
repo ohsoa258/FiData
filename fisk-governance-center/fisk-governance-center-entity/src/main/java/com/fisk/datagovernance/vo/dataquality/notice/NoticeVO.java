@@ -75,6 +75,12 @@ public class NoticeVO {
     public String runTimeCron;
 
     /**
+     * 下次运行时间
+     */
+    @ApiModelProperty(value = "下次运行时间")
+    public String nextTime;
+
+    /**
      * 通知状态：1、启用 0、禁用
      */
     @ApiModelProperty(value = "通知状态")
@@ -119,7 +125,7 @@ public class NoticeVO {
      * 模板名称
      */
     @ApiModelProperty(value = "模板名称")
-    public String templatenName;
+    public String templateName;
 
     /**
      * 模板类型

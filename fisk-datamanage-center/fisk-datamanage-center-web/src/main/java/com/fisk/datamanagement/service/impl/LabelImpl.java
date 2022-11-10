@@ -109,7 +109,7 @@ public class LabelImpl implements ILabel {
     public List<String> atlasGetLabel()
     {
         QueryWrapper<LabelPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.select("label_en_name").orderByDesc("create_time");
+        queryWrapper.select("label_cn_name").orderByDesc("create_time");
         List<String> list=(List)mapper.selectObjs(queryWrapper);
         return list;
     }

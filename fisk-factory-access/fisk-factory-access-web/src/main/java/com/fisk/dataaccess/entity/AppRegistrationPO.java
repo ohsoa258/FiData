@@ -47,4 +47,15 @@ public class AppRegistrationPO extends BasePO {
      * 应用负责人邮箱
      */
     public String appPrincipalEmail;
+
+    /**
+     * 是否将应用简称作为schema使用
+     */
+    public Boolean whetherSchema;
+
+    /**
+     * 目标ods数据源id
+     */
+    public Integer targetDbId;
+
 }

@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.core.constants.RedisTokenKey;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -26,10 +27,12 @@ import com.fisk.dataservice.map.ApiParmMap;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IApiServiceManageService;
 import com.fisk.dataservice.vo.apiservice.ResponseVO;
+import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.*;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -59,7 +62,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
     private ApiBuiltinParmMapper apiBuiltinParmMapper;
 
     @Resource
-    private DataSourceConMapper dataSourceConMapper;
+    private DataSourceConManageImpl dataSourceConManageImpl;
 
     @Resource
     private ApiFilterConditionMapper apiFilterConditionMapper;
@@ -152,26 +155,29 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             }
 
             // 第五步：验证数据源是否有效
-            DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(apiInfo.datasourceId);
-            if (dataSourceConPO == null) {
+            DataSourceConVO dataSourceConVO = dataSourceConManageImpl.getAllDataSource()
+                    .stream().filter(t -> t.getId() == apiInfo.datasourceId).findFirst().orElse(null);
+            if (dataSourceConVO == null) {
                 resultEnum = ResultEnum.DS_APISERVICE_DATASOURCE_EXISTS;
                 return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_DATASOURCE_EXISTS, responseVO);
             }
 
             String sql = apiInfo.createSql;
-            // 第六步：查询参数信息，如果参数设置为内置参数，则以内置参数为准，反之则以传递的参数为准，如果没设置内置参数&参数列表中未传递，则读取后台配置的参数值
+            // 第六步：查询参数信息，如果参数设置为内置参数，则以内置参数为准，反之则以传递的参数为准，如果没设置内置参数&参数列表中未传递，默认为空//则读取后台配置的参数值
             List<ParmConfigPO> parmList = apiParmMapper.getListByApiId(Math.toIntExact(apiInfo.id));
             if (CollectionUtils.isNotEmpty(parmList)) {
-                if (CollectionUtils.isNotEmpty(dto.parmList)) {
-                    parmList.forEach(e -> {
-                        Optional<Map.Entry<String, Object>> entryStream = dto.parmList.entrySet().stream().filter(item -> item.getKey().equals(e.getParmName())).findFirst();
-                        if (entryStream.isPresent()) {
-                            Map.Entry<String, Object> stringObjectEntry = entryStream.get();
-                            if (stringObjectEntry != null)
-                                e.setParmValue(String.valueOf(stringObjectEntry.getValue()));
-                        }
-                    });
+                if (!CollectionUtils.isNotEmpty(dto.parmList)) {
+                    dto.parmList = new HashMap<>();
                 }
+                parmList.forEach(e -> {
+                    Map.Entry<String, Object> stringObjectEntry = dto.parmList.entrySet().stream().filter(item -> item.getKey().equals(e.getParmName())).findFirst().orElse(null);
+                    if (stringObjectEntry != null) {
+                        e.setParmValue(String.valueOf(stringObjectEntry.getValue()));
+                    } else {
+                        e.setParmValue(null);
+                    }
+                });
+
                 List<Long> collect = parmList.stream().map(ParmConfigPO::getId).collect(Collectors.toList());
                 List<BuiltinParmPO> builtinParmList = apiBuiltinParmMapper.getListBy(Math.toIntExact(appInfo.id), Math.toIntExact(apiInfo.id), collect);
                 if (CollectionUtils.isNotEmpty(builtinParmList)) {
@@ -206,17 +212,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
 
             // 第九步：判断数据源类型，加载数据库驱动，执行查询SQL
             Statement st = null;
-            Connection conn = null;
-            DataSourceTypeEnum typeEnum = DataSourceTypeEnum.MYSQL;
-            if (dataSourceConPO.getConType() == DataSourceTypeEnum.MYSQL.getValue()) {
-                conn = getStatement(DataSourceTypeEnum.MYSQL.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
-            } else if (dataSourceConPO.getConType() == DataSourceTypeEnum.SQLSERVER.getValue()) {
-                conn = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
-                typeEnum = DataSourceTypeEnum.SQLSERVER;
-            }else if (dataSourceConPO.getConType() == DataSourceTypeEnum.POSTGRE.getValue()){
-                conn = getStatement(DataSourceTypeEnum.POSTGRE.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
-                typeEnum = DataSourceTypeEnum.POSTGRE;
-            }
+            Connection conn = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             assert st != null;
             ResultSet rs = st.executeQuery(sql);
@@ -265,25 +261,5 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             logsManageImpl.saveLog(logPO);
         }
         return ResultEntityBuild.buildData(resultEnum, responseVO);
-    }
-
-    /**
-     * 连接数据库
-     *
-     * @param driver   driver
-     * @param url      url
-     * @param username username
-     * @param password password
-     * @return statement
-     */
-    private Connection getStatement(String driver, String url, String username, String password) {
-        Connection conn;
-        try {
-            Class.forName(driver);
-            conn = DriverManager.getConnection(url, username, password);
-        } catch (Exception e) {
-            throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR);
-        }
-        return conn;
     }
 }

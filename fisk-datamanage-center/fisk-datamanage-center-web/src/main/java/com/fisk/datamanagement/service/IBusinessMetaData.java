@@ -30,9 +30,17 @@ public interface IBusinessMetaData {
 
     /**
      * 根据业务元数据名称删除
+     *
      * @param businessMetaDataName
      * @return
      */
     ResultEnum deleteBusinessMetaData(String businessMetaDataName);
+
+    /**
+     * 同步业务元数据
+     *
+     * @return
+     */
+    ResultEnum synchronousBusinessMetaData();
 
 }

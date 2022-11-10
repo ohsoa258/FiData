@@ -16,7 +16,10 @@
         from tb_model as model
         where model.del_flag=1
         <if test=" query.keyword !=null and query.keyword.length()>0 ">
-            and model.name like concat('%', #{query.keyword}, '%')
+            and (
+            model.name like concat('%', #{query.keyword}, '%') or
+            display_name like concat('%', #{query.keyword}, '%') or
+            model.desc like concat('%', #{query.keyword}, '%'))
         </if>
         order by create_time desc
     </select>

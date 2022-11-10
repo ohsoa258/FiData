@@ -1,23 +1,34 @@
 package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.fisk.common.core.response.ResultEntity;
-import com.fisk.common.core.response.ResultEntityBuild;
-import com.fisk.common.core.response.ResultEnum;
-import com.fisk.datamodel.entity.*;
-import com.fisk.datamodel.enums.FactAttributeEnum;
-import com.fisk.datamodel.enums.IndicatorsTypeEnum;
-import com.fisk.datamodel.mapper.*;
 import com.fisk.chartvisual.dto.chartvisual.IndicatorDTO;
 import com.fisk.chartvisual.dto.chartvisual.IndicatorFeignDTO;
 import com.fisk.chartvisual.dto.chartvisual.TableDataDTO;
-import com.fisk.datamodel.service.ITableName;
 import com.fisk.chartvisual.enums.DataDoFieldTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datamodel.entity.IndicatorsPO;
+import com.fisk.datamodel.entity.businesslimited.BusinessLimitedAttributePO;
+import com.fisk.datamodel.entity.businesslimited.BusinessLimitedPO;
+import com.fisk.datamodel.entity.dimension.DimensionAttributePO;
+import com.fisk.datamodel.entity.dimension.DimensionPO;
+import com.fisk.datamodel.entity.fact.FactAttributePO;
+import com.fisk.datamodel.entity.fact.FactPO;
+import com.fisk.datamodel.enums.FactAttributeEnum;
+import com.fisk.datamodel.enums.IndicatorsTypeEnum;
+import com.fisk.datamodel.mapper.IndicatorsMapper;
+import com.fisk.datamodel.mapper.businesslimited.BusinessLimitedAttributeMapper;
+import com.fisk.datamodel.mapper.businesslimited.BusinessLimitedMapper;
+import com.fisk.datamodel.mapper.dimension.DimensionAttributeMapper;
+import com.fisk.datamodel.mapper.dimension.DimensionMapper;
+import com.fisk.datamodel.mapper.fact.FactAttributeMapper;
+import com.fisk.datamodel.mapper.fact.FactMapper;
+import com.fisk.datamodel.service.ITableName;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -62,7 +73,7 @@ public class TableNameImpl implements ITableName {
                 tableDataDTO.id = id;
                 tableDataDTO.type = DataDoFieldTypeEnum.VALUE;
                 tableDataDTO.tableField = field;
-                tableDataDTO.tableName = fact.factTableEnName;
+                tableDataDTO.tableName = fact.factTabName;
                 return ResultEntityBuild.buildData(ResultEnum.SUCCESS, tableDataDTO);
             case WHERE:
             case COLUMN:

@@ -5,7 +5,10 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.config.SwaggerConfig;
-import com.fisk.datamanagement.dto.entity.*;
+import com.fisk.datamanagement.dto.entity.EntityAssociatedLabelDTO;
+import com.fisk.datamanagement.dto.entity.EntityAssociatedMetaDataDTO;
+import com.fisk.datamanagement.dto.entity.EntityDTO;
+import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
 import com.fisk.datamanagement.service.IEntity;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -83,18 +86,6 @@ public class MetaDataEntityController {
     @GetMapping("/getMetaDataKinship/{guid}")
     public ResultEntity<Object> getMetaDataKinship(@PathVariable("guid") String guid) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMetaDataKinship(guid));
-    }
-
-    @ApiOperation("首页文本框查询Entity")
-    @GetMapping("/searchQuick")
-    public ResultEntity<Object> searchQuick(String query,int limit,int offset) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchQuick(query,limit,offset));
-    }
-
-    @ApiOperation("首页文本框查询Suggestions")
-    @GetMapping("/searchSuggestions")
-    public ResultEntity<Object> searchSuggestions(String prefixString) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchSuggestions(prefixString));
     }
 
     @ApiOperation("根据db实体id,获取实例详情")

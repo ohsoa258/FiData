@@ -9,6 +9,7 @@ import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.nifi.FunnelDTO;
 import com.fisk.task.dto.nifi.*;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.TableNifiSettingDTO;
 import com.fisk.task.vo.ProcessGroupsVO;
 
@@ -486,7 +487,7 @@ public interface INiFiHelper {
      * @param funcName            funcName
      * @return String
      */
-    String assemblySql(DataAccessConfigDTO config, SynchronousTypeEnum synchronousTypeEnum, String funcName);
+    String assemblySql(DataAccessConfigDTO config, SynchronousTypeEnum synchronousTypeEnum, String funcName, BuildNifiFlowDTO buildNifiFlow);
 
     /**
      * immediatelyStart
@@ -551,6 +552,14 @@ public interface INiFiHelper {
      * @return ProcessorEntity
      */
     public BusinessResult<ProcessorEntity> buildInvokeHTTPProcessor(BuildInvokeHttpProcessorDTO data, List<String> autoEnd);
+
+    /**
+     * buildKeytabCredentialsService
+     *
+     * @param data 创建Kerberos认证控制器服务
+     * @return ProcessorEntity
+     */
+    public BusinessResult<ControllerServiceEntity> buildKeytabCredentialsService(BuildKeytabCredentialsServiceDTO data);
 
 
 }

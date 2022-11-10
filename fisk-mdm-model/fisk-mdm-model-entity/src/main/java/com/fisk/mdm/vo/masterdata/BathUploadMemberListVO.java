@@ -10,8 +10,8 @@ import java.util.List;
 @Data
 public class BathUploadMemberListVO {
 
-    public String key;
+    private String key;
 
-    public List<BathUploadMemberVO> list;
+    private List<BathUploadMemberVO> list;
 
 }

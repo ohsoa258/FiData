@@ -22,7 +22,20 @@ public enum RedisKeyEnum implements BaseEnum {
     // 客户端过期时间自定义,不使用当前设置的
     AUTH_CLIENT_INFO(0, "Auth:ClientInfo"),
     CHARTVISUAL_DOWNLOAD_TOKEN(1800, "ChartVisual:DownLoad:Token"),
-    DATASOURCE_KEY(-1, "DataSourceMeta:appId");
+    // 数据接入上游数据库结构key
+    DATASOURCE_KEY(-1, "DataSourceMeta:appId"),
+    // FiData数据结构(ods、dw、olap、mdm)
+    FIDATA_STRUCTURE(-1, "FiData:Structure:DataSourceId"),
+    // 数据调度管道数据结构
+    DISPATCH_STRUCTURE(-1, "FiData:Dispatch:id"),
+    // 数据调度管道数据结构--trace_id
+    PIPEL_TRACE_ID(3000,"pipel:trace:id"),
+    //管道task
+    PIPEL_TASK(3000, "pipel:task:id"),
+    // FiData数据表结构(ods、dw、olap、mdm)
+    FIDATA_TABLE_STRUCTURE(-1, "FiData:TableStructure:DataSourceId"),
+
+    NIFI_TOKEN(3600,"nifiToken");
 
     RedisKeyEnum(int value, String name) {
         this.value = value;

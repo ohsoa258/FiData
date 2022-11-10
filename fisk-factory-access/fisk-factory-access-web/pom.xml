@@ -42,6 +42,16 @@
             <version>3.4.0</version>
         </dependency>
 
+        <!-- hystrix -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-hystrix-dashboard</artifactId>
+        </dependency>
+
         <!-- 本模块实体类 -->
         <dependency>
             <groupId>com.fisk</groupId>
@@ -101,6 +111,26 @@
             <artifactId>fisk-governance-center-apiclient</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-datamanage-center-entity</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-datamanage-center-apiclient</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-system-center-apiclient</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-system-center-entity</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
 
         <!-- elk -->
         <dependency>
@@ -113,7 +143,7 @@
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
-            <version>6.4.0.jre7</version>
+            <version>9.2.1.jre8</version>
         </dependency>
 
         <!-- pg驱动 -->
@@ -130,22 +160,6 @@
             <version>11.1.0.7.0</version>
             <scope>system</scope>
             <systemPath>${project.basedir}/src/main/resources/lib/ojdbc7.jar</systemPath>
-        </dependency>
-
-        <!--apollo-->
-        <dependency>
-            <groupId>com.ctrip.framework.apollo</groupId>
-            <artifactId>apollo-client</artifactId>
-            <version>1.8.1</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/lib/apollo-client-1.8.1.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>com.ctrip.framework.apollo</groupId>
-            <artifactId>apollo-core</artifactId>
-            <version>1.8.1</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/lib/apollo-core-1.8.1.jar</systemPath>
         </dependency>
 
         <!-- ftp -->
@@ -165,18 +179,23 @@
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
-            <version>3.9</version>
+            <version>4.1.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
-            <version>3.9</version>
+            <version>4.1.1</version>
         </dependency>
         <dependency>
+            <groupId>com.monitorjbl</groupId>
+            <artifactId>xlsx-streamer</artifactId>
+            <version>2.1.0</version>
+        </dependency>
+        <!--<dependency>
             <groupId>org.apache.xmlbeans</groupId>
             <artifactId>xmlbeans</artifactId>
             <version>2.4.0</version>
-        </dependency>
+        </dependency>-->
         <!-- javacsv -->
         <dependency>
             <groupId>net.sourceforge.javacsv</groupId>

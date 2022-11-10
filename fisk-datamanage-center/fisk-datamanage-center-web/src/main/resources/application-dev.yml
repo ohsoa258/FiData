@@ -2,7 +2,7 @@ spring:
   metadataentity: MetaDataEntity
   schedule: 0 0 1 * * ?
   datasource:
-    url: jdbc:mysql://192.168.11.130:3306/dmp_datagovern_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://192.168.11.130:3306/dmp_datamanagement_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: root123
     driver-class-name: com.mysql.jdbc.Driver
@@ -17,7 +17,7 @@ spring:
 #授权
 fk:
   auth:
-    clientId: datamanagement-service
+    clientId: data-management-service
     secret: 1234
   encoder:
     crypt:
@@ -29,6 +29,7 @@ atlas:
   account: admin
   password: admin
   searchBasic: /api/atlas/v2/search/basic
+  searchDsl: /api/atlas/v2/search/dsl
   entityByGuid: /api/atlas/v2/entity/guid
   entity: /api/atlas/v2/entity
   typedefs: /api/atlas/v2/types/typedefs
@@ -44,50 +45,8 @@ atlas:
     terms: /api/atlas/v2/glossary/terms
     category: /api/atlas/v2/glossary/category
   request:
-    url: http://192.168.1.250:21000
-
-#元数据对象配置
-fidata:
-  database:
-    name: 192.168.1.250,192.168.1.250,192.168.11.134
-    hostname: 192.168.1.250,192.168.1.250,192.168.11.134
-    port: 5432,5432,9030
-    platform: Linux,Linux,Linux
-    protocol: http,http,http
-    rdbmstype: postgresql,postgresql,doris
-    username: postgres,postgres,root
-    password: Password01!,Password01!,Password01!
-    db: dmp_ods,dmp_dw,dmp_olap
+    url: http://192.168.11.160:21000
 
 #血缘同步
 scheduling:
-  enabled: true
-
-#注册中心
-eureka:
-  client:
-    service-url:
-      defaultZone: http://127.0.0.1:8082/eureka
-
-#feign接口超时配置
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 10000
-        readTimeout: 12000
-
-ribbon:
-  eager-load:
-    enabled: true
-    clients: datamodel-service,dataaccess-service
-
-  hystrix:
-    command:
-    default:
-      isolation:
-        thread:
-          timeoutInMilliseconds:  30000
-      execution:
-        timeout:
-          enabled: true
+  enabled: false

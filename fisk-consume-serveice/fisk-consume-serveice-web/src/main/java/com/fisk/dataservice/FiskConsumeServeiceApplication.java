@@ -1,9 +1,9 @@
 package com.fisk.dataservice;
 
-import com.ctrip.framework.apollo.spring.annotation.EnableApolloConfig;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
 /**
@@ -24,10 +24,12 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @MapperScan("com.fisk.dataservice.mapper")
 @EnableFeignClients(basePackages = {
         "com.fisk.auth.client",
-        "com.fisk.task.client",
-        "com.fisk.system.client"
+        "com.fisk.system.client",
+        "com.fisk.dataaccess.client",
+        "com.fisk.datamodel.client",
+        "com.fisk.mdm.client"
 })
-@EnableApolloConfig
+@EnableHystrix
 public class FiskConsumeServeiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(FiskConsumeServeiceApplication.class, args);

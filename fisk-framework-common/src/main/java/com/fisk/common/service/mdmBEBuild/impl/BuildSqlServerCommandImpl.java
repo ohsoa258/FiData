@@ -102,16 +102,21 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildQueryOneColumn(String tableName, String selectColumnName) {
-        return "select distinct " + selectColumnName + " as columnName from " + tableName;
+    public String buildQueryOneColumn(String tableName, String selectColumnName, int versionId) {
+        StringBuilder str = new StringBuilder();
+        str.append("select distinct ");
+        str.append(selectColumnName + " as columns from " + tableName);
+        str.append(" where fidata_version_id=" + versionId);
+        return str.toString();
     }
 
     @Override
     public String buildQueryCount(String tableName, String queryConditions) {
         StringBuilder str = new StringBuilder();
         str.append("SELECT COUNT(*) AS totalNum FROM " + tableName);
+        ////str.append(" WHERE fidata_del_flag=1 ");
         if (!StringUtils.isEmpty(queryConditions)) {
-            str.append(" WHERE 1=1 " + queryConditions);
+            str.append(queryConditions);
         }
         return str.toString();
     }
@@ -134,7 +139,7 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildQueryOneData(String tableName, String queryConditions) {
+    public String buildQueryData(String tableName, String queryConditions) {
         StringBuilder str = new StringBuilder();
         str.append(" select *");
         str.append(" from " + tableName);
@@ -143,12 +148,12 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildQueryCodeAndName(String tableName, String code, String name) {
+    public String buildQueryCodeAndName(String tableName, String code, String name, Integer versionId) {
         StringBuilder str = new StringBuilder();
         str.append("select " + code + " as code,");
         str.append(name + " as name ");
         str.append(" from " + tableName);
-        str.append(" where fidata_del_flag=1 ");
+        str.append(" where fidata_version_id=" + versionId);
         return str.toString();
     }
 

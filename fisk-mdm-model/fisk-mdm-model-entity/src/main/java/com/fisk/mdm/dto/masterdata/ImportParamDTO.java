@@ -1,7 +1,6 @@
 package com.fisk.mdm.dto.masterdata;
 
 import lombok.Data;
-import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author JianWenYang
@@ -10,6 +9,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Data
 public class ImportParamDTO extends MasterDataBaseDTO {
 
-    public boolean removeSpace;
+    private Boolean removeSpace;
 
 }

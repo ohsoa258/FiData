@@ -17,11 +17,29 @@ public class EntityQueryDTO {
     private Integer id;
     private String name;
     private String type;
+    private String dataType;
+    private String displayName;
     private String aliasName;
+    private String desc;
+    private Integer dataTypeLength;
+    private Integer dataTypeDecimalLength;
+    private Integer domainEntityId;
+    private String domainName;
+    private String mapType;
+    /**
+     * 实体id,实体名称
+     */
+    private Integer entityId;
+    private String entityName;
+    private String entityDisplayName;
     /**
      * 是否选中 0:未选中 1:选中
      */
     private Integer isCheck;
+    /**
+     * 是否选中 0:是 1:不是
+     */
+    private Integer isMainEntity;
     private List<EntityQueryDTO> children;
 
     public EntityQueryDTO(Integer id, String name, String type) {

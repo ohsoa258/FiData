@@ -52,7 +52,17 @@ public class MailSenderDTO {
     public String attachmentName;
 
     /**
+     * 附件实际名称
+     */
+    public String attachmentActualName;
+
+    /**
      * 附件地址
      */
     public String attachmentPath;
+
+    /**
+     * 公司logo地址
+     */
+    public String companyLogoPath;
 }

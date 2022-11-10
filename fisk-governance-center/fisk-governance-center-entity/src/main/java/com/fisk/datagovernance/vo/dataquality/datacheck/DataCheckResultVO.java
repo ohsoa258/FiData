@@ -32,9 +32,19 @@ public class DataCheckResultVO
     public String checkTable;
 
     /**
+     * 检查的表标识
+     */
+    public String checkTableUnique;
+
+    /**
      * 检查的字段
      */
     public String checkField;
+
+    /**
+     * 检查的字段标识
+     */
+    public String checkFieldUnique;
 
     /**
      * 检查的类型

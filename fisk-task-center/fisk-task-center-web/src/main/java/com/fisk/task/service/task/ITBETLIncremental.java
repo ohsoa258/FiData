@@ -1,8 +1,10 @@
 package com.fisk.task.service.task;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.task.entity.TBETLIncrementalPO;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -21,7 +23,7 @@ public interface ITBETLIncremental extends IService<TBETLIncrementalPO> {
      * @param driveType
      * @return Map<String, String>
      */
-    Map<String, String> converSql(String tableName, String sql, String driveType);
+    Map<String, String> converSql(String tableName, String sql, String driveType, String deltaTime);
     /**
      * addEtlIncremental
      *

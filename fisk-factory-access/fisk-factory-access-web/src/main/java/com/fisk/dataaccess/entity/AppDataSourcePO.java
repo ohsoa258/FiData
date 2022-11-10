@@ -48,9 +48,19 @@ public class AppDataSourcePO extends BasePO {
     public String connectStr;
 
     /**
+     * JWT账号key
+     */
+    public String accountKey;
+
+    /**
      * 连接账号(非实时、OAuth、JWT)
      */
     public String connectAccount;
+
+    /**
+     * JWT密码key
+     */
+    public String pwdKey;
 
     /**
      * 连接密码(非实时、OAuth、JWT)
@@ -101,4 +111,35 @@ public class AppDataSourcePO extends BasePO {
      * Bearer Token验证方式的Token
      */
     public String token;
+
+    /**
+     * jwt类型下，设置token过期时间
+     */
+    public Integer expirationTime;
+
+    /**
+     * 服务名(只有oracle有服务名)
+     */
+    public String serviceName;
+
+    /**
+     * oracle服务类型：0:服务名、1:SID
+     */
+    public Integer serviceType;
+
+    /**
+     * oracle连接模式，0:非CDB、1:CDB/PDB
+     */
+    public Integer pattern;
+
+    /**
+     * CDB/PDB名称
+     */
+    public String pdbName;
+
+    /**
+     * 域名
+     */
+    public String domainName;
+
 }

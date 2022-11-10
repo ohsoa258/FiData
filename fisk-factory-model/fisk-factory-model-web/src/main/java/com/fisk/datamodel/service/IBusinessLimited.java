@@ -3,7 +3,7 @@ package com.fisk.datamodel.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.dto.businesslimited.*;
-import com.fisk.datamodel.entity.BusinessLimitedPO;
+import com.fisk.datamodel.entity.businesslimited.BusinessLimitedPO;
 
 import java.util.List;
 

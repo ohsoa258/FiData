@@ -2,6 +2,8 @@ package com.fisk.mdm.map;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.mdm.dto.attribute.*;
+import com.fisk.mdm.dto.attributelog.AttributeLogSaveDTO;
+import com.fisk.mdm.entity.AttributeLogPO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.utlis.TypeConversionUtils;
@@ -33,6 +35,7 @@ public interface AttributeMap {
             @Mapping(source = "enableReadonly" ,target = "enableReadonly"),
             @Mapping(source = "enableRequired" ,target = "enableRequired"),
             @Mapping(source = "mdmType" , target = "mdmType"),
+            @Mapping(source = "mapType" , target = "mapType"),
             @Mapping(source = "dataType" , target = "dataType"),
             @Mapping(source = "status" ,target = "status")
     })
@@ -63,6 +66,7 @@ public interface AttributeMap {
             @Mapping(source = "enableReadonly" ,target = "enableReadonly"),
             @Mapping(source = "enableRequired" ,target = "enableRequired"),
             @Mapping(source = "mdmType" , target = "mdmType"),
+            @Mapping(source = "mapType" , target = "mapType"),
             @Mapping(source = "dataType" , target = "dataType"),
             @Mapping(source = "status" ,target = "status")
     })
@@ -94,6 +98,28 @@ public interface AttributeMap {
     AttributeInfoDTO poToInfoDto(AttributePO po);
 
     /**
+     * po => dto
+     * @param po
+     * @return
+     */
+    AttributeLogSaveDTO poToLogDto(AttributePO po);
+
+    /**
+     * dto => dto
+     * @param dto
+     * @return
+     */
+    AttributeLogSaveDTO dtoToLogDto(AttributeUpdateDTO dto);
+
+
+    /**
+     * po => po
+     * @param po
+     * @return
+     */
+    AttributePO poToLogPo(AttributeLogPO po);
+
+    /**
      * poList => DtoList
      *
      * @param list 列表
@@ -104,6 +130,7 @@ public interface AttributeMap {
             @Mapping(source = "enableReadonly" ,target = "enableReadonly"),
             @Mapping(source = "enableRequired" ,target = "enableRequired"),
             @Mapping(source = "mdmType" , target = "mdmType"),
+            @Mapping(source = "mapType" , target = "mapType"),
             @Mapping(source = "dataType" , target = "dataType"),
             @Mapping(source = "status" ,target = "status")
     })

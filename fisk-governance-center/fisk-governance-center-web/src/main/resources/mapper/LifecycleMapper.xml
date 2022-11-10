@@ -8,7 +8,9 @@
         t1.template_id,
         t1.datasource_id,
         t1.rule_name,
-        t1.table_name,
+        t1.table_unique,
+        t1.table_type,
+        t1.table_business_type,
         t1.recovery_date,
         t1.continued_number,
         t1.is_backup,
@@ -23,7 +25,7 @@
         t2.scene_name,
         t2.scene_desc,
         t2.template_type,
-        t2.templaten_name,
+        t2.template_name,
         t2.template_desc,
         t1.create_time,
         t1.create_user
@@ -36,7 +38,10 @@
         AND t2.del_flag = 1
         AND t3.del_flag = 1
         AND t3.id = #{datasourceId}
-        AND table_name = #{tableName,jdbcType=VARCHAR}
+        AND table_unique = #{tableUnique,jdbcType=VARCHAR}
+        <if test="tableBusinessType != 0 ">
+            AND table_business_type = #{tableBusinessType}
+        </if>
         <if test="keyword != null and keyword != '' ">
             AND rule_name LIKE concat('%', #{keyword}, '%')
         </if>

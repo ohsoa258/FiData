@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.app.*;
 import com.fisk.dataservice.vo.app.*;
@@ -100,6 +101,7 @@ public class AppRegisterController {
 
     @ApiOperation("生成文档")
     @PostMapping("/createDoc")
+    @ControllerAOPConfig(printParams = false)
     public ResultEntity<Object> createDoc(@Validated @RequestBody CreateAppApiDocDTO dto) {
         return ResultEntityBuild.build(service.createDoc(dto,response));
     }

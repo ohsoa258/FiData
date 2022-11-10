@@ -3,6 +3,7 @@ package com.fisk.datamanagement.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
@@ -27,10 +28,16 @@ public class ClassificationController {
     @Resource
     IClassification service;
 
-    @ApiOperation("获取业务类型树形列表")
+    @ApiOperation("获取业务分类列表")
     @GetMapping("/getClassificationList")
     public ResultEntity<Object> getClassificationList() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getClassificationList());
+    }
+
+    @ApiOperation("获取业务类型树形列表")
+    @GetMapping("/getClassificationTree")
+    public ResultEntity<Object> getClassificationTree() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getClassificationTree());
     }
 
     @ApiOperation("修改业务类型以及业务属性")
@@ -61,6 +68,18 @@ public class ClassificationController {
     @DeleteMapping("/classificationDelAssociatedEntity")
     public ResultEntity<Object> classificationDelAssociatedEntity(@Validated @RequestBody ClassificationDelAssociatedEntityDTO dto) {
         return ResultEntityBuild.build(service.classificationDelAssociatedEntity(dto));
+    }
+
+    @ApiOperation("同步业务分类")
+    @PostMapping("/synchronousClassification")
+    public ResultEntity<Object> synchronousClassification() {
+        return ResultEntityBuild.build(service.synchronousClassification());
+    }
+
+    @ApiOperation("数据接入应用同步到业务分类")
+    @PostMapping("/appSynchronousClassification")
+    public ResultEntity<Object> appSynchronousClassification(@Validated @RequestBody ClassificationInfoDTO dto) {
+        return ResultEntityBuild.build(service.appSynchronousClassification(dto));
     }
 
 }

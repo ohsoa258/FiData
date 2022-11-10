@@ -2,6 +2,7 @@ package com.fisk.datagovernance.service.dataquality;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterEditDTO;
@@ -57,4 +58,19 @@ public interface IBusinessFilterManageService extends IService<BusinessFilterPO>
      * @return 执行结果
      */
     ResultEnum editModuleExecSort(List<BusinessFilterSortDto> dto);
+
+    /**
+     * API清洗,调用授权API获取Token
+     *
+     * @return 执行结果
+     */
+    ResultEntity<String> collAuthApi(BusinessFilterDTO dto);
+
+    /**
+     * API清洗，调用API清洗数据
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum collApi(BusinessFilterDTO dto);
 }

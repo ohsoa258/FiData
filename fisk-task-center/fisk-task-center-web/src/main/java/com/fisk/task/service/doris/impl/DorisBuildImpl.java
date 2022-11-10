@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.task.service.doris.IDorisBuild;
 import com.fisk.task.utils.DorisHelper;
+import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -63,7 +64,7 @@ public class DorisBuildImpl implements IDorisBuild {
 
         } catch (Exception e) {
             //捕捉错误
-            e.printStackTrace();
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             msg = e.getMessage();
             throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
         } finally {

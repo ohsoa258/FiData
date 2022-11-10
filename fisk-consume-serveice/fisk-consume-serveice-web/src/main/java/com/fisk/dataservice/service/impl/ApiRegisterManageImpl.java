@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -16,17 +17,18 @@ import com.fisk.common.core.utils.Dto.SqlParmDto;
 import com.fisk.common.core.utils.Dto.SqlWhereDto;
 import com.fisk.common.core.utils.SqlParmUtils;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbBEBuild.dataservice.BuildDataServiceHelper;
+import com.fisk.common.service.dbBEBuild.dataservice.IBuildDataServiceSqlCommand;
+import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
+import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.dataservice.dto.api.*;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.ApiTypeEnum;
-import com.fisk.dataservice.enums.DataSourceTypeEnum;
-import com.fisk.dataservice.map.ApiFieldMap;
-import com.fisk.dataservice.map.ApiFilterConditionMap;
-import com.fisk.dataservice.map.ApiParmMap;
-import com.fisk.dataservice.map.ApiRegisterMap;
+import com.fisk.dataservice.map.*;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IApiRegisterManageService;
 import com.fisk.dataservice.vo.api.*;
+import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
 import org.apache.commons.lang.StringUtils;
@@ -52,6 +54,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
 
     @Resource
     private DataSourceConMapper dataSourceConMapper;
+
+    @Resource
+    private DataSourceConManageImpl dataSourceConManageImpl;
 
     @Resource
     private ApiFilterConditionMapper apiFilterConditionMapper;
@@ -153,7 +158,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             return ResultEnum.SAVE_DATA_ERROR;
         DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(apiConfigPO.getDatasourceId());
         if (dataSourceConPO == null)
-            return ResultEnum.DS_DATASOURCE_EXISTS;
+            return ResultEnum.DS_DATASOURCE_NOTEXISTS;
         String apiCode = UUID.randomUUID().toString().replace("-", "").toLowerCase();
         apiConfigPO.setApiCode(apiCode);
         apiConfigPO.setCreateTime(LocalDateTime.now());
@@ -211,7 +216,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         }
         DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(dto.apiDTO.getDatasourceId());
         if (dataSourceConPO == null)
-            return ResultEnum.DS_DATASOURCE_EXISTS;
+            return ResultEnum.DS_DATASOURCE_NOTEXISTS;
         int apiId;
         boolean isUpdate = false;
         // 第一步：编辑保存api信息
@@ -287,6 +292,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         if (model == null)
             return ResultEntityBuild.buildData(ResultEnum.DS_API_EXISTS, apiRegisterDetailVO);
         apiRegisterDetailVO.apiVO = ApiRegisterMap.INSTANCES.poToVo(model);
+        DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(model.getDatasourceId());
+        apiRegisterDetailVO.apiVO.setDatasourceType(dataSourceConPO.getDatasourceType());
 
         // 第二步：查询字段信息
         QueryWrapper<FieldConfigPO> fieldQueryWrapper = new QueryWrapper<>();
@@ -368,19 +375,23 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         }
 
         // 第三步：查询数据源信息
-        DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(dto.apiDTO.getDatasourceId());
-        if (dataSourceConPO == null)
+        DataSourceConVO dataSourceConVO = dataSourceConManageImpl.getAllDataSource().stream().filter(t -> t.getId() == dto.apiDTO.getDatasourceId()).findFirst().orElse(null);
+        if (dataSourceConVO == null)
             return apiPreviewVO;
+
+        // 第四步：如果是编辑，查询上次配置的字段信息，如果描述信息不为空，使用该描述。如果为空使用系统查询出来的描述信息
+        List<FieldConfigPO> fieldConfigPOS = null;
+        if (dto.apiId != 0) {
+            QueryWrapper<FieldConfigPO> fieldConfigPOQueryWrapper = new QueryWrapper<>();
+            fieldConfigPOQueryWrapper.lambda()
+                    .eq(FieldConfigPO::getDelFlag, 1)
+                    .eq(FieldConfigPO::getApiId, dto.apiId);
+            fieldConfigPOS = apiFieldMapper.selectList(fieldConfigPOQueryWrapper);
+        }
+
         try {
             Statement st = null;
-            Connection conn = null;
-            if (dataSourceConPO.getConType() == DataSourceTypeEnum.MYSQL.getValue()) {
-                conn = getStatement(DataSourceTypeEnum.MYSQL.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
-            } else if (dataSourceConPO.getConType() == DataSourceTypeEnum.SQLSERVER.getValue()) {
-                conn = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
-            } else if (dataSourceConPO.getConType() == DataSourceTypeEnum.POSTGRE.getValue()) {
-                conn = getStatement(DataSourceTypeEnum.POSTGRE.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
-            }
+            Connection conn = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
             /*
                 以流的形式 TYPE_FORWARD_ONLY: 只可向前滚动查询 CONCUR_READ_ONLY: 指定不可以更新 ResultSet
                 如果PreparedStatement对象初始化时resultSetType参数设置为TYPE_FORWARD_ONLY，
@@ -394,7 +405,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             assert st != null;
             ResultSet rs = st.executeQuery(sql);
             //获取数据集
-            apiPreviewVO = resultSetToJsonArray(conn, dataSourceConPO, rs, dto);
+            apiPreviewVO = resultSetToJsonArray(conn, dataSourceConVO, rs, dto, fieldConfigPOS);
             rs.close();
         } catch (Exception e) {
             throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR, e.getMessage());
@@ -411,7 +422,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
      * @param pvDTO      预览请求参数
      * @return target
      */
-    private static ApiPreviewVO resultSetToJsonArray(Connection conn, DataSourceConPO dataSource, ResultSet rs, ApiPreviewDTO pvDTO)
+    private static ApiPreviewVO resultSetToJsonArray(Connection conn, DataSourceConVO dataSource,
+                                                     ResultSet rs, ApiPreviewDTO pvDTO, List<FieldConfigPO> fieldConfigPOS)
             throws SQLException, JSONException {
         ApiPreviewVO data = new ApiPreviewVO();
 
@@ -470,105 +482,23 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
 
             // 获取表字段描述
             if (CollectionUtils.isNotEmpty(tableFieldList)) {
-                Optional<FieldInfoVO> first = tableFieldList.stream().filter(item -> item.originalFieldName.equals(fieldConfigVO.fieldName)).findFirst();
-                if (first.isPresent()) {
-                    FieldInfoVO fieldInfoVO = first.get();
-                    if (fieldInfoVO != null)
-                        fieldConfigVO.fieldDesc = fieldInfoVO.originalFieldDesc;
+                FieldInfoVO fieldInfoVO = tableFieldList.stream().
+                        filter(item -> item.originalFieldName.equals(fieldConfigVO.fieldName)).findFirst().orElse(null);
+                if (fieldInfoVO != null) {
+                    fieldConfigVO.fieldDesc = fieldInfoVO.originalFieldDesc;
                 }
             }
-
+            if (CollectionUtils.isNotEmpty(fieldConfigPOS)) {
+                FieldConfigPO fieldConfigPO = fieldConfigPOS.stream().filter(t -> t.getFieldName().equals(fieldConfigVO.fieldName)).findFirst().orElse(null);
+                if (fieldConfigPO != null && StringUtils.isNotEmpty(fieldConfigPO.fieldDesc)) {
+                    fieldConfigVO.fieldDesc = fieldConfigPO.fieldDesc;
+                }
+            }
             fieldConfigVOS.add(fieldConfigVO);
         }
         data.fieldVO = fieldConfigVOS.stream().collect(Collectors.toList());
         data.dataArray = array;
         return data;
-    }
-
-    /**
-     * 转换表字段类型
-     *
-     * @param fieldType fieldType
-     * @return target
-     */
-    private static List<String> transformField(String fieldType) {
-        // 日期型
-        String timeType = "date";
-
-        // 浮点型
-        List<String> floatType = new ArrayList<>();
-        floatType.add("double");
-
-        // 文本类型
-        List<String> textTpye = new ArrayList<>();
-        textTpye.add("text");
-
-        // 字符型
-        List<String> charType = new ArrayList<>();
-        charType.add("");
-
-        // 双字符型
-        List<String> ncharType = new ArrayList<>();
-        charType.add("nvarchar");
-
-        // 整型
-        List<String> integerType = new ArrayList<>();
-        integerType.add("tinyint");
-        integerType.add("smallint");
-        integerType.add("mediumint");
-        integerType.add("int");
-        integerType.add("integer");
-        integerType.add("bigint");
-
-        // 精确数值型
-        List<String> accurateType = new ArrayList<>();
-        accurateType.add("decimal");
-        accurateType.add("numeric");
-
-        // 货币、近似数值型
-        List<String> otherType = new ArrayList<>();
-        otherType.add("money");
-        otherType.add("smallmoney");
-        otherType.add("float");
-        otherType.add("real");
-
-        List<String> fieldList = new LinkedList<>();
-
-        if (integerType.contains(fieldType.toLowerCase())) {
-            fieldList.add("INT".toLowerCase());
-        } else if (textTpye.contains(fieldType.toLowerCase())) {
-            fieldList.add("TEXT".toLowerCase());
-        } else if (accurateType.contains(fieldType.toLowerCase())
-                || otherType.contains(fieldType.toLowerCase())) {
-            fieldList.add("FLOAT".toLowerCase());
-        } else if (fieldType.toLowerCase().contains(timeType)) {
-            fieldList.add("TIMESTAMP".toLowerCase());
-        } else if (ncharType.contains(fieldType.toLowerCase())) {
-            fieldList.add("NVARCHAR".toLowerCase());
-        } else {
-            fieldList.add("VARCHAR".toLowerCase());
-        }
-        return fieldList;
-    }
-
-    /**
-     * 连接数据库
-     *
-     * @param driver   driver
-     * @param url      url
-     * @param username username
-     * @param password password
-     * @return statement
-     */
-    private static Connection getStatement(String driver, String url, String username, String password) {
-        Connection conn;
-        try {
-            Class.forName(driver);
-            conn = DriverManager.getConnection(url, username, password);
-        } catch (Exception e) {
-            throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR);
-        }
-        return conn;
     }
 
     /**
@@ -579,51 +509,12 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
      * @param tableNames 查询的表
      * @return statement
      */
-    private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConPO dataSource, List<String> tableNames) throws SQLException {
+    private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConVO dataSource, List<String> tableNames) throws SQLException {
         List<FieldInfoVO> fieldlist = new ArrayList<>();
         if (CollectionUtils.isEmpty(tableNames))
             return fieldlist;
-        String sql = "";
-        DataSourceTypeEnum value = DataSourceTypeEnum.values()[dataSource.getConType()];
-        switch (value) {
-            case MYSQL:
-                sql = String.format("SELECT\n" +
-                        "\tTABLE_NAME AS originalTableName,\n" +
-                        "\tCOLUMN_NAME AS originalFieldName,\n" +
-                        "\tCOLUMN_COMMENT AS originalFieldDesc,\n" +
-                        "\t'' AS originalFramework \n" +
-                        "FROM\n" +
-                        "\tinformation_schema.`COLUMNS` \n" +
-                        "WHERE\n" +
-                        "\tTABLE_SCHEMA = '%s' \n" +
-                        "\tAND TABLE_NAME = '%s'", dataSource.conDbname, tableNames.get(0));
-                break;
-            case SQLSERVER:
-                sql = String.format("SELECT\n" +
-                        "\td.name AS originalTableName,\n" +
-                        "\ta.name AS originalFieldName,\n" +
-                        "\tisnull( g.[value], '' ) AS originalFieldDesc,\n" +
-                        "\tschema_name( tb.schema_id ) AS originalFramework \n" +
-                        "FROM\n" +
-                        "\tsyscolumns a\n" +
-                        "\tLEFT JOIN systypes b ON a.xusertype= b.xusertype\n" +
-                        "\tINNER JOIN sysobjects d ON a.id= d.id \n" +
-                        "\tAND d.xtype= 'U' \n" +
-                        "\tAND d.name<> 'dtproperties'\n" +
-                        "\tLEFT JOIN sys.tables tb ON tb.name= d.name\n" +
-                        "\tLEFT JOIN syscomments e ON a.cdefault= e.id\n" +
-                        "\tLEFT JOIN sys.extended_properties g ON a.id= g.major_id \n" +
-                        "\tAND a.colid= g.minor_id\n" +
-                        "\tLEFT JOIN sys.extended_properties f ON d.id= f.major_id \n" +
-                        "\tAND f.minor_id= 0\n" +
-                        "\tWHERE d.name = '%s'", tableNames.get(0));
-                break;
-            case POSTGRE:
-                sql = String.format("SELECT c.relname as originalTableName,a.attname as originalFieldName,col_description(a.attrelid,a.attnum) as originalFieldDesc,'' AS originalFramework \n" +
-                        "FROM pg_class as c,pg_attribute as a inner join pg_type on pg_type.oid = a.atttypid\n" +
-                        "where c.relname in  (SELECT tablename FROM pg_tables ) and a.attrelid = c.oid and a.attnum>0\n" +
-                        "and c.relname ='%s'", tableNames.get(0));
-        }
+        IBuildDataServiceSqlCommand dbCommand = BuildDataServiceHelper.getDBCommand(dataSource.getConType());
+        String sql = dbCommand.buildUseExistTableFiled(dataSource.conDbname, tableNames.get(0));
         if (sql == null || sql.isEmpty())
             return fieldlist;
         try {

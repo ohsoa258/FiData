@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.utils.json;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.response.ResultEnum;
@@ -198,7 +199,7 @@ public class JsonUtils {
         for (TableFieldsDTO fieldsDto : tableDto.list) {
 
             dataSchema.add(JsonSchema.builder()
-                    .name(fieldsDto.fieldName)
+                    .name(fieldsDto.sourceFieldName)
                     .type(converFieldType(fieldsDto.fieldType))
                     .targetTableName(tableDto.tableName)
                     .build());
@@ -265,6 +266,37 @@ public class JsonUtils {
             default:
                 return JsonSchema.TypeEnum.STRING;
         }
+    }
+
+
+    /**
+     * data是个list的字符串集合
+     *
+     * @param data     操作的数据
+     * @param fieldMap 要修改的字段
+     * @return
+     */
+    public static String updateJsonArray(String data, Map<String, String> fieldMap) {
+
+        //如果data是个集合
+        JSONArray dataArray = JSONArray.parseArray(data);
+        //遍历dataArray
+        Iterator<Object> iterator = dataArray.iterator();
+        int i = 0;
+        while (iterator.hasNext()) {
+            i++;
+            JSONObject object = (JSONObject) iterator.next();
+            Iterator<Map.Entry<String, String>> iterator1 = fieldMap.entrySet().iterator();
+            while (iterator1.hasNext()) {
+                Map.Entry<String, String> next = iterator1.next();
+                //获取原本key
+                String source = object.getString(next.getKey());
+                //删除connection对象
+                object.remove(next.getKey());
+                object.put(next.getValue(), source);
+            }
+        }
+        return JSON.toJSONString(dataArray);
     }
 
 }

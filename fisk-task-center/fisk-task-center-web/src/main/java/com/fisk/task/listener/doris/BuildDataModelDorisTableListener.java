@@ -6,6 +6,7 @@ import com.davis.client.ApiException;
 import com.davis.client.model.*;
 import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.constants.NifiConstants;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
@@ -36,13 +37,14 @@ import com.fisk.task.po.AppNifiSettingPO;
 import com.fisk.task.po.NifiConfigPO;
 import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.doris.IDorisBuild;
-import com.fisk.task.service.nifi.IPostgreBuild;
+import com.fisk.task.service.nifi.IJdbcBuild;
 import com.fisk.task.service.nifi.ITaskDwDim;
 import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.service.pipeline.impl.NifiConfigServiceImpl;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
+import com.fisk.task.utils.StackTraceHelper;
 import com.fisk.task.utils.TaskPgTableStructureHelper;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +53,8 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -68,7 +72,7 @@ public class BuildDataModelDorisTableListener
     @Resource
     IDorisBuild doris;
     @Resource
-    IPostgreBuild iPostgreBuild;
+    IJdbcBuild iPostgreBuild;
     @Resource
     ITaskDwDim iTaskDwDim;
     @Resource
@@ -114,6 +118,7 @@ public class BuildDataModelDorisTableListener
         ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
         int id = 0;
         int tableType = 0;
+        log.info("dw创建表参数:" + dataInfo);
         //saveTableStructure(list);
         //1.,查询语句,并存库
         //2.修改表的存储过程
@@ -123,19 +128,27 @@ public class BuildDataModelDorisTableListener
             List<ModelPublishTableDTO> dimensionList = inpData.dimensionList;
 
             for (ModelPublishTableDTO modelPublishTableDTO : dimensionList) {
-                id = modelPublishStatusDTO.id;
+                id = Math.toIntExact(modelPublishTableDTO.tableId);
                 tableType = modelPublishTableDTO.createType;
                 //生成版本号
-                ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO);
+                //获取时间戳版本号
+                DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+                Calendar calendar = Calendar.getInstance();
+                String version = df.format(calendar.getTime());
+                ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO, version, DataSourceTypeEnum.POSTGRESQL);
+                if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
+                    taskPgTableStructureMapper.updatevalidVersion(version);
+                    throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+                }
                 log.info("执行存储过程返回结果" + resultEnum.getCode());
                 //生成建表语句
                 List<String> pgdbTable2 = createPgdbTable2(modelPublishTableDTO);
-                BusinessResult businessResult = iPostgreBuild.postgreBuildTable(pgdbTable2.get(0).toLowerCase(), BusinessTypeEnum.DATAMODEL);
+                BusinessResult businessResult = iPostgreBuild.postgreBuildTable(pgdbTable2.get(0), BusinessTypeEnum.DATAMODEL);
                 if (!businessResult.success) {
                     throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
                 }
                 if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
-                    BusinessResult businessResult1 = iPostgreBuild.postgreBuildTable(pgdbTable2.get(1).toLowerCase(), BusinessTypeEnum.DATAMODEL);
+                    BusinessResult businessResult1 = iPostgreBuild.postgreBuildTable(pgdbTable2.get(1), BusinessTypeEnum.DATAMODEL);
                     if (!businessResult1.success) {
                         throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
                     }
@@ -146,11 +159,11 @@ public class BuildDataModelDorisTableListener
             iPostgreBuild.postgreBuildTable(storedProcedure3, BusinessTypeEnum.DATAMODEL);*/
                 log.info("开始执行nifi创建数据同步");
                 TBETLIncrementalPO ETLIncremental = new TBETLIncrementalPO();
-                ETLIncremental.object_name = modelPublishTableDTO.tableName;
-                ETLIncremental.enable_flag = "1";
-                ETLIncremental.incremental_objectivescore_batchno = UUID.randomUUID().toString();
+                ETLIncremental.objectName = modelPublishTableDTO.tableName;
+                ETLIncremental.enableFlag = "1";
+                ETLIncremental.incrementalObjectivescoreBatchno = UUID.randomUUID().toString();
                 Map<String, Object> conditionHashMap = new HashMap<>();
-                conditionHashMap.put("object_name", ETLIncremental.object_name);
+                conditionHashMap.put("object_name", ETLIncremental.objectName);
                 List<TBETLIncrementalPO> tbetlIncrementalPos = incrementalMapper.selectByMap(conditionHashMap);
                 if (tbetlIncrementalPos != null && tbetlIncrementalPos.size() > 0) {
                     log.info("此表已有同步记录,无需重复添加");
@@ -172,6 +185,7 @@ public class BuildDataModelDorisTableListener
                 bfd.queryEndTime = modelPublishTableDTO.queryEndTime;
                 bfd.appName = inpData.businessAreaName;
                 bfd.openTransmission = inpData.openTransmission;
+                bfd.updateSql = modelPublishTableDTO.factUpdateSql;
                 if (modelPublishTableDTO.createType == 0) {
                     //类型为物理表
                     bfd.type = OlapTableEnum.DIMENSION;
@@ -210,15 +224,15 @@ public class BuildDataModelDorisTableListener
             }
             return result;
         } catch (Exception e) {
-            log.error("dw发布失败,表id为" + id);
-            e.printStackTrace();
+            log.error("dw发布失败,表id为" + id + StackTraceHelper.getStackTraceInfo(e));
+            result = ResultEnum.ERROR;
             if (tableType == 0) {
-                modelPublishStatusDTO.status = 1;
+                modelPublishStatusDTO.status = 2;
                 modelPublishStatusDTO.id = Math.toIntExact(id);
                 modelPublishStatusDTO.type = 0;
                 dataModelClient.updateDimensionPublishStatus(modelPublishStatusDTO);
             } else {
-                modelPublishStatusDTO.status = 1;
+                modelPublishStatusDTO.status = 2;
                 modelPublishStatusDTO.id = Math.toIntExact(id);
                 modelPublishStatusDTO.type = 0;
                 dataModelClient.updateFactPublishStatus(modelPublishStatusDTO);
@@ -357,9 +371,9 @@ public class BuildDataModelDorisTableListener
         String tableName = modelPublishTableDTO.tableName;
         String tablePk = "";
         if (modelPublishTableDTO.createType == 0) {
-            tablePk = tableName.substring(4) + "key";
+            tablePk = "\"" + tableName.substring(4) + "key\"";
         } else {
-            tablePk = tableName.substring(5) + "key";
+            tablePk = "\"" + tableName.substring(5) + "key\"";
         }
 
         StringBuilder sql = new StringBuilder();
@@ -387,9 +401,11 @@ public class BuildDataModelDorisTableListener
         });
 
         String sql1 = sql.toString();
-        String associatedKey = associatedConditions(fieldList);
+        //String associatedKey = associatedConditions(fieldList);
+        String associatedKey = "";
         String sql2 = sqlFileds.toString() + associatedKey;
         sql2 += "fi_createtime varchar(50),fi_updatetime varchar(50)";
+        sql2 += ",fidata_batch_code varchar(50)";
         String sql3 = sqlFileds1.toString();
         if (Objects.equals("", sql3)) {
             sql1 += sql2;
@@ -404,7 +420,8 @@ public class BuildDataModelDorisTableListener
         //创建表
         log.info("pg_dw建表语句" + sql1);
         //String stgTable = sql1.replaceFirst(tableName, "stg_" + tableName);
-        String stgTable = "DROP TABLE IF EXISTS stg_" + tableName + "; CREATE TABLE stg_" + tableName + " (" + tablePk + " varchar(50) NOT NULL DEFAULT sys_guid()," + stgSqlFileds.toString() + associatedKey + "fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),enableflag varchar(50))";
+        String stgTable = "DROP TABLE IF EXISTS stg_" + tableName + "; CREATE TABLE stg_" + tableName + " (" + tablePk + " varchar(50) NOT NULL DEFAULT sys_guid()," + stgSqlFileds.toString() + associatedKey + "fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3');";
+        stgTable += "create index " + tableName + "enableflagsy on stg_" + tableName + " (fi_enableflag);";
         sqlList.add(stgTable);
         sqlList.add(sql1);
         HashMap<String, Object> map = new HashMap<>();

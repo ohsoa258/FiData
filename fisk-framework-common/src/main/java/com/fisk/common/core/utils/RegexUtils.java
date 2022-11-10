@@ -4,7 +4,10 @@ import com.fisk.common.core.constants.RegexPatterns;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -59,6 +62,18 @@ public class RegexUtils {
         return subtract;
     }
 
+    /**
+     * 自定义函数去重: 用于stream流根据对象指定字段去重
+     *
+     * @param keyExtractor 去重的对象
+     * @param <T>          泛型
+     * @return 返回的实体对象
+     */
+    public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+        Map<Object, Boolean> map = new ConcurrentHashMap<>();
+        return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
+    }
+
     private static boolean matches(String str, String regex) {
         if (StringUtils.isBlank(str)) {
             return false;
@@ -66,4 +81,81 @@ public class RegexUtils {
         return str.matches(regex);
     }
 
+    public static boolean isCharValid(String fieldType) {
+        boolean isChar = true;
+        if (StringUtils.isEmpty(fieldType)) {
+            return isChar;
+        }
+        fieldType = fieldType.toLowerCase();
+        if (fieldType.contains("int")) {
+            fieldType = "int";
+        }
+        if (fieldType.contains("float")) {
+            fieldType = "float";
+        }
+        String timeType = "date";
+
+        // 浮点型
+        List<String> floatType = new ArrayList<>();
+        floatType.add("double");
+
+        // 文本类型
+        List<String> textTpye = new ArrayList<>();
+        textTpye.add("text");
+
+        // 字符型
+        List<String> charType = new ArrayList<>();
+        charType.add("varchar");
+        charType.add("char");
+
+        // Number型
+        // 整型
+        List<String> integerType = new ArrayList<>();
+        integerType.add("tinyint");
+        integerType.add("smallint");
+        integerType.add("mediumint");
+        integerType.add("int");
+        integerType.add("integer");
+        integerType.add("bigint");
+        // 精确数值型
+        List<String> accurateType = new ArrayList<>();
+        accurateType.add("decimal");
+        accurateType.add("numeric");
+        // 货币、近似数值型
+        List<String> otherType = new ArrayList<>();
+        otherType.add("money");
+        otherType.add("smallmoney");
+        otherType.add("float");
+        otherType.add("real");
+
+        // boolean类型长度放开
+        if (integerType.contains(fieldType.toLowerCase())) {
+            isChar = false;
+        } else if (textTpye.contains(fieldType.toLowerCase())) {
+            isChar = true;
+        } else if (accurateType.contains(fieldType.toLowerCase()) || otherType.contains(fieldType.toLowerCase())) {
+            isChar = false;
+        } else if (charType.contains(fieldType.toLowerCase())) {
+            isChar = true;
+        } else if (fieldType.toLowerCase().contains(timeType)) {
+            isChar = false;
+        }
+        return isChar;
+    }
+
+    /**
+     * @description 集合中是否包含某个值，忽略大小写
+     * @author dick
+     * @date 2022/10/21 11:33
+     * @version v1.0
+     * @params list
+     * @params str
+     * @return boolean
+     */
+    public static boolean isContains(List<String> list,String str){
+        if (CollectionUtils.isEmpty(list)){
+            return false;
+        }
+         return  list.stream().anyMatch(str::equalsIgnoreCase);
+    }
 }

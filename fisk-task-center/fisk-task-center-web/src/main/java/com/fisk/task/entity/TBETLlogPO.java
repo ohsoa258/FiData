@@ -21,4 +21,5 @@ public class TBETLlogPO {
     public String code;
     public String errordesc;
     public String topicName;
+    public String querySql;
 }

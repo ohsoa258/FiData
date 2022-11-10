@@ -27,10 +27,16 @@ public class LifecycleVO {
     public int templateId;
 
     /**
-     * 数据源id
+     * 数据源表主键id
      */
-    @ApiModelProperty(value = "数据源id")
+    @ApiModelProperty(value = "数据源表主键id")
     public int datasourceId;
+
+    /**
+     * 数据源类型
+     */
+    @ApiModelProperty(value = "数据源类型")
+    public SourceTypeEnum sourceTypeEnum;
 
     /**
      * 规则名称
@@ -39,10 +45,22 @@ public class LifecycleVO {
     public String ruleName;
 
     /**
-     * 表名称
+     * 表名称/表Id
      */
-    @ApiModelProperty(value = "表名称")
-    public String tableName;
+    @ApiModelProperty(value = "表名称/表Id")
+    public String tableUnique;
+
+    /**
+     * 表类型 1：表  2：视图
+     */
+    @ApiModelProperty(value = "表类型 1：表  2：视图")
+    public int tableType;
+
+    /**
+     * 表业务类型 1：事实表、2：维度表、3、指标表  4、宽表
+     */
+    @ApiModelProperty(value = "表业务类型 1：事实表、2：维度表、3、指标表  4、宽表")
+    public int tableBusinessType;
 
     /**
      * 回收时间
@@ -134,7 +152,7 @@ public class LifecycleVO {
      * 模板名称
      */
     @ApiModelProperty(value = "模板名称")
-    public String templatenName;
+    public String templateName;
 
     /**
      * 模板类型

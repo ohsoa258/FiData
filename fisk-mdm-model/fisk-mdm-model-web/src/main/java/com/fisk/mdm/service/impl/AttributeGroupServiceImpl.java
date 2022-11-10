@@ -12,18 +12,21 @@ import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.AttributeGroupMap;
+import com.fisk.mdm.map.EntityMap;
 import com.fisk.mdm.mapper.AttributeGroupDetailsMapper;
 import com.fisk.mdm.mapper.AttributeGroupMapper;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.service.AttributeGroupService;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EntityService;
+import com.fisk.mdm.service.IModelService;
 import com.fisk.mdm.utlis.TypeConversionUtils;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupDropDownVO;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupVO;
 import com.fisk.mdm.vo.attributeGroup.QueryAttributeGroupVO;
 import com.fisk.mdm.vo.entity.EntityVO;
+import com.fisk.mdm.vo.entity.EntityViewVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
@@ -34,6 +37,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -58,6 +62,8 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
     EntityMapper entityMapper;
     @Resource
     EntityService entityService;
+    @Resource
+    IModelService modelService;
 
     @Override
     public AttributeGroupVO getDataByGroupId(Integer id) {
@@ -93,10 +99,19 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
     }
 
     @Override
-    public List<AttributeGroupVO> getDataByModelId(Integer modelId) {
+    public List<AttributeGroupVO> getDataByModelId(Integer modelId,String name) {
         QueryWrapper<AttributeGroupPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(AttributeGroupPO::getModelId,modelId);
+
+        // 追加模糊搜索条件
+        if (com.baomidou.mybatisplus.core.toolkit.StringUtils.isNotBlank(name)){
+            queryWrapper.lambda().and(wq -> wq
+                    .like(AttributeGroupPO::getName, name)
+                    .or()
+                    .like(AttributeGroupPO::getDetails,name));
+        }
+
         List<AttributeGroupPO> groupPoList = groupMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(groupPoList)){
             List<AttributeGroupVO> collect = groupPoList.stream().filter(e -> e.getId() != 0).map(e -> {
@@ -145,20 +160,23 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum addAttribute(AttributeGroupDetailsAddDTO dto) {
+        if (CollectionUtils.isEmpty(dto.getAttributes())){
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
 
+        Integer entityId = dto.getAttributes().get(0).getEntityId();
         // 删除属性组下的实体数据
         QueryWrapper<AttributeGroupDetailsPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(AttributeGroupDetailsPO::getGroupId,dto.getGroupId())
-                .eq(AttributeGroupDetailsPO::getEntityId,dto.getEntityId());
+                .eq(AttributeGroupDetailsPO::getGroupId,dto.getGroupId());
         detailsMapper.delete(queryWrapper);
 
         // 新增属性
         AttributeGroupDetailsDTO detailsDto = new AttributeGroupDetailsDTO();
         detailsDto.setGroupId(dto.getGroupId());
-        detailsDto.setEntityId(dto.getEntityId());
-        dto.getAttributeId().stream().forEach(e -> {
-            detailsDto.setAttributeId(e);
+        dto.getAttributes().stream().forEach(e -> {
+            detailsDto.setEntityId(e.getEntityId());
+            detailsDto.setAttributeId(e.getAttributeId());
             AttributeGroupDetailsPO detailsPo1 = AttributeGroupMap.INSTANCES.detailsDtoToDto(detailsDto);
             int res = detailsMapper.insert(detailsPo1);
             if (res <= 0){
@@ -234,7 +252,8 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
         List<QueryAttributeGroupVO> list = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(detailsPoList)){
             // 根据实体id进行分组
-            Map<Integer, List<AttributeGroupDetailsPO>> listMap = detailsPoList.stream().collect(Collectors.groupingBy(AttributeGroupDetailsPO::getEntityId));
+            Map<Integer, List<AttributeGroupDetailsPO>> listMap = detailsPoList.stream().filter(e -> e.getEntityId() != null)
+                    .collect(Collectors.groupingBy(AttributeGroupDetailsPO::getEntityId));
             for (Integer key : listMap.keySet()) {
                 // 拼接所需参数
                 List<AttributeGroupDetailsPO> detailsList = listMap.get(key);
@@ -269,25 +288,54 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
     }
 
     @Override
-    public List<AttributeInfoDTO> getAttributeExists(AttributeInfoQueryDTO dto) {
+    public AttributeQueryRelationDTO getAttributeExists(AttributeInfoQueryDTO dto) {
         TypeConversionUtils typeConversionUtils = new TypeConversionUtils();
-        // 查询数据
-        List<AttributeInfoDTO> attributeExists = groupMapper.getAttributeExists(dto.getGroupId(), dto.getEntityId());
-        // 枚举转换
-        attributeExists.stream().forEach(e -> {
-            DataTypeEnum typeEnum = typeConversionUtils.intToDataTypeEnum(Integer.parseInt(e.getDataType()));
-            e.setDataType(typeEnum.getName());
 
-            // 域字段的名称
-            if (StringUtils.isNotBlank(e.getDomainName())){
-                AttributeVO data = attributeService.getById(Integer.parseInt(e.getDomainName())).getData();
-                EntityVO entityVo = entityService.getDataById(data.getEntityId());
-                e.setDomainName(entityVo.getName());
-            }
+        List<EntityVO> entityVoList = modelService.getEntityById(dto.getModelId(), null).getEntityVOList();
+
+        // 所有实体数据
+        List<EntityViewVO> collect = entityVoList.stream().map(iter -> {
+            EntityViewVO viewVo = EntityMap.INSTANCES.viewToVo(iter);
+            viewVo.setType(ObjectTypeEnum.ENTITY.getName());
+
+            // 查询数据
+            List<AttributeInfoDTO> attributeExists = groupMapper.getAttributeExists(dto.getGroupId(), iter.getId());
+            // 枚举转换
+            attributeExists.stream().forEach(e -> {
+                DataTypeEnum typeEnum = typeConversionUtils.intToDataTypeEnum(Integer.parseInt(e.getDataType()));
+                e.setDataType(typeEnum.getName());
+                e.setType(ObjectTypeEnum.ATTRIBUTES.getName());
+                e.setEntityId(viewVo.getId());
+                e.setEntityName(viewVo.getName());
+                e.setEntityDisplayName(viewVo.getDisplayName());
+
+                // 域字段的名称
+                if (StringUtils.isNotBlank(e.getDomainName())) {
+                    AttributeVO data = attributeService.getById(Integer.parseInt(e.getDomainName())).getData();
+                    EntityVO entityVo = entityService.getDataById(data.getEntityId());
+                    if (entityVo != null) {
+                        e.setDomainName(entityVo.getName());
+                    }
+                }
+            });
+            viewVo.setAttributeList(attributeExists);
+            return viewVo;
+        }).collect(Collectors.toList());
+
+        // 选中的实行
+        List<AttributeInfoDTO> checkedArr = new ArrayList<>();
+        collect.stream().forEach(e -> {
+            e.getAttributeList().stream().filter(Objects::nonNull).forEach(iter -> {
+                if (iter.getExistsGroup() != null){
+                    checkedArr.add(iter);
+                }
+            });
         });
 
-
-        return attributeExists;
+        AttributeQueryRelationDTO dto1 = new AttributeQueryRelationDTO();
+        dto1.setRelationList(collect);
+        dto1.setCheckedArr(checkedArr);
+        return dto1;
     }
 
     /**
@@ -357,6 +405,21 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
             return null;
         }
         return AttributeGroupMap.INSTANCES.poToDto(po);
+    }
+
+    /**
+     * 根据属性id,获取属性组id集合
+     *
+     * @param attributeId
+     * @return
+     */
+    public List<Integer> getAttributeGroupIdByAttributeId(Integer attributeId) {
+        QueryWrapper<AttributeGroupDetailsPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderByDesc("create_time").select("group_id")
+                .lambda()
+                .eq(AttributeGroupDetailsPO::getAttributeId, attributeId);
+        List<Integer> groupId = (List) detailsMapper.selectObjs(queryWrapper);
+        return groupId;
     }
 
 }

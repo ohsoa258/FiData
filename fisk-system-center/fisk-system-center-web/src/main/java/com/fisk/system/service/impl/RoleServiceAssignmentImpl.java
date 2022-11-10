@@ -6,7 +6,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
-import com.fisk.system.dto.*;
+import com.fisk.system.dto.AssignmentDTO;
+import com.fisk.system.dto.IconDTO;
+import com.fisk.system.dto.LoginServiceDTO;
+import com.fisk.system.dto.RoleServiceAssignmentDTO;
 import com.fisk.system.entity.RoleServiceAssignmentPO;
 import com.fisk.system.entity.RoleUserAssignmentPO;
 import com.fisk.system.entity.ServiceRegistryPO;
@@ -87,7 +90,6 @@ public class RoleServiceAssignmentImpl
         {
             return dtoList;
         }
-        List<ServiceSourceDTO> dataList=new ArrayList<>();
         /*查询当前用户下所有角色*/
         QueryWrapper<RoleUserAssignmentPO> roleData = new QueryWrapper<>();
         roleData.select("role_id").lambda().eq(RoleUserAssignmentPO::getUserId,userInfo.id);

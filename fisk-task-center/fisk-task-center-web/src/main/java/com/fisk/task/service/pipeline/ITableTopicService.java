@@ -1,5 +1,6 @@
 package com.fisk.task.service.pipeline;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.task.dto.task.TableTopicDTO;
 
 import java.util.List;
@@ -7,7 +8,7 @@ import java.util.List;
 /**
  * @author cfk
  */
-public interface ITableTopicService {
+public interface ITableTopicService extends IService<TableTopicDTO> {
 
     /**
      * 获取TableTopicDTO集合
@@ -55,5 +56,21 @@ public interface ITableTopicService {
      * @param id
      * @return Integer
      */
-    TableTopicDTO getTableTopicDTOByComponentId(Integer id,Integer tableId,Integer tableType);
+    TableTopicDTO getTableTopicDTOByComponentId(Integer id, Integer tableId, Integer tableType);
+
+    /**
+     * 根据管道topic找到实际topic
+     *
+     * @param topicName
+     * @return List<TableTopicDTO>
+     */
+    List<TableTopicDTO> getByTopicName(String topicName);
+
+    /**
+     * 管道删除组件,同时删除topic
+     *
+     * @param dtos
+     * @return
+     */
+    boolean deleteTableTopicGroup(List<TableTopicDTO> dtos);
 }

@@ -11,6 +11,15 @@ public class MqConstants {
 
     }
 
+    /*
+     * topic前缀
+     * */
+    public static final class TopicPrefix {
+
+        public static final String TOPIC_PREFIX = "dmp.datafactory.nifi.";
+
+    }
+
     public static final class QueueConstants {
 
         public static final String INCREMENT_RESULT = "task.data.increment.result";
@@ -45,41 +54,36 @@ public class MqConstants {
 
         public static final String BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW = "task.build.nifi.dispatch.flow";
 
-        public static final String BUILD_GOVERNANCE_FIELD_STRONG_RULE_TEMPLATE_FLOW = "task.build.governance.fieldStrongRule.template.flow";
-
-        public static final String BUILD_GOVERNANCE_FIELD_AGGREGATE_THRESHOLD_TEMPLATE_FLOW = "task.build.governance.fieldAggregateThreshold.template.flow";
-
-        public static final String BUILD_GOVERNANCE_ROWCOUNT_THRESHOLD_TEMPLATE_FLOW = "task.build.governance.rowCountThreshold.template.flow";
-
-        public static final String BUILD_GOVERNANCE_EMPTY_TABLE_CHECK_TEMPLATE_FLOW = "task.build.governance.emptyTableCheck.template.flow";
-
-        public static final String BUILD_GOVERNANCE_UPDATE_TABLE_CHECK_TEMPLATE_FLOW = "task.build.governance.updateTableCheck.template.flow";
-
-        public static final String BUILD_GOVERNANCE_TABLE_BLOOD_KINSHIP_CHECK_TEMPLATE_FLOW = "task.build.governance.tableBloodKinshipCheck.template.flow";
-
-        public static final String BUILD_GOVERNANCE_BUSINESS_CHECK_TEMPLATE_FLOW = "task.build.governance.businessCheck.template.flow";
-
-        public static final String BUILD_GOVERNANCE_SIMILARITY_TEMPLATE_FLOW = "task.build.governance.similarity.template.flow";
-
-        public static final String BUILD_GOVERNANCE_BUSINESS_FILTER_TEMPLATE_FLOW = "task.build.governance.businessFilter.template.flow";
-
-        public static final String BUILD_GOVERNANCE_SPECIFY_TIME_RECYCLING_TEMPLATE_FLOW = "task.build.governance.specifyTimeRecycling.template.flow";
-
-        public static final String BUILD_GOVERNANCE_EMPTY_TABLE_RECOVERY_TEMPLATE_FLOW = "task.build.governance.emptyTableRecovery.template.flow";
-
-        public static final String BUILD_GOVERNANCE_NO_REFRESH_DATA_RECOVERY_TEMPLATE_FLOW = "task.build.governance.noRefreshDataRecovery.template.flow";
-
-        public static final String BUILD_GOVERNANCE_DATA_BLOOD_KINSHIP_RECOVERY_TEMPLATE_FLOW = "task.build.governance.dataBloodKinshipRecovery.template.flow";
+        public static final String BUILD_GOVERNANCE_TEMPLATE_FLOW = "task.build.governance.template.flow";
 
         public static final String BUILD_MDM_MODEL_DATA = "task.build.mdm.model";
 
         public static final String BUILD_MDM_ENTITY_DATA = "task.build.mdm.entity";
 
-        public static final String BUILD_ACCESS_API_FLOW="build.access.api.flow";
+        public static final String BUILD_ACCESS_API_FLOW = "build.access.api.flow";
 
-        public static final String BUILD_NIFI_PIPELINE_TOPICNAME_FLOW="nifi.pipeline.topicName";
+        public static final String BUILD_NIFI_PIPELINE_TOPICNAME_FLOW = "nifi.pipeline.topicName";
+
+        public static final String BUILD_UNIVERSAL_PUBLISH_FLOW = "task.build.universal_publish";
+
+        public static final String BUILD_METADATA_FLOW = "build.metadata.flow";
+
 
     }
+
+    /**
+     * 任务发布中心,流组件触发topic所在地
+     */
+    public static final class FlowQueueConstants {
+//
+
+
+
+
+
+
+    }
+
 
     public static final class RouterConstants {
         public static final String INCREMENT_RESULT = "task.data.increment.#";

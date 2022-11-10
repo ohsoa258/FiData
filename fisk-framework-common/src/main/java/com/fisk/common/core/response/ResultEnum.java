@@ -12,7 +12,8 @@ public enum ResultEnum {
      * 返回码
      */
     SUCCESS(0, "成功"),
-    REQUEST_SUCCESS(200,"请求成功"),
+    REQUEST_SUCCESS(200, "请求成功"),
+    ACCEPTED(202, "接收成功"),
     UNAUTHENTICATE(401, "认证失败"),
     NOTFOUND(404, "未找到资源"),
     ERROR(500, "系统报错"),
@@ -43,6 +44,12 @@ public enum ResultEnum {
     CLIENT_ISEMPTY(1019, "客户端已删除"),
     FILENAME_EXISTS(1020, "文件名称已存在"),
     SYSTEM_PARAMS_ISEMPTY(1021, "系统参数为空"),
+    DATASOURCE_CONNECTERROR(1022, "数据源连接建立异常"),
+    DATASOURCE_CONNECTCLOSEERROR(1022, "数据源连接关闭异常"),
+    NO_MATCHING_DATA_TYPE(1023, "没有匹配的数据类型"),
+    CRON_ERROR(1024, "cron格式错误"),
+    DRUID_SQL_ERROR(1025, "druid解析sql失败"),
+    DRUID_ERROR(1026, "druid异常"),
 
     /**
      * 报表可视化服务，错误码从2000开始
@@ -69,6 +76,8 @@ public enum ResultEnum {
      */
     USER_ACCOUNTPASSWORD_ERROR(4001, "用户名或密码不正确"),
     ORIGINAL_PASSWORD_ERROR(4002, "用户原密码错误"),
+    DATA_SOURCE_ERROR(4003, "获取数据源配置失败"),
+    SYSTEM_DATA_SOURCE_NOT_OPERATION(4004, "系统数据源不允许此操作"),
 
     /**
      * 数据接入模块
@@ -76,7 +85,7 @@ public enum ResultEnum {
     DATAACCESS_GETFIELD_ERROR(5001, "获取表字段失败"),
     DATAACCESS_GETTABLE_ERROR(5002, "获取表名失败"),
     DATAACCESS_SAVEFIELD_ERROR(5003, "添加表字段失败"),
-    DATAACCESS_CONNECTDB_ERROR(5004, "连接失败"),
+    DATAACCESS_CONNECTDB_ERROR(5004, "连接失败,请检查参数"),
     DATAACCESS_CONNECTDB_WARN(5005, "当前驱动类型尚未开发"),
     DATAACCESS_APPNAME_SUCCESS(5006, "应用名称有效"),
     DATAACCESS_APPNAME_ERROR(5007, "应用名称已存在"),
@@ -121,6 +130,20 @@ public enum ResultEnum {
     COPY_APINAME_ISEXIST(5046, "目标应用下已存在相同名称的api,请重新选择,或者给api重命名"),
     DATA_QUALITY_FEIGN_ERROR(5047, "数据质量的数据校验feign接口异常"),
     LOAD_DATASOURCE_META(5048, "重新加载所有数据源以及数据库、表数据报错"),
+    LOAD_FIDATA_METADATA_ERROR(5049, "加载FaidataMetaData报错"),
+    JSON_ROOTNODE_HANDLER_ERROR(5050, "pushData中json格式可能有误,解析失败,请自行检查"),
+    FILE_NOT_SELECTED(5051, "请选择需要读取的文件"),
+    DRIVETYPE_IS_NULL(5052, "请选择驱动类型"),
+    GET_DATABASE_ERROR(5053, "获取数据库失败,请重新检查参数"),
+    RETURN_RESULT_DEFINITION(5054, "返回结果定义必须选中获取键值"),
+    API_EXPRESSION_ERROR(5055, "API表达式格式错误"),
+    SCHEMA_ERROR(5056, "创建或删除schema失败"),
+    UPLOAD_FLINK_ERROR(5057, "脚本上传flink失败"),
+    PIPELINENAME_EXISTING(5058, "Job名称已存在"),
+    UPLOADFILE_REMOTE_ERROR(5059, "文件上传远程失败"),
+    SAVE_POINTS_UPDATE_ERROR(5060, "检查点保存失败"),
+    CREATE_JOB_ERROR(5061, "创建Flink任务失败"),
+    SCHEMA_TABLE_REPEAT(5062, "其他应用下已存在该表名"),
 
 
     /**
@@ -131,7 +154,7 @@ public enum ResultEnum {
     TASK_NIFI_NO_COMPONENTS_FOUND(6003, "未找到组件"),
     TASK_NIFI_DISPATCH_ERROR(6004, "调度失败"),
     TASK_NIFI_EMPTY_ALL_CONNECTIONS_REQUESTS_ERROR(6005, "清空队列失败"),
-    TASK_NIFI_CONTROLLER_SERVICES_RUN_STATUS_ERROR(6006,"禁用控制器服务失败"),
+    TASK_NIFI_CONTROLLER_SERVICES_RUN_STATUS_ERROR(6006, "禁用控制器服务失败"),
     TASK_NIFI_DELETE_FLOW(6007,"nifi删除失败"),
     TASK_TABLE_NOT_EXIST(6008,"表不存在"),
     TASK_TABLE_CREATE_FAIL(6009,"表创建失败"),
@@ -163,6 +186,9 @@ public enum ResultEnum {
     BUSINESS_AREA_EXISTS_ASSOCIATED(8010,"业务域中维度存在其他关联"),
     PUBLISH_NOTSUCCESS(8011, "请发布成功后再获取分析指标语句"),
     NOT_SUPPORT_FULL_JOIN(8012,"MySql暂不支持全连接"),
+    FACT_FIELD_EXIST(8013, "当前设置的目标英文名称已存在,请重新设置"),
+    QUERY_CONDITION_NOTNULL(8014, "表关联关系不能为空"),
+    FACT_NAME_NOTNULL(8015, "操作的事实表名不允许为空"),
 
     /**
      * 数据工厂
@@ -188,7 +214,7 @@ public enum ResultEnum {
     DS_APP_PWD_NOTNULL(10005, "应用密码不能为null"),
     DS_DATASOURCE_CON_WARN(10006, "当前驱动类型尚未开发"),
     DS_DATASOURCE_CON_ERROR(10007, "连接失败"),
-    DS_DATASOURCE_EXISTS(10008, "数据源不存在，请刷新页面"),
+    DS_DATASOURCE_NOTEXISTS(10008, "数据源不存在，请刷新页面"),
     DS_API_PV_QUERY_ERROR(10009, "查询失败"),
     DS_APISERVICE_APP_EXISTS(10010, "当前下游系统已失效，请联系相关人员"),
     DS_APISERVICE_API_EXISTS(10011, "API不存在，请检查APICODE"),
@@ -203,12 +229,13 @@ public enum ResultEnum {
     DS_APP_SUBAPI_ENABLE(10020, "取消勾选的API含已启用的API，请先禁用"),
     DS_APISERVICE_API_APPINFO_EXISTS(10021, "应用账号/密码错误，请核对"),
     DS_DATASOURCE_READ_ERROR(10022, "数据源信息读取失败"),
+    DS_DATASOURCE_EXISTS(11023, "数据源已存在"),
 
     /**
      * 数据质量
      */
     DATA_QUALITY_TEMPLATE_EXISTS(11001, "模板信息不存在"),
-    DATA_QUALITY_DATASOURCE_EXISTS(11002, "数据源不存在"),
+    DATA_QUALITY_DATASOURCE_ONTEXISTS(11002, "数据源不存在"),
     DATA_QUALITY_REQUESTSORT_ERROR(11003, "参数异常，执行顺序调整失败"),
     DATA_QUALITY_CREATESTATEMENT_ERROR(11004, "数据库连接建立失败"),
     DATA_QUALITY_CLOSESTATEMENT_ERROR(11005, "数据库连接关闭失败"),
@@ -220,6 +247,15 @@ public enum ResultEnum {
     DATA_QUALITY_DATACHECK_CHECKRESULT_EXISTS(11011, "校验结果为空"),
     DATA_QUALITY_DATACHECK_REQUESTJSON_ERROR(11012, "待校验的JSON数据格式异常，未包含指定字段key"),
     DATA_QUALITY_SYNCCHECK_NOOPERATION(11013, "请求参数中操作型参数均为空，无需校验"),
+    DATA_QUALITY_UPDATEDATA_ERROR(11014, "数据校验完成，修改表数据触发异常"),
+    DATA_QUALITY_TABLECONFIGURATION_SENT_CHANGES(11015, "表配置信息在源已发生变更"),
+    DATA_QUALITY_DATASOURCE_EXISTS(11016, "数据源已存在"),
+    DATA_QUALITY_NOTICE_NOTEXISTS(11017, "告警通知信息不存在"),
+    DATA_QUALITY_RULE_NOTEXISTS(11018, "规则信息不存在"),
+    DATA_QUALITY_REDIS_NOTEXISTSTABLEFIELD(11019, "redis中未找到对应的表字段元数据"),
+    DATA_QUALITY_UPDATE_PRIMARY_KEY_ISNOTSET(11020, "未设置更新主键"),
+    DATA_QUALITY_BUSINESS_API_AUTH_FILTER_EXEC_ERROR(11021, "业务API清洗授权方法执行异常"),
+    DATA_QUALITY_BUSINESS_API_FILTER_EXEC_ERROR(11022, "业务API清洗方法执行异常"),
 
     /**
      * 数据安全
@@ -278,7 +314,19 @@ public enum ResultEnum {
     CHECK_TEMPLATE_IMPORT_FAILURE(151020, "导入失败，请检查模板是否正确"),
     EMPTY_FORM(151021, "空白xlsx文件"),
     CODE_NOT_EXIST(151022, "编码列不存在"),
-    ATTRIBUTE_GROUP_NOT_EXIST(151023, "属性组不存在");
+    ATTRIBUTE_GROUP_NOT_EXIST(151023, "属性组不存在"),
+    DATA_REPLICATION_FAILED(151024, "数据复制失败"),
+    CODE_EXIST(151025, "编码已存在"),
+    MANDATE_TIMESTAMP_START(151026, "主数据定时任务开始执行"),
+    MANDATE_TIMESTAMP_SUCCESS(151027, "主数据定时任务执行成功!"),
+    UNCOMMITTED_CANNOT_COPIED(151028, "未提交不能复制!"),
+    POSTULATES_NOT_ROLLBACK(151029, "发布状态不能回滚!"),
+    AVERSION_NOT_DELETE(151030, "最后一个版本了,不能删除!"),
+    VIEW_NO_EXIST_ATTRIBUTE(151031, "该视图下暂无属性"),
+    FILE_NOT_FOUND_EXCEPTION(151032, "file流路径找不到"),
+    FILE_IO_EXCEPTION(151033, "IO流异常"),
+    FACT_ATTRIBUTE_FAILD(151034, "事实属性表更新失败!"),
+    FORM_NO_VALID_DATA(151035, "表格暂无有效数据");
 
     ResultEnum(int code, String msg) {
         this.code = code;

@@ -1,9 +1,12 @@
 package com.fisk.datagovernance.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
@@ -41,72 +44,63 @@ public class DataSourceController {
     private IDataOpsDataSourceManageService dataOpsDataSourceManageService;
 
     @PostMapping("/page")
-    @ApiOperation("获取所有数据源连接信息")
-    public ResultEntity<Page<DataSourceConVO>> getData(@RequestBody DataSourceConQuery query) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listDataSourceCons(query));
+    @ApiOperation("数据质量，获取所有数据源配置信息")
+    public ResultEntity<PageDTO<DataSourceConVO>> page(@RequestBody DataSourceConQuery query) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.page(query));
     }
 
     @PostMapping("/add")
-    @ApiOperation("添加数据源连接信息")
-    public ResultEntity<Object> addData(@Validated @RequestBody DataSourceConDTO dto) {
-        return ResultEntityBuild.build(service.saveDataSourceCon(dto));
+    @ApiOperation("数据质量，添加数据源配置信息")
+    public ResultEntity<Object> add(@Validated @RequestBody DataSourceConDTO dto) {
+        return ResultEntityBuild.build(service.add(dto));
     }
 
     @PutMapping("/edit")
-    @ApiOperation("编辑数据源连接信息")
-    public ResultEntity<Object> editData(@Validated @RequestBody DataSourceConEditDTO dto) {
-        return ResultEntityBuild.build(service.updateDataSourceCon(dto));
+    @ApiOperation("数据质量，编辑数据源配置信息")
+    public ResultEntity<Object> edit(@Validated @RequestBody DataSourceConEditDTO dto) {
+        return ResultEntityBuild.build(service.edit(dto));
     }
 
     @DeleteMapping("/delete/{id}")
-    @ApiOperation("删除数据源连接信息")
-    public ResultEntity<Object> deleteData(@PathVariable("id") int id) {
-        return ResultEntityBuild.build(service.deleteDataSourceCon(id));
+    @ApiOperation("数据质量，删除数据源配置信息")
+    public ResultEntity<Object> delete(@PathVariable("id") int id) {
+        return ResultEntityBuild.build(service.delete(id));
     }
 
     @PostMapping("/test")
-    @ApiOperation("测试数据源连接")
+    @ApiOperation("数据质量，测试数据源连接")
     public ResultEntity<Object> testConnection(@Validated @RequestBody TestConnectionDTO dto) {
         return ResultEntityBuild.build(service.testConnection(dto));
     }
 
-    @GetMapping("/getSystemAll")
-    @ApiOperation("获取FiData数据源")
-    public ResultEntity<List<DataSourceConVO>> getSystemAll() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getSystemAll());
+    @GetMapping("/getFiDataConfigMetaData")
+    @ApiOperation("数据质量，获取FiData配置表元数据信息")
+    public ResultEntity<FiDataMetaDataTreeDTO> getFiDataConfigMetaData() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataConfigMetaData());
     }
 
-    @GetMapping("/getTableAll")
-    @ApiOperation("获取全部表信息")
-    public ResultEntity<List<DataExampleSourceVO>> getTableAll() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableAll());
+    @GetMapping("/getCustomizeMetaData")
+    @ApiOperation("数据质量，获取自定义数据源表元数据信息")
+    public ResultEntity<FiDataMetaDataTreeDTO> getCustomizeMetaData() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCustomizeMetaData());
     }
 
-    @PostMapping("/getTableFieldAll")
-    @ApiOperation("获取表字段信息")
-    public ResultEntity<DataSourceVO> getTableFieldAll(@Validated @RequestBody TableFieldQueryDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldAll(dto));
-    }
-
-    /*数据运维数据源*/
     @PostMapping("/getDataOpsDataSource")
-    @ApiOperation("获取数据运维数据源信息")
+    @ApiOperation("数据运维，获取数据运维数据源信息")
     public ResultEntity<List<DataOpsSourceVO>> getDataOpsDataSource() {
         return dataOpsDataSourceManageService.getDataOpsDataSource();
     }
 
     @PostMapping("/reloadDataOpsDataSource")
-    @ApiOperation("pg数据库信息同步到redis")
+    @ApiOperation("数据运维，pg数据库信息同步到redis")
     public ResultEntity<Object> reloadDataOpsDataSource() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, dataOpsDataSourceManageService.reloadDataOpsDataSource());
     }
 
-
     @PostMapping("/executeDataOpsSql")
-    @ApiOperation("执行sql")
+    @ApiOperation("数据运维，执行sql")
     public ResultEntity<ExecuteResultVO> executeDataOpsSql(@Validated @RequestBody ExecuteDataOpsSqlDTO dto) {
         return dataOpsDataSourceManageService.executeDataOpsSql(dto);
     }
-    /*数据运维数据源*/
 
 }

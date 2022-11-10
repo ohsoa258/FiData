@@ -20,4 +20,7 @@ public class GetConfigDTO {
     @Value("${spring.datasource.password}")
     public String password;
 
+    @Value("${spring.datasource.driver-class-name}")
+    public String driver;
+
 }

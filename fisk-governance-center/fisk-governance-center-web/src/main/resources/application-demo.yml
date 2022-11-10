@@ -1,0 +1,28 @@
+dataops:
+  # 数据库元数据对应 redis key
+  metadataentity_key: DataOps_MetaDataEntityKey
+  # 执行时间 凌晨12点半
+  schedule: 0 30 0 * * ?
+  # 是否启用
+  enabled: true
+spring:
+  application:
+    name: datagovernance-service
+  datasource:
+    url: jdbc:mysql://192.168.21.21:3306/dmp_datagovernance_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: root123
+    driver-class-name: com.mysql.jdbc.Driver
+  redis:
+    host: 192.168.21.21
+    password: test123456
+# pg数据源配置
+database:
+  dw_id: 1
+  ods_id: 2
+  mdm_id: 3
+  olap_id: 4
+file:
+  uploadUrl: /root/nginx/app/file/qualityreport/
+  echoPath: /file/qualityreport/
+  logoPath: /root/nginx/app/file/qualityreport/image/companyLogo.jpg

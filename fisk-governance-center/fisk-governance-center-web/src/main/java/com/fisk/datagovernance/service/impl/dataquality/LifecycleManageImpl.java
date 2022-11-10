@@ -14,9 +14,10 @@ import com.fisk.datagovernance.dto.dataquality.lifecycle.LifecycleQueryDTO;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
 import com.fisk.datagovernance.entity.dataquality.LifecyclePO;
 import com.fisk.datagovernance.entity.dataquality.TemplatePO;
-import com.fisk.datagovernance.enums.DataSourceTypeEnum;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.map.dataquality.LifecycleMap;
+import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
 import com.fisk.datagovernance.mapper.dataquality.LifecycleMapper;
 import com.fisk.datagovernance.mapper.dataquality.TemplateMapper;
 import com.fisk.datagovernance.service.dataquality.ILifecycleManageService;
@@ -40,22 +41,31 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
     private TemplateMapper templateMapper;
 
     @Resource
+    private DataSourceConMapper dataSourceConMapper;
+
+    @Resource
     private DataSourceConManageImpl dataSourceConManageImpl;
 
     @Resource
-    private NoticeManageImpl noticeManageImpl;
-
-    @Resource
-    UserHelper userHelper;
+    private ExternalInterfaceImpl externalInterfaceImpl;
 
     @Override
     public Page<LifecycleVO> getAll(LifecycleQueryDTO query) {
-        return baseMapper.getAll(query.page, query.datasourceId, query.tableName, query.keyword);
+        // 返回增加数据源类型
+        return baseMapper.getAll(query.page, query.datasourceId, query.tableUnique,
+                query.tableBusinessType,query.keyword);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(LifecycleDTO dto) {
+        if (dto.sourceTypeEnum == SourceTypeEnum.FiData) {
+            int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.sourceTypeEnum, dto.datasourceId);
+            if (idByDataSourceId == 0) {
+                return ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS;
+            }
+            dto.datasourceId = idByDataSourceId;
+        }
         //第一步：验证模板是否存在
         TemplatePO templatePO = templateMapper.selectById(dto.templateId);
         if (templatePO == null) {
@@ -78,6 +88,8 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
         if (i <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
+        //第五步：调用元数据接口获取最新的规则信息
+        externalInterfaceImpl.synchronousTableBusinessMetaData(dto.getDatasourceId(), dto.getSourceTypeEnum(), dto.getTableBusinessType(), dto.getTableUnique());
         return ResultEnum.SUCCESS;
     }
 
@@ -100,7 +112,6 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
         if (role == null || role.code != ResultEnum.SUCCESS.getCode()) {
             return ResultEnum.getEnum(role.getCode());
         }
-        UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         dto.createRule = role.data;
         //第四步：转换DTO对象为PO对象
         lifecyclePO = LifecycleMap.INSTANCES.dtoToPo_Edit(dto);
@@ -114,6 +125,8 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
         if (i <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
+        //第六步：调用元数据接口获取最新的规则信息
+        externalInterfaceImpl.synchronousTableBusinessMetaData(dto.getDatasourceId(), dto.getSourceTypeEnum(), dto.getTableBusinessType(), dto.getTableUnique());
         return ResultEnum.SUCCESS;
     }
 
@@ -123,6 +136,12 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
         LifecyclePO lifecyclePO = baseMapper.selectById(id);
         if (lifecyclePO == null) {
             return ResultEnum.DATA_NOTEXISTS;
+        }
+        // 调用元数据接口获取最新的规则信息
+        DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(lifecyclePO.getDatasourceId());
+        if (dataSourceConPO != null) {
+            SourceTypeEnum sourceTypeEnum = SourceTypeEnum.getEnum(dataSourceConPO.getDatasourceType());
+            externalInterfaceImpl.synchronousTableBusinessMetaData(lifecyclePO.getDatasourceId(), sourceTypeEnum, lifecyclePO.getTableBusinessType(), lifecyclePO.getTableUnique());
         }
         return baseMapper.deleteByIdWithFill(lifecyclePO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -151,7 +170,7 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
                 fieldName = "`" + fieldName + "`";
             } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
                 fieldName = "[" + fieldName + "]";
-            } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRE) {
+            } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
                 fieldName = "" + fieldName + "";
             }
         }

@@ -1,0 +1,28 @@
+server:
+  port: 7008
+dataservice:
+  pdf:
+    # pdf文档模板路径
+    path: D:/Fidata/java/file/consume-serveice/pdf
+    # 接口文档中的环境信息
+    api_address: http://172.17.1.248:7002
+  datasource:
+    # redis key
+    metadataentity_key: DataService_MetaDataKey
+    # 执行时间 凌晨12点半
+    schedule: 0 30 0 * * ?
+    # 是否启用
+    enabled: true
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    password: Password01!
+    url: jdbc:mysql://172.17.1.248:3306/dmp_dataservice_db?uuseUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+  # redis 获取用户需要使用到
+  redis:
+    host: 172.17.1.248
+  # 防止模板报空错误
+  freemarker:
+    settings:
+      classic_compatible: true

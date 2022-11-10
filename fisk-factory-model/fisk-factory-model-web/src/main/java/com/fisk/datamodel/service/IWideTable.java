@@ -1,18 +1,20 @@
 package com.fisk.datamodel.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableConfigDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableListDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableQueryPageDTO;
+import com.fisk.datamodel.entity.widetable.WideTableConfigPO;
 
 import java.util.List;
 
 /**
  * @author JianWenYang
  */
-public interface IWideTable {
+public interface IWideTable extends IService<WideTableConfigPO> {
 
     /**
      * 根据业务域id，获取宽表列表

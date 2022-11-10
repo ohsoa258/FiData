@@ -9,7 +9,6 @@ import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.doris.TableColumnInfoDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
-import com.fisk.task.service.atlas.IAtlasBuildInstance;
 import com.fisk.task.service.task.IBuildTaskService;
 import com.fisk.task.service.doris.IDorisBuild;
 
@@ -34,8 +33,7 @@ import java.util.List;
 public class AtlasTest {
     @Resource
     IDorisBuild doris;
-    @Resource
-    IAtlasBuildInstance atlas;
+
     IBuildTaskService service;
     @Test
     public void testdoriscreatetable() {

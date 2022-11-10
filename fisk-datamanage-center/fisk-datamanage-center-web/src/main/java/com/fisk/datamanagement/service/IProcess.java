@@ -25,9 +25,18 @@ public interface IProcess {
 
     /**
      * 修改process
+     *
      * @param dto
      * @return
      */
     ResultEnum updateProcess(ProcessDTO dto);
+
+    /**
+     * 删除process
+     *
+     * @param guid
+     * @return
+     */
+    ResultEnum deleteProcess(String guid);
 
 }

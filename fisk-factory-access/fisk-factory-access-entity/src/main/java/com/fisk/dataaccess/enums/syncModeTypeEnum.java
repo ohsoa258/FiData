@@ -11,8 +11,9 @@ public enum syncModeTypeEnum implements BaseEnum {
      */
     FULL_VOLUME(1, "full_volume"),
     ADD(2, "add"),
-    INCREMENT(3, "increment"),
-    TIME_INCREMENT(4, "time_increment");
+    INCREMENT_MERGE(3, "increment_merge"),
+    TIME_INCREMENT(4, "time_increment"),
+    INCREMENT_DELINSERT(5, "increment_delinsert");
 
     syncModeTypeEnum(int value, String name) {
         this.name = name;
@@ -39,7 +40,7 @@ public enum syncModeTypeEnum implements BaseEnum {
             case 2:
                 return ADD.getName();
             case 3:
-                return INCREMENT.getName();
+                return INCREMENT_MERGE.getName();
             case 4:
                 return TIME_INCREMENT.getName();
             default:

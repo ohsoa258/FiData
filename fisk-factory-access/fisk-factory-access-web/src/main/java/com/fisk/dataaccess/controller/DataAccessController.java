@@ -3,6 +3,8 @@ package com.fisk.dataaccess.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
@@ -59,5 +61,11 @@ public class DataAccessController {
     @GetMapping("/getDataAccessMetaData")
     public ResultEntity<List<DataAccessSourceTableDTO>> getDataAccessMetaData() {
         return service.getDataAccessMetaData();
+    }
+
+    @ApiOperation("构建元数据查询对象(表及下面的字段)")
+    @PostMapping("/buildFiDataTableMetaData")
+    public ResultEntity<List<FiDataTableMetaDataDTO>> buildFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.buildFiDataTableMetaData(dto));
     }
 }

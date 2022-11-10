@@ -34,4 +34,25 @@
         insert into tb_table_access (app_id,is_realtime,table_name,del_flag) values
         (#{tableAccessPo.appId},#{tableAccessPo.isRealtime},#{tableAccessPo.tableName},#{tableAccessPo.delFlag})
     </insert>
+
+    <select id="getTableAccessListData" resultType="com.fisk.dataaccess.dto.v3.TbTableAccessDTO">
+        select
+        a.*,b.sync_mode
+        from
+        tb_table_access a
+        left join tb_table_syncmode b on a.id=b.id
+        where
+        a.app_id = ${query.appId}
+        and a.del_flag=1
+        <if test="query.tableName != null and query.tableName.length()>0">
+            and a.table_name like CONCAT('%',#{query.tableName},'%')
+        </if>
+        <if test="query.syncMode != null and query.syncMode>0">
+            and b.sync_mode = ${query.syncMode}
+        </if>
+        <if test="query.publish != null">
+            and a.publish = ${query.publish}
+        </if>
+    </select>
+
 </mapper>

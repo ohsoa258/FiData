@@ -9,19 +9,18 @@ import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.ApiImportDataDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
+import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
-import com.fisk.task.dto.task.BuildNifiFlowDTO;
-import com.fisk.task.dto.task.BuildPhysicalTableDTO;
-import com.fisk.task.dto.task.BuildTableNifiSettingDTO;
-import com.fisk.task.dto.task.NifiCustomWorkListDTO;
+import com.fisk.task.dto.task.*;
 import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.service.task.IBuildKfkTaskService;
 import com.fisk.task.service.task.IBuildTaskService;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,11 +44,13 @@ public class PublishTaskController {
     BuildAtlasTableAndColumnTaskListener buildAtlasTableAndColumnTaskListener;
     @Resource
     BuildDataModelDorisTableListener buildDataModelDorisTableListener;
+    @Value("${nifi.pipeline.topicName}")
+    public String pipelineTopicName;
 
     @PostMapping("/nifiFlow")
     @ApiOperation(value = "创建同步数据nifi流程")
     public ResultEntity<Object> publishBuildNifiFlowTask(@RequestBody BuildNifiFlowDTO data) {
-        return iBuildKfkTaskService.publishTask("创建表:"+data.tableName+"的数据流任务",
+        return iBuildKfkTaskService.publishTask("创建表:" + data.tableName + "的数据流任务",
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_NIFI_FLOW,
                 data);
@@ -87,6 +88,7 @@ public class PublishTaskController {
 
     /**
      * 在Atlas中生成数据库、表、字段的血缘关系
+     *
      * @param ArDto
      * @return
      */
@@ -95,9 +97,9 @@ public class PublishTaskController {
     public ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody BuildPhysicalTableDTO ArDto) {
         log.info("进入方法");
         ResultEntity<Object> resultEntity = new ResultEntity<Object>();
-        resultEntity.code=0;
-        resultEntity.msg="流程创建成功";
-        buildAtlasTableAndColumnTaskListener.msg(JSON.toJSONString(ArDto),null);
+        resultEntity.code = 0;
+        resultEntity.msg = "流程创建成功";
+        buildAtlasTableAndColumnTaskListener.msg(JSON.toJSONString(ArDto), null);
         return resultEntity;
 
     }
@@ -105,13 +107,14 @@ public class PublishTaskController {
 
     /**
      * 创建物理表
+     *
      * @param ArDto
      * @return
      */
     @PostMapping("/publishBuildPhysicsTableTask")
     @ApiOperation(value = "在ods库中生成数据表")
     public ResultEntity<Object> publishBuildPhysicsTableTask(@RequestBody BuildPhysicalTableDTO ArDto) {
-        return iBuildKfkTaskService.publishTask("数据湖表:"+ArDto.tableName+",结构处理成功",
+        return iBuildKfkTaskService.publishTask("数据湖表:" + ArDto.tableName + ",结构处理成功",
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW,
                 ArDto);
@@ -119,7 +122,8 @@ public class PublishTaskController {
 
 
     /**
-     *pgsql stg to ods
+     * pgsql stg to ods
+     *
      * @param entityId
      * @return
      */
@@ -130,10 +134,13 @@ public class PublishTaskController {
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_STGTOODS_FLOW,
                 entityId);
-    };
+    }
+
+    ;
 
     /**
      * Doris 增量更新
+     *
      * @param entityId
      * @return
      */
@@ -148,6 +155,7 @@ public class PublishTaskController {
 
     /**
      * Atlas 删除实体
+     *
      * @param entityId
      * @return
      */
@@ -159,8 +167,10 @@ public class PublishTaskController {
                 MqConstants.QueueConstants.BUILD_ATLAS_ENTITYDELETE_FLOW,
                 entityId);
     }
+
     /**
      * pgsql 删除表
+     *
      * @param delTable
      * @return
      */
@@ -175,12 +185,13 @@ public class PublishTaskController {
 
     /**
      * doris创建表BUILD_DORIS_TABLE
+     *
      * @param modelPublishDataDTO
      * @return
      */
     @PostMapping("/atlasDorisTable")
     @ApiOperation(value = "dmp_dw创建表")
-    public ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody ModelPublishDataDTO modelPublishDataDTO){
+    public ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody ModelPublishDataDTO modelPublishDataDTO) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_DATAMODEL_DORIS_TABLE.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE,
@@ -189,12 +200,13 @@ public class PublishTaskController {
 
     /**
      * 创建管道
+     *
      * @param nifiCustomWorkListDTO
      * @return
      */
     @PostMapping("/NifiCustomWorkFlow")
     @ApiOperation(value = "创建管道")
-    public ResultEntity<Object> publishBuildNifiCustomWorkFlowTask(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO){
+    public ResultEntity<Object> publishBuildNifiCustomWorkFlowTask(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_CUSTOMWORK_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_CUSTOMWORK_FLOW,
@@ -203,12 +215,13 @@ public class PublishTaskController {
 
     /**
      * 立即重启
+     *
      * @param buildTableNifiSettingDTO
      * @return
      */
     @PostMapping("/immediatelyStart")
     @ApiOperation(value = "立即启动")
-    public ResultEntity<Object> immediatelyStart(@RequestBody BuildTableNifiSettingDTO buildTableNifiSettingDTO){
+    public ResultEntity<Object> immediatelyStart(@RequestBody BuildTableNifiSettingDTO buildTableNifiSettingDTO) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_CUSTOMWORK_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_IMMEDIATELYSTART_FLOW,
@@ -218,7 +231,7 @@ public class PublishTaskController {
 
     @PostMapping("/pushModelByName")
     @ApiOperation(value = "创建属性日志表")
-    public ResultEntity<Object> pushModelByName(@RequestBody ModelDTO dto){
+    public ResultEntity<Object> pushModelByName(@RequestBody ModelDTO dto) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.CREATE_ATTRIBUTE_TABLE_LOG.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_MDM_MODEL_DATA,
@@ -227,7 +240,7 @@ public class PublishTaskController {
 
     @PostMapping("/createBackendTable")
     @ApiOperation(value = "创建任务后台表")
-    public ResultEntity<Object> createBackendTable(@RequestBody EntityDTO dto){
+    public ResultEntity<Object> createBackendTable(@RequestBody EntityDTO dto) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BACKGROUND_TABLE_TASK_CREATION.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_MDM_ENTITY_DATA,
@@ -236,11 +249,32 @@ public class PublishTaskController {
 
     @PostMapping("/importData")
     @ApiOperation(value = "调度调用第三方api,接收数据,并导入到FiData平台")
-    public ResultEntity<Object> importData(@RequestBody ApiImportDataDTO dto){
+    public ResultEntity<Object> importData(@RequestBody ApiImportDataDTO dto) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_ACCESS_API_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW,
-                dto);}
+                dto);
+    }
+
+    @PostMapping("/universalPublish")
+    @ApiOperation(value = "任务发布中心调度")
+    public ResultEntity<Object> universalPublish(@RequestBody KafkaReceiveDTO dto) {
+        log.info("任务发布中心调度");
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_UNIVERSAL_PUBLISH_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                pipelineTopicName,
+                dto);
+    }
+
+    @PostMapping("/metaData")
+    @ApiOperation(value = "元数据实时同步")
+    public ResultEntity<Object> metaData(@RequestBody BuildMetaDataDTO dto) {
+        log.info("元数据实时同步");
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_METADATA_FLOW.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_METADATA_FLOW,
+                dto);
+    }
 
 
 }

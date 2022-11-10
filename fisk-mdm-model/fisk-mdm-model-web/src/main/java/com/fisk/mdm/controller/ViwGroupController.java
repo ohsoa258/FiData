@@ -4,6 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
+import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityQueryDTO;
 import com.fisk.mdm.dto.viwGroup.*;
 import com.fisk.mdm.service.ViwGroupService;
@@ -74,8 +75,8 @@ public class ViwGroupController {
     @ApiOperation("查询视图组(根据实体id)")
     @GetMapping("/getDataByEntityId")
     @ResponseBody
-    public ResultEntity<List<ViwGroupVO>> getDataByEntityId(Integer id) {
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,viwGroupService.getDataByEntityId(id));
+    public ResultEntity<List<ViwGroupVO>> getDataByEntityId(Integer id,String name) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,viwGroupService.getDataByEntityId(id,name));
     }
 
     @ApiOperation("根据实体id查询实体关联关系")
@@ -90,5 +91,19 @@ public class ViwGroupController {
     @ResponseBody
     public ResultEntity<ResultEnum> createCustomView(Integer id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,viwGroupService.createCustomView(id));
+    }
+
+    @ApiOperation("查询视图组属性关系(根据视图组id)")
+    @PostMapping("/getRelationDataById")
+    @ResponseBody
+    public ResultEntity<List<EntityQueryDTO>> getRelationDataById(@RequestBody ViwGroupQueryDTO dto) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,viwGroupService.getRelationDataById(dto));
+    }
+
+    @ApiOperation("获取已经发布得实体(根据模型id)")
+    @GetMapping("/getReleaseData")
+    @ResponseBody
+    public ResultEntity<List<EntityDTO>> getReleaseData(Integer modelId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,viwGroupService.getReleaseData(modelId));
     }
 }

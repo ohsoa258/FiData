@@ -4,16 +4,19 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.core.mapstruct.EnumTypeConversionUtils;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.mdm.dto.attribute.AttributeDomainDTO;
+import com.fisk.mdm.dto.attribute.AttributeFactDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeStatusDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
+import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.task.dto.model.EntityDTO;
@@ -71,6 +74,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
         String tableName = null;
         String sql = null;
+        Connection connection = null;
         try {
             // 获取需要创建的表名
             ModelDTO model = JSON.parseObject(dataInfo, ModelDTO.class);
@@ -80,19 +84,20 @@ public class BuildModelListenerImpl implements BuildModelListener {
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
 
             AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
-            Connection connection = abstractDbHelper.connection(connectionStr, acc, pwd, type);
+            connection = abstractDbHelper.connection(connectionStr, acc, pwd, type);
             sql = sqlBuilder.buildAttributeLogTable(tableName);
             // 执行sql
             abstractDbHelper.executeSql(sql, connection);
             log.info("【创建属性日志表名】:" + tableName + "创建属性日志表名SQL:" + sql);
+            return ResultEnum.SUCCESS;
         } catch (Exception ex) {
             log.error("【创建属性日志表名】:" + tableName + "【创建属性日志表名SQL】:" + sql
                     + "【创建属性日志表名失败,异常信息】:" + ex);
             ex.printStackTrace();
-            return ResultEnum.SUCCESS;
-        } finally {
-            acke.acknowledge();
             return ResultEnum.ERROR;
+        } finally {
+            closeConnection(connection);
+            acke.acknowledge();
         }
     }
 
@@ -109,7 +114,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             connection = abstractDbHelper.connection(connectionStr, acc, pwd, type);
 
             // 获取实体信息
-            EntityInfoVO entityInfoVo = mdmClient.getAttributeById(dto.getEntityId()).getData();
+            EntityInfoVO entityInfoVo = mdmClient.getAttributeById(dto.getEntityId(),null).getData();
             String status = entityInfoVo.getStatus();
             if (status.equals(NOT_CREATED.getName()) || status.equals(CREATED_FAIL.getName())) {
                 // 1.执行创建表任务
@@ -152,11 +157,13 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
             // 1.stg表删了重新生成
             this.updateStgTable(abstractDbHelper, connection, sqlBuilder, entityInfoVo, noSubmitAttributeList);
-            EntityInfoVO data = mdmClient.getAttributeById(entityId).getData();
-            // 2.mdm表更新
+            EntityInfoVO data = mdmClient.getAttributeById(entityId,null).getData();
+            // 2.mdm表更新、log表更新
             List<AttributeStatusDTO> dtoList = this.updateMdmTable(abstractDbHelper, connection, sqlBuilder, data.getAttributeList());
             // 3.viw视图重新生成
             this.createViwTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
+            // 3.1更新事实属性表
+            this.updateFactTable(sqlBuilder, connection, entityInfoVo.getAttributeList());
 
             // e.提交事务
             connection.commit();
@@ -177,6 +184,46 @@ public class BuildModelListenerImpl implements BuildModelListener {
         }catch (Exception ex){
             // a.回滚事务
             rollbackConnection(connection);
+        }
+    }
+
+    /**
+     * 更新事实属性表
+     * @param sqlBuilder
+     * @param connection
+     * @param attributeList
+     */
+    public void updateFactTable(IBuildSqlCommand sqlBuilder,Connection connection,List<AttributeInfoDTO> attributeList){
+
+        String sql = null;
+        try {
+            // 1.删除状态为删除和修改得属性
+            List<Integer> deleteAttributeIds = attributeList.stream()
+                    .filter(e -> e.getStatus().equals(DELETE.getName()) ||
+                            e.getStatus().equals(UPDATE.getName()))
+                    .map(e -> e.getId())
+                    .collect(Collectors.toList());
+
+            if (CollectionUtils.isNotEmpty(deleteAttributeIds)){
+                sql = sqlBuilder.deleteDataByAttributeId("tb_fact_attribute", "attribute_id", deleteAttributeIds);
+                PreparedStatement stateDelete = connection.prepareStatement(sql);
+                stateDelete.execute();
+            }
+
+            // 2.插入状态为修改和新增得属性
+            sql = this.buildAttributeSql(sqlBuilder, attributeList);
+            if (StringUtils.isNotBlank(sql)){
+                PreparedStatement stateInsert = connection.prepareStatement(sql);
+                stateInsert.execute();
+            }
+        }catch (Exception ex){
+            // 回滚事务
+            rollbackConnection(connection);
+
+            // 记录日志
+            log.error(ResultEnum.FACT_ATTRIBUTE_FAILD.getMsg() + "【SQL:】" + sql + "【原因:】" + ex.getMessage());
+
+            throw new FkException(ResultEnum.FACT_ATTRIBUTE_FAILD);
         }
     }
 
@@ -212,7 +259,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             }
 
             // 3.创建Stg表
-            sql = this.createStgTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo,stgTableName);
+            sql = this.createStgTable(sqlBuilder, entityInfoVo,stgTableName);
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.execute();
 
@@ -306,11 +353,13 @@ public class BuildModelListenerImpl implements BuildModelListener {
         // 表名
         AttributeInfoDTO dto = attributeList.get(0);
         String tableName = generateMdmTableName(dto.getModelId(),dto.getEntityId());
+        String logTableName = generateLogTableName(dto.getModelId(),dto.getEntityId());
 
         List<AttributeStatusDTO> dtoList = new ArrayList<>();
         for (AttributeInfoDTO infoDto : attributeList) {
 
             String sql = null;
+            String logTableSql = null;
             AttributeStatusDTO status = new AttributeStatusDTO();
             status.setId(infoDto.getId());
             status.setColumnName("column_" + infoDto.getEntityId() + "_" + infoDto.getId());
@@ -319,7 +368,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
                 if (infoDto.getStatus().equals(INSERT.getName())) {
                     // 新增字段
-                    String filedType = this.getDataType(infoDto.getDataType(), infoDto.getDataTypeLength());
+                    String filedType = this.getDataType(infoDto.getDataType(), infoDto.getDataTypeLength(),infoDto.getDataTypeDecimalLength());
 
                     // 判断是否必填
                     String required = null;
@@ -332,24 +381,34 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
                     // 1.构建Sql
                     sql = sqlBuilder.addColumn(tableName, infoDto.getColumnName(), filedType + required);
+                    logTableSql = sqlBuilder.addColumn(logTableName, infoDto.getName(), filedType + required);
                     // 2.执行Sql
                     PreparedStatement statement = connection.prepareStatement(sql);
+                    PreparedStatement statementLog = connection.prepareStatement(logTableSql);
                     statement.execute();
+                    statementLog.execute();
                 } else if (infoDto.getStatus().equals(UPDATE.getName())) {
                     // 修改字段
-                    String filedType = this.getDataType(infoDto.getDataType(), infoDto.getDataTypeLength());
+                    String filedType = this.getDataType(infoDto.getDataType(), infoDto.getDataTypeLength(),infoDto.getDataTypeDecimalLength());
 
                     // 1.修改字段类型
                     sql = sqlBuilder.modifyFieldType(tableName, infoDto.getColumnName(), filedType);
+                    logTableSql = sqlBuilder.modifyFieldType(logTableName, infoDto.getName(), filedType);
                     // 2.执行Sql
                     PreparedStatement statement = connection.prepareStatement(sql);
+                    PreparedStatement statementLog = connection.prepareStatement(logTableSql);
                     statement.execute();
+                    statementLog.execute();
+
                     // 2.修改字段长度
                     if (infoDto.getDataType().equals("文本")) {
                         sql = sqlBuilder.modifyFieldLength(tableName, infoDto.getColumnName(), filedType);
+                        logTableSql = sqlBuilder.modifyFieldLength(logTableName, infoDto.getName(), filedType);
                         // 2.执行Sql
                         PreparedStatement statement1 = connection.prepareStatement(sql);
+                        PreparedStatement statementLog1 = connection.prepareStatement(logTableSql);
                         statement1.execute();
+                        statementLog1.execute();
                     }
 
                     // 3.修改字段是否必填
@@ -357,17 +416,24 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     Boolean enableRequired = infoDto.getEnableRequired();
                     if (enableRequired == true) {
                         sql = sqlBuilder.notNullable(tableName, infoDto.getColumnName());
+                        logTableSql = sqlBuilder.notNullable(logTableName, infoDto.getName());
                     } else {
                         sql = sqlBuilder.nullable(tableName, infoDto.getColumnName());
+                        logTableSql = sqlBuilder.notNullable(logTableName, infoDto.getName());
                     }
                     // 2.执行Sql
                     preparedStatement = connection.prepareStatement(sql);
+                    PreparedStatement statementLog1 = connection.prepareStatement(logTableSql);
                     preparedStatement.execute();
+                    statementLog1.execute();
                 } else if (infoDto.getStatus().equals(DELETE.getName())) {
                     // 删除字段
                     sql = sqlBuilder.deleteFiled(tableName, infoDto.getColumnName());
+                    logTableSql = sqlBuilder.deleteFiled(logTableName, infoDto.getName());
                     PreparedStatement statement = connection.prepareStatement(sql);
+                    PreparedStatement statementLog = connection.prepareStatement(logTableSql);
                     statement.execute();
+                    statementLog.execute();
                     mdmClient.delete(infoDto.getId());
                 }
 
@@ -402,14 +468,16 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param dataTypeLength
      * @return
      */
-    public String getDataType(String dataType, Integer dataTypeLength) {
+    public String getDataType(String dataType, Integer dataTypeLength,Integer precision) {
         if (dataType != null) {
             String filedType = null;
             switch (dataType) {
-                case "域字段":
-                case "数值":
                 case "文件":
                 case "经纬度坐标":
+                    filedType = "VARCHAR ( " + "50" + " )";
+                    break;
+                case "域字段":
+                case "数值":
                     filedType = "int4";
                     break;
                 case "时间":
@@ -422,7 +490,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     filedType = "timestamp";
                     break;
                 case "浮点型":
-                    filedType = "numeric(12,2)";
+                    filedType = "numeric(" + dataTypeLength + "," + precision + ")";
                     break;
                 case "布尔型":
                     filedType = "bool";
@@ -457,15 +525,21 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
             // 1.创建Stg表
             String stgTableName = generateStgTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
-            sql = this.createStgTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo,stgTableName);
+            sql = this.createStgTable(sqlBuilder, entityInfoVo,stgTableName);
             PreparedStatement stemStg = connection.prepareStatement(sql);
             stemStg.execute();
 
             // 2.创建mdm表
             String mdmTableName = generateMdmTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
-            sql = this.createMdmTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo,mdmTableName);
+            sql = this.createMdmTable(sqlBuilder, entityInfoVo,mdmTableName);
             PreparedStatement stemMdm = connection.prepareStatement(sql);
             stemMdm.execute();
+
+            // 3.创建日志表
+            String logTableName = generateLogTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
+            sql = this.createLogTable(sqlBuilder,entityInfoVo,logTableName);
+            PreparedStatement stemLog = connection.prepareStatement(sql);
+            stemLog.execute();
 
             // 3.回写columnName
             this.writableColumnName(entityInfoVo.getAttributeList());
@@ -475,6 +549,11 @@ public class BuildModelListenerImpl implements BuildModelListener {
             PreparedStatement stemViw = connection.prepareStatement(sql);
             stemViw.execute();
 
+            // 4.1 提交最新属性表
+            sql = this.buildAttributeSql(sqlBuilder, entityInfoVo.getAttributeList());
+            PreparedStatement stemAttribute = connection.prepareStatement(sql);
+            stemAttribute.execute();
+            
             // e.提交事务
             connection.commit();
 
@@ -495,9 +574,39 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // a.回滚事务
             rollbackConnection(connection);
             // b.回写失败状态
-            this.exceptionProcess(entityInfoVo, ex, ResultEnum.CREATE_TABLE_ERROR.getMsg() + "【执行Sql】:" + sql
-                    + "【原因】:" + ex.getMessage());
+            this.exceptionProcess(entityInfoVo, ex, ResultEnum.CREATE_TABLE_ERROR.getMsg() + "【原因】:" + ex.getMessage());
+            log.error(ResultEnum.CREATE_TABLE_ERROR.getMsg() + "【执行Sql】:" + sql);
         }
+    }
+
+    /**
+     * 生成插入属性事实表的Sql
+     * @param sqlBuilder
+     * @param attributeList
+     * @return
+     */
+    public String buildAttributeSql(IBuildSqlCommand sqlBuilder,List<AttributeInfoDTO> attributeList){
+
+        // 1.数据转换
+        List<AttributeFactDTO> dtoList = attributeList.stream()
+                .filter(e -> e.getStatus().equals(INSERT.getName()) || e.getStatus().equals(UPDATE.getName()))
+                .map(e -> {
+                    AttributeFactDTO dto = new AttributeFactDTO();
+                    dto.setName(e.getName());
+                    dto.setDataType(DataTypeEnum.getValue(e.getDataType()).getValue());
+                    dto.setDataTypeLength(e.getDataTypeLength());
+                    dto.setDataTypeDecimalLength(e.getDataTypeDecimalLength());
+
+                    // bool值转换
+                    EnumTypeConversionUtils conversionUtils = new EnumTypeConversionUtils();
+                    dto.setEnableRequired(conversionUtils.boolToInt(e.getEnableRequired()));
+                    dto.setAttribute_id(e.getId());
+                    return dto;
+                }).collect(Collectors.toList());
+
+        // 2.创建Sql
+        String sql = sqlBuilder.insertAttributeFact(dtoList);
+        return sql;
     }
 
     /**
@@ -574,64 +683,51 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
     /**
      * 创建Stg表
-     *
-     * @param abstractDbHelper
      * @param sqlBuilder
-     * @param connection
      * @param entityInfoVo
+     * @param stgTableName
+     * @return
      */
-    public String createStgTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
-                                 Connection connection, EntityInfoVO entityInfoVo,String stgTableName) {
+    public String createStgTable(IBuildSqlCommand sqlBuilder, EntityInfoVO entityInfoVo,String stgTableName) {
 
-        String buildStgTableSql = null;
-        try {
-            // 1.生成Sql
-            buildStgTableSql = sqlBuilder.buildStgTable(entityInfoVo,stgTableName);
-            // 2.执行sql
-            return buildStgTableSql;
-        } catch (Exception ex) {
+        // 1.生成Sql
+        String buildStgTableSql = sqlBuilder.buildStgTable(entityInfoVo,stgTableName);
+        // 2.执行sql
+        return buildStgTableSql;
+    }
 
-            // 筛选属性出去发布
-            List<AttributeInfoDTO> noSubmitAttributeList = entityInfoVo.getAttributeList().stream().filter(e -> !e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName()))
-                    .collect(Collectors.toList());
+    /**
+     * 创建日志表
+     * @param sqlBuilder
+     * @param entityInfoVo
+     * @param stgTableName
+     * @return
+     */
+    public String createLogTable(IBuildSqlCommand sqlBuilder,EntityInfoVO entityInfoVo,String stgTableName) {
 
-            // 回写失败属性信息
-            this.exceptionAttributeProcess(noSubmitAttributeList, ResultEnum.CREATE_STG_TABLE.getMsg()
-                    + "【执行SQL】" + buildStgTableSql + "【原因】:" + ex);
-            log.error("创建Stg表失败,异常信息:" + ex);
-            throw new FkException(ResultEnum.CREATE_STG_TABLE);
-        }
+        // 1.生成Sql
+        List<String> code = entityInfoVo.getAttributeList().stream().filter(e -> e.getName().equals("code")).map(e -> e.getName())
+                .collect(Collectors.toList());
+        String buildLogTableSql = sqlBuilder.buildLogTable(entityInfoVo,stgTableName,code.get(0));
+        // 2.执行sql
+        return buildLogTableSql;
     }
 
     /**
      * 创建mdm表
-     *
-     * @param abstractDbHelper
      * @param sqlBuilder
-     * @param connection
      * @param entityInfoVo
+     * @param mdmTableName
+     * @return
      */
-    public String createMdmTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
-                                 Connection connection, EntityInfoVO entityInfoVo,String mdmTableName) {
+    public String createMdmTable(IBuildSqlCommand sqlBuilder, EntityInfoVO entityInfoVo,String mdmTableName) {
 
-        String buildStgTableSql = null;
-        try {
-            // 1.生成Sql
-            List<String> code = entityInfoVo.getAttributeList().stream().filter(e -> e.getName().equals("code")).map(e -> {
-                return "column_" + e.getEntityId() + "_" + e.getId();
-            }).collect(Collectors.toList());
-            buildStgTableSql = sqlBuilder.buildMdmTable(entityInfoVo,mdmTableName,code.get(0));
-            // 2.执行sql
-            return buildStgTableSql;
-        } catch (Exception ex) {
-            closeConnection(connection);
-
-            // 回写失败信息
-            this.exceptionProcess(entityInfoVo, ex, ResultEnum.CREATE_MDM_TABLE.getMsg()
-                    + "【执行的SQL】" + buildStgTableSql + "【原因】:" + ex);
-            log.error("创建Mdm表失败,异常信息:" + ex);
-            throw new FkException(ResultEnum.CREATE_MDM_TABLE);
-        }
+        // 1.生成Sql
+        List<String> code = entityInfoVo.getAttributeList().stream().filter(e -> e.getName().equals("code")).map(e -> {
+            return "column_" + e.getEntityId() + "_" + e.getId();
+        }).collect(Collectors.toList());
+        String buildStgTableSql = sqlBuilder.buildMdmTable(entityInfoVo,mdmTableName,code.get(0));
+        return buildStgTableSql;
     }
 
     /**
@@ -815,18 +911,45 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
 
         // 复杂数据类型
+        // 文件类型
         StringBuilder complexTypeField = new StringBuilder();
         if (CollectionUtils.isNotEmpty(fileList)){
 
             // 存在文件类型
-            complexTypeField.append(PRIMARY_TABLE + amount.incrementAndGet() + "."  + "file_name").append(",");
-            complexTypeField.append(PRIMARY_TABLE + amount + "."  + "file_path");
-        }else if (CollectionUtils.isNotEmpty(longitudeList)){
+            String collect = fileList.stream().filter(Objects::nonNull)
+                    .map(e -> {
+
+                        StringBuilder stringBuilder = new StringBuilder();
+                        stringBuilder.append(PRIMARY_TABLE + amount.incrementAndGet() + "." + "file_name"
+                                + " AS " + e.getName() + "_file_name").append(",");
+                        stringBuilder.append(PRIMARY_TABLE + amount + "." + "file_path"
+                                + " AS " + e.getName() + "_file_path");
+                        return stringBuilder.toString();
+                    }).collect(Collectors.joining(","));
+            complexTypeField.append(collect);
+        }
+
+        if (CollectionUtils.isNotEmpty(fileList) && CollectionUtils.isNotEmpty(longitudeList)){
+            complexTypeField.append(",");
+        }
+
+        // 地图类型
+        if (CollectionUtils.isNotEmpty(longitudeList)){
 
             // 存在经纬度类型
-            complexTypeField.append(PRIMARY_TABLE + amount.incrementAndGet() + "."  + "lng").append(",");
-            complexTypeField.append(PRIMARY_TABLE + amount + "."  + "lat").append(",");
-            complexTypeField.append(PRIMARY_TABLE + amount + "."  + "map_type");
+            String collect = longitudeList.stream().filter(Objects::nonNull)
+                    .map(e -> {
+
+                        StringBuilder stringBuilder = new StringBuilder();
+                        stringBuilder.append(PRIMARY_TABLE + amount.incrementAndGet() + "." + "lng"
+                                + " AS " + e.getName() + "_lng").append(",");
+                        stringBuilder.append(PRIMARY_TABLE + amount + "." + "lat"
+                                + " AS " + e.getName() + "_lat").append(",");
+                        stringBuilder.append(PRIMARY_TABLE + amount + "." + "map_type"
+                                + " AS " + e.getName() + "_map_type");
+                        return stringBuilder;
+                    }).collect(Collectors.joining(","));
+            complexTypeField.append(collect);
         }
 
         // 获取主表表名
@@ -882,34 +1005,41 @@ public class BuildModelListenerImpl implements BuildModelListener {
     public String complexTypeJoin(AtomicInteger amount1,List<AttributeInfoDTO> fileList,List<AttributeInfoDTO> longitudeList){
         StringBuilder stringBuilder = new StringBuilder();
         if (CollectionUtils.isNotEmpty(fileList)){
-            String alias = PRIMARY_TABLE + amount1.incrementAndGet();
+            // 文件类型
 
             // 文件left join字段
             String fileField = fileList.stream().map(e -> {
-                return PRIMARY_TABLE + "." + e.getColumnName() + " = " + alias + ".\"id\"";
-            }).collect(Collectors.joining(" OR "));
+                String alias = PRIMARY_TABLE + amount1.incrementAndGet();
 
-            stringBuilder.append(" LEFT JOIN ");
-            stringBuilder.append(" tb_file ").append(alias);
-            stringBuilder.append(" ON ");
-            stringBuilder.append(PRIMARY_TABLE + "." + MARK + "version_id" + " = " + alias + "." + MARK + "version_id");
-            stringBuilder.append(" AND ").append(fileField);
+                StringBuilder str = new StringBuilder();
+                str.append(" LEFT JOIN ");
+                str.append(" tb_file ").append(alias);
+                str.append(" ON ");
+                str.append(PRIMARY_TABLE + "." + MARK + "version_id" + " = " + alias + "." + MARK + "version_id");
+                str.append(" AND ").append(PRIMARY_TABLE + "." + e.getColumnName() + " = " + alias + ".\"code\"");
+
+                return str;
+            }).collect(Collectors.joining(" "));
+            stringBuilder.append(fileField);
         }
 
         if (CollectionUtils.isNotEmpty(longitudeList)){
-            String alias = PRIMARY_TABLE + amount1.incrementAndGet();
+            // 经纬度坐标
 
             // 经纬度left join字段
-            String longitudes = fileList.stream().map(e -> {
-                return PRIMARY_TABLE + "." + e.getColumnName() + " = " + alias + ".\"id\"";
-            }).collect(Collectors.joining(" OR "));
+            String longitudes = longitudeList.stream().map(e -> {
+                String alias = PRIMARY_TABLE + amount1.incrementAndGet();
 
-            stringBuilder.append(" ").append(PRIMARY_TABLE);
-            stringBuilder.append(" LEFT JOIN ");
-            stringBuilder.append(" tb_file ").append(alias);
-            stringBuilder.append(" ON ");
-            stringBuilder.append(PRIMARY_TABLE + "." + MARK + "version_id" + " = " + alias + "." + "version_id");
-            stringBuilder.append(" AND ").append(longitudes);
+                StringBuilder str = new StringBuilder();
+                str.append(" LEFT JOIN ");
+                str.append(" tb_geography ").append(alias);
+                str.append(" ON ");
+                str.append(PRIMARY_TABLE + "." + MARK + "version_id" + " = " + alias + "." + MARK + "version_id");
+                str.append(" AND ").append(PRIMARY_TABLE + "." + e.getColumnName() + " = " + alias + ".\"code\"");
+
+                return str;
+            }).collect(Collectors.joining(" "));
+            stringBuilder.append(longitudes);
         }
 
         return stringBuilder.toString();
@@ -948,19 +1078,47 @@ public class BuildModelListenerImpl implements BuildModelListener {
         // 经纬度类型
         List<AttributeInfoDTO> longitudeList = noForeignList.stream().filter(e -> e.getDataType().equals("经纬度坐标")).collect(Collectors.toList());
 
-        int count = 0;
+        AtomicInteger count = new AtomicInteger();
         StringBuilder complexTypeField = new StringBuilder();
+        // 文件类型
         if (CollectionUtils.isNotEmpty(fileList)){
 
             // 存在文件类型
-            complexTypeField.append(PRIMARY_TABLE + ++count + "."  + "file_name").append(",");
-            complexTypeField.append(PRIMARY_TABLE + count + "."  + "file_path");
-        }else if (CollectionUtils.isNotEmpty(longitudeList)){
+            String collect = fileList.stream().filter(Objects::nonNull)
+                    .map(e -> {
+                        String name = mdmClient.getDataById(e.getEntityId()).getData().getName();
+
+                        StringBuilder stringBuilder = new StringBuilder();
+                        stringBuilder.append(PRIMARY_TABLE + count.incrementAndGet() + "." + "file_name"
+                                + " AS " + e.getName() + "_file_name").append(",");
+                        stringBuilder.append(PRIMARY_TABLE + count + "." + "file_path"
+                                + " AS " + e.getName() + "_file_path");
+                        return stringBuilder.toString();
+                    }).collect(Collectors.joining(","));
+            complexTypeField.append(collect);
+        }
+
+        if (CollectionUtils.isNotEmpty(fileList) && CollectionUtils.isNotEmpty(longitudeList)){
+            complexTypeField.append(",");
+        }
+
+        // 地图类型
+        if (CollectionUtils.isNotEmpty(longitudeList)){
 
             // 存在经纬度类型
-            complexTypeField.append(PRIMARY_TABLE + ++count + "."  + "lng").append(",");
-            complexTypeField.append(PRIMARY_TABLE + count + "."  + "lat").append(",");
-            complexTypeField.append(PRIMARY_TABLE + count + "."  + "map_type");
+            String collect = longitudeList.stream().filter(Objects::nonNull)
+                    .map(e -> {
+                        StringBuilder stringBuilder = new StringBuilder();
+
+                        stringBuilder.append(PRIMARY_TABLE + count.incrementAndGet() + "." + "lng"
+                                + " AS " + e.getName() + "_lng").append(",");
+                        stringBuilder.append(PRIMARY_TABLE + count + "." + "lat"
+                                + " AS " + e.getName() + "_lat").append(",");
+                        stringBuilder.append(PRIMARY_TABLE + count + "." + "map_type"
+                                + " AS " + e.getName() + "_map_type");
+                        return stringBuilder;
+                    }).collect(Collectors.joining(","));
+            complexTypeField.append(collect);
         }
 
         // 如果存在复杂数据类型就需要字段加上别名
@@ -990,12 +1148,17 @@ public class BuildModelListenerImpl implements BuildModelListener {
         AttributeInfoDTO infoDto = noForeignList.get(1);
         // 追加业务字段
         str.append(collect).append(",");
-        // 追加基础字段
-        str.append(buildPgCommand.createViw());
-        // 追加复杂类型字段
+
         if (StringUtils.isNotBlank(complexTypeField)){
+            // 追加基础字段
+            str.append(buildPgCommand.createViw(true));
+            // 追加复杂类型字段
             str.append(complexTypeField);
+        }else{
+            str.append(buildPgCommand.createViw(false));
+            str.deleteCharAt(str.length()-1);
         }
+
         str.append(" FROM " + "mdm_" + infoDto.getModelId() + "_" + infoDto.getEntityId());
 
         // 复杂数据类型 left join

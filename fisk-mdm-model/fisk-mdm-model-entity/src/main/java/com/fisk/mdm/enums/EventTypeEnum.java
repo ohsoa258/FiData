@@ -12,11 +12,13 @@ public enum EventTypeEnum implements BaseEnum {
     /**
      * 事件类型
      */
-    SAVE(0,"新增"),
+    SAVE(0, "新增"),
 
-    UPDATE(1,"修改"),
+    UPDATE(1, "修改"),
 
-    DELETE(2,"删除");
+    DELETE(2, "删除"),
+
+    ROLLBACK(3, "回滚");
 
     EventTypeEnum(int value, String name) {
         this.name = name;

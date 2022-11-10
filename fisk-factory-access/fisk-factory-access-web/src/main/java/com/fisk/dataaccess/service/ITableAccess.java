@@ -8,12 +8,14 @@ import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.dataaccess.dto.access.DataAccessTreeDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
+import com.fisk.dataaccess.dto.v3.TbTableAccessQueryDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
@@ -256,15 +258,15 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @param id id
      * @return 执行结果
      */
-    ResultEnum deleteTableAccessData(long id);
+//    ResultEnum deleteTableAccessData(long id);
 
     /**
      * 根据appId获取物理表列表
      *
-     * @param appId appId
+     * @param dto
      * @return 返回值
      */
-    List<TbTableAccessDTO> getTableAccessListData(long appId);
+    Page<TbTableAccessDTO> getTableAccessListData(TbTableAccessQueryDTO dto);
 
     /**
      * 根据SQL,获取结果集
@@ -313,5 +315,28 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return 返回值
      */
     List<FieldNameDTO> getFieldList(TableAccessNonDTO dto);
+
+    /**
+     * oracle-cdc脚本头配置
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum cdcHeadConfig(CdcHeadConfigDTO dto);
+
+    /**
+     * 获取已存在表
+     *
+     * @return
+     */
+    List<String> getUseExistTable();
+
+    /**
+     * 设置stg数据保留天数
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum setKeepNumber(TableKeepNumberDTO dto);
 
 }
