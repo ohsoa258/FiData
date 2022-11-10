@@ -20,4 +20,9 @@ public class BuildCommonMySqlCommand implements IBuildCommonSqlCommand {
         return null;
     }
 
+    @Override
+    public String buildColumnInfo(String tableName) {
+        return null;
+    }
+
 }

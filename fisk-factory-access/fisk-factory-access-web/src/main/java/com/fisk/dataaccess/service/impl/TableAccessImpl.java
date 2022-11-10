@@ -30,6 +30,7 @@ import com.fisk.common.service.dbBEBuild.common.dto.DruidFieldInfoDTO;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
+import com.fisk.common.service.mdmBEBuild.CommonMethods;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -1883,6 +1884,23 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         //数据类型转换
         typeConversion(dataSourceTypeEnum, array.fieldNameDTOList, registration.targetDbId);
+
+        //源字段长度、表名
+        AbstractCommonDbHelper helper1 = new AbstractCommonDbHelper();
+        conn = helper1.connection(po.connectStr, po.connectAccount, po.connectPwd, dataSourceTypeEnum);
+        IBuildCommonSqlCommand command = BuildCommonHelper.getCommand(dataSourceTypeEnum);
+        List<DruidFieldInfoDTO> fieldInfoDTOS = command.druidAnalyseSql(array.sql);
+        if (CollectionUtils.isEmpty(fieldInfoDTOS)) {
+            return null;
+        }
+        List<String> collect = fieldInfoDTOS.stream().map(e -> e.getTableName()).collect(Collectors.toList());
+        String columnInfoSql = command.buildColumnInfo(CommonMethods.convertListToString(collect));
+        List<Map<String, Object>> resultMaps = AbstractCommonDbHelper.batchExecQueryResultMaps(columnInfoSql, conn);
+        for (FieldNameDTO item : array.fieldNameDTOList) {
+            /*resultMaps.stream().filter(e->e.get("column_name").equals(item.fieldName)
+                    || e.get("column_name"));*/
+            //fieldInfoDTOS.stream().filter(e->e.fieldName.equals())
+        }
 
         return array;
     }

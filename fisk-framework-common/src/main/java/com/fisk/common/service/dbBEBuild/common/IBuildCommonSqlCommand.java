@@ -24,4 +24,12 @@ public interface IBuildCommonSqlCommand {
      */
     List<DruidFieldInfoDTO> druidAnalyseSql(String sql);
 
+    /**
+     * 获取字段系统信息
+     *
+     * @param tableName
+     * @return
+     */
+    String buildColumnInfo(String tableName);
+
 }

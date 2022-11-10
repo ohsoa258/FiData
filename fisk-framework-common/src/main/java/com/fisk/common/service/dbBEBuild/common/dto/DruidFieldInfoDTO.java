@@ -16,4 +16,6 @@ public class DruidFieldInfoDTO {
 
     public String logic;
 
+    public String schema;
+
 }

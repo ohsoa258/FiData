@@ -20,4 +20,9 @@ public class BuildCommonOracleCommand implements IBuildCommonSqlCommand {
         return null;
     }
 
+    @Override
+    public String buildColumnInfo(String tableName) {
+        return null;
+    }
+
 }
