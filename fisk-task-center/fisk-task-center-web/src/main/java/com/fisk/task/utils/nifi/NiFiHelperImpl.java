@@ -911,6 +911,9 @@ public class NiFiHelperImpl implements INiFiHelper {
         map.put("put-db-record-table-name", putDatabaseRecordDTO.TableName);
         map.put("put-db-record-schema-name", putDatabaseRecordDTO.schemaName);
         map.put("put-db-record-quoted-identifiers", "true");
+        if (Objects.nonNull(putDatabaseRecordDTO.putDbRecordTranslateFieldNames)) {
+            map.put("put-db-record-translate-field-names", putDatabaseRecordDTO.putDbRecordTranslateFieldNames);
+        }
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setAutoTerminatedRelationships(autoRes);
@@ -1443,13 +1446,13 @@ public class NiFiHelperImpl implements INiFiHelper {
                 //清空队列
                 this.emptyNifiConnectionQueue(nifiRemoveDTO.groupId);
                 //禁用2个控制器服务 ,分开写是因为有时候禁用不及时,导致删除的时候还没禁用,删除失败
-                for (String controllerServicesId : nifiRemoveDTO.controllerServicesIds.subList(0, 8)) {
+                for (String controllerServicesId : nifiRemoveDTO.controllerServicesIds.subList(0, 7)) {
                     if (controllerServicesId != null) {
                         //禁用
                         this.controllerServicesRunStatus(controllerServicesId);
                     }
                 }
-                for (String controllerServicesId : nifiRemoveDTO.controllerServicesIds.subList(0, 8)) {
+                for (String controllerServicesId : nifiRemoveDTO.controllerServicesIds.subList(0, 7)) {
                     if (controllerServicesId != null) {
                         //删除
                         ControllerServiceEntity controllerService = NifiHelper.getControllerServicesApi().getControllerService(controllerServicesId);
@@ -1474,7 +1477,7 @@ public class NiFiHelperImpl implements INiFiHelper {
             //删除应用
             if (nifiRemoveDTOList.size() != 0 && nifiRemoveDTOList.get(0).delApp) {
                 //禁用2个控制器服务
-                for (String controllerServicesId : nifiRemoveDTOList.get(0).controllerServicesIds.subList(8, 9)) {
+                for (String controllerServicesId : nifiRemoveDTOList.get(0).controllerServicesIds.subList(7, 9)) {
                     if (controllerServicesId != null) {
                         this.controllerServicesRunStatus(controllerServicesId);
                     }

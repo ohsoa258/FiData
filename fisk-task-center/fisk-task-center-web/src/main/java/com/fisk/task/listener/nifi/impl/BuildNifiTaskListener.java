@@ -1537,6 +1537,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         putDatabaseRecordDTO.databaseType = "MS SQL 2012+";//数据库类型,定义枚举
         putDatabaseRecordDTO.recordReader = id;
         putDatabaseRecordDTO.statementType = "INSERT";
+        putDatabaseRecordDTO.putDbRecordTranslateFieldNames = "false";
         //得到stg表名
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
@@ -1787,7 +1788,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //调用存储过程sql,存日志
         String executsql1 = "UPDATE tb_etl_log SET `status` =1,enddate='${" + NifiConstants.AttrConstants.END_TIME + "}',datarows='${" + NifiConstants.AttrConstants.NUMBERS + "}',topic_name='${" + NifiConstants.AttrConstants.KAFKA_TOPIC + "}' ";
         executsql1 += "WHERE\n" +
-                "\tcode='${fidata_batch_code}';\n";
+                "\tcode='${pipelTraceId:isEmpty():ifElse(${pipelTaskTraceId},${pipelTraceId})}';\n";
         executsql1 += "update tb_etl_Incremental  set incremental_objectivescore_start='${incremental_objectivescore_end}', enable_flag=2 " +
                 "where object_name = '" + config.targetDsConfig.targetTableName + "' ;";
         callDbProcedureProcessorDTO.dbConnectionId = cfgDbPoolId;
@@ -2386,7 +2387,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         }
 
         return "INSERT INTO tb_etl_log ( tablename, startdate, `status`,query_start_time,query_end_time,query_sql,code) " +
-                "VALUES ('" + dto.tableName + "', '${" + NifiConstants.AttrConstants.START_TIME + "}', 1" + filedValues + ",'${fidata_batch_code}')";
+                "VALUES ('" + dto.tableName + "', '${" + NifiConstants.AttrConstants.START_TIME + "}', 1" + filedValues + ",'${pipelTraceId:isEmpty():ifElse(${pipelTaskTraceId},${pipelTraceId})}')";
     }
 
     /**
