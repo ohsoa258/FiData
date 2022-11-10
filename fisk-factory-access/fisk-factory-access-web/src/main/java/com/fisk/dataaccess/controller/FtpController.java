@@ -49,7 +49,7 @@ public class FtpController {
 
     @ApiOperation(value = "复制ftp文件到新目录")
     @PostMapping("/copyFtpFile")
-    public ResultEntity<Object> copyFtpFile(@RequestParam("tableAccessId") int tableAccessId) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.copyFtpFile(tableAccessId));
+    public ResultEntity<Object> copyFtpFile(@RequestParam("keyStr") String keyStr) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.copyFtpFile(keyStr));
     }
 }
