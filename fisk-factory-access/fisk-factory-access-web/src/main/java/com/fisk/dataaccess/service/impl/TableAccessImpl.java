@@ -1542,9 +1542,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // dto -> po
         TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
-        if (po.getTableName() == null) {
+        /*if(po.getTableName() == null) {
             po.setTableName("");
-        }
+        }*/
         //po.setPublish(0);
         return this.saveOrUpdate(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
