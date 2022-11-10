@@ -114,16 +114,29 @@ public class FtpImpl implements IFtp {
     }
 
     @Override
-    public ResultEnum copyFtpFile(int tableAccessId) {
-        log.info("【copyFtpFile】请求参数：" + tableAccessId);
+    public ResultEnum copyFtpFile(String keyStr) {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
         FTPClient ftpClient = null;
         ByteArrayOutputStream fos = null;
         ByteArrayInputStream in = null;
         try {
-            if (tableAccessId == 0) {
-                return ResultEnum.PARAMTER_NOTNULL;
+            if (StringUtils.isEmpty(keyStr)) {
+                log.info("【copyFtpFile】参数为空异常");
+                return ResultEnum.PARAMTER_ERROR;
             }
+            log.info("【copyFtpFile】请求参数：" + keyStr);
+            String[] keyList = keyStr.split("\\.");
+            if (keyList == null || keyList.length == 0) {
+                log.info("【copyFtpFile】参数分割异常");
+                return ResultEnum.PARAMTER_ERROR;
+            }
+            // tb_table_access id
+            String tableAccessId = keyList[keyList.length - 1];
+            // 应用id
+            String appId = keyList[keyList.length - 2];
+            // 表类型 属于接入还是建模
+            String tableType = keyList[keyList.length - 3];
+
             TableAccessPO tableAccessPO = tableAccessMapper.selectById(tableAccessId);
             if (tableAccessPO == null || StringUtils.isEmpty(tableAccessPO.getSqlScript())) {
                 log.info("【copyFtpFile】tableAccess为空");

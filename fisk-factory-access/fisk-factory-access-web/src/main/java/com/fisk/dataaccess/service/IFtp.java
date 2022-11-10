@@ -46,8 +46,8 @@ public interface IFtp {
      * @author dick
      * @date 2022/11/4 17:06
      * @version v1.0
-     * @params tableAccessId
+     * @params keyStr
      * @return com.fisk.common.core.response.ResultEnum
      */
-    ResultEnum copyFtpFile(int tableAccessId);
+    ResultEnum copyFtpFile(String keyStr);
 }
