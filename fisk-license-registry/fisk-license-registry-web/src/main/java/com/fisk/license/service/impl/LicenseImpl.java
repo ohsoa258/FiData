@@ -27,7 +27,8 @@ import org.springframework.stereotype.Service;
 public class LicenseImpl extends ServiceImpl<LicenseMapper, LicencePO> implements ILicenseService {
     @Override
     public ResultEntity<VerifyLicenceVO> verifyLicenceByUrl(VerifyLicenceDTO dto) {
-        return null;
+        VerifyLicenceVO verifyLicenceVO = new VerifyLicenceVO();
+        return ResultEntityBuild.buildData(ResultEnum.PARAMTER_NOTNULL, verifyLicenceVO);
     }
 
     @Override
