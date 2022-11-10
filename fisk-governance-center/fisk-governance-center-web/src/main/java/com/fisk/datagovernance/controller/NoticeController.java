@@ -9,6 +9,7 @@ import com.fisk.datagovernance.dto.dataquality.notice.NoticeDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeEditDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeQueryDTO;
 import com.fisk.datagovernance.service.dataquality.INoticeManageService;
+import com.fisk.datagovernance.vo.dataquality.notice.NoticeDetailVO;
 import com.fisk.datagovernance.vo.dataquality.notice.NoticeVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -47,6 +48,12 @@ public class NoticeController {
         return ResultEntityBuild.build(service.editData(dto));
     }
 
+    @ApiOperation("编辑告警通知模板组件状态")
+    @PutMapping("/editState")
+    public ResultEntity<Object> editState(@RequestBody NoticeEditDTO dto){
+        return ResultEntityBuild.build(service.editState(dto));
+    }
+
     @ApiOperation("删除告警通知模板组件")
     @DeleteMapping("/delete/{id}")
     public ResultEntity<Object> deleteData(@PathVariable("id") int id) {
@@ -56,6 +63,12 @@ public class NoticeController {
     @ApiOperation("测试发送邮件通知")
     @PostMapping("/testSend")
     public ResultEntity<Object> testSend(@RequestBody NoticeDTO dto) {
-        return service.sendEmialNotice(dto);
+        return service.sendEmailNotice(dto);
+    }
+
+    @ApiOperation("查询通知下的规则")
+    @GetMapping("/getNoticeRuleInfo/{id}")
+    public ResultEntity<NoticeDetailVO> getNoticeRuleInfo(@PathVariable("id") int id) {
+        return service.getNoticeRuleInfo(id);
     }
 }

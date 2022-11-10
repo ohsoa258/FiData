@@ -19,9 +19,9 @@ import java.util.Date;
 public class TBETLIncrementalPO implements Serializable {
     @TableId(type = IdType.AUTO)
     public int id;
-    public String object_name;
-    public String enable_flag;
-    public String incremental_objectivescore_batchno;
-    public Date incremental_objectivescore_start;
-    public Date incremental_objectivescore_end;
+    public String objectName;
+    public String enableFlag;
+    public String incrementalObjectivescoreBatchno;
+    public Date incrementalObjectivescoreStart;
+    public Date incrementalObjectivescoreEnd;
 }

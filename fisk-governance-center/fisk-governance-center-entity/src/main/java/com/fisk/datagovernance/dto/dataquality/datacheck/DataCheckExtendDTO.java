@@ -1,6 +1,5 @@
 package com.fisk.datagovernance.dto.dataquality.datacheck;
 
-import com.fisk.datagovernance.enums.dataquality.DataCheckTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 
 /**
@@ -17,10 +16,10 @@ public class DataCheckExtendDTO {
     public int ruleId;
 
     /**
-     * 字段名称
+     * 实际字段名称/字段Id
      */
-    @ApiModelProperty(value = "字段名称")
-    public String fieldName;
+    @ApiModelProperty(value = "实际字段名称/字段Id")
+    public String fieldUnique;
 
     /**
      * 字段条件

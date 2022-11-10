@@ -69,14 +69,21 @@ public class EntityController {
     @ApiOperation("根据实体id获取属性")
     @GetMapping("/getAttributeById")
     @ResponseBody
-    public ResultEntity<EntityInfoVO> getAttributeById(Integer id) {
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,entityService.getAttributeById(id));
+    public ResultEntity<EntityInfoVO> getAttributeById(Integer id, String name) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, entityService.getAttributeById(id, name));
+    }
+
+    @ApiOperation("根据实体id获取已发布和发布成功的属性")
+    @GetMapping("/getFilterAttributeById")
+    @ResponseBody
+    public ResultEntity<EntityInfoVO> getFilterAttributeById(Integer id) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, entityService.getFilterAttributeById(id));
     }
 
     @ApiOperation("获取可关联的实体")
     @GetMapping("/getCreateSuccessEntity")
     @ResponseBody
-    public ResultEntity<List<EntityVO>> getCreateSuccessEntity(Integer modelId,Integer entityId) {
-        return entityService.getCreateSuccessEntity(modelId,entityId);
+    public ResultEntity<List<EntityVO>> getCreateSuccessEntity(Integer modelId, Integer entityId) {
+        return entityService.getCreateSuccessEntity(modelId, entityId);
     }
 }

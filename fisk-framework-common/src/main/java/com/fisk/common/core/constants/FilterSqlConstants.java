@@ -38,4 +38,16 @@ public class FilterSqlConstants {
      * 授权中心--客户端注册
      */
     public static final String TB_CLIENT_REGISTER_SQL = " where Field in('client_name','valid','token_des','create_time','create_user')";
+    /**
+     * 数据目标
+     */
+    public static final String DATA_TARGET = " where Field in('name','principal','description','host','port','api_address')";
+    /**
+     * 数据目标应用
+     */
+    public static final String DATA_TARGET_APP = " where Field in('name','principal','email','description','create_time')";
+    /**
+     * 平台管理--数据源
+     */
+    public static final String PLATFORM_DATASOURCE_SQL = " where Field in('name','con_dbname','con_type','principal')";
 }

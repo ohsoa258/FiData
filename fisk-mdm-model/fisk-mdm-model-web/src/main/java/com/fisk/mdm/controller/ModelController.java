@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.service.IModelService;
@@ -17,6 +19,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author chenYa
@@ -63,8 +66,22 @@ public class ModelController {
     @ApiOperation("根据模型id获取实体")
     @GetMapping("/getEntityById")
     @ResponseBody
-    public ResultEntity<ModelInfoVO> getEntityById(Integer id){
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getEntityById(id));
+    public ResultEntity<ModelInfoVO> getEntityById(Integer id,String name){
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getEntityById(id,name));
+    }
+
+    @ApiOperation("刷新主数据结构")
+    @PostMapping("/setDataStructure")
+    @ResponseBody
+    public ResultEntity<Object> setDataStructure(@RequestBody FiDataMetaDataReqDTO dto){
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.setDataStructure(dto));
+    }
+
+    @ApiOperation("获取主数据结构")
+    @PostMapping("/getDataStructure")
+    @ResponseBody
+    public ResultEntity<List<FiDataMetaDataDTO>> getDataStructure(@RequestBody FiDataMetaDataReqDTO dto){
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getDataStructure(dto));
     }
 
 }

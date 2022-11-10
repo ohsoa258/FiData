@@ -3,6 +3,7 @@ package com.fisk.datamanagement.service;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.glossary.GlossaryAttributeDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryDTO;
+import com.fisk.datamanagement.dto.term.TermDTO;
 
 import java.util.List;
 
@@ -33,9 +34,19 @@ public interface IGlossary {
 
     /**
      * 修改术语库
+     *
      * @param dto
      * @return
      */
     ResultEnum updateGlossary(GlossaryDTO dto);
+
+    /**
+     * 获取术语列表
+     *
+     * @param guid
+     * @param parent
+     * @return
+     */
+    List<TermDTO> getTermList(String guid, Boolean parent);
 
 }

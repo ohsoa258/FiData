@@ -1,7 +1,7 @@
 package com.fisk.datagovernance.vo.dataquality.datacheck;
 
-import com.fisk.datagovernance.enums.dataquality.DataCheckTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 /**
  * @author dick
@@ -9,6 +9,7 @@ import io.swagger.annotations.ApiModelProperty;
  * @description 数据校验规则扩展属性
  * @date 2022/4/2 11:07
  */
+@Data
 public class DataCheckExtendVO {
     /**
      * id
@@ -23,10 +24,22 @@ public class DataCheckExtendVO {
     public int ruleId;
 
     /**
+     * 字段名称/字段Id
+     */
+    @ApiModelProperty(value = "字段名称/字段Id")
+    public String fieldUnique;
+
+    /**
      * 字段名称
      */
     @ApiModelProperty(value = "字段名称")
     public String fieldName;
+
+    /**
+     * 字段别名
+     */
+    @ApiModelProperty(value = "字段别名")
+    public String fieldAlias;
 
     /**
      * 字段条件

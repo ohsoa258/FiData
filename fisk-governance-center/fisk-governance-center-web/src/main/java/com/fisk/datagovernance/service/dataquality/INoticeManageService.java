@@ -8,6 +8,7 @@ import com.fisk.datagovernance.dto.dataquality.notice.NoticeDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeEditDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeQueryDTO;
 import com.fisk.datagovernance.entity.dataquality.NoticePO;
+import com.fisk.datagovernance.vo.dataquality.notice.NoticeDetailVO;
 import com.fisk.datagovernance.vo.dataquality.notice.NoticeVO;
 
 /**
@@ -41,6 +42,14 @@ public interface INoticeManageService extends IService<NoticePO> {
     ResultEnum editData(NoticeEditDTO dto);
 
     /**
+     * 启用禁用
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum editState(NoticeEditDTO dto);
+
+    /**
      * 删除数据
      *
      * @param id id
@@ -54,5 +63,12 @@ public interface INoticeManageService extends IService<NoticePO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEntity<Object> sendEmialNotice(NoticeDTO dto);
+    ResultEntity<Object> sendEmailNotice(NoticeDTO dto);
+
+    /**
+     * 查询通知下的规则
+     *
+     * @return 执行结果
+     */
+    ResultEntity<NoticeDetailVO>  getNoticeRuleInfo(int id);
 }

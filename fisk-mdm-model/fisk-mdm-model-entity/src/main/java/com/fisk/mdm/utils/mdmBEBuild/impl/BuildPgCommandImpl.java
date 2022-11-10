@@ -1,9 +1,12 @@
 package com.fisk.mdm.utils.mdmBEBuild.impl;
 
+import com.fisk.mdm.dto.attribute.AttributeFactDTO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.utils.mdmBEBuild.IBuildSqlCommand;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.fisk.mdm.enums.AttributeStatusEnum.*;
@@ -87,6 +90,78 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
+    public String buildLogTable(EntityInfoVO entityInfoVo, String tableName,String code) {
+        StringBuilder str = new StringBuilder();
+        str.append("CREATE TABLE " + PUBLIC + ".");
+        str.append(tableName).append("(");
+
+        // 拼接日志表基础字段
+        str.append(this.splicingLogTable(tableName));
+
+        // 字段sql
+        String fieldSql = entityInfoVo.getAttributeList().stream().filter(e -> e.getStatus().equals(INSERT.getName()))
+                .map(e -> {
+
+                    String str1 = null;
+
+                    // 判断是否必填
+                    String required = null;
+                    if (e.getEnableRequired() == true){
+                        required = " NOT NULL ";
+                    }else {
+                        required = " NULL ";
+                    }
+
+                    String name = e.getName();
+
+                    // 判断数据类型
+                    switch (e.getDataType()) {
+                        case "文件":
+                        case "经纬度坐标":
+                            str1 = name + " VARCHAR(" + "50" + ")" + required;
+                            break;
+                        case "数值":
+                        case "域字段":
+                            str1 = name + " int4 " + required;
+                            break;
+                        case "时间":
+                            str1 = name + " TIME " + required;
+                            break;
+                        case "日期":
+                            str1 = name + " date " + required;
+                            break;
+                        case "日期时间":
+                            str1 = name + " timestamp " + required;
+                            break;
+                        case "浮点型":
+                            str1 = name + " numeric(12,2) " + required;
+                            break;
+                        case "布尔型":
+                            str1 = name + " bool " + required;
+                            break;
+                        case "货币":
+                            str1 = name + " money " + required;
+                            break;
+                        case "文本":
+                        default:
+                            str1 = name + " VARCHAR(" + e.getDataTypeLength() + ")" + required;
+                            break;
+                    }
+
+                    return str1;
+                }).collect(Collectors.joining(","));
+
+        if (StringUtils.isNotBlank(fieldSql)){
+            str.append(fieldSql);
+        }else {
+            str.deleteCharAt(str.length()-1);
+        }
+
+        str.append(");");
+        return str.toString();
+    }
+
+    @Override
     public String buildMdmTable(EntityInfoVO entityInfoVo,String tableName,String code) {
 
         StringBuilder str = new StringBuilder();
@@ -115,6 +190,8 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
                     switch (e.getDataType()) {
                         case "文件":
                         case "经纬度坐标":
+                            str1 = name + " VARCHAR(" + "50" + ")" + required;
+                            break;
                         case "数值":
                         case "域字段":
                             str1 = name + " int4 " + required;
@@ -129,7 +206,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
                             str1 = name + " timestamp " + required;
                             break;
                         case "浮点型":
-                            str1 = name + " numeric(12,2) " + required;
+                            str1 = name + " numeric(" + e.getDataTypeLength() + "," + e.getDataTypeDecimalLength() + ")";
                             break;
                         case "布尔型":
                             str1 = name + " bool " + required;
@@ -227,7 +304,47 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     @Override
     public String queryData(String tableName) {
         StringBuilder str = new StringBuilder();
-        str.append("SELECT * FROM " + PUBLIC + "." + tableName);
+        str.append("SELECT * FROM " + PUBLIC + "." + tableName + " LIMIT 1 ");
+        return str.toString();
+    }
+
+    @Override
+    public String insertAttributeFact(List<AttributeFactDTO> dtoList) {
+        StringBuilder str = new StringBuilder();
+        str.append("INSERT INTO ").append(" tb_fact_attribute(");
+        str.append("\"name\", data_type, data_type_length, data_type_decimal_length, enable_required, attribute_id");
+        str.append(")VALUES");
+
+        String value = dtoList.stream().map(e -> {
+            StringBuilder str1 = new StringBuilder();
+            str1.append("('" + e.getName() + "'").append(",");
+            str1.append(e.getDataType()).append(",");
+            str1.append(e.getDataTypeLength()).append(",");
+            str1.append(e.getDataTypeDecimalLength()).append(",");
+            str1.append(e.getEnableRequired()).append(",");
+            str1.append(e.getAttribute_id()).append(")");
+            return str1;
+        }).collect(Collectors.joining(","));
+
+        if (StringUtils.isNotBlank(value)){
+            str.append(value);
+        }
+
+        return str.toString();
+    }
+
+    @Override
+    public String deleteDataByAttributeId(String tableName, String deleteFiled, List<Integer> attributeIds) {
+        String attributeId = attributeIds.stream().map(e -> "'" + e.toString() + "'").collect(Collectors.joining(","));
+        if (StringUtils.isBlank(attributeId)){
+            return null;
+        }
+
+        StringBuilder str = new StringBuilder();
+        str.append("DELETE FROM ").append(tableName);
+        str.append(" WHERE ");
+        str.append(deleteFiled + " IN(");
+        str.append(attributeId).append(")");
         return str.toString();
     }
 
@@ -266,8 +383,28 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append(MARK + "version_id int4 NULL").append(",");
         str.append(MARK + "lock_tag int4 NULL").append(",");
         str.append(MARK + "new_code varchar(100) NULL").append(",");
-        str.append("constraint pk_"+ tableName + "_code_" + pk +" unique(" + code +")").append(",");
+        str.append("constraint pk_"+ tableName + "_code_" + pk +" unique(" + code + "," + MARK + "version_id" +")").append(",");
         str.append(this.commonBaseField());
+
+        return str.toString();
+    }
+
+    /**
+     * 日志表基础字段
+     * @param tableName
+     * @return
+     */
+    public String splicingLogTable(String tableName){
+        int pk = (int)(Math.random()*8999)+1000+1;
+
+        StringBuilder str = new StringBuilder();
+        str.append(MARK + "id serial NOT NULL").append(",");
+        str.append("constraint pk_"+ tableName + "_id_" + pk +" primary key(" + MARK + "id)").append(",");
+        str.append(MARK + "version_id int4 NULL").append(",");
+        str.append(MARK + "lock_tag int4 NULL").append(",");
+        str.append(MARK + "new_code varchar(100) NULL").append(",");
+        str.append(this.commonLogBaseField());
+        str.append(MARK + "old_name varchar(100) NULL").append(",");
 
         return str.toString();
     }
@@ -294,6 +431,19 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     }
 
     /**
+     * 成员日志公用基础字段
+     * @return
+     */
+    public String commonLogBaseField(){
+        StringBuilder str = new StringBuilder();
+        str.append(MARK + "create_time timestamp(6) NULL").append(",");
+        str.append(MARK + "create_user varchar(50) NULL").append(",");
+        str.append(MARK + "del_flag int2 NULL").append(",");
+        str.append(MARK + "mdm_fidata_id int2 NULL").append(",");
+        return str.toString();
+    }
+
+    /**
      * 公用基础字段
      * @return
      */
@@ -309,15 +459,25 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
 
     /**
      * 创建视图基础字段
+     * @param isDomain
      * @return
      */
-    public String createViw(){
+    public String createViw(boolean isDomain){
         StringBuilder str = new StringBuilder();
-        str.append(PRIMARY_TABLE + "." + MARK + "create_time").append(",");
-        str.append(PRIMARY_TABLE + "." + MARK + "create_user").append(",");
-        str.append(PRIMARY_TABLE + "." + MARK + "update_time").append(",");
-        str.append(PRIMARY_TABLE + "." + MARK + "update_user").append(",");
-        str.append(PRIMARY_TABLE + "." + MARK + "del_flag").append(",");
+        if (isDomain == true){
+            str.append(PRIMARY_TABLE + "." + MARK + "create_time").append(",");
+            str.append(PRIMARY_TABLE + "." + MARK + "create_user").append(",");
+            str.append(PRIMARY_TABLE + "." + MARK + "update_time").append(",");
+            str.append(PRIMARY_TABLE + "." + MARK + "update_user").append(",");
+            str.append(PRIMARY_TABLE + "." + MARK + "del_flag").append(",");
+        }else {
+            str.append(MARK + "create_time").append(",");
+            str.append(MARK + "create_user").append(",");
+            str.append(MARK + "update_time").append(",");
+            str.append(MARK + "update_user").append(",");
+            str.append(MARK + "del_flag").append(",");
+        }
+
         return str.toString();
     }
 }

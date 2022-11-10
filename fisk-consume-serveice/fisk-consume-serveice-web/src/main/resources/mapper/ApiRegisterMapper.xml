@@ -8,15 +8,19 @@
         api_code,
         api_desc,
         api_type,
-        datasource_id,
+        api.datasource_id,
+        source.datasource_type,
         table_name,
+        table_name_alias,
+        table_type,
+        table_business_type,
         create_sql,
         api.create_time,
-        create_user
+        api.create_user
         -- userinfo.user_account as create_user
         from tb_api_config as api
-        -- left join dmp_system_db.tb_user_info as userinfo
-        -- ON api.create_user= userinfo.id
+        left join tb_datasource_config as source
+        ON api.datasource_id = source.id
         where api.del_flag=1
         <if test="query.keyword !=null and query.keyword.length()>0 ">
             and (api_name like concat('%', #{query.keyword}, '%')
@@ -32,6 +36,8 @@
         api_type,
         datasource_id,
         table_name,
+        table_type,
+        table_business_type,
         create_sql,
         api.create_time,
         -- userinfo.user_account AS create_user

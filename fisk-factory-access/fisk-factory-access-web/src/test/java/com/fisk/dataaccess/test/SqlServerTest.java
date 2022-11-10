@@ -4,12 +4,9 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
-import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.service.impl.AppDataSourceImpl;
 import com.fisk.dataaccess.service.impl.AppRegistrationImpl;
-import com.fisk.dataaccess.utils.sql.MysqlConUtils;
-import com.fisk.dataaccess.utils.sql.SqlServerConUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -174,46 +171,6 @@ public class SqlServerTest {
         } catch (Exception e) {
 
         }
-    }
-
-    @Test
-    public void testTableFields() {
-
-        String appName1 = "NonRealTime";
-        String appName2 = "zfh_sqlserver_app";
-
-        // 1.根据应用名称查询表id
-        AppRegistrationPO modelReg = appRegistrationImpl.query()
-//                .eq("app_name", appName1)
-                .eq("app_name", appName2)
-                .eq("del_flag", 1)
-                .one();
-
-        // tb_app_registration表id
-        long appid = modelReg.getId();
-
-        // 2.根据app_id查询关联表tb_app_datasource的connect_str  connect_account  connect_pwd
-        AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("appid", appid).one();
-        String url = modelDataSource.getConnectStr();
-        String user = modelDataSource.getConnectAccount();
-        String pwd = modelDataSource.getConnectPwd();
-
-        List<TablePyhNameDTO> list = new ArrayList<>();
-        switch (modelDataSource.driveType) {
-            case "mysql":
-                // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
-                MysqlConUtils mysqlConUtils = new MysqlConUtils();
-//                list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
-                break;
-            case "sqlserver":
-                list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd,"");
-                break;
-            default:
-                break;
-        }
-
-        System.out.println(list);
-
     }
 
     @Test

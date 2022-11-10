@@ -1,0 +1,50 @@
+spring:
+  datasource:
+    url: jdbc:mysql://192.168.21.21:3306/dmp_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: root123
+    driver-class-name: com.mysql.jdbc.Driver
+    dynamic:
+      datasource:
+        taskdb:
+          url: jdbc:mysql://192.168.21.21:3306/dmp_task_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+          username: root
+          password: root123
+          driver-class-name: com.mysql.jdbc.Driver
+
+  # redis
+  redis:
+    host: 192.168.21.21
+    password: test123456
+  # 防止模板报空错误
+  freemarker:
+    settings:
+      classic_compatible: true
+# pdf文档模板
+dataservice:
+  pdf:
+    path: /root/java/fisk-factory-access/pdf
+    uat_address: http://192.168.21.21:8083
+    prd_address: https://prdHost
+
+# 数据质量校验的信息(ip: pg数据源的ip地址; dbName: 连接的ods库)
+Data-quality-check:
+  ip: 192.168.21.21
+  dbName: dmp_ods
+
+flink-config:
+  host: 192.168.11.131
+  port: 22
+  user: root
+  password: Password01!
+  upload-path: /root/flink-job/sql/
+  upload-way: ssh
+  savepoints-path: /root/flink-job/savepoint/
+  command: dev
+  command-path: /root/flink/flink-1.15.2/bin/sql-client.sh
+
+flink-api-config:
+  host: http://192.168.11.131
+  port: 8081
+  savepoints: /jobs/:jobid/savepoints
+  savepoint-status: /jobs/:jobid/savepoints/:triggerid

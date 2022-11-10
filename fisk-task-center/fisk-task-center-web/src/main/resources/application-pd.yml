@@ -9,25 +9,33 @@ external-table-link: '"host" = "100.102.201.107","port" = "5433","user" = "admin
 
 nifi:
   basePath: http://100.102.201.108:8081/nifi-api
+  token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJiMmVmNDFjZDgzOWI0ZjFjOTQ5Y2U1NzgzYWM5MDc3NCIsInVzZXIiOiJ7XCJpZFwiOjE4LFwidXNlckFjY291bnRcIjpcIm5pZmlfdG9rZW5cIn0iLCJpZCI6IjE4In0.Zp5nzRO9VeHhqsQ98NejOyl_-Q8LEHRu8KfCbbcLvH4
+  Enable-Authentication: 0
+  kerberos:
+    Keytab: /opt/fidata/java/fisk-task-center/kafka.keytab
+    login:
+      config: /opt/fidata/java/fisk-task-center/kafka-jaas.conf
+    krb5:
+      conf: /opt/fidata/java/fisk-task-center/krb5.conf
+  kerberosprincipal: kafka/admin@AUTOEXPR.COM
   pipeline:
     topicName: my-topic
     waitTime: 20
+    operation-interval: 2000
+    number-of-operations: 5
+    data-governance-url: http://10.220.108.140:10089
 nifi-ConcurrentTasks: 3
 nifi-FetchSize: 30000
 nifi-MaxRowsPerFlowFile: 10000
 nifi-OutputBatchSize: 1
-pgsql-datainput:
-  driverClassName: org.postgresql.Driver
-  password: .FdF_r&tj4)+
-  url: jdbc:postgresql://100.102.201.107:5433/dmp_ods?stringtype=unspecified
-  username: adminuser
-  ip: 100.102.201.107
-  dbName: dmp_ods
+fiData-data-ods-source: 2
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
   password: .FdF_r&tj4)+
   url: jdbc:postgresql://100.102.201.107:5433/dmp_dw?stringtype=unspecified
   username: adminuser
+  ip: 100.102.201.107
+  dbName: dmp_dw
 pgsql-mdm:
   driverClassName: org.postgresql.Driver
   password: .FdF_r&tj4)+

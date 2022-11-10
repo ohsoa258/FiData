@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.dto.entity;
 
+import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
 
 /**
@@ -10,6 +11,6 @@ public class EntityAssociatedMetaDataDTO {
 
     public String guid;
 
-    public Object businessMetaDataAttribute;
+    public JSONObject businessMetaDataAttribute;
 
 }

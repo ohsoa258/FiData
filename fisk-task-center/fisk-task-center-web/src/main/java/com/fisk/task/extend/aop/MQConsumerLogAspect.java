@@ -2,6 +2,7 @@ package com.fisk.task.extend.aop;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.enums.task.MessageLevelEnum;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.MDCHelper;
@@ -70,31 +71,34 @@ public class MQConsumerLogAspect {
                 log.error("后台任务：{}, 参数为空", name);
                 throw new FkException(ResultEnum.PARAMTER_NOTNULL);
             }
+            log.info("切面参数:{}", JSON.toJSONString(args));
             //获取方法参数
             data = JSON.parseObject((String) args[0], MQBaseDTO.class);
             if (data.logId != null) {
                 model = mapper.selectById(data.logId);
                 taskName = model == null ? "" : model.taskName;
+                log.info("此次调度队列:{},此次队列参数:{}", model.taskQueue, JSON.toJSONString(args[0]));
             }
         } catch (Exception ex) {
             log.error("任务状态更新失败", ex);
             ex.printStackTrace();
         }
-        if (data == null || data.userId == null) {
+        if (data == null) {
             throw new FkException(ResultEnum.PARAMTER_ERROR);
         }
 
         if (model != null) {
             model.taskStatus = TaskStatusEnum.PROCESSING;
             model.taskSendOk = true;
-            model.traceId=traceId;
+            model.traceId = traceId;
             mapper.updateById(model);
         }
 
-        if (sendMsg) {
+        if (sendMsg && data.userId != null) {
             WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务开始处理", data.userId, MessageLevelEnum.MEDIUM);
         }
 
+        //invoke
         log.info("【{}】开始执行", name);
         Object res = null;
         boolean isSuccess = false;
@@ -110,12 +114,17 @@ public class MQConsumerLogAspect {
         TaskStatusEnum statusEnum = isSuccess ? TaskStatusEnum.SUCCESS : TaskStatusEnum.FAILURE;
         if (model != null) {
             model.taskStatus = statusEnum;
-            model.traceId=traceId;
+            model.traceId = traceId;
             mapper.updateById(model);
         }
 
-        if (sendMsg) {
-            WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + statusEnum.getName() + "】", data.userId, MessageLevelEnum.HIGH);
+        String outPutMsg = "任务执行完成";
+        if (res instanceof ResultEntity<?>) {
+            outPutMsg = ((ResultEntity<?>) res).msg;
+        }
+
+        if (sendMsg && data.userId != null) {
+            WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
         }
         MDCHelper.clear();
         return res;

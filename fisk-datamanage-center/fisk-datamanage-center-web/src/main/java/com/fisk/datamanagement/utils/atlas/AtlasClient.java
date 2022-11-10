@@ -1,8 +1,8 @@
 package com.fisk.datamanagement.utils.atlas;
 
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import com.fisk.datamanagement.vo.ResultErrorDTO;
@@ -63,11 +63,9 @@ public class AtlasClient {
             resultDataDTO.data = EntityUtils.toString(entity);
         }
         catch (ClientProtocolException e) {
-            e.printStackTrace();
-            log.error("Atlas Get ClientProtocolException ex:",e);
+            log.error("atlas get clientProtocolException ex:", e);
         } catch (IOException e) {
-            e.printStackTrace();
-            log.error("Atlas Get IOException ex:",e);
+            log.error("atlas get iOException ex:", e);
         }
         finally {
             // 关闭资源
@@ -75,14 +73,14 @@ public class AtlasClient {
                 try {
                     httpResponse.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    log.error("atlas get close httpResponse iOException ex:", e);
                 }
             }
             if (null != httpClient) {
                 try {
                     httpClient.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    log.error("atlas get close httpClient iOException ex:", e);
                 }
             }
         }
@@ -114,7 +112,7 @@ public class AtlasClient {
             try {
                 httpPost.setEntity(new StringEntity(parameter,"UTF-8"));
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("atlas post exception ex:", e);
             }
         }
         try {
@@ -128,23 +126,23 @@ public class AtlasClient {
                 resultDataDTO.data = EntityUtils.toString(entity);
             }
         } catch (ClientProtocolException e) {
-            e.printStackTrace();
+            log.error("atlas post clientProtocolException ex:", e);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("atlas post iOException ex:", e);
         } finally {
             // 关闭资源
             if (null != httpResponse) {
                 try {
                     httpResponse.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    log.error("atlas post close httpResponse iOException ex:", e);
                 }
             }
             if (null != httpClient) {
                 try {
                     httpClient.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    log.error("atlas post close httpClient iOException ex:", e);
                 }
             }
         }
@@ -169,7 +167,7 @@ public class AtlasClient {
             try {
                 httpPut.setEntity(new StringEntity(parameter));
             } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+                log.error("atlas put exception ex:", e);
             }
         }
         try {
@@ -181,22 +179,22 @@ public class AtlasClient {
                 resultDataDTO.data = EntityUtils.toString(entity);
             }
         } catch (ClientProtocolException e) {
-            e.printStackTrace();
+            log.error("atlas put clientProtocolException ex:", e);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("atlas put iOException ex:", e);
         } finally {
             if (httpResponse != null) {
                 try {
                     httpResponse.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    log.error("atlas put close httpResponse iOException ex:", e);
                 }
             }
             if (null != httpClient) {
                 try {
                     httpClient.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    log.error("atlas put close httpClient iOException ex:", e);
                 }
             }
         }
@@ -225,22 +223,22 @@ public class AtlasClient {
                 resultDataDTO.data = EntityUtils.toString(entity);
             }
         } catch (ClientProtocolException e) {
-            e.printStackTrace();
+            log.error("atlas delete clientProtocolException ex:", e);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("atlas delete iOException ex:", e);
         } finally {
             if (httpResponse != null) {
                 try {
                     httpResponse.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    log.error("atlas delete close httpResponse iOException ex:", e);
                 }
             }
             if (null != httpClient) {
                 try {
                     httpClient.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    log.error("atlas delete close httpClient iOException ex:", e);
                 }
             }
         }
@@ -276,22 +274,15 @@ public class AtlasClient {
         return "Basic " + base64;
     }
 
-    public ResultEnum newResultEnum(ResultDataDTO<String> result)
-    {
-        String error="";
-        if (result.code.getValue() ==AtlasResultEnum.NO_CONTENT.getValue())
-        {
+    public ResultEnum newResultEnum(ResultDataDTO<String> result) {
+        String error = "";
+        if (result.code.getValue() == AtlasResultEnum.NO_CONTENT.getValue()
+                || result.code.getValue() == AtlasResultEnum.REQUEST_SUCCESS.getValue()) {
             return ResultEnum.SUCCESS;
         }
-        try {
-            ResultErrorDTO dto= JSONObject.parseObject(result.data,ResultErrorDTO.class);
-            error = dto.errorMessage;
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        throw new FkException(ResultEnum.ERROR,error);
+        ResultErrorDTO dto = JSONObject.parseObject(result.data, ResultErrorDTO.class);
+        error = dto.errorMessage;
+        throw new FkException(ResultEnum.ERROR, error);
     }
 
 }

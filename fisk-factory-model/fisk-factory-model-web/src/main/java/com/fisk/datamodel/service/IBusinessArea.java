@@ -3,7 +3,10 @@ package com.fisk.datamodel.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.dto.webindex.WebIndexDTO;
@@ -55,7 +58,7 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
     /**
      * 分页
      *
-     * @param key key
+     * @param key  key
      * @param page page
      * @param rows rows
      * @return 查询结果
@@ -68,10 +71,10 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @return 查询结果
      */
     List<FilterFieldDTO> getBusinessAreaColumn();
+
     /**
      * 分页
      *
-
      * @param query query
      * @return 查询结果
      */
@@ -79,6 +82,7 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
 
     /**
      * Doris发布
+     *
      * @param dto
      * @return
      */
@@ -106,5 +110,52 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @return
      */
     BusinessAreaTableDetailDTO getBusinessAreaTableDetail(BusinessAreaQueryTableDTO dto);
+
+    /**
+     * 跳转页面: 查询出当前表具体在哪个管道中使用,并给跳转页面提供数据
+     *
+     * @param dto dto
+     * @return list
+     */
+    List<DispatchRedirectDTO> redirect(ModelRedirectDTO dto);
+
+    /**
+     * 获取数据建模结构
+     *
+     * @param dto dto
+     * @return list
+     */
+    List<FiDataMetaDataDTO> getDataModelStructure(FiDataMetaDataReqDTO dto);
+
+    /**
+     * 获取数据建模表结构
+     *
+     * @param dto dto
+     * @return list
+     */
+    List<FiDataMetaDataTreeDTO> getDataModelTableStructure(FiDataMetaDataReqDTO dto);
+
+    /**
+     * 刷新数据建模结构
+     *
+     * @param dto dto
+     * @return list
+     */
+    boolean setDataModelStructure(FiDataMetaDataReqDTO dto);
+
+    /**
+     * 根据表信息/字段ID,获取表/字段基本信息
+     *
+     * @param dto dto
+     * @return 查询结果
+     */
+    List<FiDataTableMetaDataDTO> getFiDataTableMetaData(FiDataTableMetaDataReqDTO dto);
+
+    /**
+     * 获取所有业务域
+     *
+     * @return
+     */
+    List<AppBusinessInfoDTO> getBusinessAreaList();
 
 }

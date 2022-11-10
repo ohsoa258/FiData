@@ -70,4 +70,11 @@ public class NifiCustomWorkflowController {
     public void updatePublishStatus(@RequestBody NifiCustomWorkflowDTO dto){
         service.updatePublishStatus(dto);
     }
+
+    @GetMapping("/getTableListById/{id}")
+    @ApiOperation(value = "根据管道id查询组件绑定的表集合")
+    public ResultEntity<Object> getTableListById(@PathVariable("id") Long id) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableListById(id));
+    }
 }

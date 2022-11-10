@@ -35,8 +35,33 @@ public class ApiConfigDTO
      * 表名
      */
     @ApiModelProperty(value = "表名")
-    @Length(min = 0, max = 50, message = "长度最多50")
+    @Length(min = 0, max = 50, message = "长度最多255")
     public String tableName;
+
+    /**
+     * 表别名
+     */
+    @ApiModelProperty(value = "表别名")
+    @Length(min = 0, max = 50, message = "长度最多255")
+    public String tableNameAlias;
+
+    /**
+     * 表类型 1：表  2：视图
+     */
+    @ApiModelProperty(value = "表类型 1：表  2：视图")
+    public int tableType;
+
+    /**
+     * 表业务类型 1：事实表、2：维度表、3、指标表  4、宽表
+     */
+    @ApiModelProperty(value = "表业务类型 1：事实表、2：维度表、3、指标表  4、宽表")
+    public int tableBusinessType;
+
+    /**
+     * 表路径
+     */
+    @ApiModelProperty(value = "表路径")
+    public String tablePath;
 
     /**
      * sql语句
@@ -45,8 +70,7 @@ public class ApiConfigDTO
     @NotNull()
     @Length(min = 0, max = 5000, message = "长度最多5000")
     public String createSql;
-
-
+    
     /**
      * api类型 1 sql、2 自定义sql
      */

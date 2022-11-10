@@ -20,11 +20,12 @@ public interface LifecycleMapper extends FKBaseMapper<LifecyclePO> {
      *
      * @param page    分页信息
      * @param keyword where条件
-     * @param tableName 表名称
+     * @param tableUnique 表名称/表Id
      * @return 查询结果
      */
     Page<LifecycleVO> getAll(Page<LifecycleVO> page,
                              @Param("datasourceId") int datasourceId,
-                             @Param("tableName") String tableName,
+                             @Param("tableUnique") String tableUnique,
+                             @Param("tableBusinessType") int tableBusinessType,
                              @Param("keyword") String keyword);
 }

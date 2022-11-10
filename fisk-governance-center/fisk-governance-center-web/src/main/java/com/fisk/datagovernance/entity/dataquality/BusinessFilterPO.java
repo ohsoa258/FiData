@@ -20,7 +20,7 @@ public class BusinessFilterPO extends BasePO
     public int templateId;
 
     /**
-     * 数据源id
+     * 数据源表主键id
      */
     public int datasourceId;
 
@@ -30,14 +30,19 @@ public class BusinessFilterPO extends BasePO
     public String ruleName;
 
     /**
-     * 表名称，页面展示
+     * 表名称/表Id
      */
-    public String tableName;
+    public String tableUnique;
 
     /**
-     * 实际引用表名称
+     * 表类型 1：表  2：视图
      */
-    public String useTableName;
+    public int tableType;
+
+    /**
+     * 表业务类型 1：dw维度表、2：dw事实表、3、doris维度表  4、doris事实表 5、宽表
+     */
+    public int tableBusinessType;
 
     /**
      * 生成规则（清洗脚本）

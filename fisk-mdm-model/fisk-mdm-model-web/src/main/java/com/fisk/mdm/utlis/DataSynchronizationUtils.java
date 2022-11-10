@@ -4,7 +4,11 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
+import com.fisk.common.service.mdmBEBuild.BuildFactoryHelper;
+import com.fisk.common.service.mdmBEBuild.CommonMethods;
+import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.common.service.mdmBEBuild.dto.DataSourceConDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.stgbatch.MdmDTO;
@@ -15,6 +19,7 @@ import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -27,8 +32,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.execQueryResultList;
-import static com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils.generateMdmTableName;
-import static com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils.generateStgTableName;
+import static com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils.*;
 
 /**
  * @Author WangYan
@@ -52,27 +56,33 @@ public class DataSynchronizationUtils {
     EntityService entityService;
     @Resource
     AttributeService attributeService;
+    @Resource
+    UserHelper userHelper;
 
-    public static final String MARK ="fidata_";
+    public static final String MARK = "fidata_";
     public static final String SPECIAL_CHARACTERS_NULL = "`fidata_null`";
 
     /**
      * stg数据同步
+     *
      * @param entityId
      * @param batchCode
      */
-    public ResultEnum stgDataSynchronize(Integer entityId,String batchCode){
+    public ResultEnum stgDataSynchronize(Integer entityId, String batchCode) {
 
         // 1.查询属性配置信息
-        EntityInfoVO entityInfoVo = entityService.getAttributeById(entityId);
+        EntityInfoVO entityInfoVo = entityService.getFilterAttributeById(entityId);
         List<AttributeInfoDTO> attributeList = entityInfoVo.getAttributeList();
         String mdmTableName = entityInfoVo.getTableName();
 
         // 获取stg表名
         String stgTableName = generateStgTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
 
+        //获取log表名
+        String logTableName = generateLogTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
+
         // 2.查询需要同步的数据
-        String sql = "SELECT * FROM " + stgTableName + " WHERE fidata_batch_code = '" + batchCode +"'";
+        String sql = "SELECT * FROM " + stgTableName + " WHERE fidata_batch_code = '" + batchCode + "'";
 
         DataSourceConDTO dto = new DataSourceConDTO();
         dto.setConStr(connectionStr);
@@ -107,9 +117,12 @@ public class DataSynchronizationUtils {
             return code1;
         }).collect(Collectors.joining(","));
 
-        stringBuilder.append("SELECT fidata_id, " + columnName  + "  FROM " + mdmTableName);
-        stringBuilder.append(" WHERE fidata_del_flag = 1 AND " + codeColumnName.get(0));
+        stringBuilder.append("SELECT fidata_id, " + columnName + "  FROM " + mdmTableName);
+        stringBuilder.append(" WHERE " + codeColumnName.get(0));
+        ////stringBuilder.append(" WHERE fidata_del_flag = 1 AND " + codeColumnName.get(0));
         stringBuilder.append(" IN(" + codes + ")");
+        // TODO 添加版本过滤条件
+        stringBuilder.append(" and fidata_version_id=" + resultList.get(0).get("fidata_version_id"));
 
         // 查询数据
         List<Map<String, Object>> mdmResultList = execQueryResultList(stringBuilder.toString(), dto);
@@ -119,7 +132,7 @@ public class DataSynchronizationUtils {
         domains.stream().forEach(e -> {
             resultList.stream().forEach(item -> {
                 for (String key : item.keySet()) {
-                    if (e.getName().equals(key)){
+                    if (e.getName().equals(key)) {
                         // 查询出域字段信息
                         AttributeVO data = attributeService.getById(e.getDomainId()).getData();
 
@@ -145,20 +158,20 @@ public class DataSynchronizationUtils {
         List<Map<String, Object>> dateList = this.dataProcessing(mdmResultList, resultList, attributeList);
 
         // 4.数据导入
-        return this.dataImport(mdmTableName,stgTableName,dto,attributeList,dateList,batchCode);
+        return this.dataImport(mdmTableName, stgTableName, logTableName, dto, attributeList, dateList, batchCode);
     }
 
     /**
      * 数据导入
      */
-    public ResultEnum dataImport(String mdmTableName,String stgTableName
-            ,DataSourceConDTO dto
-            ,List<AttributeInfoDTO> attributeList
-            ,List<Map<String, Object>> listMap
-            ,String batchCode){
+    public ResultEnum dataImport(String mdmTableName, String stgTableName, String logTableName
+            , DataSourceConDTO dto
+            , List<AttributeInfoDTO> attributeList
+            , List<Map<String, Object>> listMap
+            , String batchCode) {
         AbstractDbHelper dbHelper = new AbstractDbHelper();
         Connection connection = dbHelper.connection(dto.conStr, dto.conAccount,
-                dto.conPassword,dto.conType);
+                dto.conPassword, dto.conType);
 
         StringBuilder str = new StringBuilder();
         str.append("INSERT INTO " + mdmTableName);
@@ -199,12 +212,14 @@ public class DataSynchronizationUtils {
 
         // 获取唯一键
         String columnName = codeAssociationCondition.get(0).getColumnName();
-        str.append(" ON CONFLICT ( " + columnName +") DO UPDATE ");
+        str.append(" ON CONFLICT ( " + columnName + "," + MARK + "version_id" + ") DO UPDATE ");
         str.append(" SET ");
         str.append(MARK + "new_code = " + "excluded." + MARK + "new_code").append(",");
         str.append(MARK + "version_id = " + "excluded." + MARK + "version_id").append(",");
         str.append(MARK + "lock_tag = " + "excluded." + MARK + "lock_tag").append(",");
         str.append(MARK + "del_flag = " + "excluded." + MARK + "del_flag").append(",");
+        str.append(MARK + "update_time = " + "excluded." + MARK + "update_time").append(",");
+        str.append(MARK + "update_user = " + "excluded." + MARK + "update_user").append(",");
 
         String code1 = columnName + " = " + "excluded." + MARK + "new_code" + ",";
 
@@ -243,32 +258,92 @@ public class DataSynchronizationUtils {
             int res = stmt.executeUpdate();
             System.out.println("成功条数！:" + res);
             log.info(ResultEnum.DATA_SYNCHRONIZATION_SUCCESS.getMsg() + "【成功条数】:" + res
-                       + "【批次号】:" + batchCode);
+                    + "【批次号】:" + batchCode);
             // 回调成功同步状态
-            this.callbackSuccessStatus(stgTableName,batchCode,connection);
+            this.callbackSuccessStatus(stgTableName, batchCode, connection);
+
+            //添加log表
+            addLogTable(mdmTableName, logTableName, attributeList, listMap, columnName);
 
             return ResultEnum.DATA_SYNCHRONIZATION_SUCCESS;
         } catch (SQLException ex) {
             log.error("stg表数据同步失败,异常信息:" + ex);
             String errorMessage = ResultEnum.DATA_SYNCHRONIZATION_FAILED.getMsg() + "【原因】:" + ex.getMessage();
-            this.errorMessageProcess(stgTableName,errorMessage,batchCode,connection);
+            this.errorMessageProcess(stgTableName, errorMessage, batchCode, connection);
 
             // 回调失败同步状态
-            this.callbackFailedStatus(stgTableName,batchCode,connection);
+            this.callbackFailedStatus(stgTableName, batchCode, connection);
 
             return ResultEnum.DATA_SYNCHRONIZATION_FAILED;
         }
     }
 
     /**
+     * 数据添加到日志表
+     *
+     * @param mdmTableName
+     * @param logTableName
+     * @param attributeList
+     * @param listMap
+     * @param columnName
+     */
+    public void addLogTable(String mdmTableName, String logTableName
+            , List<AttributeInfoDTO> attributeList
+            , List<Map<String, Object>> listMap
+            , String columnName) {
+        //获取新增数据code集合
+        List<String> codeList = new ArrayList<>();
+        for (Map<String, Object> code : listMap) {
+            if (code.get("fidata_new_code") != null && !StringUtils.isEmpty(code.get("fidata_new_code").toString())) {
+                codeList.add(code.get("fidata_new_code").toString());
+                code.put(columnName, code.get("fidata_new_code").toString());
+                continue;
+            }
+            codeList.add(code.get(columnName).toString());
+        }
+        //转为单引号也为逗号隔开的字符串
+        String values = CommonMethods.convertListToString(codeList);
+        //连接对象
+        AbstractDbHelper dbHelper = new AbstractDbHelper();
+        Connection connection = dbHelper.connection(connectionStr, acc, pwd, type);
+        IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
+        String sql = buildSqlCommand.buildQueryData(mdmTableName, " and " + columnName + " in(" + values + ")");
+        //查询新增到mdm表的数据,获取fidata_id
+        List<Map<String, Object>> maps = AbstractDbHelper.execQueryResultMaps(sql, connection);
+        for (Map<String, Object> item : listMap) {
+            Optional<Map<String, Object>> first = maps.stream().filter(e -> e.get(columnName).equals(item.get(columnName))).findFirst();
+            if (!first.isPresent()) {
+                continue;
+            }
+            Map<String, Object> data = new HashMap<>();
+            for (AttributeInfoDTO attribute : attributeList) {
+                if (item.get(attribute.getColumnName()) == null) {
+                    continue;
+                }
+                data.put(attribute.getName(), item.get(attribute.getColumnName()).toString());
+            }
+            data.put("fidata_mdm_fidata_id", first.get().get("fidata_id"));
+            //data.put("fidata_del_flag", "1");
+            data.put("fidata_version_id", item.get("fidata_version_id"));
+            Date date = new Date();
+            data.put("fidata_create_time", CommonMethods.getFormatDate(date));
+            data.put("fidata_create_user", userHelper.getLoginUserInfo().id);
+            String insertSql = buildSqlCommand.buildInsertSingleData(data, logTableName);
+            log.info("添加日志数据,sql:", insertSql);
+            AbstractDbHelper.executeSqlReturnKey(insertSql, connection);
+        }
+    }
+
+    /**
      * 根据指定字段获取值
+     *
      * @param listMap
      * @param filed
      */
-    public List<Object> getParameter(List<Map<String, Object>> listMap,String filed){
+    public List<Object> getParameter(List<Map<String, Object>> listMap, String filed) {
         List<Object> list = new ArrayList<>();
         listMap.stream().forEach(e -> {
-            e.forEach((k,v) -> {
+            e.forEach((k, v) -> {
                 if (k.equals(filed)){
                     if (SPECIAL_CHARACTERS_NULL.equals(v)){
                         list.add(null);
@@ -329,7 +404,7 @@ public class DataSynchronizationUtils {
                     filedType = JDBCType.TIMESTAMP.getName();
                     break;
                 case "浮点型":
-                    filedType = JDBCType.NUMERIC.getName();
+                    filedType = JDBCType.FLOAT.getName();
                     break;
                 case "布尔型":
                     filedType = JDBCType.BOOLEAN.getName();
@@ -338,6 +413,8 @@ public class DataSynchronizationUtils {
                     filedType = JDBCType.DECIMAL.getName();
                     break;
                 case "文本":
+                case "文件":
+                case "经纬度坐标":
                 default:
                     filedType = JDBCType.VARCHAR.getName();
             }
@@ -380,7 +457,7 @@ public class DataSynchronizationUtils {
         str.append("UPDATE " + stgTableName);
         str.append(" SET fidata_status = '" + SyncStatusTypeEnum.SUBMISSION_FAILED.getValue()).append("'");
         str.append(" WHERE fidata_batch_code ='" + batchCode + "'");
-        str.append(" AND fidata_del_flag = 1 ");
+        //str.append(" AND fidata_del_flag = 1 ");
 
         PreparedStatement statement = null;
         try {
@@ -433,8 +510,9 @@ public class DataSynchronizationUtils {
                         for (String mdmKey : item.keySet()) {
                             for (String stgKey : e.keySet()) {
                                 Object stgValue = e.get(stgKey);
-                                if (ObjectUtils.isEmpty(stgValue) && mdmKey.equals(stgKey)){
-                                    e.put(stgKey,item.get(mdmKey));
+                                if (ObjectUtils.isEmpty(stgValue) && mdmKey.equals(stgKey)) {
+                                    // TODO 编辑主数据，删除域字段数据，此处操作将mdm表数据重新赋值到updateList中
+                                    //e.put(stgKey,item.get(mdmKey));
                                 }
                             }
                         }

@@ -2,7 +2,7 @@ spring:
   metadataentity: MetaDataEntity
   schedule: 0 0 1 * * ?
   datasource:
-    url: jdbc:mysql://192.168.11.130:3306/dmp_datagovern_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://192.168.11.130:3306/dmp_datamanagement_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: root123
     driver-class-name: com.mysql.jdbc.Driver
@@ -17,7 +17,7 @@ spring:
 #授权
 fk:
   auth:
-    clientId: datamanagement-service
+    clientId: data-management-service
     secret: 1234
   encoder:
     crypt:
@@ -29,6 +29,7 @@ atlas:
   account: admin
   password: admin
   searchBasic: /api/atlas/v2/search/basic
+  searchDsl: /api/atlas/v2/search/dsl
   entityByGuid: /api/atlas/v2/entity/guid
   entity: /api/atlas/v2/entity
   typedefs: /api/atlas/v2/types/typedefs
@@ -61,33 +62,27 @@ fidata:
 
 #血缘同步
 scheduling:
-  enabled: true
-
-#注册中心
-eureka:
-  client:
-    service-url:
-      defaultZone: http://127.0.0.1:8082/eureka
+  enabled: false
 
 #feign接口超时配置
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 10000
-        readTimeout: 12000
-
-ribbon:
-  eager-load:
-    enabled: true
-    clients: datamodel-service,dataaccess-service
-
-  hystrix:
-    command:
-    default:
-      isolation:
-        thread:
-          timeoutInMilliseconds: 30000
-      execution:
-        timeout:
-          enabled: true
+#feign:
+#  client:
+#    config:
+#      default:
+#        connectTimeout: 10000
+#        readTimeout: 12000
+#
+#ribbon:
+#  eager-load:
+#    enabled: true
+#    clients: datamodel-service,dataaccess-service
+#
+#  hystrix:
+#    command:
+#    default:
+#      isolation:
+#        thread:
+#          timeoutInMilliseconds: 30000
+#      execution:
+#        timeout:
+#          enabled: true

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.api.*;
+import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.entity.ApiConfigPO;
 
@@ -136,5 +137,12 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @return list
      */
     List<ApiSelectDTO> getAppAndApiList(int appType);
+
+    /**
+     * 获取http请求返回的结果
+     *
+     * @return String
+     */
+    String getHttpRequestResult(ApiHttpRequestDTO dto);
 }
 

@@ -71,9 +71,10 @@ public interface IBuildSqlCommand {
      *
      * @param tableName
      * @param selectColumnName
+     * @param versionId
      * @return
      */
-    String buildQueryOneColumn(String tableName, String selectColumnName);
+    String buildQueryOneColumn(String tableName, String selectColumnName, int versionId);
 
     /**
      * 查询条数
@@ -100,7 +101,7 @@ public interface IBuildSqlCommand {
      * @param queryConditions
      * @return
      */
-    String buildQueryOneData(String tableName, String queryConditions);
+    String buildQueryData(String tableName, String queryConditions);
 
     /**
      * 查询mdm表code和name数据
@@ -108,9 +109,10 @@ public interface IBuildSqlCommand {
      * @param tableName
      * @param code
      * @param name
+     * @param versionId
      * @return
      */
-    String buildQueryCodeAndName(String tableName, String code, String name);
+    String buildQueryCodeAndName(String tableName, String code, String name, Integer versionId);
 
     /**
      * 获取主数据列表筛选条件运算符

@@ -1,13 +1,14 @@
 package com.fisk.task;
 
-import com.ctrip.framework.apollo.spring.annotation.EnableApolloConfig;
 import com.fisk.task.server.WebSocketServer;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
+import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  * @author gy
@@ -17,6 +18,7 @@ import org.springframework.context.ConfigurableApplicationContext;
         "com.fisk.common.framework.mybatis",
         "com.fisk.common.framework.redis",
         "com.fisk.common.core.user",
+        "com.fisk.common.framework.advice",
         "com.fisk.common.framework.feign",
         "com.fisk.common.framework.exception",
         "com.fisk.common.framework.actuators"},
@@ -26,8 +28,12 @@ import org.springframework.context.ConfigurableApplicationContext;
         "com.fisk.dataaccess.client",
         "com.fisk.datamodel.client",
         "com.fisk.datafactory.client",
-        "com.fisk.mdm.client"})
-@EnableApolloConfig
+        "com.fisk.mdm.client",
+        "com.fisk.datagovernance.client",
+        "com.fisk.system.client",
+        "com.fisk.datamanage.client"})
+@EnableTransactionManagement
+@EnableHystrix
 public class FkTaskApplication {
     public static void main(String[] args) {
         ConfigurableApplicationContext configurableApplicationContext =  SpringApplication.run(FkTaskApplication.class, args);

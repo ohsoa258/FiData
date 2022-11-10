@@ -6,12 +6,14 @@ import com.fisk.common.framework.mdc.TraceTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
  * @author gy
  */
 @Component
+@Order(value = 1)
 @Slf4j
 public class ApplicationRunnerImpl implements ApplicationRunner {
 

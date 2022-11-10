@@ -102,7 +102,7 @@ public class FtpUtils {
     public static FTPClient closeFtpConnect(FTPClient ftpClient) {
         try {
             if (ftpClient != null && ftpClient.isConnected()) {
-                ftpClient.abort();
+                //ftpClient.abort();
                 ftpClient.disconnect();
             }
         } catch (IOException e) {

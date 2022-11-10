@@ -17,5 +17,30 @@ public class NifiStageMessageDTO {
     public Date endTime;
     public Integer counts;
     public NifiStageDTO nifiStageDTO;
+    /*
+     * 管道批次号
+     * */
+    public String pipelTraceId;
+
+    /*
+     * job批次号
+     * */
+    public String pipelJobTraceId;
+
+    /*
+     * task批次号
+     * */
+    public String pipelTaskTraceId;
+
+    /*
+     * stage批次号
+     * */
+    public String pipelStageTraceId;
+
+    /*
+     * 流文件流入时间
+     * */
+    public String entryDate;
+
 
 }

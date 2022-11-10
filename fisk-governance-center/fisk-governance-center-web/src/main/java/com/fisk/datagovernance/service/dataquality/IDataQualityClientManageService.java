@@ -1,7 +1,10 @@
 package com.fisk.datagovernance.service.dataquality;
 
 import com.fisk.common.core.response.ResultEntity;
-import com.fisk.datagovernance.dto.dataquality.DataQualityRequestDTO;
+import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
+
+import java.util.List;
 
 /**
  * @author dick
@@ -10,107 +13,19 @@ import com.fisk.datagovernance.dto.dataquality.DataQualityRequestDTO;
  * @date 2022/4/12 13:41
  */
 public interface IDataQualityClientManageService {
-    /**
-     * 消费字段规则模板规则
-     *
-     * @param requestDTO 请求DTO
-     * @return 执行结果
-     */
-    ResultEntity<Object> buildFieldRule(DataQualityRequestDTO requestDTO);
 
     /**
-     * 消费字段聚合波动阈值模板规则
-     *
-     * @param requestDTO 请求DTO
-     * @return 执行结果
+     * 查询数据质量表规则（含字段规则）
      */
-    ResultEntity<Object> buildFieldAggregateRule(DataQualityRequestDTO requestDTO);
+    ResultEntity<TableRuleInfoDTO> getTableRuleList(int dataSourceId, String tableName,int tableBusinessType);
 
     /**
-     * 消费表行数波动阈值模板规则
-     *
-     * @param requestDTO 请求DTO
-     * @return 执行结果
+     * 查询数据质量所有数据源信息，含FiData系统数据源
      */
-    ResultEntity<Object> buildTableRowThresholdRule(DataQualityRequestDTO requestDTO);
+    ResultEntity<List<DataSourceConVO>> getAllDataSource();
 
     /**
-     * 消费空表校验模板规则
-     *
-     * @param requestDTO 请求DTO
-     * @return 执行结果
+     * 生成质量报告
      */
-    ResultEntity<Object> buildEmptyTableCheckRule(DataQualityRequestDTO requestDTO);
-
-    /**
-     * 消费表更新校验模板规则
-     *
-     * @param requestDTO 请求DTO
-     * @return 执行结果
-     */
-    ResultEntity<Object> buildUpdateTableRule(DataQualityRequestDTO requestDTO);
-
-    /**
-     * 消费表血缘断裂校验模板规则
-     *
-     * @param requestDTO 请求DTO
-     * @return 执行结果
-     */
-    ResultEntity<Object> buildTableBloodKinshipRule(DataQualityRequestDTO requestDTO);
-
-    /**
-     * 消费业务验证模板规则
-     *
-     * @param requestDTO 请求DTO
-     * @return 执行结果
-     */
-    ResultEntity<Object> buildBusinessCheckRule(DataQualityRequestDTO requestDTO);
-
-    /**
-     * 消费相似度模板消费规则
-     *
-     * @param requestDTO 请求DTO
-     * @return 执行结果
-     */
-    ResultEntity<Object> buildSimilarityRule(DataQualityRequestDTO requestDTO);
-
-    /**
-     * 消费业务清洗模板规则
-     *
-     * @param requestDTO 请求DTO
-     * @return 执行结果
-     */
-    ResultEntity<Object> buildBusinessFilterRule(DataQualityRequestDTO requestDTO);
-
-    /**
-     * 消费指定时间回收模板规则
-     *
-     * @param requestDTO 请求DTO
-     * @return 执行结果
-     */
-    ResultEntity<Object> buildSpecifyTimeRecyclingRule(DataQualityRequestDTO requestDTO);
-
-    /**
-     * 消费空表回收模板规则
-     *
-     * @param requestDTO 请求DTO
-     * @return 执行结果
-     */
-    ResultEntity<Object> buildEmptyTableRecoveryRule(DataQualityRequestDTO requestDTO);
-
-    /**
-     * 消费数据无刷新回收模板规则
-     *
-     * @param requestDTO 请求DTO
-     * @return 执行结果
-     */
-    ResultEntity<Object> buildNoRefreshDataRecoveryRule(DataQualityRequestDTO requestDTO);
-
-    /**
-     * 消费数据血缘断裂回收模板规则
-     *
-     * @param requestDTO 请求DTO
-     * @return 执行结果
-     */
-    ResultEntity<Object> buildDataBloodKinshipRecoveryRule(DataQualityRequestDTO requestDTO);
+    ResultEntity<Object> createQualityReport(int id);
 }

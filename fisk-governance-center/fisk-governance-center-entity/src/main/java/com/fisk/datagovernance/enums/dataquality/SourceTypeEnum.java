@@ -12,7 +12,7 @@ public enum SourceTypeEnum implements BaseEnum {
 
     NONE(0, "空"),
     FiData(1, "FiData"),
-    custom(2, "自定义");
+    custom(2, "custom");
 
     SourceTypeEnum(int value, String name) {
         this.name = name;

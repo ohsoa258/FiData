@@ -1,0 +1,49 @@
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    org:
+      springframework:
+        orm:
+          jpa: debug
+management:
+  endpoint:
+    health:
+      show-details: always
+    shutdown:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+# spring配置
+spring:
+  application:
+    name: mdmmodel-service
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    password: Password01!
+    url: jdbc:mysql://172.17.1.248:3306/dmp_mdm_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+    username: root
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  redis:
+    host: 172.17.1.248
+
+# pg数仓
+pgsql-mdm:
+  password: Password01!
+  url: jdbc:postgresql://192.168.1.250:5432/dmp_mdm?stringtype=unspecified
+  username: postgres
+  type: PG
+
+# 阿里云ocr参数配置
+ocr:
+  aliyun:
+    url: https://gjbsb.market.alicloudapi.com/ocrservice/advanced
+    appCode: be40b237d6fe470d84590b5a42934596
+
+file:
+  uploadUrl: /root/nginx/app/file/mdm/
+  echoPath: /file/mdm/

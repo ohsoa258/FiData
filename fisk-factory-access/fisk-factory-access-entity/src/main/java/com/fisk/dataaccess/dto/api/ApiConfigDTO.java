@@ -41,6 +41,9 @@ public class ApiConfigDTO {
     @ApiModelProperty(value = "实时api的json结构示例")
     public String pushData;
 
+    @ApiModelProperty(value = "是否全字段去重")
+    public boolean fieldDistinct;
+
     @ApiModelProperty(value = "0: 保存;   1: 保存&发布", required = true)
     public int flag;
 
@@ -53,5 +56,5 @@ public class ApiConfigDTO {
     public String pushDataJson;
 
     @ApiModelProperty(value = "true: 勾选(发布之后,按照配置调用一次api);false: 不勾选")
-    public boolean executeConfigFlag;
+    public Boolean executeConfigFlag;
 }

@@ -12,31 +12,36 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Objects;
 
 /**
- * @author JianWenYang
+ * @author Lock
  */
 @Service
-public class TableHistoryImpl
-        extends ServiceImpl<TableHistoryMapper, TableHistoryPO>
-        implements ITableHistory {
+public class TableHistoryImpl extends ServiceImpl<TableHistoryMapper, TableHistoryPO> implements ITableHistory {
 
     @Resource
     TableHistoryMapper mapper;
 
     @Override
-    public ResultEnum addTableHistory(List<TableHistoryDTO> dto)
-    {
+    public ResultEnum addTableHistory(List<TableHistoryDTO> dto) {
+        dto.stream().filter(Objects::nonNull)
+                .forEach(e -> {
+                    if (e.openTransmission) {
+                        e.remark = e.remark + " --> 已同步";
+                    } else {
+                        e.remark = e.remark + " --> 未同步";
+                    }
+                });
 
-        return this.saveBatch(TableHistoryMap.INSTANCES.dtoListToPoList(dto))?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        return this.saveBatch(TableHistoryMap.INSTANCES.dtoListToPoList(dto)) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
-    public List<TableHistoryDTO> getTableHistoryList(TableHistoryDTO dto)
-    {
-        QueryWrapper<TableHistoryPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(TableHistoryPO::getTableId,dto.tableId)
-                .eq(TableHistoryPO::getTableType,dto.tableType);
+    public List<TableHistoryDTO> getTableHistoryList(TableHistoryDTO dto) {
+        QueryWrapper<TableHistoryPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(TableHistoryPO::getTableId, dto.tableId)
+                .eq(TableHistoryPO::getTableType, dto.tableType);
         return TableHistoryMap.INSTANCES.poListToDtoList(mapper.selectList(queryWrapper));
     }
 

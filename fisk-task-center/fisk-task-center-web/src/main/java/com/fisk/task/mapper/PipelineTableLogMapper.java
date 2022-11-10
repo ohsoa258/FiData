@@ -2,9 +2,11 @@ package com.fisk.task.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
+import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.entity.PipelineTableLogPO;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
@@ -34,4 +36,12 @@ public interface PipelineTableLogMapper extends FKBaseMapper<PipelineTableLogPO>
 
     List<PipelineTableLogVO> getPipelineTableLogs(@Param("tableId") Integer tableId, @Param("tableType") Integer tableType, @Param("keyword") String keyword);
 
+    /**
+     * 根据组件id获取数据
+     *
+     * @param componentId 组件id
+     * @return 返回值
+     */
+    @Select("select * from tb_pipeline_table_log where component_id=#{componentId} and del_flag=1 order by create_time desc limit 1")
+    PipelineTableLogDTO selectByComponentId(@Param("componentId") Long componentId);
 }

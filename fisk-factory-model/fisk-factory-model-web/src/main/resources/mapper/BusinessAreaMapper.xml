@@ -52,4 +52,26 @@
 	    AND del_flag = 1 and business_id=${query.appId} and fact_tab_name like CONCAT('%',#{query.keyword},'%')
     </select>
 
+    <insert id="insertBusinessArea" useGeneratedKeys="true" keyProperty="dto.id" keyColumn="id"
+            parameterType="com.fisk.datamodel.dto.businessarea.BusinessAreaDTO">
+        insert into tb_area_business
+        (business_name,
+         business_des,
+         business_admin,
+         business_email,
+         create_user,
+         create_time,
+         del_flag
+        )
+        value(
+        #{dto.businessName},
+        #{dto.businessDes},
+        #{dto.businessAdmin},
+        #{dto.businessEmail},
+        #{creator},
+        #{time},
+        1
+        );
+    </insert>
+
 </mapper>

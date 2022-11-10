@@ -37,9 +37,14 @@ public class DataSourceConPO extends BasePO
     public int conPort;
 
     /**
-     * 模型
+     * FiData数据源id
      */
-    public String conCube;
+    public int datasourceId;
+
+    /**
+     * 数据源类型 1、FiData 2、自定义
+     */
+    public int datasourceType;
 
     /**
      * 数据库名称

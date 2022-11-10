@@ -1,18 +1,49 @@
 server:
   port: 8083
 
-
 eureka:
-  server:
-    #关闭自我保护模式
-    enable-self-preservation: false
   client:
-    service-url:
-      defaultZone: http://127.0.0.1:8082/eureka #注册中心的地址
-      #eureka客户端发送心跳间隔，默认30秒
-      lease-renewal-interval-in-seconds: 3
-      #eureka服务器在接收到实例的最后一次发出的心跳后，需要等待多久才可以将此实例删除
-      lease-expiration-duration-in-seconds: 3
+    healthcheck:
+      enabled: true
+    serviceUrl:
+      # eureka服务端地址
+      defaultZone: http://127.0.0.1:8082/eureka
+    # 自己去服务端获取其他服务注册信息间隔时间，默认30秒
+    registry-fetch-interval-seconds: 2
+    # 客户端连接eureka服务端超时时间，默认为5秒
+    eureka-server-connect-timeout-seconds: 5
+    # 客户端读取eureka服务端超时时间
+    eureka-server-read-timeout-seconds: 5
+  instance:
+    metadata-map:
+      cluster: ${spring.application.name}
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+    # status-page-url-path: ${server.servletPath}/info
+    # 该服务实例安全健康检查地址
+    # health-check-url-path: ${server.servletPath}/health
+    # 不使用主机名来定义注册中心的地址，而使用IP地址的形式，如果设置了
+    # eureka.instance.ip-address 属性，则使用该属性配置的IP，否则自动获取除环路IP外的第一个IP地址
+    prefer-ip-address: true
+    # 每隔n秒，发送一次心跳 （spring cloud 默认配置30s）
+    lease-renewal-interval-in-seconds: 2
+    # 告诉eureka服务端，n秒内未收到心跳，就将该服务剔除 （spring cloud 默认配置90s）
+    lease-expiration-duration-in-seconds: 4
+
+feign:
+  client:
+    config:
+      default:
+        loggerLevel: basic
+  hystrix:
+    enabled: true
+
+ribbon:
+  ConnectTimeout: 3000
+  ReadTimeout: 15000
+  NIWSServerListClassName: com.netflix.niws.loadbalancer.DiscoveryEnabledNIWSServerList
+  ServerListRefreshInterval: 3000
+  MaxAutoRetries: 0
+  MaxAutoRetriesNextServer: 0
 
 hystrix:
   command:
@@ -21,14 +52,21 @@ hystrix:
         timeout:
           enabled: true
         isolation:
+          # 线程隔离 THREAD， SEMAPHORE
+          strategy: THREAD
           thread:
-            timeoutInMilliseconds: 20000 # 请求超时时长：6000ms
-
-ribbon:
-  # ribbon请求连接的超时时间- 限制5秒内必须请求到服务，并不限制服务处理的返回时间
-  ConnectTimeout: 5000 # 连接超时时间,毫秒
-  # 请求处理的超时时间 下级服务响应最大时间,超出时间消费方（路由也是消费方）返回timeout,超时时间不可大于断路器的超时时间
-  ReadTimeout: 6000 # 逻辑处理超时时间,毫秒
+            # 超时时间
+            timeoutInMilliseconds: 15500
+            # 超时时是否应中断执行（默认true）
+            interruptOnTimeout: true
+      circuitBreaker:
+        enabled: true
+        # 在滚动窗口中启用熔断的最小请求数（默认20次）
+        requestVolumeThreshold: 10
+        # 熔断后，多少ms后进行一次请求尝试（默认5000ms）
+        sleepWindowInMilliseconds: 5000
+        # 当请求错误比例到达n%时，开启熔断（默认50%）
+        errorThresholdPercentage: 50
 
 spring:
   application:
@@ -36,10 +74,12 @@ spring:
   # 日志输入环境
   profiles:
     active: dev
+  freemarker:
+    check-template-location: false
+  redis:
+    host: 192.168.11.130
   cloud:
-
     gateway:
-
       # =============跨域============
       globalcors: # 全局的跨域处理
         add-to-simple-url-handler-mapping: true # 是否将当前cors配置加入到SimpleUrlHandlerMapping中，解决options请求被拦截问题
@@ -138,21 +178,13 @@ spring:
           predicates:
             - Path=/mdmmodel/**
 
-
-  redis:
-    host: 192.168.11.130
-#    host: 192.168.21.13
-#    host: 10.220.108.140
-#    port: 16380
-#    password: test123456
-
-
-logging:
-  level:
-    com.fisk: debug
 fk:
   jwt:
     key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
   auth:
-    clientId: api-gateway
+    clientId: gateway-service
     secret: 1234
+  encoder:
+    crypt:
+      secret: ${random.uuid}
+      strength: 6

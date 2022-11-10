@@ -49,6 +49,8 @@ public interface TableAccessMap {
      */
     TableAccessNonDTO poToDtoNon(TableAccessPO po);
 
+    TableAccessPO dtoToPoNon(TableAccessNonDTO po);
+
     /**
      * list集合 po -> dto
      *

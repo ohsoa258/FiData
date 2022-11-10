@@ -17,6 +17,7 @@ import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.service.doris.IDorisBuild;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.task.ITBETLIncremental;
+import com.fisk.task.utils.StackTraceHelper;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
@@ -89,10 +90,12 @@ public class BuildModelTaskListener {
                 if (tableType == 1) {
                     modelPublishStatusDTO.status = 1;
                     modelPublishStatusDTO.id = Math.toIntExact(tableId);
+                    modelPublishStatusDTO.type = 1;
                     client.updateDimensionPublishStatus(modelPublishStatusDTO);
                 } else {
                     modelPublishStatusDTO.status = 1;
                     modelPublishStatusDTO.id = Math.toIntExact(tableId);
+                    modelPublishStatusDTO.type = 1;
                     client.updateFactPublishStatus(modelPublishStatusDTO);
                 }
                 log.info("nifi流程配置结束");
@@ -101,14 +104,16 @@ public class BuildModelTaskListener {
         } catch (Exception e) {
             if (tableType == 1) {
                 modelPublishStatusDTO.status = 2;
+                modelPublishStatusDTO.type = 1;
                 modelPublishStatusDTO.id = Math.toIntExact(tableId);
                 client.updateDimensionPublishStatus(modelPublishStatusDTO);
             } else {
                 modelPublishStatusDTO.status = 2;
+                modelPublishStatusDTO.type = 1;
                 modelPublishStatusDTO.id = Math.toIntExact(tableId);
                 client.updateFactPublishStatus(modelPublishStatusDTO);
             }
-            e.printStackTrace();
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.ERROR;
         } finally {
             acke.acknowledge();

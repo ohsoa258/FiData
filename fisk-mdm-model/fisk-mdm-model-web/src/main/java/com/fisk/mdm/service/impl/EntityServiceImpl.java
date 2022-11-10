@@ -80,7 +80,11 @@ public class EntityServiceImpl implements EntityService {
         String name = dto.getName();
         if (StringUtils.isNotBlank(name)) {
             query.lambda()
-                    .like(EntityPO::getName, name);
+                    .like(EntityPO::getName, name)
+                    .or()
+                    .like(EntityPO::getDisplayName,name)
+                    .or()
+                    .like(EntityPO::getDesc,name);
             Page<EntityPO> entityPoPage = entityMapper.selectPage(poPage, query);
 
             // 查创建人信息
@@ -280,7 +284,7 @@ public class EntityServiceImpl implements EntityService {
     }
 
     @Override
-    public EntityInfoVO getAttributeById(Integer id) {
+    public EntityInfoVO getAttributeById(Integer id,String name) {
         EntityPO entityPo = entityMapper.selectById(id);
         if (entityPo == null){
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -293,6 +297,17 @@ public class EntityServiceImpl implements EntityService {
         queryWrapper.lambda()
                 .eq(AttributePO::getEntityId,id)
                 .orderByAsc(AttributePO::getSortWieght);
+
+        // 追加模糊搜索条件
+        if (StringUtils.isNotBlank(name)){
+            queryWrapper.lambda().and(wq -> wq
+                    .like(AttributePO::getName, name)
+                    .or()
+                    .like(AttributePO::getDisplayName,name)
+                    .or()
+                    .like(AttributePO::getDesc,name));
+        }
+
         List<AttributePO> attributePoList = attributeMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(attributePoList)){
             List<AttributeInfoDTO> dtoList = AttributeMap.INSTANCES.poToDtoList(attributePoList).stream().filter(Objects::nonNull)
@@ -320,20 +335,36 @@ public class EntityServiceImpl implements EntityService {
                     if(codeAttribute != null){
                         //根据code属性的entity_id查询到实体
                         EntityPO domainEntityPo = entityMapper.selectById(codeAttribute.getEntityId());
-                        if(domainEntityPo != null){
+                        if (domainEntityPo != null) {
                             //为”关联实体名“赋值
-                            attributeInfoDTO.setDomainEntityId((int)domainEntityPo.getId());
+                            attributeInfoDTO.setDomainEntityId((int) domainEntityPo.getId());
                             //为”关联实体名“赋值
                             attributeInfoDTO.setDomainName(domainEntityPo.getName());
                         }
                     }
                 }
             }
+            dtoList.stream().map(e -> {
+                e.setDataTypeEnDisplay(DataTypeEnum.getValue(e.getDataType()).name());
+                return e;
+            }).collect(Collectors.toList());
             entityInfoVo.setAttributeList(dtoList);
             return entityInfoVo;
         }
 
         return entityInfoVo;
+    }
+
+    @Override
+    public EntityInfoVO getFilterAttributeById(Integer id) {
+        EntityInfoVO entityInfo = getAttributeById(id, null);
+        List<AttributeInfoDTO> collect = entityInfo.getAttributeList()
+                .stream()
+                .filter(e -> e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName())
+                        && e.getSyncStatus().equals(AttributeSyncStatusEnum.SUCCESS.getName()))
+                .collect(Collectors.toList());
+        entityInfo.setAttributeList(collect);
+        return entityInfo;
     }
 
     /**
@@ -342,14 +373,14 @@ public class EntityServiceImpl implements EntityService {
      * @return {@link List}<{@link EntityVO}>
      */
     @Override
-    public ResultEntity<List<EntityVO>> getCreateSuccessEntity(Integer modelId,Integer entityId) {
+    public ResultEntity<List<EntityVO>> getCreateSuccessEntity(Integer modelId, Integer entityId) {
         QueryWrapper<EntityPO> wrapper = new QueryWrapper<>();
-        wrapper.lambda().eq(EntityPO::getStatus,MdmStatusTypeEnum.CREATED_SUCCESSFULLY)
-                .ne(EntityPO::getId,entityId)
-                .eq(EntityPO::getModelId,modelId);
+        wrapper.lambda().eq(EntityPO::getStatus, MdmStatusTypeEnum.CREATED_SUCCESSFULLY)
+                .ne(EntityPO::getId, entityId)
+                .eq(EntityPO::getModelId, modelId);
         List<EntityPO> entityPoS = entityMapper.selectList(wrapper);
         return entityPoS.size() == 0 ? ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS) :
-                ResultEntityBuild.build(ResultEnum.SUCCESS,EntityMap.INSTANCES.poToVoList(entityPoS));
+                ResultEntityBuild.build(ResultEnum.SUCCESS, EntityMap.INSTANCES.poToVoList(entityPoS));
     }
 
     /**
@@ -399,6 +430,20 @@ public class EntityServiceImpl implements EntityService {
                 .eq(EntityPO::getStatus, MdmStatusTypeEnum.CREATED_SUCCESSFULLY);
         List<EntityPO> list = entityMapper.selectList(queryWrapper);
         return EntityMap.INSTANCES.poListToDropDownVoList(list);
+    }
+
+    /**
+     * 实体是否开启成员日志
+     *
+     * @param entityId
+     * @return
+     */
+    public boolean getEnableMemberLog(Integer entityId) {
+        EntityPO entityPo = entityMapper.selectById(entityId);
+        if (entityPo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return entityPo.getEnableMemberLog() == 0 ? false : true;
     }
 
 }

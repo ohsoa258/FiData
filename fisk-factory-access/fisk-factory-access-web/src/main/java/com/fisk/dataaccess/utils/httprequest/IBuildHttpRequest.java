@@ -20,6 +20,14 @@ public interface IBuildHttpRequest {
     JSONObject httpRequest(ApiHttpRequestDTO dto);
 
     /**
+     * 请求第三方平台api返回的参数
+     *
+     * @param dto dto
+     * @return jsonObject
+     */
+    String getHttpRequest(ApiHttpRequestDTO dto);
+
+    /**
      * 获取api的临时token
      *
      * @param dto dto

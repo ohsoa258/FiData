@@ -1,8 +1,10 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.app.DbConnectionDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
@@ -10,17 +12,30 @@ import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
 import com.fisk.dataaccess.dto.ftp.FtpPathDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
+import com.fisk.dataaccess.entity.AppRegistrationPO;
+import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.enums.FtpFileTypeEnum;
+import com.fisk.dataaccess.mapper.AppRegistrationMapper;
+import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.service.IFtp;
 import com.fisk.dataaccess.utils.ftp.ExcelUtils;
 import com.fisk.dataaccess.utils.ftp.FtpUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import static com.fisk.dataaccess.utils.ftp.FtpUtils.getInputStreamByName;
@@ -31,11 +46,18 @@ import static com.fisk.dataaccess.utils.ftp.FtpUtils.getInputStreamByName;
  * @description ftp数据源实现类
  * @date 2021/12/28 10:50
  */
+@Slf4j
 @Service
 public class FtpImpl implements IFtp {
 
     @Resource
     AppDataSourceImpl dataSourceImpl;
+
+    @Resource
+    TableAccessMapper tableAccessMapper;
+
+    @Resource
+    AppRegistrationMapper appRegistrationMapper;
 
     @Override
     public ResultEntity<Object> connectFtp(DbConnectionDTO dto) {
@@ -55,6 +77,10 @@ public class FtpImpl implements IFtp {
     @Override
     public List<ExcelDTO> previewContent(OdsQueryDTO query) {
         FTPClient ftpClient = getFtpClient(query.appId);
+
+        if (StringUtils.isBlank(query.querySql) || FtpFileTypeEnum.judgeSuffixList(query.querySql)) {
+            throw new FkException(ResultEnum.FILE_NOT_SELECTED);
+        }
 
         // 重新封装excel参数
         List<String> excelParam = encapsulationExcelParam(query.querySql);
@@ -87,13 +113,87 @@ public class FtpImpl implements IFtp {
         return FtpUtils.listFilesAndDirectorys(ftpClient, dto.fullPath, fileTypeEnum.getName());
     }
 
+    @Override
+    public ResultEnum copyFtpFile(int tableAccessId) {
+        log.info("【copyFtpFile】请求参数：" + tableAccessId);
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
+        FTPClient ftpClient = null;
+        ByteArrayOutputStream fos = null;
+        ByteArrayInputStream in = null;
+        try {
+            if (tableAccessId == 0) {
+                return ResultEnum.PARAMTER_NOTNULL;
+            }
+            TableAccessPO tableAccessPO = tableAccessMapper.selectById(tableAccessId);
+            if (tableAccessPO == null || StringUtils.isEmpty(tableAccessPO.getSqlScript())) {
+                log.info("【copyFtpFile】tableAccess为空");
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            AppRegistrationPO appRegistrationPO = appRegistrationMapper.selectById(tableAccessPO.getAppId());
+            if (appRegistrationPO == null) {
+                log.info("【copyFtpFile】appRegistration为空");
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            // 将源文件复制到Archive文件夹下
+            log.info("【copyFtpFile】文件信息：" + tableAccessPO.getSqlScript());
+            List<String> excelParam = encapsulationExcelParam(tableAccessPO.getSqlScript());
+            if (CollectionUtils.isEmpty(excelParam) || excelParam.size() < 4) {
+                log.error("【copyFtpFile】文件参数解析异常：" + JSON.toJSONString(excelParam));
+                return ResultEnum.SQL_ERROR;
+            }
+            ftpClient = getFtpClient(appRegistrationPO.getId());
+            if (ftpClient == null) {
+                log.info("【copyFtpFile】ftpClient建立连接失败");
+                return ResultEnum.FTP_CONNECTION_ERROR;
+            }
+            // 判断根目录是否存在Archive文件夹，不存在则创建
+            boolean isExist = ftpClient.changeWorkingDirectory("/Archive");
+            if (!isExist) {
+                log.info("【copyFtpFile】文件目录不存在，创建Archive目录");
+                ftpClient.makeDirectory("/Archive");
+            }
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date date = simpleDateFormat.parse(DateTimeUtils.getNow());
+            String format = String.valueOf(date.getTime());
+            String toPath = "/Archive/" + excelParam.get(3) + "_" + format + excelParam.get(2);
+            // 设置被动模式，开通一个端口来传输数据
+            ftpClient.enterLocalPassiveMode();
+            ftpClient.setBufferSize(1024);
+            fos = new ByteArrayOutputStream();
+            ftpClient.retrieveFile(tableAccessPO.getSqlScript(), fos);
+            in = new ByteArrayInputStream(fos.toByteArray());
+            // 复制文件
+            ftpClient.storeFile(toPath, in);
+            // 移动文件到新目录
+            // ftpClient.rename(String from, String to);
+        } catch (Exception ex) {
+            log.error("【copyFtpFile】触发系统异常：" + ex);
+            resultEnum = ResultEnum.ERROR;
+        } finally {
+            try {
+                if (fos != null) {
+                    fos.close();
+                }
+                if (in != null) {
+                    in.close();
+                }
+                if (ftpClient != null) {
+                    FtpUtils.closeFtpConnect(ftpClient);
+                }
+            } catch (Exception ex) {
+                log.error("【copyFtpFile】关闭文件流异常");
+            }
+        }
+        return resultEnum;
+    }
+
     /**
+     * 根据应用id连接ftp数据源, 获取ftp客户端
+     *
+     * @param appId 应用id
      * @return org.apache.commons.net.ftp.FTPClient
-     * @description 根据应用id连接ftp数据源, 获取ftp客户端
      * @author Lock
      * @date 2021/12/31 10:24
-     * @version v1.0
-     * @params appId 应用id
      */
     private FTPClient getFtpClient(long appId) {
         // 查询ftp数据源配置信息
@@ -111,12 +211,12 @@ public class FtpImpl implements IFtp {
     }
 
     /**
+     * 封装读取excel文件内容所需参数
+     *
+     * @param textFullPath 文件全路径
      * @return java.util.List<java.lang.String>
-     * @description 封装读取excel文件内容所需参数
      * @author Lock
      * @date 2021/12/29 11:01
-     * @version v1.0
-     * @params textFullPath
      */
     public List<String> encapsulationExcelParam(String textFullPath) {
         List<String> param = new ArrayList<>();

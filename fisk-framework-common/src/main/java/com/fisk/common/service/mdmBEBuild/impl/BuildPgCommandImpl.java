@@ -14,7 +14,10 @@ import com.fisk.common.service.pageFilter.dto.OperatorVO;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author WangYan
@@ -43,25 +46,22 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
 
     @Override
     public String buildInsertImportData(InsertImportDataDTO dto) {
-        Date date = new Date();
         int delFlat = dto.getDelete() ? 0 : 1;
         StringBuilder str = new StringBuilder();
         str.append("insert into " + dto.getTableName());
         str.append("(" + CommonMethods.getColumnNameAndValue(dto.getMembers().get(0), ImportDataEnum.COLUMN_NAME.getValue()));
         str.append(",fidata_import_type,fidata_batch_code,fidata_version_id,");
-        str.append("fidata_create_time,fidata_create_user,fidata_update_time,fidata_update_user,fidata_del_flag");
+        str.append("fidata_del_flag");
         str.append(")");
         str.append(" values(" + CommonMethods.getColumnNameAndValue(dto.getMembers().get(0), ImportDataEnum.COLUMN_VALUE.getValue()) + ","
-                + dto.getImportType() + ",'" + dto.getBatchCode() + "'," + dto.getVersionId() + ",'");
-        str.append(CommonMethods.getFormatDate(date) + "'," + dto.getUserId() + ",'");
-        str.append(CommonMethods.getFormatDate(date) + "'," + dto.getUserId() + "," + delFlat + ")");
+                + dto.getImportType() + ",'" + dto.getBatchCode() + "'," + dto.getVersionId() + ",");
+        str.append(delFlat + ")");
         if (dto.getMembers().size() > 1) {
             for (int i = 1; i < dto.getMembers().size(); i++) {
                 str.append(",(" + CommonMethods.getColumnNameAndValue(dto.getMembers().get(i), ImportDataEnum.COLUMN_VALUE.getValue()) + ","
                         + dto.getImportType() + ",'" + dto.getBatchCode() + "',"
-                        + dto.getVersionId() + ",'");
-                str.append(CommonMethods.getFormatDate(date) + "'," + dto.getUserId() + ",'");
-                str.append(CommonMethods.getFormatDate(date) + "'," + dto.getUserId() + ",1" + ")");
+                        + dto.getVersionId() + ",");
+                str.append("1" + ")");
             }
         }
         return str.toString();
@@ -111,10 +111,13 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         int offset = (dto.getPageIndex() - 1) * dto.getPageSize();
         StringBuilder str = new StringBuilder();
         str.append("select " + dto.getColumnNames());
-        str.append(" from " + dto.getTableName() + " view ");
-        str.append("where fidata_del_flag = 1 and fidata_version_id = " + dto.getVersionId());
-        str.append(dto.getConditions());
-        str.append(" order by fidata_create_time,fidata_id desc ");
+        str.append(" from ");
+        str.append("\"" + dto.getTableName() + "\"");
+        str.append("where fidata_version_id = " + dto.getVersionId());
+        if (!StringUtils.isEmpty(dto.getConditions())) {
+            str.append(dto.getConditions());
+        }
+        str.append(" order by fidata_create_time desc ");
         if (!dto.getExport()) {
             str.append(" limit " + dto.getPageSize() + " offset " + offset);
         }
@@ -142,16 +145,22 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildQueryOneColumn(String tableName, String selectColumnName) {
-        return "select distinct " + selectColumnName + " as columnName from " + tableName;
+    public String buildQueryOneColumn(String tableName, String selectColumnName, int versionId) {
+        StringBuilder str = new StringBuilder();
+        str.append("select distinct ");
+        str.append(selectColumnName + " as columns from " + tableName);
+        str.append(" where fidata_version_id=" + versionId);
+        return str.toString();
     }
 
     @Override
     public String buildQueryCount(String tableName, String queryConditions) {
         StringBuilder str = new StringBuilder();
-        str.append("SELECT COUNT(*) AS totalNum FROM " + tableName);
+        str.append("SELECT COUNT(*) AS totalNum FROM ");
+        str.append("\"" + tableName + "\"");
+        str.append(" WHERE 1=1 ");
         if (!StringUtils.isEmpty(queryConditions)) {
-            str.append(" WHERE 1=1 " + queryConditions);
+            str.append(queryConditions);
         }
         return str.toString();
     }
@@ -174,7 +183,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildQueryOneData(String tableName, String queryConditions) {
+    public String buildQueryData(String tableName, String queryConditions) {
         StringBuilder str = new StringBuilder();
         str.append(" select *");
         str.append(" from " + tableName);
@@ -183,12 +192,12 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildQueryCodeAndName(String tableName, String code, String name) {
+    public String buildQueryCodeAndName(String tableName, String code, String name, Integer versionId) {
         StringBuilder str = new StringBuilder();
         str.append("select " + code + " as code,");
         str.append(name + " as name ");
         str.append(" from " + tableName);
-        str.append(" where fidata_del_flag=1 ");
+        str.append(" where fidata_version_id=" + versionId);
         return str.toString();
     }
 
@@ -291,11 +300,11 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
                 case LESS_THAN_EQUAL:
                 case GREATER_THAN:
                 case GREATER_THAN_EQUAL:
-                    str.append(" and " + item.columnName + operatorEnum.getValue() + "'" + item.columnValue + "'");
+                    str.append(" and " + item.columnName + " " + operatorEnum.getValue() + "'" + item.columnValue + "'");
                     break;
                 case LIKE:
                 case NOT_LIKE:
-                    str.append(" and " + item.columnName + operatorEnum.getValue() + "'" + item.columnValue + "%'");
+                    str.append(" and " + item.columnName + " " + operatorEnum.getValue() + "'%" + item.columnValue + "%'");
                     break;
                 default:
                     continue;
@@ -313,7 +322,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         List<String> valueList = new ArrayList<>();
         for (Map.Entry<String, Object> item : data.entrySet()) {
             columnList.add(item.getKey());
-            valueList.add(item.getValue().toString());
+            valueList.add(item.getValue() == null ? "null" : item.getValue().toString());
         }
         str.append(String.join(",", columnList) + ") ");
         str.append("values(" + CommonMethods.convertListToString(valueList) + ")");

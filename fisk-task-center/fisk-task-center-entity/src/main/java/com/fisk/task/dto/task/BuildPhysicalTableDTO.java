@@ -1,5 +1,6 @@
 package com.fisk.task.dto.task;
 
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.task.dto.MQBaseDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
@@ -61,4 +62,15 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
      * 是否是表格同步
      */
     public boolean excelFlow;
+    /**
+     * 是否是schema结构
+     */
+    public boolean whetherSchema;
+
+
+    /*
+     * 接入的增量时间参数
+     */
+    public List<DeltaTimeDTO> deltaTimes;
+
 }

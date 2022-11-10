@@ -2,6 +2,9 @@ package com.fisk.mdm.vo.attribute;
 
 import lombok.Data;
 
+import java.io.Serializable;
+import java.util.List;
+
 /**
  * 属性列名vo
  *
@@ -9,7 +12,7 @@ import lombok.Data;
  * @date 2022/04/28
  */
 @Data
-public class AttributeColumnVO {
+public class AttributeColumnVO implements Serializable {
 
     /**
      * 实体id
@@ -51,4 +54,10 @@ public class AttributeColumnVO {
      * 数据类型业务名称
      */
     public String dataTypeEnDisplay;
+
+    /**
+     * 属性所属属性组id集合
+     */
+    public List<Integer> attributeGroupIds;
+
 }

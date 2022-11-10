@@ -86,8 +86,7 @@ public class WsSessionManager {
                 // 关闭连接
                 session.close();
             } catch (IOException e) {
-                e.printStackTrace();
-                log.error("ws连接关闭失败：", e);
+                log.error("ws连接关闭失败：", StackTraceHelper.getStackTraceInfo(e));
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.dto.v3;
 
+import com.fisk.dataaccess.enums.ScanStartupModeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -59,6 +60,9 @@ public class TbTableAccessDTO {
      */
     public String sheet;
 
+    @ApiModelProperty(value = "发布错误信息", required = true)
+    public String publishErrorMsg;
+
     /**
      * 0: 发布;  1: 保存sql脚本
      */
@@ -68,4 +72,41 @@ public class TbTableAccessDTO {
      * 用于拦截sql保存时空字符
      */
     public int sqlFlag;
+
+    /**
+     * oracle-cdc名称
+     */
+    public String pipelineName;
+
+    /**
+     * oracle-cdc检查点时间
+     */
+    public Integer checkPointInterval;
+
+    /**
+     * oracle-cdc检查点时间单位
+     */
+    public String checkPointUnit;
+
+    /**
+     * 0:从最开始读 1:从最新的读
+     */
+    public ScanStartupModeEnum scanStartupMode;
+
+    /**
+     * 现有表
+     */
+    public boolean useExistTable;
+
+    /**
+     * 物理表显示名称
+     */
+    public String displayName;
+
+    /**
+     * 同步方式
+     */
+    public Integer syncMode;
+
+
 }

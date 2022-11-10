@@ -131,10 +131,10 @@ public interface IMasterDataService {
     /**
      * 获取实体表code和name数据
      *
-     * @param entityId
+     * @param dto
      * @return
      */
-    List<Map<String, Object>> listEntityCodeAndName(Integer entityId);
+    List<Map<String, Object>> listEntityCodeAndName(MasterDataBaseDTO dto);
 
 
 }

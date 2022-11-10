@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.map;
 
+import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceFieldDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
@@ -55,4 +56,41 @@ public interface DataAccessMap {
      */
     List<DataAccessSourceFieldDTO> fieldListPoToDto(List<TableFieldsPO> list);
 
+    /**
+     * table: po => dto
+     *
+     * @param po source
+     * @return target
+     */
+    @Mappings({
+            @Mapping(source = "tableName", target = "name")
+    })
+    FiDataTableMetaDataDTO tablePoToFiDataTableMetaData(TableAccessPO po);
+
+    /**
+     * list集合 po -> dto
+     *
+     * @param list source
+     * @return target
+     */
+    List<FiDataTableMetaDataDTO> tableListPoToFiDataTableMetaData(List<TableAccessPO> list);
+
+    /**
+     * field: po => dto
+     *
+     * @param po source
+     * @return target
+     */
+    @Mappings({
+            @Mapping(source = "fieldName", target = "name")
+    })
+    FiDataTableMetaDataDTO fieldPoToFiDataTableMetaData(TableFieldsPO po);
+
+    /**
+     * list集合 po -> dto
+     *
+     * @param list source
+     * @return target
+     */
+    List<FiDataTableMetaDataDTO> fieldListPoToFiDataTableMetaData(List<TableFieldsPO> list);
 }

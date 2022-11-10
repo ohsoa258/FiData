@@ -3,6 +3,8 @@ package com.fisk.datamodel.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.service.IDataModelTable;
 import io.swagger.annotations.Api;
@@ -25,6 +27,12 @@ public class DataManagementController {
     @GetMapping("/getDataModelTable/{publishStatus}")
     public ResultEntity<Object> getDataModelTable(@PathVariable("publishStatus") int publishStatus) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataModelTable(publishStatus));
+    }
+
+    @ApiOperation("获取数仓中每个表中的业务元数据配置")
+    @PostMapping("/setTableRule")
+    public ResultEntity<TableRuleInfoDTO> setTableRule(@RequestBody TableRuleParameterDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setTableRule(dto));
     }
 
 }

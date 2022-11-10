@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.dataassets.DataAssetsParameterDTO;
 import com.fisk.datamanagement.dto.dataassets.DataAssetsResultDTO;
+import com.fisk.datamanagement.service.IAssetsDirectory;
 import com.fisk.datamanagement.service.IDataAssets;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -31,34 +32,41 @@ public class DataAssetsController {
 
     @Resource
     IDataAssets service;
+    @Resource
+    IAssetsDirectory assetsDirectory;
 
     /**
      * 基于构造器注入
      */
     private final HttpServletResponse response;
+
     public DataAssetsController(HttpServletResponse response) {
         this.response = response;
     }
 
     @ApiOperation("获取表数据")
     @PostMapping("/getDataAssetsList")
-    public ResultEntity<Object> getDataAssetsList(@Validated @RequestBody DataAssetsParameterDTO dto){
+    public ResultEntity<Object> getDataAssetsList(@Validated @RequestBody DataAssetsParameterDTO dto) {
         DataAssetsResultDTO result = service.getDataAssetsTableList(dto);
-        if (dto.export)
-        {
-            exportTable(result,dto.tableName);
+        if (dto.export) {
+            exportTable(result, dto.tableName);
             return ResultEntityBuild.build(ResultEnum.SUCCESS);
         }
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,result);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
+    }
+
+    @ApiOperation("资产目录列表")
+    @GetMapping("/assetsDirectoryDataList")
+    public ResultEntity<Object> assetsDirectoryDataList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, assetsDirectory.assetsDirectoryData());
     }
 
     /**
-     *
      * @param result
      * @param tableName
      * @throws IOException
      */
-    public void exportTable( DataAssetsResultDTO result,String tableName) {
+    public void exportTable(DataAssetsResultDTO result, String tableName) {
         HSSFWorkbook workbook = new HSSFWorkbook();
         HSSFSheet sheet = workbook.createSheet("sheet1");
         HSSFRow row1 = sheet.createRow(0);

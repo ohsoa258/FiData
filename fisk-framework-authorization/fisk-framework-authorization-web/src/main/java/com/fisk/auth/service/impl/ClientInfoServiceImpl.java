@@ -29,7 +29,7 @@ public class ClientInfoServiceImpl extends ServiceImpl<ClientInfoMapper, ClientI
     public String getSecretKey(String clientId, String secret) {
 
         // 1.查询服务名
-        ClientInfo clientInfo = this.query().eq("client_id", clientId).one();
+        ClientInfo clientInfo = this.query().eq("client_id", clientId).eq("del_flag", 1).one();
 
         if (clientInfo == null) {
             throw new FkException(ResultEnum.AUTH_CLIENTINFO_ERROR, "客户端信息有误" + clientInfo + "不存在!");

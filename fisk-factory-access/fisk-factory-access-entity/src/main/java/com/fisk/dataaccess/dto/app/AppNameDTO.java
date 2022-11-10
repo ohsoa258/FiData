@@ -27,6 +27,8 @@ public class AppNameDTO extends BaseDTO {
     public byte appType;
     @ApiModelProperty(value = "主键", required = true)
     public long id;
+    @ApiModelProperty(value = "简称")
+    public String appAbbreviation;
 
     public AppNameDTO(BaseEntity entity) {
         super(entity);

@@ -1,7 +1,7 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.fisk.datamodel.mapper.DimensionMapper">
+<mapper namespace="com.fisk.datamodel.mapper.dimension.DimensionMapper">
     <select id="getDimension" resultType="com.fisk.datamodel.dto.dimensionattribute.DimensionAssociationDTO">
         SELECT a.*,
         b.business_name

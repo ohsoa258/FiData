@@ -2,6 +2,7 @@ package com.fisk.task.consumer;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.constants.MqConstants;
+import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -14,7 +15,9 @@ import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.listener.doris.BuildDorisTaskListener;
+import com.fisk.task.listener.governance.BuildQualityReportListener;
 import com.fisk.task.listener.mdm.BuildModelListener;
+import com.fisk.task.listener.metadata.IMetaDataListener;
 import com.fisk.task.listener.nifi.INifiTaskListener;
 import com.fisk.task.listener.nifi.INonRealTimeListener;
 import com.fisk.task.listener.nifi.ITriggerScheduling;
@@ -22,7 +25,7 @@ import com.fisk.task.listener.nifi.impl.BuildNifiCustomWorkFlow;
 import com.fisk.task.listener.nifi.impl.BuildNifiTaskListener;
 import com.fisk.task.listener.olap.BuildModelTaskListener;
 import com.fisk.task.listener.olap.BuildWideTableTaskListener;
-import com.fisk.task.listener.pipeline.IBuildPipelineSupervisionListener;
+import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
 import com.fisk.task.listener.postgre.datainput.BuildDataInputDeletePgTableListener;
 import com.fisk.task.listener.postgre.datainput.BuildDataInputPgTableListener;
 import com.fisk.task.mapper.NifiStageMapper;
@@ -31,6 +34,7 @@ import com.fisk.task.mapper.PipelineTableLogMapper;
 import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.pipeline.ITableTopicService;
+import com.fisk.task.utils.StackTraceHelper;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -50,6 +54,7 @@ import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author cfk
@@ -78,6 +83,12 @@ public class KafkaConsumer {
     private String sessionTimeoutMs;
     @Value("${nifi.pipeline.waitTime}")
     private String waitTime;
+    @Value("${nifi.Enable-Authentication}")
+    public String enableAuthentication;
+    @Value("${nifi.kerberos.login.config}")
+    public String loginConfigPath;
+    @Value("${nifi.kerberos.krb5.conf}")
+    public String krb5ConfigPath;
     @Resource
     BuildNifiTaskListener buildNifiTaskListener;
     @Resource
@@ -113,9 +124,13 @@ public class KafkaConsumer {
     @Resource
     BuildModelListener buildModelListener;
     @Resource
-    IBuildPipelineSupervisionListener iBuildPipelineSupervisionListener;
+    IPipelineTaskPublishCenter iPipelineTaskPublishCenter;
     @Resource
     INonRealTimeListener iNonRealTimeListener;
+    @Resource
+    IMetaDataListener metaDataListener;
+    @Resource
+    BuildQualityReportListener qualityReportListener;
 
     @Bean
     public KafkaListenerContainerFactory<?> batchFactory() {
@@ -139,6 +154,12 @@ public class KafkaConsumer {
 
     @Bean
     public Map<String, Object> consumerConfigs() {
+        if (Objects.equals(enableAuthentication, NifiConstants.enableAuthentication.ENABLE)) {
+            System.setProperty("java.security.auth.login.config", loginConfigPath);
+            System.setProperty("java.security.krb5.conf", krb5ConfigPath);
+        }
+
+
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, consumerBootstrapServer);
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, enableAutoCommit);
@@ -148,16 +169,22 @@ public class KafkaConsumer {
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valueDeserializer);
         // props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-091231");
         //每一批数量
+        if (Objects.equals(enableAuthentication, NifiConstants.enableAuthentication.ENABLE)) {
+            props.put("sasl.kerberos.service.name", "kafka");     //认证代码
+            props.put("sasl.mechanism", "GSSAPI");                //认证代码
+            props.put("security.protocol", "SASL_PLAINTEXT");
+        }
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 500);
         props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, sessionTimeoutMs);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         return props;
     }
 
-    //这里只用来存放reids
-    @KafkaListener(topics = {MqConstants.QueueConstants.BUILD_NIFI_PIPELINE_TOPICNAME_FLOW}, containerFactory = "batchFactory", groupId = "test")
-    public void consumer(List<String> arrMessage, Acknowledgment ack) {
-        iBuildPipelineSupervisionListener.msg(arrMessage, ack);
+    //任务发布中心,这里只用来存放reids
+    @KafkaListener(topics = "my-topic", containerFactory = "batchFactory", groupId = "test")
+    @MQConsumerLog
+    public void consumer(String message, Acknowledgment ack) {
+        iPipelineTaskPublishCenter.msg(message, ack);
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_NIFI_FLOW, containerFactory = "batchFactory", groupId = "test")
@@ -215,7 +242,7 @@ public class KafkaConsumer {
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog
+    //@MQConsumerLog
     public ResultEntity<Object> buildUnifiedControlTaskListener(String dataInfo, Acknowledgment acke) {
         return ResultEntityBuild.build(iTriggerScheduling.unifiedControl(dataInfo, acke));
     }
@@ -233,98 +260,24 @@ public class KafkaConsumer {
             }
             return ResultEntityBuild.build(ResultEnum.SUCCESS);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEntityBuild.build(ResultEnum.ERROR);
         } finally {
             acke.acknowledge();
         }
     }
 
-    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_GOVERNANCE_FIELD_STRONG_RULE_TEMPLATE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog
-    public void buildFieldStrongTaskListener(String dataInfo, Acknowledgment acke) {
-        //字段强规则模板消费接口
-    }
-
-    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_GOVERNANCE_FIELD_AGGREGATE_THRESHOLD_TEMPLATE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog
-    public void buildFieldAggregateTaskListener(String dataInfo, Acknowledgment acke) {
-        //字段聚合波动阈值模板消费接口
-    }
-
-    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_GOVERNANCE_ROWCOUNT_THRESHOLD_TEMPLATE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog
-    public void buildTableRowThresholdTaskListener(String dataInfo, Acknowledgment acke) {
-        //表行数波动阈值模板消费接口
-    }
-
-    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_GOVERNANCE_EMPTY_TABLE_CHECK_TEMPLATE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog
-    public void buildEmptyTableCheckTaskListener(String dataInfo, Acknowledgment acke) {
-        //空表校验模板消费接口
-    }
-
-    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_GOVERNANCE_UPDATE_TABLE_CHECK_TEMPLATE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog
-    public void buildUpdateTableTaskListener(String dataInfo, Acknowledgment acke) {
-        //表更新校验模板消费接口
-    }
-
-    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_GOVERNANCE_TABLE_BLOOD_KINSHIP_CHECK_TEMPLATE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog
-    public void buildTableBloodKinshipTaskListener(String dataInfo, Acknowledgment acke) {
-        //表血缘断裂校验模板消费接口
-    }
-
-    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_GOVERNANCE_BUSINESS_CHECK_TEMPLATE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog
-    public void buildBusinessCheckTaskListener(String dataInfo, Acknowledgment acke) {
-        //业务验证模板消费接口
-    }
-
-    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_GOVERNANCE_SIMILARITY_TEMPLATE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog
-    public void buildSimilarityTaskListener(String dataInfo, Acknowledgment acke) {
-        //相似度模板消费接口
-    }
-
-    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_GOVERNANCE_BUSINESS_FILTER_TEMPLATE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog
-    public void buildBusinessFilterTaskListener(String dataInfo, Acknowledgment acke) {
-        //业务清洗模板消费接口
-    }
-
-    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_GOVERNANCE_SPECIFY_TIME_RECYCLING_TEMPLATE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog
-    public void buildSpecifyTimeRecyclingTaskListener(String dataInfo, Acknowledgment acke) {
-        //指定时间回收模板消费接口
-    }
-
-    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_GOVERNANCE_EMPTY_TABLE_RECOVERY_TEMPLATE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog
-    public void buildEmptyTableRecoveryTaskListener(String dataInfo, Acknowledgment acke) {
-        //空表回收模板消费接口
-    }
-
-    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_GOVERNANCE_NO_REFRESH_DATA_RECOVERY_TEMPLATE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog
-    public void buildNoRefreshDataRecoveryTaskListener(String dataInfo, Acknowledgment acke) {
-        //数据无刷新回收模板消费接口
-    }
-
-    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_GOVERNANCE_DATA_BLOOD_KINSHIP_RECOVERY_TEMPLATE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog
-    public void buildDataBloodKinshipRecoveryTaskListener(String dataInfo, Acknowledgment acke) {
-        //数据血缘断裂回收模板消费接口
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_GOVERNANCE_TEMPLATE_FLOW, containerFactory = "batchFactory", groupId = "test")
+    //@MQConsumerLog
+    public void buildQualityReportTaskListener(String dataInfo, Acknowledgment acke) {
+        // 数据质量--质量报告 消费类
+        qualityReportListener.msg(dataInfo, acke);
     }
 
     @KafkaListener(topics = "pipeline.supervision", containerFactory = "batchFactory", groupId = "test")
     public void saveNifiStage(String dataInfo, Acknowledgment acke) {
         iNifiStage.saveNifiStage(dataInfo, acke);
     }
-
-
-    // 7个模板7个方法
 
     @MQConsumerLog
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_MDM_MODEL_DATA, containerFactory = "batchFactory", groupId = "test")
@@ -341,5 +294,10 @@ public class KafkaConsumer {
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW, containerFactory = "batchFactory", groupId = "test")
     public ResultEntity<Object> importData(String dataInfo, Acknowledgment acke) {
         return ResultEntityBuild.build(iNonRealTimeListener.importData(dataInfo, acke));
+    }
+
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_METADATA_FLOW, containerFactory = "batchFactory", groupId = "test")
+    public ResultEntity<Object> buildMetaData(String dataInfo, Acknowledgment ack) {
+        return ResultEntityBuild.build(metaDataListener.metaData(dataInfo, ack));
     }
 }

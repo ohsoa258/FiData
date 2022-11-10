@@ -4,6 +4,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.attributeGroup.*;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupVO;
 import com.fisk.mdm.vo.attributeGroup.QueryAttributeGroupVO;
+import com.fisk.mdm.vo.entity.EntityViewVO;
 
 import java.util.List;
 
@@ -26,7 +27,7 @@ public interface AttributeGroupService {
      * @param modelId
      * @return
      */
-    List<AttributeGroupVO> getDataByModelId(Integer modelId);
+    List<AttributeGroupVO> getDataByModelId(Integer modelId,String name);
 
     /**
      * 修改属性组信息
@@ -82,5 +83,5 @@ public interface AttributeGroupService {
      * @param dto
      * @return
      */
-    List<AttributeInfoDTO> getAttributeExists(AttributeInfoQueryDTO dto);
+    AttributeQueryRelationDTO getAttributeExists(AttributeInfoQueryDTO dto);
 }

@@ -11,6 +11,11 @@ import java.time.LocalDateTime;
 public class GeographyVO {
 
     /**
+     * 唯一编码
+     */
+    private String code;
+
+    /**
      * 经度
      */
     private String lng;
@@ -28,5 +33,10 @@ public class GeographyVO {
     private LocalDateTime create_time;
 
     private Long create_user;
+
+    /**
+     * 版本id
+     */
+    private Integer fidata_version_id;
 
 }

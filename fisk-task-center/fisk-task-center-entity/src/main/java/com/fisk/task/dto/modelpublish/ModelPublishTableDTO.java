@@ -1,5 +1,6 @@
 package com.fisk.task.dto.modelpublish;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -37,4 +38,7 @@ public class ModelPublishTableDTO {
 
 
     public String groupStructureId;
+
+    @ApiModelProperty(value = "事实表-维度键的更新sql集合")
+    public String factUpdateSql;
 }

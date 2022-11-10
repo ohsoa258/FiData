@@ -10,9 +10,12 @@ import com.cronutils.parser.CronParser;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.enums.DeltaTimeParameterTypeEnum;
+import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.task.entity.TBETLIncrementalPO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
 import com.fisk.task.enums.DataClassifyEnum;
@@ -20,7 +23,6 @@ import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import com.fisk.task.po.TableNifiSettingPO;
-import com.fisk.task.service.atlas.IAtlasBuildInstance;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.TriggerUtils;
@@ -30,6 +32,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.cronutils.model.CronType.QUARTZ;
@@ -43,8 +46,7 @@ import static com.cronutils.model.CronType.QUARTZ;
 @Slf4j
 public class BuildAtlasTableAndColumnTaskListener
         extends ServiceImpl<TaskPgTableStructureMapper, TaskPgTableStructurePO> {
-    @Resource
-    IAtlasBuildInstance atlas;
+
     @Resource
     DataAccessClient dc;
     @Resource
@@ -58,15 +60,31 @@ public class BuildAtlasTableAndColumnTaskListener
         log.info("进入Atlas生成表和字段");
         log.info("dataInfo:" + dataInfo);
         try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             BuildPhysicalTableDTO buildPhysicalTableDTO = JSON.parseObject(dataInfo, BuildPhysicalTableDTO.class);
             String physicalSelect = createPhysicalTable(buildPhysicalTableDTO);
             //endregion
             TBETLIncrementalPO ETLIncremental = new TBETLIncrementalPO();
-            ETLIncremental.object_name = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
-            ETLIncremental.enable_flag = "1";
-            ETLIncremental.incremental_objectivescore_batchno = UUID.randomUUID().toString();
+            if (buildPhysicalTableDTO.whetherSchema) {
+                ETLIncremental.objectName = buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName;
+            } else {
+                ETLIncremental.objectName = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
+            }
+            List<DeltaTimeDTO> deltaTimes = buildPhysicalTableDTO.deltaTimes;
+            for (DeltaTimeDTO dto : deltaTimes) {
+                if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT) &&
+                        Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.START_TIME)) {
+                    ETLIncremental.incrementalObjectivescoreStart = sdf.parse(dto.variableValue);
+                }
+                if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT) &&
+                        Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.END_TIME)) {
+                    ETLIncremental.incrementalObjectivescoreEnd = sdf.parse(dto.variableValue);
+                }
+            }
+            ETLIncremental.enableFlag = "1";
+            ETLIncremental.incrementalObjectivescoreBatchno = UUID.randomUUID().toString();
             Map<String, Object> conditionHashMap = new HashMap<>();
-            conditionHashMap.put("object_name", ETLIncremental.object_name);
+            conditionHashMap.put("object_name", ETLIncremental.objectName);
             List<TBETLIncrementalPO> tbetlIncrementalPos = incrementalMapper.selectByMap(conditionHashMap);
             if (tbetlIncrementalPos != null && tbetlIncrementalPos.size() > 0) {
                 log.info("此表已有同步记录,无需重复添加");
@@ -80,7 +98,12 @@ public class BuildAtlasTableAndColumnTaskListener
                 tableNifiSettingPO = one;
             }
             tableNifiSettingPO.appId = Integer.valueOf(buildPhysicalTableDTO.appId);
-            tableNifiSettingPO.tableName = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
+            if (buildPhysicalTableDTO.whetherSchema) {
+                tableNifiSettingPO.tableName = buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName;
+            } else {
+                tableNifiSettingPO.tableName = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
+            }
+
             tableNifiSettingPO.tableAccessId = Integer.valueOf(buildPhysicalTableDTO.dbId);
             tableNifiSettingPO.selectSql = physicalSelect;
             tableNifiSettingPO.type = OlapTableEnum.PHYSICS.getValue();

@@ -13,9 +13,16 @@ public enum DbTypeEnum implements BaseEnum {
     mysql(1, "mysql"),
     postgresql(2, "postgresql"),
     oracle(3, "oracle"),
+    /**
+     * 实时api
+     */
     RestfulAPI(4, "RestfulAPI"),
     ftp(5, "ftp"),
-    api(6, "api");
+    /**
+     * 非实时api
+     */
+    api(6, "api"),
+    oracle_cdc(8, "oracle-cdc");
 
     DbTypeEnum(int value, String name) {
         this.value = value;

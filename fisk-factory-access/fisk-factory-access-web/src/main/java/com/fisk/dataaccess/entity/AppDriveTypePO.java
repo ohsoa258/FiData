@@ -30,4 +30,9 @@ public class AppDriveTypePO extends BaseEntity {
      */
     public String connectStr;
 
+    /**
+     * 类型: 0数据库 1非数据库
+     */
+    public Integer type;
+
 }

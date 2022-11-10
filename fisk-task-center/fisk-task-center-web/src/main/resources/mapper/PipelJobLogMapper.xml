@@ -1,0 +1,16 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.task.mapper.PipelJobLogMapper">
+
+    <select id="getPipelJobLogVo" resultType="com.fisk.task.dto.dispatchlog.PipelJobLogVO">
+        select * from tb_pipel_job_log where pipel_id=#{pipelJobLog.pipelId}
+        <if test="pipelJobLog.pipelTraceId != null and pipelJobLog.pipelTraceId != '' ">
+            and pipel_trace_id=#{pipelJobLog.pipelTraceId}
+        </if>
+        and job_trace_id is not null
+        and del_flag=1 ORDER BY create_time desc limit 100
+
+    </select>
+
+</mapper>

@@ -1,7 +1,10 @@
 package com.fisk.mdm.utils.mdmBEBuild.impl;
 
+import com.fisk.mdm.dto.attribute.AttributeFactDTO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.utils.mdmBEBuild.IBuildSqlCommand;
+
+import java.util.List;
 
 /**
  * @author WangYan
@@ -30,6 +33,11 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
 
     @Override
     public String buildStgTable(EntityInfoVO entityInfoVo,String tableName) {
+        return null;
+    }
+
+    @Override
+    public String buildLogTable(EntityInfoVO entityInfoVo, String tableName, String code) {
         return null;
     }
 
@@ -80,6 +88,16 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
 
     @Override
     public String queryData(String tableName) {
+        return null;
+    }
+
+    @Override
+    public String insertAttributeFact(List<AttributeFactDTO> dtoList) {
+        return null;
+    }
+
+    @Override
+    public String deleteDataByAttributeId(String tableName, String deleteFiled, List<Integer> attributeIds) {
         return null;
     }
 }

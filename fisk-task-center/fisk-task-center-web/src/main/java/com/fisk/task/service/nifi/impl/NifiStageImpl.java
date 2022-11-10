@@ -19,29 +19,34 @@ import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaQueryTableDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaTableDetailDTO;
+import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.nifi.NifiStageMessageDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.entity.NifiStagePO;
 import com.fisk.task.entity.PipelineTableLogPO;
+import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
+import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
 import com.fisk.task.map.NifiStageMap;
 import com.fisk.task.map.NifiStageMapImpl;
 import com.fisk.task.mapper.NifiStageMapper;
 import com.fisk.task.mapper.PipelineTableLogMapper;
 import com.fisk.task.po.TableNifiSettingPO;
+import com.fisk.task.service.dispatchLog.IPipelJobLog;
+import com.fisk.task.service.dispatchLog.IPipelStageLog;
+import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.utils.NifiHelper;
+import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -65,6 +70,14 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
     DataAccessClient dataAccessClient;
     @Resource
     DataModelClient dataModelClient;
+    @Resource
+    IPipelTaskLog iPipelTaskLog;
+    @Resource
+    IPipelStageLog iPipelStageLog;
+    @Resource
+    IPipelJobLog iPipelJobLog;
+    @Resource
+    IPipelineTaskPublishCenter iPipelineTaskPublishCenter;
 
 
     @Override
@@ -112,10 +125,17 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
 
     @Override
     public NifiStagePO saveNifiStage(String data, Acknowledgment acke) {
+        log.info("阶段日志保存:" + data);
         NifiStagePO nifiStagePO = new NifiStagePO();
+        String pipleName = "";
+        String JobName = "";
+        NifiStageMessageDTO nifiStageMessageDTO = new NifiStageMessageDTO();
         try {
-            NifiStageMessageDTO nifiStageMessageDTO = JSON.parseObject(data, NifiStageMessageDTO.class);
+            nifiStageMessageDTO = JSON.parseObject(data, NifiStageMessageDTO.class);
             String topicName = nifiStageMessageDTO.topic;
+            if (StringUtils.isEmpty(nifiStageMessageDTO.pipelStageTraceId)) {
+                nifiStageMessageDTO.pipelStageTraceId = UUID.randomUUID().toString();
+            }
             String[] topic = topicName.split("\\.");
             int type = 0;
             Integer tableAccessId = 0;
@@ -133,8 +153,8 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                 appId = Integer.valueOf(topic[5]);
                 NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = olap.getNifiGetPortHierarchy(pipelineId, type, null, tableAccessId);
                 //三个阶段,默认正在运行
-                ResultEntity<NifiPortsHierarchyDTO> nIfiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchyDTO);
-                NifiCustomWorkflowDetailDTO itselfPort = nIfiPortHierarchy.data.itselfPort;
+                NifiPortsHierarchyDTO nIfiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchyDTO, nifiStageMessageDTO.pipelTraceId);
+                NifiCustomWorkflowDetailDTO itselfPort = nIfiPortHierarchy.itselfPort;
                 nifiStagePO.componentId = Math.toIntExact(itselfPort.id);
             } else if (topic.length == 4) {
                 //长度为4的只可能为nifi流程,可以通过groupid区分
@@ -148,8 +168,8 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                 appId = tableNifiSettingPO.appId;
                 NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = olap.getNifiGetPortHierarchy(pipelineId, type, tableName, tableAccessId);
                 //三个阶段,默认正在运行
-                ResultEntity<NifiPortsHierarchyDTO> nIfiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchyDTO);
-                NifiCustomWorkflowDetailDTO itselfPort = nIfiPortHierarchy.data.itselfPort;
+                NifiPortsHierarchyDTO nIfiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchyDTO, nifiStageMessageDTO.pipelTraceId);
+                NifiCustomWorkflowDetailDTO itselfPort = nIfiPortHierarchy.itselfPort;
                 nifiStagePO.componentId = Math.toIntExact(itselfPort.id);
             }
 
@@ -186,11 +206,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                     }
                 }
             }
-/*            if (nifiStagePO.componentId != null && nifiStagePO.componentId != 0) {
-                pipelineTableLog.deleteByComponentId(nifiStagePO.componentId);
-                nifiStageMapper.deleteByComponentId(nifiStagePO.componentId);
 
-            }*/
 
             PipelineTableLogPO pipelineTableLogPO = new PipelineTableLogPO();
             pipelineTableLogPO.comment = nifiStagePO.comment;
@@ -225,10 +241,46 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                 pipelineTableLogPO.dispatchType = 1;
             }
             pipelineTableLog.insert(pipelineTableLogPO);
+
+            //----------------------------------------------
+            HashMap<Integer, Object> taskMap = new HashMap<>();
+            //nifiStageMessageDTO.pipelTaskTraceId
+
+            taskMap.put(DispatchLogEnum.taskcount.getValue(), nifiStageMessageDTO.counts);
+            taskMap.put(DispatchLogEnum.entrydate.getValue(), nifiStageMessageDTO.entryDate);
+            if (StringUtils.isEmpty(nifiStagePO.comment) || !nifiStagePO.comment.contains("成功")) {
+                taskMap.put(DispatchLogEnum.taskcomment.getValue(), nifiStagePO.comment);
+                DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = new DispatchExceptionHandlingDTO();
+                dispatchExceptionHandlingDTO.comment = nifiStagePO.comment;
+                dispatchExceptionHandlingDTO.pipelTraceId = nifiStageMessageDTO.pipelTraceId;
+                dispatchExceptionHandlingDTO.pipelJobTraceId = nifiStageMessageDTO.pipelJobTraceId;
+                dispatchExceptionHandlingDTO.pipelStageTraceId = nifiStageMessageDTO.pipelStageTraceId;
+                dispatchExceptionHandlingDTO.pipelTaskTraceId = nifiStageMessageDTO.pipelTaskTraceId;
+                iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
+            }
+            HashMap<Integer, Object> stagekMap = new HashMap<>();
+            stagekMap.put(DispatchLogEnum.stageinsert.getValue(), nifiStagePO.insertPhase);
+            stagekMap.put(DispatchLogEnum.stagestart.getValue(), nifiStagePO.queryPhase);
+            stagekMap.put(DispatchLogEnum.stagestate.getValue(), pipelineTableLogPO.state);
+            stagekMap.put(DispatchLogEnum.stagetransition.getValue(), nifiStagePO.transitionPhase);
+            stagekMap.put(DispatchLogEnum.entrydate.getValue(), nifiStageMessageDTO.entryDate);
+            if (!StringUtils.isEmpty(nifiStageMessageDTO.pipelTaskTraceId)) {
+                iPipelStageLog.savePipelTaskStageLog(nifiStageMessageDTO.pipelStageTraceId, nifiStageMessageDTO.pipelTaskTraceId, stagekMap);
+            }
+            //-----------------------------------------------
             nifiStagePO.pipelineTableLogId = Math.toIntExact(pipelineTableLogPO.id);
+
             this.save(nifiStagePO);
-        } catch (ApiException e) {
-            log.error(e.getResponseBody());
+
+        } catch (Exception e) {
+            DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = new DispatchExceptionHandlingDTO();
+            dispatchExceptionHandlingDTO.comment = nifiStagePO.comment;
+            dispatchExceptionHandlingDTO.pipelTraceId = nifiStageMessageDTO.pipelTraceId;
+            dispatchExceptionHandlingDTO.pipelJobTraceId = nifiStageMessageDTO.pipelJobTraceId;
+            dispatchExceptionHandlingDTO.pipelStageTraceId = nifiStageMessageDTO.pipelStageTraceId;
+            dispatchExceptionHandlingDTO.pipelTaskTraceId = nifiStageMessageDTO.pipelTaskTraceId;
+            iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
         } finally {
             if (acke != null) {
                 acke.acknowledge();

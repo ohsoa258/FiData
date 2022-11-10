@@ -2,6 +2,7 @@ package com.fisk.dataaccess.dto.table;
 
 import com.fisk.common.core.baseObject.dto.BaseDTO;
 import com.fisk.common.core.baseObject.entity.BaseEntity;
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -48,6 +49,9 @@ public class TableAccessNonDTO extends BaseDTO {
     @ApiModelProperty(value = "物理表名", required = true)
     public String tableName;
 
+    @ApiModelProperty(value = "物理表显示名称", required = true)
+    public String displayName;
+
     /**
      * 物理表描述
      */
@@ -83,6 +87,12 @@ public class TableAccessNonDTO extends BaseDTO {
     @ApiModelProperty(value = "excel sheet页名称", required = true)
     public String sheet;
 
+    @ApiModelProperty(value = "发布错误信息", required = true)
+    public String publishErrorMsg;
+
+    @ApiModelProperty(value = "stg数据保留天数", required = true)
+    public String keepNumber;
+
     /**
      * 表字段对象
      */
@@ -97,6 +107,11 @@ public class TableAccessNonDTO extends BaseDTO {
      * 同步方式对象
      */
     public TableSyncmodeDTO tableSyncmodeDTO;
+
+    /*
+     * 接入的增量时间参数
+     */
+    public List<DeltaTimeDTO> deltaTimes;
 
     /**
      * 0: 保存;   1: 保存&发布

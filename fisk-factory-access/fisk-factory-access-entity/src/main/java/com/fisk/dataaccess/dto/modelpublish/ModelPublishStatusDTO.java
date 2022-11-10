@@ -22,4 +22,8 @@ public class ModelPublishStatusDTO {
      * 发布状态 1: 发布成功  2: 发布失败
      */
     public int publish;
+    /**
+     * 发布错误信息
+     */
+    public String publishErrorMsg;
 }

@@ -7,12 +7,14 @@ import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.netflix.discovery.DiscoveryManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
  * @author gy
  */
 @Component
+@Order(value = 1)
 @Slf4j
 public class DisposableBeanImpl implements DisposableBean {
     @Override

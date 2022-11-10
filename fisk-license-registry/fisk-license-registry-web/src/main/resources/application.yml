@@ -1,0 +1,109 @@
+server:
+  port: 8098
+spring:
+  application:
+    name: license-registry
+  profiles:
+    active: dev
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+
+mybatis-plus:
+  configuration:
+    default-enum-type-handler: com.fisk.common.framework.mybatis.config.BaseEnumTypeHandler
+  global-config:
+    db-config:
+      id-type: auto
+      insert-strategy: not_null
+      logic-delete-field: del_flag
+      logic-delete-value: 0
+      logic-not-delete-value: 1
+      update-strategy: not_null
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.fisk.license.entity
+
+fk:
+  jwt:
+    key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
+  auth:
+    clientId: license-registry
+    secret: 1234
+  encoder:
+    crypt:
+      secret: ${random.uuid}
+      strength: 6
+
+eureka:
+  client:
+    healthcheck:
+      enabled: true
+    serviceUrl:
+      # eureka服务端地址
+      defaultZone: http://127.0.0.1:8082/eureka
+    # 自己去服务端获取其他服务注册信息间隔时间，默认30秒
+    registry-fetch-interval-seconds: 2
+    # 客户端连接eureka服务端超时时间，默认为5秒
+    eureka-server-connect-timeout-seconds: 5
+    # 客户端读取eureka服务端超时时间
+    eureka-server-read-timeout-seconds: 5
+  instance:
+    metadata-map:
+      cluster: ${spring.application.name}
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+    # status-page-url-path: ${server.servletPath}/info
+    # 该服务实例安全健康检查地址
+    # health-check-url-path: ${server.servletPath}/health
+    # 不使用主机名来定义注册中心的地址，而使用IP地址的形式，如果设置了
+    # eureka.instance.ip-address 属性，则使用该属性配置的IP，否则自动获取除环路IP外的第一个IP地址
+    prefer-ip-address: true
+    # 每隔n秒，发送一次心跳 （spring cloud 默认配置30s）
+    lease-renewal-interval-in-seconds: 2
+    # 告诉eureka服务端，n秒内未收到心跳，就将该服务剔除 （spring cloud 默认配置90s）
+    lease-expiration-duration-in-seconds: 4
+
+#feign接口超时配置
+#feign:
+#  client:
+#    config:
+#      default:
+#        connectTimeout: 10000
+#        readTimeout: 12000
+feign:
+  client:
+    config:
+      default:
+        loggerLevel: basic
+  hystrix:
+    enabled: true
+
+ribbon:
+  ConnectTimeout: 3000
+  ReadTimeout: 15000
+  NIWSServerListClassName: com.netflix.niws.loadbalancer.DiscoveryEnabledNIWSServerList
+  ServerListRefreshInterval: 3000
+  MaxAutoRetries: 0
+  MaxAutoRetriesNextServer: 0
+
+hystrix:
+  command:
+    default:
+      execution:
+        timeout:
+          enabled: true
+        isolation:
+          # 线程隔离 THREAD， SEMAPHORE
+          strategy: THREAD
+          thread:
+            # 超时时间
+            timeoutInMilliseconds: 15500
+            # 超时时是否应中断执行（默认true）
+            interruptOnTimeout: true
+      circuitBreaker:
+        enabled: true
+        # 在滚动窗口中启用熔断的最小请求数（默认20次）
+        requestVolumeThreshold: 10
+        # 熔断后，多少ms后进行一次请求尝试（默认5000ms）
+        sleepWindowInMilliseconds: 5000
+        # 当请求错误比例到达n%时，开启熔断（默认50%）
+        errorThresholdPercentage: 50

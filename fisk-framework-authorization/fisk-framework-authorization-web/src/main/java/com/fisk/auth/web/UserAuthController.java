@@ -3,6 +3,7 @@ package com.fisk.auth.web;
 import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.auth.service.UserAuthService;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.framework.advice.ControllerAOPConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Lock
@@ -42,13 +42,13 @@ public class UserAuthController {
     /**
      * 退出登录
      *
-     * @param request  请求参数
-     * @param response 响应数据，写cookie用
+     * @param request 请求参数
      * @return 无
      */
+    @ControllerAOPConfig(printParams = false)
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
-        userAuthService.logout(request, response);
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
+        userAuthService.logout(request);
         return ResponseEntity.noContent().build();
     }
 

@@ -16,7 +16,7 @@ public class AttributeInfoQueryDTO {
     private Integer groupId;
 
     /**
-     * 实体id
+     * 模型id
      */
-    private Integer entityId;
+    private Integer modelId;
 }

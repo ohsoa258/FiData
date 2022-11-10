@@ -1,16 +1,26 @@
 package com.fisk.dataaccess.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.datasource.ExternalDataSourceDTO;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
+import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.dataaccess.dto.app.*;
+import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
+import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
+import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
@@ -47,6 +57,14 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return 返回值
      */
     ResultEnum updateAppRegistration(AppRegistrationEditDTO dto);
+
+    /**
+     * 修改应用基本信息
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum editAppBasicInfo(AppRegistrationEditDTO dto);
 
     /**
      * 删除
@@ -138,7 +156,7 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @param dto dto
      * @return 连接结果
      */
-    ResultEntity<Object> connectDb(DbConnectionDTO dto);
+    List<DbNameDTO> connectDb(DbConnectionDTO dto);
 
     /**
      * 判断应用名称是否重复
@@ -152,9 +170,10 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * 判断应用简称是否重复
      *
      * @param appAbbreviation appAbbreviation
+     * @param whetherSchema
      * @return 执行结果
      */
-    ResultEntity<Object> getRepeatAppAbbreviation(String appAbbreviation);
+    ResultEntity<Object> getRepeatAppAbbreviation(String appAbbreviation, boolean whetherSchema);
 
     /**
      * 查询数据接入下所有业务系统个数
@@ -178,4 +197,91 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return 执行结果
      */
     List<LogMessageFilterVO> getTableNameListByAppIdAndApiId(PipelineTableQueryDTO dto);
+
+    /**
+     * 跳转页面: 查询出当前(表、api、ftp)具体在哪个管道中使用,并给跳转页面提供数据
+     *
+     * @param dto dto
+     * @return list
+     */
+    List<DispatchRedirectDTO> redirect(AccessRedirectDTO dto);
+
+    /**
+     * 获取数据接入结构
+     *
+     * @param dto dto
+     * @return list
+     */
+    List<FiDataMetaDataDTO> getDataAccessStructure(FiDataMetaDataReqDTO dto);
+
+    /**
+     * 获取数据接入表结构
+     *
+     * @param dto dto
+     * @return list
+     */
+    List<FiDataMetaDataTreeDTO> getDataAccessTableStructure(FiDataMetaDataReqDTO dto);
+
+    /**
+     * 刷新数据接入结构
+     *
+     * @param dto dto
+     * @return list
+     */
+    boolean setDataAccessStructure(FiDataMetaDataReqDTO dto);
+
+    /**
+     * 构建业务元数据其他数据信息
+     *
+     * @param dto dto
+     * @return 查询结果
+     */
+    TableRuleInfoDTO buildTableRuleInfo(TableRuleParameterDTO dto);
+
+    /**
+     * 根据表信息/字段ID,获取表/字段基本信息
+     *
+     * @param dto dto
+     * @return 查询结果
+     */
+    List<FiDataTableMetaDataDTO> getFiDataTableMetaData(FiDataTableMetaDataReqDTO dto);
+
+    /**
+     * 获取所有应用信息
+     *
+     * @return list
+     */
+    List<AppBusinessInfoDTO> getAppList();
+
+    /**
+     * 根据jwt身份验证地址,获取token
+     *
+     * @param dto
+     * @return
+     */
+    String getApiToken(AppDataSourceDTO dto);
+
+    /**
+     * 获取cdc任务脚本
+     *
+     * @param dto
+     * @return
+     */
+    CdcJobScriptDTO buildCdcJobScript(CdcJobParameterDTO dto);
+
+    /**
+     * 获取ods数据源集合
+     *
+     * @return
+     */
+    List<ExternalDataSourceDTO> getFiDataDataSource();
+
+    /**
+     * 数据类型集合
+     *
+     * @param appId
+     * @return
+     */
+    JSONObject dataTypeList(Integer appId);
+
 }

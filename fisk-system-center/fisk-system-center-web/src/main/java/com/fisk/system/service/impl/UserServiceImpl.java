@@ -331,6 +331,7 @@ public class UserServiceImpl implements IUserService {
         dto.password = getConfig.password;
         dto.tableName = "tb_user_info";
         dto.tableAlias = "a";
+        dto.driver = getConfig.driver;
         dto.filterSql = FilterSqlConstants.USER_INFO_SQL;
         List<FilterFieldDTO> list = getMetadata.getMetadataList(dto);
         //添加创建人

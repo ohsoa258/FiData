@@ -1,7 +1,5 @@
 package com.fisk.system.web;
 
-import com.fisk.auth.dto.UserDetail;
-import com.fisk.auth.utils.UserContext;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -15,7 +13,6 @@ import com.fisk.system.service.IUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -97,16 +94,6 @@ public class UserController {
     @GetMapping("/getUser/{id}")
     public ResultEntity<Object> getUser(@PathVariable("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getUser(id));
-    }
-
-    /**
-     * 获取当前登录的用户信息
-     *
-     * @return 用户信息
-     */
-    @GetMapping("/me")
-    public ResponseEntity<UserDetail> me() {
-        return ResponseEntity.ok(UserContext.getUser());
     }
 
     @ApiOperation("获取登录人信息")

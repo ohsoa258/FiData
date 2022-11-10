@@ -3,7 +3,7 @@ package com.fisk.auth.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.auth.dto.UserDetail;
+import com.fisk.auth.dto.GetConfigDTO;
 import com.fisk.auth.dto.clientregister.ClientRegisterDTO;
 import com.fisk.auth.dto.clientregister.ClientRegisterPageDTO;
 import com.fisk.auth.dto.clientregister.ClientRegisterQueryDTO;
@@ -11,16 +11,18 @@ import com.fisk.auth.entity.ClientRegisterPO;
 import com.fisk.auth.map.ClientRegisterMap;
 import com.fisk.auth.mapper.ClientRegisterMapper;
 import com.fisk.auth.service.IClientRegisterService;
-import com.fisk.auth.utils.JwtUtils;
 import com.fisk.auth.vo.ClientRegisterVO;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.constants.SystemConstants;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.jwt.JwtUtils;
+import com.fisk.common.framework.jwt.model.UserDetail;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import org.springframework.stereotype.Service;
@@ -46,6 +48,8 @@ public class ClientRegisterServiceImpl extends ServiceImpl<ClientRegisterMapper,
     private GenerateCondition generateCondition;
     @Resource
     private GetMetadata getMetadata;
+    @Resource
+    GetConfigDTO getConfig;
 
     @Override
     public ClientRegisterDTO getData(long id) {
@@ -161,11 +165,14 @@ public class ClientRegisterServiceImpl extends ServiceImpl<ClientRegisterMapper,
 
     @Override
     public List<FilterFieldDTO> getColumn() {
-        return getMetadata.getMetadataList(
-                "dmp_system_db",
-                "tb_client_register",
-                "",
-                FilterSqlConstants.TB_CLIENT_REGISTER_SQL);
+        MetaDataConfigDTO dto = new MetaDataConfigDTO();
+        dto.url = getConfig.url;
+        dto.userName = getConfig.username;
+        dto.password = getConfig.password;
+        dto.driver = getConfig.driver;
+        dto.tableName = "tb_client_register";
+        dto.filterSql = FilterSqlConstants.TB_CLIENT_REGISTER_SQL;
+        return getMetadata.getMetadataList(dto);
     }
 
 }

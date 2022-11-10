@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: data-factory
+  datasource:
+    url: jdbc:mysql://172.17.1.248:3306/dmp_datafactory_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: Password01!
+    driver-class-name: com.mysql.jdbc.Driver
+  redis:
+    host: 172.17.1.248

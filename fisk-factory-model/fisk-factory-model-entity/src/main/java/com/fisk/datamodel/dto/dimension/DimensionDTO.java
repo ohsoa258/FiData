@@ -14,7 +14,6 @@ public class DimensionDTO {
     public int dimensionFolderId;
     public int businessId;
     public String dimensionCnName;
-    public String dimensionEnName;
     public String dimensionTabName;
     public String dimensionDesc;
     public boolean share;

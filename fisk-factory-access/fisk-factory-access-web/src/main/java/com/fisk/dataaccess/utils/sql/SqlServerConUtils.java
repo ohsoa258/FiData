@@ -2,6 +2,7 @@ package com.fisk.dataaccess.utils.sql;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -17,9 +18,6 @@ import java.util.List;
  */
 @Slf4j
 public class SqlServerConUtils {
-
-    private static Connection conn = null;
-    private static Statement stmt = null;
 
     /**
      * 获取SQL server具体库中所有表名
@@ -78,21 +76,15 @@ public class SqlServerConUtils {
     /**
      * 根据库名获取下属表及表字段
      *
-     * @param url      url
-     * @param user     user
-     * @param password password
-     * @param dbName   库名
+     * @param conn
+     * @param dbName 库名
      * @return 下属表及表字段
      */
-    public List<TablePyhNameDTO> getTableNameAndColumns(String url, String user, String password, String dbName) {
+    public List<TablePyhNameDTO> getTableNameAndColumns(Connection conn, String dbName) {
 
         List<TablePyhNameDTO> list = null;
-
+        Statement stmt = null;
         try {
-            //1.加载驱动程序
-            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            //2.获得数据库的连接
-            conn = DriverManager.getConnection(url, user, password);
             stmt = conn.createStatement();
             list = new ArrayList<>();
 
@@ -110,13 +102,15 @@ public class SqlServerConUtils {
                 tag++;
                 list.add(tablePyhNameDTO);
             }
-
-            conn.close();
-        } catch (ClassNotFoundException | SQLException e) {
+        } catch (SQLException e) {
             log.error("【getTableNameAndColumns】获取表及表字段报错, ex", e);
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(stmt);
+            AbstractCommonDbHelper.closeConnection(conn);
         }
         return list;
     }
+
 
 }

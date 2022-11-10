@@ -17,4 +17,9 @@ public class BuildReplaceTextProcessorDTO extends BaseProcessorDTO {
      * Evaluation Mode
      * */
     public String evaluationMode;
+
+    /*
+    * Maximum Buffer Size
+    * */
+    public String maximumBufferSize;
 }

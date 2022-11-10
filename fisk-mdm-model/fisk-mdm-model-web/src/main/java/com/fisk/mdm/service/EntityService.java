@@ -54,15 +54,23 @@ public interface EntityService {
 
     /**
      * 根据实体id查询属性
+     *
      * @param id
      * @return
      */
-    EntityInfoVO getAttributeById(Integer id);
+    EntityInfoVO getAttributeById(Integer id, String name);
 
     /**
-     *  获取可关联（同模型下 除本身外 创建后台表成功）的实体
+     *根据实体id查询发布成功属性数据
+     * @param id
+     * @return
+     */
+    EntityInfoVO getFilterAttributeById(Integer id);
+
+    /**
+     * 获取可关联（同模型下 除本身外 创建后台表成功）的实体
      *
      * @return {@link List}<{@link EntityVO}>
      */
-    ResultEntity<List<EntityVO>> getCreateSuccessEntity(Integer modelId,Integer entityId);
+    ResultEntity<List<EntityVO>> getCreateSuccessEntity(Integer modelId, Integer entityId);
 }

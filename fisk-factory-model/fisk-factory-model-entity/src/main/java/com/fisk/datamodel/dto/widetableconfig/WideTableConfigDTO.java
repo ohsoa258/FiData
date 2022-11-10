@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class WideTableConfigDTO {
 
-    public long id;
+    public Integer id;
     /**
      * 业务域id
      */

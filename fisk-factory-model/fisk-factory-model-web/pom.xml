@@ -28,6 +28,16 @@
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
+        <!-- hystrix -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-hystrix-dashboard</artifactId>
+        </dependency>
+
         <!--数据库驱动-->
         <dependency>
             <groupId>mysql</groupId>
@@ -108,6 +118,12 @@
             <artifactId>fisk-factory-dispatch-entity</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-factory-dispatch-apiclient</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
         <!-- elk -->
         <dependency>
             <groupId>net.logstash.logback</groupId>
@@ -128,20 +144,6 @@
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
-        <!--<dependency>
-            <groupId>com.ctrip.framework.apollo</groupId>
-            <artifactId>apollo-client</artifactId>
-            <version>1.8.1</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/lib/apollo-client-1.8.1.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>com.ctrip.framework.apollo</groupId>
-            <artifactId>apollo-core</artifactId>
-            <version>1.8.1</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/lib/apollo-core-1.8.1.jar</systemPath>
-        </dependency>-->
         <!-- 报表实体类 -->
         <dependency>
             <groupId>com.fisk</groupId>
@@ -152,6 +154,24 @@
         <dependency>
             <groupId>com.fisk</groupId>
             <artifactId>fisk-consume-visual-entity</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-system-center-apiclient</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-consume-serveice-entity</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-datamanage-center-apiclient</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

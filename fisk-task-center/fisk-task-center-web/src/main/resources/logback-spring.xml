@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
     <!-- 定义变量，下方可通过${}引用 -->
-    <property name="LOG_HOME" value="./logs/task" />
-    <property name="appName" value="task" />
+    <property name="LOG_HOME" value="./logs/task"/>
+    <property name="appName" value="task"/>
+    <springProperty scope="context" name="springAppName" source="spring.application.name"/>
     <contextName>${appName}</contextName>
 
     <!-- Print the log to the console -->
     <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%yellow(%d{yyyy-MM-dd HH:mm:ss.SSS}) [TraceID: %X{TraceID}] [App_LogType: %X{App_LogType}]
-                [%thread] [%highlight(%-5level)] [%green(%logger{50})] [%highlight([%file:%line])] - %msg %n
-            </pattern>
+            <!--@formatter:off-->
+            <pattern>[%yellow(%d{yyyy-MM-dd HH:mm:ss.SSS})][${springAppName}][%X{TraceID}][%X{SpanID}][%X{App_LogType}][%thread][%highlight(%-5level)][%green(%logger{50})][%highlight([%file:%line])] - %msg %n</pattern>
         </encoder>
     </appender>
 
@@ -41,9 +41,10 @@
             %msg 日志信息
             %n 换行符
             -->
-            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [TraceID: %X{TraceID}] [App_LogType: %X{App_LogType}]
-                [ThreadID: %thread] [LogLevel: %-5level] [Logger: %logger{50}] [File: %file:%line] - %msg%n
-            </Pattern>
+            <!--@formatter:off-->
+            <pattern>
+                [%d{yyyy-MM-dd HH:mm:ss.SSS}] | [${springAppName}] | [%X{TraceID}] | [%X{SpanID}] | [%X{App_LogType}] | [%thread] | [%-5level] | [%logger{50}] | [%file:%line] | %msg%n
+            </pattern>
         </encoder>
         <!-- 过滤级别 -->
         <!-- <filter class="ch.qos.logback.classic.filter.LevelFilter"> -->
@@ -82,10 +83,10 @@
     -->
 
     <!-- 根据application.yml文件中的spring.profile.active配置，设置日志输出 -->
-    <springProfile name="dev">
-        <!--
+    <!--<springProfile name="dev">
+        &lt;!&ndash;
         logger: 指定java包的输出级别
-        -->
+        &ndash;&gt;
 
         <logger name="org" level="info">
             <appender-ref ref="Console"/>
@@ -96,16 +97,16 @@
             <appender-ref ref="Console"/>
         </logger>
 
-        <!--
+        &lt;!&ndash;
         root: 设置输出级别，只有一个level属性
         root.level: 输出级别，默认是debug
         <root level="info">
             <appender-ref ref="Console"/>
         </root>
-        -->
-    </springProfile>
+        &ndash;&gt;
+    </springProfile>-->
 
-    <springProfile name="uat,test,pd">
+    <springProfile name="uat,test,pd,demo,yf,dev">
         <logger name="org" level="info">
             <appender-ref ref="Console"/>
             <appender-ref ref="FILE"/>

@@ -1,6 +1,9 @@
 package com.fisk.mdm.utils.mdmBEBuild;
 
+import com.fisk.mdm.dto.attribute.AttributeFactDTO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
+
+import java.util.List;
 
 /**
  * @author WangYan
@@ -23,6 +26,15 @@ public interface IBuildSqlCommand {
      * @return
      */
     String buildStgTable(EntityInfoVO entityInfoVo,String tableName);
+
+    /**
+     * 创建日志表
+     * @param entityInfoVo
+     * @param tableName
+     * @param code
+     * @return
+     */
+    String buildLogTable(EntityInfoVO entityInfoVo,String tableName,String code);
 
     /**
      * 创建表mdm
@@ -104,4 +116,20 @@ public interface IBuildSqlCommand {
      * @return
      */
     String queryData(String tableName);
+
+    /**
+     * 插入属性事实表
+     * @param dtoList
+     * @return
+     */
+    String insertAttributeFact(List<AttributeFactDTO> dtoList);
+
+    /**
+     * 删除数据(物理删除)
+     * @param tableName
+     * @param deleteFiled
+     * @param attributeIds
+     * @return
+     */
+    String deleteDataByAttributeId(String tableName,String deleteFiled,List<Integer> attributeIds);
 }

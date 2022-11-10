@@ -30,6 +30,10 @@ public class SwaggerConfig {
     public static final String TAG_5 = "MasterData-Controller";
     public static final String TAG_6 = "AttributeGroup-Controller";
     public static final String TAG_7 = "ViwGroup-Controller";
+    public static final String TAG_8 = "ComplexType-Controller";
+    public static final String TAG_9 = "MasterDataLog-Controller";
+    public static final String TAG_10 = "AttributeLog-Controller";
+    public static final String TAG_11 = "CodeRule-Controller";
 
     @Bean
     public Docket createRestApi() {
@@ -37,12 +41,16 @@ public class SwaggerConfig {
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
                 .tags(new Tag(TAG_1, "实体管理API"))
-                .tags(new Tag(TAG_2,"模型管理API"))
-                .tags(new Tag(TAG_3,"属性管理API"))
-                .tags(new Tag(TAG_4,"模型版本管理API"))
-                .tags(new Tag(TAG_5,"主数据管理API"))
-                .tags(new Tag(TAG_6,"属性组管理API"))
-                .tags(new Tag(TAG_7,"自定义视图管理API"))
+                .tags(new Tag(TAG_2, "模型管理API"))
+                .tags(new Tag(TAG_3, "属性管理API"))
+                .tags(new Tag(TAG_4, "模型版本管理API"))
+                .tags(new Tag(TAG_5, "主数据管理API"))
+                .tags(new Tag(TAG_6, "属性组管理API"))
+                .tags(new Tag(TAG_7, "自定义视图管理API"))
+                .tags(new Tag(TAG_8, "复杂数据类型"))
+                .tags(new Tag(TAG_9, "主数据维护日志"))
+                .tags(new Tag(TAG_10, "属性日志管理API"))
+                .tags(new Tag(TAG_11, "自动创建编码管理API"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

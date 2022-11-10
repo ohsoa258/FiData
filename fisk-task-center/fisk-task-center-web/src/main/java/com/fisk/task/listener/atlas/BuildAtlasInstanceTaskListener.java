@@ -6,7 +6,6 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
-import com.fisk.task.service.atlas.IAtlasBuildInstance;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
@@ -23,8 +22,6 @@ import java.text.SimpleDateFormat;
 @Slf4j
 public class BuildAtlasInstanceTaskListener {
 
-    @Resource
-    IAtlasBuildInstance atlas;
     @Resource
     DataAccessClient dc;
 

@@ -30,7 +30,7 @@ public interface ApiRegisterMapper extends FKBaseMapper<ApiConfigPO> {
      * @return 执行结果
      */
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
-    @Insert("INSERT INTO `tb_api_config`(`api_name`, `api_code`, `api_desc`, `api_type`, `datasource_id`, `table_name`, `create_sql`, `create_time`, `create_user`,`del_flag`) VALUES (#{apiName}, #{apiCode}, #{apiDesc}, #{apiType}, #{datasourceId}, #{tableName}, #{createSql}, #{createTime}, #{createUser},1);")
+    @Insert("INSERT INTO `tb_api_config`(`api_name`, `api_code`, `api_desc`, `api_type`, `datasource_id`, `table_name`,`table_name_alias`, `table_type`, `table_business_type`, `table_path`, `create_sql`, `create_time`, `create_user`,`del_flag`) VALUES (#{apiName}, #{apiCode}, #{apiDesc}, #{apiType}, #{datasourceId}, #{tableName}, #{tableNameAlias}, #{tableType}, #{tableBusinessType}, #{tablePath}, #{createSql}, #{createTime}, #{createUser},1);")
     int insertOne(ApiConfigPO po);
 
     /**
@@ -38,7 +38,7 @@ public interface ApiRegisterMapper extends FKBaseMapper<ApiConfigPO> {
      *
      * @return 查询结果
      */
-    @Select("SELECT id,api_code,api_name,api_code,api_type,datasource_id,table_name,create_sql FROM tb_api_config WHERE api_code=#{apiCode} AND del_flag=1;")
+    @Select("SELECT id,api_code,api_name,api_code,api_type,datasource_id,table_name,table_name_alias,table_type,table_business_type,create_sql FROM tb_api_config WHERE api_code=#{apiCode} AND del_flag=1;")
     ApiConfigPO getByApiCode(@Param("apiCode") String apiCode);
 
     /**

@@ -4,13 +4,14 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
+import com.fisk.mdm.dto.modelVersion.ModelCopyDTO;
+import com.fisk.mdm.dto.modelVersion.ModelVersionDTO;
+import com.fisk.mdm.dto.modelVersion.ModelVersionUpdateDTO;
 import com.fisk.mdm.service.IModelVersionService;
 import com.fisk.mdm.vo.modelVersion.ModelVersionVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -33,6 +34,36 @@ public class ModelVersionController {
     @ApiOperation("根据模型id查看模型版本")
     @GetMapping("/getByModelId")
     public ResultEntity<List<ModelVersionVO>> getByModelId(Integer modelId){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getByModelId(modelId));
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getByModelId(modelId));
+    }
+
+    @ApiOperation("新增模型版本")
+    @PostMapping("/addData")
+    public ResultEntity<ResultEnum> addData(@RequestBody ModelVersionDTO dto){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.addData(dto));
+    }
+
+    @ApiOperation("修改模型版本信息")
+    @PutMapping("/updateData")
+    public ResultEntity<ResultEnum> updateData(@RequestBody ModelVersionUpdateDTO dto){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.updateData(dto));
+    }
+
+    @ApiOperation("根据id删除版本信息")
+    @DeleteMapping("/deleteDataById")
+    public ResultEntity<ResultEnum> deleteDataById(Integer id){
+        return ResultEntityBuild.build(service.deleteDataById(id));
+    }
+
+    @ApiOperation("版本复制")
+    @PostMapping("/copyDataByModelId")
+    public ResultEntity<ResultEnum> copyDataByModelId(@RequestBody ModelCopyDTO dto){
+        return ResultEntityBuild.build(service.copyDataByModelId(dto));
+    }
+
+    @ApiOperation("模型下是否存在未发布的实体")
+    @GetMapping("/getNotReleaseData")
+    public ResultEntity<Boolean> getNotReleaseData(Integer id){
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getNotReleaseData(id));
     }
 }

@@ -68,7 +68,7 @@ public class AbstractDbHelper {
     private Connection getConnectionByType(String connectionStr, String acc, String pwd,DataSourceTypeEnum type) throws Exception {
         switch (type) {
             case SQLSERVER:
-                return DriverManager.getConnection(connectionStr);
+                return DriverManager.getConnection(connectionStr, acc, pwd);
             case PG:
                 return DriverManager.getConnection(connectionStr, acc, pwd);
             default:
@@ -158,6 +158,13 @@ public class AbstractDbHelper {
         statement.execute(sql);
     }
 
+    /**
+     * 新增数据，返回主键id
+     *
+     * @param sql
+     * @param connection
+     * @return
+     */
     public static Integer executeSqlReturnKey(String sql, Connection connection) {
         Statement statement = null;
         String code = UUID.randomUUID().toString();
@@ -231,6 +238,7 @@ public class AbstractDbHelper {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ex.getLocalizedMessage());
         } finally {
             closeStatement(st);
+            closeConnection(con);
             stopWatch.stop();
             log.info("【execQuery】【" + code + "】执行时间: 【" + stopWatch.getTotalTimeMillis() + "毫秒】");
         }

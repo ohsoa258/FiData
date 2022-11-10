@@ -1,6 +1,7 @@
 package com.fisk.task.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
@@ -10,6 +11,10 @@ import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
+import com.fisk.task.dto.dispatchlog.PipelLogVO;
+import com.fisk.task.dto.dispatchlog.PipelStageLogVO;
+import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
@@ -163,6 +168,15 @@ public interface PublishTaskClient {
     public ResultEntity<Object> deleteTableTopicByComponentId(@RequestParam("ids") List<Integer> ids);
 
     /**
+     * deleteTableTopicGroup
+     *
+     * @param dtos
+     * @return
+     */
+    @PostMapping("/TableTopic/deleteTableTopicGroup")
+    public ResultEntity<Object> deleteTableTopicGroup(@RequestParam("dtos") List<TableTopicDTO> dtos);
+
+    /**
      * 拼接sql替换时间
      *
      * @param tableName tableName
@@ -172,7 +186,10 @@ public interface PublishTaskClient {
      */
     @GetMapping("/TBETLIncremental/converSql")
     ResultEntity<Map<String, String>> converSql(
-            @RequestParam("tableName") String tableName, @RequestParam("sql") String sql, @RequestParam(value = "driveType", required = false) String driveType);
+            @RequestParam("tableName") String tableName,
+            @RequestParam("sql") String sql,
+            @RequestParam(value = "driveType", required = false) String driveType,
+            @RequestParam(value = "deltaTimes", required = false) String deltaTimes);
 
     /**
      * getSqlForPgOds
@@ -225,7 +242,7 @@ public interface PublishTaskClient {
      * @param buildTableNifiSettingDTO
      * @return
      */
-    @PostMapping("/immediatelyStart")
+    @PostMapping("/publishTask/immediatelyStart")
     public ResultEntity<Object> immediatelyStart(@RequestBody BuildTableNifiSettingDTO buildTableNifiSettingDTO);
 
     /**
@@ -234,7 +251,7 @@ public interface PublishTaskClient {
      * @param unifiedControlDTO unifiedControlDTO
      * @return
      */
-    @PostMapping("/publishBuildunifiedControlTask")
+    @PostMapping("/olapTask/publishBuildunifiedControlTask")
     public ResultEntity<Object> publishBuildunifiedControlTask(@RequestBody UnifiedControlDTO unifiedControlDTO);
 
     /**
@@ -261,7 +278,7 @@ public interface PublishTaskClient {
      * @return
      */
     @PostMapping("/pipeline/consumer")
-    public void consumer(@RequestBody List<String> arrMessage);
+    public void consumer(@RequestParam String message);
 
     /**
      * updateTableTopicByComponentId
@@ -294,4 +311,54 @@ public interface PublishTaskClient {
      */
     @PostMapping("/pipeline/getPipelineTableLog")
     public ResultEntity<List<PipelineTableLogVO>> getPipelineTableLog(@RequestParam("data") String data, @RequestParam("pipelineTableQuery") String pipelineTableQuery);
+
+    /**
+     * 管道job日志
+     *
+     * @return
+     */
+    @PostMapping("/dispatchLog/getPipelJobLogVos")
+    public ResultEntity<List<PipelJobLogVO>> getPipelJobLogVos(@RequestBody List<PipelJobLogVO> pipelJobLogs);
+
+    /**
+     * 任务日志
+     *
+     * @return
+     */
+    @PostMapping("/dispatchLog/getPipelTaskLogVos")
+    public ResultEntity<List<PipelTaskLogVO>> getPipelTaskLogVos(@RequestBody List<PipelTaskLogVO> pipelTaskLogs);
+
+    /**
+     * 阶段日志
+     *
+     * @return
+     */
+    @PostMapping("/dispatchLog/getPipelStageLogVos")
+    public ResultEntity<List<PipelStageLogVO>> getPipelStageLogVos(@RequestParam String taskId);
+
+    /**
+     * 暂停管道
+     *
+     * @return
+     */
+    @PostMapping("/nifi/suspendCustomWorkNifiFlow")
+    public ResultEntity<Object> suspendCustomWorkNifiFlow(@RequestParam("nifiCustomWorkflowId") String nifiCustomWorkflowId, @RequestParam("ifFire") boolean ifFire);
+
+    /**
+     * 元数据实时同步
+     *
+     * @param dto
+     */
+    @PostMapping("/publishTask/metaData")
+    ResultEntity<Object> metaData(@RequestBody BuildMetaDataDTO dto);
+
+    /**
+     * 获取管道日志
+     *
+     * @param pipelLog pipelLog
+     * @return 执行结果
+     */
+    @PostMapping("/dispatchLog/getPipelLogVos")
+    public ResultEntity<List<PipelLogVO>> getPipelLogVos(@RequestBody PipelLogVO pipelLog);
+
 }

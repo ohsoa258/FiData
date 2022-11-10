@@ -1,12 +1,22 @@
 package com.fisk.dataaccess.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
+import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
 import com.fisk.dataaccess.dto.access.NifiAccessDTO;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
+import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
+import com.fisk.dataaccess.dto.app.AppDriveTypeDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.app.LogMessageFilterVO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
@@ -233,4 +243,82 @@ public interface DataAccessClient {
     @PostMapping("/appRegistration/getTableNameListByAppIdAndApiId")
     @ApiOperation(value = "通过appId和apiId查询表名集合")
     public ResultEntity<List<LogMessageFilterVO>> getTableNameListByAppIdAndApiId(@RequestBody PipelineTableQueryDTO dto);
+
+    /**
+     * 根据sql语句,获取字段列表(数据建模)
+     *
+     * @param query 查询条件
+     * @return 查询结果
+     */
+    @PostMapping("/appRegistration/getTableAccessQueryList")
+    ResultEntity<OdsResultDTO> getTableAccessQueryList(@RequestBody OdsQueryDTO query);
+
+    /**
+     * 构建业务元数据其他数据信息
+     *
+     * @param dto dto
+     * @return 查询结果
+     */
+    @PostMapping("/appRegistration/buildTableRuleInfo")
+    @ApiOperation(value = "构建业务元数据其他数据信息")
+    ResultEntity<TableRuleInfoDTO> buildTableRuleInfo(@RequestBody TableRuleParameterDTO dto);
+
+    /**
+     * 构建元数据查询对象(表及下面的字段)
+     *
+     * @param dto dto
+     * @return 元数据对象
+     */
+    @ApiOperation("构建元数据查询对象(表及下面的字段)")
+    @PostMapping("/dataAccessTree/buildFiDataTableMetaData")
+    ResultEntity<List<FiDataTableMetaDataDTO>> buildFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto);
+
+    /**
+     * 刷新数据接入结构
+     *
+     * @param dto dto
+     * @return 元数据对象
+     */
+    @ApiOperation("刷新数据接入结构")
+    @PostMapping("/appRegistration/setDataStructure")
+    ResultEntity<Object> setDataAccessStructure(@RequestBody FiDataMetaDataReqDTO dto);
+
+    /**
+     * 根据表信息/字段ID,获取表/字段基本信息
+     *
+     * @param dto dto
+     * @return 查询结果
+     */
+    @PostMapping("/appRegistration/getFiDataTableMetaData")
+    @ApiOperation(value = "根据表信息/字段ID,获取表/字段基本信息")
+    ResultEntity<List<FiDataTableMetaDataDTO>> getFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto);
+
+    /**
+     * 获取所有应用信息
+     *
+     * @return list
+     */
+    @GetMapping("/appRegistration/getAppList")
+    @ApiOperation(value = "获取所有应用信息")
+    ResultEntity<List<AppBusinessInfoDTO>> getAppList();
+
+    /**
+     * 获取http请求返回的结果
+     *
+     * @param dto dto
+     * @return 查询结果
+     */
+    @PostMapping("/apiConfig/getHttpRequestResult")
+    @ApiOperation(value = "获取http请求返回的结果")
+    String getHttpRequestResult(@RequestBody ApiHttpRequestDTO dto);
+
+    /**
+     * 数据源驱动类型
+     *
+     * @return
+     */
+    @GetMapping("/appRegistration/getDriveType")
+    @ApiOperation(value = "数据源驱动类型")
+    ResultEntity<List<AppDriveTypeDTO>> getDriveType();
+
 }

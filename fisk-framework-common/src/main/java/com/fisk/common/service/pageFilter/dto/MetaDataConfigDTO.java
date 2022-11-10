@@ -7,7 +7,10 @@ import lombok.Data;
  */
 @Data
 public class MetaDataConfigDTO {
-
+    /**
+     * 驱动
+     */
+    public String driver;
     /**
      * 连接数据库url
      */
@@ -37,6 +40,5 @@ public class MetaDataConfigDTO {
      * 过滤字段sql
      */
     public String filterSql;
-
 
 }

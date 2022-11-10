@@ -2,6 +2,7 @@ package com.fisk.dataservice.vo.datasource;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.dataservice.enums.SourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -44,10 +45,16 @@ public class DataSourceConVO {
     public Integer conPort;
 
     /**
-     * 模型
+     * FiData数据源id
      */
-    @ApiModelProperty(value = "模型")
-    public String conCube;
+    @ApiModelProperty(value = "FiData数据源id")
+    public int datasourceId;
+
+    /**
+     * 数据源类型 1、FiData 2、自定义
+     */
+    @ApiModelProperty(value = "数据源类型 1、FiData 2、自定义")
+    public SourceTypeEnum datasourceType;
 
     /**
      * 数据库名称

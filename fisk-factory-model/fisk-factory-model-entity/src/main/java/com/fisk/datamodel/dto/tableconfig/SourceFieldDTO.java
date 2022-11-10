@@ -52,5 +52,9 @@ public class SourceFieldDTO {
      * 聚合逻辑
      */
     public String calculationLogic;
+    /**
+     * 原子指标id
+     */
+    public int atomicId;
 
 }

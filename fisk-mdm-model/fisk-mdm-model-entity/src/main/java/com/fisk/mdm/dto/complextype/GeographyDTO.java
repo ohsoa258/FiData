@@ -10,6 +10,11 @@ import lombok.Data;
 public class GeographyDTO {
 
     /**
+     * 唯一编码
+     */
+    private String code;
+
+    /**
      * 经度
      */
     private String lng;
@@ -20,8 +25,13 @@ public class GeographyDTO {
     private String lat;
 
     /**
-     * 地图类型：0:高的类型，1:百度类型
+     * 地图类型：0:高德类型，1:百度类型
      */
     private Integer mapType;
+
+    /**
+     * 版本id
+     */
+    private Integer versionId;
 
 }

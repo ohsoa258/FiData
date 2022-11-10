@@ -16,7 +16,7 @@ public class MDCHelper {
     }
 
     public static void setAppLogType(TraceTypeEnum type) {
-        MDC.put(TraceConstant.APP_LOGTYPE, type.getName());
+        MDC.put(TraceConstant.APP_LOG_TYPE, type.getName());
     }
 
     @Deprecated
@@ -35,8 +35,23 @@ public class MDCHelper {
         return traceId;
     }
 
+    public static String setTraceId(String traceId) {
+        MDC.put(TraceConstant.TRACE_ID, traceId);
+        return traceId;
+    }
+
     public static String getTraceId() {
         return MDC.get(TraceConstant.TRACE_ID);
+    }
+
+    public static String setSpanId() {
+        String spanId = UUID.randomUUID().toString();
+        MDC.put(TraceConstant.SPAN_ID, spanId);
+        return spanId;
+    }
+
+    public static String getSpanId() {
+        return MDC.get(TraceConstant.SPAN_ID);
     }
 
     public static void remove(String key) {
@@ -44,11 +59,15 @@ public class MDCHelper {
     }
 
     public static void removeLogType() {
-        MDC.remove(TraceConstant.APP_LOGTYPE);
+        MDC.remove(TraceConstant.APP_LOG_TYPE);
     }
 
     public static void removeTraceId() {
         MDC.remove(TraceConstant.TRACE_ID);
+    }
+
+    public static void removeSpanId() {
+        MDC.remove(TraceConstant.SPAN_ID);
     }
 
     public static void clear() {

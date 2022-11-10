@@ -20,6 +20,7 @@ public class ViwGroupVO extends BaseUserInfoVO {
     private Integer id;
     private Integer entityId;
     private String name;
+    private String columnName;
     private String details;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")

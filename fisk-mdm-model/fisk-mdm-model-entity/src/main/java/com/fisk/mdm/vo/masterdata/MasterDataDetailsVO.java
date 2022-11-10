@@ -11,6 +11,6 @@ import java.util.List;
 @Data
 public class MasterDataDetailsVO {
 
-    public List<AttributeDetailsVO> attributes;
+    private List<AttributeDetailsVO> attributes;
 
 }

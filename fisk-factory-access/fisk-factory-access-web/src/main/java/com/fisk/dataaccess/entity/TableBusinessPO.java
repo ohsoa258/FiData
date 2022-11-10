@@ -19,7 +19,7 @@ public class TableBusinessPO extends BasePO {
     public Long accessId;
 
     /**
-     * 模式(1:普通模式  2:高级模式)
+     * 模式(1:普通模式  2:高级模式 3:自定义覆盖时间)
      */
     public Integer otherLogic;
 
@@ -67,4 +67,10 @@ public class TableBusinessPO extends BasePO {
      * 其他逻辑  业务覆盖单位,Year,Month,Day,Hour
      */
     public String rangeDateUnitStandby;
+
+    /**
+     * 自定义覆盖时间
+     */
+    public String customCoverageTime;
+
 }

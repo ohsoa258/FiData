@@ -28,7 +28,11 @@ public enum serverModuleTypeEnum implements BaseEnum {
     /**
      * 数据治理
      */
-    DATA_MANAGEMENT("数据治理", 4);
+    DATA_MANAGEMENT("数据治理", 4),
+    /**
+     * 平台数据源
+     */
+    PLATFORM_DATASOURCE("平台数据源", 5);
 
     private final String name;
     @EnumValue
