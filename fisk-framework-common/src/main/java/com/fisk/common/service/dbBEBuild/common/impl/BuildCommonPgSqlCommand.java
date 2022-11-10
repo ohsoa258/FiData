@@ -21,8 +21,29 @@ public class BuildCommonPgSqlCommand implements IBuildCommonSqlCommand {
     }
 
     @Override
-    public String buildColumnInfo(String tableName) {
-        return null;
+    public String buildColumnInfo(String dbName, String tableName) {
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT ");
+        str.append("TABLE_SCHEMA AS schema,");
+        str.append("TABLE_NAME AS table_name,");
+        str.append("COLUMN_NAME AS column_name,");
+        str.append("CHARACTER_MAXIMUM_LENGTH AS column_length,");
+        str.append("UDT_NAME AS data_type ");
+        str.append("FROM ");
+        str.append("INFORMATION_SCHEMA.COLUMNS ");
+        str.append("WHERE ");
+        str.append("TABLE_SCHEMA NOT IN");
+        str.append("(");
+        str.append("'pg_catalog',");
+        str.append("'information_schema'");
+        str.append(") ");
+        str.append("AND ");
+        str.append("TABLE_NAME IN");
+        str.append("(");
+        str.append(tableName);
+        str.append(")");
+
+        return str.toString();
     }
 
 }
