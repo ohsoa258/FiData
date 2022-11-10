@@ -30,6 +30,47 @@ public class DateTimeUtils {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 
+
+    /**
+     * 将时间戳转换为时间,参数和返回值都是字符串
+     *
+     * @param s
+     * @return res
+     */
+    public static String stampToDate(String s) {
+        try {
+            String res;
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            long lt = new Long(s);
+            Date date = new Date(lt);
+            res = simpleDateFormat.format(date);
+            return res;
+        } catch (Exception ex) {
+            throw new FkException(ResultEnum.ERROR, "【stampToDate】：" + ex);
+        }
+    }
+
+    /**
+     * 时间转换成时间戳,参数和返回值都是字符串
+     *
+     * @param s
+     * @return res
+     * @throws ParseException
+     */
+    public static String dateToStamp(String s) {
+        try {
+            String res;
+            //设置时间模版
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            Date date = simpleDateFormat.parse(s);
+            long ts = date.getTime();
+            res = String.valueOf(ts);
+            return res;
+        } catch (Exception ex) {
+            throw new FkException(ResultEnum.ERROR, "【dateToStamp】：" + ex);
+        }
+    }
+
     /**
      * @return int
      * @description 计算两个日期之间天数差

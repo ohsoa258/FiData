@@ -2,7 +2,7 @@ server:
   port: 8098
 spring:
   application:
-    name: license-registry
+    name: licenseRegistry-service
   profiles:
     active: dev
   jackson:

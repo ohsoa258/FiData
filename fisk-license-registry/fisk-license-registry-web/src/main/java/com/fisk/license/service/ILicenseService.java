@@ -18,10 +18,10 @@ public interface ILicenseService extends IService<LicencePO> {
     /**
      * 校验Url是否有访问权限
      */
-    ResultEntity<VerifyLicenceVO> verifyLicenceByUrl(VerifyLicenceDTO dto);
+    VerifyLicenceVO verifyCompanyLicenceByUrl(VerifyLicenceDTO dto);
 
     /**
      * 生成许可证
      */
-    ResultEntity<LicenceVO> createLicence(LicenceDTO dto);
+    ResultEntity<LicenceVO> createCompanyLicence(LicenceDTO dto);
 }
