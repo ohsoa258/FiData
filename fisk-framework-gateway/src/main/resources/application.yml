@@ -178,6 +178,10 @@ spring:
           predicates:
             - Path=/mdmmodel/**
 
+        - id: licenseRegistry-service # 许可证注册服务
+          uri: lb://licenseRegistry-service
+          predicates:
+            - Path=/licenseRegistry/**
 fk:
   jwt:
     key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥

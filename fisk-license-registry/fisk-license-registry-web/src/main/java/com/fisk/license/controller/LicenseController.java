@@ -1,6 +1,8 @@
 package com.fisk.license.controller;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.license.config.SwaggerConfig;
 import com.fisk.license.dto.LicenceDTO;
 import com.fisk.license.dto.VerifyLicenceDTO;
@@ -9,6 +11,7 @@ import com.fisk.license.vo.LicenceVO;
 import com.fisk.license.vo.VerifyLicenceVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,15 +39,15 @@ public class LicenseController {
     @Resource
     private ILicenseService service;
 
-    @ApiOperation("校验Url是否有访问权限")
-    @PostMapping("/verifyLicenceByUrl")
-    public ResultEntity<VerifyLicenceVO> verifyLicenceByUrl(@RequestBody VerifyLicenceDTO dto) {
-        return service.verifyLicenceByUrl(dto);
+    @ApiOperation("校验Url是否有访问权限（Company）")
+    @PostMapping("/verifyCompanyLicenceByUrl")
+    public ResultEntity<VerifyLicenceVO> verifyCompanyLicenceByUrl(@Validated @RequestBody VerifyLicenceDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.verifyCompanyLicenceByUrl(dto));
     }
 
-    @ApiOperation("生成许可证")
-    @PostMapping("/createLicence")
-    public ResultEntity<LicenceVO> createLicence(@RequestBody LicenceDTO dto) {
-        return service.createLicence(dto);
+    @ApiOperation("生成许可证（Company）")
+    @PostMapping("/verifyCompanyLicenceByUrl")
+    public ResultEntity<LicenceVO> createCompanyLicence(@Validated @RequestBody LicenceDTO dto) {
+        return service.createCompanyLicence(dto);
     }
 }

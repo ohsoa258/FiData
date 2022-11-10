@@ -3,6 +3,8 @@ package com.fisk.license.dto;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * @author dick
  * @version 1.0
@@ -14,6 +16,7 @@ public class VerifyLicenceDTO {
     /**
      * 相对路径地址
      */
+    @NotNull()
     @ApiModelProperty(value = "相对路径地址 例：/home/index")
     public String relativePathUrl;
 }

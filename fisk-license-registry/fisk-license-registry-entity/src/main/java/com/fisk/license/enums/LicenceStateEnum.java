@@ -12,11 +12,13 @@ public enum LicenceStateEnum implements BaseEnum {
     /**
      * 许可证状态
      */
-    LICENCE_NONE(0, "Licence不存在"),
+    LICENCE_NONE(0, "Licence不存在，请联系相关人员"),
     LICENCE_UNAUTHORIZED(1, "Licence未授权"),
     LICENCE_AUTHORIZED(2, "Licence已授权"),
     LICENCE_EXPIRED(3, "Licence已过期"),
-    LICENCE_DISABLED(4, "Licence已禁用");
+    LICENCE_DISABLED(4, "Licence已禁用"),
+    LICENCE_DECRYPT_FAIL(5, "Licence解析失败"),
+    LICENCE_DECRYPT_ERROR(6, "Licence解析异常");
 
     LicenceStateEnum(int value, String name) {
         this.name = name;
