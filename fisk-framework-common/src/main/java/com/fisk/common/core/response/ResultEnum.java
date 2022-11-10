@@ -48,6 +48,8 @@ public enum ResultEnum {
     DATASOURCE_CONNECTCLOSEERROR(1022, "数据源连接关闭异常"),
     NO_MATCHING_DATA_TYPE(1023, "没有匹配的数据类型"),
     CRON_ERROR(1024, "cron格式错误"),
+    DRUID_SQL_ERROR(1025, "druid解析sql失败"),
+    DRUID_ERROR(1026, "druid异常"),
 
     /**
      * 报表可视化服务，错误码从2000开始
