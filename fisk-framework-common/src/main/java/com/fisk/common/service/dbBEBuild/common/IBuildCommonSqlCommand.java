@@ -12,4 +12,12 @@ public interface IBuildCommonSqlCommand {
      */
     String buildAllDbSql();
 
+    /**
+     * druid分析sql
+     *
+     * @param sql
+     * @return
+     */
+    Object druidAnalyseSql(String sql);
+
 }
