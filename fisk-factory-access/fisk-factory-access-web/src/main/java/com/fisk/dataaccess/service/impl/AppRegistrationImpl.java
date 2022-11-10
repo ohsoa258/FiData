@@ -28,6 +28,8 @@ import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
+import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
+import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
@@ -1093,6 +1095,23 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
         return oracleCdcUtils.createCdcJobScript(dto, dataSourceData, dataSourceConfig.data, tableAccessData);
+    }
+
+    @Override
+    public JSONObject dataTypeList(Integer appId) {
+
+        AppRegistrationPO po = baseMapper.selectById(appId);
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        ResultEntity<DataSourceDTO> fiDataDataSourceById = userClient.getFiDataDataSourceById(po.targetDbId);
+        if (fiDataDataSourceById == null) {
+            throw new FkException(ResultEnum.DATA_OPS_CONFIG_EXISTS);
+        }
+
+        IBuildAccessSqlCommand command = BuildFactoryAccessHelper.getDBCommand(fiDataDataSourceById.data.conType);
+        return command.dataTypeList();
+
     }
 
     /**

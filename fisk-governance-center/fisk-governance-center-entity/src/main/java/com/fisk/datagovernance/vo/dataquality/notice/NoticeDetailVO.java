@@ -1,6 +1,5 @@
 package com.fisk.datagovernance.vo.dataquality.notice;
 
-import com.fisk.datagovernance.vo.dataquality.emailserver.EmailServerVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -36,7 +35,7 @@ public class NoticeDetailVO {
      * 邮件服务器列表
      */
     @ApiModelProperty(value = "邮件服务器列表")
-    public List<EmailServerVO> emailServerVOS;
+    public List<NoticeEmailVO> emailServerVOS;
 
     /**
      * 数据校验规则关联的通知ID

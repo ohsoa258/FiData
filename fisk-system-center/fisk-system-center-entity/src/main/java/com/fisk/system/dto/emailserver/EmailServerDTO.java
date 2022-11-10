@@ -1,6 +1,6 @@
-package com.fisk.datagovernance.dto.dataquality.emailserver;
+package com.fisk.system.dto.emailserver;
 
-import com.fisk.datagovernance.enums.dataquality.EmailServerTypeEnum;
+import com.fisk.system.enums.EmailServerTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 
 /**

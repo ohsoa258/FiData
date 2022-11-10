@@ -24,6 +24,9 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
+import com.fisk.common.service.dbBEBuild.common.BuildCommonHelper;
+import com.fisk.common.service.dbBEBuild.common.IBuildCommonSqlCommand;
+import com.fisk.common.service.dbBEBuild.common.dto.DruidFieldInfoDTO;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
@@ -561,22 +564,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
             dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
             dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
-            /*if (dto.fieldType.contains("INT2")
-                    || dto.fieldType.contains("INT4")
-                    || dto.fieldType.contains("INT8")) {
-                dto.fieldType = "INT";
-            }
-            if (dto.fieldType.toLowerCase().contains(fieldType1)
-                    || dto.fieldType.toLowerCase().contains(fieldType2)) {
-                dto.fieldLength = "50";
-            } else {
-                dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
-            }*/
-
-            // 转换表字段类型和长度
-            /*List<String> list = transformField(dto.fieldType, dto.fieldLength);
-            dto.fieldType = list.get(0);
-            dto.fieldLength = list.get(1);*/
             fieldNameDTOList.add(dto);
         }
         data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());
@@ -1542,7 +1529,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // dto -> po
         TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
-        /*if(po.getTableName() == null) {
+        /*if (po.getTableName() == null) {
             po.setTableName("");
         }*/
         //po.setPublish(0);
@@ -1583,7 +1570,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         try {
             AppRegistrationPO appRegistrationPo = registrationMapper.selectById(query.appId);
             if (appRegistrationPo == null) {
-                throw new FkException(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
+                throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR);
             }
             ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(appRegistrationPo.targetDbId);
             if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
@@ -1840,12 +1827,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         Connection conn = null;
         Statement st = null;
         ResultSet rs = null;
+        com.fisk.common.core.enums.dataservice.DataSourceTypeEnum dataSourceTypeEnum = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.getEnum(po.driveType.toUpperCase());
         try {
-            com.fisk.common.core.enums.dataservice.DataSourceTypeEnum dataSourceTypeEnum = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.getEnum(po.driveType.toUpperCase());
             AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
             conn = helper.connection(po.connectStr, po.connectAccount, po.connectPwd, dataSourceTypeEnum);
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             st.setMaxRows(10);
+
+            //cdc模式
             if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE_CDC.getName())) {
                 query.querySql = "SELECT * FROM " + query.querySql;
             }
@@ -1877,9 +1866,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             //获取数据集
             array = resultSetToJsonArrayDataAccess(rs);
 
-            //类型转换
-            typeConversion(dataSourceTypeEnum, array.fieldNameDTOList, registration.targetDbId);
-
             Instant inst5 = Instant.now();
             log.info("封装数据执行时间 : " + Duration.between(inst4, inst5).toMillis());
 
@@ -1894,6 +1880,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
         Instant inst5 = Instant.now();
         System.out.println("最终执行时间 : " + Duration.between(inst1, inst5).toMillis());
+
+        //数据类型转换
+        typeConversion(dataSourceTypeEnum, array.fieldNameDTOList, registration.targetDbId);
 
         return array;
     }
@@ -1922,10 +1911,29 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.dataType = field.fieldType;
             dto.precision = field.sourceFieldPrecision;
             String[] data = command.dataTypeConversion(dto, targetDataSource.data.conType);
-            //field.fieldTypeDescribe = data[0];
-            field.fieldType = data[1].toUpperCase();
+            field.fieldType = data[0].toUpperCase();
         }
 
+    }
+
+
+    /**
+     * 设置字段源表名
+     *
+     * @param typeEnum
+     * @param sql
+     */
+    public void setSourceTable(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum typeEnum,
+                               List<FieldNameDTO> fieldList,
+                               String sql) {
+        IBuildCommonSqlCommand command = BuildCommonHelper.getCommand(typeEnum);
+        List<DruidFieldInfoDTO> fieldInfoList = command.druidAnalyseSql(sql);
+        /*for (FieldNameDTO field : fieldList){
+            Optional<DruidFieldInfoDTO> first = fieldInfoList.stream()
+                    .filter(e -> e.fieldName.equals(field.fieldName))
+                    .findFirst();
+
+        }*/
     }
 
 
@@ -1972,10 +1980,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(listPo);
         dto.appAbbreviation = registrationPo.appAbbreviation;
         dto.tableName = tableAccessPo.tableName;
+        dto.selectSql = tableAccessPo.sqlScript;
         // 非实时物理表才有sql
         if (!dbTypeEnum.getName().equals(DbTypeEnum.RestfulAPI.getName())
                 && !dbTypeEnum.getName().equals(DbTypeEnum.api.getName())
-                && !dbTypeEnum.getName().equals(DbTypeEnum.oracle_cdc.getName())) {
+                && !dbTypeEnum.getName().equals(DbTypeEnum.oracle_cdc.getName())
+                && !dbTypeEnum.getName().equals(DbTypeEnum.ftp.getName())) {
             String tableName = TableNameGenerateUtils.buildTableName(tableAccessPo.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
             Map<String, String> converSql = publishTaskClient.converSql(tableName, tableAccessPo.sqlScript, dataSourcePo.driveType, null).data;
             //String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());

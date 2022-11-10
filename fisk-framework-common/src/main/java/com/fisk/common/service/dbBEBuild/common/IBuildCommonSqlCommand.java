@@ -1,5 +1,9 @@
 package com.fisk.common.service.dbBEBuild.common;
 
+import com.fisk.common.service.dbBEBuild.common.dto.DruidFieldInfoDTO;
+
+import java.util.List;
+
 /**
  * @author JianWenYang
  */
@@ -11,5 +15,13 @@ public interface IBuildCommonSqlCommand {
      * @return
      */
     String buildAllDbSql();
+
+    /**
+     * druid分析sql
+     *
+     * @param sql
+     * @return
+     */
+    List<DruidFieldInfoDTO> druidAnalyseSql(String sql);
 
 }

@@ -29,7 +29,10 @@ import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
 import com.fisk.dataaccess.dto.flink.FlinkConfigDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.dto.savepointhistory.SavepointHistoryDTO;
-import com.fisk.dataaccess.dto.table.*;
+import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
+import com.fisk.dataaccess.dto.table.TableBusinessDTO;
+import com.fisk.dataaccess.dto.table.TableFieldsDTO;
+import com.fisk.dataaccess.dto.table.TableSyncmodeDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.map.FlinkParameterMap;
@@ -401,7 +404,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             // 执行发布
             try {
                 // 实时--RestfulAPI类型  or  非实时--api类型
-                if ((registration.appType == 0 && DataSourceTypeEnum.RestfulAPI.getName().equals(dataSourcePo.driveType)) || (registration.appType == 1 && DataSourceTypeEnum.API.getName().equals(dataSourcePo.driveType))) {
+                //0实时
+                if ((registration.appType == 0
+                        && DataSourceTypeEnum.RestfulAPI.getName().equals(dataSourcePo.driveType))
+                        || (registration.appType == 1
+                        && DataSourceTypeEnum.API.getName().equals(dataSourcePo.driveType))) {
                     // 传入apiId和api下所有表
                     TableAccessPO accessPo = tableAccessImpl.query().eq("id", accessId).one();
                     List<TableAccessPO> tablePoList = tableAccessImpl.query().eq("api_id", accessPo.apiId).list();
@@ -414,12 +421,12 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     // 构建元数据实时同步数据对象
                     //buildMetaDataInstanceAttribute(registration, accessId, 1);
                 } else if (registration.appType == 1) {
-                    // 非实时物理表发布
-                    // 创建表流程
-                    publishTaskClient.publishBuildPhysicsTableTask(data);
                     if (DataSourceTypeEnum.FTP.getName().equals(dataSourcePo.driveType)) {
                         data.excelFlow = true;
                     }
+                    // 非实时物理表发布
+                    // 创建表流程
+                    publishTaskClient.publishBuildPhysicsTableTask(data);
                     // 生成nifi流程
                     //log.info(JSON.toJSONString(data));
                     //publishTaskClient.publishBuildAtlasTableTask(data);
@@ -558,6 +565,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         instance.setContact_info(app.getAppPrincipal());
         instance.setDescription(app.getAppDes());
         instance.setComment(app.getAppDes());
+        instance.setOwner(app.createUser);
 
         // 库
         List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
@@ -567,6 +575,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         db.setContact_info(app.getAppPrincipal());
         db.setDescription(app.getAppDes());
         db.setComment(app.getAppDes());
+        db.setOwner(app.createUser);
 
         TableAccessPO tableAccess = tableAccessImpl.query().eq("id", accessId).one();
         if (tableAccess == null) {
@@ -581,6 +590,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     app.appAbbreviation,
                     app.whetherSchema));
             table.setContact_info(app.getAppPrincipal());
+            table.setOwner(tableAccess.createUser);
             table.setDescription(tableAccess.getTableDes());
             table.setComment(String.valueOf(app.getId()));
 
@@ -836,7 +846,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
             // 日期操作函数
             Calendar calendar = Calendar.getInstance();
-            String sql = String.format("DELETE FROM %s WHERE version NOT IN", tableName);
+            String sql = String.format("DELETE FROM %s WHERE fi_version NOT IN", tableName);
             List<String> sqlConditions = new ArrayList<>();
             int i = 1;
 
@@ -847,10 +857,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     log.info("【delVersionData】自定义模式下自定义规则配置为空");
                     return ResultEnum.DATA_NOTEXISTS;
                 }
-                versionCustomRule = String.format("SELECT (%s) AS version", versionCustomRule);
+                versionCustomRule = String.format("SELECT (%s) AS fi_version", versionCustomRule);
                 log.info("【delVersionData】自定义模式下自定义规则：" + versionCustomRule);
                 List<Map<String, Object>> data = dbHelper.batchExecQueryResultMaps_noClose(versionCustomRule, conn);
-                Object versionObj = data.get(0).get("version");
+                Object versionObj = data.get(0).get("fi_version");
                 if (versionObj == null || versionObj == "") {
                     log.info("【delVersionData】自定义模式下自定义规则查询结果为空");
                     return ResultEnum.DATA_NOTEXISTS;

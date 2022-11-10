@@ -1,7 +1,7 @@
-package com.fisk.datagovernance.map.dataquality;
-import com.fisk.datagovernance.dto.dataquality.emailserver.EmailServerDTO;
-import com.fisk.datagovernance.dto.dataquality.emailserver.EmailServerEditDTO;
-import com.fisk.datagovernance.entity.dataquality.EmailServerPO;
+package com.fisk.system.map;
+import com.fisk.system.dto.emailserver.EmailServerDTO;
+import com.fisk.system.dto.emailserver.EmailServerEditDTO;
+import com.fisk.system.entity.EmailServerPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;

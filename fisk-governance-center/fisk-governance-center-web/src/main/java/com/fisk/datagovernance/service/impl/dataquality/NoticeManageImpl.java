@@ -24,10 +24,12 @@ import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.map.dataquality.NoticeMap;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.INoticeManageService;
-import com.fisk.datagovernance.vo.dataquality.emailserver.EmailServerVO;
 import com.fisk.datagovernance.vo.dataquality.notice.NoticeDetailVO;
+import com.fisk.datagovernance.vo.dataquality.notice.NoticeEmailVO;
 import com.fisk.datagovernance.vo.dataquality.notice.NoticeModuleVO;
 import com.fisk.datagovernance.vo.dataquality.notice.NoticeVO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.vo.emailserver.EmailServerVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.UnifiedControlDTO;
 import com.fisk.task.enums.DataClassifyEnum;
@@ -69,7 +71,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
     private LifecycleMapper lifecycleMapper;
 
     @Resource
-    private EmailServerMapper emailServerMapper;
+    private UserClient userClient;
 
     @Resource
     private TemplateMapper templateMapper;
@@ -198,20 +200,22 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
     @Override
     public ResultEntity<Object> sendEmailNotice(NoticeDTO dto) {
         //第一步：查询邮件服务器设置
-        EmailServerPO emailServerPO = emailServerMapper.selectById(dto.emailServerId);
-        if (emailServerPO == null) {
+        ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(dto.emailServerId);
+        if (emailServerById == null || emailServerById.getCode() != ResultEnum.SUCCESS.getCode() ||
+                emailServerById.getData() == null) {
             return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS, "邮件服务器不存在");
         }
+        EmailServerVO emailServerVO = emailServerById.getData();
         MailServeiceDTO mailServeiceDTO = new MailServeiceDTO();
         mailServeiceDTO.setOpenAuth(true);
         mailServeiceDTO.setOpenDebug(true);
-        mailServeiceDTO.setHost(emailServerPO.getEmailServer());
-        mailServeiceDTO.setProtocol(EmailServerTypeEnum.getEnum(emailServerPO.getEmailServerType()).getName());
-        mailServeiceDTO.setUser(emailServerPO.getEmailServerAccount());
-        mailServeiceDTO.setPassword(emailServerPO.getEmailServerPwd());
-        mailServeiceDTO.setPort(emailServerPO.getEmailServerPort());
+        mailServeiceDTO.setHost(emailServerVO.getEmailServer());
+        mailServeiceDTO.setProtocol(emailServerVO.getEmailServerType().getName());
+        mailServeiceDTO.setUser(emailServerVO.getEmailServerAccount());
+        mailServeiceDTO.setPassword(emailServerVO.getEmailServerPwd());
+        mailServeiceDTO.setPort(emailServerVO.getEmailServerPort());
         MailSenderDTO mailSenderDTO = new MailSenderDTO();
-        mailSenderDTO.setUser(emailServerPO.getEmailServerAccount());
+        mailSenderDTO.setUser(emailServerVO.getEmailServerAccount());
         mailSenderDTO.setSubject(dto.emailSubject);
         mailSenderDTO.setBody(dto.body);
         mailSenderDTO.setToAddress(dto.emailConsignee);
@@ -237,7 +241,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         List<NoticeModuleVO> noticeRule_DataCheck = new ArrayList<>();
         List<NoticeModuleVO> noticeRule_BusinessFilter = new ArrayList<>();
         List<NoticeModuleVO> noticeRule_Lifecycle = new ArrayList<>();
-        List<EmailServerVO> emailServerVOS = new ArrayList<>();
+        List<NoticeEmailVO> noticeRule_Email = new ArrayList<>();
         List<Long> noticeIds_DataCheck = new ArrayList<>();
         List<Long> noticeIds_BusinessFilter = new ArrayList<>();
         List<Long> noticeIds_Lifecycle = new ArrayList<>();
@@ -367,15 +371,13 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         }
 
         //第六步：获取邮件服务器信息
-        QueryWrapper<EmailServerPO> emailServerPOQueryWrapper = new QueryWrapper<>();
-        emailServerPOQueryWrapper.lambda().eq(EmailServerPO::getDelFlag, 1);
-        List<EmailServerPO> emailServerPOS = emailServerMapper.selectList(emailServerPOQueryWrapper);
-        if (CollectionUtils.isNotEmpty(emailServerPOS)) {
-            emailServerPOS.forEach(e -> {
-                EmailServerVO emailServerVO = new EmailServerVO();
-                emailServerVO.setId(Math.toIntExact(e.getId()));
-                emailServerVO.setName(e.getName());
-                emailServerVOS.add(emailServerVO);
+        ResultEntity<List<EmailServerVO>> emailServerList = userClient.getEmailServerList();
+        if (emailServerList != null && CollectionUtils.isNotEmpty(emailServerList.getData())) {
+            emailServerList.getData().forEach(e -> {
+                NoticeEmailVO noticeEmailVO = new NoticeEmailVO();
+                noticeEmailVO.setId(Math.toIntExact(e.getId()));
+                noticeEmailVO.setName(e.getName());
+                noticeRule_Email.add(noticeEmailVO);
             });
         }
 
@@ -385,7 +387,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         noticeDetailVO.noticeIds_DataCheck = noticeIds_DataCheck;
         noticeDetailVO.noticeIds_BusinessFilter = noticeIds_BusinessFilter;
         noticeDetailVO.noticeIds_Lifecycle = noticeIds_Lifecycle;
-        noticeDetailVO.emailServerVOS = emailServerVOS;
+        noticeDetailVO.emailServerVOS = noticeRule_Email;
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, noticeDetailVO);
     }
 
@@ -418,7 +420,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         unifiedControlDTO.setType(OlapTableEnum.GOVERNANCE);
         unifiedControlDTO.setDataClassifyEnum(DataClassifyEnum.UNIFIEDCONTROL);
         unifiedControlDTO.setDeleted(isDelTask);
-        log.info("创建nifi调度任务请求参数："+ JSON.toJSONString(unifiedControlDTO));
+        log.info("创建nifi调度任务请求参数：" + JSON.toJSONString(unifiedControlDTO));
         ResultEntity<Object> result = publishTaskClient.publishBuildunifiedControlTask(unifiedControlDTO);
         if (result != null) {
             resultEnum = ResultEnum.getEnum(result.getCode());

@@ -1,7 +1,7 @@
-package com.fisk.datagovernance.dto.dataquality.emailserver;
+package com.fisk.system.dto.emailserver;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.datagovernance.vo.dataquality.emailserver.EmailServerVO;
+import com.fisk.system.vo.emailserver.EmailServerVO;
 import io.swagger.annotations.ApiModelProperty;
 
 /**

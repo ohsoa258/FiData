@@ -15,7 +15,7 @@ import java.util.Map;
 public class BuildGovernancePgCommandImpl implements IBuildGovernanceSqlCommand {
 
     @Override
-    public String buildPagingSql(String tableName,String fields, String orderBy, Integer pageIndex, Integer pageSize) {
+    public String buildPagingSql(String tableName, String fields, String orderBy, Integer pageIndex, Integer pageSize) {
         StringBuilder str = new StringBuilder();
         str.append("SELECT ");
         str.append(fields);
@@ -24,12 +24,13 @@ public class BuildGovernancePgCommandImpl implements IBuildGovernanceSqlCommand 
         if (StringUtils.isNotEmpty(orderBy)) {
             str.append(" ORDER BY " + orderBy);
         }
-        str.append(" LIMIT " + pageSize + " OFFSET " + pageIndex);
+        // OFFSET 从0开始
+        str.append(String.format(" LIMIT %s OFFSET %s ", pageSize, (pageIndex - 1) * pageSize));
         return str.toString();
     }
 
     @Override
-    public String buildPagingSql(String tableName,List<String> fields, String orderBy, Integer pageIndex, Integer pageSize) {
+    public String buildPagingSql(String tableName, List<String> fields, String orderBy, Integer pageIndex, Integer pageSize) {
         StringBuilder str = new StringBuilder();
         str.append("SELECT ");
         str.append(Joiner.on(",").join(fields));
@@ -38,7 +39,7 @@ public class BuildGovernancePgCommandImpl implements IBuildGovernanceSqlCommand 
         if (StringUtils.isNotEmpty(orderBy)) {
             str.append(" ORDER BY " + orderBy);
         }
-        str.append(" LIMIT " + pageSize + " OFFSET " + pageIndex);
+        str.append(String.format(" LIMIT %s OFFSET %s ", pageSize, (pageIndex - 1) * pageSize));
         return str.toString();
     }
 
@@ -55,7 +56,7 @@ public class BuildGovernancePgCommandImpl implements IBuildGovernanceSqlCommand 
     }
 
     @Override
-    public  String buildQuerySql(String tableName, String fields, String queryConditions) {
+    public String buildQuerySql(String tableName, String fields, String queryConditions) {
         StringBuilder str = new StringBuilder();
         str.append(" SELECT ");
         if (StringUtils.isNotEmpty(fields)) {
@@ -92,7 +93,7 @@ public class BuildGovernancePgCommandImpl implements IBuildGovernanceSqlCommand 
         str.append(" SET ");
         String column = singleUpdateSql(member);
         str.append(column);
-        str.append(" WHERE ");
+        str.append(" WHERE 1=1 ");
         str.append(editConditions);
         return str.toString();
     }

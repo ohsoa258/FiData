@@ -1,7 +1,11 @@
 package com.fisk.common.service.dbBEBuild.factoryaccess.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
-import com.fisk.common.core.enums.dbdatatype.*;
+import com.fisk.common.core.enums.dbdatatype.MySqlTypeEnum;
+import com.fisk.common.core.enums.dbdatatype.OracleTypeEnum;
+import com.fisk.common.core.enums.dbdatatype.PgTypeEnum;
+import com.fisk.common.core.enums.dbdatatype.SqlServerTypeEnum;
 import com.fisk.common.core.enums.factory.BusinessTimeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
@@ -96,7 +100,7 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
     public String buildVersionSql(String type, String value) {
         if (type.equals("年")) {
             value = "SELECT YEAR\n" +
-                    "\t( GETDATE( ) ) AS version;";
+                    "\t( GETDATE( ) ) AS fi_version;";
         } else if (type.equals("季")) {
             value = "SELECT CAST\n" +
                     "\t( YEAR ( GETDATE( ) ) AS VARCHAR ) + '/Q' +\n" +
@@ -108,18 +112,18 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
                     "\t\t'02' \n" +
                     "\t\tWHEN MONTH ( GETDATE( ) ) <= 9 THEN\n" +
                     "\t\t'03' ELSE '04' \n" +
-                    "\tEND AS version;";
+                    "\tEND AS fi_version;";
         } else if (type.equals("月")) {
             value = "SELECT CAST\n" +
-                    "\t( YEAR ( GETDATE( ) ) AS VARCHAR ) + '/' + CAST ( MONTH ( GETDATE( ) ) AS VARCHAR ) AS version;";
+                    "\t( YEAR ( GETDATE( ) ) AS VARCHAR ) + '/' + CAST ( MONTH ( GETDATE( ) ) AS VARCHAR ) AS fi_version;";
         } else if (type.equals("周")) {
             value = "SELECT CAST\n" +
-                    "\t( YEAR ( GETDATE( ) ) AS VARCHAR ) + '/W' + Datename( week, GetDate( ) ) AS version;";
+                    "\t( YEAR ( GETDATE( ) ) AS VARCHAR ) + '/W' + Datename( week, GetDate( ) ) AS fi_version;";
         } else if (type.equals("日")) {
             value = "SELECT CONVERT\n" +
-                    "\t( CHAR ( 10 ), GetDate( ), 111 ) AS version;";
+                    "\t( CHAR ( 10 ), GetDate( ), 111 ) AS fi_version;";
         } else if (type.equals("自定义")) {
-            value = String.format("SELECT (%s) AS version", value);
+            value = String.format("SELECT (%s) AS fi_version", value);
         }
         return value;
     }
@@ -153,6 +157,17 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
 
     }
 
+    @Override
+    public JSONObject dataTypeList() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("字符串型", "NVARCHAR");
+        jsonObject.put("整型", "INT");
+        jsonObject.put("时间戳类型", "TIMESTAMP");
+        jsonObject.put("浮点型", "FLOAT");
+        jsonObject.put("文本型", "TEXT");
+        return jsonObject;
+    }
+
     /**
      * SqlServer转pg
      *
@@ -161,33 +176,28 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] sqlServerConversionPg(DataTypeConversionDTO dto) {
         SqlServerTypeEnum typeEnum = SqlServerTypeEnum.getValue(dto.dataType);
-        String[] data = new String[2];
+        String[] data = new String[1];
         switch (typeEnum) {
             case INT:
             case SMALLINT:
             case BIGINT:
-                data[0] = FiDataDataTypeEnum.INT.getDescription();
-                data[1] = PgTypeEnum.INT4.getName();
+                data[0] = PgTypeEnum.INT4.getName();
                 break;
             case TEXT:
-                data[0] = FiDataDataTypeEnum.TEXT.getDescription();
-                data[1] = PgTypeEnum.TEXT.getName();
+                data[0] = PgTypeEnum.TEXT.getName();
                 break;
             case DATE:
             case TIME:
             case TIMESTAMP:
             case DATETIME:
-                data[0] = FiDataDataTypeEnum.TIMESTAMP.getDescription();
-                data[1] = PgTypeEnum.TIMESTAMP.getName();
+                data[0] = PgTypeEnum.TIMESTAMP.getName();
                 break;
             case NUMERIC:
             case DECIMAL:
-                data[0] = FiDataDataTypeEnum.FLOAT.getDescription();
-                data[1] = PgTypeEnum.NUMERIC.getName();
+                data[0] = PgTypeEnum.NUMERIC.getName();
                 break;
             default:
-                data[0] = FiDataDataTypeEnum.NVARCHAR.getDescription();
-                data[1] = PgTypeEnum.VARCHAR.getName();
+                data[0] = PgTypeEnum.VARCHAR.getName();
         }
         return data;
     }
@@ -200,33 +210,28 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] sqlServerConversionSqlServer(DataTypeConversionDTO dto) {
         SqlServerTypeEnum typeEnum = SqlServerTypeEnum.getValue(dto.dataType);
-        String[] data = new String[2];
+        String[] data = new String[1];
         switch (typeEnum) {
             case INT:
             case SMALLINT:
             case BIGINT:
-                data[0] = FiDataDataTypeEnum.INT.getDescription();
-                data[1] = SqlServerTypeEnum.INT.getName();
+                data[0] = SqlServerTypeEnum.INT.getName();
                 break;
             case TEXT:
-                data[0] = FiDataDataTypeEnum.TEXT.getDescription();
-                data[1] = SqlServerTypeEnum.TEXT.getName();
+                data[0] = SqlServerTypeEnum.TEXT.getName();
                 break;
             case DATE:
             case TIME:
             case TIMESTAMP:
             case DATETIME:
-                data[0] = FiDataDataTypeEnum.TIMESTAMP.getDescription();
-                data[1] = SqlServerTypeEnum.TIMESTAMP.getName();
+                data[0] = SqlServerTypeEnum.TIMESTAMP.getName();
                 break;
             case NUMERIC:
             case DECIMAL:
-                data[0] = FiDataDataTypeEnum.FLOAT.getDescription();
-                data[1] = SqlServerTypeEnum.NUMERIC.getName();
+                data[0] = SqlServerTypeEnum.NUMERIC.getName();
                 break;
             default:
-                data[0] = FiDataDataTypeEnum.NVARCHAR.getDescription();
-                data[1] = SqlServerTypeEnum.NVARCHAR.getName();
+                data[0] = SqlServerTypeEnum.NVARCHAR.getName();
         }
         return data;
     }
@@ -244,28 +249,23 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
             case INT:
             case SMALLINT:
             case BIGINT:
-                data[0] = FiDataDataTypeEnum.INT.getDescription();
-                data[1] = MySqlTypeEnum.INT.getName();
+                data[0] = MySqlTypeEnum.INT.getName();
                 break;
             case TEXT:
-                data[0] = FiDataDataTypeEnum.TEXT.getDescription();
-                data[1] = MySqlTypeEnum.TEXT.getName();
+                data[0] = MySqlTypeEnum.TEXT.getName();
                 break;
             case DATE:
             case TIME:
             case TIMESTAMP:
             case DATETIME:
-                data[0] = FiDataDataTypeEnum.TIMESTAMP.getDescription();
-                data[1] = MySqlTypeEnum.TIMESTAMP.getName();
+                data[0] = MySqlTypeEnum.TIMESTAMP.getName();
                 break;
             case NUMERIC:
             case DECIMAL:
-                data[0] = FiDataDataTypeEnum.FLOAT.getDescription();
-                data[1] = MySqlTypeEnum.NUMERIC.getName();
+                data[0] = MySqlTypeEnum.NUMERIC.getName();
                 break;
             default:
-                data[0] = FiDataDataTypeEnum.NVARCHAR.getDescription();
-                data[1] = MySqlTypeEnum.VARCHAR.getName();
+                data[0] = MySqlTypeEnum.VARCHAR.getName();
         }
         return data;
     }
@@ -278,33 +278,28 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] sqlServerConversionOracle(DataTypeConversionDTO dto) {
         SqlServerTypeEnum typeEnum = SqlServerTypeEnum.getValue(dto.dataType);
-        String[] data = new String[2];
+        String[] data = new String[1];
         switch (typeEnum) {
             case INT:
             case SMALLINT:
             case BIGINT:
-                data[0] = FiDataDataTypeEnum.INT.getDescription();
-                data[1] = OracleTypeEnum.NUMBER.getName();
+                data[0] = OracleTypeEnum.INT.getName();
                 break;
             case TEXT:
-                data[0] = FiDataDataTypeEnum.TEXT.getDescription();
-                data[1] = OracleTypeEnum.CLOB.getName();
+                data[0] = OracleTypeEnum.CLOB.getName();
                 break;
             case DATE:
             case TIME:
             case TIMESTAMP:
             case DATETIME:
-                data[0] = FiDataDataTypeEnum.TIMESTAMP.getDescription();
-                data[1] = OracleTypeEnum.TIMESTAMP.getName();
+                data[0] = OracleTypeEnum.TIMESTAMP.getName();
                 break;
             case NUMERIC:
             case DECIMAL:
-                data[0] = FiDataDataTypeEnum.FLOAT.getDescription();
-                data[1] = OracleTypeEnum.NUMBER.getName();
+                data[0] = OracleTypeEnum.NUMBER.getName();
                 break;
             default:
-                data[0] = FiDataDataTypeEnum.NVARCHAR.getDescription();
-                data[1] = OracleTypeEnum.VARCHAR2.getName();
+                data[0] = OracleTypeEnum.VARCHAR2.getName();
         }
         return data;
     }

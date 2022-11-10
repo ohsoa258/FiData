@@ -1,4 +1,4 @@
-package com.fisk.datagovernance.entity.dataquality;
+package com.fisk.system.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;

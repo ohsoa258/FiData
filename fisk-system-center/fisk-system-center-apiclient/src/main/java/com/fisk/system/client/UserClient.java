@@ -7,6 +7,7 @@ import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.dto.userinfo.UserDropDTO;
 import com.fisk.system.dto.userinfo.UserGroupQueryDTO;
 import com.fisk.system.dto.userinfo.UserPowerDTO;
+import com.fisk.system.vo.emailserver.EmailServerVO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -92,4 +93,19 @@ public interface UserClient {
      */
     @GetMapping("/datasource/getById/{datasourceId}")
     ResultEntity<DataSourceDTO> getFiDataDataSourceById(@RequestParam("datasourceId") int datasourceId);
+
+    /**
+     * 查询所有邮件服务器信息
+     * @return
+     */
+    @PostMapping("/emailserver/getEmailServerList")
+    ResultEntity<List<EmailServerVO>> getEmailServerList();
+
+    /**
+     * 根据ID查询邮件服务器信息
+     * @return
+     */
+    @GetMapping("/emailserver/getById/{id}")
+    ResultEntity<EmailServerVO> getEmailServerById(@RequestParam("id") int id);
+
 }

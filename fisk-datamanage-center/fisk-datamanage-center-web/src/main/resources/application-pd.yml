@@ -32,6 +32,7 @@ atlas:
   account: admin
   password: admin
   searchBasic: /api/atlas/v2/search/basic
+  searchDsl: /api/atlas/v2/search/dsl
   entityByGuid: /api/atlas/v2/entity/guid
   entity: /api/atlas/v2/entity
   typedefs: /api/atlas/v2/types/typedefs

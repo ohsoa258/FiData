@@ -30,7 +30,10 @@ public enum OracleTypeEnum implements BaseEnum {
     DOUBLEPRECISION(20, "DOUBLE PRECISION"),
     TIMESTAMPWITHLOCALTIMEZONE(21, "TIMESTAMP WITH LOCAL TIME ZONE"),
     TIMESTAMPWITHTIMEZONE(22, "TIMESTAMP WITH TIME ZONE"),
-    OTHER(-1, "OTHER");
+    OTHER(-1, "OTHER"),
+
+    //Oracle数据库没有int,为了适配其他数据库
+    INT(23, "int");
 
     private final String name;
     private final int value;

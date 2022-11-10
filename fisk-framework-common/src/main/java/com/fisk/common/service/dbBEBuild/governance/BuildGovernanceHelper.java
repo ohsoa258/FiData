@@ -3,6 +3,7 @@ package com.fisk.common.service.dbBEBuild.governance;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbBEBuild.governance.impl.BuildGovernanceMySqlCommandImpl;
 import com.fisk.common.service.dbBEBuild.governance.impl.BuildGovernancePgCommandImpl;
 import com.fisk.common.service.dbBEBuild.governance.impl.BuildGovernanceSqlServerCommandImpl;
 
@@ -17,6 +18,8 @@ public class BuildGovernanceHelper {
                 return new BuildGovernanceSqlServerCommandImpl();
             case POSTGRESQL:
                 return new BuildGovernancePgCommandImpl();
+            case MYSQL:
+                return new BuildGovernanceMySqlCommandImpl();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

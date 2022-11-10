@@ -50,6 +50,12 @@ public class ApiConfigVO {
     public int tableBusinessType;
 
     /**
+     * 表路径
+     */
+    @ApiModelProperty(value = "表路径")
+    public String tablePath;
+
+    /**
      * 数据源id
      */
     @ApiModelProperty(value = "数据源id")

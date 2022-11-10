@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.baseObject.dto.PageDTO;
@@ -274,5 +275,13 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return
      */
     List<ExternalDataSourceDTO> getFiDataDataSource();
+
+    /**
+     * 数据类型集合
+     *
+     * @param appId
+     * @return
+     */
+    JSONObject dataTypeList(Integer appId);
 
 }
