@@ -30,7 +30,6 @@ import com.fisk.common.service.dbBEBuild.common.dto.DruidFieldInfoDTO;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
-import com.fisk.common.service.mdmBEBuild.CommonMethods;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -551,10 +550,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         //获取列名
         for (int i = 1; i <= columnCount; i++) {
             FieldNameDTO dto = new FieldNameDTO();
-            //源表
-            dto.sourceTableName = metaData.getTableName(i);
-            // 源字段
-            dto.sourceFieldName = metaData.getColumnLabel(i);
             dto.sourceFieldType = metaData.getColumnTypeName(i);
             dto.sourceFieldPrecision = metaData.getScale(i);
             dto.fieldName = metaData.getColumnLabel(i);
@@ -1885,7 +1880,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         //数据类型转换
         typeConversion(dataSourceTypeEnum, array.fieldNameDTOList, registration.targetDbId);
 
-        //源字段长度、表名
+        /*//源字段长度、表名
         AbstractCommonDbHelper helper1 = new AbstractCommonDbHelper();
         conn = helper1.connection(po.connectStr, po.connectAccount, po.connectPwd, dataSourceTypeEnum);
         IBuildCommonSqlCommand command = BuildCommonHelper.getCommand(dataSourceTypeEnum);
@@ -1894,13 +1889,25 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return null;
         }
         List<String> collect = fieldInfoDTOS.stream().map(e -> e.getTableName()).collect(Collectors.toList());
-        String columnInfoSql = command.buildColumnInfo(CommonMethods.convertListToString(collect));
+        String columnInfoSql = command.buildColumnInfo(CommonMethods.convertListToString(collect),"");
         List<Map<String, Object>> resultMaps = AbstractCommonDbHelper.batchExecQueryResultMaps(columnInfoSql, conn);
         for (FieldNameDTO item : array.fieldNameDTOList) {
-            /*resultMaps.stream().filter(e->e.get("column_name").equals(item.fieldName)
-                    || e.get("column_name"));*/
-            //fieldInfoDTOS.stream().filter(e->e.fieldName.equals())
-        }
+            Optional<DruidFieldInfoDTO> first = fieldInfoDTOS.stream()
+                    .filter(e -> e.fieldName.equals(item.fieldName) || e.alias.equals(item.fieldName)).findFirst();
+            if (!first.isPresent()){
+
+            }
+            item.sourceTableName = first.get().tableName;
+            Optional<Map<String, Object>> first1 = resultMaps
+                    .stream()
+                    .filter(e -> e.get("table_name").equals(item.sourceTableName) && e.get("column_name").equals(item.sourceFieldName))
+                    .findFirst();
+            if (!first1.isPresent()){
+
+            }
+            item.sourceFieldLength = first1.get().get("column_length").toString();
+            item.sourceFieldName = first1.get().get("column_name").toString();
+        }*/
 
         return array;
     }
