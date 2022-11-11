@@ -375,9 +375,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                          CdcJobScriptDTO cdcDto,
                          boolean useExistTable,
                          List<DeltaTimeDTO> deltaTimes) {
-        if (CollectionUtils.isEmpty(deltaTimes)) {
-            throw new FkException(ResultEnum.SYSTEM_VARIABLES_ERROR);
-        }
         AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("app_id", appId).one();
         if (dataSourcePo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
