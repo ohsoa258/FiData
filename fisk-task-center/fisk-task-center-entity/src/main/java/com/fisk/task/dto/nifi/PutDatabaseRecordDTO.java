@@ -15,5 +15,9 @@ public class PutDatabaseRecordDTO   extends BaseProcessorDTO{
     public String concurrentTasks;
     public SynchronousTypeEnum synchronousTypeEnum;
     public String schemaName;
+    /**
+     * 是否严格按照字段名称添加属性,实际上是bool类型
+     */
+    public String putDbRecordTranslateFieldNames;
 
 }

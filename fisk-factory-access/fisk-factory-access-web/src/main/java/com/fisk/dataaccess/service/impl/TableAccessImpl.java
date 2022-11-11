@@ -24,6 +24,9 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
+import com.fisk.common.service.dbBEBuild.common.BuildCommonHelper;
+import com.fisk.common.service.dbBEBuild.common.IBuildCommonSqlCommand;
+import com.fisk.common.service.dbBEBuild.common.dto.DruidFieldInfoDTO;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
@@ -1824,8 +1827,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         Connection conn = null;
         Statement st = null;
         ResultSet rs = null;
+        com.fisk.common.core.enums.dataservice.DataSourceTypeEnum dataSourceTypeEnum = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.getEnum(po.driveType.toUpperCase());
         try {
-            com.fisk.common.core.enums.dataservice.DataSourceTypeEnum dataSourceTypeEnum = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.getEnum(po.driveType.toUpperCase());
             AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
             conn = helper.connection(po.connectStr, po.connectAccount, po.connectPwd, dataSourceTypeEnum);
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
@@ -1863,9 +1866,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             //获取数据集
             array = resultSetToJsonArrayDataAccess(rs);
 
-            //类型转换
-            typeConversion(dataSourceTypeEnum, array.fieldNameDTOList, registration.targetDbId);
-
             Instant inst5 = Instant.now();
             log.info("封装数据执行时间 : " + Duration.between(inst4, inst5).toMillis());
 
@@ -1880,6 +1880,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
         Instant inst5 = Instant.now();
         System.out.println("最终执行时间 : " + Duration.between(inst1, inst5).toMillis());
+
+        //数据类型转换
+        typeConversion(dataSourceTypeEnum, array.fieldNameDTOList, registration.targetDbId);
 
         return array;
     }
@@ -1911,6 +1914,26 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             field.fieldType = data[0].toUpperCase();
         }
 
+    }
+
+
+    /**
+     * 设置字段源表名
+     *
+     * @param typeEnum
+     * @param sql
+     */
+    public void setSourceTable(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum typeEnum,
+                               List<FieldNameDTO> fieldList,
+                               String sql) {
+        IBuildCommonSqlCommand command = BuildCommonHelper.getCommand(typeEnum);
+        List<DruidFieldInfoDTO> fieldInfoList = command.druidAnalyseSql(sql);
+        /*for (FieldNameDTO field : fieldList){
+            Optional<DruidFieldInfoDTO> first = fieldInfoList.stream()
+                    .filter(e -> e.fieldName.equals(field.fieldName))
+                    .findFirst();
+
+        }*/
     }
 
 

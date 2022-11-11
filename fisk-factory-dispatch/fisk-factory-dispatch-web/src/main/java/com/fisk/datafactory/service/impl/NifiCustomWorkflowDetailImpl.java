@@ -91,7 +91,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         try {
             baseMapper.insert(model);
         } catch (Exception e) {
-            log.error("调度报错", e );
+            log.error("调度报错", e);
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         dto.id = model.id;
@@ -152,7 +152,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             if (e.schedule == null || e.script == null || "".equals(e.script)) {
                 return ResultEntityBuild.build(ResultEnum.SCHEDULE_PARAME_NULL);
             }
-            if (!CronUtils.isValidExpression(e.script)) {
+            if (Objects.equals(e.schedule, SchedulingStrategyTypeEnum.CRON) && !CronUtils.isValidExpression(e.script)) {
                 return ResultEntityBuild.build(ResultEnum.CRON_ERROR);
             }
         }
@@ -622,13 +622,15 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     @Override
     public ResultEnum editWorkflow(NifiCustomWorkflowDetailDTO dto) {
         // 参数校验
+        log.info("NifiCustomWorkflowDetailDTO参数:{}", JSON.toJSONString(dto));
         NifiCustomWorkflowDetailPO model = this.getById(dto.id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-
+        log.info("model参数:{}", JSON.toJSONString(model));
         //校验cron格式是否正确
-        if (model.schedule == SchedulingStrategyTypeEnum.CRON.getValue() && !StringUtils.isEmpty(dto.script)) {
+        //{"componentType":"数据湖表任务","createTime":"2022-11-09T12:07:51","createUser":"60","delFlag":1,"id":2834,"workflowId":"5f663512-0800-4481-8c59-0a0e5ef114b8"}
+        if (Objects.equals(model.schedule, SchedulingStrategyTypeEnum.CRON.getValue()) && !StringUtils.isEmpty(dto.script)) {
             if (!CronUtils.isValidExpression(dto.script)) {
                 throw new FkException(ResultEnum.CRON_ERROR);
             }
@@ -637,7 +639,9 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         // dto -> po
         NifiCustomWorkflowDetailPO po = NifiCustomWorkflowDetailMap.INSTANCES.dtoToPo(dto);
         // 执行修改
-        return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+        boolean dtoSuccecc = this.updateById(po);
+        log.info("是否修改成功{}", dtoSuccecc);
+        return dtoSuccecc ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
     @Transactional(rollbackFor = Exception.class)

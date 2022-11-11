@@ -1,6 +1,9 @@
 package com.fisk.common.service.dbBEBuild.common.impl;
 
 import com.fisk.common.service.dbBEBuild.common.IBuildCommonSqlCommand;
+import com.fisk.common.service.dbBEBuild.common.dto.DruidFieldInfoDTO;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -13,7 +16,7 @@ public class BuildCommonMySqlCommand implements IBuildCommonSqlCommand {
     }
 
     @Override
-    public Object druidAnalyseSql(String sql) {
+    public List<DruidFieldInfoDTO> druidAnalyseSql(String sql) {
         return null;
     }
 

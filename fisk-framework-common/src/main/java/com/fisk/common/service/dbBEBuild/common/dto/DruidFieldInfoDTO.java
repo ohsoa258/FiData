@@ -12,7 +12,7 @@ public class DruidFieldInfoDTO {
 
     public String tableName;
 
-    public boolean alias;
+    public String alias;
 
     public String logic;
 
