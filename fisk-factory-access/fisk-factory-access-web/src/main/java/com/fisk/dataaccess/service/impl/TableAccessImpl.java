@@ -559,7 +559,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                     || tableName.equals("ods_" + dto.fieldName)) {
                 continue;
             }
-            dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
+            dto.fieldType = metaData.getColumnTypeName(i).toLowerCase();
             dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
             fieldNameDTOList.add(dto);
         }
