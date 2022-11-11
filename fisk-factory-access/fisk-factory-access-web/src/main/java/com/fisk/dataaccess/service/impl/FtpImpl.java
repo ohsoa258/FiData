@@ -23,7 +23,6 @@ import com.fisk.dataaccess.utils.ftp.ExcelUtils;
 import com.fisk.dataaccess.utils.ftp.FtpUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -34,7 +33,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -65,8 +63,11 @@ public class FtpImpl implements IFtp {
         try {
             if (DataSourceTypeEnum.FTP.getName().equals(dto.driveType)) {
                 ftpClient = FtpUtils.connectFtpServer(dto.host, Integer.parseInt(dto.port), dto.connectAccount, dto.connectPwd, "utf-8");
-                return ftpClient.isConnected() ? ResultEntityBuild.build(ResultEnum.SUCCESS) : ResultEntityBuild.build(ResultEnum.FTP_CONNECTION_ERROR);
+                return ResultEntityBuild.build(ResultEnum.SUCCESS);
             }
+        } catch (Exception e) {
+            log.error("连接Ftp异常,{}", e);
+            throw new FkException(ResultEnum.FTP_CONNECTION_ERROR);
         } finally {
             // 关闭连接
             FtpUtils.closeFtpConnect(ftpClient);
