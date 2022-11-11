@@ -84,9 +84,8 @@ public class FtpUtils {
                 ftpClient.disconnect();
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println(">>>>>FTP服务器连接登录失败，请检查连接参数是否正确，或者网络是否通畅*********");
             log.error(">>>>>FTP服务器连接登录失败，请检查连接参数是否正确，或者网络是否通畅*********");
+            throw new FkException(ResultEnum.FTP_CONNECTION_ERROR);
         }
         return ftpClient;
     }
@@ -102,7 +101,6 @@ public class FtpUtils {
     public static FTPClient closeFtpConnect(FTPClient ftpClient) {
         try {
             if (ftpClient != null && ftpClient.isConnected()) {
-                //ftpClient.abort();
                 ftpClient.disconnect();
             }
         } catch (IOException e) {
