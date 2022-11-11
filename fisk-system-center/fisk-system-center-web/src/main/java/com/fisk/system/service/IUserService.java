@@ -130,6 +130,7 @@ public interface IUserService {
 
     /**
      * 根据用户组筛选系统用户
+     *
      * @param dto
      * @return
      */
@@ -137,8 +138,15 @@ public interface IUserService {
 
     /**
      * 获取系统用户下拉数据
+     *
      * @return
      */
     List<UserDropDTO> listUserDrops();
 
+    /**
+     * 获取MDM用户Token
+     *
+     * @return
+     */
+    ResultEntity<String> getMDMUserToken();
 }
