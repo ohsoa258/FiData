@@ -27,10 +27,10 @@ public interface IBuildCommonSqlCommand {
     /**
      * 获取字段系统信息
      *
-     * @param dbName
+     * @param schemaName
      * @param tableName
      * @return
      */
-    String buildColumnInfo(String dbName, String tableName);
+    String buildColumnInfo(String schemaName, String tableName);
 
 }

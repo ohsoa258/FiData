@@ -1,5 +1,7 @@
 package com.fisk.system.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -26,12 +28,26 @@ import com.fisk.system.mapper.RoleUserAssignmentMapper;
 import com.fisk.system.mapper.UserMapper;
 import com.fisk.system.service.IUserService;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.ParseException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Lock
@@ -53,6 +69,13 @@ public class UserServiceImpl implements IUserService {
     GenerateCondition generateCondition;
     @Resource
     GetMetadata getMetadata;
+
+    @Value("${mdmAuthorize.url}")
+    private String url;
+    @Value("${mdmAuthorize.userAccount}")
+    private String mdmUserAccount;
+    @Value("${mdmAuthorize.userPassword}")
+    private String mdmUserPassword;
 
     /**
      * 校验手机号或用户名是否存在
@@ -188,17 +211,15 @@ public class UserServiceImpl implements IUserService {
             data = mapper.selectList(queryWrapper.orderByDesc("create_time"));
         }
         //计算分页
-        return  userPageQuery(data,dto.size,dto.page);
+        return userPageQuery(data, dto.size, dto.page);
     }
 
     @Override
-    public Page<UserPowerDTO> userGroupQuery(UserGroupQueryDTO dto)
-    {
+    public Page<UserPowerDTO> userGroupQuery(UserGroupQueryDTO dto) {
         List<UserPO> data = new ArrayList<>();
-        QueryWrapper<UserPO> queryWrapper=new QueryWrapper<>();
-        if (StringUtils.isNotEmpty(dto.name))
-        {
-            queryWrapper.lambda().like(UserPO::getUsername,dto.name);
+        QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
+        if (StringUtils.isNotEmpty(dto.name)) {
+            queryWrapper.lambda().like(UserPO::getUsername, dto.name);
         }
         if (!CollectionUtils.isEmpty(dto.userIdList)) {
             //获取已选中用户
@@ -219,21 +240,21 @@ public class UserServiceImpl implements IUserService {
             if (userPo1 != null || userPo1.size() > 0) {
                 data.addAll(index, userPo1);
             }
-        }else {
+        } else {
             data = mapper.selectList(queryWrapper.orderByDesc("create_time"));
         }
-        return userPageQuery(data,dto.size,dto.page);
+        return userPageQuery(data, dto.size, dto.page);
     }
 
     /**
      * 计算分页
+     *
      * @param data
      * @param size
      * @param page
      * @return
      */
-    public Page<UserPowerDTO> userPageQuery(List<UserPO> data,int size,int page)
-    {
+    public Page<UserPowerDTO> userPageQuery(List<UserPO> data, int size, int page) {
         //计算分页
         Integer count = data.size();
         Integer pageCount = 0;
@@ -368,10 +389,54 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public List<UserDropDTO> listUserDrops()
-    {
-        QueryWrapper<UserPO> queryWrapper=new QueryWrapper<>();
+    public List<UserDropDTO> listUserDrops() {
+        QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
         return UserMap.INSTANCES.poToDropDto(mapper.selectList(queryWrapper.orderByDesc("create_time")));
     }
 
+    @Override
+    public ResultEntity<String> getMDMUserToken() {
+        String token = "";
+        try {
+            if (StringUtils.isEmpty(url) || StringUtils.isEmpty(mdmUserAccount) || StringUtils.isEmpty(mdmUserPassword)) {
+                return ResultEntityBuild.buildData(ResultEnum.USER_NON_EXISTENT, token);
+            }
+            UserInfo loginUserInfo = userHelper.getLoginUserInfo();
+            if (loginUserInfo == null) {
+                return ResultEntityBuild.buildData(ResultEnum.USER_NON_EXISTENT, token);
+            }
+            UserPO userPO = mapper.selectById(loginUserInfo.id);
+            if (userPO == null) {
+                return ResultEntityBuild.buildData(ResultEnum.USER_NON_EXISTENT, token);
+            }
+            JSONObject jsonObj = new JSONObject();
+            jsonObj.put("CurrentUserAccount", userPO.getUserAccount());
+            jsonObj.put("InterUserAccount", mdmUserAccount);
+            jsonObj.put("InterUserPassword", mdmUserPassword);
+            String params = JSON.toJSONString(jsonObj);
+
+            HttpClient client = new DefaultHttpClient();
+            // post请求
+            HttpPost httpPost = new HttpPost(url);
+            httpPost.setHeader("Content-Type", "application/json; charset=utf-8");
+            if (StringUtils.isNotBlank(params)) {
+                httpPost.setEntity(new StringEntity(params, StandardCharsets.UTF_8));
+            }
+            HttpResponse response = client.execute(httpPost);
+            HttpEntity entity = response.getEntity();
+            //解析返回数据
+            String result = EntityUtils.toString(entity, "UTF-8");
+            JSONObject jsonObject = JSONObject.parseObject(result);
+            if (jsonObject.containsKey("code") && (Integer) jsonObject.get("code") == 200) {
+                jsonObject = JSON.parseObject(jsonObject.getString("data"));
+                token = jsonObject.getString("token");
+            }
+            if (StringUtils.isEmpty(token)) {
+                throw new FkException(ResultEnum.GET_JWT_TOKEN_ERROR);
+            }
+        } catch (IOException | ParseException e) {
+            throw new FkException(ResultEnum.SEND_POST_REQUEST_ERROR);
+        }
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, token);
+    }
 }

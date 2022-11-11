@@ -132,4 +132,9 @@ public class UserController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listUserDrops());
     }
 
+    @PostMapping("/getMDMUserToken")
+    @ApiOperation("获取MDM用户Token")
+    public ResultEntity<String> getMDMUserToken() {
+        return service.getMDMUserToken();
+    }
 }
