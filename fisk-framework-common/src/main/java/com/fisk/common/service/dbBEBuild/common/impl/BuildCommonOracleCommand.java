@@ -21,10 +21,10 @@ public class BuildCommonOracleCommand implements IBuildCommonSqlCommand {
     }
 
     @Override
-    public String buildColumnInfo(String dbName, String tableName) {
+    public String buildColumnInfo(String schemaName, String tableName) {
         StringBuilder str = new StringBuilder();
         str.append("SELECT ");
-        str.append("OWNER AS schema,");
+        str.append("OWNER AS schema_name,");
         str.append("TABLE_NAME AS table_name,");
         str.append("COLUMN_NAME AS column_name,");
         str.append("DATA_TYPE AS data_type,");
@@ -37,7 +37,10 @@ public class BuildCommonOracleCommand implements IBuildCommonSqlCommand {
         str.append("TABLE_NAME IN");
         str.append("(");
         str.append(tableName);
-        str.append(")");
+        str.append(") ");
+        str.append("AND OWNER='");
+        str.append(schemaName);
+        str.append("'");
 
         return str.toString();
     }

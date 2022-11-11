@@ -21,10 +21,10 @@ public class BuildCommonPgSqlCommand implements IBuildCommonSqlCommand {
     }
 
     @Override
-    public String buildColumnInfo(String dbName, String tableName) {
+    public String buildColumnInfo(String schemaName, String tableName) {
         StringBuilder str = new StringBuilder();
         str.append("SELECT ");
-        str.append("TABLE_SCHEMA AS schema,");
+        str.append("TABLE_SCHEMA AS schema_name,");
         str.append("TABLE_NAME AS table_name,");
         str.append("COLUMN_NAME AS column_name,");
         str.append("CHARACTER_MAXIMUM_LENGTH AS column_length,");
@@ -41,7 +41,10 @@ public class BuildCommonPgSqlCommand implements IBuildCommonSqlCommand {
         str.append("TABLE_NAME IN");
         str.append("(");
         str.append(tableName);
-        str.append(")");
+        str.append(") ");
+        str.append("AND TABLE_SCHEMA='");
+        str.append(schemaName);
+        str.append("'");
 
         return str.toString();
     }

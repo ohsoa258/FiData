@@ -685,6 +685,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             fieldDTO.fieldType = po.fieldType;
             fieldDTO.fieldLength = Math.toIntExact(po.fieldLength);
             fieldDTO.isPrimaryKey = po.isPrimarykey;
+            fieldDTO.fieldPrecision = po.fieldPrecision;
             fieldList.add(fieldDTO);
         });
 
