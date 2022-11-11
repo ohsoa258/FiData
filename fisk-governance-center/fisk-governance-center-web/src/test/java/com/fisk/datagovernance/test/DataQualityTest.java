@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.utils.similarity.CosineSimilarity;
+import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterApiResultDTO;
 import com.fisk.datagovernance.service.impl.dataops.DataOpsDataSourceManageImpl;
 import org.junit.Test;
@@ -20,10 +21,7 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -116,8 +114,18 @@ public class DataQualityTest {
      */
     @Test
     public void setDataOpsDataSource() {
-        DataOpsDataSourceManageImpl dataOpsDataSourceManage = new DataOpsDataSourceManageImpl();
-        dataOpsDataSourceManage.setDataOpsDataSource();
+        List<TablePyhNameDTO> dtoList = new ArrayList<>();
+        TablePyhNameDTO dto1 = new TablePyhNameDTO();
+        dto1.setTableName("dbo.stg_cdc_test");
+        TablePyhNameDTO dto2 = new TablePyhNameDTO();
+        dto2.setTableName("dbo.ods_cdc_test");
+        TablePyhNameDTO dto3 = new TablePyhNameDTO();
+        dto3.setTableName("dbo.stg_t2034");
+        dtoList.add(dto1);
+        dtoList.add(dto2);
+        dtoList.add(dto3);
+        dtoList.sort(Comparator.comparing(TablePyhNameDTO::getTableName));
+        int i=0;
     }
 
     /**
@@ -177,7 +185,7 @@ public class DataQualityTest {
 
         List<BusinessFilterApiResultDTO> resultDTOS = authRecursionResult("1", dtoList);
         int j = 200;
-         List<BusinessFilterApiResultDTO> resultDTOS1 = recursionResult_get("1", resultDTOS);
+        List<BusinessFilterApiResultDTO> resultDTOS1 = recursionResult_get("1", resultDTOS);
 
         int i = 200;
     }

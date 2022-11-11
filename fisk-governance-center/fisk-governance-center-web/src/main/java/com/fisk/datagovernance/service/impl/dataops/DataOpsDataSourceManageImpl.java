@@ -279,7 +279,9 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                             tableNameAndColumns = sqlServerPlusUtils.getTableNameAndColumnsPlus(postgreDTO.sqlUrl, postgreDTO.sqlUsername, postgreDTO.sqlPassword, postgreDTO.dbName);
                         }
                         if (CollectionUtils.isNotEmpty(tableNameAndColumns)) {
+                            // 增加排序
                             tableNameAndColumns.sort(Comparator.comparing(TablePyhNameDTO::getTableName));
+
                             for (TablePyhNameDTO tablePyhNameDTO : tableNameAndColumns) {
                                 DataOpsDataTableVO dataOpsDataTableVO = new DataOpsDataTableVO();
                                 if (CollectionUtils.isNotEmpty(tablePyhNameDTO.getFields())) {
