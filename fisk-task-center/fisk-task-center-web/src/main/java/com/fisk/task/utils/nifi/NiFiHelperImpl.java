@@ -1621,6 +1621,8 @@ public class NiFiHelperImpl implements INiFiHelper {
                 //-----------------------------------------
                 ProcessIds.add(tableNifiSettingPO.putLogToConfigDbProcessorId);
                 ProcessIds.add(tableNifiSettingPO.executeTargetDeleteProcessorId);
+                ProcessIds.add(tableNifiSettingPO.replaceTextForFtpProcessId);
+                ProcessIds.add(tableNifiSettingPO.invokeHttpForFtpProcessorId);
                 ProcessIds.add(tableNifiSettingPO.executeSqlRecordProcessorId);
                 ProcessIds.add(tableNifiSettingPO.getFtpProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertExcelToCsvProcessorId);

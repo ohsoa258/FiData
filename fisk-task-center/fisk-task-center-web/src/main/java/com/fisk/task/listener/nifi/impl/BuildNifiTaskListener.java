@@ -905,6 +905,16 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //创建执行删除组件
         ProcessorEntity delSqlRes = execDeleteSqlProcessor(config, groupId, targetDbPoolId, synchronousTypeEnum);
         tableNifiSettingPO.executeTargetDeleteProcessorId = delSqlRes.getId();
+        if (dto.excelFlow) {
+            //ftp文件拷贝
+            ProcessorEntity replaceTextForFtpProcess = replaceTextForFtpProcess(config, groupId, dto);
+            tableNifiSettingPO.replaceTextForFtpProcessId = replaceTextForFtpProcess.getId();
+            componentConnector(groupId, delSqlRes.getId(), replaceTextForFtpProcess.getId(), AutoEndBranchTypeEnum.SUCCESS);
+            ProcessorEntity invokeHTTPForFtpProcessor = invokeHTTPForFtpProcessor(groupId);
+            tableNifiSettingPO.invokeHttpForFtpProcessorId = invokeHTTPForFtpProcessor.getId();
+            componentConnector(groupId, replaceTextForFtpProcess.getId(), replaceTextForFtpProcess.getId(), AutoEndBranchTypeEnum.SUCCESS);
+
+        }
         //连接器
         componentConnector(groupId, logProcessor.getId(), delSqlRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
         componentsConnector(groupId, logProcessor.getId(), supervisionId, autoEndBranchTypeEnums);
@@ -1924,7 +1934,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         updateFieldMap_R.put("fi_sync_type", 2);
         updateFieldMap_R.put("fi_verify_type", 4);
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
-        checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
+        checkByFieldMap.put("fidata_flow_batch_code", "'${fragment.index}'");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
         dataCheckSyncDTO.dataSourceId = "2";
         dataCheckSyncDTO.msgField = "error_message";
@@ -1943,6 +1953,31 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
         buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
         buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(dataCheckSyncDTO);
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
+        return processorEntityBusinessResult.data;
+    }
+
+    /**
+     * 调用api参数组件
+     *
+     * @param config  数据接入配置
+     * @param groupId 组id
+     * @return 组件对象
+     */
+    private ProcessorEntity replaceTextForFtpProcess(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
+        BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("keyStr", "'${kafka.topic}'");
+
+
+        buildReplaceTextProcessorDTO.name = "replaceTextForFtpProcess";
+        buildReplaceTextProcessorDTO.details = "query_phase";
+        buildReplaceTextProcessorDTO.groupId = groupId;
+        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
+        //替换流文件
+        buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
+        buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
+        buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(map);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
         return processorEntityBusinessResult.data;
     }
@@ -2042,6 +2077,27 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildInvokeHttpProcessorDTO.contentType = "application/json;charset=UTF-8";
         buildInvokeHttpProcessorDTO.httpMethod = "POST";
         buildInvokeHttpProcessorDTO.remoteUrl = dataGovernanceUrl + "/datagovernance/datacheck/syncCheckData?Content-Type=application/json";
+        buildInvokeHttpProcessorDTO.nifiToken = nifiToken;
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildInvokeHTTPProcessor(buildInvokeHttpProcessorDTO, new ArrayList<>());
+        return processorEntityBusinessResult.data;
+    }
+
+    /**
+     * ftp调用api参数组件
+     *
+     * @param groupId 组id
+     * @return 组件对象
+     */
+    private ProcessorEntity invokeHTTPForFtpProcessor(String groupId) {
+        BuildInvokeHttpProcessorDTO buildInvokeHttpProcessorDTO = new BuildInvokeHttpProcessorDTO();
+        buildInvokeHttpProcessorDTO.name = "invokeHTTPProcessor";
+        buildInvokeHttpProcessorDTO.details = "query_phase";
+        buildInvokeHttpProcessorDTO.groupId = groupId;
+        buildInvokeHttpProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
+        buildInvokeHttpProcessorDTO.attributesToSend = "(?s)(^.*$)";
+        buildInvokeHttpProcessorDTO.contentType = "application/json;charset=UTF-8";
+        buildInvokeHttpProcessorDTO.httpMethod = "POST";
+        buildInvokeHttpProcessorDTO.remoteUrl = dataGovernanceUrl + "/dataAccess/ftp/copyFtpFile?Content-Type=application/json";
         buildInvokeHttpProcessorDTO.nifiToken = nifiToken;
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildInvokeHTTPProcessor(buildInvokeHttpProcessorDTO, new ArrayList<>());
         return processorEntityBusinessResult.data;
