@@ -1938,6 +1938,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.precision = field.sourceFieldPrecision;
             String[] data = command.dataTypeConversion(dto, targetDataSource.data.conType);
             field.fieldType = data[0].toUpperCase();
+            field.fieldLength = data[1];
         }
 
     }
