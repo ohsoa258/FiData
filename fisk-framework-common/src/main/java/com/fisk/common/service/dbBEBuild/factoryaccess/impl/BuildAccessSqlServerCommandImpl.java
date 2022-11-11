@@ -18,6 +18,8 @@ import com.fisk.common.service.dbBEBuild.factoryaccess.dto.TableBusinessTimeDTO;
  */
 public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
 
+    private static Integer sql_server_max_length = 4000;
+
     @Override
     public String buildUseExistTable() {
         StringBuilder str = new StringBuilder();
@@ -176,7 +178,8 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] sqlServerConversionPg(DataTypeConversionDTO dto) {
         SqlServerTypeEnum typeEnum = SqlServerTypeEnum.getValue(dto.dataType);
-        String[] data = new String[1];
+        String[] data = new String[2];
+        data[1] = dto.dataLength;
         switch (typeEnum) {
             case INT:
             case SMALLINT:
@@ -210,7 +213,8 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] sqlServerConversionSqlServer(DataTypeConversionDTO dto) {
         SqlServerTypeEnum typeEnum = SqlServerTypeEnum.getValue(dto.dataType);
-        String[] data = new String[1];
+        String[] data = new String[2];
+        data[1] = dto.dataLength;
         switch (typeEnum) {
             case INT:
             case SMALLINT:
@@ -232,6 +236,9 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
                 break;
             default:
                 data[0] = SqlServerTypeEnum.NVARCHAR.getName();
+                if (Integer.parseInt(dto.dataLength) > sql_server_max_length) {
+                    data[1] = sql_server_max_length.toString();
+                }
         }
         return data;
     }
@@ -245,6 +252,7 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
     private String[] sqlServerConversionMySQL(DataTypeConversionDTO dto) {
         SqlServerTypeEnum typeEnum = SqlServerTypeEnum.getValue(dto.dataType);
         String[] data = new String[2];
+        data[1] = dto.dataLength;
         switch (typeEnum) {
             case INT:
             case SMALLINT:
@@ -278,7 +286,8 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] sqlServerConversionOracle(DataTypeConversionDTO dto) {
         SqlServerTypeEnum typeEnum = SqlServerTypeEnum.getValue(dto.dataType);
-        String[] data = new String[1];
+        String[] data = new String[2];
+        data[1] = dto.dataLength;
         switch (typeEnum) {
             case INT:
             case SMALLINT:

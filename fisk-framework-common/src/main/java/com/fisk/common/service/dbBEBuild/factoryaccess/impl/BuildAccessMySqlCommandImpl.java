@@ -17,6 +17,9 @@ import com.fisk.common.service.dbBEBuild.factoryaccess.dto.TableBusinessTimeDTO;
  * @author JianWenYang
  */
 public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
+
+    private static Integer sql_server_max_length = 4000;
+
     @Override
     public String buildUseExistTable() {
         return null;
@@ -87,7 +90,8 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] mySqlConversionMySQL(DataTypeConversionDTO dto) {
         MySqlTypeEnum typeEnum = MySqlTypeEnum.getValue(dto.dataType);
-        String[] data = new String[1];
+        String[] data = new String[2];
+        data[1] = dto.dataLength;
         switch (typeEnum) {
             case INT:
             case BIT:
@@ -122,7 +126,8 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] mySqlConversionPg(DataTypeConversionDTO dto) {
         MySqlTypeEnum typeEnum = MySqlTypeEnum.getValue(dto.dataType);
-        String[] data = new String[1];
+        String[] data = new String[2];
+        data[1] = dto.dataLength;
         switch (typeEnum) {
             case INT:
             case BIT:
@@ -157,7 +162,8 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] mySqlConversionOracle(DataTypeConversionDTO dto) {
         MySqlTypeEnum typeEnum = MySqlTypeEnum.getValue(dto.dataType);
-        String[] data = new String[1];
+        String[] data = new String[2];
+        data[1] = dto.dataLength;
         switch (typeEnum) {
             case INT:
             case BIT:
@@ -192,7 +198,8 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] mySqlConversionSqlServer(DataTypeConversionDTO dto) {
         MySqlTypeEnum typeEnum = MySqlTypeEnum.getValue(dto.dataType);
-        String[] data = new String[1];
+        String[] data = new String[2];
+        data[1] = dto.dataLength;
         switch (typeEnum) {
             case INT:
             case BIT:
@@ -215,6 +222,9 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
                 break;
             default:
                 data[0] = SqlServerTypeEnum.NVARCHAR.getName();
+                if (Integer.parseInt(dto.dataLength) > sql_server_max_length) {
+                    data[1] = sql_server_max_length.toString();
+                }
         }
         return data;
     }
