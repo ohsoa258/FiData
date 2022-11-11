@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -278,6 +279,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                             tableNameAndColumns = sqlServerPlusUtils.getTableNameAndColumnsPlus(postgreDTO.sqlUrl, postgreDTO.sqlUsername, postgreDTO.sqlPassword, postgreDTO.dbName);
                         }
                         if (CollectionUtils.isNotEmpty(tableNameAndColumns)) {
+                            tableNameAndColumns.sort(Comparator.comparing(TablePyhNameDTO::getTableName));
                             for (TablePyhNameDTO tablePyhNameDTO : tableNameAndColumns) {
                                 DataOpsDataTableVO dataOpsDataTableVO = new DataOpsDataTableVO();
                                 if (CollectionUtils.isNotEmpty(tablePyhNameDTO.getFields())) {
