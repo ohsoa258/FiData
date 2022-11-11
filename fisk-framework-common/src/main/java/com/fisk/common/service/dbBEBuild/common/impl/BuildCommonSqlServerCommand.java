@@ -1,11 +1,12 @@
 package com.fisk.common.service.dbBEBuild.common.impl;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
-import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr;
-import com.alibaba.druid.sql.ast.statement.*;
+import com.alibaba.druid.sql.ast.statement.SQLSelect;
+import com.alibaba.druid.sql.ast.statement.SQLSelectItem;
+import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
+import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
 import com.alibaba.druid.sql.dialect.sqlserver.visitor.SQLServerSchemaStatVisitor;
 import com.alibaba.druid.util.JdbcConstants;
-import com.alibaba.druid.util.StringUtils;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
@@ -16,9 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author JianWenYang
@@ -33,108 +32,79 @@ public class BuildCommonSqlServerCommand implements IBuildCommonSqlCommand {
 
     @Test
     public void test() {
-        druidAnalyseSql("SELECT  \n" +
-                "    A.PUID AS TT \n" +
-                "      ,A.PA9_DELTACOSTFORCHANGE \n" +
-                "      ,A.PA9_DELTAPRICEFORCHANGE \n" +
-                "      ,A.PA9_STATE \n" +
-                "      ,A.PA9_APPLYSTATUS \n" +
-                "      ,A.PA9_CHANGETYPESCENARIO \n" +
-                "      ,A.PA9_READINESS \n" +
-                "      ,A.RA9_DESIGNERU \n" +
-                "      ,A.RA9_DESIGNERC \n" +
-                "      ,A.RA9_CUSTOMERU \n" +
-                "      ,A.RA9_CUSTOMERC \n" +
-                "      ,A.RA9_ERRORREPORTU \n" +
-                "      ,A.RA9_ERRORREPORTC \n" +
-                "      ,A.RA9_ANALYSTU \n" +
-                "      ,A.RA9_ANALYSTC \n" +
-                "      ,A.RA9_LEADDESIGNERU \n" +
-                "      ,A.RA9_LEADDESIGNERC \n" +
-                "      ,A.PA9_ESTIMPDATE \n" +
-                "      ,A.PA9_CUSTOMERNOTIFIED \n" +
-                "      ,A.PA9_CUSTOMERAPPROVED \n" +
-                "      ,A.PYF5_TOTALANNUALCOST \n" +
-                "      ,A.PYF5_TARGETDATEVERIFIED \n" +
-                "      ,A.RYF5_RELEASECOORDU \n" +
-                "      ,A.RYF5_RELEASECOORDC \n" +
-                "      ,A.PYF5_REASONFOROPEN \n" +
-                "      ,A.PYF5_PURQUOTEDOCCHECKED \n" +
-                "      ,A.PYF5_PURPRICINGREQDUPDATE \n" +
-                "      ,A.PYF5_PURISQUOTEREQUIRED \n" +
-                "      ,A.PYF5_PURCHKLISTCOMPLETED \n" +
-                "      ,A.PYF5_PURCNREVIEWED \n" +
-                "      ,A.RYF5_PROCUREMENTU \n" +
-                "      ,A.RYF5_PROCUREMENTC \n" +
-                "      ,A.RYF5_MATERIALSU \n" +
-                "      ,A.RYF5_MATERIALSC \n" +
-                "      ,A.PYF5_KEYIMPACTSASSOLUTIONS \n" +
-                "      ,A.PYF5_ISMULTPROGRAMSIMPACT \n" +
-                "      ,A.PYF5_INVESTMENTCOST \n" +
-                "      ,A.RYF5_INDUSTRIALDESIGNU \n" +
-                "      ,A.RYF5_INDUSTRIALDESIGNC \n" +
-                "      ,A.PYF5_IMPLEMENTATIONDATE \n" +
-                "      ,A.PYF5_IMPLEMENTDATEPROVIDED \n" +
-                "      ,A.RYF5_ENGINEERINGMGRU \n" +
-                "      ,A.RYF5_ENGINEERINGMGRC \n" +
-                "      ,A.PYF5_CUSTOSMPLSBMTIMPCT \n" +
-                "      ,A.PYF5_CUSTOAUTHNUMBER \n" +
-                "      ,A.PYF5_COMMONENGPART \n" +
-                "      ,A.RYF5_CIBU \n" +
-                "      ,A.RYF5_CIBC \n" +
-                "      ,A.PYF5_AFFCTSSVCPARTS \n" +
-                "      ,A.PYF5_AFFCTSSFTYERGOS \n" +
-                "      ,A.PYF5_SALESFINANCEIMPACTED \n" +
-                "      ,A.PYF5_RELEASETECHIMPACTED \n" +
-                "      ,A.PYF5_QUALITYIMPACTED \n" +
-                "      ,A.PYF5_PROCUREMENTIMPACTED \n" +
-                "      ,A.PYF5_OTHERIMPACTED \n" +
-                "      ,A.PYF5_MATERIALSIMPACTED \n" +
-                "      ,A.PYF5_MANUFACTURINGIMPACTED \n" +
-                "      ,A.PYF5_LEGACYDETAILFORAUDIT \n" +
-                "      ,A.PYF5_ISDATABACKEDUP \n" +
-                "      ,A.PYF5_INDDESIGNIMPACTED \n" +
-                "      ,A.PYF5_AFFECTEDPRGIMPACTED \n" +
-                "      ,A.PYF5_CUSTOPRNUMBER \n" +
-                "      ,A.PYF5_CHANGESCOPE \n" +
-                "      ,A.PYF5_YFV_EWO_NO \n" +
-                "      ,A.PYF5_TUNING \n" +
-                "      ,A.PYF5_DRTYPE \n" +
-                "      ,A.PYF5_CADIMPACTED \n" +
-                "      ,A.PYF5_YFVEWONO \n" +
-                "      ,A.PYF5_SUPPLIER \n" +
-                "      ,A.PYF5_PRODUCTNAME \n" +
-                "      ,A.PYF5_INVOLVEDSUPPLIER \n" +
-                "      ,A.PYF5_IMPACTSPRODREMNTS \n" +
-                "      ,A.PYF5_IMPACTSIMDS \n" +
-                "      ,A.PYF5_ECDNO \n" +
-                "      ,A.PYF5_DEVIATIONSTATE \n" +
-                "      ,A.PYF5_CUSTOMEREWONO \n" +
-                "      ,A.PYF5_CUSTOMERCHANGENO \n" +
-                "      ,A.PYF5_CUSTAPPRREQUIRED \n" +
-                "      ,A.PYF5_CHANGEREASON \n" +
-                "      ,A.PYF5_CHANGECONTEXT \n" +
-                "      ,A.RYF5_CPPPLATFORMENGU \n" +
-                "      ,A.RYF5_CPPPLATFORMENGC \n" +
-                "      ,A.PYF5_C3OWNINGUSERID \n" +
-                "      ,A.PYF5_BOMUPDATE \n" +
-                "      ,A.PYF5_AUTHMATURITY \n" +
-                "      ,A.PYF5_AICHANGETYPE \n" +
-                "      ,A.PYF5_YFIPMOIMPACTED \n" +
-                "      ,A.PYF5_SALESIMPACTED \n" +
-                "      ,A.PYF5_BUPMOIMPACTED \n" +
-                "      ,A.PYF5_ITPMIMPACTED \n" +
-                "      ,A.PYF5_COSTANALYSTIMPACTED \n" +
-                "      ,A.PA9_READINESSWARN \n" +
-                "from INFODBA.PA9_AUTOCNREVISION A\n" +
-                "join  INFODBA.ppom_application_object  B on (A.PUID=B.PUID)\n" +
-                "where (B.PCREATION_DATE >to_date(@start_time,'yyyy-mm-dd hh24:mi:ss') \n" +
-                "       and B.PCREATION_DATE<=to_date(@end_time,'yyyy-mm-dd hh24:mi:ss'))\n" +
-                "or   (B.PLAST_MOD_DATE>to_date(@start_time,'yyyy-mm-dd hh24:mi:ss')  \n" +
-                "      and B.PLAST_MOD_DATE<=to_date(@end_time,'yyyy-mm-dd hh24:mi:ss'))\n" +
-                "      \n" +
-                "      \n" +
-                "      \n");
+        String sql = "SELECT [ID]\n" +
+                "      ,[Created]\n" +
+                "      ,[Modified]\n" +
+                "      ,[CreatedBy]\n" +
+                "      ,[ModifiedBy]\n" +
+                "      ,[IsDeleted]\n" +
+                "      ,[Type]\n" +
+                "      ,[Title]\n" +
+                "      ,[Description]\n" +
+                "      ,[Summary]\n" +
+                "      ,[Keywords]\n" +
+                "      ,[IsOnline]\n" +
+                "      ,[PublishDate]\n" +
+                "      ,[Content]\n" +
+                "      ,[Speaker]\n" +
+                "      ,[Avatar]\n" +
+                "      ,[IsComment]\n" +
+                "      ,[PraiseCount]\n" +
+                "      ,[ReadCount]\n" +
+                "      ,[CollectionCount]\n" +
+                "      ,[CommentCount]\n" +
+                "      ,[Src]\n" +
+                "      ,[IsScore]\n" +
+                "      ,[TitleImg]\n" +
+                "      ,[AverageScore]\n" +
+                "      ,[OriginalID]\n" +
+                "      ,[VideoID]\n" +
+                "      ,[PPTUrl]\n" +
+                "      ,[DoctorID]\n" +
+                "      ,[OriginalDoctorID]\n" +
+                "      ,[LiveBeginDate]\n" +
+                "      ,[LiveEndDate]\n" +
+                "      ,[LiveStatus]\n" +
+                "      ,[DoctorName]\n" +
+                "      ,[LiveLink]\n" +
+                "      ,[VideoUrl]\n" +
+                "      ,[VideoImg]\n" +
+                "      ,[NameStr]\n" +
+                "      ,[NameStrList]\n" +
+                "      ,[MediaType]\n" +
+                "      ,[Live_CHANNEL_ID]\n" +
+                "      ,[Live_SECRET]\n" +
+                "      ,[Live_YOUR_DOMAIN]\n" +
+                "      ,[Live_VN_roomID]\n" +
+                "      ,[Live_VN_companyCode]\n" +
+                "      ,[Live_YL_Secret]\n" +
+                "      ,[Live_TypeName]\n" +
+                "      ,[OuterLink]\n" +
+                "      ,[QrcodeUrl]\n" +
+                "      ,[WechatQrcodeUrl]\n" +
+                "      ,[ShareTitle]\n" +
+                "      ,[ShareDesc]\n" +
+                "      ,[ShareImg]\n" +
+                "      ,[WatchLiveCount]\n" +
+                "      ,[ViewRate]\n" +
+                "      ,[ViewMaxCount]\n" +
+                "      ,[isrecommend]\n" +
+                "      ,[QrViewUrl]\n" +
+                "      ,[TagStr]\n" +
+                "      ,[TagStrList]\n" +
+                "      ,[IsBanner]\n" +
+                "      ,[BeforerField]\n" +
+                "      ,[BeforeScope]\n" +
+                "      ,[BeforeTag]\n" +
+                "      ,[IsTransmit]\n" +
+                "      ,[IsHot]\n" +
+                "      ,[TransmitCount]\n" +
+                "      ,[BeforeTypeBig]\n" +
+                "  FROM [dmuat.chugaipharma.com.cn].[dbo].[Article]\n" +
+                "  where isnull(modified,created)>@start_time and isnull(modified,created)<@end_time";
+        List<DruidFieldInfoDTO> fieldInfoDTOS = druidAnalyseSql(sql);
+        String test = "";
+
     }
 
     @Override
@@ -151,7 +121,7 @@ public class BuildCommonSqlServerCommand implements IBuildCommonSqlCommand {
 
                 //获取字段以及别名
                 List<DruidFieldInfoDTO> fieldList = new ArrayList<>();
-                Set<String> set = new HashSet<>();
+                //Set<String> set = new HashSet<>();
                 List<SQLSelectItem> SourceBName = ((SQLSelectQueryBlock) ((SQLSelect) ((SQLSelectStatement) sqlStatement)
                         .getSelect())
                         .getQuery())
@@ -159,18 +129,26 @@ public class BuildCommonSqlServerCommand implements IBuildCommonSqlCommand {
 
                 for (SQLSelectItem item : SourceBName) {
                     DruidFieldInfoDTO fs = new DruidFieldInfoDTO();
-                    //解析表名
-                    SQLPropertyExpr itemEx = (SQLPropertyExpr) item.getExpr();
-                    SQLExprTableSource TableSource = (SQLExprTableSource) itemEx.getResolvedOwnerObject();
-                    fs.tableName = TableSource.getExpr().toString();
-                    //是否存在别名
-                    if (!StringUtils.isEmpty(item.getAlias())) {
-                        fs.alias = item.getAlias();
+                    /*if(item.getExpr() instanceof SQLPropertyExpr){
+                        SQLPropertyExpr itemEx = (SQLPropertyExpr) item.getExpr();
+                        SQLExprTableSource TableSource = (SQLExprTableSource) itemEx.getResolvedOwnerObject();
+                        fs.tableName = TableSource.getExpr().toString();
+                        if (fs.tableName.indexOf(".") > 1) {
+                            String[] split = fs.tableName.split(".");
+                            fs.tableName = split[1];
+                            fs.schema = split[0];
+                        }
+                        //是否存在别名
+                        if (!StringUtils.isEmpty(item.getAlias())) {
+                            fs.alias = item.getAlias();
+                        }
+
+                    }else {
+                        fs.fieldName = item.getAlias();
+                        fs.logic = item.getExpr().toString();
+
                     }
-                    fs.fieldName = itemEx.getName();
-                    fs.logic = item.getExpr().toString();
-                    fieldList.add(fs);
-                    set.add(item.getAlias());
+                    fieldList.add(fs);*/
                 }
                 ////System.out.println("解析结果："+JSON.toJSONString(fieldList));
                 log.info("解析结果：{}", JSON.toJSONString(fieldList));
@@ -181,6 +159,25 @@ public class BuildCommonSqlServerCommand implements IBuildCommonSqlCommand {
             throw new FkException(ResultEnum.DRUID_ERROR);
         }
         return null;
+    }
+
+    @Override
+    public String buildColumnInfo(String dbName, String tableName) {
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT ");
+        str.append("TABLE_NAME AS table_name,");
+        str.append("CHARACTER_MAXIMUM_LENGTH AS column_length,");
+        str.append("COLUMN_NAME AS column_name,");
+        str.append("DATA_TYPE AS data_type,");
+        str.append("TABLE_SCHEMA AS schema ");
+        str.append("FROM ");
+        str.append("INFORMATION_SCHEMA.COLUMNS ");
+        str.append("WHERE ");
+        str.append("TABLE_NAME in");
+        str.append("(");
+        str.append(tableName);
+        str.append(")");
+        return str.toString();
     }
 
 }

@@ -17,6 +17,9 @@ import com.fisk.common.service.dbBEBuild.factoryaccess.dto.TableBusinessTimeDTO;
  * @author JianWenYang
  */
 public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
+
+    private static Integer sql_server_max_length = 4000;
+
     @Override
     public String buildUseExistTable() {
         return null;
@@ -87,7 +90,8 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] oracleConversionSqlServer(DataTypeConversionDTO dto) {
         OracleTypeEnum typeEnum = OracleTypeEnum.getValue(dto.dataType);
-        String[] data = new String[1];
+        String[] data = new String[2];
+        data[1] = dto.dataLength;
         switch (typeEnum) {
             case NUMBER:
                 if (dto.precision > 0) {
@@ -112,6 +116,9 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
                 break;
             default:
                 data[0] = SqlServerTypeEnum.NVARCHAR.getName();
+                if (Integer.parseInt(dto.dataLength) > sql_server_max_length) {
+                    data[1] = sql_server_max_length.toString();
+                }
         }
         return data;
     }
@@ -124,7 +131,8 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] oracleConversionPg(DataTypeConversionDTO dto) {
         OracleTypeEnum typeEnum = OracleTypeEnum.getValue(dto.dataType);
-        String[] data = new String[1];
+        String[] data = new String[2];
+        data[1] = dto.dataLength;
         switch (typeEnum) {
             case NUMBER:
                 if (dto.precision > 0) {
@@ -161,7 +169,8 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] oracleConversionOracle(DataTypeConversionDTO dto) {
         OracleTypeEnum typeEnum = OracleTypeEnum.getValue(dto.dataType);
-        String[] data = new String[1];
+        String[] data = new String[2];
+        data[1] = dto.dataLength;
         switch (typeEnum) {
             case NUMBER:
                 if (dto.precision > 0) {
@@ -198,7 +207,8 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] oracleConversionMySQL(DataTypeConversionDTO dto) {
         OracleTypeEnum typeEnum = OracleTypeEnum.getValue(dto.dataType);
-        String[] data = new String[1];
+        String[] data = new String[2];
+        data[1] = dto.dataLength;
         switch (typeEnum) {
             case NUMBER:
                 if (dto.precision > 0) {

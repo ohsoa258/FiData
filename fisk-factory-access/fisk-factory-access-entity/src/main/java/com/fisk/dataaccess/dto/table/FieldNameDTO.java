@@ -17,7 +17,7 @@ public class FieldNameDTO {
     @ApiModelProperty(value = "源字段类型", required = true)
     public String sourceFieldType;
     @ApiModelProperty(value = "源字段类型长度", required = true)
-    public Integer sourceFieldLength;
+    public String sourceFieldLength;
     @ApiModelProperty(value = "源字段类型精度", required = true)
     public Integer sourceFieldPrecision;
     @ApiModelProperty(value = "字段", required = true)

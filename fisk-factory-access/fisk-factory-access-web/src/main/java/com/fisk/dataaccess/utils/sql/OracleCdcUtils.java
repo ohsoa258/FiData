@@ -191,7 +191,7 @@ public class OracleCdcUtils {
         str.append(ln);
         List<String> columnList = new ArrayList<>();
         for (FieldNameDTO item : dto.fieldNameDTOList) {
-            String dataType = oracleTypeMappingFlinkType(item.sourceFieldType, item.sourceFieldLength, item.sourceFieldPrecision);
+            String dataType = oracleTypeMappingFlinkType(item.sourceFieldType, Integer.parseInt(item.sourceFieldLength), item.sourceFieldPrecision);
             columnList.add(item.sourceFieldName + " " + dataType);
         }
         //拼接主键
@@ -251,7 +251,7 @@ public class OracleCdcUtils {
         List<String> columnList = new ArrayList<>();
 
         for (FieldNameDTO item : dto.fieldNameDTOList) {
-            String dataType = oracleTypeMappingFlinkType(item.sourceFieldType, item.sourceFieldLength, item.sourceFieldPrecision);
+            String dataType = oracleTypeMappingFlinkType(item.sourceFieldType, Integer.parseInt(item.sourceFieldLength), item.sourceFieldPrecision);
             columnList.add(item.fieldName + " " + dataType);
         }
 

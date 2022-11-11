@@ -20,4 +20,26 @@ public class BuildCommonMySqlCommand implements IBuildCommonSqlCommand {
         return null;
     }
 
+    @Override
+    public String buildColumnInfo(String dbName, String tableName) {
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT ");
+        str.append("TABLE_NAME AS table_name,");
+        str.append("COLUMN_NAME AS column_name,");
+        str.append("DATA_TYPE AS data_type,");
+        str.append("CHARACTER_MAXIMUM_LENGTH AS column_length ");
+        str.append("FROM ");
+        str.append("information_schema.COLUMNS ");
+        str.append("WHERE ");
+        str.append("TABLE_SCHEMA='");
+        str.append(dbName);
+        str.append("' ");
+        str.append("AND ");
+        str.append("TABLE_NAME in");
+        str.append("(");
+        str.append(tableName);
+        str.append(")");
+        return str.toString();
+    }
+
 }

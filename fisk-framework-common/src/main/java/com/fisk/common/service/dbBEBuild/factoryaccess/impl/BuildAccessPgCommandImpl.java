@@ -15,6 +15,8 @@ import com.fisk.common.service.dbBEBuild.factoryaccess.dto.TableBusinessTimeDTO;
  */
 public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
 
+    private static Integer sql_server_max_length = 4000;
+
     @Override
     public String buildUseExistTable() {
         return null;
@@ -161,7 +163,8 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] pgConversionSqlServer(DataTypeConversionDTO dto) {
         PgTypeEnum typeEnum = PgTypeEnum.getValue(dto.dataType);
-        String[] data = new String[1];
+        String[] data = new String[2];
+        data[1] = dto.dataLength;
         switch (typeEnum) {
             case INT2:
             case INT4:
@@ -186,6 +189,9 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
                 break;
             default:
                 data[0] = SqlServerTypeEnum.NVARCHAR.getName();
+                if (Integer.parseInt(dto.dataLength) > sql_server_max_length) {
+                    data[1] = sql_server_max_length.toString();
+                }
         }
         return data;
     }
@@ -198,7 +204,8 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] pgConversionPg(DataTypeConversionDTO dto) {
         PgTypeEnum typeEnum = PgTypeEnum.getValue(dto.dataType);
-        String[] data = new String[0];
+        String[] data = new String[2];
+        data[1] = dto.dataLength;
         switch (typeEnum) {
             case INT2:
             case INT4:
@@ -234,7 +241,8 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] pgConversionOracle(DataTypeConversionDTO dto) {
         PgTypeEnum typeEnum = PgTypeEnum.getValue(dto.dataType);
-        String[] data = new String[1];
+        String[] data = new String[2];
+        data[1] = dto.dataLength;
         switch (typeEnum) {
             case INT2:
             case INT4:
@@ -271,7 +279,8 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
      */
     private String[] pgConversionMySQL(DataTypeConversionDTO dto) {
         PgTypeEnum typeEnum = PgTypeEnum.getValue(dto.dataType);
-        String[] data = new String[1];
+        String[] data = new String[2];
+        data[1] = dto.dataLength;
         switch (typeEnum) {
             case INT2:
             case INT4:

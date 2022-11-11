@@ -8,6 +8,6 @@ import org.springframework.cloud.openfeign.FeignClient;
  * @description license服务接口
  * @date 2022/11/9 13:09
  */
-@FeignClient("license-registry")
+@FeignClient("licenseRegistry-service")
 public interface LicenseClient {
 }
