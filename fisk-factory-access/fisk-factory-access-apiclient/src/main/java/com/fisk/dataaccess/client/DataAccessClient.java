@@ -14,10 +14,12 @@ import com.fisk.dataaccess.dto.app.AppDriveTypeDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.app.LogMessageFilterVO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.dataaccess.dto.ftp.CopyFtpFileDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.TableAccessDTO;
+import com.fisk.dataaccess.dto.table.TableVersionDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
@@ -29,6 +31,7 @@ import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -321,4 +324,21 @@ public interface DataAccessClient {
     @ApiOperation(value = "数据源驱动类型")
     ResultEntity<List<AppDriveTypeDTO>> getDriveType();
 
+    /**
+     * 复制ftp文件到新目录
+     *
+     * @return
+     */
+    @ApiOperation(value = "复制ftp文件到新目录")
+    @PostMapping("/ftp/copyFtpFile")
+    ResultEntity<Object> copyFtpFile(@Validated @RequestBody CopyFtpFileDTO dto);
+
+    /**
+     * 删除表版本
+     *
+     * @return
+     */
+    @PostMapping("/tableFields/delTableVersion")
+    @ApiOperation(value = "删除表版本")
+    ResultEntity<Object> delVersionData(@Validated @RequestBody TableVersionDTO dto);
 }
