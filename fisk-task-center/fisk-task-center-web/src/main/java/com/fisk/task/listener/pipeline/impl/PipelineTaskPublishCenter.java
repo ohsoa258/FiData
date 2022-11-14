@@ -389,7 +389,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
 
     @Override
     public NifiPortsHierarchyDTO getNifiPortHierarchy(NifiGetPortHierarchyDTO nifiGetPortHierarchy, String pipelTraceId) {
-        log.info("查询部分dag图参数:{},pipelTraceId:{}", JSON.toJSONString(nifiGetPortHierarchy), pipelTraceId);
+        //log.info("查询部分dag图参数:{},pipelTraceId:{}", JSON.toJSONString(nifiGetPortHierarchy), pipelTraceId);
         NifiPortsHierarchyDTO nifiPortsHierarchy = new NifiPortsHierarchyDTO();
         PipeDagDTO data = this.getPipeDagDto(nifiGetPortHierarchy, pipelTraceId);
         if (data != null && data.nifiPortsHierarchyDtos != null) {
@@ -420,7 +420,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
 
     @Override
     public PipeDagDTO getPipeDagDto(NifiGetPortHierarchyDTO nifiGetPortHierarchy, String pipelTraceId) {
-        log.info("查询dag图参数:{},pipelTraceId:{}", JSON.toJSONString(nifiGetPortHierarchy), pipelTraceId);
+        //log.info("查询dag图参数:{},pipelTraceId:{}", JSON.toJSONString(nifiGetPortHierarchy), pipelTraceId);
         PipeDagDTO data = new PipeDagDTO();
         //先查redis,如果没有查一次调度模块
         boolean flag = redisUtil.hasKey(RedisKeyEnum.PIPEL_TRACE_ID.getName() + ":" + pipelTraceId);
@@ -446,7 +446,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
             dag = dag.replaceAll(ChannelDataEnum.DATALAKE_FTP_TASK.getName(), ChannelDataEnum.DATALAKE_TASK.getName());
             data = JSON.parseObject(dag, PipeDagDTO.class);
         }
-        log.info("该管道dag图:{}", JSON.toJSONString(data));
+        //log.info("该管道dag图:{}", JSON.toJSONString(data));
         return data;
     }
 

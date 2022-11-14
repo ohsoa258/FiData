@@ -22,7 +22,7 @@ nifi:
   kerberosprincipal: kafka/admin@AUTOEXPR.COM
   pipeline:
     topicName: my-topic
-    waitTime: 20
+    waitTime: 30
     operation-interval: 2000
     number-of-operations: 5
     data-governance-url: http://192.168.21.21:8083
