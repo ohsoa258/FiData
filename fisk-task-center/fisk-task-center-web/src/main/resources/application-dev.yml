@@ -22,7 +22,7 @@ nifi:
   kerberosprincipal: kafka/admin@AUTOEXPR.COM
   pipeline:
     topicName: my-topic
-    waitTime: 20
+    waitTime: 30
     operation-interval: 2000
     number-of-operations: 5
     data-governance-url: http://192.168.11.130:8083
@@ -30,7 +30,8 @@ nifi-ConcurrentTasks: 3
 nifi-FetchSize: 30000
 nifi-MaxRowsPerFlowFile: 10000
 nifi-OutputBatchSize: 1
-fiData-data-ods-source: 5
+fiData-data-ods-source: 2
+fiData-data-dw-source: 1
 
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
@@ -45,7 +46,7 @@ pgsql-mdm:
   username: postgres
   type: PG
 server:
-  port: 7003
+  port: 8099
 spring:
   application:
     name: task-center

@@ -1,5 +1,6 @@
 server:
   port: 8099
+  max-http-header-size: 16KB
 spring:
   application:
     name: task-center

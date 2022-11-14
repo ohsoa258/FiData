@@ -118,7 +118,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                     Object endTime = pipelTask.get(DispatchLogEnum.taskend.getName());
                     Object count = pipelTask.get(DispatchLogEnum.taskcount.getName());
                     //upJobName + "-" + dto.tableOrder + " " +
-                    taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " - 同步条数 - " + count);
+                    taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " - 同步条数 : " + (Objects.isNull(count) ? 0 : count));
                     //taskMap.put(DispatchLogEnum.taskend.getValue(), upJobName + "-" + dto.tableOrder + " " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())));
                     ChannelDataEnum value = ChannelDataEnum.getValue(dto.componentType);
                     OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(value.getValue());
@@ -213,7 +213,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                         Map<Object, Object> pipelTask = redisUtil.getAndDel(RedisKeyEnum.PIPEL_TASK.getName() + ":" + byPipelJobTraceId.taskId);
                         Object endTime = pipelTask.get(DispatchLogEnum.taskend.getName());
                         Object count = pipelTask.get(DispatchLogEnum.taskcount.getName());
-                        taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " - 同步条数 - " + count);
+                        taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " - 同步条数 : " + (Objects.isNull(count) ? 0 : count));
                         log.info("第八处调用保存task日志");
                         iPipelTaskLog.savePipelTaskLog(byPipelJobTraceId.jobTraceId, byPipelJobTraceId.taskTraceId, taskMap, byPipelJobTraceId.taskId, null, 0);
                         //记录job结束
@@ -244,7 +244,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                 Map<Object, Object> pipelTask = redisUtil.getAndDel(RedisKeyEnum.PIPEL_TASK.getName() + ":" + taskTraceId);
                 Object endTime = pipelTask.get(DispatchLogEnum.taskend.getName());
                 Object count = pipelTask.get(DispatchLogEnum.taskcount.getName());
-                taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " - 同步条数 - " + count);
+                taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " : 同步条数 : " + (Objects.isNull(count) ? 0 : count));
                 log.info("第九处调用保存task日志");
                 iPipelTaskLog.savePipelTaskLog(null, taskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
             }

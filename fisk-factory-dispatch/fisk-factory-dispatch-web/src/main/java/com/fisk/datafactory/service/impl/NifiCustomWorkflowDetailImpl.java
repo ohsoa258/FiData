@@ -91,6 +91,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         try {
             baseMapper.insert(model);
         } catch (Exception e) {
+            log.error("调度报错", e);
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         dto.id = model.id;
@@ -125,7 +126,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     @Override
     public ResultEntity<NifiCustomWorkListDTO> editData(NifiCustomWorkflowDetailVO dto) {
 
-        String componentType = "开始";
+        String componentType = "触发器";
 
         // 修改tb_nifi_custom_wokflow
         NifiCustomWorkflowDTO workflowDTO = dto.dto;
@@ -139,6 +140,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             }
             workflowService.editData(workflowDTO);
         } catch (Exception e) {
+            log.error("修改管道报错", e);
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
@@ -150,7 +152,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             if (e.schedule == null || e.script == null || "".equals(e.script)) {
                 return ResultEntityBuild.build(ResultEnum.SCHEDULE_PARAME_NULL);
             }
-            if (!CronUtils.isValidExpression(e.script)) {
+            if (Objects.equals(e.schedule, SchedulingStrategyTypeEnum.CRON) && !CronUtils.isValidExpression(e.script)) {
                 return ResultEntityBuild.build(ResultEnum.CRON_ERROR);
             }
         }
@@ -158,6 +160,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         // 批量保存tb_nifi_custom_wokflow_detail
         boolean success = this.updateBatchById(list);
         if (!success) {
+            log.error("修改管道报错2");
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
@@ -406,7 +409,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
      */
     private BuildNifiCustomWorkFlowDTO getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailDTO dto) {
 
-        String scheduleType = "开始";
+        String scheduleType = "触发器";
         String taskGroupTpye = "任务组";
         BuildNifiCustomWorkFlowDTO flow = new BuildNifiCustomWorkFlowDTO();
         // 调用组装操作类型方法
@@ -619,13 +622,15 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     @Override
     public ResultEnum editWorkflow(NifiCustomWorkflowDetailDTO dto) {
         // 参数校验
+        log.info("NifiCustomWorkflowDetailDTO参数:{}", JSON.toJSONString(dto));
         NifiCustomWorkflowDetailPO model = this.getById(dto.id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-
+        log.info("model参数:{}", JSON.toJSONString(model));
         //校验cron格式是否正确
-        if (model.schedule == SchedulingStrategyTypeEnum.CRON.getValue() && !StringUtils.isEmpty(dto.script)) {
+        //{"componentType":"数据湖表任务","createTime":"2022-11-09T12:07:51","createUser":"60","delFlag":1,"id":2834,"workflowId":"5f663512-0800-4481-8c59-0a0e5ef114b8"}
+        if (Objects.equals(model.schedule, SchedulingStrategyTypeEnum.CRON.getValue()) && !StringUtils.isEmpty(dto.script)) {
             if (!CronUtils.isValidExpression(dto.script)) {
                 throw new FkException(ResultEnum.CRON_ERROR);
             }
@@ -634,7 +639,9 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         // dto -> po
         NifiCustomWorkflowDetailPO po = NifiCustomWorkflowDetailMap.INSTANCES.dtoToPo(dto);
         // 执行修改
-        return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+        boolean dtoSuccecc = this.updateById(po);
+        log.info("是否修改成功{}", dtoSuccecc);
+        return dtoSuccecc ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
     @Transactional(rollbackFor = Exception.class)

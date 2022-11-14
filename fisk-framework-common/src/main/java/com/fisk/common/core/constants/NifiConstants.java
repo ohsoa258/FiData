@@ -44,9 +44,9 @@ public class NifiConstants {
     public static final class AttrConstants {
 
         public static final String INCREMENT_DB_TABLE_NAME = "tb_etl_Incremental";
-        public static final String INCREMENT_DB_FIELD_START = "Incremental_ObjectiveScore_Start";
+        public static final String INCREMENT_DB_FIELD_START = "incremental_objectiveScore_start";
         public static final String INCREMENT_START = "IncrementStart";
-        public static final String INCREMENT_DB_FIELD_END = "Incremental_ObjectiveScore_End";
+        public static final String INCREMENT_DB_FIELD_END = "incremental_objectivescore_end";
         public static final String INCREMENT_END = "IncrementEnd";
         public static final String LOG_CODE = "uuids";
         public static final String NUMBERS = "numbers";
@@ -57,7 +57,7 @@ public class NifiConstants {
         public static final String TABLE_TYPE="table_type";
         public static final String FIDATA_BATCH_CODE="fidata_batch_code";
         public static final String KAFKA_TOPIC="kafka.topic";
-        public static final String INITIAL_TIME="0001-01-01";
+        public static final String INITIAL_TIME="1753-01-01 00:00:00";
 
         public static final String PIPEL_TRACE_ID="pipelTraceId";
         public static final String PIPEL_JOB_TRACE_ID="pipelJobTraceId";

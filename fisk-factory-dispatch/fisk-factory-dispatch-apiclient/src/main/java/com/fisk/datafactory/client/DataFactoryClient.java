@@ -139,4 +139,14 @@ public interface DataFactoryClient {
     @GetMapping("/dataFactory/getTaskLinkedList/{id}")
     @ApiOperation(value = "根据管道主键id,获取reids里面的task结构")
     ResultEntity<PipeDagDTO> getTaskLinkedList(@PathVariable("id") Long id);
+
+    /**
+     * 获取单个管道组件
+     *
+     * @param id id
+     * @return 执行结果
+     */
+    @GetMapping("/nifiCustomWorkflowDetail/get/{id}")
+    @ApiOperation(value = "查询单个管道组件")
+    ResultEntity<NifiCustomWorkflowDetailDTO> getData(@PathVariable("id") long id);
 }

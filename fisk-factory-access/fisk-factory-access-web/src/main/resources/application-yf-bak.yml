@@ -1,22 +1,22 @@
 spring:
   datasource:
-    url: jdbc:mysql://10.195.131.25:3306/dmp_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
-    username: nifi_owner
-    password: ABCabc1234
+    url: jdbc:mysql://10.178.188.31:3306/dmp_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: fisksoft
+    password: Fisksoft@hsd06
     driver-class-name: com.mysql.jdbc.Driver
     dynamic:
       datasource:
         taskdb:
-          url: jdbc:mysql://10.195.131.25:3306/dmp_task_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
-          username: nifi_owner
-          password: ABCabc1234
+          url: jdbc:mysql://10.178.188.31:3306/dmp_task_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+          username: fisksoft
+          password: Fisksoft@hsd06
           driver-class-name: com.mysql.jdbc.Driver
 
   # redis
   redis:
-    host: 10.195.131.21
+    host: 10.178.188.31
     port: 6379
-    password: 7b80ba2c
+    password: redis@test
   # 防止模板报空错误
   freemarker:
     settings:

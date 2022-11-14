@@ -90,6 +90,8 @@ public class NiFiHelperImpl implements INiFiHelper {
     public UserClient userClient;
     @Value("${fiData-data-ods-source}")
     private String dataSourceOdsId;
+    @Value("${fiData-data-dw-source}")
+    private String dataSourceDwId;
     @Resource
     NifiConfigServiceImpl nifiConfigService;
     @Value("${nifi.Enable-Authentication}")
@@ -766,7 +768,7 @@ public class NiFiHelperImpl implements INiFiHelper {
     @Override
     public BusinessResult<ProcessorEntity> buildCallDbProcedureProcess(BuildCallDbProcedureProcessorDTO buildCallDbProcedureProcessorDTO) {
         List<String> autoRes = new ArrayList<>();
-        if (buildCallDbProcedureProcessorDTO.haveNextOne == false) {
+        if (!buildCallDbProcedureProcessorDTO.haveNextOne) {
             autoRes.add(AutoEndBranchTypeEnum.SUCCESS.getName());
         }
         autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
@@ -909,6 +911,9 @@ public class NiFiHelperImpl implements INiFiHelper {
         map.put("put-db-record-table-name", putDatabaseRecordDTO.TableName);
         map.put("put-db-record-schema-name", putDatabaseRecordDTO.schemaName);
         map.put("put-db-record-quoted-identifiers", "true");
+        if (Objects.nonNull(putDatabaseRecordDTO.putDbRecordTranslateFieldNames)) {
+            map.put("put-db-record-translate-field-names", putDatabaseRecordDTO.putDbRecordTranslateFieldNames);
+        }
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setAutoTerminatedRelationships(autoRes);
@@ -1170,6 +1175,43 @@ public class NiFiHelperImpl implements INiFiHelper {
     }
 
     @Override
+    public List<ProcessorEntity> stopProcessor(String groupId, ProcessorEntity processorEntity) {
+        List<ProcessorEntity> res = new ArrayList<>();
+        ProcessorsApi apiClient = NifiHelper.getProcessorsApi();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+        try {
+            ProcessorEntity entity = apiClient.getProcessor(processorEntity.getId());
+            if (entity.getComponent().getState() == ProcessorDTO.StateEnum.STOPPED) {
+                res.add(processorEntity);
+                return res;
+            }
+            ProcessorRunStatusEntity dto = new ProcessorRunStatusEntity();
+            dto.state = ProcessorDTO.StateEnum.STOPPED.toString();
+            dto.disconnectedNodeAcknowledged = true;
+            dto.revision = entity.getRevision();
+
+            HttpEntity<ProcessorRunStatusEntity> request = new HttpEntity<>(dto, headers);
+
+            String url = basePath + NifiConstants.ApiConstants.PROCESSOR_RUN_STATUS.replace("{id}", processorEntity.getId());
+            //ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.PUT, request, String.class);
+            //绕过证书验证
+            String response = HttpClientUtil.doPut(url, JSON.toJSONString(dto));
+            if (Objects.nonNull(JSON.parseObject(response))) {
+                ProcessorEntity newEntity = getProcessor(processorEntity.getId());
+                if (newEntity != null && newEntity.getComponent().getState() == ProcessorDTO.StateEnum.RUNNING) {
+                    res.add(newEntity);
+                }
+            }
+        } catch (ApiException e) {
+            log.error("【" + processorEntity.getId() + "】【" + processorEntity.getComponent().getType() + "】运行组件失败，【" + e.getResponseBody() + "】: ", e);
+        }
+
+        return res;
+    }
+
+    @Override
     public List<ProcessorEntity> updateProcessorConfig(String groupId, List<ProcessorEntity> entities) {
         List<ProcessorEntity> res = new ArrayList<>();
         ProcessorsApi apiClient = NifiHelper.getProcessorsApi();
@@ -1404,13 +1446,13 @@ public class NiFiHelperImpl implements INiFiHelper {
                 //清空队列
                 this.emptyNifiConnectionQueue(nifiRemoveDTO.groupId);
                 //禁用2个控制器服务 ,分开写是因为有时候禁用不及时,导致删除的时候还没禁用,删除失败
-                for (String controllerServicesId : nifiRemoveDTO.controllerServicesIds.subList(0, 4)) {
+                for (String controllerServicesId : nifiRemoveDTO.controllerServicesIds.subList(0, 7)) {
                     if (controllerServicesId != null) {
                         //禁用
                         this.controllerServicesRunStatus(controllerServicesId);
                     }
                 }
-                for (String controllerServicesId : nifiRemoveDTO.controllerServicesIds.subList(0, 4)) {
+                for (String controllerServicesId : nifiRemoveDTO.controllerServicesIds.subList(0, 7)) {
                     if (controllerServicesId != null) {
                         //删除
                         ControllerServiceEntity controllerService = NifiHelper.getControllerServicesApi().getControllerService(controllerServicesId);
@@ -1435,7 +1477,7 @@ public class NiFiHelperImpl implements INiFiHelper {
             //删除应用
             if (nifiRemoveDTOList.size() != 0 && nifiRemoveDTOList.get(0).delApp) {
                 //禁用2个控制器服务
-                for (String controllerServicesId : nifiRemoveDTOList.get(0).controllerServicesIds.subList(5, 6)) {
+                for (String controllerServicesId : nifiRemoveDTOList.get(0).controllerServicesIds.subList(7, 9)) {
                     if (controllerServicesId != null) {
                         this.controllerServicesRunStatus(controllerServicesId);
                     }
@@ -1525,6 +1567,14 @@ public class NiFiHelperImpl implements INiFiHelper {
                 List<String> inputportConnectIds = new ArrayList<>();
                 List<String> outputportConnectIds = new ArrayList<>();
                 TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", businessId).eq("table_access_id", tableId).eq("type", dataModelTableVO.type.getValue()).eq("del_flag", 1).one();
+                //无论是否成功删除任务组,都先暂停接收卡夫卡组件
+                try {
+                    ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(tableNifiSettingPO.consumeKafkaProcessorId);
+                    this.stopProcessor(processor.getComponent().getParentGroupId(), processor);
+                } catch (ApiException e) {
+                    log.error("停止卡夫卡消息接收组件报错" + StackTraceHelper.getStackTraceInfo(e));
+                }
+
                 //删除topic_name
                 TableTopicDTO topicDTO = new TableTopicDTO();
                 topicDTO.tableId = tableNifiSettingPO.tableAccessId;
@@ -1571,6 +1621,8 @@ public class NiFiHelperImpl implements INiFiHelper {
                 //-----------------------------------------
                 ProcessIds.add(tableNifiSettingPO.putLogToConfigDbProcessorId);
                 ProcessIds.add(tableNifiSettingPO.executeTargetDeleteProcessorId);
+                ProcessIds.add(tableNifiSettingPO.replaceTextForFtpProcessId);
+                ProcessIds.add(tableNifiSettingPO.invokeHttpForFtpProcessorId);
                 ProcessIds.add(tableNifiSettingPO.executeSqlRecordProcessorId);
                 ProcessIds.add(tableNifiSettingPO.getFtpProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertExcelToCsvProcessorId);
@@ -2090,14 +2142,26 @@ public class NiFiHelperImpl implements INiFiHelper {
     @Override
     public String assemblySql(DataAccessConfigDTO config, SynchronousTypeEnum synchronousTypeEnum, String funcName, BuildNifiFlowDTO buildNifiFlow) {
         String sql = "";
-        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
-        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
-            DataSourceDTO data = fiDataDataSource.data;
-            IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(data.conType);
-            sql = dbCommand.assemblySql(config, synchronousTypeEnum, funcName, buildNifiFlow);
+        if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
+            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
+            if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+                DataSourceDTO data = fiDataDataSource.data;
+                IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(data.conType);
+                sql = dbCommand.assemblySql(config, synchronousTypeEnum, funcName, buildNifiFlow);
+            } else {
+                log.error("userclient无法查询到ods库的连接信息");
+                throw new FkException(ResultEnum.ERROR);
+            }
         } else {
-            log.error("userclient无法查询到ods库的连接信息");
-            throw new FkException(ResultEnum.ERROR);
+            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+            if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+                DataSourceDTO data = fiDataDataSource.data;
+                IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(data.conType);
+                sql = dbCommand.assemblySql(config, synchronousTypeEnum, funcName, buildNifiFlow);
+            } else {
+                log.error("userclient无法查询到ods库的连接信息");
+                throw new FkException(ResultEnum.ERROR);
+            }
         }
         return sql;
     }

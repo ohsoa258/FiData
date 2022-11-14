@@ -8,6 +8,8 @@ external-table-link: '"host" = "100.102.201.107","port" = "5433","user" = "admin
   = ".FdF_r&tj4)+","database" = "dmp_dw"'
 
 nifi:
+  username: fisk
+  password: fiskpassword01!
   basePath: http://100.102.201.108:8081/nifi-api
   token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJiMmVmNDFjZDgzOWI0ZjFjOTQ5Y2U1NzgzYWM5MDc3NCIsInVzZXIiOiJ7XCJpZFwiOjE4LFwidXNlckFjY291bnRcIjpcIm5pZmlfdG9rZW5cIn0iLCJpZCI6IjE4In0.Zp5nzRO9VeHhqsQ98NejOyl_-Q8LEHRu8KfCbbcLvH4
   Enable-Authentication: 0
@@ -20,7 +22,7 @@ nifi:
   kerberosprincipal: kafka/admin@AUTOEXPR.COM
   pipeline:
     topicName: my-topic
-    waitTime: 20
+    waitTime: 30
     operation-interval: 2000
     number-of-operations: 5
     data-governance-url: http://10.220.108.140:10089
@@ -29,6 +31,7 @@ nifi-FetchSize: 30000
 nifi-MaxRowsPerFlowFile: 10000
 nifi-OutputBatchSize: 1
 fiData-data-ods-source: 2
+fiData-data-dw-source: 1
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
   password: .FdF_r&tj4)+

@@ -3,6 +3,8 @@ package com.fisk.task.service.nifi.impl;
 import com.alibaba.fastjson.JSONArray;
 import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.task.dto.doris.UpdateLogAndImportDataDTO;
 import com.fisk.task.service.nifi.IJdbcBuild;
 import com.fisk.task.utils.PostgreHelper;
@@ -31,6 +33,7 @@ public class JdbcBuildImpl implements IJdbcBuild {
             //捕捉错误
             log.error(e.getMessage());
             msg = e.getMessage();
+            throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
         }
         BusinessResult res = new BusinessResult(re, msg);
         return res;

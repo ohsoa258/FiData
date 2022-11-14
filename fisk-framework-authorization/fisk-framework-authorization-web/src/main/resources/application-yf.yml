@@ -1,11 +1,11 @@
 spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://10.178.188.31:3306/dmp_system_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
-    username: fisksoft
-    password: Fisksoft@hsd06
+    url: jdbc:mysql://10.195.131.25:3306/dmp_system_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: nifi_owner
+    password: ABCabc1234
 
   redis:
-    host: 10.178.188.31
+    host: 10.195.131.21
     port: 6379
-    password: redis@test
+    password: 7b80ba2c

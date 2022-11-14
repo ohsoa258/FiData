@@ -9,6 +9,8 @@ import lombok.Data;
  */
 @Data
 public class PipelTaskLogVO extends BasePO {
+    @ApiModelProperty(value = "job批次号")
+    public String jobTraceId;
     @ApiModelProperty(value = "task批次号")
     public String taskTraceId;
     @ApiModelProperty(value = "绑定表的任务的id")

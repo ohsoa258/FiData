@@ -145,6 +145,7 @@ public enum ResultEnum {
     SAVE_POINTS_UPDATE_ERROR(5060, "检查点保存失败"),
     CREATE_JOB_ERROR(5061, "创建Flink任务失败"),
     SCHEMA_TABLE_REPEAT(5062, "其他应用下已存在该表名"),
+    SYSTEM_VARIABLES_ERROR(5063, "系统变量异常"),
 
 
     /**

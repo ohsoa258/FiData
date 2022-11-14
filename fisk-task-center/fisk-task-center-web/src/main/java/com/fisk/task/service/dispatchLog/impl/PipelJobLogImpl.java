@@ -98,22 +98,26 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
     @Override
     public List<PipelJobLogVO> getPipelJobLogVos(List<PipelJobLogVO> pipelJobLogs) {
         List<PipelJobLogVO> pipelJobLogVos = new ArrayList<>();
-        for (PipelJobLogVO pipelJobLog : pipelJobLogs) {
-            List<PipelJobLogVO> pipelJobLogVo = pipelJobLogMapper.getPipelJobLogVo(pipelJobLog);
-            pipelJobLogVo.stream()
-                    .filter(Objects::nonNull)
-                    .filter(e -> e.componentId != null && e.componentId.equalsIgnoreCase(pipelJobLog.componentId))
-                    .forEach(f -> {
-                        f.componentName = pipelJobLog.componentName;
-                    });
-            pipelJobLogVo.stream()
-                    .filter(Objects::nonNull)
-                    .forEach(f -> {
-                        f.pipelName = pipelJobLog.pipelName;
-                        f.typeName = DispatchLogEnum.getName(f.type).getName();
-                    });
-            pipelJobLogVos.addAll(pipelJobLogVo);
-
+        if (CollectionUtils.isNotEmpty(pipelJobLogs)) {
+            for (PipelJobLogVO pipelJobLog : pipelJobLogs) {
+                List<PipelJobLogVO> pipelJobLogVo = pipelJobLogMapper.getPipelJobLogVo(pipelJobLog);
+                pipelJobLogVo.stream()
+                        .filter(Objects::nonNull)
+                        .filter(e -> e.componentId != null && e.componentId.equalsIgnoreCase(pipelJobLog.componentId))
+                        .sorted(Comparator.comparing(PipelJobLogVO::getCreateTime).reversed())
+                        .forEach(f -> {
+                            f.componentName = pipelJobLog.componentName;
+                        });
+                pipelJobLogVo.stream()
+                        .filter(Objects::nonNull)
+                        .forEach(f -> {
+                            f.pipelName = pipelJobLog.pipelName;
+                            f.typeName = DispatchLogEnum.getName(f.type).getName();
+                        });
+                pipelJobLogVos.addAll(JSON.parseArray(JSON.toJSONString(pipelJobLogVo), PipelJobLogVO.class));
+            }
+            pipelJobLogVos.sort((a, b) -> a.getCreateTime().compareTo(b.getCreateTime()));
+            Collections.reverse(pipelJobLogVos);
         }
         return pipelJobLogVos;
     }

@@ -23,44 +23,35 @@ public class PostgreHelper {
 
     @Resource
     UserClient userClient;
-    private static String pgsqlDatamodelUrl;
-    private static String pgsqlDatamodelDriverClassName;
-    private static String pgsqlDatamodelUsername;
-    private static String pgsqlDatamodelPassword;
     private static String dataSourceOdsId;
+    private static String dataSourceDwId;
 
-    @Value("${pgsql-datamodel.url}")
-    public void setPgsqlDatamodelUrl(String pgsqlDatamodelUrl) {
-        PostgreHelper.pgsqlDatamodelUrl = pgsqlDatamodelUrl;
-    }
-
-    @Value("${pgsql-datamodel.driverClassName}")
-    public void setPgsqlDatamodelDriverClassName(String pgsqlDatamodelDriverClassName) {
-        PostgreHelper.pgsqlDatamodelDriverClassName = pgsqlDatamodelDriverClassName;
-    }
-
-    @Value("${pgsql-datamodel.username}")
-    public void setPgsqlDatamodelUsername(String pgsqlDatamodelUsername) {
-        PostgreHelper.pgsqlDatamodelUsername = pgsqlDatamodelUsername;
-    }
-
-    @Value("${pgsql-datamodel.password}")
-    public void setPgsqlDatamodelPassword(String pgsqlDatamodelPassword) {
-        PostgreHelper.pgsqlDatamodelPassword = pgsqlDatamodelPassword;
-    }
 
     @Value("${fiData-data-ods-source}")
     public void setDataSourceOdsId(String dataSourceOdsId) {
         PostgreHelper.dataSourceOdsId = dataSourceOdsId;
     }
 
+    @Value("${fiData-data-dw-source}")
+    public void setDataSourceDwId(String dataSourceDwId) {
+        PostgreHelper.dataSourceDwId = dataSourceDwId;
+    }
+
     public Connection getConnection(BusinessTypeEnum businessTypeEnum) {
         Connection conn = null;
         try {
             if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAMODEL)) {
-                // 加载驱动类
-                Class.forName(pgsqlDatamodelDriverClassName);
-                conn = DriverManager.getConnection(pgsqlDatamodelUrl, pgsqlDatamodelUsername, pgsqlDatamodelPassword);
+
+                ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+                if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+                    DataSourceDTO data = fiDataDataSource.data;
+                    // 加载驱动类
+                    Class.forName(data.conType.getDriverName());
+                    conn = DriverManager.getConnection(data.conStr, data.conAccount, data.conPassword);
+                } else {
+                    log.error("userclient无法查询到dw库的连接信息");
+                    throw new FkException(ResultEnum.ERROR);
+                }
             } else if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAINPUT)) {
                 ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
                 if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {

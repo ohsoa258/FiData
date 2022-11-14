@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -46,16 +47,10 @@ public class TaskPgTableStructureHelper
 
     public static String driverClassName;
 
-    public static String datamodelDriverClassName;
-
-    public static String pgsqlDatamodelUrl;
-
-    public static String pgsqlDatamodelUsername;
-
-    public static String pgsqlDatamodelPassword;
-
 
     public static String dataSourceOdsId;
+
+    public static String dataSourceDwId;
 
 
     @Value("${spring.datasource.dynamic.datasource.taskdb.url}")
@@ -79,32 +74,16 @@ public class TaskPgTableStructureHelper
     }
 
 
-
-    @Value("${pgsql-datamodel.driverClassName}")
-    public void setDatamodelDriverClassName(String datamodelDriverClassName) {
-        TaskPgTableStructureHelper.datamodelDriverClassName = datamodelDriverClassName;
-    }
-
-
-    @Value("${pgsql-datamodel.url}")
-    public void setPgsqlDatamodelUrl(String pgsqlDatamodelUrl) {
-        TaskPgTableStructureHelper.pgsqlDatamodelUrl = pgsqlDatamodelUrl;
-    }
-
-    @Value("${pgsql-datamodel.username}")
-    public void setPgsqlDatamodelUsername(String pgsqlDatamodelUsername) {
-        TaskPgTableStructureHelper.pgsqlDatamodelUsername = pgsqlDatamodelUsername;
-    }
-
-    @Value("${pgsql-datamodel.password}")
-    public void setPgsqlDatamodelPassword(String pgsqlDatamodelPassword) {
-        TaskPgTableStructureHelper.pgsqlDatamodelPassword = pgsqlDatamodelPassword;
-    }
-
     @Value("${fiData-data-ods-source}")
     public void setDataSourceOdsId(String dataSourceOdsId) {
         TaskPgTableStructureHelper.dataSourceOdsId = dataSourceOdsId;
     }
+
+    @Value("${fiData-data-dw-source}")
+    public void setDataSourceDwId(String dataSourceDwId) {
+        TaskPgTableStructureHelper.dataSourceDwId = dataSourceDwId;
+    }
+
 
     /**
      * 保存建模相关表结构数据(保存版本号)
@@ -247,6 +226,10 @@ public class TaskPgTableStructureHelper
         String pgsqlOdsUsername = "";
         String pgsqlOdsPassword = "";
         String pgsqlOdsDriverClass = "";
+        String pgsqlDwUrl = "";
+        String pgsqlDwUsername = "";
+        String pgsqlDwPassword = "";
+        String pgsqlDwDriverClass = "";
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO data = fiDataDataSource.data;
@@ -258,12 +241,19 @@ public class TaskPgTableStructureHelper
             log.error("userclient无法查询到ods库的连接信息");
             return ResultEnum.ERROR;
         }
-/*        String pgsqlOdsUrl = pgsqlDatainputUrl;
-        String pgsqlOdsUsername = pgsqlDatainputUsername;
-        String pgsqlOdsPassword = pgsqlDatainputPassword;*/
-        String pgsqlDwUrl = pgsqlDatamodelUrl;
-        String pgsqlDwUsername = pgsqlDatamodelUsername;
-        String pgsqlDwPassword = pgsqlDatamodelPassword;
+
+        ResultEntity<DataSourceDTO> fiDataDataDwSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+        if (fiDataDataDwSource.code == ResultEnum.SUCCESS.getCode()) {
+            DataSourceDTO data = fiDataDataDwSource.data;
+            pgsqlDwUrl = data.conStr;
+            pgsqlDwUsername = data.conAccount;
+            pgsqlDwPassword = data.conPassword;
+            pgsqlDwDriverClass = data.conType.getDriverName();
+        } else {
+            log.error("userclient无法查询到dw库的连接信息");
+            return ResultEnum.ERROR;
+        }
+
         Connection conn;
         Statement st = null;
         if (createType == 3) {
@@ -271,7 +261,7 @@ public class TaskPgTableStructureHelper
             // 数据接入
             conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlOdsPassword);
         } else {
-            Class.forName(datamodelDriverClassName);
+            Class.forName(pgsqlDwDriverClass);
             // 数据建模
             conn = DriverManager.getConnection(pgsqlDwUrl, pgsqlDwUsername, pgsqlDwPassword);
         }
@@ -324,7 +314,8 @@ public class TaskPgTableStructureHelper
                 if (!CollectionUtils.isEmpty(taskPgTableStructurePOList1)) {
                     //判断表是否存在
                     DatabaseMetaData metaData = conn.getMetaData();
-                    ResultSet set = metaData.getTables(null, null, taskPgTableStructurePOList1.get(0).tableName, null);
+                    List<String> schemaAndTableName = TableNameGenerateUtils.getSchemaAndTableName(taskPgTableStructurePOList1.get(0).tableName);
+                    ResultSet set = metaData.getTables(null, schemaAndTableName.get(0), schemaAndTableName.get(1), null);
                     if (set.next()) {
                         return ResultEnum.SUCCESS;
                     }
@@ -335,6 +326,30 @@ public class TaskPgTableStructureHelper
             log.error("checkVersion:" + e);
         }
         return ResultEnum.PARAMTER_ERROR;
+    }
+
+
+    public static void main(String[] args) throws SQLException {
+        Connection conn = null;
+        Statement st = null;
+        try {
+
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            // 数据接入
+            conn = DriverManager.getConnection("jdbc:sqlserver://172.31.6.132:1433;DatabaseName=YF_ODS;encrypt=true;trustServerCertificate=true", "fisk_dev", "password01!");
+
+
+            DatabaseMetaData metaData = conn.getMetaData();
+            ResultSet set = metaData.getTables(null, "YuG", "PCHANGEITEMREVISION2", null);
+            if (set.next()) {
+                System.out.println("此表存在");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            st.close();
+            conn.close();
+        }
     }
 
 }

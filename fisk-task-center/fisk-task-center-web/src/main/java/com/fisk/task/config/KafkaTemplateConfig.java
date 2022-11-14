@@ -76,9 +76,9 @@ public class KafkaTemplateConfig {
         // 批量发送，延迟为1毫秒，启用该功能能有效减少生产者发送消息次数，从而提高并发量
         props.put(ProducerConfig.LINGER_MS_CONFIG, 500);
         // 生产者可以使用的总内存字节来缓冲等待发送到服务器的记录
-        props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 40960);
+        props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 163840);
         // 消息的最大大小限制,也就是说send的消息大小不能超过这个限制, 默认1048576(1MB)
-        props.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, 1048576);
+        props.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, 5242880);
         // 键的序列化方式
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, keySerializer);
         // 值的序列化方式

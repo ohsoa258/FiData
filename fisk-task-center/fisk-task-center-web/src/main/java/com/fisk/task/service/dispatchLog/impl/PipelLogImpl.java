@@ -51,6 +51,7 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
         List<PipelLogVO> list = pipelLogMapper.getPipelLogs(pipelLog);
         list.stream()
                 .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(PipelLogVO::getCreateTime).reversed())
                 .forEach(f -> {
                     f.typeName = DispatchLogEnum.getName(f.type).getName();
                     f.pipelName = pipelLog.pipelName;

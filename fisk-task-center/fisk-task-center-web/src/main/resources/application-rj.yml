@@ -1,17 +1,17 @@
 datamodeldorisconstr:
   driver_class_name: com.mysql.jdbc.Driver
-  password: DsPassword01!
-  url: jdbc:mysql://192.168.21.13:9030/dmp_olap?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+  password: Password01!
+  url: jdbc:mysql://192.168.11.134:9030/dmp_olap?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
   username: root
 
-external-table-link: '"host" = "192.168.21.13","port" = "5432","user" = "postgres","password"
-  = "PgPassword01!","database" = "dmp_dw_UAT"'
+external-table-link: '"host" = "192.168.1.250","port" = "5432","user" = "postgres","password"
+  = "Password01!","database" = "dmp_dw"'
 
 nifi:
-  username: fisk
-  password: fiskpassword01!
-  basePath: http://192.168.21.13:8080/nifi-api
-  token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiI5YjNkMjY3NjExNDc0NWU2ODg3MDlkODkzNmUzYmQ4MiIsInVzZXIiOiJ7XCJpZFwiOjE5LFwidXNlckFjY291bnRcIjpcInRhc2vkuJPnlKh0b2tlblwifSIsImlkIjoiMTkifQ.d5g6oMU3a_XsjpOouZu1R1YlVO_E_ZjwUUJROR1XbRo
+  basePath: https://172.17.1.244:8443/nifi-api
+  username: fiskadmin
+  password: Password0101!
+  token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJkMjc2Mjk3N2U4YjU0YTQ0YjYyZGU2ODlmZTk0OTRjNiIsInVzZXIiOiJ7XCJpZFwiOjE4LFwidXNlckFjY291bnRcIjpcImNma1wifSIsImlkIjoiMTgifQ.SRkIbNgKrvo1TI-WSufy4mZGLst6ed0Y6Fs0QoQ8m_g
   Enable-Authentication: 0
   kerberos:
     Keytab: /opt/fidata/java/fisk-task-center/kafka.keytab
@@ -20,33 +20,35 @@ nifi:
     krb5:
       conf: /opt/fidata/java/fisk-task-center/krb5.conf
   kerberosprincipal: kafka/admin@AUTOEXPR.COM
+
+
   pipeline:
     topicName: my-topic
     waitTime: 30
     operation-interval: 2000
     number-of-operations: 5
-    data-governance-url: http://192.168.21.13:8083
-nifi-ConcurrentTasks: 3
-nifi-FetchSize: 30000
+    data-governance-url: http://172.17.1.248:7002
+nifi-ConcurrentTasks: 1
+nifi-FetchSize: 10000
 nifi-MaxRowsPerFlowFile: 10000
 nifi-OutputBatchSize: 1
 fiData-data-ods-source: 2
 fiData-data-dw-source: 1
+
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
-  password: PgPassword01!
-  url: jdbc:postgresql://192.168.21.13:5432/dmp_dw_UAT?stringtype=unspecified
+  password: Password01!
+  url: jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified
   username: postgres
-  ip: 192.168.21.13
-  dbName: dmp_dw_UAT
+  ip: 192.168.1.250
+  dbName: dmp_dw
 pgsql-mdm:
-  driverClassName: org.postgresql.Driver
-  password: PgPassword01!
-  url: jdbc:postgresql://192.168.21.13:5432/dmp_mdm_UAT?stringtype=unspecified
+  password: Password01!
+  url: jdbc:postgresql://192.168.1.250:5432/dmp_mdm?stringtype=unspecified
   username: postgres
   type: PG
 server:
-  port: 8099
+  port: 7003
 spring:
   application:
     name: task-center
@@ -56,12 +58,12 @@ spring:
         datainputdb:
           driver-class-name: com.mysql.jdbc.Driver
           password: Password01!
-          url: jdbc:mysql://192.168.21.13:3306/dmp_datainput_db_UAT?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+          url: jdbc:mysql://172.17.1.248:3306/dmp_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
           username: root
         taskdb:
           driver-class-name: com.mysql.jdbc.Driver
           password: Password01!
-          url: jdbc:mysql://192.168.21.13:3306/dmp_task_db_UAT?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+          url: jdbc:mysql://172.17.1.248:3306/dmp_task_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
           username: root
       primary: taskdb
       strict: false
@@ -70,7 +72,7 @@ spring:
     time-zone: GMT+8
   kafka:
     consumer:
-      bootstrap-servers: 192.168.21.13:9092
+      bootstrap-servers: 172.17.1.244:9092
       enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       session:
@@ -78,10 +80,12 @@ spring:
           ms: 300000
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
-      acks: all
-      bootstrap-servers: 192.168.21.13:9092
+      acks: 0
+      bootstrap-servers: 172.17.1.244:9092
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       retries: 3
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
   redis:
-    host: 192.168.21.13
+    host: 172.17.1.248
+    port: 6379

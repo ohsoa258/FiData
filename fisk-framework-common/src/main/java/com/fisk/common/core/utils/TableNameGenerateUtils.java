@@ -74,6 +74,12 @@ public class TableNameGenerateUtils {
         return appAbbreviation + "_" + tableName;
     }
 
+    /**
+     * 生成stg,ods表名和主键名称
+     *
+     * @param tableName
+     * @return
+     */
     public static List<String> getStgAndTableName(String tableName) {
         String stgTableName = "";
         String odsTableName = "";
@@ -97,6 +103,25 @@ public class TableNameGenerateUtils {
             tableNames.add(tableKey);
         }
         return tableNames;
+    }
+
+    /**
+     * 获取架构和表名
+     *
+     * @param tableName
+     * @return
+     */
+    public static List<String> getSchemaAndTableName(String tableName) {
+        List<String> list = new ArrayList<>();
+        if (tableName.contains(".")) {
+            String[] split = tableName.split("\\.");
+            list.add(split[0]);
+            list.add(split[1]);
+        } else {
+            list.add("dbo");
+            list.add(tableName);
+        }
+        return list;
     }
 
 }

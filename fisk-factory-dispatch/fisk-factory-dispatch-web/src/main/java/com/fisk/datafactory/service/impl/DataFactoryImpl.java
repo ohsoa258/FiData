@@ -303,7 +303,7 @@ public class DataFactoryImpl implements IDataFactory {
                     .filter(e -> e.pid == dto.id)
                     .filter(e -> e.appId.equalsIgnoreCase(dto.appId))
                     // 过滤出数据湖任务下的表
-                    .filter(e -> e.componentName.equalsIgnoreCase(ChannelDataEnum.DATALAKE_TASK.getName()))
+                    .filter(e -> e.componentsId == ChannelDataEnum.DATALAKE_TASK.getValue())
                     // 根据table_order降序
                     .sorted(Comparator.comparing(NifiCustomWorkflowDetailDTO::getTableOrder).reversed())
                     .collect(Collectors.toList());
@@ -319,7 +319,7 @@ public class DataFactoryImpl implements IDataFactory {
                     .filter(e -> e.pid == dto.id)
                     .filter(e -> e.appId.equalsIgnoreCase(dto.appId))
                     // 过滤出数仓表任务下的表
-                    .filter(e -> e.componentName.equalsIgnoreCase(ChannelDataEnum.DW_TASK.getName()))
+                    .filter(e -> e.componentsId == ChannelDataEnum.DW_TASK.getValue())
                     // 根据table_order降序
                     .sorted(Comparator.comparing(NifiCustomWorkflowDetailDTO::getTableOrder).reversed())
                     .collect(Collectors.toList());
@@ -335,7 +335,7 @@ public class DataFactoryImpl implements IDataFactory {
                     .filter(e -> e.pid == dto.id)
                     .filter(e -> e.appId.equalsIgnoreCase(dto.appId))
                     // 过滤出分析模型任务下的表
-                    .filter(e -> e.componentName.equalsIgnoreCase(ChannelDataEnum.OLAP_TASK.getName()))
+                    .filter(e -> e.componentsId == ChannelDataEnum.OLAP_TASK.getValue())
                     // 根据table_order降序
                     .sorted(Comparator.comparing(NifiCustomWorkflowDetailDTO::getTableOrder).reversed())
                     .collect(Collectors.toList());
@@ -359,7 +359,7 @@ public class DataFactoryImpl implements IDataFactory {
         // 开始组件
         NifiCustomWorkflowDetailPO scheduleTask = nifiCustomWorkflowDetailImpl.query()
                 .eq("workflow_id", nifiCustomWorkflowPo.workflowId)
-                .eq("component_name", ChannelDataEnum.SCHEDULE_TASK.getName())
+                .eq("component_type", ChannelDataEnum.SCHEDULE_TASK.getName())
                 .one();
         if (scheduleTask == null) {
             return ResultEntityBuild.build(ResultEnum.SUCCESS, null);
@@ -590,7 +590,7 @@ public class DataFactoryImpl implements IDataFactory {
             // 判断出当前组件是否为所属组件中的第一个任务
             List<NifiCustomWorkflowDetailPO> ascList = nifiCustomWorkflowDetailImpl.query()
                     .eq("pid", detailPo.pid)
-                    .eq("component_name", detailPo.componentName)
+                    .eq("components_id", detailPo.componentsId)
                     .list()
                     .stream()
                     .filter(Objects::nonNull)
@@ -606,7 +606,7 @@ public class DataFactoryImpl implements IDataFactory {
             // 判断出当前组件是否为所属组件中的最后一个任务
             List<NifiCustomWorkflowDetailPO> descList = nifiCustomWorkflowDetailImpl.query()
                     .eq("pid", detailPo.pid)
-                    .eq("component_name", detailPo.componentName)
+                    .eq("components_id", detailPo.componentsId)
                     .list()
                     .stream()
                     .filter(Objects::nonNull)
@@ -616,7 +616,7 @@ public class DataFactoryImpl implements IDataFactory {
                     .sorted(Comparator.comparing(NifiCustomWorkflowDetailPO::getTableOrder, Comparator.reverseOrder()))
                     .collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(descList) && descList.get(0).id == detailPo.id) {
-                nifiPortsHierarchyDto.componentFirstFlag = true;
+                nifiPortsHierarchyDto.pipeEndFlag = true;
             }
 
             // 判断出当前组件是否为管道内最后一个任务
@@ -627,8 +627,8 @@ public class DataFactoryImpl implements IDataFactory {
             NifiCustomWorkflowPO workflowPO = nifiCustomWorkflowImpl.query().eq("workflow_id", detailPo.workflowId).one();
 
             // 有inport,没有outport,即最后一个组件
-            if (nifiCustomWorkflowDetailPo != null && StringUtils.isNotBlank(nifiCustomWorkflowDetailPo.inport) && StringUtils.isBlank(nifiCustomWorkflowDetailPo.outport)) {
-                nifiPortsHierarchyDto.pipeEndFlag = true;
+            if (nifiCustomWorkflowDetailPo != null && nifiPortsHierarchyDto.pipeEndFlag) {
+
                 // 当前管道流程最后一批执行的组件集合
                 // 注意去重
                 nifiPortsHierarchyDto.pipeEndDto = buildPipeEndDto(workflowPO.id);
@@ -659,7 +659,7 @@ public class DataFactoryImpl implements IDataFactory {
         // 开始组件
         NifiCustomWorkflowDetailPO scheduleTask = nifiCustomWorkflowDetailImpl.query()
                 .eq("workflow_id", nifiCustomWorkflowPo.workflowId)
-                .eq("component_name", ChannelDataEnum.SCHEDULE_TASK.getName())
+                .eq("component_type", ChannelDataEnum.SCHEDULE_TASK.getName())
                 .one();
 //        if (scheduleTask == null) {
 //            return null;
@@ -692,7 +692,7 @@ public class DataFactoryImpl implements IDataFactory {
                 // 当前组件的pid是开始组件的id
 //                .filter(e -> e.inport.equalsIgnoreCase(String.valueOf(scheduleTask.id)))
                 .collect(Collectors.toList()));
-        log.info("组装detailDtoList参数:{},{},{}" + JSON.toJSONString(list), JSON.toJSONString(listAllJob), JSON.toJSONString(listAllTable));
+        log.info("组装detailDtoList参数:{},{},{}", JSON.toJSONString(list), JSON.toJSONString(listAllJob), JSON.toJSONString(listAllTable));
         matchingDetailDtoList(list, listAllJob, listAllTable);
         List<NifiCustomWorkflowDetailDTO> detailDtoList = Objects.requireNonNull(list.stream().distinct().collect(Collectors.toList()));
         // 填充workflowName、componentsName属性

@@ -8,15 +8,15 @@ external-table-link: '"host" = "192.168.1.250","port" = "5432","user" = "postgre
   = "Password01!","database" = "dmp_dw"'
 
 nifi:
-  basePath: https://10.178.188.31:8443/nifi-api
+  basePath: https://10.195.131.20:8443/nifi-api
   username: fisk
   password: fiskpassword01!
   token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJkMjc2Mjk3N2U4YjU0YTQ0YjYyZGU2ODlmZTk0OTRjNiIsInVzZXIiOiJ7XCJpZFwiOjE4LFwidXNlckFjY291bnRcIjpcImNma1wifSIsImlkIjoiMTgifQ.SRkIbNgKrvo1TI-WSufy4mZGLst6ed0Y6Fs0QoQ8m_g
-  Enable-Authentication: 1
+  Enable-Authentication: 0
   kerberos:
-    Keytab: /opt/fidata/java/fisk-task-center/kafka.keytab
+    Keytab: /root/fisk/fidata/server/fisk-task-center/kafka.keytab
     login:
-      config: /opt/fidata/java/fisk-task-center/kafka-jaas.conf
+      config: /root/fisk/fidata/server/fisk-task-center/kafka-jaas.conf
     krb5:
       conf: /opt/fidata/java/fisk-task-center/krb5.conf
   kerberosprincipal: kafka/admin@AUTOEXPR.COM
@@ -24,7 +24,7 @@ nifi:
 
   pipeline:
     topicName: my-topic
-    waitTime: 20GenerateFlowFileProcessor
+    waitTime: 30
     operation-interval: 2000
     number-of-operations: 5
     data-governance-url: http://10.178.188.31:8083
@@ -33,6 +33,7 @@ nifi-FetchSize: 10000
 nifi-MaxRowsPerFlowFile: 10000
 nifi-OutputBatchSize: 1
 fiData-data-ods-source: 2
+fiData-data-dw-source: 1
 
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
@@ -56,14 +57,14 @@ spring:
       datasource:
         datainputdb:
           driver-class-name: com.mysql.jdbc.Driver
-          password: Fisksoft@hsd06
-          url: jdbc:mysql://10.178.188.31:3306/dmp_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
-          username: fisksoft
+          password: ABCabc1234
+          url: jdbc:mysql://10.195.131.25:3306/dmp_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+          username: nifi_owner
         taskdb:
           driver-class-name: com.mysql.jdbc.Driver
-          password: Fisksoft@hsd06
-          url: jdbc:mysql://10.178.188.31:3306/dmp_task_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
-          username: fisksoft
+          password: ABCabc1234
+          url: jdbc:mysql://10.195.131.25:3306/dmp_task_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+          username: nifi_owner
       primary: taskdb
       strict: false
   jackson:
@@ -71,7 +72,7 @@ spring:
     time-zone: GMT+8
   kafka:
     consumer:
-      bootstrap-servers: 10.178.188.70:9092
+      bootstrap-servers: localhost:9092
       enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       session:
@@ -80,12 +81,12 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
       acks: 0
-      bootstrap-servers: 10.178.188.70:9092
+      bootstrap-servers: localhost:9092
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       retries: 3
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
-    bootstrap-servers: 10.178.188.65:9092,10.178.188.70:9092,10.178.188.92:9092
+
   redis:
-    host: 10.178.188.31
-    password: redis@test
+    host: 10.195.131.21
+    password: 7b80ba2c
     port: 6379

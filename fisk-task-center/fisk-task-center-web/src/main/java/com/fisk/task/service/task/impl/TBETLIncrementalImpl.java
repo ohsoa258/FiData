@@ -11,9 +11,11 @@ import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.task.entity.TBETLIncrementalPO;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
 import com.fisk.task.service.task.ITBETLIncremental;
+import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
@@ -32,40 +34,47 @@ public class TBETLIncrementalImpl extends ServiceImpl<TBETLIncrementalMapper, TB
 
     @Override
     public Map<String, String> converSql(String tableName, String sql, String driveType, String deltaTime) {
-        List<DeltaTimeDTO> deltaTimes = JSON.parseArray(deltaTime,DeltaTimeDTO.class);
+        List<DeltaTimeDTO> deltaTimes = JSON.parseArray(deltaTime, DeltaTimeDTO.class);
         Map<String, String> paramMap = new HashMap<>();
         List<TBETLIncrementalPO> list = new ArrayList<>();
         TBETLIncrementalPO tbetlIncremental = new TBETLIncrementalPO();
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String defaultName = "未命名";
         Date d = new Date();
+        Map<String, Date> etlIncremental = tbetlIncrementalMapper.getEtlIncrementalByTableName(tableName);
+        List<TBETLIncrementalPO> etlIncrementalList = tbetlIncrementalMapper.getEtlIncrementalList(tableName);
         try {
             //---------------------------------------------------------
             // 如果开始时间是表达式,就用表达式,如果开始时间是常量,需要判断是否是第一次同步,如果是第一次同步就用常量,不是第一次同步用查到的
             log.info("时间增量值:{}", JSON.toJSONString(deltaTimes));
-            DeltaTimeDTO startDeltaTime = deltaTimes.get(0);
-            DeltaTimeDTO endDeltaTime = deltaTimes.get(1);
-            if (Objects.nonNull(startDeltaTime) && Objects.equals(startDeltaTime.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.VARIABLE) &&
-                    StringUtils.isNotEmpty(startDeltaTime.variableValue)) {
-                sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'" + startDeltaTime.variableValue + "'");
-            }
-            if (Objects.nonNull(startDeltaTime) && Objects.equals(startDeltaTime.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT) &&
-                    StringUtils.isNotEmpty(startDeltaTime.variableValue) && Objects.equals(defaultName, tableName)) {
-                sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'" + startDeltaTime.variableValue + "'");
-            }
-            if (Objects.nonNull(endDeltaTime) && Objects.equals(endDeltaTime.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.VARIABLE) &&
-                    StringUtils.isNotEmpty(endDeltaTime.variableValue)) {
-                sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'" + endDeltaTime.variableValue + "'");
-            }
-            if (Objects.nonNull(endDeltaTime) && Objects.equals(endDeltaTime.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT) &&
-                    StringUtils.isNotEmpty(endDeltaTime.variableValue) && Objects.equals(defaultName, tableName)) {
-                sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'" + endDeltaTime.variableValue + "'");
+            if (!CollectionUtils.isEmpty(deltaTimes)) {
+                DeltaTimeDTO startDeltaTime = deltaTimes.get(0);
+                DeltaTimeDTO endDeltaTime = deltaTimes.get(1);
+                if (Objects.nonNull(startDeltaTime) && Objects.equals(startDeltaTime.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.VARIABLE) &&
+                        StringUtils.isNotEmpty(startDeltaTime.variableValue)) {
+                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'" + startDeltaTime.variableValue + "'");
+                }
+                if (Objects.nonNull(endDeltaTime) && Objects.equals(endDeltaTime.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.VARIABLE) &&
+                        StringUtils.isNotEmpty(endDeltaTime.variableValue)) {
+                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'" + endDeltaTime.variableValue + "'");
+                }
+
+                if (CollectionUtils.isEmpty(etlIncrementalList)) {
+                    if (Objects.nonNull(endDeltaTime) && Objects.equals(endDeltaTime.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT) &&
+                            StringUtils.isNotEmpty(endDeltaTime.variableValue)) {
+                        sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'" + endDeltaTime.variableValue + "'");
+                    }
+                    if (Objects.nonNull(startDeltaTime) && Objects.equals(startDeltaTime.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT) &&
+                            StringUtils.isNotEmpty(startDeltaTime.variableValue)) {
+                        sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'" + startDeltaTime.variableValue + "'");
+                    }
+                }
+
             }
 
             //---------------------------------------------------------
             if (sql.contains(SystemVariableTypeEnum.START_TIME.getValue()) || sql.contains(SystemVariableTypeEnum.END_TIME.getValue())) {
                 //task提供方法
-                Map<String, Date> etlIncremental = tbetlIncrementalMapper.getEtlIncrementalByTableName(tableName);
                 if (etlIncremental != null) {
                     list = this.query().eq("object_name", tableName)
                             .eq("enable_flag", 2).list();
@@ -110,6 +119,7 @@ public class TBETLIncrementalImpl extends ServiceImpl<TBETLIncrementalMapper, TB
             log.info("map返回:" + JSON.toJSONString(paramMap));
             return paramMap;
         } catch (Exception e) {
+            log.error("拼装语句报错:" + StackTraceHelper.getStackTraceInfo(e));
             throw new FkException(ResultEnum.ERROR);
         }
     }
@@ -135,6 +145,5 @@ public class TBETLIncrementalImpl extends ServiceImpl<TBETLIncrementalMapper, TB
             tbetlIncrementalMapper.insert(ETLIncremental);
         }
     }
-
 
 }
