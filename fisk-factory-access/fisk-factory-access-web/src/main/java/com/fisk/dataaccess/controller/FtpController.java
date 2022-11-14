@@ -5,11 +5,13 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.app.DbConnectionDTO;
+import com.fisk.dataaccess.dto.ftp.CopyFtpFileDTO;
 import com.fisk.dataaccess.dto.ftp.FtpPathDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.service.IFtp;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -49,7 +51,7 @@ public class FtpController {
 
     @ApiOperation(value = "复制ftp文件到新目录")
     @PostMapping("/copyFtpFile")
-    public ResultEntity<Object> copyFtpFile(@RequestParam("keyStr") String keyStr) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.copyFtpFile(keyStr));
+    public ResultEntity<Object> copyFtpFile(@Validated @RequestBody CopyFtpFileDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.copyFtpFile(dto.getKeyStr()));
     }
 }

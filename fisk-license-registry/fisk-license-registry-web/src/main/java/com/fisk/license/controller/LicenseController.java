@@ -45,9 +45,9 @@ public class LicenseController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.verifyCompanyLicenceByUrl(dto));
     }
 
-    @ApiOperation("生成许可证（Company）")
-    @PostMapping("/verifyCompanyLicenceByUrl")
-    public ResultEntity<LicenceVO> createCompanyLicence(@Validated @RequestBody LicenceDTO dto) {
-        return service.createCompanyLicence(dto);
-    }
+//    @ApiOperation("生成许可证（Company）")
+//    @PostMapping("/createCompanyLicence")
+//    public ResultEntity<LicenceVO> createCompanyLicence(@Validated @RequestBody LicenceDTO dto) {
+//        return service.createCompanyLicence(dto);
+//    }
 }
