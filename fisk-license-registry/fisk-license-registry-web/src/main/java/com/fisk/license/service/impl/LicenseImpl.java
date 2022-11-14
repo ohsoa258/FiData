@@ -57,6 +57,13 @@ public class LicenseImpl extends ServiceImpl<LicenseMapper, LicencePO> implement
                 verifyLicenceVO.setLicenceStateDescribe(LicenceStateEnum.LICENCE_DECRYPT_FAIL.getName());
                 return verifyLicenceVO;
             }
+            if (StringUtils.isNotEmpty(dto.getMac())) {
+                if (!dto.getMac().equals(licenceDTO.getMac())) {
+                    verifyLicenceVO.setLicenceState(LicenceStateEnum.LICENCE_NONE);
+                    verifyLicenceVO.setLicenceStateDescribe(LicenceStateEnum.LICENCE_NONE.getName());
+                    return verifyLicenceVO;
+                }
+            }
             String toDateTime = DateTimeUtils.getNowToShortDate("yyyy/MM/dd");
             String expireTime = licenceDTO.getExpireTime();
             verifyLicenceVO.setLicenceExpireTime(expireTime);
