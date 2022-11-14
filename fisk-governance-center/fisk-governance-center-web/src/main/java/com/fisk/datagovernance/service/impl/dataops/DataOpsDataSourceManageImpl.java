@@ -116,14 +116,13 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataOpsTableFieldVOS);
         }
 
-        List<DataOpsTableFieldVO> fieldVOList = new ArrayList<>();
         columns.forEach(tableStructureDTO->{
             DataOpsTableFieldVO dataOpsTableFieldVO = new DataOpsTableFieldVO();
             dataOpsTableFieldVO.setFieldName(tableStructureDTO.getFieldName());
             dataOpsTableFieldVO.setFieldType(tableStructureDTO.getFieldType());
             dataOpsTableFieldVO.setFieldLength(tableStructureDTO.getFieldLength());
             dataOpsTableFieldVO.setFieldDes(tableStructureDTO.getFieldDes());
-            fieldVOList.add(dataOpsTableFieldVO);
+            dataOpsTableFieldVOS.add(dataOpsTableFieldVO);
         });
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataOpsTableFieldVOS);
     }
