@@ -199,10 +199,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 
         // 版本语句
-        // String versionSql = getVersionSql(syncmodePo);
+        String versionSql = getVersionSql(syncmodePo);
 
         // 发布
-        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes);
+        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -268,7 +268,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         TableSyncmodePO modelSync = tableSyncmodeDTO.toEntity(TableSyncmodePO.class);
 
         // 版本语句。位置不要调整，在保存之前与历史数据做对比
-        // String versionSql = getVersionSql(modelSync);
+        String versionSql = getVersionSql(modelSync);
 
         success = syncmodeImpl.saveOrUpdate(modelSync);
 
@@ -282,7 +282,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 
         // 发布
-        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes);
+        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
@@ -374,7 +374,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                          boolean openTransmission,
                          CdcJobScriptDTO cdcDto,
                          boolean useExistTable,
-                         List<DeltaTimeDTO> deltaTimes) {
+                         List<DeltaTimeDTO> deltaTimes,
+                         String versionSql) {
         AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("app_id", appId).one();
         if (dataSourcePo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -397,6 +398,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             String odsTableName = TableNameGenerateUtils.buildOdsTableName(tableName, registration.appAbbreviation, registration.whetherSchema);
             data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
             data.whetherSchema = registration.whetherSchema;
+            data.generateVersionSql = versionSql;
 
             // 执行发布
             try {
