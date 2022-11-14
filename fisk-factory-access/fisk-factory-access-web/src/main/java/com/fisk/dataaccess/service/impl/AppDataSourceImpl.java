@@ -85,6 +85,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 //视图结构
                 dataSource.viewDtoList = mysqlConUtils.loadViewDetails(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL));
             } else if (DataSourceTypeEnum.ORACLE.getName().equalsIgnoreCase(dataSource.driveType)) {
+                dataSource.appName = po.serviceName;
                 OracleUtils oracleUtils = new OracleUtils();
                 // 表结构
                 dataSource.tableDtoList = oracleUtils.getTableNameAndColumn(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE), po.dbName);

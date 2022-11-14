@@ -320,7 +320,7 @@ public class OracleUtils {
                     colNameList.add(conversionType(rs));
                 }
                 tablePyhNameDTO.setFields(colNameList);
-                tableName = dbName + "." + tableName;
+                //tableName = dbName + "." + tableName;
                 tablePyhNameDTO.setTableName(tableName);
                 list.add(tablePyhNameDTO);
             }
