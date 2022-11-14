@@ -30,6 +30,9 @@ public class DateTimeUtils {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 
+    public static String getNowToShortDate(String format) {
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern(format));
+    }
 
     /**
      * 将时间戳转换为时间,参数和返回值都是字符串
@@ -40,7 +43,7 @@ public class DateTimeUtils {
     public static String stampToDate(String s) {
         try {
             String res;
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd");
             long lt = new Long(s);
             Date date = new Date(lt);
             res = simpleDateFormat.format(date);
@@ -61,7 +64,7 @@ public class DateTimeUtils {
         try {
             String res;
             //设置时间模版
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd");
             Date date = simpleDateFormat.parse(s);
             long ts = date.getTime();
             res = String.valueOf(ts);
@@ -84,7 +87,7 @@ public class DateTimeUtils {
         int days = 0;
         try {
             // a-b=c,a减b等于c,a称为被减数,b称为减数,c称为差
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");//年月日
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");//年月日
             Date minuendDate = sdf.parse(minuend);
             Date subtractionDate = sdf.parse(subtraction);
             Calendar c1 = Calendar.getInstance();

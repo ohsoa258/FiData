@@ -8,6 +8,7 @@ import com.fisk.dataaccess.dto.access.OperateTableDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
+import com.fisk.dataaccess.dto.table.TableVersionDTO;
 import com.fisk.dataaccess.service.ITableFields;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -61,7 +62,7 @@ public class TableFieldsController {
 
     @PostMapping("/delTableVersion")
     @ApiOperation(value = "删除表版本")
-    public ResultEntity<Object> delVersionData(@RequestParam("keyStr") String keyStr) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delVersionData(keyStr));
+    public ResultEntity<Object> delVersionData(@Validated @RequestBody TableVersionDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delVersionData(dto.getKeyStr()));
     }
 }

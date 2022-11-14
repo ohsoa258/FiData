@@ -44,7 +44,7 @@ public class SynchronizationSchedule implements SchedulingConfigurer {
                {
                    log.info("数据运维写入pg数据源到redis 开始");
                    //数据运维写入数据源到redis
-                   dataOpsDataSourceManageImpl.setDataOpsDataSource();
+                   dataOpsDataSourceManageImpl.setDataOpsDataSource_v1();
                    log.info("数据运维写入pg数据源到redis 结束");
                }
             }

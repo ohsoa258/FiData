@@ -37,7 +37,7 @@ public class PostgresConUtils {
             Class.forName(driver.getName());
             Connection conn = DriverManager.getConnection(url, user, password);
             // 获取数据库中所有表名称
-            List<String> tableNames = getTables(conn);
+            List<String> tableNames = getTablesPlus(conn);
             Statement st = conn.createStatement();
 
             list = new ArrayList<>();
@@ -46,7 +46,7 @@ public class PostgresConUtils {
 
             for (String tableName : tableNames) {
 
-                List<TableStructureDTO> colNames = getColNames(st, tableName);
+                List<TableStructureDTO> colNames = getColumns(st, tableName);
 
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(tableName);
@@ -146,7 +146,7 @@ public class PostgresConUtils {
         try {
             Class.forName(driver);
             Connection conn = DriverManager.getConnection(url, user, password);
-            tableNames = getTables(conn);
+            tableNames = getTablesPlus(conn);
             conn.close();
         } catch (ClassNotFoundException e) {
             System.out.println("找不到驱动程序类 ，加载驱动失败！");
@@ -171,7 +171,7 @@ public class PostgresConUtils {
             Connection conn = DriverManager.getConnection(url, user, password);
             Statement st = conn.createStatement();
             for (String tableName : tableNames) {
-                List<TableStructureDTO> colNames = getColNames(st, tableName);
+                List<TableStructureDTO> colNames = getColumns(st, tableName);
                 map.put(tableName, colNames);
             }
             st.close();
@@ -193,7 +193,7 @@ public class PostgresConUtils {
      * @param conn conn
      * @return 返回值
      */
-    public List<String> getTables(Connection conn) {
+    public List<String> getTablesPlus(Connection conn) {
         ArrayList<String> tablesList = null;
         try {
             DatabaseMetaData databaseMetaData = conn.getMetaData();
@@ -215,7 +215,41 @@ public class PostgresConUtils {
      *
      * @param tableName tableName
      */
-    public List<TableStructureDTO> getColNames(Statement st, String tableName) {
+    public List<TableStructureDTO> getColumns(Connection conn, String tableName) {
+        ResultSet rs = null;
+        List<TableStructureDTO> colNameList = null;
+        try {
+            Statement st = conn.createStatement();
+            rs = st.executeQuery("select * from " + tableName + " LIMIT 0;");
+            ResultSetMetaData metaData = rs.getMetaData();
+            int count = metaData.getColumnCount();
+            colNameList = new ArrayList<>();
+            for (int i = 1; i <= count; i++) {
+                TableStructureDTO tableStructureDTO = new TableStructureDTO();
+
+                // 字段名称
+                tableStructureDTO.fieldName = metaData.getColumnName(i);
+                // 字段类型
+                tableStructureDTO.fieldType = metaData.getColumnTypeName(i);
+                // 字段长度
+                tableStructureDTO.fieldLength = metaData.getColumnDisplaySize(i);
+
+                colNameList.add(tableStructureDTO);
+            }
+            rs.close();
+        } catch (SQLException e) {
+            log.error("【PostgresConUtils/getColumns】读取字段信息异常, ex", e);
+            throw new FkException(ResultEnum.PG_READ_FIELD_ERROR);
+        }
+        return colNameList;
+    }
+
+    /**
+     * 获取表中所有字段名称
+     *
+     * @param tableName tableName
+     */
+    public List<TableStructureDTO> getColumns(Statement st, String tableName) {
         ResultSet rs = null;
         List<TableStructureDTO> colNameList = null;
         try {
@@ -238,7 +272,7 @@ public class PostgresConUtils {
             }
             rs.close();
         } catch (SQLException e) {
-            log.error("【PostgresConUtils/getColNames】读取字段信息异常, ex", e);
+            log.error("【PostgresConUtils/getColumns】读取字段信息异常, ex", e);
             throw new FkException(ResultEnum.PG_READ_FIELD_ERROR);
         }
 

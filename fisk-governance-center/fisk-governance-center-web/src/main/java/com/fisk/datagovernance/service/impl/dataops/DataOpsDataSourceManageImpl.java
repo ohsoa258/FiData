@@ -14,10 +14,12 @@ import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
 import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
+import com.fisk.datagovernance.dto.dataops.GetDataOpsFieldSourceDTO;
 import com.fisk.datagovernance.dto.dataops.PostgreDTO;
 import com.fisk.datagovernance.entity.dataops.DataOpsLogPO;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.datagovernance.service.dataops.IDataOpsDataSourceManageService;
+import com.fisk.datagovernance.service.impl.dataquality.DataSourceConManageImpl;
 import com.fisk.datagovernance.vo.dataops.*;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
@@ -32,6 +34,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -64,7 +67,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
     private UserClient userClient;
 
     @Override
-    public ResultEntity<List<DataOpsSourceVO>> getDataOpsDataSource() {
+    public ResultEntity<List<DataOpsSourceVO>> getDataOpsTableSource() {
         List<DataOpsSourceVO> list = new ArrayList<>();
         try {
             Boolean exist = redisTemplate.hasKey(metaDataEntityKey);
@@ -86,8 +89,48 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
     }
 
     @Override
+    public ResultEntity<List<DataOpsTableFieldVO>> getDataOpsFieldSource(GetDataOpsFieldSourceDTO dto) {
+        List<DataOpsTableFieldVO> dataOpsTableFieldVOS = new ArrayList<>();
+        if (dto == null || dto.getDatasourceId() == 0 || StringUtils.isEmpty(dto.getTableName())) {
+            return ResultEntityBuild.buildData(ResultEnum.PARAMTER_NOTNULL, dataOpsTableFieldVOS);
+        }
+        List<PostgreDTO> postgreDTOList = getPostgreDTOList();
+        if (CollectionUtils.isEmpty(postgreDTOList)) {
+            return ResultEntityBuild.buildData(ResultEnum.DATA_OPS_CONFIG_EXISTS, dataOpsTableFieldVOS);
+        }
+        PostgreDTO postgreDTO = postgreDTOList.stream().filter(t -> t.getId() == dto.getDatasourceId()).findFirst().orElse(null);
+        if (postgreDTO == null) {
+            return ResultEntityBuild.buildData(ResultEnum.DATA_OPS_CONFIG_EXISTS, dataOpsTableFieldVOS);
+        }
+        PostgresConUtils postgresConUtils = new PostgresConUtils();
+        SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
+        Connection connection = DataSourceConManageImpl.getStatement(postgreDTO.getDataSourceTypeEnum(), postgreDTO.getSqlUrl(), postgreDTO.getSqlUsername(), postgreDTO.getSqlPassword());
+
+        List<TableStructureDTO> columns=null;
+        if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRESQL) {
+            columns  = postgresConUtils.getColumns(connection, dto.getTableName());
+        } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.SQLSERVER) {
+            columns= sqlServerPlusUtils.getColumns(connection, dto.getTableName(),null);
+        }
+        if (CollectionUtils.isEmpty(columns)){
+            return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataOpsTableFieldVOS);
+        }
+
+        List<DataOpsTableFieldVO> fieldVOList = new ArrayList<>();
+        columns.forEach(tableStructureDTO->{
+            DataOpsTableFieldVO dataOpsTableFieldVO = new DataOpsTableFieldVO();
+            dataOpsTableFieldVO.setFieldName(tableStructureDTO.getFieldName());
+            dataOpsTableFieldVO.setFieldType(tableStructureDTO.getFieldType());
+            dataOpsTableFieldVO.setFieldLength(tableStructureDTO.getFieldLength());
+            dataOpsTableFieldVO.setFieldDes(tableStructureDTO.getFieldDes());
+            fieldVOList.add(dataOpsTableFieldVO);
+        });
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataOpsTableFieldVOS);
+    }
+
+    @Override
     public ResultEntity<Object> reloadDataOpsDataSource() {
-        setDataOpsDataSource();
+        setDataOpsDataSource_v1();
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "已重新加载数据源");
     }
 
@@ -120,7 +163,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             if (postgreDTO == null) {
                 return ResultEntityBuild.buildData(ResultEnum.DATA_OPS_CONFIG_EXISTS, executeResultVO);
             }
-            conn = getConnection(postgreDTO.getDataSourceTypeEnum().getDriverName(),
+            conn = DataSourceConManageImpl.getStatement(postgreDTO.getDataSourceTypeEnum(),
                     postgreDTO.getSqlUrl(), postgreDTO.getSqlUsername(), postgreDTO.getSqlPassword());
             st = conn.createStatement();
             assert st != null;
@@ -323,6 +366,86 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         }
     }
 
+    public void setDataOpsDataSource_v1() {
+        log.info("setDataOpsDataSource_v1 开始");
+        List<DataOpsSourceVO> dataOpsSourceVOList = new ArrayList<>();
+        // 第一步：读取配置的数据源信息
+        List<PostgreDTO> postgreDTOList = getPostgreDTOList();
+        if (CollectionUtils.isEmpty(postgreDTOList)) {
+            log.error("setDataOpsDataSource_v1 数据源配置不存在");
+            return;
+        }
+        // 第二步：读取数据源下的库、表
+        PostgresConUtils postgresConUtils = new PostgresConUtils();
+        SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
+        try {
+            List<String> conIps = postgreDTOList.stream().map(PostgreDTO::getIp).distinct().collect(Collectors.toList());
+            for (String conIp : conIps) {
+                DataOpsSourceVO dataOpsSourceVO = null;
+                List<DataOpsDataBaseVO> dataOpsDataBaseVOS = new ArrayList<>();
+                for (PostgreDTO postgreDTO : postgreDTOList) {
+                    if (postgreDTO.getIp().equals(conIp)) {
+                        if (dataOpsSourceVO == null) {
+                            dataOpsSourceVO = new DataOpsSourceVO();
+                            dataOpsSourceVO.setConIp(postgreDTO.getIp());
+                            dataOpsSourceVO.setConType(postgreDTO.getDataSourceTypeEnum());
+                            dataOpsSourceVO.setConPort(postgreDTO.getPort());
+                        }
+                        List<DataOpsDataTableVO> dataOpsDataTableVOList = new ArrayList<>();
+                        List<DataOpsDataTableVO> tableVOList = new ArrayList<>();
+                        Connection connection = DataSourceConManageImpl.getStatement(postgreDTO.getDataSourceTypeEnum(), postgreDTO.getSqlUrl(), postgreDTO.getSqlUsername(), postgreDTO.getSqlPassword());
+                        if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRESQL) {
+                            // 表/字段结构
+                            List<String> tablesPlus = postgresConUtils.getTablesPlus(connection);
+                            tablesPlus.forEach(t -> {
+                                DataOpsDataTableVO dataOpsDataTableVO = new DataOpsDataTableVO();
+                                dataOpsDataTableVO.setTableFramework("");
+                                dataOpsDataTableVO.setTableName(t);
+                                tableVOList.add(dataOpsDataTableVO);
+                            });
+                        } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.SQLSERVER) {
+                            // 表/字段结构
+                            Map<String, String> tablesPlus = sqlServerPlusUtils.getTablesPlus(connection);
+                            if (tablesPlus != null && tablesPlus.size() > 0) {
+                                tablesPlus.forEach((key, value) -> {
+                                    DataOpsDataTableVO dataOpsDataTableVO = new DataOpsDataTableVO();
+                                    dataOpsDataTableVO.setTableFramework(value);
+                                    dataOpsDataTableVO.setTableName(key);
+                                    tableVOList.add(dataOpsDataTableVO);
+                                });
+                            }
+                        }
+                        if (CollectionUtils.isNotEmpty(tableVOList)) {
+                            // 增加排序
+                            tableVOList.sort(Comparator.comparing(DataOpsDataTableVO::getTableName));
+                        }
+                        DataOpsDataBaseVO dataOpsDataBaseVO = new DataOpsDataBaseVO();
+                        dataOpsDataBaseVO.setDatasourceId(postgreDTO.getId());
+                        dataOpsDataBaseVO.setConDbname(postgreDTO.getDbName());
+                        dataOpsDataBaseVO.setChildren(dataOpsDataTableVOList);
+                        dataOpsDataBaseVOS.add(dataOpsDataBaseVO);
+
+                        if (connection != null) {
+                            connection.close();
+                        }
+                    }
+                }
+                dataOpsSourceVO.setChildren(dataOpsDataBaseVOS);
+                dataOpsSourceVOList.add(dataOpsSourceVO);
+            }
+            if (CollectionUtils.isNotEmpty(dataOpsSourceVOList)) {
+                String dataOpsSourceJson = JSONArray.toJSON(dataOpsSourceVOList).toString();
+                // 生成目录加 ：
+                redisTemplate.opsForValue().set(metaDataEntityKey, dataOpsSourceJson);
+                log.info("setDataOpsDataSource_v1 元数据信息已写入redis");
+            }
+        } catch (Exception ex) {
+            log.error("setDataOpsDataSource_v1 执行异常：", ex);
+        } finally {
+            log.info("setDataOpsDataSource_v1 结束");
+        }
+    }
+
     /**
      * @return java.util.List<com.fisk.datagovernance.dto.dataops.PostgreDTO>
      * @description 读取pg配置文件转实体
@@ -361,21 +484,5 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             }
         });
         return dataBaseList;
-    }
-
-    public static Connection getConnection(String driver, String url, String username, String password) {
-        Connection conn = null;
-        try {
-            // 加载驱动类
-            Class.forName(driver);
-            conn = DriverManager.getConnection(url, username, password);
-        } catch (ClassNotFoundException e) {
-            System.out.println("找不到数据库驱动程序类 ，加载驱动失败！");
-            throw new FkException(ResultEnum.CREATE_PG_CONNECTION);
-        } catch (SQLException e) {
-            System.out.println("数据库连接失败！");
-            throw new FkException(ResultEnum.PG_CONNECT_ERROR);
-        }
-        return conn;
     }
 }

@@ -32,6 +32,6 @@ public class LicenceDTO {
      * 到期时间
      */
     @NotNull()
-    @ApiModelProperty(value = "到期时间，年月日格式")
+    @ApiModelProperty(value = "到期时间，年月日格式 例如：2023/01/01")
     public String expireTime;
 }

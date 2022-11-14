@@ -19,6 +19,12 @@ public class VerifyLicenceVO {
     public LicenceStateEnum licenceState;
 
     /**
+     * 许可证状态描述
+     */
+    @ApiModelProperty(value = "许可证状态描述")
+    public String licenceStateDescribe;
+
+    /**
      * 许可证过期时间
      */
     @ApiModelProperty(value = "许可证过期时间")

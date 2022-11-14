@@ -31,7 +31,7 @@ public class SqlServerPlusUtils {
      * @param tableName tableName
      * @return tableName中的表字段
      */
-    public List<TableStructureDTO> getColumnsName(Connection conn, String tableName, String tableFramework) {
+    public List<TableStructureDTO> getColumns(Connection conn, String tableName, String tableFramework) {
         List<TableStructureDTO> colNameList = null;
         try {
             colNameList = new ArrayList<>();
@@ -48,7 +48,7 @@ public class SqlServerPlusUtils {
             }
 
         } catch (Exception e) {
-            log.error("【getColumnsName】获取表字段报错, ex", e);
+            log.error("【getColumns】获取表字段报错, ex", e);
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
         }
         return colNameList;
@@ -65,7 +65,7 @@ public class SqlServerPlusUtils {
      * @params conn 连接驱动
      * @params dbName 数据库名
      */
-    public Map<String, String> getTablesPlus(Connection conn, String dbName) {
+    public Map<String, String> getTablesPlus(Connection conn) {
         Map<String, String> tableMap = new LinkedHashMap<>();
         try {
             Statement stmt = conn.createStatement();
@@ -150,7 +150,7 @@ public class SqlServerPlusUtils {
             list = new ArrayList<>();
 
             // 获取指定数据库所有表
-            Map<String, String> mapList = this.getTablesPlus(conn, dbName);
+            Map<String, String> mapList = this.getTablesPlus(conn);
 
             List<TablePyhNameDTO> finalList = list;
 
@@ -159,7 +159,7 @@ public class SqlServerPlusUtils {
             while (iterator.hasNext()) {
                 Map.Entry<String, String> entry = iterator.next();
                 // 根据表名获取字段
-                List<TableStructureDTO> columnsName = getColumnsName(conn, entry.getKey(), null);
+                List<TableStructureDTO> columnsName = getColumns(conn, entry.getKey(), null);
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(entry.getValue() + "." + entry.getKey());
                 tablePyhNameDTO.setFields(columnsName);

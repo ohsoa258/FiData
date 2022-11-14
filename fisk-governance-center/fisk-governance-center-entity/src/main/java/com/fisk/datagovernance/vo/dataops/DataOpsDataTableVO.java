@@ -20,6 +20,12 @@ public class DataOpsDataTableVO {
     public String tableName;
 
     /**
+     * 表架构名称
+     */
+    @ApiModelProperty(value = "表架构名称")
+    public String tableFramework;
+
+    /**
      * 表字段
      */
     @ApiModelProperty(value = "表字段")

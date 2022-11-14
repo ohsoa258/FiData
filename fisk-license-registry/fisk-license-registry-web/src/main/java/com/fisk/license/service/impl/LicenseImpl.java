@@ -36,7 +36,6 @@ public class LicenseImpl extends ServiceImpl<LicenseMapper, LicencePO> implement
     @Override
     public VerifyLicenceVO verifyCompanyLicenceByUrl(VerifyLicenceDTO dto) {
         VerifyLicenceVO verifyLicenceVO = new VerifyLicenceVO();
-
         if (dto == null || StringUtils.isEmpty(dto.getRelativePathUrl())) {
             return verifyLicenceVO;
         }
@@ -44,22 +43,28 @@ public class LicenseImpl extends ServiceImpl<LicenseMapper, LicencePO> implement
             LicencePO licencePO = baseMapper.selectById(1);
             if (licencePO == null || StringUtils.isEmpty(licencePO.getLicence())) {
                 verifyLicenceVO.setLicenceState(LicenceStateEnum.LICENCE_NONE);
+                verifyLicenceVO.setLicenceStateDescribe(LicenceStateEnum.LICENCE_NONE.getName());
                 return verifyLicenceVO;
             }
             if (licencePO.getDelFlag() == 0) {
                 verifyLicenceVO.setLicenceState(LicenceStateEnum.LICENCE_DISABLED);
+                verifyLicenceVO.setLicenceStateDescribe(LicenceStateEnum.LICENCE_DISABLED.getName());
                 return verifyLicenceVO;
             }
             LicenceDTO licenceDTO = decryptCompanyLicense(licencePO.getLicence());
             if (licenceDTO == null) {
                 verifyLicenceVO.setLicenceState(LicenceStateEnum.LICENCE_DECRYPT_FAIL);
+                verifyLicenceVO.setLicenceStateDescribe(LicenceStateEnum.LICENCE_DECRYPT_FAIL.getName());
                 return verifyLicenceVO;
             }
-            String toDateTime = DateTimeUtils.getNowToShortDate();
+            String toDateTime = DateTimeUtils.getNowToShortDate("yyyy/MM/dd");
             String expireTime = licenceDTO.getExpireTime();
-            int i = expireTime.compareTo(toDateTime);
+            verifyLicenceVO.setLicenceExpireTime(expireTime);
+            // 必须为严格的年月日格式，否则无法对比时间 2023/01/01
+            int i = toDateTime.compareTo(expireTime);
             if (i > 0) {
                 verifyLicenceVO.setLicenceState(LicenceStateEnum.LICENCE_EXPIRED);
+                verifyLicenceVO.setLicenceStateDescribe(LicenceStateEnum.LICENCE_EXPIRED.getName());
                 return verifyLicenceVO;
             }
             boolean contains = RegexUtils.isContains(licenceDTO.getMenus(), dto.getRelativePathUrl());
@@ -72,6 +77,7 @@ public class LicenseImpl extends ServiceImpl<LicenseMapper, LicencePO> implement
             log.error("【verifyCompanyLicenceByUrl】 ex：" + ex);
             verifyLicenceVO.setLicenceState(LicenceStateEnum.LICENCE_DECRYPT_ERROR);
         }
+        verifyLicenceVO.setLicenceStateDescribe(verifyLicenceVO.getLicenceState().getName());
         return verifyLicenceVO;
     }
 
