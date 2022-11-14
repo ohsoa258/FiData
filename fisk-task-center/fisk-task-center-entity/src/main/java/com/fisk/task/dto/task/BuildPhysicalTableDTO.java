@@ -73,4 +73,10 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
      */
     public List<DeltaTimeDTO> deltaTimes;
 
+
+    /**
+     * 获取版本的语句
+     */
+    public String generateVersionSql;
+
 }
