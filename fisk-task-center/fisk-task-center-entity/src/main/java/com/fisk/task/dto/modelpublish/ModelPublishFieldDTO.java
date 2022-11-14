@@ -55,4 +55,8 @@ public class ModelPublishFieldDTO {
      * 关联维度表字段名称
      */
     public String associateDimensionFieldName;
+    /**
+     * 字段精度
+     */
+    public Integer fieldPrecision;
 }

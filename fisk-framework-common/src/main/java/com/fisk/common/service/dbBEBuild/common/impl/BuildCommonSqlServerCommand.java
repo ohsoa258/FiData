@@ -1,11 +1,10 @@
 package com.fisk.common.service.dbBEBuild.common.impl;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
-import com.alibaba.druid.sql.ast.statement.SQLSelect;
-import com.alibaba.druid.sql.ast.statement.SQLSelectItem;
-import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
-import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
+import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr;
+import com.alibaba.druid.sql.ast.statement.*;
 import com.alibaba.druid.sql.dialect.sqlserver.visitor.SQLServerSchemaStatVisitor;
+import com.alibaba.druid.stat.TableStat;
 import com.alibaba.druid.util.JdbcConstants;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.response.ResultEnum;
@@ -15,9 +14,12 @@ import com.fisk.common.service.dbBEBuild.common.IBuildCommonSqlCommand;
 import com.fisk.common.service.dbBEBuild.common.dto.DruidFieldInfoDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author JianWenYang
@@ -114,14 +116,24 @@ public class BuildCommonSqlServerCommand implements IBuildCommonSqlCommand {
         //连接druid驱动
         List<SQLStatement> stmtList = BuildCommonHelper.connectionStatement(dbType, sql);
         try {
+            List<String> tableNameList = new ArrayList<>();
             //解析sql，获取表名
             for (SQLStatement sqlStatement : stmtList) {
                 SQLServerSchemaStatVisitor visitor = new SQLServerSchemaStatVisitor();
                 sqlStatement.accept(visitor);
 
+                //获取表名
+                Map<TableStat.Name, TableStat> tables = visitor.getTables();
+                Set<TableStat.Name> tableNameSet = tables.keySet();
+                for (TableStat.Name name : tableNameSet) {
+                    String tableName = name.getName();
+                    if (tableName != null && tableName.length() > 0 && tableName.trim().length() > 0) {
+                        tableNameList.add(tableName);
+                    }
+                }
+
                 //获取字段以及别名
                 List<DruidFieldInfoDTO> fieldList = new ArrayList<>();
-                //Set<String> set = new HashSet<>();
                 List<SQLSelectItem> SourceBName = ((SQLSelectQueryBlock) ((SQLSelect) ((SQLSelectStatement) sqlStatement)
                         .getSelect())
                         .getQuery())
@@ -129,26 +141,27 @@ public class BuildCommonSqlServerCommand implements IBuildCommonSqlCommand {
 
                 for (SQLSelectItem item : SourceBName) {
                     DruidFieldInfoDTO fs = new DruidFieldInfoDTO();
-                    /*if(item.getExpr() instanceof SQLPropertyExpr){
+                    if (item.getExpr() instanceof SQLPropertyExpr) {
                         SQLPropertyExpr itemEx = (SQLPropertyExpr) item.getExpr();
                         SQLExprTableSource TableSource = (SQLExprTableSource) itemEx.getResolvedOwnerObject();
                         fs.tableName = TableSource.getExpr().toString();
-                        if (fs.tableName.indexOf(".") > 1) {
-                            String[] split = fs.tableName.split(".");
-                            fs.tableName = split[1];
-                            fs.schema = split[0];
-                        }
+                        fs.fieldName = itemEx.getName();
                         //是否存在别名
                         if (!StringUtils.isEmpty(item.getAlias())) {
                             fs.alias = item.getAlias();
                         }
-
-                    }else {
+                    } else {
+                        fs.tableName = tableNameList.get(0);
                         fs.fieldName = item.getAlias();
-                        fs.logic = item.getExpr().toString();
 
                     }
-                    fieldList.add(fs);*/
+                    fs.logic = item.getExpr().toString();
+                    if (fs.tableName.indexOf(".") > 1) {
+                        String[] split = fs.tableName.split(".");
+                        fs.tableName = split[1];
+                        fs.schema = split[0];
+                    }
+                    fieldList.add(fs);
                 }
                 ////System.out.println("解析结果："+JSON.toJSONString(fieldList));
                 log.info("解析结果：{}", JSON.toJSONString(fieldList));
@@ -162,21 +175,24 @@ public class BuildCommonSqlServerCommand implements IBuildCommonSqlCommand {
     }
 
     @Override
-    public String buildColumnInfo(String dbName, String tableName) {
+    public String buildColumnInfo(String schemaName, String tableName) {
         StringBuilder str = new StringBuilder();
         str.append("SELECT ");
         str.append("TABLE_NAME AS table_name,");
         str.append("CHARACTER_MAXIMUM_LENGTH AS column_length,");
         str.append("COLUMN_NAME AS column_name,");
         str.append("DATA_TYPE AS data_type,");
-        str.append("TABLE_SCHEMA AS schema ");
+        str.append("TABLE_SCHEMA AS schema_name ");
         str.append("FROM ");
         str.append("INFORMATION_SCHEMA.COLUMNS ");
         str.append("WHERE ");
         str.append("TABLE_NAME in");
         str.append("(");
         str.append(tableName);
-        str.append(")");
+        str.append(") ");
+        str.append("AND TABLE_SCHEMA='");
+        str.append(schemaName);
+        str.append("'");
         return str.toString();
     }
 
