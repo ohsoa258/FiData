@@ -391,7 +391,6 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                             dataOpsSourceVO.setConType(postgreDTO.getDataSourceTypeEnum());
                             dataOpsSourceVO.setConPort(postgreDTO.getPort());
                         }
-                        List<DataOpsDataTableVO> dataOpsDataTableVOList = new ArrayList<>();
                         List<DataOpsDataTableVO> tableVOList = new ArrayList<>();
                         Connection connection = DataSourceConManageImpl.getStatement(postgreDTO.getDataSourceTypeEnum(), postgreDTO.getSqlUrl(), postgreDTO.getSqlUsername(), postgreDTO.getSqlPassword());
                         if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRESQL) {
@@ -422,7 +421,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                         DataOpsDataBaseVO dataOpsDataBaseVO = new DataOpsDataBaseVO();
                         dataOpsDataBaseVO.setDatasourceId(postgreDTO.getId());
                         dataOpsDataBaseVO.setConDbname(postgreDTO.getDbName());
-                        dataOpsDataBaseVO.setChildren(dataOpsDataTableVOList);
+                        dataOpsDataBaseVO.setChildren(tableVOList);
                         dataOpsDataBaseVOS.add(dataOpsDataBaseVO);
 
                         if (connection != null) {
