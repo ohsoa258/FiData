@@ -76,9 +76,11 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("字符串型", "VARCHAR");
         jsonObject.put("整型", "INT");
+        jsonObject.put("大整型", "BIGINT");
         jsonObject.put("时间戳类型", "TIMESTAMP");
         jsonObject.put("浮点型", "FLOAT");
         jsonObject.put("文本型", "TEXT");
+        jsonObject.put("大文本型", "MEDIUMTEXT");
         return jsonObject;
     }
 
@@ -96,12 +98,17 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
             case INT:
             case BIT:
             case SMALLINT:
-            case BIGINT:
                 data[0] = MySqlTypeEnum.INT.getName();
+                break;
+            case BIGINT:
+                data[0] = MySqlTypeEnum.BIGINT.getName();
                 break;
             case NUMERIC:
             case DECIMAL:
                 data[0] = MySqlTypeEnum.FLOAT.getName();
+                break;
+            case MEDIUMTEXT:
+                data[0] = MySqlTypeEnum.MEDIUMTEXT.getName();
                 break;
             case TEXT:
                 data[0] = MySqlTypeEnum.TEXT.getName();
@@ -132,13 +139,16 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
             case INT:
             case BIT:
             case SMALLINT:
-            case BIGINT:
                 data[0] = PgTypeEnum.INT4.getName();
+                break;
+            case BIGINT:
+                data[0] = PgTypeEnum.INT8.getName();
                 break;
             case NUMERIC:
             case DECIMAL:
                 data[0] = PgTypeEnum.FLOAT4.getName();
                 break;
+            case MEDIUMTEXT:
             case TEXT:
                 data[0] = PgTypeEnum.TEXT.getName();
                 break;
@@ -150,6 +160,48 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
                 break;
             default:
                 data[0] = PgTypeEnum.VARCHAR.getName();
+        }
+        return data;
+    }
+
+    /**
+     * mySql转SqlServer
+     *
+     * @param dto
+     * @return
+     */
+    private String[] mySqlConversionSqlServer(DataTypeConversionDTO dto) {
+        MySqlTypeEnum typeEnum = MySqlTypeEnum.getValue(dto.dataType);
+        String[] data = new String[2];
+        data[1] = dto.dataLength;
+        switch (typeEnum) {
+            case INT:
+            case BIT:
+            case SMALLINT:
+                data[0] = SqlServerTypeEnum.INT.getName();
+                break;
+            case BIGINT:
+                data[0] = SqlServerTypeEnum.BIGINT.getName();
+                break;
+            case NUMERIC:
+            case DECIMAL:
+                data[0] = SqlServerTypeEnum.FLOAT.getName();
+                break;
+            case MEDIUMTEXT:
+            case TEXT:
+                data[0] = SqlServerTypeEnum.TEXT.getName();
+                break;
+            case DATE:
+            case TIMESTAMP:
+            case TIME:
+            case DATETIME:
+                data[0] = SqlServerTypeEnum.TIMESTAMP.getName();
+                break;
+            default:
+                data[0] = SqlServerTypeEnum.NVARCHAR.getName();
+                if (Integer.parseInt(dto.dataLength) > sql_server_max_length) {
+                    data[1] = sql_server_max_length.toString();
+                }
         }
         return data;
     }
@@ -175,6 +227,7 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
             case DECIMAL:
                 data[0] = OracleTypeEnum.NUMBER.getName();
                 break;
+            case MEDIUMTEXT:
             case TEXT:
                 data[0] = OracleTypeEnum.CLOB.getName();
                 break;
@@ -186,45 +239,6 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
                 break;
             default:
                 data[0] = OracleTypeEnum.VARCHAR2.getName();
-        }
-        return data;
-    }
-
-    /**
-     * mySql转SqlServer
-     *
-     * @param dto
-     * @return
-     */
-    private String[] mySqlConversionSqlServer(DataTypeConversionDTO dto) {
-        MySqlTypeEnum typeEnum = MySqlTypeEnum.getValue(dto.dataType);
-        String[] data = new String[2];
-        data[1] = dto.dataLength;
-        switch (typeEnum) {
-            case INT:
-            case BIT:
-            case SMALLINT:
-            case BIGINT:
-                data[0] = SqlServerTypeEnum.INT.getName();
-                break;
-            case NUMERIC:
-            case DECIMAL:
-                data[0] = SqlServerTypeEnum.FLOAT.getName();
-                break;
-            case TEXT:
-                data[0] = SqlServerTypeEnum.TEXT.getName();
-                break;
-            case DATE:
-            case TIMESTAMP:
-            case TIME:
-            case DATETIME:
-                data[0] = SqlServerTypeEnum.TIMESTAMP.getName();
-                break;
-            default:
-                data[0] = SqlServerTypeEnum.NVARCHAR.getName();
-                if (Integer.parseInt(dto.dataLength) > sql_server_max_length) {
-                    data[1] = sql_server_max_length.toString();
-                }
         }
         return data;
     }

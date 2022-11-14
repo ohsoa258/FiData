@@ -148,7 +148,8 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
     public JSONObject dataTypeList() {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("字符串型", "VARCHAR");
-        jsonObject.put("整型", "INT");
+        jsonObject.put("整型", "INT4");
+        jsonObject.put("大整型", "INT8");
         jsonObject.put("时间戳类型", "TIMESTAMP");
         jsonObject.put("浮点型", "FLOAT4");
         jsonObject.put("文本型", "TEXT");
@@ -168,11 +169,13 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
         switch (typeEnum) {
             case INT2:
             case INT4:
-            case INT8:
             case BIT:
             case FLOAT4:
             case FLOAT8:
                 data[0] = SqlServerTypeEnum.INT.getName();
+                break;
+            case INT8:
+                data[0] = SqlServerTypeEnum.BIGINT.getName();
                 break;
             case NUMERIC:
             case DECIMAL:
@@ -209,10 +212,12 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
         switch (typeEnum) {
             case INT2:
             case INT4:
-            case INT8:
             case FLOAT4:
             case FLOAT8:
-                data[0] = FiDataDataTypeEnum.INT.getName();
+                data[0] = PgTypeEnum.INT4.getName();
+                break;
+            case INT8:
+                data[0] = PgTypeEnum.INT8.getName();
                 break;
             case TEXT:
                 data[0] = PgTypeEnum.TEXT.getName();
@@ -284,11 +289,13 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
         switch (typeEnum) {
             case INT2:
             case INT4:
-            case INT8:
             case BIT:
             case FLOAT4:
             case FLOAT8:
                 data[0] = MySqlTypeEnum.INT.getName();
+                break;
+            case INT8:
+                data[0] = MySqlTypeEnum.BIGINT.getName();
                 break;
             case DECIMAL:
             case NUMERIC:

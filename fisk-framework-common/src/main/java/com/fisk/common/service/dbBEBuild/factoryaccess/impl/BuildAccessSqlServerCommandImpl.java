@@ -164,6 +164,7 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("字符串型", "NVARCHAR");
         jsonObject.put("整型", "INT");
+        jsonObject.put("大整型", "BIGINT");
         jsonObject.put("时间戳类型", "TIMESTAMP");
         jsonObject.put("浮点型", "FLOAT");
         jsonObject.put("文本型", "TEXT");
@@ -183,8 +184,10 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
         switch (typeEnum) {
             case INT:
             case SMALLINT:
-            case BIGINT:
                 data[0] = PgTypeEnum.INT4.getName();
+                break;
+            case BIGINT:
+                data[0] = PgTypeEnum.INT8.getName();
                 break;
             case TEXT:
                 data[0] = PgTypeEnum.TEXT.getName();
@@ -218,8 +221,10 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
         switch (typeEnum) {
             case INT:
             case SMALLINT:
-            case BIGINT:
                 data[0] = SqlServerTypeEnum.INT.getName();
+                break;
+            case BIGINT:
+                data[0] = SqlServerTypeEnum.BIGINT.getName();
                 break;
             case TEXT:
                 data[0] = SqlServerTypeEnum.TEXT.getName();
@@ -256,8 +261,10 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
         switch (typeEnum) {
             case INT:
             case SMALLINT:
-            case BIGINT:
                 data[0] = MySqlTypeEnum.INT.getName();
+                break;
+            case BIGINT:
+                data[0] = MySqlTypeEnum.BIGINT.getName();
                 break;
             case TEXT:
                 data[0] = MySqlTypeEnum.TEXT.getName();
