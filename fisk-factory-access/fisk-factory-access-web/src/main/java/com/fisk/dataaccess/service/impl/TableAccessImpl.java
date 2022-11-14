@@ -552,7 +552,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             FieldNameDTO dto = new FieldNameDTO();
             dto.sourceTableName = metaData.getTableName(i);
             dto.sourceFieldName = metaData.getColumnLabel(i);
-            dto.sourceFieldType = metaData.getColumnTypeName(i);
+            dto.sourceFieldType = metaData.getColumnTypeName(i).toUpperCase();
             dto.sourceFieldPrecision = metaData.getScale(i);
             dto.fieldName = metaData.getColumnLabel(i);
             String tableName = metaData.getTableName(i) + "key";
