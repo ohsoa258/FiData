@@ -183,7 +183,6 @@ public class KafkaConsumer {
 
     //任务发布中心,这里只用来存放reids
     @KafkaListener(topics = "my-topic", containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog
     public void consumer(String message, Acknowledgment ack) {
         iPipelineTaskPublishCenter.msg(message, ack);
     }
