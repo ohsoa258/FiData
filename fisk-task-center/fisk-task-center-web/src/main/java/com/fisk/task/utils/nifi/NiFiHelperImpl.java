@@ -5,9 +5,11 @@ import com.davis.client.ApiException;
 import com.davis.client.api.ProcessorsApi;
 import com.davis.client.model.*;
 import com.fisk.common.core.baseObject.entity.BusinessResult;
+import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.task.FuncNameEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
+import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.core.enums.task.nifi.ControllerServiceTypeEnum;
 import com.fisk.common.core.enums.task.nifi.ProcessorTypeEnum;
@@ -27,8 +29,10 @@ import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.daconfig.AssociatedConditionDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.nifi.FunnelDTO;
 import com.fisk.task.dto.nifi.ProcessorRunStatusEntity;
@@ -66,6 +70,7 @@ import org.springframework.web.client.RestTemplate;
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
 import java.sql.DriverManager;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -102,6 +107,8 @@ public class NiFiHelperImpl implements INiFiHelper {
     private String nifiPassword;
     @Resource
     public RedisUtil redisUtil;
+    @Resource
+    PublishTaskController pc;
 
 
     @Override
@@ -1611,15 +1618,21 @@ public class NiFiHelperImpl implements INiFiHelper {
                 ProcessIds.add(tableNifiSettingPO.queryIncrementProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertDataToJsonProcessorId);
                 ProcessIds.add(tableNifiSettingPO.evaluateTimeVariablesProcessorId);
-                //---------------------------------------
                 ProcessIds.add(tableNifiSettingPO.queryStratTimeProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertStratTimeToJsonProcessorId);
                 ProcessIds.add(tableNifiSettingPO.setStratTimeProcessorId);
                 ProcessIds.add(tableNifiSettingPO.queryEndTimeProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertEndTimeToJsonProcessorId);
                 ProcessIds.add(tableNifiSettingPO.setEndTimeProcessorId);
-                //-----------------------------------------
                 ProcessIds.add(tableNifiSettingPO.putLogToConfigDbProcessorId);
+                //---------------------------------------------------------------
+                ProcessIds.add(tableNifiSettingPO.queryVersionProcessorId);
+                ProcessIds.add(tableNifiSettingPO.convertVersionToJsonProcessorId);
+                ProcessIds.add(tableNifiSettingPO.setVersionProcessorId);
+                ProcessIds.add(tableNifiSettingPO.replaceTextForVersionProcessId);
+                ProcessIds.add(tableNifiSettingPO.invokeHttpForVersionProcessorId);
+                //---------------------------------------------------------------
+
                 ProcessIds.add(tableNifiSettingPO.executeTargetDeleteProcessorId);
                 ProcessIds.add(tableNifiSettingPO.replaceTextForFtpProcessId);
                 ProcessIds.add(tableNifiSettingPO.invokeHttpForFtpProcessorId);
@@ -2169,15 +2182,23 @@ public class NiFiHelperImpl implements INiFiHelper {
     @Override
     public void immediatelyStart(TableNifiSettingDTO tableNifiSettingDTO) {
         try {
-            TableNifiSettingPO tableNifiSetting = tableNifiSettingService.getByTableId(tableNifiSettingDTO.tableAccessId, tableNifiSettingDTO.type);
-            ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(tableNifiSetting.dispatchComponentId);
-            enabledProcessor(tableNifiSetting.tableComponentId, processor);
-            com.davis.client.model.ProcessorRunStatusEntity processorRunStatusEntity = new com.davis.client.model.ProcessorRunStatusEntity();
-            processorRunStatusEntity.setDisconnectedNodeAcknowledged(false);
-            processorRunStatusEntity.setRevision(processor.getRevision());
-            processorRunStatusEntity.setState(com.davis.client.model.ProcessorRunStatusEntity.StateEnum.STOPPED);
-            NifiHelper.getProcessorsApi().updateRunStatus(processor.getId(), processorRunStatusEntity);
-        } catch (ApiException e) {
+            TableNifiSettingPO dto = tableNifiSettingService.getByTableId( tableNifiSettingDTO.tableAccessId, tableNifiSettingDTO.type);
+            KafkaReceiveDTO kafkaRkeceiveDTO = new KafkaReceiveDTO();
+            String topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type + "." + dto.appId + "." + dto.id;
+            int value = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
+            if (Objects.equals(value, OlapTableEnum.KPI)) {
+                topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.KPI.getValue() + "." + dto.appId + "." + dto.id;
+            }
+            kafkaRkeceiveDTO.topic = topicName;
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            kafkaRkeceiveDTO.start_time = simpleDateFormat.format(new Date());
+            kafkaRkeceiveDTO.pipelTaskTraceId = UUID.randomUUID().toString();
+            kafkaRkeceiveDTO.fidata_batch_code = kafkaRkeceiveDTO.pipelTaskTraceId;
+            kafkaRkeceiveDTO.pipelStageTraceId = UUID.randomUUID().toString();
+            kafkaRkeceiveDTO.ifTaskStart = true;
+            kafkaRkeceiveDTO.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
+            pc.universalPublish(kafkaRkeceiveDTO);
+        } catch (Exception e) {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
         }
     }

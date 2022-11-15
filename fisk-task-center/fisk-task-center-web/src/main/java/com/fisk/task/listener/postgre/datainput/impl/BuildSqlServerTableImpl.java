@@ -68,10 +68,10 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             }
 
         });
-        stgSql.append("fi_createtime varchar(50) DEFAULT (format(GETDATE(),'yyyy-MM-dd HH:mm:ss') ),fi_updatetime varchar(50),fi_enableflag varchar(50)," +
+        stgSql.append("fi_createtime varchar(50) DEFAULT (format(GETDATE(),'yyyy-MM-dd HH:mm:ss') ),fi_updatetime varchar(50),fi_version varchar(50),fi_enableflag varchar(50)," +
                 "fi_error_message varchar(250),fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3'," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT (newid())");
 
-        sqlFileds.append("fi_createtime varchar(50) DEFAULT (format(GETDATE(),'yyyy-MM-dd HH:mm:ss')),fi_updatetime varchar(50),fidata_batch_code varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT (newid())");
+        sqlFileds.append("fi_createtime varchar(50) DEFAULT (format(GETDATE(),'yyyy-MM-dd HH:mm:ss')),fi_updatetime varchar(50),fi_version varchar(50),fidata_batch_code varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT (newid())");
         String havePk = pksql.toString();
         sqlFileds.append(")");
         stgSql.append(");");
