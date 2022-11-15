@@ -656,11 +656,12 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         //表
         List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
         MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
-        table.contact_info = "";
+        //table.contact_info = "";
         table.description = dimension.dimensionDesc;
         table.name = dimension.dimensionTabName;
         table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dataModelType + "_" + dimension.id;
         table.comment = String.valueOf(dimension.businessId);
+        table.owner = dimension.createUser;
         //字段
         List<MetaDataColumnAttributeDTO> columnList = new ArrayList<>();
         DimensionAttributeListDTO dimensionAttributeList = dimensionAttributeImpl.getDimensionAttributeList((int) dimension.id);
@@ -671,6 +672,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
             column.description = field.dimensionFieldDes;
             column.name = field.dimensionFieldEnName;
             column.qualifiedName = table.qualifiedName + "_" + field.id;
+            column.owner = table.owner;
             columnList.add(column);
         }
         table.columnList = columnList;
@@ -716,6 +718,17 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         dbList.add(db);
         data.dbList = dbList;
         return data;
+    }
+
+    @Override
+    public DimensionDTO getDimensionByName(String tableName) {
+        QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(DimensionPO::getDimensionTabName, tableName);
+        DimensionPO po = mapper.selectOne(queryWrapper);
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return DimensionMap.INSTANCES.poToDto(po);
     }
 
 }

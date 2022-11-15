@@ -49,9 +49,18 @@ public interface IDimensionFolder {
 
     /**
      * 批量发布维度文件夹
+     *
      * @param dto
      * @return
      */
     ResultEnum batchPublishDimensionFolder(DimensionFolderPublishQueryDTO dto);
+
+    /**
+     * 根据维度表名获取维度文件夹详情
+     *
+     * @param tableName
+     * @return
+     */
+    DimensionFolderDTO getDimensionFolderByTableName(String tableName);
 
 }

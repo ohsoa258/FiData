@@ -21,6 +21,7 @@ import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaQueryTableDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaTableDetailDTO;
+import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -307,5 +308,13 @@ public interface DataModelClient {
     @ApiOperation(value = "获取业务域下拉列表")
     ResultEntity<List<AppBusinessInfoDTO>> getBusinessAreaList();
 
+    /**
+     * 根据维度名称获取维度文件夹详情
+     *
+     * @param tableName
+     * @return
+     */
+    @GetMapping("/dimensionFolder/getDimensionFolderByTableName")
+    ResultEntity<DimensionFolderDTO> getDimensionFolderByTableName(String tableName);
 
 }

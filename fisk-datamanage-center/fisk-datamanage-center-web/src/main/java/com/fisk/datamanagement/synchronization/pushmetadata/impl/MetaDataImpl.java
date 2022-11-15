@@ -37,6 +37,7 @@ import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceFieldDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
 import com.fisk.datamodel.enums.DataModelTableTypeEnum;
@@ -673,11 +674,27 @@ public class MetaDataImpl implements IMetaData {
                     data.typeName = data.typeName + "_" + first.get().appAbbreviation;
                 }
             } else if (DataSourceConfigEnum.DMP_DW.getValue() == sourceData.get().id) {
-                /*if ("dim_".equals(tableName.substring(0, 4))) {
-                    data.typeName = "维度";
-                } else {
-                    data.typeName = "业务过程";
-                }*/
+                //获取所有业务域
+                ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
+                if (businessAreaList.code != ResultEnum.SUCCESS.getCode()) {
+                    return;
+                }
+                //判断是否为公共维度
+                if ("dim_".equals(tableName.substring(0, 4))) {
+                    ResultEntity<DimensionFolderDTO> dimensionFolder = dataModelClient.getDimensionFolderByTableName(tableName);
+                    if (dimensionFolder.code != ResultEnum.SUCCESS.getCode()) {
+                        return;
+                    }
+                    //共享维度关联所有分析指标业务分类
+                    if (dimensionFolder.data.share) {
+                        batchAssociateClassification(tableGuid, businessAreaList.data);
+                    }
+                }
+                Optional<AppBusinessInfoDTO> first = businessAreaList.data.stream().filter(e -> e.id == Long.parseLong(comment)).findFirst();
+                if (!first.isPresent()) {
+                    return;
+                }
+                data.typeName = first.get().name;
             }
             dto.classification = data;
             classification.classificationAddAssociatedEntity(dto);
@@ -685,6 +702,24 @@ public class MetaDataImpl implements IMetaData {
             log.error("associatedClassification ex:", e);
         }
 
+    }
+
+    /**
+     * 公共维度表批量关联业务分类
+     *
+     * @param tableGuid
+     * @param businessAreaList
+     */
+    public void batchAssociateClassification(String tableGuid, List<AppBusinessInfoDTO> businessAreaList) {
+        for (AppBusinessInfoDTO item : businessAreaList) {
+            ClassificationAddEntityDTO dto = new ClassificationAddEntityDTO();
+            dto.entityGuids = new ArrayList<>();
+            dto.entityGuids.add(tableGuid);
+            ClassificationDTO data = new ClassificationDTO();
+            data.typeName = item.name;
+            dto.classification = data;
+            classification.classificationAddAssociatedEntity(dto);
+        }
     }
 
     /**

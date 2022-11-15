@@ -64,4 +64,10 @@ public class DimensionFolderController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.batchPublishDimensionFolder(dto));
     }
 
+    @ApiOperation("根据维度名称获取维度文件夹详情")
+    @GetMapping("/getDimensionFolderByTableName")
+    public ResultEntity<DimensionFolderDTO> getDimensionFolderByTableName(String tableName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionFolderByTableName(tableName));
+    }
+
 }

@@ -751,28 +751,6 @@ public class BusinessAreaImpl
         return null;
     }
 
-/*    private List<FiDataMetaDataTreeDTO> buildChildren(String guid, String dourceType) {
-
-        List<FiDataMetaDataTreeDTO> businessTreeList = new ArrayList<>();
-
-        // 第二层: 业务域总目录
-        FiDataMetaDataTreeDTO businessTreeDto = new FiDataMetaDataTreeDTO();
-        String businessGuid = UUID.randomUUID().toString();
-        businessTreeDto.setId(businessGuid);
-        businessTreeDto.setParentId(guid);
-        businessTreeDto.setLabel("业务域");
-        businessTreeDto.setLabelAlias("业务域");
-        businessTreeDto.setLevelType(LevelTypeEnum.FOLDER);
-
-        List<BusinessAreaPO> businessPoList = this.query().orderByDesc("create_time").list();
-
-        // 业务域子级
-        businessTreeDto.setChildren(buildBusinessChildren(guid, businessPoList, dourceType));
-        businessTreeList.add(businessTreeDto);
-
-        return businessTreeList;
-    }*/
-
     /**
      * 构建业务域子级
      *
