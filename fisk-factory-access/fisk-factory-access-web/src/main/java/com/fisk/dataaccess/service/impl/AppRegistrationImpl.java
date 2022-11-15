@@ -1437,7 +1437,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         case SQLSERVER:
                         case ORACLE:
                         case POSTGRESQL:
-
+                        case FTP:
                             List<FiDataMetaDataTreeDTO> tableTreeList = this.tableAccessImpl.query()
                                     .eq("app_id", app.id)
                                     .orderByDesc("create_time")
