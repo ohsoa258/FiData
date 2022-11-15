@@ -16,7 +16,6 @@ import com.fisk.datamanagement.service.IDataAssets;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -39,8 +38,6 @@ public class DataAssetsImpl implements IDataAssets {
     GenerateCondition generateCondition;
     @Resource
     EntityImpl entity;
-    @Resource
-    private RedisTemplate redisTemplate;
 
     @Resource
     UserClient userClient;
@@ -51,17 +48,8 @@ public class DataAssetsImpl implements IDataAssets {
         Connection conn = null;
         Statement st = null;
         try {
-            JSONObject instanceEntity = null;
-            Boolean exist = redisTemplate.hasKey("metaDataEntityData:" + dto.instanceGuid);
-            if (exist) {
-                String datas = redisTemplate.opsForValue().get("metaDataEntityData:" + dto.instanceGuid).toString();
-                instanceEntity = JSON.parseObject(datas);
-            } else {
-                entity.setRedis(dto.instanceGuid);
-                String datas = redisTemplate.opsForValue().get("metaDataEntityData:" + dto.instanceGuid).toString();
-                instanceEntity = JSON.parseObject(datas);
-            }
-
+            //获取实例配置信息
+            JSONObject instanceEntity = this.entity.getEntity(dto.instanceGuid);
             JSONObject entity = JSON.parseObject(instanceEntity.getString("entity"));
             JSONObject attributes = JSON.parseObject(entity.getString("attributes"));
             String hostname = attributes.getString("hostname");
