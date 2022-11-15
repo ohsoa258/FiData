@@ -314,7 +314,7 @@ public interface DataModelClient {
      * @param tableName
      * @return
      */
-    @GetMapping("/dimensionFolder/getDimensionFolderByTableName")
-    ResultEntity<DimensionFolderDTO> getDimensionFolderByTableName(String tableName);
+    @PostMapping("/dimensionFolder/getDimensionFolderByTableName")
+    ResultEntity<DimensionFolderDTO> getDimensionFolderByTableName(@Validated @RequestBody String tableName);
 
 }

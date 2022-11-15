@@ -65,8 +65,8 @@ public class DimensionFolderController {
     }
 
     @ApiOperation("根据维度名称获取维度文件夹详情")
-    @GetMapping("/getDimensionFolderByTableName")
-    public ResultEntity<DimensionFolderDTO> getDimensionFolderByTableName(String tableName) {
+    @PostMapping("/getDimensionFolderByTableName")
+    public ResultEntity<DimensionFolderDTO> getDimensionFolderByTableName(@Validated @RequestBody String tableName) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionFolderByTableName(tableName));
     }
 

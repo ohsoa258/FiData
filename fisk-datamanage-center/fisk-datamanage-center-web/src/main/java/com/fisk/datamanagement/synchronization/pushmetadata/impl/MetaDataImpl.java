@@ -636,6 +636,11 @@ public class MetaDataImpl implements IMetaData {
         return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_COLUMN, dto);
     }
 
+    @Override
+    public void test() {
+        associatedClassification("138bf87f-895a-408b-b16e-954f9388494a", "dim_test01", "dmp_dw", "12");
+    }
+
     /**
      * 实体关联业务分类
      *
@@ -688,6 +693,7 @@ public class MetaDataImpl implements IMetaData {
                     //共享维度关联所有分析指标业务分类
                     if (dimensionFolder.data.share) {
                         batchAssociateClassification(tableGuid, businessAreaList.data);
+                        return;
                     }
                 }
                 Optional<AppBusinessInfoDTO> first = businessAreaList.data.stream().filter(e -> e.id == Long.parseLong(comment)).findFirst();
