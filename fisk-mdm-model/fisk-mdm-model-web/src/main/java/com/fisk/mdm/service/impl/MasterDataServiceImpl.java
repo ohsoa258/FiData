@@ -387,7 +387,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 .map(e -> e.getName()).collect(Collectors.toList()), ",");
         try {
             //拼接筛选条件
-            String conditions = " and fidata_version_id=" + dto.getVersionId() + " ";
+            String conditions = " and fidata_version_id=" + dto.getVersionId() + " and fidata_del_flag= " +dto.getIsValidity()+" ";
             if (!CollectionUtils.isEmpty(dto.getFilterQuery())) {
                 conditions = getOperatorCondition(dto.getFilterQuery());
             }
@@ -410,6 +410,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             dataPageDTO.setTableName(tableName);
             dataPageDTO.setExport(dto.getExport());
             dataPageDTO.setConditions(conditions);
+            dataPageDTO.setIsValidity(dto.getIsValidity());
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             String sql = sqlBuilder.buildMasterDataPage(dataPageDTO);
             //执行sql，获得结果集
@@ -740,9 +741,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 }
                 attributePoList.add(data.get());
             }
-            if (list.size() != columnNum - 1) {
-                throw new FkException(ResultEnum.CHECK_TEMPLATE_IMPORT_FAILURE);
-            }
+//            if (list.size() != columnNum - 1) {
+//                throw new FkException(ResultEnum.CHECK_TEMPLATE_IMPORT_FAILURE);
+//            }
         } catch (Exception e) {
             log.error("导入模板错误:", e);
             throw new FkException(ResultEnum.CHECK_TEMPLATE_IMPORT_FAILURE);
