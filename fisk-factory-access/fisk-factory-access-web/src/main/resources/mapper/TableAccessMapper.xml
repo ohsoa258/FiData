@@ -55,4 +55,30 @@
         </if>
     </select>
 
+    <select id="getTableInfo" resultType="com.fisk.dataaccess.dto.dataops.TableQueryDTO">
+        SELECT
+	    *
+        FROM
+	    (
+	    SELECT
+		CASE
+			b.whether_schema
+			WHEN 0 THEN
+			concat( 'ods_', b.app_abbreviation, a.table_name ) ELSE concat( b.app_abbreviation, '.', a.table_name )
+		END AS ods_table_name,
+		CASE
+			b.whether_schema
+			WHEN 0 THEN
+			concat( 'stg_', b.app_abbreviation, a.table_name ) ELSE concat( b.app_abbreviation, '.','stg_', a.table_name )
+		END AS stg_table_name,
+		a.app_id,
+		a.id
+	    FROM
+		tb_table_access AS a
+		INNER JOIN tb_app_registration AS b ON a.app_id = b.id where a.del_flag = 1 and b.del_flag = 1
+	        ) AS new_table
+        WHERE
+	    ods_table_name = #{tableName} or stg_table_name = #{tableName}
+    </select>
+
 </mapper>
