@@ -673,11 +673,11 @@ public class MetaDataImpl implements IMetaData {
                     data.typeName = data.typeName + "_" + first.get().appAbbreviation;
                 }
             } else if (DataSourceConfigEnum.DMP_DW.getValue() == sourceData.get().id) {
-                if ("dim_".equals(tableName.substring(0, 4))) {
+                /*if ("dim_".equals(tableName.substring(0, 4))) {
                     data.typeName = "维度";
                 } else {
                     data.typeName = "业务过程";
-                }
+                }*/
             }
             dto.classification = data;
             classification.classificationAddAssociatedEntity(dto);

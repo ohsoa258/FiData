@@ -418,7 +418,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     // 创建表流程
                     publishTaskClient.publishBuildPhysicsTableTask(data);
                     // 构建元数据实时同步数据对象
-                    //buildMetaDataInstanceAttribute(registration, accessId, 1);
+                    buildMetaDataInstanceAttribute(registration, accessId, 1);
                 } else if (registration.appType == 1) {
                     if (DataSourceTypeEnum.FTP.getName().equals(dataSourcePo.driveType)) {
                         data.excelFlow = true;
@@ -430,7 +430,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     //log.info(JSON.toJSONString(data));
                     //publishTaskClient.publishBuildAtlasTableTask(data);
                     // 构建元数据实时同步数据对象
-                    //buildMetaDataInstanceAttribute(registration, accessId, 2);
+                    buildMetaDataInstanceAttribute(registration, accessId, 2);
                 }
 
 
