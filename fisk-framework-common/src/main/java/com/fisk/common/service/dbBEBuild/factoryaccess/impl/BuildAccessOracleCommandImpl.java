@@ -82,6 +82,11 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
         return jsonObject;
     }
 
+    @Override
+    public String buildVersionDeleteSql(String tableName) {
+        return null;
+    }
+
     /**
      * oracle转SqlServer
      *

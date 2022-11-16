@@ -855,7 +855,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
                 // 日期操作函数
                 Calendar calendar = Calendar.getInstance();
-                deleteSql = String.format("DELETE FROM %s WHERE fi_version NOT IN", tableName);
+                deleteSql = dbCommand.buildVersionDeleteSql(tableName);
                 List<String> sqlConditions = new ArrayList<>();
                 int i = 1;
 
