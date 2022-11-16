@@ -13,16 +13,24 @@ import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.dataops.TableInfoDTO;
 import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
 import com.fisk.datagovernance.dto.dataops.GetDataOpsFieldSourceDTO;
 import com.fisk.datagovernance.dto.dataops.PostgreDTO;
+import com.fisk.datagovernance.dto.dataops.TableDataSyncDTO;
 import com.fisk.datagovernance.entity.dataops.DataOpsLogPO;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.datagovernance.service.dataops.IDataOpsDataSourceManageService;
 import com.fisk.datagovernance.service.impl.dataquality.DataSourceConManageImpl;
 import com.fisk.datagovernance.vo.dataops.*;
+import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.datamodel.dto.dataops.DataModelTableInfoDTO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.task.BuildTableNifiSettingDTO;
+import com.fisk.task.dto.task.TableNifiSettingDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,6 +74,15 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
     @Resource
     private UserClient userClient;
 
+    @Resource
+    private DataModelClient dataModelClient;
+
+    @Resource
+    private DataAccessClient dataAccessClient;
+
+    @Resource
+    private PublishTaskClient publishTaskClient;
+
     @Override
     public ResultEntity<List<DataOpsSourceVO>> getDataOpsTableSource() {
         List<DataOpsSourceVO> list = new ArrayList<>();
@@ -106,17 +123,17 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
         Connection connection = DataSourceConManageImpl.getStatement(postgreDTO.getDataSourceTypeEnum(), postgreDTO.getSqlUrl(), postgreDTO.getSqlUsername(), postgreDTO.getSqlPassword());
 
-        List<TableStructureDTO> columns=null;
+        List<TableStructureDTO> columns = null;
         if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRESQL) {
-            columns  = postgresConUtils.getColumns(connection, dto.getTableName());
+            columns = postgresConUtils.getColumns(connection, dto.getTableName());
         } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.SQLSERVER) {
-            columns= sqlServerPlusUtils.getColumns(connection, dto.getTableName(),null);
+            columns = sqlServerPlusUtils.getColumns(connection, dto.getTableName(), null);
         }
-        if (CollectionUtils.isEmpty(columns)){
+        if (CollectionUtils.isEmpty(columns)) {
             return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataOpsTableFieldVOS);
         }
 
-        columns.forEach(tableStructureDTO->{
+        columns.forEach(tableStructureDTO -> {
             DataOpsTableFieldVO dataOpsTableFieldVO = new DataOpsTableFieldVO();
             dataOpsTableFieldVO.setFieldName(tableStructureDTO.getFieldName());
             dataOpsTableFieldVO.setFieldType(tableStructureDTO.getFieldType());
@@ -284,6 +301,52 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             }
         }
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, executeResultVO);
+    }
+
+    @Override
+    public ResultEnum tableDataSync(TableDataSyncDTO dto) {
+        if (dto == null || dto.getDatasourceId() == 0 || StringUtils.isEmpty(dto.getTableName())) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
+        TableInfoDTO tableInfoDTO = new TableInfoDTO();
+        if (dto.getDatasourceId() == 1) {
+            // 调用数据建模接口获取表信息
+            ResultEntity<DataModelTableInfoDTO> tableInfo = dataModelClient.getTableInfo(dto.getTableName());
+            if (tableInfo != null
+                    && tableInfo.getCode() == ResultEnum.SUCCESS.getCode()
+                    && tableInfo.getData() != null) {
+                tableInfoDTO.setTableAccessId(tableInfo.getData().getTableId());
+                tableInfoDTO.setAppId(tableInfo.getData().getBusinessAreaId());
+                tableInfoDTO.setTableName(tableInfo.getData().getTableName());
+                tableInfoDTO.setOlapTable(tableInfo.getData().getOlapTable());
+            }
+        } else if (dto.getDatasourceId() == 2) {
+            // 调用数据接入接口获取表信息
+            ResultEntity<TableInfoDTO> tableInfo = dataAccessClient.getTableInfo(dto.getTableName());
+            if (tableInfo != null
+                    && tableInfo.getCode() == ResultEnum.SUCCESS.getCode()
+                    && tableInfo.getData() != null) {
+                tableInfoDTO = tableInfo.getData();
+            }
+        }
+        if (tableInfoDTO == null || StringUtils.isEmpty(tableInfoDTO.getTableName())) {
+            return ResultEnum.DATAACCESS_GETTABLE_ERROR;
+        }
+        BuildTableNifiSettingDTO buildTableNifiSetting = new BuildTableNifiSettingDTO();
+        List<TableNifiSettingDTO> tableNifiSettings = new ArrayList<>();
+        TableNifiSettingDTO tableNifiSetting = new TableNifiSettingDTO();
+        tableNifiSetting.setUserId(userHelper.getLoginUserInfo().getId());
+        tableNifiSetting.setTableName(tableInfoDTO.getTableName());
+        tableNifiSetting.setTableAccessId(tableInfoDTO.getTableAccessId());
+        tableNifiSetting.setAppId(tableInfoDTO.getAppId());
+        tableNifiSetting.setType(tableInfoDTO.getOlapTable());
+        tableNifiSettings.add(tableNifiSetting);
+        buildTableNifiSetting.setTableNifiSettings(tableNifiSettings);
+        ResultEntity<Object> result = publishTaskClient.immediatelyStart(buildTableNifiSetting);
+        if (result != null && result.getCode() == ResultEnum.SUCCESS.getCode()) {
+            return ResultEnum.SUCCESS;
+        }
+        return ResultEnum.TABLE_DATA_SYNC_FAIL;
     }
 
     public void setDataOpsDataSource() {

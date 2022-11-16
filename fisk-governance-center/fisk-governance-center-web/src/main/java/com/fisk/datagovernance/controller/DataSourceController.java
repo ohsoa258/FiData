@@ -8,6 +8,7 @@ import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
 import com.fisk.datagovernance.dto.dataops.GetDataOpsFieldSourceDTO;
+import com.fisk.datagovernance.dto.dataops.TableDataSyncDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.service.dataops.IDataOpsDataSourceManageService;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
@@ -104,6 +105,12 @@ public class DataSourceController {
     @ApiOperation("数据运维，执行sql")
     public ResultEntity<ExecuteResultVO> executeDataOpsSql(@Validated @RequestBody ExecuteDataOpsSqlDTO dto) {
         return dataOpsDataSourceManageService.executeDataOpsSql(dto);
+    }
+
+    @PostMapping("/tableDataSync")
+    @ApiOperation("数据运维，表数据同步")
+    public ResultEntity<Object> tableDataSync(@Validated @RequestBody TableDataSyncDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataOpsDataSourceManageService.tableDataSync(dto));
     }
 
 }
