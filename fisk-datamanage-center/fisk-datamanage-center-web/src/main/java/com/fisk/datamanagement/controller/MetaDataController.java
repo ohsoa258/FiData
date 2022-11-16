@@ -41,4 +41,10 @@ public class MetaDataController {
         return ResultEntityBuild.build(service.deleteMetaData(dto));
     }
 
+    @ApiOperation("test")
+    @DeleteMapping("/test")
+    public void test() {
+        service.test();
+    }
+
 }

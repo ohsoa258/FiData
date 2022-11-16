@@ -5,6 +5,7 @@ import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessPageDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessPageResultDTO;
+import com.fisk.datamodel.dto.dataops.DataModelQueryDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
@@ -71,6 +72,14 @@ public interface BusinessAreaMapper extends FKBaseMapper<BusinessAreaPO> {
     Integer insertBusinessArea(@Param("dto") BusinessAreaDTO dto,
                                @Param("creator") Long createUser,
                                @Param("time") LocalDateTime time);
+
+    /**
+     * 根据表名获取表信息
+     *
+     * @param tableName
+     * @return
+     */
+    DataModelQueryDTO getTableInfo(@Param("tableName") String tableName);
 
 
 }

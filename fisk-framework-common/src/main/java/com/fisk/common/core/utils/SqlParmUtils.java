@@ -62,13 +62,13 @@ public class SqlParmUtils {
      * @param symbol 符号
      * @return String
      */
-    public static String SqlParm(List<SqlParmDto> list, String repSql, String symbol) {
+    public static String SqlParams(List<SqlParmDto> list, String repSql, String symbol) {
         String sql = repSql;
         if (CollectionUtils.isEmpty(list) || sql == null || sql.isEmpty())
             return sql;
         for (SqlParmDto item : list) {
             String targetKey = String.format("%s%s", symbol, item.parmName);
-            String replacement = StringUtils.isEmpty(item.parmValue) ? "NULL" : "'" + item.parmValue + "'";
+            String replacement = StringUtils.isEmpty(item.parmValue) ? "NULL" : "N'" + item.parmValue + "'";
             sql = sql.replace(targetKey, replacement);
         }
         return sql;

@@ -331,7 +331,8 @@ public class EntityImpl implements IEntity {
     {
         try {
             String[] s = guid.split("_");
-            ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + s[0]);
+            EntityInstanceDTO data = new EntityInstanceDTO();
+            /*ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + s[0]);
             if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS) {
                 throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
             }
@@ -340,7 +341,8 @@ public class EntityImpl implements IEntity {
             JSONObject entity = JSON.parseObject(jsonObj.getString("entity"));
             JSONObject attributes = JSON.parseObject(entity.getString("attributes"));
             JSONObject instance = JSON.parseObject(attributes.getString("instance"));
-            data.instanceGuid = instance.getString("guid");
+            data.instanceGuid = instance.getString("guid");*/
+            data.instanceGuid = s[0];
             return data;
         }
         catch (Exception e)

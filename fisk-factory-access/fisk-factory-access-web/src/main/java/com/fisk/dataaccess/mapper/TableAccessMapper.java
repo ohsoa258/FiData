@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.dataaccess.dto.datafactory.TableIdAndNameDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.dataaccess.dto.dataops.TableQueryDTO;
 import com.fisk.dataaccess.dto.table.TableAccessPageDTO;
 import com.fisk.dataaccess.dto.table.TableNameDTO;
 import com.fisk.dataaccess.dto.table.TableNameTreeDTO;
@@ -181,5 +182,13 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
      * @return
      */
     Page<TbTableAccessDTO> getTableAccessListData(Page<TbTableAccessDTO> page, @Param("query") TbTableAccessQueryDTO query);
+
+    /**
+     * 数据运维根据表名获取表信息
+     *
+     * @param tableName
+     * @return
+     */
+    TableQueryDTO getTableInfo(@Param("tableName") String tableName);
 
 }

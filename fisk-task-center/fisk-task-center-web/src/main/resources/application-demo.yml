@@ -8,10 +8,10 @@ external-table-link: '"host" = "192.168.21.21","port" = "5432","user" = "postgre
   = "postgres123","database" = "dmp_dw"'
 
 nifi:
-  username: fisk
-  password: fiskpassword01!
-  basePath: http://192.168.21.21:8081/nifi-api
-  token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJkMjc2Mjk3N2U4YjU0YTQ0YjYyZGU2ODlmZTk0OTRjNiIsInVzZXIiOiJ7XCJpZFwiOjE4LFwidXNlckFjY291bnRcIjpcImNma1wifSIsImlkIjoiMTgifQ.SRkIbNgKrvo1TI-WSufy4mZGLst6ed0Y6Fs0QoQ8m_g
+  username: fiskadmin
+  password: Password0101!
+  basePath: https://192.168.21.21:8023/nifi-api
+  token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiI2NjU3MDI5YjQxMTc0NzdhOGMwMDExY2NmMzg2ZmYzZSIsInVzZXIiOiJ7XCJpZFwiOjE5LFwidXNlckFjY291bnRcIjpcIm5pZmnmjqXlj6N0b2tlblwifSIsImlkIjoiMTkifQ.UrYWOvRq6IqQ5pep6uCTYlE-kG_5zc7Yl6VgeYupPeU
   Enable-Authentication: 0
   kerberos:
     Keytab: /opt/fidata/java/fisk-task-center/kafka.keytab

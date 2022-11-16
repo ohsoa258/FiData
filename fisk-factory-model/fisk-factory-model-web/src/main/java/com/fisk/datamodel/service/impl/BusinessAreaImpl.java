@@ -16,6 +16,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
@@ -25,6 +26,7 @@ import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.dto.GetConfigDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
@@ -141,6 +143,9 @@ public class BusinessAreaImpl
     @Value("${fidata.wide-table.guid}")
     private String wideTableGuid;
 
+    @Resource
+    private DataManageClient dataManageClient;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(BusinessAreaDTO dto) {
@@ -157,6 +162,20 @@ public class BusinessAreaImpl
         }
         dimensionFolder.addPublicDimensionFolder();
         dimensionFolder.addSystemDimensionFolder(dto.id);
+
+        // 添加元数据信息
+        ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
+        classificationInfoDto.setName(dto.businessName);
+        classificationInfoDto.setDescription(dto.businessDes);
+        classificationInfoDto.setSourceType(2);
+        classificationInfoDto.setDelete(false);
+        try {
+            dataManageClient.appSynchronousClassification(classificationInfoDto);
+        } catch (Exception e) {
+            // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
+            log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
+        }
+
         return ResultEnum.SUCCESS;
     }
 
@@ -274,6 +293,20 @@ public class BusinessAreaImpl
             if (result) {
                 return ResultEnum.BUSINESS_AREA_EXISTS_ASSOCIATED;
             }
+
+            //删除元数据信息
+            ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
+            classificationInfoDto.setName(model.getBusinessName());
+            classificationInfoDto.setDescription(model.getBusinessDes());
+            classificationInfoDto.setSourceType(2);
+            classificationInfoDto.setDelete(true);
+            try {
+                dataManageClient.appSynchronousClassification(classificationInfoDto);
+            } catch (Exception e) {
+                // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
+                log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
+            }
+
             return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         } catch (Exception e) {
             log.error("deleteBusinessArea:" + e);
@@ -717,28 +750,6 @@ public class BusinessAreaImpl
 
         return null;
     }
-
-/*    private List<FiDataMetaDataTreeDTO> buildChildren(String guid, String dourceType) {
-
-        List<FiDataMetaDataTreeDTO> businessTreeList = new ArrayList<>();
-
-        // 第二层: 业务域总目录
-        FiDataMetaDataTreeDTO businessTreeDto = new FiDataMetaDataTreeDTO();
-        String businessGuid = UUID.randomUUID().toString();
-        businessTreeDto.setId(businessGuid);
-        businessTreeDto.setParentId(guid);
-        businessTreeDto.setLabel("业务域");
-        businessTreeDto.setLabelAlias("业务域");
-        businessTreeDto.setLevelType(LevelTypeEnum.FOLDER);
-
-        List<BusinessAreaPO> businessPoList = this.query().orderByDesc("create_time").list();
-
-        // 业务域子级
-        businessTreeDto.setChildren(buildBusinessChildren(guid, businessPoList, dourceType));
-        businessTreeList.add(businessTreeDto);
-
-        return businessTreeList;
-    }*/
 
     /**
      * 构建业务域子级

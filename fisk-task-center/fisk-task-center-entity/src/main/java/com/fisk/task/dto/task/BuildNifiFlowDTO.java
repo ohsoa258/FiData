@@ -95,4 +95,9 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
      */
     public List<DeltaTimeDTO> deltaTimes;
 
+    /**
+     * 版本字段语句
+     */
+    public String generateVersionSql;
+
 }

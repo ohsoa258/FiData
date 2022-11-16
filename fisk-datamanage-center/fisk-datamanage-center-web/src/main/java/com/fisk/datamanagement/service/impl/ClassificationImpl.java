@@ -178,6 +178,8 @@ public class ClassificationImpl implements IClassification {
         List<String> analysisModelSuperType = new ArrayList<>();
         if (dto.sourceType == 1) {
             analysisModelSuperType.add("业务数据");
+        } else {
+            analysisModelSuperType.add("分析数据");
         }
         masterData.superTypes = analysisModelSuperType;
 

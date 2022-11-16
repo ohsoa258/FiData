@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
+import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimension.DimensionListDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDataDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
@@ -328,25 +329,24 @@ public class DimensionFolderImpl
             data.dimensionList=dimensionList;
             //发送消息
             publishTaskClient.publishBuildAtlasDorisTableTask(data);
-        }
-        catch (Exception ex){
+        } catch (Exception ex) {
             log.error("batchPublishDimensionFolder ex:", ex);
             throw new FkException(ResultEnum.PUBLISH_FAILURE);
         }
         return ResultEnum.SUCCESS;
     }
 
-    public ModelPublishFieldDTO pushField(DimensionAttributePO attributePo){
-        ModelPublishFieldDTO fieldDTO=new ModelPublishFieldDTO();
-        fieldDTO.fieldId=attributePo.id;
-        fieldDTO.fieldEnName=attributePo.dimensionFieldEnName;
-        fieldDTO.fieldType=attributePo.dimensionFieldType;
-        fieldDTO.fieldLength=attributePo.dimensionFieldLength;
-        fieldDTO.attributeType=attributePo.attributeType;
-        fieldDTO.isPrimaryKey=attributePo.isPrimaryKey;
-        fieldDTO.sourceFieldName=attributePo.sourceFieldName;
-        fieldDTO.associateDimensionId=attributePo.associateDimensionId;
-        fieldDTO.associateDimensionFieldId=attributePo.associateDimensionFieldId;
+    public ModelPublishFieldDTO pushField(DimensionAttributePO attributePo) {
+        ModelPublishFieldDTO fieldDTO = new ModelPublishFieldDTO();
+        fieldDTO.fieldId = attributePo.id;
+        fieldDTO.fieldEnName = attributePo.dimensionFieldEnName;
+        fieldDTO.fieldType = attributePo.dimensionFieldType;
+        fieldDTO.fieldLength = attributePo.dimensionFieldLength;
+        fieldDTO.attributeType = attributePo.attributeType;
+        fieldDTO.isPrimaryKey = attributePo.isPrimaryKey;
+        fieldDTO.sourceFieldName = attributePo.sourceFieldName;
+        fieldDTO.associateDimensionId = attributePo.associateDimensionId;
+        fieldDTO.associateDimensionFieldId = attributePo.associateDimensionFieldId;
         //判断是否关联维度
         if (attributePo.associateDimensionId != 0 && attributePo.associateDimensionFieldId != 0) {
             DimensionPO dimensionPo = dimensionMapper.selectById(attributePo.associateDimensionId);
@@ -403,6 +403,16 @@ public class DimensionFolderImpl
         if (!this.save(po)) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
+    }
+
+    @Override
+    public DimensionFolderDTO getDimensionFolderByTableName(String tableName) {
+        DimensionDTO dimensionByName = dimensionImpl.getDimensionByName(tableName);
+        DimensionFolderPO po = mapper.selectById(dimensionByName.dimensionFolderId);
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return DimensionFolderMap.INSTANCES.poToDto(po);
     }
 
 

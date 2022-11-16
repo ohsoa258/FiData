@@ -75,8 +75,17 @@ public interface IDimension extends IService<DimensionPO> {
 
     /**
      * 根据维度id,更改发布状态
+     *
      * @param dto
      */
     void updateDimensionPublishStatus(ModelPublishStatusDTO dto);
+
+    /**
+     * 根据表名获取详情
+     *
+     * @param tableName
+     * @return
+     */
+    DimensionDTO getDimensionByName(String tableName);
 
 }

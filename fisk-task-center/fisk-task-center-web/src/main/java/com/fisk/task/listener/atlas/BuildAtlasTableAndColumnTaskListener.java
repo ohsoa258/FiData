@@ -129,6 +129,7 @@ public class BuildAtlasTableAndColumnTaskListener
             bfd.openTransmission = buildPhysicalTableDTO.openTransmission;
             bfd.excelFlow = buildPhysicalTableDTO.excelFlow;
             bfd.deltaTimes = deltaTimes;
+            bfd.generateVersionSql = buildPhysicalTableDTO.generateVersionSql;
             log.info("nifi传入参数：" + JSON.toJSONString(bfd));
             pc.publishBuildNifiFlowTask(bfd);
             log.info("执行完成");

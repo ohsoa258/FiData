@@ -368,8 +368,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
 
         // 第二步：拼接参数条件
         if (CollectionUtils.isNotEmpty(dto.parmDTO)) {
-            List<SqlParmDto> sqlParmDtos = ApiParmMap.INSTANCES.listDtoToSqlParmDto(dto.parmDTO);
-            String s = SqlParmUtils.SqlParm(sqlParmDtos, sql, "@");
+            List<SqlParmDto> sqlParamsDto = ApiParmMap.INSTANCES.listDtoToSqlParmDto(dto.parmDTO);
+            String s = SqlParmUtils.SqlParams(sqlParamsDto, sql, "@");
             if (s != null && s.length() > 0)
                 sql = s;
         }
