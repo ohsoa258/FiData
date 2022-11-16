@@ -1,5 +1,7 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.dataops.TableInfoDTO;
 import com.fisk.dataaccess.dto.dataops.TableQueryDTO;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
@@ -21,7 +23,7 @@ public class DataOpsImpl implements IDataOps {
     public TableInfoDTO getTableInfo(String tableName) {
         TableQueryDTO tableInfo = tableAccessMapper.getTableInfo(tableName);
         if (tableInfo == null) {
-
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         TableInfoDTO dto = new TableInfoDTO();
         dto.appId = tableInfo.appId;

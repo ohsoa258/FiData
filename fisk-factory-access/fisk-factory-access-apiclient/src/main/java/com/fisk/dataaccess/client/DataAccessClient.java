@@ -14,6 +14,7 @@ import com.fisk.dataaccess.dto.app.AppDriveTypeDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.app.LogMessageFilterVO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.dataaccess.dto.dataops.TableInfoDTO;
 import com.fisk.dataaccess.dto.ftp.CopyFtpFileDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
@@ -341,4 +342,15 @@ public interface DataAccessClient {
     @PostMapping("/tableFields/delTableVersion")
     @ApiOperation(value = "删除表版本")
     ResultEntity<Object> delVersionData(@Validated @RequestBody TableVersionDTO dto);
+
+    /**
+     * 根据表名获取接入表信息
+     *
+     * @param tableName
+     * @return
+     */
+    @ApiOperation("根据表名获取接入表信息")
+    @PostMapping("/DataOps/getTableInfo")
+    ResultEntity<TableInfoDTO> getTableInfo(@Validated @RequestBody String tableName);
+
 }

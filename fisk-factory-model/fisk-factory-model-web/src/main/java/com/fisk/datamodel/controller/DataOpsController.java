@@ -1,11 +1,11 @@
-package com.fisk.dataaccess.controller;
+package com.fisk.datamodel.controller;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.dataaccess.config.SwaggerConfig;
-import com.fisk.dataaccess.dto.dataops.TableInfoDTO;
-import com.fisk.dataaccess.service.IDataOps;
+import com.fisk.datamodel.config.SwaggerConfig;
+import com.fisk.datamodel.dto.dataops.DataModelTableInfoDTO;
+import com.fisk.datamodel.service.IDataOps;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -29,7 +29,7 @@ public class DataOpsController {
 
     @ApiOperation("根据表名获取接入表信息")
     @PostMapping("/getTableInfo")
-    public ResultEntity<TableInfoDTO> getTableInfo(@Validated @RequestBody String tableName) {
+    public ResultEntity<DataModelTableInfoDTO> getTableInfo(@Validated @RequestBody String tableName) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableInfo(tableName));
     }
 

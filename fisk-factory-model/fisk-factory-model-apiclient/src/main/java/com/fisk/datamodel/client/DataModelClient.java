@@ -21,6 +21,7 @@ import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaQueryTableDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaTableDetailDTO;
+import com.fisk.datamodel.dto.dataops.DataModelTableInfoDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
@@ -316,5 +317,15 @@ public interface DataModelClient {
      */
     @PostMapping("/dimensionFolder/getDimensionFolderByTableName")
     ResultEntity<DimensionFolderDTO> getDimensionFolderByTableName(@Validated @RequestBody String tableName);
+
+    /**
+     * 根据表名获取接入表信息
+     *
+     * @param tableName
+     * @return
+     */
+    @ApiOperation("根据表名获取接入表信息")
+    @PostMapping("/DataOps/getTableInfo")
+    ResultEntity<DataModelTableInfoDTO> getTableInfo(@Validated @RequestBody String tableName);
 
 }
