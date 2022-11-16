@@ -14,6 +14,7 @@ import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
 import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.dataops.TableInfoDTO;
 import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
 import com.fisk.datagovernance.dto.dataops.GetDataOpsFieldSourceDTO;
 import com.fisk.datagovernance.dto.dataops.PostgreDTO;
@@ -24,6 +25,7 @@ import com.fisk.datagovernance.service.dataops.IDataOpsDataSourceManageService;
 import com.fisk.datagovernance.service.impl.dataquality.DataSourceConManageImpl;
 import com.fisk.datagovernance.vo.dataops.*;
 import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.datamodel.dto.dataops.DataModelTableInfoDTO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
@@ -306,22 +308,38 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         if (dto == null || dto.getDatasourceId() == 0 || StringUtils.isEmpty(dto.getTableName())) {
             return ResultEnum.PARAMTER_NOTNULL;
         }
+        TableInfoDTO tableInfoDTO = new TableInfoDTO();
         if (dto.getDatasourceId() == 1) {
             // 调用数据建模接口获取表信息
+            ResultEntity<DataModelTableInfoDTO> tableInfo = dataModelClient.getTableInfo(dto.getTableName());
+            if (tableInfo != null
+                    && tableInfo.getCode() == ResultEnum.SUCCESS.getCode()
+                    && tableInfo.getData() != null) {
+                tableInfoDTO.setTableAccessId(tableInfo.getData().getTableId());
+                tableInfoDTO.setAppId(tableInfo.getData().getBusinessAreaId());
+                tableInfoDTO.setTableName(tableInfo.getData().getTableName());
+                tableInfoDTO.setOlapTable(tableInfo.getData().getOlapTable());
+            }
         } else if (dto.getDatasourceId() == 2) {
             // 调用数据接入接口获取表信息
+            ResultEntity<TableInfoDTO> tableInfo = dataAccessClient.getTableInfo(dto.getTableName());
+            if (tableInfo != null
+                    && tableInfo.getCode() == ResultEnum.SUCCESS.getCode()
+                    && tableInfo.getData() != null) {
+                tableInfoDTO = tableInfo.getData();
+            }
         }
-        if (1 == 1) {
+        if (tableInfoDTO == null || StringUtils.isEmpty(tableInfoDTO.getTableName())) {
             return ResultEnum.DATAACCESS_GETTABLE_ERROR;
         }
         BuildTableNifiSettingDTO buildTableNifiSetting = new BuildTableNifiSettingDTO();
         List<TableNifiSettingDTO> tableNifiSettings = new ArrayList<>();
         TableNifiSettingDTO tableNifiSetting = new TableNifiSettingDTO();
         tableNifiSetting.setUserId(userHelper.getLoginUserInfo().getId());
-        tableNifiSetting.setTableName("");
-        tableNifiSetting.setTableAccessId(0);
-        tableNifiSetting.setAppId(0);
-        tableNifiSetting.setType(0);
+        tableNifiSetting.setTableName(tableInfoDTO.getTableName());
+        tableNifiSetting.setTableAccessId(tableInfoDTO.getTableAccessId());
+        tableNifiSetting.setAppId(tableInfoDTO.getAppId());
+        tableNifiSetting.setType(tableInfoDTO.getOlapTable());
         tableNifiSettings.add(tableNifiSetting);
         buildTableNifiSetting.setTableNifiSettings(tableNifiSettings);
         ResultEntity<Object> result = publishTaskClient.immediatelyStart(buildTableNifiSetting);
