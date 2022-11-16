@@ -290,6 +290,7 @@ public enum ResultEnum {
     PG_METADATA_READREDIS_EXISTS(14010,"redis中未找到pg元数据对应的key"),
     PG_METADATA_SETREDIS_ERROR(14011,"redis写入pg元数据信息异常"),
     PG_METADATA_GETREDIS_ERROR(14012,"redis读取pg元数据信息异常"),
+    TABLE_DATA_SYNC_FAIL(14013,"数据同步失败"),
 
     /**
      * mdm
