@@ -146,7 +146,16 @@ public enum ResultEnum {
     CREATE_JOB_ERROR(5061, "创建Flink任务失败"),
     SCHEMA_TABLE_REPEAT(5062, "其他应用下已存在该表名"),
     SYSTEM_VARIABLES_ERROR(5063, "系统变量异常"),
-
+    VERSION_PARAMS_SPLIT_ERROR(5064, "参数分割异常"),
+    VERSION_TABLE_TYPE_ERROR(5065, "暂不支持的表类型"),
+    VERSION_TABLE_NOT_EXISTS(5066, "表配置不存在"),
+    VERSION_APP_NOT_EXISTS(5067, "应用配置不存在"),
+    VERSION_TABLE_SYNC_NOT_EXISTS(5068, "表同步方式配置不存在"),
+    VERSION_TABLE_SYNC_NOT_ALL(5069, "仅支持全量模式下设置版本"),
+    VERSION_SAVE_DAY_ERROR(5070, "版本保留天数为0"),
+    VERSION_CUSTOM_SQL_IS_NULL(5071, "版本自定义语句为空"),
+    VERSION_CUSTOM_SQL_RESULT_IS_NULL(5072, "版本自定义语句查询结果为空"),
+    VERSION_NOT_OPEN_SAVE_RULE(5073, "未启用版本保留规则"),
 
     /**
      * 后台任务模块
