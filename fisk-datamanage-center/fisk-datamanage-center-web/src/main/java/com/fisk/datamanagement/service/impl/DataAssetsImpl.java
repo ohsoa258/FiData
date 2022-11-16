@@ -1,6 +1,5 @@
 package com.fisk.datamanagement.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
@@ -36,8 +35,6 @@ public class DataAssetsImpl implements IDataAssets {
 
     @Resource
     GenerateCondition generateCondition;
-    @Resource
-    EntityImpl entity;
 
     @Resource
     UserClient userClient;
@@ -49,10 +46,11 @@ public class DataAssetsImpl implements IDataAssets {
         Statement st = null;
         try {
             //获取实例配置信息
-            JSONObject instanceEntity = this.entity.getEntity(dto.instanceGuid);
+            /*JSONObject instanceEntity = this.entity.getEntity(dto.instanceGuid);
             JSONObject entity = JSON.parseObject(instanceEntity.getString("entity"));
             JSONObject attributes = JSON.parseObject(entity.getString("attributes"));
-            String hostname = attributes.getString("hostname");
+            String hostname = attributes.getString("hostname");*/
+
             //获取账号密码
             ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
             if (allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
@@ -60,7 +58,7 @@ public class DataAssetsImpl implements IDataAssets {
             }
             Optional<DataSourceDTO> first = allFiDataDataSource.data
                     .stream()
-                    .filter(e -> dto.dbName.equals(e.conDbname) && hostname.equals(e.conIp))
+                    .filter(e -> dto.dbName.equals(e.conDbname))
                     .findFirst();
             if (!first.isPresent()) {
                 throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
