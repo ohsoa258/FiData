@@ -10,6 +10,7 @@ public class TraceConstant {
     public static final String APP_CLASS = "App_Class";
     public static final String TRACE_ID = "TraceID";
     public static final String SPAN_ID = "SpanID";
+    public static final String PIPEL_TRACE_ID = "PipelTraceId";
 
     public static final String HTTP_HEADER_TRACE = "trace";
 

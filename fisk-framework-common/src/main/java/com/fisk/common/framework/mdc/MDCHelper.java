@@ -50,6 +50,11 @@ public class MDCHelper {
         return spanId;
     }
 
+    public static String setPipelTraceId(String pipelTraceId) {
+        MDC.put(TraceConstant.PIPEL_TRACE_ID, pipelTraceId);
+        return pipelTraceId;
+    }
+
     public static String getSpanId() {
         return MDC.get(TraceConstant.SPAN_ID);
     }
@@ -60,6 +65,10 @@ public class MDCHelper {
 
     public static void removeLogType() {
         MDC.remove(TraceConstant.APP_LOG_TYPE);
+    }
+
+    public static void removePipelTraceId() {
+        MDC.remove(TraceConstant.PIPEL_TRACE_ID);
     }
 
     public static void removeTraceId() {
