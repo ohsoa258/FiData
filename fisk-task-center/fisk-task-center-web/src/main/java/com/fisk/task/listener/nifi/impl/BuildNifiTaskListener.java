@@ -1546,11 +1546,12 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 || Objects.equals(dto.type, OlapTableEnum.DIMENSION) || Objects.equals(dto.type, OlapTableEnum.CUSTOMWORKDIMENSION)) {
             sourceFieldName = config.modelPublishFieldDTOList.stream().map(e -> e.fieldEnName).collect(Collectors.toList());
         }
-        sourceFieldName.add("fidata_batch_code");
-        sourceFieldName.add("fidata_flow_batch_code");
         if (StringUtils.isNotEmpty(dto.generateVersionSql)) {
             sourceFieldName.add(NifiConstants.AttrConstants.FI_VERSION);
         }
+        sourceFieldName.add("fidata_batch_code");
+        sourceFieldName.add("fidata_flow_batch_code");
+
         String schemaArchitecture = buildSchemaArchitecture(sourceFieldName, config.processorConfig.targetTableName);
         data.schemaText = schemaArchitecture;
 
