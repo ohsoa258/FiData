@@ -708,6 +708,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      */
     public String getVersionSql(TableSyncmodePO tableSyncmodeDto) {
         String versionSql = "";
+        Connection conn = null;
+        AbstractCommonDbHelper dbHelper = null;
         try {
             if (tableSyncmodeDto == null || tableSyncmodeDto.getId() == 0) {
                 log.info("【getVersionSql】参数为空异常");
@@ -747,11 +749,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceDTO.getConType());
             if (!tableSyncmodeDto.getVersionUnit().equals(tableSyncmodePO.getVersionUnit())) {
                 log.info("【getVersionSql】配置发生变更，清空表数据");
-                Connection conn = DbConnectionHelper.connection(dataSourceDTO.getConStr(), dataSourceDTO.getConAccount(), dataSourceDTO.getConPassword(), dataSourceDTO.getConType());
+                conn = DbConnectionHelper.connection(dataSourceDTO.getConStr(), dataSourceDTO.getConAccount(), dataSourceDTO.getConPassword(), dataSourceDTO.getConType());
                 // 检查表是否存在
-                AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
+                dbHelper = new AbstractCommonDbHelper();
                 String existTableSql = dbCommand.buildExistTableSql(tableName);
-                List<Map<String, Object>> maps = dbHelper.execQueryResultMaps(existTableSql, conn);
+                List<Map<String, Object>> maps = dbHelper.batchExecQueryResultMaps_noClose(existTableSql, conn);
                 boolean isExists = !maps.get(0).get("isExists").toString().equals("0");
                 if (isExists) {
                     String sql = String.format("TRUNCATE TABLE %s", tableName);
@@ -760,7 +762,12 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             }
             versionSql = dbCommand.buildVersionSql(tableSyncmodeDto.getVersionUnit(), tableSyncmodeDto.getVersionCustomRule());
         } catch (Exception ex) {
+            versionSql = "";
             log.error("【getVersionSql】触发异常：" + ex);
+        } finally {
+            if (conn != null) {
+                dbHelper.closeConnection(conn);
+            }
         }
         log.info("【getVersionSql】versionSql：" + versionSql);
         return versionSql;
@@ -858,6 +865,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 deleteSql = dbCommand.buildVersionDeleteSql(tableName);
                 List<String> sqlConditions = new ArrayList<>();
                 int i = 1;
+                // 因为版本保留需要含当月，所以当仅保留一个月时，i要等于0
+                if (retainTime == 1) {
+                    i = 0;
+                }
 
                 // 如果版本规则是按照自定义模式生成的，则需要根据保留规则和版本规则生成条件语句
                 if (versionUnit.equals("自定义")) {
