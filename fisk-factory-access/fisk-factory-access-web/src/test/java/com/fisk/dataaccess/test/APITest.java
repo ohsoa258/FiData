@@ -140,12 +140,12 @@ public class APITest {
         SimpleDateFormat format = new SimpleDateFormat(str);
         java.util.Date date = null;
         try {
-            date = format.parse("2022/01/12");
+            date = format.parse("2022/10/01");
             c.setTime(date);
         } catch (Exception ex) {
         }
         int year = c.get(Calendar.YEAR);
-        int month = c.get(Calendar.MONTH) + 1;
+        int month = c.get(Calendar.MONTH);
         int dates = c.get(Calendar.DAY_OF_MONTH);
         int hour = c.get(Calendar.HOUR_OF_DAY);
         int minute = c.get(Calendar.MINUTE);

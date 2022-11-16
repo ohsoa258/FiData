@@ -873,7 +873,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 // 如果版本规则是按照自定义模式生成的，则需要根据保留规则和版本规则生成条件语句
                 if (versionUnit.equals("自定义")) {
                     log.info("【delVersionData】自定义模式");
-                    if (StringUtils.isNotEmpty(versionCustomRule)) {
+                    if (StringUtils.isEmpty(versionCustomRule)) {
                         return ResultEnum.VERSION_CUSTOM_SQL_IS_NULL;
                     }
                     versionCustomRule = String.format("SELECT (%s) AS fi_version", versionCustomRule);
@@ -911,13 +911,15 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         calendar.setTime(date);
                         while (i < retainTime) {
                             calendar.add(Calendar.MONTH, -3);
-                            int month = calendar.get(Calendar.MONTH);
+                            // 注意：java取时间函数的月份时要+1，否则取的是上个月
+                            int month = calendar.get(Calendar.MONTH) + 1;
                             int year = calendar.get(Calendar.YEAR);
                             int quarter = month % 3 == 0 ? month / 3 : month / 3 + 1;
                             sqlConditions.add(String.format("'%s/Q0%s'", year, quarter));
                             i++;
                         }
                     } else if (retainUnit.equals("月")) {
+                        //2022/1、2022/2
                         String str = "yyyy/MM";
                         SimpleDateFormat format = new SimpleDateFormat(str);
                         Date date = format.parse(versionObj.toString());
@@ -925,7 +927,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         while (i < retainTime) {
                             calendar.add(Calendar.MONTH, -1);
                             int year = calendar.get(Calendar.YEAR);
-                            int month = calendar.get(Calendar.MONTH);
+                            int month = calendar.get(Calendar.MONTH) + 1;
                             sqlConditions.add(String.format("'%s/%s'", year, month));
                             i++;
                         }
