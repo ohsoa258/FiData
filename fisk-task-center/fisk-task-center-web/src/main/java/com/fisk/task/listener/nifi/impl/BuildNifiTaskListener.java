@@ -1992,7 +1992,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     private ProcessorEntity replaceTextForFtpProcess(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
         HashMap<String, Object> map = new HashMap<>();
-        map.put("keyStr", "'${kafka.topic}'");
+        map.put("keyStr", "${kafka.topic}");
 
 
         buildReplaceTextProcessorDTO.name = "replaceTextForFtpProcess";
@@ -2017,7 +2017,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     private ProcessorEntity replaceTextForVisionProcess(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
         HashMap<String, Object> map = new HashMap<>();
-        map.put("keyStr", "'${kafka.topic}'");
+        map.put("keyStr", "${kafka.topic}");
 
 
         buildReplaceTextProcessorDTO.name = "replaceTextForFtpProcess";
