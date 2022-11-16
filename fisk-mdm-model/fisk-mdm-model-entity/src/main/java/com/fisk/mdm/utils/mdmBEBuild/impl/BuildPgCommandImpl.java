@@ -214,6 +214,8 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
                         case "货币":
                             str1 = name + " money " + required;
                             break;
+                        case "文本域":
+                            str1=  name + " text " + required;
                         case "文本":
                         default:
                             str1 = name + " VARCHAR(" + e.getDataTypeLength() + ")" + required;

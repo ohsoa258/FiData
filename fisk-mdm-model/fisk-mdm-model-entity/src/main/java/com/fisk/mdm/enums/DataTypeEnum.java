@@ -66,8 +66,9 @@ public enum DataTypeEnum implements BaseEnum {
     LATITUDE_COORDINATE(4, "经纬度坐标"),
     OCR(5,"OCR"),
     FILE(6,"文件"),
-    POI(7,"POI");
+    POI(7,"POI"),
 
+    TEXTAREA(13,"文本域");
     DataTypeEnum(int value, String name) {
         this.name = name;
         this.value = value;
