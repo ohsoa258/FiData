@@ -78,5 +78,13 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
      * 获取版本的语句
      */
     public String generateVersionSql;
+    /**
+     * 单个数据流文件加载最大数据行
+     */
+    public int maxRowsPerFlowFile;
+    /**
+     * 单次从结果集中提取的最大数据行
+     */
+    public int fetchSize;
 
 }
