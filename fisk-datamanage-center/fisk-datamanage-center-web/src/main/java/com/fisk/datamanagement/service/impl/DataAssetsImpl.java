@@ -137,6 +137,7 @@ public class DataAssetsImpl implements IDataAssets {
         }
         catch (Exception e)
         {
+            log.error("元数据获取行数据失败：{}", e);
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,e);
         }
     }
