@@ -109,6 +109,8 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
                 return DataTypeEnum.TIME;
             case 12:
                 return DataTypeEnum.TIMESTAMP;
+            case 13:
+                return DataTypeEnum.TEXTAREA;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
