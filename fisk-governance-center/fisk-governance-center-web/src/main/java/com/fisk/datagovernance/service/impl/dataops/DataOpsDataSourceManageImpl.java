@@ -336,7 +336,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         List<TableNifiSettingDTO> tableNifiSettings = new ArrayList<>();
         TableNifiSettingDTO tableNifiSetting = new TableNifiSettingDTO();
         tableNifiSetting.setUserId(userHelper.getLoginUserInfo().getId());
-        tableNifiSetting.setTableName(tableInfoDTO.getTableName());
+        tableNifiSetting.setTableName(dto.getTableName());
         tableNifiSetting.setTableAccessId(tableInfoDTO.getTableAccessId());
         tableNifiSetting.setAppId(tableInfoDTO.getAppId());
         tableNifiSetting.setType(tableInfoDTO.getOlapTable());
