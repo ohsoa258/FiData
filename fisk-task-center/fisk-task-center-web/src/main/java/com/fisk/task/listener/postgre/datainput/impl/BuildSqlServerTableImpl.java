@@ -163,6 +163,13 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
                 sql += stgAndTableName.get(0) + "'";
                 sql += ",'" + stgAndTableName.get(1) + "'";
+                //同步方式
+                String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
+                if (Objects.nonNull(buildNifiFlow) && StringUtils.isNotEmpty(buildNifiFlow.generateVersionSql)) {
+                    sql += ",'" + syncModeTypeEnum.FULL_VOLUME_VERSION.getName() + "'";
+                } else {
+                    sql += ",'" + syncMode + "'";
+                }
             } else {
                 //sql +="${fragment.index}','${fidata_batch_code}','";
                 sql += "${fragment.index}','''";
@@ -171,11 +178,11 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                         .map(t -> t.fieldName).collect(Collectors.joining("'''',''''"));
                 sql += fieldList + "''','" + tableKey + "','" + stgAndTableName.get(0) + "'";
                 sql += ",'" + stgAndTableName.get(1) + "'";
+                String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
+                sql += ",'" + syncMode + "'";
             }
         }
-        //同步方式
-        String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
-        sql += ",'" + syncMode + "'";
+
         //主键
         sql += config.businessKeyAppend == null ? ",''" : ",'" + config.businessKeyAppend + "'";
         if (business == null) {

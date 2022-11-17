@@ -84,6 +84,11 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
         return jsonObject;
     }
 
+    @Override
+    public String buildVersionDeleteSql(String tableName) {
+        return null;
+    }
+
     /**
      * mySql转MySQL
      *

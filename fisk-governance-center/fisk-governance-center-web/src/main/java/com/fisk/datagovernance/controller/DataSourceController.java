@@ -84,13 +84,13 @@ public class DataSourceController {
     }
 
     @PostMapping("/getDataOpsTableSource")
-    @ApiOperation("数据运维，获取数据运维数据源中的 实例、库、表信息")
+    @ApiOperation("数据运维，获取数据运维数据源中的实例、库、表信息")
     public ResultEntity<List<DataOpsSourceVO>> getDataOpsTableSource() {
         return dataOpsDataSourceManageService.getDataOpsTableSource();
     }
 
     @PostMapping("/getDataOpsFieldSource")
-    @ApiOperation("获取数据运维数据源中的 字段信息")
+    @ApiOperation("数据运维，获取数据运维数据源中的字段信息")
     public ResultEntity<List<DataOpsTableFieldVO>> getDataOpsFieldSource(@RequestBody GetDataOpsFieldSourceDTO dto) {
         return dataOpsDataSourceManageService.getDataOpsFieldSource(dto);
     }

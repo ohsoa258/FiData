@@ -171,6 +171,12 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
         return jsonObject;
     }
 
+    @Override
+    public String buildVersionDeleteSql(String tableName) {
+        String sql= String.format("DELETE FROM %s WHERE ISNULL(fi_version,'') NOT IN ",tableName);
+        return sql;
+    }
+
     /**
      * SqlServer转pg
      *

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.mdc.MDCHelper;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
@@ -100,6 +101,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                 //管道总的pipelTraceId
                 if (StringUtils.isEmpty(kafkaReceiveDTO.pipelTraceId)) {
                     kafkaReceiveDTO.pipelTraceId = UUID.randomUUID().toString();
+                    MDCHelper.setPipelTraceId(kafkaReceiveDTO.pipelTraceId);
                 }
                 if (!StringUtils.isEmpty(kafkaReceiveDTO.topic)) {
                     String topicName = kafkaReceiveDTO.topic;

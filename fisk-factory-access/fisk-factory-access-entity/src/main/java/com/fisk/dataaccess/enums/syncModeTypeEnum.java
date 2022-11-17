@@ -13,8 +13,11 @@ public enum syncModeTypeEnum implements BaseEnum {
     ADD(2, "add"),
     INCREMENT_MERGE(3, "increment_merge"),
     TIME_INCREMENT(4, "time_increment"),
-    INCREMENT_DELINSERT(5, "increment_del_insert");
-
+    INCREMENT_DELINSERT(5, "increment_del_insert"),
+    /**
+     * ods表什么操作都不做
+     */
+    FULL_VOLUME_VERSION(6, "full_volume_version");
     syncModeTypeEnum(int value, String name) {
         this.name = name;
         this.value = value;

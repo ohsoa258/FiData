@@ -13,6 +13,7 @@ import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -83,6 +84,9 @@ public class BuildDataInputDeletePgTableListener {
                     log.info("执行pg delete table 完成");
                 }
             }
+            //todo 删除的时候同时删除管道
+            deletePipleline(inputData);
+
             return ResultEnum.SUCCESS;
         } catch (Exception e) {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
@@ -90,6 +94,30 @@ public class BuildDataInputDeletePgTableListener {
         } finally {
             acke.acknowledge();
         }
-
     }
+
+    /**
+     * 删除表的时候,同时删除管道,但不包括非实时api,因为非实时api在调度绑定的是api_id,并不是表id,而这里删的是表级别
+     * todo 需要一个表类别
+     * @param inputData
+     */
+    public void deletePipleline(PgsqlDelTableDTO inputData) {
+        if (!CollectionUtils.isEmpty(inputData.tableList)) {
+            HashMap<String, Object> conditionHashMap = new HashMap<>();
+            //接入
+            if (Objects.equals(inputData.businessTypeEnum, BusinessTypeEnum.DATAINPUT)) {
+
+                inputData.tableList.forEach((t) -> {
+
+                });
+
+            } else {
+                //建模
+                inputData.tableList.forEach((t) -> {
+
+                });
+            }
+        }
+    }
+
 }

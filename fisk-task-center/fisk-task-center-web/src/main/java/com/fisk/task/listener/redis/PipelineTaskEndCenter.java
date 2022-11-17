@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.framework.mdc.MDCHelper;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.client.DataAccessClient;
@@ -233,6 +234,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                     iPipelJobLog.savePipelLog(pipelTraceId, PipelMap, pipelId);
                     iPipelLog.savePipelLog(pipelTraceId, PipelMap, pipelId);
                 }
+                MDCHelper.removePipelTraceId();
             } else if (expiredKey.startsWith("nowExec")) {
                 //手动调度记录结束
                 String[] split = expiredKey.split(",");

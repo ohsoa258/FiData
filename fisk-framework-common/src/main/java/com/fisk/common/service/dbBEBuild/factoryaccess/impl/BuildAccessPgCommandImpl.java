@@ -156,6 +156,12 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
         return jsonObject;
     }
 
+    @Override
+    public String buildVersionDeleteSql(String tableName) {
+        String sql = String.format("DELETE FROM %s WHERE COALESCE(fi_version,'') NOT IN ", tableName);
+        return sql;
+    }
+
     /**
      * pg转SqlServer
      *

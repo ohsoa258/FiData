@@ -136,17 +136,25 @@ public class BuildPgTableImpl implements IbuildTable {
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
                 sql += "stg_" + targetTableName + "'";
                 sql += ",'ods_" + targetTableName + "'";
+                //同步方式
+                String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
+                if (StringUtils.isNotEmpty(buildNifiFlow.generateVersionSql)) {
+                    sql += ",'" + syncModeTypeEnum.FULL_VOLUME_VERSION.getName() + "'";
+                } else {
+                    sql += ",'" + syncMode + "'";
+                }
             } else {
                 String fieldList = config.targetDsConfig.tableFieldsList.stream().filter(Objects::nonNull)
                         .filter(e -> e.fieldName != null && !Objects.equals("", e.fieldName))
                         .map(t -> t.fieldName).collect(Collectors.joining("'',''"));
                 sql += fieldList + "','" + tableKey + "','" + targetTableName + "'";
                 sql += ",'ods_" + targetTableName.substring(4) + "'";
+                //同步方式
+                String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
+                sql += ",'" + syncMode + "'";
             }
         }
-        //同步方式
-        String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
-        sql += ",'" + syncMode + "'";
+
         //主键
         sql += config.businessKeyAppend == null ? ",''" : ",'" + config.businessKeyAppend + "'";
         if (business == null) {

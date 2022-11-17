@@ -75,4 +75,15 @@ public class TableSyncmodePO extends BaseEntity {
      * 版本自定义规则
      */
     public String versionCustomRule;
+
+    /**
+     * 单个数据流文件加载最大数据行
+     */
+    public Integer maxRowsPerFlowFile;
+
+    /**
+     * 单词从结果集中提取的最大数据行
+     */
+    public Integer fetchSize;
+
 }
