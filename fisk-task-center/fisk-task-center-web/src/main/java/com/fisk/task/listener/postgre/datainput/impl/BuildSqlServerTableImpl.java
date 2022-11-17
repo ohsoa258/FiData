@@ -165,7 +165,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                 sql += ",'" + stgAndTableName.get(1) + "'";
                 //同步方式
                 String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
-                if (StringUtils.isNotEmpty(buildNifiFlow.generateVersionSql)) {
+                if (Objects.nonNull(buildNifiFlow) && StringUtils.isNotEmpty(buildNifiFlow.generateVersionSql)) {
                     sql += ",'" + syncModeTypeEnum.FULL_VOLUME_VERSION.getName() + "'";
                 } else {
                     sql += ",'" + syncMode + "'";
