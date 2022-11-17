@@ -57,7 +57,6 @@ import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
-import com.fisk.task.enums.OlapTableEnum;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -202,7 +201,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         String versionSql = getVersionSql(syncmodePo);
 
         // 发布
-        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql);
+        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -282,7 +281,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 
         // 发布
-        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql);
+        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
@@ -375,7 +374,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                          CdcJobScriptDTO cdcDto,
                          boolean useExistTable,
                          List<DeltaTimeDTO> deltaTimes,
-                         String versionSql) {
+                         String versionSql,
+                         TableSyncmodeDTO syncMode) {
         AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("app_id", appId).one();
         if (dataSourcePo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -399,6 +399,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
             data.whetherSchema = registration.whetherSchema;
             data.generateVersionSql = versionSql;
+            data.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile;
+            data.fetchSize = syncMode.fetchSize;
 
             // 执行发布
             try {

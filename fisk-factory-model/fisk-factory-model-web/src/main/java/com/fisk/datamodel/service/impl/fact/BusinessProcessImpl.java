@@ -250,14 +250,15 @@ public class BusinessProcessImpl
                     Optional<SyncModePO> first = syncModePoList.stream().filter(e -> e.syncTableId == item.id).findFirst();
                     if (first.isPresent())
                     {
-                        pushDto.synMode=first.get().syncMode;
+                        pushDto.synMode = first.get().syncMode;
+                        pushDto.maxRowsPerFlowFile = first.get().maxRowsPerFlowFile;
+                        pushDto.fetchSize = first.get().fetchSize;
                     }
                 }
                 //获取该维度下所有维度字段
                 List<ModelPublishFieldDTO> fieldList=new ArrayList<>();
                 List<FactAttributePO> attributePoList=factAttributePoList.stream().filter(e->e.factId==item.id).collect(Collectors.toList());
-                for (FactAttributePO attributePo:attributePoList)
-                {
+                for (FactAttributePO attributePo : attributePoList) {
                     fieldList.add(pushField(attributePo));
                 }
 
