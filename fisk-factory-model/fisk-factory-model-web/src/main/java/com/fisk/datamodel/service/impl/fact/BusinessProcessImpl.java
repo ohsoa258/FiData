@@ -242,7 +242,10 @@ public class BusinessProcessImpl
                 pushDto.factUpdateSql = factAttribute.buildFactUpdateSql(Math.toIntExact(item.id));
 
                 //获取事实表同步方式
-                Optional<SyncModePO> first = syncModePoList.stream().filter(e -> e.syncTableId == item.id).findFirst();
+                Optional<SyncModePO> first = syncModePoList
+                        .stream()
+                        .filter(e -> e.syncTableId == item.id)
+                        .findFirst();
                 if (first.isPresent()) {
                     pushDto.synMode = first.get().syncMode;
                     pushDto.maxRowsPerFlowFile = first.get().maxRowsPerFlowFile;

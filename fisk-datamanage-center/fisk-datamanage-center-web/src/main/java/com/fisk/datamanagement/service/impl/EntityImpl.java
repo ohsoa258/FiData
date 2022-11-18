@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
@@ -164,18 +163,17 @@ public class EntityImpl implements IEntity {
                                 continue;
                             }
                             Optional<AppBusinessInfoDTO> first = null;
-                            if (DataSourceConfigEnum.DMP_ODS.getValue() == sourceData.get().id) {
-                                first = appList.data.stream().filter(e -> e.id == Integer.parseInt(names.getString("comment"))).findFirst();
-                                if (!first.isPresent()) {
+                            switch (sourceData.get().sourceBusinessType) {
+                                case ODS:
+                                    first = appList.data.stream().filter(e -> e.id == Integer.parseInt(names.getString("comment"))).findFirst();
+                                    break;
+                                case DW:
+                                    first = businessAreaList.data.stream().filter(e -> e.id == Integer.parseInt(names.getString("comment"))).findFirst();
+                                    break;
+                                default:
                                     continue;
-                                }
-                            } else if (DataSourceConfigEnum.DMP_DW.getValue() == sourceData.get().id) {
-                                first = businessAreaList.data.stream().filter(e -> e.id == Integer.parseInt(names.getString("comment"))).findFirst();
-                                if (!first.isPresent()) {
-                                    continue;
-                                }
                             }
-                            if (first == null) {
+                            if (!first.isPresent()) {
                                 continue;
                             }
                             EntityStagingDTO dbStag = new EntityStagingDTO();
@@ -223,23 +221,26 @@ public class EntityImpl implements IEntity {
                 EntityTreeDTO dto=new EntityTreeDTO();
                 dto.id=item.guid;
                 dto.label =item.name;
-                dto.type=item.type;
-                dto.parentId=pNode.id;
-                list.add(buildChildTree(dto,poList));
+                dto.type = item.type;
+                dto.parentId = pNode.id;
+
+                list.add(buildChildTree(dto, poList));
             }
         }
-        pNode.children =list;
+        pNode.children = list;
         return pNode;
     }
 
+    public void getDisplay() {
+
+    }
+
     @Override
-    public ResultEnum addEntity(EntityDTO dto)
-    {
+    public ResultEnum addEntity(EntityDTO dto) {
         //获取所属人
-        dto.entity.attributes.owner=userHelper.getLoginUserInfo().username;
-        if (dto.entity.typeName.toLowerCase().equals(EntityTypeEnum.RDBMS_INSTANCE.getName()))
-        {
-            dto.entity.attributes.qualifiedName+=":"+dto.entity.attributes.port;
+        dto.entity.attributes.owner = userHelper.getLoginUserInfo().username;
+        if (dto.entity.typeName.toLowerCase().equals(EntityTypeEnum.RDBMS_INSTANCE.getName())) {
+            dto.entity.attributes.qualifiedName += ":" + dto.entity.attributes.port;
         }
         String jsonParameter=JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.post(entity, jsonParameter);

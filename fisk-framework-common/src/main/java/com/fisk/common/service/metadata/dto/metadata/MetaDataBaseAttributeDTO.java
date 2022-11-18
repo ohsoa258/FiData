@@ -21,4 +21,6 @@ public class MetaDataBaseAttributeDTO {
     public String comment;
     @ApiModelProperty(value = "所属人")
     public String owner;
+    @ApiModelProperty(value = "显示名称")
+    public String displayName;
 }

@@ -567,6 +567,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         instance.setDescription(app.getAppDes());
         instance.setComment(app.getAppDes());
         instance.setOwner(app.createUser);
+        instance.setDisplayName(hostname);
 
         // 库
         List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
@@ -605,8 +606,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         field.setName(e.getFieldName());
                         field.setContact_info(app.getAppPrincipal());
                         field.setDescription(e.getFieldDes());
-                        field.setComment(e.getFieldDes());
-                        field.setDataType("VARCHAR".equalsIgnoreCase(e.fieldType) ? e.fieldType + "(" + e.fieldLength + ")" : e.fieldType);
+                        field.setComment(e.getDisplayName());
+                        field.setDataType(e.fieldType);
                         return field;
                     }).collect(Collectors.toList());
 
@@ -642,8 +643,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                                     field.setName(e.getFieldName());
                                     field.setContact_info(app.getAppPrincipal());
                                     field.setDescription(e.getFieldDes());
-                                    field.setComment(e.getFieldDes());
-                                    field.setDataType("VARCHAR".equalsIgnoreCase(e.fieldType) ? e.fieldType + "(" + e.fieldLength + ")" : e.fieldType);
+                                    field.setComment(e.getDisplayName());
+                                    field.setDataType(e.fieldType);
                                     return field;
                                 }).collect(Collectors.toList());
 
