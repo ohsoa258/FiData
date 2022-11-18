@@ -32,6 +32,7 @@ public enum ProcessorTypeEnum implements BaseEnum {
     ConvertExcelToCSV(18,"org.apache.nifi.processors.poi.ConvertExcelToCSVProcessor"),
     CONVERTRECORD(19,"org.apache.nifi.processors.standard.ConvertRecord"),
     FETCHFTP(20,"org.apache.nifi.processors.standard.FetchFTP"),
+    FETCHSFTP(23,"org.apache.nifi.processors.standard.FetchSFTP"),
     GENERATEFLOWFILE(21,"org.apache.nifi.processors.standard.GenerateFlowFile"),
     INVOKEHTTP(22,"org.apache.nifi.processors.standard.InvokeHTTP");
 

@@ -1219,6 +1219,40 @@ public class NiFiHelperImpl implements INiFiHelper {
     }
 
     @Override
+    public BusinessResult<ProcessorEntity> buildFetchSFTPProcess(BuildFetchSFTPProcessorDTO data) {
+        //流程分支，是否自动结束
+        List<String> autoRes = new ArrayList<>();
+        autoRes.add(AutoEndBranchTypeEnum.SUCCESS.getName());
+        autoRes.add(AutoEndBranchTypeEnum.COMMSFAILURE.getName());
+        autoRes.add(AutoEndBranchTypeEnum.NOTFOUND.getName());
+        autoRes.add(AutoEndBranchTypeEnum.PERMISSIONDENIED.getName());
+
+        Map<String, String> map = new HashMap<>(2);
+        map.put("Hostname", data.hostname);
+        map.put("Port", data.port);
+        map.put("Username", data.username);
+        map.put("Password", data.password);
+        map.put("Remote File", data.remoteFile);
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setAutoTerminatedRelationships(autoRes);
+        config.setProperties(map);
+        config.setComments(data.details);
+
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(data.name);
+        dto.setType(ProcessorTypeEnum.FETCHSFTP.getName());
+        dto.setPosition(data.positionDTO);
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+
+        return buildProcessor(data.groupId, entity, dto, config);
+    }
+
+    @Override
     public List<ProcessorEntity> updateProcessorConfig(String groupId, List<ProcessorEntity> entities) {
         List<ProcessorEntity> res = new ArrayList<>();
         ProcessorsApi apiClient = NifiHelper.getProcessorsApi();

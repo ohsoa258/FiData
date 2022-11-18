@@ -937,7 +937,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             executeSQLRecord = createExecuteSQLRecordDoris(config, groupId, dto, targetDbPoolId);
         } else {
             if (dto.excelFlow) {
-                excelProcessorEntity = createExcelProcessorEntity(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums);
+                excelProcessorEntity = createExcelProcessorEntity(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums, dto);
                 res.addAll(excelProcessorEntity);
             } else {
                 executeSQLRecord = createExecuteSQLRecord(appGroupId, config, groupId, dto, sourceDbPoolId, tableNifiSettingPO);
@@ -1157,10 +1157,16 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         return processorEntityList;
     }
 
-    public List<ProcessorEntity> createExcelProcessorEntity(String appGroupId, String groupId, DataAccessConfigDTO config, TableNifiSettingPO tableNifiSettingPO, String supervisionId, List<AutoEndBranchTypeEnum> autoEndBranchTypeEnums) {
+    public List<ProcessorEntity> createExcelProcessorEntity(String appGroupId, String groupId, DataAccessConfigDTO config, TableNifiSettingPO tableNifiSettingPO, String supervisionId, List<AutoEndBranchTypeEnum> autoEndBranchTypeEnums, BuildNifiFlowDTO dto) {
         List<ProcessorEntity> processorEntities = new ArrayList<>();
+        ProcessorEntity getFTPProcessor = null;
         //getftp组件
-        ProcessorEntity getFTPProcessor = createFetchFTPProcessor(groupId, config.ftpConfig);
+        if (dto.sftpFlow) {
+            getFTPProcessor = createFetchSFTPProcessor(groupId, config.ftpConfig);
+        } else {
+            getFTPProcessor = createFetchFTPProcessor(groupId, config.ftpConfig);
+        }
+
         //componentsConnector(groupId, getFTPProcessor.getId(), supervisionId, autoEndBranchTypeEnums);
         tableNifiSettingPO.getFtpProcessorId = getFTPProcessor.getId();
         //ToCSV
@@ -1223,6 +1229,22 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildFetchFTPProcessorDTO.username = ftpConfig.username;
         buildFetchFTPProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-1, 9);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildFetchFTPProcess(buildFetchFTPProcessorDTO);
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
+    }
+
+    public ProcessorEntity createFetchSFTPProcessor(String groupId, FtpConfig ftpConfig) {
+        BuildFetchSFTPProcessorDTO buildFetchSFTPProcessor = new BuildFetchSFTPProcessorDTO();
+        buildFetchSFTPProcessor.groupId = groupId;
+        buildFetchSFTPProcessor.name = "FetchSFTP";
+        buildFetchSFTPProcessor.details = "query_phase";
+        buildFetchSFTPProcessor.hostname = ftpConfig.hostname;
+        buildFetchSFTPProcessor.password = ftpConfig.password;
+        buildFetchSFTPProcessor.port = ftpConfig.port;
+        buildFetchSFTPProcessor.remoteFile = ftpConfig.remotePath + "/" + ftpConfig.fileFilterRegex;
+        buildFetchSFTPProcessor.username = ftpConfig.username;
+        buildFetchSFTPProcessor.positionDTO = NifiPositionHelper.buildXYPositionDTO(-1, 9);
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildFetchSFTPProcess(buildFetchSFTPProcessor);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;
     }

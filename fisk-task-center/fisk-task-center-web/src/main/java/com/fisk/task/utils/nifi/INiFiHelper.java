@@ -570,5 +570,12 @@ public interface INiFiHelper {
      */
     public List<ProcessorEntity> stopProcessor(String groupId, ProcessorEntity processorEntity);
 
+    /**
+     * 创建sftp组件
+     * @param data
+     * @return
+     */
+    public BusinessResult<ProcessorEntity> buildFetchSFTPProcess(BuildFetchSFTPProcessorDTO data);
+
 
 }
