@@ -662,6 +662,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dataModelType + "_" + dimension.id;
         table.comment = String.valueOf(dimension.businessId);
         table.owner = dimension.createUser;
+        table.displayName = dimension.dimensionCnName;
         //字段
         List<MetaDataColumnAttributeDTO> columnList = new ArrayList<>();
         DimensionAttributeListDTO dimensionAttributeList = dimensionAttributeImpl.getDimensionAttributeList((int) dimension.id);
@@ -673,6 +674,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
             column.name = field.dimensionFieldEnName;
             column.qualifiedName = table.qualifiedName + "_" + field.id;
             column.owner = table.owner;
+            column.displayName = field.dimensionFieldCnName;
             columnList.add(column);
         }
         table.columnList = columnList;

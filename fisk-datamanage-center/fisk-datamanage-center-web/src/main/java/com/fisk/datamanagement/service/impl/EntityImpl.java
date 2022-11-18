@@ -116,6 +116,9 @@ public class EntityImpl implements IEntity {
                 entityParentDTO.label = array.getJSONObject(i).getString("displayText");
                 entityParentDTO.type = EntityTypeEnum.RDBMS_INSTANCE.getName();
                 entityParentDTO.parentId = "-1";
+                ////String attributes1 = array.getJSONObject(i).getString("attributes");
+                ////JSONObject jsonObject = JSONObject.parseObject(attributes1);
+                entityParentDTO.displayName = array.getJSONObject(i).getString("displayText");
                 //查询实例下db/table/column
                 ResultDataDTO<String> attribute = atlasClient.get(entityByGuid + "/" + entityParentDTO.id);
                 if (attribute.code != AtlasResultEnum.REQUEST_SUCCESS) {
@@ -123,7 +126,7 @@ public class EntityImpl implements IEntity {
                 }
                 JSONObject jsonObj1 = JSON.parseObject(attribute.data);
                 //获取referredEntities
-                String referredEntities=jsonObj1.getString("referredEntities");
+                String referredEntities = jsonObj1.getString("referredEntities");
                 JSONObject guidEntityMap = JSON.parseObject(referredEntities);
                 Iterator sIterator = guidEntityMap.keySet().iterator();
                 List<EntityStagingDTO> stagingDTOList=new ArrayList<>();
@@ -143,7 +146,8 @@ public class EntityImpl implements IEntity {
                     String attributes = jsonValue.getString("attributes");
                     JSONObject names = JSON.parseObject(attributes);
                     childEntityDTO.name = names.getString("name");
-                    childEntityDTO.type=typeName;
+                    childEntityDTO.type = typeName;
+                    childEntityDTO.displayName = names.getString("displayName");
                     EntityTypeEnum typeNameEnum = EntityTypeEnum.getValue(typeName);
                     switch (typeNameEnum) {
                         case RDBMS_DB:
@@ -180,6 +184,7 @@ public class EntityImpl implements IEntity {
                             dbStag.guid = dbObject.getString("guid") + "_" + first.get().name;
                             dbStag.parent = dbObject.getString("guid");
                             dbStag.name = first.get().name;
+                            dbStag.displayName = first.get().name;
                             //库名
                             dbStag.type = dbObject.getString("displayText");
                             stagingDTOList.add(dbStag);
@@ -213,26 +218,20 @@ public class EntityImpl implements IEntity {
      * @return
      */
     public EntityTreeDTO buildChildTree(EntityTreeDTO pNode, List<EntityStagingDTO> poList) {
-        List<EntityTreeDTO> list=new ArrayList<>();
-        for (EntityStagingDTO item:poList)
-        {
-            if (item.getParent().equals(pNode.getId()))
-            {
-                EntityTreeDTO dto=new EntityTreeDTO();
-                dto.id=item.guid;
-                dto.label =item.name;
+        List<EntityTreeDTO> list = new ArrayList<>();
+        for (EntityStagingDTO item : poList) {
+            if (item.getParent().equals(pNode.getId())) {
+                EntityTreeDTO dto = new EntityTreeDTO();
+                dto.id = item.guid;
+                dto.label = item.name;
                 dto.type = item.type;
                 dto.parentId = pNode.id;
-
+                dto.displayName = item.displayName;
                 list.add(buildChildTree(dto, poList));
             }
         }
         pNode.children = list;
         return pNode;
-    }
-
-    public void getDisplay() {
-
     }
 
     @Override

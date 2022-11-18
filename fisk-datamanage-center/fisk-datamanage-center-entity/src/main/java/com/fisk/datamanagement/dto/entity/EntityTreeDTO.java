@@ -13,6 +13,6 @@ public class EntityTreeDTO {
     public String label;
     public String type;
     public String parentId;
-    public String display;
+    public String displayName;
     public List<EntityTreeDTO> children;
 }

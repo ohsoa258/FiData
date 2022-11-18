@@ -767,6 +767,7 @@ public class MetaDataImpl implements IMetaData {
                 attribute.put("comment", dto.comment);
                 attribute.put("contact_info", dto.contact_info);
                 attribute.put("description", dto.description);
+                attribute.put("displayName", dto.displayName);
                 break;
             case RDBMS_COLUMN:
                 MetaDataColumnAttributeDTO field = (MetaDataColumnAttributeDTO) dto;
@@ -775,6 +776,7 @@ public class MetaDataImpl implements IMetaData {
                 attribute.put("contact_info", field.contact_info);
                 attribute.put("description", field.description);
                 attribute.put("data_type", field.dataType);
+                attribute.put("displayName", field.displayName);
                 break;
             default:
         }

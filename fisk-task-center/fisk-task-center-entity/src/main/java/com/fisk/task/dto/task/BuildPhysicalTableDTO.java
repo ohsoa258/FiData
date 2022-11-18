@@ -62,6 +62,11 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
      * 是否是表格同步
      */
     public boolean excelFlow;
+
+    /**
+     * 是否是sftp
+     */
+    public boolean sftpFlow;
     /**
      * 是否是schema结构
      */

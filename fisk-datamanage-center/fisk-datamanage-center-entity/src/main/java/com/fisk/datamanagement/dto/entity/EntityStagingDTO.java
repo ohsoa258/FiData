@@ -11,4 +11,5 @@ public class EntityStagingDTO {
     public String name;
     public String parent;
     public String type;
+    public String displayName;
 }

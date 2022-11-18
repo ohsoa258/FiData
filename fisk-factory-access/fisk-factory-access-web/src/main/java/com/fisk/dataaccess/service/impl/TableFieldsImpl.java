@@ -578,6 +578,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         db.setDescription(app.getAppDes());
         db.setComment(app.getAppDes());
         db.setOwner(app.createUser);
+        db.setDisplayName(app.appName);
 
         TableAccessPO tableAccess = tableAccessImpl.query().eq("id", accessId).one();
         if (tableAccess == null) {
@@ -595,6 +596,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             table.setOwner(tableAccess.createUser);
             table.setDescription(tableAccess.getTableDes());
             table.setComment(String.valueOf(app.getId()));
+            table.setDisplayName(tableAccess.displayName);
 
             // 字段
             List<MetaDataColumnAttributeDTO> columnList = this.query().eq("table_access_id", tableAccess.id).list()
@@ -608,6 +610,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         field.setDescription(e.getFieldDes());
                         field.setComment(e.getDisplayName());
                         field.setDataType(e.fieldType);
+                        field.setDisplayName(e.displayName);
                         return field;
                     }).collect(Collectors.toList());
 
@@ -645,6 +648,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                                     field.setDescription(e.getFieldDes());
                                     field.setComment(e.getDisplayName());
                                     field.setDataType(e.fieldType);
+                                    field.setDisplayName(e.displayName);
                                     return field;
                                 }).collect(Collectors.toList());
 

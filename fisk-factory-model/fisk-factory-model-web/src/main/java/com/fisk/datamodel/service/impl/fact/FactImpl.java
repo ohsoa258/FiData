@@ -303,6 +303,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         table.name = fact.factTabName;
         table.comment = String.valueOf(fact.businessId);
         table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dataModelType + "_" + fact.id;
+        table.displayName = fact.factTableCnName;
         //字段
         List<MetaDataColumnAttributeDTO> columnList = setFactField(dto, table);
         if (CollectionUtils.isEmpty(columnList)) {
@@ -347,6 +348,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
                 column.description = field.factFieldDes;
                 String fieldTypeLength = field.factFieldLength == 0 ? "" : "(" + field.factFieldLength + ")";
                 column.dataType = field.factFieldType + fieldTypeLength;
+                column.displayName = field.factFieldCnName;
                 columnList.add(column);
             }
         }
