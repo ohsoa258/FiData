@@ -232,7 +232,7 @@ public class BusinessProcessImpl
                 ModelPublishTableDTO pushDto=new ModelPublishTableDTO();
                 pushDto.tableId=Integer.parseInt(String.valueOf(item.id));
                 pushDto.tableName=item.factTabName;
-                pushDto.createType=CreateTypeEnum.CREATE_FACT.getValue();
+                pushDto.createType = CreateTypeEnum.CREATE_FACT.getValue();
                 ResultEntity<Map<String, String>> converMap = publishTaskClient.converSql(pushDto.tableName, item.sqlScript, "", null);
                 Map<String, String> data1 = converMap.data;
                 pushDto.queryEndTime = data1.get(SystemVariableTypeEnum.END_TIME.getValue());
@@ -242,22 +242,20 @@ public class BusinessProcessImpl
                 pushDto.factUpdateSql = factAttribute.buildFactUpdateSql(Math.toIntExact(item.id));
 
                 //获取事实表同步方式
-                if (dto.syncMode !=0)
-                {
+                Optional<SyncModePO> first = syncModePoList.stream().filter(e -> e.syncTableId == item.id).findFirst();
+                if (first.isPresent()) {
+                    pushDto.synMode = first.get().syncMode;
+                    pushDto.maxRowsPerFlowFile = first.get().maxRowsPerFlowFile;
+                    pushDto.fetchSize = first.get().fetchSize;
+                } else {
+                    pushDto.synMode = dto.syncMode;
+                }
+                /*if (dto.syncMode !=0) {
                     pushDto.synMode=dto.syncMode;
-                }
-                else {
-                    Optional<SyncModePO> first = syncModePoList.stream().filter(e -> e.syncTableId == item.id).findFirst();
-                    if (first.isPresent())
-                    {
-                        pushDto.synMode = first.get().syncMode;
-                        pushDto.maxRowsPerFlowFile = first.get().maxRowsPerFlowFile;
-                        pushDto.fetchSize = first.get().fetchSize;
-                    }
-                }
+                }*/
                 //获取该维度下所有维度字段
-                List<ModelPublishFieldDTO> fieldList=new ArrayList<>();
-                List<FactAttributePO> attributePoList=factAttributePoList.stream().filter(e->e.factId==item.id).collect(Collectors.toList());
+                List<ModelPublishFieldDTO> fieldList = new ArrayList<>();
+                List<FactAttributePO> attributePoList = factAttributePoList.stream().filter(e -> e.factId == item.id).collect(Collectors.toList());
                 for (FactAttributePO attributePo : attributePoList) {
                     fieldList.add(pushField(attributePo));
                 }
