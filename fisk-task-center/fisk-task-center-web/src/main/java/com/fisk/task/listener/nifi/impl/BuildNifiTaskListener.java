@@ -904,7 +904,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
 
         //创建执行删除组件
-        ProcessorEntity delSqlRes = execDeleteSqlProcessor(config, groupId, targetDbPoolId, synchronousTypeEnum,dto);
+        ProcessorEntity delSqlRes = execDeleteSqlProcessor(config, groupId, targetDbPoolId, synchronousTypeEnum, dto);
         tableNifiSettingPO.executeTargetDeleteProcessorId = delSqlRes.getId();
         //------------------------------------------
         List<ProcessorEntity> generateVersions = buildgenerateVersionProcessorEntity(dto.generateVersionSql, groupId, targetDbPoolId, res, tableNifiSettingPO);
@@ -1346,8 +1346,19 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         executeSQLRecordDTO.name = "executeSQLRecord";
         executeSQLRecordDTO.details = "query_phase";
         executeSQLRecordDTO.groupId = groupId;
-        executeSQLRecordDTO.FetchSize = FetchSize;
-        executeSQLRecordDTO.maxRowsPerFlowFile = MaxRowsPerFlowFile;
+        //拿接入配置,如果没有拿默认配置
+        if (dto.maxRowsPerFlowFile != 0) {
+            executeSQLRecordDTO.maxRowsPerFlowFile = String.valueOf(dto.maxRowsPerFlowFile);
+        } else {
+            executeSQLRecordDTO.maxRowsPerFlowFile = MaxRowsPerFlowFile;
+        }
+        if (dto.fetchSize != 0) {
+            executeSQLRecordDTO.FetchSize = String.valueOf(dto.fetchSize);
+        } else {
+            executeSQLRecordDTO.FetchSize = FetchSize;
+        }
+
+
         executeSQLRecordDTO.outputBatchSize = OutputBatchSize;
         //executeSQLRecordDTO.databaseConnectionPoolingService=config.sourceDsConfig.componentId;
         executeSQLRecordDTO.databaseConnectionPoolingService = sourceDbPoolId;
@@ -1499,7 +1510,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         }*/
         if (StringUtils.isNotEmpty(dto.generateVersionSql)) {
             schemaArchitecture = buildSchemaArchitecture(sourceFieldName.subList(0, sourceFieldName.size() - 3), config.processorConfig.targetTableName);
-        }else{
+        } else {
             schemaArchitecture = buildSchemaArchitecture(sourceFieldName.subList(0, sourceFieldName.size() - 2), config.processorConfig.targetTableName);
         }
 
@@ -1925,7 +1936,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      * @param targetDbPoolId ods连接池id
      * @return 组件对象
      */
-    private ProcessorEntity execDeleteSqlProcessor(DataAccessConfigDTO config, String groupId, String targetDbPoolId, SynchronousTypeEnum synchronousTypeEnum,BuildNifiFlowDTO buildNifiFlow) {
+    private ProcessorEntity execDeleteSqlProcessor(DataAccessConfigDTO config, String groupId, String targetDbPoolId, SynchronousTypeEnum synchronousTypeEnum, BuildNifiFlowDTO buildNifiFlow) {
         BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
         querySqlDto.name = "Exec Target Delete";
         querySqlDto.details = "query_phase";

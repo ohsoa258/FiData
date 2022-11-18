@@ -2,6 +2,8 @@ package com.fisk.datamodel.service;
 
 import com.fisk.datamodel.dto.dataops.DataModelTableInfoDTO;
 
+import java.util.List;
+
 /**
  * @author JianWenYang
  */
@@ -14,5 +16,13 @@ public interface IDataOps {
      * @return
      */
     DataModelTableInfoDTO getTableInfo(String tableName);
+
+    /**
+     * 根据表名字段显示名称
+     *
+     * @param tableName
+     * @return
+     */
+    List<String[]> getTableColumnDisplay(String tableName);
 
 }

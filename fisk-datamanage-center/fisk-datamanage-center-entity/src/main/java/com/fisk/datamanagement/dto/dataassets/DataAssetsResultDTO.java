@@ -15,7 +15,7 @@ public class DataAssetsResultDTO {
      */
     public JSONArray dataArray;
 
-    public List<String> columnList;
+    public List<String[]> columnList;
 
     public int pageIndex;
 

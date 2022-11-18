@@ -308,22 +308,26 @@ public class DimensionFolderImpl
                 pushDto.queryEndTime = data1.get(SystemVariableTypeEnum.END_TIME.getValue());
                 pushDto.sqlScript = data1.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
                 pushDto.queryStartTime = data1.get(SystemVariableTypeEnum.START_TIME.getValue());
+
                 //获取维度表同步方式
-                if (dto.syncMode != 0) {
-                    pushDto.synMode = dto.syncMode;
+                Optional<SyncModePO> first = syncModePoList.stream().filter(e -> e.syncTableId == item.id).findFirst();
+                if (first.isPresent()) {
+                    pushDto.synMode = first.get().syncMode;
+                    pushDto.maxRowsPerFlowFile = first.get().maxRowsPerFlowFile;
+                    pushDto.fetchSize = first.get().fetchSize;
                 } else {
-                    Optional<SyncModePO> first = syncModePoList.stream().filter(e -> e.syncTableId == item.id).findFirst();
-                    if (first.isPresent()) {
-                        pushDto.synMode = first.get().syncMode;
-                    }
+                    pushDto.synMode = dto.syncMode;
                 }
+                /*if (dto.syncMode != 0) {
+
+                }*/
                 //获取该维度下所有维度字段
-                List<ModelPublishFieldDTO> fieldList=new ArrayList<>();
-                List<DimensionAttributePO> attributePoList=dimensionAttributePoList.stream().filter(e->e.dimensionId==item.id).collect(Collectors.toList());
+                List<ModelPublishFieldDTO> fieldList = new ArrayList<>();
+                List<DimensionAttributePO> attributePoList = dimensionAttributePoList.stream().filter(e -> e.dimensionId == item.id).collect(Collectors.toList());
                 for (DimensionAttributePO attributePo : attributePoList) {
                     fieldList.add(pushField(attributePo));
                 }
-                pushDto.fieldList=fieldList;
+                pushDto.fieldList = fieldList;
                 dimensionList.add(pushDto);
             }
             data.dimensionList=dimensionList;

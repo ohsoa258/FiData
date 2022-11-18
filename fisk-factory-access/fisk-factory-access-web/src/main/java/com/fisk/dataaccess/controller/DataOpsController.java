@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -31,6 +32,12 @@ public class DataOpsController {
     @PostMapping("/getTableInfo")
     public ResultEntity<TableInfoDTO> getTableInfo(@Validated @RequestBody String tableName) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableInfo(tableName));
+    }
+
+    @ApiOperation("根据表名字段显示名称")
+    @PostMapping("/getTableColumnDisplay")
+    public ResultEntity<List<String[]>> getTableColumnDisplay(@Validated @RequestBody String tableName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableColumnDisplay(tableName));
     }
 
 }
