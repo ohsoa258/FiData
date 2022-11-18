@@ -2,6 +2,8 @@ package com.fisk.dataaccess.service;
 
 import com.fisk.dataaccess.dto.dataops.TableInfoDTO;
 
+import java.util.List;
+
 /**
  * @author JianWenYang
  */
@@ -14,5 +16,13 @@ public interface IDataOps {
      * @return
      */
     TableInfoDTO getTableInfo(String tableName);
+
+    /**
+     * 获取表字段显示列表
+     *
+     * @param tableName
+     * @return
+     */
+    List<String[]> getTableColumnDisplay(String tableName);
 
 }

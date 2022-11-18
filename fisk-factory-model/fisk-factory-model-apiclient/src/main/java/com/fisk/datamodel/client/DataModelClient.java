@@ -328,4 +328,14 @@ public interface DataModelClient {
     @PostMapping("/DataOps/getTableInfo")
     ResultEntity<DataModelTableInfoDTO> getTableInfo(@Validated @RequestBody String tableName);
 
+    /**
+     * 根据表名获取接入表信息
+     *
+     * @param tableName
+     * @return
+     */
+    @ApiOperation("根据表名获取接入表信息")
+    @PostMapping("/getTableColumnDisplay")
+    ResultEntity<List<String[]>> getTableColumnDisplay(@Validated @RequestBody String tableName);
+
 }

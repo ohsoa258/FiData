@@ -353,4 +353,14 @@ public interface DataAccessClient {
     @PostMapping("/DataOps/getTableInfo")
     ResultEntity<TableInfoDTO> getTableInfo(@Validated @RequestBody String tableName);
 
+    /**
+     * 根据表名字段显示名称
+     *
+     * @param tableName
+     * @return
+     */
+    @ApiOperation("根据表名字段显示名称")
+    @PostMapping("/DataOps/getTableColumnDisplay")
+    ResultEntity<List<String[]>> getTableColumnDisplay(@Validated @RequestBody String tableName);
+
 }

@@ -71,7 +71,7 @@ public class DataAssetsController {
         HSSFSheet sheet = workbook.createSheet("sheet1");
         HSSFRow row1 = sheet.createRow(0);
         for (int i = 0; i < result.columnList.size(); i++) {
-            row1.createCell(i).setCellValue(result.columnList.get(i));
+            row1.createCell(i).setCellValue(result.columnList.get(i)[0]);
         }
         for (int i=0;i<result.dataArray.size();i++)
         {
