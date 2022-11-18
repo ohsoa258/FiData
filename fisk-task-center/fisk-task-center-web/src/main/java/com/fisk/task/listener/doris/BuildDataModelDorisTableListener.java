@@ -215,6 +215,8 @@ public class BuildDataModelDorisTableListener
                     //类型为物理表
                     bfd.type = OlapTableEnum.FACT;
                 }
+                bfd.maxRowsPerFlowFile = modelPublishTableDTO.maxRowsPerFlowFile;
+                bfd.fetchSize = modelPublishTableDTO.fetchSize;
                 log.info("nifi传入参数：" + JSON.toJSONString(bfd));
                 TableNifiSettingPO one = tableNifiSettingService.query().eq("app_id", bfd.appId).eq("table_access_id", bfd.id).eq("type", bfd.type.getValue()).one();
                 TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();

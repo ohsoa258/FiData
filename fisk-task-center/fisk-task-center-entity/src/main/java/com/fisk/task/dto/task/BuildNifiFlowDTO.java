@@ -100,4 +100,13 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
      */
     public String generateVersionSql;
 
+    /**
+     * 单个数据流文件加载最大数据行
+     */
+    public int maxRowsPerFlowFile;
+    /**
+     * 单次从结果集中提取的最大数据行
+     */
+    public int fetchSize;
+
 }

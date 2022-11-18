@@ -130,6 +130,8 @@ public class BuildAtlasTableAndColumnTaskListener
             bfd.excelFlow = buildPhysicalTableDTO.excelFlow;
             bfd.deltaTimes = deltaTimes;
             bfd.generateVersionSql = buildPhysicalTableDTO.generateVersionSql;
+            bfd.maxRowsPerFlowFile = buildPhysicalTableDTO.maxRowsPerFlowFile;
+            bfd.fetchSize = buildPhysicalTableDTO.fetchSize;
             log.info("nifi传入参数：" + JSON.toJSONString(bfd));
             pc.publishBuildNifiFlowTask(bfd);
             log.info("执行完成");
