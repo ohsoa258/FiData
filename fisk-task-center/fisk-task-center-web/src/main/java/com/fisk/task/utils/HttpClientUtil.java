@@ -143,7 +143,7 @@ public class HttpClientUtil {
      * @throws IOException
      */
     public static String doPut(String url, String jsonStr) {
-        log.info("put请求参数与地址,{},{}", url, jsonStr);
+        //log.info("put请求参数与地址,{},{}", url, jsonStr);
         CloseableHttpClient httpClient = (CloseableHttpClient) wrapClient();
         HttpPut httpPut = new HttpPut(url);
         //RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(35000).setConnectionRequestTimeout(35000).setSocketTimeout(60000).build();
@@ -158,7 +158,7 @@ public class HttpClientUtil {
             httpResponse = httpClient.execute(httpPut);
             HttpEntity entity = httpResponse.getEntity();
             String result = EntityUtils.toString(entity);
-            log.info("put请求返回结果" + result);
+            //log.info("put请求返回结果" + result);
             return result;
         } catch (ClientProtocolException e) {
             log.error("nifi请求报错" + StackTraceHelper.getStackTraceInfo(e));

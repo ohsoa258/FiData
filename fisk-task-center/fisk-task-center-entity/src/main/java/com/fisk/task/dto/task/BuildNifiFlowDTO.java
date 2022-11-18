@@ -86,6 +86,11 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
     public boolean excelFlow;
 
     /**
+     * 是否是sftp
+     */
+    public boolean sftpFlow;
+
+    /**
      * 建模才有的update语句
      */
     public String updateSql;
