@@ -720,7 +720,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum editDataByDeleteTable(List<DeleteTableDetailDTO> list) {
-
+        log.info("删除表对应删除管道任务方法:" + JSON.toJSONString(list));
         list.stream()
                 .filter(Objects::nonNull)
                 .forEach(e ->
