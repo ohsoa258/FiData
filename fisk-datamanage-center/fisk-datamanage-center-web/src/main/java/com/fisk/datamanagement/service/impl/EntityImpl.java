@@ -184,6 +184,7 @@ public class EntityImpl implements IEntity {
                             dbStag.guid = dbObject.getString("guid") + "_" + first.get().name;
                             dbStag.parent = dbObject.getString("guid");
                             dbStag.name = first.get().name;
+                            dbStag.displayName = first.get().name;
                             //库名
                             dbStag.type = dbObject.getString("displayText");
                             stagingDTOList.add(dbStag);
@@ -217,14 +218,12 @@ public class EntityImpl implements IEntity {
      * @return
      */
     public EntityTreeDTO buildChildTree(EntityTreeDTO pNode, List<EntityStagingDTO> poList) {
-        List<EntityTreeDTO> list=new ArrayList<>();
-        for (EntityStagingDTO item:poList)
-        {
-            if (item.getParent().equals(pNode.getId()))
-            {
-                EntityTreeDTO dto=new EntityTreeDTO();
-                dto.id=item.guid;
-                dto.label =item.name;
+        List<EntityTreeDTO> list = new ArrayList<>();
+        for (EntityStagingDTO item : poList) {
+            if (item.getParent().equals(pNode.getId())) {
+                EntityTreeDTO dto = new EntityTreeDTO();
+                dto.id = item.guid;
+                dto.label = item.name;
                 dto.type = item.type;
                 dto.parentId = pNode.id;
                 dto.displayName = item.displayName;
