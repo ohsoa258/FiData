@@ -399,8 +399,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
             data.whetherSchema = registration.whetherSchema;
             data.generateVersionSql = versionSql;
-            data.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile;
-            data.fetchSize = syncMode.fetchSize;
+            //data.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile;
+            //data.fetchSize = syncMode.fetchSize;
 
             // 执行发布
             try {
