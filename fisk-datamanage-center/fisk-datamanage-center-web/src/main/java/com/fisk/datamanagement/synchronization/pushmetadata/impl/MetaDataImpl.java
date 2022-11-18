@@ -759,6 +759,7 @@ public class MetaDataImpl implements IMetaData {
                 attribute.put("comment", data.comment);
                 attribute.put("contact_info", data.contact_info);
                 attribute.put("description", data.description);
+                attribute.put("displayName", data.displayName);
                 break;
             case RDBMS_DB:
             case RDBMS_TABLE:
