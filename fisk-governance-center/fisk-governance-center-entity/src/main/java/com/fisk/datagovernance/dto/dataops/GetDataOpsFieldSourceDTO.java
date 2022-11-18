@@ -22,4 +22,11 @@ public class GetDataOpsFieldSourceDTO {
      */
     @ApiModelProperty(value = "表名称")
     public String tableName;
+
+    /**
+     * 表架构名称
+     */
+    @ApiModelProperty(value = "表架构名称")
+    public String tableFramework;
+
 }

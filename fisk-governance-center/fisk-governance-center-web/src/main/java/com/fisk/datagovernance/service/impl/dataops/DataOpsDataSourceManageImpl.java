@@ -1,9 +1,9 @@
 package com.fisk.datagovernance.service.impl.dataops;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -125,9 +125,10 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
 
         List<TableStructureDTO> columns = null;
         if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRESQL) {
-            columns = postgresConUtils.getColumns(connection, dto.getTableName());
+            String tableFullName = StringUtils.isEmpty(dto.getTableFramework()) ? dto.getTableName() : dto.getTableFramework() + "." + dto.getTableName();
+            columns = postgresConUtils.getColumns(connection, tableFullName);
         } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.SQLSERVER) {
-            columns = sqlServerPlusUtils.getColumns(connection, dto.getTableName(), null);
+            columns = sqlServerPlusUtils.getColumns(connection, dto.getTableName(), dto.getTableFramework());
         }
         if (CollectionUtils.isEmpty(columns)) {
             return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataOpsTableFieldVOS);
@@ -305,127 +306,56 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
 
     @Override
     public ResultEnum tableDataSync(TableDataSyncDTO dto) {
-        if (dto == null || dto.getDatasourceId() == 0 || StringUtils.isEmpty(dto.getTableName())) {
+        if (dto == null || dto.getDatasourceId() == 0 || StringUtils.isEmpty(dto.getTableFullName())) {
             return ResultEnum.PARAMTER_NOTNULL;
         }
-        TableInfoDTO tableInfoDTO = new TableInfoDTO();
-        if (dto.getDatasourceId() == 1) {
-            // 调用数据建模接口获取表信息
-            ResultEntity<DataModelTableInfoDTO> tableInfo = dataModelClient.getTableInfo(dto.getTableName());
-            if (tableInfo != null
-                    && tableInfo.getCode() == ResultEnum.SUCCESS.getCode()
-                    && tableInfo.getData() != null) {
-                tableInfoDTO.setTableAccessId(tableInfo.getData().getTableId());
-                tableInfoDTO.setAppId(tableInfo.getData().getBusinessAreaId());
-                tableInfoDTO.setTableName(tableInfo.getData().getTableName());
-                tableInfoDTO.setOlapTable(tableInfo.getData().getOlapTable());
-            }
-        } else if (dto.getDatasourceId() == 2) {
-            // 调用数据接入接口获取表信息
-            ResultEntity<TableInfoDTO> tableInfo = dataAccessClient.getTableInfo(dto.getTableName());
-            if (tableInfo != null
-                    && tableInfo.getCode() == ResultEnum.SUCCESS.getCode()
-                    && tableInfo.getData() != null) {
-                tableInfoDTO = tableInfo.getData();
-            }
-        }
-        if (tableInfoDTO == null || StringUtils.isEmpty(tableInfoDTO.getTableName())) {
-            return ResultEnum.DATAACCESS_GETTABLE_ERROR;
-        }
-        BuildTableNifiSettingDTO buildTableNifiSetting = new BuildTableNifiSettingDTO();
-        List<TableNifiSettingDTO> tableNifiSettings = new ArrayList<>();
-        TableNifiSettingDTO tableNifiSetting = new TableNifiSettingDTO();
-        tableNifiSetting.setUserId(userHelper.getLoginUserInfo().getId());
-        tableNifiSetting.setTableName(dto.getTableName());
-        tableNifiSetting.setTableAccessId(tableInfoDTO.getTableAccessId());
-        tableNifiSetting.setAppId(tableInfoDTO.getAppId());
-        tableNifiSetting.setType(tableInfoDTO.getOlapTable());
-        tableNifiSettings.add(tableNifiSetting);
-        buildTableNifiSetting.setTableNifiSettings(tableNifiSettings);
-        ResultEntity<Object> result = publishTaskClient.immediatelyStart(buildTableNifiSetting);
-        if (result != null && result.getCode() == ResultEnum.SUCCESS.getCode()) {
-            return ResultEnum.SUCCESS;
-        }
-        return ResultEnum.TABLE_DATA_SYNC_FAIL;
-    }
-
-    public void setDataOpsDataSource() {
-        log.info("setDataOpsDataSource 开始");
-        List<DataOpsSourceVO> dataOpsSourceVOList = new ArrayList<>();
-        // 第一步：读取配置的数据源信息
-        List<PostgreDTO> postgreDTOList = getPostgreDTOList();
-        if (CollectionUtils.isEmpty(postgreDTOList)) {
-            log.error("setDataOpsDataSource 数据源配置不存在");
-            return;
-        }
-        // 第二步：读取数据源下的库、表、字段信息
-        PostgresConUtils postgresConUtils = new PostgresConUtils();
-        SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
         try {
-            List<String> conIps = postgreDTOList.stream().map(PostgreDTO::getIp).distinct().collect(Collectors.toList());
-            for (String conIp : conIps) {
-                DataOpsSourceVO dataOpsSourceVO = null;
-                List<DataOpsDataBaseVO> dataOpsDataBaseVOS = new ArrayList<>();
-                for (PostgreDTO postgreDTO : postgreDTOList) {
-                    if (postgreDTO.getIp().equals(conIp)) {
-                        if (dataOpsSourceVO == null) {
-                            dataOpsSourceVO = new DataOpsSourceVO();
-                            dataOpsSourceVO.setConIp(postgreDTO.getIp());
-                            dataOpsSourceVO.setConType(postgreDTO.getDataSourceTypeEnum());
-                            dataOpsSourceVO.setConPort(postgreDTO.getPort());
-                        }
-                        List<DataOpsDataTableVO> dataOpsDataTableVOList = new ArrayList<>();
-                        List<TablePyhNameDTO> tableNameAndColumns = null;
-                        if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRESQL) {
-                            // 表/字段结构
-                            tableNameAndColumns = postgresConUtils.getTableNameAndColumns(postgreDTO.sqlUrl, postgreDTO.sqlUsername, postgreDTO.sqlPassword, DriverTypeEnum.POSTGRESQL);
-                        } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.SQLSERVER) {
-                            // 表/字段结构
-                            tableNameAndColumns = sqlServerPlusUtils.getTableNameAndColumnsPlus(postgreDTO.sqlUrl, postgreDTO.sqlUsername, postgreDTO.sqlPassword, postgreDTO.dbName);
-                        }
-                        if (CollectionUtils.isNotEmpty(tableNameAndColumns)) {
-                            // 增加排序
-                            tableNameAndColumns.sort(Comparator.comparing(TablePyhNameDTO::getTableName));
-
-                            for (TablePyhNameDTO tablePyhNameDTO : tableNameAndColumns) {
-                                DataOpsDataTableVO dataOpsDataTableVO = new DataOpsDataTableVO();
-                                if (CollectionUtils.isNotEmpty(tablePyhNameDTO.getFields())) {
-                                    List<DataOpsTableFieldVO> fieldVOList = new ArrayList<>();
-                                    for (TableStructureDTO tableStructureDTO : tablePyhNameDTO.getFields()) {
-                                        DataOpsTableFieldVO dataOpsTableFieldVO = new DataOpsTableFieldVO();
-                                        dataOpsTableFieldVO.setFieldName(tableStructureDTO.getFieldName());
-                                        dataOpsTableFieldVO.setFieldType(tableStructureDTO.getFieldType());
-                                        dataOpsTableFieldVO.setFieldLength(tableStructureDTO.getFieldLength());
-                                        dataOpsTableFieldVO.setFieldDes(tableStructureDTO.getFieldDes());
-                                        fieldVOList.add(dataOpsTableFieldVO);
-                                    }
-                                    dataOpsDataTableVO.setChildren(fieldVOList);
-                                }
-                                dataOpsDataTableVO.setTableName(tablePyhNameDTO.getTableName());
-                                dataOpsDataTableVOList.add(dataOpsDataTableVO);
-                            }
-                        }
-                        DataOpsDataBaseVO dataOpsDataBaseVO = new DataOpsDataBaseVO();
-                        dataOpsDataBaseVO.setDatasourceId(postgreDTO.getId());
-                        dataOpsDataBaseVO.setConDbname(postgreDTO.getDbName());
-                        dataOpsDataBaseVO.setChildren(dataOpsDataTableVOList);
-                        dataOpsDataBaseVOS.add(dataOpsDataBaseVO);
-                    }
+            log.info("【tableDataSync】请求参数：" + JSON.toJSONString(dto));
+            TableInfoDTO tableInfoDTO = new TableInfoDTO();
+            if (dto.getDatasourceId() == 1) {
+                // 调用数据建模接口获取表信息
+                ResultEntity<DataModelTableInfoDTO> tableInfo = dataModelClient.getTableInfo(dto.getTableFullName());
+                if (tableInfo != null
+                        && tableInfo.getCode() == ResultEnum.SUCCESS.getCode()
+                        && tableInfo.getData() != null) {
+                    tableInfoDTO.setTableAccessId(tableInfo.getData().getTableId());
+                    tableInfoDTO.setAppId(tableInfo.getData().getBusinessAreaId());
+                    tableInfoDTO.setTableName(tableInfo.getData().getTableName());
+                    tableInfoDTO.setOlapTable(tableInfo.getData().getOlapTable());
                 }
-                dataOpsSourceVO.setChildren(dataOpsDataBaseVOS);
-                dataOpsSourceVOList.add(dataOpsSourceVO);
+            } else if (dto.getDatasourceId() == 2) {
+                // 调用数据接入接口获取表信息
+                ResultEntity<TableInfoDTO> tableInfo = dataAccessClient.getTableInfo(dto.getTableFullName());
+                if (tableInfo != null
+                        && tableInfo.getCode() == ResultEnum.SUCCESS.getCode()
+                        && tableInfo.getData() != null) {
+                    tableInfoDTO = tableInfo.getData();
+                }
             }
-            if (CollectionUtils.isNotEmpty(dataOpsSourceVOList)) {
-                String dataOpsSourceJson = JSONArray.toJSON(dataOpsSourceVOList).toString();
-                // 生成目录加 ：
-                redisTemplate.opsForValue().set(metaDataEntityKey, dataOpsSourceJson);
-                log.info("setDataOpsDataSource 元数据信息已写入redis");
+            if (tableInfoDTO == null || StringUtils.isEmpty(tableInfoDTO.getTableName())) {
+                return ResultEnum.DATAACCESS_GETTABLE_ERROR;
+            }
+            log.info("【tableDataSync】查询表信息返回数据：" + JSON.toJSONString(tableInfoDTO));
+            BuildTableNifiSettingDTO buildTableNifiSetting = new BuildTableNifiSettingDTO();
+            buildTableNifiSetting.setUserId(userHelper.getLoginUserInfo().getId());
+            List<TableNifiSettingDTO> tableNifiSettings = new ArrayList<>();
+            TableNifiSettingDTO tableNifiSetting = new TableNifiSettingDTO();
+            tableNifiSetting.setTableName(dto.getTableFullName());
+            tableNifiSetting.setTableAccessId(tableInfoDTO.getTableAccessId());
+            tableNifiSetting.setAppId(tableInfoDTO.getAppId());
+            tableNifiSetting.setType(tableInfoDTO.getOlapTable());
+            tableNifiSettings.add(tableNifiSetting);
+            buildTableNifiSetting.setTableNifiSettings(tableNifiSettings);
+            log.info("【tableDataSync】调用nifi同步表数据请求参数：" + JSON.toJSONString(buildTableNifiSetting));
+            ResultEntity<Object> result = publishTaskClient.immediatelyStart(buildTableNifiSetting);
+            if (result != null && result.getCode() == ResultEnum.SUCCESS.getCode()) {
+                return ResultEnum.SUCCESS;
             }
         } catch (Exception ex) {
-            log.error("setDataOpsDataSource执行异常：", ex);
-        } finally {
-            log.info("setDataOpsDataSource 结束");
+            log.error("【tableDataSync】执行异常：" + ex);
+            return ResultEnum.ERROR;
         }
+        return ResultEnum.TABLE_DATA_SYNC_FAIL;
     }
 
     public void setDataOpsDataSource_v1() {
@@ -455,31 +385,25 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                         }
                         List<DataOpsDataTableVO> tableVOList = new ArrayList<>();
                         Connection connection = DataSourceConManageImpl.getStatement(postgreDTO.getDataSourceTypeEnum(), postgreDTO.getSqlUrl(), postgreDTO.getSqlUsername(), postgreDTO.getSqlPassword());
+                        List<TablePyhNameDTO> tablesPlus = null;
                         if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRESQL) {
-                            // 表/字段结构
-                            List<String> tablesPlus = postgresConUtils.getTablesPlus(connection);
+                            tablesPlus = postgresConUtils.getTablesPlus(connection);
+                        } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.SQLSERVER) {
+                            tablesPlus = sqlServerPlusUtils.getTablesPlus(connection);
+                        }
+                        if (CollectionUtils.isNotEmpty(tablesPlus)) {
                             tablesPlus.forEach(t -> {
                                 DataOpsDataTableVO dataOpsDataTableVO = new DataOpsDataTableVO();
-                                dataOpsDataTableVO.setTableFramework("");
-                                dataOpsDataTableVO.setTableName(t);
+                                dataOpsDataTableVO.setTableFramework(t.getTableFramework());
+                                dataOpsDataTableVO.setTableName(t.getTableName());
+                                dataOpsDataTableVO.setTableFullName(t.getTableFullName());
                                 tableVOList.add(dataOpsDataTableVO);
                             });
-                        } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.SQLSERVER) {
-                            // 表/字段结构
-                            Map<String, String> tablesPlus = sqlServerPlusUtils.getTablesPlus(connection);
-                            if (tablesPlus != null && tablesPlus.size() > 0) {
-                                tablesPlus.forEach((key, value) -> {
-                                    DataOpsDataTableVO dataOpsDataTableVO = new DataOpsDataTableVO();
-                                    dataOpsDataTableVO.setTableFramework(value);
-                                    dataOpsDataTableVO.setTableName(key);
-                                    tableVOList.add(dataOpsDataTableVO);
-                                });
-                            }
                         }
-                        if (CollectionUtils.isNotEmpty(tableVOList)) {
-                            // 增加排序
-                            tableVOList.sort(Comparator.comparing(DataOpsDataTableVO::getTableName));
-                        }
+//                        if (CollectionUtils.isNotEmpty(tableVOList)) {
+//                            // 增加排序
+//                            tableVOList.sort(Comparator.comparing(DataOpsDataTableVO::getTableName));
+//                        }
                         DataOpsDataBaseVO dataOpsDataBaseVO = new DataOpsDataBaseVO();
                         dataOpsDataBaseVO.setDatasourceId(postgreDTO.getId());
                         dataOpsDataBaseVO.setConDbname(postgreDTO.getDbName());

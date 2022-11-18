@@ -156,6 +156,8 @@ public enum ResultEnum {
     VERSION_CUSTOM_SQL_IS_NULL(5071, "版本自定义语句为空"),
     VERSION_CUSTOM_SQL_RESULT_IS_NULL(5072, "版本自定义语句查询结果为空"),
     VERSION_NOT_OPEN_SAVE_RULE(5073, "未启用版本保留规则"),
+    DATAACCESS_GETSCHEMA_ERROR(5074, "获取schema失败"),
+    DATAACCESS_GETTABLEANDFIELD_ERROR(5075, "获取表和字段信息失败"),
 
     /**
      * 后台任务模块

@@ -245,15 +245,15 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             switch (DataSourceTypeEnum.values()[conPo.conType]) {
                 case MYSQL:
                     // 表结构
-                    tableNameAndColumns = mysqlConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DriverTypeEnum.MYSQL);
+                    tableNameAndColumns = mysqlConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.MYSQL);
                     break;
                 case SQLSERVER:
                     // 表结构
-                    tableNameAndColumns = sqlServerPlusUtils.getTableNameAndColumnsPlus(conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                    tableNameAndColumns = sqlServerPlusUtils.getTableNameAndColumnsPlus(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.SQLSERVER);
                     break;
                 case POSTGRESQL:
                     // 表结构
-                    tableNameAndColumns = postgresConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DriverTypeEnum.POSTGRESQL);
+                    tableNameAndColumns = postgresConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.POSTGRESQL);
                     break;
             }
             if (CollectionUtils.isNotEmpty(tableNameAndColumns)) {
@@ -263,8 +263,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     FiDataMetaDataTreeDTO fiDataMetaDataTree_Table = new FiDataMetaDataTreeDTO();
                     fiDataMetaDataTree_Table.setId(uuid_TableId);
                     fiDataMetaDataTree_Table.setParentId(String.valueOf(conPo.id));
-                    fiDataMetaDataTree_Table.setLabel(table.tableName);
-                    fiDataMetaDataTree_Table.setLabelAlias(table.tableName);
+                    fiDataMetaDataTree_Table.setLabel(table.tableFullName);
+                    fiDataMetaDataTree_Table.setLabelAlias(table.tableFullName);
                     fiDataMetaDataTree_Table.setSourceId(Math.toIntExact(conPo.id));
                     fiDataMetaDataTree_Table.setSourceType(SourceTypeEnum.custom.getValue());
                     fiDataMetaDataTree_Table.setLevelType(LevelTypeEnum.TABLE);

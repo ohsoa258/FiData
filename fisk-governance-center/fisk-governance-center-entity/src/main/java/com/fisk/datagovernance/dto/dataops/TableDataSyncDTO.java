@@ -20,9 +20,8 @@ public class TableDataSyncDTO {
     public int datasourceId;
 
     /**
-     * 表名称
+     * 架构名称+表名称
      */
-    @ApiModelProperty(value = "表名称")
-    @NotNull()
-    public String tableName;
+    @ApiModelProperty(value = "架构名称+表名称")
+    public String tableFullName;
 }

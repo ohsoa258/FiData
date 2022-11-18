@@ -9,7 +9,6 @@ import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
-import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -384,15 +383,15 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             switch (dataSourceTypeEnum) {
                 case MYSQL:
                     // 表结构
-                    tableNameAndColumns = mysqlConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DriverTypeEnum.MYSQL);
+                    tableNameAndColumns = mysqlConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.MYSQL);
                     break;
                 case SQLSERVER:
                     // 表结构
-                    tableNameAndColumns = sqlServerPlusUtils.getTableNameAndColumnsPlus(conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                    tableNameAndColumns = sqlServerPlusUtils.getTableNameAndColumnsPlus(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.SQLSERVER);
                     break;
                 case POSTGRESQL:
                     // 表结构
-                    tableNameAndColumns = postgresConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DriverTypeEnum.POSTGRESQL);
+                    tableNameAndColumns = postgresConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.POSTGRESQL);
                     break;
             }
             List<FieldInfoVO> tableFieldList = getTableFieldList(connection, conPo);
@@ -405,8 +404,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     FiDataMetaDataTreeDTO fiDataMetaDataTree_Table = new FiDataMetaDataTreeDTO();
                     fiDataMetaDataTree_Table.setId(uuid_TableId);
                     fiDataMetaDataTree_Table.setParentId(uuid_TableFOLDERId);
-                    fiDataMetaDataTree_Table.setLabel(table.tableName);
-                    fiDataMetaDataTree_Table.setLabelAlias(table.tableName);
+                    fiDataMetaDataTree_Table.setLabel(table.tableFullName);
+                    fiDataMetaDataTree_Table.setLabelAlias(table.tableFullName);
                     fiDataMetaDataTree_Table.setSourceId(Math.toIntExact(conPo.id));
                     fiDataMetaDataTree_Table.setSourceType(SourceTypeEnum.custom.getValue());
                     fiDataMetaDataTree_Table.setLevelType(LevelTypeEnum.TABLE);
@@ -472,15 +471,15 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             switch (DataSourceTypeEnum.values()[conPo.conType]) {
                 case MYSQL:
                     // 表结构
-                    viewNameAndColumns = mysqlConUtils.loadViewDetails(DriverTypeEnum.MYSQL, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                    viewNameAndColumns = mysqlConUtils.loadViewDetails(DataSourceTypeEnum.MYSQL, conPo.conStr, conPo.conAccount, conPo.conPassword);
                     break;
                 case SQLSERVER:
                     // 表结构
-                    viewNameAndColumns = sqlServerPlusUtils.loadViewDetails(DriverTypeEnum.SQLSERVER, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                    viewNameAndColumns = sqlServerPlusUtils.loadViewDetails(DataSourceTypeEnum.SQLSERVER, conPo.conStr, conPo.conAccount, conPo.conPassword);
                     break;
                 case POSTGRESQL:
                     // 表结构
-                    viewNameAndColumns = postgresConUtils.loadViewDetails(DriverTypeEnum.POSTGRESQL, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                    viewNameAndColumns = postgresConUtils.loadViewDetails(DataSourceTypeEnum.POSTGRESQL, conPo.conStr, conPo.conAccount, conPo.conPassword);
                     break;
             }
 

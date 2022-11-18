@@ -35,6 +35,12 @@ public class TablePyhNameDTO extends BaseDTO {
     public String tableName;
 
     /**
+     * 表架构名称+表名
+     */
+    @ApiModelProperty(value = "表架构名称+表名", required = true)
+    public String tableFullName;
+
+    /**
      * 表行数
      */
     @ApiModelProperty(value = "表行数")
