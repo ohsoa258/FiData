@@ -428,8 +428,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                             fiDataMetaDataTree_Field.setLabelType(field.fieldType);
                             fiDataMetaDataTree_Field.setLabelLength(String.valueOf(field.fieldLength));
                             fiDataMetaDataTree_Field.setLabelDesc(field.fieldDes);
-                            fiDataMetaDataTree_Field.setParentName(table.tableName);
-                            fiDataMetaDataTree_Field.setParentNameAlias(table.tableName);
+                            fiDataMetaDataTree_Field.setParentName(table.tableFullName);
+                            fiDataMetaDataTree_Field.setParentNameAlias(table.tableFullName);
                             fiDataMetaDataTree_Field.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                             fiDataMetaDataTree_Field.setPublishState("1");
                             if (CollectionUtils.isNotEmpty(tableFieldList)) {
