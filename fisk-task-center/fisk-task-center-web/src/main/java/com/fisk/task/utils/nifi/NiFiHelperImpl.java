@@ -2218,10 +2218,10 @@ public class NiFiHelperImpl implements INiFiHelper {
         try {
             TableNifiSettingPO dto = tableNifiSettingService.getByTableId( tableNifiSettingDTO.tableAccessId, tableNifiSettingDTO.type);
             KafkaReceiveDTO kafkaRkeceiveDTO = new KafkaReceiveDTO();
-            String topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type + "." + dto.appId + "." + dto.id;
+            String topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type + "." + dto.appId + "." + dto.tableAccessId;
             int value = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
             if (Objects.equals(value, OlapTableEnum.KPI)) {
-                topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.KPI.getValue() + "." + dto.appId + "." + dto.id;
+                topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.KPI.getValue() + "." + dto.appId + "." + dto.tableAccessId;
             }
             kafkaRkeceiveDTO.topic = topicName;
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
