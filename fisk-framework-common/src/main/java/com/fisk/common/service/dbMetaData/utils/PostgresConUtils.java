@@ -70,7 +70,7 @@ public class PostgresConUtils {
             // 获取所有架构名
             List<String> schemaList = getSchemaList(conn);
             // 获取数据库中所有视图名称
-            List<String> viewNameList = loadViewNameList(conn,schemaList);
+            List<String> viewNameList = loadViewNameList(conn, schemaList);
             stmt = conn.createStatement();
             list = new ArrayList<>();
             for (String viewName : viewNameList) {
@@ -102,16 +102,17 @@ public class PostgresConUtils {
     /**
      * 根据架构名获取视图名
      */
-    private List<String> loadViewNameList(Connection conn,  List<String> schemaList ) {
-        ArrayList<String> viewNameList = null;
+    private List<String> loadViewNameList(Connection conn, List<String> schemaList) {
+        List<String> viewNameList = new ArrayList<>();
         try {
             DatabaseMetaData databaseMetaData = conn.getMetaData();
             String[] types = {"VIEW"};
             for (String schema : schemaList) {
                 ResultSet rs = databaseMetaData.getTables(null, schema, null, types);
+                // schema下不存在view，走到这里为空会跳过
                 while (rs.next()) {
-                    rs.getString(3);
-                    viewNameList.add(schema + ".[" + rs.getString(3) + "]");
+                    String viewName = rs.getString(3);
+                    viewNameList.add(schema + "." + viewName);
                 }
                 // 关闭
                 rs.close();
