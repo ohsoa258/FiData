@@ -578,7 +578,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         db.setDescription(app.getAppDes());
         db.setComment(app.getAppDes());
         db.setOwner(app.createUser);
-        db.setDisplayName(app.appName);
+        db.setDisplayName(dbName);
 
         TableAccessPO tableAccess = tableAccessImpl.query().eq("id", accessId).one();
         if (tableAccess == null) {

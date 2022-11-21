@@ -712,10 +712,12 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
         data.qualifiedName = result.data.conIp;
         data.protocol = result.data.protocol;
         data.rdbms_type = result.data.conType.getName();
+        data.displayName = result.data.conIp;
         //库
         List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
         MetaDataDbAttributeDTO db = new MetaDataDbAttributeDTO();
         db.name = result.data.conDbname;
+        db.displayName = result.data.conDbname;
         db.qualifiedName = result.data.conIp + "_" + result.data.conDbname;
         dbList.add(db);
         data.dbList = dbList;
