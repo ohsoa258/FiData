@@ -73,8 +73,10 @@ public class PostgresConUtils {
             List<String> viewNameList = loadViewNameList(conn, schemaList);
             stmt = conn.createStatement();
             list = new ArrayList<>();
+            ResultSet resultFiled = null;
             for (String viewName : viewNameList) {
-                List<TableStructureDTO> colNames = getViewColumns(conn, viewName);
+                resultFiled = stmt.executeQuery("select * from " + viewName + ";");
+                List<TableStructureDTO> colNames = getViewColumns(resultFiled);
                 DataBaseViewDTO dto = new DataBaseViewDTO();
                 dto.viewName = viewName;
                 dto.fields = colNames;
@@ -281,25 +283,22 @@ public class PostgresConUtils {
     /**
      * 获取指定表视图字段信息
      */
-    public List<TableStructureDTO> getViewColumns(Connection conn, String viewName) {
+    public List<TableStructureDTO> getViewColumns(ResultSet rs) {
         List<TableStructureDTO> colNameList = new ArrayList<>();
         try {
-            ResultSet rs = conn.getMetaData().getColumns(null, "%", viewName, "%");
-            while (rs.next()) {
+            ResultSetMetaData metaData = rs.getMetaData();
+            int count = metaData.getColumnCount();
+            for (int i = 1; i <= count; i++) {
                 TableStructureDTO tableStructureDTO = new TableStructureDTO();
-                //字段名称
-                tableStructureDTO.setFieldName(rs.getString("COLUMN_NAME"));
-                //字段类型
-                tableStructureDTO.setFieldType(rs.getString("TYPE_NAME"));
-                //字段长度
-                tableStructureDTO.setFieldLength(Integer.parseInt(rs.getString("COLUMN_SIZE")));
-                //备注
-                //tableStructureDTO.setFieldDes(rs.getString("REMARKS"));
+                // 字段名称
+                tableStructureDTO.fieldName = metaData.getColumnName(i);
+                // 字段类型
+                tableStructureDTO.fieldType = metaData.getColumnTypeName(i);
+                // 字段长度
+                tableStructureDTO.fieldLength = metaData.getColumnDisplaySize(i);
                 colNameList.add(tableStructureDTO);
             }
-            if (rs != null) {
-                rs.close();
-            }
+            rs.close();
         } catch (Exception e) {
             log.error("【getViewColumns】读取字段信息异常, ex", e);
             throw new FkException(ResultEnum.PG_READ_FIELD_ERROR);
