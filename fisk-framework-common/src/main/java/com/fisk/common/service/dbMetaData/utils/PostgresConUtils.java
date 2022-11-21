@@ -67,8 +67,10 @@ public class PostgresConUtils {
         try {
             Class.forName(driverTypeEnum.getDriverName());
             conn = DriverManager.getConnection(url, user, password);
+            // 获取所有架构名
+            List<String> schemaList = getSchemaList(conn);
             // 获取数据库中所有视图名称
-            List<String> viewNameList = loadViewNameList(conn);
+            List<String> viewNameList = loadViewNameList(conn,schemaList);
             stmt = conn.createStatement();
             list = new ArrayList<>();
             for (String viewName : viewNameList) {
@@ -100,18 +102,18 @@ public class PostgresConUtils {
     /**
      * 根据架构名获取视图名
      */
-    private List<String> loadViewNameList(Connection conn) {
+    private List<String> loadViewNameList(Connection conn,  List<String> schemaList ) {
         ArrayList<String> viewNameList = null;
         try {
             DatabaseMetaData databaseMetaData = conn.getMetaData();
             String[] types = {"VIEW"};
-            ResultSet rs = null;
-            rs = databaseMetaData.getTables(null, null, "%", types);
-            viewNameList = new ArrayList<>();
-            while (rs.next()) {
-                viewNameList.add(rs.getString(3));
-            }
-            if (rs != null) {
+            for (String schema : schemaList) {
+                ResultSet rs = databaseMetaData.getTables(null, schema, null, types);
+                while (rs.next()) {
+                    rs.getString(3);
+                    viewNameList.add(schema + ".[" + rs.getString(3) + "]");
+                }
+                // 关闭
                 rs.close();
             }
         } catch (Exception e) {
@@ -119,6 +121,48 @@ public class PostgresConUtils {
             throw new FkException(ResultEnum.LOAD_VIEW_NAME_ERROR);
         }
         return viewNameList;
+    }
+
+    /**
+     * 获取某个库下的所有架构名
+     */
+    public List<String> getSchemaList(Connection conn) {
+        List<String> schemaList = new ArrayList<>();
+        Statement stmt = null;
+        try {
+            stmt = conn.createStatement();
+            ResultSet resultSet = stmt.executeQuery("SELECT\n" +
+                    "\tschemata.SCHEMA_NAME AS schemaName \n" +
+                    "FROM\n" +
+                    "\tinformation_schema.schemata AS schemata\n" +
+                    "\tLEFT JOIN pg_tables tables ON schemata.SCHEMA_NAME = tables.schemaname \n" +
+                    "WHERE\n" +
+                    "\ttables.tablename IS NOT NULL \n" +
+                    "\tAND tables.tablename <> '' \n" +
+                    "\tAND schemata.SCHEMA_NAME NOT IN ( 'pg_catalog', 'information_schema' ) \n" +
+                    "GROUP BY\n" +
+                    "SCHEMA_NAME \n" +
+                    "ORDER BY\n" +
+                    "SCHEMA_NAME");
+            while (resultSet.next()) {
+                String schemaName = resultSet.getString("schemaName");
+                schemaList.add(schemaName);
+            }
+            resultSet.close();
+        } catch (SQLException e) {
+            log.error("【getSchemaList】获取架构名异常：", e);
+            throw new FkException(ResultEnum.DATAACCESS_GETSCHEMA_ERROR);
+        } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException e) {
+                    log.error("【getSchemaList】关闭数据库连接异常：", e);
+                    throw new FkException(ResultEnum.DATAACCESS_GETSCHEMA_ERROR);
+                }
+            }
+        }
+        return schemaList;
     }
 
     /**
