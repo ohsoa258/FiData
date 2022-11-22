@@ -185,6 +185,10 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
             case SMALLINT:
                 data[0] = SqlServerTypeEnum.INT.getName();
                 break;
+            case TINYINT:
+                data[0] = SqlServerTypeEnum.NVARCHAR.getName();
+                data[1] = "10";
+                break;
             case BIGINT:
                 data[0] = SqlServerTypeEnum.BIGINT.getName();
                 break;

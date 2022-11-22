@@ -19,7 +19,6 @@ import java.util.*;
 public class SftpUtils {
 
     private static final String ROOT_PATH = "/";
-    private static final String secreKeyPath1 = "D:\\WeChatData\\WeChat Files\\wxid_mpbfv3jjxgjd12\\FileStorage\\File\\2022-11\\id_rsa_sftp2";
 
    /* @Test
     public void test(){
@@ -40,6 +39,7 @@ public class SftpUtils {
      * @param port
      * @param userName
      * @param password
+     * @param secretKeyPath
      * @return
      */
     public static ChannelSftp connect(String hostName, Integer port, String userName, String password, String secretKeyPath) {
@@ -48,7 +48,6 @@ public class SftpUtils {
         ChannelSftp sftp = null;
         Channel channel = null;
         try {
-            secretKeyPath = secreKeyPath1;
             session = jSch.getSession(userName, hostName, port);
             if (!StringUtils.isEmpty(secretKeyPath)) {
                 jSch.addIdentity(secretKeyPath);
@@ -64,7 +63,7 @@ public class SftpUtils {
             channel.connect();
             sftp = (ChannelSftp) channel;
 
-            //解决获取sftp中文文件名乱码问题
+            //解决获取sftp文件中有中文名导致乱码问题
             Class cl = ChannelSftp.class;
             Field field = cl.getDeclaredField("server_version");
             field.setAccessible(true);
