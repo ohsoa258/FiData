@@ -124,12 +124,22 @@ public class BuildPgTableImpl implements IbuildTable {
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
                 sql += "stg_" + targetTableName + "'";
                 sql += ",'" + targetTableName + "'";
+                //同步方式
+                String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
+                if (StringUtils.isNotEmpty(buildNifiFlow.generateVersionSql)) {
+                    sql += ",'" + syncModeTypeEnum.FULL_VOLUME_VERSION.getName() + "'";
+                } else {
+                    sql += ",'" + syncMode + "'";
+                }
             } else {
                 String fieldList = config.modelPublishFieldDTOList.stream().filter(Objects::nonNull)
                         .filter(e -> e.fieldEnName != null && !Objects.equals("", e.fieldEnName))
                         .map(t -> t.fieldEnName).collect(Collectors.joining("'',''"));
                 sql += fieldList + "','" + tableKey + "','" + targetTableName + "'";
                 sql += ",'" + config.processorConfig.targetTableName.substring(4) + "'";
+                //同步方式
+                String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
+                sql += ",'" + syncMode + "'";
             }
         } else {
             tableKey = targetTableName.substring(4) + "key";

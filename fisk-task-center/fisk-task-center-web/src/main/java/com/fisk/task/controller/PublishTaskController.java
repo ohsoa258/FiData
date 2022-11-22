@@ -216,16 +216,16 @@ public class PublishTaskController {
     /**
      * 立即重启
      *
-     * @param buildTableNifiSettingDTO
+     * @param buildTableNifiSetting
      * @return
      */
     @PostMapping("/immediatelyStart")
     @ApiOperation(value = "立即启动")
-    public ResultEntity<Object> immediatelyStart(@RequestBody BuildTableNifiSettingDTO buildTableNifiSettingDTO) {
-        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_CUSTOMWORK_TASK.getName(),
+    public ResultEntity<Object> immediatelyStart(@RequestBody BuildTableNifiSettingDTO buildTableNifiSetting) {
+        return iBuildKfkTaskService.publishTask("【数据库运维】" + buildTableNifiSetting.tableNifiSettings.get(0).tableName + "表数据同步",
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_IMMEDIATELYSTART_FLOW,
-                buildTableNifiSettingDTO);
+                buildTableNifiSetting);
     }
 
 

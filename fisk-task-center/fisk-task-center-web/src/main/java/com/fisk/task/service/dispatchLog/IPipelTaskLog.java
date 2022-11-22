@@ -2,6 +2,7 @@ package com.fisk.task.service.dispatchLog;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
+import com.fisk.task.dto.dispatchlog.PipelTaskMergeLogVO;
 import com.fisk.task.entity.PipelTaskLogPO;
 
 
@@ -40,7 +41,7 @@ public interface IPipelTaskLog extends IService<PipelTaskLogPO> {
      * @param pipelTaskLogs
      * @return
      */
-    List<PipelTaskLogVO> getPipelTaskLogVos(List<PipelTaskLogVO> pipelTaskLogs);
+    List<PipelTaskMergeLogVO> getPipelTaskLogVos(List<PipelTaskLogVO> pipelTaskLogs);
 
 
 }

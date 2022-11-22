@@ -1,7 +1,9 @@
 package com.fisk.task.service.dispatchLog;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.task.dto.dispatchlog.LogStatisticsForChartVO;
 import com.fisk.task.dto.dispatchlog.PipelLogVO;
+import com.fisk.task.dto.dispatchlog.PipelMergeLog;
 import com.fisk.task.entity.PipelLogPO;
 
 import java.util.List;
@@ -14,5 +16,9 @@ public interface IPipelLog extends IService<PipelLogPO> {
 
     void savePipelLog(String pipelTraceId, Map<Integer, Object> map, String pipelId);
 
-    List<PipelLogVO> getPipelLogVos(PipelLogVO pipelLog);
+    List<PipelMergeLog> getPipelLogVos(PipelLogVO pipelLog);
+
+    LogStatisticsForChartVO getLogStatisticsForChart(PipelLogVO pipelLog);
+
+
 }

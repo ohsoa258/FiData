@@ -149,6 +149,13 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
                 sql += "stg_" + targetTableName + "'";
                 sql += ",'" + targetTableName + "'";
+                //同步方式
+                String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
+                if (Objects.nonNull(buildNifiFlow) && StringUtils.isNotEmpty(buildNifiFlow.generateVersionSql)) {
+                    sql += ",'" + syncModeTypeEnum.FULL_VOLUME_VERSION.getName() + "'";
+                } else {
+                    sql += ",'" + syncMode + "'";
+                }
             } else {
                 sql += "${fragment.index}','''";
                 String fieldList = config.modelPublishFieldDTOList.stream().filter(Objects::nonNull)
@@ -156,6 +163,8 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                         .map(t -> t.fieldEnName).collect(Collectors.joining("'''',''''"));
                 sql += fieldList + "''','" + tableKey + "','stg_" + targetTableName + "'";
                 sql += ",'" + config.processorConfig.targetTableName + "'";
+                String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
+                sql += ",'" + syncMode + "'";
             }
         } else {
 
@@ -260,7 +269,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                         "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
                         "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + stgAndTableName.get(1) + " where fidata_batch_code='${pipelTraceId:isEmpty():ifElse(${pipelTaskTraceId},${pipelTraceId})}'";
             } else {
-                querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
+                querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,convert(varchar(100),getdate(),120) as end_time," +
                         "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
                         "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName + " where fidata_batch_code='${fidata_batch_code}'";
             }

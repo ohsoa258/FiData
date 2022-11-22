@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
+import com.fisk.task.dto.dispatchlog.PipelTaskMergeLogVO;
 import com.fisk.task.entity.PipelTaskLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.mapper.PipelTaskLogMapper;
@@ -88,7 +89,7 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
     }
 
     @Override
-    public List<PipelTaskLogVO> getPipelTaskLogVos(List<PipelTaskLogVO> pipelTaskLogs) {
+    public List<PipelTaskMergeLogVO> getPipelTaskLogVos(List<PipelTaskLogVO> pipelTaskLogs) {
         List<PipelTaskLogVO> pipelTaskLogVos = new ArrayList<>();
         for (PipelTaskLogVO pipelTaskLog : pipelTaskLogs) {
             List<PipelTaskLogVO> byTaskId = pipelTaskLogMapper.getByTaskId(pipelTaskLog.taskId, pipelTaskLog.jobTraceId);
@@ -107,7 +108,81 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
         }
         pipelTaskLogVos.sort((a, b) -> a.getCreateTime().compareTo(b.getCreateTime()));
         Collections.reverse(pipelTaskLogVos);
-        return pipelTaskLogVos;
+        //todo task日志,两条合成一条
+        //转出一份备份
+        List<PipelTaskMergeLogVO> pipelTaskMergeLogVos = new ArrayList<>();
+        List<PipelTaskLogVO> logs = JSON.parseArray(JSON.toJSONString(pipelTaskLogVos), PipelTaskLogVO.class);
+        //根据pipelTraceId去重,除了开始
+        for (int i = 0; i < logs.size() - 1; i++) {
+            for (int j = logs.size() - 1; j > i; j--) {
+                if (logs.get(j).taskTraceId.equals(logs.get(i).taskTraceId) && !logs.get(j).msg.contains("开始运行")) {
+                    logs.remove(j);
+                }
+            }
+        }
+        Collections.reverse(logs);
+        for (int i = 0; i < logs.size() - 1; i++) {
+            for (int j = logs.size() - 1; j > i; j--) {
+                if (logs.get(j).taskTraceId.equals(logs.get(i).taskTraceId) && logs.get(j).msg.contains("开始运行")) {
+                    logs.remove(j);
+                }
+            }
+        }
+        Collections.reverse(logs);
+        SimpleDateFormat simpleDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        for (int i = 0; i < logs.size(); i++) {
+            PipelTaskMergeLogVO pipelTaskMergeLogVo = new PipelTaskMergeLogVO();
+            PipelTaskLogVO pipelTaskLogVo = logs.get(i);
+            pipelTaskMergeLogVo.jobTraceId = pipelTaskLogVo.jobTraceId;
+            pipelTaskMergeLogVo.taskTraceId = pipelTaskLogVo.taskTraceId;
+            pipelTaskMergeLogVo.taskId = pipelTaskLogVo.taskId;
+            pipelTaskMergeLogVo.taskName = pipelTaskLogVo.taskName;
+            pipelTaskMergeLogVo.tableId = pipelTaskLogVo.tableId;
+            pipelTaskMergeLogVo.tableName = pipelTaskLogVo.tableName;
+            try {
+                if (Objects.equals(pipelTaskLogVo.type, DispatchLogEnum.taskstart.getValue())) {
+                    pipelTaskMergeLogVo.startTime = simpleDate.parse(pipelTaskLogVo.msg.substring(7, 26));
+                    pipelTaskMergeLogVo.createTime = pipelTaskLogVo.createTime;
+                } else if (Objects.equals(pipelTaskLogVo.type, DispatchLogEnum.taskend.getValue())) {
+                    pipelTaskMergeLogVo.endTime = simpleDate.parse(pipelTaskLogVo.msg.substring(7, 26));
+                    pipelTaskMergeLogVo.msg = pipelTaskLogVo.msg;
+                }
+            } catch (ParseException e) {
+                log.error("转换时间异常", StackTraceHelper.getStackTraceInfo(e));
+            }
+            for (int j = 0; j < logs.size(); j++) {
+                if (Objects.equals(logs.get(i).taskTraceId, logs.get(j).taskTraceId) && !Objects.equals(logs.get(i).msg, logs.get(j).msg)) {
+                    try {
+                        PipelTaskLogVO pipelTaskLog = logs.get(j);
+                        if (Objects.equals(pipelTaskLog.type, DispatchLogEnum.taskstart.getValue())) {
+                            pipelTaskMergeLogVo.startTime = simpleDate.parse(pipelTaskLog.msg.substring(7, 26));
+                            pipelTaskMergeLogVo.createTime = pipelTaskLog.createTime;
+                        } else if (Objects.equals(pipelTaskLog.type, DispatchLogEnum.taskend.getValue())) {
+                            pipelTaskMergeLogVo.endTime = simpleDate.parse(pipelTaskLog.msg.substring(7, 26));
+                            pipelTaskMergeLogVo.msg = pipelTaskLogVo.msg;
+                        }
+                    } catch (ParseException e) {
+                        log.error("转换时间异常", StackTraceHelper.getStackTraceInfo(e));
+                    }
+                    pipelTaskMergeLogVos.add(pipelTaskMergeLogVo);
+                }
+            }
+            if (Objects.nonNull(pipelTaskMergeLogVo.endTime)) {
+                pipelTaskMergeLogVo.duration = (pipelTaskMergeLogVo.endTime.getTime() - pipelTaskMergeLogVo.startTime.getTime()) / 60000;
+                pipelTaskMergeLogVos.add(pipelTaskMergeLogVo);
+            }
+
+        }
+        for (int i = 0; i < pipelTaskMergeLogVos.size() - 1; i++) {
+            for (int j = pipelTaskMergeLogVos.size() - 1; j > i; j--) {
+                if (pipelTaskMergeLogVos.get(j).taskTraceId.equals(pipelTaskMergeLogVos.get(i).taskTraceId)) {
+                    pipelTaskMergeLogVos.remove(j);
+                }
+            }
+        }
+
+
+        return pipelTaskMergeLogVos;
     }
 
 
