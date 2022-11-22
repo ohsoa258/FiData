@@ -164,59 +164,73 @@ public class SqlServerPlusUtils {
      * 获取视图详情(视图名称 + 字段)
      */
     public List<DataBaseViewDTO> loadViewDetails(DataSourceTypeEnum driverTypeEnum, String url, String user, String password) {
-        List<DataBaseViewDTO> list = null;
+        List<DataBaseViewDTO> dataBaseViewDTOS = null;
+        Connection conn = null;
+        Statement stmt = null;
         try {
             Class.forName(driverTypeEnum.getDriverName());
-            Connection conn = DriverManager.getConnection(url, user, password);
+            conn = DriverManager.getConnection(url, user, password);
+            stmt = conn.createStatement();
             // 获取所有架构名
             List<String> schemaList = getSchemaList(conn);
-            // 获取数据库中所有视图名称
-            List<String> viewNameList = loadViewNameList(conn, schemaList);
-            Statement st = conn.createStatement();
-            list = new ArrayList<>();
-            for (String viewName : viewNameList) {
-                DataBaseViewDTO dto = new DataBaseViewDTO();
-                dto.viewName = viewName;
+            dataBaseViewDTOS = loadViewNameList(conn, schemaList);
+            for (DataBaseViewDTO dto : dataBaseViewDTOS) {
                 ResultSet resultSql = null;
                 try {
-                    resultSql = st.executeQuery("select * from " + viewName + ";");
+                    resultSql = stmt.executeQuery("select * from " + dto.viewName + ";");
                     List<TableStructureDTO> colNames = getViewFields(resultSql);
                     dto.fields = colNames;
                     dto.flag = 1;
                 } catch (SQLException e) {
-                    log.error("无效的视图: " + viewName);
+                    log.error("无效的视图: " + dto.viewName);
                     dto.flag = 2;
-                    list.add(dto);
                     continue;
+                } finally {
+                    if (resultSql != null) {
+                        // 关闭当前结果集
+                        resultSql.close();
+                    }
                 }
-                // 关闭当前结果集
-                resultSql.close();
-                list.add(dto);
             }
-            st.close();
-            conn.close();
+
         } catch (ClassNotFoundException | SQLException e) {
             log.error("【loadViewDetails】获取表名异常：", e);
             throw new FkException(ResultEnum.LOAD_VIEW_STRUCTURE_ERROR);
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception e) {
+                log.error("【loadViewDetails】关闭数据库连接异常：", e);
+                throw new FkException(ResultEnum.LOAD_VIEW_STRUCTURE_ERROR);
+            }
         }
-        return list;
+        return dataBaseViewDTOS;
     }
 
     /**
      * 根据架构名获取视图名
      */
-    private List<String> loadViewNameList(Connection conn, List<String> schemaList) {
-        ArrayList<String> viewNameList = null;
+    private List<DataBaseViewDTO> loadViewNameList(Connection conn, List<String> schemaList) {
+        ArrayList<DataBaseViewDTO> viewNameList = new ArrayList<>();
         try {
-            viewNameList = new ArrayList<>();
             DatabaseMetaData databaseMetaData = conn.getMetaData();
             String[] types = {"VIEW"};
 
             for (String schema : schemaList) {
                 ResultSet rs = databaseMetaData.getTables(null, schema, null, types);
                 while (rs.next()) {
-                    rs.getString(3);
-                    viewNameList.add(schema + ".[" + rs.getString(3) + "]");
+                    DataBaseViewDTO dto = new DataBaseViewDTO();
+                    String viewRelName = rs.getString(3);
+                    String viewName = schema + ".[" + viewRelName + "]";
+                    dto.setViewFramework(schema);
+                    dto.setViewRelName(viewRelName);
+                    dto.setViewName(viewName);
+                    viewNameList.add(dto);
                 }
                 // 关闭
                 rs.close();
@@ -248,7 +262,6 @@ public class SqlServerPlusUtils {
                 tableStructureDTO.fieldLength = metaData.getColumnDisplaySize(i);
                 colNameList.add(tableStructureDTO);
             }
-            rs.close();
         } catch (SQLException e) {
             log.error("【getViewField】获取视图的所有表字段：", e);
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);

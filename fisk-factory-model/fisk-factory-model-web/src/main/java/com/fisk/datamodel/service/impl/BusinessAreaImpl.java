@@ -764,6 +764,8 @@ public class BusinessAreaImpl
      */
     private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> buildBusinessChildren(String id, String dourceType, TableBusinessTypeEnum tableBusinessTypeEnum) {
 
+        // 建模暂时没有schema的设置
+
         List<BusinessAreaPO> businessPoList = this.query().orderByDesc("create_time").list();
 
         HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = new HashMap<>();
@@ -809,6 +811,7 @@ public class BusinessAreaImpl
                                             dimensionTreeDto.setParentId(String.valueOf(dimensionFolder.id));
                                             dimensionTreeDto.setLabel(dimension.dimensionTabName);
                                             dimensionTreeDto.setLabelAlias(dimension.dimensionTabName);
+                                            dimensionTreeDto.setLabelRelName(dimension.dimensionTabName);
                                             dimensionTreeDto.setLevelType(LevelTypeEnum.TABLE);
                                             dimensionTreeDto.setPublishState(String.valueOf(dimension.isPublish != 1 ? 0 : 1));
                                             dimensionTreeDto.setLabelDesc(dimension.dimensionDesc);
@@ -837,6 +840,7 @@ public class BusinessAreaImpl
                                                         dimensionAttributeTreeDto.setLabelBusinessType(TableBusinessTypeEnum.DW_DIMENSION.getValue());
                                                         dimensionAttributeTreeDto.setParentName(dimension.dimensionTabName);
                                                         dimensionAttributeTreeDto.setParentNameAlias(dimension.dimensionTabName);
+                                                        dimensionAttributeTreeDto.setParentLabelRelName(dimension.dimensionTabName);
                                                         return dimensionAttributeTreeDto;
                                                     }).collect(Collectors.toList());
 
@@ -881,6 +885,7 @@ public class BusinessAreaImpl
                                             factTreeDto.setParentId(String.valueOf(businessProcess.id));
                                             factTreeDto.setLabel(fact.factTabName);
                                             factTreeDto.setLabelAlias(fact.factTabName);
+                                            factTreeDto.setLabelRelName(fact.factTabName);
                                             factTreeDto.setLevelType(LevelTypeEnum.TABLE);
                                             factTreeDto.setPublishState(String.valueOf(fact.isPublish != 1 ? 0 : 1));
                                             factTreeDto.setLabelDesc(fact.factTableDesc);
@@ -910,6 +915,7 @@ public class BusinessAreaImpl
                                                             factAttributeTreeDto.setLabelBusinessType(tableBusinessTypeEnum.getValue());
                                                             factAttributeTreeDto.setParentName(fact.factTabName);
                                                             factAttributeTreeDto.setParentNameAlias(fact.factTabName);
+                                                            factAttributeTreeDto.setParentLabelRelName(fact.factTabName);
                                                             return factAttributeTreeDto;
                                                         }).collect(Collectors.toList());
                                             } else {
@@ -935,6 +941,7 @@ public class BusinessAreaImpl
                                                             factAttributeTreeDto.setLabelBusinessType(tableBusinessTypeEnum.getValue());
                                                             factAttributeTreeDto.setParentName(fact.factTabName);
                                                             factAttributeTreeDto.setParentNameAlias(fact.factTabName);
+                                                            factAttributeTreeDto.setParentLabelRelName(fact.factTabName);
                                                             return factAttributeTreeDto;
                                                         }).collect(Collectors.toList());
                                             }
@@ -976,6 +983,7 @@ public class BusinessAreaImpl
                                     wideTableTreeDto.setParentId(wideTableGuid);
                                     wideTableTreeDto.setLabel(wideTable1.name);
                                     wideTableTreeDto.setLabelAlias(wideTable1.name);
+                                    wideTableTreeDto.setLabelRelName(wideTable1.name);
                                     wideTableTreeDto.setLevelType(LevelTypeEnum.TABLE);
                                     wideTableTreeDto.setPublishState(String.valueOf(wideTable1.dorisPublish != 1 ? 0 : 1));
                                     wideTableTreeDto.setSourceId(Integer.parseInt(id));
@@ -1006,6 +1014,7 @@ public class BusinessAreaImpl
                                                         wideTableFieldTreeDto.setLabelBusinessType(TableBusinessTypeEnum.WIDE_TABLE.getValue());
                                                         wideTableFieldTreeDto.setParentName(wideTable1.name);
                                                         wideTableFieldTreeDto.setParentNameAlias(wideTable1.name);
+                                                        wideTableFieldTreeDto.setParentLabelRelName(wideTable1.name);
                                                         return wideTableFieldTreeDto;
                                                     }).collect(Collectors.toList());
                                             wideTableFieldTreeList.addAll(fieldList);

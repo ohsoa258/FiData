@@ -10,20 +10,15 @@ public class FieldInfoVO {
     /**
      * 表名称
      */
-    public String originalTableName;
+    public String tableName;
 
     /**
      * 字段名称
      */
-    public  String originalFieldName;
+    public String fieldName;
 
     /**
      * 字段描述
      */
-    public String originalFieldDesc;
-
-    /**
-     * 架构名称
-     */
-    public String originalFramework;
+    public String fieldDesc;
 }

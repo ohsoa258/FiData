@@ -32,11 +32,24 @@ public class ApiConfigDTO
     public String apiDesc;
 
     /**
-     * 表名
+     * 表名，带架构名
      */
-    @ApiModelProperty(value = "表名")
+    @ApiModelProperty(value = "表名，带架构名")
     @Length(min = 0, max = 50, message = "长度最多255")
     public String tableName;
+
+    /**
+     * 表架构名
+     */
+    @ApiModelProperty(value = "表架构名")
+    public String tableFramework;
+
+
+    /**
+     * 表名，不带架构名
+     */
+    @ApiModelProperty(value = "表名，不带架构名")
+    public String tableRelName;
 
     /**
      * 表别名

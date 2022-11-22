@@ -44,31 +44,16 @@ public class BuildDataServiceMysqlCommandImpl implements IBuildDataServiceSqlCom
     }
 
     @Override
-    public String buildUseExistTableFiled(String dbName, String tableName) {
+    public String buildUseExistTableFiled(String tableFramework, String tableRelName) {
+        // tableFramework 用不到，因为没有mysql没有schema的概念
        String sql = String.format("SELECT\n" +
-                "\tTABLE_NAME AS originalTableName,\n" +
-                "\tCOLUMN_NAME AS originalFieldName,\n" +
-                "\tCOLUMN_COMMENT AS originalFieldDesc,\n" +
-                "\t'' AS originalFramework \n" +
-                "FROM\n" +
-                "\tinformation_schema.`COLUMNS` \n" +
-                "WHERE\n" +
-                "\tTABLE_SCHEMA = '%s' \n" +
-                "\tAND TABLE_NAME = '%s'", dbName, tableName);
+               "\tTABLE_NAME AS tableName,\n" +
+               "\tCOLUMN_NAME AS fieldName,\n" +
+               "\tCOLUMN_COMMENT AS fieldDesc \n" +
+               "FROM\n" +
+               "\tinformation_schema.`COLUMNS` \n" +
+               "WHERE\n" +
+               "\tTABLE_NAME = '%s'", tableRelName);
        return  sql;
-    }
-
-    @Override
-    public String buildUseExistAllTableFiled(String dbName) {
-        String sql = String.format("SELECT\n" +
-                "\tTABLE_NAME AS originalTableName,\n" +
-                "\tCOLUMN_NAME AS originalFieldName,\n" +
-                "\tCOLUMN_COMMENT AS originalFieldDesc,\n" +
-                "\t'' AS originalFramework \n" +
-                "FROM\n" +
-                "\tinformation_schema.`COLUMNS` \n" +
-                "WHERE\n" +
-                "\tTABLE_SCHEMA = '%s'", dbName);
-        return  sql;
     }
 }

@@ -394,7 +394,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     tableNameAndColumns = postgresConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.POSTGRESQL);
                     break;
             }
-            List<FieldInfoVO> tableFieldList = getTableFieldList(connection, conPo);
             connection.close();
 
             if (CollectionUtils.isNotEmpty(tableNameAndColumns)) {
@@ -406,6 +405,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     fiDataMetaDataTree_Table.setParentId(uuid_TableFOLDERId);
                     fiDataMetaDataTree_Table.setLabel(table.tableFullName);
                     fiDataMetaDataTree_Table.setLabelAlias(table.tableFullName);
+                    fiDataMetaDataTree_Table.setLabelFramework(table.tableFramework);
+                    fiDataMetaDataTree_Table.setLabelRelName(table.tableName);
                     fiDataMetaDataTree_Table.setSourceId(Math.toIntExact(conPo.id));
                     fiDataMetaDataTree_Table.setSourceType(SourceTypeEnum.custom.getValue());
                     fiDataMetaDataTree_Table.setLevelType(LevelTypeEnum.TABLE);
@@ -430,16 +431,10 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                             fiDataMetaDataTree_Field.setLabelDesc(field.fieldDes);
                             fiDataMetaDataTree_Field.setParentName(table.tableFullName);
                             fiDataMetaDataTree_Field.setParentNameAlias(table.tableFullName);
+                            fiDataMetaDataTree_Field.setParentLabelFramework(table.tableFramework);
+                            fiDataMetaDataTree_Field.setParentLabelRelName(table.tableName);
                             fiDataMetaDataTree_Field.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                             fiDataMetaDataTree_Field.setPublishState("1");
-                            if (CollectionUtils.isNotEmpty(tableFieldList)) {
-                                FieldInfoVO fieldInfoVO = tableFieldList.stream()
-                                        .filter(item -> item.originalTableName.equals(table.getTableName()) && item.originalFieldName.equals(field.getFieldName()))
-                                        .findFirst().orElse(null);
-                                if (fieldInfoVO != null) {
-                                    fiDataMetaDataTree_Field.setLabelDesc(fieldInfoVO.originalFieldDesc);
-                                }
-                            }
                             fiDataMetaDataTree_Table_Children.add(fiDataMetaDataTree_Field);
                         }
                     }
@@ -492,6 +487,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     fiDataMetaDataTree_View.setParentId(uuid_ViewFOLDERId);
                     fiDataMetaDataTree_View.setLabel(view.viewName);
                     fiDataMetaDataTree_View.setLabelAlias(view.viewName);
+                    fiDataMetaDataTree_View.setLabelRelName(view.viewRelName);
+                    fiDataMetaDataTree_View.setLabelFramework(view.viewFramework);
                     fiDataMetaDataTree_View.setSourceId(Math.toIntExact(conPo.id));
                     fiDataMetaDataTree_View.setSourceType(SourceTypeEnum.custom.getValue());
                     fiDataMetaDataTree_View.setLevelType(LevelTypeEnum.VIEW);
@@ -516,6 +513,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                             fiDataMetaDataTree_Field.setLabelDesc(field.fieldDes);
                             fiDataMetaDataTree_Field.setParentName(view.viewName);
                             fiDataMetaDataTree_Field.setParentNameAlias(view.viewName);
+                            fiDataMetaDataTree_Field.setParentLabelRelName(view.viewRelName);
+                            fiDataMetaDataTree_Field.setParentLabelFramework(view.viewFramework);
                             fiDataMetaDataTree_Field.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                             fiDataMetaDataTree_Field.setPublishState("1");
                             fiDataMetaDataTree_View_Children.add(fiDataMetaDataTree_Field);
@@ -608,45 +607,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         } catch (Exception e) {
             throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR);
         }
-    }
-
-    /**
-     * @return java.util.List<com.fisk.dataservice.vo.api.FieldInfoVO>
-     * @description 查询表字段信息，此处获取表字段描述信息
-     * @author dick
-     * @date 2022/7/21 11:56
-     * @version v1.0
-     * @params conn
-     * @params dataSource
-     */
-    private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConPO dataSource) {
-        List<FieldInfoVO> fieldlist = new ArrayList<>();
-        String sql = "";
-        DataSourceTypeEnum value = DataSourceTypeEnum.values()[dataSource.getConType()];
-        IBuildDataServiceSqlCommand dbCommand = BuildDataServiceHelper.getDBCommand(value);
-        sql = dbCommand.buildUseExistAllTableFiled(dataSource.getConDbname());
-        if (sql == null || sql.isEmpty())
-            return fieldlist;
-        try {
-            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                FieldInfoVO fieldInfoVO = new FieldInfoVO();
-                fieldInfoVO.originalTableName = resultSet.getString("originalTableName");
-                fieldInfoVO.originalFieldName = resultSet.getString("originalFieldName");
-                fieldInfoVO.originalFieldDesc = resultSet.getString("originalFieldDesc");
-                fieldInfoVO.originalFramework = resultSet.getString("originalFramework");
-                if (StringUtils.isNotEmpty(fieldInfoVO.originalTableName) && StringUtils.isNotEmpty(fieldInfoVO.originalFieldName)
-                        && StringUtils.isNotEmpty(fieldInfoVO.originalFieldDesc)) {
-                    //if (fieldInfoVO.originalFramework != null && fieldInfoVO.originalFramework.length() > 0)
-                    //fieldInfoVO.originalTableName = fieldInfoVO.originalFramework + "." + fieldInfoVO.originalTableName;
-                    fieldlist.add(fieldInfoVO);
-                }
-            }
-        } catch (Exception ex) {
-            throw new FkException(ResultEnum.ERROR, ":" + ex.getMessage());
-        }
-        return fieldlist;
     }
 
     /**

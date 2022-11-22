@@ -61,26 +61,36 @@ public class PostgresConUtils {
      * 获取视图详情(视图名称 + 字段)
      */
     public List<DataBaseViewDTO> loadViewDetails(DataSourceTypeEnum driverTypeEnum, String url, String user, String password) {
-        List<DataBaseViewDTO> list = null;
+        List<DataBaseViewDTO> dataBaseViewDTOS = null;
         Connection conn = null;
         Statement stmt = null;
         try {
             Class.forName(driverTypeEnum.getDriverName());
             conn = DriverManager.getConnection(url, user, password);
+            stmt = conn.createStatement();
             // 获取所有架构名
             List<String> schemaList = getSchemaList(conn);
             // 获取数据库中所有视图名称
-            List<String> viewNameList = loadViewNameList(conn, schemaList);
-            stmt = conn.createStatement();
-            list = new ArrayList<>();
-            ResultSet resultFiled = null;
-            for (String viewName : viewNameList) {
-                resultFiled = stmt.executeQuery("select * from " + viewName + ";");
-                List<TableStructureDTO> colNames = getViewColumns(resultFiled);
-                DataBaseViewDTO dto = new DataBaseViewDTO();
-                dto.viewName = viewName;
-                dto.fields = colNames;
-                list.add(dto);
+            dataBaseViewDTOS = loadViewNameList(conn, schemaList);
+            if (CollectionUtils.isNotEmpty(dataBaseViewDTOS)) {
+                for (DataBaseViewDTO dto : dataBaseViewDTOS) {
+                    ResultSet resultSql = null;
+                    try {
+                        resultSql = stmt.executeQuery("select * from " + dto.viewName + ";");
+                        List<TableStructureDTO> colNames = getViewColumns(resultSql);
+                        dto.fields = colNames;
+                        dto.flag = 1;
+                    } catch (SQLException e) {
+                        log.error("无效的视图: " + dto.viewName);
+                        dto.flag = 2;
+                        continue;
+                    } finally {
+                        if (resultSql != null) {
+                            // 关闭当前结果集
+                            resultSql.close();
+                        }
+                    }
+                }
             }
         } catch (Exception e) {
             log.error("【loadViewDetails】获取视图信息异常", e);
@@ -98,14 +108,14 @@ public class PostgresConUtils {
                 throw new FkException(ResultEnum.LOAD_VIEW_STRUCTURE_ERROR);
             }
         }
-        return list;
+        return dataBaseViewDTOS;
     }
 
     /**
      * 根据架构名获取视图名
      */
-    private List<String> loadViewNameList(Connection conn, List<String> schemaList) {
-        List<String> viewNameList = new ArrayList<>();
+    private List<DataBaseViewDTO> loadViewNameList(Connection conn, List<String> schemaList) {
+        List<DataBaseViewDTO> viewNameList = new ArrayList<>();
         try {
             DatabaseMetaData databaseMetaData = conn.getMetaData();
             String[] types = {"VIEW"};
@@ -113,8 +123,13 @@ public class PostgresConUtils {
                 ResultSet rs = databaseMetaData.getTables(null, schema, null, types);
                 // schema下不存在view，走到这里为空会跳过
                 while (rs.next()) {
-                    String viewName = rs.getString(3);
-                    viewNameList.add(schema + "." + viewName);
+                    DataBaseViewDTO dto = new DataBaseViewDTO();
+                    String viewRelName = rs.getString(3);
+                    String viewName = schema + "." + viewRelName;
+                    dto.setViewFramework(schema);
+                    dto.setViewRelName(viewRelName);
+                    dto.setViewName(viewName);
+                    viewNameList.add(dto);
                 }
                 // 关闭
                 rs.close();

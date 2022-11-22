@@ -448,11 +448,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         // 获取描述信息
         List<FieldInfoVO> tableFieldList = null;
         if (pvDTO.apiDTO.getApiType() == ApiTypeEnum.SQL.getValue()
-                && pvDTO.apiDTO.getTableName() != null
-                && pvDTO.apiDTO.getTableName().length() > 0) {
-            List<String> tableNames = new ArrayList<>();
-            tableNames.add(pvDTO.apiDTO.getTableName());
-            tableFieldList = getTableFieldList(conn, dataSource, tableNames);
+                && StringUtils.isNotEmpty(pvDTO.apiDTO.getTableRelName())) {
+            tableFieldList = getTableFieldList(conn, dataSource, pvDTO.apiDTO.getTableFramework(), pvDTO.apiDTO.getTableRelName());
         }
 
         //获取列名、描述
@@ -483,9 +480,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             // 获取表字段描述
             if (CollectionUtils.isNotEmpty(tableFieldList)) {
                 FieldInfoVO fieldInfoVO = tableFieldList.stream().
-                        filter(item -> item.originalFieldName.equals(fieldConfigVO.fieldName)).findFirst().orElse(null);
+                        filter(item -> item.fieldName.equals(fieldConfigVO.fieldName)).findFirst().orElse(null);
                 if (fieldInfoVO != null) {
-                    fieldConfigVO.fieldDesc = fieldInfoVO.originalFieldDesc;
+                    fieldConfigVO.fieldDesc = fieldInfoVO.fieldDesc;
                 }
             }
             if (CollectionUtils.isNotEmpty(fieldConfigPOS)) {
@@ -504,44 +501,37 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     /**
      * 查询表字段信息
      *
-     * @param conn       连接
-     * @param dataSource 数据源信息
-     * @param tableNames 查询的表
+     * @param conn           连接
+     * @param dataSource     数据源信息
+     * @param tableFramework 表架构名
+     * @param tableRelName   表名称，不带架构名
      * @return statement
      */
-    private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConVO dataSource, List<String> tableNames) throws SQLException {
-        List<FieldInfoVO> fieldlist = new ArrayList<>();
-        if (CollectionUtils.isEmpty(tableNames))
-            return fieldlist;
+    private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConVO dataSource,
+                                                       String tableFramework, String tableRelName) {
+        List<FieldInfoVO> fieldList = new ArrayList<>();
+        if (StringUtils.isEmpty(tableRelName))
+            return fieldList;
         IBuildDataServiceSqlCommand dbCommand = BuildDataServiceHelper.getDBCommand(dataSource.getConType());
-        String sql = dbCommand.buildUseExistTableFiled(dataSource.conDbname, tableNames.get(0));
+        String sql = dbCommand.buildUseExistTableFiled(tableFramework, tableRelName);
         if (sql == null || sql.isEmpty())
-            return fieldlist;
+            return fieldList;
         try {
-            //String instr = "(\'" + String.join("\',\'", tableNames) + "\')";
             PreparedStatement preparedStatement = conn.prepareStatement(sql);
-            //preparedStatement.setString(1, instr);
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
                 FieldInfoVO fieldInfoVO = new FieldInfoVO();
-                fieldInfoVO.originalTableName = resultSet.getString("originalTableName");
-                fieldInfoVO.originalFieldName = resultSet.getString("originalFieldName");
-                fieldInfoVO.originalFieldDesc = resultSet.getString("originalFieldDesc");
-                fieldInfoVO.originalFramework = resultSet.getString("originalFramework");
-                if (fieldInfoVO.originalTableName != null
-                        && fieldInfoVO.originalTableName.length() > 0
-                        && fieldInfoVO.originalFieldName != null
-                        && fieldInfoVO.originalFieldName.length() > 0
-                        && fieldInfoVO.originalFieldDesc != null
-                        && fieldInfoVO.originalFieldDesc.length() > 0) {
-                    if (fieldInfoVO.originalFramework != null && fieldInfoVO.originalFramework.length() > 0)
-                        fieldInfoVO.originalTableName = fieldInfoVO.originalFramework + "." + fieldInfoVO.originalTableName;
-                    fieldlist.add(fieldInfoVO);
+                fieldInfoVO.tableName = resultSet.getString("tableName");
+                fieldInfoVO.fieldName = resultSet.getString("fieldName");
+                fieldInfoVO.fieldDesc = resultSet.getString("fieldDesc");
+                if (StringUtils.isNotEmpty(fieldInfoVO.tableName) && StringUtils.isNotEmpty(fieldInfoVO.fieldName)
+                        && StringUtils.isNotEmpty(fieldInfoVO.fieldDesc)) {
+                    fieldList.add(fieldInfoVO);
                 }
             }
         } catch (Exception ex) {
             throw new FkException(ResultEnum.ERROR, ":" + ex.getMessage());
         }
-        return fieldlist;
+        return fieldList;
     }
 }

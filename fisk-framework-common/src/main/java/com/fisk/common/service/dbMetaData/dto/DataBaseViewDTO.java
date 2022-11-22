@@ -14,11 +14,18 @@ import java.util.List;
 @Data
 public class DataBaseViewDTO {
 
-    @ApiModelProperty(value = "视图名称", required = true)
+    @ApiModelProperty(value = "视图名称，带架构名", required = true)
     public String viewName;
+
+    @ApiModelProperty(value = "视图架构名")
+    public String viewFramework;
+
+    @ApiModelProperty(value = "视图名称，不带架构名")
+    public String viewRelName;
 
     @ApiModelProperty(value = "1: 当前视图有效; 2: 当前视图无效")
     public int flag;
+
     /**
      * 视图字段
      */

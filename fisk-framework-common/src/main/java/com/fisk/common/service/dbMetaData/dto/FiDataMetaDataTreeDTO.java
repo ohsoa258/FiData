@@ -22,17 +22,29 @@ public class FiDataMetaDataTreeDTO {
     @ApiModelProperty(value = "父级id，第一级默认-1", required = true)
     public String parentId;
 
-    @ApiModelProperty(value = "父级name，应用到字段维度，取值为字段父级名称", required = true)
+    @ApiModelProperty(value = "父级名称，应用到字段维度，取值为字段父级名称", required = true)
     public String parentName;
 
-    @ApiModelProperty(value = "父级name别名，应用到字段维度，取值为字段父级别名名称", required = true)
+    @ApiModelProperty(value = "父级别名，应用到字段维度，取值为字段父级别名名称", required = true)
     public String parentNameAlias;
 
-    @ApiModelProperty(value = "名称", required = true)
+    @ApiModelProperty(value = "父级名称，不带架构名")
+    public String parentLabelRelName;
+
+    @ApiModelProperty(value = "父级架构名")
+    public String parentLabelFramework;
+
+    @ApiModelProperty(value = "名称，带架构名", required = true)
     public String label;
 
     @ApiModelProperty(value = "别名，没有别名则和名称保持一致", required = true)
     public String labelAlias;
+
+    @ApiModelProperty(value = "名称，不带架构名")
+    public String labelRelName;
+
+    @ApiModelProperty(value = "架构名")
+    public String labelFramework;
 
     @ApiModelProperty(value = "业务类型，表和视图维度设置")
     public int labelBusinessType;

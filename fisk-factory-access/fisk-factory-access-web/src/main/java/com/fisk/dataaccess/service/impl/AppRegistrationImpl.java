@@ -1238,6 +1238,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     tableDtoTree.setParentId(String.valueOf(api.id));
                                                     tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
                                                     tableDtoTree.setLabelAlias(table.tableName);
+                                                    tableDtoTree.setLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                                    tableDtoTree.setLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
                                                     tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
                                                     tableDtoTree.setSourceType(1);
                                                     tableDtoTree.setSourceId(Integer.parseInt(id));
@@ -1270,8 +1272,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                                 fieldDtoTree.setSourceType(1);
                                                                 fieldDtoTree.setSourceId(Integer.parseInt(id));
                                                                 fieldDtoTree.setParentName(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
-                                                                fieldDtoTree.setParentName(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
                                                                 fieldDtoTree.setParentNameAlias(table.tableName);
+                                                                fieldDtoTree.setParentLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                                                fieldDtoTree.setParentLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
                                                                 fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                                                                 return fieldDtoTree;
                                                             }).collect(Collectors.toList());
@@ -1377,6 +1380,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     tableDtoTree.setParentId(String.valueOf(api.id));
                                                     tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
                                                     tableDtoTree.setLabelAlias(table.tableName);
+                                                    tableDtoTree.setLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                                    tableDtoTree.setLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
                                                     tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
                                                     tableDtoTree.setSourceType(1);
                                                     tableDtoTree.setSourceId(Integer.parseInt(id));
@@ -1411,6 +1416,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                                 fieldDtoTree.setSourceId(Integer.parseInt(id));
                                                                 fieldDtoTree.setParentName(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
                                                                 fieldDtoTree.setParentNameAlias(table.tableName);
+                                                                fieldDtoTree.setParentLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                                                fieldDtoTree.setParentLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
                                                                 fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                                                                 return fieldDtoTree;
                                                             }).collect(Collectors.toList());
@@ -1450,6 +1457,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                         tableDtoTree.setParentId(String.valueOf(app.id));
                                         tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
                                         tableDtoTree.setLabelAlias(table.tableName);
+                                        tableDtoTree.setLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                        tableDtoTree.setLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
                                         tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
                                         tableDtoTree.setSourceType(1);
                                         tableDtoTree.setSourceId(Integer.parseInt(id));
@@ -1484,6 +1493,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     fieldDtoTree.setSourceId(Integer.parseInt(id));
                                                     fieldDtoTree.setParentName(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
                                                     fieldDtoTree.setParentNameAlias(table.tableName);
+                                                    fieldDtoTree.setParentLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                                    fieldDtoTree.setParentLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
                                                     fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                                                     return fieldDtoTree;
                                                 }).collect(Collectors.toList());
