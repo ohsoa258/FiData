@@ -6,6 +6,7 @@ import com.fisk.dataaccess.dto.ftp.ExcelDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
 import com.fisk.dataaccess.dto.ftp.FtpPathDTO;
 import com.fisk.dataaccess.dto.sftp.SftpPreviewQueryDTO;
+import com.fisk.dataaccess.dto.sftp.SftpUploadDTO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -46,6 +47,6 @@ public interface ISftp {
      * @param file
      * @return
      */
-    String uploadSecretKeyFile(Integer appId, MultipartFile file);
+    SftpUploadDTO uploadSecretKeyFile(Integer appId, MultipartFile file);
 
 }
