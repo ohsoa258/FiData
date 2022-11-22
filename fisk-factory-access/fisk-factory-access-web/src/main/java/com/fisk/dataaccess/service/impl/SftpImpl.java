@@ -7,6 +7,7 @@ import com.fisk.dataaccess.dto.ftp.ExcelDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
 import com.fisk.dataaccess.dto.ftp.FtpPathDTO;
 import com.fisk.dataaccess.dto.sftp.SftpPreviewQueryDTO;
+import com.fisk.dataaccess.dto.sftp.SftpUploadDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.enums.FtpFileTypeEnum;
 import com.fisk.dataaccess.service.ISftp;
@@ -96,7 +97,7 @@ public class SftpImpl implements ISftp {
     }
 
     @Override
-    public String uploadSecretKeyFile(Integer appId, MultipartFile file) {
+    public SftpUploadDTO uploadSecretKeyFile(Integer appId, MultipartFile file) {
         try {
             String fileName = file.getOriginalFilename();
             String path = filePath + appId;
@@ -114,7 +115,9 @@ public class SftpImpl implements ISftp {
             //将前端传递过来的文件输送给新文件 这里需要抛出IO异常 throws IOException
             file.transferTo(newFile);
 
-            return filePath;
+            SftpUploadDTO data = new SftpUploadDTO();
+            data.uploadPath = filePath;
+            return data;
         } catch (IOException e) {
             log.error("sftp上传秘钥文件失败,{}", e);
             throw new FkException(ResultEnum.UPLOAD_ERROR);
