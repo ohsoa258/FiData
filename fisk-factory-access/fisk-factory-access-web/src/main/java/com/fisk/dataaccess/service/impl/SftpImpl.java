@@ -14,9 +14,13 @@ import com.fisk.dataaccess.utils.ftp.ExcelUtils;
 import com.fisk.dataaccess.utils.sftp.SftpUtils;
 import com.jcraft.jsch.ChannelSftp;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
@@ -30,9 +34,13 @@ public class SftpImpl implements ISftp {
     @Resource
     AppDataSourceImpl dataSourceImpl;
 
+    @Resource
+    @Value("${sftp.file-path}")
+    public String filePath;
+
     @Override
     public ResultEnum connectSftp(DbConnectionDTO dto) {
-        ChannelSftp connect = SftpUtils.connect(dto.host, Integer.parseInt(dto.port), dto.connectAccount, dto.connectPwd);
+        ChannelSftp connect = SftpUtils.connect(dto.host, Integer.parseInt(dto.port), dto.connectAccount, dto.connectPwd, dto.connectStr);
         SftpUtils.disconnect(connect);
         return ResultEnum.SUCCESS;
     }
@@ -87,6 +95,32 @@ public class SftpImpl implements ISftp {
 
     }
 
+    @Override
+    public String uploadSecretKeyFile(Integer appId, MultipartFile file) {
+        try {
+            String fileName = file.getOriginalFilename();
+            String path = filePath + appId;
+            //如果不存在,创建文件夹
+            File f = new File(path);
+            if (!f.exists()) {
+                f.mkdirs();
+            }
+
+            //指定到上传路径
+            String filePath = path + "\\" + fileName;
+
+            //创建新文件对象 指定文件路径为拼接好的路径
+            File newFile = new File(filePath);
+            //将前端传递过来的文件输送给新文件 这里需要抛出IO异常 throws IOException
+            file.transferTo(newFile);
+
+            return filePath;
+        } catch (IOException e) {
+            log.error("sftp上传秘钥文件失败,{}", e);
+            throw new FkException(ResultEnum.UPLOAD_ERROR);
+        }
+    }
+
     /**
      * 根据应用，连接sftp
      *
@@ -97,7 +131,8 @@ public class SftpImpl implements ISftp {
                 dataSourcePo.host,
                 Integer.parseInt(dataSourcePo.port),
                 dataSourcePo.connectAccount,
-                dataSourcePo.connectPwd);
+                dataSourcePo.connectPwd,
+                dataSourcePo.connectStr);
     }
 
 }

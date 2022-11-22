@@ -50,6 +50,7 @@ public enum ResultEnum {
     CRON_ERROR(1024, "cron格式错误"),
     DRUID_SQL_ERROR(1025, "druid解析sql失败"),
     DRUID_ERROR(1026, "druid异常"),
+    UPLOAD_ERROR(1027, "文件上传失败"),
 
     /**
      * 报表可视化服务，错误码从2000开始

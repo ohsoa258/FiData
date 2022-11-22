@@ -6,6 +6,7 @@ import com.fisk.dataaccess.dto.ftp.ExcelPropertyDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
 import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -18,10 +19,15 @@ import java.util.*;
 public class SftpUtils {
 
     private static final String ROOT_PATH = "/";
+    private static final String secreKeyPath1 = "D:\\WeChatData\\WeChat Files\\wxid_mpbfv3jjxgjd12\\FileStorage\\File\\2022-11\\id_rsa_sftp2";
 
-    /*@Test
+   /* @Test
     public void test(){
-        ChannelSftp sftp = connect("192.168.21.21", 22, "sftp", "password01!");
+        ChannelSftp sftp = connect("192.168.21.21",
+                22,
+                "sftp",
+                "password01!",
+                "");
         ExcelTreeDTO file = getFile(sftp, "/upload", "xlsx");
         String test = "";
 
@@ -36,14 +42,19 @@ public class SftpUtils {
      * @param password
      * @return
      */
-    public static ChannelSftp connect(String hostName, Integer port, String userName, String password) {
+    public static ChannelSftp connect(String hostName, Integer port, String userName, String password, String secretKeyPath) {
         JSch jSch = new JSch();
         Session session = null;
         ChannelSftp sftp = null;
         Channel channel = null;
         try {
+            secretKeyPath = secreKeyPath1;
             session = jSch.getSession(userName, hostName, port);
-            session.setPassword(password);
+            if (!StringUtils.isEmpty(secretKeyPath)) {
+                jSch.addIdentity(secretKeyPath);
+            } else {
+                session.setPassword(password);
+            }
             session.setConfig(getSshConfig());
             //设置timeout时间
             session.setTimeout(60000);
@@ -77,6 +88,7 @@ public class SftpUtils {
     private static Properties getSshConfig() {
         Properties sshConfig = new Properties();
         sshConfig.put("StrictHostKeyChecking", "no");
+        //sshConfig.put("PreferredAuthentications","publickey,gssapi-with-mic,keyboard-interactive,password");
         return sshConfig;
     }
 
