@@ -8,7 +8,9 @@ import com.fisk.common.core.enums.BaseEnum;
  * Description:
  */
 public enum DbTypeEnum implements BaseEnum {
-
+    /**
+     * sqlserver
+     */
     sqlserver(0, "sqlserver"),
     mysql(1, "mysql"),
     postgresql(2, "postgresql"),

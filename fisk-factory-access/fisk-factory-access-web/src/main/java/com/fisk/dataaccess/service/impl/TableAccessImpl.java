@@ -1928,7 +1928,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableSyncmodePO tableSyncmodePo = tableSyncmodeImpl.query().eq("id", tableId).one();
         dto.syncMode = tableSyncmodePo.syncMode;
         dto.driveType = DbTypeEnum.getValue(dataSourcePo.driveType);
-        ;
         dto.tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(listPo);
         dto.appAbbreviation = registrationPo.appAbbreviation;
         dto.tableName = tableAccessPo.tableName;
