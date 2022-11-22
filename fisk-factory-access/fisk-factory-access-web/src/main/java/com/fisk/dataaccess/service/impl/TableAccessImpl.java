@@ -24,9 +24,6 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
-import com.fisk.common.service.dbBEBuild.common.BuildCommonHelper;
-import com.fisk.common.service.dbBEBuild.common.IBuildCommonSqlCommand;
-import com.fisk.common.service.dbBEBuild.common.dto.DruidFieldInfoDTO;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
@@ -1916,27 +1913,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     }
 
-
-    /**
-     * 设置字段源表名
-     *
-     * @param typeEnum
-     * @param sql
-     */
-    public void setSourceTable(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum typeEnum,
-                               List<FieldNameDTO> fieldList,
-                               String sql) {
-        IBuildCommonSqlCommand command = BuildCommonHelper.getCommand(typeEnum);
-        List<DruidFieldInfoDTO> fieldInfoList = command.druidAnalyseSql(sql);
-        /*for (FieldNameDTO field : fieldList){
-            Optional<DruidFieldInfoDTO> first = fieldInfoList.stream()
-                    .filter(e -> e.fieldName.equals(field.fieldName))
-                    .findFirst();
-
-        }*/
-    }
-
-
     @Override
     public ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTO(long tableId, long appId) {
 
@@ -1951,41 +1927,18 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
         TableSyncmodePO tableSyncmodePo = tableSyncmodeImpl.query().eq("id", tableId).one();
         dto.syncMode = tableSyncmodePo.syncMode;
-        DbTypeEnum dbTypeEnum = DbTypeEnum.getValue(dataSourcePo.driveType);
-        switch (dbTypeEnum) {
-            case sqlserver:
-                dto.driveType = DbTypeEnum.sqlserver;
-                break;
-            case mysql:
-                dto.driveType = DbTypeEnum.mysql;
-                break;
-            case oracle:
-                dto.driveType = DbTypeEnum.oracle;
-                break;
-            case ftp:
-                dto.driveType = DbTypeEnum.ftp;
-                break;
-            case RestfulAPI:
-                dto.driveType = DbTypeEnum.RestfulAPI;
-                break;
-            case api:
-                dto.driveType = DbTypeEnum.api;
-                break;
-            case oracle_cdc:
-                dto.driveType = DbTypeEnum.oracle_cdc;
-                break;
-            default:
-                break;
-        }
+        dto.driveType = DbTypeEnum.getValue(dataSourcePo.driveType);
+        ;
         dto.tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(listPo);
         dto.appAbbreviation = registrationPo.appAbbreviation;
         dto.tableName = tableAccessPo.tableName;
         dto.selectSql = tableAccessPo.sqlScript;
         // 非实时物理表才有sql
-        if (!dbTypeEnum.getName().equals(DbTypeEnum.RestfulAPI.getName())
-                && !dbTypeEnum.getName().equals(DbTypeEnum.api.getName())
-                && !dbTypeEnum.getName().equals(DbTypeEnum.oracle_cdc.getName())
-                && !dbTypeEnum.getName().equals(DbTypeEnum.ftp.getName())) {
+        if (!dto.driveType.getName().equals(DbTypeEnum.RestfulAPI.getName())
+                && !dto.driveType.getName().equals(DbTypeEnum.api.getName())
+                && !dto.driveType.getName().equals(DbTypeEnum.oracle_cdc.getName())
+                && !dto.driveType.getName().equals(DbTypeEnum.ftp.getName())
+                && !dto.driveType.getName().equals(DbTypeEnum.sftp.getName())) {
             String tableName = TableNameGenerateUtils.buildTableName(tableAccessPo.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
             Map<String, String> converSql = publishTaskClient.converSql(tableName, tableAccessPo.sqlScript, dataSourcePo.driveType, null).data;
             //String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
