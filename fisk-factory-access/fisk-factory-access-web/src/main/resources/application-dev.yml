@@ -51,4 +51,4 @@ flink-api-config:
   savepoint-status: /jobs/:jobid/savepoints/:triggerid
 
 sftp:
-  file-path:  D:\白泽发布\
+  file-path: /root/java/upload/

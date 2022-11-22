@@ -63,3 +63,6 @@ flink-api-config:
   port: 8081
   savepoints: /jobs/:jobid/savepoints
   savepoint-status: /jobs/:jobid/savepoints/:triggerid
+
+sftp:
+  file-path: /root/java/upload/

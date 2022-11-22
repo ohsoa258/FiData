@@ -107,7 +107,7 @@ public class SftpImpl implements ISftp {
             }
 
             //指定到上传路径
-            String filePath = path + "\\" + fileName;
+            String filePath = path + "/" + fileName;
 
             //创建新文件对象 指定文件路径为拼接好的路径
             File newFile = new File(filePath);
