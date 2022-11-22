@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.app.DbConnectionDTO;
 import com.fisk.dataaccess.dto.ftp.FtpPathDTO;
+import com.fisk.dataaccess.dto.sftp.SftpPreviewQueryDTO;
 import com.fisk.dataaccess.service.ISftp;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -37,6 +38,12 @@ public class SftpController {
     @PostMapping("/getSftpFile")
     public ResultEntity<Object> getSftpFile(@RequestBody FtpPathDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFile(dto));
+    }
+
+    @ApiOperation("预览sftp文件")
+    @PostMapping("/previewContent")
+    public ResultEntity<Object> previewContent(@RequestBody SftpPreviewQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.previewContent(dto));
     }
 
 }

@@ -2,8 +2,12 @@ package com.fisk.dataaccess.service;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.app.DbConnectionDTO;
+import com.fisk.dataaccess.dto.ftp.ExcelDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
 import com.fisk.dataaccess.dto.ftp.FtpPathDTO;
+import com.fisk.dataaccess.dto.sftp.SftpPreviewQueryDTO;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -25,5 +29,13 @@ public interface ISftp {
      * @return
      */
     ExcelTreeDTO getFile(FtpPathDTO dto);
+
+    /**
+     * 预览文件
+     *
+     * @param dto
+     * @return
+     */
+    List<ExcelDTO> previewContent(SftpPreviewQueryDTO dto);
 
 }

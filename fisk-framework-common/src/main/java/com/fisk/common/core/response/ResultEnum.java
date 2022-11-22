@@ -159,6 +159,8 @@ public enum ResultEnum {
     DATAACCESS_GETSCHEMA_ERROR(5074, "获取schema失败"),
     DATAACCESS_GETTABLEANDFIELD_ERROR(5075, "获取表和字段信息失败"),
     SFTP_CONNECTION_ERROR(5075, "SFTP服务器连接登录失败，请检查连接参数是否正确，或者网络是否通畅"),
+    SFTP_PREVIEW_ERROR(5076, "SFTP预览文件失败"),
+
 
     /**
      * 后台任务模块

@@ -112,28 +112,6 @@ public class ExcelUtils {
                     Optional.of(col).filter(x -> count > 0).ifPresent(content::add);
                     getRow++;
                 }
-                /*// excel行对象，0：第一行对象
-                Row row = sheet.getRow(0);
-                // 获取当前行的列数
-                int colNum = row.getPhysicalNumberOfCells();
-                // for循环 0: 从表头开始读取  1: 从正文开始读取
-                // 正文内容应该从第二行开始, 第一行为表头的标题
-                // 默认只读取前十条
-                int tenLines = Math.min(rowNum, 10);
-                for (int ri = 0; ri <= tenLines; ri++) {
-                    row = sheet.getRow(ri);
-                    int ci = 0;
-                    List<String> col = new ArrayList<>();
-                    while (ci < colNum) {
-                        Object obj = getCellFormatValue(row.getCell(ci++));
-                        obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
-                        col.add((String) obj);
-                    }
-                    // 如果行是纯空白字符串，将被过滤
-                    // 但有空列，而不是全部空白，将不会破坏行信息，而不会被过滤。
-                    long count = col.stream().filter(StringUtils::isNoneBlank).count();
-                    Optional.of(col).filter(x -> count > 0).ifPresent(content::add);
-                }*/
                 return content;
             } catch (Exception e) {
                 log.error("", e);

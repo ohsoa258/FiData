@@ -7,6 +7,7 @@ import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
 import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.*;
 
@@ -94,6 +95,54 @@ public class SftpUtils {
         } catch (Exception e) {
             log.error("关闭与sftp服务器会话连接异常", e);
         }
+    }
+
+    /**
+     * 预览sftp文件
+     *
+     * @param sftp
+     * @param path
+     * @return
+     */
+    public static InputStream getSftpFileInputStream(ChannelSftp sftp, String path) {
+        try {
+            InputStream inputStream = sftp.get(path);
+            return inputStream;
+        } catch (SftpException e) {
+            log.error("sftp获取文件流失败,{}", e);
+            throw new FkException(ResultEnum.SFTP_PREVIEW_ERROR);
+        }
+    }
+
+    /**
+     * 解析全路径
+     *
+     * @param textFullPath
+     * @return
+     */
+    public static List<String> encapsulationExcelParam(String textFullPath) {
+        List<String> param = new ArrayList<>();
+        // ["/Windows/二级/tb_app_registration", "xlsx"]
+        String[] split = textFullPath.split("\\.");
+        // .xlsx
+        String suffixName = "." + split[1];
+
+        String[] split1 = split[0].split("/");
+        // tb_app_registration
+        String fileName = split1[split1.length - 1];
+        // tb_app_registration.xlsx
+        String fileFullName = fileName + suffixName;
+        // /Windows/二级/
+        String path = textFullPath.replace(fileFullName, "");
+
+        // 全目录路径
+        param.add(path);
+        // 文件全名
+        param.add(fileFullName);
+        // 文件后缀名
+        param.add(suffixName);
+        param.add(fileName);
+        return param;
     }
 
     /**
