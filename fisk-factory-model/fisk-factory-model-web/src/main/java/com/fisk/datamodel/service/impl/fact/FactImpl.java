@@ -21,6 +21,7 @@ import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.fact.*;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
 import com.fisk.datamodel.entity.fact.FactPO;
 import com.fisk.datamodel.enums.DataModelTableTypeEnum;
@@ -32,6 +33,7 @@ import com.fisk.datamodel.mapper.fact.FactAttributeMapper;
 import com.fisk.datamodel.mapper.fact.FactMapper;
 import com.fisk.datamodel.service.IFact;
 import com.fisk.datamodel.service.impl.AtomicIndicatorsImpl;
+import com.fisk.datamodel.service.impl.BusinessAreaImpl;
 import com.fisk.datamodel.service.impl.dimension.DimensionImpl;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
@@ -63,6 +65,8 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     @Resource
     FactAttributeImpl factAttributeImpl;
     @Resource
+    BusinessAreaImpl businessAreaImpl;
+    @Resource
     AtomicIndicatorsImpl atomicIndicatorsImpl;
     @Resource
     PublishTaskClient publishTaskClient;
@@ -91,14 +95,18 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     public ResultEnum deleteFact(int id)
     {
         try {
-            FactPO po=mapper.selectById(id);
+            FactPO po = mapper.selectById(id);
             if (po == null) {
                 return ResultEnum.DATA_NOTEXISTS;
             }
+            BusinessAreaPO businessArea = businessAreaImpl.getById(po.businessId);
+            if (businessArea == null) {
+                return ResultEnum.DATA_NOTEXISTS;
+            }
             //删除事实字段表
-            QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
-            queryWrapper.select("id").lambda().eq(FactAttributePO::getFactId,id);
-            List<Integer> factAttributeIds=(List)attributeMapper.selectObjs(queryWrapper);
+            QueryWrapper<FactAttributePO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.select("id").lambda().eq(FactAttributePO::getFactId, id);
+            List<Integer> factAttributeIds = (List) attributeMapper.selectObjs(queryWrapper);
             if (!CollectionUtils.isEmpty(factAttributeIds)) {
                 ResultEnum resultEnum = factAttributeImpl.deleteFactAttribute(factAttributeIds);
                 if (ResultEnum.SUCCESS != resultEnum) {
@@ -143,6 +151,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
                     delQualifiedName.add(dataSourceConfigOlap.dbList.get(0).qualifiedName + "_" + DataModelTableTypeEnum.DORIS_FACT.getValue() + "_" + id);
                 }
                 deleteDto.qualifiedNames = delQualifiedName;
+                deleteDto.classifications = businessArea.getBusinessName();
                 dataManageClient.deleteMetaData(deleteDto);
             }
 

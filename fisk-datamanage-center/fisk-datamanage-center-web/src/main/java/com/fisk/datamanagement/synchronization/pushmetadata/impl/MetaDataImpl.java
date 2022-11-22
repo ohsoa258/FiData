@@ -19,6 +19,7 @@ import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.datagovernance.client.DataQualityClient;
 import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDTO;
+import com.fisk.datamanagement.dto.classification.ClassificationDelAssociatedEntityDTO;
 import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.dto.process.*;
 import com.fisk.datamanagement.dto.relationship.RelationshipDTO;
@@ -410,10 +411,23 @@ public class MetaDataImpl implements IMetaData {
             if (po == null) {
                 continue;
             }
+
+            //删除表业务分类关联
+            ClassificationDelAssociatedEntityDTO associatedEntityDto = new ClassificationDelAssociatedEntityDTO();
+            associatedEntityDto.classificationName = dto.classifications;
+            associatedEntityDto.entityGuid = po.atlasGuid;
+            ResultEnum delResult = classification.classificationDelAssociatedEntity(associatedEntityDto);
+            if (delResult.getCode() != ResultEnum.SUCCESS.getCode()) {
+                continue;
+            }
+
+            //删除元数据实体
             ResultEnum resultEnum = entityImpl.deleteEntity(po.atlasGuid);
             if (resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
                 continue;
             }
+
+            //删除元数据配置
             int flat = metadataMapAtlasMapper.delete(queryWrapper);
             if (flat > 0) {
                 delete(po.atlasGuid);

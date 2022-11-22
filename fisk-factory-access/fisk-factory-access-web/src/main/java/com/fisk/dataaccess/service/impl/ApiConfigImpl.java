@@ -344,9 +344,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             publishTaskClient.deleteNifiFlow(dataModelVO);
 
             // 删除元数据
-            // 删除元数据
             MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
             metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.qualifiedNames);
+            metaDataDeleteAttributeDto.setClassifications(nifiVO.classifications);
             dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
         }
 

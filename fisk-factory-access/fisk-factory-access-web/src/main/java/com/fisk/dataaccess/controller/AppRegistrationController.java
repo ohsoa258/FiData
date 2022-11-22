@@ -158,6 +158,7 @@ public class AppRegistrationController {
         if (CollectionUtils.isNotEmpty(nifiVO.qualifiedNames)) {
             MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
             metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.getQualifiedNames());
+            metaDataDeleteAttributeDto.classifications = nifiVO.classifications;
             dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
         }
 

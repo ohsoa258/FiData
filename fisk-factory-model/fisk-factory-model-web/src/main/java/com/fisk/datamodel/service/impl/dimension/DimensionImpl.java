@@ -25,6 +25,7 @@ import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeListDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionMetaDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.dimension.DimensionAttributePO;
 import com.fisk.datamodel.entity.dimension.DimensionPO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
@@ -36,6 +37,7 @@ import com.fisk.datamodel.mapper.dimension.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.dimension.DimensionMapper;
 import com.fisk.datamodel.mapper.fact.FactAttributeMapper;
 import com.fisk.datamodel.service.IDimension;
+import com.fisk.datamodel.service.impl.BusinessAreaImpl;
 import com.fisk.datamodel.utils.mysql.DataSourceConfigUtil;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
@@ -68,7 +70,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> implements IDimension {
+public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> implements IDimension {
 
     @Resource
     DimensionMapper mapper;
@@ -78,6 +80,8 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
     FactAttributeMapper factAttributeMapper;
     @Resource
     DimensionAttributeImpl dimensionAttributeImpl;
+    @Resource
+    BusinessAreaImpl businessAreaImpl;
     @Resource
     PublishTaskClient publishTaskClient;
     @Resource
@@ -391,20 +395,25 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
     public ResultEnum deleteDimension(int id)
     {
         try {
-            DimensionPO model=mapper.selectById(id);
+            DimensionPO model = mapper.selectById(id);
             if (model == null) {
                 return ResultEnum.DATA_NOTEXISTS;
             }
+
+            BusinessAreaPO businessArea = businessAreaImpl.getById(model.businessId);
+            if (businessArea == null) {
+                return ResultEnum.DATA_NOTEXISTS;
+            }
             //判断维度表是否存在关联
-            QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
-            queryWrapper.lambda().eq(DimensionAttributePO::getAssociateDimensionId,id);
-            List<DimensionAttributePO> poList=dimensionAttributeMapper.selectList(queryWrapper);
+            QueryWrapper<DimensionAttributePO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(DimensionAttributePO::getAssociateDimensionId, id);
+            List<DimensionAttributePO> poList = dimensionAttributeMapper.selectList(queryWrapper);
             if (poList.size() > 0) {
                 return ResultEnum.TABLE_ASSOCIATED;
             }
             //判断维度表是否与事实表有关联
-            QueryWrapper<FactAttributePO> queryWrapper1=new QueryWrapper<>();
-            queryWrapper1.lambda().eq(FactAttributePO::getAssociateDimensionId,id);
+            QueryWrapper<FactAttributePO> queryWrapper1 = new QueryWrapper<>();
+            queryWrapper1.lambda().eq(FactAttributePO::getAssociateDimensionId, id);
             List<FactAttributePO> factAttributePoList=factAttributeMapper.selectList(queryWrapper1);
             if (factAttributePoList.size() > 0) {
                 return ResultEnum.TABLE_ASSOCIATED;
@@ -455,6 +464,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper,DimensionPO> impl
                     delQualifiedName.add(dataSourceConfigOlap.dbList.get(0).qualifiedName + "_" + DataModelTableTypeEnum.DORIS_DIMENSION.getValue() + "_" + id);
                 }
                 deleteDto.qualifiedNames = delQualifiedName;
+                deleteDto.classifications = businessArea.getBusinessName();
                 dataManageClient.deleteMetaData(deleteDto);
             }
             return flat > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;

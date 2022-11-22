@@ -13,4 +13,9 @@ public class MetaDataDeleteAttributeDTO {
 
     public List<String> qualifiedNames;
 
+    /**
+     * atlas业务名称
+     */
+    public String classifications;
+
 }

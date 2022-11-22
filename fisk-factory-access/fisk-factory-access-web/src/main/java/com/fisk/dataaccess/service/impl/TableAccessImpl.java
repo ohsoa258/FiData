@@ -784,6 +784,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<String> qualifiedNames = new ArrayList<>();
         qualifiedNames.add(hostname + "_" + dbName + "_" + id);
         vo.setQualifiedNames(qualifiedNames);
+        vo.setClassifications(registrationPo.appName + "_" + registrationPo.appAbbreviation);
 
         log.info("删除的物理表信息,{}", vo);
 
