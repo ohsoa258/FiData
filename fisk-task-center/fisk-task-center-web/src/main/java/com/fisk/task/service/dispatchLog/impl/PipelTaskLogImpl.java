@@ -167,7 +167,7 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
                     pipelTaskMergeLogVos.add(pipelTaskMergeLogVo);
                 }
             }
-            if (Objects.nonNull(pipelTaskMergeLogVo.endTime)) {
+            if (Objects.nonNull(pipelTaskMergeLogVo.endTime) && Objects.nonNull(pipelTaskMergeLogVo.startTime)) {
                 pipelTaskMergeLogVo.duration = (pipelTaskMergeLogVo.endTime.getTime() - pipelTaskMergeLogVo.startTime.getTime()) / 60000;
                 pipelTaskMergeLogVos.add(pipelTaskMergeLogVo);
             }

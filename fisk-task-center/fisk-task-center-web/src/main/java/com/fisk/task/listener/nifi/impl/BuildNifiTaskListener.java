@@ -918,7 +918,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         if (dto.excelFlow) {
             //ftp文件拷贝
             ProcessorEntity replaceTextForFtpProcess = replaceTextForFtpProcess(config, groupId, dto);
-            tableNifiSettingPO.replaceTextForFtpProcessId = replaceTextForFtpProcess.getId();
+            tableNifiSettingPO.replaceTextForFtpProcessorId = replaceTextForFtpProcess.getId();
             componentConnector(groupId, delSqlRes.getId(), replaceTextForFtpProcess.getId(), AutoEndBranchTypeEnum.SUCCESS);
             ProcessorEntity invokeHTTPForFtpProcessor = invokeHTTPForFtpProcessor(groupId);
             tableNifiSettingPO.invokeHttpForFtpProcessorId = invokeHTTPForFtpProcessor.getId();
@@ -2866,7 +2866,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             tableNifiSettingPO.setVersionProcessorId = evaluateJson.getId();
             componentConnector(groupId, processorEntity.getId(), jsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
             componentConnector(groupId, jsonRes.getId(), evaluateJson.getId(), AutoEndBranchTypeEnum.SUCCESS);
-            //todo 调用删除的两个组件 replaceTextForVersionProcessId  invokeHttpForVersionProcessorId
+            //todo 调用删除的两个组件 replaceTextForVersionProcessorId  invokeHttpForVersionProcessorId
             ProcessorEntity replaceTextForVisionProcess = replaceTextForVisionProcess(null, groupId, null);
             ProcessorEntity invokeHTTPForVisionProcessor = invokeHTTPForVisionProcessor(groupId);
             componentConnector(groupId, evaluateJson.getId(), replaceTextForVisionProcess.getId(), AutoEndBranchTypeEnum.MATCHED);
@@ -2876,7 +2876,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             res.add(evaluateJson);
             res.add(replaceTextForVisionProcess);
             res.add(invokeHTTPForVisionProcessor);
-            tableNifiSettingPO.replaceTextForVersionProcessId = replaceTextForVisionProcess.getId();
+            tableNifiSettingPO.replaceTextForVersionProcessorId = replaceTextForVisionProcess.getId();
             tableNifiSettingPO.invokeHttpForVersionProcessorId = invokeHTTPForVisionProcessor.getId();
             processorEntities.add(replaceTextForVisionProcess);
             processorEntities.add(invokeHTTPForVisionProcessor);
@@ -2884,7 +2884,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             tableNifiSettingPO.queryVersionProcessorId = null;
             tableNifiSettingPO.convertVersionToJsonProcessorId = null;
             tableNifiSettingPO.setVersionProcessorId = null;
-            tableNifiSettingPO.replaceTextForVersionProcessId = null;
+            tableNifiSettingPO.replaceTextForVersionProcessorId = null;
             tableNifiSettingPO.invokeHttpForVersionProcessorId = null;
         }
         return processorEntities;

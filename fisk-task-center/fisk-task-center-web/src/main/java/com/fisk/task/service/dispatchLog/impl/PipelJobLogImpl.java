@@ -190,7 +190,7 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                     pipelJobMergeLogVos.add(pipelJobMergeLogVo);
                 }
             }
-            if (Objects.nonNull(pipelJobMergeLogVo.endTime)) {
+            if (Objects.nonNull(pipelJobMergeLogVo.endTime) && Objects.nonNull(pipelJobMergeLogVo.startTime)) {
                 pipelJobMergeLogVo.duration = (pipelJobMergeLogVo.endTime.getTime() - pipelJobMergeLogVo.startTime.getTime()) / 60000;
                 pipelJobMergeLogVos.add(pipelJobMergeLogVo);
             }

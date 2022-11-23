@@ -1663,12 +1663,12 @@ public class NiFiHelperImpl implements INiFiHelper {
                 ProcessIds.add(tableNifiSettingPO.queryVersionProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertVersionToJsonProcessorId);
                 ProcessIds.add(tableNifiSettingPO.setVersionProcessorId);
-                ProcessIds.add(tableNifiSettingPO.replaceTextForVersionProcessId);
+                ProcessIds.add(tableNifiSettingPO.replaceTextForVersionProcessorId);
                 ProcessIds.add(tableNifiSettingPO.invokeHttpForVersionProcessorId);
                 //---------------------------------------------------------------
 
                 ProcessIds.add(tableNifiSettingPO.executeTargetDeleteProcessorId);
-                ProcessIds.add(tableNifiSettingPO.replaceTextForFtpProcessId);
+                ProcessIds.add(tableNifiSettingPO.replaceTextForFtpProcessorId);
                 ProcessIds.add(tableNifiSettingPO.invokeHttpForFtpProcessorId);
                 ProcessIds.add(tableNifiSettingPO.executeSqlRecordProcessorId);
                 ProcessIds.add(tableNifiSettingPO.getFtpProcessorId);

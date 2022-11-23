@@ -130,7 +130,7 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
                 }
 
             }
-            if (Objects.nonNull(pipelMergeLog.endTime)) {
+            if (Objects.nonNull(pipelMergeLog.endTime) && Objects.nonNull(pipelMergeLog.startTime)) {
                 pipelMergeLog.duration = (pipelMergeLog.endTime.getTime() - pipelMergeLog.startTime.getTime()) / 60000;
             } else {
                 pipelMergeLog.pipelStatu = "正在运行";
@@ -168,7 +168,7 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
                     }
                 }
                 if (successReplenish) {
-                    LogStatisticsVO logStatistics = JSON.parseObject(JSON.toJSONString(amountLog.get(i)),LogStatisticsVO.class);
+                    LogStatisticsVO logStatistics = JSON.parseObject(JSON.toJSONString(amountLog.get(i)), LogStatisticsVO.class);
                     logStatistics.sum = 0;
                     successLog.add(logStatistics);
                 }
@@ -180,7 +180,7 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
                     }
                 }
                 if (failureReplenish) {
-                    LogStatisticsVO logStatistics =  JSON.parseObject(JSON.toJSONString(amountLog.get(i)),LogStatisticsVO.class);
+                    LogStatisticsVO logStatistics = JSON.parseObject(JSON.toJSONString(amountLog.get(i)), LogStatisticsVO.class);
                     logStatistics.sum = 0;
                     failureLog.add(logStatistics);
                 }
