@@ -11,7 +11,6 @@ import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
@@ -152,14 +151,6 @@ public class AppRegistrationController {
             // 删除nifi流程
             publishTaskClient.deleteNifiFlow(dataModelVO);
             log.info("task删除应用{}", task);
-        }
-
-        // 删除元数据
-        if (CollectionUtils.isNotEmpty(nifiVO.qualifiedNames)) {
-            MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
-            metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.getQualifiedNames());
-            metaDataDeleteAttributeDto.classifications = nifiVO.classifications;
-            dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);

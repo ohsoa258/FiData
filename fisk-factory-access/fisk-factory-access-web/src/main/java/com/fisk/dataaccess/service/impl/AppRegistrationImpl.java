@@ -31,6 +31,7 @@ import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbMetaData.dto.*;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -460,18 +461,33 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         vo.qualifiedNames = qualifiedNames;
         log.info("删除的应用信息,{}", vo);
 
-        // 删除元数据信息
-        ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
-        classificationInfoDto.setName(model.appName + "_" + model.appAbbreviation);
-        classificationInfoDto.setDescription(model.appDes);
-        classificationInfoDto.setSourceType(1);
-        classificationInfoDto.setDelete(true);
-        try {
-            dataManageClient.appSynchronousClassification(classificationInfoDto);
-        } catch (Exception e) {
-            // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
-            log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
-        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+
+                    // 删除元数据
+                    if (!CollectionUtils.isEmpty(vo.qualifiedNames)) {
+                        MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
+                        metaDataDeleteAttributeDto.setQualifiedNames(vo.getQualifiedNames());
+                        metaDataDeleteAttributeDto.classifications = vo.classifications;
+                        dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
+                    }
+
+                    // 删除元数据信息
+                    ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
+                    classificationInfoDto.setName(model.appName + "_" + model.appAbbreviation);
+                    classificationInfoDto.setDescription(model.appDes);
+                    classificationInfoDto.setSourceType(1);
+                    classificationInfoDto.setDelete(true);
+
+                    dataManageClient.appSynchronousClassification(classificationInfoDto);
+                } catch (Exception e) {
+                    // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
+                    log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
+                }
+            }
+        }).start();
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
     }
