@@ -44,7 +44,6 @@ public class ApiConfigDTO
     @ApiModelProperty(value = "表架构名")
     public String tableFramework;
 
-
     /**
      * 表名，不带架构名
      */

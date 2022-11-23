@@ -99,16 +99,25 @@ public class BuildDataServicePgCommandImpl implements IBuildDataServiceSqlComman
 
     @Override
     public String buildUseExistTableFiled(String tableFramework, String tableRelName) {
-        // tableFramework 用不到，因为查询字段的时候无法关联schema进行查询，所以这里取第一个匹配的表名称
-        String sql = String.format("SELECT \n" +
-                "\t'%s' AS tableName,\n" +
-                "\tA.attname AS fieldName,\n" +
-                "\tcol_description ( A.attrelid, A.attnum ) AS fieldDesc \n" +
+        String sql = String.format("SELECT TABLE_NAME AS\n" +
+                "\ttableName,\n" +
+                "\tCOLUMN_NAME AS fieldName,\n" +
+                "\t(\n" +
+                "\tSELECT\n" +
+                "\t\tpg_catalog.col_description ( C.oid, sc.ordinal_position :: INT ) \n" +
                 "\tFROM\n" +
-                "\t\tpg_attribute A \n" +
+                "\t\tpg_catalog.pg_class C \n" +
                 "\tWHERE\n" +
-                "\tattstattarget =- 1 \n" +
-                "\tAND attrelid = ( SELECT oid FROM pg_class WHERE relname = '%s' LIMIT 1 ) -- 这里限制一条记录，否则存在多个表名可能会引起报错)",tableRelName, tableRelName);
+                "\t\tC.oid = ( SELECT ( '\"' || sc.TABLE_NAME || '\"' ) :: REGCLASS :: OID ) \n" +
+                "\t\tAND C.relname = sc.TABLE_NAME \n" +
+                "\t) AS fieldDesc \n" +
+                "FROM\n" +
+                "\tinformation_schema.COLUMNS sc \n" +
+                "WHERE\n" +
+                "\tTABLE_NAME = '%s' ", tableRelName);
+        if (StringUtils.isNotEmpty(tableFramework)) {
+            sql += String.format(" AND table_schema = '%s'", tableFramework);
+        }
         return sql;
     }
 

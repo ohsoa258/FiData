@@ -391,7 +391,13 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
 
         try {
             Statement st = null;
-            Connection conn = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
+            String conStr = dataSourceConVO.getConStr();
+            if (StringUtils.isNotEmpty(dto.apiDTO.getTableFramework()) &&
+                    (dataSourceConVO.getConType() == DataSourceTypeEnum.POSTGRESQL ||
+                            dataSourceConVO.getConType() == DataSourceTypeEnum.SQLSERVER)) {
+                conStr = dataSourceConVO.getConStr() + "&currentSchema=" + dto.apiDTO.getTableFramework();
+            }
+            Connection conn = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), conStr, dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
             /*
                 以流的形式 TYPE_FORWARD_ONLY: 只可向前滚动查询 CONCUR_READ_ONLY: 指定不可以更新 ResultSet
                 如果PreparedStatement对象初始化时resultSetType参数设置为TYPE_FORWARD_ONLY，
