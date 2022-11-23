@@ -133,12 +133,7 @@ public class BuildDataServiceSqlServerCommandImpl implements IBuildDataServiceSq
         if (StringUtils.isEmpty(schema)) {
             return conStr;
         }
-        String str;
-        if (conStr.contains("?")) {
-            str = conStr + "&searchpath=" + schema;
-        } else {
-            str = conStr + "?searchpath=" + schema;
-        }
+        String str = conStr + ";searchpath=" + schema;
         return str;
     }
 
