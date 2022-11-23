@@ -257,7 +257,12 @@ public class PhysicalTableController {
         MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
         metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.qualifiedNames);
         metaDataDeleteAttributeDto.setClassifications(nifiVO.classifications);
-        dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
+            }
+        }).start();
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
