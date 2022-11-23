@@ -85,6 +85,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -210,18 +212,25 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             VerifySchema(po.appAbbreviation, po.targetDbId);
         }
 
-        // 添加元数据信息
+        // 添加业务分类元数据信息
         ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
         classificationInfoDto.setName(appRegistrationDTO.appName + "_" + appRegistrationDTO.appAbbreviation);
         classificationInfoDto.setDescription(appRegistrationDTO.appDes);
         classificationInfoDto.setSourceType(1);
         classificationInfoDto.setDelete(false);
-        try {
-            dataManageClient.appSynchronousClassification(classificationInfoDto);
-        } catch (Exception e) {
-            // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
-            log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
-        }
+
+        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+        cachedThreadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    dataManageClient.appSynchronousClassification(classificationInfoDto);
+                } catch (Exception e) {
+                    // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
+                    log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
+                }
+            }
+        });
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
     }
