@@ -423,7 +423,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     // 构建元数据实时同步数据对象
                     buildMetaDataInstanceAttribute(registration, accessId, 1);
                 } else if (registration.appType == 1) {
-                    if (DataSourceTypeEnum.FTP.getName().equals(dataSourcePo.driveType)) {
+                    if (DataSourceTypeEnum.FTP.getName().equals(dataSourcePo.driveType) || data.sftpFlow) {
                         data.excelFlow = true;
                     }
                     // 非实时物理表发布
