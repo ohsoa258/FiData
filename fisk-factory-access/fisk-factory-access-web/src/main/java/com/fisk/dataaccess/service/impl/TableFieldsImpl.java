@@ -401,6 +401,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.generateVersionSql = versionSql;
             data.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile;
             data.fetchSize = syncMode.fetchSize;
+            data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType) ? true : false;
 
             // 执行发布
             try {
@@ -431,7 +432,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     // 生成nifi流程
                     //log.info(JSON.toJSONString(data));
                     //publishTaskClient.publishBuildAtlasTableTask(data);
-                    // 构建元数据实时同步数据对象
+                    //构建元数据实时同步数据对象
                     buildMetaDataInstanceAttribute(registration, accessId, 2);
                 }
 
