@@ -7,6 +7,7 @@ import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
 import com.fisk.task.entity.PipelJobLogPO;
 import com.fisk.task.entity.PipelTaskLogPO;
 import com.fisk.task.entity.PipelLogPO;
+import com.fisk.task.dto.dispatchlog.*;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.mapper.PipelJobLogMapper;
