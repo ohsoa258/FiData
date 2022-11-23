@@ -475,7 +475,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             public void run() {
                 try {
 
-                    // 删除元数据
+                    // 删除元数据实体
                     if (!CollectionUtils.isEmpty(vo.qualifiedNames)) {
                         MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
                         metaDataDeleteAttributeDto.setQualifiedNames(vo.getQualifiedNames());
@@ -483,7 +483,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
                     }
 
-                    // 删除元数据信息
+                    // 删除业务分类
                     ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
                     classificationInfoDto.setName(model.appName + "_" + model.appAbbreviation);
                     classificationInfoDto.setDescription(model.appDes);
