@@ -12,22 +12,22 @@ public interface IBuildDataServiceSqlCommand {
      * 分页SQL
      *
      * @param tableName 表名称
-     * @param fields 表字段名称
-     * @param orderBy 排序条件
+     * @param fields    表字段名称
+     * @param orderBy   排序条件
      * @param pageIndex 页码
-     * @param pageSize 页数
+     * @param pageSize  页数
      * @return sql
      */
-    String buildPagingSql(String tableName,String fields, String orderBy, Integer pageIndex, Integer pageSize);
+    String buildPagingSql(String tableName, String fields, String orderBy, Integer pageIndex, Integer pageSize);
 
     /**
      * 分页SQL
      *
      * @param tableName 表名称
-     * @param fields 表字段名称
-     * @param orderBy 排序条件
+     * @param fields    表字段名称
+     * @param orderBy   排序条件
      * @param pageIndex 页码
-     * @param pageSize 页数
+     * @param pageSize  页数
      * @return sql
      */
     String buildPagingSql(String tableName, List<String> fields, String orderBy, Integer pageIndex, Integer pageSize);
@@ -35,7 +35,7 @@ public interface IBuildDataServiceSqlCommand {
     /**
      * 查询指定表数量
      *
-     * @param tableName 表名称
+     * @param tableName       表名称
      * @param queryConditions 查询条件
      * @return sql
      */
@@ -44,8 +44,8 @@ public interface IBuildDataServiceSqlCommand {
     /**
      * 查询指定表数据
      *
-     * @param tableName 表名称
-     * @param fields 表字段
+     * @param tableName       表名称
+     * @param fields          表字段
      * @param queryConditions 查询条件
      * @return sql
      */
@@ -55,7 +55,7 @@ public interface IBuildDataServiceSqlCommand {
      * 单条新增SQL语句
      *
      * @param tableName 表名称
-     * @param member 表字段
+     * @param member    表字段
      * @return sql
      */
     String buildSingleInsertSql(String tableName, Map<String, Object> member);
@@ -64,7 +64,7 @@ public interface IBuildDataServiceSqlCommand {
      * 单条修改SQL语句
      *
      * @param tableName 表名称
-     * @param member 表字段
+     * @param member    表字段
      * @return sql
      */
     String buildSingleUpdateSql(String tableName, Map<String, Object> member, String editConditions);
@@ -73,8 +73,17 @@ public interface IBuildDataServiceSqlCommand {
      * 查询指定库下指定表的字段信息
      *
      * @param tableFramework 架构名
-     * @param tableRelName 表名称，不带架构名
+     * @param tableRelName   表名称，不带架构名
      * @return sql
      */
     String buildUseExistTableFiled(String tableFramework, String tableRelName);
+
+    /**
+     * 指定Schema的连接字符串
+     *
+     * @param schema 模式
+     * @param conStr 连接字符串
+     * @return sql
+     */
+    String buildSchemaConStr(String schema, String conStr);
 }

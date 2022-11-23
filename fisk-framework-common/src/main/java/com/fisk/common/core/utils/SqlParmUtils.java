@@ -82,7 +82,7 @@ public class SqlParmUtils {
      * @version v1.0
      * @params list
      */
-    public static <T> String parseListToParmStr(List<T> list) {
+    public static <T> String parseListToParamStr(List<T> list) {
         String result = null;
         if (CollectionUtils.isNotEmpty(list)) {
             result = Joiner.on(",").join(list);
@@ -98,7 +98,7 @@ public class SqlParmUtils {
      * @version v1.0
      * @params string
      */
-    public static String getInParm(List<String> list) {
+    public static String getInParam(List<String> list) {
         list = list.stream().distinct().collect(Collectors.toList());
         StringBuilder sb = new StringBuilder();
         sb.append("(");

@@ -1,6 +1,7 @@
 package com.fisk.common.service.dbBEBuild.dataservice.impl;
 
 import com.fisk.common.service.dbBEBuild.dataservice.IBuildDataServiceSqlCommand;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -46,14 +47,20 @@ public class BuildDataServiceMysqlCommandImpl implements IBuildDataServiceSqlCom
     @Override
     public String buildUseExistTableFiled(String tableFramework, String tableRelName) {
         // tableFramework 用不到，因为没有mysql没有schema的概念
-       String sql = String.format("SELECT\n" +
-               "\tTABLE_NAME AS tableName,\n" +
-               "\tCOLUMN_NAME AS fieldName,\n" +
-               "\tCOLUMN_COMMENT AS fieldDesc \n" +
-               "FROM\n" +
-               "\tinformation_schema.`COLUMNS` \n" +
-               "WHERE\n" +
-               "\tTABLE_NAME = '%s'", tableRelName);
-       return  sql;
+        String sql = String.format("SELECT\n" +
+                "\tTABLE_NAME AS tableName,\n" +
+                "\tCOLUMN_NAME AS fieldName,\n" +
+                "\tCOLUMN_COMMENT AS fieldDesc \n" +
+                "FROM\n" +
+                "\tinformation_schema.`COLUMNS` \n" +
+                "WHERE\n" +
+                "\tTABLE_NAME = '%s'", tableRelName);
+        return sql;
     }
+
+    @Override
+    public String buildSchemaConStr(String schema, String conStr) {
+        return conStr;
+    }
+
 }

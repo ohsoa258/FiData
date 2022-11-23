@@ -121,6 +121,20 @@ public class BuildDataServicePgCommandImpl implements IBuildDataServiceSqlComman
         return sql;
     }
 
+    @Override
+    public String buildSchemaConStr(String schema, String conStr) {
+        if (StringUtils.isEmpty(schema)) {
+            return conStr;
+        }
+        String str;
+        if (conStr.contains("?")) {
+            str = conStr + "&currentSchema=" + schema;
+        } else {
+            str = conStr + "?currentSchema=" + schema;
+        }
+        return str;
+    }
+
     /**
      * 单条新增SQL语句
      *

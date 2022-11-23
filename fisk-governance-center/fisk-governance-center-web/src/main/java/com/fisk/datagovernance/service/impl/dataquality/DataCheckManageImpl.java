@@ -946,7 +946,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     public JSONArray GetCheckFieldRuleResult_Sync(Connection conn, List<SyncCheckInfoVO> checkResultSqlList, String checkFieldWhere) {
         String tableName = checkResultSqlList.get(0).getCheckTable();
         List<String> fileds = checkResultSqlList.stream().map(SyncCheckInfoVO::getCheckField).distinct().collect(Collectors.toList());
-        String filedStr = SqlParmUtils.parseListToParmStr(fileds);
+        String filedStr = SqlParmUtils.parseListToParamStr(fileds);
         String query_SqlStr = String.format("SELECT %s FROM %s WHERE 1=1 %s;", filedStr, tableName, checkFieldWhere);
         Statement st = null;
         JSONArray array = new JSONArray();
@@ -1027,7 +1027,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         }
                     }
                     if (!isValid) {
-                        sqlInPram = SqlParmUtils.getInParm(fieldValueFilters);
+                        sqlInPram = SqlParmUtils.getInParam(fieldValueFilters);
                         checkInfo.setSqlWhere(sqlInPram);
                     }
                     break;
@@ -1043,7 +1043,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     if (fieldValueFilters.size() != data.size()) {
                         isValid = false;
                         fieldValueFilters = RegexUtils.subtractValid(fieldValues, fieldValueFilters, false);
-                        sqlInPram = SqlParmUtils.getInParm(fieldValueFilters);
+                        sqlInPram = SqlParmUtils.getInParam(fieldValueFilters);
                         checkInfo.setSqlWhere(sqlInPram);
                     }
                     break;

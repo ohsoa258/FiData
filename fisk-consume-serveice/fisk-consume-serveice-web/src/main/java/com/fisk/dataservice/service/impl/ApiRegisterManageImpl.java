@@ -31,6 +31,7 @@ import com.fisk.dataservice.vo.api.*;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +48,7 @@ import java.util.stream.Collectors;
  * @author dick
  */
 @Service
+@Slf4j
 public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiConfigPO> implements IApiRegisterManageService {
 
     @Resource
@@ -359,8 +361,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         if (dto.apiDTO.getApiType() == ApiTypeEnum.SQL.getValue()) {
             sql = String.format("SELECT %s FROM %s WHERE 1=1 ", sql, dto.apiDTO.getTableName());
             if (CollectionUtils.isNotEmpty(dto.whereDTO)) {
-                List<SqlWhereDto> sqlWhereDtos = ApiFilterConditionMap.INSTANCES.listDtoToSqlWhereDto(dto.whereDTO);
-                String s = SqlParmUtils.SqlWhere(sqlWhereDtos);
+                List<SqlWhereDto> sqlWhereList = ApiFilterConditionMap.INSTANCES.listDtoToSqlWhereDto(dto.whereDTO);
+                String s = SqlParmUtils.SqlWhere(sqlWhereList);
                 if (s != null && s.length() > 0)
                     sql += s;
             }
@@ -389,15 +391,14 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             fieldConfigPOS = apiFieldMapper.selectList(fieldConfigPOQueryWrapper);
         }
 
+        Connection conn = null;
+        Statement st = null;
         try {
-            Statement st = null;
-            String conStr = dataSourceConVO.getConStr();
-            if (StringUtils.isNotEmpty(dto.apiDTO.getTableFramework()) &&
-                    (dataSourceConVO.getConType() == DataSourceTypeEnum.POSTGRESQL ||
-                            dataSourceConVO.getConType() == DataSourceTypeEnum.SQLSERVER)) {
-                conStr = dataSourceConVO.getConStr() + "&currentSchema=" + dto.apiDTO.getTableFramework();
-            }
-            Connection conn = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), conStr, dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
+            IBuildDataServiceSqlCommand dbCommand = BuildDataServiceHelper.getDBCommand(dataSourceConVO.getConType());
+            String conStr = dbCommand.buildSchemaConStr(dto.apiDTO.getTableFramework(), dataSourceConVO.getConStr());
+            log.info("【preview】连接字符串sql语句：" + conStr);
+            log.info("【preview】查询sql语句：" + sql);
+            conn = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), conStr, dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
             /*
                 以流的形式 TYPE_FORWARD_ONLY: 只可向前滚动查询 CONCUR_READ_ONLY: 指定不可以更新 ResultSet
                 如果PreparedStatement对象初始化时resultSetType参数设置为TYPE_FORWARD_ONLY，
@@ -411,10 +412,23 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             assert st != null;
             ResultSet rs = st.executeQuery(sql);
             //获取数据集
-            apiPreviewVO = resultSetToJsonArray(conn, dataSourceConVO, rs, dto, fieldConfigPOS);
+            apiPreviewVO = resultSetToJsonArray(conn, dbCommand, rs, dto, fieldConfigPOS);
             rs.close();
         } catch (Exception e) {
+            log.error("【preview】系统异常：" + e);
             throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR, e.getMessage());
+        } finally {
+            try {
+                if (st != null) {
+                    st.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception ex) {
+                log.error("【preview】数据库关闭异常：" + ex);
+                throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR, ex.getMessage());
+            }
         }
         return apiPreviewVO;
     }
@@ -422,13 +436,13 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     /**
      * 预览结果转Json数组
      *
-     * @param conn       数据库连接
-     * @param dataSource 数据库信息
-     * @param rs         查询结果
-     * @param pvDTO      预览请求参数
+     * @param conn      数据库连接
+     * @param dbCommand 数据库sql
+     * @param rs        查询结果
+     * @param pvDTO     预览请求参数
      * @return target
      */
-    private static ApiPreviewVO resultSetToJsonArray(Connection conn, DataSourceConVO dataSource,
+    private static ApiPreviewVO resultSetToJsonArray(Connection conn, IBuildDataServiceSqlCommand dbCommand,
                                                      ResultSet rs, ApiPreviewDTO pvDTO, List<FieldConfigPO> fieldConfigPOS)
             throws SQLException, JSONException {
         ApiPreviewVO data = new ApiPreviewVO();
@@ -455,7 +469,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         List<FieldInfoVO> tableFieldList = null;
         if (pvDTO.apiDTO.getApiType() == ApiTypeEnum.SQL.getValue()
                 && StringUtils.isNotEmpty(pvDTO.apiDTO.getTableRelName())) {
-            tableFieldList = getTableFieldList(conn, dataSource, pvDTO.apiDTO.getTableFramework(), pvDTO.apiDTO.getTableRelName());
+            tableFieldList = getTableFieldList(conn, dbCommand, pvDTO.apiDTO.getTableFramework(), pvDTO.apiDTO.getTableRelName());
         }
 
         //获取列名、描述
@@ -474,9 +488,6 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                 fieldConfigVO.fieldType = "INT".toLowerCase();
             }
 
-            // 转换表字段类型
-//            List<String> list = transformField(fieldConfigVO.fieldType);
-//            fieldConfigVO.fieldType = list.get(0);
             fieldConfigVO.fieldType = fieldConfigVO.fieldType.toLowerCase();
             // 读取不到类型，默认字符串类型
             if (fieldConfigVO.fieldType == null ||
@@ -508,18 +519,18 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
      * 查询表字段信息
      *
      * @param conn           连接
-     * @param dataSource     数据源信息
+     * @param dbCommand      数据库sql
      * @param tableFramework 表架构名
      * @param tableRelName   表名称，不带架构名
      * @return statement
      */
-    private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConVO dataSource,
+    private static List<FieldInfoVO> getTableFieldList(Connection conn, IBuildDataServiceSqlCommand dbCommand,
                                                        String tableFramework, String tableRelName) {
         List<FieldInfoVO> fieldList = new ArrayList<>();
         if (StringUtils.isEmpty(tableRelName))
             return fieldList;
-        IBuildDataServiceSqlCommand dbCommand = BuildDataServiceHelper.getDBCommand(dataSource.getConType());
         String sql = dbCommand.buildUseExistTableFiled(tableFramework, tableRelName);
+        log.info("【getTableFieldList】查询字段sql语句：" + sql);
         if (sql == null || sql.isEmpty())
             return fieldList;
         try {
@@ -536,6 +547,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                 }
             }
         } catch (Exception ex) {
+            log.error("【getTableFieldList】系统异常：" + ex);
             throw new FkException(ResultEnum.ERROR, ":" + ex.getMessage());
         }
         return fieldList;

@@ -127,6 +127,21 @@ public class BuildDataServiceSqlServerCommandImpl implements IBuildDataServiceSq
         return sql;
     }
 
+    @Override
+    public String buildSchemaConStr(String schema, String conStr) {
+        // JDBC 版本在 9.4 以后用currentSchema，之前用searchpath
+        if (StringUtils.isEmpty(schema)) {
+            return conStr;
+        }
+        String str;
+        if (conStr.contains("?")) {
+            str = conStr + "&searchpath=" + schema;
+        } else {
+            str = conStr + "?searchpath=" + schema;
+        }
+        return str;
+    }
+
     /**
      * 单条新增SQL语句
      *
