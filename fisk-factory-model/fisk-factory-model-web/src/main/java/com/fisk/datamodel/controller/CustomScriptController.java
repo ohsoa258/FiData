@@ -3,9 +3,11 @@ package com.fisk.datamodel.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.customscript.CustomScriptDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.service.ICustomScript;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +18,7 @@ import java.util.List;
 /**
  * @author JianWenYang
  */
+@Api(tags = {SwaggerConfig.CUSTOM_SCRIPT})
 @RestController
 @RequestMapping("/CustomScript")
 public class CustomScriptController {
