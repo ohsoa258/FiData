@@ -40,5 +40,10 @@ public class FtpConfig {
      * */
     public String sheetName;
 
+    /**
+     * 公钥连接路径
+     */
+    public String connectStr;
+
 
 }

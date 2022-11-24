@@ -969,11 +969,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @TraceType(type = TraceTypeEnum.DATAACCESS_CONFIG)
     @Override
     public ResultEntity<DataAccessConfigDTO> dataAccessConfig(long id, long appid) {
-        String mysqlType = "mysql";
-        String sqlserverType = "sqlserver";
-        String postgresqlType = "postgresql";
-        String ftpType = "ftp";
-        String oracleType = "oracle";
         // 增量
         int syncModel = 4;
         DataAccessConfigDTO dto = new DataAccessConfigDTO();
@@ -1006,18 +1001,29 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
         sourceDsConfig.setJdbcStr(modelDataSource.getConnectStr());
-        // 选择驱动类型
-        if (Objects.equals(modelDataSource.driveType, sqlserverType)) {
-            sourceDsConfig.setType(DriverTypeEnum.SQLSERVER);
-        } else if (Objects.equals(modelDataSource.driveType, mysqlType)) {
-            sourceDsConfig.setType(DriverTypeEnum.MYSQL);
-        } else if (Objects.equals(modelDataSource.driveType, postgresqlType)) {
-            sourceDsConfig.setType(DriverTypeEnum.POSTGRESQL);
-        } else if (Objects.equals(modelDataSource.driveType, ftpType)) {
-            dto.ftpConfig = buildFtpConfig(ftpConfig, modelDataSource, modelAccess);
-        } else if (Objects.equals(modelDataSource.driveType, oracleType)) {
-            sourceDsConfig.setType(DriverTypeEnum.ORACLE);
+
+        DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.getValue(modelDataSource.driveType);
+        switch (dataSourceTypeEnum) {
+            case SQLSERVER:
+                sourceDsConfig.setType(DriverTypeEnum.SQLSERVER);
+                break;
+            case MYSQL:
+                sourceDsConfig.setType(DriverTypeEnum.MYSQL);
+                break;
+            case POSTGRESQL:
+                sourceDsConfig.setType(DriverTypeEnum.POSTGRESQL);
+                break;
+            case ORACLE:
+                sourceDsConfig.setType(DriverTypeEnum.ORACLE);
+                break;
+            case FTP:
+            case SFTP:
+                dto.ftpConfig = buildFtpConfig(ftpConfig, modelDataSource, modelAccess);
+                break;
+            default:
+                break;
         }
+
         sourceDsConfig.setUser(modelDataSource.getConnectAccount());
         sourceDsConfig.setPassword(modelDataSource.getConnectPwd());
         // 5.表及表sql
@@ -1100,6 +1106,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         ftpConfig.hostname = modelDataSource.host;
         ftpConfig.port = modelDataSource.port;
+        ftpConfig.connectStr = modelDataSource.connectStr;
         ftpConfig.username = modelDataSource.connectAccount;
         ftpConfig.password = modelDataSource.connectPwd;
         ftpConfig.ftpUseUtf8 = true;

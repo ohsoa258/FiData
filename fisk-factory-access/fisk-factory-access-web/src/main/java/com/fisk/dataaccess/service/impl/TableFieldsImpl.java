@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -426,6 +427,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     if (DataSourceTypeEnum.FTP.getName().equals(dataSourcePo.driveType) || data.sftpFlow) {
                         data.excelFlow = true;
                     }
+                    String userStr = JSONObject.toJSONString(data);
                     // 非实时物理表发布
                     // 创建表流程
                     publishTaskClient.publishBuildPhysicsTableTask(data);
