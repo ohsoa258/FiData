@@ -140,8 +140,6 @@ public class BusinessAreaImpl
     private WideTableImpl wideTableImpl;
     @Resource
     private RedisUtil redisUtil;
-    @Value("${fidata.wide-table.guid}")
-    private String wideTableGuid;
 
     @Resource
     private DataManageClient dataManageClient;
@@ -775,7 +773,8 @@ public class BusinessAreaImpl
                 .map(business -> {
                     // 第三层: 业务域
                     FiDataMetaDataTreeDTO businessPoTreeDto = new FiDataMetaDataTreeDTO();
-                    businessPoTreeDto.setId(String.valueOf(business.id));
+                    String uuid_businessId = UUID.randomUUID().toString().replace("-", "");
+                    businessPoTreeDto.setId(uuid_businessId); // String.valueOf(business.id)
                     businessPoTreeDto.setParentId(id);
                     businessPoTreeDto.setLabel(business.getBusinessName());
                     businessPoTreeDto.setLabelAlias(business.getBusinessName());
@@ -792,8 +791,9 @@ public class BusinessAreaImpl
                             .filter(Objects::nonNull)
                             .map(dimensionFolder -> {
                                 FiDataMetaDataTreeDTO dimensionFolderTreeDto = new FiDataMetaDataTreeDTO();
-                                dimensionFolderTreeDto.setId(String.valueOf(dimensionFolder.id));
-                                dimensionFolderTreeDto.setParentId(String.valueOf(business.id));
+                                String uuid_dimensionFolderId = UUID.randomUUID().toString().replace("-", "");
+                                dimensionFolderTreeDto.setId(uuid_dimensionFolderId); //  String.valueOf(dimensionFolder.id)
+                                dimensionFolderTreeDto.setParentId(uuid_businessId); //  String.valueOf(business.id)
                                 dimensionFolderTreeDto.setLabel(dimensionFolder.dimensionFolderCnName);
                                 dimensionFolderTreeDto.setLabelAlias(dimensionFolder.dimensionFolderCnName);
                                 dimensionFolderTreeDto.setLabelDesc(dimensionFolder.dimensionFolderDesc);
@@ -808,7 +808,7 @@ public class BusinessAreaImpl
                                         .map(dimension -> {
                                             FiDataMetaDataTreeDTO dimensionTreeDto = new FiDataMetaDataTreeDTO();
                                             dimensionTreeDto.setId(String.valueOf(dimension.id));
-                                            dimensionTreeDto.setParentId(String.valueOf(dimensionFolder.id));
+                                            dimensionTreeDto.setParentId(uuid_dimensionFolderId); // String.valueOf(dimensionFolder.id)
                                             dimensionTreeDto.setLabel(dimension.dimensionTabName);
                                             dimensionTreeDto.setLabelAlias(dimension.dimensionTabName);
                                             dimensionTreeDto.setLabelRelName(dimension.dimensionTabName);
@@ -866,8 +866,9 @@ public class BusinessAreaImpl
                             .filter(Objects::nonNull)
                             .map(businessProcess -> {
                                 FiDataMetaDataTreeDTO businessProcessTreeDto = new FiDataMetaDataTreeDTO();
-                                businessProcessTreeDto.setId(String.valueOf(businessProcess.id));
-                                businessProcessTreeDto.setParentId(String.valueOf(business.id));
+                                String uuid_businessProcessId = UUID.randomUUID().toString().replace("-", "");
+                                businessProcessTreeDto.setId(uuid_businessProcessId); // String.valueOf(businessProcess.id)
+                                businessProcessTreeDto.setParentId(uuid_businessId); //String.valueOf(business.id)
                                 businessProcessTreeDto.setLabel(businessProcess.businessProcessCnName);
                                 businessProcessTreeDto.setLabelAlias(businessProcess.businessProcessCnName);
                                 businessProcessTreeDto.setLabelDesc(businessProcess.businessProcessDesc);
@@ -882,7 +883,7 @@ public class BusinessAreaImpl
                                         .map(fact -> {
                                             FiDataMetaDataTreeDTO factTreeDto = new FiDataMetaDataTreeDTO();
                                             factTreeDto.setId(String.valueOf(fact.id));
-                                            factTreeDto.setParentId(String.valueOf(businessProcess.id));
+                                            factTreeDto.setParentId(uuid_businessProcessId); // String.valueOf(businessProcess.id)
                                             factTreeDto.setLabel(fact.factTabName);
                                             factTreeDto.setLabelAlias(fact.factTabName);
                                             factTreeDto.setLabelRelName(fact.factTabName);
@@ -964,8 +965,9 @@ public class BusinessAreaImpl
                     FiDataMetaDataTreeDTO wideTableFolderTreeDto = null;
                     if ("olap".equalsIgnoreCase(dourceType)) {
                         wideTableFolderTreeDto = new FiDataMetaDataTreeDTO();
-                        wideTableFolderTreeDto.setId(wideTableGuid);
-                        wideTableFolderTreeDto.setParentId(String.valueOf(business.id));
+                        String uuid_wideTableFolderId = UUID.randomUUID().toString().replace("-", ""); //"9bf0e48e-aef8-44c1-9871-0cb4d0560dd6"
+                        wideTableFolderTreeDto.setId(uuid_wideTableFolderId);
+                        wideTableFolderTreeDto.setParentId(uuid_businessId); // String.valueOf(business.id)
                         wideTableFolderTreeDto.setLabel("宽表");
                         wideTableFolderTreeDto.setLabelAlias("宽表");
                         wideTableFolderTreeDto.setLabelDesc("宽表");
@@ -980,7 +982,7 @@ public class BusinessAreaImpl
                                 .map(wideTable1 -> {
                                     FiDataMetaDataTreeDTO wideTableTreeDto = new FiDataMetaDataTreeDTO();
                                     wideTableTreeDto.setId(String.valueOf(wideTable1.id));
-                                    wideTableTreeDto.setParentId(wideTableGuid);
+                                    wideTableTreeDto.setParentId(uuid_wideTableFolderId);
                                     wideTableTreeDto.setLabel(wideTable1.name);
                                     wideTableTreeDto.setLabelAlias(wideTable1.name);
                                     wideTableTreeDto.setLabelRelName(wideTable1.name);
