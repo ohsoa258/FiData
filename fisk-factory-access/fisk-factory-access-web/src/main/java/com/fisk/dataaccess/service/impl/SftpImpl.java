@@ -89,7 +89,7 @@ public class SftpImpl implements ISftp {
             }
         } catch (Exception e) {
             log.error("SFTP预览数据失败,{}", e);
-            throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+            throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR);
         } finally {
             SftpUtils.disconnect(sftp);
         }

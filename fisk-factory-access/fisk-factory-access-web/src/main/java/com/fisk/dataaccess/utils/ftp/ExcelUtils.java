@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.utils.ftp;
 
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.csvreader.CsvReader;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
@@ -219,7 +220,9 @@ public class ExcelUtils {
                 // excel预览内容
                 excelDTO.excelContent = lists;
                 // excel字段列表
-                excelDTO.excelField = lists.get(0);
+                if (!CollectionUtils.isEmpty(lists)) {
+                    excelDTO.excelField = lists.get(0);
+                }
                 // sheet名称
                 excelDTO.sheetName = workbook.getSheetName(i);
                 finalListDto.add(excelDTO);
