@@ -1213,7 +1213,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     // 第一层: app层
                     FiDataMetaDataTreeDTO appDtoTree = new FiDataMetaDataTreeDTO();
                     // 当前层默认生成的uuid
-                    appDtoTree.setId(String.valueOf(app.id));
+                    String uuid_appId = UUID.randomUUID().toString().replace("-", "");
+                    appDtoTree.setId(uuid_appId); //String.valueOf(app.id)
                     // 上一级的id
                     appDtoTree.setParentId(id);
                     appDtoTree.setLabel(app.appAbbreviation);
@@ -1237,8 +1238,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                     .filter(Objects::nonNull)
                                     .map(api -> {
                                         FiDataMetaDataTreeDTO apiDtoTree = new FiDataMetaDataTreeDTO();
-                                        apiDtoTree.setId(String.valueOf(api.id));
-                                        apiDtoTree.setParentId(String.valueOf(app.id));
+                                        String uuid_apiId = UUID.randomUUID().toString().replace("-", "");
+                                        apiDtoTree.setId(uuid_apiId);// String.valueOf(api.id)
+                                        apiDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
                                         apiDtoTree.setLabel(api.apiName);
                                         apiDtoTree.setLabelAlias(api.apiName);
                                         apiDtoTree.setLevelType(LevelTypeEnum.FOLDER);
@@ -1260,7 +1262,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                 .map(table -> {
                                                     FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
                                                     tableDtoTree.setId(String.valueOf(table.id));
-                                                    tableDtoTree.setParentId(String.valueOf(api.id));
+                                                    tableDtoTree.setParentId(uuid_apiId); // String.valueOf(api.id)
                                                     tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
                                                     tableDtoTree.setLabelAlias(table.tableName);
                                                     tableDtoTree.setLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
@@ -1355,7 +1357,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
                     // 第一层: app层
                     FiDataMetaDataTreeDTO appDtoTree = new FiDataMetaDataTreeDTO();
-                    appDtoTree.setId(String.valueOf(app.id));
+                    String uuid_appId = UUID.randomUUID().toString().replace("-", "");
+                    appDtoTree.setId(uuid_appId); //String.valueOf(app.id)
                     // 上一级的id
                     appDtoTree.setParentId(id);
                     appDtoTree.setLabel(app.appName);
@@ -1380,8 +1383,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                         .filter(Objects::nonNull)
                                         .map(api -> {
                                             FiDataMetaDataTreeDTO apiDtoTree = new FiDataMetaDataTreeDTO();
-                                            apiDtoTree.setId(String.valueOf(api.id));
-                                            apiDtoTree.setParentId(String.valueOf(app.id));
+
+                                            String uuid_apiId = UUID.randomUUID().toString().replace("-", "");
+                                            apiDtoTree.setId(uuid_apiId); // String.valueOf(api.id)
+                                            apiDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
                                             apiDtoTree.setLabel(api.apiName);
                                             apiDtoTree.setLabelAlias(api.apiName);
                                             apiDtoTree.setLevelType(LevelTypeEnum.FOLDER);
@@ -1403,7 +1408,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                                     .map(table -> {
                                                         FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
                                                         tableDtoTree.setId(String.valueOf(table.id));
-                                                        tableDtoTree.setParentId(String.valueOf(api.id));
+                                                        tableDtoTree.setParentId(uuid_apiId); // String.valueOf(api.id)
                                                         tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
                                                         tableDtoTree.setLabelAlias(table.tableName);
                                                         tableDtoTree.setLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
@@ -1480,7 +1485,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                         .map(table -> {
                                             FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
                                             tableDtoTree.setId(String.valueOf(table.id));
-                                            tableDtoTree.setParentId(String.valueOf(app.id));
+                                            tableDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
                                             tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
                                             tableDtoTree.setLabelAlias(table.tableName);
                                             tableDtoTree.setLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
