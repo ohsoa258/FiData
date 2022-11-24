@@ -128,6 +128,7 @@ public class BuildAtlasTableAndColumnTaskListener
             bfd.queryEndTime = buildPhysicalTableDTO.queryEndTime;
             bfd.openTransmission = buildPhysicalTableDTO.openTransmission;
             bfd.excelFlow = buildPhysicalTableDTO.excelFlow;
+            bfd.sftpFlow = buildPhysicalTableDTO.sftpFlow;
             bfd.deltaTimes = deltaTimes;
             bfd.generateVersionSql = buildPhysicalTableDTO.generateVersionSql;
             bfd.maxRowsPerFlowFile = buildPhysicalTableDTO.maxRowsPerFlowFile;

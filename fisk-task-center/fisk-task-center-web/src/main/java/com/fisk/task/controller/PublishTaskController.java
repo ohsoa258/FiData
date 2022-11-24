@@ -114,6 +114,7 @@ public class PublishTaskController {
     @PostMapping("/publishBuildPhysicsTableTask")
     @ApiOperation(value = "在ods库中生成数据表")
     public ResultEntity<Object> publishBuildPhysicsTableTask(@RequestBody BuildPhysicalTableDTO ArDto) {
+        log.info("进入建表" + ArDto.tableName);
         return iBuildKfkTaskService.publishTask("数据湖表:" + ArDto.tableName + ",结构处理成功",
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW,

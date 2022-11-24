@@ -226,6 +226,7 @@ public class KafkaConsumer {
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_BUILD)
     public ResultEntity<Object> buildDataInputPgTableListener(String dataInfo, Acknowledgment acke) {
+        log.info("进入建表");
         return ResultEntityBuild.build(buildDataInputPgTableListener.msg(dataInfo, acke));
     }
 
