@@ -42,6 +42,7 @@ public class SwaggerConfig {
     public static final String TABLE_BUSINESS="table-business-controller";
     public static final String WIDE_TABLE = "wide-table-controller";
     public static final String DATA_OPS = "data-ops-controller";
+    public static final String CUSTOM_SCRIPT = "custom-script-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -72,6 +73,7 @@ public class SwaggerConfig {
                 .tags(new Tag(TABLE_BUSINESS, "表增量配置"))
                 .tags(new Tag(WIDE_TABLE, "宽表"))
                 .tags(new Tag(DATA_OPS, "数据运维"))
+                .tags(new Tag(CUSTOM_SCRIPT, "自定义脚本"))
                 .securityContexts(securityContexts());
     }
 
