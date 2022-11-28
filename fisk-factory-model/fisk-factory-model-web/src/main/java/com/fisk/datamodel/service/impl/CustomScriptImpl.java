@@ -2,6 +2,7 @@ package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
@@ -25,7 +26,9 @@ import java.util.stream.Collectors;
  * @author JianWenYang
  */
 @Service
-public class CustomScriptImpl implements ICustomScript {
+public class CustomScriptImpl
+        extends ServiceImpl<CustomScriptMapper, CustomScriptPO>
+        implements ICustomScript {
 
     @Resource
     CustomScriptMapper mapper;
@@ -101,5 +104,51 @@ public class CustomScriptImpl implements ICustomScript {
 
         return customScriptInfoList;
     }
+
+    @Override
+    public ResultEnum addOrUpdateCustomScript(List<CustomScriptDTO> dtoList) {
+        List<CustomScriptPO> poList = CustomScriptMap.INSTANCES.dtoListToPoList(dtoList);
+        boolean b = this.saveOrUpdateBatch(poList);
+        if (!b) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        //删除
+        List<Integer> idList = dtoList
+                .stream()
+                .filter(e -> e.id != 0)
+                .map(e -> e.id)
+                .collect(Collectors.toList());
+
+        if (CollectionUtils.isEmpty(idList)) {
+            return ResultEnum.SUCCESS;
+        }
+
+        return batchDelCustomScriptByIds(idList, dtoList.get(0).tableId, dtoList.get(0).type);
+
+    }
+
+    /**
+     * 批量删除根据id集合
+     *
+     * @param idList
+     * @param tableId
+     * @param type
+     * @return
+     */
+    public ResultEnum batchDelCustomScriptByIds(List<Integer> idList, Integer tableId, Integer type) {
+        QueryWrapper<CustomScriptPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.notIn("id", idList)
+                .select("id")
+                .lambda()
+                .eq(CustomScriptPO::getTableId, tableId)
+                .eq(CustomScriptPO::getType, type);
+        boolean flat = this.remove(queryWrapper);
+        if (!flat) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        return ResultEnum.SUCCESS;
+    }
+
 
 }

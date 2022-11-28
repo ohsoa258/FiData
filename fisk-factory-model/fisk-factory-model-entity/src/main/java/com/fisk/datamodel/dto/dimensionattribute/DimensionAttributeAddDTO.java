@@ -1,6 +1,6 @@
 package com.fisk.datamodel.dto.dimensionattribute;
 
-import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
+import com.fisk.datamodel.dto.customscript.CustomScriptDTO;
 import com.fisk.datamodel.dto.syncmode.SyncModeDTO;
 import com.fisk.task.dto.MQBaseDTO;
 import lombok.Data;
@@ -34,4 +34,8 @@ public class DimensionAttributeAddDTO extends MQBaseDTO {
      * 是否同步
      */
     public boolean openTransmission;
+    /**
+     * 自定义脚本集合
+     */
+    public List<CustomScriptDTO> customScriptList;
 }

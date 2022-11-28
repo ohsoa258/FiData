@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
@@ -25,6 +26,7 @@ import com.fisk.datamodel.mapper.dimension.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.dimension.DimensionMapper;
 import com.fisk.datamodel.mapper.fact.FactAttributeMapper;
 import com.fisk.datamodel.service.IDimensionAttribute;
+import com.fisk.datamodel.service.impl.CustomScriptImpl;
 import com.fisk.datamodel.service.impl.SyncModeImpl;
 import com.fisk.datamodel.service.impl.TableBusinessImpl;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -57,13 +59,14 @@ public class DimensionAttributeImpl
     SyncModeImpl syncMode;
     @Resource
     TableBusinessImpl tableBusiness;
+    @Resource
+    CustomScriptImpl customScript;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ResultEnum addOrUpdateDimensionAttribute(DimensionAttributeAddDTO dto)
-    {
+    public ResultEnum addOrUpdateDimensionAttribute(DimensionAttributeAddDTO dto) {
         //判断是否存在
-        DimensionPO dimensionPo=mapper.selectById(dto.dimensionId);
+        DimensionPO dimensionPo = mapper.selectById(dto.dimensionId);
         if (dimensionPo == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
@@ -85,8 +88,12 @@ public class DimensionAttributeImpl
         if (!syncMode || !tableBusiness) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
+
+        //自定义脚本
+        customScript.addOrUpdateCustomScript(dto.customScriptList);
+
         //删除维度字段属性
-        List<Integer> ids=(List)dto.list.stream().filter(e->e.id!=0).map(DimensionAttributeDTO::getId).collect(Collectors.toList());
+        List<Integer> ids = (List) dto.list.stream().filter(e -> e.id != 0).map(DimensionAttributeDTO::getId).collect(Collectors.toList());
         if (ids != null && ids.size() > 0) {
             QueryWrapper<DimensionAttributePO> queryWrapper = new QueryWrapper<>();
             queryWrapper.notIn("id", ids).lambda().eq(DimensionAttributePO::getDimensionId, dto.dimensionId);
@@ -119,7 +126,7 @@ public class DimensionAttributeImpl
             queryDTO.openTransmission=dto.openTransmission;
             return dimensionFolder.batchPublishDimensionFolder(queryDTO);
         }
-        return result==true?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        return result ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -214,13 +221,20 @@ public class DimensionAttributeImpl
         if (syncModePo.syncMode != SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
             return data;
         }
-        QueryWrapper<TableBusinessPO> tableBusinessPoQueryWrapper=new QueryWrapper<>();
-        tableBusinessPoQueryWrapper.lambda().eq(TableBusinessPO::getSyncId,syncModePo.id);
-        TableBusinessPO tableBusinessPo=tableBusiness.getOne(tableBusinessPoQueryWrapper);
+        QueryWrapper<TableBusinessPO> tableBusinessPoQueryWrapper = new QueryWrapper<>();
+        tableBusinessPoQueryWrapper.lambda().eq(TableBusinessPO::getSyncId, syncModePo.id);
+        TableBusinessPO tableBusinessPo = tableBusiness.getOne(tableBusinessPoQueryWrapper);
         if (tableBusinessPo == null) {
             return data;
         }
-        data.syncModeDTO.syncTableBusinessDTO=TableBusinessMap.INSTANCES.poToDto(tableBusinessPo);
+        data.syncModeDTO.syncTableBusinessDTO = TableBusinessMap.INSTANCES.poToDto(tableBusinessPo);
+
+        //自定义脚本
+        CustomScriptQueryDTO queryDto = new CustomScriptQueryDTO();
+        queryDto.tableId = dimensionId;
+        queryDto.type = 1;
+        data.customScriptList = customScript.listCustomScript(queryDto);
+
         return data;
     }
 

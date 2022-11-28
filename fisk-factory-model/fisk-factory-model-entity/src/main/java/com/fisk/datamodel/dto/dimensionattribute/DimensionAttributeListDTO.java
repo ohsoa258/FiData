@@ -1,5 +1,6 @@
 package com.fisk.datamodel.dto.dimensionattribute;
 
+import com.fisk.datamodel.dto.customscript.CustomScriptInfoDTO;
 import com.fisk.datamodel.dto.syncmode.SyncModeDTO;
 import lombok.Data;
 
@@ -20,5 +21,7 @@ public class DimensionAttributeListDTO {
     public SyncModeDTO syncModeDTO;
 
     public Integer appId;
+
+    public List<CustomScriptInfoDTO> customScriptList;
 
 }

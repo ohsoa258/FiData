@@ -41,4 +41,12 @@ public interface CustomScriptMap {
      */
     List<CustomScriptInfoDTO> poListToDtoList(List<CustomScriptPO> poList);
 
+    /**
+     * dtoList==>PoList
+     *
+     * @param dtoList
+     * @return
+     */
+    List<CustomScriptPO> dtoListToPoList(List<CustomScriptDTO> dtoList);
+
 }
