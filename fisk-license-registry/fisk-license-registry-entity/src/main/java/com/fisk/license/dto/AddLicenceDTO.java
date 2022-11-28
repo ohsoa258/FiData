@@ -13,7 +13,22 @@ import java.util.List;
  * @date 2022/11/10 15:24
  */
 @Data
-public class LicenceDTO {
+public class AddLicenceDTO {
+
+    /**
+     * 平台
+     */
+    @NotNull()
+    @ApiModelProperty(value = "平台")
+    public String platform;
+
+    /**
+     * 授权人
+     */
+    @NotNull()
+    @ApiModelProperty(value = "授权人")
+    public String authorizer;
+
     /**
      * Mac地址
      */

@@ -21,7 +21,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.common.framework.actuators"})
 @MapperScan("com.fisk.license.mapper")
 @EnableFeignClients(basePackages = {
-        "com.fisk.auth.client"
+        "com.fisk.auth.client",
+        "com.fisk.system.client"
 })
 @EnableHystrix
 public class FkLicenseRegistryApplication {

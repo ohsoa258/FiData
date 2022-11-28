@@ -108,4 +108,10 @@ public interface UserClient {
     @GetMapping("/emailserver/getById/{id}")
     ResultEntity<EmailServerVO> getEmailServerById(@RequestParam("id") int id);
 
+    /**
+     * 菜单列表
+     * @return
+     */
+    @GetMapping("/ServiceRegistry/getList")
+    ResultEntity<Object> getMenuList();
 }

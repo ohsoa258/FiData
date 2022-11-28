@@ -19,10 +19,4 @@ public class VerifyLicenceDTO {
     @NotNull()
     @ApiModelProperty(value = "相对路径地址 例：/home/index")
     public String relativePathUrl;
-
-    /**
-     * mac地址
-     */
-    @ApiModelProperty(value = "mac地址，非必填。填了则验证mac")
-    public String mac;
 }

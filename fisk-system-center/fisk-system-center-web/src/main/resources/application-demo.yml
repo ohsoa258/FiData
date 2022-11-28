@@ -9,7 +9,7 @@ spring:
     password: test123456
 # mdm授权账号
 mdmAuthorize:
-  url: http://192.168.1.32:5500/api/Integration/GetToken
+  url: http://fidata.fisksoft.com:65123/api/Integration/GetToken
   userAccount: admin
   userPassword: 123456
 # 图片上传
