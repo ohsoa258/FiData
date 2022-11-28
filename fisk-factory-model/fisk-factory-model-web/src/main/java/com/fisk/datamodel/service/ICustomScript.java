@@ -52,4 +52,12 @@ public interface ICustomScript {
      */
     List<CustomScriptInfoDTO> listCustomScript(CustomScriptQueryDTO dto);
 
+    /**
+     * 新增或编辑
+     *
+     * @param dtoList
+     * @return
+     */
+    ResultEnum addOrUpdateCustomScript(List<CustomScriptDTO> dtoList);
+
 }

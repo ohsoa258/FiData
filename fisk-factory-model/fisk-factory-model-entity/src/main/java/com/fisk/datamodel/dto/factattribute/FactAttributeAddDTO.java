@@ -1,5 +1,6 @@
 package com.fisk.datamodel.dto.factattribute;
 
+import com.fisk.datamodel.dto.customscript.CustomScriptDTO;
 import com.fisk.datamodel.dto.syncmode.SyncModeDTO;
 import lombok.Data;
 
@@ -22,4 +23,9 @@ public class FactAttributeAddDTO {
      * 是否同步
      */
     public boolean openTransmission;
+
+    /**
+     * 自定义脚本集合
+     */
+    public List<CustomScriptDTO> customScriptList;
 }
