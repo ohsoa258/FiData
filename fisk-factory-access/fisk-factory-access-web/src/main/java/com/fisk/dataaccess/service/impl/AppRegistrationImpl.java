@@ -468,6 +468,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // atlas物理表信息
         vo.tableList = tableList;
         vo.qualifiedNames = qualifiedNames;
+        vo.classifications = model.appName + "_" + model.appAbbreviation;
         log.info("删除的应用信息,{}", vo);
 
         new Thread(new Runnable() {
@@ -485,7 +486,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
                     // 删除业务分类
                     ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
-                    classificationInfoDto.setName(model.appName + "_" + model.appAbbreviation);
+                    classificationInfoDto.setName(vo.classifications);
                     classificationInfoDto.setDescription(model.appDes);
                     classificationInfoDto.setSourceType(1);
                     classificationInfoDto.setDelete(true);

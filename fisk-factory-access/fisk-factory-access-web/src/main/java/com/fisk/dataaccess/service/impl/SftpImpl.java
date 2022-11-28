@@ -130,6 +130,9 @@ public class SftpImpl implements ISftp {
      * @return
      */
     public ChannelSftp getChannelSftp(AppDataSourcePO dataSourcePo) {
+        if (dataSourcePo.serviceType == 0) {
+            dataSourcePo.connectStr = null;
+        }
         return SftpUtils.connect(
                 dataSourcePo.host,
                 Integer.parseInt(dataSourcePo.port),
