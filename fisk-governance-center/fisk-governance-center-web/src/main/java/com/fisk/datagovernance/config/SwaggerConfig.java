@@ -28,7 +28,7 @@ public class SwaggerConfig {
     public static final String DATA_CHECK_CONTROLLER = "data-check-controller";
     public static final String DATASOURCE_CONTROLLER = "datasource-controller";
     public static final String LIFECYCLE_CONTROLLER = "lifecycle-controller";
-    public static final String NOTICE_CONTROLLER = "notice-controller";
+    public static final String QUALITY_REPORT_CONTROLLER = "quality_report-controller";
     public static final String TEMPLATE_CONTROLLER = "template-controller";
     public static final String DATA0PSLOG_CONTROLLER = "data_ops_log-controller";
     public static final String DATA_QUALITY_CLIENT_CONTROLLER = "data-quality-client-controller";
@@ -50,7 +50,7 @@ public class SwaggerConfig {
                 .tags(new Tag(DATA_CHECK_CONTROLLER, "数据校验API"))
                 .tags(new Tag(DATASOURCE_CONTROLLER, "数据源API"))
                 .tags(new Tag(LIFECYCLE_CONTROLLER, "生命周期API"))
-                .tags(new Tag(NOTICE_CONTROLLER, "告警通知API"))
+                .tags(new Tag(QUALITY_REPORT_CONTROLLER, "质量报告API"))
                 .tags(new Tag(TEMPLATE_CONTROLLER, "模板配置API"))
                 .tags(new Tag(DATA0PSLOG_CONTROLLER, "数据运维日志API"))
                 .tags(new Tag(DATA_QUALITY_CLIENT_CONTROLLER, "数据质量服务接口API"))

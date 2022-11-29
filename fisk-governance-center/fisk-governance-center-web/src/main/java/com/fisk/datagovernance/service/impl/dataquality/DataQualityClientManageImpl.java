@@ -11,12 +11,13 @@ import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.common.core.utils.Dto.Excel.*;
 import com.fisk.common.core.utils.RegexUtils;
 import com.fisk.common.core.utils.office.excel.ExcelReportUtil;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFieldDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.TableRuleSqlDTO;
-import com.fisk.datagovernance.dto.dataquality.notice.NoticeDTO;
+import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
@@ -64,16 +65,19 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     private LifecycleMapper lifecycleMapper;
 
     @Resource
-    private NoticeMapper noticeMapper;
+    private QualityReportMapper qualityReportMapper;
 
     @Resource
-    private NoticeManageImpl noticeManageImpl;
+    private QualityReportManageImpl qualityReportManage;
 
     @Resource
-    private NoticeExtendMapper noticeExtendMapper;
+    private QualityReportRuleMapper qualityReportRuleMapper;
 
     @Resource
     private AttachmentInfoMapper attachmentInfoMapper;
+
+    @Resource
+    private QualityReportLogMapper qualityReportLogMapper;
 
     @Value("${file.uploadUrl}")
     private String uploadUrl;
@@ -143,29 +147,29 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             ruleIdList.addAll(ruleIds);
         }
 
-        // 告警通知
-        List<NoticePO> noticePOS = null;
-        List<NoticeExtendPO> noticeExtendPOS = null;
-        List<Integer> noticeModuleTypes = new ArrayList<>();
-        noticeModuleTypes.add(ModuleTypeEnum.DATACHECK_MODULE.getValue());
-        noticeModuleTypes.add(ModuleTypeEnum.BIZCHECK_MODULE.getValue());
-        noticeModuleTypes.add(ModuleTypeEnum.LIFECYCLE_MODULE.getValue());
-        if (CollectionUtils.isNotEmpty(ruleIdList)) {
-            ruleIdList = ruleIdList.stream().distinct().collect(Collectors.toList());
-            QueryWrapper<NoticeExtendPO> noticeExtendPOQueryWrapper = new QueryWrapper<>();
-            noticeExtendPOQueryWrapper.lambda().eq(NoticeExtendPO::getDelFlag, 1)
-                    .in(NoticeExtendPO::getModuleType, noticeModuleTypes)
-                    .in(NoticeExtendPO::getRuleId, ruleIdList);
-            noticeExtendPOS = noticeExtendMapper.selectList(noticeExtendPOQueryWrapper);
-            if (CollectionUtils.isNotEmpty(noticeExtendPOS)) {
-                List<Integer> noticeIds = noticeExtendPOS.stream().map(NoticeExtendPO::getNoticeId).distinct().collect(Collectors.toList());
-                QueryWrapper<NoticePO> noticePOQueryWrapper = new QueryWrapper<>();
-                noticePOQueryWrapper.lambda().eq(NoticePO::getDelFlag, 1)
-                        .eq(NoticePO::getNoticeState, 1)
-                        .in(NoticePO::getId, noticeIds);
-                noticePOS = noticeMapper.selectList(noticePOQueryWrapper);
-            }
-        }
+//        // 告警通知
+//        List<NoticePO> noticePOS = null;
+//        List<NoticeExtendPO> noticeExtendPOS = null;
+//        List<Integer> noticeModuleTypes = new ArrayList<>();
+//        noticeModuleTypes.add(ModuleTypeEnum.DATACHECK_MODULE.getValue());
+//        noticeModuleTypes.add(ModuleTypeEnum.BIZCHECK_MODULE.getValue());
+//        noticeModuleTypes.add(ModuleTypeEnum.LIFECYCLE_MODULE.getValue());
+//        if (CollectionUtils.isNotEmpty(ruleIdList)) {
+//            ruleIdList = ruleIdList.stream().distinct().collect(Collectors.toList());
+//            QueryWrapper<NoticeExtendPO> noticeExtendPOQueryWrapper = new QueryWrapper<>();
+//            noticeExtendPOQueryWrapper.lambda().eq(NoticeExtendPO::getDelFlag, 1)
+//                    .in(NoticeExtendPO::getModuleType, noticeModuleTypes)
+//                    .in(NoticeExtendPO::getRuleId, ruleIdList);
+//            noticeExtendPOS = noticeExtendMapper.selectList(noticeExtendPOQueryWrapper);
+//            if (CollectionUtils.isNotEmpty(noticeExtendPOS)) {
+//                List<Integer> noticeIds = noticeExtendPOS.stream().map(NoticeExtendPO::getNoticeId).distinct().collect(Collectors.toList());
+//                QueryWrapper<NoticePO> noticePOQueryWrapper = new QueryWrapper<>();
+//                noticePOQueryWrapper.lambda().eq(NoticePO::getDelFlag, 1)
+//                        .eq(NoticePO::getNoticeState, 1)
+//                        .in(NoticePO::getId, noticeIds);
+//                noticePOS = noticeMapper.selectList(noticePOQueryWrapper);
+//            }
+//        }
 
         // 查询数据校验、业务清洗、生命周期、告警设置所对应的模板信息
         QueryWrapper<TemplatePO> templatePOQueryWrapper = new QueryWrapper<>();
@@ -502,15 +506,15 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         }
 
         // 拼接告警通知规则--表维度
-        if (CollectionUtils.isNotEmpty(noticePOS)) {
-            // 表的校验规则
-            for (NoticePO noticePO : noticePOS) {
-                NoticeTypeEnum noticeType = NoticeTypeEnum.getEnum(noticePO.getNoticeType());
-                if (!tableRuleInfoDTO.noticeRules.contains(noticeType.getName())) {
-                    tableRuleInfoDTO.noticeRules.add(noticeType.getName());
-                }
-            }
-        }
+//        if (CollectionUtils.isNotEmpty(noticePOS)) {
+//            // 表的校验规则
+//            for (NoticePO noticePO : noticePOS) {
+//                NoticeTypeEnum noticeType = NoticeTypeEnum.getEnum(noticePO.getNoticeType());
+//                if (!tableRuleInfoDTO.noticeRules.contains(noticeType.getName())) {
+//                    tableRuleInfoDTO.noticeRules.add(noticeType.getName());
+//                }
+//            }
+//        }
 
         // 循环字段，查询每个字段的数据校验、业务清洗、生命周期规则
         List<TableRuleTempVO> dataCheckTemp_FieldRules = tempVOS.stream().filter(t -> t.getType().equals("FIELD")).collect(Collectors.toList());
@@ -568,84 +572,104 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
     @Override
     public ResultEntity<Object> createQualityReport(int id) {
-        log.info("质量报告开始执行");
-        if (id == 0) {
-            return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, "");
-        }
-        NoticePO noticePO = noticeMapper.selectById(id);
-        if (noticePO == null || noticePO.noticeState == RuleStateEnum.Disable.getValue()) {
-            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NOTICE_NOTEXISTS, "");
-        }
-        QueryWrapper<NoticeExtendPO> noticeExtendPOQueryWrapper = new QueryWrapper<>();
-        noticeExtendPOQueryWrapper.lambda()
-                .eq(NoticeExtendPO::getNoticeId, noticePO.getId())
-                .eq(NoticeExtendPO::getDelFlag, 1);
-        List<NoticeExtendPO> noticeExtendPOS = noticeExtendMapper.selectList(noticeExtendPOQueryWrapper);
-        if (!CollectionUtils.isNotEmpty(noticeExtendPOS)) {
-            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NOTICE_NOTEXISTS, "");
-        }
-        List<DataSourceConVO> allDataSource = dataSourceConManageImpl.getAllDataSource();
-        if (!CollectionUtils.isNotEmpty(allDataSource)) {
-            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS, "");
-        }
-        TemplatePO templatePO = templateMapper.selectById(noticePO.templateId);
-        if (templatePO == null) {
-            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS, "");
-        }
-        // 第一步：判断质量报告属于哪个业务模块 数据校验/业务清洗/生命周期
-        TemplateSceneEnum templateSceneEnum = TemplateSceneEnum.getEnum(templatePO.getTemplateScene());
-        AttachmentInfoPO attachmentInfoPO = new AttachmentInfoPO();
-        String currentFileName = UUID.randomUUID().toString().replace("-", "") + ".xlsx";
-        attachmentInfoPO.setCurrentFileName(currentFileName);
-        attachmentInfoPO.setExtensionName(".xlsx");
-        attachmentInfoPO.setAbsolutePath(uploadUrl);
-        attachmentInfoPO.setRelativePath(echoPath);
-        attachmentInfoPO.setObjectId(String.valueOf(id));
-        ResultEnum resultEnum = ResultEnum.SUCCESS;
-        switch (templateSceneEnum) {
-            case NOTICE_DATACHECK:
-                // 生成数据校验质量报告
-                attachmentInfoPO.setOriginalName(String.format("数据校验质量报告%s.xlsx",
-                        DateTimeUtils.getNowToShortDate().replace("-", "")));
-                attachmentInfoPO.setCategory(100);
-                resultEnum = createDataCheckQualityReport(noticeExtendPOS, allDataSource, attachmentInfoPO);
-                break;
-            case NOTICE_BUSINESSFILTER:
-                // 生成业务清洗质量报告
-                attachmentInfoPO.setOriginalName(String.format("业务清洗质量报告%s.xlsx",
-                        DateTimeUtils.getNowToShortDate().replace("-", "")));
-                attachmentInfoPO.setCategory(200);
-                break;
-            case NOTICE_LIFECYCLE:
-                // 生成生命周期质量报告
-                attachmentInfoPO.setOriginalName(String.format("生命周期质量报告%s.xlsx",
-                        DateTimeUtils.getNowToShortDate().replace("-", "")));
-                attachmentInfoPO.setCategory(300);
-                break;
-        }
-        if (resultEnum != ResultEnum.SUCCESS) {
-            log.info("质量报告执行异常：" + resultEnum.getMsg());
-            return ResultEntityBuild.buildData(resultEnum, "");
-        }
-        // 第二步：保存质量报告信息到附件信息表
-        attachmentInfoMapper.insert(attachmentInfoPO);
+        log.info("【createQualityReport】质量报告开始执行");
+        try {
+            if (id == 0) {
+                return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, "");
+            }
+            QualityReportPO qualityReportPO = qualityReportMapper.selectById(id);
+            if (qualityReportPO == null || qualityReportPO.getReportState() == RuleStateEnum.Disable.getValue()) {
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NOTICE_NOTEXISTS, "");
+            }
+            QueryWrapper<QualityReportRulePO> qualityReportRulePOQueryWrapper = new QueryWrapper<>();
+            qualityReportRulePOQueryWrapper.lambda()
+                    .eq(QualityReportRulePO::getReportId, qualityReportPO.getId())
+                    .eq(QualityReportRulePO::getDelFlag, 1);
+            List<QualityReportRulePO> noticeExtendPOS = qualityReportRuleMapper.selectList(qualityReportRulePOQueryWrapper);
+            if (!CollectionUtils.isNotEmpty(noticeExtendPOS)) {
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NOTICE_NOTEXISTS, "");
+            }
+            List<DataSourceConVO> allDataSource = dataSourceConManageImpl.getAllDataSource();
+            if (!CollectionUtils.isNotEmpty(allDataSource)) {
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS, "");
+            }
+            // 第一步：判断质量报告属于哪个业务模块 质量校验报告/数据清洗报告
+            AttachmentInfoPO attachmentInfoPO = new AttachmentInfoPO();
+            String currentFileName = UUID.randomUUID().toString().replace("-", "") + ".xlsx";
+            attachmentInfoPO.setCurrentFileName(currentFileName);
+            attachmentInfoPO.setExtensionName(".xlsx");
+            attachmentInfoPO.setAbsolutePath(uploadUrl);
+            attachmentInfoPO.setRelativePath(echoPath);
+            ResultEnum resultEnum = ResultEnum.SUCCESS;
+            switch (qualityReportPO.getReportType()) {
+                case 100:
+                    // 生成数据校验质量报告
+                    attachmentInfoPO.setOriginalName(String.format("数据校验质量报告%s.xlsx",
+                            DateTimeUtils.getNowToShortDate().replace("-", "")));
+                    attachmentInfoPO.setCategory(100);
+                    resultEnum = createDataCheckQualityReport(noticeExtendPOS, allDataSource, attachmentInfoPO);
+                    break;
+                case 200:
+                    // 生成业务清洗质量报告
+                    attachmentInfoPO.setOriginalName(String.format("业务清洗质量报告%s.xlsx",
+                            DateTimeUtils.getNowToShortDate().replace("-", "")));
+                    attachmentInfoPO.setCategory(200);
+                    break;
+            }
+            if (qualityReportPO.getReportType() != 100 || qualityReportPO.getReportNoticeType() != 1) {
+                log.info("质量报告类型暂不支持非质量校验报告的其他方式");
+                log.info("质量报告通知方式暂不支持非邮件通知的其他方式");
+                return ResultEntityBuild.buildData(resultEnum, "");
+            }
 
-        // 第三步：是否需要发送邮件
-        if (noticePO.getNoticeType() == NoticeTypeEnum.EMAIL_NOTICE.getValue()) {
-            NoticeDTO noticeDTO = new NoticeDTO();
-            noticeDTO.emailServerId = noticePO.getEmailServerId();
-            noticeDTO.emailSubject = noticePO.getEmailSubject();
-            noticeDTO.body = noticePO.getBody();
-            noticeDTO.emailConsignee = noticePO.getEmailConsignee();
-            noticeDTO.emailCc = noticePO.getEmailCc();
-            noticeDTO.sendAttachment = true;
-            noticeDTO.attachmentName = attachmentInfoPO.getCurrentFileName();
-            noticeDTO.attachmentPath = attachmentInfoPO.getAbsolutePath();
-            noticeDTO.attachmentActualName = attachmentInfoPO.getOriginalName();
-            noticeDTO.companyLogoPath = logoPaht;
-            noticeManageImpl.sendEmailNotice(noticeDTO);
+            // 第二步：是否需要发送邮件
+            ResultEntity<Object> sendResult = null;
+            if (qualityReportPO.getReportNoticeType() == 1) {
+                QualityReportDTO qualityReportDTO = new QualityReportDTO();
+                qualityReportDTO.setEmailServerId(qualityReportPO.getEmailServerId());
+                qualityReportDTO.setEmailSubject(qualityReportPO.getEmailSubject());
+                qualityReportDTO.setBody(qualityReportPO.getBody());
+                qualityReportDTO.setEmailConsignee(qualityReportPO.getEmailConsignee());
+                qualityReportDTO.setEmailCc(qualityReportPO.getEmailCc());
+                qualityReportDTO.sendAttachment = true;
+                qualityReportDTO.setAttachmentName(attachmentInfoPO.getCurrentFileName());
+                qualityReportDTO.setAttachmentPath(attachmentInfoPO.getAbsolutePath());
+                qualityReportDTO.setAttachmentActualName(attachmentInfoPO.getOriginalName());
+                qualityReportDTO.setCompanyLogoPath(logoPaht);
+                sendResult = qualityReportManage.sendEmailReport(qualityReportDTO);
+            }
+
+            // 第三步：生成质量报告发送日志
+            QualityReportLogPO qualityReportLogPO = new QualityReportLogPO();
+            qualityReportLogPO.setReportId(Math.toIntExact(qualityReportPO.getId()));
+            qualityReportLogPO.setReportName(qualityReportPO.getReportName());
+            qualityReportLogPO.setReportType(qualityReportPO.getReportType());
+            qualityReportLogPO.setReportTypeName(qualityReportPO.getReportTypeName());
+            qualityReportLogPO.setReportDesc(qualityReportPO.getReportDesc());
+            qualityReportLogPO.setReportPrincipal(qualityReportPO.getReportPrincipal());
+            qualityReportLogPO.setReportNoticeType(qualityReportPO.getReportNoticeType());
+            qualityReportLogPO.setEmailServerId(qualityReportPO.getEmailServerId());
+            qualityReportLogPO.setEmailSubject(qualityReportPO.getEmailSubject());
+            qualityReportLogPO.setEmailConsignee(qualityReportPO.getEmailConsignee());
+            qualityReportLogPO.setEmailCc(qualityReportPO.getEmailCc());
+            qualityReportLogPO.setBody(qualityReportPO.getBody());
+            qualityReportLogPO.setSendTime(DateTimeUtils.getNow());
+            if (sendResult != null && sendResult.getCode() == ResultEnum.SUCCESS.getCode()) {
+                qualityReportLogPO.setSendResult("已发送");
+            } else {
+                qualityReportLogPO.setSendResult("发送失败");
+            }
+            qualityReportLogMapper.insertOne(qualityReportLogPO);
+
+            // 第三步：生成质量报告附件
+            attachmentInfoPO.setObjectId(String.valueOf(qualityReportLogPO.getId()));
+            attachmentInfoMapper.insert(attachmentInfoPO);
+
+        } catch (Exception ex) {
+            log.error("【createQualityReport】质量报告执行异常：" + ex);
+            throw new FkException(ResultEnum.ERROR, "【createQualityReport】 ex：" + ex);
         }
-        log.info("质量报告执行结束");
+        log.info("【createQualityReport】质量报告执行结束");
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "");
     }
 
@@ -660,10 +684,10 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params templatePO 模板PO
      * @params attachmentInfoPO 附件PO
      */
-    public ResultEnum createDataCheckQualityReport(List<NoticeExtendPO> noticeExtendPOS, List<DataSourceConVO> allDataSource, AttachmentInfoPO
+    public ResultEnum createDataCheckQualityReport(List<QualityReportRulePO> qualityReportRulePOS, List<DataSourceConVO> allDataSource, AttachmentInfoPO
             attachmentInfoPO) {
 
-        List<Integer> ruleIds = noticeExtendPOS.stream().map(NoticeExtendPO::getRuleId).collect(Collectors.toList());
+        List<Integer> ruleIds = qualityReportRulePOS.stream().map(QualityReportRulePO::getRuleId).collect(Collectors.toList());
         QueryWrapper<DataCheckPO> dataCheckPOQueryWrapper = new QueryWrapper<>();
         dataCheckPOQueryWrapper.lambda()
                 .eq(DataCheckPO::getDelFlag, 1)
@@ -696,10 +720,10 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             dataTableFieldDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.getEnum(dataCheckPO.getTableBusinessType()));
             dtoList.add(dataTableFieldDTO);
         }
-        List<FiDataMetaDataDTO> fiDataMetaDatas = null;
+        List<FiDataMetaDataDTO> fiDataMetaDataList = null;
         if (CollectionUtils.isNotEmpty(dtoList)) {
-            fiDataMetaDatas = dataSourceConManageImpl.getTableFieldName(dtoList);
-            if (CollectionUtils.isEmpty(fiDataMetaDatas)) {
+            fiDataMetaDataList = dataSourceConManageImpl.getTableFieldName(dtoList);
+            if (CollectionUtils.isEmpty(fiDataMetaDataList)) {
                 return ResultEnum.DATA_QUALITY_REDIS_NOTEXISTSTABLEFIELD;
             }
         }
@@ -725,7 +749,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             String tableName = "";
             HashMap<String, String> fields = new HashMap<>();
             if (dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData) {
-                FiDataMetaDataDTO fiDataMetaDataDTO = fiDataMetaDatas.stream().filter(t -> t.getDataSourceId() == dataSourceConVO.getDatasourceId()).findFirst().orElse(null);
+                FiDataMetaDataDTO fiDataMetaDataDTO = fiDataMetaDataList.stream().filter(t -> t.getDataSourceId() == dataSourceConVO.getDatasourceId()).findFirst().orElse(null);
                 if (fiDataMetaDataDTO == null) {
                     continue;
                 }
