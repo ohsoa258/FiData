@@ -195,6 +195,10 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                 pipelJobMergeLogVos.add(pipelJobMergeLogVo);
             }
 
+            if (Objects.isNull(pipelJobMergeLogVo.endTime) && Objects.nonNull(pipelJobMergeLogVo.startTime)) {
+                pipelJobMergeLogVos.add(pipelJobMergeLogVo);
+            }
+
         }
         for (int i = 0; i < pipelJobMergeLogVos.size() - 1; i++) {
             for (int j = pipelJobMergeLogVos.size() - 1; j > i; j--) {
@@ -249,6 +253,100 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
         }
 
 
+    }
+
+    public static void main(String[] args) {
+        List<PipelJobLogVO> pipelJobLogVos = new ArrayList<>();
+        for(int i=0;i<4;i++){
+            PipelJobLogVO pipelJobLogVO = new PipelJobLogVO();
+            pipelJobLogVO.msg="开始运行 - 2022-11-28 10:00:00";
+            pipelJobLogVO.jobTraceId="ccc"+i;
+            pipelJobLogVO.type = 4;
+            pipelJobLogVos.add(pipelJobLogVO);
+        }
+        //转出一份备份
+        List<PipelJobMergeLogVO> pipelJobMergeLogVos = new ArrayList<>();
+        List<PipelJobLogVO> logs = JSON.parseArray(JSON.toJSONString(pipelJobLogVos), PipelJobLogVO.class);
+        //根据pipelTraceId去重,除了开始
+        for (int i = 0; i < logs.size() - 1; i++) {
+            for (int j = logs.size() - 1; j > i; j--) {
+                if (logs.get(j).jobTraceId.equals(logs.get(i).jobTraceId) && !logs.get(j).msg.contains("开始运行")) {
+                    logs.remove(j);
+                }
+            }
+        }
+        Collections.reverse(logs);
+        for (int i = 0; i < logs.size() - 1; i++) {
+            for (int j = logs.size() - 1; j > i; j--) {
+                if (logs.get(j).jobTraceId.equals(logs.get(i).jobTraceId) && logs.get(j).msg.contains("开始运行")) {
+                    logs.remove(j);
+                }
+            }
+        }
+        Collections.reverse(logs);
+        SimpleDateFormat simpleDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        for (int i = 0; i < logs.size(); i++) {
+            PipelJobMergeLogVO pipelJobMergeLogVo = new PipelJobMergeLogVO();
+            PipelJobLogVO pipelJobLogVo = logs.get(i);
+            pipelJobMergeLogVo.pipelTraceId = pipelJobLogVo.pipelTraceId;
+            pipelJobMergeLogVo.jobTraceId = pipelJobLogVo.jobTraceId;
+            pipelJobMergeLogVo.pipelId = pipelJobLogVo.pipelId;
+            pipelJobMergeLogVo.pipelName = pipelJobLogVo.pipelName;
+            pipelJobMergeLogVo.componentId = pipelJobLogVo.componentId;
+            pipelJobMergeLogVo.componentName = pipelJobLogVo.componentName;
+            try {
+                if (Objects.equals(pipelJobLogVo.type, DispatchLogEnum.jobstart.getValue())) {
+                    pipelJobMergeLogVo.startTime = simpleDate.parse(pipelJobLogVo.msg.substring(7, 26));
+                    pipelJobMergeLogVo.createTime = pipelJobLogVo.createTime;
+                } else if (Objects.equals(pipelJobLogVo.type, DispatchLogEnum.jobend.getValue())) {
+                    pipelJobMergeLogVo.endTime = simpleDate.parse(pipelJobLogVo.msg.substring(7, 26));
+                    if (pipelJobLogVo.msg.contains("运行成功")) {
+                        pipelJobMergeLogVo.result = "成功";
+                    } else if (pipelJobLogVo.msg.contains("运行失败")) {
+                        pipelJobMergeLogVo.result = "失败";
+                    }
+                }
+            } catch (ParseException e) {
+                log.error("转换时间异常", StackTraceHelper.getStackTraceInfo(e));
+            }
+            for (int j = 0; j < logs.size(); j++) {
+                if (Objects.equals(logs.get(i).jobTraceId, logs.get(j).jobTraceId) && !Objects.equals(logs.get(i).msg, logs.get(j).msg)) {
+                    try {
+                        PipelJobLogVO pipelJobLog = logs.get(j);
+                        if (Objects.equals(pipelJobLog.type, DispatchLogEnum.jobstart.getValue())) {
+                            pipelJobMergeLogVo.startTime = simpleDate.parse(pipelJobLog.msg.substring(7, 26));
+                            pipelJobMergeLogVo.createTime = pipelJobLogVo.createTime;
+                        } else if (Objects.equals(pipelJobLog.type, DispatchLogEnum.jobend.getValue())) {
+                            pipelJobMergeLogVo.endTime = simpleDate.parse(pipelJobLog.msg.substring(7, 26));
+                            if (pipelJobLog.msg.contains("运行成功")) {
+                                pipelJobMergeLogVo.result = "成功";
+                            } else if (pipelJobLog.msg.contains("运行失败")) {
+                                pipelJobMergeLogVo.result = "失败";
+                            }
+                        }
+                    } catch (ParseException e) {
+                        log.error("转换时间异常", StackTraceHelper.getStackTraceInfo(e));
+                    }
+                    pipelJobMergeLogVos.add(pipelJobMergeLogVo);
+                }
+            }
+            if (Objects.nonNull(pipelJobMergeLogVo.endTime) && Objects.nonNull(pipelJobMergeLogVo.startTime)) {
+                pipelJobMergeLogVo.duration = (pipelJobMergeLogVo.endTime.getTime() - pipelJobMergeLogVo.startTime.getTime()) / 60000;
+                pipelJobMergeLogVos.add(pipelJobMergeLogVo);
+            }
+            if (Objects.isNull(pipelJobMergeLogVo.endTime) && Objects.nonNull(pipelJobMergeLogVo.startTime)) {
+                pipelJobMergeLogVos.add(pipelJobMergeLogVo);
+            }
+
+        }
+        for (int i = 0; i < pipelJobMergeLogVos.size() - 1; i++) {
+            for (int j = pipelJobMergeLogVos.size() - 1; j > i; j--) {
+                if (pipelJobMergeLogVos.get(j).equals(pipelJobMergeLogVos.get(i))) {
+                    pipelJobMergeLogVos.remove(j);
+                }
+            }
+        }
+        System.out.println(pipelJobMergeLogVos.size());
     }
 
 

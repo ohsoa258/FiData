@@ -1,6 +1,7 @@
 package com.fisk.datafactory.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.datafactory.dto.customworkflow.DispatchEmailDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
@@ -149,4 +150,15 @@ public interface DataFactoryClient {
     @GetMapping("/nifiCustomWorkflowDetail/get/{id}")
     @ApiOperation(value = "查询单个管道组件")
     ResultEntity<NifiCustomWorkflowDetailDTO> getData(@PathVariable("id") long id);
+
+
+    /**
+     * 调用邮件服务器发邮件的方法
+     *
+     * @param dispatchEmail
+     * @return
+     */
+    @PostMapping("/DispatchEmail/pipelineSendEmails")
+    @ApiOperation(value = "管道异常发邮件")
+    public ResultEntity<Object> pipelineSendEmails(@RequestBody DispatchEmailDTO dispatchEmail);
 }

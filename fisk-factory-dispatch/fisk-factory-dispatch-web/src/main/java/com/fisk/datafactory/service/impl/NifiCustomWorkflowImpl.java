@@ -19,10 +19,7 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.GetConfigDTO;
-import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
-import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowNumDTO;
-import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowPageDTO;
-import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
+import com.fisk.datafactory.dto.customworkflow.*;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
@@ -31,6 +28,7 @@ import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
 import com.fisk.datafactory.map.NifiCustomWorkflowMap;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowMapper;
+import com.fisk.datafactory.service.IDispatchEmail;
 import com.fisk.datafactory.service.INifiCustomWorkflow;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
@@ -76,6 +74,8 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
     RedisUtil redisUtil;
     @Resource
     GetConfigDTO getConfig;
+    @Resource
+    IDispatchEmail iDispatchEmail;
 
 
     @Override
@@ -122,7 +122,7 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
             for (NifiCustomWorkflowDetailDTO e : dtoList) {
                 ChannelDataEnum channelDataEnum = ChannelDataEnum.getValue(e.componentType);
                 if (channelDataEnum == null) {
-                    return vo;
+                    continue;
                 }
                 switch (channelDataEnum) {
                     // 数据湖表任务
@@ -280,6 +280,10 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
 
                 // 删除redis中的DAG图
                 redisUtil.del(RedisKeyBuild.buildDispatchStructureKey(id));
+                //删除管道关联的邮件服务器
+                DispatchEmailDTO dispatchEmail = new DispatchEmailDTO();
+                dispatchEmail.nifiCustomWorkflowId = Math.toIntExact(id);
+                iDispatchEmail.deleteDispatchEmail(dispatchEmail);
             }
         } catch (Exception e) {
             log.error("调度报错", e );
