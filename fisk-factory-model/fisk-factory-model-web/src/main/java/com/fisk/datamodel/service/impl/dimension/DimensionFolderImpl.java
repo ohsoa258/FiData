@@ -113,7 +113,7 @@ public class DimensionFolderImpl
             QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
             queryWrapper.select("id").in("dimension_folder_id",folderIds);
             List<Integer> dimIds=(List) dimensionMapper.selectObjs(queryWrapper);
-            if (dimIds == null || ids.size() == 0) {
+            if (CollectionUtils.isEmpty(dimIds)) {
                 return ResultEnum.SUCCESS;
             }
             //判断维度表是否存在关联
@@ -122,6 +122,7 @@ public class DimensionFolderImpl
                 ResultEnum resultEnum = dimensionImpl.deleteDimension(id);
                 if (resultEnum.getCode() == ResultEnum.TABLE_ASSOCIATED.getCode()) {
                     isExistAssociated = true;
+                    break;
                 }
             }
             if (isExistAssociated) {
@@ -130,8 +131,8 @@ public class DimensionFolderImpl
             return mapper.deleteBatchIds(ids)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
         } catch (Exception e) {
             log.error("delDimensionFolder ex:", e);
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
-        return ResultEnum.SUCCESS;
     }
 
     @Override
@@ -205,7 +206,7 @@ public class DimensionFolderImpl
         dimensionPoQueryWrapper.orderByDesc("create_time")
                 .in("dimension_folder_id",dimIds.toArray());
         List<DimensionPO> list=dimensionMapper.selectList(dimensionPoQueryWrapper);
-        if (list == null || list.size() == 0) {
+        if (CollectionUtils.isEmpty(list)) {
             return listDtoList;
         }
         for (DimensionFolderDataDTO item : listDtoList) {
@@ -214,14 +215,14 @@ public class DimensionFolderImpl
         //获取业务域下所有维度id集合
         dimensionPoQueryWrapper.select("id");
         List<Integer> ids=(List)dimensionMapper.selectObjs(dimensionPoQueryWrapper);
-        if (ids == null || ids.size() == 0) {
+        if (CollectionUtils.isEmpty(ids)) {
             return listDtoList;
         }
         //根据维度id集合获取字段列表
         QueryWrapper<DimensionAttributePO> attributePoQueryWrapper=new QueryWrapper<>();
         attributePoQueryWrapper.in("dimension_id",ids);
         List<DimensionAttributePO> attributePoList=dimensionAttributeMapper.selectList(attributePoQueryWrapper);
-        if (attributePoList == null || attributePoList.size() == 0) {
+        if (CollectionUtils.isEmpty(attributePoList)) {
             return listDtoList;
         }
         //循环赋值
@@ -229,7 +230,7 @@ public class DimensionFolderImpl
             dimensionFolder.dimensionListDTO = DimensionMap.INSTANCES.listPoToListsDto(list.stream()
                     .filter(e -> e.dimensionFolderId == dimensionFolder.id)
                     .collect(Collectors.toList()));
-            if (dimensionFolder.dimensionListDTO == null || dimensionFolder.dimensionListDTO.size() == 0) {
+            if (CollectionUtils.isEmpty(dimensionFolder.dimensionListDTO)) {
                 continue;
             }
             for (DimensionListDTO item : dimensionFolder.dimensionListDTO) {
@@ -318,9 +319,6 @@ public class DimensionFolderImpl
                 } else {
                     pushDto.synMode = dto.syncMode;
                 }
-                /*if (dto.syncMode != 0) {
-
-                }*/
                 //获取该维度下所有维度字段
                 List<ModelPublishFieldDTO> fieldList = new ArrayList<>();
                 List<DimensionAttributePO> attributePoList = dimensionAttributePoList.stream().filter(e -> e.dimensionId == item.id).collect(Collectors.toList());
@@ -330,7 +328,7 @@ public class DimensionFolderImpl
                 pushDto.fieldList = fieldList;
                 dimensionList.add(pushDto);
             }
-            data.dimensionList=dimensionList;
+            data.dimensionList = dimensionList;
             //发送消息
             publishTaskClient.publishBuildAtlasDorisTableTask(data);
         } catch (Exception ex) {
@@ -362,9 +360,13 @@ public class DimensionFolderImpl
         return fieldDTO;
     }
 
-    private void addTableHistory(DimensionFolderPublishQueryDTO dto)
-    {
-        List<TableHistoryDTO> list=new ArrayList<>();
+    /**
+     * 维度表发布历史
+     *
+     * @param dto
+     */
+    private void addTableHistory(DimensionFolderPublishQueryDTO dto) {
+        List<TableHistoryDTO> list = new ArrayList<>();
         for (Integer id : dto.dimensionIds) {
             TableHistoryDTO data = new TableHistoryDTO();
             data.remark = dto.remark;

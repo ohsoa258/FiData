@@ -73,7 +73,7 @@ public class DimensionAttributeImpl
         //添加增量配置
         SyncModePO syncModePo = SyncModeMap.INSTANCES.dtoToPo(dto.syncModeDTO);
         boolean syncMode = this.syncMode.saveOrUpdate(syncModePo);
-        boolean tableBusiness=true;
+        boolean tableBusiness = true;
         if (dto.syncModeDTO.syncMode == SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
             QueryWrapper<SyncModePO> syncModePoQueryWrapper = new QueryWrapper<>();
             syncModePoQueryWrapper.lambda().eq(SyncModePO::getSyncTableId, dto.syncModeDTO.syncTableId)
@@ -130,11 +130,11 @@ public class DimensionAttributeImpl
     }
 
     @Override
-    public ResultEntity<List<ModelPublishFieldDTO>> selectDimensionAttributeList(Integer dimensionId){
+    public ResultEntity<List<ModelPublishFieldDTO>> selectDimensionAttributeList(Integer dimensionId) {
         Map<String, Object> conditionHashMap = new HashMap<>();
-        List<ModelPublishFieldDTO> fieldList=new ArrayList<>();
-        conditionHashMap.put("dimension_id",dimensionId);
-        conditionHashMap.put("del_flag",1);
+        List<ModelPublishFieldDTO> fieldList = new ArrayList<>();
+        conditionHashMap.put("dimension_id", dimensionId);
+        conditionHashMap.put("del_flag", 1);
         List<DimensionAttributePO> dimensionAttributePoList = attributeMapper.selectByMap(conditionHashMap);
         for (DimensionAttributePO attributePo : dimensionAttributePoList) {
             ModelPublishFieldDTO fieldDTO = new ModelPublishFieldDTO();

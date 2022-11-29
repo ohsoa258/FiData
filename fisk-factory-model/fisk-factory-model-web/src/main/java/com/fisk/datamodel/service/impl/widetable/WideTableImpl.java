@@ -33,11 +33,9 @@ import com.fisk.datamodel.service.IWideTable;
 import com.fisk.datamodel.service.impl.AtomicIndicatorsImpl;
 import com.fisk.datamodel.service.impl.dimension.DimensionAttributeImpl;
 import com.fisk.datamodel.utils.mysql.DataSourceConfigUtil;
-import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -75,11 +73,8 @@ public class WideTableImpl
     DataSourceConfigUtil dataSourceConfigUtil;
     @Resource
     PublishTaskClient publishTaskClient;
-    @Resource
-    UserClient userClient;
 
-    @Value("${fiData-data-dw-source}")
-    private Integer dwSource;
+    private static String prefix = "external_";
 
     @Override
     public List<WideTableListDTO> getWideTableList(int businessId) {
@@ -89,10 +84,10 @@ public class WideTableImpl
         List<WideTableConfigPO> wideTableConfigPoList = mapper.selectList(queryWrapper);
         for (WideTableConfigPO item : wideTableConfigPoList) {
             WideTableListDTO dto = new WideTableListDTO();
-            dto.id=item.id;
-            dto.name=item.name;
-            dto.dorisPublish=item.dorisPublish;
-            List<String> fieldList=new ArrayList<>();
+            dto.id = item.id;
+            dto.name = item.name;
+            dto.dorisPublish = item.dorisPublish;
+            List<String> fieldList = new ArrayList<>();
             //获取宽表字段
             WideTableFieldConfigDTO configDTO = JSONObject.parseObject(item.configDetails, WideTableFieldConfigDTO.class);
             for (TableSourceTableConfigDTO e : configDTO.entity) {
@@ -165,7 +160,7 @@ public class WideTableImpl
      * @return
      */
     public String prefixTable(String tableName) {
-        return "external_" + tableName;
+        return prefix + tableName;
     }
 
     /**
@@ -180,7 +175,7 @@ public class WideTableImpl
         Connection conn = null;
         Statement st = null;
         try {
-            String newSql = sql.replace("external_", "");
+            String newSql = sql.replace(prefix, "");
 
             DataSourceDTO dwSource = dataSourceConfigUtil.getDwSource();
             IBuildDataModelSqlCommand command = BuildDataModelHelper.getDBCommand(dwSource.conType);
@@ -225,12 +220,12 @@ public class WideTableImpl
     }
 
 
-    public WideTableQueryPageDTO getWideTableData(String sql,int pageSize,String aliasName) {
+    public WideTableQueryPageDTO getWideTableData(String sql, int pageSize, String aliasName) {
         WideTableQueryPageDTO data = new WideTableQueryPageDTO();
         Connection conn = null;
         Statement st = null;
         try {
-            String newSql = sql.replace("external_", "");
+            String newSql = sql.replace(prefix, "");
 
             DataSourceDTO dwSource = dataSourceConfigUtil.getDwSource();
             IBuildDataModelSqlCommand command = BuildDataModelHelper.getDBCommand(dwSource.conType);
@@ -295,8 +290,7 @@ public class WideTableImpl
     public WideTableConfigDTO getWideTable(int id)
     {
         WideTableConfigPO po=mapper.selectById(id);
-        if (po==null)
-        {
+        if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         return WideTableMap.INSTANCES.poToDto(po);
@@ -382,9 +376,10 @@ public class WideTableImpl
 
     /**
      * 宽表发布
+     *
      * @param dto
      */
-    public void publishWideTable(IndicatorQueryDTO dto){
+    public void publishWideTable(IndicatorQueryDTO dto) {
         try {
             if (CollectionUtils.isEmpty(dto.wideTableIds)) {
                 return;
@@ -445,13 +440,13 @@ public class WideTableImpl
     }
 
     @Override
-    public void updateWideTablePublishStatus(ModelPublishStatusDTO dto)
-    {
-        WideTableConfigPO po=mapper.selectById(dto.id);
-        if (po != null) {
-            po.dorisPublish = dto.status;
-            mapper.updateById(po);
+    public void updateWideTablePublishStatus(ModelPublishStatusDTO dto) {
+        WideTableConfigPO po = mapper.selectById(dto.id);
+        if (po == null) {
+            return;
         }
+        po.dorisPublish = dto.status;
+        mapper.updateById(po);
     }
 
 }
