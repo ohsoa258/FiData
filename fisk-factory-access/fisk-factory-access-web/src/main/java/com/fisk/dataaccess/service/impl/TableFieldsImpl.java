@@ -123,6 +123,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     @Resource
     private RedisTemplate redisTemplate;
 
+    private static Integer fetchSize = 50000;
+    private static Integer maxRowsPerFlowFile = 5000;
+
     @Override
     public Page<DataReviewVO> listData(DataReviewQueryDTO query) {
 
@@ -400,8 +403,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
             data.whetherSchema = registration.whetherSchema;
             data.generateVersionSql = versionSql;
-            data.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile;
-            data.fetchSize = syncMode.fetchSize;
+            data.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile == null ? maxRowsPerFlowFile : syncMode.maxRowsPerFlowFile;
+            data.fetchSize = syncMode.fetchSize == null ? fetchSize : syncMode.fetchSize;
             data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType) ? true : false;
 
             // 执行发布
