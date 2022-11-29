@@ -37,7 +37,7 @@ public interface AttributeMap {
             @Mapping(source = "mdmType" , target = "mdmType"),
             @Mapping(source = "mapType" , target = "mapType"),
             @Mapping(source = "dataType" , target = "dataType"),
-            @Mapping(source = "status" ,target = "status")
+            @Mapping(source = "status" ,target = "status"),
     })
     AttributePO dtoToPo(AttributeDTO dto);
 
@@ -52,7 +52,7 @@ public interface AttributeMap {
             @Mapping(source = "enableRequired" ,target = "enableRequired"),
             @Mapping(source = "mdmType" , target = "mdmType"),
             @Mapping(source = "dataType" , target = "dataType"),
-            @Mapping(source = "status" ,target = "status")
+            @Mapping(source = "status" ,target = "status"),
     })
     AttributeVO poToVo(AttributePO po);
 
@@ -68,10 +68,9 @@ public interface AttributeMap {
             @Mapping(source = "mdmType" , target = "mdmType"),
             @Mapping(source = "mapType" , target = "mapType"),
             @Mapping(source = "dataType" , target = "dataType"),
-            @Mapping(source = "status" ,target = "status")
+            @Mapping(source = "status" ,target = "status"),
     })
     AttributePO updateDtoToPo(AttributeUpdateDTO dto);
-
     /**
      * po => dto
      * @param po

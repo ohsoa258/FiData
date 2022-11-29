@@ -4,7 +4,6 @@ import com.fisk.common.core.mapstruct.EnumTypeConversionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.mdm.enums.*;
-import org.apache.xmlbeans.impl.xb.xsdschema.Public;
 import org.springframework.stereotype.Component;
 
 /**
@@ -77,7 +76,7 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
      * 数据类型枚举转换
      */
 
-    public DataTypeEnum intToDataTypeEnum(Integer value){
+    public  DataTypeEnum intToDataTypeEnum(Integer value){
         if (value == null){
             return null;
         }
@@ -111,6 +110,8 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
                 return DataTypeEnum.TIMESTAMP;
             case 13:
                 return DataTypeEnum.TEXTAREA;
+            case 14:
+                return DataTypeEnum.IMAGE;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
@@ -180,5 +181,22 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
         }
 
         return RuleTypeEnum.values()[value];
+    }
+
+    public DataRuleEnum intToDataRuleEnum(Integer dataRule) {
+        if (dataRule == null){
+            return null;
+        }
+
+        switch (dataRule){
+            case 0:
+                return DataRuleEnum.Round;
+            case 1:
+                return DataRuleEnum.Split;
+            case 2:
+                return  DataRuleEnum.Default;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
     }
 }

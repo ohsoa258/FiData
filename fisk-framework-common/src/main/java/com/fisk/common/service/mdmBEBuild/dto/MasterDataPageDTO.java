@@ -13,7 +13,7 @@ public class MasterDataPageDTO extends PageDataDTO {
 
     private String columnNames;
 
-    private Integer isValidity;
+    private Integer validity;
     /**
      * 是否导出
      */
