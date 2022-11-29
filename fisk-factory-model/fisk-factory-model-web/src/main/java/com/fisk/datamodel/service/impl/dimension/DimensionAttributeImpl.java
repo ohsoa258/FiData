@@ -217,18 +217,16 @@ public class DimensionAttributeImpl
         if (syncModePo == null) {
             return data;
         }
-        data.syncModeDTO=SyncModeMap.INSTANCES.poToDto(syncModePo);
-        if (syncModePo.syncMode != SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
-            return data;
+        data.syncModeDTO = SyncModeMap.INSTANCES.poToDto(syncModePo);
+        if (syncModePo.syncMode == SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
+            QueryWrapper<TableBusinessPO> tableBusinessPoQueryWrapper = new QueryWrapper<>();
+            tableBusinessPoQueryWrapper.lambda().eq(TableBusinessPO::getSyncId, syncModePo.id);
+            TableBusinessPO tableBusinessPo = tableBusiness.getOne(tableBusinessPoQueryWrapper);
+            if (tableBusinessPo == null) {
+                return data;
+            }
+            data.syncModeDTO.syncTableBusinessDTO = TableBusinessMap.INSTANCES.poToDto(tableBusinessPo);
         }
-        QueryWrapper<TableBusinessPO> tableBusinessPoQueryWrapper = new QueryWrapper<>();
-        tableBusinessPoQueryWrapper.lambda().eq(TableBusinessPO::getSyncId, syncModePo.id);
-        TableBusinessPO tableBusinessPo = tableBusiness.getOne(tableBusinessPoQueryWrapper);
-        if (tableBusinessPo == null) {
-            return data;
-        }
-        data.syncModeDTO.syncTableBusinessDTO = TableBusinessMap.INSTANCES.poToDto(tableBusinessPo);
-
         //自定义脚本
         CustomScriptQueryDTO queryDto = new CustomScriptQueryDTO();
         queryDto.tableId = dimensionId;
