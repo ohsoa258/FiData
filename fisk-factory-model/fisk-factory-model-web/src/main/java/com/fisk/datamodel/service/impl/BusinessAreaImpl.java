@@ -71,7 +71,6 @@ import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -170,7 +169,6 @@ public class BusinessAreaImpl
         try {
             dataManageClient.appSynchronousClassification(classificationInfoDto);
         } catch (Exception e) {
-            // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
             log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
         }
 

@@ -55,8 +55,9 @@ hystrix:
           # 线程隔离 THREAD， SEMAPHORE
           strategy: THREAD
           thread:
-            # 超时时间
-            timeoutInMilliseconds: 15500
+            # 超时时间15500
+            # TODO 日健环境连接sftp超时，所以修改此参数
+            timeoutInMilliseconds: 50000
             # 超时时是否应中断执行（默认true）
             interruptOnTimeout: true
       circuitBreaker:
