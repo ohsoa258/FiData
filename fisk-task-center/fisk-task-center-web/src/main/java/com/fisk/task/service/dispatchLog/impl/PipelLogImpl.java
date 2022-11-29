@@ -2,6 +2,8 @@ package com.fisk.task.service.dispatchLog.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.datafactory.dto.customworkflow.DispatchEmailDTO;
 import com.fisk.task.dto.dispatchlog.LogStatisticsForChartVO;
 import com.fisk.task.dto.dispatchlog.LogStatisticsVO;
 import com.fisk.task.dto.dispatchlog.PipelLogVO;
@@ -29,6 +31,8 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
 
     @Resource
     PipelLogMapper pipelLogMapper;
+    @Resource
+    DataFactoryClient dataFactoryClient;
 
     @Override
     public void savePipelLog(String pipelTraceId, Map<Integer, Object> map, String pipelId) {
@@ -43,6 +47,17 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
                 continue;
             }
             pipelLog.msg = next.getValue().toString();
+
+            if(Objects.equals(DispatchLogEnum.pipelend.getValue(),next.getKey())){
+                //先更新掉
+                pipelLogMapper.updateByPipelTraceId(pipelTraceId,next.getKey());
+                DispatchEmailDTO dispatchEmail = new DispatchEmailDTO();
+                dispatchEmail.nifiCustomWorkflowId = Integer.parseInt(pipelId);
+                dispatchEmail.msg = pipelLog.msg;
+                dataFactoryClient.pipelineSendEmails(dispatchEmail);
+            }
+
+
             pipelLog.pipelId = pipelId;
             pipelLog.pipelTraceId = pipelTraceId;
             pipelLog.type = next.getKey();

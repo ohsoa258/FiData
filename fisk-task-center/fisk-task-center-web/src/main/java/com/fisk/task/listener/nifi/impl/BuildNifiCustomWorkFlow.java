@@ -44,6 +44,7 @@ import com.fisk.task.utils.nifi.INiFiHelper;
 import com.fisk.task.utils.nifi.NiFiHelperImpl;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
@@ -550,23 +551,28 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     boolean commonTask = false;
                     boolean fapi = false;
                     String queryApiSql = "";
+                    boolean fscript = false;
+                    String scriptTaskIds = "";
                     List<PipelApiDispatchDTO> pipelApiDispatchs = new ArrayList<>();
                     PipelApiDispatchDTO pipelApiDispatch = new PipelApiDispatchDTO();
                     for (BuildNifiCustomWorkFlowDTO buildNifiCustomWorkFlowDTO : outputDucts) {
-                        if (!Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.DATAACCESS_API)) {
-                            TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(buildNifiCustomWorkFlowDTO);
-                            String Topic = TopicName;
-                            ProcessorEntity processorEntity = updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, Topic, TopicTypeEnum.COMPONENT_NIFI_FLOW,
-                                    tableNifiSettingPO.tableAccessId, tableNifiSettingPO.type, nifiNode.workflowDetailId);
-                            processorEntities.add(processorEntity);
-                            commonTask = true;
-                        } else {
+                        if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.CUSTOMWORKCUSTOMIZESCRIPT)) {
+                            scriptTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId;
+                            fscript = true;
+                        } else if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.DATAACCESS_API)) {
                             fapi = true;
                             pipelApiDispatch.workflowId = String.valueOf(buildNifiCustomWorkFlowDTO.workflowDetailId);
                             pipelApiDispatch.appId = buildNifiCustomWorkFlowDTO.appId;
                             pipelApiDispatch.apiId = Long.parseLong(buildNifiCustomWorkFlowDTO.tableId);
                             pipelApiDispatch.pipelineId = nifiCustomWorkList.pipelineId;
                             pipelApiDispatchs.add(pipelApiDispatch);
+                        } else {
+                            TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(buildNifiCustomWorkFlowDTO);
+                            String Topic = TopicName;
+                            ProcessorEntity processorEntity = updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, Topic, TopicTypeEnum.COMPONENT_NIFI_FLOW,
+                                    tableNifiSettingPO.tableAccessId, tableNifiSettingPO.type, nifiNode.workflowDetailId);
+                            processorEntities.add(processorEntity);
+                            commonTask = true;
                         }
 
                     }
@@ -580,10 +586,15 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     TopicTypeEnum pipelineNifiFlow = TopicTypeEnum.PIPELINE_NIFI_FLOW;
 
                     if (pipelApiDispatchs.size() == 0) {
-                        querySqlDto.querySql = "select '" + TopicName + "' as topic, '${uuid}' as pipelTraceId, '" + pipelineNifiFlow.getValue() + "' as topicType from tb_etl_Incremental limit 1";
+                        querySqlDto.querySql = "select '" + TopicName + "' as topic, '${uuid}' as pipelTraceId, '" + pipelineNifiFlow.getValue() + "' as topicType ";
                     } else {
                         //加管道批次
-                        querySqlDto.querySql = "select '" + JSON.toJSONString(pipelApiDispatchs) + "' as pipelApiDispatch ,'" + MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW + "' as topic, '${uuid}' as pipelTraceId, '" + pipelineNifiFlow.getValue() + "' as topicType  from tb_etl_Incremental limit 1";
+                        querySqlDto.querySql = "select '" + JSON.toJSONString(pipelApiDispatchs) + "' as pipelApiDispatch ,'" + TopicName + "' as topic, '${uuid}' as pipelTraceId, '" + pipelineNifiFlow.getValue() + "' as topicType  ";
+                    }
+                    if (StringUtils.isNotEmpty(scriptTaskIds)) {
+                        querySqlDto.querySql += scriptTaskIds + " as scriptTaskIds from tb_etl_Incremental limit 1";
+                    } else {
+                        querySqlDto.querySql += " from tb_etl_Incremental limit 1";
                     }
 
                     //配置库
@@ -653,7 +664,8 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
 
                 if (Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSTRUCTURE) ||
                         Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSCHEDULINGCOMPONENT) ||
-                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.DATAACCESS_API)) {
+                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.DATAACCESS_API)||
+                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKCUSTOMIZESCRIPT)) {
                     continue;
                 }
                 String Topic = TopicName;
@@ -686,6 +698,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             log.error("组id:" + groupStructure + "停止失败" + StackTraceHelper.getStackTraceInfo(e));
             nifiCustomWorkflowDTO.status = PipelineStatuTypeEnum.failure_publish.getValue();
             dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
+            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR);
         }
     }
 

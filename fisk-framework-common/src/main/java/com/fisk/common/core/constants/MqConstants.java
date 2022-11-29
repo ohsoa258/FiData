@@ -68,6 +68,8 @@ public class MqConstants {
 
         public static final String BUILD_METADATA_FLOW = "build.metadata.flow";
 
+        public static final String BUILD_EXEC_SCRIPT_FLOW = "build.exec.script.flow";
+
 
     }
 

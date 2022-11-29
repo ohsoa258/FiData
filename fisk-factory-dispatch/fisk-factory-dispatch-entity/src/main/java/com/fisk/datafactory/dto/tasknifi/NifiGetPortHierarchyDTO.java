@@ -19,6 +19,9 @@ public class NifiGetPortHierarchyDTO {
     public String workflowName;
 
     @ApiModelProperty(value = "管道主键id")
+    /**
+     * 大管道的数字id
+     */
     public String workflowId;
 
     @ApiModelProperty(value = "表类型",required = true)

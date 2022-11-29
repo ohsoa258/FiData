@@ -14,6 +14,8 @@ import com.fisk.datafactory.mapper.DispatchEmailMapper;
 import com.fisk.datafactory.service.IDispatchEmail;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.vo.emailserver.EmailServerVO;
+import com.fisk.task.enums.NifiStageTypeEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -23,6 +25,7 @@ import java.util.Objects;
  * @author cfk
  */
 @Service
+@Slf4j
 public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, DispatchEmailPO> implements IDispatchEmail {
 
     @Resource
@@ -55,12 +58,25 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
     @Override
     public ResultEnum pipelineSendEmails(DispatchEmailDTO dispatchEmail) {
         // 发邮件
-        DispatchEmailPO Email = this.query().eq("nifi_custom_workflow_id", dispatchEmail.nifiCustomWorkflowId).one();
+        DispatchEmailPO email = this.query().eq("nifi_custom_workflow_id", dispatchEmail.nifiCustomWorkflowId).one();
         //第一步：查询邮件服务器设置
-        ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(Email.emailserverConfigId);
+        ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(email.emailserverConfigId);
         if (emailServerById == null || emailServerById.getCode() != ResultEnum.SUCCESS.getCode() ||
                 emailServerById.getData() == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        boolean contains = dispatchEmail.msg.contains(NifiStageTypeEnum.RUN_FAILED.getName());
+        boolean sendMode = email.sendMode;
+        if (sendMode) {
+            log.info("满足模式");
+        } else {
+            if (contains) {
+                log.info("满足模式,并且msg报错");
+            } else {
+                log.info("满足模式,但是msg没报错");
+                return ResultEnum.SUCCESS;
+            }
         }
         EmailServerVO emailServerVO = emailServerById.getData();
         MailServeiceDTO mailServeiceDTO = new MailServeiceDTO();
@@ -78,7 +94,7 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
         //邮件正文
         mailSenderDTO.setBody("邮件正文");
         //邮件收件人
-        mailSenderDTO.setToAddress(Email.recipients);
+        mailSenderDTO.setToAddress(email.recipients);
         //mailSenderDTO.setToCc("邮件抄送人");
         //mailSenderDTO.setSendAttachment("是否发送附件");
         //mailSenderDTO.setAttachmentName("附件名称");

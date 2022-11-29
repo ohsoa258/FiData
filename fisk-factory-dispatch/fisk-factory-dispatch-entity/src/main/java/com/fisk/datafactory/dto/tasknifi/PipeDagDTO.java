@@ -17,7 +17,7 @@ public class PipeDagDTO {
     /**
      * task无序集合
      */
-    public List<NifiPortsHierarchyDTO> nifiPortsHierarchyDtos;
+    public List<TaskHierarchyDTO> taskHierarchyDtos;
     /**
      * pipelTraceId
      */

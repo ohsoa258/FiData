@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.MqConstants;
+import com.fisk.common.core.enums.task.TaskTypeEnum;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -19,9 +20,7 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.*;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
@@ -40,6 +39,8 @@ import com.fisk.task.dto.task.NifiCustomWorkDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.enums.DataClassifyEnum;
+import com.fisk.task.enums.DispatchLogEnum;
+import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -240,6 +241,10 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 case DATALAKE_API_TASK:
                     e.componentsId = 10;
                     break;
+                // 数据湖非实时api任务
+                case CUSTOMIZE_SCRIPT_TASK:
+                    e.componentsId = 13;
+                    break;
                 default:
                     break;
             }
@@ -325,16 +330,22 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                         // 保存topic
                         TableTopicDTO topicDTO = new TableTopicDTO();
                         //只保存非实时api的topic
-                        if (!Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.DATALAKE_API_TASK.getName())) {
-                            continue;
+                        if (Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.DATALAKE_API_TASK.getName())) {
+                            topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
+                            topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.PHYSICS_API.getValue() + "." + nifiCustomWorkflowDetailPo.appId + "." + nifiCustomWorkflowDetailPo.tableId;
+                            topicDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
+                            topicDTO.tableId = Integer.parseInt(dto.NifiNode.tableId);
+                            topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
+                            publishTaskClient.updateTableTopicByComponentId(topicDTO);
                         }
-                        topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
-                        topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.PHYSICS_API.getValue() + "." + nifiCustomWorkflowDetailPo.appId + "." + nifiCustomWorkflowDetailPo.tableId;
-                        topicDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
-                        topicDTO.tableId = Integer.parseInt(dto.NifiNode.tableId);
-                        topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
-
-                        publishTaskClient.updateTableTopicByComponentId(topicDTO);
+                        //只保存调度的自定义脚本任务
+                        if (Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName())) {
+                            topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
+                            topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.CUSTOMIZESCRIPT.getValue() + "." + nifiCustomWorkflowDetailPo.appId + "." + nifiCustomWorkflowDetailPo.tableId;
+                            topicDTO.tableType = OlapTableEnum.CUSTOMIZESCRIPT.getValue();
+                            topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
+                            publishTaskClient.updateTableTopicByComponentId(topicDTO);
+                        }
                     }
                 }
 //                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO = this.query().eq("pid", po.id).orderByAsc("table_order").list().get(0);
@@ -485,6 +496,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             // 分析模型宽表任务
             case OLAP_WIDETABLE_TASK:
                 return DataClassifyEnum.DATAMODELWIDETABLE;
+            case CUSTOMIZE_SCRIPT_TASK:
+                return DataClassifyEnum.CUSTOMWORKCUSTOMIZESCRIPT;
             case DW_TASK:
             case OLAP_TASK:
 
@@ -784,6 +797,37 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     @Override
     public List<String> getNextCronExeTime(NextCronTimeDTO dto) {
         return CronUtils.nextCronExeTime(dto);
+    }
+
+    @Override
+    public List<DispatchJobHierarchyDTO> getJobList(QueryJobHierarchyDTO dto) {
+        NifiCustomWorkflowPO one = nifiCustomWorkflowImpl.query().eq("id", dto.nifiCustomWorkflowId).eq("del_flag", 1).one();
+        if (Objects.isNull(one)) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        List<NifiCustomWorkflowDetailPO> list = this.query().eq("workflow_id", one.workflowId).eq("del_flag", 1).eq("pid", 0).list();
+        List<DispatchJobHierarchyDTO> dtos = new ArrayList<>();
+        list.forEach(e -> {
+            //初始状态为未运行
+            DispatchJobHierarchyDTO dispatchJobHierarchy = new DispatchJobHierarchyDTO();
+            dispatchJobHierarchy.id = e.id;
+            dispatchJobHierarchy.jobName = e.componentName;
+            //job初始状态为未运行
+            dispatchJobHierarchy.jobStatus = NifiStageTypeEnum.NOT_RUN;
+            if (StringUtils.isNotEmpty(e.inport)) {
+                dispatchJobHierarchy.inport = JSON.parseArray(JSON.toJSONString(Arrays.asList(e.inport.split(","))), Long.class);
+            }
+            if (StringUtils.isNotEmpty(e.outport)) {
+                dispatchJobHierarchy.outport = JSON.parseArray(JSON.toJSONString(Arrays.asList(e.outport.split(","))), Long.class);
+            } else {
+                //是管道某个支线的最后一级
+                dispatchJobHierarchy.last = true;
+            }
+
+
+            dtos.add(dispatchJobHierarchy);
+        });
+        return dtos;
     }
 
 }

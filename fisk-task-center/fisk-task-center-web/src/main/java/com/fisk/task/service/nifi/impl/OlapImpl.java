@@ -360,6 +360,9 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
                 nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DATALAKE_API_TASK;
                 nifiGetPortHierarchyDTO.tableId = String.valueOf(tableAccessId);
                 break;
+            case CUSTOMIZESCRIPT:
+                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK;
+                break;
             default:
                 break;
         }

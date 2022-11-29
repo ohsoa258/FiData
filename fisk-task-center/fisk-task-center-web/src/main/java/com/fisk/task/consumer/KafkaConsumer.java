@@ -18,6 +18,7 @@ import com.fisk.task.listener.doris.BuildDorisTaskListener;
 import com.fisk.task.listener.governance.BuildQualityReportListener;
 import com.fisk.task.listener.mdm.BuildModelListener;
 import com.fisk.task.listener.metadata.IMetaDataListener;
+import com.fisk.task.listener.nifi.IExecScriptListener;
 import com.fisk.task.listener.nifi.INifiTaskListener;
 import com.fisk.task.listener.nifi.INonRealTimeListener;
 import com.fisk.task.listener.nifi.ITriggerScheduling;
@@ -131,6 +132,8 @@ public class KafkaConsumer {
     IMetaDataListener metaDataListener;
     @Resource
     BuildQualityReportListener qualityReportListener;
+    @Resource
+    IExecScriptListener iExecScriptListener;
 
     @Bean
     public KafkaListenerContainerFactory<?> batchFactory() {
@@ -300,5 +303,10 @@ public class KafkaConsumer {
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_METADATA_FLOW, containerFactory = "batchFactory", groupId = "test")
     public ResultEntity<Object> buildMetaData(String dataInfo, Acknowledgment ack) {
         return ResultEntityBuild.build(metaDataListener.metaData(dataInfo, ack));
+    }
+
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, containerFactory = "batchFactory", groupId = "test")
+    public ResultEntity<Object> BuildExecScript(String dataInfo, Acknowledgment ack) {
+        return ResultEntityBuild.build(iExecScriptListener.execScript(dataInfo, ack));
     }
 }

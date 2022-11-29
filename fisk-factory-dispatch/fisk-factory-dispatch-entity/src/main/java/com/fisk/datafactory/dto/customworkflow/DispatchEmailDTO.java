@@ -25,5 +25,9 @@ public class DispatchEmailDTO extends BasePO {
      * 收件人
      */
     public String recipients;
+    /**
+     * 报错信息
+     */
+    public String msg;
 
 }

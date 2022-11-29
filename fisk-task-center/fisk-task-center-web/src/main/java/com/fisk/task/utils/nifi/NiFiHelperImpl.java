@@ -528,6 +528,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         autoEnd.add("No Retry");
         autoEnd.add("Original");
         autoEnd.add("Retry");
+        autoEnd.add("Response");
         //组件属性
         Map<String, String> map = new HashMap<>(5);
         map.put("Attributes to Send", data.attributesToSend);

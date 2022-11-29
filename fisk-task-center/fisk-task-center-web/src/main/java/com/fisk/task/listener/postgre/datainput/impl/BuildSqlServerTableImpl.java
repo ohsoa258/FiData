@@ -253,7 +253,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
     }
 
     @Override
-    public String queryNumbersField(BuildNifiFlowDTO dto, DataAccessConfigDTO config) {
+    public String queryNumbersField(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId) {
         //convert(varchar(100),getdate(),120)
         List<String> stgAndTableName = getStgAndTableName(config.processorConfig.targetTableName);
         if (config.processorConfig.targetTableName.contains("\\.")) {

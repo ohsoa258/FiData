@@ -1,6 +1,8 @@
-package com.fisk.task.listener.redis;
+package com.fisk.task.utils;
 
 import com.alibaba.fastjson.JSON;
+import com.davis.client.model.ProcessGroupEntity;
+import com.davis.client.model.ProcessGroupStatusDTO;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -11,6 +13,7 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
 import com.fisk.dataaccess.dto.api.PipelApiDispatchDTO;
 import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.datafactory.dto.customworkflowdetail.DispatchJobHierarchyDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
@@ -24,7 +27,6 @@ import com.fisk.task.entity.PipelTaskLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
-import com.fisk.task.listener.nifi.IExecScriptListener;
 import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
 import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
@@ -32,61 +34,102 @@ import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.nifi.ITableNifiSettingService;
-import com.fisk.task.utils.KafkaTemplateHelper;
-import com.fisk.task.utils.StackTraceHelper;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.data.redis.connection.Message;
-import org.springframework.data.redis.listener.KeyExpirationEventMessageListener;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-@Component
+/**
+ * @author cfk
+ */
 @Slf4j
-public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
+@AllArgsConstructor
+@NoArgsConstructor
+@Component
+public class DelayedTask extends TimerTask {
+    @Value("${nifi.pipeline.waitTime}")
+    private String waitTime;
     @Resource
+    ScheduledExecutorService scheduledExecutorService;
     KafkaTemplateHelper kafkaTemplateHelper;
-    @Resource
+
     DataAccessClient dataAccessClient;
-    @Resource
+
     private DataFactoryClient dataFactoryClient;
-    @Resource
+
     IOlap iOlap;
-    @Resource
+
     IPipelJobLog iPipelJobLog;
-    @Resource
+
     IPipelLog iPipelLog;
-    @Resource
+
     IPipelTaskLog iPipelTaskLog;
-    @Resource
+
     RedisUtil redisUtil;
-    @Resource
+
     IPipelineTaskPublishCenter iPipelineTaskPublishCenter;
-    @Resource
+
     ITableNifiSettingService iTableNifiSettingService;
-    @Resource
+
     PublishTaskController publishTaskController;
 
+    private String param;
 
-    public PipelineTaskEndCenter(RedisMessageListenerContainer listenerContainer) {
-        super(listenerContainer);
+    private String groupId;
+
+    public DelayedTask(String groupId, String param, KafkaTemplateHelper kafkaTemplateHelper,
+                       DataFactoryClient dataFactoryClient,
+                       IOlap iOlap, IPipelJobLog iPipelJobLog, IPipelLog iPipelLog,
+                       IPipelTaskLog iPipelTaskLog, RedisUtil redisUtil,
+                       ITableNifiSettingService iTableNifiSettingService) {
+        this.param = param;
+        this.kafkaTemplateHelper = kafkaTemplateHelper;
+        this.dataAccessClient = dataAccessClient;
+        this.dataFactoryClient = dataFactoryClient;
+        this.iOlap = iOlap;
+        this.iPipelJobLog = iPipelJobLog;
+        this.iPipelLog = iPipelLog;
+        this.iPipelTaskLog = iPipelTaskLog;
+        this.redisUtil = redisUtil;
+        this.iTableNifiSettingService = iTableNifiSettingService;
+
     }
 
-    /**
-     * 针对redis数据失效事件，进行数据处理
-     *
-     * @param message
-     * @param pattern
-     */
     @Override
-    public void onMessage(Message message, byte[] pattern) {
-        log.info("此处已作废");
-      /*  // 用户做自己的业务处理即可,注意message.toString()可以获取失效的key
-        String expiredKey = message.toString();
+    public void run() {
+
+        try {
+            Thread.sleep(1000);
+            boolean exist = redisUtil.hasKey(param);
+            if (exist) {
+                log.info("key还没失效");
+                return;
+            }
+            //只有是nifi处理的任务才有这个groupId
+            if (StringUtils.isNotEmpty(groupId)) {
+                ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(groupId);
+                ProcessGroupStatusDTO status = processGroup.getStatus();
+                //flowFilesQueued 组内流文件数量,如果为0代表组内所有流文件执行完,没有正在执行的组件
+                Integer flowFilesQueued = status.getAggregateSnapshot().getFlowFilesQueued();
+                if (!Objects.equals(flowFilesQueued, 0)) {
+                    DelayedTask delayedTask = new DelayedTask(groupId, param, kafkaTemplateHelper, dataFactoryClient, iOlap, iPipelJobLog, iPipelLog, iPipelTaskLog, redisUtil, iTableNifiSettingService);
+                    scheduledExecutorService.schedule(delayedTask, Long.parseLong(waitTime), TimeUnit.SECONDS);
+                }
+            }
+        } catch (Exception e) {
+            log.error("查看组状态报错");
+        }
+        // 用户做自己的业务处理即可,注意message.toString()可以获取失效的key
+        String expiredKey = param;
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         log.info("即将调用的节点:" + expiredKey);
         String thisPipelTaskTraceId = UUID.randomUUID().toString();
@@ -248,10 +291,26 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                     }
                     //记录管道结束
                     Map<Integer, Object> PipelMap = new HashMap<>();
-                    PipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
+                    Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
+                    boolean success = true;
+                    Iterator<Map.Entry<Object, Object>> nodeMap = hmget.entrySet().iterator();
+                    while (nodeMap.hasNext()) {
+                        Map.Entry<Object, Object> next = nodeMap.next();
+                        DispatchJobHierarchyDTO jobHierarchy = JSON.parseObject(JSON.toJSONString(next.getValue()), DispatchJobHierarchyDTO.class);
+                        if(!Objects.equals(jobHierarchy.jobStatus,NifiStageTypeEnum.SUCCESSFUL_RUNNING)){
+                            success = false;
+                        }
+                    }
+                    if(success){
+                        PipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
+                    }else{
+                        PipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
+                    }
+
                     //PipelMap.put(DispatchLogEnum.pipelstate.getValue(), pipelName + " " + NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
                     log.info("这个管道的结束:" + pipelTraceId);
-                    redisUtil.del(RedisKeyEnum.PIPEL_TRACE_ID.getName() + pipelTraceId);
+                    redisUtil.del(RedisKeyEnum.PIPEL_TRACE_ID.getName() +":"+ pipelTraceId);
+                    redisUtil.del(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() +":"+ pipelTraceId);
                     log.info("第二处调用保存job日志");
                     iPipelJobLog.savePipelLog(pipelTraceId, PipelMap, pipelId);
                     iPipelLog.savePipelLog(pipelTraceId, PipelMap, pipelId);
@@ -270,7 +329,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                 Object count = pipelTask.get(DispatchLogEnum.taskcount.getName());
                 taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " : 同步条数 : " + (Objects.isNull(count) ? 0 : count));
                 log.info("第九处调用保存task日志");
-                iPipelTaskLog.savePipelTaskLog(null,null, taskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
+                iPipelTaskLog.savePipelTaskLog(null, null, taskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
             }
         } catch (Exception e) {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
@@ -282,6 +341,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
             dto.pipleName = pipelName;
             dto.JobName = JobName;
             iPipelJobLog.exceptionHandlingLog(dto);
-        }*/
+        }
     }
+
 }

@@ -2,6 +2,11 @@ package com.fisk.task.service.dispatchLog.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.framework.redis.RedisKeyEnum;
+import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.datafactory.dto.customworkflowdetail.DispatchJobHierarchyDTO;
+import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyNextDTO;
+import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
 import com.fisk.task.entity.PipelJobLogPO;
@@ -40,6 +45,8 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
     IPipelTaskLog iPipelTaskLog;
     @Resource
     IPipelLog iPipelLog;
+    @Resource
+    RedisUtil redisUtil;
 
     @Override
     public void savePipelLog(String pipelTraceId, Map<Integer, Object> map, String pipelId) {
@@ -81,6 +88,37 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
             pipelJobLog.jobTraceId = jobTraceId;
             pipelJobLog.pipelTraceId = pipelTraceId;
             pipelJobLog.type = next.getKey();
+            //修改dag图的job的状态
+            try {
+                if (org.apache.commons.lang3.StringUtils.isNotEmpty(pipelTraceId)) {
+                    Map<Object, Object> jobMap = new HashMap<>();
+                    Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId);
+                    DispatchJobHierarchyDTO dto = JSON.parseObject(JSON.toJSONString(hmget.get(componentId)), DispatchJobHierarchyDTO.class);
+                    if (Objects.equals(pipelJobLog.type, DispatchLogEnum.jobstart.getValue())) {
+                        dto.jobStatus = NifiStageTypeEnum.START_RUN;
+                        jobMap.put(componentId, dto);
+                        redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, jobMap, 3000);
+                    } else if (Objects.equals(pipelJobLog.type, DispatchLogEnum.jobend.getValue()) && !Objects.equals(pipelJobLog.msg, NifiStageTypeEnum.RUN_FAILED.getValue())) {
+                        dto.jobStatus = NifiStageTypeEnum.RUN_FAILED;
+                        jobMap.put(componentId, dto);
+                        redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, jobMap, 3000);
+                    } else if (Objects.equals(pipelJobLog.type, DispatchLogEnum.jobend.getValue()) && Objects.equals(pipelJobLog.msg, NifiStageTypeEnum.RUN_FAILED.getValue())) {
+                        dto.jobStatus = NifiStageTypeEnum.SUCCESSFUL_RUNNING;
+                        jobMap.put(componentId, dto);
+                        redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, jobMap, 3000);
+                    }else if (Objects.equals(pipelJobLog.type, DispatchLogEnum.jobpass.getValue())) {
+                        dto.jobStatus = NifiStageTypeEnum.PASS;
+                        jobMap.put(componentId, dto);
+                        redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, jobMap, 3000);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("redis中task集合数据不存在:" + pipelTraceId, e);
+            }
+            if (Objects.equals(DispatchLogEnum.jobend.getValue(), next.getKey())) {
+                //先更新掉
+                pipelJobLogMapper.updateByPipelTraceId(jobTraceId, next.getKey());
+            }
             pipelJobLog.componentId = componentId;
             pipelJobLogs.add(pipelJobLog);
         }
@@ -217,6 +255,7 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
         //任务日志
         dto.JobName = Objects.equals(dto.JobName, null) ? "" : dto.JobName;
         dto.pipleName = Objects.equals(dto.pipleName, null) ? "" : dto.pipleName;
+
         if (!StringUtils.isEmpty(dto.pipelTaskTraceId)) {
             List<PipelTaskLogPO> list = iPipelTaskLog.query().eq("task_trace_id", dto.pipelTaskTraceId).orderByDesc("create_time").list();
             if (CollectionUtils.isNotEmpty(list)) {
@@ -225,7 +264,17 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                 //stageMap.put(DispatchLogEnum.taskstate.getValue(), dto.pipleName + dto.JobName + " " + NifiStageTypeEnum.RUN_FAILED.getName());
                 //stageMap.put(DispatchLogEnum.taskcomment.getValue(), dto.pipleName + dto.JobName + " " + dto.comment);
                 log.info("第一处调用保存task日志");
-                iPipelTaskLog.savePipelTaskLog(dto.pipelJobTraceId, dto.pipelTaskTraceId, stageMap, list.get(0).taskId, null, 0);
+                iPipelTaskLog.savePipelTaskLog(dto.pipelTraceId, dto.pipelJobTraceId, dto.pipelTaskTraceId, stageMap, list.get(0).taskId, null, 0);
+                Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + dto.pipelTraceId);
+                TaskHierarchyDTO taskHierarchy = JSON.parseObject(JSON.toJSONString(hmget.get(list.get(0).taskId)), TaskHierarchyDTO.class);
+                //这里只改本级状态
+                taskHierarchy.taskProcessed = true;
+                taskHierarchy.taskStatus = DispatchLogEnum.taskpass;
+                hmget.put(list.get(0).taskId, taskHierarchy);
+                redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + dto.pipelTraceId, hmget, 3000);
+                //这里
+                updateTaskStatus(Long.parseLong(list.get(0).taskId), dto.pipelTraceId);
+
             }
         }
         //job日志
@@ -238,21 +287,58 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                 jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()) + " - " + dto.comment);
                 //jobMap.put(DispatchLogEnum.jobstate.getValue(), dto.JobName + " " + NifiStageTypeEnum.RUN_FAILED.getName());
                 this.savePipelJobLog(pipelJobLogPo.pipelTraceId, jobMap, pipelJobLogPo.pipelId, pipelJobLogPo.jobTraceId, pipelJobLogPo.componentId);
+                updateJobStatus(Long.parseLong(pipelJobLogPo.componentId), pipelJobLogPo.pipelTraceId);
             }
         }
+
         //管道级别
         List<PipelJobLogPO> list = this.query().eq("pipel_trace_id", dto.pipelTraceId).orderByDesc("create_time").list();
         if (CollectionUtils.isNotEmpty(list)) {
             Map<Integer, Object> pipelMap = new HashMap<>();
             pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()) + " - " + dto.comment);
-            //pipelMap.put(DispatchLogEnum.pipelstate.getValue(), dto.pipleName + " " + NifiStageTypeEnum.RUN_FAILED.getName());
-            //保存管道失败日志
             log.info("第三处调用保存job日志");
-            this.savePipelLog(dto.pipelTraceId, pipelMap, list.get(0).pipelId);
-            iPipelLog.savePipelLog(dto.pipelTraceId, pipelMap, list.get(0).pipelId);
+            //this.savePipelLog(dto.pipelTraceId, pipelMap, list.get(0).pipelId);
+            //iPipelLog.savePipelLog(dto.pipelTraceId, pipelMap, list.get(0).pipelId);
         }
+    }
 
+    public void updateTaskStatus(Long id, String pipelTraceId) {
+        Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
+        //TaskHierarchyDTO
+        TaskHierarchyDTO taskHierarchy = JSON.parseObject(JSON.toJSONString(hmget.get(id)), TaskHierarchyDTO.class);
+        List<NifiPortsHierarchyNextDTO> nextList = taskHierarchy.nextList;
+        if (CollectionUtils.isNotEmpty(nextList)) {
+            HashMap<Object, Object> map = new HashMap<>();
+            for (NifiPortsHierarchyNextDTO nifiPortsHierarchyNext : nextList) {
+                Long itselfPort = nifiPortsHierarchyNext.itselfPort;
+                TaskHierarchyDTO taskHierarchyNext = JSON.parseObject(JSON.toJSONString(hmget.get(itselfPort)), TaskHierarchyDTO.class);
+                taskHierarchyNext.taskStatus = DispatchLogEnum.taskend;
+                map.put(itselfPort, taskHierarchyNext);
+            }
+            redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, map, 3000);
+            for (NifiPortsHierarchyNextDTO nifiPortsHierarchyNext : nextList) {
+                updateTaskStatus(nifiPortsHierarchyNext.itselfPort, pipelTraceId);
+            }
+        }
+    }
 
+    public void updateJobStatus(Long id, String pipelTraceId) {
+        Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId);
+        //TaskHierarchyDTO
+        DispatchJobHierarchyDTO taskHierarchy = JSON.parseObject(JSON.toJSONString(hmget.get(id)), DispatchJobHierarchyDTO.class);
+
+        if (CollectionUtils.isNotEmpty(taskHierarchy.outport)) {
+            HashMap<Object, Object> map = new HashMap<>();
+            for (Long jobId : taskHierarchy.outport) {
+                TaskHierarchyDTO taskHierarchyNext = JSON.parseObject(JSON.toJSONString(jobId), TaskHierarchyDTO.class);
+                taskHierarchyNext.taskStatus = DispatchLogEnum.taskend;
+                map.put(jobId, taskHierarchyNext);
+            }
+            redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, map, 3000);
+            for (Long jobId : taskHierarchy.outport) {
+                updateJobStatus(jobId, pipelTraceId);
+            }
+        }
     }
 
     public static void main(String[] args) {

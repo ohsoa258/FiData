@@ -1,6 +1,7 @@
 package com.fisk.datafactory.dto.tasknifi;
 
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
+import com.fisk.task.enums.DispatchLogEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -14,7 +15,7 @@ import java.util.Map;
  * @date 2022/2/16 15:26
  */
 @Data
-public class NifiPortsHierarchyDTO {
+public class TaskHierarchyDTO {
 
     @ApiModelProperty(value = "task的主键id")
     public Long id;
@@ -32,26 +33,36 @@ public class NifiPortsHierarchyDTO {
     @ApiModelProperty(value = "是否为管道内最后一个任务")
     public boolean pipeEndFlag;
     /**
+     * 要变成task_id  NifiCustomWorkflowDetailDTO
      * 管道每个分支的最后一个task
      */
-    public List<NifiCustomWorkflowDetailDTO> pipeEndDto;
+    @ApiModelProperty(value = "管道每个分支的最后一个task")
+    public List<Long> pipeEndDto;
     /**
+     * 也要变成task_id  NifiPortsHierarchyNextDTO
      * 当前task的所有下一级task集合
      */
+    @ApiModelProperty(value = "当前task的所有下一级task集合")
     public List<NifiPortsHierarchyNextDTO> nextList;
     /**
+     * 要变成id   NifiCustomWorkflowDetailDTO
      * 当前task的所有上一级task集合
      */
-    public List<NifiCustomWorkflowDetailDTO> inportList;
+    @ApiModelProperty(value = "当前task的所有上一级task集合")
+    public List<Long> inportList;
     /**
      * 本节点特殊参数
      */
     public Map<String, String> specialParaMap;
 
     /**
-     * 本节点状态类参数
+     * task运行状态,包括 未运行,运行成功,运行失败
      */
-    public Map<String, String> taskParaMap;
+    public DispatchLogEnum taskStatus;
+    /**
+     * job处理状态.true 已处理. false 未处理
+     */
+    public boolean taskProcessed;
 
 
 }

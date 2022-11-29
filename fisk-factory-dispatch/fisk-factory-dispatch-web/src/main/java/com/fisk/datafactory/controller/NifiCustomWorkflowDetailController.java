@@ -6,9 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.Dto.cron.NextCronTimeDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.*;
 import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.task.client.PublishTaskClient;
@@ -140,4 +138,9 @@ public class NifiCustomWorkflowDetailController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getNextCronExeTime(dto));
     }
 
+    @ApiOperation("查询job结构与运行状态")
+    @PostMapping("/getJobList")
+    public ResultEntity<List<DispatchJobHierarchyDTO>> getJobList(@RequestBody QueryJobHierarchyDTO dto) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.getJobList(dto));
+    }
 }

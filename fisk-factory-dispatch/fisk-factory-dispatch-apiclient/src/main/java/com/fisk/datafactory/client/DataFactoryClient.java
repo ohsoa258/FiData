@@ -4,7 +4,9 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datafactory.dto.customworkflow.DispatchEmailDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.DispatchJobHierarchyDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.QueryJobHierarchyDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.dto.tasknifi.*;
@@ -59,7 +61,7 @@ public interface DataFactoryClient {
      */
     @PostMapping("/dataFactory/getNIfiPortHierarchy")
     @ApiOperation(value = "获取管道层级关系")
-    ResultEntity<NifiPortsHierarchyDTO> getNifiPortHierarchy(@Validated @RequestBody NifiGetPortHierarchyDTO dto);
+    ResultEntity<TaskHierarchyDTO> getNifiPortHierarchy(@Validated @RequestBody NifiGetPortHierarchyDTO dto);
 
     /**
      * 根据管道主键id查询管道内第一批任务
@@ -150,6 +152,10 @@ public interface DataFactoryClient {
     @GetMapping("/nifiCustomWorkflowDetail/get/{id}")
     @ApiOperation(value = "查询单个管道组件")
     ResultEntity<NifiCustomWorkflowDetailDTO> getData(@PathVariable("id") long id);
+
+    @ApiOperation("查询job结构与运行状态")
+    @PostMapping("/nifiCustomWorkflowDetail/getJobList")
+    public ResultEntity<List<DispatchJobHierarchyDTO>> getJobList(@RequestBody QueryJobHierarchyDTO dto);
 
 
     /**
