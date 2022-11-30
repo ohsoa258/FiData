@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * @author dick
  * @version 1.0
- * @description 数据校验
+ * @description 校验规则
  * @date 2022/3/22 16:17
  */
 @Api(tags = {SwaggerConfig.DATA_CHECK_CONTROLLER})

@@ -2,6 +2,7 @@ package com.fisk.datagovernance.dto;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * @author dick
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
  * @description 获取配置文件
  * @date 2022/11/29 10:57
  */
+@Configuration
 @Data
 public class GetConfigDTO {
     @Value("${spring.datasource.url}")

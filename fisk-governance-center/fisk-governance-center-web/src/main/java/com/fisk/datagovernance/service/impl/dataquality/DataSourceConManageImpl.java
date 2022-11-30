@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.service.impl.dataquality;
 
+import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -31,6 +32,8 @@ import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.SneakyThrows;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -48,13 +51,19 @@ import java.util.stream.Collectors;
 public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, DataSourceConPO> implements IDataSourceConManageService {
 
     @Resource
-    DataSourceConMapper mapper;
+    private DataSourceConMapper mapper;
 
     @Resource
     private UserClient userClient;
 
     @Resource
-    RedisUtil redisUtil;
+    private RedisUtil redisUtil;
+
+//    @Value("${dataservice.datasource.metadataentity_key}")
+//    private String metaDataEntityKey;
+
+//    @Resource
+//    private RedisTemplate redisTemplate;
 
     @Override
     public PageDTO<DataSourceConVO> page(DataSourceConQuery query) {
@@ -175,6 +184,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             fiDataMetaDataTreeBase.setLabel("FiData");
             fiDataMetaDataTreeBase.setLabelAlias("FiData");
             fiDataMetaDataTreeBase.setLevelType(LevelTypeEnum.BASEFOLDER);
+            fiDataMetaDataTreeBase.setSourceType(SourceTypeEnum.FiData.getValue());
             fiDataMetaDataTreeBase.children = new ArrayList<>();
             for (DataSourceConPO dataSourceConPO : dataSourceConPOList) {
                 List<FiDataMetaDataDTO> fiDataMetaData = redisUtil.getFiDataMetaData(String.valueOf(dataSourceConPO.datasourceId));
@@ -203,7 +213,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             fiDataMetaDataTreeBase.setLabel("Customize");
             fiDataMetaDataTreeBase.setLabelAlias("Customize");
             fiDataMetaDataTreeBase.setLevelType(LevelTypeEnum.BASEFOLDER);
-
+            fiDataMetaDataTreeBase.setSourceType(SourceTypeEnum.custom.getValue());
             List<FiDataMetaDataTreeDTO> fiDataMetaDataTree_Ips = new ArrayList<>();
             List<String> conIp = dataSourceConPOList.stream().map(t -> t.getConIp()).distinct().collect(Collectors.toList());
             for (String ip : conIp) {
@@ -214,15 +224,18 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 fiDataMetaDataTree_Ip.setLabel(ip);
                 fiDataMetaDataTree_Ip.setLabelAlias(ip);
                 fiDataMetaDataTree_Ip.setLevelType(LevelTypeEnum.FOLDER);
+                fiDataMetaDataTree_Ip.setSourceType(SourceTypeEnum.custom.getValue());
                 List<FiDataMetaDataTreeDTO> fiDataMetaDataTree_Ip_DataBases = new ArrayList<>();
-                List<DataSourceConPO> dataSourcs = dataSourceConPOList.stream().filter(t -> t.getConIp().equals(ip)).collect(Collectors.toList());
-                for (DataSourceConPO dataSource : dataSourcs) {
+                List<DataSourceConPO> dataSourceConPOS = dataSourceConPOList.stream().filter(t -> t.getConIp().equals(ip)).collect(Collectors.toList());
+                for (DataSourceConPO dataSource : dataSourceConPOS) {
                     FiDataMetaDataTreeDTO fiDataMetaDataTree_DataBase = new FiDataMetaDataTreeDTO();
                     fiDataMetaDataTree_DataBase.setId(String.valueOf(dataSource.getId()));
                     fiDataMetaDataTree_DataBase.setParentId(uuid_Ip);
                     fiDataMetaDataTree_DataBase.setLabel(dataSource.name);
                     fiDataMetaDataTree_DataBase.setLabelAlias(dataSource.name);
                     fiDataMetaDataTree_DataBase.setLevelType(LevelTypeEnum.DATABASE);
+                    fiDataMetaDataTree_DataBase.setSourceId(Math.toIntExact(dataSource.id));
+                    fiDataMetaDataTree_DataBase.setSourceType(SourceTypeEnum.custom.getValue());
                     fiDataMetaDataTree_DataBase.setChildren(getCustomizeMetaData_Table(dataSource));
                     fiDataMetaDataTree_Ip_DataBases.add(fiDataMetaDataTree_DataBase);
                 }
@@ -426,7 +439,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @param password
      * @return statement
      */
-    public static Connection getStatement(DataSourceTypeEnum dataSourceTypeEnum, String connectionStr, String account, String password) {
+    public static Connection getStatement(DataSourceTypeEnum dataSourceTypeEnum,
+                                          String connectionStr, String account, String password) {
         try {
             AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
             Connection connection = dbHelper.connection(connectionStr, account,
@@ -436,4 +450,74 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR);
         }
     }
+
+
+    /**
+     * @return com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO
+     * @description 设置表的规则数量
+     * @author dick
+     * @date 2022/11/30 13:09
+     * @version v1.0
+     * @params dto
+     */
+    public FiDataMetaDataTreeDTO setTableRuleCount(FiDataMetaDataTreeDTO dto) {
+        FiDataMetaDataTreeDTO treeDTO = new FiDataMetaDataTreeDTO();
+        if (CollectionUtils.isNotEmpty(dto.getChildren())) {
+            for (int i = 0; i < dto.getChildren().size(); i++) {
+                FiDataMetaDataTreeDTO dataTreeDTO = dto.getChildren().get(i);
+                if (dataTreeDTO.getLevelType() != LevelTypeEnum.TABLE) {
+                    setTableRuleCount(dataTreeDTO);
+                } else {
+
+                }
+            }
+        }
+        return treeDTO;
+    }
+
+    /**
+     * @return void
+     * @description 保存自定义数据源的元数据信息到Redis
+     * @author dick
+     * @date 2022/7/21 11:59
+     * @version v1.0
+     * @params datasourceId
+     * @params operationType 操作类型 1、新增 2、修改 3、删除
+     */
+//    public void setMetaDataToRedis(DataSourceConPO dataSourceConPO, int operationType) {
+//        if (StringUtils.isEmpty(metaDataEntityKey)) {
+//            return;
+//        }
+//        String redisKey = metaDataEntityKey + "_" + dataSourceConPO.getId();
+//        if (operationType == 3) {
+//            Boolean exist = redisTemplate.hasKey(redisKey);
+//            if (exist) {
+//                redisTemplate.delete(redisKey);
+//            }
+//        } else if (operationType == 1 || operationType == 2) {
+//            FiDataMetaDataTreeDTO meta = getCustomizeMetaData(dataSourceConPO);
+//            String json = JSONArray.toJSON(meta).toString();
+//            redisTemplate.opsForValue().set(redisKey, json);
+//        }
+//    }
+
+    /**
+     * @return void
+     * @description 保存自定义数据源的元数据信息到Redis.定时任务调用
+     * @author dick
+     * @date 2022/5/11 10:33
+     * @version v1.0
+     */
+//    public void setMetaDataToRedis() {
+//        QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
+//        queryWrapper.lambda()
+//                .eq(DataSourceConPO::getDelFlag, 1)
+//                .eq(DataSourceConPO::getDatasourceType, SourceTypeEnum.custom.getValue());
+//        List<DataSourceConPO> dataSourceConPOs = mapper.selectList(queryWrapper);
+//        if (CollectionUtils.isNotEmpty(dataSourceConPOs)) {
+//            for (DataSourceConPO dataSourceConPO : dataSourceConPOs) {
+//                setMetaDataToRedis(dataSourceConPO, 2);
+//            }
+//        }
+//    }
 }

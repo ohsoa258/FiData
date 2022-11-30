@@ -153,7 +153,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
         dto.userName = getConfig.username;
         dto.password = getConfig.password;
         dto.driver = getConfig.driver;
-        dto.tableName = "tb_notice_rule";
+        dto.tableName = "tb_quality_report";
         dto.filterSql = FilterSqlConstants.DG_REPORT_SQL;
         return getMetadata.getMetadataList(dto);
     }
@@ -458,30 +458,31 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
      * @params stateEnum 状态
      */
     public ResultEnum publishBuild_unifiedControlTask(int id, int state, String cron) {
-        ResultEnum resultEnum = ResultEnum.TASK_NIFI_DISPATCH_ERROR;
-        //调用task服务提供的API生成调度任务
-        if (id == 0) {
-            return ResultEnum.SAVE_VERIFY_ERROR;
-        }
-        long userId = userHelper.getLoginUserInfo().getId();
-        boolean isDelTask = state != RuleStateEnum.Enable.getValue();
-        if (cron == null) {
-            isDelTask = true;
-        }
-        UnifiedControlDTO unifiedControlDTO = new UnifiedControlDTO();
-        unifiedControlDTO.setUserId(userId);
-        unifiedControlDTO.setId(id);
-        unifiedControlDTO.setScheduleType(SchedulingStrategyTypeEnum.CRON);
-        unifiedControlDTO.setScheduleExpression(cron);
-        unifiedControlDTO.setTopic(MqConstants.QueueConstants.BUILD_GOVERNANCE_TEMPLATE_FLOW);
-        unifiedControlDTO.setType(OlapTableEnum.GOVERNANCE);
-        unifiedControlDTO.setDataClassifyEnum(DataClassifyEnum.UNIFIEDCONTROL);
-        unifiedControlDTO.setDeleted(isDelTask);
-        log.info("创建nifi调度任务请求参数：" + JSON.toJSONString(unifiedControlDTO));
-        ResultEntity<Object> result = publishTaskClient.publishBuildunifiedControlTask(unifiedControlDTO);
-        if (result != null) {
-            resultEnum = ResultEnum.getEnum(result.getCode());
-        }
-        return resultEnum;
+        return ResultEnum.SUCCESS;
+//        ResultEnum resultEnum = ResultEnum.TASK_NIFI_DISPATCH_ERROR;
+//        //调用task服务提供的API生成调度任务
+//        if (id == 0) {
+//            return ResultEnum.SAVE_VERIFY_ERROR;
+//        }
+//        long userId = userHelper.getLoginUserInfo().getId();
+//        boolean isDelTask = state != RuleStateEnum.Enable.getValue();
+//        if (cron == null) {
+//            isDelTask = true;
+//        }
+//        UnifiedControlDTO unifiedControlDTO = new UnifiedControlDTO();
+//        unifiedControlDTO.setUserId(userId);
+//        unifiedControlDTO.setId(id);
+//        unifiedControlDTO.setScheduleType(SchedulingStrategyTypeEnum.CRON);
+//        unifiedControlDTO.setScheduleExpression(cron);
+//        unifiedControlDTO.setTopic(MqConstants.QueueConstants.BUILD_GOVERNANCE_TEMPLATE_FLOW);
+//        unifiedControlDTO.setType(OlapTableEnum.GOVERNANCE);
+//        unifiedControlDTO.setDataClassifyEnum(DataClassifyEnum.UNIFIEDCONTROL);
+//        unifiedControlDTO.setDeleted(isDelTask);
+//        log.info("创建nifi调度任务请求参数：" + JSON.toJSONString(unifiedControlDTO));
+//        ResultEntity<Object> result = publishTaskClient.publishBuildunifiedControlTask(unifiedControlDTO);
+//        if (result != null) {
+//            resultEnum = ResultEnum.getEnum(result.getCode());
+//        }
+//        return resultEnum;
     }
 }

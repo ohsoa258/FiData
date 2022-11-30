@@ -60,7 +60,7 @@ public class QualityReportController {
     }
 
     @ApiOperation("质量报告启用/禁用")
-    @PutMapping("/editState")
+    @PutMapping("/editState/{id}")
     public ResultEntity<Object> editState(@PathVariable("id") int id) {
         return ResultEntityBuild.build(service.editState(id));
     }
