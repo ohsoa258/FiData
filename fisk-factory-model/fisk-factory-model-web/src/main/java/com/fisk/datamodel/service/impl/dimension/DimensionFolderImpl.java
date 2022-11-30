@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
+import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimension.DimensionListDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDataDTO;
@@ -32,6 +33,7 @@ import com.fisk.datamodel.mapper.dimension.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.dimension.DimensionFolderMapper;
 import com.fisk.datamodel.mapper.dimension.DimensionMapper;
 import com.fisk.datamodel.service.IDimensionFolder;
+import com.fisk.datamodel.service.impl.CustomScriptImpl;
 import com.fisk.datamodel.service.impl.TableHistoryImpl;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -69,17 +71,19 @@ public class DimensionFolderImpl
     @Resource
     DimensionImpl dimensionImpl;
     @Resource
+    DimensionAttributeImpl dimensionAttribute;
+    @Resource
     SyncModeMapper syncModeMapper;
+    @Resource
+    CustomScriptImpl customScript;
 
     @Override
-    public ResultEnum addDimensionFolder(DimensionFolderDTO dto)
-    {
+    public ResultEnum addDimensionFolder(DimensionFolderDTO dto) {
         //判断共享维度文件夹是否已存在
-        if (dto.share)
-        {
-            QueryWrapper<DimensionFolderPO> folderPoQueryWrapper=new QueryWrapper<>();
+        if (dto.share) {
+            QueryWrapper<DimensionFolderPO> folderPoQueryWrapper = new QueryWrapper<>();
             folderPoQueryWrapper.lambda()
-                    .eq(DimensionFolderPO::getDimensionFolderCnName,dto.dimensionFolderCnName)
+                    .eq(DimensionFolderPO::getDimensionFolderCnName, dto.dimensionFolderCnName)
                     .eq(DimensionFolderPO::getShare,true);
             List<DimensionFolderPO> poList=mapper.selectList(folderPoQueryWrapper);
             if (poList != null && poList.size() > 0) {
@@ -309,6 +313,15 @@ public class DimensionFolderImpl
                 pushDto.queryEndTime = data1.get(SystemVariableTypeEnum.END_TIME.getValue());
                 pushDto.sqlScript = data1.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
                 pushDto.queryStartTime = data1.get(SystemVariableTypeEnum.START_TIME.getValue());
+
+                //获取维度键update语句
+                pushDto.factUpdateSql = dimensionAttribute.buildDimensionUpdateSql(Math.toIntExact(item.id));
+
+                //获取自定义脚本
+                CustomScriptQueryDTO customScriptDto = new CustomScriptQueryDTO();
+                customScriptDto.type = 1;
+                customScriptDto.tableId = Integer.parseInt(String.valueOf(item.id));
+                pushDto.customScript = customScript.getBatchScript(customScriptDto);
 
                 //获取维度表同步方式
                 Optional<SyncModePO> first = syncModePoList.stream().filter(e -> e.syncTableId == item.id).findFirst();

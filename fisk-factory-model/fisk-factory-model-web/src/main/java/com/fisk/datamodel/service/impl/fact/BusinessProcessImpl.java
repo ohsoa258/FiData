@@ -12,6 +12,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.businessprocess.*;
+import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddListDTO;
@@ -43,6 +44,7 @@ import com.fisk.datamodel.mapper.fact.BusinessProcessMapper;
 import com.fisk.datamodel.mapper.fact.FactAttributeMapper;
 import com.fisk.datamodel.mapper.fact.FactMapper;
 import com.fisk.datamodel.service.IBusinessProcess;
+import com.fisk.datamodel.service.impl.CustomScriptImpl;
 import com.fisk.datamodel.service.impl.TableHistoryImpl;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -92,15 +94,15 @@ public class BusinessProcessImpl
     @Resource
     FactImpl factImpl;
     @Resource
+    CustomScriptImpl customScript;
+    @Resource
     SyncModeMapper syncModeMapper;
 
     @Override
-    public IPage<BusinessProcessDTO> getBusinessProcessList(QueryDTO dto)
-    {
-        QueryWrapper<BusinessProcessPO> queryWrapper=new QueryWrapper<>();
-        if (dto.id !=0)
-        {
-            queryWrapper.lambda().eq(BusinessProcessPO::getBusinessId,dto.id);
+    public IPage<BusinessProcessDTO> getBusinessProcessList(QueryDTO dto) {
+        QueryWrapper<BusinessProcessPO> queryWrapper = new QueryWrapper<>();
+        if (dto.id != 0) {
+            queryWrapper.lambda().eq(BusinessProcessPO::getBusinessId, dto.id);
         }
         Page<BusinessProcessPO> data=new Page<>(dto.getPage(),dto.getSize());
         return BusinessProcessMap.INSTANCES.pagePoToDto(mapper.selectPage(data,queryWrapper.select().orderByDesc("create_time")));
@@ -230,7 +232,15 @@ public class BusinessProcessImpl
                 pushDto.sqlScript = data1.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
                 pushDto.queryStartTime = data1.get(SystemVariableTypeEnum.START_TIME.getValue());
 
+                //关联维度键脚本
                 pushDto.factUpdateSql = factAttribute.buildFactUpdateSql(Math.toIntExact(item.id));
+
+                //获取自定义脚本
+                CustomScriptQueryDTO customScriptDto = new CustomScriptQueryDTO();
+                customScriptDto.type = 2;
+                customScriptDto.tableId = Integer.parseInt(String.valueOf(item.id));
+                pushDto.customScript = customScript.getBatchScript(customScriptDto);
+
 
                 //获取事实表同步方式
                 Optional<SyncModePO> first = syncModePoList

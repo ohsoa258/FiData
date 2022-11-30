@@ -29,15 +29,14 @@ import com.fisk.datamodel.service.IDimensionAttribute;
 import com.fisk.datamodel.service.impl.CustomScriptImpl;
 import com.fisk.datamodel.service.impl.SyncModeImpl;
 import com.fisk.datamodel.service.impl.TableBusinessImpl;
+import com.fisk.datamodel.service.impl.fact.FactAttributeImpl;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -55,6 +54,8 @@ public class DimensionAttributeImpl
     FactAttributeMapper factAttributeMapper;
     @Resource
     DimensionFolderImpl dimensionFolder;
+    @Resource
+    FactAttributeImpl factAttribute;
     @Resource
     SyncModeImpl syncMode;
     @Resource
@@ -351,12 +352,35 @@ public class DimensionAttributeImpl
     }
 
     @Override
-    public List<DimensionAttributeUpdateDTO> getDimensionAttributeDataList(int dimensionId)
-    {
-        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,dimensionId);
-        List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
+    public List<DimensionAttributeUpdateDTO> getDimensionAttributeDataList(int dimensionId) {
+        QueryWrapper<DimensionAttributePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId, dimensionId);
+        List<DimensionAttributePO> list = attributeMapper.selectList(queryWrapper);
         return DimensionAttributeMap.INSTANCES.poToDetailDtoList(list);
+    }
+
+    /**
+     * 维度键update语句
+     *
+     * @param dimensionId
+     * @return
+     */
+    public String buildDimensionUpdateSql(int dimensionId) {
+        Map<String, String> configDetailsMap = this.query()
+                .eq("dimension_id", dimensionId)
+                .eq("attribute_type", 1)
+                .select("config_details", "dimension_field_en_name")
+                .list()
+                .stream()
+                .filter(Objects::nonNull)
+                .filter(e -> StringUtils.isNotBlank(e.configDetails))
+                .collect(Collectors.toMap(DimensionAttributePO::getDimensionFieldEnName, DimensionAttributePO::getConfigDetails));
+
+        if (org.springframework.util.CollectionUtils.isEmpty(configDetailsMap)) {
+            return null;
+        }
+
+        return factAttribute.buildUpdateSql(configDetailsMap);
     }
 
 }

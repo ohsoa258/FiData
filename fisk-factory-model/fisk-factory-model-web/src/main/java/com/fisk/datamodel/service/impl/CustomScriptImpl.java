@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -143,11 +144,34 @@ public class CustomScriptImpl
                 .lambda()
                 .eq(CustomScriptPO::getTableId, tableId)
                 .eq(CustomScriptPO::getType, type);
+        List<CustomScriptPO> list = mapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(list)) {
+            return ResultEnum.SUCCESS;
+        }
         boolean flat = this.remove(queryWrapper);
         if (!flat) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 获取批量脚本,分号隔开
+     *
+     * @param dto
+     * @return
+     */
+    public String getBatchScript(CustomScriptQueryDTO dto) {
+        List<CustomScriptInfoDTO> customScriptInfoDTOS = listCustomScript(dto);
+        if (CollectionUtils.isEmpty(customScriptInfoDTOS)) {
+            return null;
+        }
+        List<String> collect = customScriptInfoDTOS.stream()
+                .sorted(Comparator.comparing(CustomScriptInfoDTO::getSequence))
+                .map(e -> e.getScript())
+                .collect(Collectors.toList());
+
+        return String.join(";", collect);
     }
 
 
