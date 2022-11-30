@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.utils.similarity.CosineSimilarity;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterApiResultDTO;
+import com.fisk.datagovernance.dto.dataquality.datasource.TableRuleCountDTO;
+import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
 import com.fisk.datagovernance.service.impl.dataops.DataOpsDataSourceManageImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,6 +17,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMailMessage;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.annotation.Resource;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -125,7 +128,7 @@ public class DataQualityTest {
         dtoList.add(dto2);
         dtoList.add(dto3);
         dtoList.sort(Comparator.comparing(TablePyhNameDTO::getTableName));
-        int i=0;
+        int i = 0;
     }
 
     /**
