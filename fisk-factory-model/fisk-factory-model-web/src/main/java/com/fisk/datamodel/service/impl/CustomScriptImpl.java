@@ -108,6 +108,9 @@ public class CustomScriptImpl
 
     @Override
     public ResultEnum addOrUpdateCustomScript(List<CustomScriptDTO> dtoList) {
+        if (CollectionUtils.isEmpty(dtoList)) {
+            return ResultEnum.SUCCESS;
+        }
         List<CustomScriptPO> poList = CustomScriptMap.INSTANCES.dtoListToPoList(dtoList);
         boolean b = this.saveOrUpdateBatch(poList);
         if (!b) {
