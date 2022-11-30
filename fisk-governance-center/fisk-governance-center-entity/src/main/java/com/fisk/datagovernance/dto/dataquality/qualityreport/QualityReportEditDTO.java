@@ -1,15 +1,16 @@
-package com.fisk.datagovernance.dto.dataquality.notice;
+package com.fisk.datagovernance.dto.dataquality.qualityreport;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 /**
  * @author dick
  * @version 1.0
- * @description 告警通知编辑DTO
+ * @description 质量报告编辑DTO
  * @date 2022/3/24 14:30
  */
-public class NoticeEditDTO extends NoticeDTO {
-
+@Data
+public class QualityReportEditDTO extends QualityReportDTO {
     /**
      * id
      */
