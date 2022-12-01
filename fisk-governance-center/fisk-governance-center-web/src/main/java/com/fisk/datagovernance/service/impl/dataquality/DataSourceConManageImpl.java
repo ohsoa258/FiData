@@ -210,7 +210,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             fiDataMetaDataTreeBase = setTableRuleCount(fiDataMetaDataTreeBase, tableRules);
         }
         // 第四步：递归统计Tree-各个节点规则数量
-        
+
         return fiDataMetaDataTreeBase;
     }
 
@@ -478,7 +478,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @version v1.0
      * @params dto
      */
-    public FiDataMetaDataTreeDTO setTableRuleCount(FiDataMetaDataTreeDTO dto, List<TableRuleCountDTO> tableRules) {
+    public FiDataMetaDataTreeDTO setTableRuleCount(FiDataMetaDataTreeDTO dto,
+                                                   List<TableRuleCountDTO> tableRules) {
         if (CollectionUtils.isNotEmpty(dto.getChildren())) {
             for (int i = 0; i < dto.getChildren().size(); i++) {
                 FiDataMetaDataTreeDTO dataTreeDTO = dto.getChildren().get(i);
@@ -508,6 +509,25 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         }
         return dto;
     }
+
+//    public FiDataMetaDataTreeDTO setTreeCount(FiDataMetaDataTreeDTO dto) {
+//        FiDataMetaDataTreeDTO dataTreeDTO = dto;
+//        if (CollectionUtils.isNotEmpty(dto.getChildren())) {
+//            for (int i = 0; i < dto.getChildren().size(); i++) {
+//                FiDataMetaDataTreeDTO treeDTO = dto.getChildren().get(i);
+//                if (treeDTO.getLevelType() == LevelTypeEnum.TABLE &&
+//                        (treeDTO.getCheckRuleCount() > 0 || treeDTO.getFilterRuleCount() > 0 || treeDTO.getRecoveryRuleCount() > 0)) {
+//
+//                }
+//            }
+//        }
+//    }
+
+//    public  FiDataMetaDataTreeDTO setFolderCount(String id, FiDataMetaDataTreeDTO dto){
+//        if (dto.getId().equals(id)){
+//
+//        }
+//    }
 
     /**
      * @return void

@@ -33,7 +33,7 @@ public class TableRuleCountDTO {
      * 表规则数量
      */
     @ApiModelProperty(value = "表规则数量")
-    public String tableRuleCount;
+    public int tableRuleCount;
 
     /**
      * 表规则类型 校验规则/清洗规则/回收规则

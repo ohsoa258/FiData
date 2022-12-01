@@ -71,13 +71,13 @@ public class FiDataMetaDataTreeDTO {
     public String labelDesc;
 
     @ApiModelProperty(value = "校验规则数量")
-    public String checkRuleCount;
+    public int checkRuleCount;
 
     @ApiModelProperty(value = "清洗规则数据")
-    public String filterRuleCount;
+    public int filterRuleCount;
 
     @ApiModelProperty(value = "回收规则数量")
-    public String recoveryRuleCount;
+    public int recoveryRuleCount;
 
     @ApiModelProperty(value = "子集树，递归")
     public List<FiDataMetaDataTreeDTO> children;
