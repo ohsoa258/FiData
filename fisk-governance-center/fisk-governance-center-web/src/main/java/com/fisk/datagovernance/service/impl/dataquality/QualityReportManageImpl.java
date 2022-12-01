@@ -279,9 +279,9 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
     @Override
     public QualityReportExtVO getReportExt() {
         QualityReportExtVO qualityReportExtVO = new QualityReportExtVO();
-        HashMap<Long, String> cRules = new HashMap<>();
-        HashMap<Long, String> bRules = new HashMap<>();
-        HashMap<Long, String> emails = new HashMap<>();
+        List<QualityReportExtMapVO> cRules = new ArrayList<>();
+        List<QualityReportExtMapVO> bRules = new ArrayList<>();
+        List<QualityReportExtMapVO> emails = new ArrayList<>();
 
         // 第一步：查询报告模板
         List<Integer> moduleType = new ArrayList<>();
@@ -303,7 +303,12 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                     .eq(DataCheckPO::getRuleState, RuleStateEnum.Enable.getValue())
                     .in(DataCheckPO::getTemplateId, templateIdList);
             List<DataCheckPO> dataCheckPOList = dataCheckMapper.selectList(dataCheckPOQueryWrapper);
-            dataCheckPOList.forEach(t -> cRules.put(t.getId(), t.getRuleName()));
+            dataCheckPOList.forEach(t -> {
+                QualityReportExtMapVO cRule = new QualityReportExtMapVO();
+                cRule.setId(t.getId());
+                cRule.setName(t.getRuleName());
+                cRules.add(cRule);
+            });
 
             templateIdList = templatePOS.stream().filter(t -> t.getModuleType() == ModuleTypeEnum.BIZCHECK_MODULE.getValue()).map(TemplatePO::getId).collect(Collectors.toList());
             QueryWrapper<BusinessFilterPO> businessFilterPOQueryWrapper = new QueryWrapper<>();
@@ -311,14 +316,24 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                     .eq(BusinessFilterPO::getRuleState, RuleStateEnum.Enable.getValue())
                     .in(BusinessFilterPO::getTemplateId, templateIdList);
             List<BusinessFilterPO> businessFilterPOS = businessFilterMapper.selectList(businessFilterPOQueryWrapper);
-            businessFilterPOS.forEach(t -> bRules.put(t.getId(), t.getRuleName()));
+            businessFilterPOS.forEach(t -> {
+                QualityReportExtMapVO bRule = new QualityReportExtMapVO();
+                bRule.setId(t.getId());
+                bRule.setName(t.getRuleName());
+                bRules.add(bRule);
+            });
 
         }
 
         // 第三步：查询邮件服务配置
         ResultEntity<List<EmailServerVO>> emailServerList = userClient.getEmailServerList();
         if (emailServerList != null && emailServerList.getCode() == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(emailServerList.getData())) {
-            emailServerList.getData().forEach(t -> emails.put(Long.valueOf(t.getId()), t.getName()));
+            emailServerList.getData().forEach(t -> {
+                QualityReportExtMapVO email = new QualityReportExtMapVO();
+                email.setId(Long.valueOf(t.getId()));
+                email.setName(t.getName());
+                bRules.add(email);
+            });
         }
         qualityReportExtVO.setCRules(cRules);
         qualityReportExtVO.setBRules(bRules);
@@ -458,7 +473,6 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
      * @params stateEnum 状态
      */
     public ResultEnum publishBuild_unifiedControlTask(int id, int state, String cron) {
-        return ResultEnum.SUCCESS;
 //        ResultEnum resultEnum = ResultEnum.TASK_NIFI_DISPATCH_ERROR;
 //        //调用task服务提供的API生成调度任务
 //        if (id == 0) {
@@ -484,5 +498,6 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
 //            resultEnum = ResultEnum.getEnum(result.getCode());
 //        }
 //        return resultEnum;
+        return ResultEnum.SUCCESS;
     }
 }

@@ -25,7 +25,6 @@
         del_flag = 1 AND report_id=#{reportId}
         <if test="keyword != null and keyword != '' ">
             AND report_name LIKE concat('%', #{keyword}, '%')
-            OR email_subject LIKE concat('%', #{keyword}, '%')
             OR send_time LIKE concat('%', #{keyword}, '%')
             OR send_result LIKE concat('%', #{keyword}, '%')
         </if>

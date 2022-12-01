@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
+import com.fisk.common.core.constants.SqlConstants;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
@@ -13,6 +14,8 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
+import com.fisk.common.service.dbBEBuild.governance.BuildGovernanceHelper;
+import com.fisk.common.service.dbBEBuild.governance.IBuildGovernanceSqlCommand;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
@@ -20,6 +23,8 @@ import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
+import com.fisk.common.service.pageFilter.utils.GetMetadata;
+import com.fisk.datagovernance.dto.GetConfigDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
@@ -58,6 +63,10 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Resource
     private RedisUtil redisUtil;
+
+    @Resource
+    private GetConfigDTO getConfig;
+
 
 //    @Value("${dataservice.datasource.metadataentity_key}")
 //    private String metaDataEntityKey;
@@ -168,6 +177,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Override
     public FiDataMetaDataTreeDTO getFiDataConfigMetaData() {
+        // 第一步：获取Tree
         FiDataMetaDataTreeDTO fiDataMetaDataTreeBase = null;
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
@@ -193,6 +203,14 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 }
             }
         }
+        // 第二步：获取表规则
+        List<TableRuleCountDTO> tableRules = baseMapper.getTableRuleList();
+        // 第三步：递归设置Tree-表节点规则数量
+        if (CollectionUtils.isNotEmpty(tableRules)) {
+            fiDataMetaDataTreeBase = setTableRuleCount(fiDataMetaDataTreeBase, tableRules);
+        }
+        // 第四步：递归统计Tree-各个节点规则数量
+
         return fiDataMetaDataTreeBase;
     }
 
@@ -460,20 +478,56 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @version v1.0
      * @params dto
      */
-    public FiDataMetaDataTreeDTO setTableRuleCount(FiDataMetaDataTreeDTO dto) {
-        FiDataMetaDataTreeDTO treeDTO = new FiDataMetaDataTreeDTO();
+    public FiDataMetaDataTreeDTO setTableRuleCount(FiDataMetaDataTreeDTO dto,
+                                                   List<TableRuleCountDTO> tableRules) {
         if (CollectionUtils.isNotEmpty(dto.getChildren())) {
             for (int i = 0; i < dto.getChildren().size(); i++) {
                 FiDataMetaDataTreeDTO dataTreeDTO = dto.getChildren().get(i);
                 if (dataTreeDTO.getLevelType() != LevelTypeEnum.TABLE) {
-                    setTableRuleCount(dataTreeDTO);
+                    setTableRuleCount(dataTreeDTO, tableRules);
                 } else {
-
+                    List<TableRuleCountDTO> ruleList = tableRules.stream().filter(
+                            t -> t.getSourceId() == dataTreeDTO.getSourceId()
+                                    && t.getSourceType() == dataTreeDTO.getSourceType()
+                                    && t.getTableUnique().equals(dataTreeDTO.getId())).collect(Collectors.toList());
+                    if (CollectionUtils.isNotEmpty(ruleList)) {
+                        // 获取校验规则数量
+                        TableRuleCountDTO checkRule = ruleList.stream().filter(t -> t.getTableRuleType().equals("校验规则")).findFirst().orElse(null);
+                        if (checkRule != null)
+                            dataTreeDTO.setCheckRuleCount(checkRule.getTableRuleCount());
+                        // 获取清洗规则数量
+                        TableRuleCountDTO filterRule = ruleList.stream().filter(t -> t.getTableRuleType().equals("清洗规则")).findFirst().orElse(null);
+                        if (filterRule != null)
+                            dataTreeDTO.setFilterRuleCount(filterRule.getTableRuleCount());
+                        // 获取回收规则数量
+                        TableRuleCountDTO recoveryRule = ruleList.stream().filter(t -> t.getTableRuleType().equals("回收规则")).findFirst().orElse(null);
+                        if (recoveryRule != null)
+                            dataTreeDTO.setRecoveryRuleCount(recoveryRule.getTableRuleCount());
+                    }
                 }
             }
         }
-        return treeDTO;
+        return dto;
     }
+
+//    public FiDataMetaDataTreeDTO setTreeCount(FiDataMetaDataTreeDTO dto) {
+//        FiDataMetaDataTreeDTO dataTreeDTO = dto;
+//        if (CollectionUtils.isNotEmpty(dto.getChildren())) {
+//            for (int i = 0; i < dto.getChildren().size(); i++) {
+//                FiDataMetaDataTreeDTO treeDTO = dto.getChildren().get(i);
+//                if (treeDTO.getLevelType() == LevelTypeEnum.TABLE &&
+//                        (treeDTO.getCheckRuleCount() > 0 || treeDTO.getFilterRuleCount() > 0 || treeDTO.getRecoveryRuleCount() > 0)) {
+//
+//                }
+//            }
+//        }
+//    }
+
+//    public  FiDataMetaDataTreeDTO setFolderCount(String id, FiDataMetaDataTreeDTO dto){
+//        if (dto.getId().equals(id)){
+//
+//        }
+//    }
 
     /**
      * @return void

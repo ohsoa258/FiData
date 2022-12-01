@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * @author dick
@@ -17,17 +18,17 @@ public class QualityReportExtVO {
      * 质量校验规则
      */
     @ApiModelProperty(value = "质量校验规则")
-    public HashMap<Long,String> cRules;
+    public List<QualityReportExtMapVO> cRules;
 
     /**
      * 数据清洗规则
      */
     @ApiModelProperty(value = "数据清洗规则")
-    public HashMap<Long,String> bRules;
+    public List<QualityReportExtMapVO> bRules;
 
     /**
      * 邮件列表
      */
     @ApiModelProperty(value = "邮件列表")
-    public HashMap<Long,String> emails;
+    public List<QualityReportExtMapVO> emails;
 }
