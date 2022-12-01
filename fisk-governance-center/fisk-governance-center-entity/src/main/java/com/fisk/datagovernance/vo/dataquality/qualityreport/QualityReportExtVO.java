@@ -18,13 +18,13 @@ public class QualityReportExtVO {
      * 质量校验规则
      */
     @ApiModelProperty(value = "质量校验规则")
-    public List<QualityReportExtMapVO> cRules;
+    public List<QualityReportExtMapVO> rules_c;
 
     /**
      * 数据清洗规则
      */
     @ApiModelProperty(value = "数据清洗规则")
-    public List<QualityReportExtMapVO> bRules;
+    public List<QualityReportExtMapVO> rules_b;
 
     /**
      * 邮件列表
