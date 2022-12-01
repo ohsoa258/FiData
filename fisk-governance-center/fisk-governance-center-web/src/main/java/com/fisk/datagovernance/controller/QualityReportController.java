@@ -11,6 +11,7 @@ import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportLogQue
 import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportQueryDTO;
 import com.fisk.datagovernance.service.dataquality.IQualityReportManageService;
 import com.fisk.datagovernance.vo.dataquality.qualityreport.PreviewQualityReportVO;
+import com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportExtVO;
 import com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportLogVO;
 import com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportVO;
 import io.swagger.annotations.Api;
@@ -79,7 +80,7 @@ public class QualityReportController {
 
     @ApiOperation("报告相关数据")
     @GetMapping("/getReportExt")
-    public ResultEntity<Object> getReportExt() {
+    public ResultEntity<QualityReportExtVO> getReportExt() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getReportExt());
     }
 

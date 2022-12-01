@@ -332,11 +332,11 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                 QualityReportExtMapVO email = new QualityReportExtMapVO();
                 email.setId(Long.valueOf(t.getId()));
                 email.setName(t.getName());
-                bRules.add(email);
+                emails.add(email);
             });
         }
-        qualityReportExtVO.setCRules(cRules);
-        qualityReportExtVO.setBRules(bRules);
+        qualityReportExtVO.setRules_c(cRules);
+        qualityReportExtVO.setRules_b(bRules);
         qualityReportExtVO.setEmails(emails);
         return qualityReportExtVO;
     }
