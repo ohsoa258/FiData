@@ -35,4 +35,9 @@ public class CustomScriptDTO {
      */
     public String script;
 
+    /**
+     * 执行类型:1stg 2 ods
+     */
+    public Integer execType;
+
 }
