@@ -32,7 +32,11 @@ public enum serverModuleTypeEnum implements BaseEnum {
     /**
      * 平台数据源
      */
-    PLATFORM_DATASOURCE("平台数据源", 5);
+    PLATFORM_DATASOURCE("平台数据源", 5),
+    /**
+     * 数据治理_质量报告
+     */
+    DATA_GOVERNANCE_QUALITY_REPORT("质量报告", 6);
 
     private final String name;
     @EnumValue

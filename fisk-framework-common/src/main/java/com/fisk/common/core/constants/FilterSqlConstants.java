@@ -53,6 +53,6 @@ public class FilterSqlConstants {
     /**
      * 数据质量--质量报告
      */
-    public static final String DG_REPORT_SQL = " where Field in('report_name','report_type_name','report_principal')";
+    public static final String DATA_GOVERNANCE_QUALITY_REPORT_SQL = " where Field in('report_name','report_type_name','report_principal')";
 
 }
