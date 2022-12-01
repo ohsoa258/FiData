@@ -323,10 +323,10 @@ public class DimensionFolderImpl
                 customScriptDto.type = 1;
                 customScriptDto.tableId = Integer.parseInt(String.valueOf(item.id));
                 customScriptDto.execType = 1;
-                pushDto.stgCustomScript = customScript.getBatchScript(customScriptDto);
+                pushDto.customScript = customScript.getBatchScript(customScriptDto);
 
                 customScriptDto.execType = 2;
-                pushDto.odsCustomScript = customScript.getBatchScript(customScriptDto);
+                pushDto.factUpdateSql += customScript.getBatchScript(customScriptDto);
 
                 //获取维度表同步方式
                 Optional<SyncModePO> first = syncModePoList.stream().filter(e -> e.syncTableId == item.id).findFirst();

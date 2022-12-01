@@ -240,10 +240,10 @@ public class BusinessProcessImpl
                 customScriptDto.type = 2;
                 customScriptDto.tableId = Integer.parseInt(String.valueOf(item.id));
                 customScriptDto.execType = 1;
-                pushDto.stgCustomScript = customScript.getBatchScript(customScriptDto);
+                pushDto.customScript = customScript.getBatchScript(customScriptDto);
 
                 customScriptDto.execType = 2;
-                pushDto.odsCustomScript = customScript.getBatchScript(customScriptDto);
+                pushDto.factUpdateSql += customScript.getBatchScript(customScriptDto);
 
                 //获取事实表同步方式
                 Optional<SyncModePO> first = syncModePoList
