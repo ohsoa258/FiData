@@ -43,6 +43,7 @@ import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
@@ -677,8 +678,15 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> imp
         table.name = dimension.dimensionTabName;
         table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dataModelType + "_" + dimension.id;
         table.comment = String.valueOf(dimension.businessId);
-        table.owner = dimension.createUser;
         table.displayName = dimension.dimensionCnName;
+        //所属人
+        List<Long> ids = new ArrayList<>();
+        ids.add(Long.parseLong(dimension.createUser));
+        ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(ids);
+        if (userListByIds.code == ResultEnum.SUCCESS.getCode()) {
+            table.owner = userListByIds.data.get(0).getUsername();
+        }
+
         //字段
         List<MetaDataColumnAttributeDTO> columnList = new ArrayList<>();
         DimensionAttributeListDTO dimensionAttributeList = dimensionAttributeImpl.getDimensionAttributeList((int) dimension.id);
