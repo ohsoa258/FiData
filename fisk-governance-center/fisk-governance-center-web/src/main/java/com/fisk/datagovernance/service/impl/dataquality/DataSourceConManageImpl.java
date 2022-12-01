@@ -26,6 +26,7 @@ import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.datagovernance.dto.GetConfigDTO;
+import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterApiResultDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
@@ -205,11 +206,11 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             }
         }
         // 第二步：获取表规则
-        List<TableRuleCountDTO> tableRules = baseMapper.getFiDataTableRuleList();
+       // List<TableRuleCountDTO> tableRules = baseMapper.getFiDataTableRuleList();
         // 第三步：递归设置Tree-节点规则数量
-        if (CollectionUtils.isNotEmpty(tableRules)) {
-            fiDataMetaDataTreeBase = setFiDataRuleTreeCount(fiDataMetaDataTreeBase, tableRules);
-        }
+//        if (CollectionUtils.isNotEmpty(tableRules)) {
+//            fiDataMetaDataTreeBase = setFiDataRuleTreeCount(fiDataMetaDataTreeBase, tableRules);
+//        }
         return fiDataMetaDataTreeBase;
     }
 
@@ -474,12 +475,11 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         dataBaseIdList.add(String.valueOf(SourceBusinessTypeEnum.OLAP.getValue()));
         // 单个库处理，减少递归次数
         int ruleCount = 0, filterCount = 0, recoveryCount = 0;
+        // tree规则集合
+        List<TreeRuleCountDTO> treeRules = new ArrayList<>();
         for (FiDataMetaDataTreeDTO dataTree : dto.getChildren()) {
-            FiDataMetaDataTreeDTO dataBaseTree = setFiDataTableRuleCount(dataTree, tableRules, dataBaseIdList);
-            ruleCount += dataBaseTree.getCheckRuleCount();
-            filterCount += dataBaseTree.getFilterRuleCount();
-            recoveryCount += dataBaseTree.getRecoveryRuleCount();
-            dataBaseTrees.add(dataBaseTree);
+            List<TreeRuleCountDTO> dataBaseTreeRules = setFiDataTableRuleCount(dataTree, dataTree, tableRules, treeRules, dataBaseIdList);
+
         }
         // 计算根节点下规则总数
         result.setCheckRuleCount(ruleCount);
@@ -499,12 +499,14 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @params tableRules 表规则数量
      * @params dataBaseIdList 数据库ID集合
      */
-    public FiDataMetaDataTreeDTO setFiDataTableRuleCount(FiDataMetaDataTreeDTO dto, List<TableRuleCountDTO> tableRules, List<String> dataBaseIdList) {
+    public List<TreeRuleCountDTO> setFiDataTableRuleCount(FiDataMetaDataTreeDTO dto, FiDataMetaDataTreeDTO oldDto,
+                                                          List<TableRuleCountDTO> tableRules, List<TreeRuleCountDTO> treeRules,
+                                                          List<String> dataBaseIdList) {
         if (CollectionUtils.isNotEmpty(dto.getChildren())) {
             for (int i = 0; i < dto.getChildren().size(); i++) {
                 FiDataMetaDataTreeDTO dataTreeDTO = dto.getChildren().get(i);
                 if (dataTreeDTO.getLevelType() != LevelTypeEnum.TABLE) {
-                    setFiDataTableRuleCount(dataTreeDTO, tableRules, dataBaseIdList);
+                    setFiDataTableRuleCount(dataTreeDTO, oldDto, tableRules, treeRules, dataBaseIdList);
                 } else {
                     List<TableRuleCountDTO> ruleList = tableRules.stream().filter(t -> t.getSourceId() == dataTreeDTO.getSourceId() && t.getTableUnique().equals(dataTreeDTO.getId())).collect(Collectors.toList());
                     if (CollectionUtils.isNotEmpty(ruleList)) {
@@ -521,14 +523,14 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                         if (recoveryRule != null)
                             dataTreeDTO.setRecoveryRuleCount(recoveryRule.getTableRuleCount());
                         if (dataTreeDTO.getCheckRuleCount() > 0 || dataTreeDTO.getFilterRuleCount() > 0 || dataTreeDTO.getRecoveryRuleCount() > 0) {
-                            dto = setFiDataFolderRuleCount(dataTreeDTO.getParentId(), dataTreeDTO.getCheckRuleCount(),
-                                    dataTreeDTO.getFilterRuleCount(), dataTreeDTO.getRecoveryRuleCount(), dto, dataBaseIdList);
+                            treeRules = setFiDataFolderRuleCount(dataTreeDTO.getParentId(), dataTreeDTO.getCheckRuleCount(),
+                                    dataTreeDTO.getFilterRuleCount(), dataTreeDTO.getRecoveryRuleCount(), oldDto, oldDto, treeRules, dataBaseIdList);
                         }
                     }
                 }
             }
         }
-        return dto;
+        return treeRules;
     }
 
     /**
@@ -544,26 +546,43 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @params dto Tree
      * @params dataBaseIdList 数据库ID集合
      */
-    public FiDataMetaDataTreeDTO setFiDataFolderRuleCount(String id, int ruleCount, int filterCount, int recoveryCount, FiDataMetaDataTreeDTO dto, List<String> dataBaseIdList) {
-        // 递归到了库，设置库下面的规则数量并结束递归
+    public List<TreeRuleCountDTO> setFiDataFolderRuleCount(String id, int ruleCount, int filterCount, int recoveryCount,
+                                                           FiDataMetaDataTreeDTO dto, FiDataMetaDataTreeDTO oldDto,
+                                                           List<TreeRuleCountDTO> treeRuleList, List<String> dataBaseIdList) {
+        TreeRuleCountDTO treeRule = new TreeRuleCountDTO();
+
+        // 递归到了库，保存库的规则数量并结束递归
         if (dataBaseIdList.contains(id) && dto.getLevelType() == LevelTypeEnum.DATABASE) {
-            dto.setCheckRuleCount(dto.getCheckRuleCount() + ruleCount);
-            dto.setFilterRuleCount(dto.getFilterRuleCount() + filterCount);
-            dto.setRecoveryRuleCount(dto.getRecoveryRuleCount() + recoveryCount);
-            return dto;
+            treeRule.setId(id);
+            treeRule.setLevelTypeEnum(LevelTypeEnum.DATABASE);
+            treeRule.setCheckRuleCount(dto.getCheckRuleCount() + ruleCount);
+            treeRule.setFilterRuleCount(dto.getFilterRuleCount() + filterCount);
+            treeRule.setRecoveryRuleCount(dto.getRecoveryRuleCount() + recoveryCount);
+            treeRuleList.add(treeRule);
+            return treeRuleList;
         }
         // 递归设置每个节点的父节点的规则数量
-        for (int i = 0; i < dto.getChildren().size(); i++) {
-            FiDataMetaDataTreeDTO treeDTO = dto.getChildren().get(i);
-            if (treeDTO.getId().equals(id)) {
-                treeDTO.setCheckRuleCount(treeDTO.getCheckRuleCount() + ruleCount);
-                treeDTO.setFilterRuleCount(treeDTO.getFilterRuleCount() + filterCount);
-                treeDTO.setRecoveryRuleCount(treeDTO.getRecoveryRuleCount() + recoveryCount);
+        if (CollectionUtils.isNotEmpty(dto.getChildren())) {
+            for (int i = 0; i < dto.getChildren().size(); i++) {
+                FiDataMetaDataTreeDTO treeDTO = dto.getChildren().get(i);
+                String id_temp = id;
+                if (treeDTO.getId().equals(id)) {
+                    // 保存规则数量
+                    treeRule.setId(id);
+                    treeRule.setLevelTypeEnum(dto.getLevelType());
+                    treeRule.setCheckRuleCount(ruleCount);
+                    treeRule.setFilterRuleCount(filterCount);
+                    treeRule.setRecoveryRuleCount(recoveryCount);
+                    treeRuleList.add(treeRule);
+                    id_temp = dto.getParentId();
+                    treeDTO = oldDto;
+                }
+                if (CollectionUtils.isNotEmpty(treeDTO.getChildren())) {
+                    setFiDataFolderRuleCount(id_temp, ruleCount, filterCount, recoveryCount, treeDTO, oldDto, treeRuleList, dataBaseIdList);
+                }
             }
-            setFiDataFolderRuleCount(treeDTO.getParentId(), treeDTO.getCheckRuleCount(),
-                    treeDTO.getFilterRuleCount(), treeDTO.getRecoveryRuleCount(), dto, dataBaseIdList);
         }
-        return dto;
+        return treeRuleList;
     }
 
     /**

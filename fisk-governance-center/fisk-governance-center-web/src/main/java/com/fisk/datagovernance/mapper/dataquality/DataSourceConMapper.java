@@ -34,7 +34,6 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
      */
     @Select("SELECT\n" +
             "\tsource.datasource_id AS sourceId,\n" +
-            "\t1 AS 'sourceType',\n" +
             "\ttable_unique AS tableUnique,\n" +
             "\tCOUNT(*) AS tableRuleCount,\n" +
             "\t'校验规则' AS 'tableRuleType' \n" +
