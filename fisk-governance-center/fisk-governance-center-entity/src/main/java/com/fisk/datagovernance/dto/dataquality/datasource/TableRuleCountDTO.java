@@ -18,12 +18,6 @@ public class TableRuleCountDTO {
     public int sourceId;
 
     /**
-     * 数据源类型 FiData/Customize
-     */
-    @ApiModelProperty(value = "数据源类型 1 FiData/2 Customize")
-    public int sourceType;
-
-    /**
      * 表标识
      */
     @ApiModelProperty(value = "表标识")

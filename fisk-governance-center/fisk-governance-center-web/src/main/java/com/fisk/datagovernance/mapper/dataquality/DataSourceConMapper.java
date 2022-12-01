@@ -48,7 +48,6 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
             "\ttableUnique UNION ALL\n" +
             "SELECT\n" +
             "\tsource.datasource_id AS sourceId,\n" +
-            "\t1 AS 'sourceType',\n" +
             "\ttable_unique AS tableUnique,\n" +
             "\tCOUNT(*) AS tableRuleCount,\n" +
             "\t'清洗规则' AS 'tableRuleType' \n" +
@@ -62,7 +61,6 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
             "\ttableUnique UNION ALL\n" +
             "SELECT\n" +
             "\tsource.datasource_id AS sourceId,\n" +
-            "\t1 AS 'sourceType',\n" +
             "\ttable_unique AS tableUnique,\n" +
             "\tCOUNT(*) AS tableRuleCount,\n" +
             "\t'回收规则' AS 'tableRuleType' \n" +
@@ -73,10 +71,16 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
             "\tsource.datasource_type = 1 \n" +
             "GROUP BY\n" +
             "\tsourceId,\n" +
-            "\ttableUnique UNION ALL\n" +
-            "SELECT\n" +
+            "\ttableUnique")
+    List<TableRuleCountDTO> getFiDataTableRuleList();
+
+    /**
+     * 查询数据质量规则
+     *
+     * @return 查询结果
+     */
+    @Select("SELECT\n" +
             "\tsource.id AS sourceId,\n" +
-            "\t2 AS 'sourceType',\n" +
             "\ttable_unique AS tableUnique,\n" +
             "\tCOUNT(*) AS tableRuleCount,\n" +
             "\t'校验规则' AS 'tableRuleType' \n" +
@@ -90,7 +94,6 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
             "\ttableUnique UNION ALL\n" +
             "SELECT\n" +
             "\tsource.id AS sourceId,\n" +
-            "\t2 AS 'sourceType',\n" +
             "\ttable_unique AS tableUnique,\n" +
             "\tCOUNT(*) AS tableRuleCount,\n" +
             "\t'清洗规则' AS 'tableRuleType' \n" +
@@ -104,7 +107,6 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
             "\ttableUnique UNION ALL\n" +
             "SELECT\n" +
             "\tsource.id AS sourceId,\n" +
-            "\t2 AS 'sourceType',\n" +
             "\ttable_unique AS tableUnique,\n" +
             "\tCOUNT(*) AS tableRuleCount,\n" +
             "\t'回收规则' AS 'tableRuleType' \n" +
@@ -116,5 +118,5 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
             "GROUP BY\n" +
             "\tsourceId,\n" +
             "\ttableUnique")
-    List<TableRuleCountDTO> getTableRuleList();
+    List<TableRuleCountDTO> getCustomizeTableRuleList();
 }
