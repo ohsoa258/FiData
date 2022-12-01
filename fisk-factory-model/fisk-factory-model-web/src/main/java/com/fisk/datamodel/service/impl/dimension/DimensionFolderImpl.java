@@ -284,18 +284,19 @@ public class DimensionFolderImpl
                 }
             }
             //获取维度字段数据
-            QueryWrapper<DimensionAttributePO> attributePoQueryWrapper=new QueryWrapper<>();
             //获取维度id集合
-            List<Integer> dimensionIds=(List) dimensionMapper.selectObjs(queryWrapper.select("id"));
-            List<DimensionAttributePO> dimensionAttributePoList=dimensionAttributeMapper
-                    .selectList(attributePoQueryWrapper.in("dimension_id",dimensionIds));
+            List<Integer> dimensionIds = (List) dimensionMapper.selectObjs(queryWrapper.select("id"));
+            QueryWrapper<DimensionAttributePO> attributePoQueryWrapper = new QueryWrapper<>();
+            attributePoQueryWrapper.in("dimension_id", dimensionIds);
+            List<DimensionAttributePO> dimensionAttributePoList = dimensionAttributeMapper
+                    .selectList(attributePoQueryWrapper);
             //遍历取值
-            ModelPublishDataDTO data=new ModelPublishDataDTO();
-            data.businessAreaId=businessAreaPo.getId();
-            data.businessAreaName=businessAreaPo.getBusinessName();
-            data.userId=userHelper.getLoginUserInfo().id;
-            data.openTransmission=dto.openTransmission;
-            List<ModelPublishTableDTO> dimensionList=new ArrayList<>();
+            ModelPublishDataDTO data = new ModelPublishDataDTO();
+            data.businessAreaId = businessAreaPo.getId();
+            data.businessAreaName = businessAreaPo.getBusinessName();
+            data.userId = userHelper.getLoginUserInfo().id;
+            data.openTransmission = dto.openTransmission;
+            List<ModelPublishTableDTO> dimensionList = new ArrayList<>();
             //获取表增量配置信息
             QueryWrapper<SyncModePO> syncModePoQueryWrapper=new QueryWrapper<>();
             syncModePoQueryWrapper.lambda().eq(SyncModePO::getTableType, TableHistoryTypeEnum.TABLE_DIMENSION.getValue());

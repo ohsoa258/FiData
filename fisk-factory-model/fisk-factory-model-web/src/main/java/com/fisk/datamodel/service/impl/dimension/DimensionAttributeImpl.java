@@ -95,7 +95,7 @@ public class DimensionAttributeImpl
 
         //删除维度字段属性
         List<Integer> ids = (List) dto.list.stream().filter(e -> e.id != 0).map(DimensionAttributeDTO::getId).collect(Collectors.toList());
-        if (ids != null && ids.size() > 0) {
+        if (!CollectionUtils.isEmpty(ids)) {
             QueryWrapper<DimensionAttributePO> queryWrapper = new QueryWrapper<>();
             queryWrapper.notIn("id", ids).lambda().eq(DimensionAttributePO::getDimensionId, dto.dimensionId);
             List<DimensionAttributePO> list = attributeMapper.selectList(queryWrapper);
@@ -358,6 +358,7 @@ public class DimensionAttributeImpl
         List<DimensionAttributePO> list = attributeMapper.selectList(queryWrapper);
         return DimensionAttributeMap.INSTANCES.poToDetailDtoList(list);
     }
+
 
     /**
      * 维度键update语句

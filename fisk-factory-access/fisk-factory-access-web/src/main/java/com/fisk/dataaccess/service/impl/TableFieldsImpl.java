@@ -54,6 +54,7 @@ import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
@@ -590,6 +591,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         if (tableAccess == null) {
             return;
         }
+        List<Long> userIds = new ArrayList<>();
         if (flag == tableType) {
             // 表
             List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
@@ -599,10 +601,17 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     app.appAbbreviation,
                     app.whetherSchema));
             table.setContact_info(app.getAppPrincipal());
-            table.setOwner(tableAccess.createUser);
             table.setDescription(tableAccess.getTableDes());
             table.setComment(String.valueOf(app.getId()));
             table.setDisplayName(tableAccess.displayName);
+
+            //所属人
+            userIds.add(Long.parseLong(tableAccess.createUser));
+            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
+            if (userListByIds.code == ResultEnum.SUCCESS.getCode()) {
+                table.setOwner(userListByIds.data.get(0).getUsername());
+            }
+
 
             // 字段
             List<MetaDataColumnAttributeDTO> columnList = this.query().eq("table_access_id", tableAccess.id).list()
@@ -617,6 +626,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         field.setComment(e.getDisplayName());
                         field.setDataType(e.fieldType);
                         field.setDisplayName(e.displayName);
+                        field.setOwner(table.owner);
                         return field;
                     }).collect(Collectors.toList());
 
@@ -639,7 +649,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         table.setContact_info(app.getAppPrincipal());
                         table.setDescription(tb.getTableDes());
                         table.setComment(String.valueOf(app.getId()));
-
+                        table.setOwner(String.valueOf(tb.id));
+                        userIds.add(tb.id);
                         // 字段
                         List<MetaDataColumnAttributeDTO> columnList = this.query()
                                 .eq("table_access_id", tb.id)
@@ -661,6 +672,16 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         table.setColumnList(columnList);
                         return table;
                     }).collect(Collectors.toList());
+            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
+            if (userListByIds.code == ResultEnum.SUCCESS.getCode()) {
+                tableList.stream().forEach(e -> {
+                    Optional<UserDTO> first = userListByIds.data.stream().filter(p -> p.id == Long.parseLong(e.owner)).findFirst();
+                    if (first.isPresent()) {
+                        e.setOwner(first.get().getUsername());
+                        e.columnList.stream().map(p -> p.owner = e.owner).collect(Collectors.toList());
+                    }
+                });
+            }
             db.setTableList(tableList);
             dbList.add(db);
             instance.setDbList(dbList);
