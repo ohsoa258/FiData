@@ -335,7 +335,7 @@ public interface DataModelClient {
      * @return
      */
     @ApiOperation("根据表名获取接入表信息")
-    @PostMapping("/DataOps/getTableColumnDisplay")
-    ResultEntity<List<String[]>> getTableColumnDisplay(@Validated @RequestBody String tableName);
+    @GetMapping("/DataOps/getTableColumnDisplay")
+    ResultEntity<List<String[]>> getTableColumnDisplay(@RequestParam("tableName") String tableName);
 
 }

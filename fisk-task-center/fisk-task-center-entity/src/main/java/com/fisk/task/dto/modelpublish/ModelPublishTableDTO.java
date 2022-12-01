@@ -51,7 +51,11 @@ public class ModelPublishTableDTO {
      */
     public int fetchSize;
     /**
-     * 自定义脚本
+     * stg自定义脚本
      */
-    public String customScript;
+    public String stgCustomScript;
+    /**
+     * ods自定义脚本
+     */
+    public String odsCustomScript;
 }

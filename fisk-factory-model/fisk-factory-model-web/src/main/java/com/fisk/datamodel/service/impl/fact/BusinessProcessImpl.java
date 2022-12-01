@@ -239,8 +239,11 @@ public class BusinessProcessImpl
                 CustomScriptQueryDTO customScriptDto = new CustomScriptQueryDTO();
                 customScriptDto.type = 2;
                 customScriptDto.tableId = Integer.parseInt(String.valueOf(item.id));
-                pushDto.customScript = customScript.getBatchScript(customScriptDto);
+                customScriptDto.execType = 1;
+                pushDto.stgCustomScript = customScript.getBatchScript(customScriptDto);
 
+                customScriptDto.execType = 2;
+                pushDto.odsCustomScript = customScript.getBatchScript(customScriptDto);
 
                 //获取事实表同步方式
                 Optional<SyncModePO> first = syncModePoList

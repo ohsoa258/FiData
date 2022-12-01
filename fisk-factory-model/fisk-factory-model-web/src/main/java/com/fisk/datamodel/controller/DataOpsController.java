@@ -9,10 +9,7 @@ import com.fisk.datamodel.service.IDataOps;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -35,8 +32,8 @@ public class DataOpsController {
     }
 
     @ApiOperation("根据表名获取接入表信息")
-    @PostMapping("/getTableColumnDisplay")
-    public ResultEntity<List<String[]>> getTableColumnDisplay(@Validated @RequestBody String tableName) {
+    @GetMapping("/getTableColumnDisplay")
+    public ResultEntity<List<String[]>> getTableColumnDisplay(@RequestParam("tableName") String tableName) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableColumnDisplay(tableName));
     }
 
