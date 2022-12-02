@@ -293,7 +293,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
         QueryWrapper<TemplatePO> templatePOQueryWrapper = new QueryWrapper<>();
         templatePOQueryWrapper.lambda().eq(TemplatePO::getDelFlag, 1)
                 .in(TemplatePO::getModuleType, moduleType)
-                .eq(TemplatePO::getTemplateScene, templateScene);
+                .in(TemplatePO::getTemplateScene, templateScene);
         List<TemplatePO> templatePOS = templateMapper.selectList(templatePOQueryWrapper);
         if (CollectionUtils.isNotEmpty(templatePOS)) {
             // 第二步：查询报告模板生成的报告规则
