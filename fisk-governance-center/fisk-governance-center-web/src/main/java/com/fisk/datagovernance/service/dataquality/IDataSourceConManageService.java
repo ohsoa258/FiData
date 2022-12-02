@@ -65,12 +65,12 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      *
      * @return 查询结果
      */
-    FiDataMetaDataTreeDTO getFiDataConfigMetaData();
+    FiDataMetaDataTreeDTO getFiDataConfigMetaData(boolean isComputeRuleCount);
 
     /**
      * 获取自定义数据源元数据
      *
      * @return 查询结果
      */
-    FiDataMetaDataTreeDTO getCustomizeMetaData();
+    FiDataMetaDataTreeDTO getCustomizeMetaData(boolean isComputeRuleCount);
 }

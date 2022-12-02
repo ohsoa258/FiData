@@ -16,9 +16,9 @@ import java.util.List;
 @Data
 public class DataCheckVO {
     /**
-     * id
+     * 主键id
      */
-    @ApiModelProperty(value = "id")
+    @ApiModelProperty(value = "主键id")
     public int id;
 
     /**
@@ -28,10 +28,16 @@ public class DataCheckVO {
     public int templateId;
 
     /**
-     * 数据源表主键id
+     * 数据质量数据源表主键ID
      */
-    @ApiModelProperty(value = "数据源表主键id")
+    @ApiModelProperty(value = "数据质量数据源表主键ID")
     public int datasourceId;
+
+    /**
+     * FiData系统数据源表主键ID
+     */
+    @ApiModelProperty(value = "FiData系统数据源表主键ID")
+    public int fiDataSourceId;
 
     /**
      * 数据源类型

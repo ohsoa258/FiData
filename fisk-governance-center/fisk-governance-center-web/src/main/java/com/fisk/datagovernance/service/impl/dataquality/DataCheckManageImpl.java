@@ -4,9 +4,9 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
+import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -20,6 +20,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
+import com.fisk.datagovernance.dto.dataquality.datasource.QueryTableRuleDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
@@ -79,52 +80,95 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     private UserHelper userHelper;
 
     @Override
-    public Page<DataCheckVO> getAll(DataCheckQueryDTO query) {
-        int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(query.sourceTypeEnum, query.datasourceId);
-        if (query.sourceTypeEnum == SourceTypeEnum.FiData) {
-            query.datasourceId = idByDataSourceId;
+    public List<DataCheckVO> getAllRule(DataCheckQueryDTO query) {
+        // 第一步：参数验证
+        List<DataCheckVO> filterRule = new ArrayList<>();
+        if (query == null) {
+            return filterRule;
         }
-        Page<DataCheckVO> all = baseMapper.getAll(query.page, query.datasourceId, query.tableUnique, query.tableBusinessType, query.keyword);
-        if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
-            List<DataCheckVO> allExtends = getAllExtends(query, all.getRecords());
-            all.setRecords(allExtends);
+        // 第二步：查询某个节点下的表信息，没选择节点默认查询所有规则
+        List<QueryTableRuleDTO> queryTableParams = new ArrayList<>();
+        if (query.getLevelType() == LevelTypeEnum.TABLE || query.getLevelType() == LevelTypeEnum.VIEW) {
+            QueryTableRuleDTO queryTableParam = new QueryTableRuleDTO();
+            queryTableParam.setId(query.getUniqueId());
+            queryTableParam.setTableType(query.getLevelType());
+            queryTableParam.setTableBusinessType(query.getTableBusinessType());
+            queryTableParam.setSourceId(query.getDatasourceId());
+            queryTableParam.setSourceType(query.getSourceTypeEnum());
+            queryTableParams.add(queryTableParam);
+        } else if (query.getLevelType() == LevelTypeEnum.BASEFOLDER || query.getLevelType() == LevelTypeEnum.DATABASE || query.getLevelType() == LevelTypeEnum.FOLDER) {
+            List<QueryTableRuleDTO> treeTableNodes = dataSourceConManageImpl.getTreeTableNode_main(query.sourceTypeEnum, query.getUniqueId());
+            if (CollectionUtils.isNotEmpty(treeTableNodes)) {
+                queryTableParams.addAll(treeTableNodes);
+            }
         }
-        return all;
-    }
-
-    private List<DataCheckVO> getAllExtends(DataCheckQueryDTO query, List<DataCheckVO> source) {
-        List<DataCheckVO> result = source;
-        List<Integer> ruleIds = source.stream().map(DataCheckVO::getId).collect(Collectors.toList());
-        // 数据校验规则扩展属性
-        QueryWrapper<DataCheckExtendPO> dataCheckExtendPOQueryWrapper = new QueryWrapper<>();
-        dataCheckExtendPOQueryWrapper.lambda().eq(DataCheckExtendPO::getDelFlag, 1)
-                .in(DataCheckExtendPO::getRuleId, ruleIds);
-        List<DataCheckExtendPO> dataCheckExtends = dataCheckExtendMapper.selectList(dataCheckExtendPOQueryWrapper);
-        if (CollectionUtils.isNotEmpty(dataCheckExtends)) {
-            source.forEach(e -> {
-                e.setTableName(query.getTableField().getLabel());
-                e.setTableAlias(query.getTableField().getLabelAlias());
-                List<DataCheckExtendPO> dataCheckExtendFilters = dataCheckExtends.stream().filter(item -> item.getRuleId() == e.getId()).collect(Collectors.toList());
-                if (CollectionUtils.isNotEmpty(dataCheckExtendFilters)) {
-                    e.setDataCheckExtends(DataCheckExtendMap.INSTANCES.poToVo(dataCheckExtendFilters));
-                    e.getDataCheckExtends().stream().forEach(t -> {
-                        if (e.getSourceTypeEnum() == SourceTypeEnum.FiData) {
-                            if (CollectionUtils.isNotEmpty(query.getTableField().getFields())) {
-                                DataTableFieldDTO dataTableFieldDTO = query.getTableField().getFields().stream().filter(f -> f.id.equals(t.fieldUnique)).findFirst().orElse(null);
-                                if (dataTableFieldDTO != null) {
-                                    t.setFieldName(dataTableFieldDTO.getLabel());
-                                    t.setFieldAlias(dataTableFieldDTO.getLabelAlias());
-                                }
-                            }
-                        } else {
-                            t.setFieldName(t.getFieldUnique());
-                            t.setFieldAlias(t.getFieldUnique());
-                        }
-                    });
+        // 第三步：获取所有表规则
+        List<DataCheckVO> allRule = baseMapper.getAllRule();
+        if (CollectionUtils.isEmpty(allRule)) {
+            return filterRule;
+        }
+        // 第四步：筛选满足条件的表/视图的规则
+        if (CollectionUtils.isNotEmpty(queryTableParams)) {
+            for (QueryTableRuleDTO dto : queryTableParams) {
+                List<DataCheckVO> rules = null;
+                int tableType = 0;
+                if (dto.getTableType() == LevelTypeEnum.TABLE) {
+                    tableType = 1;
+                } else if (dto.getTableType() == LevelTypeEnum.VIEW) {
+                    tableType = 2;
                 }
-            });
+                int finalTableType = tableType;
+                if (dto.getSourceType() == SourceTypeEnum.FiData) {
+                    // 通过数据源ID+表类型+表业务类型+表ID 定位到表的规则
+                    rules = allRule.stream().filter(t -> t.getFiDataSourceId() == dto.getSourceId() &&
+                            t.getTableType() == finalTableType &&
+                            t.getTableBusinessType() == dto.getTableBusinessType() &&
+                            t.getTableUnique().equals(dto.getId())).collect(Collectors.toList());
+                } else if (dto.getSourceType() == SourceTypeEnum.custom) {
+                    // 通过数据源ID+表类型+表业务类型+表名称 定位到表的规则
+                    rules = allRule.stream().filter(t -> t.getDatasourceId() == dto.getSourceId() &&
+                            t.getTableType() == finalTableType &&
+                            t.getTableBusinessType() == dto.getTableBusinessType() &&
+                            t.getTableUnique().equals(dto.getId())).collect(Collectors.toList());
+                }
+                if (CollectionUtils.isNotEmpty(rules)) {
+                    filterRule.addAll(rules);
+                }
+            }
+        } else {
+            filterRule = allRule;
         }
-        return result;
+        if (CollectionUtils.isEmpty(filterRule)) {
+            return filterRule;
+        }
+        // 第五步：基于筛选后的表查询表字段详情
+        List<DataTableFieldDTO> filterFiDataTables = new ArrayList<>();
+        filterRule.forEach(t -> {
+            if (t.getSourceTypeEnum() == SourceTypeEnum.custom) {
+                return;
+            }
+            DataTableFieldDTO dto = new DataTableFieldDTO();
+            dto.setId(t.getTableUnique());
+            dto.setDataSourceConfigEnum(DataSourceConfigEnum.getEnum(t.getFiDataSourceId()));
+            dto.setTableBusinessTypeEnum(TableBusinessTypeEnum.getEnum(t.getTableBusinessType()));
+            filterFiDataTables.add(dto);
+        });
+        List<FiDataMetaDataDTO> tableFields = null;
+        if (CollectionUtils.isNotEmpty(filterFiDataTables)) {
+            tableFields = dataSourceConManageImpl.getTableFieldName(filterFiDataTables);
+        }
+        // 第六步：表字段信息填充
+        filterRule = dataCheckExtendManageImpl.setTableFieldName(filterRule, tableFields);
+        // 第七步：排序设置
+        filterRule = filterRule.stream().sorted(
+                // 1.先按照表名称排正序
+                Comparator.comparing(DataCheckVO::getTableAlias, Comparator.naturalOrder())
+                        // 2.再按照规则类型排正序
+                        .thenComparing(DataCheckVO::getTemplateScene, Comparator.naturalOrder())
+                        // 3.再按照执行顺序排正序
+                        .thenComparing(DataCheckVO::getRuleSort, Comparator.naturalOrder())
+        ).collect(Collectors.toList());
+        return filterRule;
     }
 
     @Override
@@ -1183,5 +1227,4 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
         return updateMsgFieldSql;
     }
-
 }

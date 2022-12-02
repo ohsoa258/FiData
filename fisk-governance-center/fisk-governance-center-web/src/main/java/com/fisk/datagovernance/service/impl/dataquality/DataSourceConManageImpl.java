@@ -157,7 +157,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     @Override
-    public FiDataMetaDataTreeDTO getFiDataConfigMetaData() {
+    public FiDataMetaDataTreeDTO getFiDataConfigMetaData(boolean isComputeRuleCount) {
         // 第一步：获取Tree
         FiDataMetaDataTreeDTO fiDataMetaDataTreeBase = null;
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
@@ -187,14 +187,14 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         // 第二步：获取表规则
         List<TableRuleCountDTO> tableRules = baseMapper.getFiDataTableRuleList();
         // 第三步：递归设置Tree-节点规则数量
-        if (CollectionUtils.isNotEmpty(tableRules)) {
+        if (CollectionUtils.isNotEmpty(tableRules) && isComputeRuleCount) {
             fiDataMetaDataTreeBase = setFiDataRuleTree(SourceTypeEnum.FiData, fiDataMetaDataTreeBase, tableRules);
         }
         return fiDataMetaDataTreeBase;
     }
 
     @Override
-    public FiDataMetaDataTreeDTO getCustomizeMetaData() {
+    public FiDataMetaDataTreeDTO getCustomizeMetaData(boolean isComputeRuleCount) {
         // 第一步：获取Tree
         FiDataMetaDataTreeDTO fiDataMetaDataTreeBase = null;
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
@@ -245,7 +245,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         // 第二步：获取表规则
         List<TableRuleCountDTO> tableRules = baseMapper.getCustomizeTableRuleList();
         // 第三步：递归设置Tree-节点规则数量
-        if (CollectionUtils.isNotEmpty(tableRules)) {
+        if (CollectionUtils.isNotEmpty(tableRules) && isComputeRuleCount) {
             fiDataMetaDataTreeBase = setCustomizeRuleTree(SourceTypeEnum.custom, fiDataMetaDataTreeBase, tableRules);
         }
         return fiDataMetaDataTreeBase;
@@ -691,6 +691,104 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     /**
+     * @return java.util.List<java.lang.String>
+     * @description 查找Tree节点下的表、视图的ID
+     * @author dick
+     * @date 2022/12/2 14:59
+     * @version v1.0
+     * @params sourceType 数据源类型
+     * @params id 节点ID
+     */
+    public List<QueryTableRuleDTO> getTreeTableNode_main(SourceTypeEnum sourceType, String id) {
+        List<QueryTableRuleDTO> list = new ArrayList<>();
+        FiDataMetaDataTreeDTO tree = new FiDataMetaDataTreeDTO();
+        tree.children = new ArrayList<>();
+        if (sourceType == SourceTypeEnum.FiData) {
+            tree.children.add(getFiDataConfigMetaData(false));
+        } else if (sourceType == SourceTypeEnum.custom) {
+            tree.children.add(getCustomizeMetaData(false));
+        } else {
+            tree.children.add(getFiDataConfigMetaData(false));
+            tree.children.add(getCustomizeMetaData(false));
+        }
+        if (tree != null) {
+            // 递归获取选择的节点
+            List<FiDataMetaDataTreeDTO> treeFolderNodes = getTreeFolderNode(tree);
+            FiDataMetaDataTreeDTO treeFolderNode = null;
+            if (CollectionUtils.isNotEmpty(treeFolderNodes)) {
+                treeFolderNode = treeFolderNodes.stream().filter(t -> t.getId().equals(id)).findFirst().orElse(null);
+            }
+            if (treeFolderNode != null && CollectionUtils.isNotEmpty(treeFolderNode.getChildren())) {
+                list = getTreeTableNode(sourceType, treeFolderNode);
+            }
+        }
+        return list;
+    }
+
+    /**
+     * @return java.util.List<java.lang.String>
+     * @description 查找Tree节点下的表、视图信息
+     * @author dick
+     * @date 2022/12/2 16:17
+     * @version v1.0
+     * @params sourceType 数据源类型
+     * @params treeNode 树节点
+     */
+    public List<QueryTableRuleDTO> getTreeTableNode(SourceTypeEnum sourceType, FiDataMetaDataTreeDTO treeNode) {
+        List<QueryTableRuleDTO> list = new ArrayList<>();
+        for (int i = 0; i < treeNode.getChildren().size(); i++) {
+            FiDataMetaDataTreeDTO tree = treeNode.getChildren().get(i);
+            if (tree.getLevelType() == LevelTypeEnum.TABLE || tree.getLevelType() == LevelTypeEnum.VIEW) {
+                QueryTableRuleDTO model = new QueryTableRuleDTO();
+                if (sourceType == SourceTypeEnum.FiData) {
+                    model.setId(tree.getId());
+                } else if (sourceType == SourceTypeEnum.custom) {
+                    model.setId(tree.getLabel());
+                }
+                model.setName(tree.getLabel());
+                model.setTableType(tree.getLevelType());
+                model.setTableBusinessType(tree.getLabelBusinessType());
+                model.setSourceId(tree.getSourceId());
+                model.setSourceType(SourceTypeEnum.getEnum(tree.getSourceType()));
+                list.add(model);
+            }
+            if (CollectionUtils.isNotEmpty(tree.getChildren())) {
+                list.addAll(getTreeTableNode(sourceType, tree));
+            }
+        }
+        return list;
+    }
+
+    /**
+     * @return java.util.List<java.lang.String>
+     * @description 查询单个节点下的结构
+     * @author dick
+     * @date 2022/12/2 15:51
+     * @version v1.0
+     * @params tree
+     * @params id
+     */
+    public List<FiDataMetaDataTreeDTO> getTreeFolderNode(FiDataMetaDataTreeDTO treeDTO) {
+        List<FiDataMetaDataTreeDTO> list = new ArrayList<>();
+        // 存在节点才递归
+        if (CollectionUtils.isNotEmpty(treeDTO.getChildren())) {
+            for (int i = 0; i < treeDTO.getChildren().size(); i++) {
+                FiDataMetaDataTreeDTO model = treeDTO.getChildren().get(i);
+                if (model.getLevelType() == LevelTypeEnum.TABLE ||
+                        model.getLevelType() == LevelTypeEnum.VIEW ||
+                        model.getLevelType() == LevelTypeEnum.FIELD) {
+                    continue;
+                }
+                list.add(model);
+                if (CollectionUtils.isNotEmpty(model.getChildren())) {
+                    list.addAll(getTreeFolderNode(model));
+                }
+            }
+        }
+        return list;
+    }
+
+    /**
      * @return java.sql.Connection
      * @description 创建数据库连接对象
      * @author dick
@@ -701,7 +799,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @params account
      * @params password
      */
-    public static Connection getStatement(DataSourceTypeEnum dataSourceTypeEnum, String connectionStr, String account, String password) {
+    public static Connection getStatement(DataSourceTypeEnum dataSourceTypeEnum, String connectionStr, String
+            account, String password) {
         try {
             AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
             Connection connection = dbHelper.connection(connectionStr, account,
