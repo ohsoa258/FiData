@@ -293,7 +293,11 @@ public class FactAttributeImpl
         CustomScriptQueryDTO queryDto = new CustomScriptQueryDTO();
         queryDto.tableId = factId;
         queryDto.type = 2;
+        queryDto.execType = 1;
         data.customScriptList = customScript.listCustomScript(queryDto);
+
+        queryDto.execType = 2;
+        data.customScriptList.addAll(customScript.listCustomScript(queryDto));
 
         return data;
     }

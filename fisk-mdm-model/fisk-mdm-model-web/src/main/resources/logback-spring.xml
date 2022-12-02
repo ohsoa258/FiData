@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
     <!-- 定义变量，下方可通过${}引用 -->
-    <property name="LOG_HOME" value="./logs/mdmModel"/>
+    <property name="LOG_HOME" value="/root/fisk/fidata/logs/mdmModel"/>
     <property name="appName" value="mdmModel"/>
     <springProperty scope="context" name="springAppName" source="spring.application.name"/>
     <contextName>${appName}</contextName>
@@ -10,7 +10,7 @@
     <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <!--@formatter:off-->
-            <pattern>[%yellow(%d{yyyy-MM-dd HH:mm:ss.SSS})][${springAppName}][%X{TraceID}][%X{SpanID}][%X{App_LogType}][%thread][%highlight(%-5level)][%green(%logger{50})][%highlight([%file:%line])] - %msg %n</pattern>
+            <pattern>[%yellow(%d{yyyy-MM-dd HH:mm:ss.SSS})][%X{TraceID}][%X{SpanID}][%thread][%highlight(%-5level)][%green(%logger{50})][%highlight([%file:%line])] - %msg %n</pattern>
         </encoder>
     </appender>
 
@@ -43,7 +43,7 @@
             -->
             <!--@formatter:off-->
             <pattern>
-                [%d{yyyy-MM-dd HH:mm:ss.SSS}] | [${springAppName}] | [%X{TraceID}] | [%X{SpanID}] | [%X{App_LogType}] | [%thread] | [%-5level] | [%logger{50}] | [%file:%line] | %msg%n
+                [%d{yyyy-MM-dd HH:mm:ss.SSS}] | [%X{TraceID}] | [%X{SpanID}] | [%thread] | [%-5level] | [%logger{50}] | [%file:%line] | %msg%n
             </pattern>
         </encoder>
     </appender>

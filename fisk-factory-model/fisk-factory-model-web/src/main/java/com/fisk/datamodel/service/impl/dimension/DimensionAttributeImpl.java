@@ -232,7 +232,10 @@ public class DimensionAttributeImpl
         CustomScriptQueryDTO queryDto = new CustomScriptQueryDTO();
         queryDto.tableId = dimensionId;
         queryDto.type = 1;
+        queryDto.execType = 1;
         data.customScriptList = customScript.listCustomScript(queryDto);
+        queryDto.execType = 2;
+        data.customScriptList.addAll(customScript.listCustomScript(queryDto));
 
         return data;
     }
