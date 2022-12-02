@@ -301,7 +301,7 @@ public class OracleUtils {
      * @param dbName
      * @return
      */
-    public List<TablePyhNameDTO> getTableNameAndColumn(Connection conn, String dbName) {
+    public List<TablePyhNameDTO> getTableNameList(Connection conn, String dbName) {
         Statement st = null;
         List<TablePyhNameDTO> list = new ArrayList<>();
         try {
@@ -314,13 +314,12 @@ public class OracleUtils {
             list = new ArrayList<>();
             for (String tableName : tableList) {
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-                ResultSet rs = st.executeQuery(this.buildUserSelectTableColumnSql(dbName));
+                /*ResultSet rs = st.executeQuery(this.buildUserSelectTableColumnSql(dbName));
                 List<TableStructureDTO> colNameList = new ArrayList<>();
                 while (rs.next()) {
                     colNameList.add(conversionType(rs));
                 }
-                tablePyhNameDTO.setFields(colNameList);
-                //tableName = dbName + "." + tableName;
+                tablePyhNameDTO.setFields(colNameList);*/
                 tablePyhNameDTO.setTableName(tableName);
                 list.add(tablePyhNameDTO);
             }
@@ -332,6 +331,35 @@ public class OracleUtils {
             AbstractDbHelper.closeConnection(conn);
         }
         return list;
+    }
+
+    /**
+     * 获取表字段信息
+     *
+     * @param conn
+     * @param dbName
+     * @param tableName
+     * @return
+     */
+    public List<TableStructureDTO> getTableColumnInfoList(Connection conn, String dbName, String tableName) {
+        Statement st = null;
+        ResultSet rs = null;
+        try {
+            st = conn.createStatement();
+            rs = st.executeQuery(this.buildUserSelectTableColumnSql(dbName, tableName));
+            List<TableStructureDTO> colNameList = new ArrayList<>();
+            while (rs.next()) {
+                colNameList.add(conversionType(rs));
+            }
+            return colNameList;
+        } catch (SQLException e) {
+            log.error("【oracle获取表字段信息失败】,{}", e);
+        } finally {
+            AbstractCommonDbHelper.closeResultSet(rs);
+            AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeConnection(conn);
+        }
+        return null;
     }
 
     /**
@@ -367,9 +395,10 @@ public class OracleUtils {
      * 根据user_tab_cols表,拼接查询表字段信息sql
      *
      * @param dbName
+     * @param tableName
      * @return
      */
-    public String buildUserSelectTableColumnSql(String dbName) {
+    public String buildUserSelectTableColumnSql(String dbName, String tableName) {
         StringBuilder str = new StringBuilder();
         str.append("SELECT ");
         str.append("a.TABLE_NAME,");
@@ -383,6 +412,8 @@ public class OracleUtils {
         str.append("LEFT JOIN ALL_COL_COMMENTS b ON a.TABLE_NAME = b.TABLE_NAME ");
         str.append("WHERE ");
         str.append("b.owner='" + dbName + "' ");
+        str.append("and ");
+        str.append("a.TABLE_NAME='" + tableName + "' ");
         return str.toString();
     }
 
