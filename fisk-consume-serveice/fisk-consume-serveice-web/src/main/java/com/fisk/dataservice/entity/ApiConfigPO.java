@@ -68,4 +68,14 @@ public class ApiConfigPO extends BasePO
      * sql语句
      */
     public String createSql;
+
+    /**
+     * api地址
+     */
+    public String apiAddress;
+
+    /**
+     * 创建api类型：1 创建新api 2 使用现有api
+     */
+    public Integer createApiType;
 }
