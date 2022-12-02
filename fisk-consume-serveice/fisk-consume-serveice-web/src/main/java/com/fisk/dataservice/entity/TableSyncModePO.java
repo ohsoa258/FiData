@@ -10,7 +10,8 @@ import lombok.Data;
 @Data
 @TableName("tb_table_sync_mode")
 public class TableSyncModePO extends BasePO {
- /**
+
+    /**
   *
   */
  public Integer type;
