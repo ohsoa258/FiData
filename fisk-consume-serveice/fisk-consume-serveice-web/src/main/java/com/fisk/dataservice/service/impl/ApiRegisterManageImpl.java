@@ -8,7 +8,6 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
-import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -19,12 +18,13 @@ import com.fisk.common.core.utils.SqlParmUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.dataservice.BuildDataServiceHelper;
 import com.fisk.common.service.dbBEBuild.dataservice.IBuildDataServiceSqlCommand;
-import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
-import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.dataservice.dto.api.*;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.ApiTypeEnum;
-import com.fisk.dataservice.map.*;
+import com.fisk.dataservice.map.ApiFieldMap;
+import com.fisk.dataservice.map.ApiFilterConditionMap;
+import com.fisk.dataservice.map.ApiParmMap;
+import com.fisk.dataservice.map.ApiRegisterMap;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IApiRegisterManageService;
 import com.fisk.dataservice.vo.api.*;
@@ -74,6 +74,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
 
     @Resource
     private ApiParmManageImpl apiParmManageImpl;
+
+    @Resource
+    TableSyncModeImpl tableSyncModeImpl;
 
     @Resource
     private AppApiMapper appApiMapper;
@@ -204,6 +207,12 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             isInsert = apiParmManageImpl.saveBatch(parmConfigPOS);
             if (!isInsert)
                 return ResultEnum.SAVE_DATA_ERROR;
+        }
+
+        //第五步：保存调度(创建现有api类型才有调度)
+        if (dto.apiDTO.createApiType == 2) {
+            dto.syncModeDTO.typeTableId = apiId;
+            return tableSyncModeImpl.addApiTableSyncMode(dto.syncModeDTO);
         }
 
         return ResultEnum.SUCCESS;

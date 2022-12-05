@@ -162,7 +162,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
         QueryWrapper<AppConfigPO> queryWrapper = new QueryWrapper<>();
         // and(appName = '' or appAccount = '')
         queryWrapper.lambda().and(wq -> wq.eq(AppConfigPO::getAppName, dto.appName).
-                        or().eq(AppConfigPO::getAppAccount, dto.appAccount))
+                or().eq(AppConfigPO::getAppAccount, dto.appAccount))
                 .eq(AppConfigPO::getDelFlag, 1)
                 .ne(AppConfigPO::getId, dto.id);
         List<AppConfigPO> selectList = baseMapper.selectList(queryWrapper);

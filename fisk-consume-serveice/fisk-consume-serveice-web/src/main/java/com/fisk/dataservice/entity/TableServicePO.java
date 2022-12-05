@@ -55,4 +55,9 @@ public class TableServicePO extends BasePO {
      */
     public Integer sourceDbId;
 
+    /**
+     * 发布状态: 0: 未发布  1: 发布成功  2: 发布失败
+     */
+    public Integer publish;
+
 }
