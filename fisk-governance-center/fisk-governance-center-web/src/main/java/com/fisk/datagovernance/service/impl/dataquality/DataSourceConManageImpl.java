@@ -13,13 +13,11 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
-import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
-import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
+import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
+import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
@@ -28,9 +26,12 @@ import com.fisk.datagovernance.map.dataquality.DataSourceConMap;
 import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
 import com.fisk.datagovernance.vo.dataquality.datasource.*;
+import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.mdm.client.MdmClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -48,6 +49,7 @@ import java.util.stream.Collectors;
  * @author dick
  */
 @Service
+@Slf4j
 public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, DataSourceConPO> implements IDataSourceConManageService {
 
     @Resource
@@ -55,6 +57,15 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Resource
     private UserClient userClient;
+
+    @Resource
+    private DataAccessClient dataAccessClient;
+
+    @Resource
+    private DataModelClient dataModelClient;
+
+    @Resource
+    private MdmClient mdmClient;
 
     @Resource
     private RedisUtil redisUtil;
@@ -270,6 +281,52 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             fiDataMetaDataTreeBase = setCustomizeRuleTree(SourceTypeEnum.custom, fiDataMetaDataTreeBase, tableRules);
         }
         return fiDataMetaDataTreeBase;
+    }
+
+    @Override
+    public Object reloadFiDataDataSource() {
+        ResultEntity<List<DataSourceDTO>> fiDataDataSource = userClient.getAllFiDataDataSource();
+        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(fiDataDataSource.getData())) {
+            for (DataSourceDTO fiDataSourceDTO : fiDataDataSource.getData()) {
+                try {
+                    FiDataMetaDataReqDTO reqDTO = new FiDataMetaDataReqDTO();
+                    reqDTO.setDataSourceId(String.valueOf(fiDataSourceDTO.id));
+                    reqDTO.setDataSourceName(fiDataSourceDTO.getConDbname());
+                    switch (fiDataSourceDTO.id) {
+                        case 1:
+                        case 4:
+                            // dw olap
+                            log.info("【reloadFiDataDataSource】dw olap 数据源同步redis开始，数据源：" + fiDataSourceDTO.getConDbname());
+                            dataModelClient.setDataModelStructure(reqDTO);
+                            log.info("【reloadFiDataDataSource】dw olap 数据源同步redis结束，数据源：" + fiDataSourceDTO.getConDbname());
+                            break;
+                        case 2:
+                            // ods
+                            log.info("【reloadFiDataDataSource】ods 数据源同步redis开始，数据源：" + fiDataSourceDTO.getConDbname());
+                            dataAccessClient.setDataAccessStructure(reqDTO);
+                            log.info("【reloadFiDataDataSource】ods 数据源同步redis结束，数据源：" + fiDataSourceDTO.getConDbname());
+                            break;
+                        case 3:
+                            // mdm
+                            log.info("【reloadFiDataDataSource】mdm 数据源同步redis开始，数据源：" + fiDataSourceDTO.getConDbname());
+                            mdmClient.setMDMDataStructure(reqDTO);
+                            log.info("【reloadFiDataDataSource】mdm 数据源同步redis结束，数据源：" + fiDataSourceDTO.getConDbname());
+                            break;
+                    }
+                } catch (Exception ex) {
+                    log.error("【reloadFiDataDataSource】FiData数据源同步redis失败,Id:" + fiDataSourceDTO.getId());
+                    log.error("【reloadFiDataDataSource】FiData数据源同步redis失败,DbName:" + fiDataSourceDTO.getConDbname());
+                    continue;
+                }
+            }
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public Object reloadCustomizeDataSource() {
+        setMetaDataToRedis();
+        return ResultEnum.SUCCESS;
     }
 
     /**
@@ -810,7 +867,15 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         List<DataSourceConPO> dataSourceConPOs = mapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(dataSourceConPOs)) {
             for (DataSourceConPO dataSourceConPO : dataSourceConPOs) {
-                setMetaDataToRedis(dataSourceConPO, 2);
+                try {
+                    log.info("【setMetaDataToRedis】自定义数据源同步redis开始，数据源：" + dataSourceConPO.getConDbname());
+                    setMetaDataToRedis(dataSourceConPO, 2);
+                    log.info("【setMetaDataToRedis】自定义数据源同步redis结束，数据源：" + dataSourceConPO.getConDbname());
+                } catch (Exception ex) {
+                    log.error("【setMetaDataToRedis】自定义数据源同步redis失败,Id:" + dataSourceConPO.getId());
+                    log.error("【setMetaDataToRedis】自定义数据源同步redis失败,DbName:" + dataSourceConPO.getConDbname());
+                    continue;
+                }
             }
         }
     }
