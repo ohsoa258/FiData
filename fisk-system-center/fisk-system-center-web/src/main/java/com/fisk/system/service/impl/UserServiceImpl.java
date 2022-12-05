@@ -330,6 +330,7 @@ public class UserServiceImpl implements IUserService {
         dto.id = model.id;
         dto.userAccount = model.userAccount;
         dto.userName = model.username;
+        dto.email = model.email;
         return dto;
     }
 
