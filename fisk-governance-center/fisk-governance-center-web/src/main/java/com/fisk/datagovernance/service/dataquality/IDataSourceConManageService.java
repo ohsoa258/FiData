@@ -73,4 +73,18 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      * @return 查询结果
      */
     FiDataMetaDataTreeDTO getCustomizeMetaData(boolean isComputeRuleCount);
+
+    /**
+     * 数据库信息同步到redis
+     *
+     * @return 查询结果
+     */
+    Object reloadFiDataDataSource();
+
+    /**
+     * 数据库信息同步到redis
+     *
+     * @return 查询结果
+     */
+    Object reloadCustomizeDataSource();
 }
