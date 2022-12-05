@@ -106,11 +106,11 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
             return queryApiVOS;
         }
         // 查询API参数配置信息
-        QueryWrapper<BusinessFilterApiParamPO> apiParmPOQueryWrapper = new QueryWrapper<>();
-        apiParmPOQueryWrapper.lambda()
+        QueryWrapper<BusinessFilterApiParamPO> apiParamPOQueryWrapper = new QueryWrapper<>();
+        apiParamPOQueryWrapper.lambda()
                 .in(BusinessFilterApiParamPO::getRuleId, ruleIds)
                 .eq(BusinessFilterApiParamPO::getDelFlag, 1);
-        List<BusinessFilterApiParamPO> businessFilterApiParmPOS = businessFilterApiParamMapper.selectList(apiParmPOQueryWrapper);
+        List<BusinessFilterApiParamPO> businessFilterApiParamPOS = businessFilterApiParamMapper.selectList(apiParamPOQueryWrapper);
         // 查询API结果配置信息
         QueryWrapper<BusinessFilterApiResultPO> apiResultPOQueryWrapper = new QueryWrapper<>();
         apiResultPOQueryWrapper.lambda()
@@ -122,8 +122,8 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
             BusinessFilterQueryApiVO apiVO = new BusinessFilterQueryApiVO();
             apiVO.setRuleId(Integer.valueOf(t.getRuleId()));
             apiVO.setApiConfig(BusinessFilterApiMap.INSTANCES.poToVo(t));
-            if (CollectionUtils.isNotEmpty(businessFilterApiParmPOS)) {
-                List<BusinessFilterApiParamPO> paramList = businessFilterApiParmPOS.stream().filter(parm -> parm.getApiId() == t.getId()).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(businessFilterApiParamPOS)) {
+                List<BusinessFilterApiParamPO> paramList = businessFilterApiParamPOS.stream().filter(param -> param.getApiId() == t.getId()).collect(Collectors.toList());
                 if (CollectionUtils.isNotEmpty(paramList)) {
                     apiVO.setApiParamConfig(BusinessFilterApiParamMap.INSTANCES.poToVo(paramList));
                 }

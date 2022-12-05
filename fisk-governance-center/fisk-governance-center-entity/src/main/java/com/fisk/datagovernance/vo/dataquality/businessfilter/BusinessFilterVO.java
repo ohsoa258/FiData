@@ -28,10 +28,16 @@ public class BusinessFilterVO {
     public int templateId;
 
     /**
-     * 数据源表主键id
+     * 数据质量数据源表主键ID
      */
-    @ApiModelProperty(value = "数据源表主键id")
+    @ApiModelProperty(value = "数据质量数据源表主键ID")
     public int datasourceId;
+
+    /**
+     * FiData系统数据源表主键ID
+     */
+    @ApiModelProperty(value = "FiData系统数据源表主键ID")
+    public int fiDataSourceId;
 
     /**
      * 数据源类型
@@ -50,6 +56,18 @@ public class BusinessFilterVO {
      */
     @ApiModelProperty(value = "表名称/表Id")
     public String tableUnique;
+
+    /**
+     * 表名称
+     */
+    @ApiModelProperty(value = "表名称")
+    public String tableName;
+
+    /**
+     * 表别名
+     */
+    @ApiModelProperty(value = "表别名")
+    public String tableAlias;
 
     /**
      * 表类型 1：表  2：视图
