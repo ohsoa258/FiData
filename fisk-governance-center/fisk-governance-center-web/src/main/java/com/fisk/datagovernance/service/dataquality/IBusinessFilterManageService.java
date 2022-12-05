@@ -1,6 +1,5 @@
 package com.fisk.datagovernance.service.dataquality;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -25,7 +24,7 @@ public interface IBusinessFilterManageService extends IService<BusinessFilterPO>
      *
      * @return 分页列表
      */
-    Page<BusinessFilterVO> getAll(BusinessFilterQueryDTO query);
+    List<BusinessFilterVO> getAllRule(BusinessFilterQueryDTO query);
 
     /**
      * 添加数据

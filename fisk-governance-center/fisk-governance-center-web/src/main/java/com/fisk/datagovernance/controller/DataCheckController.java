@@ -31,10 +31,10 @@ public class DataCheckController {
     @Resource
     private IDataCheckManageService service;
 
-    @ApiOperation("分页查询数据校验模板组件")
-    @PostMapping("/page")
-    public ResultEntity<Page<DataCheckVO>> getAll(@RequestBody DataCheckQueryDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAll(dto));
+    @ApiOperation("查询全部校验规则")
+    @PostMapping("/getAllRule")
+    public ResultEntity<List<DataCheckVO>> getAllRule(@RequestBody DataCheckQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllRule(dto));
     }
 
     @ApiOperation("添加数据校验模板组件")

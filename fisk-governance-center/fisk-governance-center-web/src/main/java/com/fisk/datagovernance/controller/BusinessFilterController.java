@@ -1,6 +1,5 @@
 package com.fisk.datagovernance.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * @author dick
@@ -33,10 +31,10 @@ public class BusinessFilterController {
     @Resource
     private IBusinessFilterManageService service;
 
-    @ApiOperation("分页查询业务清洗模板组件")
-    @PostMapping("/page")
-    public ResultEntity<Page<BusinessFilterVO>> getAll(@RequestBody BusinessFilterQueryDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAll(dto));
+    @ApiOperation("查询全部清洗规则")
+    @PostMapping("/getAllRule")
+    public ResultEntity<List<BusinessFilterVO>> getAllRule(@RequestBody BusinessFilterQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllRule(dto));
     }
 
     @ApiOperation("添加业务清洗模板组件")

@@ -1,6 +1,5 @@
 package com.fisk.datagovernance.service.dataquality;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -20,11 +19,11 @@ import java.util.List;
  */
 public interface IDataCheckManageService extends IService<DataCheckPO> {
     /**
-     * 分页查询
+     * 查询所有规则
      *
-     * @return 分页列表
+     * @return 规则列表
      */
-    Page<DataCheckVO> getAll(DataCheckQueryDTO query);
+    List<DataCheckVO> getAllRule(DataCheckQueryDTO query);
 
     /**
      * 添加数据

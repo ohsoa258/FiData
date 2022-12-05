@@ -74,13 +74,13 @@ public class DataSourceController {
     @GetMapping("/getFiDataConfigMetaData")
     @ApiOperation("数据质量，获取FiData配置表元数据信息")
     public ResultEntity<FiDataMetaDataTreeDTO> getFiDataConfigMetaData() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataConfigMetaData());
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataConfigMetaData(true));
     }
 
     @GetMapping("/getCustomizeMetaData")
     @ApiOperation("数据质量，获取自定义数据源表元数据信息")
     public ResultEntity<FiDataMetaDataTreeDTO> getCustomizeMetaData() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCustomizeMetaData());
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCustomizeMetaData(true));
     }
 
     @PostMapping("/getDataOpsTableSource")
