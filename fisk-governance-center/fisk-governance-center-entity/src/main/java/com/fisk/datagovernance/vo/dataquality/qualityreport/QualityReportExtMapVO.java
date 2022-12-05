@@ -1,4 +1,4 @@
-package com.fisk.datagovernance.vo.dataquality.notice;
+package com.fisk.datagovernance.vo.dataquality.qualityreport;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -6,16 +6,17 @@ import lombok.Data;
 /**
  * @author dick
  * @version 1.0
- * @description TDDD
- * @date 2022/11/7 13:53
+ * @description 质量报告扩展信息VO
+ * @date 2022/12/1 10:46
  */
 @Data
-public class NoticeEmailVO {
+public class QualityReportExtMapVO {
+
     /**
      * id
      */
-    @ApiModelProperty(value = "id")
-    public int id;
+    @ApiModelProperty(value = "标识")
+    public Long id;
 
     /**
      * 名称

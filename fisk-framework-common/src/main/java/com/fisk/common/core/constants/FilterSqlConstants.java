@@ -50,4 +50,9 @@ public class FilterSqlConstants {
      * 平台管理--数据源
      */
     public static final String PLATFORM_DATASOURCE_SQL = " where Field in('name','con_dbname','con_type','principal')";
+    /**
+     * 数据质量--质量报告
+     */
+    public static final String DATA_GOVERNANCE_QUALITY_REPORT_SQL = " where Field in('report_name','report_type_name','report_principal')";
+
 }

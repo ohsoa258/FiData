@@ -148,10 +148,10 @@ public class SqlServerPlusUtils {
             while (iterator.hasNext()) {
                 Map.Entry<String, String> entry = iterator.next();
                 // 根据表名获取字段
-                List<TableStructureDTO> columnsName = getColumnsName(conn, entry.getKey());
+                //List<TableStructureDTO> columnsName = getColumnsName(conn, entry.getKey());
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(entry.getValue() + "." + entry.getKey());
-                tablePyhNameDTO.setFields(columnsName);
+                //tablePyhNameDTO.setFields(columnsName);
                 finalList.add(tablePyhNameDTO);
             }
         } catch (SQLException e) {
@@ -196,7 +196,7 @@ public class SqlServerPlusUtils {
                 DataBaseViewDTO dto = new DataBaseViewDTO();
                 dto.viewName = viewName;
 
-                ResultSet resultSql = null;
+                /*ResultSet resultSql = null;
                 try {
                     resultSql = st.executeQuery("select * from " + viewName + ";");
                     List<TableStructureDTO> colNames = getViewField(resultSql);
@@ -207,7 +207,7 @@ public class SqlServerPlusUtils {
                     dto.flag = 2;
                 } finally {
                     AbstractCommonDbHelper.closeResultSet(resultSql);
-                }
+                }*/
                 list.add(dto);
             }
         } catch (SQLException e) {
@@ -269,9 +269,13 @@ public class SqlServerPlusUtils {
      * @version v1.0
      * @params rs
      */
-    private List<TableStructureDTO> getViewField(ResultSet rs) {
+    public List<TableStructureDTO> getViewField(Connection conn, String viewName) {
         List<TableStructureDTO> colNameList = null;
+        Statement st = null;
+        ResultSet rs = null;
         try {
+            st = conn.createStatement();
+            rs = st.executeQuery("select * from " + viewName + ";");
             ResultSetMetaData metaData = rs.getMetaData();
             int count = metaData.getColumnCount();
 
@@ -292,6 +296,8 @@ public class SqlServerPlusUtils {
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
         } finally {
             AbstractCommonDbHelper.closeResultSet(rs);
+            AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeConnection(conn);
         }
         return colNameList;
     }

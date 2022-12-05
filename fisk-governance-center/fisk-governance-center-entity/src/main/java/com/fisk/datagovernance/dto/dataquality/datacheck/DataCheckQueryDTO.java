@@ -15,10 +15,11 @@ import lombok.Data;
  */
 @Data
 public class DataCheckQueryDTO {
+
     /**
-     * 搜索条件
+     * 搜索关键字
      */
-    @ApiModelProperty(value = "搜索条件")
+    @ApiModelProperty(value = "搜索关键字")
     public String keyword;
 
     /**
@@ -50,6 +51,12 @@ public class DataCheckQueryDTO {
      */
     @ApiModelProperty(value = "表业务类型 1：事实表、2：维度表、3、指标表  4、宽表")
     public int tableBusinessType;
+
+    /**
+     * 文件夹ID
+     */
+    @ApiModelProperty(value = "文件夹ID")
+    public String folderUnique;
 
     /**
      * 分页对象

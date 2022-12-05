@@ -679,6 +679,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> imp
         table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dataModelType + "_" + dimension.id;
         table.comment = String.valueOf(dimension.businessId);
         table.displayName = dimension.dimensionCnName;
+        table.owner = dimension.createUser;
         //所属人
         List<Long> ids = new ArrayList<>();
         ids.add(Long.parseLong(dimension.createUser));

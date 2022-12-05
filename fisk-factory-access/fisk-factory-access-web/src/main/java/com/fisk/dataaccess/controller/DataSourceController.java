@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
+import com.fisk.dataaccess.dto.v3.SourceColumnMetaQueryDTO;
 import com.fisk.dataaccess.service.IAppDataSource;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -39,4 +40,11 @@ public class DataSourceController {
     public ResultEntity<Object> getDatabaseNameList(@RequestBody AppDataSourceDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDatabaseNameList(dto));
     }
+
+    @PostMapping("/getSourceColumnMeta")
+    @ApiOperation(value = "根据表名称获取字段信息")
+    public ResultEntity<Object> getSourceColumnMeta(@RequestBody SourceColumnMetaQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getSourceColumnMeta(dto));
+    }
+
 }

@@ -27,6 +27,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -99,14 +100,14 @@ public class ProcessImpl implements IProcess {
         }
         //解析数据
         JSONObject jsonObj = JSON.parseObject(getDetail.data);
-        JSONObject entityObject= JSON.parseObject(jsonObj.getString("entity"));
-        JSONObject relationShip=JSON.parseObject(entityObject.getString("relationshipAttributes"));
-        JSONArray relationShipAttribute=JSON.parseArray(relationShip.getString("outputFromProcesses"));
+        JSONObject entityObject = JSON.parseObject(jsonObj.getString("entity"));
+        JSONObject relationShip = JSON.parseObject(entityObject.getString("relationshipAttributes"));
+        JSONArray relationShipAttribute = JSON.parseArray(relationShip.getString("outputFromProcesses"));
         //条数为0,则添加process
-        if (relationShipAttribute.size() == 0) {
-            return process(dto);
-        }
-        return ResultEnum.SUCCESS;
+        //if (relationShipAttribute.size() == 0) {
+        return process(dto);
+        //}
+        //return ResultEnum.SUCCESS;
     }
 
     public ResultEnum process(AddProcessDTO dto)
@@ -118,9 +119,9 @@ public class ProcessImpl implements IProcess {
         EntityAttributesDTO attributesDTO=new EntityAttributesDTO();
         attributesDTO.comment=dto.processName;
         attributesDTO.description=dto.description;
-        attributesDTO.owner="root";
-        attributesDTO.qualifiedName="";
-        attributesDTO.contact_info=dto.contactInfo;
+        attributesDTO.owner = "root";
+        attributesDTO.qualifiedName = UUID.randomUUID().toString();
+        attributesDTO.contact_info = dto.contactInfo;
         attributesDTO.name=dto.processName;
         //输入参数
         attributesDTO.inputs=dto.inputList;

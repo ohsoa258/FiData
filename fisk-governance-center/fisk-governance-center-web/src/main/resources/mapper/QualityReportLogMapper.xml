@@ -1,0 +1,32 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datagovernance.mapper.dataquality.QualityReportLogMapper">
+    <select id="getAll" resultType="com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportLogVO">
+        SELECT
+        id,
+        report_id,
+        report_name,
+        report_type,
+        report_type_name,
+        report_desc,
+        report_principal,
+        report_notice_type,
+        email_server_id,
+        email_subject,
+        email_consignee,
+        email_cc,
+        body,
+        send_time,
+        send_result
+        FROM
+        tb_quality_report_log
+        WHERE
+        del_flag = 1 AND report_id=#{reportId}
+        <if test="keyword != null and keyword != '' ">
+            AND report_name LIKE concat('%', #{keyword}, '%')
+            OR send_time LIKE concat('%', #{keyword}, '%')
+            OR send_result LIKE concat('%', #{keyword}, '%')
+        </if>
+    </select>
+</mapper>

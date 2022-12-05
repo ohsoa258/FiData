@@ -318,9 +318,10 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         table.comment = String.valueOf(fact.businessId);
         table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dataModelType + "_" + fact.id;
         table.displayName = fact.factTableCnName;
+        table.owner = fact.createUser;
         //所属人
         List<Long> ids = new ArrayList<>();
-        ids.add(fact.id);
+        ids.add(Long.parseLong(fact.createUser));
         ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(ids);
         if (userListByIds.code == ResultEnum.SUCCESS.getCode()) {
             table.owner = userListByIds.data.get(0).getUsername();
