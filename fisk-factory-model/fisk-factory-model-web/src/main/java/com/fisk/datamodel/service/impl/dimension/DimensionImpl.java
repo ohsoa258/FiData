@@ -43,6 +43,7 @@ import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
@@ -106,23 +107,27 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> imp
         if (po != null) {
             return ResultEnum.DIMENSION_EXIST;
         }
-        dto.isPublish= PublicStatusEnum.UN_PUBLIC.getValue();
-        DimensionPO model= DimensionMap.INSTANCES.dtoToPo(dto);
+        dto.isPublish = PublicStatusEnum.UN_PUBLIC.getValue();
+        DimensionPO model = DimensionMap.INSTANCES.dtoToPo(dto);
         //判断是否为生成时间维度表
-        if (dto.timeTable)
-        {
-            model.isPublish= PublicStatusEnum.PUBLIC_SUCCESS.getValue();
+        if (dto.timeTable) {
+            model.isPublish = PublicStatusEnum.PUBLIC_SUCCESS.getValue();
             //生成物理表以及插入数据
-            editDateDimension(dto,dto.dimensionTabName);
+            editDateDimension(dto, dto.dimensionTabName);
         }
-        int flat=mapper.insert(model);
-        if (flat>0 && dto.timeTable)
-        {
+        int flat = mapper.insert(model);
+        if (flat > 0 && dto.timeTable) {
             return addTimeTableAttribute(dto);
         }
-        return flat>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        return flat > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
+    /**
+     * 编辑时间维度表
+     *
+     * @param dto
+     * @param oldTimeTable
+     */
     public void editDateDimension(DimensionDTO dto, String oldTimeTable) {
         Connection conn = null;
         Statement stat = null;
@@ -159,6 +164,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> imp
 
     /**
      * 拼接创表语句
+     *
      * @param dimensionTabName
      * @return
      */
@@ -170,15 +176,16 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> imp
 
     /**
      * 拼接insert语句
+     *
      * @param tableName
      * @param startTime
      * @param endTime
      * @return
      */
-    public String insertTableDataSql(String tableName,String startTime,String endTime) {
+    public String insertTableDataSql(String tableName, String startTime, String endTime) {
         StringBuilder str = new StringBuilder();
         Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date date;
         try {
             date = sdf.parse(startTime);
@@ -311,9 +318,9 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> imp
         return dt;
     }
 
-    public ResultEnum addTimeTableAttribute(DimensionDTO dto){
-        QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(DimensionPO::getDimensionTabName,dto.dimensionTabName)
+    public ResultEnum addTimeTableAttribute(DimensionDTO dto) {
+        QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(DimensionPO::getDimensionTabName, dto.dimensionTabName)
                 .eq(DimensionPO::getBusinessId, dto.businessId);
         DimensionPO po = mapper.selectOne(queryWrapper);
         if (po == null) {
@@ -360,15 +367,15 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> imp
     }
 
     @Override
-    public ResultEnum updateDimension(DimensionDTO dto){
-        DimensionPO model=mapper.selectById(dto.id);
+    public ResultEnum updateDimension(DimensionDTO dto) {
+        DimensionPO model = mapper.selectById(dto.id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
         QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(DimensionPO::getDimensionTabName,dto.dimensionTabName);
-        DimensionPO po=mapper.selectOne(queryWrapper);
+                .eq(DimensionPO::getDimensionTabName, dto.dimensionTabName);
+        DimensionPO po = mapper.selectOne(queryWrapper);
         if (po != null && po.id != model.id) {
             return ResultEnum.DIMENSION_EXIST;
         }
@@ -408,14 +415,14 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> imp
             QueryWrapper<DimensionAttributePO> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda().eq(DimensionAttributePO::getAssociateDimensionId, id);
             List<DimensionAttributePO> poList = dimensionAttributeMapper.selectList(queryWrapper);
-            if (poList.size() > 0) {
+            if (!CollectionUtils.isEmpty(poList)) {
                 return ResultEnum.TABLE_ASSOCIATED;
             }
             //判断维度表是否与事实表有关联
             QueryWrapper<FactAttributePO> queryWrapper1 = new QueryWrapper<>();
             queryWrapper1.lambda().eq(FactAttributePO::getAssociateDimensionId, id);
             List<FactAttributePO> factAttributePoList=factAttributeMapper.selectList(queryWrapper1);
-            if (factAttributePoList.size() > 0) {
+            if (!CollectionUtils.isEmpty(factAttributePoList)) {
                 return ResultEnum.TABLE_ASSOCIATED;
             }
             //删除维度字段数据
@@ -560,7 +567,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> imp
         //获取维度字段
         QueryWrapper<DimensionAttributePO> queryWrapper1 = new QueryWrapper<>();
         List<DimensionAttributePO> attributePoList = dimensionAttributeMapper.selectList(queryWrapper1);
-        if (list != null && list.size() > 0) {
+        if (!CollectionUtils.isEmpty(list)) {
             for (DimensionPO item : list) {
                 item.isDimDateTbl = false;
                 if (mapper.updateById(item) == 0) {
@@ -568,7 +575,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> imp
                 }
                 List<DimensionAttributePO> attributePoStreamList = attributePoList.stream()
                         .filter(e -> e.dimensionId == item.id).collect(Collectors.toList());
-                if (attributePoStreamList != null && attributePoList.size() > 0) {
+                if (!CollectionUtils.isEmpty(attributePoStreamList)) {
                     for (DimensionAttributePO attributePo : attributePoStreamList) {
                         attributePo.isDimDateField = false;
                         if (dimensionAttributeMapper.updateById(attributePo) == 0) {
@@ -671,8 +678,16 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> imp
         table.name = dimension.dimensionTabName;
         table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dataModelType + "_" + dimension.id;
         table.comment = String.valueOf(dimension.businessId);
-        table.owner = dimension.createUser;
         table.displayName = dimension.dimensionCnName;
+        table.owner = dimension.createUser;
+        //所属人
+        List<Long> ids = new ArrayList<>();
+        ids.add(Long.parseLong(dimension.createUser));
+        ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(ids);
+        if (userListByIds.code == ResultEnum.SUCCESS.getCode()) {
+            table.owner = userListByIds.data.get(0).getUsername();
+        }
+
         //字段
         List<MetaDataColumnAttributeDTO> columnList = new ArrayList<>();
         DimensionAttributeListDTO dimensionAttributeList = dimensionAttributeImpl.getDimensionAttributeList((int) dimension.id);

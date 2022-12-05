@@ -82,7 +82,7 @@
 	    Concat('stg_',dimension_tab_name) AS stg_table_name,
 	    1 AS table_type
         FROM
-	    tb_dimension
+	    tb_dimension where del_flag=1
 
         UNION ALL
 
@@ -93,7 +93,8 @@
 	    Concat('stg_',fact_tab_name) AS stg_table_name,
 	    2 AS table_type
         FROM
-	    tb_fact) AS tab
+	    tb_fact where del_flag=1
+	    ) AS tab
 	    WHERE
 	    ods_table_name = #{tableName} OR stg_table_name = #{tableName}
     </select>

@@ -71,7 +71,6 @@ import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -170,7 +169,6 @@ public class BusinessAreaImpl
         try {
             dataManageClient.appSynchronousClassification(classificationInfoDto);
         } catch (Exception e) {
-            // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
             log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
         }
 
@@ -698,6 +696,9 @@ public class BusinessAreaImpl
             dwDataTree.setLabel(reqDto.dataSourceName);
             dwDataTree.setLabelAlias(reqDto.dataSourceName);
             dwDataTree.setLevelType(LevelTypeEnum.DATABASE);
+            dwDataTree.setSourceId(Integer.parseInt(reqDto.dataSourceId));
+            dwDataTree.setSourceType(1);
+
             // 封装dw所有结构数据
             HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> fiDataMetaDataTree_DW = buildBusinessChildren(reqDto.dataSourceId, "dw", TableBusinessTypeEnum.DW_FACT);
             Map.Entry<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> nextTree_DW = fiDataMetaDataTree_DW.entrySet().iterator().next();
@@ -719,6 +720,9 @@ public class BusinessAreaImpl
             olapDataTree.setLabel(reqDto.dataSourceName);
             olapDataTree.setLabelAlias(reqDto.dataSourceName);
             olapDataTree.setLevelType(LevelTypeEnum.DATABASE);
+            olapDataTree.setSourceId(Integer.parseInt(reqDto.dataSourceId));
+            olapDataTree.setSourceType(1);
+
             // 封装olap、宽表 所有结构数据
             HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> fiDataMetaDataTree_OLAP = buildBusinessChildren(reqDto.dataSourceId, "olap", TableBusinessTypeEnum.DORIS_FACT);
             Map.Entry<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> nextTree_OLAP = fiDataMetaDataTree_OLAP.entrySet().iterator().next();
@@ -780,6 +784,8 @@ public class BusinessAreaImpl
                     businessPoTreeDto.setLabelAlias(business.getBusinessName());
                     businessPoTreeDto.setLabelDesc(business.getBusinessDes());
                     businessPoTreeDto.setLevelType(LevelTypeEnum.FOLDER);
+                    businessPoTreeDto.setSourceId(Integer.parseInt(id));
+                    businessPoTreeDto.setSourceType(1);
 
                     List<FiDataMetaDataTreeDTO> folderList = new ArrayList<>();
 
@@ -798,6 +804,8 @@ public class BusinessAreaImpl
                                 dimensionFolderTreeDto.setLabelAlias(dimensionFolder.dimensionFolderCnName);
                                 dimensionFolderTreeDto.setLabelDesc(dimensionFolder.dimensionFolderDesc);
                                 dimensionFolderTreeDto.setLevelType(LevelTypeEnum.FOLDER);
+                                dimensionFolderTreeDto.setSourceId(Integer.parseInt(id));
+                                dimensionFolderTreeDto.setSourceType(1);
 
                                 // 第五层: 维度表
                                 List<FiDataMetaDataTreeDTO> dimensionTreeList = dimensionImpl.query()
@@ -873,6 +881,8 @@ public class BusinessAreaImpl
                                 businessProcessTreeDto.setLabelAlias(businessProcess.businessProcessCnName);
                                 businessProcessTreeDto.setLabelDesc(businessProcess.businessProcessDesc);
                                 businessProcessTreeDto.setLevelType(LevelTypeEnum.FOLDER);
+                                businessProcessTreeDto.setSourceId(Integer.parseInt(id));
+                                businessProcessTreeDto.setSourceType(1);
 
                                 // 第五层: 事实表
                                 List<FiDataMetaDataTreeDTO> factTreeList = factImpl.query()
@@ -972,6 +982,8 @@ public class BusinessAreaImpl
                         wideTableFolderTreeDto.setLabelAlias("宽表");
                         wideTableFolderTreeDto.setLabelDesc("宽表");
                         wideTableFolderTreeDto.setLevelType(LevelTypeEnum.FOLDER);
+                        wideTableFolderTreeDto.setSourceId(Integer.parseInt(id));
+                        wideTableFolderTreeDto.setSourceType(1);
 
                         // 第五层: 宽表
                         List<FiDataMetaDataTreeDTO> wideTableTreeList = this.wideTableImpl.query()

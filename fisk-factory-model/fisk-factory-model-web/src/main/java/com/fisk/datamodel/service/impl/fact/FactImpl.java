@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
@@ -37,6 +38,8 @@ import com.fisk.datamodel.service.impl.BusinessAreaImpl;
 import com.fisk.datamodel.service.impl.dimension.DimensionImpl;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
@@ -75,6 +78,8 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     @Resource
     UserHelper userHelper;
     @Resource
+    UserClient userClient;
+    @Resource
     DimensionImpl dimensionImpl;
     @Resource
     DataManageClient dataManageClient;
@@ -87,8 +92,8 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         if (po != null) {
             return ResultEnum.FACT_EXIST;
         }
-        FactPO model= FactMap.INSTANCES.dtoToPo(dto);
-        return mapper.insert(model)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        FactPO model = FactMap.INSTANCES.dtoToPo(dto);
+        return mapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -313,6 +318,14 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         table.comment = String.valueOf(fact.businessId);
         table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dataModelType + "_" + fact.id;
         table.displayName = fact.factTableCnName;
+        table.owner = fact.createUser;
+        //所属人
+        List<Long> ids = new ArrayList<>();
+        ids.add(Long.parseLong(fact.createUser));
+        ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(ids);
+        if (userListByIds.code == ResultEnum.SUCCESS.getCode()) {
+            table.owner = userListByIds.data.get(0).getUsername();
+        }
         //字段
         List<MetaDataColumnAttributeDTO> columnList = setFactField(dto, table);
         if (CollectionUtils.isEmpty(columnList)) {
@@ -358,6 +371,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
                 String fieldTypeLength = field.factFieldLength == 0 ? "" : "(" + field.factFieldLength + ")";
                 column.dataType = field.factFieldType + fieldTypeLength;
                 column.displayName = field.factFieldCnName;
+                column.owner = table.owner;
                 columnList.add(column);
             }
         }
@@ -384,6 +398,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
                     column.dataType = "BIGINT";
                     column.comment = field.aggregationLogic;
                 }
+                column.owner = table.owner;
                 columnList.add(column);
             }
         }

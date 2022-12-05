@@ -42,7 +42,7 @@ public class MetaDataController {
     }
 
     @ApiOperation("test")
-    @DeleteMapping("/test")
+    @PostMapping("/test")
     public void test() {
         service.test();
     }

@@ -952,6 +952,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         dataTree.setLabel(reqDto.dataSourceName);
         dataTree.setLabelAlias(reqDto.dataSourceName);
         dataTree.setLevelType(LevelTypeEnum.DATABASE);
+        dataTree.setSourceType(1);
+        dataTree.setSourceId(Integer.parseInt(reqDto.dataSourceId));
 
         // 封装data-access所有结构数据
         HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = buildChildren(reqDto.dataSourceId);
@@ -1161,6 +1163,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         appTreeByRealTime.setLabel("实时应用");
         appTreeByRealTime.setLabelAlias("实时应用");
         appTreeByRealTime.setLevelType(LevelTypeEnum.FOLDER);
+        appTreeByRealTime.setSourceType(1);
+        appTreeByRealTime.setSourceId(Integer.parseInt(id));
 
         FiDataMetaDataTreeDTO appTreeByNonRealTime = new FiDataMetaDataTreeDTO();
         String appTreeByNonRealTimeGuid = UUID.randomUUID().toString();
@@ -1169,6 +1173,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         appTreeByNonRealTime.setLabel("非实时应用");
         appTreeByNonRealTime.setLabelAlias("非实时应用");
         appTreeByNonRealTime.setLevelType(LevelTypeEnum.FOLDER);
+        appTreeByNonRealTime.setSourceType(1);
+        appTreeByNonRealTime.setSourceId(Integer.parseInt(id));
 
         // 所有应用
         List<AppRegistrationPO> appPoList = this.query().orderByDesc("create_time").list();
@@ -1217,6 +1223,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     String uuid_appId = UUID.randomUUID().toString().replace("-", "");
                     appDtoTree.setId(uuid_appId); //String.valueOf(app.id)
                     // 上一级的id
+                    appDtoTree.setSourceType(1);
+                    appDtoTree.setSourceId(Integer.parseInt(id));
                     appDtoTree.setParentId(id);
                     appDtoTree.setLabel(app.appAbbreviation);
                     appDtoTree.setLabelAlias(app.appName);
@@ -1244,6 +1252,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                         apiDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
                                         apiDtoTree.setLabel(api.apiName);
                                         apiDtoTree.setLabelAlias(api.apiName);
+                                        apiDtoTree.setSourceType(1);
+                                        apiDtoTree.setSourceId(Integer.parseInt(id));
                                         apiDtoTree.setLevelType(LevelTypeEnum.FOLDER);
                                         // 不是已发布的都当作未发布处理
                                         if (api.publish == null) {
@@ -1365,6 +1375,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     appDtoTree.setLabel(app.appName);
                     appDtoTree.setLabelAlias(app.appAbbreviation);
                     appDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                    appDtoTree.setSourceType(1);
+                    appDtoTree.setSourceId(Integer.parseInt(id));
                     appDtoTree.setLabelDesc(app.appDes);
 
                     // 查询驱动类型
@@ -1390,6 +1402,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                             apiDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
                                             apiDtoTree.setLabel(api.apiName);
                                             apiDtoTree.setLabelAlias(api.apiName);
+                                            apiDtoTree.setSourceType(1);
+                                            apiDtoTree.setSourceId(Integer.parseInt(id));
                                             apiDtoTree.setLevelType(LevelTypeEnum.FOLDER);
                                             // 不是已发布的都当作未发布处理
                                             if (api.publish == null) {

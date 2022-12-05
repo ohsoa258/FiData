@@ -10,7 +10,9 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
+import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.dto.v3.DataSourceDTO;
+import com.fisk.dataaccess.dto.v3.SourceColumnMetaQueryDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.map.AppDataSourceMap;
@@ -35,8 +37,6 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     AppDataSourceMapper mapper;
     @Resource
     RedisUtil redisUtil;
-    @Resource
-    PgsqlUtils pgsqlUtils;
     @Resource
     ApiResultConfigImpl apiResultConfig;
 
@@ -88,7 +88,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 dataSource.appName = po.serviceName;
                 OracleUtils oracleUtils = new OracleUtils();
                 // 表结构
-                dataSource.tableDtoList = oracleUtils.getTableNameAndColumn(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE), po.dbName);
+                dataSource.tableDtoList = oracleUtils.getTableNameList(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE), po.dbName);
                 //视图结构
                 ////dataSource.viewDtoList = oracleUtils.loadViewDetails(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE), po.connectAccount);
             } else if (DataSourceTypeEnum.SQLSERVER.getName().equalsIgnoreCase(dataSource.driveType)) {
@@ -98,6 +98,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 // 视图结构
                 dataSource.viewDtoList = sqlServerPlusUtils.loadViewDetails(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER));
             } else if (DataSourceTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(dataSource.driveType)) {
+                PgsqlUtils pgsqlUtils = new PgsqlUtils();
                 // 表结构
                 dataSource.tableDtoList = pgsqlUtils.getTableNameAndColumnsPlus(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL));
                 //视图结构
@@ -106,7 +107,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             } else if (DataSourceTypeEnum.ORACLE_CDC.getName().equalsIgnoreCase(dataSource.driveType)) {
                 OracleUtils oracleUtils = new OracleUtils();
                 // 表结构
-                dataSource.tableDtoList = oracleUtils.getTableNameAndColumn(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE), po.dbName);
+                dataSource.tableDtoList = oracleUtils.getTableNameList(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE), po.dbName);
             }
 
             if (CollectionUtils.isNotEmpty(dataSource.tableDtoList)) {
@@ -117,6 +118,34 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             log.error(appId + ":" + JSON.toJSONString(ResultEnum.DATASOURCE_INFORMATION_ISNULL));
             return null;
         }
+    }
+
+    @Override
+    public List<TableStructureDTO> getSourceColumnMeta(SourceColumnMetaQueryDTO dto) {
+        DataSourceDTO dataSource = mapper.getDataSource(dto.appId);
+        if (dataSource == null) {
+            log.error(dto.appId + ":" + JSON.toJSONString(ResultEnum.DATASOURCE_INFORMATION_ISNULL));
+            return null;
+        }
+        AppDataSourcePO po = this.query().eq("app_id", dto.appId).one();
+        if (DataSourceTypeEnum.MYSQL.getName().equalsIgnoreCase(dataSource.driveType)) {
+            MysqlConUtils mysqlConUtils = new MysqlConUtils();
+            Connection conn = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL);
+            return mysqlConUtils.getColNames(conn, dto.name);
+        } else if (DataSourceTypeEnum.ORACLE.getName().equalsIgnoreCase(dataSource.driveType)) {
+            OracleUtils oracleUtils = new OracleUtils();
+            Connection conn = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE);
+            return dto.queryType == 1 ? oracleUtils.getTableColumnInfoList(conn, po.serviceName, dto.name) : null;
+        } else if (DataSourceTypeEnum.SQLSERVER.getName().equalsIgnoreCase(dataSource.driveType)) {
+            SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
+            Connection conn = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
+            return sqlServerPlusUtils.getViewField(conn, dto.name);
+        } else if (DataSourceTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(dataSource.driveType)) {
+            PgsqlUtils pgsqlUtils = new PgsqlUtils();
+            Connection conn = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL);
+            return dto.queryType == 1 ? pgsqlUtils.getTableColumnName(conn, dto.name) : null;
+        }
+        return null;
     }
 
     @Override

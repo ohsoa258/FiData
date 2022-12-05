@@ -4,12 +4,10 @@ import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
 
-
 /**
  * @author dick
  */
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface NoticeExtendMap {
-
-    NoticeExtendMap INSTANCES = Mappers.getMapper(NoticeExtendMap.class);
+public interface QualityReportLogMap {
+    QualityReportLogMap INSTANCES = Mappers.getMapper(QualityReportLogMap.class);
 }

@@ -652,7 +652,39 @@ public class MetaDataImpl implements IMetaData {
 
     @Override
     public void test() {
-        associatedClassification("138bf87f-895a-408b-b16e-954f9388494a", "dim_test01", "dmp_dw", "12");
+        synchronousDisplay();
+    }
+
+    public void synchronousDisplay() {
+
+        QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
+        List<MetadataMapAtlasPO> list = metadataMapAtlasMapper.selectList(queryWrapper);
+        for (MetadataMapAtlasPO item : list) {
+            if (item.type == 7) {
+                continue;
+            }
+            ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + item.atlasGuid);
+            if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS) {
+                return;
+            }
+            //解析数据
+            JSONObject jsonObj = JSON.parseObject(getDetail.data);
+            JSONObject entityObject = JSON.parseObject(jsonObj.getString("entity"));
+            JSONObject attribute = JSON.parseObject(entityObject.getString("attributes"));
+
+            attribute.put("displayName", attribute.get("name"));
+
+            entityObject.put("attributes", attribute);
+            jsonObj.put("entity", entityObject);
+            String jsonParameter = JSONArray.toJSON(jsonObj).toString();
+            ResultDataDTO<String> result = atlasClient.post(entity, jsonParameter);
+            if (result.code != AtlasResultEnum.REQUEST_SUCCESS) {
+                return;
+            }
+
+        }
+
+
     }
 
     /**
@@ -881,6 +913,7 @@ public class MetaDataImpl implements IMetaData {
 
     /**
      * 根据数据库名,判断是否可以血缘同步
+     *
      * @param isSkip
      * @param dbName
      * @return

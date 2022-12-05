@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
-import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
@@ -48,13 +47,13 @@ import java.util.stream.Collectors;
 public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, DataSourceConPO> implements IDataSourceConManageService {
 
     @Resource
-    DataSourceConMapper mapper;
+    private DataSourceConMapper mapper;
 
     @Resource
     private UserClient userClient;
 
     @Resource
-    RedisUtil redisUtil;
+    private RedisUtil redisUtil;
 
     @Override
     public PageDTO<DataSourceConVO> page(DataSourceConQuery query) {
@@ -159,6 +158,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Override
     public FiDataMetaDataTreeDTO getFiDataConfigMetaData() {
+        // 第一步：获取Tree
         FiDataMetaDataTreeDTO fiDataMetaDataTreeBase = null;
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
@@ -175,6 +175,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             fiDataMetaDataTreeBase.setLabel("FiData");
             fiDataMetaDataTreeBase.setLabelAlias("FiData");
             fiDataMetaDataTreeBase.setLevelType(LevelTypeEnum.BASEFOLDER);
+            fiDataMetaDataTreeBase.setSourceType(SourceTypeEnum.FiData.getValue());
             fiDataMetaDataTreeBase.children = new ArrayList<>();
             for (DataSourceConPO dataSourceConPO : dataSourceConPOList) {
                 List<FiDataMetaDataDTO> fiDataMetaData = redisUtil.getFiDataMetaData(String.valueOf(dataSourceConPO.datasourceId));
@@ -183,13 +184,19 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 }
             }
         }
+        // 第二步：获取表规则
+        List<TableRuleCountDTO> tableRules = baseMapper.getFiDataTableRuleList();
+        // 第三步：递归设置Tree-节点规则数量
+        if (CollectionUtils.isNotEmpty(tableRules)) {
+            fiDataMetaDataTreeBase = setFiDataRuleTree(SourceTypeEnum.FiData, fiDataMetaDataTreeBase, tableRules);
+        }
         return fiDataMetaDataTreeBase;
     }
 
     @Override
     public FiDataMetaDataTreeDTO getCustomizeMetaData() {
+        // 第一步：获取Tree
         FiDataMetaDataTreeDTO fiDataMetaDataTreeBase = null;
-
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(DataSourceConPO::getDatasourceType, SourceTypeEnum.custom.getValue())
@@ -203,7 +210,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             fiDataMetaDataTreeBase.setLabel("Customize");
             fiDataMetaDataTreeBase.setLabelAlias("Customize");
             fiDataMetaDataTreeBase.setLevelType(LevelTypeEnum.BASEFOLDER);
-
+            fiDataMetaDataTreeBase.setSourceType(SourceTypeEnum.custom.getValue());
             List<FiDataMetaDataTreeDTO> fiDataMetaDataTree_Ips = new ArrayList<>();
             List<String> conIp = dataSourceConPOList.stream().map(t -> t.getConIp()).distinct().collect(Collectors.toList());
             for (String ip : conIp) {
@@ -214,15 +221,18 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 fiDataMetaDataTree_Ip.setLabel(ip);
                 fiDataMetaDataTree_Ip.setLabelAlias(ip);
                 fiDataMetaDataTree_Ip.setLevelType(LevelTypeEnum.FOLDER);
+                fiDataMetaDataTree_Ip.setSourceType(SourceTypeEnum.custom.getValue());
                 List<FiDataMetaDataTreeDTO> fiDataMetaDataTree_Ip_DataBases = new ArrayList<>();
-                List<DataSourceConPO> dataSourcs = dataSourceConPOList.stream().filter(t -> t.getConIp().equals(ip)).collect(Collectors.toList());
-                for (DataSourceConPO dataSource : dataSourcs) {
+                List<DataSourceConPO> dataSourceConPOS = dataSourceConPOList.stream().filter(t -> t.getConIp().equals(ip)).collect(Collectors.toList());
+                for (DataSourceConPO dataSource : dataSourceConPOS) {
                     FiDataMetaDataTreeDTO fiDataMetaDataTree_DataBase = new FiDataMetaDataTreeDTO();
                     fiDataMetaDataTree_DataBase.setId(String.valueOf(dataSource.getId()));
                     fiDataMetaDataTree_DataBase.setParentId(uuid_Ip);
                     fiDataMetaDataTree_DataBase.setLabel(dataSource.name);
                     fiDataMetaDataTree_DataBase.setLabelAlias(dataSource.name);
                     fiDataMetaDataTree_DataBase.setLevelType(LevelTypeEnum.DATABASE);
+                    fiDataMetaDataTree_DataBase.setSourceId(Math.toIntExact(dataSource.id));
+                    fiDataMetaDataTree_DataBase.setSourceType(SourceTypeEnum.custom.getValue());
                     fiDataMetaDataTree_DataBase.setChildren(getCustomizeMetaData_Table(dataSource));
                     fiDataMetaDataTree_Ip_DataBases.add(fiDataMetaDataTree_DataBase);
                 }
@@ -232,9 +242,23 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             fiDataMetaDataTreeBase.children = new ArrayList<>();
             fiDataMetaDataTreeBase.children.addAll(fiDataMetaDataTree_Ips);
         }
+        // 第二步：获取表规则
+        List<TableRuleCountDTO> tableRules = baseMapper.getCustomizeTableRuleList();
+        // 第三步：递归设置Tree-节点规则数量
+        if (CollectionUtils.isNotEmpty(tableRules)) {
+            fiDataMetaDataTreeBase = setCustomizeRuleTree(SourceTypeEnum.custom, fiDataMetaDataTreeBase, tableRules);
+        }
         return fiDataMetaDataTreeBase;
     }
 
+    /**
+     * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
+     * @description 查询自定义数据源下的表信息
+     * @author dick
+     * @date 2022/12/1 12:17
+     * @version v1.0
+     * @params conPo
+     */
     public List<FiDataMetaDataTreeDTO> getCustomizeMetaData_Table(DataSourceConPO conPo) {
         List<FiDataMetaDataTreeDTO> fiDataMetaDataTrees = new ArrayList<>();
         MysqlConUtils mysqlConUtils = new MysqlConUtils();
@@ -298,11 +322,10 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     /**
-     * 查询数据质量所有数据源信息，含FiData系统数据源
-     *
      * @return java.util.List<com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO>
+     * @description 查询数据质量所有数据源信息，含FiData系统数据源
      * @author dick
-     * @date 2022/6/16 23:17
+     * @date 2022/12/1 12:17
      * @version v1.0
      * @params
      */
@@ -359,7 +382,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @return int
      * @description 根据FiData系统数据源的Id查询数据质量数据源ID
      * @author dick
-     * @date 2022/8/18 16:36
+     * @date 2022/12/1 12:16
      * @version v1.0
      * @params sourceTypeEnum
      * @params datasourceId
@@ -377,10 +400,10 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     /**
-     * @return void
-     * @description 查询表字段名称
+     * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO>
+     * @description 查询缓存中FiData的表字段名称
      * @author dick
-     * @date 2022/8/18 12:13
+     * @date 2022/12/1 12:15
      * @version v1.0
      * @params dtoList
      */
@@ -418,13 +441,265 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     /**
-     * 连接数据库
-     *
-     * @param dataSourceTypeEnum
-     * @param connectionStr
-     * @param account
-     * @param password
-     * @return statement
+     * @return com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO
+     * @description 设置Customize树节点规则数量
+     * @author dick
+     * @date 2022/12/1 13:13
+     * @version v1.0
+     * @params sourceType 数据源类型
+     * @params dto Tree
+     * @params tableRules 表规则数量
+     */
+    public FiDataMetaDataTreeDTO setCustomizeRuleTree(SourceTypeEnum sourceType, FiDataMetaDataTreeDTO dataTree, List<TableRuleCountDTO> tableRules) {
+        // 递归获取所有树节点，平铺成列表(不包含表、视图、字段)
+        List<TreeRuleTileDTO> treeTile = getTreeTile(sourceType, dataTree);
+        // 递归设置表节点规则数量
+        HashMap<FiDataMetaDataTreeDTO, List<TreeRuleTileDTO>> map = setTableRuleCount(sourceType, dataTree, tableRules, treeTile);
+        FiDataMetaDataTreeDTO treeResult = map.keySet().stream().collect(Collectors.toList()).get(0);
+        List<TreeRuleTileDTO> treeTileResult = map.values().stream().collect(Collectors.toList()).get(0);
+        // 递归设置各个节点规则数量
+        FiDataMetaDataTreeDTO resultTree = setTreeRuleCount(sourceType, treeResult, treeTileResult);
+        return resultTree;
+    }
+
+    /**
+     * @return com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO
+     * @description 设置FiData树节点规则数量
+     * @author dick
+     * @date 2022/12/1 13:13
+     * @version v1.0
+     * @params sourceType 数据源类型
+     * @params dto Tree
+     * @params tableRules 表规则数量
+     */
+    public FiDataMetaDataTreeDTO setFiDataRuleTree(SourceTypeEnum sourceType, FiDataMetaDataTreeDTO dto, List<TableRuleCountDTO> tableRules) {
+        FiDataMetaDataTreeDTO result = dto;
+        // 单个库处理，减少递归次数
+        int ruleCount = 0, filterCount = 0, recoveryCount = 0;
+        // 统计节点规则后的库
+        List<FiDataMetaDataTreeDTO> dataBaseTrees = new ArrayList<>();
+        for (FiDataMetaDataTreeDTO dataTree : dto.getChildren()) {
+            // 递归获取所有树节点，平铺成列表(不包含表、视图、字段)
+            List<TreeRuleTileDTO> treeTile = getTreeTile(sourceType, dataTree);
+            // 递归设置表节点规则数量
+            HashMap<FiDataMetaDataTreeDTO, List<TreeRuleTileDTO>> map = setTableRuleCount(sourceType, dataTree, tableRules, treeTile);
+            FiDataMetaDataTreeDTO treeResult = map.keySet().stream().collect(Collectors.toList()).get(0);
+            List<TreeRuleTileDTO> treeTileResult = map.values().stream().collect(Collectors.toList()).get(0);
+            // 递归设置表规则父级节点规则数量
+            FiDataMetaDataTreeDTO resultTree = setTreeRuleCount(sourceType, treeResult, treeTileResult);
+            ruleCount += resultTree.getCheckRuleCount();
+            filterCount += resultTree.getFilterRuleCount();
+            recoveryCount += resultTree.getRecoveryRuleCount();
+            dataBaseTrees.add(resultTree);
+        }
+        // 计算根节点下规则总数
+        result.setCheckRuleCount(ruleCount);
+        result.setFilterRuleCount(filterCount);
+        result.setRecoveryRuleCount(recoveryCount);
+        result.setChildren(dataBaseTrees);
+        return result;
+    }
+
+    /**
+     * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
+     * @description 获取所有树节点，平铺成列表(不包含表、视图、字段)
+     * @author dick
+     * @date 2022/12/2 10:05
+     * @version v1.0
+     * @params sourceType 数据源类型
+     * @params treeDTO Tree
+     */
+    public List<TreeRuleTileDTO> getTreeTile(SourceTypeEnum sourceType, FiDataMetaDataTreeDTO treeDTO) {
+        List<TreeRuleTileDTO> list = new ArrayList<>();
+        // 存在节点才递归
+        if (CollectionUtils.isNotEmpty(treeDTO.getChildren())) {
+            TreeRuleTileDTO tileDTO = new TreeRuleTileDTO();
+            if ((treeDTO.getLevelType() == LevelTypeEnum.DATABASE && sourceType == SourceTypeEnum.FiData) ||
+                    (treeDTO.getLevelType() == LevelTypeEnum.BASEFOLDER && sourceType == SourceTypeEnum.custom)) {
+                tileDTO.setId(treeDTO.getId());
+                tileDTO.setName(treeDTO.getLabel());
+                tileDTO.setLabelBusinessType(treeDTO.getLabelBusinessType());
+                tileDTO.setParentId(treeDTO.getParentId());
+                tileDTO.setLevelTypeEnum(treeDTO.getLevelType());
+                list.add(tileDTO);
+            }
+            for (int i = 0; i < treeDTO.getChildren().size(); i++) {
+                FiDataMetaDataTreeDTO model = treeDTO.getChildren().get(i);
+                if (model.getLevelType() == LevelTypeEnum.TABLE ||
+                        model.getLevelType() == LevelTypeEnum.VIEW ||
+                        model.getLevelType() == LevelTypeEnum.FIELD) {
+                    continue;
+                }
+                tileDTO = new TreeRuleTileDTO();
+                tileDTO.setId(model.getId());
+                tileDTO.setName(model.getLabel());
+                tileDTO.setLabelBusinessType(model.getLabelBusinessType());
+                tileDTO.setParentId(model.getParentId());
+                tileDTO.setLevelTypeEnum(model.getLevelType());
+                list.add(tileDTO);
+                if (CollectionUtils.isNotEmpty(model.getChildren())) {
+                    list.addAll(getTreeTile(sourceType, model));
+                }
+            }
+        }
+        return list;
+    }
+
+    /**
+     * @return com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO
+     * @description 设置表下的规则数量
+     * @author dick
+     * @date 2022/12/1 13:12
+     * @version v1.0
+     * @params sourceType 数据源类型
+     * @params dto Tree
+     * @params tableRules 表规则数量
+     * @params treeTiles 平铺的父级列表
+     */
+    public HashMap<FiDataMetaDataTreeDTO, List<TreeRuleTileDTO>> setTableRuleCount(SourceTypeEnum sourceType, FiDataMetaDataTreeDTO dto, List<TableRuleCountDTO> tableRules, List<TreeRuleTileDTO> treeTiles) {
+        if (CollectionUtils.isNotEmpty(dto.getChildren())) {
+            for (int i = 0; i < dto.getChildren().size(); i++) {
+                FiDataMetaDataTreeDTO dataTreeDTO = dto.getChildren().get(i);
+                if (dataTreeDTO.getLevelType() != LevelTypeEnum.TABLE && dataTreeDTO.getLevelType() != LevelTypeEnum.VIEW) {
+                    setTableRuleCount(sourceType, dataTreeDTO, tableRules, treeTiles);
+                } else {
+                    int tableType = 0;
+                    if (dataTreeDTO.getLevelType() == LevelTypeEnum.TABLE) {
+                        tableType = 1;
+                    } else if (dataTreeDTO.getLevelType() == LevelTypeEnum.VIEW) {
+                        tableType = 2;
+                    }
+                    int finalTableType = tableType;
+                    // 通过数据源ID+表类型+表业务类型+表ID/表名称 定位到表的规则
+                    String tableUnique = "";
+                    if (sourceType == SourceTypeEnum.FiData) {
+                        tableUnique = dataTreeDTO.getId();
+                    } else if (sourceType == SourceTypeEnum.custom) {
+                        tableUnique = dataTreeDTO.getLabel();
+                    }
+                    String finalTableUnique = tableUnique;
+                    List<TableRuleCountDTO> ruleList = tableRules.stream().filter(
+                            t -> t.getSourceId() == dataTreeDTO.getSourceId()
+                                    && t.getTableType() == finalTableType
+                                    && t.getTableBusinessType() == dataTreeDTO.getLabelBusinessType()
+                                    && t.getTableUnique().equals(finalTableUnique)).collect(Collectors.toList());
+                    if (CollectionUtils.isNotEmpty(ruleList)) {
+                        // 获取校验规则数量
+                        TableRuleCountDTO checkRule = ruleList.stream().filter(t -> t.getTableRuleType().equals("校验规则")).findFirst().orElse(null);
+                        if (checkRule != null)
+                            dataTreeDTO.setCheckRuleCount(checkRule.getTableRuleCount());
+                        // 获取清洗规则数量
+                        TableRuleCountDTO filterRule = ruleList.stream().filter(t -> t.getTableRuleType().equals("清洗规则")).findFirst().orElse(null);
+                        if (filterRule != null)
+                            dataTreeDTO.setFilterRuleCount(filterRule.getTableRuleCount());
+                        // 获取回收规则数量
+                        TableRuleCountDTO recoveryRule = ruleList.stream().filter(t -> t.getTableRuleType().equals("回收规则")).findFirst().orElse(null);
+                        if (recoveryRule != null)
+                            dataTreeDTO.setRecoveryRuleCount(recoveryRule.getTableRuleCount());
+                        // 设置表的父节点规则数量
+                        if (CollectionUtils.isNotEmpty(treeTiles) &&
+                                (dataTreeDTO.getCheckRuleCount() > 0 || dataTreeDTO.getFilterRuleCount() > 0 || dataTreeDTO.getRecoveryRuleCount() > 0)) {
+                            treeTiles = setFolderRuleCount(sourceType, dataTreeDTO.getParentId(), dataTreeDTO.getCheckRuleCount(), dataTreeDTO.getFilterRuleCount(), dataTreeDTO.getRecoveryRuleCount(), treeTiles);
+                        }
+                    }
+                }
+            }
+        }
+        HashMap<FiDataMetaDataTreeDTO, List<TreeRuleTileDTO>> map = new HashMap<>();
+        map.put(dto, treeTiles);
+        return map;
+    }
+
+    /**
+     * @return java.util.List<com.fisk.datagovernance.dto.dataquality.datasource.TreeRuleTileDTO>
+     * @description 设置文件夹下的规则数量
+     * @author dick
+     * @date 2022/12/2 12:50
+     * @version v1.0
+     * @params sourceType 数据源类型
+     * @params id 父级id
+     * @params ruleCount 校验规则数量
+     * @params filterCount 清洗规则数量
+     * @params recoveryCount 回收规则数量
+     * @params treeTiles 平铺的父级列表
+     */
+    public List<TreeRuleTileDTO> setFolderRuleCount(SourceTypeEnum sourceType, String id, int ruleCount, int filterCount, int recoveryCount, List<TreeRuleTileDTO> treeTiles) {
+        // 递归到了根节点，推出递归
+        if ((id.equals("-10") && sourceType == SourceTypeEnum.FiData) ||
+                (id.equals("-200") && sourceType == SourceTypeEnum.custom)) {
+            return treeTiles;
+        }
+        // 查找节点的父级节点
+        List<TreeRuleTileDTO> parentList = treeTiles.stream().filter(t -> t.getId().equals(id)).collect(Collectors.toList());
+        // 设置父级节点的规则数量
+        if (CollectionUtils.isNotEmpty(parentList)) {
+            for (int i = 0; i < parentList.size(); i++) {
+                TreeRuleTileDTO tileDTO = parentList.get(i);
+                int t_ruleCount = tileDTO.getCheckRuleCount() + ruleCount;
+                int t_filterCount = tileDTO.getFilterRuleCount() + filterCount;
+                int t_recoveryCount = tileDTO.getRecoveryRuleCount() + recoveryCount;
+                tileDTO.setCheckRuleCount(t_ruleCount);
+                tileDTO.setFilterRuleCount(t_filterCount);
+                tileDTO.setRecoveryRuleCount(t_recoveryCount);
+                setFolderRuleCount(sourceType, tileDTO.getParentId(), ruleCount, filterCount, recoveryCount, treeTiles);
+            }
+        }
+        return treeTiles;
+    }
+
+    /**
+     * @return com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO
+     * @description 设置Tree各个节点的规则数量
+     * @author dick
+     * @date 2022/12/2 12:51
+     * @version v1.0
+     * @params sourceType 数据源类型
+     * @params tree 树
+     * @params treeTile 平铺的父级列表
+     */
+    public FiDataMetaDataTreeDTO setTreeRuleCount(SourceTypeEnum sourceType, FiDataMetaDataTreeDTO tree, List<TreeRuleTileDTO> treeTile) {
+        // 存在节点和存在规则数量才开始递归设置
+        if (CollectionUtils.isNotEmpty(tree.getChildren()) && CollectionUtils.isNotEmpty(treeTile)) {
+            TreeRuleTileDTO tileDTO = null;
+            if ((tree.getLevelType() == LevelTypeEnum.DATABASE && sourceType == SourceTypeEnum.FiData)
+                    || (tree.getLevelType() == LevelTypeEnum.BASEFOLDER && sourceType == SourceTypeEnum.custom)) {
+                tileDTO = treeTile.stream().filter(t -> t.getId().equals(tree.getId())).findFirst().orElse(null);
+                if (tileDTO != null) {
+                    tree.setCheckRuleCount(tileDTO.getCheckRuleCount());
+                    tree.setFilterRuleCount(tileDTO.getFilterRuleCount());
+                    tree.setRecoveryRuleCount(tileDTO.getRecoveryRuleCount());
+                }
+            }
+            for (int i = 0; i < tree.getChildren().size(); i++) {
+                FiDataMetaDataTreeDTO dataTree = tree.getChildren().get(i);
+                // 表、视图、字段 直接跳过
+                if (dataTree.getLevelType() == LevelTypeEnum.TABLE ||
+                        dataTree.getLevelType() == LevelTypeEnum.VIEW ||
+                        dataTree.getLevelType() == LevelTypeEnum.FIELD) {
+                    continue;
+                }
+                tileDTO = treeTile.stream().filter(t -> t.getId().equals(dataTree.getId())).findFirst().orElse(null);
+                if (tileDTO != null) {
+                    dataTree.setCheckRuleCount(tileDTO.getCheckRuleCount());
+                    dataTree.setFilterRuleCount(tileDTO.getFilterRuleCount());
+                    dataTree.setRecoveryRuleCount(tileDTO.getRecoveryRuleCount());
+                }
+                setTreeRuleCount(sourceType, dataTree, treeTile);
+            }
+        }
+        return tree;
+    }
+
+    /**
+     * @return java.sql.Connection
+     * @description 创建数据库连接对象
+     * @author dick
+     * @date 2022/12/1 12:16
+     * @version v1.0
+     * @params dataSourceTypeEnum
+     * @params connectionStr
+     * @params account
+     * @params password
      */
     public static Connection getStatement(DataSourceTypeEnum dataSourceTypeEnum, String connectionStr, String account, String password) {
         try {

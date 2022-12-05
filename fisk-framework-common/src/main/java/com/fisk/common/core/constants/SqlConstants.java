@@ -15,5 +15,4 @@ public class SqlConstants {
      * 删除
      */
     public static final String DEL = "0";
-
 }

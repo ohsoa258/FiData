@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -71,7 +72,8 @@ public class CustomScriptImpl
         QueryWrapper<CustomScriptPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(CustomScriptPO::getTableId, dto.tableId)
-                .eq(CustomScriptPO::getType, dto.type);
+                .eq(CustomScriptPO::getType, dto.type)
+                .eq(CustomScriptPO::getExecType, dto.execType);
         List<CustomScriptPO> list = mapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(list)) {
             return new ArrayList<>();
@@ -107,6 +109,9 @@ public class CustomScriptImpl
 
     @Override
     public ResultEnum addOrUpdateCustomScript(List<CustomScriptDTO> dtoList) {
+        if (CollectionUtils.isEmpty(dtoList)) {
+            return ResultEnum.SUCCESS;
+        }
         List<CustomScriptPO> poList = CustomScriptMap.INSTANCES.dtoListToPoList(dtoList);
         boolean b = this.saveOrUpdateBatch(poList);
         if (!b) {
@@ -143,11 +148,34 @@ public class CustomScriptImpl
                 .lambda()
                 .eq(CustomScriptPO::getTableId, tableId)
                 .eq(CustomScriptPO::getType, type);
+        List<CustomScriptPO> list = mapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(list)) {
+            return ResultEnum.SUCCESS;
+        }
         boolean flat = this.remove(queryWrapper);
         if (!flat) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 获取批量脚本,分号隔开
+     *
+     * @param dto
+     * @return
+     */
+    public String getBatchScript(CustomScriptQueryDTO dto) {
+        List<CustomScriptInfoDTO> customScriptInfoDTOS = listCustomScript(dto);
+        if (CollectionUtils.isEmpty(customScriptInfoDTOS)) {
+            return null;
+        }
+        List<String> collect = customScriptInfoDTOS.stream()
+                .sorted(Comparator.comparing(CustomScriptInfoDTO::getSequence))
+                .map(e -> e.getScript())
+                .collect(Collectors.toList());
+
+        return String.join(";", collect);
     }
 
 

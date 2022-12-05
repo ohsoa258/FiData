@@ -39,10 +39,7 @@ public class AttachmentInfoPO  extends BasePO {
     public String absolutePath;
 
     /**
-     * 附件类别 、
-     * 100：数据校验质量报告
-     * 200 业务清洗质量报告
-     * 300 生命周期质量报告
+     * 附件类别 100：质量校验报告 200 数据清洗报告
      */
     public int category;
 

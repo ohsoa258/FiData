@@ -50,4 +50,8 @@ public class ModelPublishTableDTO {
      * 单次从结果集中提取的最大数据行
      */
     public int fetchSize;
+    /**
+     * 自定义脚本
+     */
+    public String customScript;
 }
