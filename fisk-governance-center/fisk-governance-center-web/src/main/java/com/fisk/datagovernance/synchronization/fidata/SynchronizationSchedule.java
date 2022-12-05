@@ -1,6 +1,7 @@
 package com.fisk.datagovernance.synchronization.fidata;
 
 import com.fisk.datagovernance.service.impl.dataops.DataOpsDataSourceManageImpl;
+import com.fisk.datagovernance.service.impl.dataquality.DataSourceConManageImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.Trigger;
@@ -25,6 +26,9 @@ public class SynchronizationSchedule implements SchedulingConfigurer {
     @Resource
     DataOpsDataSourceManageImpl dataOpsDataSourceManageImpl;
 
+    @Resource
+    DataSourceConManageImpl dataSourceConManageImpl;
+
     @Value("${dataops.schedule}")
     private String cron;
     @Value("${dataops.enabled}")
@@ -42,10 +46,13 @@ public class SynchronizationSchedule implements SchedulingConfigurer {
                 // 业务逻辑
                if (enabled)
                {
-                   log.info("数据运维写入pg数据源到redis 开始");
-                   //数据运维写入数据源到redis
-                   dataOpsDataSourceManageImpl.setDataOpsDataSource_v1();
-                   log.info("数据运维写入pg数据源到redis 结束");
+                   log.info("数据运维写入数据源到redis 开始");
+                   dataOpsDataSourceManageImpl.setMetaDataToRedis();
+                   log.info("数据运维写入数据源到redis 结束");
+
+                   log.info("数据质量写入数据源到redis 开始");
+                   dataSourceConManageImpl.setMetaDataToRedis();
+                   log.info("数据质量写入数据源到redis 结束");
                }
             }
         };

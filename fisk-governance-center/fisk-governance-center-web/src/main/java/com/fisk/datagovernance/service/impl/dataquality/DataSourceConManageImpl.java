@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.service.impl.dataquality;
 
+import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -30,6 +31,8 @@ import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.SneakyThrows;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -54,6 +57,12 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Resource
     private RedisUtil redisUtil;
+
+    @Value("${dataquality.metadataentity_key}")
+    private String metaDataEntityKey;
+
+    @Resource
+    private RedisTemplate redisTemplate;
 
     @Override
     public PageDTO<DataSourceConVO> page(DataSourceConQuery query) {
@@ -95,6 +104,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             return ResultEnum.DATA_QUALITY_DATASOURCE_EXISTS;
         }
         DataSourceConPO model = DataSourceConMap.INSTANCES.dtoToPo(dto);
+        if (model.getDatasourceType() == SourceTypeEnum.custom.getValue()) {
+            setMetaDataToRedis(model, 1);
+        }
         return mapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -121,6 +133,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             return ResultEnum.DATA_QUALITY_DATASOURCE_EXISTS;
         }
         DataSourceConMap.INSTANCES.editDtoToPo(dto, model);
+        if (dto.getDatasourceType() == SourceTypeEnum.custom) {
+            setMetaDataToRedis(model, 2);
+        }
         return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -129,6 +144,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         DataSourceConPO model = mapper.selectById(id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
+        }
+        if (model.getDatasourceType() == SourceTypeEnum.custom.getValue()) {
+            setMetaDataToRedis(model, 3);
         }
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -799,8 +817,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @params account
      * @params password
      */
-    public static Connection getStatement(DataSourceTypeEnum dataSourceTypeEnum, String connectionStr, String
-            account, String password) {
+    public static Connection getStatement(DataSourceTypeEnum dataSourceTypeEnum, String connectionStr, String account, String password) {
         try {
             AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
             Connection connection = dbHelper.connection(connectionStr, account,
@@ -808,6 +825,52 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             return connection;
         } catch (Exception e) {
             throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR);
+        }
+    }
+
+    /**
+     * @return void
+     * @description 保存自定义数据源的元数据信息到Redis
+     * @author dick
+     * @date 2022/7/21 11:59
+     * @version v1.0
+     * @params datasourceId
+     * @params operationType 操作类型 1、新增 2、修改 3、删除
+     */
+    public void setMetaDataToRedis(DataSourceConPO dataSourceConPO, int operationType) {
+        if (StringUtils.isEmpty(metaDataEntityKey)) {
+            return;
+        }
+        String redisKey = metaDataEntityKey + "_" + dataSourceConPO.getId();
+        if (operationType == 3) {
+            Boolean exist = redisTemplate.hasKey(redisKey);
+            if (exist) {
+                redisTemplate.delete(redisKey);
+            }
+        } else if (operationType == 1 || operationType == 2) {
+            FiDataMetaDataTreeDTO meta = getCustomizeMetaData(false);
+            String json = JSONArray.toJSON(meta).toString();
+            redisTemplate.opsForValue().set(redisKey, json);
+        }
+    }
+
+    /**
+     * @return void
+     * @description 保存自定义数据源的元数据信息到Redis.定时任务调用
+     * @author dick
+     * @date 2022/5/11 10:33
+     * @version v1.0
+     */
+    public void setMetaDataToRedis() {
+        QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(DataSourceConPO::getDelFlag, 1)
+                .eq(DataSourceConPO::getDatasourceType, SourceTypeEnum.custom.getValue());
+        List<DataSourceConPO> dataSourceConPOs = mapper.selectList(queryWrapper);
+        if (CollectionUtils.isNotEmpty(dataSourceConPOs)) {
+            for (DataSourceConPO dataSourceConPO : dataSourceConPOs) {
+                setMetaDataToRedis(dataSourceConPO, 2);
+            }
         }
     }
 }
