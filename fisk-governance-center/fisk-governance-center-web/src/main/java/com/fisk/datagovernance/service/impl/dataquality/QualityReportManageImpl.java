@@ -403,11 +403,10 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
             // 清空response
             response.reset();
             // 设置response的Header
+            response.addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(filename, "UTF-8"));
+            response.addHeader("Content-Length", "" + file.length());
             OutputStream toClient = new BufferedOutputStream(response.getOutputStream());
-            response.setCharacterEncoding("UTF-8");
-            response.setContentType("application/vnd.ms-excel");
-            response.setHeader("content-disposition",
-                    "attachment;filename=" + new String(filename.getBytes("utf-8"),"ISO-8859-1" )+ ".xls");
+            response.setContentType("application/octet-stream");
             toClient.write(buffer);
             toClient.flush();
             toClient.close();
