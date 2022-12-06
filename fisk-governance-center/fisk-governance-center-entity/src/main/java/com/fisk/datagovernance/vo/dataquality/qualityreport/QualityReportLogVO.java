@@ -66,6 +66,12 @@ public class QualityReportLogVO {
     public boolean existReport;
 
     /**
+     * 报告名称
+     */
+    @ApiModelProperty(value = "报告名称")
+    public String originalName;
+
+    /**
      * 邮件服务id
      */
     @ApiModelProperty(value = "邮件服务id")
