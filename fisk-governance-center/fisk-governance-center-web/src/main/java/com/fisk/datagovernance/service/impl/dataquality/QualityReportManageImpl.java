@@ -43,6 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -401,7 +402,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
             // 清空response
             response.reset();
             // 设置response的Header
-            response.addHeader("Content-Disposition", "attachment;filename=" + filename);
+            response.addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(filename, "UTF-8"));
             response.addHeader("Content-Length", "" + file.length());
             OutputStream toClient = new BufferedOutputStream(response.getOutputStream());
             response.setContentType("application/octet-stream");
