@@ -409,7 +409,8 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
             toClient.flush();
             toClient.close();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            log.error("【downloadReportRecord】 系统异常：" + ex);
+            throw new FkException(ResultEnum.ERROR, "【downloadReportRecord】 ex：" + ex);
         }
         return response;
     }
