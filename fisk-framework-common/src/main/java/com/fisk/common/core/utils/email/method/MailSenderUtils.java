@@ -1,7 +1,9 @@
 package com.fisk.common.core.utils.email.method;
 
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.utils.email.dto.MailSenderDTO;
 import com.fisk.common.core.utils.email.dto.MailServeiceDTO;
+import com.google.common.base.Joiner;
 import com.sun.mail.util.MailSSLSocketFactory;
 import org.apache.commons.lang.StringUtils;
 
@@ -10,9 +12,9 @@ import javax.activation.FileDataSource;
 import javax.mail.*;
 import javax.mail.internet.*;
 import java.io.File;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Properties;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author dick
@@ -79,20 +81,42 @@ public class MailSenderUtils {
         // 1. 创建邮件对象
         Message mimeMessage = new MimeMessage(session);
         // 2. 发件人
-        mimeMessage.setFrom(new InternetAddress(senderDTO.getUser(),"fiskColud@fisksoft.com")); //senderDTO.getUser()
+        mimeMessage.setFrom(new InternetAddress(senderDTO.getUser(), "fiskColud@fisksoft.com")); //senderDTO.getUser()
         // 3. 收件人
-        mimeMessage.setRecipients(MimeMessage.RecipientType.TO, InternetAddress.parse(senderDTO.getToAddress()));
+        if (senderDTO.getToAddress() != null && senderDTO.getToAddress() != "") {
+            String to = senderDTO.getToAddress()
+                    .replace(";", ",")
+                    .replace("；", ",")
+                    .replace("，", ",");
+            List<String> toList = Arrays.stream(to.split(",")).distinct().collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(toList)) {
+                String param = Joiner.on(",").join(toList);
+                mimeMessage.setRecipients(MimeMessage.RecipientType.TO, InternetAddress.parse(param));
+            }
+        }
         // 4. 抄送人
         if (senderDTO.getToCc() != null && senderDTO.getToCc() != "") {
             String cc = senderDTO.getToCc()
                     .replace(";", ",")
                     .replace("；", ",")
                     .replace("，", ",");
-            mimeMessage.setRecipients(MimeMessage.RecipientType.CC, InternetAddress.parse(cc));
+            List<String> ccList = Arrays.stream(cc.split(",")).distinct().collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(ccList)) {
+                String param = Joiner.on(",").join(ccList);
+                mimeMessage.setRecipients(MimeMessage.RecipientType.CC, InternetAddress.parse(param));
+            }
         }
         // 5. 密抄
         if (senderDTO.getToBcc() != null && senderDTO.getToBcc() != "") {
-            mimeMessage.setRecipients(MimeMessage.RecipientType.BCC, InternetAddress.parse(senderDTO.getToBcc()));
+            String bcc = senderDTO.getToBcc()
+                    .replace(";", ",")
+                    .replace("；", ",")
+                    .replace("，", ",");
+            List<String> bccList = Arrays.stream(bcc.split(",")).distinct().collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(bccList)) {
+                String param = Joiner.on(",").join(bccList);
+                mimeMessage.setRecipients(MimeMessage.RecipientType.BCC, InternetAddress.parse(param));
+            }
         }
         // 6. 邮件主题
         mimeMessage.setSubject(senderDTO.getSubject());
