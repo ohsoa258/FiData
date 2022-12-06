@@ -144,5 +144,13 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @return String
      */
     String getHttpRequestResult(ApiHttpRequestDTO dto);
+
+    /**
+     * 根据apiId获取表字段信息
+     *
+     * @param apiId
+     * @return
+     */
+    List<ApiColumnInfoDTO> getTableColumnInfoByApi(Integer apiId);
 }
 

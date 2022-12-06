@@ -83,5 +83,13 @@ public interface TableFieldsMap {
      */
     TableBusinessTimeDTO businessTime(TableBusinessDTO dto);
 
+    /**
+     * poList==>DtoFileList
+     *
+     * @param poList
+     * @return
+     */
+    List<FieldNameDTO> poListToDtoFileList(List<TableFieldsPO> poList);
+
 
 }

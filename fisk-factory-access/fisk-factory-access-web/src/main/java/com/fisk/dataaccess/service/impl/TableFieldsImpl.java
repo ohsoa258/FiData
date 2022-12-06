@@ -30,10 +30,7 @@ import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
 import com.fisk.dataaccess.dto.flink.FlinkConfigDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.dto.savepointhistory.SavepointHistoryDTO;
-import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
-import com.fisk.dataaccess.dto.table.TableBusinessDTO;
-import com.fisk.dataaccess.dto.table.TableFieldsDTO;
-import com.fisk.dataaccess.dto.table.TableSyncmodeDTO;
+import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.map.FlinkParameterMap;
@@ -1084,5 +1081,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             }
         }
         return resultEnum;
+    }
+
+    @Override
+    public List<FieldNameDTO> getTableFileInfo(long tableAccessId) {
+        List<TableFieldsPO> list = this.query().eq("table_access_id", tableAccessId).list();
+        return TableFieldsMap.INSTANCES.poListToDtoFileList(list);
     }
 }
