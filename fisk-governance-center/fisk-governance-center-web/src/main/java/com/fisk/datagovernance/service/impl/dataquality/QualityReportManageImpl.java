@@ -401,7 +401,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
             // 清空response
             response.reset();
             // 设置response的Header
-            response.addHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes()));
+            response.addHeader("Content-Disposition", "attachment;filename=" + filename);
             response.addHeader("Content-Length", "" + file.length());
             OutputStream toClient = new BufferedOutputStream(response.getOutputStream());
             response.setContentType("application/octet-stream");
