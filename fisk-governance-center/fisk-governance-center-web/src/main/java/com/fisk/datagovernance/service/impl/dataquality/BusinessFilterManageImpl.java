@@ -159,6 +159,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             // 第六步：表信息填充
             if (CollectionUtils.isNotEmpty(tableFields)) {
                 for (BusinessFilterVO ruleDto : filterRule) {
+                    ruleDto.setTemplateSceneName(ruleDto.getTemplateScene().getName());
                     FiDataMetaDataTreeDTO f_table = null;
                     if (ruleDto.getSourceTypeEnum() == SourceTypeEnum.FiData) {
                         FiDataMetaDataDTO fiDataMetaDataDTO = tableFields.stream().filter(t -> t.getDataSourceId() == ruleDto.getFiDataSourceId()).findFirst().orElse(null);

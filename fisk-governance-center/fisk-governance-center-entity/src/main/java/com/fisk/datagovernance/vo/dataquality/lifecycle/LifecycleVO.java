@@ -157,6 +157,12 @@ public class LifecycleVO {
     public TemplateSceneEnum templateScene;
 
     /**
+     * 模板应用场景名称
+     */
+    @ApiModelProperty(value = "模板应用场景名称")
+    public String templateSceneName;
+
+    /**
      * 应用场景描述
      */
     @ApiModelProperty(value = "应用场景描述")

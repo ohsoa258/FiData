@@ -36,6 +36,7 @@ public class DataCheckExtendManageImpl extends ServiceImpl<DataCheckExtendMapper
         List<DataCheckExtendPO> dataCheckExtends = baseMapper.selectList(dataCheckExtendPOQueryWrapper);
         if (CollectionUtils.isNotEmpty(dataCheckExtends)) {
             for (DataCheckVO ruleDto : source) {
+                ruleDto.setTemplateSceneName(ruleDto.getTemplateScene().getName());
                 FiDataMetaDataTreeDTO f_table = null;
                 if (ruleDto.getSourceTypeEnum() == SourceTypeEnum.FiData && CollectionUtils.isNotEmpty(tableFields)) {
                     FiDataMetaDataDTO fiDataMetaDataDTO = tableFields.stream().filter(t -> t.getDataSourceId() == ruleDto.getFiDataSourceId()).findFirst().orElse(null);
