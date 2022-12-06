@@ -364,6 +364,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                         File file = new File(filePath);
                         if (file.exists()) {
                             qualityReportLogVO.setExistReport(true);
+                            qualityReportLogVO.setOriginalName(attachmentInfoPO.getOriginalName());
                         }
                     }
                 }
