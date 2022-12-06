@@ -1181,12 +1181,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 所有应用下表字段信息
         List<FiDataMetaDataTreeDTO> tableFieldList = new ArrayList<>();
 
-        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> fiDataMetaDataTreeByRealTime = getFiDataMetaDataTreeByRealTime(id, appPoList);
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> fiDataMetaDataTreeByRealTime = getFiDataMetaDataTreeByRealTime(appTreeByRealTimeGuid,id, appPoList);
         Map.Entry<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> nextTreeByRealTime = fiDataMetaDataTreeByRealTime.entrySet().iterator().next();
         appTreeByRealTime.setChildren(nextTreeByRealTime.getValue());
         tableFieldList.addAll(nextTreeByRealTime.getKey());
 
-        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> fiDataMetaDataTreeByNonRealTime = getFiDataMetaDataTreeByNonRealTime(id, appPoList);
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> fiDataMetaDataTreeByNonRealTime = getFiDataMetaDataTreeByNonRealTime(appTreeByNonRealTimeGuid,id, appPoList);
         Map.Entry<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> nextTreeByNonRealTime = fiDataMetaDataTreeByNonRealTime.entrySet().iterator().next();
         appTreeByNonRealTime.setChildren(nextTreeByNonRealTime.getValue());
         tableFieldList.addAll(nextTreeByNonRealTime.getKey());
@@ -1208,7 +1208,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * @date 2022/6/16 15:21
      * @params id FiData数据源id
      */
-    private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> getFiDataMetaDataTreeByRealTime(String id, List<AppRegistrationPO> appPoList) {
+    private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> getFiDataMetaDataTreeByRealTime(String appTreeByRealTimeGuid, String id, List<AppRegistrationPO> appPoList) {
         HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = new HashMap<>();
         List<FiDataMetaDataTreeDTO> key = new ArrayList<>();
         List<FiDataMetaDataTreeDTO> value = appPoList.stream()
@@ -1225,7 +1225,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     // 上一级的id
                     appDtoTree.setSourceType(1);
                     appDtoTree.setSourceId(Integer.parseInt(id));
-                    appDtoTree.setParentId(id);
+                    appDtoTree.setParentId(appTreeByRealTimeGuid);
                     appDtoTree.setLabel(app.appAbbreviation);
                     appDtoTree.setLabelAlias(app.appName);
                     appDtoTree.setLevelType(LevelTypeEnum.FOLDER);
@@ -1357,7 +1357,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * @author Lock
      * @date 2022/6/16 15:21
      */
-    private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> getFiDataMetaDataTreeByNonRealTime(String id, List<AppRegistrationPO> appPoList) {
+    private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> getFiDataMetaDataTreeByNonRealTime(String appTreeByNonRealTimeGuid, String id, List<AppRegistrationPO> appPoList) {
         HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = new HashMap<>();
         List<FiDataMetaDataTreeDTO> key = new ArrayList<>();
         List<FiDataMetaDataTreeDTO> value = appPoList.stream()
@@ -1371,7 +1371,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     String uuid_appId = UUID.randomUUID().toString().replace("-", "");
                     appDtoTree.setId(uuid_appId); //String.valueOf(app.id)
                     // 上一级的id
-                    appDtoTree.setParentId(id);
+                    appDtoTree.setParentId(appTreeByNonRealTimeGuid);
                     appDtoTree.setLabel(app.appName);
                     appDtoTree.setLabelAlias(app.appAbbreviation);
                     appDtoTree.setLevelType(LevelTypeEnum.FOLDER);
