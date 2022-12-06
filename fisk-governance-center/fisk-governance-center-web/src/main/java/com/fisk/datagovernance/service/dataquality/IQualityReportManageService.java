@@ -92,7 +92,7 @@ public interface IQualityReportManageService extends IService<QualityReportPO> {
      *
      * @return 执行结果
      */
-    HttpServletResponse downloadReportRecord(int reportLogId, HttpServletResponse response);
+    void downloadReportRecord(int reportLogId, HttpServletResponse response);
 
     /**
      * 预览报告记录

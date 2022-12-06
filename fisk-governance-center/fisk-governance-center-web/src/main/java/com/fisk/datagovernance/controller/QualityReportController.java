@@ -91,9 +91,9 @@ public class QualityReportController {
     }
 
     @ApiOperation("下载报告记录")
-    @GetMapping("/getAllReportLog/{reportLogId}")
-    public HttpServletResponse downloadReportRecord(@PathVariable("reportLogId") int reportLogId, HttpServletResponse response) {
-        return service.downloadReportRecord(reportLogId, response);
+    @GetMapping("/downloadReportRecord/{reportLogId}")
+    public void downloadReportRecord(@PathVariable("reportLogId") int reportLogId, HttpServletResponse response) {
+        service.downloadReportRecord(reportLogId, response);
     }
 
     @ApiOperation("预览报告记录")

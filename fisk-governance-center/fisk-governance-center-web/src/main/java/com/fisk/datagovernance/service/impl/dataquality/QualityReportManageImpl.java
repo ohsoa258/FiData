@@ -372,10 +372,10 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
     }
 
     @Override
-    public HttpServletResponse downloadReportRecord(int reportLogId, HttpServletResponse response) {
+    public void downloadReportRecord(int reportLogId, HttpServletResponse response) {
         try {
             if (reportLogId == 0) {
-                return response;
+                return;
             }
             List<Integer> categoryList = new ArrayList<>();
             categoryList.add(100); // 质量校验报告
@@ -386,7 +386,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                     .eq(AttachmentInfoPO::getObjectId, reportLogId);
             AttachmentInfoPO attachmentInfoPO = attachmentInfoMapper.selectOne(attachmentInfoPOQueryWrapper);
             if (attachmentInfoPO == null) {
-                return response;
+                return;
             }
             String filePath = attachmentInfoPO.getAbsolutePath() + File.separator + attachmentInfoPO.getCurrentFileName();
             log.info("【downloadReportRecord】文件路径：" + filePath);
@@ -412,7 +412,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
             log.error("【downloadReportRecord】 系统异常：" + ex);
             throw new FkException(ResultEnum.ERROR, "【downloadReportRecord】 ex：" + ex);
         }
-        return response;
+        return;
     }
 
     @Override
