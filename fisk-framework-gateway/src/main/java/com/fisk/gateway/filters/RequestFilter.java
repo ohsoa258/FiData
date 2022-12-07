@@ -31,13 +31,13 @@ import java.util.List;
 
 
 /**
- * @author Lock
+ * @author YuG
  * @date 2021/5/17 17:16
- * 拦截器: 用于拦截用户请求,并刷新有效期
+ * 拦截器: 用于拦截前端请求, 并刷新token有效期
  */
 @Slf4j
 @Component
-public class LoginFilter implements GlobalFilter, Ordered {
+public class RequestFilter implements GlobalFilter, Ordered {
 
     @Resource
     private JwtUtils jwtUtils;
@@ -51,7 +51,7 @@ public class LoginFilter implements GlobalFilter, Ordered {
         String traceId = MDCHelper.setTraceId(),
                 spanId = MDCHelper.setSpanId();
 
-        // 1.获取Request对象
+        // step 1.获取Request对象
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
 
@@ -63,14 +63,14 @@ public class LoginFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
-        // 2. 获取token
+        // step 2. 获取token
         String token = request.getHeaders().getFirst(SystemConstants.HTTP_HEADER_AUTH);
         if (StringUtils.isEmpty(token)) {
             return buildResult(response, exchange, "没有token，请先登录");
         }
         token = token.replace(SystemConstants.AUTH_TOKEN_HEADER, "");
 
-        // 3.校验token是否有效
+        // step 3.校验token是否有效
         try {
             // 3.1.解析并验证token
             Payload payload = null;
@@ -84,16 +84,18 @@ public class LoginFilter implements GlobalFilter, Ordered {
                 if (userInfo.getId() == permanentToken) {
                     // 不需要刷新token过期时间,直接放行
                     return chain.filter(exchange);
-                    // 推送数据的请求路径判断
-                    // 200928
-                } else if (userInfo.getId() >= RedisTokenKey.DATA_SERVICE_TOKEN && userInfo.getId() <= RedisTokenKey.TOKEN_MAX) {
+                }
+                // 推送数据的请求路径判断
+                // 200928
+                else if (userInfo.getId() >= RedisTokenKey.DATA_SERVICE_TOKEN && userInfo.getId() <= RedisTokenKey.TOKEN_MAX) {
                     // 推送数据白名单
                     ResultEntity<Boolean> result = authClient.pushDataPathIsExists(request.getPath().value());
                     if (result.code == ResultEnum.SUCCESS.getCode() && result.data) {
                         // 不需要刷新token过期时间,直接放行
                         return chain.filter(exchange);
-                        // 当前请求路径不在推送数据的白名单中
-                    } else if (result.code == ResultEnum.SUCCESS.getCode() && !result.data) {
+                    }
+                    // 当前请求路径不在推送数据的白名单中
+                    else if (result.code == ResultEnum.SUCCESS.getCode() && !result.data) {
                         log.error("远程调用失败，方法名：【auth-service:pushDataPathIsExists】");
                         return buildResult(response, exchange, ResultEnum.TOKEN_EXCEPTION.getMsg());
                     }
@@ -126,7 +128,8 @@ public class LoginFilter implements GlobalFilter, Ordered {
                         }
                     }
                     log.info("客户端: {}, 正在访问: {}", userInfo.getUserAccount(), request.getURI().getPath());
-                } else { // 两种情况会执行到else: 1: feign接口调用失败, 2: 当前客户端已删除,auth模块执行catch
+                } else {
+                    // 两种情况会执行到else: 1: feign接口调用失败, 2: 当前客户端已删除, auth模块执行catch
                     // 远程调用失败
                     return buildResult(response, exchange, authClientData.msg);
                 }
@@ -136,7 +139,7 @@ public class LoginFilter implements GlobalFilter, Ordered {
             log.info(e.getMessage());
             return buildResult(response, exchange, e.getMessage());
         }
-        // 5.放行
+        // step 5.放行
         return chain.filter(exchange);
     }
 
