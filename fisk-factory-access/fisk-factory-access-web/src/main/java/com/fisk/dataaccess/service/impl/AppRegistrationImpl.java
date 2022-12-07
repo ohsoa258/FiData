@@ -31,7 +31,10 @@ import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbMetaData.dto.*;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDbAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -212,6 +215,21 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             VerifySchema(po.appAbbreviation, po.targetDbId);
         }
 
+        //新增业务分类
+        addClassification(appRegistrationDTO);
+
+        //数据库应用,需要新增元数据对象
+        addDataSourceMetaData(appRegistrationDTO, po.id, modelDataSource.id);
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
+    }
+
+    /**
+     * 新增业务分类
+     *
+     * @param appRegistrationDTO
+     */
+    public void addClassification(AppRegistrationDTO appRegistrationDTO) {
         // 添加业务分类元数据信息
         ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
         classificationInfoDto.setName(appRegistrationDTO.appName + "_" + appRegistrationDTO.appAbbreviation);
@@ -231,8 +249,45 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 }
             }
         });
+    }
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
+    public void addDataSourceMetaData(AppRegistrationDTO dto, long appId, long dataSourceId) {
+        if (dto.appDatasourceDTO.driveType.toUpperCase().equals("SFTP")
+                || dto.appDatasourceDTO.driveType.toUpperCase().equals("FTP")
+                || dto.appDatasourceDTO.driveType.toUpperCase().equals("API")
+                || dto.appDatasourceDTO.driveType.toUpperCase().equals("RESTFULAPI")) {
+            return;
+        }
+        List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
+        MetaDataInstanceAttributeDTO data = new MetaDataInstanceAttributeDTO();
+        data.name = dto.appName;
+        data.hostname = dto.appDatasourceDTO.host;
+        data.port = dto.appDatasourceDTO.port;
+        data.qualifiedName = appId + "_" + dto.appAbbreviation;
+        data.rdbms_type = dto.appDatasourceDTO.driveType;
+        data.displayName = dto.appName;
+        //库
+        List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
+        MetaDataDbAttributeDTO db = new MetaDataDbAttributeDTO();
+        db.name = dto.appDatasourceDTO.dbName;
+        db.displayName = dto.appDatasourceDTO.dbName;
+        db.qualifiedName = data.qualifiedName + "_" + dataSourceId;
+        dbList.add(db);
+        data.dbList = dbList;
+
+        list.add(data);
+
+        try {
+            MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
+            metaDataAttribute.instanceList = list;
+            metaDataAttribute.userId = Long.parseLong(userHelper.getLoginUserInfo().id.toString());
+            // 更新元数据内容
+            log.info("数据接入构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+            dataManageClient.metaData(metaDataAttribute);
+        } catch (Exception e) {
+            log.error("【dataManageClient.MetaData()】方法报错,ex", e);
+        }
+
     }
 
     @Override
