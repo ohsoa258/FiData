@@ -20,7 +20,7 @@ public enum DispatchLogEnum implements BaseEnum {
     /**
      * job未运行
      */
-    jobnorun(18, "task未运行"),
+    jobnorun(20, "task未运行"),
     /*
      *job开始
      * */
@@ -29,6 +29,10 @@ public enum DispatchLogEnum implements BaseEnum {
      *job结束
      * */
     jobend(5, "job结束"),
+    /**
+     * job失败
+     */
+    jobfailure(22, "job失败"),
     /*
      *job状态
      * */
@@ -40,11 +44,11 @@ public enum DispatchLogEnum implements BaseEnum {
     /**
      * task跳过
      */
-    taskpass(17, "task跳过"),
+    taskpass(18, "task跳过"),
     /**
      * job跳过
      */
-    jobpass(18,"job跳过"),
+    jobpass(19, "job跳过"),
     /*
      *task开始
      * */
@@ -53,6 +57,10 @@ public enum DispatchLogEnum implements BaseEnum {
      *task结束
      * */
     taskend(8, "task结束"),
+    /**
+     * task失败
+     */
+    taskfailure(21, "task失败"),
     /*
      *task状态
      * */

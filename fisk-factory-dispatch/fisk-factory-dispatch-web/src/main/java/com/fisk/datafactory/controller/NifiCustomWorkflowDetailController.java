@@ -59,7 +59,7 @@ public class NifiCustomWorkflowDetailController {
 
     @GetMapping("/get/{id}")
     @ApiOperation(value = "查询单个管道组件")
-    public ResultEntity<NifiCustomWorkflowDetailDTO> getData(@PathVariable("id") long id) {
+    public ResultEntity<NifiCustomWorkflowDetailDTO> getData(@PathVariable("id") Long id) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
     }

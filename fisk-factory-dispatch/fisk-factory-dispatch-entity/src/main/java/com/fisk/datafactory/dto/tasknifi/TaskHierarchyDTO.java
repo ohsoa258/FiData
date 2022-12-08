@@ -63,6 +63,10 @@ public class TaskHierarchyDTO {
      * job处理状态.true 已处理. false 未处理
      */
     public boolean taskProcessed;
+    /**
+     * 创建的时候就定义好的,在redis里面的traceid
+     */
+    public String taskTraceId;
 
 
 }

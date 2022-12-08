@@ -151,7 +151,7 @@ public interface DataFactoryClient {
      */
     @GetMapping("/nifiCustomWorkflowDetail/get/{id}")
     @ApiOperation(value = "查询单个管道组件")
-    ResultEntity<NifiCustomWorkflowDetailDTO> getData(@PathVariable("id") long id);
+    public ResultEntity<NifiCustomWorkflowDetailDTO> getData(@PathVariable("id") Long id);
 
     @ApiOperation("查询job结构与运行状态")
     @PostMapping("/nifiCustomWorkflowDetail/getJobList")

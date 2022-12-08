@@ -28,4 +28,9 @@ public class DispatchJobHierarchyDTO {
      */
     public boolean last;
 
+    /**
+     * job_trace_id 预先生成
+     */
+    public String jobTraceId;
+
 }

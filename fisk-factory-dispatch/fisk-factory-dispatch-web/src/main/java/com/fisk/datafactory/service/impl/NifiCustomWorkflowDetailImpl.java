@@ -126,6 +126,23 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEntity<NifiCustomWorkListDTO> editData(NifiCustomWorkflowDetailVO dto) {
+        List<NifiCustomWorkflowDetailDTO> collect =
+                dto.list.stream().filter(e -> e.componentType.equals(ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName()) && e.pid == 0).collect(Collectors.toList());
+        String workflowId = "";
+        if (CollectionUtils.isNotEmpty(collect)) {
+            for (NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetail : collect) {
+                List<NifiCustomWorkflowDetailPO> original = this.query().eq("pid", nifiCustomWorkflowDetail.id).list();
+                if (CollectionUtils.isNotEmpty(original)) {
+                    this.removeByIds(original.stream().map(d -> d.id).collect(Collectors.toList()));
+                    workflowId = nifiCustomWorkflowDetail.workflowId;
+                }
+            }
+            //删除跳过pid!=0,workflowId = workflowId,类型=ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName()
+            NifiCustomWorkflowDetailPO nifiCustomWorkflowDetail = new NifiCustomWorkflowDetailPO();
+            nifiCustomWorkflowDetail.workflowId = workflowId;
+            nifiCustomWorkflowDetail.componentType = ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName();
+            mapper.deleteByType(nifiCustomWorkflowDetail);
+        }
 
         String componentType = "触发器";
 
@@ -159,7 +176,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         }
 
         // 批量保存tb_nifi_custom_wokflow_detail
-        boolean success = this.updateBatchById(list);
+        boolean success = this.saveOrUpdateBatch(list);
         if (!success) {
             log.error("修改管道报错2");
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
@@ -339,9 +356,9 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                             publishTaskClient.updateTableTopicByComponentId(topicDTO);
                         }
                         //只保存调度的自定义脚本任务
-                        if (Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName())) {
+                        if (Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName()) && !Objects.equals(nifiCustomWorkflowDetailPo.pid, 0)) {
                             topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
-                            topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.CUSTOMIZESCRIPT.getValue() + "." + nifiCustomWorkflowDetailPo.appId + "." + nifiCustomWorkflowDetailPo.tableId;
+                            topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.CUSTOMIZESCRIPT.getValue() + ".0." + nifiCustomWorkflowDetailPo.id;
                             topicDTO.tableType = OlapTableEnum.CUSTOMIZESCRIPT.getValue();
                             topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
                             publishTaskClient.updateTableTopicByComponentId(topicDTO);
@@ -805,7 +822,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         if (Objects.isNull(one)) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        List<NifiCustomWorkflowDetailPO> list = this.query().eq("workflow_id", one.workflowId).eq("del_flag", 1).eq("pid", 0).list();
+        List<NifiCustomWorkflowDetailPO> list = this.query().eq("workflow_id", one.workflowId).eq("del_flag", 1).eq("pid", 0).ne("component_type", ChannelDataEnum.SCHEDULE_TASK.getName()).list();
         List<DispatchJobHierarchyDTO> dtos = new ArrayList<>();
         list.forEach(e -> {
             //初始状态为未运行

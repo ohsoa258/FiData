@@ -25,11 +25,9 @@ public class NifiGetPortHierarchyDTO {
     public String workflowId;
 
     @ApiModelProperty(value = "表类型",required = true)
-    @NotNull
     public ChannelDataEnum channelDataEnum;
 
     @ApiModelProperty(value = "表id",required = true)
-    @NotNull
     public String tableId;
 
     @ApiModelProperty(value = "当前组件id")

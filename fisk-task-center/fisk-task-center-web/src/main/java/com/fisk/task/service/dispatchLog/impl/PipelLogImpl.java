@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -36,7 +37,8 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
 
     @Override
     public void savePipelLog(String pipelTraceId, Map<Integer, Object> map, String pipelId) {
-        log.info("job参数:pipelTraceId:{},map:{},pipelId:{}", pipelTraceId, JSON.toJSONString(map), pipelId);
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        log.info("job参数1:pipelTraceId:{},map:{},pipelId:{}", pipelTraceId, JSON.toJSONString(map), pipelId);
 
         List<PipelLogPO> pipelLogs = new ArrayList<>();
         Iterator<Map.Entry<Integer, Object>> nodeMap = map.entrySet().iterator();
@@ -48,13 +50,46 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
             }
             pipelLog.msg = next.getValue().toString();
 
-            if(Objects.equals(DispatchLogEnum.pipelend.getValue(),next.getKey())){
+            if (Objects.equals(DispatchLogEnum.pipelend.getValue(), next.getKey())) {
                 //先更新掉
-                pipelLogMapper.updateByPipelTraceId(pipelTraceId,next.getKey());
+                pipelLogMapper.updateByPipelTraceId(pipelTraceId, next.getKey());
                 DispatchEmailDTO dispatchEmail = new DispatchEmailDTO();
                 dispatchEmail.nifiCustomWorkflowId = Integer.parseInt(pipelId);
                 dispatchEmail.msg = pipelLog.msg;
-                dataFactoryClient.pipelineSendEmails(dispatchEmail);
+                dispatchEmail.result = pipelLog.msg.contains("运行成功") ? "【运行成功】" : "【运行失败】";
+                dispatchEmail.pipelTraceId = pipelLog.pipelTraceId;
+                //    /**
+                //     * 运行时长
+                //     */
+                //    public String duration;
+                List<PipelLogPO> pos = this.query().eq("pipel_trace_id", pipelTraceId).list();
+                if (CollectionUtils.isNotEmpty(pos)) {
+                    PipelLogPO pipelLogPo = pos.get(0);
+                    try {
+                        Date date = new Date();
+                        Date parse = format.parse(pipelLogPo.msg.substring(7, 26));
+                        Long second = (date.getTime() - parse.getTime()) / 1000 % 60;
+                        Long minutes = (date.getTime() - parse.getTime()) / (60 * 1000) % 60;
+                        dispatchEmail.duration = minutes + "m " + second + "s";
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                dispatchEmail.url = "【http://fidata.fisksoft.com:65115/#/DataFactory/pipelineSettings】";
+                try {
+                    Map<String, String> hashMap = new HashMap<>();
+                    hashMap.put("运行结果", dispatchEmail.result);
+                    hashMap.put("运行时长", dispatchEmail.duration);
+                    hashMap.put("运行详情", dispatchEmail.msg);
+                    hashMap.put("TraceID", dispatchEmail.pipelTraceId);
+                    hashMap.put("页面地址", dispatchEmail.url);
+                    dispatchEmail.body = hashMap;
+                    dataFactoryClient.pipelineSendEmails(dispatchEmail);
+                } catch (Exception e) {
+                    log.error("发邮件出错,但是不影响主流程");
+                }
+
             }
 
 
@@ -146,7 +181,10 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
 
             }
             if (Objects.nonNull(pipelMergeLog.endTime) && Objects.nonNull(pipelMergeLog.startTime)) {
-                pipelMergeLog.duration = (pipelMergeLog.endTime.getTime() - pipelMergeLog.startTime.getTime()) / 60000;
+                long sec = (pipelMergeLog.endTime.getTime() - pipelMergeLog.startTime.getTime()) / 1000 % 60;
+                long min = (pipelMergeLog.endTime.getTime() - pipelMergeLog.startTime.getTime()) / (60 * 1000) % 60;
+
+                pipelMergeLog.duration = min + "m " + sec + "s ";
             } else {
                 pipelMergeLog.pipelStatu = "正在运行";
                 pipelMergeLogs.add(pipelMergeLog);

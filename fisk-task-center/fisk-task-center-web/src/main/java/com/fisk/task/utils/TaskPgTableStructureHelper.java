@@ -105,8 +105,10 @@ public class TaskPgTableStructureHelper
                 po.fieldId = String.valueOf(item.fieldId);
                 po.fieldName = item.fieldEnName;
                 po.fieldType = item.fieldType;
-                po.primaryKey = item.isPrimaryKey == 0 ? false : true;
-                if ("VARCHAR".equals(item.fieldType)) {
+                po.primaryKey = item.isPrimaryKey != 0;
+                //默认为1
+                po.validVersion = 1;
+                if (item.fieldType.contains("VARCHAR")) {
                     po.fieldType = item.fieldType + "(" + item.fieldLength + ")";
                 }
                 if ("FLOAT".equals(item.fieldType)) {
@@ -122,6 +124,8 @@ public class TaskPgTableStructureHelper
                     po2.fieldId = String.valueOf(item.associateDimensionId);
                     po2.fieldName = (item.associateDimensionName.substring(4) + "key");
                     po2.fieldType = "VARCHAR(255)";
+                    //默认为1
+                    po2.validVersion = 1;
                     poList.add(po2);
                 }
             }
@@ -351,5 +355,6 @@ public class TaskPgTableStructureHelper
             conn.close();
         }
     }
+
 
 }

@@ -56,4 +56,8 @@ public class KafkaReceiveDTO extends MQBaseDTO {
      * scriptTaskIds执行脚本任务id
      */
     public String scriptTaskIds;
+    /**
+     * 失败信息
+     */
+    public String message;
 }

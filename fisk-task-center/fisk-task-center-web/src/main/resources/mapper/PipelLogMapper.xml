@@ -9,7 +9,7 @@
                     COUNT( 1 ) AS num
                 FROM
                     tb_pipel_log
-                    where msg like concat('%', #{result}, '%') and pipel_id=#{pipelId} and create_time >= DATE_SUB( CURDATE( ), INTERVAL #{lookday} DAY )
+                    where msg like concat('%', #{result}, '%') and pipel_id=#{pipelId} and create_time >= DATE_SUB( CURDATE( ), INTERVAL #{lookday} DAY ) and del_flag=1
                 GROUP BY
                     DATE_FORMAT( `create_time`, '%Y-%m-%d' ) ,pipel_trace_id
                 ORDER BY

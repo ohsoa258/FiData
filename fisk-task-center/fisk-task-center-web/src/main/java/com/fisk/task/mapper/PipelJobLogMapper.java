@@ -15,7 +15,7 @@ public interface PipelJobLogMapper extends FKBaseMapper<PipelJobLogPO> {
 
     List<PipelJobLogVO> getPipelJobLogVo(@Param("pipelJobLog") PipelJobLogVO pipelJobLog);
 
-    @Update("update tb_pipel_job_log set del_flag = 0 where pipel_job_id=#{pipelJobId} and type = #{type} and del_flag=1")
+    @Update("update tb_pipel_job_log set del_flag = 0 where job_trace_id=#{pipelJobId} and type = #{type} and del_flag=1")
     void updateByPipelTraceId(@Param("pipelJobId")String pipelJobId,@Param("type") int type);
 
 

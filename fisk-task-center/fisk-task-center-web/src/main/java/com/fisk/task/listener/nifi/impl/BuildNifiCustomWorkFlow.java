@@ -793,9 +793,16 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     }
                     //否定出去
                     while ((!Objects.equals(processor.getComponent().getState(), ProcessorDTO.StateEnum.STOPPED) && i < Integer.parseInt(numberOfOperations)) || terminatedThreadCount > 0);
-                    NifiHelper.getProcessorsApi().terminateProcessor(processorEntity.getId());
-                    //--------------------------------------------------------------------------------
                     String id = processorEntity.getId();
+                    log.info("组件详情2:" + id);
+                    try {
+                        NifiHelper.getProcessorsApi().terminateProcessor(id);
+                    }catch (Exception e){
+                        log.error("这个沙雕组处理失败,下一个");
+                    }
+
+                    //--------------------------------------------------------------------------------
+
                     NifiHelper.getProcessorsApi().updateProcessor(id, processorEntity);
                     i = 0;
                     do {
@@ -804,16 +811,16 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                         Thread.sleep(50);
                     }
                     while (!Objects.equals(processor.getComponent().getConfig().getProperties(), processorEntity.getComponent().getConfig().getProperties()) && i < 3);
-                    log.info("组件详情2:" + id);
-                    processorEntity = NifiHelper.getProcessorsApi().getProcessor(id);
                     log.info("组件详情3:" + id);
-                    componentsBuild.enabledProcessor(processorEntity.getId(), processorEntity);
+                    processorEntity = NifiHelper.getProcessorsApi().getProcessor(id);
                     log.info("组件详情4:" + id);
+                    componentsBuild.enabledProcessor(processorEntity.getId(), processorEntity);
+                    log.info("组件详情5:" + id);
                 }
             }
         } catch (Exception e) {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
-            throw new FkException(ResultEnum.TASK_PUBLISH_ERROR);
+            //throw new FkException(ResultEnum.TASK_PUBLISH_ERROR);
         }
 
     }

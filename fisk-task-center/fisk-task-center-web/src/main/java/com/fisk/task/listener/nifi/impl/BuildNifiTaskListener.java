@@ -957,7 +957,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             processorEntity1 = executeSQLRecord;
         }
         componentsConnector(groupId, delSqlRes.getId(), supervisionId, autoEndBranchTypeEnums);
-
+        componentsConnector(groupId, processorEntity1.getId(), supervisionId, autoEndBranchTypeEnums);
         String lastId = "";
         Boolean isLastId = true;
 

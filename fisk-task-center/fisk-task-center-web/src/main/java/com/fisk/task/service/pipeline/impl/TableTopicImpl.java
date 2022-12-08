@@ -8,6 +8,7 @@ import com.fisk.task.mapper.TableTopicMapper;
 import com.fisk.task.service.pipeline.ITableTopicService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -91,17 +92,19 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicDTO>
     }
 
     @Override
-    public TableTopicDTO getTableTopicDTOByComponentId(Integer id, Integer tableId, Integer tableType) {
+    public TableTopicDTO getTableTopicDTOByComponentId(Integer id, String tableId, Integer tableType) {
         TableTopicDTO topicDTO = new TableTopicDTO();
         HashMap<String, Object> conditionMap = new HashMap<>();
         conditionMap.put("component_id", id);
         conditionMap.put("del_flag", 1);
-        conditionMap.put("table_id", tableId);
+        if (!StringUtils.isEmpty(tableId)) {
+            conditionMap.put("table_id", Integer.valueOf(tableId));
+        }
         conditionMap.put("table_type", tableType);
         conditionMap.put("topic_type", TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue());
-        List<TableTopicDTO> tableTopicDTOS = tableTopicMapper.selectByMap(conditionMap);
-        if (tableTopicDTOS != null && tableTopicDTOS.size() != 0) {
-            return tableTopicDTOS.get(0);
+        List<TableTopicDTO> tableTopicDtos = tableTopicMapper.selectByMap(conditionMap);
+        if (tableTopicDtos != null && tableTopicDtos.size() != 0) {
+            return tableTopicDtos.get(0);
         }
         return topicDTO;
     }

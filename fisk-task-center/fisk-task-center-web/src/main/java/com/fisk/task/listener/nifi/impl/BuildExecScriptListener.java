@@ -27,6 +27,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -45,46 +46,58 @@ public class BuildExecScriptListener implements IExecScriptListener {
 
     @Override
     public ResultEnum execScript(String data, Acknowledgment acke) {
+        try {
+            log.info("执行调度脚本参数:{}", data);
+            data = "[" + data + "]";
+            List<ExecScriptDTO> execScripts = JSON.parseArray(data, ExecScriptDTO.class);
+            for (ExecScriptDTO execScript : execScripts) {
+                ResultEntity<NifiCustomWorkflowDetailDTO> dto = dataFactoryClient.getData(Long.parseLong(execScript.taskId));
+                if (Objects.equals(dto.code, ResultEnum.SUCCESS.getCode())) {
+                    NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetail = dto.data;
+                    Integer dataSourceId = nifiCustomWorkflowDetail.dataSourceId;
+                    String customScript = nifiCustomWorkflowDetail.customScript;
+                    ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dataSourceId);
+                    if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+                        DataSourceDTO dataSource = fiDataDataSource.data;
+                        Connection conn = null;
+                        Statement st = null;
+                        try {
+                            Class.forName(dataSource.conType.getDriverName());
+                            conn = DriverManager.getConnection(dataSource.conStr, dataSource.conAccount, dataSource.conPassword);
+                            st = conn.createStatement();
+                            //无需判断ddl语句执行结果,因为如果执行失败会进catch
+                            log.info("开始执行脚本:{}", customScript);
+                            st.execute(customScript);
+                        } catch (Exception e) {
+                            log.error(StackTraceHelper.getStackTraceInfo(e));
+                        } finally {
+                            try {
+                                st.close();
+                                conn.close();
+                            } catch (SQLException e) {
+                                log.error(StackTraceHelper.getStackTraceInfo(e));
+                            }
 
-        log.info("执行调度脚本参数:{}", data);
-        ExecScriptDTO execScript = JSON.parseObject(data, ExecScriptDTO.class);
-        ResultEntity<NifiCustomWorkflowDetailDTO> dto = dataFactoryClient.getData(Long.parseLong(execScript.taskId));
-        if (Objects.equals(dto.code, ResultEnum.SUCCESS.getCode())) {
-            NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetail = dto.data;
-            Integer dataSourceId = nifiCustomWorkflowDetail.dataSourceId;
-            String customScript = nifiCustomWorkflowDetail.customScript;
-            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dataSourceId);
-            if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
-                DataSourceDTO dataSource = fiDataDataSource.data;
-                Connection conn = null;
-                Statement st = null;
-                try {
-                    Class.forName(dataSource.conType.getDriverName());
-                    conn = DriverManager.getConnection(dataSource.conStr, dataSource.conAccount, dataSource.conPassword);
-                    st = conn.createStatement();
-                    //无需判断ddl语句执行结果,因为如果执行失败会进catch
-                    st.execute(customScript);
-                } catch (Exception e) {
-                    log.error(StackTraceHelper.getStackTraceInfo(e));
-                } finally {
-                    try {
-                        st.close();
-                        conn.close();
-                    } catch (SQLException e) {
-                        log.error(StackTraceHelper.getStackTraceInfo(e));
+                        }
+                    } else {
+                        log.error("userclient无法查询到目标库的连接信息");
+                        throw new FkException(ResultEnum.ERROR);
                     }
-
+                } else {
+                    log.error("查询执行脚本组件报错1");
+                    throw new FkException(ResultEnum.ERROR);
                 }
-            } else {
-                log.error("userclient无法查询到目标库的连接信息");
-                throw new FkException(ResultEnum.ERROR);
+                execScriptToDispatch(execScript);
             }
-        } else {
-            log.error("查询执行脚本组件报错");
+            return ResultEnum.SUCCESS;
+        } catch (Exception e) {
+            log.error("执行脚本组件报错" + StackTraceHelper.getStackTraceInfo(e));
             throw new FkException(ResultEnum.ERROR);
+        } finally {
+            if (acke != null) {
+                acke.acknowledge();
+            }
         }
-        execScriptToDispatch(execScript);
-        return ResultEnum.SUCCESS;
     }
 
     /**
@@ -108,7 +121,7 @@ public class BuildExecScriptListener implements IExecScriptListener {
             TaskHierarchyDTO data = nifiPortHierarchy.data;
             kafkaReceiveDTO.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + data.pipelineId + "." + OlapTableEnum.CUSTOMIZESCRIPT.getValue() + ".0." + dto.taskId;
         } else {
-            log.error("查找执行脚本任务失败" + nifiPortHierarchy.msg);
+            log.error("查找执行脚本任务失败2" + nifiPortHierarchy.msg);
         }
         kafkaReceiveDTO.nifiCustomWorkflowDetailId = Long.valueOf(dto.taskId);
         kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();

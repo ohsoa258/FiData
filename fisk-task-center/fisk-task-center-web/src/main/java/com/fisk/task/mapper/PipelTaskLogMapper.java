@@ -17,6 +17,6 @@ public interface PipelTaskLogMapper extends FKBaseMapper<PipelTaskLogPO> {
 
     List<PipelTaskLogVO> getByTaskId(@Param("taskId") String taskId, @Param("jobTraceId") String jobTraceId);
 
-    @Update("update tb_pipel_task_log set del_flag = 0 where pipel_task_id=#{pipelJobId} and type = #{type} and del_flag=1")
+    @Update("update tb_pipel_task_log set del_flag = 0 where task_trace_id=#{pipelJobId} and type = #{type} and del_flag=1")
     void updateByPipelTraceId(@Param("pipelJobId")String pipelJobId,@Param("type") int type);
 }

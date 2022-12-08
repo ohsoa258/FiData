@@ -24,7 +24,7 @@ public class PipelMergeLog {
     @ApiModelProperty(value = "管道结束时间")
     public Date endTime;
     @ApiModelProperty(value = "持续时间/分钟")
-    public Long duration;
+    public String duration;
     @ApiModelProperty(value = "管道状态,正在执行/已结束")
     public String pipelStatu;
     @ApiModelProperty(value = "管道运行结果,成功/失败")

@@ -326,7 +326,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
     }
 
     @Override
-    public NifiGetPortHierarchyDTO getNifiGetPortHierarchy(String pipelineId,int type,String tableName,int tableAccessId) {
+    public NifiGetPortHierarchyDTO getNifiGetPortHierarchy(String pipelineId,Integer type,String tableName,Integer tableAccessId) {
         NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = new NifiGetPortHierarchyDTO();
         nifiGetPortHierarchyDTO.workflowId = pipelineId;
         OlapTableEnum nameByValue = OlapTableEnum.getNameByValue(type);

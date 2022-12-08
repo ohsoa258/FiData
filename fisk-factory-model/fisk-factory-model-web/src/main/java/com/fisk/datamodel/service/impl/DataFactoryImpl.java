@@ -46,68 +46,64 @@ public class DataFactoryImpl implements IDataFactory {
     WideTableMapper wideTableMapper;
 
     @Override
-    public List<ChannelDataDTO> getTableIds(NifiComponentsDTO dto)
-    {
-        List<ChannelDataDTO> data=new ArrayList<>();
-        QueryWrapper<BusinessAreaPO> queryWrapper=new QueryWrapper<>();
-        List<BusinessAreaPO> businessAreaPoList=businessAreaMapper.selectList(queryWrapper);
-        if (businessAreaPoList==null || businessAreaPoList.size()==0)
-        {
+    public List<ChannelDataDTO> getTableIds(NifiComponentsDTO dto) {
+        List<ChannelDataDTO> data = new ArrayList<>();
+        QueryWrapper<BusinessAreaPO> queryWrapper = new QueryWrapper<>();
+        List<BusinessAreaPO> businessAreaPoList = businessAreaMapper.selectList(queryWrapper);
+        if (businessAreaPoList == null || businessAreaPoList.size() == 0) {
             return data;
         }
         //查询维度
-        QueryWrapper<DimensionPO> dimensionPoQueryWrapper=new QueryWrapper<>();
+        QueryWrapper<DimensionPO> dimensionPoQueryWrapper = new QueryWrapper<>();
         dimensionPoQueryWrapper.lambda().eq(DimensionPO::getTimeTable, false);
-        List<DimensionPO> dimensionPoList=dimensionMapper.selectList(dimensionPoQueryWrapper);
+        List<DimensionPO> dimensionPoList = dimensionMapper.selectList(dimensionPoQueryWrapper);
         //查询事实
-        QueryWrapper<FactPO> factPoQueryWrapper=new QueryWrapper<>();
-        List<FactPO> factPoList=factMapper.selectList(factPoQueryWrapper);
+        QueryWrapper<FactPO> factPoQueryWrapper = new QueryWrapper<>();
+        List<FactPO> factPoList = factMapper.selectList(factPoQueryWrapper);
         //查询宽表
-        QueryWrapper<WideTableConfigPO> wideTableConfigPoQueryWrapper=new QueryWrapper<>();
-        List<WideTableConfigPO> wideTableConfigPoList=wideTableMapper.selectList(wideTableConfigPoQueryWrapper);
+        QueryWrapper<WideTableConfigPO> wideTableConfigPoQueryWrapper = new QueryWrapper<>();
+        List<WideTableConfigPO> wideTableConfigPoList = wideTableMapper.selectList(wideTableConfigPoQueryWrapper);
         //获取枚举类型
-        DataFactoryEnum dataFactoryEnum=DataFactoryEnum.getValue((int) dto.id);
-        for (BusinessAreaPO item:businessAreaPoList)
-        {
-            ChannelDataDTO dataDTO=new ChannelDataDTO();
-            dataDTO.id=item.getId();
-            dataDTO.businessName =item.getBusinessName();
-            switch (dataFactoryEnum)
-            {
+        DataFactoryEnum dataFactoryEnum = DataFactoryEnum.getValue((int) dto.id);
+        for (BusinessAreaPO item : businessAreaPoList) {
+            ChannelDataDTO dataDTO = new ChannelDataDTO();
+            dataDTO.id = item.getId();
+            dataDTO.businessName = item.getBusinessName();
+            switch (dataFactoryEnum) {
                 case NUMBER_DIMENSION:
-                    List<DimensionPO> dimensionPo=dimensionPoList.stream()
-                            .filter(e->e.businessId==item.id && (e.isPublish== PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.isPublish==PublicStatusEnum.PUBLIC_ING.getValue()))
+                    List<DimensionPO> dimensionPo = dimensionPoList.stream()
+                            .filter(e -> e.businessId == item.id && (e.isPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.isPublish == PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
-                    dataDTO.list=getChannelDimensionData(dimensionPo);
-                    dataDTO.type=ChannelDataEnum.DW_DIMENSION_TASK.getName();
+                    dataDTO.list = getChannelDimensionData(dimensionPo);
+                    dataDTO.type = ChannelDataEnum.DW_DIMENSION_TASK.getName();
                     break;
                 case ANALYSIS_DIMENSION:
-                    List<DimensionPO> dimensionPoStreamList=dimensionPoList.stream()
-                            .filter(e->e.businessId==item.id && (e.dorisPublish==PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.dorisPublish==PublicStatusEnum.PUBLIC_ING.getValue()))
+                    List<DimensionPO> dimensionPoStreamList = dimensionPoList.stream()
+                            .filter(e -> e.businessId == item.id && (e.dorisPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.dorisPublish == PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
-                    dataDTO.list=getChannelDimensionData(dimensionPoStreamList);
-                    dataDTO.type=ChannelDataEnum.OLAP_DIMENSION_TASK.getName();
+                    dataDTO.list = getChannelDimensionData(dimensionPoStreamList);
+                    dataDTO.type = ChannelDataEnum.OLAP_DIMENSION_TASK.getName();
                     break;
                 case NUMBER_FACT:
-                    List<FactPO> factPo=factPoList.stream()
-                            .filter(e->e.businessId==item.id && (e.isPublish==PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.isPublish==PublicStatusEnum.PUBLIC_ING.getValue()))
+                    List<FactPO> factPo = factPoList.stream()
+                            .filter(e -> e.businessId == item.id && (e.isPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.isPublish == PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
-                    dataDTO.list=getChannelFactData(factPo);
-                    dataDTO.type=ChannelDataEnum.DW_FACT_TASK.getName();
+                    dataDTO.list = getChannelFactData(factPo);
+                    dataDTO.type = ChannelDataEnum.DW_FACT_TASK.getName();
                     break;
                 case ANALYSIS_FACT:
-                    List<FactPO> factPoStreamList=factPoList.stream()
-                            .filter(e->e.businessId==item.id && (e.dorisPublish==PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.dorisPublish==PublicStatusEnum.PUBLIC_ING.getValue()))
+                    List<FactPO> factPoStreamList = factPoList.stream()
+                            .filter(e -> e.businessId == item.id && (e.dorisPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.dorisPublish == PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
-                    dataDTO.list=getChannelFactData(factPoStreamList);
-                    dataDTO.type=ChannelDataEnum.OLAP_FACT_TASK.getName();
+                    dataDTO.list = getChannelFactData(factPoStreamList);
+                    dataDTO.type = ChannelDataEnum.OLAP_FACT_TASK.getName();
                     break;
                 case WIDE_TABLE:
-                    List<WideTableConfigPO> wideTableConfigPoStreamList=wideTableConfigPoList.stream()
-                            .filter(e->e.businessId==item.id && (e.dorisPublish==PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.dorisPublish==PublicStatusEnum.PUBLIC_ING.getValue()))
+                    List<WideTableConfigPO> wideTableConfigPoStreamList = wideTableConfigPoList.stream()
+                            .filter(e -> e.businessId == item.id && (e.dorisPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.dorisPublish == PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
-                    dataDTO.list=getChannelWideTableData(wideTableConfigPoStreamList);
-                    dataDTO.type=ChannelDataEnum.OLAP_WIDETABLE_TASK.getName();
+                    dataDTO.list = getChannelWideTableData(wideTableConfigPoStreamList);
+                    dataDTO.type = ChannelDataEnum.OLAP_WIDETABLE_TASK.getName();
                     break;
                 default:
             }
@@ -120,19 +116,17 @@ public class DataFactoryImpl implements IDataFactory {
 
     /**
      * 获取发布成功/正在发布维度表List
+     *
      * @param dimensionPo
      * @return
      */
-    private List<ChannelDataChildDTO> getChannelDimensionData(List<DimensionPO> dimensionPo)
-    {
-        List<ChannelDataChildDTO> data=new ArrayList<>();
-        if (!CollectionUtils.isEmpty(dimensionPo))
-        {
-            for (DimensionPO dimPo:dimensionPo)
-            {
-                ChannelDataChildDTO child=new ChannelDataChildDTO();
-                child.id=dimPo.id;
-                child.tableName=dimPo.dimensionTabName;
+    private List<ChannelDataChildDTO> getChannelDimensionData(List<DimensionPO> dimensionPo) {
+        List<ChannelDataChildDTO> data = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(dimensionPo)) {
+            for (DimensionPO dimPo : dimensionPo) {
+                ChannelDataChildDTO child = new ChannelDataChildDTO();
+                child.id = dimPo.id;
+                child.tableName = dimPo.dimensionTabName;
                 data.add(child);
             }
         }
@@ -141,35 +135,30 @@ public class DataFactoryImpl implements IDataFactory {
 
     /**
      * 获取发布成功/正在发布事实表List
+     *
      * @param factPo
      * @return
      */
-    private List<ChannelDataChildDTO> getChannelFactData(List<FactPO> factPo)
-    {
-        List<ChannelDataChildDTO> data=new ArrayList<>();
-        if (!CollectionUtils.isEmpty(factPo))
-        {
-            for (FactPO fact:factPo)
-            {
-                ChannelDataChildDTO child=new ChannelDataChildDTO();
-                child.id=fact.id;
-                child.tableName=fact.factTabName;
+    private List<ChannelDataChildDTO> getChannelFactData(List<FactPO> factPo) {
+        List<ChannelDataChildDTO> data = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(factPo)) {
+            for (FactPO fact : factPo) {
+                ChannelDataChildDTO child = new ChannelDataChildDTO();
+                child.id = fact.id;
+                child.tableName = fact.factTabName;
                 data.add(child);
             }
         }
         return data;
     }
 
-    private List<ChannelDataChildDTO> getChannelWideTableData(List<WideTableConfigPO> wideTableConfigPo)
-    {
-        List<ChannelDataChildDTO> data=new ArrayList<>();
-        if (!CollectionUtils.isEmpty(wideTableConfigPo))
-        {
-            for (WideTableConfigPO wide:wideTableConfigPo)
-            {
-                ChannelDataChildDTO child=new ChannelDataChildDTO();
-                child.id=wide.id;
-                child.tableName=wide.name;
+    private List<ChannelDataChildDTO> getChannelWideTableData(List<WideTableConfigPO> wideTableConfigPo) {
+        List<ChannelDataChildDTO> data = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(wideTableConfigPo)) {
+            for (WideTableConfigPO wide : wideTableConfigPo) {
+                ChannelDataChildDTO child = new ChannelDataChildDTO();
+                child.id = wide.id;
+                child.tableName = wide.name;
                 data.add(child);
             }
         }
@@ -177,22 +166,23 @@ public class DataFactoryImpl implements IDataFactory {
     }
 
     @Override
-    public ResultEntity<ComponentIdDTO> getBusinessAreaNameAndTableName(DataAccessIdsDTO dto)
-    {
+    public ResultEntity<ComponentIdDTO> getBusinessAreaNameAndTableName(DataAccessIdsDTO dto) {
         ComponentIdDTO componentIdDTO = new ComponentIdDTO();
         BusinessAreaPO businessAreaPo = businessAreaMapper.selectById(dto.appId);
         componentIdDTO.appName = businessAreaPo == null ? "" : businessAreaPo.getBusinessName();
-        if (dto.flag == DataFactoryEnum.NUMBER_DIMENSION.getValue()
-                || dto.flag == DataFactoryEnum.ANALYSIS_DIMENSION.getValue()) {
-            DimensionPO dimensionPo = dimensionMapper.selectById(dto.tableId);
-            componentIdDTO.tableName = dimensionPo == null ? "" : dimensionPo.dimensionTabName;
-        } else if (dto.flag == DataFactoryEnum.NUMBER_FACT.getValue()
-                || dto.flag == DataFactoryEnum.ANALYSIS_FACT.getValue()) {
-            FactPO factPo = factMapper.selectById(dto.tableId);
-            componentIdDTO.tableName = factPo == null ? "" : factPo.factTabName;
-        } else if (dto.flag == DataFactoryEnum.WIDE_TABLE.getValue()) {
-            WideTableConfigPO po = wideTableMapper.selectById(dto.tableId);
-            componentIdDTO.tableName = po == null ? "" : po.name;
+        if (dto.tableId != null) {
+            if (dto.flag == DataFactoryEnum.NUMBER_DIMENSION.getValue()
+                    || dto.flag == DataFactoryEnum.ANALYSIS_DIMENSION.getValue()) {
+                DimensionPO dimensionPo = dimensionMapper.selectById(dto.tableId);
+                componentIdDTO.tableName = dimensionPo == null ? "" : dimensionPo.dimensionTabName;
+            } else if (dto.flag == DataFactoryEnum.NUMBER_FACT.getValue()
+                    || dto.flag == DataFactoryEnum.ANALYSIS_FACT.getValue()) {
+                FactPO factPo = factMapper.selectById(dto.tableId);
+                componentIdDTO.tableName = factPo == null ? "" : factPo.factTabName;
+            } else if (dto.flag == DataFactoryEnum.WIDE_TABLE.getValue()) {
+                WideTableConfigPO po = wideTableMapper.selectById(dto.tableId);
+                componentIdDTO.tableName = po == null ? "" : po.name;
+            }
         }
         return ResultEntityBuild.build(ResultEnum.SUCCESS, componentIdDTO);
     }

@@ -4,11 +4,13 @@ import com.fisk.common.core.baseObject.entity.BasePO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.io.Serializable;
+
 /**
  * @author cfk
  */
 @Data
-public class PipelTaskLogVO extends BasePO {
+public class PipelTaskLogVO extends BasePO implements Serializable {
     @ApiModelProperty(value = "job批次号")
     public String jobTraceId;
     @ApiModelProperty(value = "task批次号")
