@@ -219,7 +219,19 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         addClassification(appRegistrationDTO);
 
         //数据库应用,需要新增元数据对象
-        addDataSourceMetaData(appRegistrationDTO, po.id, modelDataSource.id);
+        List<MetaDataInstanceAttributeDTO> list = addDataSourceMetaData(po, modelDataSource);
+        if (!CollectionUtils.isEmpty(list)) {
+            try {
+                MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
+                metaDataAttribute.instanceList = list;
+                metaDataAttribute.userId = Long.parseLong(userHelper.getLoginUserInfo().id.toString());
+                // 更新元数据内容
+                log.info("数据接入ods构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+                dataManageClient.metaData(metaDataAttribute);
+            } catch (Exception e) {
+                log.error("【dataManageClient.MetaData()】方法报错,ex", e);
+            }
+        }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
     }
@@ -251,42 +263,39 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         });
     }
 
-    public void addDataSourceMetaData(AppRegistrationDTO dto, long appId, long dataSourceId) {
-        if (dto.appDatasourceDTO.driveType.toUpperCase().equals("SFTP")
-                || dto.appDatasourceDTO.driveType.toUpperCase().equals("FTP")
-                || dto.appDatasourceDTO.driveType.toUpperCase().equals("API")
-                || dto.appDatasourceDTO.driveType.toUpperCase().equals("RESTFULAPI")) {
-            return;
+    /**
+     * 新增元数据信息
+     *
+     * @param appRegistration
+     * @param dataSource
+     */
+    public List<MetaDataInstanceAttributeDTO> addDataSourceMetaData(AppRegistrationPO appRegistration, AppDataSourcePO dataSource) {
+        if (dataSource.driveType.toUpperCase().equals("SFTP")
+                || dataSource.driveType.toUpperCase().equals("FTP")
+                || dataSource.driveType.toUpperCase().equals("API")
+                || dataSource.driveType.toUpperCase().equals("RESTFULAPI")) {
+            return null;
         }
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
         MetaDataInstanceAttributeDTO data = new MetaDataInstanceAttributeDTO();
-        data.name = dto.appName;
-        data.hostname = dto.appDatasourceDTO.host;
-        data.port = dto.appDatasourceDTO.port;
-        data.qualifiedName = appId + "_" + dto.appAbbreviation;
-        data.rdbms_type = dto.appDatasourceDTO.driveType;
-        data.displayName = dto.appName;
+        data.name = appRegistration.appName;
+        data.hostname = dataSource.host;
+        data.port = dataSource.port;
+        data.qualifiedName = appRegistration.id + "_" + appRegistration.appAbbreviation;
+        data.rdbms_type = dataSource.driveType;
+        data.displayName = appRegistration.appName;
         //库
         List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
         MetaDataDbAttributeDTO db = new MetaDataDbAttributeDTO();
-        db.name = dto.appDatasourceDTO.dbName;
-        db.displayName = dto.appDatasourceDTO.dbName;
-        db.qualifiedName = data.qualifiedName + "_" + dataSourceId;
+        db.name = dataSource.dbName;
+        db.displayName = dataSource.dbName;
+        db.qualifiedName = data.qualifiedName + "_" + dataSource.id;
         dbList.add(db);
         data.dbList = dbList;
 
         list.add(data);
 
-        try {
-            MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
-            metaDataAttribute.instanceList = list;
-            metaDataAttribute.userId = Long.parseLong(userHelper.getLoginUserInfo().id.toString());
-            // 更新元数据内容
-            log.info("数据接入ods构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
-            dataManageClient.metaData(metaDataAttribute);
-        } catch (Exception e) {
-            log.error("【dataManageClient.MetaData()】方法报错,ex", e);
-        }
+        return list;
 
     }
 

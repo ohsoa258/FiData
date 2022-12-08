@@ -1,7 +1,7 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.alibaba.druid.DbType;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -21,6 +21,10 @@ import com.fisk.common.service.flinkupload.FlinkFactoryHelper;
 import com.fisk.common.service.flinkupload.IFlinkJobUpload;
 import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.common.service.sqlparser.ISqlParser;
+import com.fisk.common.service.sqlparser.ParserVersion;
+import com.fisk.common.service.sqlparser.SqlParserFactory;
+import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
@@ -36,6 +40,8 @@ import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.map.FlinkParameterMap;
 import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
+import com.fisk.dataaccess.mapper.AppDataSourceMapper;
+import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.mapper.TableFieldsMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
@@ -88,6 +94,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     private TableAccessImpl tableAccessImpl;
     @Resource
     private TableAccessMapper tableAccessMapper;
+    @Resource
+    private AppRegistrationMapper appRegistrationMapper;
+    @Resource
+    private AppDataSourceMapper appDataSourceMapper;
     @Resource
     private IAppRegistration iAppRegistration;
     @Resource
@@ -202,6 +212,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         // 版本语句
         String versionSql = getVersionSql(syncmodePo);
 
+        //新增元数据信息
+        odsMetaDataInfo(dto.appId, dto.sqlScript);
+
         // 发布
         publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO);
 
@@ -282,10 +295,75 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             systemVariables.addSystemVariables(dto.id, dto.deltaTimes);
         }
 
+        //新增元数据信息
+        odsMetaDataInfo(dto.appId, dto.sqlScript);
+
         // 发布
         publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+    }
+
+    /**
+     * 新增ods元数据信息
+     *
+     * @param appId
+     * @param sql
+     */
+    public void odsMetaDataInfo(long appId, String sql) {
+        AppRegistrationPO registrationPO = appRegistrationMapper.selectById(appId);
+        if (registrationPO == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        AppDataSourcePO po = appDataSourceMapper.selectById(appId);
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        List<MetaDataInstanceAttributeDTO> list = appRegistration.addDataSourceMetaData(registrationPO, po);
+
+        try {
+            ISqlParser parser = SqlParserFactory.parser(ParserVersion.V1);
+            DbType dbType = DbType.sqlserver;
+            if (po.driveType == "mysql") {
+                dbType = DbType.mysql;
+            } else if (po.driveType == "oracle") {
+                dbType = DbType.oracle;
+            } else if (po.driveType == "postgresql") {
+                dbType = DbType.postgresql;
+            } else {
+                return;
+            }
+            List<TableMetaDataObject> res = parser.getDataTableBySql(sql, dbType);
+            if (CollectionUtils.isEmpty(res)) {
+                return;
+            }
+            List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
+            for (TableMetaDataObject item : res) {
+                MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+                table.setQualifiedName(list.get(0).dbList.get(0).qualifiedName + "_" + item.name);
+                table.setName(item.name);
+                table.setComment(String.valueOf(appId));
+                table.setDisplayName(item.name);
+                tableList.add(table);
+            }
+            try {
+                MetaDataAttributeDTO data = new MetaDataAttributeDTO();
+                data.instanceList = list;
+                data.userId = userHelper.getLoginUserInfo().id;
+                // 更新元数据内容
+                log.info("构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
+                dataManageClient.metaData(data);
+            } catch (Exception e) {
+                log.error("【dataManageClient.MetaData()】方法报错,ex", e);
+            }
+
+
+        } catch (Exception e) {
+
+        }
+
     }
 
     @Override
@@ -428,7 +506,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     if (DataSourceTypeEnum.FTP.getName().equals(dataSourcePo.driveType) || data.sftpFlow) {
                         data.excelFlow = true;
                     }
-                    String userStr = JSONObject.toJSONString(data);
                     // 非实时物理表发布
                     // 创建表流程
                     publishTaskClient.publishBuildPhysicsTableTask(data);

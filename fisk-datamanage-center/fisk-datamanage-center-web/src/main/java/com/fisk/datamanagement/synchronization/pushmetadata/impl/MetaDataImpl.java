@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.synchronization.pushmetadata.impl;
 
+import com.alibaba.druid.DbType;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -13,6 +14,10 @@ import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.metadata.dto.metadata.*;
+import com.fisk.common.service.sqlparser.ISqlParser;
+import com.fisk.common.service.sqlparser.ParserVersion;
+import com.fisk.common.service.sqlparser.SqlParserFactory;
+import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceFieldDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
@@ -181,7 +186,34 @@ public class MetaDataImpl implements IMetaData {
 
             DataSourceDTO dataSourceInfo = getDataSourceInfo(dbName);
             if (dataSourceInfo == null) {
-                return;
+                //同步ods血缘
+                odsResult = dataAccessClient.getDataAccessMetaData();
+                if (odsResult.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(odsResult.data)) {
+                    return;
+                }
+                Optional<DataAccessSourceTableDTO> first1 = odsResult.data.stream().filter(e -> e.tableName.equals(tableName)).findFirst();
+                if (!first1.isPresent()) {
+                    return;
+                }
+                ISqlParser parser = SqlParserFactory.parser(ParserVersion.V1);
+                DbType dbType = DbType.sqlserver;
+                if (first1.get().driveType == "mysql") {
+                    dbType = DbType.mysql;
+                } else if (first1.get().driveType == "oracle") {
+                    dbType = DbType.oracle;
+                } else if (first1.get().driveType == "postgresql") {
+                    dbType = DbType.postgresql;
+                } else {
+                    return;
+                }
+                List<TableMetaDataObject> res = parser.getDataTableBySql(first1.get().sqlScript, dbType);
+                if (CollectionUtils.isEmpty(res)) {
+                    return;
+                }
+                List<String> collect = res.stream().map(e -> e.name).collect(Collectors.toList());
+                String dbQualifiedNames = first1.get().appId + "_" + first1.get().appAbbreviation + "_" + first1.get().appId;
+                inputTableList = getOdsTableList(collect, dbQualifiedNames);
+                first.get().sqlScript = first1.get().sqlScript;
             }
             if (dataSourceInfo.id == DataSourceConfigEnum.DMP_DW.getValue()) {
                 //获取ods表信息
@@ -249,6 +281,10 @@ public class MetaDataImpl implements IMetaData {
                             first.get().sqlScript,
                             tableGuid);
                 }
+            }
+            //ods暂不支持字段血缘
+            if (dataSourceInfo == null) {
+                return;
             }
             //同步字段血缘
             synchronizationColumnKinShip(odsResult.data, first.get(), columnList, dataSourceInfo.id, dbQualifiedName);
@@ -1000,6 +1036,29 @@ public class MetaDataImpl implements IMetaData {
         return list;
     }
 
+    public List<EntityIdAndTypeDTO> getOdsTableList(List<String> tableNameList,
+                                                    String dbQualifiedName) {
+        List<EntityIdAndTypeDTO> list = new ArrayList<>();
+
+        List<String> tableQualifiedNameList = tableNameList.stream().map(e -> dbQualifiedName + "_" + e).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(tableQualifiedNameList)) {
+            return list;
+        }
+        QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("qualified_name", tableQualifiedNameList);
+        List<MetadataMapAtlasPO> poList = metadataMapAtlasMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(poList)) {
+            return list;
+        }
+        for (MetadataMapAtlasPO item : poList) {
+            EntityIdAndTypeDTO dto = new EntityIdAndTypeDTO();
+            dto.guid = item.atlasGuid;
+            dto.typeName = EntityTypeEnum.RDBMS_TABLE.getName();
+            list.add(dto);
+        }
+        return list;
+    }
+
     /**
      * 获取dw与doris表血缘输入参数
      *
@@ -1191,11 +1250,6 @@ public class MetaDataImpl implements IMetaData {
                 if (po1 == null) {
                     continue;
                 }
-                //获取表名
-                /*Optional<SourceTableDTO> first = dtoList.stream().filter(e -> e.id == po1.tableId).findFirst();
-                if (!first.isPresent()) {
-                    continue;
-                }*/
                 ProcessAttributesPutDTO attributesPutDTO = new ProcessAttributesPutDTO();
                 attributesPutDTO.guid = item.guid;
                 attributesPutDTO.typeName = EntityTypeEnum.RDBMS_TABLE.getName();
