@@ -116,17 +116,17 @@ public class MetaDataImpl implements IMetaData {
     public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data) {
         for (MetaDataInstanceAttributeDTO instance : data) {
             String instanceGuid = metaDataInstance(instance);
-            if (StringUtils.isEmpty(instanceGuid)) {
+            if (StringUtils.isEmpty(instanceGuid) || CollectionUtils.isEmpty(instance.dbList)) {
                 continue;
             }
             for (MetaDataDbAttributeDTO db : instance.dbList) {
                 String dbGuid = metaDataDb(db, instanceGuid);
-                if (StringUtils.isEmpty(dbGuid)) {
+                if (StringUtils.isEmpty(dbGuid) || CollectionUtils.isEmpty(db.tableList)) {
                     continue;
                 }
                 for (MetaDataTableAttributeDTO table : db.tableList) {
                     String tableGuid = metaDataTable(table, dbGuid, db.name);
-                    if (StringUtils.isEmpty(tableGuid)) {
+                    if (StringUtils.isEmpty(tableGuid) || CollectionUtils.isEmpty(table.columnList)) {
                         continue;
                     }
                     List<String> qualifiedNames = new ArrayList<>();
