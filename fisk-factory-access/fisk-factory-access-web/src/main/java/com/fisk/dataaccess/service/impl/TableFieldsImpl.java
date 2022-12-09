@@ -213,7 +213,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         String versionSql = getVersionSql(syncmodePo);
 
         //新增元数据信息
-        odsMetaDataInfo(dto.appId, dto.sqlScript);
+        odsMetaDataInfo(accessPo.appId, accessPo.sqlScript);
 
         // 发布
         publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO);
@@ -354,7 +354,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 data.userId = userHelper.getLoginUserInfo().id;
                 // 更新元数据内容
                 log.info("构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
-                dataManageClient.metaData(data);
+                dataManageClient.consumeMetaData(list);
             } catch (Exception e) {
                 log.error("【dataManageClient.MetaData()】方法报错,ex", e);
             }
@@ -769,7 +769,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.userId = userHelper.getLoginUserInfo().id;
             // 更新元数据内容
             log.info("构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
-            dataManageClient.metaData(data);
+            dataManageClient.consumeMetaData(list);
         } catch (Exception e) {
             log.error("【dataManageClient.MetaData()】方法报错,ex", e);
         }

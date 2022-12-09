@@ -227,7 +227,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 metaDataAttribute.userId = Long.parseLong(userHelper.getLoginUserInfo().id.toString());
                 // 更新元数据内容
                 log.info("数据接入ods构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
-                dataManageClient.metaData(metaDataAttribute);
+                dataManageClient.consumeMetaData(list);
             } catch (Exception e) {
                 log.error("【dataManageClient.MetaData()】方法报错,ex", e);
             }

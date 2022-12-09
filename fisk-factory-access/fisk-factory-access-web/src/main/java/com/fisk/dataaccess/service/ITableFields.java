@@ -83,4 +83,6 @@ public interface ITableFields extends IService<TableFieldsPO> {
      */
     List<FieldNameDTO> getTableFileInfo(long tableAccessId);
 
+    //void odsMetaDataInfo(long appId, String sql);
+
 }
