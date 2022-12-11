@@ -185,7 +185,9 @@ public class MetaDataImpl implements IMetaData {
             ResultEntity<List<DataAccessSourceTableDTO>> odsResult = new ResultEntity<>();
 
             DataSourceDTO dataSourceInfo = getDataSourceInfo(dbName);
-            if (dataSourceInfo == null) {
+
+            String sqlScript = null;
+            if (dataSourceInfo.id == DataSourceConfigEnum.DMP_ODS.getValue()) {
                 //同步ods血缘
                 odsResult = dataAccessClient.getDataAccessMetaData();
                 if (odsResult.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(odsResult.data)) {
@@ -197,11 +199,11 @@ public class MetaDataImpl implements IMetaData {
                 }
                 ISqlParser parser = SqlParserFactory.parser(ParserVersion.V1);
                 DbType dbType = DbType.sqlserver;
-                if (first1.get().driveType == "mysql") {
+                if ("mysql".equals(first1.get().driveType)) {
                     dbType = DbType.mysql;
-                } else if (first1.get().driveType == "oracle") {
+                } else if ("oracle".equals(first1.get().driveType)) {
                     dbType = DbType.oracle;
-                } else if (first1.get().driveType == "postgresql") {
+                } else if ("postgresql".equals(first1.get().driveType)) {
                     dbType = DbType.postgresql;
                 } else {
                     return;
@@ -213,7 +215,10 @@ public class MetaDataImpl implements IMetaData {
                 List<String> collect = res.stream().map(e -> e.name).collect(Collectors.toList());
                 String dbQualifiedNames = first1.get().appId + "_" + first1.get().appAbbreviation + "_" + first1.get().appId;
                 inputTableList = getOdsTableList(collect, dbQualifiedNames);
-                first.get().sqlScript = first1.get().sqlScript;
+                if (CollectionUtils.isEmpty(inputTableList)) {
+                    return;
+                }
+                sqlScript = first1.get().sqlScript;
             }
             if (dataSourceInfo.id == DataSourceConfigEnum.DMP_DW.getValue()) {
                 //获取ods表信息
@@ -245,6 +250,7 @@ public class MetaDataImpl implements IMetaData {
                 if (CollectionUtils.isEmpty(inputTableList)) {
                     return;
                 }
+                sqlScript = first.get().sqlScript;
             } else if (dataSourceInfo.id == DataSourceConfigEnum.DMP_OLAP.getValue()) {
                 result = dataModelClient.getDataModelTable(2);
                 if (result.code != ResultEnum.SUCCESS.getCode()) {
@@ -263,6 +269,7 @@ public class MetaDataImpl implements IMetaData {
                 if (CollectionUtils.isEmpty(inputTableList)) {
                     return;
                 }
+                sqlScript = first.get().sqlScript;
             }
             //解析数据
             JSONObject jsonObj = JSON.parseObject(getDetail.data);
@@ -271,14 +278,14 @@ public class MetaDataImpl implements IMetaData {
             JSONArray relationShipAttribute = JSON.parseArray(relationShip.getString("outputFromProcesses"));
             //条数为0,则添加process
             if (relationShipAttribute.size() == 0) {
-                addProcess(EntityTypeEnum.RDBMS_TABLE, first.get().sqlScript, inputTableList, tableGuid);
+                addProcess(EntityTypeEnum.RDBMS_TABLE, sqlScript, inputTableList, tableGuid);
             } else {
                 for (int i = 0; i < relationShipAttribute.size(); i++) {
                     updateProcess(
                             relationShipAttribute.getJSONObject(i).getString("guid"),
                             inputTableList,
                             EntityTypeEnum.RDBMS_TABLE,
-                            first.get().sqlScript,
+                            sqlScript,
                             tableGuid);
                 }
             }
@@ -565,7 +572,7 @@ public class MetaDataImpl implements IMetaData {
         //同步业务分类
         associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
         //同步业务元数据
-        associatedBusinessMetaData(atlasGuid, dbName, dto.name);
+        //associatedBusinessMetaData(atlasGuid, dbName, dto.name);
         if (isAdd) {
             return atlasGuid;
         }
@@ -965,7 +972,7 @@ public class MetaDataImpl implements IMetaData {
         int dataSourceId = 0;
         //暂不支持同步ods血缘
         if (dataSourceInfo.id == DataSourceConfigEnum.DMP_ODS.getValue()) {
-            return null;
+            return "ods";
         }
         //dw
         else if (dataSourceInfo.id == DataSourceConfigEnum.DMP_DW.getValue()) {

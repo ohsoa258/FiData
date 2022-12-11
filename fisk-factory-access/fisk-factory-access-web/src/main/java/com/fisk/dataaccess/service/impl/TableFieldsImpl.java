@@ -296,7 +296,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 
         //新增元数据信息
-        odsMetaDataInfo(dto.appId, dto.sqlScript);
+        odsMetaDataInfo(model.appId, model.sqlScript);
 
         // 发布
         publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO);
@@ -326,11 +326,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         try {
             ISqlParser parser = SqlParserFactory.parser(ParserVersion.V1);
             DbType dbType = DbType.sqlserver;
-            if (po.driveType == "mysql") {
+            if ("mysql".equals(po.driveType)) {
                 dbType = DbType.mysql;
-            } else if (po.driveType == "oracle") {
+            } else if ("oracle".equals(po.driveType)) {
                 dbType = DbType.oracle;
-            } else if (po.driveType == "postgresql") {
+            } else if ("postgresql".equals(po.driveType)) {
                 dbType = DbType.postgresql;
             } else {
                 return;
@@ -348,6 +348,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 table.setDisplayName(item.name);
                 tableList.add(table);
             }
+            list.get(0).dbList.get(0).tableList = tableList;
             try {
                 MetaDataAttributeDTO data = new MetaDataAttributeDTO();
                 data.instanceList = list;
