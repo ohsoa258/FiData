@@ -21,6 +21,8 @@ import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaQueryTableDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaTableDetailDTO;
+import com.fisk.datamodel.dto.customscript.CustomScriptInfoDTO;
+import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dataops.DataModelTableInfoDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
@@ -49,15 +51,6 @@ public interface DataModelClient {
      */
     @GetMapping("/attribute/getDimensionEntity")
     ResultEntity<Object> getDimensionEntity(@RequestParam("id") int id);
-
-    /**
-     * 获取维度表元数据列表以及字段--用于Doris
-     *
-     * @param businessAreaId
-     * @return 执行结果
-     */
-    /*@GetMapping("/attribute/getDimensionListEntity")
-    ResultEntity<Object> getDimensionListEntity(@RequestParam("businessAreaId") int businessAreaId);*/
 
     /**
      * 获取事实表元数据字段
@@ -337,5 +330,15 @@ public interface DataModelClient {
     @ApiOperation("根据表名获取接入表信息")
     @GetMapping("/DataOps/getTableColumnDisplay")
     ResultEntity<List<String[]>> getTableColumnDisplay(@RequestParam("tableName") String tableName);
+
+    /**
+     * 自定义脚本列表
+     *
+     * @param dto
+     * @return
+     */
+    @ApiOperation("自定义脚本列表")
+    @PostMapping("/CustomScript/listCustomScript")
+    public ResultEntity<List<CustomScriptInfoDTO>> listCustomScript(@RequestBody CustomScriptQueryDTO dto);
 
 }

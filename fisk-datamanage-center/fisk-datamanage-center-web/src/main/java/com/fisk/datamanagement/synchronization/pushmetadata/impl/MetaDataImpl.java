@@ -44,6 +44,8 @@ import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.datamodel.dto.customscript.CustomScriptInfoDTO;
+import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceFieldDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
@@ -59,7 +61,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -187,6 +192,8 @@ public class MetaDataImpl implements IMetaData {
 
             DataSourceDTO dataSourceInfo = getDataSourceInfo(dbName);
 
+            boolean delete = false;
+
             String sqlScript = null;
             if (dataSourceInfo.id == DataSourceConfigEnum.DMP_ODS.getValue()) {
                 //同步ods血缘
@@ -237,14 +244,16 @@ public class MetaDataImpl implements IMetaData {
                     return;
                 }
                 List<TableMetaDataObject> tableMetaDataObjects = SqlParserUtils.sqlDriveConversion(dataSourceInfo.conType.getName().toUpperCase(), first.get().sqlScript);
+                if (CollectionUtils.isEmpty(tableMetaDataObjects)) {
+                    return;
+                }
 
-                List<String> tableList = first.get().fieldList
+                List<String> tableList = tableMetaDataObjects
                         .stream()
-                        .map(e -> e.getSourceTable())
+                        .map(e -> e.getName())
                         .distinct()
                         .collect(Collectors.toList());
 
-                tableList.removeAll(Collections.singleton(null));
                 //获取输入参数
                 inputTableList = getTableList(tableList, odsResult.data, dbQualifiedName);
                 String newDbQualifiedName = whetherSynchronization(dbName, true);
@@ -254,6 +263,7 @@ public class MetaDataImpl implements IMetaData {
                     return;
                 }
                 sqlScript = first.get().sqlScript;
+                delete = true;
             } else if (dataSourceInfo.id == DataSourceConfigEnum.DMP_OLAP.getValue()) {
                 result = dataModelClient.getDataModelTable(2);
                 if (result.code != ResultEnum.SUCCESS.getCode()) {
@@ -289,7 +299,13 @@ public class MetaDataImpl implements IMetaData {
                             inputTableList,
                             EntityTypeEnum.RDBMS_TABLE,
                             sqlScript,
-                            tableGuid);
+                            tableGuid,
+                            delete);
+                }
+                if (delete) {
+                    addProcess(EntityTypeEnum.RDBMS_TABLE, sqlScript, inputTableList, tableGuid);
+                    //新增自定义脚本
+                    //synchronizationCustomScriptKinShip();
                 }
             }
             //ods暂不支持字段血缘
@@ -301,6 +317,47 @@ public class MetaDataImpl implements IMetaData {
         } catch (Exception e) {
             log.error("同步表血缘失败,表guid" + tableGuid + " ex:", e);
             return;
+        }
+    }
+
+
+    public void synchronizationCustomScriptKinShip(Integer tableId,
+                                                   String tableName,
+                                                   List<SourceTableDTO> list,
+                                                   String tableGuid,
+                                                   String driveType,
+                                                   String dbQualifiedName) {
+
+        CustomScriptQueryDTO dto = new CustomScriptQueryDTO();
+        dto.tableId = tableId;
+        dto.execType = 2;
+        dto.type = 2;
+        if ("dim_".equals(tableName.substring(0, 4))) {
+            dto.type = 1;
+        }
+
+        ResultEntity<List<CustomScriptInfoDTO>> listResultEntity = dataModelClient.listCustomScript(dto);
+        if (listResultEntity.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(listResultEntity.data)) {
+            return;
+        }
+
+        for (CustomScriptInfoDTO item : listResultEntity.data) {
+            //解析sql
+            List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversion(driveType, item.script);
+            if (CollectionUtils.isEmpty(res)) {
+                return;
+            }
+
+            //获取输入表集合
+            List<String> collect = res.stream().map(e -> e.getName()).collect(Collectors.toList());
+
+            List<EntityIdAndTypeDTO> inputTableList = getDwTableList(collect, list, dbQualifiedName);
+            if (CollectionUtils.isEmpty(inputTableList)) {
+                continue;
+            }
+
+            addProcess(EntityTypeEnum.RDBMS_TABLE, item.script, inputTableList, tableGuid);
+
         }
     }
 
@@ -442,7 +499,8 @@ public class MetaDataImpl implements IMetaData {
                             inputList,
                             EntityTypeEnum.RDBMS_TABLE,
                             fieldName,
-                            item.atlasGuid);
+                            item.atlasGuid,
+                            false);
                 }
             }
         }
@@ -740,7 +798,10 @@ public class MetaDataImpl implements IMetaData {
      * @param tableName
      * @param dbName
      */
-    public void associatedClassification(String tableGuid, String tableName, String dbName, String comment) {
+    public void associatedClassification(String tableGuid,
+                                         String tableName,
+                                         String dbName,
+                                         String comment) {
         try {
             //获取数据源列表
             ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
@@ -1046,6 +1107,32 @@ public class MetaDataImpl implements IMetaData {
         return list;
     }
 
+    public List<EntityIdAndTypeDTO> getDwTableList(List<String> tableNameList,
+                                                   List<SourceTableDTO> dtoList,
+                                                   String dbQualifiedName) {
+        List<EntityIdAndTypeDTO> list = new ArrayList<>();
+
+        List<String> tableQualifiedNameList = dtoList.stream()
+                .filter(e -> tableNameList.contains(e.tableName.toLowerCase()))
+                .map(e -> dbQualifiedName + "_" + e.getId()).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(tableQualifiedNameList)) {
+            return list;
+        }
+        QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("qualified_name", tableQualifiedNameList);
+        List<MetadataMapAtlasPO> poList = metadataMapAtlasMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(poList)) {
+            return list;
+        }
+        for (MetadataMapAtlasPO item : poList) {
+            EntityIdAndTypeDTO dto = new EntityIdAndTypeDTO();
+            dto.guid = item.atlasGuid;
+            dto.typeName = EntityTypeEnum.RDBMS_TABLE.getName();
+            list.add(dto);
+        }
+        return list;
+    }
+
     public List<EntityIdAndTypeDTO> getOdsTableList(List<String> tableNameList,
                                                     String dbQualifiedName) {
         List<EntityIdAndTypeDTO> list = new ArrayList<>();
@@ -1077,7 +1164,9 @@ public class MetaDataImpl implements IMetaData {
      * @param newDbQualifiedName
      * @return
      */
-    public List<EntityIdAndTypeDTO> getDorisTableList(SourceTableDTO dto, String dbQualifiedName, String newDbQualifiedName) {
+    public List<EntityIdAndTypeDTO> getDorisTableList(SourceTableDTO dto,
+                                                      String dbQualifiedName,
+                                                      String newDbQualifiedName) {
         List<EntityIdAndTypeDTO> list = new ArrayList<>();
         //获取dw事实表限定名
         String factQualifiedName = dbQualifiedName + "_" + DataModelTableTypeEnum.DW_FACT.getValue() + "_" + dto.id;
@@ -1232,8 +1321,13 @@ public class MetaDataImpl implements IMetaData {
                               List<EntityIdAndTypeDTO> inputList,
                               EntityTypeEnum entityTypeEnum,
                               String sqlScript,
-                              String atlasGuid) {
+                              String atlasGuid,
+                              boolean delete) {
         try {
+            if (delete) {
+                entityImpl.deleteEntity(processGuid);
+                return;
+            }
             //获取process详情
             ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + processGuid);
             if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS) {
@@ -1321,7 +1415,10 @@ public class MetaDataImpl implements IMetaData {
      * @param end2QualifiedName
      * @return
      */
-    public String addRelationShip(String end1Guid, String end1QualifiedName, String end2Guid, String end2QualifiedName) {
+    public String addRelationShip(String end1Guid,
+                                  String end1QualifiedName,
+                                  String end2Guid,
+                                  String end2QualifiedName) {
         RelationshipDTO dto = new RelationshipDTO();
         dto.typeName = EntityTypeEnum.DATASET_PROCESS_INPUTS.getName();
 
