@@ -219,8 +219,7 @@ public class MetaDataImpl implements IMetaData {
                     return;
                 }
                 sqlScript = first1.get().sqlScript;
-            }
-            if (dataSourceInfo.id == DataSourceConfigEnum.DMP_DW.getValue()) {
+            } else if (dataSourceInfo.id == DataSourceConfigEnum.DMP_DW.getValue()) {
                 //获取ods表信息
                 odsResult = dataAccessClient.getDataAccessMetaData();
                 if (odsResult.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(odsResult.data)) {
@@ -236,6 +235,8 @@ public class MetaDataImpl implements IMetaData {
                 if (!first.isPresent()) {
                     return;
                 }
+                //获取sql
+                String aa = first.get().sqlScript;
                 List<String> tableList = first.get().fieldList
                         .stream()
                         .map(e -> e.getSourceTable())

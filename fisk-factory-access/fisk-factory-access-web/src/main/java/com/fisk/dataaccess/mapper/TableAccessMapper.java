@@ -138,7 +138,12 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
      *
      * @return
      */
-    @Select("SELECT a.id,a.app_id,a.sql_script,b.app_abbreviation,c.drive_type,CONCAT('ods','_',b.app_abbreviation,'_',a.table_name) as tableName,a.table_des from tb_table_access a \n" +
+    @Select("SELECT a.id,a.app_id,a.sql_script,b.app_abbreviation,c.drive_type," +
+            "CASE b.whether_schema " +
+            "WHEN 0 THEN " +
+            "CONCAT( 'ods', '_', b.app_abbreviation, '_', a.table_name ) " +
+            "ELSE concat( b.app_abbreviation, '.', a.table_name ) END AS tableName," +
+            "a.table_des from tb_table_access a \n" +
             "join tb_app_registration b on a.app_id=b.id\n" +
             "join tb_app_datasource c on a.app_id=c.id\n" +
             "where a.del_flag=1 and a.publish=1")
