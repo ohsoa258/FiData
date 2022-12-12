@@ -1319,6 +1319,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                     if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.RestfulAPI.getName())) {
                         f.type = "数据湖RestfulAPI任务";
                     }
+                    if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.sftp.getName())) {
+                        f.type = "数据湖sftp任务";
+                    }
                 }
             }
         }
