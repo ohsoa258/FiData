@@ -1,11 +1,14 @@
 package com.fisk.common.service.sqlparser;
 
+import com.alibaba.druid.DbType;
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr;
 import com.alibaba.druid.sql.ast.expr.SQLQueryExpr;
 import com.alibaba.druid.sql.ast.statement.*;
 import com.alibaba.druid.sql.dialect.sqlserver.ast.SQLServerSelectQueryBlock;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.sqlparser.model.FieldMetaDataObject;
 import com.fisk.common.service.sqlparser.model.TableInfo;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
@@ -266,6 +269,28 @@ public class SqlParserUtils {
             tableInfo.tableType = TableTypeEnum.NONE;
         }
         return tableInfo;
+    }
+
+    /**
+     * 数据库类型
+     *
+     * @param driveTpye
+     * @return
+     */
+    public static DbType sqlDriveConversion(String driveTpye) {
+        DbType dbType = null;
+        if ("mysql".equals(driveTpye)) {
+            dbType = DbType.mysql;
+        } else if ("oracle".equals(driveTpye)) {
+            dbType = DbType.oracle;
+        } else if ("postgresql".equals(driveTpye)) {
+            dbType = DbType.postgresql;
+        } else if ("sqlserver".equals(driveTpye)) {
+            dbType = DbType.sqlserver;
+        } else {
+            throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+        return dbType;
     }
 
 }

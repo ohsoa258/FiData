@@ -1,14 +1,5 @@
 package com.fisk.common.framework.feign;
 
-import com.netflix.hystrix.strategy.HystrixPlugins;
-import com.netflix.hystrix.strategy.concurrency.HystrixConcurrencyStrategy;
-import org.slf4j.MDC;
-import org.springframework.context.annotation.Configuration;
-
-import javax.annotation.PostConstruct;
-import java.util.Map;
-import java.util.concurrent.Callable;
-
 /**
  * @author gy
  * @version 1.0
@@ -17,22 +8,24 @@ import java.util.concurrent.Callable;
  * 所以需要重写Hystrix的获取线程方法，获取线程前，先获取主线程的MDC信息，然后设置给请求线程。
  * @date 2022/12/7 16:49
  */
-@Configuration
-public class MdcHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy {
+//@Configuration
+public class MdcHystrixConcurrencyStrategy {
+//extends HystrixConcurrencyStrategy
+// {
 
-    @PostConstruct
+    /*@PostConstruct
     public void hystrixInit() {
         HystrixPlugins.getInstance().registerConcurrencyStrategy(new MdcHystrixConcurrencyStrategy());
     }
 
-    /**
+    *//**
      * 允许修饰Callable，比如做些上下文数据传递。
      * 这里用来获取主线程的MDC信息
      *
      * @param callable callable
      * @param <T>      T
      * @return callable
-     */
+     *//*
     @Override
     public <T> Callable<T> wrapCallable(Callable<T> callable) {
         // 获取当前线程的MDC信息
@@ -46,5 +39,5 @@ public class MdcHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy {
                 MDC.clear();
             }
         };
-    }
+    }*/
 }

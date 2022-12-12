@@ -24,6 +24,7 @@ import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.sqlparser.ISqlParser;
 import com.fisk.common.service.sqlparser.ParserVersion;
 import com.fisk.common.service.sqlparser.SqlParserFactory;
+import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
@@ -322,47 +323,39 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 
         List<MetaDataInstanceAttributeDTO> list = appRegistration.addDataSourceMetaData(registrationPO, po);
-
+        List<TableMetaDataObject> res = null;
+        //数据库类型
+        DbType dbType = SqlParserUtils.sqlDriveConversion(po.driveType);
         try {
             ISqlParser parser = SqlParserFactory.parser(ParserVersion.V1);
-            DbType dbType = DbType.sqlserver;
-            if ("mysql".equals(po.driveType)) {
-                dbType = DbType.mysql;
-            } else if ("oracle".equals(po.driveType)) {
-                dbType = DbType.oracle;
-            } else if ("postgresql".equals(po.driveType)) {
-                dbType = DbType.postgresql;
-            } else {
-                return;
-            }
-            List<TableMetaDataObject> res = parser.getDataTableBySql(sql, dbType);
-            if (CollectionUtils.isEmpty(res)) {
-                return;
-            }
-            List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
-            for (TableMetaDataObject item : res) {
-                MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
-                table.setQualifiedName(list.get(0).dbList.get(0).qualifiedName + "_" + item.name);
-                table.setName(item.name);
-                table.setComment(String.valueOf(appId));
-                table.setDisplayName(item.name);
-                tableList.add(table);
-            }
-            list.get(0).dbList.get(0).tableList = tableList;
-            try {
-                MetaDataAttributeDTO data = new MetaDataAttributeDTO();
-                data.instanceList = list;
-                data.userId = userHelper.getLoginUserInfo().id;
-                // 更新元数据内容
-                log.info("构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
-                dataManageClient.consumeMetaData(list);
-            } catch (Exception e) {
-                log.error("【dataManageClient.MetaData()】方法报错,ex", e);
-            }
-
-
+            res = parser.getDataTableBySql(sql, dbType);
         } catch (Exception e) {
+            log.error("【sql解析失败】,{}", e);
+            throw new FkException(ResultEnum.SQL_PARSING);
+        }
 
+        if (CollectionUtils.isEmpty(res)) {
+            return;
+        }
+        List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
+        for (TableMetaDataObject item : res) {
+            MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+            table.setQualifiedName(list.get(0).dbList.get(0).qualifiedName + "_" + item.name);
+            table.setName(item.name);
+            table.setComment(String.valueOf(appId));
+            table.setDisplayName(item.name);
+            tableList.add(table);
+        }
+        list.get(0).dbList.get(0).tableList = tableList;
+        try {
+            MetaDataAttributeDTO data = new MetaDataAttributeDTO();
+            data.instanceList = list;
+            data.userId = userHelper.getLoginUserInfo().id;
+            // 更新元数据内容
+            log.info("构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
+            dataManageClient.metaData(data);
+        } catch (Exception e) {
+            log.error("【dataManageClient.MetaData()】方法报错,ex", e);
         }
 
     }
@@ -770,7 +763,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.userId = userHelper.getLoginUserInfo().id;
             // 更新元数据内容
             log.info("构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
-            dataManageClient.consumeMetaData(list);
+            dataManageClient.metaData(data);
         } catch (Exception e) {
             log.error("【dataManageClient.MetaData()】方法报错,ex", e);
         }
