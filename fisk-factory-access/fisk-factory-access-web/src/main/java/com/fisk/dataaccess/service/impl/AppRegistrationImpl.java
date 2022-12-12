@@ -278,7 +278,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
         MetaDataInstanceAttributeDTO data = new MetaDataInstanceAttributeDTO();
-        data.name = appRegistration.appName;
+        data.name = dataSource.host + "_" + appRegistration.appAbbreviation;
         data.hostname = dataSource.host;
         data.port = dataSource.port;
         data.qualifiedName = appRegistration.id + "_" + appRegistration.appAbbreviation;

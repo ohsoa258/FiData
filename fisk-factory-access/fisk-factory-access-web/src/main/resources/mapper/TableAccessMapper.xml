@@ -64,12 +64,12 @@
 		CASE
 			b.whether_schema
 			WHEN 0 THEN
-			concat( 'ods_', b.app_abbreviation, a.table_name ) ELSE concat( b.app_abbreviation, '.', a.table_name )
+			concat( 'ods_', b.app_abbreviation,'_', a.table_name ) ELSE concat( b.app_abbreviation, '.', a.table_name )
 		END AS ods_table_name,
 		CASE
 			b.whether_schema
 			WHEN 0 THEN
-			concat( 'stg_', b.app_abbreviation, a.table_name ) ELSE concat( b.app_abbreviation, '.','stg_', a.table_name )
+			concat( 'stg_', b.app_abbreviation,'_', a.table_name ) ELSE concat( b.app_abbreviation, '.','stg_', a.table_name )
 		END AS stg_table_name,
 		a.app_id,
 		a.id
