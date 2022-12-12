@@ -17,6 +17,7 @@ import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.common.service.sqlparser.ISqlParser;
 import com.fisk.common.service.sqlparser.ParserVersion;
 import com.fisk.common.service.sqlparser.SqlParserFactory;
+import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceFieldDTO;
@@ -235,13 +236,14 @@ public class MetaDataImpl implements IMetaData {
                 if (!first.isPresent()) {
                     return;
                 }
-                //获取sql
-                String aa = first.get().sqlScript;
+                List<TableMetaDataObject> tableMetaDataObjects = SqlParserUtils.sqlDriveConversion(dataSourceInfo.conType.getName().toUpperCase(), first.get().sqlScript);
+
                 List<String> tableList = first.get().fieldList
                         .stream()
                         .map(e -> e.getSourceTable())
                         .distinct()
                         .collect(Collectors.toList());
+
                 tableList.removeAll(Collections.singleton(null));
                 //获取输入参数
                 inputTableList = getTableList(tableList, odsResult.data, dbQualifiedName);

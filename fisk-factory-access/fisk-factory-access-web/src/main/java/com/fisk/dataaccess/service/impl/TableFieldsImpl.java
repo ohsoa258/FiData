@@ -1,6 +1,5 @@
 package com.fisk.dataaccess.service.impl;
 
-import com.alibaba.druid.DbType;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -21,9 +20,6 @@ import com.fisk.common.service.flinkupload.FlinkFactoryHelper;
 import com.fisk.common.service.flinkupload.IFlinkJobUpload;
 import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
-import com.fisk.common.service.sqlparser.ISqlParser;
-import com.fisk.common.service.sqlparser.ParserVersion;
-import com.fisk.common.service.sqlparser.SqlParserFactory;
 import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
@@ -323,20 +319,12 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 
         List<MetaDataInstanceAttributeDTO> list = appRegistration.addDataSourceMetaData(registrationPO, po);
-        List<TableMetaDataObject> res = null;
-        //数据库类型
-        DbType dbType = SqlParserUtils.sqlDriveConversion(po.driveType);
-        try {
-            ISqlParser parser = SqlParserFactory.parser(ParserVersion.V1);
-            res = parser.getDataTableBySql(sql, dbType);
-        } catch (Exception e) {
-            log.error("【sql解析失败】,{}", e);
-            throw new FkException(ResultEnum.SQL_PARSING);
-        }
-
+        //解析sql
+        List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversion(po.driveType, sql);
         if (CollectionUtils.isEmpty(res)) {
             return;
         }
+
         List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
         for (TableMetaDataObject item : res) {
             MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();

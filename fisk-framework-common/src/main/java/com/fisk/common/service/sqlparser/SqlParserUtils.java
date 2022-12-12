@@ -274,23 +274,34 @@ public class SqlParserUtils {
     /**
      * 数据库类型
      *
-     * @param driveTpye
+     * @param driveType
+     * @param sqlScript
      * @return
      */
-    public static DbType sqlDriveConversion(String driveTpye) {
+    public static List<TableMetaDataObject> sqlDriveConversion(String driveType, String sqlScript) {
         DbType dbType = null;
-        if ("mysql".equals(driveTpye)) {
+        if ("mysql".equals(driveType)) {
             dbType = DbType.mysql;
-        } else if ("oracle".equals(driveTpye)) {
+        } else if ("oracle".equals(driveType)) {
             dbType = DbType.oracle;
-        } else if ("postgresql".equals(driveTpye)) {
+        } else if ("postgresql".equals(driveType)) {
             dbType = DbType.postgresql;
-        } else if ("sqlserver".equals(driveTpye)) {
+        } else if ("sqlserver".equals(driveType)) {
             dbType = DbType.sqlserver;
         } else {
             throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
-        return dbType;
+
+        List<TableMetaDataObject> res = null;
+        try {
+            ISqlParser parser = SqlParserFactory.parser(ParserVersion.V1);
+            res = parser.getDataTableBySql(sqlScript, dbType);
+        } catch (Exception e) {
+            log.error("【sql解析失败】,{}", e);
+            throw new FkException(ResultEnum.SQL_PARSING);
+        }
+
+        return res;
     }
 
 }
