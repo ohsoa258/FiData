@@ -72,8 +72,10 @@ public class CustomScriptImpl
         QueryWrapper<CustomScriptPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(CustomScriptPO::getTableId, dto.tableId)
-                .eq(CustomScriptPO::getType, dto.type)
-                .eq(CustomScriptPO::getExecType, dto.execType);
+                .eq(CustomScriptPO::getType, dto.type);
+        if (dto.execType != 0) {
+            queryWrapper.lambda().eq(CustomScriptPO::getExecType, dto.execType);
+        }
         List<CustomScriptPO> list = mapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(list)) {
             return new ArrayList<>();

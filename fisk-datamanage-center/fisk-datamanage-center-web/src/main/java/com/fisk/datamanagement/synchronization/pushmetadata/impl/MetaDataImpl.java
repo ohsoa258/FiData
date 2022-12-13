@@ -1,6 +1,5 @@
 package com.fisk.datamanagement.synchronization.pushmetadata.impl;
 
-import com.alibaba.druid.DbType;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -14,9 +13,6 @@ import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.metadata.dto.metadata.*;
-import com.fisk.common.service.sqlparser.ISqlParser;
-import com.fisk.common.service.sqlparser.ParserVersion;
-import com.fisk.common.service.sqlparser.SqlParserFactory;
 import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.client.DataAccessClient;
@@ -143,7 +139,7 @@ public class MetaDataImpl implements IMetaData {
                     //删除
                     deleteMetaData(qualifiedNames, tableGuid);
                     //同步血缘
-                    synchronizationTableKinShip(db.name, tableGuid, table.name, table.columnList);
+                    synchronizationTableKinShip(db.name, tableGuid, table.name); //, table.columnList);
                 }
             }
         }
@@ -166,8 +162,8 @@ public class MetaDataImpl implements IMetaData {
      */
     public void synchronizationTableKinShip(String dbName,
                                             String tableGuid,
-                                            String tableName,
-                                            List<MetaDataColumnAttributeDTO> columnList) {
+                                            String tableName) //,List<MetaDataColumnAttributeDTO> columnList
+    {
         try {
             String dbQualifiedName = whetherSynchronization(dbName, false);
             if (StringUtils.isEmpty(dbQualifiedName)) {
@@ -186,7 +182,7 @@ public class MetaDataImpl implements IMetaData {
 
             Optional<SourceTableDTO> first = null;
 
-            List<SourceTableDTO> list;
+            List<SourceTableDTO> list = null;
 
             ResultEntity<List<DataAccessSourceTableDTO>> odsResult = new ResultEntity<>();
 
@@ -205,21 +201,12 @@ public class MetaDataImpl implements IMetaData {
                 if (!first1.isPresent()) {
                     return;
                 }
-                ISqlParser parser = SqlParserFactory.parser(ParserVersion.V1);
-                DbType dbType = DbType.sqlserver;
-                if ("mysql".equals(first1.get().driveType)) {
-                    dbType = DbType.mysql;
-                } else if ("oracle".equals(first1.get().driveType)) {
-                    dbType = DbType.oracle;
-                } else if ("postgresql".equals(first1.get().driveType)) {
-                    dbType = DbType.postgresql;
-                } else {
-                    return;
-                }
-                List<TableMetaDataObject> res = parser.getDataTableBySql(first1.get().sqlScript, dbType);
+
+                List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversion(dataSourceInfo.conType.getName().toUpperCase(), first1.get().sqlScript);
                 if (CollectionUtils.isEmpty(res)) {
                     return;
                 }
+
                 List<String> collect = res.stream().map(e -> e.name).collect(Collectors.toList());
                 String dbQualifiedNames = first1.get().appId + "_" + first1.get().appAbbreviation + "_" + first1.get().appId;
                 inputTableList = getOdsTableList(collect, dbQualifiedNames);
@@ -243,7 +230,7 @@ public class MetaDataImpl implements IMetaData {
                 if (!first.isPresent()) {
                     return;
                 }
-                List<TableMetaDataObject> tableMetaDataObjects = SqlParserUtils.sqlDriveConversion(dataSourceInfo.conType.getName().toUpperCase(), first.get().sqlScript);
+                List<TableMetaDataObject> tableMetaDataObjects = SqlParserUtils.sqlDriveConversion(dataSourceInfo.conType.getName().toLowerCase(), first.get().sqlScript);
                 if (CollectionUtils.isEmpty(tableMetaDataObjects)) {
                     return;
                 }
@@ -291,7 +278,7 @@ public class MetaDataImpl implements IMetaData {
             JSONArray relationShipAttribute = JSON.parseArray(relationShip.getString("outputFromProcesses"));
             //条数为0,则添加process
             if (relationShipAttribute.size() == 0) {
-                addProcess(EntityTypeEnum.RDBMS_TABLE, sqlScript, inputTableList, tableGuid);
+                addProcess(EntityTypeEnum.RDBMS_TABLE, sqlScript, inputTableList, tableGuid, "抽取");
             } else {
                 for (int i = 0; i < relationShipAttribute.size(); i++) {
                     updateProcess(
@@ -303,24 +290,36 @@ public class MetaDataImpl implements IMetaData {
                             delete);
                 }
                 if (delete) {
-                    addProcess(EntityTypeEnum.RDBMS_TABLE, sqlScript, inputTableList, tableGuid);
-                    //新增自定义脚本
-                    //synchronizationCustomScriptKinShip();
+                    addProcess(EntityTypeEnum.RDBMS_TABLE, sqlScript, inputTableList, tableGuid, "抽取");
                 }
+            }
+            if (delete) {
+                String newDbQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname;
+                //新增自定义脚本
+                synchronizationCustomScriptKinShip((int) first.get().id, first.get().tableName, list, tableGuid, dataSourceInfo.conType.getName().toLowerCase(), newDbQualifiedName);
             }
             //ods暂不支持字段血缘
             if (dataSourceInfo == null) {
                 return;
             }
-            //同步字段血缘
-            synchronizationColumnKinShip(odsResult.data, first.get(), columnList, dataSourceInfo.id, dbQualifiedName);
+            //同步字段血缘 TODO 暂不支持字段血缘
+            //synchronizationColumnKinShip(odsResult.data, first.get(), columnList, dataSourceInfo.id, dbQualifiedName);
         } catch (Exception e) {
             log.error("同步表血缘失败,表guid" + tableGuid + " ex:", e);
             return;
         }
     }
 
-
+    /**
+     * 同步自定义脚本血缘
+     *
+     * @param tableId
+     * @param tableName
+     * @param list
+     * @param tableGuid
+     * @param driveType
+     * @param dbQualifiedName
+     */
     public void synchronizationCustomScriptKinShip(Integer tableId,
                                                    String tableName,
                                                    List<SourceTableDTO> list,
@@ -330,7 +329,7 @@ public class MetaDataImpl implements IMetaData {
 
         CustomScriptQueryDTO dto = new CustomScriptQueryDTO();
         dto.tableId = tableId;
-        dto.execType = 2;
+        dto.execType = 0;
         dto.type = 2;
         if ("dim_".equals(tableName.substring(0, 4))) {
             dto.type = 1;
@@ -356,7 +355,7 @@ public class MetaDataImpl implements IMetaData {
                 continue;
             }
 
-            addProcess(EntityTypeEnum.RDBMS_TABLE, item.script, inputTableList, tableGuid);
+            addProcess(EntityTypeEnum.RDBMS_TABLE, item.script, inputTableList, tableGuid, item.name);
 
         }
     }
@@ -491,7 +490,7 @@ public class MetaDataImpl implements IMetaData {
             JSONArray relationShipAttribute = JSON.parseArray(relationShip.getString("outputFromProcesses"));
             //条数为0,则添加process
             if (relationShipAttribute.size() == 0) {
-                addProcess(EntityTypeEnum.RDBMS_COLUMN, fieldName, inputList, item.atlasGuid);
+                addProcess(EntityTypeEnum.RDBMS_COLUMN, fieldName, inputList, item.atlasGuid,"");
             } else {
                 for (int i = 0; i < relationShipAttribute.size(); i++) {
                     updateProcess(
@@ -1107,14 +1106,29 @@ public class MetaDataImpl implements IMetaData {
         return list;
     }
 
+    /**
+     * 获取自定义脚本与dw表血缘输入参数
+     *
+     * @param tableNameList
+     * @param dtoList
+     * @param dbQualifiedName
+     * @return
+     */
     public List<EntityIdAndTypeDTO> getDwTableList(List<String> tableNameList,
                                                    List<SourceTableDTO> dtoList,
                                                    String dbQualifiedName) {
         List<EntityIdAndTypeDTO> list = new ArrayList<>();
 
         List<String> tableQualifiedNameList = dtoList.stream()
-                .filter(e -> tableNameList.contains(e.tableName.toLowerCase()))
-                .map(e -> dbQualifiedName + "_" + e.getId()).collect(Collectors.toList());
+                .filter(e -> tableNameList.contains(e.tableName))
+                .map(e -> {
+                    if ("dim_".equals(e.tableName.substring(0, 4))) {
+                        return dbQualifiedName + "_1" + "_" + e.getId();
+                    }
+                    return dbQualifiedName + "_2" + "_" + e.getId();
+                })
+                .collect(Collectors.toList());
+
         if (CollectionUtils.isEmpty(tableQualifiedNameList)) {
             return list;
         }
@@ -1223,7 +1237,7 @@ public class MetaDataImpl implements IMetaData {
             entityIdAndTypeDTO.guid = po2.atlasGuid;
             entityIdAndTypeDTO.typeName = EntityTypeEnum.RDBMS_TABLE.getName();
             inputTableList.add(entityIdAndTypeDTO);
-            addProcess(EntityTypeEnum.RDBMS_TABLE, "", inputTableList, po1.atlasGuid);
+            addProcess(EntityTypeEnum.RDBMS_TABLE, "", inputTableList, po1.atlasGuid,"抽取");
         }
 
         return list;
@@ -1271,7 +1285,8 @@ public class MetaDataImpl implements IMetaData {
     public void addProcess(EntityTypeEnum entityTypeEnum,
                            String sql,
                            List<EntityIdAndTypeDTO> tableList,
-                           String atlasGuid) {
+                           String atlasGuid,
+                           String processName) {
         //去除换行符,以及转小写
         sql = sql.replace("\n", "").toLowerCase();
         //组装参数
@@ -1284,7 +1299,7 @@ public class MetaDataImpl implements IMetaData {
         attributesDTO.owner = "root";
         attributesDTO.qualifiedName = sql + "_" + atlasGuid;
         attributesDTO.contact_info = "root";
-        attributesDTO.name = sql;
+        attributesDTO.name = processName;
         //输入参数
         attributesDTO.inputs = tableList;
         //输出参数
@@ -1338,7 +1353,7 @@ public class MetaDataImpl implements IMetaData {
             //判断process是否已删除
             if (EntityTypeEnum.DELETED.getName().equals(dto.entity.status)) {
                 //如果已删除,则重新添加
-                addProcess(entityTypeEnum, sqlScript, inputList, atlasGuid);
+                addProcess(entityTypeEnum, sqlScript, inputList, atlasGuid,"抽取");
                 return;
             }
             List<String> inputGuidList = dto.entity.attributes.inputs.stream().map(e -> e.getGuid()).collect(Collectors.toList());
