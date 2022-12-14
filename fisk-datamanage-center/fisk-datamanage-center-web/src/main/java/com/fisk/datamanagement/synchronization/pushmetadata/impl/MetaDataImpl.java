@@ -98,6 +98,8 @@ public class MetaDataImpl implements IMetaData {
     @Value("${atlas.relationship}")
     private String relationship;
 
+    private static final String stg_prefix = "_stg";
+
     @Override
     public ResultEnum metaData(MetaDataAttributeDTO data) {
         try {
@@ -128,12 +130,17 @@ public class MetaDataImpl implements IMetaData {
                 }
                 for (MetaDataTableAttributeDTO table : db.tableList) {
                     String tableGuid = metaDataTable(table, dbGuid, db.name);
+                    //新增stg表
+                    metaDataStgTable(table, dbGuid, db.name);
                     if (StringUtils.isEmpty(tableGuid) || CollectionUtils.isEmpty(table.columnList)) {
                         continue;
                     }
                     List<String> qualifiedNames = new ArrayList<>();
                     for (MetaDataColumnAttributeDTO field : table.columnList) {
                         metaDataField(field, tableGuid);
+                        //新增stg表字段
+                        metaDataStgField(field, tableGuid);
+
                         qualifiedNames.add(field.qualifiedName);
                     }
                     //删除
@@ -296,7 +303,6 @@ public class MetaDataImpl implements IMetaData {
             }
             if (delete) {
                 //关联维度
-
 
                 String newDbQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname;
                 //新增自定义脚本
@@ -643,6 +649,31 @@ public class MetaDataImpl implements IMetaData {
         return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_TABLE, dto);
     }
 
+    public void metaDataStgTable(MetaDataTableAttributeDTO dto, String parentEntityGuid, String dbName) {
+        String atlasGuid = getMetaDataConfig(dto.qualifiedName + stg_prefix);
+        dto.name = dto.name + stg_prefix;
+        dto.qualifiedName = dto.qualifiedName + stg_prefix;
+        boolean isAdd = false;
+        if (StringUtils.isEmpty(atlasGuid)) {
+            EntityDTO entityDTO = new EntityDTO();
+            EntityTypeDTO entityTypeDTO = new EntityTypeDTO();
+            entityTypeDTO.typeName = EntityTypeEnum.RDBMS_TABLE.getName();
+            EntityIdAndTypeDTO parentEntity = new EntityIdAndTypeDTO();
+            EntityAttributesDTO attributesDTO = MetaDataMap.INSTANCES.tableDtoToAttribute(dto);
+            parentEntity.typeName = EntityTypeEnum.RDBMS_DB.getName();
+            parentEntity.guid = parentEntityGuid;
+            attributesDTO.db = parentEntity;
+            entityTypeDTO.attributes = attributesDTO;
+            entityDTO.entity = entityTypeDTO;
+            atlasGuid = addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_TABLE, parentEntityGuid);
+            isAdd = true;
+        }
+        if (isAdd) {
+            return;
+        }
+        updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_TABLE, dto);
+    }
+
     /**
      * 同步业务元数据
      *
@@ -741,6 +772,26 @@ public class MetaDataImpl implements IMetaData {
      */
     public String metaDataField(MetaDataColumnAttributeDTO dto, String parentEntityGuid) {
         String atlasGuid = getMetaDataConfig(dto.qualifiedName);
+        if (StringUtils.isEmpty(atlasGuid)) {
+            EntityDTO entityDTO = new EntityDTO();
+            EntityTypeDTO entityTypeDTO = new EntityTypeDTO();
+            entityTypeDTO.typeName = EntityTypeEnum.RDBMS_COLUMN.getName();
+            EntityIdAndTypeDTO parentEntity = new EntityIdAndTypeDTO();
+            EntityAttributesDTO attributesDTO = MetaDataMap.INSTANCES.fieldDtoToAttribute(dto);
+            parentEntity.typeName = EntityTypeEnum.RDBMS_TABLE.getName();
+            parentEntity.guid = parentEntityGuid;
+            attributesDTO.table = parentEntity;
+            entityTypeDTO.attributes = attributesDTO;
+            entityDTO.entity = entityTypeDTO;
+            return addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_COLUMN, parentEntityGuid);
+        }
+        return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_COLUMN, dto);
+    }
+
+    public String metaDataStgField(MetaDataColumnAttributeDTO dto, String parentEntityGuid) {
+        String atlasGuid = getMetaDataConfig(dto.qualifiedName + stg_prefix);
+        dto.name = dto.name + stg_prefix;
+        dto.qualifiedName = dto.qualifiedName + stg_prefix;
         if (StringUtils.isEmpty(atlasGuid)) {
             EntityDTO entityDTO = new EntityDTO();
             EntityTypeDTO entityTypeDTO = new EntityTypeDTO();
