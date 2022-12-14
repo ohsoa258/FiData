@@ -1765,6 +1765,21 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
     }
 
+    @Override
+    public List<ApiColumnInfoDTO> getTableColumnInfoByApi(Integer apiId) {
+        QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(TableAccessPO::getApiId, apiId);
+        List<TableAccessPO> tableAccessPOList = tableAccessMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(tableAccessPOList)) {
+            return new ArrayList<>();
+        }
+        List<ApiColumnInfoDTO> list = new ArrayList<>();
+        for (TableAccessPO po : tableAccessPOList) {
+            list.add(tableAccessImpl.getTableColumnInfo(po.id));
+        }
+        return list;
+    }
+
 //    public static void main(String[] args) {
 //        JsonUtils jsonUtils = new JsonUtils();
 //        // 测试时间

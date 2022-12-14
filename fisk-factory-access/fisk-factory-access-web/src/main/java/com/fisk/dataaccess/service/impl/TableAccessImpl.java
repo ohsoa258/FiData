@@ -34,6 +34,7 @@ import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataaccess.dto.GetConfigDTO;
 import com.fisk.dataaccess.dto.access.DataAccessTreeDTO;
 import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
+import com.fisk.dataaccess.dto.api.ApiColumnInfoDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
@@ -1306,7 +1307,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                     if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.sqlserver.getName())
                             || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.mysql.getName())
                             || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.oracle.getName())
-                            || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.postgresql.getName())) {
+                            || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.postgresql.getName())
+                            || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.sftp.getName())) {
                         f.type = "数据湖表任务";
                     }
                     if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.api.getName())) {
@@ -2118,6 +2120,18 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         return baseMapper.setKeepNumber(dto.id, dto.keepNumber) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public ApiColumnInfoDTO getTableColumnInfo(long tableAccessId) {
+        TableAccessPO po = this.query().eq("id", tableAccessId).one();
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        ApiColumnInfoDTO dto = new ApiColumnInfoDTO();
+        dto.tableName = po.tableName;
+        dto.fieldNameDTOList = tableFieldsImpl.getTableFileInfo(tableAccessId);
+        return dto;
     }
 
 }

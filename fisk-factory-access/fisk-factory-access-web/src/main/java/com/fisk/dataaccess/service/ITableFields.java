@@ -6,11 +6,14 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
+import com.fisk.dataaccess.dto.table.FieldNameDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
+
+import java.util.List;
 
 /**
  * @author Lock
@@ -71,5 +74,13 @@ public interface ITableFields extends IService<TableFieldsPO> {
      * @return
      */
     Object previewCoverCondition(TableBusinessDTO dto);
+
+    /**
+     * 获取表字段信息列表
+     *
+     * @param tableAccessId
+     * @return
+     */
+    List<FieldNameDTO> getTableFileInfo(long tableAccessId);
 
 }

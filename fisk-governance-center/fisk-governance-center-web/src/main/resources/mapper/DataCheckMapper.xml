@@ -2,7 +2,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.fisk.datagovernance.mapper.dataquality.DataCheckMapper">
-    <select id="getAll" resultType="com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO">
+    <select id="getAllRule" resultType="com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO">
         SELECT
         t1.id,
         t1.template_id,
@@ -16,6 +16,8 @@
         t1.rule_sort,
         t1.rule_state,
         t1.threshold_value,
+        t1.create_time,
+        t1.create_user,
         t2.module_type,
         t2.module_name,
         t2.template_scene,
@@ -24,8 +26,7 @@
         t2.template_type,
         t2.template_name,
         t2.template_desc,
-        t1.create_time,
-        t1.create_user,
+        t3.datasource_id AS fiDataSourceId,
         t3.datasource_type AS sourceTypeEnum
         FROM
         tb_datacheck_rule t1
@@ -35,13 +36,5 @@
         t1.del_flag = 1
         AND t2.del_flag = 1
         AND t3.del_flag = 1
-        AND t3.id = #{datasourceId}
-        AND table_unique = #{tableUnique,jdbcType=VARCHAR}
-        <if test="tableBusinessType != 0 ">
-            AND table_business_type = #{tableBusinessType}
-        </if>
-        <if test="keyword != null and keyword != '' ">
-            AND rule_name LIKE concat('%', #{keyword}, '%')
-        </if>
     </select>
 </mapper>

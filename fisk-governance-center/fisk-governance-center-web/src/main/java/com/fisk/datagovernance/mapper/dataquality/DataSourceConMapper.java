@@ -44,6 +44,8 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
             "\tLEFT JOIN tb_datasource_config source ON rule.datasource_id = source.id \n" +
             "WHERE\n" +
             "\tsource.datasource_type = 1 \n" +
+            "\tAND source.del_flag = 1 \n" +
+            "\tAND rule.del_flag = 1 \n" +
             "GROUP BY\n" +
             "\tsourceId,\n" +
             "\ttableUnique,\n" +
@@ -61,6 +63,8 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
             "\tLEFT JOIN tb_datasource_config source ON rule.datasource_id = source.id \n" +
             "WHERE\n" +
             "\tsource.datasource_type = 1 \n" +
+            "\tAND source.del_flag = 1 \n" +
+            "\tAND rule.del_flag = 1 \n" +
             "GROUP BY\n" +
             "\tsourceId,\n" +
             "\ttableUnique,\n" +
@@ -78,6 +82,8 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
             "\tLEFT JOIN tb_datasource_config source ON rule.datasource_id = source.id \n" +
             "WHERE\n" +
             "\tsource.datasource_type = 1 \n" +
+            "\tAND source.del_flag = 1 \n" +
+            "\tAND rule.del_flag = 1 \n" +
             "GROUP BY\n" +
             "\tsourceId,\n" +
             "\ttableUnique,\n" +
@@ -102,6 +108,8 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
             "\tLEFT JOIN tb_datasource_config source ON rule.datasource_id = source.id \n" +
             "WHERE\n" +
             "\tsource.datasource_type = 2 \n" +
+            "\tAND source.del_flag = 1 \n" +
+            "\tAND rule.del_flag = 1 \n" +
             "GROUP BY\n" +
             "\tsourceId,\n" +
             "\ttableUnique,\n" +
@@ -119,6 +127,8 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
             "\tLEFT JOIN tb_datasource_config source ON rule.datasource_id = source.id \n" +
             "WHERE\n" +
             "\tsource.datasource_type = 2 \n" +
+            "\tAND source.del_flag = 1 \n" +
+            "\tAND rule.del_flag = 1 \n" +
             "GROUP BY\n" +
             "\tsourceId,\n" +
             "\ttableUnique,\n" +
@@ -136,6 +146,8 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
             "\tLEFT JOIN tb_datasource_config source ON rule.datasource_id = source.id \n" +
             "WHERE\n" +
             "\tsource.datasource_type = 2 \n" +
+            "\tAND source.del_flag = 1 \n" +
+            "\tAND rule.del_flag = 1 \n" +
             "GROUP BY\n" +
             "\tsourceId,\n" +
             "\ttableUnique,\n" +

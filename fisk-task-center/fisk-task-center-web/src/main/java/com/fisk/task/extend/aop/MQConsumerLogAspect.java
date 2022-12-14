@@ -1,5 +1,6 @@
 package com.fisk.task.extend.aop;
 
+import com.alibaba.druid.util.StringUtils;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.enums.task.MessageLevelEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -58,13 +59,13 @@ public class MQConsumerLogAspect {
             ex.printStackTrace();
         }
 
-        //设置TraceID
-        String traceId = MDCHelper.setTraceId();
-
         TaskLogPO model = null;
         MQBaseDTO data = null;
-        String taskName = "";
-        //获取日志，修改状态
+        String taskName = "",
+                taskQueue = "",
+                traceId = "",
+                spanId = MDCHelper.setSpanId();
+        // 获取日志，修改状态
         try {
             Object[] args = joinPoint.getArgs();
             if (args == null) {
@@ -72,19 +73,32 @@ public class MQConsumerLogAspect {
                 throw new FkException(ResultEnum.PARAMTER_NOTNULL);
             }
             log.info("切面参数:{}", JSON.toJSONString(args));
-            //获取方法参数
+            // 获取方法参数
             data = JSON.parseObject((String) args[0], MQBaseDTO.class);
+            if (data == null) {
+                throw new FkException(ResultEnum.PARAMTER_ERROR);
+            }
+
+            // 获取任务信息
             if (data.logId != null) {
                 model = mapper.selectById(data.logId);
-                taskName = model == null ? "" : model.taskName;
-                log.info("此次调度队列:{},此次队列参数:{}", model.taskQueue, JSON.toJSONString(args[0]));
+                if (model != null) {
+                    taskName = model.taskName;
+                    taskQueue = model.taskQueue;
+                }
+                log.info("此次调度队列: {},此次队列参数: {}", taskQueue, JSON.toJSONString(args[0]));
+            }
+            // 设置TraceID
+            if (!StringUtils.isEmpty(data.traceId)) {
+                traceId = data.traceId;
+                MDCHelper.setTraceId(traceId);
+            }
+            // 如果参数中没有TraceID，则创建
+            else {
+                traceId = MDCHelper.setTraceId();
             }
         } catch (Exception ex) {
             log.error("任务状态更新失败", ex);
-            ex.printStackTrace();
-        }
-        if (data == null) {
-            throw new FkException(ResultEnum.PARAMTER_ERROR);
         }
 
         if (model != null) {

@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 /**
  * @author dick
  * @version 1.0
- * @description 生命周期规则VO
+ * @description 回收规则VO
  * @date 2022/3/22 15:36
  */
 @Data
@@ -27,11 +27,16 @@ public class LifecycleVO {
     public int templateId;
 
     /**
-     * 数据源表主键id
+     * 数据质量数据源表主键ID
      */
-    @ApiModelProperty(value = "数据源表主键id")
+    @ApiModelProperty(value = "数据质量数据源表主键ID")
     public int datasourceId;
 
+    /**
+     * FiData系统数据源表主键ID
+     */
+    @ApiModelProperty(value = "FiData系统数据源表主键ID")
+    public int fiDataSourceId;
     /**
      * 数据源类型
      */
@@ -49,6 +54,18 @@ public class LifecycleVO {
      */
     @ApiModelProperty(value = "表名称/表Id")
     public String tableUnique;
+
+    /**
+     * 表名称
+     */
+    @ApiModelProperty(value = "表名称")
+    public String tableName;
+
+    /**
+     * 表别名
+     */
+    @ApiModelProperty(value = "表别名")
+    public String tableAlias;
 
     /**
      * 表类型 1：表  2：视图
@@ -131,16 +148,19 @@ public class LifecycleVO {
      * 模板应用场景
      * 100、页面校验
      * 101、同步校验
-     * 102、质量报告
+     * 102、校验报告
      * 200、同步清洗
      * 201、清洗报告
-     * 300、生命周期报告
-     * 400、数据校验告警
-     * 401、业务清洗告警
-     * 402、生命周期告警
+     * 300、回收报告
      */
     @ApiModelProperty(value = "模板应用场景")
     public TemplateSceneEnum templateScene;
+
+    /**
+     * 模板应用场景名称
+     */
+    @ApiModelProperty(value = "模板应用场景名称")
+    public String templateSceneName;
 
     /**
      * 应用场景描述

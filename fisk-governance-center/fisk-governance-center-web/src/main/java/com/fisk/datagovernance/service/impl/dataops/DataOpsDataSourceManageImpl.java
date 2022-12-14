@@ -147,7 +147,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
 
     @Override
     public ResultEntity<Object> reloadDataOpsDataSource() {
-        setDataOpsDataSource_v1();
+        setMetaDataToRedis();
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "已重新加载数据源");
     }
 
@@ -358,13 +358,13 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         return ResultEnum.TABLE_DATA_SYNC_FAIL;
     }
 
-    public void setDataOpsDataSource_v1() {
-        log.info("setDataOpsDataSource_v1 开始");
+    public void setMetaDataToRedis() {
+        log.info("setMetaDataToRedis-ops 开始");
         List<DataOpsSourceVO> dataOpsSourceVOList = new ArrayList<>();
         // 第一步：读取配置的数据源信息
         List<PostgreDTO> postgreDTOList = getPostgreDTOList();
         if (CollectionUtils.isEmpty(postgreDTOList)) {
-            log.error("setDataOpsDataSource_v1 数据源配置不存在");
+            log.error("setMetaDataToRedis-ops 数据源配置不存在");
             return;
         }
         // 第二步：读取数据源下的库、表
@@ -422,12 +422,12 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                 String dataOpsSourceJson = JSONArray.toJSON(dataOpsSourceVOList).toString();
                 // 生成目录加 ：
                 redisTemplate.opsForValue().set(metaDataEntityKey, dataOpsSourceJson);
-                log.info("setDataOpsDataSource_v1 元数据信息已写入redis");
+                log.info("setMetaDataToRedis-ops 元数据信息已写入redis");
             }
         } catch (Exception ex) {
-            log.error("setDataOpsDataSource_v1 执行异常：", ex);
+            log.error("setMetaDataToRedis-ops 执行异常：", ex);
         } finally {
-            log.info("setDataOpsDataSource_v1 结束");
+            log.info("setMetaDataToRedis-ops 结束");
         }
     }
 

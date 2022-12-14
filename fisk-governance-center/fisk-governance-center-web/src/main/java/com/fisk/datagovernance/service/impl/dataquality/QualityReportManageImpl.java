@@ -43,6 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -363,6 +364,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                         File file = new File(filePath);
                         if (file.exists()) {
                             qualityReportLogVO.setExistReport(true);
+                            qualityReportLogVO.setOriginalName(attachmentInfoPO.getOriginalName());
                         }
                     }
                 }
@@ -372,10 +374,10 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
     }
 
     @Override
-    public HttpServletResponse downloadReportRecord(int reportLogId, HttpServletResponse response) {
+    public void downloadReportRecord(int reportLogId, HttpServletResponse response) {
         try {
             if (reportLogId == 0) {
-                return response;
+                return;
             }
             List<Integer> categoryList = new ArrayList<>();
             categoryList.add(100); // 质量校验报告
@@ -386,7 +388,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                     .eq(AttachmentInfoPO::getObjectId, reportLogId);
             AttachmentInfoPO attachmentInfoPO = attachmentInfoMapper.selectOne(attachmentInfoPOQueryWrapper);
             if (attachmentInfoPO == null) {
-                return response;
+                return;
             }
             String filePath = attachmentInfoPO.getAbsolutePath() + File.separator + attachmentInfoPO.getCurrentFileName();
             log.info("【downloadReportRecord】文件路径：" + filePath);
@@ -401,7 +403,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
             // 清空response
             response.reset();
             // 设置response的Header
-            response.addHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes()));
+            response.addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(filename, "UTF-8"));
             response.addHeader("Content-Length", "" + file.length());
             OutputStream toClient = new BufferedOutputStream(response.getOutputStream());
             response.setContentType("application/octet-stream");
@@ -409,9 +411,10 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
             toClient.flush();
             toClient.close();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            log.error("【downloadReportRecord】 系统异常：" + ex);
+            throw new FkException(ResultEnum.ERROR, "【downloadReportRecord】 ex：" + ex);
         }
-        return response;
+        return;
     }
 
     @Override

@@ -122,7 +122,7 @@ public class RedisUtil {
     }
 
     /**
-     * 获取FidataMetaData
+     * 获取FiData表结构MetaData
      *
      * @param dataSourceId dataSourceId
      * @return 值

@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.dataaccess.dto.access.DataAccessTreeDTO;
+import com.fisk.dataaccess.dto.api.ApiColumnInfoDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
@@ -338,5 +339,13 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return
      */
     ResultEnum setKeepNumber(TableKeepNumberDTO dto);
+
+    /**
+     * 获取表信息
+     *
+     * @param tableAccessId
+     * @return
+     */
+    ApiColumnInfoDTO getTableColumnInfo(long tableAccessId);
 
 }

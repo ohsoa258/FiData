@@ -48,7 +48,7 @@ public interface IDataOpsDataSourceManageService {
     ResultEnum tableDataSync(TableDataSyncDTO dto);
 
     /**
-     * pg数据库信息同步到redis
+     * 数据库信息同步到redis
      *
      * @return 查询结果
      */

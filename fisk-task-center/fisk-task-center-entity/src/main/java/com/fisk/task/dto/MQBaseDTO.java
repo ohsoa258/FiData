@@ -12,4 +12,6 @@ public class MQBaseDTO {
     public Long userId;
     public LocalDateTime sendTime;
     public Long logId;
+    public String traceId;
+    public String spanId;
 }

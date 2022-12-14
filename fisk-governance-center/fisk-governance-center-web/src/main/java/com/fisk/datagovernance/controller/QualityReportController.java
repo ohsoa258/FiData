@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportDTO;
 import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportEditDTO;
@@ -91,9 +92,10 @@ public class QualityReportController {
     }
 
     @ApiOperation("下载报告记录")
-    @GetMapping("/getAllReportLog/{reportLogId}")
-    public HttpServletResponse downloadReportRecord(@PathVariable("reportLogId") int reportLogId, HttpServletResponse response) {
-        return service.downloadReportRecord(reportLogId, response);
+    @GetMapping("/downloadReportRecord/{reportLogId}")
+    @ControllerAOPConfig(printParams = false)
+    public void downloadReportRecord(@PathVariable("reportLogId") int reportLogId, HttpServletResponse response) {
+        service.downloadReportRecord(reportLogId, response);
     }
 
     @ApiOperation("预览报告记录")
