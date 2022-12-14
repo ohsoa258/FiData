@@ -332,6 +332,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             table.setName(item.name);
             table.setComment(String.valueOf(appId));
             table.setDisplayName(item.name);
+            table.setBuildStg(false);
             tableList.add(table);
         }
         list.get(0).dbList.get(0).tableList = tableList;
@@ -660,6 +661,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             table.setDescription(tableAccess.getTableDes());
             table.setComment(String.valueOf(app.getId()));
             table.setDisplayName(tableAccess.displayName);
+            table.setBuildStg(true);
 
             //所属人
             userIds.add(Long.parseLong(tableAccess.createUser));
@@ -706,6 +708,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         table.setDescription(tb.getTableDes());
                         table.setComment(String.valueOf(app.getId()));
                         table.setOwner(String.valueOf(tb.id));
+                        table.setBuildStg(true);
                         userIds.add(tb.id);
                         // 字段
                         List<MetaDataColumnAttributeDTO> columnList = this.query()
@@ -755,27 +758,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         } catch (Exception e) {
             log.error("【dataManageClient.MetaData()】方法报错,ex", e);
         }
-    }
-
-    public void test(List<MetaDataInstanceAttributeDTO> list) {
-
-        MetaDataInstanceAttributeDTO attributeDTO = list.get(0);
-        MetaDataDbAttributeDTO metaDataDbAttributeDTO = attributeDTO.dbList.get(0);
-        MetaDataTableAttributeDTO dto = metaDataDbAttributeDTO.tableList.get(0);
-
-        metaDataDbAttributeDTO.tableList.add(1, dto);
-
-
-
-
-
-        /*dto.columnList;
-
-        //添加stg实体
-        tableList.add(1,table);
-        tableList.get(1).columnList = new ArrayList<>();
-        tableList.get(1).columnList = columnList;*/
-
     }
 
     /**
