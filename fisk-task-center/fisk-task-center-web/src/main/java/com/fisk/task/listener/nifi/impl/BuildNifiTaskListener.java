@@ -259,7 +259,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 if (Objects.equals(value, OlapTableEnum.KPI)) {
                     topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.KPI.getValue() + "." + dto.appId + "." + dto.id;
                 }
-                KafkaReceiveDTO kafkaRkeceiveDTO = new KafkaReceiveDTO();
+                KafkaReceiveDTO kafkaRkeceiveDTO = KafkaReceiveDTO.builder().build();
                 kafkaRkeceiveDTO.topic = topicName;
                 SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 kafkaRkeceiveDTO.start_time = simpleDateFormat.format(new Date());

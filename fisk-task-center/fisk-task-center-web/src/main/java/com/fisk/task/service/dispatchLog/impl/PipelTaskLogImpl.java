@@ -79,20 +79,20 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
                     TaskHierarchyDTO dto = JSON.parseObject(hmget.get(taskId).toString(), TaskHierarchyDTO.class);
                     dto.taskProcessed = true;
                     if (Objects.equals(pipelTaskLog.type, DispatchLogEnum.taskstart.getValue())) {
-                        dto.taskStatus = DispatchLogEnum.taskstart;
+                        //dto.taskStatus = DispatchLogEnum.taskstart;
                         taskMap.put(taskId, JSON.toJSONString(dto));
                         redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, taskMap, 3000);
                     } else if (Objects.equals(pipelTaskLog.type, DispatchLogEnum.taskend.getValue())) {
-                        if (pipelTaskLog.msg.contains(NifiStageTypeEnum.PASS.getName())) {
+                       /* if (pipelTaskLog.msg.contains(NifiStageTypeEnum.PASS.getName())) {
                             dto.taskStatus = DispatchLogEnum.taskpass;
                         } else if (pipelTaskLog.msg.contains(NifiStageTypeEnum.RUN_FAILED.getName())) {
                             dto.taskStatus = DispatchLogEnum.taskfailure;
                         } else if (pipelTaskLog.msg.contains(NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName())) {
                             dto.taskStatus = DispatchLogEnum.taskend;
-                        }
+                        }*/
 
                         taskMap.put(taskId, JSON.toJSONString(dto));
-                        //redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, taskMap, 3000);
+                        redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, taskMap, 3000);
                     }
                 }
             } catch (Exception e) {

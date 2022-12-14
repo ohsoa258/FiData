@@ -264,7 +264,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                 taskMap.put(DispatchLogEnum.entrydate.getValue(), nifiStageMessageDTO.entryDate);
                 if (StringUtils.isEmpty(nifiStagePO.comment) || !nifiStagePO.comment.contains("成功")) {
                     taskMap.put(DispatchLogEnum.taskcomment.getValue(), nifiStagePO.comment);
-                    DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = new DispatchExceptionHandlingDTO();
+                    DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = DispatchExceptionHandlingDTO.builder().build();
                     dispatchExceptionHandlingDTO.comment = nifiStagePO.comment;
                     dispatchExceptionHandlingDTO.pipelTraceId = nifiStageMessageDTO.pipelTraceId;
                     dispatchExceptionHandlingDTO.pipelJobTraceId = nifiStageMessageDTO.pipelJobTraceId;
@@ -287,7 +287,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                 //this.save(nifiStagePO);
 
             } catch (Exception e) {
-                DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = new DispatchExceptionHandlingDTO();
+                DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = DispatchExceptionHandlingDTO.builder().build();
                 dispatchExceptionHandlingDTO.comment = nifiStagePO.comment;
                 dispatchExceptionHandlingDTO.pipelTraceId = nifiStageMessageDTO.pipelTraceId;
                 dispatchExceptionHandlingDTO.pipelJobTraceId = nifiStageMessageDTO.pipelJobTraceId;
@@ -306,7 +306,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
     }
 
     public void sendPublishCenter(NifiStageMessageDTO nifiStageMessage, NifiCustomWorkflowDetailDTO itselfPort) {
-        KafkaReceiveDTO kafkaReceive = new KafkaReceiveDTO();
+        KafkaReceiveDTO kafkaReceive = KafkaReceiveDTO.builder().build();
         kafkaReceive.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
         kafkaReceive.topic = nifiStageMessage.topic;
         kafkaReceive.tableId = StringUtils.isEmpty(itselfPort.tableId) ? null : Integer.parseInt(itselfPort.tableId);
@@ -320,7 +320,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
         kafkaReceive.message = nifiStageMessage.message;
         String param = JSON.toJSONString(kafkaReceive);
         log.info("失败调用发布中心的参数:" + param);
-        DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = new DispatchExceptionHandlingDTO();
+        DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = DispatchExceptionHandlingDTO.builder().build();
         dispatchExceptionHandlingDTO.comment = nifiStageMessage.message;
         dispatchExceptionHandlingDTO.pipelTraceId = nifiStageMessage.pipelTraceId;
         dispatchExceptionHandlingDTO.pipelJobTraceId = nifiStageMessage.pipelJobTraceId;

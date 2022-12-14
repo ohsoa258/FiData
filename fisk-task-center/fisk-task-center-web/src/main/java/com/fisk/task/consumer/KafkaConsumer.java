@@ -1,6 +1,7 @@
 package com.fisk.task.consumer;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.response.ResultEntity;
@@ -32,6 +33,9 @@ import com.fisk.task.listener.postgre.datainput.BuildDataInputPgTableListener;
 import com.fisk.task.mapper.NifiStageMapper;
 import com.fisk.task.mapper.OlapMapper;
 import com.fisk.task.mapper.PipelineTableLogMapper;
+import com.fisk.task.pipeline2.HeartbeatService;
+import com.fisk.task.pipeline2.MissionEndCenter;
+import com.fisk.task.pipeline2.TaskPublish;
 import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.pipeline.ITableTopicService;
@@ -134,6 +138,13 @@ public class KafkaConsumer {
     BuildQualityReportListener qualityReportListener;
     @Resource
     IExecScriptListener iExecScriptListener;
+    @Resource
+    HeartbeatService heartbeatService;
+    @Resource
+    MissionEndCenter missionEndCenter;
+    @Resource
+    TaskPublish taskPublish;
+
 
     @Bean
     public KafkaListenerContainerFactory<?> batchFactory() {
@@ -170,7 +181,7 @@ public class KafkaConsumer {
         //props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "15000");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valueDeserializer);
-        props.put("fetch.message.max.bytes","6291456");
+        props.put("fetch.message.max.bytes", "6291456");
         // props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-091231");
         //每一批数量
         if (Objects.equals(enableAuthentication, NifiConstants.enableAuthentication.ENABLE)) {
@@ -187,7 +198,30 @@ public class KafkaConsumer {
     //任务发布中心,这里只用来存放reids
     @KafkaListener(topics = "my-topic", containerFactory = "batchFactory", groupId = "test")
     public void consumer(String message, Acknowledgment ack) {
-        iPipelineTaskPublishCenter.msg(message, ack);
+        //iPipelineTaskPublishCenter.msg(message, ack);
+        message = "[" + message + "]";
+        heartbeatService.heartbeatService(message, ack);
+    }
+
+    /**
+     * @param message
+     * @param ack
+     */
+    @KafkaListener(topics = "task.build.task.over", containerFactory = "batchFactory", groupId = "test")
+    public void missionEndCenter(String message, Acknowledgment ack) {
+        missionEndCenter.missionEndCenter(message, ack);
+    }
+
+    /**
+     * task.build.task.publish
+     *
+     * @param message
+     * @param ack
+     * @return
+     */
+    @KafkaListener(topics = "task.build.task.publish", containerFactory = "batchFactory", groupId = "test")
+    public void TaskPublish(String message, Acknowledgment ack) {
+        taskPublish.taskPublish(message, ack);
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_NIFI_FLOW, containerFactory = "batchFactory", groupId = "test")

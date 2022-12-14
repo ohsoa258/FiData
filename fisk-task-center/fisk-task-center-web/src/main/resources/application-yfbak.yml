@@ -23,7 +23,7 @@ nifi:
 
 
   pipeline:
-    topicName: my-topic
+    topicName: task.build.task.publish
     waitTime: 30
     operation-interval: 2000
     number-of-operations: 5

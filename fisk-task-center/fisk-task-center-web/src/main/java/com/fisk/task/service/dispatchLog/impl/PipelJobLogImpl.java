@@ -94,24 +94,24 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                     Map<Object, Object> jobMap = new HashMap<>();
                     Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId);
                     DispatchJobHierarchyDTO dto = JSON.parseObject(hmget.get(componentId).toString(), DispatchJobHierarchyDTO.class);
-                    dto.jobProcessed = true;
+
                     if (Objects.equals(pipelJobLog.type, DispatchLogEnum.jobstart.getValue())) {
-                        dto.jobStatus = NifiStageTypeEnum.START_RUN;
+                        //dto.jobStatus = NifiStageTypeEnum.START_RUN;
                         jobMap.put(componentId, JSON.toJSONString(dto));
-                        //redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, jobMap, 3000);
                     } else if (Objects.equals(pipelJobLog.type, DispatchLogEnum.jobend.getValue()) && !pipelJobLog.msg.contains(NifiStageTypeEnum.RUN_FAILED.getName())) {
-                        dto.jobStatus = NifiStageTypeEnum.SUCCESSFUL_RUNNING;
+                        //dto.jobStatus = NifiStageTypeEnum.SUCCESSFUL_RUNNING;
+                        dto.jobProcessed = true;
                         jobMap.put(componentId, JSON.toJSONString(dto));
-                        //redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, jobMap, 3000);
                     } else if (Objects.equals(pipelJobLog.type, DispatchLogEnum.jobend.getValue()) && pipelJobLog.msg.contains(NifiStageTypeEnum.RUN_FAILED.getName())) {
                         dto.jobStatus = NifiStageTypeEnum.RUN_FAILED;
+                        dto.jobProcessed = true;
                         jobMap.put(componentId, JSON.toJSONString(dto));
-                        //redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, jobMap, 3000);
                     } else if (Objects.equals(pipelJobLog.type, DispatchLogEnum.jobpass.getValue())) {
                         dto.jobStatus = NifiStageTypeEnum.PASS;
+                        dto.jobProcessed = true;
                         jobMap.put(componentId, JSON.toJSONString(dto));
-                        //redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, jobMap, 3000);
                     }
+                    redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, jobMap, 3000);
                 }
             } catch (Exception e) {
                 log.error("redis中task集合数据不存在:" + pipelTraceId, e);
@@ -203,6 +203,8 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                         pipelJobMergeLogVo.result = "成功";
                     } else if (pipelJobLogVo.msg.contains("运行失败")) {
                         pipelJobMergeLogVo.result = "失败";
+                    } else if (pipelJobLogVo.msg.contains("跳过")) {
+                        pipelJobMergeLogVo.result = "跳过";
                     }
                 }
             } catch (ParseException e) {
@@ -221,6 +223,8 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                                 pipelJobMergeLogVo.result = "成功";
                             } else if (pipelJobLog.msg.contains("运行失败")) {
                                 pipelJobMergeLogVo.result = "失败";
+                            } else if (pipelJobLog.msg.contains("跳过")) {
+                                pipelJobMergeLogVo.result = "跳过";
                             }
                         }
                     } catch (ParseException e) {
@@ -239,6 +243,9 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
             if (Objects.isNull(pipelJobMergeLogVo.endTime) && Objects.nonNull(pipelJobMergeLogVo.startTime)) {
                 pipelJobMergeLogVos.add(pipelJobMergeLogVo);
             }
+            if (Objects.nonNull(pipelJobMergeLogVo.endTime) && Objects.isNull(pipelJobMergeLogVo.startTime)) {
+                pipelJobMergeLogVos.add(pipelJobMergeLogVo);
+            }
 
         }
         for (int i = 0; i < pipelJobMergeLogVos.size() - 1; i++) {
@@ -248,16 +255,17 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                 }
             }
         }
-        pipelJobMergeLogVos.sort((a, b) -> a.getStartTime().compareTo(b.getStartTime()));
+        //pipelJobMergeLogVos.sort((a, b) -> a.getEndTime().compareTo(b.getEndTime()));
         return pipelJobMergeLogVos;
     }
 
     @Override
     public void exceptionHandlingLog(DispatchExceptionHandlingDTO dto) {
+        log.info("管道异常修补参数:{}", JSON.toJSONString(dto));
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         //1.从小到大保存
         //任务日志
-        dto.JobName = Objects.equals(dto.JobName, null) ? "" : dto.JobName;
+        dto.jobName = Objects.equals(dto.jobName, null) ? "" : dto.jobName;
         dto.pipleName = Objects.equals(dto.pipleName, null) ? "" : dto.pipleName;
 
         if (!StringUtils.isEmpty(dto.pipelTaskTraceId)) {
@@ -286,9 +294,9 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
             List<PipelJobLogPO> list = this.query().eq("job_trace_id", dto.pipelJobTraceId).orderByDesc("create_time").list();
             if (CollectionUtils.isNotEmpty(list)) {
                 PipelJobLogPO pipelJobLogPo = list.get(0);
-                Map<Integer, Object> jobMap = new HashMap<>();
+                //Map<Integer, Object> jobMap = new HashMap<>();
                 //结束时间,job状态
-                jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()) + " - " + dto.comment);
+                //jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()) + " - " + dto.comment);
                 //jobMap.put(DispatchLogEnum.jobstate.getValue(), dto.JobName + " " + NifiStageTypeEnum.RUN_FAILED.getName());
                 //this.savePipelJobLog(pipelJobLogPo.pipelTraceId, jobMap, pipelJobLogPo.pipelId, pipelJobLogPo.jobTraceId, pipelJobLogPo.componentId);
                 updateJobStatus(pipelJobLogPo.componentId, pipelJobLogPo.pipelTraceId, 1);
@@ -313,11 +321,12 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
         Map<Object, Object> taskMap = new HashMap<>();
         if (i == 1) {
             taskHierarchy.taskStatus = DispatchLogEnum.taskfailure;
+            taskHierarchy.taskProcessed = true;
         } else {
             taskHierarchy.taskStatus = DispatchLogEnum.taskpass;
+            taskHierarchy.taskProcessed = false;
         }
         i++;
-        taskHierarchy.taskProcessed = true;
         taskMap.put(String.valueOf(taskHierarchy.id), JSON.toJSONString(taskHierarchy));
         redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, taskMap, 3000);
         List<NifiPortsHierarchyNextDTO> nextList = taskHierarchy.nextList;
@@ -341,11 +350,13 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
         //TaskHierarchyDTO
         Map<Object, Object> jobMap = new HashMap<>();
         DispatchJobHierarchyDTO taskHierarchy = JSON.parseObject(hmget.get(id).toString(), DispatchJobHierarchyDTO.class);
-        taskHierarchy.jobProcessed = true;
+
         if (j == 1) {
             taskHierarchy.jobStatus = NifiStageTypeEnum.RUN_FAILED;
+            taskHierarchy.jobProcessed = true;
         } else {
             taskHierarchy.jobStatus = NifiStageTypeEnum.PASS;
+            taskHierarchy.jobProcessed = false;
         }
         j++;
         jobMap.put(String.valueOf(taskHierarchy.id), JSON.toJSONString(taskHierarchy));
@@ -353,8 +364,8 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
         if (CollectionUtils.isNotEmpty(taskHierarchy.outport)) {
             HashMap<Object, Object> map = new HashMap<>();
             for (Long jobId : taskHierarchy.outport) {
-                TaskHierarchyDTO taskHierarchyNext = JSON.parseObject(hmget.get(String.valueOf(jobId)).toString(), TaskHierarchyDTO.class);
-                taskHierarchyNext.taskStatus = DispatchLogEnum.jobpass;
+                DispatchJobHierarchyDTO taskHierarchyNext = JSON.parseObject(hmget.get(String.valueOf(jobId)).toString(), DispatchJobHierarchyDTO.class);
+                taskHierarchyNext.jobStatus = NifiStageTypeEnum.PASS;
                 map.put(String.valueOf(jobId), JSON.toJSONString(taskHierarchyNext));
             }
             redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, map, 3000);

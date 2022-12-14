@@ -2,11 +2,17 @@ package com.fisk.task.dto.kafka;
 
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.task.dto.MQBaseDTO;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class KafkaReceiveDTO extends MQBaseDTO {
     public Integer tableId;
     public Integer tableType;
@@ -60,4 +66,6 @@ public class KafkaReceiveDTO extends MQBaseDTO {
      * 失败信息
      */
     public String message;
+
+
 }

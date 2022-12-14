@@ -2218,7 +2218,7 @@ public class NiFiHelperImpl implements INiFiHelper {
     public void immediatelyStart(TableNifiSettingDTO tableNifiSettingDTO) {
         try {
             TableNifiSettingPO dto = tableNifiSettingService.getByTableId( tableNifiSettingDTO.tableAccessId, tableNifiSettingDTO.type);
-            KafkaReceiveDTO kafkaRkeceiveDTO = new KafkaReceiveDTO();
+            KafkaReceiveDTO kafkaRkeceiveDTO = KafkaReceiveDTO.builder().build();
             String topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type + "." + dto.appId + "." + dto.tableAccessId;
             int value = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
             if (Objects.equals(value, OlapTableEnum.KPI)) {

@@ -6,6 +6,7 @@ import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.task.ExecScriptDTO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
@@ -17,6 +18,8 @@ import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.nifi.IExecScriptListener;
 import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
+import com.fisk.task.service.dispatchLog.IPipelJobLog;
+import com.fisk.task.utils.KafkaTemplateHelper;
 import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
@@ -42,15 +45,21 @@ public class BuildExecScriptListener implements IExecScriptListener {
     UserClient userClient;
     @Resource
     IPipelineTaskPublishCenter iPipelineTaskPublishCenter;
+    @Resource
+    KafkaTemplateHelper kafkaTemplateHelper;
+    @Resource
+    IPipelJobLog iPipelJobLog;
 
 
     @Override
     public ResultEnum execScript(String data, Acknowledgment acke) {
+        ExecScriptDTO exec = new ExecScriptDTO();
         try {
             log.info("执行调度脚本参数:{}", data);
             data = "[" + data + "]";
             List<ExecScriptDTO> execScripts = JSON.parseArray(data, ExecScriptDTO.class);
             for (ExecScriptDTO execScript : execScripts) {
+                exec = execScript;
                 ResultEntity<NifiCustomWorkflowDetailDTO> dto = dataFactoryClient.getData(Long.parseLong(execScript.taskId));
                 if (Objects.equals(dto.code, ResultEnum.SUCCESS.getCode())) {
                     NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetail = dto.data;
@@ -87,14 +96,21 @@ public class BuildExecScriptListener implements IExecScriptListener {
                     log.error("查询执行脚本组件报错1");
                     throw new FkException(ResultEnum.ERROR);
                 }
-                execScriptToDispatch(execScript);
             }
             return ResultEnum.SUCCESS;
         } catch (Exception e) {
+            DispatchExceptionHandlingDTO dto = new DispatchExceptionHandlingDTO();
+            dto.pipelTraceId = exec.pipelTraceId;
+            dto.pipelTaskTraceId = exec.pipelTaskTraceId;
+            dto.pipelJobTraceId = exec.pipelJobTraceId;
+            dto.pipelStageTraceId = exec.pipelStageTraceId;
+            dto.comment = "执行脚本组件报错";
+            iPipelJobLog.exceptionHandlingLog(dto);
             log.error("执行脚本组件报错" + StackTraceHelper.getStackTraceInfo(e));
             throw new FkException(ResultEnum.ERROR);
         } finally {
             if (acke != null) {
+                execScriptToDispatch(exec);
                 acke.acknowledge();
             }
         }
@@ -108,7 +124,7 @@ public class BuildExecScriptListener implements IExecScriptListener {
      * @date 2022/6/22 11:31
      */
     public void execScriptToDispatch(ExecScriptDTO dto) {
-        KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
+        KafkaReceiveDTO kafkaReceiveDTO = KafkaReceiveDTO.builder().build();
         kafkaReceiveDTO.pipelTraceId = dto.pipelTraceId;
         kafkaReceiveDTO.pipelTaskTraceId = dto.pipelTaskTraceId;
         kafkaReceiveDTO.pipelStageTraceId = dto.pipelStageTraceId;
@@ -126,6 +142,6 @@ public class BuildExecScriptListener implements IExecScriptListener {
         kafkaReceiveDTO.nifiCustomWorkflowDetailId = Long.valueOf(dto.taskId);
         kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
         log.info("执行脚本任务完成,现在去往任务发布中心" + JSON.toJSONString(kafkaReceiveDTO));
-        iPipelineTaskPublishCenter.msg(JSON.toJSONString(kafkaReceiveDTO), null);
+        kafkaTemplateHelper.sendMessageAsync("task.build.task.over", JSON.toJSONString(kafkaReceiveDTO));
     }
 }

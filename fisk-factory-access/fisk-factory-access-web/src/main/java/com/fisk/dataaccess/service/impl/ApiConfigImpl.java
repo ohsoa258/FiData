@@ -775,19 +775,24 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @date 2022/6/22 11:31
      */
     public void consumer(ApiImportDataDTO dto) {
-        KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
-        kafkaReceiveDTO.pipelTraceId = dto.pipelTraceId;
-        kafkaReceiveDTO.pipelTaskTraceId = dto.pipelTaskTraceId;
-        kafkaReceiveDTO.pipelStageTraceId = dto.pipelStageTraceId;
-        kafkaReceiveDTO.pipelJobTraceId = dto.pipelJobTraceId;
-        kafkaReceiveDTO.numbers = COUNT_SQL;
-        kafkaReceiveDTO.tableId = Math.toIntExact(dto.apiId);
-        kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
-        kafkaReceiveDTO.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.workflowId + "." + kafkaReceiveDTO.tableType + "." + dto.appId + "." + dto.apiId;
-        kafkaReceiveDTO.nifiCustomWorkflowDetailId = Long.valueOf(dto.workflowId);
-        kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
-        kafkaReceiveDTO.pipelApiDispatch = dto.pipelApiDispatch;
-        publishTaskClient.consumer(JSON.toJSONString(kafkaReceiveDTO));
+        KafkaReceiveDTO kafkaReceive = getKafkaReceive(dto, COUNT_SQL, OlapTableEnum.PHYSICS_API, MqConstants.TopicPrefix.TOPIC_PREFIX + dto.workflowId + "." + OlapTableEnum.PHYSICS_API.getValue() + "." + dto.appId + "." + dto.apiId);
+        publishTaskClient.consumer(JSON.toJSONString(kafkaReceive));
+    }
+
+    public static KafkaReceiveDTO getKafkaReceive(ApiImportDataDTO dto,Integer numbers,OlapTableEnum olapTableEnum,String topic){
+        return KafkaReceiveDTO.builder()
+                .pipelTraceId(dto.pipelTraceId)
+                .pipelTaskTraceId(dto.pipelTaskTraceId)
+                .pipelStageTraceId(dto.pipelStageTraceId)
+                .pipelJobTraceId(dto.pipelJobTraceId)
+                .numbers(numbers)
+                .tableId(Math.toIntExact(dto.apiId))
+                .tableType(olapTableEnum.getValue())
+                .topic(topic)
+                .nifiCustomWorkflowDetailId(Long.valueOf(dto.workflowId))
+                .topicType(TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue())
+                .pipelApiDispatch(dto.pipelApiDispatch)
+                .build();
     }
 
     @Transactional(rollbackFor = Exception.class)

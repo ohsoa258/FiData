@@ -142,7 +142,7 @@ public class DelayedTask extends TimerTask {
         try {
             Thread.sleep(100);
             boolean exist = redisUtil.hasKey(param);
-            String delayedTask="";
+            String delayedTask = "";
             if (exist) {
                 log.info("key还没失效" + param);
                 delayedTask = redisUtil.get(RedisKeyEnum.DELAYED_TASK.getName() + ":" + param).toString();
@@ -151,7 +151,7 @@ public class DelayedTask extends TimerTask {
                     return;
                 }
             }
-            log.info("比较结果:{},{}",exist,!Objects.equals(delayedTask, value));
+            log.info("比较结果:{},{}", exist, !Objects.equals(delayedTask, value));
             Timer timer = new Timer();
             //只有是nifi处理的任务才有这个groupId
             if (StringUtils.isNotEmpty(groupId)) {
@@ -206,15 +206,137 @@ public class DelayedTask extends TimerTask {
                 NifiCustomWorkflowDetailDTO itselfPort = data.itselfPort;
                 thisPipelJobTraceId = iPipelineTaskPublishCenter.getDispatchJobHierarchy(pipelTraceId, String.valueOf(itselfPort.pid)).jobTraceId;
                 JobName = itselfPort.componentsName;
-                Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
-                TaskHierarchyDTO taskHierarchy = JSON.parseObject(hmget.get(upTaskId).toString(), TaskHierarchyDTO.class);
-                log.info("上一个task的状态" + taskHierarchy.taskStatus.getName());
-                if (Objects.equals(taskHierarchy.taskStatus, DispatchLogEnum.taskfailure) || Objects.equals(taskHierarchy.taskStatus, DispatchLogEnum.taskpass)) {
-                    failureAndSkipping(pipelTraceId, upTaskId, String.valueOf(itselfPort.id), param);
-                    return;
+                int i = 0;
+                boolean ifNext = true;
+                for (Long upId : data.inportList) {
+                    TaskHierarchyDTO taskHierarchy = iPipelineTaskPublishCenter.getTaskHierarchy(pipelTraceId, String.valueOf(upId));
+                    if (Objects.equals(taskHierarchy.taskStatus, DispatchLogEnum.taskpass) || Objects.equals(taskHierarchy.taskStatus, DispatchLogEnum.taskfailure)) {
+                        ifNext = false;
+                    }
                 }
-                List<Long> inportList = data.inportList.stream().distinct().collect(Collectors.toList());
+                for (Long upId : data.inportList) {
+                    i++;
+                    TaskHierarchyDTO taskHierarchy1 = iPipelineTaskPublishCenter.getTaskHierarchy(pipelTraceId, String.valueOf(upId));
+                    log.info("是否执行跳过1:{},{},{},{}", Objects.equals(taskHierarchy1.taskStatus, DispatchLogEnum.taskfailure),
+                            Objects.equals(taskHierarchy1.taskStatus, DispatchLogEnum.taskpass), taskHierarchy1.id, taskHierarchy1.taskProcessed);
+                    if (Objects.equals(taskHierarchy1.taskStatus, DispatchLogEnum.taskfailure) ||
+                            Objects.equals(taskHierarchy1.taskStatus, DispatchLogEnum.taskstart) || Objects.equals(taskHierarchy1.taskStatus, DispatchLogEnum.tasknorun) || Objects.equals(taskHierarchy1.taskStatus, DispatchLogEnum.taskpass)) {
+                        if (Objects.equals(taskHierarchy1.taskStatus, DispatchLogEnum.taskfailure) || Objects.equals(taskHierarchy1.taskStatus, DispatchLogEnum.taskpass)) {
+                            log.info("第一处跳过");
+                            failureAndSkipping(pipelTraceId, String.valueOf(upId), String.valueOf(itselfPort.id), param, i, data.inportList);
+                        } else {
+                            //------------------------------------------------------------------------------------------------------
+                            //上一级的信息
+                            log.info("第一处正常执行");
+                            NifiGetPortHierarchyDTO nextHierarchy = new NifiGetPortHierarchyDTO();
+                            nextHierarchy.nifiCustomWorkflowDetailId = upId;
+                            nextHierarchy.workflowId = split[3];
+                            TaskHierarchyDTO taskUp = iPipelineTaskPublishCenter.getNifiPortHierarchy(nextHierarchy, pipelTraceId);
+                            NifiCustomWorkflowDetailDTO dto = taskUp.itselfPort;
+                            //PipelJobLogPO byPipelTraceId = iPipelJobLog.getByPipelTraceId(pipelTraceId, dto.pid);
+                            DispatchJobHierarchyDTO jobHierarchy = iPipelineTaskPublishCenter.getDispatchJobHierarchy(pipelTraceId, String.valueOf(dto.pid));
+                            //TaskHierarchyDTO upTaskHierarchy = iPipelineTaskPublishCenter.getTaskHierarchy(pipelTraceId, String.valueOf(dto.id));
+                            PipelTaskLogPO byPipelJobTraceId = iPipelTaskLog.getByPipelJobTraceId(jobHierarchy.jobTraceId, dto.id);
+                            //String pipelTaskTraceId = byPipelJobTraceId.taskTraceId;
+                            // 1.要记录上一个task结束
+                            Map<Integer, Object> taskMap = new HashMap<>();
+                            upJobName = dto.componentsName;
+                            Map<Object, Object> pipelTask = redisUtil.getAndDel(RedisKeyEnum.PIPEL_TASK.getName() + ":" + upId);
+                            Object endTime = pipelTask.get(DispatchLogEnum.taskend.getName());
+                            Object count = pipelTask.get(DispatchLogEnum.taskcount.getName());
+                            //upJobName + "-" + dto.tableOrder + " " +
+                            taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " - 同步条数 : " + (Objects.isNull(count) ? 0 : count));
+                            //taskMap.put(DispatchLogEnum.taskend.getValue(), upJobName + "-" + dto.tableOrder + " " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())));
+                            ChannelDataEnum value = ChannelDataEnum.getValue(dto.componentType);
+                            OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(value.getValue());
+                            iPipelTaskLog.savePipelTaskLog(pipelTraceId, jobHierarchy.jobTraceId, byPipelJobTraceId.taskTraceId, taskMap, String.valueOf(upId), dto.tableId, olapTableEnum.getValue());
+                            if (!Objects.equals(itselfPort.pid, dto.pid)) {
+                                //说明这个组结束了
+                                //2.记录上一个job结束
+                                Map<Integer, Object> upJobMap = new HashMap<>();
+                                //upJobMap.put(DispatchLogEnum.jobstate.getValue(), upJobName + " " + NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());  upJobName
+                                upJobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())));
+                                iPipelJobLog.savePipelJobLog(pipelTraceId, upJobMap, split[3], jobHierarchy.jobTraceId, String.valueOf(dto.pid));
+                                ifEndJob = true;
+                            } else {
+                                upPipelJobTraceId = jobHierarchy.jobTraceId;
+                            }
 
+
+                            if (ifNext) {
+                                if (ifEndJob) {
+                                    //3.记录这个job开始
+                                    Map<Integer, Object> thisJobMap = new HashMap<>();
+                                    //thisJobMap.put(DispatchLogEnum.jobstate.getValue(), JobName + " " + NifiStageTypeEnum.RUNNING.getName()); JobName
+                                    thisJobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                                    log.info("这个job的开始:" + thisPipelJobTraceId);
+                                    iPipelJobLog.savePipelJobLog(pipelTraceId, thisJobMap, split[3], thisPipelJobTraceId, String.valueOf(itselfPort.pid));
+                                    //4.记录这个task开始
+                                    Map<Integer, Object> thisTaskMap = new HashMap<>();
+                                    //thisTaskMap.put(DispatchLogEnum.taskstate.getValue(), JobName + "-" + itselfPort.tableOrder + " " + NifiStageTypeEnum.RUNNING.getName());
+                                    thisTaskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                                    log.info("第六处调用保存task日志这个task开始" + thisPipelTaskTraceId);
+                                    iPipelTaskLog.savePipelTaskLog(pipelTraceId, thisPipelJobTraceId, thisPipelTaskTraceId, thisTaskMap, String.valueOf(itselfPort.id), split[6], Integer.parseInt(split[4]));
+                                } else {
+                                    //4.记录这个task开始
+                                    Map<Integer, Object> thisTaskMap = new HashMap<>();
+                                    //thisTaskMap.put(DispatchLogEnum.taskstate.getValue(), JobName + "-" + itselfPort.tableOrder + " " + NifiStageTypeEnum.RUNNING.getName());
+                                    thisTaskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                                    log.info("第七处调用保存task日志,记录这个task开始" + thisPipelTaskTraceId);
+                                    iPipelTaskLog.savePipelTaskLog(pipelTraceId, upPipelJobTraceId, thisPipelTaskTraceId, thisTaskMap, String.valueOf(itselfPort.id), split[6], Integer.parseInt(split[4]));
+                                    thisPipelJobTraceId = upPipelJobTraceId;
+                                }
+                            }
+                            //------------------------------------------------------------------------------------------------------
+                            if (i == data.inportList.size()) {
+                                //只调用一次
+                                //此时,expiredKey就是即将要调用的节点,需要发消息topic_name就是expiredKey
+                                String tableType = split[4];
+                                int type = Integer.parseInt(tableType);
+                                if (Objects.equals(type, OlapTableEnum.PHYSICS_API.getValue())) {
+                                    //非实时api发布
+                                    ApiImportDataDTO apiImportDataDTO = new ApiImportDataDTO();
+                                    apiImportDataDTO.workflowId = split[3];
+                                    apiImportDataDTO.appId = Long.parseLong(split[5]);
+                                    apiImportDataDTO.apiId = Long.parseLong(split[6]);
+                                    apiImportDataDTO.pipelTraceId = pipelTraceId;
+                                    apiImportDataDTO.pipelJobTraceId = thisPipelJobTraceId;
+                                    apiImportDataDTO.pipelTaskTraceId = thisPipelTaskTraceId;
+                                    apiImportDataDTO.pipelStageTraceId = thisPipelStageTraceId;
+                                    PipelApiDispatchDTO pipelApiDispatchDTO = new PipelApiDispatchDTO();
+                                    pipelApiDispatchDTO.apiId = Long.parseLong(split[6]);
+                                    pipelApiDispatchDTO.appId = Long.parseLong(split[5]);
+                                    pipelApiDispatchDTO.workflowId = split[3];
+                                    pipelApiDispatchDTO.pipelineId = data.pipelineId;
+                                    apiImportDataDTO.pipelApiDispatch = JSON.toJSONString(pipelApiDispatchDTO);
+                                    dataAccessClient.importData(apiImportDataDTO);
+                                } else if (Objects.equals(type, OlapTableEnum.CUSTOMIZESCRIPT.getValue())) {
+                                    ExecScriptDTO execScript = new ExecScriptDTO();
+                                    execScript.pipelJobTraceId = thisPipelJobTraceId;
+                                    execScript.pipelTaskTraceId = thisPipelTaskTraceId;
+                                    execScript.pipelTraceId = pipelTraceId;
+                                    execScript.taskId = split[6];
+                                    kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, JSON.toJSONString(execScript));
+                                } else {
+                                    KafkaReceiveDTO kafkaReceiveDTO = KafkaReceiveDTO.builder().build();
+                                    kafkaReceiveDTO.pipelTraceId = pipelTraceId;
+                                    kafkaReceiveDTO.pipelJobTraceId = thisPipelJobTraceId;
+                                    kafkaReceiveDTO.pipelTaskTraceId = thisPipelTaskTraceId;
+                                    kafkaReceiveDTO.pipelStageTraceId = thisPipelStageTraceId;
+                                    kafkaReceiveDTO.fidata_batch_code = pipelTraceId;
+                                    kafkaReceiveDTO.start_time = simpleDateFormat.format(new Date());
+                                    kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
+                                    log.info("发送的topic4:{},内容:{}", split1[0], JSON.toJSONString(kafkaReceiveDTO));
+                                    kafkaTemplateHelper.sendMessageAsync(split1[0], JSON.toJSONString(kafkaReceiveDTO));
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+                /*List<Long> inportList = data.inportList.stream().distinct().collect(Collectors.toList());
+                //--------------------------------------------------------------------------------------------------------------------
                 log.info("此处查到的所有上游id:" + JSON.toJSONString(inportList));
                 for (Long inportId : inportList) {
                     //上一级的信息
@@ -273,46 +395,9 @@ public class DelayedTask extends TimerTask {
                     log.info("第七处调用保存task日志,记录这个task开始" + thisPipelTaskTraceId);
                     iPipelTaskLog.savePipelTaskLog(pipelTraceId, upPipelJobTraceId, thisPipelTaskTraceId, thisTaskMap, String.valueOf(itselfPort.id), split[6], Integer.parseInt(split[4]));
                     thisPipelJobTraceId = upPipelJobTraceId;
-                }
-                //此时,expiredKey就是即将要调用的节点,需要发消息topic_name就是expiredKey
-                String tableType = split[4];
-                int type = Integer.parseInt(tableType);
-                if (Objects.equals(type, OlapTableEnum.PHYSICS_API.getValue())) {
-                    //非实时api发布
-                    ApiImportDataDTO apiImportDataDTO = new ApiImportDataDTO();
-                    apiImportDataDTO.workflowId = split[3];
-                    apiImportDataDTO.appId = Long.parseLong(split[5]);
-                    apiImportDataDTO.apiId = Long.parseLong(split[6]);
-                    apiImportDataDTO.pipelTraceId = pipelTraceId;
-                    apiImportDataDTO.pipelJobTraceId = thisPipelJobTraceId;
-                    apiImportDataDTO.pipelTaskTraceId = thisPipelTaskTraceId;
-                    apiImportDataDTO.pipelStageTraceId = thisPipelStageTraceId;
-                    PipelApiDispatchDTO pipelApiDispatchDTO = new PipelApiDispatchDTO();
-                    pipelApiDispatchDTO.apiId = Long.parseLong(split[6]);
-                    pipelApiDispatchDTO.appId = Long.parseLong(split[5]);
-                    pipelApiDispatchDTO.workflowId = split[3];
-                    pipelApiDispatchDTO.pipelineId = data.pipelineId;
-                    apiImportDataDTO.pipelApiDispatch = JSON.toJSONString(pipelApiDispatchDTO);
-                    dataAccessClient.importData(apiImportDataDTO);
-                } else if (Objects.equals(type, OlapTableEnum.CUSTOMIZESCRIPT.getValue())) {
-                    ExecScriptDTO execScript = new ExecScriptDTO();
-                    execScript.pipelJobTraceId = thisPipelJobTraceId;
-                    execScript.pipelTaskTraceId = thisPipelTaskTraceId;
-                    execScript.pipelTraceId = pipelTraceId;
-                    execScript.taskId = split[6];
-                    kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, JSON.toJSONString(execScript));
-                } else {
-                    KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
-                    kafkaReceiveDTO.pipelTraceId = pipelTraceId;
-                    kafkaReceiveDTO.pipelJobTraceId = thisPipelJobTraceId;
-                    kafkaReceiveDTO.pipelTaskTraceId = thisPipelTaskTraceId;
-                    kafkaReceiveDTO.pipelStageTraceId = thisPipelStageTraceId;
-                    kafkaReceiveDTO.fidata_batch_code = pipelTraceId;
-                    kafkaReceiveDTO.start_time = simpleDateFormat.format(new Date());
-                    kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
-                    log.info("发送的topic4:{},内容:{}", split1[0], JSON.toJSONString(kafkaReceiveDTO));
-                    kafkaTemplateHelper.sendMessageAsync(split1[0], JSON.toJSONString(kafkaReceiveDTO));
-                }
+                }*/
+                //--------------------------------------------------------------------------------------------------------------------
+
             } else if (expiredKey.startsWith("fiskgd")) {
                 //整个管道记录结束
                 pipelTraceId = expiredKey.substring(7);
@@ -326,15 +411,18 @@ public class DelayedTask extends TimerTask {
                     for (NifiCustomWorkflowDetailDTO dto : data) {
                         String taskId = String.valueOf(dto.id);
                         //-----------------------------------------------------------------------
-                        Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
-                        TaskHierarchyDTO taskHierarchy = JSON.parseObject(hmget.get(upTaskId).toString(), TaskHierarchyDTO.class);
-                        log.info("上一个task的状态" + taskHierarchy.taskStatus.getName());
+                        TaskHierarchyDTO taskHierarchy = iPipelineTaskPublishCenter.getTaskHierarchy(pipelTraceId, String.valueOf(dto.id));
+                        log.info("是否执行跳过2:{},{},{},{}", Objects.equals(taskHierarchy.taskStatus, DispatchLogEnum.taskfailure), Objects.equals(taskHierarchy.taskStatus, DispatchLogEnum.taskpass), taskHierarchy.id, taskHierarchy.taskProcessed);
+                        if (taskHierarchy.taskProcessed && !Objects.equals(taskHierarchy.taskStatus, DispatchLogEnum.taskfailure)) {
+                            continue;
+                        }
                         if (Objects.equals(taskHierarchy.taskStatus, DispatchLogEnum.taskfailure) || Objects.equals(taskHierarchy.taskStatus, DispatchLogEnum.taskpass)) {
-                            failureAndSkipping(pipelTraceId, upTaskId, taskId, param);
-                            return;
+                            log.info("第二处跳过");
+                            failureAndSkipping(pipelTraceId, taskId, taskId, param, 0, new ArrayList<>());
+                            continue;
                         }
                         //-----------------------------------------------------------------------
-
+                        log.info("第二处正常执行");
                         JobName = dto.componentsName;
                         pipelName = dto.workflowName;
                         //PipelJobLogPO byPipelTraceId = iPipelJobLog.getByPipelTraceId(pipelTraceId, dto.pid);
@@ -402,13 +490,13 @@ public class DelayedTask extends TimerTask {
             }
         } catch (Exception e) {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
-            DispatchExceptionHandlingDTO dto = new DispatchExceptionHandlingDTO();
+            DispatchExceptionHandlingDTO dto = DispatchExceptionHandlingDTO.builder().build();
             dto.pipelTraceId = pipelTraceId;
             dto.pipelJobTraceId = thisPipelJobTraceId;
             dto.pipelTaskTraceId = thisPipelTaskTraceId;
             dto.comment = "查找下一级报错";
             dto.pipleName = pipelName;
-            dto.JobName = JobName;
+            dto.jobName = JobName;
             iPipelJobLog.exceptionHandlingLog(dto);
         }
     }
@@ -416,82 +504,149 @@ public class DelayedTask extends TimerTask {
     /**
      * 参数要有本次调度的traceid和本节点任务id
      */
-    public void failureAndSkipping(String pipelTraceId, String upTaskId, String thisTaskId, String topic) {
-        log.info("本次失效调度参数{},{},{},{}", pipelTraceId, upTaskId, thisTaskId, topic);
-        if (topic.startsWith("nowExec")) {
-            return;
-        }
+    public void failureAndSkipping(String pipelTraceId, String upTaskId, String thisTaskId, String topic, int i, List<Long> inportList) {
+        log.info("本次失效调度参数{},{},{},{},{},{}", pipelTraceId, upTaskId, thisTaskId, topic, i, JSON.toJSONString(inportList));
+        if (!topic.startsWith("nowExec")) {
+            TaskHierarchyDTO taskHierarchy = iPipelineTaskPublishCenter.getTaskHierarchy(pipelTraceId, thisTaskId);
+            log.info("判断结果:{},{}", taskHierarchy.taskProcessed, taskHierarchy.taskStatus);
+            if (taskHierarchy.taskProcessed && taskHierarchy.taskStatus != DispatchLogEnum.taskfailure) {
+                log.info("此任务已运行" + thisTaskId);
+            } else if (taskHierarchy.taskStatus == DispatchLogEnum.taskpass) {
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
+                TaskHierarchyDTO upTaskHierarchy = JSON.parseObject(hmget.get(upTaskId).toString(), TaskHierarchyDTO.class);
+                NifiCustomWorkflowDetailDTO upTask = upTaskHierarchy.itselfPort;
+                TaskHierarchyDTO thisTaskHierarchy = JSON.parseObject(hmget.get(thisTaskId).toString(), TaskHierarchyDTO.class);
+                NifiCustomWorkflowDetailDTO thisTask = thisTaskHierarchy.itselfPort;
+                String jobTraceId = iPipelineTaskPublishCenter.getDispatchJobHierarchy(pipelTraceId, String.valueOf(upTask.pid)).jobTraceId;
+                String taskTraceId = UUID.randomUUID().toString();
+                List<PipelTaskLogPO> list = iPipelTaskLog.query().eq("job_trace_id", jobTraceId).eq("task_id", upTask.id).list();
+                if (CollectionUtils.isNotEmpty(list)) {
+                    taskTraceId = list.get(0).taskTraceId;
+                }
+                if (Objects.equals(upTaskHierarchy.taskStatus, DispatchLogEnum.taskpass)) {
+                    Map<Integer, Object> upTaskMap = new HashMap<>();
+                    upTaskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + simpleDateFormat.format(new Date()));
+                    // 上一级task结束--跳过 发送卡夫卡消息到任务发布中心
+                    ChannelDataEnum channel = ChannelDataEnum.getValue(upTask.componentType);
+                    OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(channel.getValue());
+                    log.info("延时任务失败或跳过处理后,第一次处理task,{}", upTaskId);
+                    iPipelTaskLog.savePipelTaskLog(pipelTraceId, jobTraceId, taskTraceId, upTaskMap, upTaskId, upTask.tableId, olapTableEnum.getValue());
+                    if (!Objects.equals(upTask.pid, thisTask.pid) || i == 0) {
+                        // 上一个job的结束--跳过
+                        Map<Integer, Object> upJobMap = new HashMap<>();
+                        upJobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + simpleDateFormat.format(new Date()));
+                        log.info("延时任务失败或跳过处理后,第一次处理job,{}", upTask.pid);
+                        iPipelJobLog.savePipelJobLog(pipelTraceId, upJobMap, String.valueOf(upTaskHierarchy.pipelineId), jobTraceId, String.valueOf(upTask.pid));
+                    } else {
+                        log.info("组没有变");
+                    }
 
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
-        TaskHierarchyDTO upTaskHierarchy = JSON.parseObject(hmget.get(upTaskId).toString(), TaskHierarchyDTO.class);
-        NifiCustomWorkflowDetailDTO upTask = upTaskHierarchy.itselfPort;
-        TaskHierarchyDTO thisTaskHierarchy = JSON.parseObject(hmget.get(thisTaskId).toString(), TaskHierarchyDTO.class);
-        NifiCustomWorkflowDetailDTO thisTask = thisTaskHierarchy.itselfPort;
-        String jobTraceId = UUID.randomUUID().toString();
-        String ThisJobTraceId = UUID.randomUUID().toString();
-        String taskTraceId = UUID.randomUUID().toString();
-        List<PipelJobLogPO> upList = iPipelJobLog.query().eq("pipel_trace_id", pipelTraceId).eq("component_id", upTask.pid).list();
-        if (CollectionUtils.isNotEmpty(upList)) {
-            jobTraceId = upList.get(0).jobTraceId;
-        }
-        List<PipelTaskLogPO> list = iPipelTaskLog.query().eq("job_trace_id", jobTraceId).eq("task_id", upTask.id).list();
-        if (CollectionUtils.isNotEmpty(list)) {
-            taskTraceId = list.get(0).taskTraceId;
-        }
-        if (Objects.equals(upTaskHierarchy.taskStatus, DispatchLogEnum.taskpass)) {
-            Map<Integer, Object> upTaskMap = new HashMap<>();
-            upTaskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + simpleDateFormat.format(new Date()));
-            // 上一级task结束--跳过 发送卡夫卡消息到任务发布中心
-            ChannelDataEnum channel = ChannelDataEnum.getValue(upTask.componentType);
-            OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(channel.getValue());
-            iPipelTaskLog.savePipelTaskLog(pipelTraceId, jobTraceId, taskTraceId, upTaskMap, upTaskId, upTask.tableId, olapTableEnum.getValue());
-            if (!Objects.equals(upTask.pid, thisTask.pid)) {
-                // 上一个job的结束--跳过
-                Map<Integer, Object> upJobMap = new HashMap<>();
-                upJobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + simpleDateFormat.format(new Date()));
-                iPipelJobLog.savePipelJobLog(pipelTraceId, upJobMap, String.valueOf(upTaskHierarchy.pipelineId), jobTraceId, String.valueOf(upTask.pid));
-            } else {
-                ThisJobTraceId = jobTraceId;
-            }
+                } else if (Objects.equals(upTaskHierarchy.taskStatus, DispatchLogEnum.taskfailure)) {
+                    // 本级失败,创建延时队列,发送卡夫卡消息到任务发布中心,但是上级做失败,本级记跳过
+                    Map<Integer, Object> upTaskMap = new HashMap<>();
+                    upTaskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
+                    // 上一级task结束--跳过 发送卡夫卡消息到任务发布中心
+                    ChannelDataEnum channel = ChannelDataEnum.getValue(upTask.componentType);
+                    OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(channel.getValue());
+                    log.info("延时任务失败或跳过处理后,第二次处理task,{}", upTaskId);
+                    iPipelTaskLog.savePipelTaskLog(pipelTraceId, jobTraceId, taskTraceId, upTaskMap, upTaskId, upTask.tableId, olapTableEnum.getValue());
+                    if (!Objects.equals(upTask.pid, thisTask.pid)) {
+                        // 上一个job的结束--跳过
+                        Map<Integer, Object> upJobMap = new HashMap<>();
+                        upJobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
+                        log.info("延时任务失败或跳过处理后,第二次处理job,{}", upTask.pid);
+                        iPipelJobLog.savePipelJobLog(pipelTraceId, upJobMap, String.valueOf(upTaskHierarchy.pipelineId), jobTraceId, String.valueOf(upTask.pid));
+                    }
+                }
+                KafkaReceiveDTO kafkaReceive = KafkaReceiveDTO.builder().build();
+                kafkaReceive.nifiCustomWorkflowDetailId = Long.valueOf(thisTaskId);
+                kafkaReceive.pipelTraceId = pipelTraceId;
+                kafkaReceive.pipelJobTraceId = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(pipelTraceId, thisTaskId).jobTraceId;
+                kafkaReceive.pipelTaskTraceId = UUID.randomUUID().toString();
+                kafkaReceive.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
+                if (StringUtils.isNotEmpty(thisTask.tableId)) {
+                    kafkaReceive.tableId = Integer.valueOf(thisTask.tableId);
+                }
+                ChannelDataEnum channel = ChannelDataEnum.getValue(thisTask.componentType);
+                OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(channel.getValue());
+                kafkaReceive.tableType = olapTableEnum.getValue();
+                String[] split = topic.split(",");
+                kafkaReceive.topic = split[0];
+                if (!topic.startsWith("fiskgd") && i == inportList.size()) {
+                    kafkaTemplateHelper.sendMessageAsync("my-topic", JSON.toJSONString(kafkaReceive));
+                }
+            } else if (taskHierarchy.taskStatus == DispatchLogEnum.taskfailure) {
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
+                TaskHierarchyDTO upTaskHierarchy = JSON.parseObject(hmget.get(upTaskId).toString(), TaskHierarchyDTO.class);
+                NifiCustomWorkflowDetailDTO upTask = upTaskHierarchy.itselfPort;
+                TaskHierarchyDTO thisTaskHierarchy = JSON.parseObject(hmget.get(thisTaskId).toString(), TaskHierarchyDTO.class);
+                NifiCustomWorkflowDetailDTO thisTask = thisTaskHierarchy.itselfPort;
+                String jobTraceId = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(pipelTraceId, upTaskId).jobTraceId;
+                String taskTraceId = UUID.randomUUID().toString();
+                List<PipelTaskLogPO> list = iPipelTaskLog.query().eq("job_trace_id", jobTraceId).eq("task_id", upTask.id).list();
+                if (CollectionUtils.isNotEmpty(list)) {
+                    taskTraceId = list.get(0).taskTraceId;
+                }
+                if (Objects.equals(upTaskHierarchy.taskStatus, DispatchLogEnum.taskpass)) {
+                    Map<Integer, Object> upTaskMap = new HashMap<>();
+                    upTaskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + simpleDateFormat.format(new Date()));
+                    // 上一级task结束--跳过 发送卡夫卡消息到任务发布中心
+                    ChannelDataEnum channel = ChannelDataEnum.getValue(upTask.componentType);
+                    OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(channel.getValue());
+                    log.info("延时任务失败或跳过处理后,第三次处理task,{}", upTaskId);
+                    iPipelTaskLog.savePipelTaskLog(pipelTraceId, jobTraceId, taskTraceId, upTaskMap, upTaskId, upTask.tableId, olapTableEnum.getValue());
+                    if (!Objects.equals(upTask.pid, thisTask.pid)) {
+                        // 上一个job的结束--跳过
+                        Map<Integer, Object> upJobMap = new HashMap<>();
+                        upJobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + simpleDateFormat.format(new Date()));
+                        log.info("延时任务失败或跳过处理后,第三次处理job,{}", upTask.pid);
+                        iPipelJobLog.savePipelJobLog(pipelTraceId, upJobMap, String.valueOf(upTaskHierarchy.pipelineId), jobTraceId, String.valueOf(upTask.pid));
+                    } else {
+                        log.info("组没有变");
+                    }
 
-        } else if (Objects.equals(upTaskHierarchy.taskStatus, DispatchLogEnum.taskfailure)) {
-            // 本级失败,创建延时队列,发送卡夫卡消息到任务发布中心,但是上级做失败,本级记跳过
-            Map<Integer, Object> upTaskMap = new HashMap<>();
-            upTaskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
-            // 上一级task结束--跳过 发送卡夫卡消息到任务发布中心
-            ChannelDataEnum channel = ChannelDataEnum.getValue(upTask.componentType);
-            OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(channel.getValue());
-            iPipelTaskLog.savePipelTaskLog(pipelTraceId, jobTraceId, taskTraceId, upTaskMap, upTaskId, upTask.tableId, olapTableEnum.getValue());
-            if (!Objects.equals(upTask.pid, thisTask.pid)) {
-                // 上一个job的结束--跳过
-                Map<Integer, Object> upJobMap = new HashMap<>();
-                upJobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
-                iPipelJobLog.savePipelJobLog(pipelTraceId, upJobMap, String.valueOf(upTaskHierarchy.pipelineId), jobTraceId, String.valueOf(upTask.pid));
+                } else if (Objects.equals(upTaskHierarchy.taskStatus, DispatchLogEnum.taskfailure)) {
+                    // 本级失败,创建延时队列,发送卡夫卡消息到任务发布中心,但是上级做失败,本级记跳过
+                    Map<Integer, Object> upTaskMap = new HashMap<>();
+                    upTaskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
+                    // 上一级task结束--跳过 发送卡夫卡消息到任务发布中心
+                    ChannelDataEnum channel = ChannelDataEnum.getValue(upTask.componentType);
+                    OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(channel.getValue());
+                    log.info("延时任务失败或跳过处理后,第四次处理task,{}", upTaskId);
+                    iPipelTaskLog.savePipelTaskLog(pipelTraceId, jobTraceId, taskTraceId, upTaskMap, upTaskId, upTask.tableId, olapTableEnum.getValue());
+                    if (!Objects.equals(upTask.pid, thisTask.pid)) {
+                        // 上一个job的结束--跳过
+                        Map<Integer, Object> upJobMap = new HashMap<>();
+                        upJobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
+                        log.info("延时任务失败或跳过处理后,第四次处理job,{}", upTask.pid);
+                        iPipelJobLog.savePipelJobLog(pipelTraceId, upJobMap, String.valueOf(upTaskHierarchy.pipelineId), jobTraceId, String.valueOf(upTask.pid));
+                    }
+                }
+                KafkaReceiveDTO kafkaReceive = KafkaReceiveDTO.builder().build();
+                kafkaReceive.nifiCustomWorkflowDetailId = Long.valueOf(thisTaskId);
+                kafkaReceive.pipelTraceId = pipelTraceId;
+                kafkaReceive.pipelJobTraceId = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(pipelTraceId, thisTaskId).jobTraceId;
+                kafkaReceive.pipelTaskTraceId = UUID.randomUUID().toString();
+                kafkaReceive.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
+                if (StringUtils.isNotEmpty(thisTask.tableId)) {
+                    kafkaReceive.tableId = Integer.valueOf(thisTask.tableId);
+                }
+                ChannelDataEnum channel = ChannelDataEnum.getValue(thisTask.componentType);
+                OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(channel.getValue());
+                kafkaReceive.tableType = olapTableEnum.getValue();
+                String[] split = topic.split(",");
+                kafkaReceive.topic = split[0];
+                if (!topic.startsWith("fiskgd") && i == inportList.size()) {
+                    kafkaTemplateHelper.sendMessageAsync("my-topic", JSON.toJSONString(kafkaReceive));
+                }
             }
         }
-        KafkaReceiveDTO kafkaReceive = new KafkaReceiveDTO();
-        kafkaReceive.nifiCustomWorkflowDetailId = Long.valueOf(thisTaskId);
-        kafkaReceive.pipelTraceId = pipelTraceId;
-        kafkaReceive.pipelJobTraceId = ThisJobTraceId;
-        kafkaReceive.pipelTaskTraceId = UUID.randomUUID().toString();
-        kafkaReceive.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
-        if (StringUtils.isNotEmpty(thisTask.tableId)) {
-            kafkaReceive.tableId = Integer.valueOf(thisTask.tableId);
-        }
-        ChannelDataEnum channel = ChannelDataEnum.getValue(thisTask.componentType);
-        OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(channel.getValue());
-        kafkaReceive.tableType = olapTableEnum.getValue();
-        String[] split = topic.split(",");
-        kafkaReceive.topic = split[0];
-        if (topic.startsWith("fiskgd")) {
-            return;
-        }
-        kafkaTemplateHelper.sendMessageAsync("my-topic", JSON.toJSONString(kafkaReceive));
 
     }
 
-    public void recordPipelEnd(String expiredKey,String JobName,String pipelName){
+    public void recordPipelEnd(String expiredKey, String JobName, String pipelName) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         //整个管道记录结束
         String pipelTraceId = expiredKey.substring(7);
@@ -554,4 +709,66 @@ public class DelayedTask extends TimerTask {
         }
         MDCHelper.removePipelTraceId();
     }
+
+    /*public void dealSuccess(Long inportId,String[] split,String pipelTraceId,String upJobName,NifiCustomWorkflowDetailDTO itselfPort){
+        boolean ifEndJob = false;
+        String upPipelJobTraceId = "";
+        //上一级的信息
+        NifiGetPortHierarchyDTO nextHierarchy = new NifiGetPortHierarchyDTO();
+        nextHierarchy.nifiCustomWorkflowDetailId = inportId;
+        nextHierarchy.workflowId = split[3];
+        TaskHierarchyDTO taskUp = iPipelineTaskPublishCenter.getNifiPortHierarchy(nextHierarchy, pipelTraceId);
+        NifiCustomWorkflowDetailDTO dto = taskUp.itselfPort;
+        //PipelJobLogPO byPipelTraceId = iPipelJobLog.getByPipelTraceId(pipelTraceId, dto.pid);
+        DispatchJobHierarchyDTO jobHierarchy = iPipelineTaskPublishCenter.getDispatchJobHierarchy(pipelTraceId, String.valueOf(dto.pid));
+        //TaskHierarchyDTO upTaskHierarchy = iPipelineTaskPublishCenter.getTaskHierarchy(pipelTraceId, String.valueOf(dto.id));
+        PipelTaskLogPO byPipelJobTraceId = iPipelTaskLog.getByPipelJobTraceId(jobHierarchy.jobTraceId, dto.id);
+        //String pipelTaskTraceId = byPipelJobTraceId.taskTraceId;
+        // 1.要记录上一个task结束
+        Map<Integer, Object> taskMap = new HashMap<>();
+        upJobName = dto.componentsName;
+        Map<Object, Object> pipelTask = redisUtil.getAndDel(RedisKeyEnum.PIPEL_TASK.getName() + ":" + inportId);
+        Object endTime = pipelTask.get(DispatchLogEnum.taskend.getName());
+        Object count = pipelTask.get(DispatchLogEnum.taskcount.getName());
+        //upJobName + "-" + dto.tableOrder + " " +
+        taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " - 同步条数 : " + (Objects.isNull(count) ? 0 : count));
+        //taskMap.put(DispatchLogEnum.taskend.getValue(), upJobName + "-" + dto.tableOrder + " " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())));
+        ChannelDataEnum value = ChannelDataEnum.getValue(dto.componentType);
+        OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(value.getValue());
+        iPipelTaskLog.savePipelTaskLog(pipelTraceId, jobHierarchy.jobTraceId, byPipelJobTraceId.taskTraceId, taskMap, String.valueOf(inportId), dto.tableId, olapTableEnum.getValue());
+        if (!Objects.equals(itselfPort.pid, dto.pid)) {
+            //说明这个组结束了
+            //2.记录上一个job结束
+            Map<Integer, Object> upJobMap = new HashMap<>();
+            //upJobMap.put(DispatchLogEnum.jobstate.getValue(), upJobName + " " + NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());  upJobName
+            upJobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())));
+            iPipelJobLog.savePipelJobLog(pipelTraceId, upJobMap, split[3], jobHierarchy.jobTraceId, String.valueOf(dto.pid));
+            ifEndJob = true;
+        } else {
+            upPipelJobTraceId = jobHierarchy.jobTraceId;
+        }
+
+                if (ifEndJob) {
+        //3.记录这个job开始
+        Map<Integer, Object> thisJobMap = new HashMap<>();
+        //thisJobMap.put(DispatchLogEnum.jobstate.getValue(), JobName + " " + NifiStageTypeEnum.RUNNING.getName()); JobName
+        thisJobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+        log.info("这个job的开始:" + thisPipelJobTraceId);
+        iPipelJobLog.savePipelJobLog(pipelTraceId, thisJobMap, split[3], thisPipelJobTraceId, String.valueOf(itselfPort.pid));
+        //4.记录这个task开始
+        Map<Integer, Object> thisTaskMap = new HashMap<>();
+        //thisTaskMap.put(DispatchLogEnum.taskstate.getValue(), JobName + "-" + itselfPort.tableOrder + " " + NifiStageTypeEnum.RUNNING.getName());
+        thisTaskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+        log.info("第六处调用保存task日志这个task开始" + thisPipelTaskTraceId);
+        iPipelTaskLog.savePipelTaskLog(pipelTraceId, thisPipelJobTraceId, thisPipelTaskTraceId, thisTaskMap, String.valueOf(itselfPort.id), split[6], Integer.parseInt(split[4]));
+    } else {
+        //4.记录这个task开始
+        Map<Integer, Object> thisTaskMap = new HashMap<>();
+        //thisTaskMap.put(DispatchLogEnum.taskstate.getValue(), JobName + "-" + itselfPort.tableOrder + " " + NifiStageTypeEnum.RUNNING.getName());
+        thisTaskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+        log.info("第七处调用保存task日志,记录这个task开始" + thisPipelTaskTraceId);
+        iPipelTaskLog.savePipelTaskLog(pipelTraceId, upPipelJobTraceId, thisPipelTaskTraceId, thisTaskMap, String.valueOf(itselfPort.id), split[6], Integer.parseInt(split[4]));
+        thisPipelJobTraceId = upPipelJobTraceId;
+    }
+    }*/
 }

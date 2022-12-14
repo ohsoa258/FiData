@@ -110,7 +110,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
     public void msg(String mapString, Acknowledgment acke) {
         log.info("消费消息:start");
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
+        KafkaReceiveDTO kafkaReceiveDTO = KafkaReceiveDTO.builder().build();
         //流程所在组id,只限有nifi的流程
         String groupId = "";
         Timer timer = new Timer();
@@ -460,8 +460,16 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                 } else {
                                     topicContent = key.toString();
                                     String[] split = topicContent.split(",");
+                                    //实例化一个set集合
+                                    HashSet<String> set = new HashSet<>();
+                                    //遍历数组并存入集合,如果元素已存在则不会重复存入
+                                    for (int i = 0; i < split.length; i++) {
+                                        set.add(split[i]);
+                                    }
+                                    //返回Set集合的数组形式
+                                    split = (String[])(set.toArray(new String[ set.size()]));
                                     //意思是没全了,所有上游没有调完
-                                    if (split.length != upPortList.size()) {
+                                    if (split.length < upPortList.size()) {
                                         log.info("比较的两个值{},{},{}", JSON.toJSONString(upPortList), split, goNext2);
                                         if (upPortList.size() - split.length <= 1) {
                                             if (goNext2) {
@@ -504,22 +512,27 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                 log.info("消费消息:end");
             }
         } catch (Exception e) {
-            DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = new DispatchExceptionHandlingDTO();
-            dispatchExceptionHandlingDTO.comment = "发布中心报错";
-            dispatchExceptionHandlingDTO.pipelTraceId = kafkaReceiveDTO.pipelTraceId;
-            dispatchExceptionHandlingDTO.pipelJobTraceId = kafkaReceiveDTO.pipelJobTraceId;
-            dispatchExceptionHandlingDTO.pipelStageTraceId = kafkaReceiveDTO.pipelStageTraceId;
-            dispatchExceptionHandlingDTO.pipelTaskTraceId = kafkaReceiveDTO.pipelTaskTraceId;
-            dispatchExceptionHandlingDTO.pipleName = pipelName;
-            dispatchExceptionHandlingDTO.JobName = jobName;
+            DispatchExceptionHandlingDTO dispatchExceptionHandling = getDispatchExceptionHandling(kafkaReceiveDTO, pipelName, jobName);
             log.error("管道调度报错" + StackTraceHelper.getStackTraceInfo(e));
-            iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
+            iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandling);
 
         } finally {
             if (acke != null) {
                 acke.acknowledge();
             }
         }
+    }
+
+    public static DispatchExceptionHandlingDTO getDispatchExceptionHandling(KafkaReceiveDTO kafkaReceive,String pipelName,String jobName){
+        return DispatchExceptionHandlingDTO.builder()
+                .comment("发布中心报错")
+                .jobName(jobName)
+                .pipleName(pipelName)
+                .pipelTraceId(kafkaReceive.pipelTraceId)
+                .pipelJobTraceId(kafkaReceive.pipelJobTraceId)
+                .pipelStageTraceId(kafkaReceive.pipelStageTraceId)
+                .pipelTaskTraceId(kafkaReceive.pipelTaskTraceId)
+                .build();
     }
 
     @Override
