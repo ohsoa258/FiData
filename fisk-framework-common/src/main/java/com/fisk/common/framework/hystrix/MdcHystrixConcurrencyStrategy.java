@@ -1,11 +1,9 @@
-package com.fisk.common.framework.feign;
+package com.fisk.common.framework.hystrix;
 
-import com.netflix.hystrix.strategy.HystrixPlugins;
 import com.netflix.hystrix.strategy.concurrency.HystrixConcurrencyStrategy;
 import org.slf4j.MDC;
 import org.springframework.context.annotation.Configuration;
 
-import javax.annotation.PostConstruct;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
@@ -19,11 +17,6 @@ import java.util.concurrent.Callable;
  */
 @Configuration
 public class MdcHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy {
-
-    @PostConstruct
-    public void hystrixInit() {
-        HystrixPlugins.getInstance().registerConcurrencyStrategy(new MdcHystrixConcurrencyStrategy());
-    }
 
     /**
      * 允许修饰Callable，比如做些上下文数据传递。
