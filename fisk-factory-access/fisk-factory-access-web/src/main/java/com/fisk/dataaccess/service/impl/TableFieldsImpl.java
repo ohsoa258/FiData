@@ -648,9 +648,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             return;
         }
         List<Long> userIds = new ArrayList<>();
+        // 表
+        List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
         if (flag == tableType) {
-            // 表
-            List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
             MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
             table.setQualifiedName(hostname + "_" + dbName + "_" + tableAccess.getId());
             table.setName(TableNameGenerateUtils.buildOdsTableName(tableAccess.getTableName(),
@@ -687,13 +687,13 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     }).collect(Collectors.toList());
 
             table.setColumnList(columnList);
-            tableList.add(table);
+            tableList.add(0, table);
+
             db.setTableList(tableList);
             dbList.add(db);
             instance.setDbList(dbList);
         } else if (flag == apiType) {
-
-            List<MetaDataTableAttributeDTO> tableList = tableAccessImpl.query().eq("api_id", tableAccess.apiId).list()
+            tableList = tableAccessImpl.query().eq("api_id", tableAccess.apiId).list()
                     .stream().filter(Objects::nonNull)
                     .map(tb -> {
                         // 表
@@ -755,6 +755,27 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         } catch (Exception e) {
             log.error("【dataManageClient.MetaData()】方法报错,ex", e);
         }
+    }
+
+    public void test(List<MetaDataInstanceAttributeDTO> list) {
+
+        MetaDataInstanceAttributeDTO attributeDTO = list.get(0);
+        MetaDataDbAttributeDTO metaDataDbAttributeDTO = attributeDTO.dbList.get(0);
+        MetaDataTableAttributeDTO dto = metaDataDbAttributeDTO.tableList.get(0);
+
+        metaDataDbAttributeDTO.tableList.add(1, dto);
+
+
+
+
+
+        /*dto.columnList;
+
+        //添加stg实体
+        tableList.add(1,table);
+        tableList.get(1).columnList = new ArrayList<>();
+        tableList.get(1).columnList = columnList;*/
+
     }
 
     /**

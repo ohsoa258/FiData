@@ -122,7 +122,7 @@ public class CommonMethods {
             List<T> dest = (List<T>) in.readObject();
             return dest;
         } catch (Exception e) {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e);
+            throw new FkException(ResultEnum.COPY_ERROR, e);
         }
     }
 

@@ -101,7 +101,9 @@ public class DataAssetsImpl implements IDataAssets {
             if (CollectionUtils.isEmpty(displayList)) {
                 throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
             }
-            displayList.addAll(systemTableColumn());
+            if (!dto.export) {
+                displayList.addAll(systemTableColumn());
+            }
 
             data.columnList = displayList;
             data.pageIndex = dto.pageIndex;

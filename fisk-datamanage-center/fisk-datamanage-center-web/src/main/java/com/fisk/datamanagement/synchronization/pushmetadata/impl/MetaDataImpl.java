@@ -230,6 +230,7 @@ public class MetaDataImpl implements IMetaData {
                 if (!first.isPresent()) {
                     return;
                 }
+                //解析sql脚本
                 List<TableMetaDataObject> tableMetaDataObjects = SqlParserUtils.sqlDriveConversion(dataSourceInfo.conType.getName().toLowerCase(), first.get().sqlScript);
                 if (CollectionUtils.isEmpty(tableMetaDataObjects)) {
                     return;
@@ -244,8 +245,8 @@ public class MetaDataImpl implements IMetaData {
                 //获取输入参数
                 inputTableList = getTableList(tableList, odsResult.data, dbQualifiedName);
                 String newDbQualifiedName = whetherSynchronization(dbName, true);
-                //获取关联维度
-                inputTableList.addAll(associateInputTableList(first.get(), newDbQualifiedName, DataModelTableTypeEnum.DW_DIMENSION));
+                //关联维度血缘
+                //inputTableList.addAll(associateInputTableList(first.get(), newDbQualifiedName, DataModelTableTypeEnum.DW_DIMENSION));
                 if (CollectionUtils.isEmpty(inputTableList)) {
                     return;
                 }
@@ -265,7 +266,7 @@ public class MetaDataImpl implements IMetaData {
                 String newDbQualifiedName = whetherSynchronization(dbName, true);
                 inputTableList = getDorisTableList(first.get(), dbQualifiedName, newDbQualifiedName);
                 //获取关联维度
-                inputTableList.addAll(associateInputTableList(first.get(), newDbQualifiedName, DataModelTableTypeEnum.DORIS_DIMENSION));
+                //inputTableList.addAll(associateInputTableList(first.get(), newDbQualifiedName, DataModelTableTypeEnum.DORIS_DIMENSION));
                 if (CollectionUtils.isEmpty(inputTableList)) {
                     return;
                 }
@@ -294,6 +295,9 @@ public class MetaDataImpl implements IMetaData {
                 }
             }
             if (delete) {
+                //关联维度
+
+
                 String newDbQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname;
                 //新增自定义脚本
                 synchronizationCustomScriptKinShip((int) first.get().id, first.get().tableName, list, tableGuid, dataSourceInfo.conType.getName().toLowerCase(), newDbQualifiedName);
@@ -1244,35 +1248,41 @@ public class MetaDataImpl implements IMetaData {
     }
 
     /**
-     * process获取关联维度表
+     * 关联维度表血缘
      *
      * @param dto
      * @param dbQualifiedName
      * @param dataModelTableTypeEnum
      * @return
      */
-    public List<EntityIdAndTypeDTO> associateInputTableList(SourceTableDTO dto,
-                                                            String dbQualifiedName,
-                                                            DataModelTableTypeEnum dataModelTableTypeEnum) {
+    public void associateInputTableList(SourceTableDTO dto,
+                                        String dbQualifiedName,
+                                        DataModelTableTypeEnum dataModelTableTypeEnum,
+                                        String tableGuid) {
         List<EntityIdAndTypeDTO> inputTableList = new ArrayList<>();
         List<Integer> associateIdList = dto.fieldList.stream().filter(e -> e.associatedDim == true)
                 .map(e -> e.getAssociatedDimId()).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(associateIdList)) {
-            return inputTableList;
+            return;
         }
         List<String> associateDimensionQualifiedNames = associateIdList.stream().map(e -> {
             return dbQualifiedName + "_" + dataModelTableTypeEnum.getValue() + "_" + e;
         }).collect(Collectors.toList());
-        QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("qualified_name", associateDimensionQualifiedNames).select("atlas_guid");
-        List<String> guidList = (List) metadataMapAtlasMapper.selectObjs(queryWrapper);
-        for (String guid : guidList) {
+        for (String item : associateDimensionQualifiedNames) {
+            QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("qualified_name", item).select("atlas_guid");
+            MetadataMapAtlasPO po = metadataMapAtlasMapper.selectOne(queryWrapper);
+            if (po == null) {
+                continue;
+            }
             EntityIdAndTypeDTO data = new EntityIdAndTypeDTO();
-            data.guid = guid;
+            data.guid = po.atlasGuid;
             data.typeName = EntityTypeEnum.RDBMS_TABLE.getName();
             inputTableList.add(data);
+
+            addProcess(EntityTypeEnum.RDBMS_TABLE, "", null, tableGuid, "关联维度");
         }
-        return inputTableList;
+
     }
 
     /**
