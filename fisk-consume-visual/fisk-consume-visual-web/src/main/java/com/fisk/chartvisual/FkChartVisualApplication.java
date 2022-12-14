@@ -16,6 +16,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.chartvisual.config",
         "com.fisk.common.framework.redis",
         "com.fisk.common.framework.feign",
+        "com.fisk.common.framework.hystrix",
         "com.fisk.common.core.user",
         "com.fisk.common.framework.actuators"})
 @MapperScan("com.fisk.chartvisual.mapper")

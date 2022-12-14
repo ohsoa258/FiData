@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         "com.fisk.common.core.user",
         "com.fisk.common.framework.advice",
         "com.fisk.common.framework.feign",
+        "com.fisk.common.framework.hystrix",
         "com.fisk.common.framework.exception",
         "com.fisk.common.framework.actuators"},
         exclude = {RabbitAutoConfiguration.class})
