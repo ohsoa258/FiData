@@ -87,17 +87,18 @@ public class MissionEndCenter {
                     DispatchJobHierarchyDTO dispatchJobHierarchy = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(pipelTraceId, String.valueOf(itselfPort.id));
                     Map<Integer, Object> taskMap = new HashMap<>();
                     String format = simpleDateFormat.format(new Date());
-                    log.info("任务结束中心本节点状态:{},{}", nifiPortHierarchy.id, nifiPortHierarchy.taskStatus);
-                    if (Objects.equals(nifiPortHierarchy.taskStatus, DispatchLogEnum.taskfailure)) {
+                    TaskHierarchyDTO taskHierarchyDto = iPipelineTaskPublishCenter.getTaskHierarchy(pipelTraceId, String.valueOf(nifiPortHierarchy.id));
+                    log.info("任务结束中心本节点状态:{},{}", taskHierarchyDto.id, taskHierarchyDto.taskStatus);
+                    if (Objects.equals(taskHierarchyDto.taskStatus, DispatchLogEnum.taskfailure)) {
 
                         taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format);
 
-                    } else if (Objects.equals(nifiPortHierarchy.taskStatus, DispatchLogEnum.taskpass)) {
+                    } else if (Objects.equals(taskHierarchyDto.taskStatus, DispatchLogEnum.taskpass)) {
 
                         //taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + format);
                         taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + format);
 
-                    } else if (!Objects.equals(nifiPortHierarchy.taskStatus, DispatchLogEnum.taskpass) && !Objects.equals(nifiPortHierarchy.taskStatus, DispatchLogEnum.taskfailure)) {
+                    } else if (!Objects.equals(taskHierarchyDto.taskStatus, DispatchLogEnum.taskpass) && !Objects.equals(taskHierarchyDto.taskStatus, DispatchLogEnum.taskfailure)) {
                         Map<Object, Object> pipelTask = redisUtil.getAndDel(RedisKeyEnum.PIPEL_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId);
                         log.info(itselfPort.id + "拿打印条数89" + JSON.toJSONString(pipelTask));
                         Object endTime = pipelTask.get(DispatchLogEnum.taskend.getName());
