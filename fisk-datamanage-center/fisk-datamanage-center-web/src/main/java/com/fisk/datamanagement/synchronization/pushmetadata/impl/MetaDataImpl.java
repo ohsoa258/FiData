@@ -57,10 +57,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -99,6 +96,7 @@ public class MetaDataImpl implements IMetaData {
     private String relationship;
 
     private static final String stg_prefix = "_stg";
+    private static final String stg_suffix = "stg_";
 
     @Override
     public ResultEnum metaData(MetaDataAttributeDTO data) {
@@ -152,7 +150,7 @@ public class MetaDataImpl implements IMetaData {
                     //删除
                     deleteMetaData(qualifiedNames, tableGuid);
                     //同步血缘
-                    synchronizationTableKinShip(db.name, tableGuid, table.name, stgTableGuid); //, table.columnList);
+                    synchronizationTableKinShip(db.name, tableGuid, table.name.replace(stg_suffix, ""), stgTableGuid); //, table.columnList);
                 }
             }
         }
@@ -219,7 +217,7 @@ public class MetaDataImpl implements IMetaData {
                 }
 
                 //解析sql
-                List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversion(dataSourceInfo.conType.getName().toUpperCase(), first1.get().sqlScript);
+                List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversion(dataSourceInfo.conType.getName().toLowerCase(), first1.get().sqlScript);
                 if (CollectionUtils.isEmpty(res)) {
                     return;
                 }
@@ -318,7 +316,6 @@ public class MetaDataImpl implements IMetaData {
             }
             if (delete) {
                 //关联维度
-
                 String newDbQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname;
                 //新增自定义脚本
                 synchronizationCustomScriptKinShip((int) first.get().id, first.get().tableName, list, tableGuid, dataSourceInfo.conType.getName().toLowerCase(), newDbQualifiedName);
@@ -408,7 +405,7 @@ public class MetaDataImpl implements IMetaData {
 
         for (CustomScriptInfoDTO item : listResultEntity.data) {
             //解析sql
-            List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversion(driveType, item.script);
+            List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversion(driveType.toLowerCase(), item.script);
             if (CollectionUtils.isEmpty(res)) {
                 return;
             }
@@ -698,7 +695,7 @@ public class MetaDataImpl implements IMetaData {
         //同步业务分类
         associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
         //同步业务元数据
-        //associatedBusinessMetaData(atlasGuid, dbName, dto.name);
+        associatedBusinessMetaData(atlasGuid, dbName, dto.name);
         if (isAdd) {
             return atlasGuid;
         }
@@ -707,7 +704,7 @@ public class MetaDataImpl implements IMetaData {
 
     public String metaDataStgTable(MetaDataTableAttributeDTO dto, String parentEntityGuid, String dbName) {
         String atlasGuid = getMetaDataConfig(dto.qualifiedName + stg_prefix);
-        dto.name = dto.name + stg_prefix;
+        dto.name = stg_suffix + dto.name;
         dto.qualifiedName = dto.qualifiedName + stg_prefix;
         boolean isAdd = false;
         if (StringUtils.isEmpty(atlasGuid)) {
@@ -846,7 +843,7 @@ public class MetaDataImpl implements IMetaData {
 
     public String metaDataStgField(MetaDataColumnAttributeDTO dto, String parentEntityGuid) {
         String atlasGuid = getMetaDataConfig(dto.qualifiedName + stg_prefix);
-        dto.name = dto.name + stg_prefix;
+        dto.name = stg_suffix + dto.name;
         dto.qualifiedName = dto.qualifiedName + stg_prefix;
         if (StringUtils.isEmpty(atlasGuid)) {
             EntityDTO entityDTO = new EntityDTO();
@@ -1414,7 +1411,7 @@ public class MetaDataImpl implements IMetaData {
         attributesDTO.comment = "";
         attributesDTO.description = sql;
         attributesDTO.owner = "root";
-        attributesDTO.qualifiedName = sql + "_" + atlasGuid;
+        attributesDTO.qualifiedName = sql + "_" + UUID.randomUUID().toString();
         attributesDTO.contact_info = "root";
         attributesDTO.name = processName;
         //输入参数
