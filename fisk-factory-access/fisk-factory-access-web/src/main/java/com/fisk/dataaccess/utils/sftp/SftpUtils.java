@@ -229,7 +229,7 @@ public class SftpUtils {
      * @param fileType  文件类型
      * @return
      */
-    public static ExcelTreeSortDTO getSortFile(ChannelSftp sftp, Integer sortType, String path, String fileType) {
+    public ExcelTreeSortDTO getSortFile(ChannelSftp sftp, Integer sortType, String path, String fileType) {
         ExcelTreeSortDTO list = new ExcelTreeSortDTO();
         try {
             // 文件
@@ -251,6 +251,9 @@ public class SftpUtils {
                     dto.setModifyTime(modifyTime);
                     fileList.add(dto);
                 } else {
+                    if (filterFileName(fileName)) {
+                        continue;
+                    }
                     ExcelPropertyDTO dto = new ExcelPropertyDTO();
                     dto.fileName = fileName;
                     dto.fileFullName = path + fileName + ROOT_PATH;
@@ -269,6 +272,13 @@ public class SftpUtils {
         return list;
     }
 
+    /**
+     * 按照排序类型对文件列表进行排序
+     *
+     * @param fileList 文件列表
+     * @param sortType 排序类型（1：正序，2：倒序）
+     * @return
+     */
     public static List<ExcelPropertySortDTO> sortFile(List<ExcelPropertySortDTO> fileList, Integer sortType){
         if (sortType.equals(SortTypeEnum.POSITIVE_SORT.getValue())){
             // 正序排序
@@ -304,7 +314,6 @@ public class SftpUtils {
     }
 
     /**
-     * @author: SongJianJian
      * 下载指定目录下的文件
      *
      * @param sftp sftp连接
@@ -321,14 +330,12 @@ public class SftpUtils {
     }
 
     /**
-     * @author SongJianJian
      * 指定文件名，并以文件流的形式传输到目标服务器中的指定目录下
      *
      * @param sftp sftp链接
      * @param ins 文件输入流
      * @param dir 文件上传后所在的目录名
      * @param fileName 文件上传后的名称
-     * @return
      */
     public static boolean uploadFile(ChannelSftp sftp, InputStream ins, String dir, String fileName) throws IOException {
         boolean flag = false;
@@ -336,7 +343,7 @@ public class SftpUtils {
             // 进入到当前目录并写入文件
             sftp.cd(dir);
             sftp.put(ins, fileName);
-            flag = true;
+            flag = false;
         } catch (SftpException e) {
             log.error("sftp上传文件失败，{}", e);
             throw new FkException(ResultEnum.UPLOAD_ERROR);
@@ -349,7 +356,6 @@ public class SftpUtils {
     }
 
     /**
-     * @author: SongJianJian
      * sftp连接将指定文件复制到目标sftp上
      *
      * @param currSftp 当前源sftp
