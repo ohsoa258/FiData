@@ -30,7 +30,7 @@ public class DispatchEmailPO extends BasePO {
     /**
      * false只失败发  ,true成功也发,默认失败才发
      */
-    public boolean sendMode;
+    public Integer sendMode;
 
 
 

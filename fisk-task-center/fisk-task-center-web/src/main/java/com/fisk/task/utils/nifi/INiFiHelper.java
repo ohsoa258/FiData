@@ -578,4 +578,7 @@ public interface INiFiHelper {
     public BusinessResult<ProcessorEntity> buildFetchSFTPProcess(BuildFetchSFTPProcessorDTO data);
 
 
+
+
+
 }

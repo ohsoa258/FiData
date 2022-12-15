@@ -7,9 +7,7 @@ import com.fisk.common.core.utils.Dto.cron.NextCronTimeDTO;
 import com.fisk.common.server.datasource.ExternalDataSourceDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.*;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
@@ -122,5 +120,8 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
      * @return
      */
     List<String> getNextCronExeTime(NextCronTimeDTO dto);
+
+
+    List<DispatchJobHierarchyDTO> getJobList(QueryJobHierarchyDTO dto);
 
 }

@@ -17,6 +17,10 @@ public enum DispatchLogEnum implements BaseEnum {
      *管道状态
      * */
     pipelstate(3, "管道状态"),
+    /**
+     * job未运行
+     */
+    jobnorun(20, "task未运行"),
     /*
      *job开始
      * */
@@ -25,10 +29,26 @@ public enum DispatchLogEnum implements BaseEnum {
      *job结束
      * */
     jobend(5, "job结束"),
+    /**
+     * job失败
+     */
+    jobfailure(22, "job失败"),
     /*
      *job状态
      * */
     jobstate(6, "job状态"),
+    /**
+     * task未运行
+     */
+    tasknorun(17, "task未运行"),
+    /**
+     * task跳过
+     */
+    taskpass(18, "task跳过"),
+    /**
+     * job跳过
+     */
+    jobpass(19, "job跳过"),
     /*
      *task开始
      * */
@@ -37,6 +57,10 @@ public enum DispatchLogEnum implements BaseEnum {
      *task结束
      * */
     taskend(8, "task结束"),
+    /**
+     * task失败
+     */
+    taskfailure(21, "task失败"),
     /*
      *task状态
      * */
@@ -68,8 +92,7 @@ public enum DispatchLogEnum implements BaseEnum {
     /*
      *流文件进来时间
      * */
-    entrydate(16,"流文件进来时间");
-
+    entrydate(16, "流文件进来时间");
 
 
     DispatchLogEnum(int value, String name) {

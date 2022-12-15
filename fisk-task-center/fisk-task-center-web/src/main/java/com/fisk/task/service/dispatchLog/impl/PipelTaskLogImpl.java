@@ -4,10 +4,15 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.redis.RedisKeyEnum;
+import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskMergeLogVO;
 import com.fisk.task.entity.PipelTaskLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
+import com.fisk.task.enums.NifiStageTypeEnum;
+import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.mapper.PipelTaskLogMapper;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.utils.StackTraceHelper;
@@ -32,14 +37,17 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
 
     @Resource
     PipelTaskLogMapper pipelTaskLogMapper;
+    @Resource
+    RedisUtil redisUtil;
 
     @Override
-    public void savePipelTaskLog(String jobTraceId, String pipelTaskTraceId, Map<Integer, Object> map, String taskId, String tableId, int tableType) {
+    public void savePipelTaskLog(String pipelTraceId, String jobTraceId, String pipelTaskTraceId, Map<Integer, Object> map, String taskId, String tableId, int tableType) {
         log.info("PipelTask参数:jobTraceId:{},pipelTaskTraceId:{},map:{},taskId:{}", jobTraceId, pipelTaskTraceId, JSON.toJSONString(map), taskId);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         List<PipelTaskLogPO> pipelTaskLogs = new ArrayList<>();
         Iterator<Map.Entry<Integer, Object>> nodeMap = map.entrySet().iterator();
         Date entryDate = new Date();
+
         while (nodeMap.hasNext()) {
             PipelTaskLogPO pipelTaskLog = new PipelTaskLogPO();
             pipelTaskLog.jobTraceId = jobTraceId;
@@ -60,8 +68,38 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
             pipelTaskLog.taskTraceId = pipelTaskTraceId;
             pipelTaskLog.taskId = taskId;
             pipelTaskLog.type = next.getKey();
-            if (StringUtils.isNotEmpty(tableId)) {
-                pipelTaskLog.tableId = Integer.valueOf(tableId);
+            if (Objects.equals(pipelTaskLog.type, DispatchLogEnum.taskend.getValue())) {
+                //pipelTaskLogMapper.updateByPipelTraceId(pipelTaskTraceId, pipelTaskLog.type);
+            }
+            //修改dag图的task的状态
+            try {
+                if (StringUtils.isNotEmpty(pipelTraceId)) {
+                    Map<Object, Object> taskMap = new HashMap<>();
+                    Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
+                    TaskHierarchyDTO dto = JSON.parseObject(hmget.get(taskId).toString(), TaskHierarchyDTO.class);
+                    dto.taskProcessed = true;
+                    if (Objects.equals(pipelTaskLog.type, DispatchLogEnum.taskstart.getValue())) {
+                        //dto.taskStatus = DispatchLogEnum.taskstart;
+                        taskMap.put(taskId, JSON.toJSONString(dto));
+                        redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, taskMap, 3000);
+                    } else if (Objects.equals(pipelTaskLog.type, DispatchLogEnum.taskend.getValue())) {
+                       /* if (pipelTaskLog.msg.contains(NifiStageTypeEnum.PASS.getName())) {
+                            dto.taskStatus = DispatchLogEnum.taskpass;
+                        } else if (pipelTaskLog.msg.contains(NifiStageTypeEnum.RUN_FAILED.getName())) {
+                            dto.taskStatus = DispatchLogEnum.taskfailure;
+                        } else if (pipelTaskLog.msg.contains(NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName())) {
+                            dto.taskStatus = DispatchLogEnum.taskend;
+                        }*/
+
+                        taskMap.put(taskId, JSON.toJSONString(dto));
+                        redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, taskMap, 3000);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("redis中task集合数据不存在:" + pipelTraceId, e);
+            }
+            if (StringUtils.isNotEmpty(tableId) && !Objects.equals(tableType, OlapTableEnum.CUSTOMIZESCRIPT.getValue())) {
+                pipelTaskLog.tableId = Integer.parseInt(tableId);
             }
             pipelTaskLog.tableType = tableType;
             pipelTaskLogs.add(pipelTaskLog);
@@ -145,7 +183,7 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
                     pipelTaskMergeLogVo.createTime = pipelTaskLogVo.createTime;
                 } else if (Objects.equals(pipelTaskLogVo.type, DispatchLogEnum.taskend.getValue())) {
                     pipelTaskMergeLogVo.endTime = simpleDate.parse(pipelTaskLogVo.msg.substring(7, 26));
-                    pipelTaskMergeLogVo.msg = pipelTaskLogVo.msg;
+                    pipelTaskMergeLogVo.msg = pipelTaskLogVo.msg + " taskTraceId:" + pipelTaskLogVo.taskTraceId;
                 }
             } catch (ParseException e) {
                 log.error("转换时间异常", StackTraceHelper.getStackTraceInfo(e));
@@ -159,7 +197,7 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
                             pipelTaskMergeLogVo.createTime = pipelTaskLog.createTime;
                         } else if (Objects.equals(pipelTaskLog.type, DispatchLogEnum.taskend.getValue())) {
                             pipelTaskMergeLogVo.endTime = simpleDate.parse(pipelTaskLog.msg.substring(7, 26));
-                            pipelTaskMergeLogVo.msg = pipelTaskLogVo.msg;
+                            pipelTaskMergeLogVo.msg = pipelTaskLogVo.msg + " taskTraceId:" + pipelTaskLogVo.taskTraceId;
                         }
                     } catch (ParseException e) {
                         log.error("转换时间异常", StackTraceHelper.getStackTraceInfo(e));
@@ -168,7 +206,9 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
                 }
             }
             if (Objects.nonNull(pipelTaskMergeLogVo.endTime) && Objects.nonNull(pipelTaskMergeLogVo.startTime)) {
-                pipelTaskMergeLogVo.duration = (pipelTaskMergeLogVo.endTime.getTime() - pipelTaskMergeLogVo.startTime.getTime()) / 60000;
+                long sec = (pipelTaskMergeLogVo.endTime.getTime() - pipelTaskMergeLogVo.startTime.getTime()) / 1000 % 60;
+                long min = (pipelTaskMergeLogVo.endTime.getTime() - pipelTaskMergeLogVo.startTime.getTime()) / (60 * 1000) % 60;
+                pipelTaskMergeLogVo.duration = min + "m " + sec + "s ";
                 pipelTaskMergeLogVos.add(pipelTaskMergeLogVo);
             }
             if (Objects.isNull(pipelTaskMergeLogVo.endTime) && Objects.nonNull(pipelTaskMergeLogVo.startTime)) {

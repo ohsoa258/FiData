@@ -131,7 +131,7 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                     case DATALAKE_API_TASK:
                         // 数据湖ftp任务
                     case DATALAKE_FTP_TASK:
-                        if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
+                        if (e.appId == null || "".equals(e.appId)) {
                             break;
                         }
                         getDataAccessIdsDtoAccess(e, channelDataEnum.getValue());
@@ -146,7 +146,7 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                     case OLAP_DIMENSION_TASK:
                         // 分析模型宽表任务
                     case OLAP_WIDETABLE_TASK:
-                        if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
+                        if (e.appId == null || "".equals(e.appId)) {
                             break;
                         }
                         getDataAccessIdsDtoModel(e, channelDataEnum.getValue());
@@ -156,23 +156,26 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                 }
             }
         }
-
+        List<NifiCustomWorkflowDetailDTO> collect = vo.list.stream().filter(e -> !(e.componentType.equals(ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName()) && e.pid != 0)).collect(Collectors.toList());
+        vo.list = collect;
         return vo;
     }
 
     /**
      * 组装应用名称和表名
      *
+     * @param e    task
+     * @param flag 对应factory-access中不同的表类型
      * @author Lock
      * @date 2022/3/18 18:26
-     * @param e task
-     * @param flag 对应factory-access中不同的表类型
      */
     private void getDataAccessIdsDtoAccess(NifiCustomWorkflowDetailDTO e, int flag) {
 
         DataAccessIdsDTO dto = new DataAccessIdsDTO();
         dto.appId = Long.valueOf(e.appId);
-        dto.tableId = Long.valueOf(e.tableId);
+        if (StringUtils.isNotEmpty(e.tableId)) {
+            dto.tableId = Long.valueOf(e.tableId);
+        }
         dto.flag = flag;
         try {
             ResultEntity<Object> result = dataAccessClient.getAppNameAndTableName(dto);
@@ -187,10 +190,10 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
     /**
      * 组装业务域名称和表名
      *
+     * @param e    task
+     * @param flag 对应不同的数仓or分析任务
      * @author Lock
      * @date 2022/3/18 18:27
-     * @param e task
-     * @param flag 对应不同的数仓or分析任务
      */
     private void getDataAccessIdsDtoModel(NifiCustomWorkflowDetailDTO e, int flag) {
 
@@ -212,10 +215,10 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
     /**
      * feign接口调用,封装名称
      *
+     * @param e      task or jab
+     * @param result 调用方的接口返回对象
      * @author Lock
      * @date 2022/3/18 18:28
-     * @param e task or jab
-     * @param result 调用方的接口返回对象
      */
     private void getName(NifiCustomWorkflowDetailDTO e, ResultEntity<Object> result) {
         if (result.code == 0) {
@@ -286,7 +289,7 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                 iDispatchEmail.deleteDispatchEmail(dispatchEmail);
             }
         } catch (Exception e) {
-            log.error("调度报错", e );
+            log.error("调度报错", e);
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
@@ -344,10 +347,10 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
     /**
      * 分页对象添加子表组件id集合
      *
+     * @param records records
      * @return java.util.List<com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO>
      * @author Lock
      * @date 2022/3/11 11:37
-     * @param records records
      */
     private List<NifiCustomWorkflowVO> buildRecords(List<NifiCustomWorkflowVO> records) {
         records.forEach(vo -> {

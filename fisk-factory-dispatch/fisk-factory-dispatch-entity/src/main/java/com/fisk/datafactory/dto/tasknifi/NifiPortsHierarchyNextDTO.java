@@ -14,12 +14,14 @@ import java.util.List;
  */
 @Data
 public class NifiPortsHierarchyNextDTO {
-
+    /**
+     * NifiCustomWorkflowDetailDTO
+     */
     @ApiModelProperty(value = "当前组件属性")
-    public NifiCustomWorkflowDetailDTO itselfPort;
+    public Long itselfPort;
 
     /**
      * 上一级组件集合
      */
-    public List<NifiCustomWorkflowDetailDTO> upPortList;
+    public List<Long> upPortList;
 }

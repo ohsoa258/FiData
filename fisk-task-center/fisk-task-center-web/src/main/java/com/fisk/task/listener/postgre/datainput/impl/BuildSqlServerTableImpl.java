@@ -105,7 +105,6 @@ public class BuildSqlServerTableImpl implements IbuildTable {
     @Override
     public String queryTableNum(BuildPhysicalTableDTO buildPhysicalTableDTO) {
         String selectTable = "";
-        selectTable = selectTable.substring(0, selectTable.length() - 2);
         if (buildPhysicalTableDTO.whetherSchema) {
             //select * from sys.schemas ss left join sys.tables st on ss.schema_id=st.schema_id where ss.name ='dbo' and st.name='stg_dim_ghs3'
             selectTable = "select count(*) from sys.tables st left join sys.schemas ss on ss.schema_id=st.schema_id where ss.name = '"
@@ -253,7 +252,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
     }
 
     @Override
-    public String queryNumbersField(BuildNifiFlowDTO dto, DataAccessConfigDTO config) {
+    public String queryNumbersField(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId) {
         //convert(varchar(100),getdate(),120)
         List<String> stgAndTableName = getStgAndTableName(config.processorConfig.targetTableName);
         if (config.processorConfig.targetTableName.contains("\\.")) {

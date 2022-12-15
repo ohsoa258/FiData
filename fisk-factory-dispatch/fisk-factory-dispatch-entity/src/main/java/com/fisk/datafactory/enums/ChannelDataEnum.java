@@ -128,6 +128,10 @@ public enum ChannelDataEnum implements BaseEnum {
                 return OlapTableEnum.PHYSICS_API;
             case 11:
                 return OlapTableEnum.PHYSICS;
+            case 12:
+                return OlapTableEnum.GOVERNANCE;
+            case 13:
+                return OlapTableEnum.CUSTOMIZESCRIPT;
             default:
                 return null;
         }

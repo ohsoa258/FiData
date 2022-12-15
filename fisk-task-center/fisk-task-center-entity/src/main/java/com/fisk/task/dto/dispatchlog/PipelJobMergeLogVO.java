@@ -29,7 +29,7 @@ public class PipelJobMergeLogVO extends BasePO {
     @ApiModelProperty(value = "job结束时间")
     public Date endTime;
     @ApiModelProperty(value = "持续时间/分钟")
-    public Long duration;
+    public String duration;
     @ApiModelProperty(value = "job运行结果,成功/失败")
     public String result;
 

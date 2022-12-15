@@ -269,6 +269,28 @@ public class RedisUtil {
     }
 
     /**
+     * HashFordispatchSet
+     *
+     * @param key 键
+     * @param map 对应多个键值
+     * @return true 成功 false 失败
+     */
+    public boolean hmsetForDispatch(String key, Map<Object, Object> map,long time) {
+        try {
+            Map<Object, Object> entries = redisTemplate.opsForHash().entries(key);
+            entries.putAll(map);
+            redisTemplate.opsForHash().putAll(key, entries);
+            if (time > 0) {
+                expire(key, time);
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
      * HashSet 并设置时间
      *
      * @param key  键

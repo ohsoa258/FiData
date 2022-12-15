@@ -56,7 +56,7 @@ public interface ITableTopicService extends IService<TableTopicDTO> {
      * @param id
      * @return Integer
      */
-    TableTopicDTO getTableTopicDTOByComponentId(Integer id, Integer tableId, Integer tableType);
+    TableTopicDTO getTableTopicDTOByComponentId(Integer id, String tableId, Integer tableType);
 
     /**
      * 根据管道topic找到实际topic

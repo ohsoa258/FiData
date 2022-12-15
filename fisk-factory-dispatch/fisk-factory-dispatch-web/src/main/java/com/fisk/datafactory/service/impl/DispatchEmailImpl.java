@@ -1,5 +1,6 @@
 package com.fisk.datafactory.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -9,11 +10,14 @@ import com.fisk.common.core.utils.email.method.MailSenderUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datafactory.dto.customworkflow.DispatchEmailDTO;
 import com.fisk.datafactory.entity.DispatchEmailPO;
+import com.fisk.datafactory.enums.SendModeEnum;
 import com.fisk.datafactory.map.DispatchEmailMap;
 import com.fisk.datafactory.mapper.DispatchEmailMapper;
 import com.fisk.datafactory.service.IDispatchEmail;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.vo.emailserver.EmailServerVO;
+import com.fisk.task.enums.NifiStageTypeEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -23,6 +27,7 @@ import java.util.Objects;
  * @author cfk
  */
 @Service
+@Slf4j
 public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, DispatchEmailPO> implements IDispatchEmail {
 
     @Resource
@@ -55,16 +60,37 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
     @Override
     public ResultEnum pipelineSendEmails(DispatchEmailDTO dispatchEmail) {
         // 发邮件
-        DispatchEmailPO Email = this.query().eq("nifi_custom_workflow_id", dispatchEmail.nifiCustomWorkflowId).one();
+        DispatchEmailPO email = this.query().eq("nifi_custom_workflow_id", dispatchEmail.nifiCustomWorkflowId).one();
         //第一步：查询邮件服务器设置
-        ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(Email.emailserverConfigId);
+        ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(email.emailserverConfigId);
         if (emailServerById == null || emailServerById.getCode() != ResultEnum.SUCCESS.getCode() ||
                 emailServerById.getData() == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
+        //true是失败
+        boolean contains = dispatchEmail.msg.contains(NifiStageTypeEnum.RUN_FAILED.getName());
+        Integer sendMode = email.sendMode;
+        if (Objects.equals(SendModeEnum.failure.getValue(), sendMode)) {
+            if (contains) {
+                log.info("满足模式,并且msg报错");
+            } else {
+                log.info("满足模式,但是msg没报错");
+                return ResultEnum.SUCCESS;
+            }
+        } else if (Objects.equals(SendModeEnum.finish.getValue(), sendMode)) {
+            log.info("所有模式都发通知");
+        } else if (Objects.equals(SendModeEnum.success.getValue(), sendMode)) {
+            if (!contains) {
+                log.info("满足模式,并且msg没报错");
+            } else {
+                log.info("满足模式,但是msg报错");
+                return ResultEnum.SUCCESS;
+            }
+        }
+
         EmailServerVO emailServerVO = emailServerById.getData();
         MailServeiceDTO mailServeiceDTO = new MailServeiceDTO();
-        mailServeiceDTO.setOpenAuth(true);
+        mailServeiceDTO.setOpenAuth(false);
         mailServeiceDTO.setOpenDebug(true);
         mailServeiceDTO.setHost(emailServerVO.getEmailServer());
         mailServeiceDTO.setProtocol(emailServerVO.getEmailServerType().getName());
@@ -74,11 +100,13 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
         MailSenderDTO mailSenderDTO = new MailSenderDTO();
         mailSenderDTO.setUser(emailServerVO.getEmailServerAccount());
         //邮件标题
-        mailSenderDTO.setSubject("邮件标题");
+        mailSenderDTO.setSubject("FiData数据管道运行结果通知");
         //邮件正文
-        mailSenderDTO.setBody("邮件正文");
+        String body = "";
+
+        mailSenderDTO.setBody(JSON.toJSONString(dispatchEmail.body));
         //邮件收件人
-        mailSenderDTO.setToAddress(Email.recipients);
+        mailSenderDTO.setToAddress(email.recipients);
         //mailSenderDTO.setToCc("邮件抄送人");
         //mailSenderDTO.setSendAttachment("是否发送附件");
         //mailSenderDTO.setAttachmentName("附件名称");
