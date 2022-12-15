@@ -729,9 +729,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     Class.forName(DriverTypeEnum.ORACLE.getName());
                     Connection connection = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
                     allDatabases.addAll(oracleUtils.getAllDatabases(connection));
+                    break;
                 case ORACLE_CDC:
                     conn = DbConnectionHelper.connection(dto.connectStr, dto.connectAccount, dto.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE);
                     allDatabases.addAll(oracleUtils.getAllDatabases(conn));
+                    break;
                 default:
                     break;
             }
