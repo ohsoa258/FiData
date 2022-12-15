@@ -79,12 +79,14 @@ public class BuildExecScriptListener implements IExecScriptListener {
                             st.execute(customScript);
                         } catch (Exception e) {
                             log.error(StackTraceHelper.getStackTraceInfo(e));
+                            throw new FkException(ResultEnum.ERROR);
                         } finally {
                             try {
                                 st.close();
                                 conn.close();
                             } catch (SQLException e) {
                                 log.error(StackTraceHelper.getStackTraceInfo(e));
+                                throw new FkException(ResultEnum.ERROR);
                             }
 
                         }
@@ -142,6 +144,6 @@ public class BuildExecScriptListener implements IExecScriptListener {
         kafkaReceiveDTO.nifiCustomWorkflowDetailId = Long.valueOf(dto.taskId);
         kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
         log.info("执行脚本任务完成,现在去往任务发布中心" + JSON.toJSONString(kafkaReceiveDTO));
-        kafkaTemplateHelper.sendMessageAsync("task.build.task.over", JSON.toJSONString(kafkaReceiveDTO));
+        kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_OVER_FLOW, JSON.toJSONString(kafkaReceiveDTO));
     }
 }

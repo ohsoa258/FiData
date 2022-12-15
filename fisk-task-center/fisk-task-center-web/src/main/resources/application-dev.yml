@@ -21,7 +21,7 @@ nifi:
       conf: /opt/fidata/java/fisk-task-center/krb5.conf
   kerberosprincipal: kafka/admin@AUTOEXPR.COM
   pipeline:
-    topicName: task.build.task.publish
+    topicName: my-topic
     waitTime: 30
     operation-interval: 2000
     number-of-operations: 5

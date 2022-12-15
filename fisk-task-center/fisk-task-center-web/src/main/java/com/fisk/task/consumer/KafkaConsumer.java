@@ -204,10 +204,12 @@ public class KafkaConsumer {
     }
 
     /**
+     * task.build.task.over
+     *
      * @param message
      * @param ack
      */
-    @KafkaListener(topics = "task.build.task.over", containerFactory = "batchFactory", groupId = "test")
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_TASK_OVER_FLOW, containerFactory = "batchFactory", groupId = "test")
     public void missionEndCenter(String message, Acknowledgment ack) {
         missionEndCenter.missionEndCenter(message, ack);
     }
@@ -219,7 +221,7 @@ public class KafkaConsumer {
      * @param ack
      * @return
      */
-    @KafkaListener(topics = "task.build.task.publish", containerFactory = "batchFactory", groupId = "test")
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, containerFactory = "batchFactory", groupId = "test")
     public void TaskPublish(String message, Acknowledgment ack) {
         taskPublish.taskPublish(message, ack);
     }

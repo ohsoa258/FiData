@@ -344,7 +344,7 @@ public class TaskPublish {
         } else {
             //失效调用失效中心
             KafkaReceiveDTO kafkaReceive = getKafkaReceive(pipelTraceId, jobTraceId, taskHierarchy.taskTraceId, simpleDateFormat.format(new Date()), TopicTypeEnum.COMPONENT_NIFI_FLOW, topic);
-            kafkaTemplateHelper.sendMessageAsync("task.build.task.over", JSON.toJSONString(kafkaReceive));
+            kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_OVER_FLOW, JSON.toJSONString(kafkaReceive));
 
         }
 

@@ -3,6 +3,7 @@ package com.fisk.task.pipeline2;
 import com.alibaba.fastjson.JSON;
 import com.davis.client.model.ProcessGroupEntity;
 import com.davis.client.model.ProcessGroupStatusDTO;
+import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.client.DataAccessClient;
@@ -169,7 +170,7 @@ public class DelayedTask2 extends TimerTask {
         }
         // 任务结束中心的topic为 : task.build.task.over
         log.info("DelayedTask2发送到任务:{}", JSON.toJSONString(kafkaReceive));
-        kafkaTemplateHelper.sendMessageAsync("task.build.task.over", JSON.toJSONString(kafkaReceive));
+        kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_OVER_FLOW, JSON.toJSONString(kafkaReceive));
 
 
     }

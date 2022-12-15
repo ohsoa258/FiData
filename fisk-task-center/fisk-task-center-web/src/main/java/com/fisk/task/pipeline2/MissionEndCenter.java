@@ -1,6 +1,7 @@
 package com.fisk.task.pipeline2;
 
 import com.alibaba.fastjson.JSON;
+import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
@@ -126,7 +127,7 @@ public class MissionEndCenter {
                         }
                         // 第三步 发送消息给任务发布中心  topic是 : task.build.task.publish
                         log.info("任务结束中心发送给任务发布中心的参数:{}", JSON.toJSONString(kafkaReceive));
-                        kafkaTemplateHelper.sendMessageAsync("task.build.task.publish", JSON.toJSONString(kafkaReceive));
+                        kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaReceive));
                     } else {
                         //记录本节点的job的结束
                         Map<Integer, Object> jobMap = new HashMap<>();

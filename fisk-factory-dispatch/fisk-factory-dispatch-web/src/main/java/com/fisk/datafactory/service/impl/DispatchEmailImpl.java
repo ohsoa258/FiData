@@ -90,7 +90,7 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
 
         EmailServerVO emailServerVO = emailServerById.getData();
         MailServeiceDTO mailServeiceDTO = new MailServeiceDTO();
-        mailServeiceDTO.setOpenAuth(true);
+        mailServeiceDTO.setOpenAuth(false);
         mailServeiceDTO.setOpenDebug(true);
         mailServeiceDTO.setHost(emailServerVO.getEmailServer());
         mailServeiceDTO.setProtocol(emailServerVO.getEmailServerType().getName());
