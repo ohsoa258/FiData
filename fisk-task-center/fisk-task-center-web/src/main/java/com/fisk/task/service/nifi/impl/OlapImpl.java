@@ -326,7 +326,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
     }
 
     @Override
-    public NifiGetPortHierarchyDTO getNifiGetPortHierarchy(String pipelineId,int type,String tableName,int tableAccessId) {
+    public NifiGetPortHierarchyDTO getNifiGetPortHierarchy(String pipelineId,Integer type,String tableName,Integer tableAccessId) {
         NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = new NifiGetPortHierarchyDTO();
         nifiGetPortHierarchyDTO.workflowId = pipelineId;
         OlapTableEnum nameByValue = OlapTableEnum.getNameByValue(type);
@@ -359,6 +359,9 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
             case PHYSICS_API:
                 nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DATALAKE_API_TASK;
                 nifiGetPortHierarchyDTO.tableId = String.valueOf(tableAccessId);
+                break;
+            case CUSTOMIZESCRIPT:
+                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK;
                 break;
             default:
                 break;

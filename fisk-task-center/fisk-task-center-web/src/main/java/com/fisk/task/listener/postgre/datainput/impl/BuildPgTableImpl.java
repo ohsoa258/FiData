@@ -223,7 +223,7 @@ public class BuildPgTableImpl implements IbuildTable {
     }
 
     @Override
-    public String queryNumbersField(BuildNifiFlowDTO dto, DataAccessConfigDTO config) {
+    public String queryNumbersField(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId) {
         List<String> stgAndTableName = getStgAndTableName(config.processorConfig.targetTableName);
         String querySql = "";
         if (Objects.equals(dto.type, OlapTableEnum.WIDETABLE) || Objects.equals(dto.type, OlapTableEnum.KPI)) {

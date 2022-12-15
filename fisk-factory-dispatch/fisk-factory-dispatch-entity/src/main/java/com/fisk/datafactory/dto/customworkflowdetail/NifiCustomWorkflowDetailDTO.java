@@ -3,6 +3,8 @@ package com.fisk.datafactory.dto.customworkflowdetail;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.Map;
+
 /**
  * @author Lock
  */
@@ -57,5 +59,8 @@ public class NifiCustomWorkflowDetailDTO {
 
     @ApiModelProperty(value = "自定义脚本任务", required = true)
     public String customScript;
+
+    @ApiModelProperty(value = "组件参数", required = true)
+    public Map<String,String> taskSetting;
 
 }

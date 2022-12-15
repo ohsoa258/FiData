@@ -1,6 +1,7 @@
 package com.fisk.task.consumer;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.response.ResultEntity;
@@ -18,6 +19,7 @@ import com.fisk.task.listener.doris.BuildDorisTaskListener;
 import com.fisk.task.listener.governance.BuildQualityReportListener;
 import com.fisk.task.listener.mdm.BuildModelListener;
 import com.fisk.task.listener.metadata.IMetaDataListener;
+import com.fisk.task.listener.nifi.IExecScriptListener;
 import com.fisk.task.listener.nifi.INifiTaskListener;
 import com.fisk.task.listener.nifi.INonRealTimeListener;
 import com.fisk.task.listener.nifi.ITriggerScheduling;
@@ -31,6 +33,9 @@ import com.fisk.task.listener.postgre.datainput.BuildDataInputPgTableListener;
 import com.fisk.task.mapper.NifiStageMapper;
 import com.fisk.task.mapper.OlapMapper;
 import com.fisk.task.mapper.PipelineTableLogMapper;
+import com.fisk.task.pipeline2.HeartbeatService;
+import com.fisk.task.pipeline2.MissionEndCenter;
+import com.fisk.task.pipeline2.TaskPublish;
 import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.pipeline.ITableTopicService;
@@ -131,6 +136,15 @@ public class KafkaConsumer {
     IMetaDataListener metaDataListener;
     @Resource
     BuildQualityReportListener qualityReportListener;
+    @Resource
+    IExecScriptListener iExecScriptListener;
+    @Resource
+    HeartbeatService heartbeatService;
+    @Resource
+    MissionEndCenter missionEndCenter;
+    @Resource
+    TaskPublish taskPublish;
+
 
     @Bean
     public KafkaListenerContainerFactory<?> batchFactory() {
@@ -167,7 +181,7 @@ public class KafkaConsumer {
         //props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "15000");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valueDeserializer);
-        props.put("fetch.message.max.bytes","6291456");
+        props.put("fetch.message.max.bytes", "6291456");
         // props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-091231");
         //每一批数量
         if (Objects.equals(enableAuthentication, NifiConstants.enableAuthentication.ENABLE)) {
@@ -184,7 +198,32 @@ public class KafkaConsumer {
     //任务发布中心,这里只用来存放reids
     @KafkaListener(topics = "my-topic", containerFactory = "batchFactory", groupId = "test")
     public void consumer(String message, Acknowledgment ack) {
-        iPipelineTaskPublishCenter.msg(message, ack);
+        //iPipelineTaskPublishCenter.msg(message, ack);
+        message = "[" + message + "]";
+        heartbeatService.heartbeatService(message, ack);
+    }
+
+    /**
+     * task.build.task.over
+     *
+     * @param message
+     * @param ack
+     */
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_TASK_OVER_FLOW, containerFactory = "batchFactory", groupId = "test")
+    public void missionEndCenter(String message, Acknowledgment ack) {
+        missionEndCenter.missionEndCenter(message, ack);
+    }
+
+    /**
+     * task.build.task.publish
+     *
+     * @param message
+     * @param ack
+     * @return
+     */
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, containerFactory = "batchFactory", groupId = "test")
+    public void TaskPublish(String message, Acknowledgment ack) {
+        taskPublish.taskPublish(message, ack);
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_NIFI_FLOW, containerFactory = "batchFactory", groupId = "test")
@@ -300,5 +339,10 @@ public class KafkaConsumer {
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_METADATA_FLOW, containerFactory = "batchFactory", groupId = "test")
     public ResultEntity<Object> buildMetaData(String dataInfo, Acknowledgment ack) {
         return ResultEntityBuild.build(metaDataListener.metaData(dataInfo, ack));
+    }
+
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, containerFactory = "batchFactory", groupId = "test")
+    public ResultEntity<Object> BuildExecScript(String dataInfo, Acknowledgment ack) {
+        return ResultEntityBuild.build(iExecScriptListener.execScript(dataInfo, ack));
     }
 }

@@ -1,11 +1,17 @@
 package com.fisk.task.dto.dispatchlog;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @author cfk
  */
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class DispatchExceptionHandlingDTO {
     /**
      * 管道批次id
@@ -39,7 +45,7 @@ public class DispatchExceptionHandlingDTO {
     /**
      * job名称
      */
-    public String JobName;
+    public String jobName;
 
 
 }

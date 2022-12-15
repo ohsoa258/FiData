@@ -28,7 +28,8 @@ public enum OlapTableEnum implements BaseEnum {
      * */
     CUSTOMWORKFACT(6, "管道服务-事实表"),
     CUSTOMWORKPHYSICS(7, "管道服务-物理表"),
-    GOVERNANCE(12, "数据质量");
+    GOVERNANCE(12, "数据质量"),
+    CUSTOMIZESCRIPT(13,"自定义脚本任务");
 
 
     OlapTableEnum(int value, String name) {
@@ -65,6 +66,10 @@ public enum OlapTableEnum implements BaseEnum {
                 return PHYSICS_API;
             case 11:
                 return PHYSICS_RESTAPI;
+            case 12:
+                return GOVERNANCE;
+            case 13:
+                return CUSTOMIZESCRIPT;
             default:
                 return null;
         }

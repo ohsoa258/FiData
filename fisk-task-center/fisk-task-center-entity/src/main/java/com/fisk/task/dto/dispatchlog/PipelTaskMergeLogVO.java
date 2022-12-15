@@ -30,5 +30,5 @@ public class PipelTaskMergeLogVO extends BasePO {
     @ApiModelProperty(value = "task结束时间")
     public Date endTime;
     @ApiModelProperty(value = "持续时间/分钟")
-    public Long duration;
+    public String duration;
 }

@@ -259,7 +259,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 if (Objects.equals(value, OlapTableEnum.KPI)) {
                     topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.KPI.getValue() + "." + dto.appId + "." + dto.id;
                 }
-                KafkaReceiveDTO kafkaRkeceiveDTO = new KafkaReceiveDTO();
+                KafkaReceiveDTO kafkaRkeceiveDTO = KafkaReceiveDTO.builder().build();
                 kafkaRkeceiveDTO.topic = topicName;
                 SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 kafkaRkeceiveDTO.start_time = simpleDateFormat.format(new Date());
@@ -822,7 +822,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         tableNifiSettingPO.tableName = config.targetDsConfig.targetTableName;
         //日志监控
         List<AutoEndBranchTypeEnum> autoEndBranchTypeEnums = new ArrayList<>();
-        autoEndBranchTypeEnums.add(AutoEndBranchTypeEnum.SUCCESS);
+        //失败的不连
+        //autoEndBranchTypeEnums.add(AutoEndBranchTypeEnum.SUCCESS);
         autoEndBranchTypeEnums.add(AutoEndBranchTypeEnum.FAILURE);
         List<ProcessorEntity> processorEntities = pipelineSupervision(groupId, res, cfgDbPoolId, tableNifiSettingPO);
         String supervisionId = processorEntities.get(0).getId();
@@ -956,7 +957,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             processorEntity1 = executeSQLRecord;
         }
         componentsConnector(groupId, delSqlRes.getId(), supervisionId, autoEndBranchTypeEnums);
-
+        componentsConnector(groupId, processorEntity1.getId(), supervisionId, autoEndBranchTypeEnums);
         String lastId = "";
         Boolean isLastId = true;
 
@@ -1836,7 +1837,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO data = fiDataDataSource.data;
             IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(data.conType);
-            String sql = dbCommand.queryNumbersField(dto, config);
+            String sql = dbCommand.queryNumbersField(dto, config, groupId);
             querySqlDto.querySql = sql;
         } else {
             log.error("userclient无法查询到ods库的连接信息");

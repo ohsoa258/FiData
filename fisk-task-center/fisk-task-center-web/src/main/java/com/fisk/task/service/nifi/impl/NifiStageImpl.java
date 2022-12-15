@@ -1,14 +1,13 @@
 package com.fisk.task.service.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.davis.client.ApiException;
 import com.davis.client.model.BulletinEntity;
 import com.davis.client.model.ProcessGroupEntity;
 import com.davis.client.model.ProcessorEntity;
+import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
@@ -16,11 +15,13 @@ import com.fisk.dataaccess.dto.app.LogMessageFilterVO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
-import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
+import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
+import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaQueryTableDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaTableDetailDTO;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
+import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.nifi.NifiStageMessageDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
@@ -39,6 +40,7 @@ import com.fisk.task.service.dispatchLog.IPipelJobLog;
 import com.fisk.task.service.dispatchLog.IPipelStageLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.service.nifi.INifiStage;
+import com.fisk.task.utils.KafkaTemplateHelper;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -79,6 +81,8 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
     IPipelJobLog iPipelJobLog;
     @Resource
     IPipelineTaskPublishCenter iPipelineTaskPublishCenter;
+    @Resource
+    KafkaTemplateHelper kafkaTemplateHelper;
 
 
     @Override
@@ -131,8 +135,8 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
         String pipleName = "";
         String JobName = "";
         //转成集合
-        data ="[" + data + "]";
-        List<NifiStageMessageDTO>  nifiStageMessages = JSON.parseArray(data, NifiStageMessageDTO.class);
+        data = "[" + data + "]";
+        List<NifiStageMessageDTO> nifiStageMessages = JSON.parseArray(data, NifiStageMessageDTO.class);
         for (NifiStageMessageDTO nifiStageMessageDTO : nifiStageMessages) {
             try {
                 String topicName = nifiStageMessageDTO.topic;
@@ -155,10 +159,18 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                     type = Integer.parseInt(topic[4]);
                     appId = Integer.valueOf(topic[5]);
                     NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = olap.getNifiGetPortHierarchy(pipelineId, type, null, tableAccessId);
+                    if (Objects.equals(Integer.parseInt(topic[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue())) {
+                        //没有表id就把任务id扔进去
+                        nifiGetPortHierarchyDTO.nifiCustomWorkflowDetailId = Long.valueOf(topic[6]);
+                    }
                     //三个阶段,默认正在运行
-                    NifiPortsHierarchyDTO nIfiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchyDTO, nifiStageMessageDTO.pipelTraceId);
+                    TaskHierarchyDTO nIfiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchyDTO, nifiStageMessageDTO.pipelTraceId);
                     NifiCustomWorkflowDetailDTO itselfPort = nIfiPortHierarchy.itselfPort;
                     nifiStagePO.componentId = Math.toIntExact(itselfPort.id);
+                    log.info("失败调用发布中心");
+                    if (!StringUtils.isEmpty(nifiStageMessageDTO.message)) {
+                        sendPublishCenter(nifiStageMessageDTO, itselfPort);
+                    }
                 } else if (topic.length == 4) {
                     //长度为4的只可能为nifi流程,可以通过groupid区分
                     String pipelineId = topic[3];
@@ -171,7 +183,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                     appId = tableNifiSettingPO.appId;
                     NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = olap.getNifiGetPortHierarchy(pipelineId, type, tableName, tableAccessId);
                     //三个阶段,默认正在运行
-                    NifiPortsHierarchyDTO nIfiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchyDTO, nifiStageMessageDTO.pipelTraceId);
+                    TaskHierarchyDTO nIfiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchyDTO, nifiStageMessageDTO.pipelTraceId);
                     NifiCustomWorkflowDetailDTO itselfPort = nIfiPortHierarchy.itselfPort;
                     nifiStagePO.componentId = Math.toIntExact(itselfPort.id);
                 }
@@ -252,7 +264,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                 taskMap.put(DispatchLogEnum.entrydate.getValue(), nifiStageMessageDTO.entryDate);
                 if (StringUtils.isEmpty(nifiStagePO.comment) || !nifiStagePO.comment.contains("成功")) {
                     taskMap.put(DispatchLogEnum.taskcomment.getValue(), nifiStagePO.comment);
-                    DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = new DispatchExceptionHandlingDTO();
+                    DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = DispatchExceptionHandlingDTO.builder().build();
                     dispatchExceptionHandlingDTO.comment = nifiStagePO.comment;
                     dispatchExceptionHandlingDTO.pipelTraceId = nifiStageMessageDTO.pipelTraceId;
                     dispatchExceptionHandlingDTO.pipelJobTraceId = nifiStageMessageDTO.pipelJobTraceId;
@@ -275,14 +287,15 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                 //this.save(nifiStagePO);
 
             } catch (Exception e) {
-                DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = new DispatchExceptionHandlingDTO();
+                DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = DispatchExceptionHandlingDTO.builder().build();
                 dispatchExceptionHandlingDTO.comment = nifiStagePO.comment;
                 dispatchExceptionHandlingDTO.pipelTraceId = nifiStageMessageDTO.pipelTraceId;
                 dispatchExceptionHandlingDTO.pipelJobTraceId = nifiStageMessageDTO.pipelJobTraceId;
                 dispatchExceptionHandlingDTO.pipelStageTraceId = nifiStageMessageDTO.pipelStageTraceId;
                 dispatchExceptionHandlingDTO.pipelTaskTraceId = nifiStageMessageDTO.pipelTaskTraceId;
-                iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
                 log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
+                iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
+
             } finally {
                 if (acke != null) {
                     acke.acknowledge();
@@ -290,6 +303,31 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
             }
         }
         return nifiStagePO;
+    }
+
+    public void sendPublishCenter(NifiStageMessageDTO nifiStageMessage, NifiCustomWorkflowDetailDTO itselfPort) {
+        KafkaReceiveDTO kafkaReceive = KafkaReceiveDTO.builder().build();
+        kafkaReceive.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
+        kafkaReceive.topic = nifiStageMessage.topic;
+        kafkaReceive.tableId = StringUtils.isEmpty(itselfPort.tableId) ? null : Integer.parseInt(itselfPort.tableId);
+        kafkaReceive.nifiCustomWorkflowDetailId = itselfPort.id;
+        ChannelDataEnum channel = ChannelDataEnum.getValue(itselfPort.componentType);
+        OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(channel.getValue());
+        kafkaReceive.tableType = olapTableEnum.getValue();
+        kafkaReceive.pipelTaskTraceId = nifiStageMessage.pipelTaskTraceId;
+        kafkaReceive.pipelJobTraceId = nifiStageMessage.pipelJobTraceId;
+        kafkaReceive.pipelTraceId = nifiStageMessage.pipelTraceId;
+        kafkaReceive.message = nifiStageMessage.message;
+        String param = JSON.toJSONString(kafkaReceive);
+        log.info("失败调用发布中心的参数:" + param);
+        DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = DispatchExceptionHandlingDTO.builder().build();
+        dispatchExceptionHandlingDTO.comment = nifiStageMessage.message;
+        dispatchExceptionHandlingDTO.pipelTraceId = nifiStageMessage.pipelTraceId;
+        dispatchExceptionHandlingDTO.pipelJobTraceId = nifiStageMessage.pipelJobTraceId;
+        dispatchExceptionHandlingDTO.pipelStageTraceId = nifiStageMessage.pipelStageTraceId;
+        dispatchExceptionHandlingDTO.pipelTaskTraceId = nifiStageMessage.pipelTaskTraceId;
+        iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
+        kafkaTemplateHelper.sendMessageAsync("my-topic", param);
     }
 
 

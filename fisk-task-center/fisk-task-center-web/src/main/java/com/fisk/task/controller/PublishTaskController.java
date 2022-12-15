@@ -277,5 +277,14 @@ public class PublishTaskController {
                 dto);
     }
 
+    @PostMapping("/BuildExecScript")
+    @ApiOperation(value = "执行自定义脚本")
+    public ResultEntity<Object> BuildExecScript(@RequestBody ExecScriptDTO dto) {
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_EXEC_SCRIPT_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW,
+                dto);
+    }
+
 
 }
