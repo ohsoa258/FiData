@@ -12,9 +12,7 @@ import java.util.List;
  * @date 2021/12/30 10:27
  */
 @Data
-public class ExcelTreeSortDTO {
+public class FileTreeSortDTO {
     @ApiModelProperty(value = "excel文件")
-    public List<ExcelPropertySortDTO> fileList;
-    @ApiModelProperty(value = "excel文件夹")
-    public List<ExcelPropertyDTO> directoryList;
+    public List<FilePropertySortDTO> fileList;
 }

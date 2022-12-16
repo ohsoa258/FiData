@@ -3,10 +3,11 @@ package com.fisk.dataaccess.utils.sftp;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.ftp.ExcelPropertyDTO;
-import com.fisk.dataaccess.dto.ftp.ExcelPropertySortDTO;
+import com.fisk.dataaccess.dto.ftp.FilePropertySortDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
-import com.fisk.dataaccess.dto.ftp.ExcelTreeSortDTO;
+import com.fisk.dataaccess.dto.ftp.FileTreeSortDTO;
 import com.fisk.dataaccess.enums.SortTypeEnum;
+import com.fisk.dataaccess.enums.SortTypeNameEnum;
 import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -14,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -187,6 +189,9 @@ public class SftpUtils {
                     dto.fileFullName = path + fileName;
                     fileList.add(dto);
                 } else {
+                    if (filterFileName(fileName)) {
+                        continue;
+                    }
                     ExcelPropertyDTO dto = new ExcelPropertyDTO();
                     dto.fileName = fileName;
                     dto.fileFullName = path + fileName + ROOT_PATH;
@@ -210,7 +215,7 @@ public class SftpUtils {
      * @param fileName
      * @return
      */
-    public boolean filterFileName(String fileName) {
+    public static boolean filterFileName(String fileName) {
         if (".".equals(fileName)) {
             return true;
         } else if ("..".equals(fileName)) {
@@ -222,120 +227,126 @@ public class SftpUtils {
     }
 
     /**
-     * 按照时间查询指定文件
-     * @param sftp sftp连接
-     * @param sortType 排序类型（1：顺序，2：倒序）
-     * @param path 需要查询的文件目录
-     * @param fileType  文件类型
+     * 按照时间或文件名进行顺序/倒序查询文件列表
+     * @param sftp 源服务器sftp连接
+     * @param sortTypeName 排序类型（1：文件名，2：时间）
+     * @param sortType 排序顺序类型（1：正序，2：默认，3：倒序）
+     * @param path 需要查询的文件目录路径
      * @return
      */
-    public ExcelTreeSortDTO getSortFile(ChannelSftp sftp, Integer sortType, String path, String fileType) {
-        ExcelTreeSortDTO list = new ExcelTreeSortDTO();
+    public static FileTreeSortDTO getSortFile(ChannelSftp sftp, Integer sortTypeName, Integer sortType, String path) {
+        FileTreeSortDTO list = new FileTreeSortDTO();
         try {
             // 文件
-            List<ExcelPropertySortDTO> fileList = new ArrayList<>();
-            // 文件夹
-            List<ExcelPropertyDTO> directoryList = new ArrayList<>();
-            fileType = "." + fileType;
+            List<FilePropertySortDTO> fileList = new ArrayList<>();
             Vector vector = sftp.ls(path);
             Iterator iterator = vector.iterator();
             while (iterator.hasNext()) {
                 ChannelSftp.LsEntry file = (ChannelSftp.LsEntry) iterator.next();
                 Integer modifyTime = file.getAttrs().getMTime();
                 String fileName = file.getFilename();
-                //获取指定文件
-                if (fileName.contains(fileType)) {
-                    ExcelPropertySortDTO dto = new ExcelPropertySortDTO();
-                    dto.fileName = fileName;
-                    dto.fileFullName = path + fileName;
-                    dto.setModifyTime(modifyTime);
-                    fileList.add(dto);
-                } else {
-                    if (filterFileName(fileName)) {
-                        continue;
-                    }
-                    ExcelPropertyDTO dto = new ExcelPropertyDTO();
-                    dto.fileName = fileName;
-                    dto.fileFullName = path + fileName + ROOT_PATH;
-                    directoryList.add(dto);
+                // 排除文件夹
+                if (fileName.equals(".") || fileName.equals("..") || !fileName.contains(".")){
+                    continue;
                 }
+                // 获取指定文件
+                FilePropertySortDTO dto = new FilePropertySortDTO();
+                dto.fileName = fileName;
+                dto.fileFullName = path + fileName;
+                dto.setModifyTime(modifyTime);
+                fileList.add(dto);
             }
-            fileList = sortFile(fileList, sortType);
+            // 是否进行排序
+            if(!fileList.isEmpty() && !sortType.equals(SortTypeEnum.DEFAULT_SORT.getValue())){
+                fileList = sortFile(fileList, sortTypeName, sortType);
+            }
             list.fileList = fileList;
-            list.directoryList = directoryList;
         } catch (SftpException e) {
             log.error("sftp获取文件失败,{}", e);
             return null;
-        } finally {
-            disconnect(sftp);
         }
         return list;
     }
 
     /**
-     * 按照排序类型对文件列表进行排序
+     * 对文件进行排序
      *
-     * @param fileList 文件列表
-     * @param sortType 排序类型（1：正序，2：倒序）
+     * @param fileList 待排序文件列表
+     * @param sortTypeName 排序类型（1：文件名，2：时间）
+     * @param sortType 排序顺序类型（1：正序，2：默认，3：倒序）
      * @return
      */
-    public static List<ExcelPropertySortDTO> sortFile(List<ExcelPropertySortDTO> fileList, Integer sortType){
-        if (sortType.equals(SortTypeEnum.POSITIVE_SORT.getValue())){
-            // 正序排序
-            fileList.sort(new Comparator<ExcelPropertySortDTO>() {
-                @Override
-                public int compare(ExcelPropertySortDTO o1, ExcelPropertySortDTO o2) {
-                    if(o1.modifyTime < o2.modifyTime){
-                        return -1;
-                    }else if(o1.modifyTime.equals(o2.modifyTime)){
-                        return 0;
-                    }else {
-                        return 1;
-                    }
-                }
-            });
+    private static List<FilePropertySortDTO> sortFile(List<FilePropertySortDTO> fileList, Integer sortTypeName, Integer sortType){
+        if (sortTypeName.equals(SortTypeNameEnum.TIME_SORT.getValue())){
+            if (sortType.equals(SortTypeEnum.POSITIVE_SORT.getValue())){
+                // 正序排序
+                fileList = fileList.stream().sorted(Comparator.comparing(FilePropertySortDTO::getModifyTime))
+                        .collect(Collectors.toList());
+            }else {
+                // 倒序排序
+                fileList = fileList.stream().sorted(Comparator.comparing(FilePropertySortDTO::getModifyTime).reversed())
+                        .collect(Collectors.toList());
+            }
         }
-        if (sortType.equals(SortTypeEnum.REVERSE_SORT.getValue())){
-            // 倒序排序
-            fileList.sort(new Comparator<ExcelPropertySortDTO>() {
-                @Override
-                public int compare(ExcelPropertySortDTO o1, ExcelPropertySortDTO o2) {
-                    if(o1.modifyTime < o2.modifyTime){
-                        return 1;
-                    }else if(o1.modifyTime.equals(o2.modifyTime)){
-                        return 0;
-                    }else {
-                        return -1;
-                    }
-                }
-            });
+
+        // 文件名排序
+        if(sortTypeName.equals(SortTypeNameEnum.FILENAME_SORT.getValue())){
+            if (sortType.equals(SortTypeEnum.POSITIVE_SORT.getValue())){
+                fileList = fileList.stream().sorted(Comparator.comparing(FilePropertySortDTO::getFileName))
+                        .collect(Collectors.toList());
+            }else{
+                fileList = fileList.stream().sorted(Comparator.comparing(FilePropertySortDTO::getFileName).reversed())
+                        .collect(Collectors.toList());
+            }
         }
         return fileList;
     }
 
     /**
-     * 下载指定目录下的文件
+     * 对文件进行重新排序，并根据指定的索引获取对应文件的InputStream流
      *
-     * @param sftp sftp连接
-     * @param dir 文件目录
-     * @param fileName 文件名
-     * @return InputStream
+     * @param sftp 源服务器sftp
+     * @param sortTypeName 排序类型（1：文件名，2：时间）
+     * @param sortType 排序顺序类型（1：正序，2：默认，3：倒序）
+     * @param index 需要复制的文件位置索引
+     * @param dir 文件所在目录
+     * @return
      * @throws SftpException
      */
-    public static InputStream downloadStream(ChannelSftp sftp, String dir, String fileName) throws SftpException {
+    public static InputStream getFileInputStream(ChannelSftp sftp, Integer sortTypeName, Integer sortType,
+                                                 Integer index, String dir) throws SftpException {
+        // 获取排序后的文件列表
+        FileTreeSortDTO sortFileDto = getSortFile(sftp, sortTypeName, sortType, dir);
+        if (sortFileDto == null || sortFileDto.getFileList().isEmpty()){
+            throw new FkException(ResultEnum.SFTP_FILE_IS_NULL);
+        }
+        List<FilePropertySortDTO> fileList = sortFileDto.getFileList();
+
+        // 文件索引校验
+        if (index <=0 || index > fileList.size()){
+            throw new FkException(ResultEnum.SFTP_FILE_INDEX_ERROR);
+        }
+        // 根据索引查询目标文件DTO
+        FilePropertySortDTO filePropertySortDTO = fileList.get(index - 1);
+        String path = filePropertySortDTO.getFileFullName();
+
+        // 文件路径及名称处理
+        String[] splits = path.split("/");
+        String fileName = splits[splits.length - 1];
         if (StringUtils.isNotEmpty(dir)) {
             sftp.cd(dir);
         }
+
         return sftp.get(fileName);
     }
 
     /**
      * 指定文件名，并以文件流的形式传输到目标服务器中的指定目录下
      *
-     * @param sftp sftp链接
+     * @param sftp 目标服务器sftp链接
      * @param ins 文件输入流
      * @param dir 文件上传后所在的目录名
-     * @param fileName 文件上传后的名称
+     * @param fileName 文件上传后的新文件名称
      */
     public static boolean uploadFile(ChannelSftp sftp, InputStream ins, String dir, String fileName) throws IOException {
         boolean flag = false;
@@ -343,36 +354,51 @@ public class SftpUtils {
             // 进入到当前目录并写入文件
             sftp.cd(dir);
             sftp.put(ins, fileName);
-            flag = false;
+            flag = true;
         } catch (SftpException e) {
             log.error("sftp上传文件失败，{}", e);
             throw new FkException(ResultEnum.UPLOAD_ERROR);
-        }finally {
-            if(ins != null){
-                ins.close();
-            }
         }
         return flag;
     }
 
     /**
      * sftp连接将指定文件复制到目标sftp上
-     *
-     * @param currSftp 当前源sftp
-     * @param targetSftp 目标源sftp
-     * @param currDir 当前源文件所在目录
-     * @param currFileName 当前源文件名称
-     * @param targetDir 复制后的文件所在路径
-     * @param targetFileName 复制后的文件名称
-     * @return
+     * @param currSftp 源服务器sftp
+     * @param targetSftp 目标服务器sftp
+     * @param sortTypeName 排序类型（1：文件名，2：时间）
+     * @param sortType 排序顺序类型（1：正序，2：默认，3：倒序）
+     * @param index 需要复制的文件所对应的文件位置
+     * @param currDir 需要复制的文件所在目录
+     * @param targetDir 复制后文件所在目录
+     * @param targetFileName 复制后的新文件名称
+     * @throws SftpException
+     * @throws IOException
      */
-    public static void copyFile(ChannelSftp currSftp, ChannelSftp targetSftp, String currDir, String currFileName,
-                                   String targetDir, String targetFileName) throws SftpException, IOException {
-        // 加载文件流
-        InputStream ins = downloadStream(currSftp, currDir, currFileName);
+    public static void copyFile(ChannelSftp currSftp, ChannelSftp targetSftp, Integer sortTypeName, Integer sortType,
+                                Integer index, String currDir, String targetDir, String targetFileName) throws SftpException, IOException {
+        // 获取文件字节流
+        InputStream ins = null;
+        try{
+            ins = getFileInputStream(currSftp, sortTypeName, sortType, index, currDir);
 
-        // 上传文件
-        uploadFile(targetSftp, ins, targetDir, targetFileName);
+            // 上传文件
+            uploadFile(targetSftp, ins, targetDir, targetFileName);
+        }finally {
+            if (ins != null){
+                ins.close();
+            }
+            disconnect(currSftp);
+            disconnect(targetSftp);
+        }
+    }
+
+
+    public static void main(String[] args) throws IOException, SftpException {
+        ChannelSftp currSftp = connect("192.168.21.21", 22, "sftp", "password01!", null);
+        ChannelSftp targetSftp = connect("192.168.21.21", 22, "sftp", "password01!", null);
+        copyFile(currSftp, targetSftp, SortTypeNameEnum.FILENAME_SORT.getValue(), SortTypeEnum.POSITIVE_SORT.getValue(),
+                1, "/upload/", "/upload/test/", "hhh.txt" );
     }
 
 }

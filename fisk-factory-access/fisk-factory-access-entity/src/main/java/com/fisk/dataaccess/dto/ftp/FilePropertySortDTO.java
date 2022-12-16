@@ -10,7 +10,7 @@ import lombok.Data;
  * @date 2021/12/30 14:26
  */
 @Data
-public class ExcelPropertySortDTO {
+public class FilePropertySortDTO {
 
     @ApiModelProperty(value = "文件名or文件夹名")
     public String fileName;
