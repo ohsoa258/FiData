@@ -40,7 +40,26 @@ public class UnionTest {
     @Test
     public void test() throws Exception {
         ISqlParser parser = SqlParserFactory.parser(ParserVersion.V1);
-        List<TableMetaDataObject> res = parser.getDataTableBySql(sql, DbType.sqlserver);
-        res.forEach(System.out::println);
+        String newSql = "SELECT [dept_id]\n" +
+                "      ,[institution_id]\n" +
+                "      ,[dept_code]\n" +
+                "      ,[dept_name]\n" +
+                "      ,[standard_dept]\n" +
+                "      ,[status]\n" +
+                "      ,[created_date]\n" +
+                "      ,[created_by]\n" +
+                "      ,[modified_date]\n" +
+                "      ,[modified_by]\n" +
+                "      ,[timestamp]\n" +
+                "      ,[comments]\n" +
+                "      ,[client_number]\n" +
+                "      ,[outpatient_number]\n" +
+                "      ,[bed_number]\n" +
+                "      ,[website]\n" +
+                "      ,[telephone]\n" +
+                "      ,[dept_status]\n" +
+                "  FROM [chugai_platform_core_pro].[dbo].[e_institution_dept]";
+        List<TableMetaDataObject> res = parser.getDataTableBySql(newSql, DbType.sqlserver);
+        res.forEach(e -> System.out.println(String.format("[%s].[%s]", e.schema, e.name)));
     }
 }

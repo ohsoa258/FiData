@@ -97,6 +97,9 @@ public class MetaDataImpl implements IMetaData {
 
     private static final String stg_prefix = "_stg";
     private static final String stg_suffix = "stg_";
+    private static final String stg = "stg";
+    private static final String dim_prefix = "dim_";
+    private static final String ods_suffix = "ods_";
 
     @Override
     public ResultEnum metaData(MetaDataAttributeDTO data) {
@@ -130,7 +133,7 @@ public class MetaDataImpl implements IMetaData {
                     String tableGuid = metaDataTable(table, dbGuid, db.name);
                     //新增stg表
                     String stgTableGuid = null;
-                    if (table.buildStg) {
+                    if (!stg.equals(table.getComment())) {
                         stgTableGuid = metaDataStgTable(table, dbGuid, db.name);
                     }
                     if (StringUtils.isEmpty(tableGuid) || CollectionUtils.isEmpty(table.columnList)) {
@@ -139,10 +142,9 @@ public class MetaDataImpl implements IMetaData {
                     List<String> qualifiedNames = new ArrayList<>();
                     for (MetaDataColumnAttributeDTO field : table.columnList) {
                         metaDataField(field, tableGuid);
-
                         qualifiedNames.add(field.qualifiedName);
 
-                        if (table.buildStg) {
+                        if (!stg.equals(table.getComment())) {
                             //新增stg表字段
                             metaDataStgField(field, stgTableGuid);
                         }
@@ -217,7 +219,7 @@ public class MetaDataImpl implements IMetaData {
                 }
 
                 //解析sql
-                List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversion(dataSourceInfo.conType.getName().toLowerCase(), first1.get().sqlScript);
+                List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(dataSourceInfo.conType.getName().toLowerCase(), first1.get().sqlScript);
                 if (CollectionUtils.isEmpty(res)) {
                     return;
                 }
@@ -251,7 +253,7 @@ public class MetaDataImpl implements IMetaData {
                     return;
                 }
                 //解析sql脚本
-                List<TableMetaDataObject> tableMetaDataObjects = SqlParserUtils.sqlDriveConversion(dataSourceInfo.conType.getName().toLowerCase(), first.get().sqlScript);
+                List<TableMetaDataObject> tableMetaDataObjects = SqlParserUtils.sqlDriveConversionName(dataSourceInfo.conType.getName().toLowerCase(), first.get().sqlScript);
                 if (CollectionUtils.isEmpty(tableMetaDataObjects)) {
                     return;
                 }
@@ -264,14 +266,29 @@ public class MetaDataImpl implements IMetaData {
 
                 //获取输入参数
                 inputTableList = getTableList(tableList, odsResult.data, dbQualifiedName);
-                String newDbQualifiedName = whetherSynchronization(dbName, true);
-                //关联维度血缘
-                //inputTableList.addAll(associateInputTableList(first.get(), newDbQualifiedName, DataModelTableTypeEnum.DW_DIMENSION));
                 if (CollectionUtils.isEmpty(inputTableList)) {
                     return;
                 }
                 sqlScript = first.get().sqlScript;
                 delete = true;
+
+                //stg与事实维度关联以及自定义脚本血缘
+                String stgQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname + "_";
+                if (dim_prefix.equals(first.get().tableName.substring(0, 4))) {
+                    stgQualifiedName += "1";
+                } else {
+                    stgQualifiedName += "2";
+                }
+                stgQualifiedName = stgQualifiedName + "_" + first.get().id + stg_prefix;
+                String newDbQualifiedName1 = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname;
+                synchronizationStgAndCustomScriptTableKinShip(stgQualifiedName,
+                        tableGuid,
+                        sqlScript,
+                        (int) first.get().id,
+                        first.get().tableName,
+                        dataSourceInfo.conType.getName().toLowerCase(),
+                        list,
+                        newDbQualifiedName1);
             } else if (dataSourceInfo.id == DataSourceConfigEnum.DMP_OLAP.getValue()) {
                 result = dataModelClient.getDataModelTable(2);
                 if (result.code != ResultEnum.SUCCESS.getCode()) {
@@ -299,7 +316,7 @@ public class MetaDataImpl implements IMetaData {
             JSONArray relationShipAttribute = JSON.parseArray(relationShip.getString("outputFromProcesses"));
             //条数为0,则添加process
             if (relationShipAttribute.size() == 0) {
-                addProcess(EntityTypeEnum.RDBMS_TABLE, sqlScript, inputTableList, tableGuid, "抽取");
+                addProcess(EntityTypeEnum.RDBMS_TABLE, sqlScript, inputTableList, stgTableGuid, "抽取");
             } else {
                 for (int i = 0; i < relationShipAttribute.size(); i++) {
                     updateProcess(
@@ -307,18 +324,21 @@ public class MetaDataImpl implements IMetaData {
                             inputTableList,
                             EntityTypeEnum.RDBMS_TABLE,
                             sqlScript,
-                            tableGuid,
+                            stgTableGuid,
                             delete);
                 }
                 if (delete) {
-                    addProcess(EntityTypeEnum.RDBMS_TABLE, sqlScript, inputTableList, tableGuid, "抽取");
+                    addProcess(EntityTypeEnum.RDBMS_TABLE, sqlScript, inputTableList, stgTableGuid, "抽取");
                 }
             }
             if (delete) {
-                //关联维度
+
                 String newDbQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname;
+                //关联维度
+                associateInputTableList(first.get(), newDbQualifiedName, DataModelTableTypeEnum.DW_DIMENSION, stgTableGuid);
+
                 //新增自定义脚本
-                synchronizationCustomScriptKinShip((int) first.get().id, first.get().tableName, list, tableGuid, dataSourceInfo.conType.getName().toLowerCase(), newDbQualifiedName);
+                synchronizationCustomScriptKinShip((int) first.get().id, first.get().tableName, list, stgTableGuid, dataSourceInfo.conType.getName().toLowerCase(), newDbQualifiedName, 1);
             }
             //ods暂不支持字段血缘
             if (dataSourceInfo == null) {
@@ -332,6 +352,64 @@ public class MetaDataImpl implements IMetaData {
         }
     }
 
+    public void synchronizationStgAndCustomScriptTableKinShip(String stgQualifiedName,
+                                                              String tableGuid,
+                                                              String sqlScript,
+                                                              Integer tableId,
+                                                              String tableName,
+                                                              String conType,
+                                                              List<SourceTableDTO> sourceTableDTOList,
+                                                              String newDbQualifiedName) {
+        //获取实体详情
+        ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + tableGuid);
+        if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS) {
+            return;
+        }
+
+        QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(MetadataMapAtlasPO::getQualifiedName, stgQualifiedName);
+        List<MetadataMapAtlasPO> poList = metadataMapAtlasMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(poList)) {
+            return;
+        }
+        List<EntityIdAndTypeDTO> list = new ArrayList<>();
+        for (MetadataMapAtlasPO item : poList) {
+            EntityIdAndTypeDTO dto = new EntityIdAndTypeDTO();
+            dto.guid = item.atlasGuid;
+            dto.typeName = EntityTypeEnum.RDBMS_TABLE.getName();
+            list.add(dto);
+        }
+
+        //解析数据
+        JSONObject jsonObj = JSON.parseObject(getDetail.data);
+        JSONObject entityObject = JSON.parseObject(jsonObj.getString("entity"));
+        JSONObject relationShip = JSON.parseObject(entityObject.getString("relationshipAttributes"));
+        JSONArray relationShipAttribute = JSON.parseArray(relationShip.getString("outputFromProcesses"));
+        //条数为0,则添加process
+        if (relationShipAttribute.size() == 0) {
+            addProcess(EntityTypeEnum.RDBMS_TABLE, sqlScript, list, tableGuid, "抽取");
+        } else {
+            for (int i = 0; i < relationShipAttribute.size(); i++) {
+                updateProcess(
+                        relationShipAttribute.getJSONObject(i).getString("guid"),
+                        null,
+                        EntityTypeEnum.RDBMS_TABLE,
+                        sqlScript,
+                        tableGuid,
+                        true);
+            }
+            addProcess(EntityTypeEnum.RDBMS_TABLE, sqlScript, list, tableGuid, "抽取");
+        }
+        synchronizationCustomScriptKinShip(tableId, tableName, sourceTableDTOList, tableGuid, conType, newDbQualifiedName, 2);
+    }
+
+    /**
+     * 同步stg相关血缘
+     *
+     * @param odsTableGuid
+     * @param sqlScript
+     * @param stgQualifiedName
+     */
     public void synchronizationStgOdsKinShip(String odsTableGuid, String sqlScript, String stgQualifiedName) {
         //获取实体详情
         ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + odsTableGuid);
@@ -382,30 +460,33 @@ public class MetaDataImpl implements IMetaData {
      * @param tableGuid
      * @param driveType
      * @param dbQualifiedName
+     * @param execType        执行自定义脚本类型：1stg 2事实维度表
      */
     public void synchronizationCustomScriptKinShip(Integer tableId,
                                                    String tableName,
                                                    List<SourceTableDTO> list,
                                                    String tableGuid,
                                                    String driveType,
-                                                   String dbQualifiedName) {
+                                                   String dbQualifiedName,
+                                                   Integer execType) {
 
         CustomScriptQueryDTO dto = new CustomScriptQueryDTO();
         dto.tableId = tableId;
-        dto.execType = 0;
+        dto.execType = execType;
         dto.type = 2;
-        if ("dim_".equals(tableName.substring(0, 4))) {
+        if (dim_prefix.equals(tableName.substring(0, 4))) {
             dto.type = 1;
         }
 
         ResultEntity<List<CustomScriptInfoDTO>> listResultEntity = dataModelClient.listCustomScript(dto);
-        if (listResultEntity.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(listResultEntity.data)) {
+        if (listResultEntity.code != ResultEnum.SUCCESS.getCode()
+                || CollectionUtils.isEmpty(listResultEntity.data)) {
             return;
         }
 
         for (CustomScriptInfoDTO item : listResultEntity.data) {
             //解析sql
-            List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversion(driveType.toLowerCase(), item.script);
+            List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(driveType.toLowerCase(), item.script);
             if (CollectionUtils.isEmpty(res)) {
                 return;
             }
@@ -704,7 +785,12 @@ public class MetaDataImpl implements IMetaData {
 
     public String metaDataStgTable(MetaDataTableAttributeDTO dto, String parentEntityGuid, String dbName) {
         String atlasGuid = getMetaDataConfig(dto.qualifiedName + stg_prefix);
-        dto.name = stg_suffix + dto.name;
+        //替换前缀
+        if (ods_suffix.equals(dto.name.substring(0, 4))) {
+            dto.name = dto.name.replace(ods_suffix, stg_suffix);
+        } else {
+            dto.name = stg_suffix + dto.name;
+        }
         dto.qualifiedName = dto.qualifiedName + stg_prefix;
         boolean isAdd = false;
         if (StringUtils.isEmpty(atlasGuid)) {
@@ -945,7 +1031,7 @@ public class MetaDataImpl implements IMetaData {
                     return;
                 }
                 //判断是否为公共维度
-                if ("dim_".equals(tableName.substring(0, 4))) {
+                if (dim_prefix.equals(tableName.substring(0, 4))) {
                     ResultEntity<DimensionFolderDTO> dimensionFolder = dataModelClient.getDimensionFolderByTableName(tableName);
                     if (dimensionFolder.code != ResultEnum.SUCCESS.getCode()) {
                         return;
@@ -1230,10 +1316,10 @@ public class MetaDataImpl implements IMetaData {
         List<String> tableQualifiedNameList = dtoList.stream()
                 .filter(e -> tableNameList.contains(e.tableName))
                 .map(e -> {
-                    if ("dim_".equals(e.tableName.substring(0, 4))) {
-                        return dbQualifiedName + "_1" + "_" + e.getId();
+                    if (dim_prefix.equals(e.tableName.substring(0, 4))) {
+                        return dbQualifiedName + "_1_" + e.getId();
                     }
-                    return dbQualifiedName + "_2" + "_" + e.getId();
+                    return dbQualifiedName + "_2_" + e.getId();
                 })
                 .collect(Collectors.toList());
 

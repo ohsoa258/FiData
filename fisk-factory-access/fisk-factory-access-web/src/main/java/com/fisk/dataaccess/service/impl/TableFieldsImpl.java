@@ -320,7 +320,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
         List<MetaDataInstanceAttributeDTO> list = appRegistration.addDataSourceMetaData(registrationPO, po);
         //解析sql
-        List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversion(po.driveType, sql);
+        List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(po.driveType, sql);
         if (CollectionUtils.isEmpty(res)) {
             return;
         }
@@ -332,7 +332,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             table.setName(item.name);
             table.setComment(String.valueOf(appId));
             table.setDisplayName(item.name);
-            table.setBuildStg(false);
+            table.setComment("stg");
             tableList.add(table);
         }
         list.get(0).dbList.get(0).tableList = tableList;
@@ -661,7 +661,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             table.setDescription(tableAccess.getTableDes());
             table.setComment(String.valueOf(app.getId()));
             table.setDisplayName(tableAccess.displayName);
-            table.setBuildStg(true);
 
             //所属人
             userIds.add(Long.parseLong(tableAccess.createUser));
@@ -708,7 +707,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         table.setDescription(tb.getTableDes());
                         table.setComment(String.valueOf(app.getId()));
                         table.setOwner(String.valueOf(tb.id));
-                        table.setBuildStg(true);
                         userIds.add(tb.id);
                         // 字段
                         List<MetaDataColumnAttributeDTO> columnList = this.query()

@@ -12,5 +12,6 @@ import lombok.Data;
 public class TableInfo {
     public String name;
     public String alias;
+    public String schema;
     public TableTypeEnum tableType;
 }

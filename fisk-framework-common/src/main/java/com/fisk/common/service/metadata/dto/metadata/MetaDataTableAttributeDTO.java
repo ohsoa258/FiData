@@ -13,9 +13,4 @@ import java.util.List;
 public class MetaDataTableAttributeDTO extends MetaDataBaseAttributeDTO {
     @ApiModelProperty(value = "字段集合")
     public List<MetaDataColumnAttributeDTO> columnList;
-
-    /**
-     * 是否构建stg表
-     */
-    public boolean buildStg;
 }

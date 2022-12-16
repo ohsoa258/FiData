@@ -15,6 +15,7 @@ import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.common.service.sqlparser.model.TableTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -146,6 +147,7 @@ public class SqlParserUtils {
                 .name(tableInfo.name)
                 .alias(tableInfo.alias)
                 .details(details)
+                .schema(tableInfo.schema)
                 .lastNodeId(lastNodeId)
                 .hierarchy(hierarchy)
                 .tableType(tableInfo.tableType)
@@ -246,9 +248,11 @@ public class SqlParserUtils {
         }
         // 一元表类型
         else if (table instanceof SQLExprTableSource) {
-            tableInfo.name = ((SQLExprTableSource) table).getTableName();
+            SQLExprTableSource exprTable = (SQLExprTableSource) table;
+            tableInfo.name = exprTable.getTableName();
             tableInfo.alias = table.getAlias();
             tableInfo.tableType = TableTypeEnum.Expr;
+            tableInfo.schema = exprTable.getSchema();
         }
         // 子查询
         else if (table instanceof SQLSubqueryTableSource) {
@@ -279,7 +283,7 @@ public class SqlParserUtils {
      * @return
      */
     public static List<TableMetaDataObject> sqlDriveConversion(String driveType, String sqlScript) {
-        DbType dbType = null;
+        DbType dbType;
         if ("mysql".equals(driveType)) {
             dbType = DbType.mysql;
         } else if ("oracle".equals(driveType)) {
@@ -289,10 +293,10 @@ public class SqlParserUtils {
         } else if ("sqlserver".equals(driveType)) {
             dbType = DbType.sqlserver;
         } else {
-            throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+            return new ArrayList<>();
         }
 
-        List<TableMetaDataObject> res = null;
+        List<TableMetaDataObject> res;
         try {
             ISqlParser parser = SqlParserFactory.parser(ParserVersion.V1);
             res = parser.getDataTableBySql(sqlScript, dbType);
@@ -302,6 +306,20 @@ public class SqlParserUtils {
         }
 
         return res;
+    }
+
+    public static List<TableMetaDataObject> sqlDriveConversionName(String driveType, String sqlScript) {
+        List<TableMetaDataObject> tableMetaDataObjects = sqlDriveConversion(driveType, sqlScript);
+        if (CollectionUtils.isEmpty(tableMetaDataObjects)) {
+            return tableMetaDataObjects;
+        }
+        tableMetaDataObjects.stream().forEach(e -> {
+            if (!StringUtils.isEmpty(e.schema)) {
+                e.name = e.schema + "." + e.name;
+            }
+            e.setName(e.name.replace("[", "").replace("]", ""));
+        });
+        return tableMetaDataObjects;
     }
 
 }
