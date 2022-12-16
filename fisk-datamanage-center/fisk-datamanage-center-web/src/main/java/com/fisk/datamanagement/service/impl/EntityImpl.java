@@ -417,7 +417,7 @@ public class EntityImpl implements IEntity {
             LineAgeDTO dto=new LineAgeDTO();
             dto.relations=new ArrayList<>();
             dto.guidEntityMap=new ArrayList<>();
-            ResultDataDTO<String> result = atlasClient.get(lineage + "/" + guid);
+            ResultDataDTO<String> result = atlasClient.get(lineage + "/" + guid + "?depth=9");
             if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
             {
                 throw new FkException(ResultEnum.BAD_REQUEST);

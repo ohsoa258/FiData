@@ -51,6 +51,8 @@ public enum ResultEnum {
     DRUID_SQL_ERROR(1025, "druid解析sql失败"),
     DRUID_ERROR(1026, "druid异常"),
     UPLOAD_ERROR(1027, "文件上传失败"),
+    SQL_PARSING(1028, "sql解析失败"),
+    COPY_ERROR(1029, "拷贝失败"),
 
     /**
      * 报表可视化服务，错误码从2000开始

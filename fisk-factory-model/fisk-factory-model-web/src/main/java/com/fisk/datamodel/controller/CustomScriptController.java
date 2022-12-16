@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.customscript.CustomScriptDTO;
+import com.fisk.datamodel.dto.customscript.CustomScriptInfoDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.service.ICustomScript;
 import io.swagger.annotations.Api;
@@ -52,7 +53,7 @@ public class CustomScriptController {
 
     @ApiOperation("列表")
     @PostMapping("/listCustomScript")
-    public ResultEntity<Object> listCustomScript(@RequestBody CustomScriptQueryDTO dto) {
+    public ResultEntity<List<CustomScriptInfoDTO>> listCustomScript(@RequestBody CustomScriptQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listCustomScript(dto));
     }
 

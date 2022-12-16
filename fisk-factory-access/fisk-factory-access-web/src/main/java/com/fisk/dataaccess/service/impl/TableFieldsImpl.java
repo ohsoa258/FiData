@@ -1,7 +1,6 @@
 package com.fisk.dataaccess.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -21,6 +20,8 @@ import com.fisk.common.service.flinkupload.FlinkFactoryHelper;
 import com.fisk.common.service.flinkupload.IFlinkJobUpload;
 import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.common.service.sqlparser.SqlParserUtils;
+import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
@@ -36,6 +37,8 @@ import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.map.FlinkParameterMap;
 import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
+import com.fisk.dataaccess.mapper.AppDataSourceMapper;
+import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.mapper.TableFieldsMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
@@ -88,6 +91,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     private TableAccessImpl tableAccessImpl;
     @Resource
     private TableAccessMapper tableAccessMapper;
+    @Resource
+    private AppRegistrationMapper appRegistrationMapper;
+    @Resource
+    private AppDataSourceMapper appDataSourceMapper;
     @Resource
     private IAppRegistration iAppRegistration;
     @Resource
@@ -202,6 +209,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         // 版本语句
         String versionSql = getVersionSql(syncmodePo);
 
+        //新增元数据信息
+        odsMetaDataInfo(accessPo.appId, accessPo.sqlScript);
+
         // 发布
         publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO);
 
@@ -282,10 +292,61 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             systemVariables.addSystemVariables(dto.id, dto.deltaTimes);
         }
 
+        //新增元数据信息
+        odsMetaDataInfo(model.appId, model.sqlScript);
+
         // 发布
         publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+    }
+
+    /**
+     * 新增ods元数据信息
+     *
+     * @param appId
+     * @param sql
+     */
+    public void odsMetaDataInfo(long appId, String sql) {
+        AppRegistrationPO registrationPO = appRegistrationMapper.selectById(appId);
+        if (registrationPO == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        AppDataSourcePO po = appDataSourceMapper.selectById(appId);
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        List<MetaDataInstanceAttributeDTO> list = appRegistration.addDataSourceMetaData(registrationPO, po);
+        //解析sql
+        List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(po.driveType, sql);
+        if (CollectionUtils.isEmpty(res)) {
+            return;
+        }
+
+        List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
+        for (TableMetaDataObject item : res) {
+            MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+            table.setQualifiedName(list.get(0).dbList.get(0).qualifiedName + "_" + item.name);
+            table.setName(item.name);
+            table.setComment(String.valueOf(appId));
+            table.setDisplayName(item.name);
+            table.setComment("stg");
+            tableList.add(table);
+        }
+        list.get(0).dbList.get(0).tableList = tableList;
+        try {
+            MetaDataAttributeDTO data = new MetaDataAttributeDTO();
+            data.instanceList = list;
+            data.userId = userHelper.getLoginUserInfo().id;
+            // 更新元数据内容
+            log.info("构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
+            dataManageClient.metaData(data);
+        } catch (Exception e) {
+            log.error("【dataManageClient.MetaData()】方法报错,ex", e);
+        }
+
     }
 
     @Override
@@ -428,7 +489,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     if (DataSourceTypeEnum.FTP.getName().equals(dataSourcePo.driveType) || data.sftpFlow) {
                         data.excelFlow = true;
                     }
-                    String userStr = JSONObject.toJSONString(data);
                     // 非实时物理表发布
                     // 创建表流程
                     publishTaskClient.publishBuildPhysicsTableTask(data);
@@ -589,9 +649,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             return;
         }
         List<Long> userIds = new ArrayList<>();
+        // 表
+        List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
         if (flag == tableType) {
-            // 表
-            List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
             MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
             table.setQualifiedName(hostname + "_" + dbName + "_" + tableAccess.getId());
             table.setName(TableNameGenerateUtils.buildOdsTableName(tableAccess.getTableName(),
@@ -628,13 +688,13 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     }).collect(Collectors.toList());
 
             table.setColumnList(columnList);
-            tableList.add(table);
+            tableList.add(0, table);
+
             db.setTableList(tableList);
             dbList.add(db);
             instance.setDbList(dbList);
         } else if (flag == apiType) {
-
-            List<MetaDataTableAttributeDTO> tableList = tableAccessImpl.query().eq("api_id", tableAccess.apiId).list()
+            tableList = tableAccessImpl.query().eq("api_id", tableAccess.apiId).list()
                     .stream().filter(Objects::nonNull)
                     .map(tb -> {
                         // 表

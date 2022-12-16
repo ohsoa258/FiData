@@ -65,4 +65,11 @@ public class TableFieldsController {
     public ResultEntity<Object> delVersionData(@Validated @RequestBody TableVersionDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delVersionData(dto.getKeyStr()));
     }
+
+    /*@PostMapping("/test")
+    @ApiOperation(value = "对表进行操作时,查询依赖")
+    public void test(long appId, String sql) {
+        service.odsMetaDataInfo(appId,sql);
+    }*/
+
 }

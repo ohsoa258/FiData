@@ -16,7 +16,7 @@ public class CustomScriptQueryDTO {
     public Integer tableId;
 
     /**
-     * 执行类型:1stg 2 ods
+     * 执行类型:1stg 2 fact和事实表
      */
     public Integer execType;
 

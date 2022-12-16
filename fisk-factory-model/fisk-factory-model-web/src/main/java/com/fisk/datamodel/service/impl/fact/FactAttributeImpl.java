@@ -550,8 +550,8 @@ public class FactAttributeImpl
         for (Map.Entry<String, String> entry : configDetailsMap.entrySet()) {
 
             // 当前维度key关联关系
-            WideTableFieldConfigDTO dto = JSON.parseObject(entry.getValue(), WideTableFieldConfigDTO.class);
-            List<TableSourceRelationsDTO> relations = dto.relations;
+            List<TableSourceRelationsDTO> dto = JSON.parseArray(entry.getValue(), TableSourceRelationsDTO.class);
+            List<TableSourceRelationsDTO> relations = dto;
             if (CollectionUtils.isEmpty(relations)) {
                 continue;
             }

@@ -22,6 +22,7 @@ public class TableMetaDataObject {
     public String id;
     public String name;
     public String alias;
+    public String schema;
     public String details;
     public Integer hierarchy;
     public String lastNodeId;

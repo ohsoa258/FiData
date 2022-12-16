@@ -1,17 +1,21 @@
 package com.fisk.common.service.sqlparser;
 
+import com.alibaba.druid.DbType;
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr;
 import com.alibaba.druid.sql.ast.expr.SQLQueryExpr;
 import com.alibaba.druid.sql.ast.statement.*;
 import com.alibaba.druid.sql.dialect.sqlserver.ast.SQLServerSelectQueryBlock;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.sqlparser.model.FieldMetaDataObject;
 import com.fisk.common.service.sqlparser.model.TableInfo;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.common.service.sqlparser.model.TableTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -143,6 +147,7 @@ public class SqlParserUtils {
                 .name(tableInfo.name)
                 .alias(tableInfo.alias)
                 .details(details)
+                .schema(tableInfo.schema)
                 .lastNodeId(lastNodeId)
                 .hierarchy(hierarchy)
                 .tableType(tableInfo.tableType)
@@ -243,9 +248,11 @@ public class SqlParserUtils {
         }
         // 一元表类型
         else if (table instanceof SQLExprTableSource) {
-            tableInfo.name = ((SQLExprTableSource) table).getTableName();
+            SQLExprTableSource exprTable = (SQLExprTableSource) table;
+            tableInfo.name = exprTable.getTableName();
             tableInfo.alias = table.getAlias();
             tableInfo.tableType = TableTypeEnum.Expr;
+            tableInfo.schema = exprTable.getSchema();
         }
         // 子查询
         else if (table instanceof SQLSubqueryTableSource) {
@@ -266,6 +273,53 @@ public class SqlParserUtils {
             tableInfo.tableType = TableTypeEnum.NONE;
         }
         return tableInfo;
+    }
+
+    /**
+     * 数据库类型
+     *
+     * @param driveType
+     * @param sqlScript
+     * @return
+     */
+    public static List<TableMetaDataObject> sqlDriveConversion(String driveType, String sqlScript) {
+        DbType dbType;
+        if ("mysql".equals(driveType)) {
+            dbType = DbType.mysql;
+        } else if ("oracle".equals(driveType)) {
+            dbType = DbType.oracle;
+        } else if ("postgresql".equals(driveType)) {
+            dbType = DbType.postgresql;
+        } else if ("sqlserver".equals(driveType)) {
+            dbType = DbType.sqlserver;
+        } else {
+            return new ArrayList<>();
+        }
+
+        List<TableMetaDataObject> res;
+        try {
+            ISqlParser parser = SqlParserFactory.parser(ParserVersion.V1);
+            res = parser.getDataTableBySql(sqlScript, dbType);
+        } catch (Exception e) {
+            log.error("【sql解析失败】,{}", e);
+            throw new FkException(ResultEnum.SQL_PARSING);
+        }
+
+        return res;
+    }
+
+    public static List<TableMetaDataObject> sqlDriveConversionName(String driveType, String sqlScript) {
+        List<TableMetaDataObject> tableMetaDataObjects = sqlDriveConversion(driveType, sqlScript);
+        if (CollectionUtils.isEmpty(tableMetaDataObjects)) {
+            return tableMetaDataObjects;
+        }
+        tableMetaDataObjects.stream().forEach(e -> {
+            if (!StringUtils.isEmpty(e.schema)) {
+                e.name = e.schema + "." + e.name;
+            }
+            e.setName(e.name.replace("[", "").replace("]", ""));
+        });
+        return tableMetaDataObjects;
     }
 
 }
