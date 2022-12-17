@@ -110,14 +110,19 @@ public class EntityImpl implements IEntity {
                 if (EntityTypeEnum.DELETED.getName().equals(array.getJSONObject(i).getString("status"))) {
                     continue;
                 }
+                //判断是否stg临时表
+                String attributes1 = array.getJSONObject(i).getString("attributes");
+                JSONObject jsonObject = JSONObject.parseObject(attributes1);
+                if ("stg".equals(jsonObject.getString("description"))) {
+                    continue;
+                }
+
                 //获取实例数据
                 EntityTreeDTO entityParentDTO = new EntityTreeDTO();
                 entityParentDTO.id = array.getJSONObject(i).getString("guid");
                 entityParentDTO.label = array.getJSONObject(i).getString("displayText");
                 entityParentDTO.type = EntityTypeEnum.RDBMS_INSTANCE.getName();
                 entityParentDTO.parentId = "-1";
-                ////String attributes1 = array.getJSONObject(i).getString("attributes");
-                ////JSONObject jsonObject = JSONObject.parseObject(attributes1);
                 entityParentDTO.displayName = array.getJSONObject(i).getString("displayText");
                 //查询实例下db/table/column
                 ResultDataDTO<String> attribute = atlasClient.get(entityByGuid + "/" + entityParentDTO.id);
@@ -142,9 +147,14 @@ public class EntityImpl implements IEntity {
                     //根据key获取json指定数据
                     String typeName = jsonValue.getString("typeName");
                     EntityStagingDTO childEntityDTO = new EntityStagingDTO();
-                    childEntityDTO.guid =jsonValue.getString("guid");
+                    childEntityDTO.guid = jsonValue.getString("guid");
                     String attributes = jsonValue.getString("attributes");
                     JSONObject names = JSON.parseObject(attributes);
+
+                    if ("stg".equals(names.getString("description"))) {
+                        continue;
+                    }
+
                     childEntityDTO.name = names.getString("name");
                     childEntityDTO.type = typeName;
                     childEntityDTO.displayName = names.getString("displayName");
@@ -154,10 +164,6 @@ public class EntityImpl implements IEntity {
                             childEntityDTO.parent = entityParentDTO.id;
                             break;
                         case RDBMS_TABLE:
-                            if (names.getString("comment") == null
-                                    || !names.getString("comment").matches("[0-9]+")) {
-                                continue;
-                            }
                             //实体为表时，需要获取所属应用或业务域
                             String relationshipAttributes = jsonValue.getString("relationshipAttributes");
                             JSONObject dbInfo = JSONObject.parseObject(relationshipAttributes);

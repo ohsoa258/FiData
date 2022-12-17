@@ -776,7 +776,7 @@ public class MetaDataImpl implements IMetaData {
         //同步业务分类
         associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
         //同步业务元数据
-        associatedBusinessMetaData(atlasGuid, dbName, dto.name);
+        //associatedBusinessMetaData(atlasGuid, dbName, dto.name);
         if (isAdd) {
             return atlasGuid;
         }
@@ -792,6 +792,7 @@ public class MetaDataImpl implements IMetaData {
             dto.name = stg_suffix + dto.name;
         }
         dto.qualifiedName = dto.qualifiedName + stg_prefix;
+        dto.description = stg;
         boolean isAdd = false;
         if (StringUtils.isEmpty(atlasGuid)) {
             EntityDTO entityDTO = new EntityDTO();
@@ -931,6 +932,7 @@ public class MetaDataImpl implements IMetaData {
         String atlasGuid = getMetaDataConfig(dto.qualifiedName + stg_prefix);
         dto.name = stg_suffix + dto.name;
         dto.qualifiedName = dto.qualifiedName + stg_prefix;
+        dto.description = stg;
         if (StringUtils.isEmpty(atlasGuid)) {
             EntityDTO entityDTO = new EntityDTO();
             EntityTypeDTO entityTypeDTO = new EntityTypeDTO();
@@ -1280,7 +1282,7 @@ public class MetaDataImpl implements IMetaData {
         List<EntityIdAndTypeDTO> list = new ArrayList<>();
 
         List<String> tableQualifiedNameList = dtoList.stream()
-                .filter(e -> tableNameList.contains(e.tableName.toLowerCase()))
+                .filter(e -> tableNameList.contains(e.tableName))
                 .map(e -> dbQualifiedName + "_" + e.getId()).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(tableQualifiedNameList)) {
             return list;
