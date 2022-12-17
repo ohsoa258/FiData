@@ -1,15 +1,13 @@
 package com.fisk.common.core.utils.dbutils.utils;
 
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import lombok.extern.slf4j.Slf4j;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.*;
 
 /**
@@ -68,6 +66,35 @@ public class SqlServerUtils {
     }
 
     /**
+     * 根据tableName获取tableFields
+     *
+     * @param tableName tableName
+     * @return tableName中的表字段
+     */
+    public static List<TableColumnDTO> getColumnsName(Connection conn, String tableName) {
+        List<TableColumnDTO> colNameList = null;
+        try {
+            colNameList = new ArrayList<>();
+
+            DatabaseMetaData metaData = conn.getMetaData();
+            ResultSet resultSet = metaData.getColumns(null, "%", tableName, "%");
+            while (resultSet.next()) {
+                TableColumnDTO dto = new TableColumnDTO();
+                dto.fieldName = resultSet.getString("COLUMN_NAME");
+                dto.fieldType = resultSet.getString("TYPE_NAME");
+                dto.fieldLength = Integer.parseInt(resultSet.getString("COLUMN_SIZE"));
+                dto.fieldDes = resultSet.getString("REMARKS");
+                colNameList.add(dto);
+            }
+
+        } catch (Exception e) {
+            log.error("【getColumnsName】获取表字段报错, ex", e);
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        }
+        return colNameList;
+    }
+
+    /**
      * 获取schema下所有表sql
      *
      * @return
@@ -81,7 +108,7 @@ public class SqlServerUtils {
         str.append("select name, schema_name(schema_id) as structure from sys.tables");
         str.append(")");
         str.append("as tabl");
-        str.append("';");
+        str.append(";");
 
         return str.toString();
     }

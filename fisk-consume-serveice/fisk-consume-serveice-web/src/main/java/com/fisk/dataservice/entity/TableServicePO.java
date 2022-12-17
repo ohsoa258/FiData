@@ -12,10 +12,6 @@ import lombok.Data;
 public class TableServicePO extends BasePO {
 
     /**
-     * 服务应用id
-     */
-    public Integer appId;
-    /**
      * 表名
      */
     public String tableName;
