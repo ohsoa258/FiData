@@ -4,6 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.dto.datasource.DataSourceColumnQueryDTO;
+import com.fisk.dataservice.dto.datasource.DataSourceQueryDTO;
 import com.fisk.dataservice.dto.tableservice.TableServicePageQueryDTO;
 import com.fisk.dataservice.service.IDataSourceConfig;
 import com.fisk.dataservice.service.ITableService;
@@ -42,6 +43,12 @@ public class TableServiceController {
     @PostMapping("/getColumn")
     public ResultEntity<Object> getColumn(@RequestBody DataSourceColumnQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, dataSourceConfig.getColumn(dto));
+    }
+
+    @ApiOperation("根据自定义脚本查询数据")
+    @PostMapping("/tableServiceQueryList")
+    public ResultEntity<Object> tableServiceQueryList(@RequestBody DataSourceQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataSourceConfig.getTableServiceQueryList(dto));
     }
 
 
