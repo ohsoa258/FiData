@@ -23,6 +23,7 @@ import com.fisk.datafactory.dto.customworkflow.*;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
+import com.fisk.datafactory.entity.TaskSettingPO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
 import com.fisk.datafactory.map.NifiCustomWorkflowMap;
@@ -30,6 +31,7 @@ import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowMapper;
 import com.fisk.datafactory.service.IDispatchEmail;
 import com.fisk.datafactory.service.INifiCustomWorkflow;
+import com.fisk.datafactory.service.ITaskSetting;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.datamodel.client.DataModelClient;
@@ -76,6 +78,8 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
     GetConfigDTO getConfig;
     @Resource
     IDispatchEmail iDispatchEmail;
+    @Resource
+    ITaskSetting iTaskSetting;
 
 
     @Override
@@ -124,6 +128,13 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                 if (channelDataEnum == null) {
                     continue;
                 }
+                if(e.pid!=0){
+                    List<TaskSettingPO> poList = iTaskSetting.query().eq("task_id", e.id).list();
+                    if(CollectionUtils.isNotEmpty(poList)){
+                        e.taskSetting = poList.stream().collect(Collectors.toMap(TaskSettingPO::getKey, TaskSettingPO::getValue, (k1, k2) -> k1));
+                    }
+                }
+
                 switch (channelDataEnum) {
                     // 数据湖表任务
                     case DATALAKE_TASK:
@@ -156,10 +167,15 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                 }
             }
         }
-        List<NifiCustomWorkflowDetailDTO> collect = vo.list.stream().filter(e -> !(e.componentType.equals(ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName()) && e.pid != 0)).collect(Collectors.toList());
+        List<NifiCustomWorkflowDetailDTO> collect = vo.list.stream().filter(e -> !
+                ((e.componentType.equals(ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName())
+                        || e.componentType.equals(ChannelDataEnum.SFTP_FILE_COPY_TASK.getName())) &&
+                        e.pid != 0)).collect(Collectors.toList());
         vo.list = collect;
         return vo;
     }
+
+
 
     /**
      * 组装应用名称和表名

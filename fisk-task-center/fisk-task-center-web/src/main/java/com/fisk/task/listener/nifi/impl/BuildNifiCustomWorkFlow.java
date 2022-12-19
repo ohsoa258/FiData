@@ -551,14 +551,15 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     boolean commonTask = false;
                     boolean fapi = false;
                     String queryApiSql = "";
-                    boolean fscript = false;
                     String scriptTaskIds = "";
+                    String sftpFileCopyTaskIds = "";
                     List<PipelApiDispatchDTO> pipelApiDispatchs = new ArrayList<>();
                     PipelApiDispatchDTO pipelApiDispatch = new PipelApiDispatchDTO();
                     for (BuildNifiCustomWorkFlowDTO buildNifiCustomWorkFlowDTO : outputDucts) {
                         if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.CUSTOMWORKCUSTOMIZESCRIPT)) {
                             scriptTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId;
-                            fscript = true;
+                        } else if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.SFTPFILECOPYTASK)) {
+                            sftpFileCopyTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId;
                         } else if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.DATAACCESS_API)) {
                             fapi = true;
                             pipelApiDispatch.workflowId = String.valueOf(buildNifiCustomWorkFlowDTO.workflowDetailId);
@@ -584,18 +585,20 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     querySqlDto.groupId = groupStructure;
                     //调度类别
                     TopicTypeEnum pipelineNifiFlow = TopicTypeEnum.PIPELINE_NIFI_FLOW;
-
+                    querySqlDto.querySql = "select 1 as num ";
                     if (pipelApiDispatchs.size() == 0) {
-                        querySqlDto.querySql = "select '" + TopicName + "' as topic, '${uuid}' as pipelTraceId, '" + pipelineNifiFlow.getValue() + "' as topicType ";
+                        querySqlDto.querySql += " ,'" + TopicName + "' as topic, '${uuid}' as pipelTraceId, '" + pipelineNifiFlow.getValue() + "' as topicType ";
                     } else {
                         //加管道批次
-                        querySqlDto.querySql = "select '" + JSON.toJSONString(pipelApiDispatchs) + "' as pipelApiDispatch ,'" + TopicName + "' as topic, '${uuid}' as pipelTraceId, '" + pipelineNifiFlow.getValue() + "' as topicType  ";
+                        querySqlDto.querySql += " ,'" + JSON.toJSONString(pipelApiDispatchs) + "' as pipelApiDispatch ,'" + TopicName + "' as topic, '${uuid}' as pipelTraceId, '" + pipelineNifiFlow.getValue() + "' as topicType  ";
                     }
                     if (StringUtils.isNotEmpty(scriptTaskIds)) {
-                        querySqlDto.querySql += scriptTaskIds + " as scriptTaskIds from tb_etl_Incremental limit 1";
-                    } else {
-                        querySqlDto.querySql += " from tb_etl_Incremental limit 1";
+                        querySqlDto.querySql += " ,'" + scriptTaskIds + "' as scriptTaskIds ";
                     }
+                    if (StringUtils.isNotEmpty(sftpFileCopyTaskIds)) {
+                        querySqlDto.querySql += " ,'" + sftpFileCopyTaskIds + "' as sftpFileCopyTaskIds ";
+                    }
+                    querySqlDto.querySql += " from tb_etl_Incremental limit 1";
 
                     //配置库
                     NifiConfigPO nifiConfigPO = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID.getName()).one();
@@ -664,8 +667,9 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
 
                 if (Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSTRUCTURE) ||
                         Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSCHEDULINGCOMPONENT) ||
-                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.DATAACCESS_API)||
-                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKCUSTOMIZESCRIPT)) {
+                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.DATAACCESS_API) ||
+                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKCUSTOMIZESCRIPT) ||
+                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.SFTPFILECOPYTASK)) {
                     continue;
                 }
                 String Topic = TopicName;
@@ -797,7 +801,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     log.info("组件详情2:" + id);
                     try {
                         NifiHelper.getProcessorsApi().terminateProcessor(id);
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         log.error("这个沙雕组处理失败,下一个");
                     }
 

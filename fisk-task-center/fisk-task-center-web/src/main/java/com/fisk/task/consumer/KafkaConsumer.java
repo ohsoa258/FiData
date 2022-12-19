@@ -25,6 +25,7 @@ import com.fisk.task.listener.nifi.INonRealTimeListener;
 import com.fisk.task.listener.nifi.ITriggerScheduling;
 import com.fisk.task.listener.nifi.impl.BuildNifiCustomWorkFlow;
 import com.fisk.task.listener.nifi.impl.BuildNifiTaskListener;
+import com.fisk.task.listener.nifi.impl.BuildSftpCopyListener;
 import com.fisk.task.listener.olap.BuildModelTaskListener;
 import com.fisk.task.listener.olap.BuildWideTableTaskListener;
 import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
@@ -144,6 +145,8 @@ public class KafkaConsumer {
     MissionEndCenter missionEndCenter;
     @Resource
     TaskPublish taskPublish;
+    @Resource
+    BuildSftpCopyListener buildSftpCopyListener;
 
 
     @Bean
@@ -344,5 +347,10 @@ public class KafkaConsumer {
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, containerFactory = "batchFactory", groupId = "test")
     public ResultEntity<Object> BuildExecScript(String dataInfo, Acknowledgment ack) {
         return ResultEntityBuild.build(iExecScriptListener.execScript(dataInfo, ack));
+    }
+
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_SFTP_FILE_COPY_FLOW, containerFactory = "batchFactory", groupId = "test")
+    public ResultEntity<Object> BuildSftpCopyTask(String dataInfo, Acknowledgment ack) {
+        return ResultEntityBuild.build(buildSftpCopyListener.sftpCopyTask(dataInfo, ack));
     }
 }

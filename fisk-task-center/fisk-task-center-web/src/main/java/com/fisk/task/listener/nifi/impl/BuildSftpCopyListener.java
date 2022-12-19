@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -17,6 +18,7 @@ import java.util.List;
 @Slf4j
 public class BuildSftpCopyListener implements ISftpCopyListener {
 
+
     @Override
     public ResultEnum sftpCopyTask(String data, Acknowledgment acke) {
         log.info("执行sftp文件复制参数:{}", data);
@@ -24,6 +26,7 @@ public class BuildSftpCopyListener implements ISftpCopyListener {
         List<SftpCopyDTO> sftpCopys = JSON.parseArray(data, SftpCopyDTO.class);
         for (SftpCopyDTO sftpCopy : sftpCopys) {
             //查具体的配置
+
 
 
 

@@ -29,6 +29,7 @@ import com.fisk.datafactory.map.NifiCustomWorkflowMap;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
 import com.fisk.datafactory.service.INifiCustomWorkflow;
 import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
+import com.fisk.datafactory.service.ITaskSetting;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.system.client.UserClient;
@@ -77,6 +78,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
     @Resource
     UserClient userClient;
+    @Resource
+    ITaskSetting taskSetting;
 
 
     @Override
@@ -126,23 +129,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEntity<NifiCustomWorkListDTO> editData(NifiCustomWorkflowDetailVO dto) {
-        List<NifiCustomWorkflowDetailDTO> collect =
-                dto.list.stream().filter(e -> e.componentType.equals(ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName()) && e.pid == 0).collect(Collectors.toList());
-        String workflowId = "";
-        if (CollectionUtils.isNotEmpty(collect)) {
-            for (NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetail : collect) {
-                List<NifiCustomWorkflowDetailPO> original = this.query().eq("pid", nifiCustomWorkflowDetail.id).list();
-                if (CollectionUtils.isNotEmpty(original)) {
-                    this.removeByIds(original.stream().map(d -> d.id).collect(Collectors.toList()));
-                    workflowId = nifiCustomWorkflowDetail.workflowId;
-                }
-            }
-            //删除跳过pid!=0,workflowId = workflowId,类型=ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName()
-            NifiCustomWorkflowDetailPO nifiCustomWorkflowDetail = new NifiCustomWorkflowDetailPO();
-            nifiCustomWorkflowDetail.workflowId = workflowId;
-            nifiCustomWorkflowDetail.componentType = ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName();
-            mapper.deleteByType(nifiCustomWorkflowDetail);
-        }
+        //这类任务天生只有父级,所以需要我们每次生成子集,所在在生成子集之前需要先把原来的子集删掉
+        deleteOldTask(dto);
 
         String componentType = "触发器";
 
@@ -177,10 +165,14 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
         // 批量保存tb_nifi_custom_wokflow_detail
         boolean success = this.saveOrUpdateBatch(list);
+        for (NifiCustomWorkflowDetailDTO detail : dto.list) {
+            taskSetting.updateTaskSetting(detail.id, detail.taskSetting);
+        }
         if (!success) {
             log.error("修改管道报错2");
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
+
 
         NifiCustomWorkListDTO workListDTO = new NifiCustomWorkListDTO();
         if (dto.flag) {
@@ -203,6 +195,31 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         dataFactoryImpl.setTaskLinkedList(workflowDTO.id);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, workListDTO);
+    }
+
+    public void deleteOldTask(NifiCustomWorkflowDetailVO dto) {
+
+        List<NifiCustomWorkflowDetailDTO> collect =
+                dto.list.stream().filter(e -> (e.componentType.equals(ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName()) ||
+                        e.componentType.equals(ChannelDataEnum.SFTP_FILE_COPY_TASK.getName())) && e.pid == 0).collect(Collectors.toList());
+        String workflowId = "";
+        if (CollectionUtils.isNotEmpty(collect)) {
+            for (NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetail : collect) {
+                List<NifiCustomWorkflowDetailPO> original = this.query().eq("pid", nifiCustomWorkflowDetail.id).list();
+                if (CollectionUtils.isNotEmpty(original)) {
+                    this.removeByIds(original.stream().map(d -> d.id).collect(Collectors.toList()));
+                    //因为有时候给pid是空的,所以在下面还要删一下
+                    workflowId = nifiCustomWorkflowDetail.workflowId;
+                }
+            }
+            //删除跳过pid!=0,workflowId = workflowId,类型=ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName()
+            NifiCustomWorkflowDetailPO nifiCustomWorkflowDetail = new NifiCustomWorkflowDetailPO();
+            nifiCustomWorkflowDetail.workflowId = workflowId;
+            nifiCustomWorkflowDetail.componentType = ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName();
+            mapper.deleteByType(nifiCustomWorkflowDetail);
+            nifiCustomWorkflowDetail.componentType = ChannelDataEnum.SFTP_FILE_COPY_TASK.getName();
+            mapper.deleteByType(nifiCustomWorkflowDetail);
+        }
     }
 
     /**
@@ -262,6 +279,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 case CUSTOMIZE_SCRIPT_TASK:
                     e.componentsId = 13;
                     break;
+                case SFTP_FILE_COPY_TASK:
+                    e.componentsId = 14;
                 default:
                     break;
             }
@@ -515,6 +534,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 return DataClassifyEnum.DATAMODELWIDETABLE;
             case CUSTOMIZE_SCRIPT_TASK:
                 return DataClassifyEnum.CUSTOMWORKCUSTOMIZESCRIPT;
+            case SFTP_FILE_COPY_TASK:
+                return DataClassifyEnum.SFTPFILECOPYTASK;
             case DW_TASK:
             case OLAP_TASK:
 
@@ -567,6 +588,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             // 分析模型宽表任务
             case OLAP_WIDETABLE_TASK:
                 return OlapTableEnum.WIDETABLE;
+            case SFTP_FILE_COPY_TASK:
+                return OlapTableEnum.SFTPFILECOPYTASK;
 
             default:
                 break;
@@ -665,6 +688,14 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 throw new FkException(ResultEnum.CRON_ERROR);
             }
         }
+        if (CollectionUtils.isNotEmpty(dto.taskSetting)) {
+            //修改sftp组件的父子级配置,旨在解决修改一个组件就要发布整个管道的
+            if (Objects.equals(dto.componentsId, ChannelDataEnum.SFTP_FILE_COPY_TASK.getValue())) {
+                taskSetting.updateTaskSetting(dto.id, dto.taskSetting);
+                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPo = this.query().eq("pid", dto.id).one();
+                taskSetting.updateTaskSetting(nifiCustomWorkflowDetailPo.id, dto.taskSetting);
+            }
+        }
 
         // dto -> po
         NifiCustomWorkflowDetailPO po = NifiCustomWorkflowDetailMap.INSTANCES.dtoToPo(dto);
@@ -699,6 +730,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 }
                 log.info("删除组件的topic组装参数:" + JSON.toJSONString(topicDtos));
                 publishTaskClient.deleteTableTopicGroup(topicDtos);
+                //先删除组件配置
+                dtoList.forEach(e -> taskSetting.deleteByTaskId(e.id));
                 dtoList.forEach(e -> mapper.deleteByIdWithFill(NifiCustomWorkflowDetailMap.INSTANCES.dtoToPo(e)));
             }
         } catch (Exception e) {

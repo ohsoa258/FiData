@@ -21,7 +21,9 @@ public enum DataClassifyEnum  implements BaseEnum {
     //scheduling component
     CUSTOMWORKSCHEDULINGCOMPONENT(7,"管道服务-调度组件"),
     //自定义脚本任务
-    CUSTOMWORKCUSTOMIZESCRIPT(12,"自定义脚本任务");
+    CUSTOMWORKCUSTOMIZESCRIPT(12,"自定义脚本任务"),
+    //sftp_file_copy_task
+    SFTPFILECOPYTASK(14,"SFTP文件复制");
 
     private final String name;
     private final int value;
