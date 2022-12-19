@@ -28,21 +28,19 @@ public class BuildSftpCopyListener implements ISftpCopyListener {
     @Resource
     private DataFactoryClient dataFactoryClient;
 
-    @Resource
-    private SftpUtils sftpUtils;
-
     @Override
     public ResultEnum sftpCopyTask(String data, Acknowledgment acke) {
         log.info("执行sftp文件复制参数:{}", data);
         data = "[" + data + "]";
         List<SftpCopyDTO> sftpCopys = JSON.parseArray(data, SftpCopyDTO.class);
+
         for (SftpCopyDTO sftpCopy : sftpCopys) {
             // 查具体的配置
             List<TaskSettingDTO> list = dataFactoryClient.getTaskSettingsByTaskId(Long.parseLong(sftpCopy.getTaskId()));
             Map<String, String> map = list.stream()
                     .collect(Collectors.toMap(TaskSettingDTO::getKey, TaskSettingDTO::getValue));
             // 执行sftp文件复制任务
-            sftpUtils.copyFile(map.get(TaskSettingEnum.sftp_source_ip.getAttributeName()), 22,
+            SftpUtils.copyFile(map.get(TaskSettingEnum.sftp_source_ip.getAttributeName()), 22,
                     map.get(TaskSettingEnum.sftp_source_account.getAttributeName()),
                     map.get(TaskSettingEnum.sftp_source_password.getAttributeName()),
                     map.get(TaskSettingEnum.sftp_source_authentication_type.getAttributeName()),

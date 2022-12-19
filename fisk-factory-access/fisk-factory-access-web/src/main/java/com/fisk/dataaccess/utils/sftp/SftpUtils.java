@@ -398,7 +398,7 @@ public class SftpUtils {
      * @throws SftpException
      * @throws IOException
      */
-    public void copyFile(String rHost, Integer rPort, String rUserName, String rPw, String rKey,
+    public static void copyFile(String rHost, Integer rPort, String rUserName, String rPw, String rKey,
                          String tHost, Integer tPort, String tUserName, String tPw, String tKey,
                          Integer sortTypeName, Integer sortType, Integer index, String currDir,
                          String targetDir, String targetFileName){
