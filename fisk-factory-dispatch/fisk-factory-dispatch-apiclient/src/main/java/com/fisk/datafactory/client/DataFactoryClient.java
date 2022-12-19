@@ -3,10 +3,7 @@ package com.fisk.datafactory.client;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datafactory.dto.customworkflow.DispatchEmailDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.DispatchJobHierarchyDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.QueryJobHierarchyDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.*;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.dto.tasknifi.*;
@@ -167,4 +164,14 @@ public interface DataFactoryClient {
     @PostMapping("/DispatchEmail/pipelineSendEmails")
     @ApiOperation(value = "管道异常发邮件")
     public ResultEntity<Object> pipelineSendEmails(@RequestBody DispatchEmailDTO dispatchEmail);
+
+    /**
+     * 依据taskId获取当前任务下的所有配置列表信息
+     *
+     * @param taskId 任务id
+     * @return
+     */
+    @GetMapping("/taskSetting/getTaskSettingsByTaskId/{taskId}")
+    @ApiOperation(value = "根据任务id查询当前任务下的配置信息列表")
+    public List<TaskSettingDTO> getTaskSettingsByTaskId(@PathVariable("taskId") long taskId);
 }

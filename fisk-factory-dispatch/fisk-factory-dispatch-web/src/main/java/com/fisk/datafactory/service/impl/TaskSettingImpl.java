@@ -1,9 +1,12 @@
 package com.fisk.datafactory.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datafactory.dto.customworkflowdetail.TaskSettingDTO;
 import com.fisk.datafactory.entity.TaskSettingPO;
+import com.fisk.datafactory.map.TaskSettingMap;
 import com.fisk.datafactory.mapper.TaskSettingMapper;
 import com.fisk.datafactory.service.ITaskSetting;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +27,9 @@ public class TaskSettingImpl extends ServiceImpl<TaskSettingMapper, TaskSettingP
 
     @Resource
     TaskSettingMapper taskSettingMapper;
+
+    @Resource
+    private TaskSettingMap taskSettingMap;
 
     @Override
     public ResultEnum deleteByTaskId(long taskId) {
@@ -49,5 +55,12 @@ public class TaskSettingImpl extends ServiceImpl<TaskSettingMapper, TaskSettingP
         taskSettingMapper.deleteByTaskId(taskId);
         this.saveBatch(list);
         return ResultEnum.SUCCESS;
+    }
+    
+    @Override
+    public List<TaskSettingDTO> getTaskSettingsByTaskId(long taskId) {
+        QueryWrapper<TaskSettingPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("task_id", taskId);
+        return taskSettingMap.poToDto(taskSettingMapper.selectList(queryWrapper));
     }
 }

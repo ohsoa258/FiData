@@ -363,42 +363,74 @@ public class SftpUtils {
     }
 
     /**
-     * sftp连接将指定文件复制到目标sftp上
-     * @param currSftp 源服务器sftp
-     * @param targetSftp 目标服务器sftp
+     * 关闭流
+     *
+     * @param ins
+     */
+    public static void closeInputStream(InputStream ins) {
+        try {
+            if (ins != null) {
+                ins.close();
+            }
+        } catch (Exception e) {
+            log.error("关闭InputStream流异常", e);
+        }
+    }
+
+    /**
+     * 将源sftp服务器中的指定文件复制到目标sftp服务器中
+     * @param rHost 源sftp地址
+     * @param rPort 源sftp端口
+     * @param rUserName 源sftp用户名
+     * @param rPw 源sftp密码
+     * @param rKey 源sftp认证类型
+     * @param tHost 目标sftp端口
+     * @param tPort 目标sftp端口
+     * @param tUserName 目标sftp用户名
+     * @param tPw 目标sftp密码
+     * @param tKey 目标sftp认证类型
      * @param sortTypeName 排序类型（1：文件名，2：时间）
      * @param sortType 排序顺序类型（1：正序，2：默认，3：倒序）
-     * @param index 需要复制的文件所对应的文件位置
+     * @param index 需要复制的第几个文件
      * @param currDir 需要复制的文件所在目录
      * @param targetDir 复制后文件所在目录
      * @param targetFileName 复制后的新文件名称
      * @throws SftpException
      * @throws IOException
      */
-    public static void copyFile(ChannelSftp currSftp, ChannelSftp targetSftp, Integer sortTypeName, Integer sortType,
-                                Integer index, String currDir, String targetDir, String targetFileName) throws SftpException, IOException {
-        // 获取文件字节流
+    public void copyFile(String rHost, Integer rPort, String rUserName, String rPw, String rKey,
+                         String tHost, Integer tPort, String tUserName, String tPw, String tKey,
+                         Integer sortTypeName, Integer sortType, Integer index, String currDir,
+                         String targetDir, String targetFileName){
         InputStream ins = null;
+        ChannelSftp currSftp = null;
+        ChannelSftp targetSftp = null;
         try{
+            // 初始化sftp连接
+            currSftp = connect(rHost, rPort, rUserName, rPw, rKey);
+            targetSftp = connect(tHost, tPort, tUserName, tPw, tKey);
+
+            // 获取文件字节流
             ins = getFileInputStream(currSftp, sortTypeName, sortType, index, currDir);
 
             // 上传文件
             uploadFile(targetSftp, ins, targetDir, targetFileName);
+        }catch (Exception e){
+            log.error("sftp文件复制失败，{}", e);
+            throw new FkException(ResultEnum.SFTP_FILE_COPY_FAIL);
         }finally {
-            if (ins != null){
-                ins.close();
-            }
+            closeInputStream(ins);
             disconnect(currSftp);
             disconnect(targetSftp);
         }
     }
 
 
-    public static void main(String[] args) throws IOException, SftpException {
-        ChannelSftp currSftp = connect("192.168.21.21", 22, "sftp", "password01!", null);
-        ChannelSftp targetSftp = connect("192.168.21.21", 22, "sftp", "password01!", null);
-        copyFile(currSftp, targetSftp, SortTypeNameEnum.FILENAME_SORT.getValue(), SortTypeEnum.POSITIVE_SORT.getValue(),
-                1, "/upload/", "/upload/test/", "hhh.txt" );
-    }
+//    public static void main(String[] args) throws IOException, SftpException {
+//        ChannelSftp currSftp = connect("192.168.21.21", 22, "sftp", "password01!", null);
+//        ChannelSftp targetSftp = connect("192.168.21.21", 22, "sftp", "password01!", null);
+//        copyFile(currSftp, targetSftp, SortTypeNameEnum.FILENAME_SORT.getValue(), SortTypeEnum.POSITIVE_SORT.getValue(),
+//                1, "/upload/", "/upload/test/", "hhh.txt" );
+//    }
 
 }
