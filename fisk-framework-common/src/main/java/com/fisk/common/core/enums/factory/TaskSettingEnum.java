@@ -94,4 +94,6 @@ public enum TaskSettingEnum implements BaseEnum {
         return name;
     }
 
+    public String getAttributeName(){return attributeName;}
+
 }
