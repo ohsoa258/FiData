@@ -1,5 +1,7 @@
 package com.fisk.dataservice.map;
 
+import com.fisk.dataservice.dto.tableservice.TableServiceDTO;
+import com.fisk.dataservice.entity.TableServicePO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
@@ -11,5 +13,13 @@ import org.mapstruct.factory.Mappers;
 public interface TableServiceMap {
 
     TableServiceMap INSTANCES = Mappers.getMapper(TableServiceMap.class);
+
+    /**
+     * dto==>Po
+     *
+     * @param dto
+     * @return
+     */
+    TableServicePO dtoToPo(TableServiceDTO dto);
 
 }

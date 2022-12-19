@@ -1,15 +1,12 @@
-package com.fisk.dataservice.entity;
+package com.fisk.dataservice.dto.tablesyncmode;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
 
 /**
  * @author JianWenYang
  */
 @Data
-@TableName("tb_table_sync_mode")
-public class TableSyncModePO extends BasePO {
+public class TableSyncModeDTO {
 
     /**
      *

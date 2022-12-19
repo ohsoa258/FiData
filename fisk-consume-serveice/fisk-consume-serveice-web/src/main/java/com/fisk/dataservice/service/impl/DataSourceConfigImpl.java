@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.constants.NifiConstants;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -16,6 +17,9 @@ import com.fisk.common.core.utils.dbutils.utils.PgSqlUtils;
 import com.fisk.common.core.utils.dbutils.utils.SqlServerUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
+import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
+import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
+import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
 import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.dto.table.FieldNameDTO;
 import com.fisk.dataaccess.enums.DeltaTimeParameterTypeEnum;
@@ -104,7 +108,32 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
         }
         data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());
         data.dataArray = array;
+
         return data;
+    }
+
+    /**
+     * 不同数据库类型转换
+     *
+     * @param dataSourceTypeEnum
+     * @param fieldList
+     * @param sqlType
+     */
+    public void typeConversion(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum dataSourceTypeEnum,
+                               List<FieldNameDTO> fieldList,
+                               DataSourceTypeEnum sqlType) {
+
+        IBuildAccessSqlCommand command = BuildFactoryAccessHelper.getDBCommand(dataSourceTypeEnum);
+        DataTypeConversionDTO dto = new DataTypeConversionDTO();
+        for (FieldNameDTO field : fieldList) {
+            dto.dataLength = field.fieldLength;
+            dto.dataType = field.fieldType;
+            dto.precision = field.sourceFieldPrecision;
+            String[] data = command.dataTypeConversion(dto, sqlType);
+            field.fieldType = data[0].toUpperCase();
+            field.fieldLength = data[1];
+        }
+
     }
 
     @Override
@@ -200,6 +229,7 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
 
             //获取数据集
             data = resultSetToJsonArrayTableService(rs);
+            data.sql = sql;
 
             Instant inst5 = Instant.now();
             log.info("封装数据执行时间 : " + Duration.between(inst4, inst5).toMillis());
@@ -212,6 +242,12 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
             AbstractCommonDbHelper.closeStatement(st);
             AbstractCommonDbHelper.closeConnection(conn);
         }
+
+        Instant inst5 = Instant.now();
+        System.out.println("最终执行时间 : " + Duration.between(inst1, inst5).toMillis());
+
+        //数据类型转换
+        typeConversion(first.get().conType, data.fieldNameDTOList, DataSourceTypeEnum.SQLSERVER);
 
         return data;
     }

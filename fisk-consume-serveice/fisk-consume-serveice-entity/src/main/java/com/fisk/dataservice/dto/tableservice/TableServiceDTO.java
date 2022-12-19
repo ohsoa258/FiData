@@ -9,8 +9,7 @@ import lombok.Data;
 @Data
 public class TableServiceDTO {
 
-    @ApiModelProperty(value = "服务应用id", required = true)
-    public Integer appId;
+    public long id;
 
     @ApiModelProperty(value = "表名", required = true)
     public String tableName;
@@ -25,7 +24,7 @@ public class TableServiceDTO {
     public String sqlScript;
 
     @ApiModelProperty(value = "目标数据源id", required = true)
-    public String targetDbTd;
+    public Integer targetDbId;
 
     @ApiModelProperty(value = "表添加方式: 1创建新表 2选择现有表", required = true)
     public Integer addType;

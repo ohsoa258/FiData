@@ -34,7 +34,7 @@ public class TableServicePO extends BasePO {
     /**
      * 目标数据源id
      */
-    public String targetDbTd;
+    public Integer targetDbId;
 
     /**
      * 表添加方式: 1创建新表 2选择现有表
