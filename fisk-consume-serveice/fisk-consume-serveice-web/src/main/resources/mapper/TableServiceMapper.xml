@@ -5,7 +5,6 @@
 
     <select id="getTableServiceListData" resultType="com.fisk.dataservice.dto.tableservice.TableServicePageDataDTO">
         select
-        a.app_id,
         a.table_name,
         a.display_name,
         a.publish,
@@ -14,7 +13,7 @@
         tb_table_service a
         left join tb_table_sync_mode b on a.id=b.type_table_id
         where
-        a.app_id = ${query.appId} and b.type = 2 and a.del_flag=1
+        b.type = 2 and a.del_flag=1
         <if test="query.tableName != null and query.tableName.length()>0">
             and a.table_name like CONCAT('%',#{query.tableName},'%')
         </if>

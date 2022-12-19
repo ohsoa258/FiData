@@ -19,8 +19,6 @@ public class TableServicePageQueryDTO {
     @ApiModelProperty(value = "同步方式")
     public Integer syncMode;
 
-    public Integer appId;
-
     public Page<TableServicePageDataDTO> page;
 
 }
