@@ -9,4 +9,12 @@ import lombok.Data;
 public class BuildCSVReaderProcessorDTO extends BaseProcessorDTO {
     public String schemaAccessStrategy;
     public String schemaText;
+    /**
+     * CSV Format
+     */
+    public String csvFormat;
+    /**
+     * Skip Header Line
+     */
+    public String skipHeaderLine;
 }

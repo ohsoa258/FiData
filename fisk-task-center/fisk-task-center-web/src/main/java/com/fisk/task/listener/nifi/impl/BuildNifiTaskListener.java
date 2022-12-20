@@ -268,8 +268,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 kafkaRkeceiveDTO.pipelStageTraceId = UUID.randomUUID().toString();
                 kafkaRkeceiveDTO.ifTaskStart = true;
                 kafkaRkeceiveDTO.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
-                pc.universalPublish(kafkaRkeceiveDTO);
-                //kafkaTemplateHelper.sendMessageAsync(pipelineTopicName, JSON.toJSONString(kafkaRkeceiveDTO));
+                //pc.universalPublish(kafkaRkeceiveDTO);
+                kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaRkeceiveDTO));
             }
 
             //7. 回写id
@@ -1244,6 +1244,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildFetchSFTPProcessor.port = ftpConfig.port;
         buildFetchSFTPProcessor.remoteFile = ftpConfig.remotePath + "/" + ftpConfig.fileFilterRegex;
         buildFetchSFTPProcessor.username = ftpConfig.username;
+        buildFetchSFTPProcessor.sendKeepAliveOnTimeout = "false";
+        buildFetchSFTPProcessor.connectionTimeout = "100 sec";
+        buildFetchSFTPProcessor.dataTimeout = "100 sec";
         buildFetchSFTPProcessor.positionDTO = NifiPositionHelper.buildXYPositionDTO(-1, 9);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildFetchSFTPProcess(buildFetchSFTPProcessor);
         verifyProcessorResult(processorEntityBusinessResult);
@@ -1271,6 +1274,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildCSVReaderProcessorDTO.groupId = groupId;
         buildCSVReaderProcessorDTO.name = "CSVReader";
         buildCSVReaderProcessorDTO.details = "CSVReader";
+        buildCSVReaderProcessorDTO.csvFormat = "excel";
+        buildCSVReaderProcessorDTO.skipHeaderLine = "false";
         List<String> sourceFieldName = config.targetDsConfig.tableFieldsList.stream().map(e -> e.sourceFieldName).collect(Collectors.toList());
         String schemaArchitecture = buildSchemaArchitecture(sourceFieldName, config.processorConfig.targetTableName);
         buildCSVReaderProcessorDTO.schemaText = schemaArchitecture;
@@ -1291,6 +1296,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         List<String> sourceFieldName = config.targetDsConfig.tableFieldsList.stream().map(e -> e.sourceFieldName).collect(Collectors.toList());
         String schemaArchitecture = buildSchemaArchitecture(sourceFieldName, config.processorConfig.targetTableName);
         buildCSVReaderProcessorDTO.schemaArchitecture = schemaArchitecture;
+        buildCSVReaderProcessorDTO.schemaAccessStrategy = "schema-text-property";
+        buildCSVReaderProcessorDTO.schemaWriteStrategy = "avro-embedded";
         BusinessResult<ControllerServiceEntity> controllerServiceEntityBusinessResult = componentsBuild.buildAvroRecordSetWriterService(buildCSVReaderProcessorDTO);
         if (controllerServiceEntityBusinessResult.success) {
             ControllerServiceEntity data = controllerServiceEntityBusinessResult.data;
@@ -1326,14 +1333,19 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     private String buildSchemaArchitecture(List<String> tableFieldsList, String schemaName) {
         String architecture = "{\"namespace\": \"nifi\",\"name\": \"" + schemaName + "\",\"type\": \"record\",\"fields\": [";
-        for (String tableFieldsDTO : tableFieldsList) {
-            if (tableFieldsDTO != null && tableFieldsDTO != "") {
-                architecture += "{ \"name\": \"" + tableFieldsDTO + "\",\"type\": [\"null\",\"string\"] },";
+        for (String tableFields : tableFieldsList) {
+            if (StringUtils.isNotEmpty(tableFields)) {
+                tableFields = tableFields.replace(")", "_");
+                tableFields = tableFields.replace("(", "_");
+                tableFields = tableFields.replace("）", "_");
+                tableFields = tableFields.replace("（", "_");
+                architecture += "{ \"name\": \"" + tableFields + "\",\"type\": [\"null\",\"string\"] },";
             }
         }
         architecture = architecture.substring(0, architecture.length() - 1) + "]}";
         return architecture;
     }
+
 
     private ProcessorEntity createExecuteSQLRecord(String appGroupId, DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto, String sourceDbPoolId, TableNifiSettingPO tableNifiSettingPO) {
         BuildAvroRecordSetWriterServiceDTO data = new BuildAvroRecordSetWriterServiceDTO();
@@ -1356,6 +1368,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         }
         String schemaArchitecture = buildSchemaArchitecture(sourceFieldName, config.processorConfig.targetTableName);
         data.schemaArchitecture = schemaArchitecture;
+        data.schemaWriteStrategy = "avro-embedded";
+        data.schemaAccessStrategy = "schema-text-property";
         //--------------------------------------------
         //创建buildAvroRecordSetWriterService
         BusinessResult<ControllerServiceEntity> controllerServiceEntityBusinessResult = componentsBuild.buildAvroRecordSetWriterService(data);
@@ -1433,6 +1447,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         }
         String schemaArchitecture = buildSchemaArchitecture(sourceFieldName, config.processorConfig.targetTableName);
         buildAvroRecordSetWriterServiceDTO.schemaArchitecture = schemaArchitecture;
+        buildAvroRecordSetWriterServiceDTO.schemaWriteStrategy = "avro-embedded";
+        buildAvroRecordSetWriterServiceDTO.schemaAccessStrategy = "schema-text-property";
         BusinessResult<ControllerServiceEntity> avroRecordSetWriterService = componentsBuild.buildAvroRecordSetWriterService(buildAvroRecordSetWriterServiceDTO);
         tableNifiSettingPO.convertAvroRecordSetWriterId = avroRecordSetWriterService.data.getId();
         //--------------------------------------
@@ -1474,7 +1490,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildUpdateRecordDTO.name = "UpdateRecord";
 
         if (buildParameter.size() != 0) {
-            buildUpdateRecordDTO.filedMap = buildParameter;
+            String avro = JSON.toJSONString(buildParameter);
+            avro = avro.replaceAll("）", "_");
+            avro = avro.replaceAll("（", "_");
+            buildUpdateRecordDTO.filedMap = JSON.parseObject(avro, Map.class);
         }
         buildUpdateRecordDTO.recordReader = avroReaderService.data.getId();
         buildUpdateRecordDTO.recordWriter = avroRecordSetWriterService.data.getId();
@@ -1514,6 +1533,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
         String schemaArchitecture = buildSchemaArchitecture(sourceFieldName, config.processorConfig.targetTableName);
         buildAvroRecordSetWriterServiceDTO.schemaArchitecture = schemaArchitecture;
+        buildAvroRecordSetWriterServiceDTO.schemaWriteStrategy = "avro-embedded";
+        buildAvroRecordSetWriterServiceDTO.schemaAccessStrategy = "schema-text-property";
         BusinessResult<ControllerServiceEntity> avroRecordSetWriterService = componentsBuild.buildAvroRecordSetWriterService(buildAvroRecordSetWriterServiceDTO);
         tableNifiSettingPO.convertAvroRecordSetWriterForCodeId = avroRecordSetWriterService.data.getId();
         //--------------------------------------
@@ -2911,6 +2932,5 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         verifyProcessorResult(querySqlRes);
         return querySqlRes.data;
     }
-
 
 }
