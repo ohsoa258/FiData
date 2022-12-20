@@ -165,6 +165,7 @@ public enum ResultEnum {
     SFTP_PREVIEW_ERROR(5076, "SFTP预览文件失败"),
     SFTP_FILE_INDEX_ERROR(5077, "SFTP文件索引错误"),
     SFTP_FILE_IS_NULL(5078, "SFTP文件不存在"),
+    SFTP_FILE_COPY_FAIL(5079, "SFTP文件复制失败"),
 
 
     /**

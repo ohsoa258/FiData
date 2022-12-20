@@ -2,14 +2,16 @@ package com.fisk.task.dto.task;
 
 import com.fisk.task.dto.MQBaseDTO;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 
 /**
  * @author cfk
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class SftpCopyDTO extends MQBaseDTO {
     @ApiModelProperty(value = "管道批次id", required = true)
     public String pipelTraceId;

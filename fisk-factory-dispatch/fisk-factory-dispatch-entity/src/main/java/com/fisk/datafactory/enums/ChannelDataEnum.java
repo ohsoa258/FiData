@@ -66,7 +66,11 @@ public enum ChannelDataEnum implements BaseEnum {
     /**
      * 自定义脚本任务
      */
-    CUSTOMIZE_SCRIPT_TASK(13,"自定义脚本任务")
+    CUSTOMIZE_SCRIPT_TASK(13,"自定义脚本任务"),
+    /**
+     * SFTP文件复制
+     */
+    SFTP_FILE_COPY_TASK(14,"SFTP文件复制")
     ;
 
     ChannelDataEnum(int value, String name) {

@@ -18,6 +18,7 @@ import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.ExecScriptDTO;
+import com.fisk.task.dto.task.SftpCopyDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.entity.PipelTaskLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
@@ -78,7 +79,7 @@ public class TaskPublish {
 
 
     /**
-     *  接收到的本节点,需要找所有下游,根据下游状态调用
+     * 接收到的本节点,需要找所有下游,根据下游状态调用
      */
     public void taskPublish(String message, Acknowledgment acke) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -146,38 +147,9 @@ public class TaskPublish {
                             iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelTraceId, kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.itselfPort.id), null, 0);
                         }
                         //调度脚本任务
-                        if (!StringUtils.isEmpty(kafkaReceiveDTO.scriptTaskIds)) {
-                            ExecScriptDTO execScript = new ExecScriptDTO();
-                            String[] scriptTaskId = kafkaReceiveDTO.scriptTaskIds.split(",");
-                            execScript.pipelTraceId = kafkaReceiveDTO.pipelTraceId;
-                            for (String taskId : scriptTaskId) {
-                                execScript.pipelJobTraceId = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(kafkaReceiveDTO.pipelTraceId, String.valueOf(taskId)).jobTraceId;
-                                execScript.pipelTaskTraceId = UUID.randomUUID().toString();
-                                execScript.taskId = taskId;
-                                log.info("发送的执行脚本topic:{},内容:{}", MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, JSON.toJSONString(execScript));
-                                kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, JSON.toJSONString(execScript));
-                                //job开始日志
-                                Map<Integer, Object> jobMap = new HashMap<>();
-                                NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, OlapTableEnum.CUSTOMIZESCRIPT.getValue(), null, 0);
-                                if (Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue())) {
-                                    //没有表id就把任务id扔进去
-                                    nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(taskId);
-                                }
-
-                                TaskHierarchyDTO nifiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchy, kafkaReceiveDTO.pipelTraceId);
-                                //任务依赖的组件
-                                jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
-                                iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, pipelineId, execScript.pipelJobTraceId, String.valueOf(nifiPortHierarchy.itselfPort.pid));
-                                //task日志
-                                HashMap<Integer, Object> taskMap = new HashMap<>();
-                                taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
-                                //taskMap.put(DispatchLogEnum.taskstate.getValue(), jobName + "-" + nifiPortHierarchy.itselfPort.tableOrder + " " + NifiStageTypeEnum.RUNNING.getName());
-                                log.info("第四处调用保存task日志");
-                                iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelTraceId, execScript.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.itselfPort.id), null, OlapTableEnum.CUSTOMIZESCRIPT.getValue());
-
-                            }
-
-                        }
+                        sendScriptTask(kafkaReceiveDTO, pipelineId, split1[4]);
+                        //sftp复制任务
+                        sendSftpFileCopyTask(kafkaReceiveDTO, pipelineId, split1[4]);
                         //如果有非实时api,单独发消息
                         if (!StringUtils.isEmpty(kafkaReceiveDTO.pipelApiDispatch)) {
                             ApiImportDataDTO apiImportData = new ApiImportDataDTO();
@@ -214,15 +186,27 @@ public class TaskPublish {
                         log.info("第一处调用保存job日志");
                         iPipelJobLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
                         iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
+                    } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.DAILY_NIFI_FLOW.getValue())) {
+                        //卡夫卡的内容在发布时就定义好了
+                        String dailyNifiMsg = JSON.toJSONString(kafkaReceiveDTO);
+                        log.info("打印topic内容:" + dailyNifiMsg);
+                        HashMap<Integer, Object> taskMap = new HashMap<>();
+                        taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN + " - " + simpleDateFormat.format(new Date()));
+                        log.info("第二处调用保存task日志");
+                        iPipelTaskLog.savePipelTaskLog(null, null, kafkaReceiveDTO.pipelTaskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
+                        //任务中心发布任务,通知任务开始执行
+                        kafkaTemplateHelper.sendMessageAsync(topicName, dailyNifiMsg);
                     } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue())) {
                         String tableId = "";
-                        if (!Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue())) {
+                        if (!Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue()) &&
+                                !Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue())) {
                             //没有表id就把任务id扔进去
                             tableId = split1[6];
                         }
                         //请求接口得到对象,条件--管道名称,表名称,表类别,表id,topic_name(加表名table_name)
                         NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, Integer.parseInt(split1[4]), null, Integer.parseInt(StringUtils.isEmpty(tableId) ? "0" : tableId));
-                        if (Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue())) {
+                        if (Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue()) ||
+                                Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue())) {
                             //没有表id就把任务id扔进去
                             nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(split1[6]);
                         }
@@ -336,6 +320,10 @@ public class TaskPublish {
                 execScript.taskId = split[6];
                 log.info("执行脚本任务发送卡夫卡请求参数:{}", JSON.toJSONString(execScript));
                 kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, JSON.toJSONString(execScript));
+            } else if (Objects.equals(type, OlapTableEnum.SFTPFILECOPYTASK)) {
+                SftpCopyDTO sftpCopy = getSftpCopy(pipelTraceId, jobTraceId, taskHierarchy.taskTraceId, split[6], null);
+                log.info("执行脚本任务发送卡夫卡请求参数:{}", JSON.toJSONString(sftpCopy));
+                kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_SFTP_FILE_COPY_FLOW, JSON.toJSONString(sftpCopy));
             } else {
                 KafkaReceiveDTO kafkaReceive = getKafkaReceive(pipelTraceId, jobTraceId, taskHierarchy.taskTraceId, simpleDateFormat.format(new Date()), TopicTypeEnum.COMPONENT_NIFI_FLOW, topic);
                 log.info("发送卡夫卡请求参数:{},内容:{}", topic, JSON.toJSONString(kafkaReceive));
@@ -350,6 +338,99 @@ public class TaskPublish {
 
     }
 
+    /**
+     * 发送脚本任务
+     *
+     * @param kafkaReceiveDTO
+     * @param pipelineId
+     * @param taskType
+     */
+    public void sendScriptTask(KafkaReceiveDTO kafkaReceiveDTO, String pipelineId, String taskType) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        if (!StringUtils.isEmpty(kafkaReceiveDTO.scriptTaskIds)) {
+            ExecScriptDTO execScript = new ExecScriptDTO();
+            String[] scriptTaskId = kafkaReceiveDTO.scriptTaskIds.split(",");
+            execScript.pipelTraceId = kafkaReceiveDTO.pipelTraceId;
+            for (String taskId : scriptTaskId) {
+                execScript.pipelJobTraceId = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(kafkaReceiveDTO.pipelTraceId, String.valueOf(taskId)).jobTraceId;
+                execScript.pipelTaskTraceId = UUID.randomUUID().toString();
+                execScript.taskId = taskId;
+                log.info("发送的执行脚本topic:{},内容:{}", MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, JSON.toJSONString(execScript));
+                kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, JSON.toJSONString(execScript));
+                //job开始日志
+                Map<Integer, Object> jobMap = new HashMap<>();
+                NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, OlapTableEnum.CUSTOMIZESCRIPT.getValue(), null, 0);
+                if (Objects.equals(Integer.parseInt(taskType), OlapTableEnum.CUSTOMIZESCRIPT.getValue())) {
+                    //没有表id就把任务id扔进去
+                    nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(taskId);
+                }
+
+                TaskHierarchyDTO nifiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchy, kafkaReceiveDTO.pipelTraceId);
+                //任务依赖的组件
+                jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, pipelineId, execScript.pipelJobTraceId, String.valueOf(nifiPortHierarchy.itselfPort.pid));
+                //task日志
+                HashMap<Integer, Object> taskMap = new HashMap<>();
+                taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                //taskMap.put(DispatchLogEnum.taskstate.getValue(), jobName + "-" + nifiPortHierarchy.itselfPort.tableOrder + " " + NifiStageTypeEnum.RUNNING.getName());
+                log.info("第四处调用保存task日志");
+                iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelTraceId, execScript.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.itselfPort.id), null, OlapTableEnum.CUSTOMIZESCRIPT.getValue());
+
+            }
+        }
+    }
+
+    /**
+     * 发送脚本任务
+     *
+     * @param kafkaReceiveDTO
+     * @param pipelineId
+     * @param taskType
+     */
+    public void sendSftpFileCopyTask(KafkaReceiveDTO kafkaReceiveDTO, String pipelineId, String taskType) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        if (!StringUtils.isEmpty(kafkaReceiveDTO.sftpFileCopyTaskId)) {
+            ExecScriptDTO execScript = new ExecScriptDTO();
+            String[] scriptTaskId = kafkaReceiveDTO.sftpFileCopyTaskId.split(",");
+            execScript.pipelTraceId = kafkaReceiveDTO.pipelTraceId;
+            for (String taskId : scriptTaskId) {
+                execScript.pipelJobTraceId = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(kafkaReceiveDTO.pipelTraceId, String.valueOf(taskId)).jobTraceId;
+                execScript.pipelTaskTraceId = UUID.randomUUID().toString();
+                execScript.taskId = taskId;
+                log.info("发送的执行脚本topic:{},内容:{}", MqConstants.QueueConstants.BUILD_SFTP_FILE_COPY_FLOW, JSON.toJSONString(execScript));
+                kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_SFTP_FILE_COPY_FLOW, JSON.toJSONString(execScript));
+                //job开始日志
+                Map<Integer, Object> jobMap = new HashMap<>();
+                NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, OlapTableEnum.SFTPFILECOPYTASK.getValue(), null, 0);
+                if (Objects.equals(Integer.parseInt(taskType), OlapTableEnum.SFTPFILECOPYTASK.getValue())) {
+                    //没有表id就把任务id扔进去
+                    nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(taskId);
+                }
+
+                TaskHierarchyDTO nifiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchy, kafkaReceiveDTO.pipelTraceId);
+                //任务依赖的组件
+                jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, pipelineId, execScript.pipelJobTraceId, String.valueOf(nifiPortHierarchy.itselfPort.pid));
+                //task日志
+                HashMap<Integer, Object> taskMap = new HashMap<>();
+                taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                //taskMap.put(DispatchLogEnum.taskstate.getValue(), jobName + "-" + nifiPortHierarchy.itselfPort.tableOrder + " " + NifiStageTypeEnum.RUNNING.getName());
+                log.info("第四处调用保存task日志");
+                iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelTraceId, execScript.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.itselfPort.id), null, OlapTableEnum.SFTPFILECOPYTASK.getValue());
+
+            }
+        }
+    }
+
+    /**
+     * @param pipelTraceId
+     * @param jobTraceId
+     * @param pipelTaskTraceId
+     * @param startTime
+     * @param topicType
+     * @param topic
+     * @return
+     */
     public static KafkaReceiveDTO getKafkaReceive(String pipelTraceId, String jobTraceId, String pipelTaskTraceId, String startTime, TopicTypeEnum topicType, String topic) {
         return KafkaReceiveDTO.builder()
                 .pipelTraceId(pipelTraceId)
@@ -362,6 +443,22 @@ public class TaskPublish {
                 .topic(topic)
                 .build();
     }
+
+    public static SftpCopyDTO getSftpCopy(String pipelTraceId,
+                                          String pipelJobTraceId,
+                                          String pipelTaskTraceId,
+                                          String taskId,
+                                          String pipelStageTraceId) {
+        return SftpCopyDTO.builder()
+                .pipelJobTraceId(pipelJobTraceId)
+                .pipelStageTraceId(pipelStageTraceId)
+                .pipelTaskTraceId(pipelTaskTraceId)
+                .pipelTraceId(pipelTraceId)
+                .taskId(taskId)
+                .build();
+    }
+
+
 }
 
 

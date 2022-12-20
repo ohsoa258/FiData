@@ -80,6 +80,11 @@ public class MqConstants {
          */
         public static final String BUILD_TASK_PUBLISH_FLOW = "task.build.task.publish";
 
+        /**
+         * build.sftpfile.copy.flow
+         */
+        public static final String BUILD_SFTP_FILE_COPY_FLOW = "build.sftpfile.copy.flow";
+
     }
 
     /**

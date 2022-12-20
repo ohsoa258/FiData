@@ -73,12 +73,16 @@ public class MissionEndCenter {
                 if (split.length == 7) {
                     String pipelineId = split[3];
                     String pipelJobTraceId = kafkaReceive.pipelJobTraceId;
-                    if (!Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue())) {
+                    if (!Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue())&&
+                            !Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue())
+                    ) {
                         //没有表id就把任务id扔进去
                         tableId = split[6];
                     }
                     NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, Integer.parseInt(split[4]), null, Integer.parseInt(StringUtils.isEmpty(tableId) ? "0" : tableId));
-                    if (Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue())) {
+                    if (Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue())||
+                            Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue())
+                    ) {
                         //没有表id就把任务id扔进去
                         nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(split[6]);
                     }

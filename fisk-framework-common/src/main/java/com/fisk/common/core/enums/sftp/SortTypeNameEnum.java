@@ -1,4 +1,4 @@
-package com.fisk.dataaccess.enums;
+package com.fisk.common.core.enums.sftp;
 
 
 import com.fisk.common.core.enums.BaseEnum;

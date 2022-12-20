@@ -358,6 +358,21 @@ public class DataFactoryImpl implements IDataFactory {
             if (!CollectionUtils.isEmpty(dispatchScriptTaskDtoList)) {
                 inportList.add(dispatchScriptTaskDtoList.get(0));
             }
+
+            // sftp复制任务
+            List<NifiCustomWorkflowDetailDTO> sftpFileCopyTaskDtoList = listAllTable.stream()
+                    .filter(Objects::nonNull)
+                    // 确保在同一个分析模型任务下
+                    .filter(e -> e.pid == dto.id)
+                    // 过滤出分析模型任务下的表
+                    .filter(e -> e.componentsId == ChannelDataEnum.SFTP_FILE_COPY_TASK.getValue())
+                    // 根据table_order降序
+                    .sorted(Comparator.comparing(NifiCustomWorkflowDetailDTO::getTableOrder).reversed())
+                    .collect(Collectors.toList());
+            log.info("sftpFileCopyTaskDtoList筛选后:" + JSON.toJSONString(sftpFileCopyTaskDtoList));
+            if (!CollectionUtils.isEmpty(sftpFileCopyTaskDtoList)) {
+                inportList.add(sftpFileCopyTaskDtoList.get(0));
+            }
         }
     }
 
