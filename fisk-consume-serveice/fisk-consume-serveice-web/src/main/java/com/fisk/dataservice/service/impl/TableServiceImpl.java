@@ -76,10 +76,13 @@ public class TableServiceImpl
     @Override
     public ResultEnum TableServiceSave(TableServiceSaveDTO dto) {
 
+        //修改表服务数据
         updateTableService(dto.tableService);
 
+        //表字段
         tableField.tableServiceSaveConfig((int) dto.tableService.id, dto.tableFieldList);
 
+        //覆盖方式
         dto.tableSyncMode.typeTableId = (int) dto.tableService.id;
         dto.tableSyncMode.type = AppServiceTypeEnum.TABLE.getValue();
         tableSyncMode.tableServiceTableSyncMode(dto.tableSyncMode);
@@ -99,6 +102,25 @@ public class TableServiceImpl
         data.tableSyncMode = tableSyncMode.getTableServiceSyncMode(id);
         return data;
 
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ResultEnum delTableServiceById(long id) {
+        TableServicePO po = mapper.selectById(id);
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        if (mapper.deleteByIdWithFill(po) == 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        tableField.delTableServiceField((int) id);
+
+        tableSyncMode.delTableServiceSyncMode(id, AppServiceTypeEnum.TABLE.getValue());
+
+        return ResultEnum.SUCCESS;
     }
 
     /**

@@ -34,5 +34,14 @@ public interface ITableSyncMode {
      */
     TableSyncModeDTO getTableServiceSyncMode(long tableServiceId);
 
+    /**
+     * 删除覆盖方式
+     *
+     * @param tableServiceId
+     * @param type
+     * @return
+     */
+    ResultEnum delTableServiceSyncMode(long tableServiceId, Integer type);
+
 
 }

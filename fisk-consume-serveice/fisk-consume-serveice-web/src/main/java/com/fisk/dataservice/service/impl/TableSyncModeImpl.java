@@ -68,4 +68,21 @@ public class TableSyncModeImpl
         return TableSyncModeMap.INSTANCES.poToDto(po);
     }
 
+    @Override
+    public ResultEnum delTableServiceSyncMode(long tableServiceId, Integer type) {
+        TableSyncModePO po = this.query().eq("type_table_id", tableServiceId)
+                .eq("type", AppServiceTypeEnum.TABLE.getValue())
+                .one();
+        if (po == null) {
+            return ResultEnum.SUCCESS;
+        }
+
+        if (mapper.deleteByIdWithFill(po) == 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        return ResultEnum.SUCCESS;
+
+    }
+
 }

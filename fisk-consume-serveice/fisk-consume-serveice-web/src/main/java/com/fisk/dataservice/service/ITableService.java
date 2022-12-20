@@ -55,4 +55,12 @@ public interface ITableService {
      */
     TableServiceSaveDTO getTableServiceById(long id);
 
+    /**
+     * 删除表服务
+     *
+     * @param id
+     * @return
+     */
+    ResultEnum delTableServiceById(long id);
+
 }

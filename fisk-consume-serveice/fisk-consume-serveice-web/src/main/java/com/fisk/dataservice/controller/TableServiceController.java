@@ -77,5 +77,11 @@ public class TableServiceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableServiceById(id));
     }
 
+    @ApiOperation("删除表服务配置")
+    @DeleteMapping("/getTableServiceById/{id}")
+    public ResultEntity<Object> delTableServiceById(@PathVariable("id") long id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delTableServiceById(id));
+    }
+
 
 }
