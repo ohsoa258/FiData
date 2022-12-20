@@ -1493,6 +1493,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             String avro = JSON.toJSONString(buildParameter);
             avro = avro.replaceAll("）", "_");
             avro = avro.replaceAll("（", "_");
+            avro = avro.replaceAll("\\)", "_");
+            avro = avro.replaceAll("\\(", "_");
             buildUpdateRecordDTO.filedMap = JSON.parseObject(avro, Map.class);
         }
         buildUpdateRecordDTO.recordReader = avroReaderService.data.getId();

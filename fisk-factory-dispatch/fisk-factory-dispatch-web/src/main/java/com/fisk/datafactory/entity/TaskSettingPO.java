@@ -13,7 +13,7 @@ public class TaskSettingPO extends BasePO {
 
     public String taskId;
 
-    public String key;
+    public String settingKey;
 
     public String value;
 
