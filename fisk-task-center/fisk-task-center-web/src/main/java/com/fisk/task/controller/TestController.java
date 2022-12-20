@@ -151,7 +151,7 @@ public class TestController {
     @PostMapping("/nifiTest1")
     public void nifiTest1(){
         try{
-            ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor("2d5c860f-0185-1000-7aba-756b39b68880");
+            ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor("018517b8-87c8-1425-aecf-c04511b906e8");
             System.out.println("nifi" + JSON.toJSONString(processor));
         }catch (ApiException e){
             e.printStackTrace();

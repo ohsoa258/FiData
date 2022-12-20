@@ -28,5 +28,7 @@ public class BuildFetchSFTPProcessorDTO extends BaseProcessorDTO {
      */
     public String dataTimeout;
 
+    public String privateKeyPath;
+
 
 }
