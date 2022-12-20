@@ -5,6 +5,7 @@
 
     <select id="getTableServiceListData" resultType="com.fisk.dataservice.dto.tableservice.TableServicePageDataDTO">
         select
+        a.id,
         a.table_name,
         a.display_name,
         a.publish,
