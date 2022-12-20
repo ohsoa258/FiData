@@ -1,6 +1,7 @@
 package com.fisk.dataservice.map;
 
 import com.fisk.dataservice.dto.tablesyncmode.ApiTableSyncModeDTO;
+import com.fisk.dataservice.dto.tablesyncmode.TableSyncModeDTO;
 import com.fisk.dataservice.entity.TableSyncModePO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -21,6 +22,14 @@ public interface TableSyncModeMap {
      * @return
      */
     TableSyncModePO dtoToPo(ApiTableSyncModeDTO dto);
+
+    /**
+     * tableServiceDto==>Po
+     *
+     * @param dto
+     * @return
+     */
+    TableSyncModePO tableServiceDtoToPo(TableSyncModeDTO dto);
 
 
 }

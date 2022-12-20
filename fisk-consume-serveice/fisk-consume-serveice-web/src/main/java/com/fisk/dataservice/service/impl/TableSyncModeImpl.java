@@ -1,8 +1,10 @@
 package com.fisk.dataservice.service.impl;
 
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataservice.dto.tablesyncmode.ApiTableSyncModeDTO;
+import com.fisk.dataservice.dto.tablesyncmode.TableSyncModeDTO;
 import com.fisk.dataservice.entity.TableSyncModePO;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
 import com.fisk.dataservice.map.TableSyncModeMap;
@@ -16,7 +18,9 @@ import javax.annotation.Resource;
  * @author JianWenYang
  */
 @Service
-public class TableSyncModeImpl implements ITableSyncMode {
+public class TableSyncModeImpl
+        extends ServiceImpl<TableSyncModeMapper, TableSyncModePO>
+        implements ITableSyncMode {
 
     @Resource
     TableSyncModeMapper mapper;
@@ -29,6 +33,26 @@ public class TableSyncModeImpl implements ITableSyncMode {
         if (flat == 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum tableServiceTableSyncMode(TableSyncModeDTO dto) {
+        TableSyncModePO po = this.query().eq("type_table_id", dto.typeTableId)
+                .eq("type", AppServiceTypeEnum.TABLE.getValue())
+                .one();
+        if (po == null) {
+            TableSyncModePO addPo = TableSyncModeMap.INSTANCES.tableServiceDtoToPo(dto);
+            if (mapper.insert(addPo) == 0) {
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            }
+            return ResultEnum.SUCCESS;
+        }
+        po = TableSyncModeMap.INSTANCES.tableServiceDtoToPo(dto);
+        if (mapper.updateById(po) == 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
         return ResultEnum.SUCCESS;
     }
 

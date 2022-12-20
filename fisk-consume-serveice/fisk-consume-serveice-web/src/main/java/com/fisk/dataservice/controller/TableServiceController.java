@@ -7,6 +7,7 @@ import com.fisk.dataservice.dto.datasource.DataSourceColumnQueryDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceQueryDTO;
 import com.fisk.dataservice.dto.tableservice.TableServiceDTO;
 import com.fisk.dataservice.dto.tableservice.TableServicePageQueryDTO;
+import com.fisk.dataservice.dto.tableservice.TableServiceSaveDTO;
 import com.fisk.dataservice.service.IDataSourceConfig;
 import com.fisk.dataservice.service.ITableService;
 import io.swagger.annotations.ApiOperation;
@@ -62,6 +63,12 @@ public class TableServiceController {
     @GetMapping("/getDataSourceConfig")
     public ResultEntity<Object> getDataSourceConfig() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataSourceConfig());
+    }
+
+    @ApiOperation("表服务配置保存")
+    @PostMapping("/TableServiceSave")
+    public ResultEntity<Object> TableServiceSave(@RequestBody TableServiceSaveDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.TableServiceSave(dto));
     }
 
 

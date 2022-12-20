@@ -12,6 +12,7 @@ import com.fisk.dataservice.dto.tableservice.TableServicePageDataDTO;
 import com.fisk.dataservice.dto.tableservice.TableServicePageQueryDTO;
 import com.fisk.dataservice.dto.tableservice.TableServiceSaveDTO;
 import com.fisk.dataservice.entity.TableServicePO;
+import com.fisk.dataservice.enums.AppServiceTypeEnum;
 import com.fisk.dataservice.enums.SourceTypeEnum;
 import com.fisk.dataservice.map.DataSourceConMap;
 import com.fisk.dataservice.map.TableServiceMap;
@@ -35,6 +36,11 @@ public class TableServiceImpl
 
     @Resource
     DataSourceConManageImpl dataSourceConManage;
+    @Resource
+    TableFieldImpl tableField;
+    @Resource
+    TableSyncModeImpl tableSyncMode;
+
 
     @Resource
     TableServiceMapper mapper;
@@ -72,6 +78,11 @@ public class TableServiceImpl
 
         updateTableService(dto.tableService);
 
+        tableField.tableServiceSaveConfig((int) dto.tableService.id, dto.tableFieldList);
+
+        dto.tableSyncMode.typeTableId = (int) dto.tableService.id;
+        dto.tableSyncMode.type = AppServiceTypeEnum.TABLE.getValue();
+        tableSyncMode.tableServiceTableSyncMode(dto.tableSyncMode);
 
         return ResultEnum.SUCCESS;
     }
@@ -88,7 +99,7 @@ public class TableServiceImpl
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
-        if (mapper.updateById(po) > 0) {
+        if (mapper.updateById(po) == 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         return ResultEnum.SUCCESS;
