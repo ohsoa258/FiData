@@ -198,7 +198,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         if (accessPo == null) {
             return ResultEnum.TABLE_NOT_EXIST;
         }
-
+        accessPo.sheet = dto.sheet;
         tableAccessImpl.updateById(accessPo);
 
         //系统变量
@@ -285,6 +285,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
         // 修改发布状态
         model.publish = 0;
+        model.sheet = dto.sheet;
         tableAccessImpl.updateById(model);
 
         //系统变量
