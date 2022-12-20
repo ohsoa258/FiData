@@ -131,7 +131,7 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                 if(e.pid!=0){
                     List<TaskSettingPO> poList = iTaskSetting.query().eq("task_id", e.id).list();
                     if(CollectionUtils.isNotEmpty(poList)){
-                        e.taskSetting = poList.stream().collect(Collectors.toMap(TaskSettingPO::getKey, TaskSettingPO::getValue, (k1, k2) -> k1));
+                        e.taskSetting = poList.stream().collect(Collectors.toMap(TaskSettingPO::getSettingKey, TaskSettingPO::getValue, (k1, k2) -> k1));
                     }
                 }
 

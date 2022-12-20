@@ -45,7 +45,7 @@ public class TaskSettingImpl extends ServiceImpl<TaskSettingMapper, TaskSettingP
             String key = nodeEntry.getKey();
             String value = nodeEntry.getValue();
             TaskSettingPO taskSettingPo = new TaskSettingPO();
-            taskSettingPo.key = key;
+            taskSettingPo.settingKey = key;
             taskSettingPo.value = value;
             taskSettingPo.taskId = String.valueOf(taskId);
             list.add(JSON.parseObject(JSON.toJSONString(taskSettingPo), TaskSettingPO.class));
