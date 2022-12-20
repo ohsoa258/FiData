@@ -21,10 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -51,6 +48,7 @@ public class DataAssetsImpl implements IDataAssets {
         DataAssetsResultDTO data = new DataAssetsResultDTO();
         Connection conn = null;
         Statement st = null;
+        PreparedStatement psst = null;
         try {
             //获取账号密码
             ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
@@ -67,7 +65,9 @@ public class DataAssetsImpl implements IDataAssets {
 
             //连接数据源
             conn = getConnection(first.get());
-            st = conn.createStatement();
+
+            conn.setAutoCommit(false);
+
             //拼接筛选条件
             String condition = " where 1=1 ";
             if (CollectionUtils.isNotEmpty(dto.filterQueryDTOList)) {
@@ -80,6 +80,7 @@ public class DataAssetsImpl implements IDataAssets {
             }else {
                 //获取总条数
                 String getTotalSql = "select count(*) as totalNum from " + dto.tableName+condition;
+                st = conn.createStatement();
                 ResultSet rSet = st.executeQuery(getTotalSql);
                 int rowCount = 0;
                 if (rSet.next()) {
@@ -90,7 +91,11 @@ public class DataAssetsImpl implements IDataAssets {
                 //分页获取数据
                 sql = buildSelectSql(dto, condition, first.get().conType);
             }
-            ResultSet rs = st.executeQuery(sql);
+
+            psst = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            psst.setFetchSize(1000);
+
+            ResultSet rs = psst.executeQuery();
             // 获取列数
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();
@@ -104,6 +109,8 @@ public class DataAssetsImpl implements IDataAssets {
             if (!dto.export) {
                 displayList.addAll(systemTableColumn());
             }
+
+            psst.close();
 
             data.columnList = displayList;
             data.pageIndex = dto.pageIndex;
