@@ -186,6 +186,16 @@ public class TaskPublish {
                         log.info("第一处调用保存job日志");
                         iPipelJobLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
                         iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
+                    } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.DAILY_NIFI_FLOW.getValue())) {
+                        //卡夫卡的内容在发布时就定义好了
+                        String dailyNifiMsg = JSON.toJSONString(kafkaReceiveDTO);
+                        log.info("打印topic内容:" + dailyNifiMsg);
+                        HashMap<Integer, Object> taskMap = new HashMap<>();
+                        taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN + " - " + simpleDateFormat.format(new Date()));
+                        log.info("第二处调用保存task日志");
+                        iPipelTaskLog.savePipelTaskLog(null, null, kafkaReceiveDTO.pipelTaskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
+                        //任务中心发布任务,通知任务开始执行
+                        kafkaTemplateHelper.sendMessageAsync(topicName, dailyNifiMsg);
                     } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue())) {
                         String tableId = "";
                         if (!Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue()) &&

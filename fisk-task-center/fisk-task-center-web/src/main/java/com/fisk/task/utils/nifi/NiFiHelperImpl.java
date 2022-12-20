@@ -205,10 +205,16 @@ public class NiFiHelperImpl implements INiFiHelper {
         //对象的属性
         Map<String, String> map = new HashMap<>(5);
         //avro-embedded
-        map.put("Schema Write Strategy", "avro-embedded");
-        //schema-text-property
-        map.put("schema-access-strategy", "schema-text-property");
-        map.put("schema-text", data.schemaArchitecture);
+        if (StringUtils.isNotEmpty(data.schemaWriteStrategy)) {
+            map.put("Schema Write Strategy", "avro-embedded");
+        }
+        if (StringUtils.isNotEmpty(data.schemaAccessStrategy)) {
+            //schema-text-property
+            map.put("schema-access-strategy", "schema-text-property");
+        }
+        if (StringUtils.isNotEmpty(data.schemaArchitecture)) {
+            map.put("schema-text", data.schemaArchitecture);
+        }
 
 
         ControllerServiceDTO dto = new ControllerServiceDTO();
@@ -247,6 +253,8 @@ public class NiFiHelperImpl implements INiFiHelper {
         //schema-text-property
         map.put("schema-access-strategy", data.schemaAccessStrategy);
         map.put("schema-text", data.schemaText);
+        map.put("CSV Format", data.csvFormat);
+        map.put("Skip Header Line", data.skipHeaderLine);
         ControllerServiceDTO dto = new ControllerServiceDTO();
         dto.setType(ControllerServiceTypeEnum.CSVREADER.getName());
         dto.setName(data.name);
@@ -1234,6 +1242,9 @@ public class NiFiHelperImpl implements INiFiHelper {
         map.put("Username", data.username);
         map.put("Password", data.password);
         map.put("Remote File", data.remoteFile);
+        map.put("Send Keep Alive On Timeout", data.sendKeepAliveOnTimeout);
+        map.put("Connection Timeout", data.connectionTimeout);
+        map.put("Data Timeout", data.dataTimeout);
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setAutoTerminatedRelationships(autoRes);
@@ -2217,7 +2228,7 @@ public class NiFiHelperImpl implements INiFiHelper {
     @Override
     public void immediatelyStart(TableNifiSettingDTO tableNifiSettingDTO) {
         try {
-            TableNifiSettingPO dto = tableNifiSettingService.getByTableId( tableNifiSettingDTO.tableAccessId, tableNifiSettingDTO.type);
+            TableNifiSettingPO dto = tableNifiSettingService.getByTableId(tableNifiSettingDTO.tableAccessId, tableNifiSettingDTO.type);
             KafkaReceiveDTO kafkaRkeceiveDTO = KafkaReceiveDTO.builder().build();
             String topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type + "." + dto.appId + "." + dto.tableAccessId;
             int value = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
