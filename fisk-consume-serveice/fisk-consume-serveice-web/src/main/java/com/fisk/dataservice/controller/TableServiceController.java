@@ -71,5 +71,11 @@ public class TableServiceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.TableServiceSave(dto));
     }
 
+    @ApiOperation("获取表配置详情")
+    @GetMapping("/getTableServiceById/{id}")
+    public ResultEntity<Object> getTableServiceById(@PathVariable("id") long id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableServiceById(id));
+    }
+
 
 }

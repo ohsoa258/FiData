@@ -47,4 +47,12 @@ public interface ITableService {
      */
     ResultEnum TableServiceSave(TableServiceSaveDTO dto);
 
+    /**
+     * 获取表服务详情
+     *
+     * @param id
+     * @return
+     */
+    TableServiceSaveDTO getTableServiceById(long id);
+
 }

@@ -31,5 +31,13 @@ public interface TableSyncModeMap {
      */
     TableSyncModePO tableServiceDtoToPo(TableSyncModeDTO dto);
 
+    /**
+     * po==>Dto
+     *
+     * @param po
+     * @return
+     */
+    TableSyncModeDTO poToDto(TableSyncModePO po);
+
 
 }

@@ -87,6 +87,20 @@ public class TableServiceImpl
         return ResultEnum.SUCCESS;
     }
 
+    @Override
+    public TableServiceSaveDTO getTableServiceById(long id) {
+        TableServicePO po = mapper.selectById(id);
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        TableServiceSaveDTO data = new TableServiceSaveDTO();
+        data.tableService = TableServiceMap.INSTANCES.poToDto(po);
+        data.tableFieldList = tableField.getTableServiceField(id);
+        data.tableSyncMode = tableSyncMode.getTableServiceSyncMode(id);
+        return data;
+
+    }
+
     /**
      * 更新表服务数据
      *
@@ -98,7 +112,8 @@ public class TableServiceImpl
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-
+        po = TableServiceMap.INSTANCES.dtoToPo(dto);
+        po.id = dto.id;
         if (mapper.updateById(po) == 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }

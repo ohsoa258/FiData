@@ -13,6 +13,7 @@ import com.fisk.dataservice.service.ITableField;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -56,6 +57,15 @@ public class TableFieldImpl
 
         return ResultEnum.SUCCESS;
 
+    }
+
+    @Override
+    public List<TableFieldDTO> getTableServiceField(long tableServiceId) {
+        List<TableFieldPO> list = this.query().eq("table_service_id", tableServiceId).list();
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+        return TableFieldMap.INSTANCES.poListToDtoList(list);
     }
 
     public ResultEnum tableServiceSaveConfig(Integer tableServiceId, List<TableFieldDTO> fieldDTOList) {

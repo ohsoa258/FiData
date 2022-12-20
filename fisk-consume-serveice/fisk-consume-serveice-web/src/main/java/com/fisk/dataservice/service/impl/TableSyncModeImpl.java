@@ -48,12 +48,24 @@ public class TableSyncModeImpl
             }
             return ResultEnum.SUCCESS;
         }
+        dto.id = po.id;
         po = TableSyncModeMap.INSTANCES.tableServiceDtoToPo(dto);
         if (mapper.updateById(po) == 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public TableSyncModeDTO getTableServiceSyncMode(long tableServiceId) {
+        TableSyncModePO po = this.query().eq("type_table_id", tableServiceId)
+                .eq("type", AppServiceTypeEnum.TABLE.getValue())
+                .one();
+        if (po == null) {
+            return null;
+        }
+        return TableSyncModeMap.INSTANCES.poToDto(po);
     }
 
 }

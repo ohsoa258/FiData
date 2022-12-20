@@ -22,4 +22,12 @@ public interface TableServiceMap {
      */
     TableServicePO dtoToPo(TableServiceDTO dto);
 
+    /**
+     * po==>Dto
+     *
+     * @param po
+     * @return
+     */
+    TableServiceDTO poToDto(TableServicePO po);
+
 }

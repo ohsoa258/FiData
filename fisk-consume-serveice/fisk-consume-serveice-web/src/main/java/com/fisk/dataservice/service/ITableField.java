@@ -27,4 +27,12 @@ public interface ITableField {
      */
     ResultEnum delTableServiceField(Integer tableServiceId);
 
+    /**
+     * 获取表服务字段
+     *
+     * @param tableServiceId
+     * @return
+     */
+    List<TableFieldDTO> getTableServiceField(long tableServiceId);
+
 }

@@ -24,4 +24,12 @@ public interface TableFieldMap {
      */
     List<TableFieldPO> dtoListToPoList(List<TableFieldDTO> dtoList);
 
+    /**
+     * poList==>DtoList
+     *
+     * @param poList
+     * @return
+     */
+    List<TableFieldDTO> poListToDtoList(List<TableFieldPO> poList);
+
 }

@@ -25,4 +25,14 @@ public interface ITableSyncMode {
      */
     ResultEnum tableServiceTableSyncMode(TableSyncModeDTO dto);
 
+
+    /**
+     * 获取表服务覆盖方式
+     *
+     * @param tableServiceId
+     * @return
+     */
+    TableSyncModeDTO getTableServiceSyncMode(long tableServiceId);
+
+
 }

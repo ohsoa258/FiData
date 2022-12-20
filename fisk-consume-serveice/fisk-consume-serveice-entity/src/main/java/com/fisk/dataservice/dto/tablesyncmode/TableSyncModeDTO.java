@@ -9,6 +9,7 @@ import lombok.Data;
 @Data
 public class TableSyncModeDTO {
 
+    public long id;
     /**
      * 类型：1api服务 2表服务 3 文件服务
      */

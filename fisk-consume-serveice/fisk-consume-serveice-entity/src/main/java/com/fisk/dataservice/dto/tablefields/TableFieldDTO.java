@@ -8,6 +8,7 @@ import lombok.Data;
 @Data
 public class TableFieldDTO {
 
+    public long id;
     /**
      * 表服务id
      */
