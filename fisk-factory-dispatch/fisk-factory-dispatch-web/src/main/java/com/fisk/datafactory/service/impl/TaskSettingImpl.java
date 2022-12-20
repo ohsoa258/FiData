@@ -28,9 +28,6 @@ public class TaskSettingImpl extends ServiceImpl<TaskSettingMapper, TaskSettingP
     @Resource
     TaskSettingMapper taskSettingMapper;
 
-    @Resource
-    private TaskSettingMap taskSettingMap;
-
     @Override
     public ResultEnum deleteByTaskId(long taskId) {
         taskSettingMapper.deleteByTaskId(taskId);
@@ -61,6 +58,6 @@ public class TaskSettingImpl extends ServiceImpl<TaskSettingMapper, TaskSettingP
     public List<TaskSettingDTO> getTaskSettingsByTaskId(long taskId) {
         QueryWrapper<TaskSettingPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("task_id", taskId);
-        return taskSettingMap.poToDto(taskSettingMapper.selectList(queryWrapper));
+        return TaskSettingMap.INSTANCES.poToDto(taskSettingMapper.selectList(queryWrapper));
     }
 }

@@ -383,12 +383,12 @@ public class SftpUtils {
      * @param rPort 源sftp端口
      * @param rUserName 源sftp用户名
      * @param rPw 源sftp密码
-     * @param rKey 源sftp认证类型
+     * @param rKey 源sftp-rsa文件路径
      * @param tHost 目标sftp端口
      * @param tPort 目标sftp端口
      * @param tUserName 目标sftp用户名
      * @param tPw 目标sftp密码
-     * @param tKey 目标sftp认证类型
+     * @param tKey 目标sftp-rsa文件路径
      * @param sortTypeName 排序类型（1：文件名，2：时间）
      * @param sortType 排序顺序类型（1：正序，2：默认，3：倒序）
      * @param index 需要复制的第几个文件
@@ -426,11 +426,13 @@ public class SftpUtils {
     }
 
 
-//    public static void main(String[] args) throws IOException, SftpException {
-//        ChannelSftp currSftp = connect("192.168.21.21", 22, "sftp", "password01!", null);
-//        ChannelSftp targetSftp = connect("192.168.21.21", 22, "sftp", "password01!", null);
-//        copyFile(currSftp, targetSftp, SortTypeNameEnum.FILENAME_SORT.getValue(), SortTypeEnum.POSITIVE_SORT.getValue(),
+    public static void main(String[] args) throws IOException, SftpException {
+//        ChannelSftp currSftp = connect("192.168.21.21", 22, "sftp", "password01!", "/upload/rsa/");
+//        ChannelSftp targetSftp = connect("192.168.21.21", 22, "sftp", "password01!", "/upload/rsa/");
+//        copyFile("192.168.21.21", 22, "sftp", "password01!", "/.ssh/id_rsa_npw",
+//                "192.168.21.21", 22,  "sftp", "password01!", "/.ssh/id_rsa_npw",
+//                SortTypeNameEnum.FILENAME_SORT.getValue(), SortTypeEnum.POSITIVE_SORT.getValue(),
 //                1, "/upload/", "/upload/test/", "hhh.txt" );
-//    }
+    }
 
 }
