@@ -3,7 +3,7 @@ package com.fisk.dataaccess.service;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.app.DbConnectionDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
-import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
+import com.fisk.common.core.utils.Dto.sftp.ExcelTreeDTO;
 import com.fisk.dataaccess.dto.ftp.FtpPathDTO;
 import com.fisk.dataaccess.dto.sftp.SftpPreviewQueryDTO;
 import com.fisk.dataaccess.dto.sftp.SftpUploadDTO;

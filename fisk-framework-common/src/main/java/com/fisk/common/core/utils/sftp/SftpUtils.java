@@ -1,13 +1,13 @@
-package com.fisk.dataaccess.utils.sftp;
+package com.fisk.common.core.utils.sftp;
 
+import com.fisk.common.core.enums.sftp.SortTypeEnum;
+import com.fisk.common.core.enums.sftp.SortTypeNameEnum;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.Dto.sftp.ExcelPropertyDTO;
+import com.fisk.common.core.utils.Dto.sftp.ExcelTreeDTO;
+import com.fisk.common.core.utils.Dto.sftp.FilePropertySortDTO;
+import com.fisk.common.core.utils.Dto.sftp.FileTreeSortDTO;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.dataaccess.dto.ftp.ExcelPropertyDTO;
-import com.fisk.dataaccess.dto.ftp.FilePropertySortDTO;
-import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
-import com.fisk.dataaccess.dto.ftp.FileTreeSortDTO;
-import com.fisk.dataaccess.enums.SortTypeEnum;
-import com.fisk.dataaccess.enums.SortTypeNameEnum;
 import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;

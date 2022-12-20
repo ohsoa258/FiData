@@ -1,4 +1,4 @@
-package com.fisk.dataaccess.dto.ftp;
+package com.fisk.common.core.utils.Dto.sftp;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

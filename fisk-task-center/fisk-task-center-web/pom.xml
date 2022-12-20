@@ -112,13 +112,6 @@
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
-        <!-- 调用SftpUtils工具类引入 -->
-        <dependency>
-            <groupId>com.fisk</groupId>
-            <artifactId>fisk-factory-access-web</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
         <dependency>
             <groupId>com.cronutils</groupId>
             <artifactId>cron-utils</artifactId>

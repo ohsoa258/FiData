@@ -3,8 +3,8 @@ package com.fisk.dataaccess.utils.ftp;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
-import com.fisk.dataaccess.dto.ftp.ExcelPropertyDTO;
-import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
+import com.fisk.common.core.utils.Dto.sftp.ExcelPropertyDTO;
+import com.fisk.common.core.utils.Dto.sftp.ExcelTreeDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
@@ -246,7 +246,7 @@ public class FtpUtils {
 
 
     /**
-     * @return com.fisk.dataaccess.dto.ftp.ExcelTreeDTO
+     * @return com.fisk.common.core.utils.Dto.sftp.ExcelTreeDTO
      * @description 获取当前路径下的文件&文件夹
      * @author Lock
      * @date 2021/12/30 15:38

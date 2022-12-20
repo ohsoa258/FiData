@@ -8,7 +8,7 @@ import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.app.DbConnectionDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
-import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
+import com.fisk.common.core.utils.Dto.sftp.ExcelTreeDTO;
 import com.fisk.dataaccess.dto.ftp.FtpPathDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;

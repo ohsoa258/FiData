@@ -2,9 +2,8 @@ package com.fisk.task.listener.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.enums.factory.TaskSettingEnum;
-import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.dataaccess.utils.sftp.SftpUtils;
+import com.fisk.common.core.utils.sftp.SftpUtils;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.TaskSettingDTO;
 import com.fisk.task.dto.task.SftpCopyDTO;
