@@ -92,4 +92,9 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
      */
     public int fetchSize;
 
+    /**
+     * sheet名
+     */
+    public String sheetName;
+
 }

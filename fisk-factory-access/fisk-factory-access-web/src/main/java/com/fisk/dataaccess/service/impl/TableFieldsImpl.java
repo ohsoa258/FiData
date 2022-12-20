@@ -459,6 +459,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
             //拼接ods表名
             String odsTableName = TableNameGenerateUtils.buildOdsTableName(tableName, registration.appAbbreviation, registration.whetherSchema);
+
             data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
             data.whetherSchema = registration.whetherSchema;
             data.generateVersionSql = versionSql;
@@ -468,6 +469,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
             // 执行发布
             try {
+                TableAccessPO accessPo = tableAccessImpl.query().eq("id", accessId).one();
+                data.sheetName = accessPo.sheet;
                 // 实时--RestfulAPI类型  or  非实时--api类型
                 //0实时
                 if ((registration.appType == 0
@@ -475,7 +478,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         || (registration.appType == 1
                         && DataSourceTypeEnum.API.getName().equals(dataSourcePo.driveType))) {
                     // 传入apiId和api下所有表
-                    TableAccessPO accessPo = tableAccessImpl.query().eq("id", accessId).one();
                     List<TableAccessPO> tablePoList = tableAccessImpl.query().eq("api_id", accessPo.apiId).list();
                     // api下所有表
                     data.apiTableNames = tablePoList.stream().map(e -> e.tableName).collect(Collectors.toList());
