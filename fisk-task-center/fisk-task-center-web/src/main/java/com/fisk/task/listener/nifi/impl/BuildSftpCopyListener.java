@@ -59,7 +59,7 @@ public class BuildSftpCopyListener implements ISftpCopyListener {
                 // 查具体的配置
                 List<TaskSettingDTO> list = dataFactoryClient.getTaskSettingsByTaskId(Long.parseLong(sftpCopy.getTaskId()));
                 Map<String, String> map = list.stream()
-                        .collect(Collectors.toMap(TaskSettingDTO::getKey, TaskSettingDTO::getValue));
+                        .collect(Collectors.toMap(TaskSettingDTO::getSettingKey, TaskSettingDTO::getValue));
                 // 执行sftp文件复制任务
                 SftpUtils.copyFile(map.get(TaskSettingEnum.sftp_source_ip.getAttributeName()), 22,
                         map.get(TaskSettingEnum.sftp_source_account.getAttributeName()),

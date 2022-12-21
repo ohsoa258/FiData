@@ -3,12 +3,12 @@ package com.fisk.datafactory.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.sftp.DelFlagEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.sftp.SftpUploadDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.TaskSettingDTO;
 import com.fisk.datafactory.entity.TaskSettingPO;
-import com.fisk.datafactory.map.TaskSettingMap;
 import com.fisk.datafactory.mapper.TaskSettingMapper;
 import com.fisk.datafactory.service.ITaskSetting;
 import lombok.extern.slf4j.Slf4j;
@@ -63,8 +63,24 @@ public class TaskSettingImpl extends ServiceImpl<TaskSettingMapper, TaskSettingP
     @Override
     public List<TaskSettingDTO> getTaskSettingsByTaskId(long taskId) {
         QueryWrapper<TaskSettingPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("task_id", taskId);
-        return TaskSettingMap.INSTANCES.poToDto(taskSettingMapper.selectList(queryWrapper));
+        queryWrapper.eq("task_id", taskId).eq("del_flag", DelFlagEnum.NORMAL_FLAG.getValue());
+        return settingListPoToDto(taskSettingMapper.selectList(queryWrapper));
+    }
+
+    private List<TaskSettingDTO> settingListPoToDto(List<TaskSettingPO> poList){
+        if (poList == null){
+            return null;
+        }
+        List<TaskSettingDTO> dtoList = new ArrayList<>();
+        for (TaskSettingPO po : poList){
+            TaskSettingDTO dto = new TaskSettingDTO();
+            dto.setTaskId(po.getTaskId());
+            dto.setSettingKey(po.getSettingKey());
+            dto.setValue(po.getValue());
+            dto.setSettingGroupId(po.getSettingGroupId());
+            dtoList.add(dto);
+        }
+        return dtoList;
     }
 
     @Override

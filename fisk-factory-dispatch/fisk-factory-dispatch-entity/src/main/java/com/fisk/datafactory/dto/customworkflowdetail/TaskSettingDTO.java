@@ -11,7 +11,8 @@ public class TaskSettingDTO extends BasePO {
 
     public String taskId;
 
-    public String key;
+    public String settingKey;
+//    public String key;
 
     public String value;
 
