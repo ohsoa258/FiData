@@ -21,14 +21,14 @@ import com.fisk.common.service.dbBEBuild.dataservice.IBuildDataServiceSqlCommand
 import com.fisk.dataservice.dto.api.*;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.ApiTypeEnum;
-import com.fisk.dataservice.map.ApiFieldMap;
-import com.fisk.dataservice.map.ApiFilterConditionMap;
-import com.fisk.dataservice.map.ApiParmMap;
-import com.fisk.dataservice.map.ApiRegisterMap;
+import com.fisk.dataservice.enums.AppServiceTypeEnum;
+import com.fisk.dataservice.map.*;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IApiRegisterManageService;
 import com.fisk.dataservice.vo.api.*;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
+import com.fisk.dataservice.vo.fileservice.FileServiceVO;
+import com.fisk.dataservice.vo.tableservice.TableServiceVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -79,7 +79,13 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     TableSyncModeImpl tableSyncModeImpl;
 
     @Resource
-    private AppApiMapper appApiMapper;
+    private AppServiceConfigMapper appServiceConfigMapper;
+
+    @Resource
+    private TableServiceMapper tableServiceMapper;
+
+    @Resource
+    private FileServiceMapper fileServiceMapper;
 
     @Resource
     UserHelper userHelper;
@@ -118,12 +124,13 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         List<ApiConfigPO> apiConfigPOS = baseMapper.getList(dto.keyword);
         if (CollectionUtils.isNotEmpty(apiConfigPOS)) {
             apiSubVOS = ApiRegisterMap.INSTANCES.poToApiSubVO(apiConfigPOS);
-            List<AppApiPO> subscribeListByAppId = appApiMapper.getSubscribeListByAppId(dto.appId);
+            List<AppServiceConfigPO> subscribeListByAppId = appServiceConfigMapper.getSubscribeListByAppId(dto.appId);
             if (CollectionUtils.isNotEmpty(subscribeListByAppId)) {
                 apiSubVOS.forEach(e -> {
                     subscribeListByAppId
                             .stream()
-                            .filter(item -> item.getApiId() == e.id)
+                            .filter(item -> item.getServiceId() == e.id
+                                    && item.getType() == AppServiceTypeEnum.API.getValue())
                             .findFirst()
                             .ifPresent(user -> e.apiSubState = 1);
                 });
@@ -151,6 +158,137 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         pageDTO.setItems(apiSubVOS);
         return pageDTO;
     }
+
+    @Override
+    public PageDTO<TableServiceVO> getTableServiceSubAll(ApiSubQueryDTO dto) {
+        QueryWrapper<TableServicePO> tableServicePOQueryWrapper = new QueryWrapper<>();
+        tableServicePOQueryWrapper.orderByDesc("create_time");
+        if (!StringUtils.isEmpty(dto.keyword)) {
+            tableServicePOQueryWrapper
+                    .like("table_name", dto.keyword)
+                    .or()
+                    .like("display_name", dto.keyword);
+        }
+        List<TableServicePO> poList = tableServiceMapper.selectList(tableServicePOQueryWrapper);
+        if (CollectionUtils.isEmpty(poList)) {
+            return new PageDTO<>();
+        }
+
+        List<TableServiceVO> list = new ArrayList<>();
+
+        PageDTO<TableServiceVO> pageDTO = new PageDTO<>();
+
+        //获取已订阅的数据
+        QueryWrapper<AppServiceConfigPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("service_id")
+                .lambda()
+                .eq(AppServiceConfigPO::getType, AppServiceTypeEnum.TABLE.getValue());
+        List<AppServiceConfigPO> subscribePo = appServiceConfigMapper.selectList(queryWrapper);
+        if (!CollectionUtils.isEmpty(subscribePo)) {
+            List<Long> subscribeList = subscribePo.stream().map(e -> Long.valueOf(e.serviceId)).collect(Collectors.toList());
+            List<TableServicePO> collect = poList
+                    .stream()
+                    .filter(e -> subscribeList.contains(e.id))
+                    .sorted(Comparator.comparing(TableServicePO::getCreateTime))
+                    .collect(Collectors.toList());
+
+            list.addAll(TableServiceMap.INSTANCES.poListToVoList(collect));
+            list.stream().map(e -> e.tableServiceSubState = 1).collect(Collectors.toList());
+
+            //反转
+            Collections.reverse(list);
+
+            //未订阅的数据
+            List<TableServicePO> collect1 = poList
+                    .stream()
+                    .filter(e -> !subscribeList.contains(e.id))
+                    .sorted(Comparator.comparing(TableServicePO::getCreateTime))
+                    .collect(Collectors.toList());
+            List<TableServiceVO> list1 = TableServiceMap.INSTANCES.poListToVoList(collect1);
+            list1.stream().map(e -> e.tableServiceSubState = 0).collect(Collectors.toList());
+
+            //反转
+            Collections.reverse(list1);
+
+            list.addAll(list1);
+
+        } else {
+            list = TableServiceMap.INSTANCES.poListToVoList(poList);
+            list.stream().map(e -> e.tableServiceSubState = 0).collect(Collectors.toList());
+        }
+
+        pageDTO.setTotal(Long.valueOf(list.size()));
+        pageDTO.setItems(list.stream().skip((dto.current - 1) * dto.size).limit(dto.size).collect(Collectors.toList()));
+
+        return pageDTO;
+    }
+
+    @Override
+    public PageDTO<FileServiceVO> getFileServiceSubAll(ApiSubQueryDTO dto) {
+
+        PageDTO<FileServiceVO> pageDTO = new PageDTO<>();
+
+        QueryWrapper<FileServicePO> fileServicePOQueryWrapper = new QueryWrapper<>();
+        fileServicePOQueryWrapper.orderByDesc("create_time");
+        if (!StringUtils.isEmpty(dto.keyword)) {
+            fileServicePOQueryWrapper
+                    .like("table_name", dto.keyword)
+                    .or()
+                    .like("display_name", dto.keyword);
+        }
+        List<FileServicePO> poList = fileServiceMapper.selectList(fileServicePOQueryWrapper);
+        if (CollectionUtils.isEmpty(poList)) {
+            pageDTO.setItems(new ArrayList<>());
+            return pageDTO;
+        }
+
+        List<FileServiceVO> list = new ArrayList<>();
+
+        //获取已订阅的数据
+        QueryWrapper<AppServiceConfigPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("service_id")
+                .lambda()
+                .eq(AppServiceConfigPO::getType, AppServiceTypeEnum.FILE.getValue());
+        List<AppServiceConfigPO> subscribePo = appServiceConfigMapper.selectList(queryWrapper);
+        if (!CollectionUtils.isEmpty(subscribePo)) {
+            List<Long> subscribeList = subscribePo.stream().map(e -> Long.valueOf(e.serviceId)).collect(Collectors.toList());
+            List<FileServicePO> collect = poList
+                    .stream()
+                    .filter(e -> subscribeList.contains(e.id))
+                    .sorted(Comparator.comparing(FileServicePO::getCreateTime))
+                    .collect(Collectors.toList());
+
+            list.addAll(FileServiceMap.INSTANCES.poListToVoList(collect));
+            list.stream().map(e -> e.fileServiceSubState = 1).collect(Collectors.toList());
+
+            //反转
+            Collections.reverse(list);
+
+            //未订阅的数据
+            List<FileServicePO> collect1 = poList
+                    .stream()
+                    .filter(e -> !subscribeList.contains(e.id))
+                    .sorted(Comparator.comparing(FileServicePO::getCreateTime))
+                    .collect(Collectors.toList());
+            List<FileServiceVO> list1 = FileServiceMap.INSTANCES.poListToVoList(collect1);
+            list1.stream().map(e -> e.fileServiceSubState = 0).collect(Collectors.toList());
+
+            //反转
+            Collections.reverse(list1);
+
+            list.addAll(list1);
+
+        } else {
+            list = FileServiceMap.INSTANCES.poListToVoList(poList);
+            list.stream().map(e -> e.fileServiceSubState = 0).collect(Collectors.toList());
+        }
+
+        pageDTO.setTotal(Long.valueOf(list.size()));
+        pageDTO.setItems(list.stream().skip((dto.current - 1) * dto.size).limit(dto.size).collect(Collectors.toList()));
+
+        return pageDTO;
+    }
+
 
     @Override
     @Transactional(rollbackFor = Exception.class)

@@ -7,7 +7,6 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.core.constants.RedisTokenKey;
-import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -21,7 +20,10 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataservice.dto.apiservice.RequstDTO;
 import com.fisk.dataservice.dto.apiservice.TokenDTO;
 import com.fisk.dataservice.entity.*;
-import com.fisk.dataservice.enums.*;
+import com.fisk.dataservice.enums.ApiStateTypeEnum;
+import com.fisk.dataservice.enums.ApiTypeEnum;
+import com.fisk.dataservice.enums.LogLevelTypeEnum;
+import com.fisk.dataservice.enums.LogTypeEnum;
 import com.fisk.dataservice.map.ApiFilterConditionMap;
 import com.fisk.dataservice.map.ApiParmMap;
 import com.fisk.dataservice.mapper.*;
@@ -31,7 +33,10 @@ import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +52,7 @@ import java.util.stream.Collectors;
 public class ApiServiceManageImpl implements IApiServiceManageService {
 
     @Resource
-    private AppApiMapper appApiMapper;
+    private AppServiceConfigMapper appApiMapper;
 
     @Resource
     private ApiRegisterMapper apiRegisterMapper;
@@ -144,7 +149,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             }
 
             // 第四步：验证当前请求的API是否具备访问权限
-            AppApiPO subscribeBy = appApiMapper.getSubscribeBy(Math.toIntExact(appInfo.id), Math.toIntExact(apiInfo.id));
+            AppServiceConfigPO subscribeBy = appApiMapper.getSubscribeBy(Math.toIntExact(appInfo.id), Math.toIntExact(apiInfo.id));
             if (subscribeBy == null) {
                 resultEnum = ResultEnum.DS_APISERVICE_APP_NOTSUB;
                 return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_NOTSUB, responseVO);

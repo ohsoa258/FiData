@@ -21,6 +21,7 @@ import com.fisk.dataservice.dto.api.doc.*;
 import com.fisk.dataservice.dto.app.*;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.ApiStateTypeEnum;
+import com.fisk.dataservice.enums.AppServiceTypeEnum;
 import com.fisk.dataservice.map.ApiBuiltinParmMap;
 import com.fisk.dataservice.map.ApiParmMap;
 import com.fisk.dataservice.map.AppApiMap;
@@ -55,7 +56,9 @@ import static com.fisk.common.core.constants.ApiConstants.*;
  */
 @Service
 @Slf4j
-public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppConfigPO> implements IAppRegisterManageService {
+public class AppRegisterManageImpl
+        extends ServiceImpl<AppRegisterMapper, AppConfigPO>
+        implements IAppRegisterManageService {
 
     @Resource
     private GetMetadata getMetadata;
@@ -64,7 +67,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
     private GenerateCondition generateCondition;
 
     @Resource
-    private AppApiMapper appApiMapper;
+    private AppServiceConfigMapper appApiMapper;
 
     @Resource
     private ApiRegisterMapper apiRegisterMapper;
@@ -187,10 +190,10 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
             return ResultEnum.DS_APP_EXISTS;
         }
         // 查询应用下是否存在api
-        QueryWrapper<AppApiPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(AppApiPO::getAppId, id).eq(AppApiPO::getApiState, 1)
-                .eq(AppApiPO::getDelFlag, 1);
-        List<AppApiPO> appApiPOS = appApiMapper.selectList(queryWrapper);
+        QueryWrapper<AppServiceConfigPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(AppServiceConfigPO::getAppId, id).eq(AppServiceConfigPO::getApiState, 1)
+                .eq(AppServiceConfigPO::getDelFlag, 1);
+        List<AppServiceConfigPO> appApiPOS = appApiMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(appApiPOS)) {
             // 该应用下没有启用的api，可以直接删除
             return baseMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -214,23 +217,24 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                 List<AppApiSubDTO> collect = saveDTO.dto.stream().filter(item -> item.apiState == ApiStateTypeEnum.Disable.getValue()).collect(Collectors.toList());
                 if (CollectionUtils.isNotEmpty(collect)) {
                     List<Integer> collect1 = collect.stream().map(AppApiSubDTO::getApiId).collect(Collectors.toList());
-                    QueryWrapper<AppApiPO> queryWrapper = new QueryWrapper<>();
+                    QueryWrapper<AppServiceConfigPO> queryWrapper = new QueryWrapper<>();
                     queryWrapper.lambda().
-                            in(AppApiPO::getApiId, collect1)
-                            .eq(AppApiPO::getAppId, collect.get(0).appId)
-                            .eq(AppApiPO::getApiState, ApiStateTypeEnum.Enable.getValue())
-                            .eq(AppApiPO::getDelFlag, 1);
-                    List<AppApiPO> appApiPOS = appApiMapper.selectList(queryWrapper);
+                            in(AppServiceConfigPO::getServiceId, collect1)
+                            .eq(AppServiceConfigPO::getType, AppServiceTypeEnum.API)
+                            .eq(AppServiceConfigPO::getAppId, collect.get(0).appId)
+                            .eq(AppServiceConfigPO::getApiState, ApiStateTypeEnum.Enable.getValue())
+                            .eq(AppServiceConfigPO::getDelFlag, 1);
+                    List<AppServiceConfigPO> appApiPOS = appApiMapper.selectList(queryWrapper);
                     if (CollectionUtils.isNotEmpty(appApiPOS))
                         return ResultEnum.DS_APP_SUBAPI_ENABLE;
                 }
             }
             for (AppApiSubDTO dto : saveDTO.dto) {
                 // 根据应用id和APIID查询是否存在订阅记录
-                QueryWrapper<AppApiPO> queryWrapper = new QueryWrapper<>();
-                queryWrapper.lambda().eq(AppApiPO::getAppId, dto.appId).eq(AppApiPO::getApiId, dto.apiId)
-                        .eq(AppApiPO::getDelFlag, 1);
-                AppApiPO data = appApiMapper.selectOne(queryWrapper);
+                QueryWrapper<AppServiceConfigPO> queryWrapper = new QueryWrapper<>();
+                queryWrapper.lambda().eq(AppServiceConfigPO::getAppId, dto.appId).eq(AppServiceConfigPO::getServiceId, dto.apiId)
+                        .eq(AppServiceConfigPO::getDelFlag, 1);
+                AppServiceConfigPO data = appApiMapper.selectOne(queryWrapper);
                 if (data != null) {
                     if (saveDTO.saveType == 1) {
                         // 存在&取消订阅，删除该订阅记录
@@ -248,7 +252,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                             && dto.apiState == ApiStateTypeEnum.Disable.getValue())
                         continue;
                     // 不存在则新增
-                    AppApiPO model = AppApiMap.INSTANCES.dtoToPo(dto);
+                    AppServiceConfigPO model = AppApiMap.INSTANCES.dtoToPo(dto);
                     appApiMapper.insert(model);
                 }
             }
@@ -281,10 +285,10 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 //        if (CollectionUtils.isEmpty(collect))
 //            return ResultEnum.DS_APPAPIDOC_DISABLE;
 //        dto.appApiDto = collect;
-        List<AppApiPO> subscribeListByAppId = appApiMapper.getSubscribeListBy(dto.appId);
+        List<AppServiceConfigPO> subscribeListByAppId = appApiMapper.getSubscribeListBy(dto.appId);
         if (CollectionUtils.isEmpty(subscribeListByAppId))
             return ResultEnum.DS_APPAPIDOC_EXISTS;
-        List<Integer> apiIdList = subscribeListByAppId.stream().filter(item -> item.apiState == ApiStateTypeEnum.Enable.getValue()).map(AppApiPO::getApiId).collect(Collectors.toList());
+        List<Integer> apiIdList = subscribeListByAppId.stream().filter(item -> item.apiState == ApiStateTypeEnum.Enable.getValue()).map(AppServiceConfigPO::getServiceId).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(apiIdList))
             return ResultEnum.DS_APPAPIDOC_DISABLE;
         // 第二步：查询需要生成的API接口，在第一步查询时已验证API有效性

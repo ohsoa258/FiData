@@ -3,7 +3,7 @@ package com.fisk.dataservice.mapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.dataservice.dto.app.AppApiSubQueryDTO;
-import com.fisk.dataservice.entity.AppApiPO;
+import com.fisk.dataservice.entity.AppServiceConfigPO;
 import com.fisk.dataservice.vo.app.AppApiSubVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -17,7 +17,7 @@ import java.util.List;
  * @author dick
  */
 @Mapper
-public interface AppApiMapper extends FKBaseMapper<AppApiPO> {
+public interface AppServiceConfigMapper extends FKBaseMapper<AppServiceConfigPO> {
     Page<AppApiSubVO> getSubscribeAll(Page<AppApiSubVO> page, @Param("query") AppApiSubQueryDTO query);
 
     /**
@@ -26,7 +26,7 @@ public interface AppApiMapper extends FKBaseMapper<AppApiPO> {
      * @return 查询结果
      */
     @Select("SELECT id,api_id,app_id,api_state FROM tb_app_api WHERE app_id=#{appId} AND api_id=#{apiId} AND del_flag=1;")
-    AppApiPO getSubscribeBy(@Param("appId") int appId, @Param("apiId") int apiId);
+    AppServiceConfigPO getSubscribeBy(@Param("appId") int appId, @Param("apiId") int apiId);
 
     /**
      * 根据应用id查询此应用下所有的api
@@ -34,7 +34,7 @@ public interface AppApiMapper extends FKBaseMapper<AppApiPO> {
      * @return 查询结果
      */
     @Select("SELECT id,api_id,app_id,api_state FROM tb_app_api WHERE app_id=#{appId} AND del_flag=1;")
-    List<AppApiPO> getSubscribeListByAppId(@Param("appId") int appId);
+    List<AppServiceConfigPO> getSubscribeListByAppId(@Param("appId") int appId);
 
     /**
      * 根据应用id查询此应用下所有的已启用的&有效的&API为有效的api
@@ -53,5 +53,5 @@ public interface AppApiMapper extends FKBaseMapper<AppApiPO> {
             "\tt1.app_id = #{appId} \n" +
             "\tAND t1.del_flag = 1 \n" +
             "\tAND t2.del_flag = 1 ")
-    List<AppApiPO> getSubscribeListBy(@Param("appId") int appId);
+    List<AppServiceConfigPO> getSubscribeListBy(@Param("appId") int appId);
 }

@@ -24,7 +24,7 @@ public class FileServicePO extends BasePO {
     /**
      * 描述
      */
-    public String describe;
+    public String describes;
 
     /**
      * sql脚本

@@ -2,9 +2,12 @@ package com.fisk.dataservice.map;
 
 import com.fisk.dataservice.dto.tableservice.TableServiceDTO;
 import com.fisk.dataservice.entity.TableServicePO;
+import com.fisk.dataservice.vo.tableservice.TableServiceVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -29,5 +32,13 @@ public interface TableServiceMap {
      * @return
      */
     TableServiceDTO poToDto(TableServicePO po);
+
+    /**
+     * poList==>VoList
+     *
+     * @param poList
+     * @return
+     */
+    List<TableServiceVO> poListToVoList(List<TableServicePO> poList);
 
 }

@@ -1,28 +1,92 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.fisk.dataservice.mapper.AppApiMapper">
+<mapper namespace="com.fisk.dataservice.mapper.AppServiceConfigMapper">
     <select id="getSubscribeAll" resultType="com.fisk.dataservice.vo.app.AppApiSubVO">
-        SELECT
-               t1.id,
-               t1.app_id,
-               t1.api_id,
-               t1.api_state,
-               t2.api_code,
-               t2.api_name,
-               t2.api_desc,
-               t1.create_time AS create_time,
-               t2.create_time AS t2create_time,
-               t3.create_time AS t3create_time
-        FROM tb_app_api t1
-            LEFT JOIN tb_api_config t2 ON t1.api_id=t2.id
+
+        <if test="query.type ==1">
+            SELECT
+            t1.id,
+            t1.app_id,
+            t1.service_id,
+            t1.api_state,
+            t1.type,
+            t2.api_code,
+            t2.api_name as ServiceName,
+            t2.api_desc as ServiceDesc,
+            1 as displayName,
+            t1.create_time AS create_time,
+            t2.create_time AS t2create_time,
+            t3.create_time AS t3create_time
+            FROM tb_app_service_config t1
+            LEFT JOIN tb_api_config t2 ON t1.service_id=t2.id
             LEFT JOIN tb_app_config t3 ON t1.app_id=t3.id
-        WHERE t1.del_flag=1
+            WHERE t1.del_flag=1
             AND t2.del_flag=1
             AND t3.del_flag=1
+            AND t1.type=1
             AND t3.id= #{query.appId}
-        <if test="query.keyword != null and query.keyword != '' ">
-            AND (t2.api_name LIKE concat('%', #{query.keyword}, '%') OR t2.api_desc LIKE concat('%', #{query.keyword}, '%') )
+            <if test="query.keyword != null and query.keyword != '' ">
+                AND (t2.api_name LIKE concat('%', #{query.keyword}, '%') OR t2.api_desc LIKE concat('%',
+                #{query.keyword}, '%') )
+            </if>
         </if>
+
+        <if test="query.type ==2">
+            SELECT
+            t1.id,
+            t1.app_id,
+            t1.service_id,
+            t1.api_state,
+            t1.type,
+            t2.sql_script as api_code,
+            t2.table_name as ServiceName,
+            t2.table_des as ServiceDesc,
+            t2.display_name as displayName,
+            t1.create_time AS create_time,
+            t2.create_time AS t2create_time,
+            t3.create_time AS t3create_time
+            FROM tb_app_service_config t1
+            LEFT JOIN tb_table_service t2 ON t1.service_id=t2.id
+            LEFT JOIN tb_app_config t3 ON t1.app_id=t3.id
+            WHERE t1.del_flag=1
+            AND t2.del_flag=1
+            AND t3.del_flag=1
+            AND t1.type=2
+            AND t3.id= #{query.appId}
+            <if test="query.keyword != null and query.keyword != '' ">
+                AND (t2.api_name LIKE concat('%', #{query.keyword}, '%') OR t2.api_desc LIKE concat('%',
+                #{query.keyword}, '%') )
+            </if>
+        </if>
+
+        <if test="query.type ==3">
+            SELECT
+            t1.id,
+            t1.app_id,
+            t1.service_id,
+            t1.api_state,
+            t1.type,
+            t2.sql_script as api_code,
+            t2.name as ServiceName,
+            t2.describe as ServiceDesc,
+            t2.display_name as displayName,
+            t1.create_time AS create_time,
+            t2.create_time AS t2create_time,
+            t3.create_time AS t3create_time
+            FROM tb_app_service_config t1
+            LEFT JOIN tb_file_service t2 ON t1.service_id=t2.id
+            LEFT JOIN tb_app_config t3 ON t1.app_id=t3.id
+            WHERE t1.del_flag=1
+            AND t2.del_flag=1
+            AND t3.del_flag=1
+            AND t1.type=3
+            AND t3.id= #{query.appId}
+            <if test="query.keyword != null and query.keyword != '' ">
+                AND (t2.api_name LIKE concat('%', #{query.keyword}, '%') OR t2.api_desc LIKE concat('%',
+                #{query.keyword}, '%') )
+            </if>
+        </if>
+
     </select>
 </mapper>

@@ -1,8 +1,9 @@
 package com.fisk.dataservice.map;
 
 import com.fisk.dataservice.dto.app.AppApiSubDTO;
-import com.fisk.dataservice.entity.AppApiPO;
-import org.mapstruct.*;
+import com.fisk.dataservice.entity.AppServiceConfigPO;
+import org.mapstruct.Mapper;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
 
 /**
@@ -19,5 +20,5 @@ public interface AppApiMap {
      * @param dto source
      * @return target
      */
-    AppApiPO dtoToPo(AppApiSubDTO dto);
+    AppServiceConfigPO dtoToPo(AppApiSubDTO dto);
 }
