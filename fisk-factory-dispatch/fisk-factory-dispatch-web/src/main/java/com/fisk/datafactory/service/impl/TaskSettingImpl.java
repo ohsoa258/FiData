@@ -2,6 +2,7 @@ package com.fisk.datafactory.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.sftp.DelFlagEnum;
 import com.fisk.common.core.response.ResultEnum;
@@ -44,6 +45,9 @@ public class TaskSettingImpl extends ServiceImpl<TaskSettingMapper, TaskSettingP
     public ResultEnum updateTaskSetting(long taskId, Map<String, String> taskSetting) {
         //map转list
         List<TaskSettingPO> list = new ArrayList<>();
+        if(!CollectionUtils.isNotEmpty(taskSetting)){
+            return ResultEnum.SUCCESS;
+        }
         Iterator<Map.Entry<String, String>> nodeMap = taskSetting.entrySet().iterator();
         while (nodeMap.hasNext()) {
             Map.Entry<String, String> nodeEntry = nodeMap.next();
@@ -88,7 +92,7 @@ public class TaskSettingImpl extends ServiceImpl<TaskSettingMapper, TaskSettingP
         try {
             String filePath = "/root/upload/";
             String fileName = file.getOriginalFilename();
-            String path = filePath + pipelineId + "/" + taskId + "/" + sourceOrTarget + "/";
+            String path = filePath + pipelineId + "/" + taskId + "/" + sourceOrTarget;
             //如果不存在,创建文件夹
             File f = new File(path);
             if (!f.exists()) {

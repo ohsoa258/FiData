@@ -117,8 +117,16 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicDTO>
             int tableId = dto.tableId;
             int tableType = dto.tableType;
             int topicType = dto.topicType;
-            List<TableTopicDTO> list1 = this.query().eq("table_id", tableId).eq("table_type", tableType)
-                    .eq("topic_type", topicType).eq("del_flag", 1).like("topic_name", topicName).list();
+            int taskId = dto.componentId;
+            List<TableTopicDTO> list1 = new ArrayList<>();
+            if (Objects.equals(tableId, 0)) {
+                list1 = this.query().eq("table_id", tableId).eq("table_type", tableType).eq("component_id", taskId)
+                        .eq("del_flag", 1).like("topic_name", topicName).list();
+            } else {
+                list1 = this.query().eq("table_id", tableId).eq("table_type", tableType)
+                        .eq("topic_type", topicType).eq("del_flag", 1).like("topic_name", topicName).list();
+            }
+
             for (TableTopicDTO dto1 : list1) {
                 if (!Objects.equals(dto.topicName, dto1.topicName)) {
                     tableTopics.add(dto1);

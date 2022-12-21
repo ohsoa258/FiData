@@ -124,6 +124,11 @@ public class TaskPublish {
                         for (TableTopicDTO topic : topicNames) {
                             String[] split = topic.topicName.split("\\.");
                             NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, Integer.parseInt(split[4]), null, Integer.valueOf(split[6]));
+                            if (Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue()) ||
+                                    Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue())) {
+                                //没有表id就把任务id扔进去
+                                nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(split[6]);
+                            }
                             TaskHierarchyDTO nifiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchy, kafkaReceiveDTO.pipelTraceId);
                             //job批次号
                             kafkaReceiveDTO.pipelJobTraceId = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(kafkaReceiveDTO.pipelTraceId, String.valueOf(topic.componentId)).jobTraceId;
@@ -132,8 +137,17 @@ public class TaskPublish {
                             kafkaReceiveDTO.topic = topic.topicName;
                             kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
 
-                            log.info("发送的topic2:{},内容:{}", topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
-                            kafkaTemplateHelper.sendMessageAsync(topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
+
+                            if (Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue())) {
+                                //调度脚本任务
+                                sendScriptTask(kafkaReceiveDTO, pipelineId, split[4]);
+                            } else if (Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue())) {
+                                //sftp复制任务
+                                sendSftpFileCopyTask(kafkaReceiveDTO, pipelineId, split[4]);
+                            } else {
+                                log.info("发送的topic2:{},内容:{}", topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
+                                kafkaTemplateHelper.sendMessageAsync(topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
+                            }
                             //-----------------------------------------------------
                             //job开始日志
                             Map<Integer, Object> jobMap = new HashMap<>();
@@ -145,11 +159,10 @@ public class TaskPublish {
                             taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
                             log.info("第三处调用保存task日志");
                             iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelTraceId, kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.itselfPort.id), null, 0);
+
+
                         }
-                        //调度脚本任务
-                        sendScriptTask(kafkaReceiveDTO, pipelineId, split1[4]);
-                        //sftp复制任务
-                        sendSftpFileCopyTask(kafkaReceiveDTO, pipelineId, split1[4]);
+
                         //如果有非实时api,单独发消息
                         if (!StringUtils.isEmpty(kafkaReceiveDTO.pipelApiDispatch)) {
                             ApiImportDataDTO apiImportData = new ApiImportDataDTO();
@@ -353,7 +366,7 @@ public class TaskPublish {
             execScript.pipelTraceId = kafkaReceiveDTO.pipelTraceId;
             for (String taskId : scriptTaskId) {
                 execScript.pipelJobTraceId = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(kafkaReceiveDTO.pipelTraceId, String.valueOf(taskId)).jobTraceId;
-                execScript.pipelTaskTraceId = UUID.randomUUID().toString();
+                execScript.pipelTaskTraceId = iPipelineTaskPublishCenter.getTaskHierarchy(kafkaReceiveDTO.pipelTraceId, String.valueOf(taskId)).taskTraceId;
                 execScript.taskId = taskId;
                 log.info("发送的执行脚本topic:{},内容:{}", MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, JSON.toJSONString(execScript));
                 kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, JSON.toJSONString(execScript));
@@ -389,13 +402,21 @@ public class TaskPublish {
      */
     public void sendSftpFileCopyTask(KafkaReceiveDTO kafkaReceiveDTO, String pipelineId, String taskType) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        if (!StringUtils.isEmpty(kafkaReceiveDTO.sftpFileCopyTaskId)) {
-            ExecScriptDTO execScript = new ExecScriptDTO();
-            String[] scriptTaskId = kafkaReceiveDTO.sftpFileCopyTaskId.split(",");
+        if (!StringUtils.isEmpty(kafkaReceiveDTO.sftpFileCopyTaskIds)) {
+            SftpCopyDTO execScript = new SftpCopyDTO();
+            String[] scriptTaskId = kafkaReceiveDTO.sftpFileCopyTaskIds.split(",");
+            //实例化一个set集合
+            HashSet<String> set = new HashSet<>();
+            //遍历数组并存入集合,如果元素已存在则不会重复存入
+            for (int i = 0; i < scriptTaskId.length; i++) {
+                set.add(scriptTaskId[i]);
+            }
+            //返回Set集合的数组形式
+            scriptTaskId = (String[]) (set.toArray(new String[set.size()]));
             execScript.pipelTraceId = kafkaReceiveDTO.pipelTraceId;
             for (String taskId : scriptTaskId) {
                 execScript.pipelJobTraceId = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(kafkaReceiveDTO.pipelTraceId, String.valueOf(taskId)).jobTraceId;
-                execScript.pipelTaskTraceId = UUID.randomUUID().toString();
+                execScript.pipelTaskTraceId = iPipelineTaskPublishCenter.getTaskHierarchy(kafkaReceiveDTO.pipelTraceId, String.valueOf(taskId)).taskTraceId;
                 execScript.taskId = taskId;
                 log.info("发送的执行脚本topic:{},内容:{}", MqConstants.QueueConstants.BUILD_SFTP_FILE_COPY_FLOW, JSON.toJSONString(execScript));
                 kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_SFTP_FILE_COPY_FLOW, JSON.toJSONString(execScript));

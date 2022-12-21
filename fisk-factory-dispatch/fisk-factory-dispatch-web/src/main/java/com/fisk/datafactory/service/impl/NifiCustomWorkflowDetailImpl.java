@@ -382,6 +382,13 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                             topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
                             publishTaskClient.updateTableTopicByComponentId(topicDTO);
                         }
+                        if (Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.SFTP_FILE_COPY_TASK.getName()) && !Objects.equals(nifiCustomWorkflowDetailPo.pid, 0)) {
+                            topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
+                            topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.SFTPFILECOPYTASK.getValue() + ".0." + nifiCustomWorkflowDetailPo.id;
+                            topicDTO.tableType = OlapTableEnum.SFTPFILECOPYTASK.getValue();
+                            topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
+                            publishTaskClient.updateTableTopicByComponentId(topicDTO);
+                        }
                     }
                 }
 //                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO = this.query().eq("pid", po.id).orderByAsc("table_order").list().get(0);

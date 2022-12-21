@@ -351,6 +351,7 @@ public class KafkaConsumer {
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_SFTP_FILE_COPY_FLOW, containerFactory = "batchFactory", groupId = "test")
     public ResultEntity<Object> BuildSftpCopyTask(String dataInfo, Acknowledgment ack) {
+        log.info("进入sftp复制任务");
         return ResultEntityBuild.build(buildSftpCopyListener.sftpCopyTask(dataInfo, ack));
     }
 }

@@ -557,9 +557,26 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     PipelApiDispatchDTO pipelApiDispatch = new PipelApiDispatchDTO();
                     for (BuildNifiCustomWorkFlowDTO buildNifiCustomWorkFlowDTO : outputDucts) {
                         if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.CUSTOMWORKCUSTOMIZESCRIPT)) {
-                            scriptTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId;
+                            scriptTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId + ",";
+                            commonTask = true;
+                            //更新topic_name并使用
+                            TableTopicDTO topicDTO = new TableTopicDTO();
+                            topicDTO.tableType = OlapTableEnum.CUSTOMIZESCRIPT.getValue();
+                            topicDTO.tableId = 0;
+                            topicDTO.componentId = Math.toIntExact(buildNifiCustomWorkFlowDTO.workflowDetailId);
+                            topicDTO.topicName = TopicName;
+                            topicDTO.topicType = TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue();
+                            tableTopic.updateTableTopicByComponentId(topicDTO);
                         } else if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.SFTPFILECOPYTASK)) {
-                            sftpFileCopyTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId;
+                            TableTopicDTO topicDTO = new TableTopicDTO();
+                            topicDTO.tableType = OlapTableEnum.SFTPFILECOPYTASK.getValue();
+                            topicDTO.tableId = 0;
+                            topicDTO.componentId = Math.toIntExact(buildNifiCustomWorkFlowDTO.workflowDetailId);
+                            topicDTO.topicName = TopicName;
+                            topicDTO.topicType = TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue();
+                            tableTopic.updateTableTopicByComponentId(topicDTO);
+                            sftpFileCopyTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId + ",";
+                            commonTask = true;
                         } else if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.DATAACCESS_API)) {
                             fapi = true;
                             pipelApiDispatch.workflowId = String.valueOf(buildNifiCustomWorkFlowDTO.workflowDetailId);
@@ -593,10 +610,10 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                         querySqlDto.querySql += " ,'" + JSON.toJSONString(pipelApiDispatchs) + "' as pipelApiDispatch ,'" + TopicName + "' as topic, '${uuid}' as pipelTraceId, '" + pipelineNifiFlow.getValue() + "' as topicType  ";
                     }
                     if (StringUtils.isNotEmpty(scriptTaskIds)) {
-                        querySqlDto.querySql += " ,'" + scriptTaskIds + "' as scriptTaskIds ";
+                        querySqlDto.querySql += " ,'" + scriptTaskIds.substring(0, scriptTaskIds.length() - 1) + "' as scriptTaskIds ";
                     }
                     if (StringUtils.isNotEmpty(sftpFileCopyTaskIds)) {
-                        querySqlDto.querySql += " ,'" + sftpFileCopyTaskIds + "' as sftpFileCopyTaskIds ";
+                        querySqlDto.querySql += " ,'" + sftpFileCopyTaskIds.substring(0, sftpFileCopyTaskIds.length() - 1) + "' as sftpFileCopyTaskIds ";
                     }
                     querySqlDto.querySql += " from tb_etl_Incremental limit 1";
 

@@ -66,7 +66,7 @@ public class KafkaReceiveDTO extends MQBaseDTO {
     /**
      *sftpFileCopyTaskId,sftp复制任务
      */
-    public String sftpFileCopyTaskId;
+    public String sftpFileCopyTaskIds;
     /**
      * 失败信息
      */

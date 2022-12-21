@@ -83,7 +83,7 @@ public class MqConstants {
         /**
          * build.sftpfile.copy.flow
          */
-        public static final String BUILD_SFTP_FILE_COPY_FLOW = "build.sftpfile.copy.flow";
+        public static final String BUILD_SFTP_FILE_COPY_FLOW = "build.sftpFile.copy";
 
     }
 

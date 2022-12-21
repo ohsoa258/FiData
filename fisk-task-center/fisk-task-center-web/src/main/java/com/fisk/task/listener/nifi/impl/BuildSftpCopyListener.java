@@ -9,6 +9,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.sftp.SftpUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.TaskSettingDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
@@ -18,6 +19,7 @@ import com.fisk.task.dto.task.ExecScriptDTO;
 import com.fisk.task.dto.task.SftpCopyDTO;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.nifi.ISftpCopyListener;
+import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
 import com.fisk.task.utils.KafkaTemplateHelper;
 import com.fisk.task.utils.StackTraceHelper;
@@ -43,6 +45,8 @@ public class BuildSftpCopyListener implements ISftpCopyListener {
     private IPipelJobLog iPipelJobLog;
     @Resource
     private KafkaTemplateHelper kafkaTemplateHelper;
+    @Resource
+    IPipelineTaskPublishCenter iPipelineTaskPublishCenter;
 
     @Override
     public ResultEnum sftpCopyTask(String data, Acknowledgment acke) {
@@ -56,8 +60,10 @@ public class BuildSftpCopyListener implements ISftpCopyListener {
 
             for (SftpCopyDTO sftpCopy : sftpCopys) {
                 dto = sftpCopy;
+                TaskHierarchyDTO taskHierarchy = iPipelineTaskPublishCenter.getTaskHierarchy(sftpCopy.pipelTraceId, sftpCopy.taskId);
+                NifiCustomWorkflowDetailDTO itselfPort = taskHierarchy.itselfPort;
                 // 查具体的配置
-                List<TaskSettingDTO> list = dataFactoryClient.getTaskSettingsByTaskId(Long.parseLong(sftpCopy.getTaskId()));
+                List<TaskSettingDTO> list = dataFactoryClient.getTaskSettingsByTaskId(itselfPort.pid);
                 Map<String, String> map = list.stream()
                         .collect(Collectors.toMap(TaskSettingDTO::getSettingKey, TaskSettingDTO::getValue));
                 // 执行sftp文件复制任务
@@ -76,8 +82,10 @@ public class BuildSftpCopyListener implements ISftpCopyListener {
                         map.get(TaskSettingEnum.sftp_target_folder.getAttributeName()),
                         map.get(TaskSettingEnum.sftp_target_file_name.getAttributeName()));
             }
+            log.info("sftp复制任务执行完成");
             return ResultEnum.SUCCESS;
         } catch (Exception e) {
+            log.error("执行sftp组件报错" + StackTraceHelper.getStackTraceInfo(e));
             DispatchExceptionHandlingDTO dispatchExceptionHandling = new DispatchExceptionHandlingDTO();
             dispatchExceptionHandling.pipelTraceId = dto.pipelTraceId;
             dispatchExceptionHandling.pipelTaskTraceId = dto.pipelTaskTraceId;
@@ -85,11 +93,13 @@ public class BuildSftpCopyListener implements ISftpCopyListener {
             dispatchExceptionHandling.pipelStageTraceId = dto.pipelStageTraceId;
             dispatchExceptionHandling.comment = "执行脚本组件报错";
             iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandling);
-            log.error("执行脚本组件报错" + StackTraceHelper.getStackTraceInfo(e));
             throw new FkException(ResultEnum.ERROR);
         } finally {
+            if (acke != null) {
+                acke.acknowledge();
+            }
             execScriptToDispatch(dto);
-            acke.acknowledge();
+
         }
     }
 
@@ -101,6 +111,7 @@ public class BuildSftpCopyListener implements ISftpCopyListener {
      * @date 2022/6/22 11:31
      */
     public void execScriptToDispatch(SftpCopyDTO dto) {
+        log.info("开始组装结束信息:{}", JSON.toJSONString(dto));
         KafkaReceiveDTO kafkaReceiveDTO = KafkaReceiveDTO.builder().build();
         kafkaReceiveDTO.pipelTraceId = dto.pipelTraceId;
         kafkaReceiveDTO.pipelTaskTraceId = dto.pipelTaskTraceId;

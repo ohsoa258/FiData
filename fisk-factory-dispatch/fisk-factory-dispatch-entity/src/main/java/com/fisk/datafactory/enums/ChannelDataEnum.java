@@ -159,6 +159,7 @@ public enum ChannelDataEnum implements BaseEnum {
         list.add(ChannelDataEnum.OLAP_FACT_TASK.getName());
         list.add(ChannelDataEnum.OLAP_WIDETABLE_TASK.getName());
         list.add(ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName());
+        list.add(ChannelDataEnum.SFTP_FILE_COPY_TASK.getName());
         return list;
     }
 }
