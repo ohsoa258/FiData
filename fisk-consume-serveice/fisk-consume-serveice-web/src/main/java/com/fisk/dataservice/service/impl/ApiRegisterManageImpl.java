@@ -120,6 +120,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     @Override
     public PageDTO<ApiSubVO> getApiSubAll(ApiSubQueryDTO dto) {
         PageDTO<ApiSubVO> pageDTO = new PageDTO<>();
+
         List<ApiSubVO> apiSubVOS = new ArrayList<>();
         List<ApiConfigPO> apiConfigPOS = baseMapper.getList(dto.keyword);
         if (CollectionUtils.isNotEmpty(apiConfigPOS)) {
