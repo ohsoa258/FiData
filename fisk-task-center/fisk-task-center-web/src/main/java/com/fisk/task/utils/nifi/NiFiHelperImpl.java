@@ -1241,6 +1241,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         map.put("Port", data.port);
         map.put("Username", data.username);
         map.put("Password", data.password);
+        map.put("Private Key Path", data.privateKeyPath);
         map.put("Remote File", data.remoteFile);
         map.put("Send Keep Alive On Timeout", data.sendKeepAliveOnTimeout);
         map.put("Connection Timeout", data.connectionTimeout);

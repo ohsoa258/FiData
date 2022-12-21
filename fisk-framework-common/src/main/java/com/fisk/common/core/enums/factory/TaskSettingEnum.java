@@ -59,7 +59,15 @@ public enum TaskSettingEnum implements BaseEnum {
     /**
      * sftp任务配置-目标-文件名称
      */
-    sftp_target_file_name(14, "sftp任务配置-目标-文件名称", "sftpTargetFileName");
+    sftp_target_file_name(14, "sftp任务配置-目标-文件名称", "sftpTargetFileName"),
+    /**
+     * sftp源rsa文件路径
+     */
+    sftp_source_rsa_file_path(15, "sftp任务配置-数据源-rsa文件路径", "sftpSourceRsaFilePath"),
+    /**
+     * sftp目标rsa文件路径
+     */
+    sftp_target_rsa_file_path(16, "sftp任务配置-目标-rsa文件路径", "sftpTargetRsaFilePath");
 
     private final String name;
 
