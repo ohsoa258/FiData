@@ -41,8 +41,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.time.Duration;
-import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -397,4 +396,16 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                 .map(e -> e.tableName)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<NifiCustomWorkFlowDropDTO> getNifiCustomWorkFlowDrop() {
+        List<NifiCustomWorkflowPO> list = this.query().eq("del_flag", 1).select("id", "workflow_name").list();
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+
+        return NifiCustomWorkflowMap.INSTANCES.poToDropDto(list);
+
+    }
+
 }

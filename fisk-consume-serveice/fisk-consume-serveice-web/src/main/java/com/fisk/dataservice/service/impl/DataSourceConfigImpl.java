@@ -169,6 +169,7 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
 
         for (DataSourceDTO item : dataList) {
             DataSourceInfoDTO data = new DataSourceInfoDTO();
+            data.dbId = item.id;
             data.dbName = item.name;
             data.tableNameList = getDbTable(item);
             list.add(data);

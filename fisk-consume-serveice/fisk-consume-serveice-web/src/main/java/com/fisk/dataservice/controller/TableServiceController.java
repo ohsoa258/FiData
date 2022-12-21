@@ -3,6 +3,7 @@ package com.fisk.dataservice.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.dataservice.dto.datasource.DataSourceColumnQueryDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceQueryDTO;
 import com.fisk.dataservice.dto.tableservice.TableServiceDTO;
@@ -28,6 +29,8 @@ public class TableServiceController {
     ITableService service;
     @Resource
     IDataSourceConfig dataSourceConfig;
+    @Resource
+    DataFactoryClient dataFactoryClient;
 
     @ApiOperation("分页获取表服务数据")
     @PostMapping("/getTableServiceListData")
@@ -81,6 +84,12 @@ public class TableServiceController {
     @DeleteMapping("/getTableServiceById/{id}")
     public ResultEntity<Object> delTableServiceById(@PathVariable("id") long id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delTableServiceById(id));
+    }
+
+    @ApiOperation("获取所有管道")
+    @GetMapping("/getNifiCustomWorkFlowDrop")
+    public ResultEntity<Object> getNifiCustomWorkFlowDrop() {
+        return dataFactoryClient.getNifiCustomWorkFlowDrop();
     }
 
 

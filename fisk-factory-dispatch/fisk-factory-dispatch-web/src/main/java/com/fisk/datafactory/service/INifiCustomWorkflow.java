@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkFlowDropDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowNumDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
@@ -85,4 +86,12 @@ public interface INifiCustomWorkflow extends IService<NifiCustomWorkflowPO> {
      * @return list
      */
     List<String> getTableListById(Long id);
+
+    /**
+     * 获取所有管道
+     *
+     * @return
+     */
+    List<NifiCustomWorkFlowDropDTO> getNifiCustomWorkFlowDrop();
+
 }

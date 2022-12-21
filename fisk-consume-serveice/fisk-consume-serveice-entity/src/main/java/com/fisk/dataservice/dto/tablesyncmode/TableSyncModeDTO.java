@@ -112,4 +112,10 @@ public class TableSyncModeDTO {
     @ApiModelProperty(value = "关联管道id")
     public Integer associatePipe;
 
+    /**
+     * 调度类型:1TIMER DRIVEN 2CRON DRIVEN
+     */
+    @ApiModelProperty(value = "调度类型:1TIMER DRIVEN 2CRON DRIVEN")
+    public Integer scheduleType;
+
 }

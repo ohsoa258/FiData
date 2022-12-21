@@ -96,4 +96,9 @@ public class TableSyncModePO extends BasePO {
      */
     public Integer associatePipe;
 
+    /**
+     * 调度类型:1TIMER DRIVEN 2CRON DRIVEN
+     */
+    public Integer scheduleType;
+
 }

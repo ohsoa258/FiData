@@ -1,5 +1,6 @@
 package com.fisk.datafactory.map;
 
+import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkFlowDropDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
 import org.mapstruct.Mapper;
@@ -45,4 +46,13 @@ public interface NifiCustomWorkflowMap {
      * @return target
      */
     List<NifiCustomWorkflowDTO> listPoToDto(List<NifiCustomWorkflowPO> list);
+
+    /**
+     * po==>DropDto
+     *
+     * @param list
+     * @return
+     */
+    List<NifiCustomWorkFlowDropDTO> poToDropDto(List<NifiCustomWorkflowPO> list);
+
 }

@@ -11,6 +11,8 @@ import java.util.List;
 @Data
 public class DataSourceInfoDTO {
 
+    public Integer dbId;
+
     public String dbName;
 
     public List<TableNameDTO> tableNameList;
