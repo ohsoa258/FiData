@@ -690,11 +690,13 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         }
         if (CollectionUtils.isNotEmpty(dto.taskSetting)) {
             //修改sftp组件的父子级配置,旨在解决修改一个组件就要发布整个管道的
-            if (Objects.equals(dto.componentsId, ChannelDataEnum.SFTP_FILE_COPY_TASK.getValue())) {
+            //if (Objects.equals(dto.componentsId, ChannelDataEnum.SFTP_FILE_COPY_TASK.getValue())) {
                 taskSetting.updateTaskSetting(dto.id, dto.taskSetting);
                 NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPo = this.query().eq("pid", dto.id).one();
-                taskSetting.updateTaskSetting(nifiCustomWorkflowDetailPo.id, dto.taskSetting);
-            }
+                if(Objects.nonNull(nifiCustomWorkflowDetailPo)){
+                    taskSetting.updateTaskSetting(nifiCustomWorkflowDetailPo.id, dto.taskSetting);
+                }
+            //}
         }
 
         // dto -> po
