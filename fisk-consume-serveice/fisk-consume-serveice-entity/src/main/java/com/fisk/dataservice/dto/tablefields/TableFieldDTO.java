@@ -57,6 +57,6 @@ public class TableFieldDTO {
     /**
      * 是否主键
      */
-    public Boolean primaryKey;
+    public Boolean isPrimaryKey;
 
 }

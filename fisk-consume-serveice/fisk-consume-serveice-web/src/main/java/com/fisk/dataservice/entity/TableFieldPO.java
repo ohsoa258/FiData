@@ -59,6 +59,6 @@ public class TableFieldPO extends BasePO {
     /**
      * 是否主键
      */
-    public Boolean primaryKey;
+    public Boolean isPrimaryKey;
 
 }
