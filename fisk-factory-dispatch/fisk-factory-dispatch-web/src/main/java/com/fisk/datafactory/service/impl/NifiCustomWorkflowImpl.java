@@ -25,6 +25,7 @@ import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
 import com.fisk.datafactory.entity.TaskSettingPO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
 import com.fisk.datafactory.map.NifiCustomWorkflowMap;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
@@ -415,5 +416,10 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                 .filter(e -> e.appId != null && !"".equals(e.appId) && e.tableId != null && !"".equals(e.tableId))
                 .map(e -> e.tableName)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Integer getDataDispatchNum() {
+        return mapper.getDataDispatchNum(DelFlagEnum.NORMAL_FLAG.getValue());
     }
 }
