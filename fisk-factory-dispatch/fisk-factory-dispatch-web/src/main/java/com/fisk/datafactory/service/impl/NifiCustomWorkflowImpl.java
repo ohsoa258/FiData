@@ -167,11 +167,13 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                 }
             }
         }
-        List<NifiCustomWorkflowDetailDTO> collect = vo.list.stream().filter(e -> !
-                ((e.componentType.equals(ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName())
-                        || e.componentType.equals(ChannelDataEnum.SFTP_FILE_COPY_TASK.getName())) &&
-                        e.pid != 0)).collect(Collectors.toList());
-        vo.list = collect;
+        if(CollectionUtils.isNotEmpty(vo.list)){
+            List<NifiCustomWorkflowDetailDTO> collect = vo.list.stream().filter(e -> !
+                    ((e.componentType.equals(ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName())
+                            || e.componentType.equals(ChannelDataEnum.SFTP_FILE_COPY_TASK.getName())) &&
+                            e.pid != 0)).collect(Collectors.toList());
+            vo.list = collect;
+        }
         return vo;
     }
 
