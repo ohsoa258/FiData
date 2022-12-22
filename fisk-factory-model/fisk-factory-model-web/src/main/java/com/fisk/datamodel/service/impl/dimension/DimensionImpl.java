@@ -43,7 +43,6 @@ import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
-import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
@@ -71,7 +70,10 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> implements IDimension {
+//@Lazy
+public class DimensionImpl
+        extends ServiceImpl<DimensionMapper, DimensionPO>
+        implements IDimension {
 
     @Resource
     DimensionMapper mapper;
@@ -385,7 +387,11 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> imp
             editDateDimension(dto, model.dimensionTabName);
         }
         dto.businessId = model.businessId;
-        model = DimensionMap.INSTANCES.dtoToPo(dto);
+        //model = DimensionMap.INSTANCES.dtoToPo(dto);
+        model.dimensionCnName = dto.dimensionCnName;
+        model.dimensionTabName = dto.dimensionTabName;
+        model.dimensionDesc = dto.dimensionDesc;
+        model.dimensionFolderId = dto.dimensionFolderId;
         int flat = mapper.updateById(model);
         if (flat > 0 && dto.timeTable) {
             //同步atlas
@@ -394,13 +400,22 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> imp
                 synchronousMetadata(DataSourceConfigEnum.DMP_DW.getValue(), dimensionPo, DataModelTableTypeEnum.DW_DIMENSION.getValue());
             }
         }
+
+        //同步元数据
+        if (model.isPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue()) {
+            asyncSynchronousMetadata(model);
+        }
+
         return flat > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    public void asyncSynchronousMetadata(DimensionPO model) {
+        synchronousMetadata(DataSourceConfigEnum.DMP_DW.getValue(), model, DataModelTableTypeEnum.DW_DIMENSION.getValue());
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultEnum deleteDimension(int id)
-    {
+    public ResultEnum deleteDimension(int id) {
         try {
             DimensionPO model = mapper.selectById(id);
             if (model == null) {
@@ -664,6 +679,12 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> imp
      * @param dataModelType
      */
     public void synchronousMetadata(int dataSourceId, DimensionPO dimension, int dataModelType) {
+
+        BusinessAreaPO businessAreaPO = businessAreaImpl.query().eq("id", dimension.businessId).one();
+        if (businessAreaPO == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
         //实时更新元数据
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
         MetaDataInstanceAttributeDTO data = getDataSourceConfig(dataSourceId);
@@ -679,13 +700,17 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> imp
         table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dataModelType + "_" + dimension.id;
         table.comment = String.valueOf(dimension.businessId);
         table.displayName = dimension.dimensionCnName;
-        //所属人
+
+        //获取业务域负责人
+        table.owner = businessAreaPO.getBusinessAdmin();
+
+        /*//所属人
         List<Long> ids = new ArrayList<>();
         ids.add(Long.parseLong(dimension.createUser));
         ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(ids);
         if (userListByIds.code == ResultEnum.SUCCESS.getCode()) {
             table.owner = userListByIds.data.get(0).getUsername();
-        }
+        }*/
 
         //字段
         List<MetaDataColumnAttributeDTO> columnList = new ArrayList<>();
@@ -705,6 +730,7 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> imp
         tableList.add(table);
         data.dbList.get(0).tableList = tableList;
         list.add(data);
+
         try {
             MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
             metaDataAttribute.instanceList = list;
@@ -715,6 +741,24 @@ public class DimensionImpl extends ServiceImpl<DimensionMapper, DimensionPO> imp
         } catch (Exception e) {
             log.error("【dataManageClient.MetaData()】方法报错,ex", e);
         }
+
+        /*//修改元数据
+        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+        cachedThreadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    *//* MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
+                    metaDataAttribute.instanceList = list;
+                    metaDataAttribute.userId = Long.parseLong(dimension.createUser);*//*
+                    // 更新元数据内容
+                    log.info("维度表构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+                    dataManageClient.consumeMetaData(list);
+                } catch (Exception e) {
+                    log.error("【dataManageClient.MetaData()】方法报错,ex", e);
+                }
+            }
+        });*/
     }
 
     /**
