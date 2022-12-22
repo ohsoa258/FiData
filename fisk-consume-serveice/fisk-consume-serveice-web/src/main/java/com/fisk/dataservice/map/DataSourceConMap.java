@@ -4,7 +4,7 @@ import com.fisk.dataservice.dto.datasource.DataSourceConDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConEditDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
 import com.fisk.dataservice.entity.DataSourceConPO;
-import com.fisk.dataservice.vo.datasource.DataSourceConVO;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
@@ -50,6 +50,6 @@ public interface DataSourceConMap {
      * @param voList
      * @return
      */
-    List<DataSourceConfigInfoDTO> voListToDtoInfo(List<DataSourceConVO> voList);
+    List<DataSourceConfigInfoDTO> voListToDtoInfo(List<DataSourceDTO> voList);
 
 }

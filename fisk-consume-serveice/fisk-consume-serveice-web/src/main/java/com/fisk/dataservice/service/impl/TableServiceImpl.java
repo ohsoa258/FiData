@@ -13,18 +13,17 @@ import com.fisk.dataservice.dto.tableservice.TableServicePageQueryDTO;
 import com.fisk.dataservice.dto.tableservice.TableServiceSaveDTO;
 import com.fisk.dataservice.entity.TableServicePO;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
-import com.fisk.dataservice.enums.SourceTypeEnum;
 import com.fisk.dataservice.map.DataSourceConMap;
 import com.fisk.dataservice.map.TableServiceMap;
 import com.fisk.dataservice.mapper.TableServiceMapper;
 import com.fisk.dataservice.service.ITableService;
-import com.fisk.dataservice.vo.datasource.DataSourceConVO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -40,6 +39,9 @@ public class TableServiceImpl
     TableFieldImpl tableField;
     @Resource
     TableSyncModeImpl tableSyncMode;
+
+    @Resource
+    UserClient client;
 
 
     @Resource
@@ -65,11 +67,17 @@ public class TableServiceImpl
 
     @Override
     public List<DataSourceConfigInfoDTO> getDataSourceConfig() {
-        List<DataSourceConVO> allDataSource = dataSourceConManage.getAllDataSource();
+        /*List<DataSourceConVO> allDataSource = dataSourceConManage.getAllDataSource();
         //过滤数据
         List<DataSourceConVO> collect = allDataSource.stream().filter(e -> e.datasourceType == SourceTypeEnum.custom).collect(Collectors.toList());
+        */
 
-        return DataSourceConMap.INSTANCES.voListToDtoInfo(collect);
+        ResultEntity<List<DataSourceDTO>> allExternalDataSource = client.getAllExternalDataSource();
+        if (allExternalDataSource.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+
+        return DataSourceConMap.INSTANCES.voListToDtoInfo(allExternalDataSource.data);
     }
 
     @Transactional(rollbackFor = Exception.class)

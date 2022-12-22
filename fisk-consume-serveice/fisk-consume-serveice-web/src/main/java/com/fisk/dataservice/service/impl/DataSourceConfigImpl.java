@@ -60,6 +60,9 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
     @Resource
     UserClient client;
 
+    @Resource
+    TableServiceImpl tableService;
+
     public static DataSourceQueryResultDTO resultSetToJsonArrayTableService(ResultSet rs) throws SQLException, JSONException {
         DataSourceQueryResultDTO data = new DataSourceQueryResultDTO();
         // json数组
@@ -251,6 +254,49 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
         typeConversion(first.get().conType, data.fieldNameDTOList, DataSourceTypeEnum.SQLSERVER);
 
         return data;
+    }
+
+    @Override
+    public List<TableNameDTO> getAllTableByDb(Integer dataSourceId) {
+        //获取数据源
+        ResultEntity<List<DataSourceDTO>> allFiDataDataSource = client.getAllExternalDataSource();
+        if (allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+
+        Optional<DataSourceDTO> first = allFiDataDataSource.data.stream().filter(e -> e.id.equals(dataSourceId)).findFirst();
+        if (!first.isPresent()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+
+        List<TableNameDTO> data = new ArrayList<>();
+
+        Connection conn = null;
+        try {
+            AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
+            conn = helper.connection(first.get().conStr, first.get().conAccount, first.get().conPassword, first.get().conType);
+            switch (first.get().conType) {
+                case MYSQL:
+                    data = MySqlConUtils.getTableName(conn);
+                    break;
+                case SQLSERVER:
+                    data = SqlServerUtils.getTableName(conn);
+                    break;
+                case POSTGRESQL:
+                    data = PgSqlUtils.getTableName(conn);
+                    break;
+                case ORACLE:
+                    data = OracleUtils.getTableName(conn);
+                    break;
+                default:
+                    throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+            }
+        } catch (Exception e) {
+            log.error("【根据库获取表集合】,{}", e);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        return data;
+
     }
 
     /**

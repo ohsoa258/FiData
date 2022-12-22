@@ -1,6 +1,7 @@
 package com.fisk.dataservice.service;
 
 import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
+import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceColumnQueryDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceInfoDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceQueryDTO;
@@ -35,5 +36,13 @@ public interface IDataSourceConfig {
      * @return
      */
     DataSourceQueryResultDTO getTableServiceQueryList(DataSourceQueryDTO dto);
+
+    /**
+     * 根据数据库id获取所有表
+     *
+     * @param dataSourceId
+     * @return
+     */
+    List<TableNameDTO> getAllTableByDb(Integer dataSourceId);
 
 }

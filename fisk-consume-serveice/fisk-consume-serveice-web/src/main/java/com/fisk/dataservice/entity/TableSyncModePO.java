@@ -101,4 +101,14 @@ public class TableSyncModePO extends BasePO {
      */
     public Integer scheduleType;
 
+    /**
+     * 自定义脚本执行前
+     */
+    public String customScriptBefore;
+
+    /**
+     * 自定义脚本执行后
+     */
+    public String customScriptAfter;
+
 }

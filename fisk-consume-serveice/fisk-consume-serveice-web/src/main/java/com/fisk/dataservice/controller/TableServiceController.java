@@ -92,5 +92,10 @@ public class TableServiceController {
         return dataFactoryClient.getNifiCustomWorkFlowDrop();
     }
 
+    @ApiOperation("获取库中表集合")
+    @GetMapping("/getAllTableByDb/{id}")
+    public ResultEntity<Object> getAllTableByDb(@PathVariable("id") Integer id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataSourceConfig.getAllTableByDb(id));
+    }
 
 }
