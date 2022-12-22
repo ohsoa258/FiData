@@ -85,4 +85,11 @@ public interface INifiCustomWorkflow extends IService<NifiCustomWorkflowPO> {
      * @return list
      */
     List<String> getTableListById(Long id);
+
+    /**
+     * 获取数据调度中的应用总数
+     *
+     * @return Integer
+     */
+    Integer getDataDispatchNum();
 }
