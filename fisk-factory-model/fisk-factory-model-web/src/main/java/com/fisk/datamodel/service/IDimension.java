@@ -88,4 +88,6 @@ public interface IDimension extends IService<DimensionPO> {
      */
     DimensionDTO getDimensionByName(String tableName);
 
+    //void asyncSynchronousMetadata(DimensionPO model);
+
 }

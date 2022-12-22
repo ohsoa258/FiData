@@ -9,6 +9,9 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 /**
  * @author Lock
  */
+/*@EnableAsync(proxyTargetClass=true)
+@EnableTransactionManagement
+@EnableAspectJAutoProxy(proxyTargetClass=false,exposeProxy=true)*/
 @SpringBootApplication(scanBasePackages = {
         "com.fisk.datamanagement",
         "com.fisk.common.framework.advice",

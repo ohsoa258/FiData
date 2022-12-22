@@ -118,7 +118,9 @@ public class MetaDataImpl implements IMetaData {
     }
 
     @Override
+    //@Async
     public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data) {
+        log.info("开始同步元数据***********");
         for (MetaDataInstanceAttributeDTO instance : data) {
             String instanceGuid = metaDataInstance(instance);
             if (StringUtils.isEmpty(instanceGuid) || CollectionUtils.isEmpty(instance.dbList)) {
@@ -776,7 +778,7 @@ public class MetaDataImpl implements IMetaData {
         //同步业务分类
         associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
         //同步业务元数据
-        //associatedBusinessMetaData(atlasGuid, dbName, dto.name);
+        associatedBusinessMetaData(atlasGuid, dbName, dto.name);
         if (isAdd) {
             return atlasGuid;
         }
@@ -999,6 +1001,7 @@ public class MetaDataImpl implements IMetaData {
                                          String comment) {
         try {
             //获取数据源列表
+            //RequestContextHolder.setRequestAttributes(RequestContextHolder.getRequestAttributes(), true);
             ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
             if (allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
                 return;
@@ -1108,6 +1111,7 @@ public class MetaDataImpl implements IMetaData {
                 attribute.put("contact_info", data.contact_info);
                 attribute.put("description", data.description);
                 attribute.put("displayName", data.displayName);
+                attribute.put("owner", dto.owner);
                 break;
             case RDBMS_DB:
             case RDBMS_TABLE:
@@ -1116,6 +1120,7 @@ public class MetaDataImpl implements IMetaData {
                 attribute.put("contact_info", dto.contact_info);
                 attribute.put("description", dto.description);
                 attribute.put("displayName", dto.displayName);
+                attribute.put("owner", dto.owner);
                 break;
             case RDBMS_COLUMN:
                 MetaDataColumnAttributeDTO field = (MetaDataColumnAttributeDTO) dto;
@@ -1125,8 +1130,10 @@ public class MetaDataImpl implements IMetaData {
                 attribute.put("description", field.description);
                 attribute.put("data_type", field.dataType);
                 attribute.put("displayName", field.displayName);
+                attribute.put("owner", field.owner);
                 break;
             default:
+                break;
         }
         entityObject.put("attributes", attribute);
         jsonObj.put("entity", entityObject);
