@@ -1,8 +1,11 @@
 package com.fisk.task.dto.task;
 
+import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.dataservice.dto.tablefields.TableFieldDTO;
 import com.fisk.dataservice.dto.tablesyncmode.TableSyncModeDTO;
 import com.fisk.task.dto.MQBaseDTO;
+import com.fisk.task.enums.DataClassifyEnum;
+import com.fisk.task.enums.OlapTableEnum;
 import lombok.Data;
 
 import java.util.List;
@@ -13,6 +16,10 @@ import java.util.List;
 @Data
 public class BuildTableServiceDTO extends MQBaseDTO {
 
+    /**
+     * 表id
+     */
+    public long id;
     /**
      * 表名
      */
@@ -29,7 +36,7 @@ public class BuildTableServiceDTO extends MQBaseDTO {
     public Integer dataSourceId;
 
     /**
-     * 脚本
+     * 查询脚本
      */
     public String sqlScript;
 
@@ -52,6 +59,21 @@ public class BuildTableServiceDTO extends MQBaseDTO {
      * 字段集合
      */
     public List<TableFieldDTO> fieldDtoList;
+
+    /**
+     * 同步类型
+     */
+    public SynchronousTypeEnum synchronousTypeEnum = SynchronousTypeEnum.TOEXTERNALDB;
+
+    /**
+     * 数据类别
+     */
+    public DataClassifyEnum dataClassifyEnum = DataClassifyEnum.DATASERVICES;
+
+    /**
+     * 表类别
+     */
+    public OlapTableEnum olapTableEnum = OlapTableEnum.DATASERVICES;
 
 
 }
