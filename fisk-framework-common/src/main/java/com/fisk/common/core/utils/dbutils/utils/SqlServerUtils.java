@@ -73,11 +73,12 @@ public class SqlServerUtils {
      */
     public static List<TableColumnDTO> getColumnsName(Connection conn, String tableName) {
         List<TableColumnDTO> colNameList = null;
+        ResultSet resultSet = null;
         try {
             colNameList = new ArrayList<>();
 
             DatabaseMetaData metaData = conn.getMetaData();
-            ResultSet resultSet = metaData.getColumns(null, "%", tableName, "%");
+            resultSet = metaData.getColumns(null, "%", tableName, "%");
             while (resultSet.next()) {
                 TableColumnDTO dto = new TableColumnDTO();
                 dto.fieldName = resultSet.getString("COLUMN_NAME");
@@ -90,6 +91,41 @@ public class SqlServerUtils {
         } catch (Exception e) {
             log.error("【getColumnsName】获取表字段报错, ex", e);
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeResultSet(resultSet);
+        }
+        return colNameList;
+    }
+
+    public static List<TableColumnDTO> getColumnsNameBySql(Connection conn, String tableName) {
+        List<TableColumnDTO> colNameList = null;
+        Statement st = null;
+        ResultSet rs = null;
+        try {
+            colNameList = new ArrayList<>();
+
+            st = conn.createStatement();
+            String sql = "SELECT TOP 1 * FROM " + tableName;
+
+            rs = st.executeQuery(sql);
+
+            // 获取列数
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            for (int i = 1; i <= columnCount; i++) {
+                TableColumnDTO dto = new TableColumnDTO();
+                dto.fieldName = metaData.getColumnLabel(i);
+                dto.fieldType = metaData.getColumnTypeName(i).toLowerCase();
+                colNameList.add(dto);
+            }
+
+        } catch (Exception e) {
+            log.error("【getColumnsName】获取表字段报错, ex", e);
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeResultSet(rs);
         }
         return colNameList;
     }
