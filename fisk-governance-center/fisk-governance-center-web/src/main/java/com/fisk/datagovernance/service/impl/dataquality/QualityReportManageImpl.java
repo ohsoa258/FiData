@@ -1,12 +1,15 @@
 package com.fisk.datagovernance.service.impl.dataquality;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
+import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
+import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -33,13 +36,15 @@ import com.fisk.datagovernance.map.dataquality.QualityReportRecipientMap;
 import com.fisk.datagovernance.map.dataquality.QualityReportRuleMap;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IQualityReportManageService;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.qualityreport.*;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.vo.emailserver.EmailServerVO;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.task.UnifiedControlDTO;
+import com.fisk.task.enums.DataClassifyEnum;
+import com.fisk.task.enums.OlapTableEnum;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -826,36 +831,35 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
      * @params stateEnum 状态
      */
     public ResultEnum publishBuild_unifiedControlTask(int id, int state, String cron) {
-        ResultEnum resultEnum = ResultEnum.SUCCESS;
-        //        ResultEnum resultEnum = ResultEnum.TASK_NIFI_DISPATCH_ERROR;
-//        try {
-//            //调用task服务提供的API生成调度任务
-//            if (id == 0) {
-//                return ResultEnum.SAVE_VERIFY_ERROR;
-//            }
-//            long userId = userHelper.getLoginUserInfo().getId();
-//            boolean isDelTask = state != RuleStateEnum.Enable.getValue();
-//            if (StringUtils.isEmpty(cron)) {
-//                isDelTask = true;
-//            }
-//            UnifiedControlDTO unifiedControlDTO = new UnifiedControlDTO();
-//            unifiedControlDTO.setUserId(userId);
-//            unifiedControlDTO.setId(id);
-//            unifiedControlDTO.setScheduleType(SchedulingStrategyTypeEnum.CRON);
-//            unifiedControlDTO.setScheduleExpression(cron);
-//            unifiedControlDTO.setTopic(MqConstants.QueueConstants.BUILD_GOVERNANCE_TEMPLATE_FLOW);
-//            unifiedControlDTO.setType(OlapTableEnum.GOVERNANCE);
-//            unifiedControlDTO.setDataClassifyEnum(DataClassifyEnum.UNIFIEDCONTROL);
-//            unifiedControlDTO.setDeleted(isDelTask);
-//            log.info("【publishBuild_unifiedControlTask】创建nifi调度任务请求参数：" + JSON.toJSONString(unifiedControlDTO));
-//            ResultEntity<Object> result = publishTaskClient.publishBuildunifiedControlTask(unifiedControlDTO);
-//            if (result != null) {
-//                resultEnum = ResultEnum.getEnum(result.getCode());
-//            }
-//        } catch (Exception ex) {
-//            log.error("【publishBuild_unifiedControlTask】ex：" + ex);
-//            return ResultEnum.SUCCESS;
-//        }
+        ResultEnum resultEnum = ResultEnum.TASK_NIFI_DISPATCH_ERROR;
+        try {
+            //调用task服务提供的API生成调度任务
+            if (id == 0) {
+                return ResultEnum.SAVE_VERIFY_ERROR;
+            }
+            long userId = userHelper.getLoginUserInfo().getId();
+            boolean isDelTask = state != RuleStateEnum.Enable.getValue();
+            if (StringUtils.isEmpty(cron)) {
+                isDelTask = true;
+            }
+            UnifiedControlDTO unifiedControlDTO = new UnifiedControlDTO();
+            unifiedControlDTO.setUserId(userId);
+            unifiedControlDTO.setId(id);
+            unifiedControlDTO.setScheduleType(SchedulingStrategyTypeEnum.CRON);
+            unifiedControlDTO.setScheduleExpression(cron);
+            unifiedControlDTO.setTopic(MqConstants.QueueConstants.BUILD_GOVERNANCE_TEMPLATE_FLOW);
+            unifiedControlDTO.setType(OlapTableEnum.GOVERNANCE);
+            unifiedControlDTO.setDataClassifyEnum(DataClassifyEnum.UNIFIEDCONTROL);
+            unifiedControlDTO.setDeleted(isDelTask);
+            log.info("【publishBuild_unifiedControlTask】创建nifi调度任务请求参数：" + JSON.toJSONString(unifiedControlDTO));
+            ResultEntity<Object> result = publishTaskClient.publishBuildunifiedControlTask(unifiedControlDTO);
+            if (result != null) {
+                resultEnum = ResultEnum.getEnum(result.getCode());
+            }
+        } catch (Exception ex) {
+            log.error("【publishBuild_unifiedControlTask】ex：" + ex);
+            return ResultEnum.SUCCESS;
+        }
         return resultEnum;
     }
 

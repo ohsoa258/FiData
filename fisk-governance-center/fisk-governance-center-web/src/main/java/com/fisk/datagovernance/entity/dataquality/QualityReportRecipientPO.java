@@ -20,7 +20,7 @@ public class QualityReportRecipientPO extends BasePO {
 
     /**
      * 用户类型：1、FiData系统用户 2、第三方用户
-     * 如果选择FiData系统用户，那么接收人名称和邮件收件人自动带出，在页面不可修改
+     * 如果选择FiData系统用户，那么接收人名称和邮件收件人自动带出
      */
     public int userType;
 
