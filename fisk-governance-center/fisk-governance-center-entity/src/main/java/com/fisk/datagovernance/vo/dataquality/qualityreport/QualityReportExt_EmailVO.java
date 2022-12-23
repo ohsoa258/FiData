@@ -6,12 +6,11 @@ import lombok.Data;
 /**
  * @author dick
  * @version 1.0
- * @description 质量报告扩展信息VO
- * @date 2022/12/1 10:46
+ * @description 报告扩展信息-邮件服务器
+ * @date 2022/12/23 17:00
  */
 @Data
-public class QualityReportExtMapVO {
-
+public class QualityReportExt_EmailVO {
     /**
      * id
      */

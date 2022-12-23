@@ -137,4 +137,10 @@ public class UserController {
     public ResultEntity<String> getMDMUserToken() {
         return service.getMDMUserToken();
     }
+
+    @GetMapping("/getAllUserList")
+    @ApiOperation("批量查询用户信息")
+    public ResultEntity<List<UserDTO>> getAllUserList() {
+        return service.getAllUserList();
+    }
 }

@@ -18,9 +18,18 @@ public class QualityReportRulePO extends BasePO {
      */
     public int reportId;
 
+    /**
+     * 报告类型 100、质量校验报告 200、数据清洗报告
+     */
+    public int reportType;
 
     /**
      * 规则id
      */
     public int ruleId;
+
+    /**
+     * 规则执行顺序
+     */
+    public int ruleSort;
 }

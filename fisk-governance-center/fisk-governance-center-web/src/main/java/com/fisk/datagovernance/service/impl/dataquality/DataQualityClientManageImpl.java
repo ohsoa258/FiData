@@ -18,6 +18,8 @@ import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFieldDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.TableRuleSqlDTO;
 import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportDTO;
+import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportNoticeDTO;
+import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportRecipientDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
@@ -78,6 +80,13 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
     @Resource
     private QualityReportLogMapper qualityReportLogMapper;
+
+    @Resource
+    private QualityReportRecipientMapper qualityReportRecipientMapper;
+
+    @Resource
+    private QualityReportNoticeMapper qualityReportNoticeMapper;
+
 
     @Value("${file.uploadUrl}")
     private String uploadUrl;
@@ -577,22 +586,72 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             if (id == 0) {
                 return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, "");
             }
+            // 查询质量报告基础信息
             QualityReportPO qualityReportPO = qualityReportMapper.selectById(id);
             if (qualityReportPO == null || qualityReportPO.getReportState() == RuleStateEnum.Disable.getValue()) {
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NOTICE_NOTEXISTS, "");
             }
+            int reportId = Math.toIntExact(qualityReportPO.getId());
+
+            // 查询质量报告下的规则配置
             QueryWrapper<QualityReportRulePO> qualityReportRulePOQueryWrapper = new QueryWrapper<>();
             qualityReportRulePOQueryWrapper.lambda()
-                    .eq(QualityReportRulePO::getReportId, qualityReportPO.getId())
+                    .eq(QualityReportRulePO::getReportId, reportId)
                     .eq(QualityReportRulePO::getDelFlag, 1);
-            List<QualityReportRulePO> noticeExtendPOS = qualityReportRuleMapper.selectList(qualityReportRulePOQueryWrapper);
+            List<QualityReportRulePO> noticeExtendPOS = qualityReportRuleMapper.selectList(qualityReportRulePOQueryWrapper).stream().sorted(Comparator.comparing(QualityReportRulePO::getRuleSort)).collect(Collectors.toList());
+            ;
             if (!CollectionUtils.isNotEmpty(noticeExtendPOS)) {
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NOTICE_NOTEXISTS, "");
             }
+
+            // 查询质量报告下的通知方式
+            QualityReportNoticeDTO qualityReportNoticeDTO = new QualityReportNoticeDTO();
+            QueryWrapper<QualityReportNoticePO> qualityReportNoticePOQueryWrapper = new QueryWrapper<>();
+            qualityReportNoticePOQueryWrapper.lambda().eq(QualityReportNoticePO::getDelFlag, 1)
+                    .eq(QualityReportNoticePO::getReportId, reportId);
+            QualityReportNoticePO qualityReportNoticePO = qualityReportNoticeMapper.selectOne(qualityReportNoticePOQueryWrapper);
+            if (qualityReportNoticePO == null) {
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NOTICE_CONFIG_ISNULL, "");
+            }
+            qualityReportNoticeDTO.setId(Math.toIntExact(qualityReportNoticePO.getId()));
+            qualityReportNoticeDTO.setReportId(qualityReportNoticePO.getReportId());
+            qualityReportNoticeDTO.setReportNoticeType(qualityReportNoticePO.getReportNoticeType());
+            qualityReportNoticeDTO.setBody(qualityReportNoticePO.getBody());
+            qualityReportNoticeDTO.setSubject(qualityReportNoticePO.getSubject());
+            qualityReportNoticeDTO.setEmailServerId(qualityReportNoticePO.getEmailServerId());
+
+            // 查询质量报告下的接收人
+            List<QualityReportRecipientDTO> qualityReportRecipientDTOs = new ArrayList<>();
+            QueryWrapper<QualityReportRecipientPO> qualityReportRecipientPOQueryWrapper = new QueryWrapper<>();
+            qualityReportRecipientPOQueryWrapper.lambda().eq(QualityReportRecipientPO::getDelFlag, 1)
+                    .eq(QualityReportRecipientPO::getReportId, reportId);
+            List<QualityReportRecipientPO> qualityReportRecipientPOs = qualityReportRecipientMapper.selectList(qualityReportRecipientPOQueryWrapper);
+            if (!CollectionUtils.isNotEmpty(qualityReportRecipientPOs)) {
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NOTICE_RECIPIENT_ISNULL, "");
+            }
+            qualityReportRecipientPOs.forEach(t -> {
+                QualityReportRecipientDTO qualityReportRecipientDTO = new QualityReportRecipientDTO();
+                qualityReportRecipientDTO.setId(Math.toIntExact(t.id));
+                qualityReportRecipientDTO.setReportId(t.getReportId());
+                qualityReportRecipientDTO.setUserId(t.getUserId());
+                qualityReportRecipientDTO.setUserType(t.getUserType());
+                qualityReportRecipientDTO.setUserName(t.getUserName());
+                qualityReportRecipientDTO.setRecipient(t.getRecipient());
+                qualityReportRecipientDTOs.add(qualityReportRecipientDTO);
+            });
+            qualityReportNoticeDTO.setQualityReportRecipient(qualityReportRecipientDTOs);
+            String toAddressStr = "";
+            List<String> toAddressList = qualityReportRecipientDTOs.stream().map(QualityReportRecipientDTO::getRecipient).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(toAddressList)) {
+                toAddressStr = Joiner.on(";").join(toAddressList);
+            }
+
+            // 数据源信息
             List<DataSourceConVO> allDataSource = dataSourceConManageImpl.getAllDataSource();
             if (!CollectionUtils.isNotEmpty(allDataSource)) {
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS, "");
             }
+
             // 第一步：判断质量报告属于哪个业务模块 质量校验报告/数据清洗报告
             AttachmentInfoPO attachmentInfoPO = new AttachmentInfoPO();
             String currentFileName = UUID.randomUUID().toString().replace("-", "") + ".xlsx";
@@ -616,7 +675,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     attachmentInfoPO.setCategory(200);
                     break;
             }
-            if (qualityReportPO.getReportType() != 100 || qualityReportPO.getReportNoticeType() != 1) {
+            if (qualityReportPO.getReportType() != 100 || qualityReportNoticePO.getReportNoticeType() != 1) {
                 log.info("质量报告类型暂不支持非质量校验报告的其他方式");
                 log.info("质量报告通知方式暂不支持非邮件通知的其他方式");
                 return ResultEntityBuild.buildData(resultEnum, "");
@@ -624,18 +683,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
             // 第二步：是否需要发送邮件
             ResultEntity<Object> sendResult = null;
-            if (qualityReportPO.getReportNoticeType() == 1) {
+            if (qualityReportNoticePO.getReportNoticeType() == 1) {
                 QualityReportDTO qualityReportDTO = new QualityReportDTO();
-                qualityReportDTO.setEmailServerId(qualityReportPO.getEmailServerId());
-                qualityReportDTO.setEmailSubject(qualityReportPO.getEmailSubject());
-                qualityReportDTO.setBody(qualityReportPO.getBody());
-                qualityReportDTO.setEmailConsignee(qualityReportPO.getEmailConsignee());
-                qualityReportDTO.setEmailCc(qualityReportPO.getEmailCc());
                 qualityReportDTO.sendAttachment = true;
                 qualityReportDTO.setAttachmentName(attachmentInfoPO.getCurrentFileName());
                 qualityReportDTO.setAttachmentPath(attachmentInfoPO.getAbsolutePath());
                 qualityReportDTO.setAttachmentActualName(attachmentInfoPO.getOriginalName());
                 qualityReportDTO.setCompanyLogoPath(logoPaht);
+                qualityReportDTO.setQualityReportNotice(qualityReportNoticeDTO);
                 sendResult = qualityReportManage.sendEmailReport(qualityReportDTO);
             }
 
@@ -647,12 +702,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             qualityReportLogPO.setReportTypeName(qualityReportPO.getReportTypeName());
             qualityReportLogPO.setReportDesc(qualityReportPO.getReportDesc());
             qualityReportLogPO.setReportPrincipal(qualityReportPO.getReportPrincipal());
-            qualityReportLogPO.setReportNoticeType(qualityReportPO.getReportNoticeType());
-            qualityReportLogPO.setEmailServerId(qualityReportPO.getEmailServerId());
-            qualityReportLogPO.setEmailSubject(qualityReportPO.getEmailSubject());
-            qualityReportLogPO.setEmailConsignee(qualityReportPO.getEmailConsignee());
-            qualityReportLogPO.setEmailCc(qualityReportPO.getEmailCc());
-            qualityReportLogPO.setBody(qualityReportPO.getBody());
+            qualityReportLogPO.setReportNoticeType(qualityReportNoticeDTO.getReportNoticeType());
+            qualityReportLogPO.setEmailServerId(qualityReportNoticeDTO.getEmailServerId());
+            qualityReportLogPO.setSubject(qualityReportNoticeDTO.getSubject());
+            qualityReportLogPO.setRecipient(toAddressStr);
+            qualityReportLogPO.setBody(qualityReportNoticeDTO.getBody());
             qualityReportLogPO.setSendTime(DateTimeUtils.getNow());
             if (sendResult != null && sendResult.getCode() == ResultEnum.SUCCESS.getCode()) {
                 qualityReportLogPO.setSendResult("已发送");
@@ -969,7 +1023,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         }
         String fieldType = tableRuleSqlDTO.fieldType;
         boolean charValid = true;
-        if (dataSourceConVO.getConType() == DataSourceTypeEnum.POSTGRESQL) {
+        if (dataSourceConVO.getConType() == DataSourceTypeEnum.POSTGRESQL ||
+                dataSourceConVO.getConType() == DataSourceTypeEnum.SQLSERVER) {
             charValid = RegexUtils.isCharValid(fieldType);
         }
         String sql = "";
