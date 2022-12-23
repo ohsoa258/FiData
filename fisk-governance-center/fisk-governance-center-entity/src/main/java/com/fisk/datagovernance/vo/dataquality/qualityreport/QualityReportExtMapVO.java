@@ -11,7 +11,6 @@ import lombok.Data;
  */
 @Data
 public class QualityReportExtMapVO {
-
     /**
      * id
      */
@@ -23,4 +22,22 @@ public class QualityReportExtMapVO {
      */
     @ApiModelProperty(value = "名称")
     public String name;
+
+    /**
+     * 类型名称
+     */
+    @ApiModelProperty(value = "类型名称")
+    public String typeName;
+
+    /**
+     * 状态名称
+     */
+    @ApiModelProperty(value = "状态名称")
+    public String stateName;
+
+    /**
+     * 顺序
+     */
+    @ApiModelProperty(value = "顺序")
+    public int Sort;
 }

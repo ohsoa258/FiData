@@ -12,11 +12,6 @@
         report_principal,
         report_notice_type,
         report_state,
-        email_server_id,
-        email_subject,
-        email_consignee,
-        email_cc,
-        body,
         run_time_cron
         FROM
         tb_quality_report

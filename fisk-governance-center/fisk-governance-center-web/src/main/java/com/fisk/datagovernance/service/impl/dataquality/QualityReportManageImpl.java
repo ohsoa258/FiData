@@ -1,6 +1,7 @@
 package com.fisk.datagovernance.service.impl.dataquality;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -26,15 +27,20 @@ import com.fisk.datagovernance.dto.dataquality.qualityreport.*;
 import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.map.dataquality.QualityReportMap;
+import com.fisk.datagovernance.map.dataquality.QualityReportNoticeMap;
+import com.fisk.datagovernance.map.dataquality.QualityReportRecipientMap;
+import com.fisk.datagovernance.map.dataquality.QualityReportRuleMap;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IQualityReportManageService;
 import com.fisk.datagovernance.vo.dataquality.qualityreport.*;
 import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.vo.emailserver.EmailServerVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.UnifiedControlDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
+import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
@@ -47,10 +53,7 @@ import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -90,6 +93,15 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
     private AttachmentInfoMapper attachmentInfoMapper;
 
     @Resource
+    private QualityReportRecipientMapper qualityReportRecipientMapper;
+
+    @Resource
+    private QualityReportRecipientManageImpl qualityReportRecipientManage;
+
+    @Resource
+    private QualityReportNoticeMapper qualityReportNoticeMapper;
+
+    @Resource
     private UserClient userClient;
 
     @Resource
@@ -117,12 +129,65 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
             data.where = querySql.toString();
             all = baseMapper.getAll(query.page, data);
             if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
+
+                // 质量报告Id集合
                 List<Integer> reportIdList = all.getRecords().stream().map(QualityReportVO::getId).collect(Collectors.toList());
+
+                // 质量报告下的质量规则
                 QueryWrapper<QualityReportRulePO> qualityReportRulePOQueryWrapper = new QueryWrapper<>();
                 qualityReportRulePOQueryWrapper.lambda().eq(QualityReportRulePO::getDelFlag, 1)
                         .in(QualityReportRulePO::getReportId, reportIdList);
                 List<QualityReportRulePO> qualityReportRulePOS = qualityReportRuleMapper.selectList(qualityReportRulePOQueryWrapper);
+                // 质量报告下的质量规则的详细信息
+                List<DataCheckPO> dataCheckPOList = null;
+                List<BusinessFilterPO> businessFilterPOList = null;
+                if (CollectionUtils.isNotEmpty(qualityReportRulePOS)) {
+                    // 查询质量报告下的质量规则详细信息
+                    List<Integer> dataCheck_RuleIdList = qualityReportRulePOS.stream().filter(t -> t.getReportType() == 100).map(QualityReportRulePO::getRuleId).collect(Collectors.toList());
+                    if (CollectionUtils.isNotEmpty(dataCheck_RuleIdList)) {
+                        QueryWrapper<DataCheckPO> dataCheckPOQueryWrapper = new QueryWrapper<>();
+                        dataCheckPOQueryWrapper.lambda().eq(DataCheckPO::getDelFlag, 1)
+                                .in(DataCheckPO::getId, dataCheck_RuleIdList);
+                        dataCheckPOList = dataCheckMapper.selectList(dataCheckPOQueryWrapper);
+                    }
+                    List<Integer> businessFilter_RuleIdList = qualityReportRulePOS.stream().filter(t -> t.getReportType() == 200).map(QualityReportRulePO::getRuleId).collect(Collectors.toList());
+                    if (CollectionUtils.isNotEmpty(businessFilter_RuleIdList)) {
+                        QueryWrapper<BusinessFilterPO> businessFilterPOQueryWrapper = new QueryWrapper<>();
+                        businessFilterPOQueryWrapper.lambda().eq(BusinessFilterPO::getDelFlag, 1)
+                                .in(BusinessFilterPO::getId, businessFilter_RuleIdList);
+                        businessFilterPOList = businessFilterMapper.selectList(businessFilterPOQueryWrapper);
+                    }
+                }
+
+                // 质量报告的通知方式
+                QueryWrapper<QualityReportNoticePO> qualityReportNoticePOQueryWrapper = new QueryWrapper<>();
+                qualityReportNoticePOQueryWrapper.lambda().eq(QualityReportNoticePO::getDelFlag, 1)
+                        .in(QualityReportNoticePO::getReportId, reportIdList);
+                List<QualityReportNoticePO> qualityReportNoticePOList = qualityReportNoticeMapper.selectList(qualityReportNoticePOQueryWrapper);
+
+                // 质量报告的接收人
+//                List<UserDTO> userDTOList = null;
+                QueryWrapper<QualityReportRecipientPO> qualityReportRecipientPOQueryWrapper = new QueryWrapper<>();
+                qualityReportRecipientPOQueryWrapper.lambda().in(QualityReportRecipientPO::getDelFlag, 1)
+                        .eq(QualityReportRecipientPO::getReportId, reportIdList);
+                List<QualityReportRecipientPO> qualityReportRecipientPOList = qualityReportRecipientMapper.selectList(qualityReportRecipientPOQueryWrapper);
+//                if (CollectionUtils.isNotEmpty(qualityReportRecipientPOList)) {
+//                    List<Integer> userIdList = qualityReportRecipientPOList.stream().filter(t -> t.getUserId() != 0 && t.getUserType() == 1).map(QualityReportRecipientPO::getUserId).collect(Collectors.toList());
+//                    if (CollectionUtils.isNotEmpty(userIdList)) {
+//                        List<Long> userIds = JSONArray.parseArray(userIdList.toString(), Long.class);
+//                        ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
+//                        if (userListByIds.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(userListByIds.getData())) {
+//                            userDTOList = userListByIds.getData();
+//                        }
+//                    }
+//                }
+                List<DataCheckPO> finalDataCheckPOList = dataCheckPOList;
+                List<BusinessFilterPO> finalBusinessFilterPOList = businessFilterPOList;
+//                List<UserDTO> finalUserDTOList = userDTOList;
+
                 all.getRecords().forEach(t -> {
+
+                    // 获取Cron表达式下次执行时间
                     if (StringUtils.isNotEmpty(t.getRunTimeCron())) {
                         String cronExpress = CronUtils.getCronExpress(t.getRunTimeCron());
                         Date date = null;
@@ -134,14 +199,67 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                         String now = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(date);
                         t.setNextRunTime(now);
                     }
+
+                    // 质量报告下的质量规则的详细信息
+                    List<QualityReportRuleVO> rules = new ArrayList<>();
                     if (CollectionUtils.isNotEmpty(qualityReportRulePOS)) {
-                        List<Integer> ruleIds = qualityReportRulePOS.stream().filter(rule -> rule.getReportId() == t.getId()).map(QualityReportRulePO::getRuleId).collect(Collectors.toList());
-                        t.setRules(ruleIds);
+                        List<QualityReportRulePO> qualityReportRulePOList = qualityReportRulePOS.stream().filter(rule -> rule.getReportId() == t.getId()).sorted(Comparator.comparing(QualityReportRulePO::getRuleSort)).collect(Collectors.toList());
+                        if (CollectionUtils.isNotEmpty(qualityReportRulePOList) && (CollectionUtils.isNotEmpty(finalDataCheckPOList) || CollectionUtils.isNotEmpty(finalBusinessFilterPOList))) {
+                            List<QualityReportRuleVO> qualityReportRuleVOS = QualityReportRuleMap.INSTANCES.poToVo(qualityReportRulePOList);
+                            qualityReportRuleVOS.forEach(rule -> {
+                                if (t.getReportType() == 100) {
+                                    DataCheckPO dataCheckPO = finalDataCheckPOList.stream().filter(r -> r.getId() == rule.getRuleId()).findFirst().orElse(null);
+                                    if (dataCheckPO != null) {
+                                        rule.setRuleName(dataCheckPO.getRuleName());
+                                        rule.setRuleStateName(dataCheckPO.getRuleState() == 1 ? "启用" : "禁用");
+                                        rule.setRuleTypeName(TemplateSceneEnum.DATACHECK_QUALITYREPORT.getName());
+                                    }
+                                } else if (t.getReportType() == 200) {
+                                    BusinessFilterPO businessFilterPO = finalBusinessFilterPOList.stream().filter(r -> r.getId() == rule.getRuleId()).findFirst().orElse(null);
+                                    if (businessFilterPO != null) {
+                                        rule.setRuleName(businessFilterPO.getRuleName());
+                                        rule.setRuleStateName(businessFilterPO.getRuleState() == 1 ? "启用" : "禁用");
+                                        rule.setRuleTypeName(TemplateSceneEnum.BUSINESSFILTER_FILTERREPORT.getName());
+                                    }
+                                }
+                                if (StringUtils.isNotEmpty(rule.getRuleName())) {
+                                    rules.add(rule);
+                                }
+                            });
+                        }
+                    }
+                    t.setRules(rules);
+
+                    // 质量报告的通知方式
+                    if (CollectionUtils.isNotEmpty(qualityReportNoticePOList)) {
+                        QualityReportNoticePO qualityReportNoticePO = qualityReportNoticePOList.stream().filter(n -> n.getReportId() == t.getId()).findFirst().orElse(null);
+                        if (qualityReportNoticePO != null) {
+                            t.setNotice(QualityReportNoticeMap.INSTANCES.poToVo(qualityReportNoticePO));
+                        }
+                    }
+
+                    // 质量报告的接收人
+                    if (CollectionUtils.isNotEmpty(qualityReportRecipientPOList) && t.getNotice() != null) {
+                        List<QualityReportRecipientPO> qualityReportRecipientPOS = qualityReportRecipientPOList.stream().filter(r -> r.getReportId() == t.getId()).sorted(Comparator.comparing(QualityReportRecipientPO::getCreateTime).reversed()).collect(Collectors.toList());
+                        if (CollectionUtils.isNotEmpty(qualityReportRecipientPOS)) {
+                            List<QualityReportRecipientVO> qualityReportRecipientVOS = QualityReportRecipientMap.INSTANCES.poToVo(qualityReportRecipientPOS);
+//                            qualityReportRecipientVOS.forEach(r -> {
+//                                if (r.getUserId() != 0 && r.getUserType() == 1 && CollectionUtils.isNotEmpty(finalUserDTOList)) {
+//                                    UserDTO userDTO = finalUserDTOList.stream().filter(u -> u.getId() == r.getUserId()).findFirst().orElse(null);
+//                                    if (userDTO != null) {
+//                                        r.setUserName(userDTO.getUsername());
+//                                        r.setRecipient(userDTO.getEmail());
+//                                    }
+//                                }
+//                            });
+                            t.getNotice().setRecipients(qualityReportRecipientVOS);
+                        }
                     }
                 });
+
             }
         } catch (Exception ex) {
-            log.error("【getAll】 质量报告执行异常：" + ex);
+            log.error("【getAll】 查询质量报告异常：" + ex);
             throw new FkException(ResultEnum.ERROR, "【getAll】 ex：" + ex);
         }
         return all;
@@ -162,73 +280,110 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(QualityReportDTO dto) {
-        if (dto == null) {
-            return ResultEnum.PARAMTER_NOTNULL;
+        try {
+            if (dto == null) {
+                return ResultEnum.PARAMTER_NOTNULL;
+            }
+            //第一步：转换DTO对象为PO对象
+            QualityReportPO qualityReportPO = QualityReportMap.INSTANCES.dtoToPo(dto);
+            if (qualityReportPO == null) {
+                return ResultEnum.PARAMTER_ERROR;
+            }
+            //第二步：保存质量报告配置
+            qualityReportPO.setCreateTime(LocalDateTime.now());
+            qualityReportPO.setCreateUser(String.valueOf(userHelper.getLoginUserInfo().getId()));
+            int i = baseMapper.insertOne(qualityReportPO);
+            if (i <= 0) {
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
+            int reportId = Math.toIntExact(qualityReportPO.id);
+
+            //第三步：保存质量报告规则配置
+            if (CollectionUtils.isNotEmpty(dto.getQualityReportRule())) {
+                List<QualityReportRulePO> qualityReportRulePOS = new ArrayList<>();
+                for (int j = 0; j < dto.getQualityReportRule().size(); j++) {
+                    QualityReportRulePO qualityReportRulePO = QualityReportRuleMap.INSTANCES.dtoToPo(dto.getQualityReportRule().get(j));
+                    qualityReportRulePO.setReportId(reportId);
+                    qualityReportRulePO.setReportType(qualityReportPO.getReportType());
+                    qualityReportRulePO.setRuleSort(j);
+                    qualityReportRulePOS.add(qualityReportRulePO);
+                }
+                qualityReportRuleManage.saveBatch(qualityReportRulePOS);
+            }
+            // 第四步：保存质量报告通知配置
+            if (dto.getQualityReportNotice() != null) {
+                QualityReportNoticePO qualityReportNoticePO = QualityReportNoticeMap.INSTANCES.dtoToPo(dto.getQualityReportNotice());
+                qualityReportNoticePO.setReportId(reportId);
+                qualityReportNoticeMapper.insert(qualityReportNoticePO);
+            }
+            // 第五步：保存质量报告接收人配置
+            if (dto.getQualityReportNotice() != null && CollectionUtils.isNotEmpty(dto.qualityReportNotice.getQualityReportRecipient())) {
+                List<QualityReportRecipientPO> qualityReportRecipientPOS = QualityReportRecipientMap.INSTANCES.dtoToPo(dto.getQualityReportNotice().getQualityReportRecipient());
+                qualityReportRecipientPOS.forEach(t -> t.setReportId(reportId));
+                qualityReportRecipientManage.saveBatch(qualityReportRecipientPOS);
+            }
+            //第六步：保存调度任务
+            publishBuild_unifiedControlTask(reportId, qualityReportPO.getReportState(), qualityReportPO.getRunTimeCron());
+        } catch (Exception ex) {
+            log.error("【addData】 新增质量报告异常：" + ex);
+            throw new FkException(ResultEnum.ERROR, "【addData】 ex：" + ex);
         }
-        //第一步：转换DTO对象为PO对象
-        QualityReportPO qualityReportPO = QualityReportMap.INSTANCES.dtoToPo(dto);
-        if (qualityReportPO == null) {
-            return ResultEnum.PARAMTER_ERROR;
-        }
-        //第二步：保存质量报告配置
-        qualityReportPO.setCreateTime(LocalDateTime.now());
-        qualityReportPO.setCreateUser(String.valueOf(userHelper.getLoginUserInfo().getId()));
-        int i = baseMapper.insertOne(qualityReportPO);
-        if (i <= 0) {
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
-        //第三步：保存质量报告规则配置
-        if (CollectionUtils.isNotEmpty(dto.getQualityReportRule())) {
-            List<QualityReportRulePO> qualityReportRulePOS = new ArrayList<>();
-            dto.getQualityReportRule().forEach(t -> {
-                QualityReportRulePO qualityReportRulePO = new QualityReportRulePO();
-                qualityReportRulePO.setReportId(Math.toIntExact(qualityReportPO.id));
-                qualityReportRulePO.setRuleId(t.ruleId);
-                qualityReportRulePOS.add(qualityReportRulePO);
-            });
-            qualityReportRuleManage.saveBatch(qualityReportRulePOS);
-        }
-        //第四步：保存调度任务
-        publishBuild_unifiedControlTask(Math.toIntExact(qualityReportPO.getId()), qualityReportPO.getReportState(),
-                qualityReportPO.getRunTimeCron());
         return ResultEnum.SUCCESS;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum editData(QualityReportEditDTO dto) {
-        if (dto == null) {
-            return ResultEnum.PARAMTER_NOTNULL;
+        try {
+            if (dto == null) {
+                return ResultEnum.PARAMTER_NOTNULL;
+            }
+            QualityReportPO qualityReportPO = baseMapper.selectById(dto.id);
+            if (qualityReportPO == null) {
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            // 第一步：转换DTO对象为PO对象
+            qualityReportPO = QualityReportMap.INSTANCES.dtoToPo_Edit(dto);
+            if (qualityReportPO == null) {
+                return ResultEnum.PARAMTER_ERROR;
+            }
+            // 第二步：保存质量报告配置
+            int reportId = Math.toIntExact(qualityReportPO.id);
+            int i = baseMapper.updateById(qualityReportPO);
+            if (i <= 0) {
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
+            // 第三步：保存质量报告规则配置
+            if (CollectionUtils.isNotEmpty(dto.getQualityReportRule())) {
+                qualityReportRuleMapper.updateByReportId(reportId);
+                List<QualityReportRulePO> qualityReportRulePOS = new ArrayList<>();
+                for (int j = 0; j < dto.getQualityReportRule().size(); j++) {
+                    QualityReportRulePO qualityReportRulePO = QualityReportRuleMap.INSTANCES.dtoToPo(dto.getQualityReportRule().get(j));
+                    qualityReportRulePO.setReportId(reportId);
+                    qualityReportRulePO.setReportType(qualityReportPO.getReportType());
+                    qualityReportRulePO.setRuleSort(j);
+                    qualityReportRulePOS.add(qualityReportRulePO);
+                }
+                qualityReportRuleManage.saveBatch(qualityReportRulePOS);
+            }
+            // 第四步：保存质量报告通知配置
+            if (dto.getQualityReportNotice() != null) {
+                QualityReportNoticePO qualityReportNoticePO = QualityReportNoticeMap.INSTANCES.dtoToPo(dto.getQualityReportNotice());
+                qualityReportNoticeMapper.updateById(qualityReportNoticePO);
+            }
+            // 第五步：保存质量报告接收人配置
+            if (dto.getQualityReportNotice() != null && CollectionUtils.isNotEmpty(dto.qualityReportNotice.getQualityReportRecipient())) {
+                qualityReportRecipientMapper.updateByReportId(reportId);
+                List<QualityReportRecipientPO> qualityReportRecipientPOS = QualityReportRecipientMap.INSTANCES.dtoToPo(dto.getQualityReportNotice().getQualityReportRecipient());
+                qualityReportRecipientPOS.forEach(t -> t.setReportId(reportId));
+                qualityReportRecipientManage.saveBatch(qualityReportRecipientPOS);
+            }
+            // 第六步：保存调度任务
+            publishBuild_unifiedControlTask(reportId, qualityReportPO.getReportState(), qualityReportPO.getRunTimeCron());
+        } catch (Exception ex) {
+            log.error("【editData】 编辑质量报告异常：" + ex);
+            throw new FkException(ResultEnum.ERROR, "【editData】 ex：" + ex);
         }
-        QualityReportPO qualityReportPO = baseMapper.selectById(dto.id);
-        if (qualityReportPO == null) {
-            return ResultEnum.DATA_NOTEXISTS;
-        }
-        //第一步：转换DTO对象为PO对象
-        qualityReportPO = QualityReportMap.INSTANCES.dtoToPo_Edit(dto);
-        if (qualityReportPO == null) {
-            return ResultEnum.PARAMTER_ERROR;
-        }
-        //第二步：保存质量报告配置
-        int id = Math.toIntExact(qualityReportPO.id);
-        int i = baseMapper.updateById(qualityReportPO);
-        if (i <= 0) {
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
-        //第三步：保存质量报告规则配置
-        if (CollectionUtils.isNotEmpty(dto.getQualityReportRule())) {
-            qualityReportRuleMapper.updateByReportId(id);
-            List<QualityReportRulePO> qualityReportRulePOS = new ArrayList<>();
-            dto.getQualityReportRule().forEach(t -> {
-                QualityReportRulePO qualityReportRulePO = new QualityReportRulePO();
-                qualityReportRulePO.setReportId(id);
-                qualityReportRulePO.setRuleId(t.ruleId);
-                qualityReportRulePOS.add(qualityReportRulePO);
-            });
-            qualityReportRuleManage.saveBatch(qualityReportRulePOS);
-        }
-        //第四步：保存调度任务
-        publishBuild_unifiedControlTask(Math.toIntExact(qualityReportPO.getId()), qualityReportPO.getReportState(), qualityReportPO.getRunTimeCron());
         return ResultEnum.SUCCESS;
     }
 
@@ -251,16 +406,23 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
     @Override
     public ResultEnum deleteData(int id) {
         ResultEnum resultEnum;
-        if (id == 0) {
-            return ResultEnum.PARAMTER_NOTNULL;
+        try {
+            if (id == 0) {
+                return ResultEnum.PARAMTER_NOTNULL;
+            }
+            QualityReportPO qualityReportPO = baseMapper.selectById(id);
+            if (qualityReportPO == null) {
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            qualityReportRuleMapper.updateByReportId(id);
+            qualityReportNoticeMapper.updateByReportId(id);
+            qualityReportRecipientMapper.updateByReportId(id);
+            resultEnum = baseMapper.deleteByIdWithFill(qualityReportPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+            publishBuild_unifiedControlTask(Math.toIntExact(qualityReportPO.getId()), RuleStateEnum.Disable.getValue(), qualityReportPO.getRunTimeCron());
+        } catch (Exception ex) {
+            log.error("【deleteData】 删除质量报告异常：" + ex);
+            throw new FkException(ResultEnum.ERROR, "【deleteData】 ex：" + ex);
         }
-        QualityReportPO qualityReportPO = baseMapper.selectById(id);
-        if (qualityReportPO == null) {
-            return ResultEnum.DATA_NOTEXISTS;
-        }
-        qualityReportRuleMapper.updateByReportId(id);
-        resultEnum = baseMapper.deleteByIdWithFill(qualityReportPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
-        publishBuild_unifiedControlTask(Math.toIntExact(qualityReportPO.getId()), RuleStateEnum.Disable.getValue(), qualityReportPO.getRunTimeCron());
         return resultEnum;
     }
 
@@ -303,11 +465,14 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
             dataCheckPOQueryWrapper.lambda().eq(DataCheckPO::getDelFlag, 1)
                     .eq(DataCheckPO::getRuleState, RuleStateEnum.Enable.getValue())
                     .in(DataCheckPO::getTemplateId, templateIdList);
-            List<DataCheckPO> dataCheckPOList = dataCheckMapper.selectList(dataCheckPOQueryWrapper);
+            List<DataCheckPO> dataCheckPOList = dataCheckMapper.selectList(dataCheckPOQueryWrapper).stream().sorted(Comparator.comparing(DataCheckPO::getRuleSort)).collect(Collectors.toList());
             dataCheckPOList.forEach(t -> {
                 QualityReportExtMapVO cRule = new QualityReportExtMapVO();
                 cRule.setId(t.getId());
                 cRule.setName(t.getRuleName());
+                cRule.setTypeName(TemplateSceneEnum.DATACHECK_QUALITYREPORT.getName());
+                cRule.setTypeName(t.getRuleState() == 1 ? "启用" : "禁用");
+                cRule.setSort(t.getRuleSort());
                 cRules.add(cRule);
             });
 
@@ -316,14 +481,16 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
             businessFilterPOQueryWrapper.lambda().eq(BusinessFilterPO::getDelFlag, 1)
                     .eq(BusinessFilterPO::getRuleState, RuleStateEnum.Enable.getValue())
                     .in(BusinessFilterPO::getTemplateId, templateIdList);
-            List<BusinessFilterPO> businessFilterPOS = businessFilterMapper.selectList(businessFilterPOQueryWrapper);
+            List<BusinessFilterPO> businessFilterPOS = businessFilterMapper.selectList(businessFilterPOQueryWrapper).stream().sorted(Comparator.comparing(BusinessFilterPO::getRuleSort)).collect(Collectors.toList());
             businessFilterPOS.forEach(t -> {
                 QualityReportExtMapVO bRule = new QualityReportExtMapVO();
                 bRule.setId(t.getId());
                 bRule.setName(t.getRuleName());
+                bRule.setTypeName(TemplateSceneEnum.BUSINESSFILTER_FILTERREPORT.getName());
+                bRule.setTypeName(t.getRuleState() == 1 ? "启用" : "禁用");
+                bRule.setSort(t.getRuleSort());
                 bRules.add(bRule);
             });
-
         }
 
         // 第三步：查询邮件服务配置
@@ -336,6 +503,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                 emails.add(email);
             });
         }
+
         qualityReportExtVO.setRules_c(cRules);
         qualityReportExtVO.setRules_b(bRules);
         qualityReportExtVO.setEmails(emails);
@@ -431,8 +599,24 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
      * @params dto
      */
     public ResultEntity<Object> sendEmailReport(QualityReportDTO dto) {
+
+        QualityReportNoticeDTO qualityReportNotice = dto.getQualityReportNotice();
+        if (qualityReportNotice == null) {
+            return ResultEntityBuild.buildData(ResultEnum.PARAMTER_NOTNULL, "发送邮件时，通知信息参数为空");
+        }
+        List<QualityReportRecipientDTO> qualityReportRecipient = qualityReportNotice.getQualityReportRecipient();
+        if (CollectionUtils.isEmpty(qualityReportRecipient)) {
+            return ResultEntityBuild.buildData(ResultEnum.PARAMTER_NOTNULL, "发送邮件时，接收人信息参数为空");
+        }
+        String toAddressStr = "";
+        List<String> toAddressList = qualityReportRecipient.stream().map(QualityReportRecipientDTO::getRecipient).collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(toAddressList)) {
+            toAddressStr = Joiner.on(";").join(toAddressList);
+        }
+        log.info("【sendEmailReport】收件人为：" + toAddressStr);
+
         //第一步：查询邮件服务器设置
-        ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(dto.getEmailServerId());
+        ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(qualityReportNotice.getEmailServerId());
         if (emailServerById == null || emailServerById.getCode() != ResultEnum.SUCCESS.getCode() ||
                 emailServerById.getData() == null) {
             return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS, "邮件服务器不存在");
@@ -448,10 +632,9 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
         mailServeiceDTO.setPort(emailServerVO.getEmailServerPort());
         MailSenderDTO mailSenderDTO = new MailSenderDTO();
         mailSenderDTO.setUser(emailServerVO.getEmailServerAccount());
-        mailSenderDTO.setSubject(dto.getEmailSubject());
-        mailSenderDTO.setBody(dto.getBody());
-        mailSenderDTO.setToAddress(dto.getEmailConsignee());
-        mailSenderDTO.setToCc(dto.getEmailCc());
+        mailSenderDTO.setSubject(qualityReportNotice.getSubject());
+        mailSenderDTO.setBody(qualityReportNotice.getBody());
+        mailSenderDTO.setToAddress(toAddressStr);
         mailSenderDTO.setSendAttachment(dto.sendAttachment);
         mailSenderDTO.setAttachmentName(dto.getAttachmentName());
         mailSenderDTO.setAttachmentPath(dto.getAttachmentPath());

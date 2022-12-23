@@ -54,9 +54,9 @@ public class QualityReportLogVO {
     public String reportPrincipal;
 
     /**
-     * 报告通知类型 1、邮件通知 2、站内通知
+     * 报告通知类型 1、邮件通知 2、站内通知 3、微信通知 4、短信通知
      */
-    @ApiModelProperty(value = "报告通知类型 1、邮件通知 2、站内通知")
+    @ApiModelProperty(value = "报告通知类型 1、邮件通知 2、站内通知 3、微信通知 4、短信通知")
     public int reportNoticeType;
 
     /**
@@ -84,15 +84,15 @@ public class QualityReportLogVO {
     public String emailSubject;
 
     /**
-     * 邮件收件人
+     * 邮件收件人，多个收件人逗号分割
      */
-    @ApiModelProperty(value = "邮件收件人")
+    @ApiModelProperty(value = "邮件收件人，多个收件人逗号分割")
     public String emailConsignee;
 
     /**
-     * 邮件抄送人
+     * 邮件抄送人，多个抄送人逗号分割
      */
-    @ApiModelProperty(value = "邮件抄送人")
+    @ApiModelProperty(value = "邮件抄送人，多个抄送人逗号分割")
     public String emailCc;
 
     /**

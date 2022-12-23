@@ -33,6 +33,6 @@ public interface QualityReportLogMapper extends FKBaseMapper<QualityReportLogPO>
      * @return 执行结果
      */
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
-    @Insert("INSERT INTO tb_quality_report_log(`report_id`, `report_name`, `report_type`, `report_type_name`, `report_desc`, `report_principal`, `report_notice_type`, `email_server_id`,`email_subject`, `email_consignee`, `email_cc`, `body` ,`send_time` ,`send_result`, `create_time`, `create_user`, `del_flag`) VALUES (#{reportId}, #{reportName}, #{reportType}, #{reportTypeName}, #{reportDesc}, #{reportPrincipal}, #{reportNoticeType}, #{emailServerId}, #{emailSubject}, #{emailConsignee}, #{emailCc}, #{body}, #{sendTime}, #{sendResult}, #{createTime}, #{createUser},1);")
+    @Insert("INSERT INTO tb_quality_report_log(`report_id`, `report_name`, `report_type`, `report_type_name`, `report_desc`, `report_principal`, `report_notice_type`, `email_server_id`,`subject`, `body`, `recipient`, `send_time` ,`send_result`, `create_time`, `create_user`, `del_flag`) VALUES (#{reportId}, #{reportName}, #{reportType}, #{reportTypeName}, #{reportDesc}, #{reportPrincipal}, #{reportNoticeType}, #{emailServerId}, #{subject}, #{body}, #{recipient}, #{sendTime}, #{sendResult}, #{createTime}, #{createUser},1);")
     int insertOne(QualityReportLogPO po);
 }
