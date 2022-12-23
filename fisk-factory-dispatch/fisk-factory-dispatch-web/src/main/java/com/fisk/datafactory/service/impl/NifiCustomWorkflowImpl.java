@@ -431,13 +431,13 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
 
     @Override
     public ResultEntity<Object> updateWorkStatus(String nifiCustomWorkflowId, boolean ifFire) {
-        // 调用tasksettings模块方法
+        // 暂停/恢复管道工作运行状态
         ResultEntity<Object> result = publishTaskClient.suspendCustomWorkNifiFlow(nifiCustomWorkflowId, ifFire);
         if (result.getCode() == 500){
             return ResultEntityBuild.build(ResultEnum.UPDATE_WORK_STATUS_ERROR);
         }
 
-        // 更新库中管道工作状态
+        // 更新库中管道工作状态记录
         Integer workStatus = null;
         if (ifFire){
             workStatus = NifiWorkStatusEnum.RUNNING_STATUS.getValue();
