@@ -16,9 +16,6 @@ public class TableServicePageQueryDTO {
     @ApiModelProperty(value = "发布状态")
     public Integer publish;
 
-    @ApiModelProperty(value = "同步方式")
-    public Integer syncMode;
-
     public Page<TableServicePageDataDTO> page;
 
 }
