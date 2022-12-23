@@ -23,7 +23,8 @@ public enum DataClassifyEnum  implements BaseEnum {
     //自定义脚本任务
     CUSTOMWORKCUSTOMIZESCRIPT(12,"自定义脚本任务"),
     //sftp_file_copy_task
-    SFTPFILECOPYTASK(14,"SFTP文件复制");
+    SFTPFILECOPYTASK(14,"SFTP文件复制"),
+    DATASERVICES(15,"数据服务");
 
     private final String name;
     private final int value;
