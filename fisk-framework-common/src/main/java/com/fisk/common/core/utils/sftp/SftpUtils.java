@@ -169,44 +169,102 @@ public class SftpUtils {
      * @param fileType
      * @return
      */
-    public static ExcelTreeDTO getFile(ChannelSftp sftp, String path, String fileType) {
+//    public static ExcelTreeDTO getFile(ChannelSftp sftp, String path, String fileType) {
+//        ExcelTreeDTO list = new ExcelTreeDTO();
+//        try {
+//            // 文件
+//            List<ExcelPropertyDTO> fileList = new ArrayList<>();
+//            // 文件夹
+//            List<ExcelPropertyDTO> directoryList = new ArrayList<>();
+//            fileType = "." + fileType;
+//            Vector vector = sftp.ls(path);
+//            Iterator iterator = vector.iterator();
+//            while (iterator.hasNext()) {
+//                ChannelSftp.LsEntry file = (ChannelSftp.LsEntry) iterator.next();
+//                String fileName = file.getFilename();
+//                //获取指定文件
+//                if (fileName.contains(fileType)) {
+//                    ExcelPropertyDTO dto = new ExcelPropertyDTO();
+//                    dto.fileName = fileName;
+//                    dto.fileFullName = path + fileName;
+//                    fileList.add(dto);
+//                } else {
+//                    if (filterFileName(fileName)) {
+//                        continue;
+//                    }
+//                    ExcelPropertyDTO dto = new ExcelPropertyDTO();
+//                    dto.fileName = fileName;
+//                    dto.fileFullName = path + fileName + ROOT_PATH;
+//                    directoryList.add(dto);
+//                }
+//            }
+//            list.fileList = fileList;
+//            list.directoryList = directoryList;
+//        } catch (SftpException e) {
+//            log.error("sftp获取文件失败,{}", e);
+//            return null;
+//        } finally {
+//            disconnect(sftp);
+//        }
+//        return list;
+//    }
+
+    /**
+     * 递归获取sftp文件和文件夹
+     * @param sftp
+     * @param path
+     * @param fileType
+     * @return
+     */
+    public static ExcelTreeDTO getFile(ChannelSftp sftp, String path, String fileType){
         ExcelTreeDTO list = new ExcelTreeDTO();
+        List<ExcelPropertyDTO> fileList = new ArrayList<>();
+        List<ExcelPropertyDTO> dirList = new ArrayList<>();
+
+        // 处理文件类型
+        fileType = "." + fileType;
         try {
-            // 文件
-            List<ExcelPropertyDTO> fileList = new ArrayList<>();
-            // 文件夹
-            List<ExcelPropertyDTO> directoryList = new ArrayList<>();
-            fileType = "." + fileType;
-            Vector vector = sftp.ls(path);
-            Iterator iterator = vector.iterator();
-            while (iterator.hasNext()) {
-                ChannelSftp.LsEntry file = (ChannelSftp.LsEntry) iterator.next();
-                String fileName = file.getFilename();
-                //获取指定文件
-                if (fileName.contains(fileType)) {
-                    ExcelPropertyDTO dto = new ExcelPropertyDTO();
-                    dto.fileName = fileName;
-                    dto.fileFullName = path + fileName;
-                    fileList.add(dto);
-                } else {
-                    if (filterFileName(fileName)) {
-                        continue;
-                    }
-                    ExcelPropertyDTO dto = new ExcelPropertyDTO();
-                    dto.fileName = fileName;
-                    dto.fileFullName = path + fileName + ROOT_PATH;
-                    directoryList.add(dto);
-                }
-            }
-            list.fileList = fileList;
-            list.directoryList = directoryList;
+             list = recurFile(sftp, path, fileType, fileList, dirList, list);
         } catch (SftpException e) {
-            log.error("sftp获取文件失败,{}", e);
-            return null;
-        } finally {
-            disconnect(sftp);
+            e.printStackTrace();
         }
         return list;
+    }
+
+    private static ExcelTreeDTO recurFile(ChannelSftp sftp, String path, String fileType,
+                                          List<ExcelPropertyDTO> fileList, List<ExcelPropertyDTO> dirList, ExcelTreeDTO excelTreeDTO) throws SftpException {
+        // 获取当前目录中所有内容
+        Vector<ChannelSftp.LsEntry> vectors = sftp.ls(path);
+        for (int i = 0; i < vectors.size(); i++){
+            ChannelSftp.LsEntry entry = vectors.get(i);
+            // 获取当前文件名
+            String filename = entry.getFilename();
+            if (filterFileName(filename)){
+                continue;
+            }
+
+            // 获取文件
+            if (!entry.getAttrs().isDir()){
+                ExcelPropertyDTO dto = new ExcelPropertyDTO();
+                dto.fileName = filename;
+                dto.fileFullName = path + filename;
+                // 加入到文件集合中
+                fileList.add(dto);
+            }else{
+                // 加入文件夹集合
+                ExcelPropertyDTO dto = new ExcelPropertyDTO();
+                dto.fileName = filename;
+                dto.fileFullName = path + filename + ROOT_PATH;
+                dirList.add(dto);
+                // 递归处理文件夹
+                if (!filename.equals(".ssh")){
+                    recurFile(sftp, dto.fileFullName, fileType, fileList, dirList, excelTreeDTO);
+                }
+            }
+            excelTreeDTO.fileList = fileList;
+            excelTreeDTO.directoryList = dirList;
+        }
+        return excelTreeDTO;
     }
 
     /**
@@ -220,10 +278,9 @@ public class SftpUtils {
             return true;
         } else if ("..".equals(fileName)) {
             return true;
-        } else {
+        } else{
             return false;
         }
-
     }
 
     /**
