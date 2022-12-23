@@ -98,4 +98,10 @@ public class TableServiceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, dataSourceConfig.getAllTableByDb(id));
     }
 
+    @ApiOperation("获取库和表获取字段集合")
+    @GetMapping("/getColumnByTable")
+    public ResultEntity<Object> getColumnByTable(Integer id, String tableName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataSourceConfig.getColumnByTable(id, tableName));
+    }
+
 }

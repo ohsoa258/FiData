@@ -60,9 +60,6 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
     @Resource
     UserClient client;
 
-    @Resource
-    TableServiceImpl tableService;
-
     public static DataSourceQueryResultDTO resultSetToJsonArrayTableService(ResultSet rs) throws SQLException, JSONException {
         DataSourceQueryResultDTO data = new DataSourceQueryResultDTO();
         // json数组
@@ -258,24 +255,16 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
 
     @Override
     public List<TableNameDTO> getAllTableByDb(Integer dataSourceId) {
-        //获取数据源
-        ResultEntity<List<DataSourceDTO>> allFiDataDataSource = client.getAllExternalDataSource();
-        if (allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
-            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
-        }
 
-        Optional<DataSourceDTO> first = allFiDataDataSource.data.stream().filter(e -> e.id.equals(dataSourceId)).findFirst();
-        if (!first.isPresent()) {
-            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
-        }
+        DataSourceDTO dataSource = getDataSource(dataSourceId);
 
         List<TableNameDTO> data = new ArrayList<>();
 
         Connection conn = null;
         try {
             AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
-            conn = helper.connection(first.get().conStr, first.get().conAccount, first.get().conPassword, first.get().conType);
-            switch (first.get().conType) {
+            conn = helper.connection(dataSource.conStr, dataSource.conAccount, dataSource.conPassword, dataSource.conType);
+            switch (dataSource.conType) {
                 case MYSQL:
                     data = MySqlConUtils.getTableName(conn);
                     break;
@@ -294,9 +283,66 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
         } catch (Exception e) {
             log.error("【根据库获取表集合】,{}", e);
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeConnection(conn);
         }
         return data;
 
+    }
+
+    @Override
+    public List<TableColumnDTO> getColumnByTable(Integer dataSourceId, String tableName) {
+        DataSourceDTO dataSource = getDataSource(dataSourceId);
+
+        List<TableColumnDTO> data = new ArrayList<>();
+
+        Connection conn = null;
+        try {
+            AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
+            conn = helper.connection(dataSource.conStr, dataSource.conAccount, dataSource.conPassword, dataSource.conType);
+            switch (dataSource.conType) {
+                case MYSQL:
+                    data = MySqlConUtils.getColNames(conn, tableName);
+                    break;
+                case SQLSERVER:
+                    data = SqlServerUtils.getColumnsNameBySql(conn, tableName);
+                    break;
+                case POSTGRESQL:
+                    data = PgSqlUtils.getTableColumnName(conn, tableName);
+                    break;
+                case ORACLE:
+                    data = OracleUtils.getTableColumnInfoList(conn, dataSource.conDbname, tableName);
+                    break;
+                default:
+                    throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+            }
+        } catch (Exception e) {
+            log.error("【根据库和表获取字段集合】,{}", e);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeConnection(conn);
+        }
+        return data;
+    }
+
+    /**
+     * 获取指定数据源
+     *
+     * @param dataSourceId
+     * @return
+     */
+    public DataSourceDTO getDataSource(Integer dataSourceId) {
+        //获取数据源
+        ResultEntity<List<DataSourceDTO>> allFiDataDataSource = client.getAllExternalDataSource();
+        if (allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+
+        Optional<DataSourceDTO> first = allFiDataDataSource.data.stream().filter(e -> e.id.equals(dataSourceId)).findFirst();
+        if (!first.isPresent()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        return first.get();
     }
 
     /**

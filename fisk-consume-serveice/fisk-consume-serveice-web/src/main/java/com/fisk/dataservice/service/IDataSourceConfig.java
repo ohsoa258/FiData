@@ -45,4 +45,13 @@ public interface IDataSourceConfig {
      */
     List<TableNameDTO> getAllTableByDb(Integer dataSourceId);
 
+    /**
+     * 根据库 表信息获取字段集合
+     *
+     * @param dataSourceId
+     * @param tableName
+     * @return
+     */
+    List<TableColumnDTO> getColumnByTable(Integer dataSourceId, String tableName);
+
 }
