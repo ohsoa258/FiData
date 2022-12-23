@@ -23,10 +23,10 @@ public class AppApiSubVO {
     public int appId;
 
     /**
-     * API id
+     * 服务id
      */
     @ApiModelProperty(value = "API id")
-    public int apiId;
+    public int serviceId;
 
     /**
      * API 状态 1启用、0禁用
@@ -35,10 +35,10 @@ public class AppApiSubVO {
     public int apiState;
 
     /**
-     * api名称
+     * 服务名称名称
      */
-    @ApiModelProperty(value = "api名称")
-    public String apiName;
+    @ApiModelProperty(value = "服务名称名称")
+    public String ServiceName;
 
     /**
      * api标识
@@ -47,8 +47,11 @@ public class AppApiSubVO {
     public String apiCode;
 
     /**
-     * api描述
+     * 服务描述
      */
-    @ApiModelProperty(value = "api描述")
-    public String apiDesc;
+    @ApiModelProperty(value = "服务描述")
+    public String ServiceDesc;
+
+    @ApiModelProperty(value = "类型：1api服务 2表服务 3 文件服务")
+    public Integer type;
 }

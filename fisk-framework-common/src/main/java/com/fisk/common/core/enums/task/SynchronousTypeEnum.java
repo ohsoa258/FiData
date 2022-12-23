@@ -7,7 +7,11 @@ public enum SynchronousTypeEnum implements BaseEnum {
 
     TOPGODS(0,"toPgOds"),
     PGTOPG(1,"pgToPg"),
-    PGTODORIS(2,"PgToDoris");
+    PGTODORIS(2,"PgToDoris"),
+    /**
+     * 推给第三方库
+     */
+    TOEXTERNALDB(3,"toExternalDb");
 
 
     private final String name;

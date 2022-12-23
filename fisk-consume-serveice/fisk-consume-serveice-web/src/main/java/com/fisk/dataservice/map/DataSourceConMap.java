@@ -2,9 +2,13 @@ package com.fisk.dataservice.map;
 
 import com.fisk.dataservice.dto.datasource.DataSourceConDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConEditDTO;
+import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
 import com.fisk.dataservice.entity.DataSourceConPO;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @author dick
@@ -39,4 +43,13 @@ public interface DataSourceConMap {
             @Mapping(source = "datasourceType.value", target = "datasourceType")
     })
     void editDtoToPo(DataSourceConEditDTO dto, @MappingTarget DataSourceConPO po);
+
+    /**
+     * voList==>DtoInfo
+     *
+     * @param voList
+     * @return
+     */
+    List<DataSourceConfigInfoDTO> voListToDtoInfo(List<DataSourceDTO> voList);
+
 }

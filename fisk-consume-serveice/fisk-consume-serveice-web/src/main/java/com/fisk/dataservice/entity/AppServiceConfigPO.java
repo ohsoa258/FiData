@@ -11,20 +11,25 @@ import lombok.Data;
  * @date 2022/1/6 14:51
  */
 @Data
-@TableName("tb_app_api")
-public class AppApiPO extends BasePO{
+@TableName("tb_app_service_config")
+public class AppServiceConfigPO extends BasePO {
     /**
      * 应用id
      */
     public int appId;
 
     /**
-     * API id
+     * 服务id
      */
-    public int apiId;
+    public int serviceId;
 
     /**
      * API 状态 1启用、0禁用
      */
     public int apiState;
+
+    /**
+     * 类型：1api服务 2表服务 3 文件服务
+     */
+    public Integer type;
 }

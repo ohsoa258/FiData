@@ -94,4 +94,17 @@ public class ApiConfigDTO
      */
     @ApiModelProperty(value = "数据源id")
     public int datasourceId;
+
+    /**
+     * 创建api类型
+     */
+    @ApiModelProperty(value = "创建api类型：1 创建新api 2 使用现有api")
+    public Integer createApiType;
+
+    /**
+     * 现有api地址
+     */
+    @ApiModelProperty(value = "现有api地址")
+    public String apiAddress;
+
 }

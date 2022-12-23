@@ -30,7 +30,8 @@ public enum OlapTableEnum implements BaseEnum {
     CUSTOMWORKPHYSICS(7, "管道服务-物理表"),
     GOVERNANCE(12, "数据质量"),
     CUSTOMIZESCRIPT(13,"自定义脚本任务"),
-    SFTPFILECOPYTASK(14,"SFTP文件复制")
+    SFTPFILECOPYTASK(14,"SFTP文件复制"),
+    DATASERVICES(15,"数据服务表")
     ;
 
 
