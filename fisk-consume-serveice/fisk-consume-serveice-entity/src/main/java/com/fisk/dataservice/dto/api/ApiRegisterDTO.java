@@ -1,5 +1,6 @@
 package com.fisk.dataservice.dto.api;
 
+import com.fisk.dataservice.dto.tablesyncmode.ApiTableSyncModeDTO;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
@@ -38,4 +39,11 @@ public class ApiRegisterDTO
      */
     @ApiModelProperty(value = "参数列表")
     public List<ParmConfigDTO> parmDTO;
+
+    /**
+     * api触发类型
+     */
+    @ApiModelProperty(value = "api触发类型")
+    public ApiTableSyncModeDTO syncModeDTO;
+
 }

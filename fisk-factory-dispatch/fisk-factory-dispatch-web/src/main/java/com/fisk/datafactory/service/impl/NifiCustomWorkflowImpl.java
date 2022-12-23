@@ -424,4 +424,16 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
     public Integer getDataDispatchNum() {
         return mapper.getDataDispatchNum(DelFlagEnum.NORMAL_FLAG.getValue());
     }
+
+    @Override
+    public List<NifiCustomWorkFlowDropDTO> getNifiCustomWorkFlowDrop() {
+        List<NifiCustomWorkflowPO> list = this.query().eq("del_flag", 1).select("id", "workflow_name").list();
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+
+        return NifiCustomWorkflowMap.INSTANCES.poToDropDto(list);
+
+    }
+
 }

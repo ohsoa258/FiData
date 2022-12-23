@@ -165,6 +165,17 @@ public interface DataFactoryClient {
     @ApiOperation(value = "管道异常发邮件")
     public ResultEntity<Object> pipelineSendEmails(@RequestBody DispatchEmailDTO dispatchEmail);
 
+
+    /**
+     * 获取所有管道
+     *
+     * @return
+     */
+    @GetMapping("/nifiCustomWorkflow/getNifiCustomWorkFlowDrop")
+    @ApiOperation(value = "获取所有管道")
+    ResultEntity<Object> getNifiCustomWorkFlowDrop();
+
+
     /**
      * 依据taskId获取当前任务下的所有配置列表信息
      *

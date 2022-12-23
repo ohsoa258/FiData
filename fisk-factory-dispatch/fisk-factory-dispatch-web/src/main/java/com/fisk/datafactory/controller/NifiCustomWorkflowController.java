@@ -67,7 +67,7 @@ public class NifiCustomWorkflowController {
 
     @ApiOperation("修改管道发布状态")
     @PutMapping("/updatePublishStatus")
-    public void updatePublishStatus(@RequestBody NifiCustomWorkflowDTO dto){
+    public void updatePublishStatus(@RequestBody NifiCustomWorkflowDTO dto) {
         service.updatePublishStatus(dto);
     }
 
@@ -77,4 +77,12 @@ public class NifiCustomWorkflowController {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableListById(id));
     }
+
+    @GetMapping("/getNifiCustomWorkFlowDrop")
+    @ApiOperation(value = "获取所有管道")
+    public ResultEntity<Object> getNifiCustomWorkFlowDrop() {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getNifiCustomWorkFlowDrop());
+    }
+
 }

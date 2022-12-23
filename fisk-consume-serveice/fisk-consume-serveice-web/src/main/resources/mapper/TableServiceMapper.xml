@@ -1,0 +1,29 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.dataservice.mapper.TableServiceMapper">
+
+    <select id="getTableServiceListData" resultType="com.fisk.dataservice.dto.tableservice.TableServicePageDataDTO">
+        select
+        a.id,
+        a.table_name,
+        a.display_name,
+        a.publish,
+        b.sync_mode
+        from
+        tb_table_service a
+        left join tb_table_sync_mode b on a.id=b.type_table_id
+        where
+        b.type = 2 and a.del_flag=1
+        <if test="query.tableName != null and query.tableName.length()>0">
+            and a.table_name like CONCAT('%',#{query.tableName},'%')
+        </if>
+        <if test="query.syncMode != null and query.syncMode>0">
+            and b.sync_mode = ${query.syncMode}
+        </if>
+        <if test="query.publish != null">
+            and a.publish = ${query.publish}
+        </if>
+    </select>
+
+</mapper>
