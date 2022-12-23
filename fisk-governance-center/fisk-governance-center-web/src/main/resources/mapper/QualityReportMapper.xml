@@ -10,7 +10,6 @@
         report_type_name,
         report_desc,
         report_principal,
-        report_notice_type,
         report_state,
         run_time_cron
         FROM

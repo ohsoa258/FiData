@@ -598,7 +598,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             qualityReportRulePOQueryWrapper.lambda()
                     .eq(QualityReportRulePO::getReportId, reportId)
                     .eq(QualityReportRulePO::getDelFlag, 1);
-            List<QualityReportRulePO> noticeExtendPOS = qualityReportRuleMapper.selectList(qualityReportRulePOQueryWrapper);
+            List<QualityReportRulePO> noticeExtendPOS = qualityReportRuleMapper.selectList(qualityReportRulePOQueryWrapper).stream().sorted(Comparator.comparing(QualityReportRulePO::getRuleSort)).collect(Collectors.toList());
+            ;
             if (!CollectionUtils.isNotEmpty(noticeExtendPOS)) {
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NOTICE_NOTEXISTS, "");
             }
@@ -622,8 +623,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             // 查询质量报告下的接收人
             List<QualityReportRecipientDTO> qualityReportRecipientDTOs = new ArrayList<>();
             QueryWrapper<QualityReportRecipientPO> qualityReportRecipientPOQueryWrapper = new QueryWrapper<>();
-            qualityReportRecipientPOQueryWrapper.lambda().in(QualityReportRecipientPO::getDelFlag, 1)
-                    .in(QualityReportRecipientPO::getReportId, reportId);
+            qualityReportRecipientPOQueryWrapper.lambda().eq(QualityReportRecipientPO::getDelFlag, 1)
+                    .eq(QualityReportRecipientPO::getReportId, reportId);
             List<QualityReportRecipientPO> qualityReportRecipientPOs = qualityReportRecipientMapper.selectList(qualityReportRecipientPOQueryWrapper);
             if (!CollectionUtils.isNotEmpty(qualityReportRecipientPOs)) {
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NOTICE_RECIPIENT_ISNULL, "");
@@ -704,7 +705,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             qualityReportLogPO.setReportNoticeType(qualityReportNoticeDTO.getReportNoticeType());
             qualityReportLogPO.setEmailServerId(qualityReportNoticeDTO.getEmailServerId());
             qualityReportLogPO.setSubject(qualityReportNoticeDTO.getSubject());
-            qualityReportLogPO.setReportPrincipal(toAddressStr);
+            qualityReportLogPO.setRecipient(toAddressStr);
             qualityReportLogPO.setBody(qualityReportNoticeDTO.getBody());
             qualityReportLogPO.setSendTime(DateTimeUtils.getNow());
             if (sendResult != null && sendResult.getCode() == ResultEnum.SUCCESS.getCode()) {
@@ -1022,7 +1023,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         }
         String fieldType = tableRuleSqlDTO.fieldType;
         boolean charValid = true;
-        if (dataSourceConVO.getConType() == DataSourceTypeEnum.POSTGRESQL) {
+        if (dataSourceConVO.getConType() == DataSourceTypeEnum.POSTGRESQL ||
+                dataSourceConVO.getConType() == DataSourceTypeEnum.SQLSERVER) {
             charValid = RegexUtils.isCharValid(fieldType);
         }
         String sql = "";

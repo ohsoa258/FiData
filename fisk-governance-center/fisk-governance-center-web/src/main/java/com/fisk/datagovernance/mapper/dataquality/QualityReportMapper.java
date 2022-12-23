@@ -33,6 +33,6 @@ public interface QualityReportMapper extends FKBaseMapper<QualityReportPO> {
      * @return 执行结果
      */
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
-    @Insert("INSERT INTO tb_quality_report(`report_name`, `report_type`, `report_type_name`, `report_desc`, `report_principal`, `report_notice_type`, `report_state`, `run_time_cron`, `create_time`, `create_user`, `del_flag`) VALUES (#{reportName}, #{reportType}, #{reportTypeName}, #{reportDesc}, #{reportPrincipal}, #{reportNoticeType}, #{reportState}, #{emailServerId}, #{emailSubject}, #{emailConsignee}, #{emailCc}, #{body}, #{runTimeCron}, #{createTime}, #{createUser},1);")
+    @Insert("INSERT INTO tb_quality_report(`report_name`, `report_type`, `report_type_name`, `report_desc`, `report_principal`, `report_state`, `run_time_cron`, `create_time`, `create_user`, `del_flag`) VALUES (#{reportName}, #{reportType}, #{reportTypeName}, #{reportDesc}, #{reportPrincipal}, #{reportState}, #{runTimeCron}, #{createTime}, #{createUser},1);")
     int insertOne(QualityReportPO po);
 }

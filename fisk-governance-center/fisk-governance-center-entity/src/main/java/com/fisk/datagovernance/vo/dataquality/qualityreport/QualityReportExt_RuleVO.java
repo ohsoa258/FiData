@@ -10,7 +10,7 @@ import lombok.Data;
  * @date 2022/12/1 10:46
  */
 @Data
-public class QualityReportExtMapVO {
+public class QualityReportExt_RuleVO {
     /**
      * id
      */
@@ -39,5 +39,41 @@ public class QualityReportExtMapVO {
      * 顺序
      */
     @ApiModelProperty(value = "顺序")
-    public int Sort;
+    public int sort;
+
+    /**
+     * 数据源类型名称
+     */
+    @ApiModelProperty(value = "数据源类型名称")
+    public String sourceTypeName;
+
+    /**
+     * IP
+     */
+    @ApiModelProperty(value = "IP")
+    public String ip;
+
+    /**
+     * 库名称
+     */
+    @ApiModelProperty(value = "库名称")
+    public String dbName;
+
+    /**
+     * 表名称
+     */
+    @ApiModelProperty(value = "表名称")
+    public String tableName;
+
+    /**
+     * 表别名
+     */
+    @ApiModelProperty(value = "表别名")
+    public String tableAliasName;
+
+    /**
+     * 表类型
+     */
+    @ApiModelProperty(value = "表类型")
+    public String tableTypeName;
 }

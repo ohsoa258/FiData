@@ -382,11 +382,16 @@ public class UserServiceImpl implements IUserService {
     public ResultEntity<List<UserDTO>> getUserListByIds(List<Long> ids) {
         List<UserDTO> userDtos = new ArrayList<>();
         if (CollectionUtils.isEmpty(ids)) {
-
             return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS, userDtos);
         }
         userDtos = mapper.getUserListByIds(ids);
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, userDtos);
+    }
+
+    @Override
+    public ResultEntity<List<UserDTO>> getAllUserList() {
+        List<UserDTO>   userList = mapper.getUserListByIds(null);
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, userList);
     }
 
     @Override

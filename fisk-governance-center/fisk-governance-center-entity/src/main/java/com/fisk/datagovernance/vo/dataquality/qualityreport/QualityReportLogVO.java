@@ -78,27 +78,21 @@ public class QualityReportLogVO {
     public int emailServerId;
 
     /**
-     * 邮件主题
+     * 主题
      */
-    @ApiModelProperty(value = "邮件主题")
-    public String emailSubject;
+    @ApiModelProperty(value = "主题")
+    public String subject;
 
     /**
-     * 邮件收件人，多个收件人逗号分割
+     * 接收人，多个接收人逗号分割
      */
-    @ApiModelProperty(value = "邮件收件人，多个收件人逗号分割")
-    public String emailConsignee;
+    @ApiModelProperty(value = "接收人，多个接收人逗号分割")
+    public String recipient;
 
     /**
-     * 邮件抄送人，多个抄送人逗号分割
+     * 正文
      */
-    @ApiModelProperty(value = "邮件抄送人，多个抄送人逗号分割")
-    public String emailCc;
-
-    /**
-     * 通知正文
-     */
-    @ApiModelProperty(value = "消息正文")
+    @ApiModelProperty(value = "正文")
     public String body;
 
     /**
