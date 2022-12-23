@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.davis.client.model.ScheduleComponentsEntity;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
@@ -424,6 +426,26 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
     public Integer getDataDispatchNum() {
         return mapper.getDataDispatchNum(DelFlagEnum.NORMAL_FLAG.getValue());
     }
+
+    @Override
+    public ResultEntity<Object> updateWorkStatus(String nifiCustomWorkflowId, boolean ifFire) {
+        // 暂停/恢复管道工作运行状态
+        ResultEntity<Object> result = publishTaskClient.suspendCustomWorkNifiFlow(nifiCustomWorkflowId, ifFire);
+        if (result.getCode() == 500){
+            return ResultEntityBuild.build(ResultEnum.UPDATE_WORK_STATUS_ERROR);
+        }
+
+        // 更新库中管道工作状态记录
+        Integer workStatus = null;
+        if (ifFire){
+            workStatus = NifiWorkStatusEnum.RUNNING_STATUS.getValue();
+        }else{
+            workStatus = NifiWorkStatusEnum.SUSPEND_STATUS.getValue();
+        }
+        Integer flag = mapper.updateWorkStatus(nifiCustomWorkflowId, workStatus);
+        return flag == 1 ? ResultEntityBuild.build(ResultEnum.SUCCESS) : ResultEntityBuild.build(ResultEnum.UPDATE_WORK_STATUS_ERROR);
+    }
+
 
     @Override
     public List<NifiCustomWorkFlowDropDTO> getNifiCustomWorkFlowDrop() {

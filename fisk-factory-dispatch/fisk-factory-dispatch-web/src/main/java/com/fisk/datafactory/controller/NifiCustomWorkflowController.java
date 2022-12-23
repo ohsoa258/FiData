@@ -6,14 +6,17 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
+import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowUpdateDTO;
 import com.fisk.datafactory.service.INifiCustomWorkflow;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.validation.Valid;
 
 /**
  * @author Lock
@@ -76,6 +79,12 @@ public class NifiCustomWorkflowController {
     public ResultEntity<Object> getTableListById(@PathVariable("id") Long id) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableListById(id));
+    }
+
+    @PutMapping("/updateWorkStatus")
+    @ApiOperation("暂停/恢复管道运行")
+    public ResultEntity<Object> updateWorkStatus(@Validated @RequestBody NifiCustomWorkflowUpdateDTO dto){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.updateWorkStatus(dto.getNifiCustomWorkflowId(), dto.getIfFire()));
     }
 
     @GetMapping("/getNifiCustomWorkFlowDrop")
