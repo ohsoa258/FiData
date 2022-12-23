@@ -2,6 +2,7 @@ package com.fisk.datafactory.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
@@ -92,4 +93,12 @@ public interface INifiCustomWorkflow extends IService<NifiCustomWorkflowPO> {
      * @return Integer
      */
     Integer getDataDispatchNum();
+
+    /**
+     * 暂停/恢复管道工作状态
+     * @param nifiCustomWorkflowId
+     * @param ifFire
+     * @return
+     */
+    ResultEntity<Object> updateWorkStatus(String nifiCustomWorkflowId, boolean ifFire);
 }

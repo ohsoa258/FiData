@@ -225,6 +225,7 @@ public enum ResultEnum {
     FLOW_TABLE_NOT_EXISTS(9008, "当前管道下不存在组件,请检查参数"),
     COMPONENT_NOT_EXISTS(9009, "当前组件不存在请检查参数"),
     DISPATCHEMAIL_NOT_EXISTS(9010,"当前管道邮件参数为空"),
+    UPDATE_WORK_STATUS_ERROR(9011, "管道工作状态更新失败"),
 
     /**
      * 数据服务
