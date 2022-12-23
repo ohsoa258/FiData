@@ -49,8 +49,8 @@ public class SftpController {
     @PostMapping("/uploadFile")
     @ResponseBody
     @ControllerAOPConfig(printParams = false)
-    public ResultEntity<Object> uploadFile(Integer appId, @RequestParam("file") MultipartFile file) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.uploadSecretKeyFile(appId, file));
+    public ResultEntity<Object> uploadFile(String abbreviationName, @RequestParam("file") MultipartFile file) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.uploadSecretKeyFile(abbreviationName, file));
     }
 
 }
