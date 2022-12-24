@@ -19,6 +19,7 @@ import com.fisk.dataservice.mapper.TableServiceMapper;
 import com.fisk.dataservice.service.ITableService;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.task.dto.task.BuildTableServiceDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,10 +68,6 @@ public class TableServiceImpl
 
     @Override
     public List<DataSourceConfigInfoDTO> getDataSourceConfig() {
-        /*List<DataSourceConVO> allDataSource = dataSourceConManage.getAllDataSource();
-        //过滤数据
-        List<DataSourceConVO> collect = allDataSource.stream().filter(e -> e.datasourceType == SourceTypeEnum.custom).collect(Collectors.toList());
-        */
 
         ResultEntity<List<DataSourceDTO>> allExternalDataSource = client.getAllExternalDataSource();
         if (allExternalDataSource.code != ResultEnum.SUCCESS.getCode()) {
@@ -94,6 +91,9 @@ public class TableServiceImpl
         dto.tableSyncMode.typeTableId = (int) dto.tableService.id;
         dto.tableSyncMode.type = AppServiceTypeEnum.TABLE.getValue();
         tableSyncMode.tableServiceTableSyncMode(dto.tableSyncMode);
+
+        //推送task
+        pushTask(dto);
 
         return ResultEnum.SUCCESS;
     }
@@ -148,6 +148,30 @@ public class TableServiceImpl
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         return ResultEnum.SUCCESS;
+
+    }
+
+    /**
+     * 推送task
+     *
+     * @param dto
+     */
+    public void pushTask(TableServiceSaveDTO dto) {
+
+        BuildTableServiceDTO data = new BuildTableServiceDTO();
+        //表信息
+        data.id = dto.tableService.id;
+        data.addType = dto.tableService.addType;
+        data.dataSourceId = dto.tableService.sourceDbId;
+        data.targetDbId = dto.tableService.targetDbId;
+        data.tableName = dto.tableService.tableName;
+        data.sqlScript = dto.tableService.sqlScript;
+        data.targetTable = dto.tableService.targetTable;
+        //表字段
+        data.fieldDtoList = dto.tableFieldList;
+        //同步配置
+        data.syncModeDTO = dto.tableSyncMode;
+
 
     }
 
