@@ -44,7 +44,7 @@ public class QualityReportLogPO extends BasePO {
     public String reportPrincipal;
 
     /**
-     * 报告通知类型 1、邮件通知 2、站内通知
+     * 报告通知类型 1、邮件通知 2、站内通知 3、微信通知 4、短信通知
      */
     public int reportNoticeType;
 
@@ -54,24 +54,19 @@ public class QualityReportLogPO extends BasePO {
     public int emailServerId;
 
     /**
-     * 邮件主题
+     * 主题
      */
-    public String emailSubject;
+    public String subject;
 
     /**
-     * 邮件收件人
-     */
-    public String emailConsignee;
-
-    /**
-     * 邮件抄送人
-     */
-    public String emailCc;
-
-    /**
-     * 消息正文
+     * 正文
      */
     public String body;
+
+    /**
+     * 接收人，多个接收人逗号分割
+     */
+    public String recipient;
 
     /**
      * 发送时间

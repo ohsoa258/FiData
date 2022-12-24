@@ -129,6 +129,13 @@ public interface IUserService {
     ResultEntity<List<UserDTO>> getUserListByIds(List<Long> ids);
 
     /**
+     * 查询用户信息
+     *
+     * @return 用户列表
+     */
+    ResultEntity<List<UserDTO>> getAllUserList();
+
+    /**
      * 根据用户组筛选系统用户
      *
      * @param dto

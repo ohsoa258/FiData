@@ -13,10 +13,9 @@
         report_principal,
         report_notice_type,
         email_server_id,
-        email_subject,
-        email_consignee,
-        email_cc,
+        subject,
         body,
+        recipient,
         send_time,
         send_result
         FROM
