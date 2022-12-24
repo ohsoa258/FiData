@@ -226,7 +226,10 @@ public class SftpUtils {
         try {
              list = recurFile(sftp, path, fileType, fileList, dirList, list);
         } catch (SftpException e) {
-            e.printStackTrace();
+            log.info("sftp读取文件失败,{}", e);
+            return null;
+        } finally {
+            disconnect(sftp);
         }
         return list;
     }
@@ -245,6 +248,9 @@ public class SftpUtils {
 
             // 获取文件
             if (!entry.getAttrs().isDir()){
+                if (!filename.contains(fileType)){
+                    continue;
+                }
                 ExcelPropertyDTO dto = new ExcelPropertyDTO();
                 dto.fileName = filename;
                 dto.fileFullName = path + filename;
