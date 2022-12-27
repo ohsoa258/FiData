@@ -470,14 +470,17 @@ public class SftpUtils {
         ChannelSftp targetSftp = null;
         try{
             // 初始化sftp连接
+            log.info("开始连接数据源");
             currSftp = connect(rHost, rPort, rUserName, rPw, rKey);
+            log.info("数据源连接成功,开始连接目标数据");
             targetSftp = connect(tHost, tPort, tUserName, tPw, tKey);
-
+            log.info("目标数据源连接成功,开始获取字节流");
             // 获取文件字节流
             ins = getFileInputStream(currSftp, sortTypeName, sortType, index, currDir);
-
+            log.info("字节流获取完成,开始上传文件");
             // 上传文件
             uploadFile(targetSftp, ins, targetDir, targetFileName);
+            log.info("文件上传成功");
         }catch (Exception e){
             log.error("sftp文件复制失败，{}", e);
             throw new FkException(ResultEnum.SFTP_FILE_COPY_FAIL);
