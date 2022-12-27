@@ -41,10 +41,12 @@ public class MQConsumerLogAspect {
 
     @Around("traceType()")
     public Object doAroundDeviceControl(ProceedingJoinPoint joinPoint) throws Throwable {
-        //方法名称
+        // 方法名称
         String name = "";
-        //是否发送websocket消息通知
+        // 是否发送websocket消息通知
         boolean sendMsg = false;
+
+        // 获取方法元数据
         try {
             Class<?> tClass = joinPoint.getTarget().getClass();
             name = joinPoint.getSignature().getName();
@@ -59,6 +61,8 @@ public class MQConsumerLogAspect {
             log.error("方法元数据获取失败");
             ex.printStackTrace();
         }
+
+        log.info("【{}】开始执行", name);
 
         TaskLogPO model = null;
         MQBaseDTO data = null;
@@ -111,8 +115,8 @@ public class MQConsumerLogAspect {
             WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务开始处理", data.userId, MessageLevelEnum.MEDIUM);
         }
 
+
         //invoke
-        log.info("【{}】开始执行", name);
         Object res = null;
         boolean isSuccess = false;
         try {
@@ -136,7 +140,7 @@ public class MQConsumerLogAspect {
             outPutMsg = ((ResultEntity<?>) res).msg;
         }
 
-        if (sendMsg && data.userId != null) {
+        if (sendMsg && Objects.nonNull(data) && Objects.nonNull(data.userId)) {
             WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
         }
         MDCHelper.clear();
