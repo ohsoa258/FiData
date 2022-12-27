@@ -40,14 +40,19 @@ public class ServiceRegistryPO extends BasePO {
     public  String serveUrl;
 
     /**
-     *服务图标
+     * 服务图标
      */
-    public  String icon;
+    public String icon;
 
     /**
-     *排序号
+     * 排序号
      */
-    public  int sequenceNo;
+    public int sequenceNo;
+
+    /**
+     * 描述
+     */
+    public String description;
 
 
 }

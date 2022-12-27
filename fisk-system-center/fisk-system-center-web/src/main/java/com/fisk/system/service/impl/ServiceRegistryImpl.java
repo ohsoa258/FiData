@@ -1,8 +1,9 @@
 package com.fisk.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.fisk.common.framework.exception.FkException;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.system.dto.ServiceRegistryDTO;
 import com.fisk.system.dto.ServiceRegistryDataDTO;
 import com.fisk.system.entity.ServiceRegistryPO;
@@ -10,17 +11,22 @@ import com.fisk.system.enums.ServiceTypeEnum;
 import com.fisk.system.map.ServiceRegistryMap;
 import com.fisk.system.mapper.ServiceRegistryMapper;
 import com.fisk.system.service.IServiceRegistryService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
  */
 @Service
+@Slf4j
 public class ServiceRegistryImpl implements IServiceRegistryService {
 
     @Resource
@@ -32,32 +38,38 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
             // 查询数据
             QueryWrapper<ServiceRegistryPO> queryWrapper = new QueryWrapper<>();
             List<ServiceRegistryPO> list = mapper.selectList(queryWrapper);
-            /*查询所有父节点*/
-            String code="1";
-            List<ServiceRegistryPO> listParent=list.stream().sorted(Comparator.comparing(ServiceRegistryPO::getSequenceNo)).filter(e->code.equals(e.getParentServeCode()))
+            //查询所有父节点,并根据序号排序
+            String code = "1";
+            List<ServiceRegistryPO> listParent = list.stream()
+                    .sorted(Comparator.comparing(ServiceRegistryPO::getSequenceNo))
+                    .filter(e -> code.equals(e.getParentServeCode()))
                     .collect(Collectors.toList());
-            List<ServiceRegistryDTO> dtoList = new ArrayList<>();
+            if (CollectionUtils.isEmpty(listParent)) {
+                return new ArrayList<>();
+            }
 
-            for (ServiceRegistryPO po : listParent) {
+            List<ServiceRegistryDTO> dtoList = ServiceRegistryMap.INSTANCES.poToDtoList(listParent);
 
-                ServiceRegistryDTO dto=ServiceRegistryMap.INSTANCES.poToDto(po);
-                List<ServiceRegistryDTO> data=new ArrayList<>();
-                List<ServiceRegistryPO> listChild=list.stream().sorted(Comparator.comparing(ServiceRegistryPO::getSequenceNo)).filter(e->po.getServeCode().equals(e.getParentServeCode())).collect(Collectors.toList());
-                /*查询所有子节点*/
-                for (ServiceRegistryPO item : listChild)
-                {
-                    ServiceRegistryDTO obj=ServiceRegistryMap.INSTANCES.poToDto(item);
-                    data.add(obj);
-                }
-                dto.setDtos(data);
-                dtoList.add(dto);
+            for (ServiceRegistryDTO item : dtoList) {
+
+                item = buildChildTree(item, list);
             }
             return dtoList;
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
+            log.error("【获取菜单集合失败】,{}", e);
             throw new FkException(ResultEnum.ERROR);
         }
+    }
+
+    public ServiceRegistryDTO buildChildTree(ServiceRegistryDTO pNode, List<ServiceRegistryPO> poList) {
+        List<ServiceRegistryDTO> list = new ArrayList<>();
+        for (ServiceRegistryPO item : poList) {
+            if (item.getParentServeCode().equals(pNode.getServeCode())) {
+                list.add(buildChildTree(ServiceRegistryMap.INSTANCES.poToDto(item), poList));
+            }
+        }
+        pNode.dtos = list;
+        return pNode;
     }
 
     @Override
