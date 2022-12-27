@@ -4,10 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
-import com.fisk.dataservice.dto.tableservice.TableServiceDTO;
-import com.fisk.dataservice.dto.tableservice.TableServicePageDataDTO;
-import com.fisk.dataservice.dto.tableservice.TableServicePageQueryDTO;
-import com.fisk.dataservice.dto.tableservice.TableServiceSaveDTO;
+import com.fisk.dataservice.dto.tableservice.*;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 
 import java.util.List;
@@ -71,5 +68,13 @@ public interface ITableService {
      * @return
      */
     List<BuildTableServiceDTO> getTableListByPipelineId(Integer pipelineId);
+
+    /**
+     * 修改表服务发布状态
+     *
+     * @param dto
+     * @return
+     */
+    void updateTableServiceStatus(TableServicePublishStatusDTO dto);
 
 }

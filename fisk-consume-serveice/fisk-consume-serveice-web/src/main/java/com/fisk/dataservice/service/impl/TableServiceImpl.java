@@ -10,10 +10,7 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
-import com.fisk.dataservice.dto.tableservice.TableServiceDTO;
-import com.fisk.dataservice.dto.tableservice.TableServicePageDataDTO;
-import com.fisk.dataservice.dto.tableservice.TableServicePageQueryDTO;
-import com.fisk.dataservice.dto.tableservice.TableServiceSaveDTO;
+import com.fisk.dataservice.dto.tableservice.*;
 import com.fisk.dataservice.entity.TableServicePO;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
 import com.fisk.dataservice.map.DataSourceConMap;
@@ -154,6 +151,21 @@ public class TableServiceImpl
         }
         return list;
     }
+
+    @Override
+    public void updateTableServiceStatus(TableServicePublishStatusDTO dto) {
+        TableServicePO po = mapper.selectById(dto.id);
+        if (po == null) {
+            log.error("【表服务修改状态失败,原因:表不存在】");
+            return;
+        }
+        po.publish = dto.status;
+        if (mapper.updateById(po) > 0) {
+            log.error("表服务修改状态失败,原因表:修改异常");
+        }
+
+    }
+
 
     /**
      * 更新表服务数据

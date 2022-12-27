@@ -8,6 +8,7 @@ import com.fisk.dataservice.dto.datasource.DataSourceColumnQueryDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceQueryDTO;
 import com.fisk.dataservice.dto.tableservice.TableServiceDTO;
 import com.fisk.dataservice.dto.tableservice.TableServicePageQueryDTO;
+import com.fisk.dataservice.dto.tableservice.TableServicePublishStatusDTO;
 import com.fisk.dataservice.dto.tableservice.TableServiceSaveDTO;
 import com.fisk.dataservice.service.IDataSourceConfig;
 import com.fisk.dataservice.service.ITableService;
@@ -110,6 +111,12 @@ public class TableServiceController {
     @GetMapping("/getTableListByPipelineId/{id}")
     public ResultEntity<List<BuildTableServiceDTO>> getTableListByPipelineId(@PathVariable("id") Integer id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableListByPipelineId(id));
+    }
+
+    @ApiOperation("修改表服务发布状态")
+    @PutMapping("/updateTableServiceStatus")
+    public void updateTableServiceStatus(@RequestBody TableServicePublishStatusDTO dto) {
+        service.updateTableServiceStatus(dto);
     }
 
 }
