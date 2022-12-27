@@ -1,5 +1,6 @@
 package com.fisk.dataservice.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -93,7 +95,7 @@ public class TableServiceImpl
         tableSyncMode.tableServiceTableSyncMode(dto.tableSyncMode);
 
         //推送task
-        pushTask(dto);
+        buildParameter(dto);
 
         return ResultEnum.SUCCESS;
     }
@@ -131,6 +133,22 @@ public class TableServiceImpl
         return ResultEnum.SUCCESS;
     }
 
+    @Override
+    public List<BuildTableServiceDTO> getTableListByPipelineId(Integer pipelineId) {
+        List<Integer> tableListByPipelineId = tableSyncMode.getTableListByPipelineId(pipelineId);
+        if (CollectionUtils.isEmpty(tableListByPipelineId)) {
+            return new ArrayList<>();
+        }
+
+        List<BuildTableServiceDTO> list = new ArrayList<>();
+
+        for (Integer id : tableListByPipelineId) {
+            TableServiceSaveDTO tableService = getTableServiceById(id);
+            list.add(buildParameter(tableService));
+        }
+        return list;
+    }
+
     /**
      * 更新表服务数据
      *
@@ -152,11 +170,11 @@ public class TableServiceImpl
     }
 
     /**
-     * 推送task
+     * 构建参数
      *
      * @param dto
      */
-    public void pushTask(TableServiceSaveDTO dto) {
+    public BuildTableServiceDTO buildParameter(TableServiceSaveDTO dto) {
 
         BuildTableServiceDTO data = new BuildTableServiceDTO();
         //表信息
@@ -172,7 +190,7 @@ public class TableServiceImpl
         //同步配置
         data.syncModeDTO = dto.tableSyncMode;
 
-
+        return data;
     }
 
 

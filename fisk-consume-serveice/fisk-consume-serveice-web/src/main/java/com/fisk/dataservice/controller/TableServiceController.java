@@ -11,11 +11,13 @@ import com.fisk.dataservice.dto.tableservice.TableServicePageQueryDTO;
 import com.fisk.dataservice.dto.tableservice.TableServiceSaveDTO;
 import com.fisk.dataservice.service.IDataSourceConfig;
 import com.fisk.dataservice.service.ITableService;
+import com.fisk.task.dto.task.BuildTableServiceDTO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -102,6 +104,12 @@ public class TableServiceController {
     @GetMapping("/getColumnByTable")
     public ResultEntity<Object> getColumnByTable(Integer id, String tableName) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, dataSourceConfig.getColumnByTable(id, tableName));
+    }
+
+    @ApiOperation("根据管道id获取表服务集合")
+    @GetMapping("/getTableListByPipelineId/{id}")
+    public ResultEntity<List<BuildTableServiceDTO>> getTableListByPipelineId(@PathVariable("id") Integer id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableListByPipelineId(id));
     }
 
 }

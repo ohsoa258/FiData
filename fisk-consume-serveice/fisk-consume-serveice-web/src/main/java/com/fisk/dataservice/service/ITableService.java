@@ -8,6 +8,7 @@ import com.fisk.dataservice.dto.tableservice.TableServiceDTO;
 import com.fisk.dataservice.dto.tableservice.TableServicePageDataDTO;
 import com.fisk.dataservice.dto.tableservice.TableServicePageQueryDTO;
 import com.fisk.dataservice.dto.tableservice.TableServiceSaveDTO;
+import com.fisk.task.dto.task.BuildTableServiceDTO;
 
 import java.util.List;
 
@@ -62,5 +63,13 @@ public interface ITableService {
      * @return
      */
     ResultEnum delTableServiceById(long id);
+
+    /**
+     * 根据管道id获取表服务集合
+     *
+     * @param pipelineId
+     * @return
+     */
+    List<BuildTableServiceDTO> getTableListByPipelineId(Integer pipelineId);
 
 }

@@ -1,5 +1,6 @@
 package com.fisk.dataservice.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
@@ -13,6 +14,9 @@ import com.fisk.dataservice.service.ITableSyncMode;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -83,6 +87,14 @@ public class TableSyncModeImpl
 
         return ResultEnum.SUCCESS;
 
+    }
+
+    public List<Integer> getTableListByPipelineId(Integer pipelineId) {
+        List<TableSyncModePO> associatePipeline = this.query().eq("associate_pipe", pipelineId).list();
+        if (CollectionUtils.isEmpty(associatePipeline)) {
+            return new ArrayList<>();
+        }
+        return associatePipeline.stream().map(e -> e.typeTableId).collect(Collectors.toList());
     }
 
 }
