@@ -15,6 +15,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.CronUtils;
+import com.fisk.common.core.utils.Dto.cron.NextCronTimeDTO;
 import com.fisk.common.core.utils.email.dto.MailSenderDTO;
 import com.fisk.common.core.utils.email.dto.MailServeiceDTO;
 import com.fisk.common.core.utils.email.method.MailSenderUtils;
@@ -760,6 +761,14 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
     @Override
     public List<PreviewQualityReportVO> previewReportRecord(int reportLogId) {
         return null;
+    }
+
+    @Override
+    public List<String> getNextCronExeTime(String cron) {
+        NextCronTimeDTO dto=new NextCronTimeDTO();
+        dto.setCronExpression(cron);
+        dto.setNumber(3);
+        return CronUtils.nextCronExeTime(dto);
     }
 
     /**
