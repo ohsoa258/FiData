@@ -67,6 +67,7 @@ public class BuildSftpCopyListener implements ISftpCopyListener {
                 Map<String, String> map = list.stream()
                         .collect(Collectors.toMap(TaskSettingDTO::getSettingKey, TaskSettingDTO::getValue));
                 // 执行sftp文件复制任务
+                log.info("开始执行复制方法,连接配置:{}", JSON.toJSONString(map));
                 SftpUtils.copyFile(map.get(TaskSettingEnum.sftp_source_ip.getAttributeName()), 22,
                         map.get(TaskSettingEnum.sftp_source_account.getAttributeName()),
                         map.get(TaskSettingEnum.sftp_source_password.getAttributeName()),

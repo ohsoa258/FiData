@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 /**
  * @author gy
@@ -40,10 +41,12 @@ public class MQConsumerLogAspect {
 
     @Around("traceType()")
     public Object doAroundDeviceControl(ProceedingJoinPoint joinPoint) throws Throwable {
-        //方法名称
+        // 方法名称
         String name = "";
-        //是否发送websocket消息通知
+        // 是否发送websocket消息通知
         boolean sendMsg = false;
+
+        // 获取方法元数据
         try {
             Class<?> tClass = joinPoint.getTarget().getClass();
             name = joinPoint.getSignature().getName();
@@ -58,6 +61,8 @@ public class MQConsumerLogAspect {
             log.error("方法元数据获取失败");
             ex.printStackTrace();
         }
+
+        log.info("【{}】开始执行", name);
 
         TaskLogPO model = null;
         MQBaseDTO data = null;
@@ -75,27 +80,25 @@ public class MQConsumerLogAspect {
             log.info("切面参数:{}", JSON.toJSONString(args));
             // 获取方法参数
             data = JSON.parseObject((String) args[0], MQBaseDTO.class);
-            if (data == null) {
-                throw new FkException(ResultEnum.PARAMTER_ERROR);
-            }
-
-            // 获取任务信息
-            if (data.logId != null) {
-                model = mapper.selectById(data.logId);
-                if (model != null) {
-                    taskName = model.taskName;
-                    taskQueue = model.taskQueue;
+            if (Objects.nonNull(data)) {
+                // 获取任务信息
+                if (Objects.nonNull(data.logId)) {
+                    model = mapper.selectById(data.logId);
+                    if (model != null) {
+                        taskName = model.taskName;
+                        taskQueue = model.taskQueue;
+                    }
+                    log.info("此次调度队列: {},此次队列参数: {}", taskQueue, JSON.toJSONString(args[0]));
                 }
-                log.info("此次调度队列: {},此次队列参数: {}", taskQueue, JSON.toJSONString(args[0]));
-            }
-            // 设置TraceID
-            if (!StringUtils.isEmpty(data.traceId)) {
-                traceId = data.traceId;
-                MDCHelper.setTraceId(traceId);
-            }
-            // 如果参数中没有TraceID，则创建
-            else {
-                traceId = MDCHelper.setTraceId();
+                // 设置TraceID
+                if (!StringUtils.isEmpty(data.traceId)) {
+                    traceId = data.traceId;
+                    MDCHelper.setTraceId(traceId);
+                }
+                // 如果参数中没有TraceID，则创建
+                else {
+                    traceId = MDCHelper.setTraceId();
+                }
             }
         } catch (Exception ex) {
             log.error("任务状态更新失败", ex);
@@ -108,12 +111,12 @@ public class MQConsumerLogAspect {
             mapper.updateById(model);
         }
 
-        if (sendMsg && data.userId != null) {
+        if (sendMsg && Objects.nonNull(data) && Objects.nonNull(data.userId)) {
             WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务开始处理", data.userId, MessageLevelEnum.MEDIUM);
         }
 
+
         //invoke
-        log.info("【{}】开始执行", name);
         Object res = null;
         boolean isSuccess = false;
         try {
@@ -137,7 +140,7 @@ public class MQConsumerLogAspect {
             outPutMsg = ((ResultEntity<?>) res).msg;
         }
 
-        if (sendMsg && data.userId != null) {
+        if (sendMsg && Objects.nonNull(data) && Objects.nonNull(data.userId)) {
             WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
         }
         MDCHelper.clear();

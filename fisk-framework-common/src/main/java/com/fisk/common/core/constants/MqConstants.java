@@ -68,7 +68,7 @@ public class MqConstants {
 
         public static final String BUILD_UNIVERSAL_PUBLISH_FLOW = "task.build.universal_publish";
 
-        public static final String BUILD_METADATA_FLOW = "build.metadata.flow";
+        public static final String BUILD_METADATA_FLOW = "task.build.metadata.flow";
 
         public static final String BUILD_EXEC_SCRIPT_FLOW = "build.exec.script.flow";
 

@@ -4,7 +4,7 @@ import com.fisk.system.dto.ServiceRegistryDTO;
 import com.fisk.system.dto.ServiceRegistryDataDTO;
 import com.fisk.system.entity.ServiceRegistryPO;
 import org.mapstruct.Mapper;
-import org.mapstruct.*;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
@@ -33,7 +33,16 @@ public interface ServiceRegistryMap {
     ServiceRegistryDTO poToDto(ServiceRegistryPO po);
 
     /**
+     * po==>DtoList
+     *
+     * @param poList
+     * @return
+     */
+    List<ServiceRegistryDTO> poToDtoList(List<ServiceRegistryPO> poList);
+
+    /**
      * poList==>dtoList
+     *
      * @param po
      * @return
      */

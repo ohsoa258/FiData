@@ -100,4 +100,11 @@ public interface IQualityReportManageService extends IService<QualityReportPO> {
      * @return 执行结果
      */
     List<PreviewQualityReportVO> previewReportRecord(int reportLogId);
+
+    /**
+     * 获取Cron表达式最近3次执行时间
+     *
+     * @return 执行结果
+     */
+    List<String> getNextCronExeTime(String cron);
 }

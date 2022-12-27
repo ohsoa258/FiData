@@ -1107,9 +1107,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         ftpConfig.hostname = modelDataSource.host;
         ftpConfig.port = modelDataSource.port;
-        ftpConfig.connectStr = modelDataSource.connectStr;
+        if (modelDataSource.serviceType == 1) {
+            ftpConfig.connectStr = modelDataSource.connectStr;
+            ftpConfig.password = null;
+        } else {
+            ftpConfig.password = modelDataSource.connectPwd;
+            ftpConfig.connectStr = null;
+        }
         ftpConfig.username = modelDataSource.connectAccount;
-        ftpConfig.password = modelDataSource.connectPwd;
         ftpConfig.ftpUseUtf8 = true;
         ftpConfig.sheetName = modelAccess.sheet;
 

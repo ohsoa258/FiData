@@ -157,7 +157,7 @@ public class KafkaConsumer {
         factory.setConcurrency(1);
         //factory.setAutoStartup(true);
         //设置为批量消费，每个批次数量在Kafka配置参数中设置ConsumerConfig.MAX_POLL_RECORDS_CONFIG
-        factory.setBatchListener(true);
+        factory.setBatchListener(false);
         //设置提交偏移量的方式
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         return factory;

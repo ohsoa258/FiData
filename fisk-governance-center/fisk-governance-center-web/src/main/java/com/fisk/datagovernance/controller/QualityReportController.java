@@ -104,4 +104,9 @@ public class QualityReportController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.previewReportRecord(reportLogId));
     }
 
+    @ApiOperation("获取Cron表达式最近3次执行时间")
+    @GetMapping("/getNextCronExeTime/{cron}")
+    public ResultEntity<List<String>> getNextCronExeTime(@PathVariable("cron") String cron) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getNextCronExeTime(cron));
+    }
 }

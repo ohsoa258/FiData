@@ -127,6 +127,17 @@ public class TaskPublish {
                             if (Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue()) ||
                                     Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue())) {
                                 //没有表id就把任务id扔进去
+                                String ids = kafkaReceiveDTO.sftpFileCopyTaskIds + "," + kafkaReceiveDTO.scriptTaskIds;
+                                String[] id = ids.split(",");
+                                boolean next = false;
+                                for (String taskId : id) {
+                                    if (Objects.equals(split[6], taskId)) {
+                                        next = true;
+                                    }
+                                }
+                                if (!next) {
+                                    continue;
+                                }
                                 nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(split[6]);
                             }
                             TaskHierarchyDTO nifiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchy, kafkaReceiveDTO.pipelTraceId);
