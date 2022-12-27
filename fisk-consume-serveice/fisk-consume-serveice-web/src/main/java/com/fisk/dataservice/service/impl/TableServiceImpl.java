@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
 import com.fisk.dataservice.dto.tableservice.TableServiceDTO;
@@ -20,6 +22,7 @@ import com.fisk.dataservice.mapper.TableServiceMapper;
 import com.fisk.dataservice.service.ITableService;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +40,8 @@ public class TableServiceImpl
         implements ITableService {
 
     @Resource
-    DataSourceConManageImpl dataSourceConManage;
+    private PublishTaskClient publishTaskClient;
+
     @Resource
     TableFieldImpl tableField;
     @Resource
@@ -45,6 +49,8 @@ public class TableServiceImpl
 
     @Resource
     UserClient client;
+    @Resource
+    private UserHelper userHelper;
 
 
     @Resource
@@ -95,7 +101,7 @@ public class TableServiceImpl
         tableSyncMode.tableServiceTableSyncMode(dto.tableSyncMode);
 
         //推送task
-        buildParameter(dto);
+        publishTaskClient.publishBuildDataServices(buildParameter(dto));
 
         return ResultEnum.SUCCESS;
     }
@@ -189,6 +195,9 @@ public class TableServiceImpl
         data.fieldDtoList = dto.tableFieldList;
         //同步配置
         data.syncModeDTO = dto.tableSyncMode;
+
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        data.userId = userInfo.id;
 
         return data;
     }
