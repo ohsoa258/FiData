@@ -10,4 +10,6 @@ import org.springframework.kafka.support.Acknowledgment;
  */
 public interface INifiTaskListener {
     ResultEnum msg(String dataInfo, Acknowledgment acke);
+
+    ResultEnum buildDataServices(String dataInfo, Acknowledgment acke);
 }

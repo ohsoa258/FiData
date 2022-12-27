@@ -235,6 +235,12 @@ public class KafkaConsumer {
         return ResultEntityBuild.build(iNifiTaskListener.msg(data, ack));
     }
 
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_TABLE_SERVER_FLOW, containerFactory = "batchFactory", groupId = "test")
+    @MQConsumerLog
+    public ResultEntity<Object> buildDataServices(String data, Acknowledgment ack) {
+        return ResultEntityBuild.build(iNifiTaskListener.buildDataServices(data, ack));
+    }
+
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog
     public ResultEntity<Object> buildAtlasTableAndColumnTaskListener(String data, Acknowledgment ack) {

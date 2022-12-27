@@ -56,6 +56,15 @@ public class PublishTaskController {
                 data);
     }
 
+    @PostMapping("/publishBuildDataServices")
+    @ApiOperation(value = "表服务同步")
+    public ResultEntity<Object> publishBuildDataServices(@RequestBody BuildTableServiceDTO data) {
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_TABLE_SERVER_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_TABLE_SERVER_FLOW,
+                data);
+    }
+
     /**
      * 在Doris中生成stg&ods数据表
      *

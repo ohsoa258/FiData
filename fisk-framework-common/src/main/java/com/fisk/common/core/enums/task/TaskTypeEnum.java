@@ -81,7 +81,9 @@ public enum TaskTypeEnum implements BaseEnum {
      */
     BUILD_METADATA_FLOW(17, "元数据实时同步"),
 
-    BUILD_EXEC_SCRIPT_TASK(18,"执行自定义脚本");
+    BUILD_EXEC_SCRIPT_TASK(18,"执行自定义脚本"),
+
+    BUILD_TABLE_SERVER_TASK(19,"表服务同步");
 
     TaskTypeEnum(int value, String name) {
         this.value = value;

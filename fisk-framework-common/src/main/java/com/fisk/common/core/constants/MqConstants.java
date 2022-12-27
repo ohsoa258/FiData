@@ -26,6 +26,8 @@ public class MqConstants {
 
         public static final String BUILD_NIFI_FLOW = "task.build.nifi.flow";
 
+        public static final String BUILD_TABLE_SERVER_FLOW = "task.build.table.server.flow";
+
         public static final String BUILD_ATLAS_INSTANCE_FLOW = "task.build.atlas.instance.flow";
 
         public static final String BUILD_ATLAS_TABLECOLUMN_FLOW = "task.build.atlas.tablecolumn.flow";

@@ -67,6 +67,11 @@ public class NifiHelper implements ApplicationContextAware {
         return new ProcessGroupsApi(getApiClient());
     }
 
+
+    public static RemoteProcessGroupsApi getRemoteProcessGroupsApi() {
+        return new RemoteProcessGroupsApi(getApiClient());
+    }
+
     /**
      * 获取controller-service的api操作类
      *
