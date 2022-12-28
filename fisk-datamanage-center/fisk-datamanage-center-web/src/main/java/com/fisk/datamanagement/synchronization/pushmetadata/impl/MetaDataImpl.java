@@ -118,7 +118,6 @@ public class MetaDataImpl implements IMetaData {
     }
 
     @Override
-    //@Async
     public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data) {
         log.info("开始同步元数据***********");
         for (MetaDataInstanceAttributeDTO instance : data) {
@@ -722,8 +721,9 @@ public class MetaDataImpl implements IMetaData {
             entityDTO.entity = entityTypeDTO;
             return addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_INSTANCE, "");
         }
+        return atlasGuid;
         //修改
-        return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_INSTANCE, dto);
+        //return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_INSTANCE, dto);
     }
 
     /**
@@ -748,7 +748,8 @@ public class MetaDataImpl implements IMetaData {
             entityDTO.entity = entityTypeDTO;
             return addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_DB, parentEntityGuid);
         }
-        return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_DB, dto);
+        return atlasGuid;
+        //return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_DB, dto);
     }
 
     /**
@@ -776,9 +777,9 @@ public class MetaDataImpl implements IMetaData {
             isAdd = true;
         }
         //同步业务分类
-        associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
+        //associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
         //同步业务元数据
-        associatedBusinessMetaData(atlasGuid, dbName, dto.name);
+        //associatedBusinessMetaData(atlasGuid, dbName, dto.name);
         if (isAdd) {
             return atlasGuid;
         }

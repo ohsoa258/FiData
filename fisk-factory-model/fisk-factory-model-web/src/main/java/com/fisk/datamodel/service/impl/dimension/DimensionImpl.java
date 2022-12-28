@@ -731,7 +731,7 @@ public class DimensionImpl
         data.dbList.get(0).tableList = tableList;
         list.add(data);
 
-        try {
+        /*try {
             MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
             metaDataAttribute.instanceList = list;
             metaDataAttribute.userId = Long.parseLong(dimension.createUser);
@@ -740,17 +740,24 @@ public class DimensionImpl
             dataManageClient.metaData(metaDataAttribute);
         } catch (Exception e) {
             log.error("【dataManageClient.MetaData()】方法报错,ex", e);
-        }
+        }*/
 
-        /*//修改元数据
-        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // 更新元数据内容
+                log.info("维度表构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+                dataManageClient.consumeMetaData(list);
+            }
+        }).start();
+
+        //修改元数据
+        /*ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
         cachedThreadPool.execute(new Runnable() {
             @Override
             public void run() {
                 try {
-                    *//* MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
-                    metaDataAttribute.instanceList = list;
-                    metaDataAttribute.userId = Long.parseLong(dimension.createUser);*//*
                     // 更新元数据内容
                     log.info("维度表构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
                     dataManageClient.consumeMetaData(list);
