@@ -106,9 +106,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Resource
     private TableFieldsMapper fieldsMapper;
     @Resource
+    private AppRegistrationMapper appRegistrationMapper;
+    @Resource
     private AppRegistrationImpl appRegistrationImpl;
     @Resource
     private AppRegistrationMapper registrationMapper;
+    @Resource
+    private AppDataSourceMapper appDataSourceMapper;
     @Resource
     private AppDataSourceImpl appDataSourceImpl;
     @Resource
@@ -1539,11 +1543,29 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // dto -> po
         TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
+
+        synchronousMetadata(po.appId, po.id);
         /*if (po.getTableName() == null) {
             po.setTableName("");
         }*/
         //po.setPublish(0);
         return this.saveOrUpdate(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+    }
+
+    /**
+     * 同步元数据
+     *
+     * @param appId
+     * @param tableId
+     */
+    public void synchronousMetadata(long appId, long tableId) {
+        AppRegistrationPO registrationPO = appRegistrationMapper.selectById(appId);
+        if (registrationPO == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        tableFieldsImpl.buildMetaDataInstanceAttribute(registrationPO, tableId, 2);
+
     }
 
     @Override
