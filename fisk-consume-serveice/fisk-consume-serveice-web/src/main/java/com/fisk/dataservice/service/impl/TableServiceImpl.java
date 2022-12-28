@@ -204,8 +204,10 @@ public class TableServiceImpl
         data.sqlScript = dto.tableService.sqlScript;
         data.targetTable = dto.tableService.targetTable;
 
-        if (data.tableName.indexOf(".") > 1) {
-            data.schemaName = data.tableName.split("\\.")[0];
+        if (data.targetTable.indexOf(".") > 1) {
+            String[] str = data.targetTable.split("\\.");
+            data.schemaName = str[0];
+            data.targetTable = str[1];
         }
 
         //表字段
