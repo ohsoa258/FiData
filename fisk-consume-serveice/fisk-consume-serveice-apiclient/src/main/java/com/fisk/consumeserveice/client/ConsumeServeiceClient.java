@@ -45,6 +45,6 @@ public interface ConsumeServeiceClient {
      */
     @ApiOperation("根据表服务id构建发布数据")
     @GetMapping("/tableService/getBuildTableServiceById/{id}")
-    ResultEntity<List<BuildTableServiceDTO>> getBuildTableServiceById(@PathVariable("id") Integer id);
+    ResultEntity<BuildTableServiceDTO> getBuildTableServiceById(@PathVariable("id") long id);
 
 }

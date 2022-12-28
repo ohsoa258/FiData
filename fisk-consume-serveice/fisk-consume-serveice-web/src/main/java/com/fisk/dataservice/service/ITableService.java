@@ -83,6 +83,6 @@ public interface ITableService {
      * @param id
      * @return
      */
-    List<BuildTableServiceDTO> getBuildTableServiceById(long id);
+    BuildTableServiceDTO getBuildTableServiceById(long id);
 
 }

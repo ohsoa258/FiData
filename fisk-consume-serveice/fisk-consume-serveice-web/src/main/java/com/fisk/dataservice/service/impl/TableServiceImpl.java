@@ -166,14 +166,10 @@ public class TableServiceImpl
     }
 
     @Override
-    public List<BuildTableServiceDTO> getBuildTableServiceById(long id) {
+    public BuildTableServiceDTO getBuildTableServiceById(long id) {
         TableServiceSaveDTO data = getTableServiceById(id);
 
-        List<BuildTableServiceDTO> list = new ArrayList<>();
-
-        list.add(buildParameter(data));
-
-        return list;
+        return buildParameter(data);
 
     }
 

@@ -121,7 +121,7 @@ public class TableServiceController {
 
     @ApiOperation("根据表服务id构建发布数据")
     @GetMapping("/getBuildTableServiceById/{id}")
-    public ResultEntity<List<BuildTableServiceDTO>> getBuildTableServiceById(@PathVariable("id") Integer id) {
+    public ResultEntity<BuildTableServiceDTO> getBuildTableServiceById(@PathVariable("id") long id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBuildTableServiceById(id));
     }
 
