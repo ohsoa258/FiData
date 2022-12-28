@@ -15,13 +15,20 @@ public class LoginServiceDTO {
     public String name;
 
     /**
-     *服务url
+     * 服务url
      */
-    public  String path;
+    public String path;
 
     public String component;
 
     public IconDTO meta;
+
+    /**
+     * 是否有权限
+     */
+    public Boolean authority = false;
+
+    public String serveCode;
 
     public List<LoginServiceDTO> children;
 }
