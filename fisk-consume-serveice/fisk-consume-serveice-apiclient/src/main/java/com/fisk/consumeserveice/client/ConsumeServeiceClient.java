@@ -36,4 +36,15 @@ public interface ConsumeServeiceClient {
     @ApiOperation("修改表服务发布状态")
     @PutMapping("/tableService/updateTableServiceStatus")
     void updateTableServiceStatus(@RequestBody TableServicePublishStatusDTO dto);
+
+    /**
+     * 根据表服务id构建发布数据
+     *
+     * @param id
+     * @return
+     */
+    @ApiOperation("根据表服务id构建发布数据")
+    @GetMapping("/tableService/getBuildTableServiceById/{id}")
+    ResultEntity<List<BuildTableServiceDTO>> getBuildTableServiceById(@PathVariable("id") Integer id);
+
 }

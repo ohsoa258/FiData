@@ -30,6 +30,7 @@ public class BuildMetaDataListener implements IMetaDataListener {
                 try {
                     log.info("*****开始推送元数据实时同步数据*****");
                     BuildMetaDataDTO data = JSONObject.parseObject(dataInfo, BuildMetaDataDTO.class);
+                    log.info("*****开始推送元数据实时同步数据1*****");
                     dataManageClient.consumeMetaData(data.data);
                 } catch (Exception e) {
                     log.error("【推送元数据实时数据失败】,{}", e);

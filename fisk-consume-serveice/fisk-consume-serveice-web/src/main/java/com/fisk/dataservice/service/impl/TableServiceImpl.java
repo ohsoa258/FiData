@@ -114,7 +114,6 @@ public class TableServiceImpl
         data.tableFieldList = tableField.getTableServiceField(id);
         data.tableSyncMode = tableSyncMode.getTableServiceSyncMode(id);
         return data;
-
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -166,6 +165,17 @@ public class TableServiceImpl
 
     }
 
+    @Override
+    public List<BuildTableServiceDTO> getBuildTableServiceById(long id) {
+        TableServiceSaveDTO data = getTableServiceById(id);
+
+        List<BuildTableServiceDTO> list = new ArrayList<>();
+
+        list.add(buildParameter(data));
+
+        return list;
+
+    }
 
     /**
      * 更新表服务数据

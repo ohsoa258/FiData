@@ -77,4 +77,12 @@ public interface ITableService {
      */
     void updateTableServiceStatus(TableServicePublishStatusDTO dto);
 
+    /**
+     * 根据表服务id构建发布数据
+     *
+     * @param id
+     * @return
+     */
+    List<BuildTableServiceDTO> getBuildTableServiceById(long id);
+
 }
