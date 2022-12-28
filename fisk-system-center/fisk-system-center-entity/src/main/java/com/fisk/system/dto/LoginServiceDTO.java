@@ -30,5 +30,7 @@ public class LoginServiceDTO {
 
     public String serveCode;
 
+    public String description;
+
     public List<LoginServiceDTO> children;
 }

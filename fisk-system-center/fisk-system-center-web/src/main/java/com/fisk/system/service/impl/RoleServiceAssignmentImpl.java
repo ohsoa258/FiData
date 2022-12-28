@@ -154,6 +154,7 @@ public class RoleServiceAssignmentImpl
             icon.noCache = false;
             icon.icon = po.icon;
             dto.meta = icon;
+            dto.description = po.description;
 
             if (collect.contains(po.id)) {
                 dto.authority = true;
@@ -183,7 +184,7 @@ public class RoleServiceAssignmentImpl
                 iconChildren.icon = item.icon;
                 obj.meta = iconChildren;
                 obj.serveCode = item.getServeCode();
-
+                obj.description = item.description;
                 if (collect.contains(item.id)) {
                     obj.authority = true;
                     obj.path = "/" + item.serveUrl;
