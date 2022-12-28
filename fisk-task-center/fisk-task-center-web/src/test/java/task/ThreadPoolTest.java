@@ -18,7 +18,7 @@ public class ThreadPoolTest {
     public void test_max_limit() throws Exception {
         for (int i = 0; i < 25; i++) {
             int finalI = i;
-            TaskThreadPool.taskPool.submit(() -> {
+            TaskThreadPool.TASK_POOL.submit(() -> {
                 System.out.printf("任务：%s，线程id：{%s}%n", finalI, Thread.currentThread().getId());
                 try {
                     Thread.sleep(5000);
@@ -36,7 +36,7 @@ public class ThreadPoolTest {
      */
     @Test
     public void test() throws Exception {
-        TaskThreadPool.taskPool.submit(() -> {
+        TaskThreadPool.TASK_POOL.submit(() -> {
             System.out.printf("任务：%s，线程id：{%s}%n", 1, Thread.currentThread().getId());
             try {
                 Thread.sleep(5000);
@@ -44,7 +44,7 @@ public class ThreadPoolTest {
                 e.printStackTrace();
             }
         });
-        TaskThreadPool.taskPool.submit(() -> {
+        TaskThreadPool.TASK_POOL.submit(() -> {
             System.out.printf("任务：%s，线程id：{%s}%n", 2, Thread.currentThread().getId());
             try {
                 Thread.sleep(5000);
@@ -52,7 +52,7 @@ public class ThreadPoolTest {
                 e.printStackTrace();
             }
         });
-        TaskThreadPool.taskPool.submit(() -> {
+        TaskThreadPool.TASK_POOL.submit(() -> {
             System.out.printf("任务：%s，线程id：{%s}%n", 3, Thread.currentThread().getId());
             try {
                 Thread.sleep(5000);

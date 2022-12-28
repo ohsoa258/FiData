@@ -1,5 +1,7 @@
 package com.fisk.common.core.utils.threadPool;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.concurrent.*;
 
 /**
@@ -8,6 +10,7 @@ import java.util.concurrent.*;
  * @description 线程池帮助类
  * @date 2022/12/28 11:53
  */
+@Slf4j
 public class ThreadPoolUtils {
 
     public static ExecutorService buildThreadPool() {
@@ -27,6 +30,10 @@ public class ThreadPoolUtils {
      * @return 线程池
      */
     public static ExecutorService buildThreadPool(int coreNum, int maxNum, int keepAliveTime, int maxTask) {
+        log.info(
+                String.format("线程池创建，参数：【核心线程数：%s】【最大线程数：%s】【线程存活时长：%ss】【最大任务排队数：%s】【线程拒绝策略：%s】",
+                        maxNum, maxTask, keepAliveTime, maxTask, "线程池任务队列超过最大值之后,并且已经开启到最大线程数时，拒绝创建新任务")
+        );
         return new ThreadPoolExecutor(coreNum,
                 maxNum,
                 keepAliveTime,

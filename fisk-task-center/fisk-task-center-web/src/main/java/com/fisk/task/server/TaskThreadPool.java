@@ -12,5 +12,9 @@ import java.util.concurrent.ExecutorService;
  */
 public class TaskThreadPool {
 
-    public static ExecutorService taskPool = ThreadPoolUtils.buildThreadPool();
+    public final static ExecutorService TASK_POOL;
+
+    static {
+        TASK_POOL = ThreadPoolUtils.buildThreadPool();
+    }
 }
