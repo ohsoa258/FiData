@@ -69,5 +69,7 @@ public interface IbuildTable {
      */
     List<String> buildDwStgAndOdsTable(ModelPublishTableDTO modelPublishTableDTO);
 
+    public String queryNumbersFieldForTableServer(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId);
+
 
 }

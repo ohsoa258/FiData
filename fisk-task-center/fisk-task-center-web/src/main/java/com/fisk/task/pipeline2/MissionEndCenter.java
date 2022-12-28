@@ -3,16 +3,24 @@ package com.fisk.task.pipeline2;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.consumeserveice.client.ConsumeServeiceClient;
+import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.DispatchJobHierarchyDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyNextDTO;
 import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
+import com.fisk.task.dto.task.BuildTableServiceDTO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
@@ -30,6 +38,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -55,6 +67,10 @@ public class MissionEndCenter {
     IPipelLog iPipelLog;
     @Resource
     KafkaTemplateHelper kafkaTemplateHelper;
+    @Resource
+    ConsumeServeiceClient consumeServeiceClient;
+    @Resource
+    UserClient userClient;
 
 
     public void missionEndCenter(String data, Acknowledgment acke) {
@@ -73,14 +89,14 @@ public class MissionEndCenter {
                 if (split.length == 7) {
                     String pipelineId = split[3];
                     String pipelJobTraceId = kafkaReceive.pipelJobTraceId;
-                    if (!Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue())&&
+                    if (!Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue()) &&
                             !Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue())
                     ) {
                         //没有表id就把任务id扔进去
                         tableId = split[6];
                     }
                     NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, Integer.parseInt(split[4]), null, Integer.parseInt(StringUtils.isEmpty(tableId) ? "0" : tableId));
-                    if (Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue())||
+                    if (Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue()) ||
                             Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue())
                     ) {
                         //没有表id就把任务id扔进去
@@ -165,6 +181,24 @@ public class MissionEndCenter {
                         } else {
                             pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
                         }
+                        // 通过管道id,查询关联表服务
+                        ResultEntity<List<BuildTableServiceDTO>> result = consumeServeiceClient.getTableListByPipelineId(Integer.valueOf(pipelineId));
+                        if (result != null && result.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(result.data)) {
+                            List<BuildTableServiceDTO> list = result.data;
+                            for (BuildTableServiceDTO buildTableService : list) {
+                                KafkaReceiveDTO kafkaRkeceive = KafkaReceiveDTO.builder().build();
+                                kafkaRkeceive.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.DATASERVICES.getValue() + ".0." + buildTableService.id;
+                                kafkaRkeceive.start_time = simpleDateFormat.format(new Date());
+                                kafkaRkeceive.pipelTaskTraceId = UUID.randomUUID().toString();
+                                kafkaRkeceive.fidata_batch_code = kafkaRkeceive.pipelTaskTraceId;
+                                kafkaRkeceive.pipelStageTraceId = UUID.randomUUID().toString();
+                                kafkaRkeceive.ifTaskStart = true;
+                                kafkaRkeceive.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
+                                //pc.universalPublish(kafkaRkeceiveDTO);
+                                log.info("表服务关联触发流程参数:{}", JSON.toJSONString(kafkaRkeceive));
+                                kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaRkeceive));
+                            }
+                        }
                         iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
                     }
 
@@ -174,6 +208,24 @@ public class MissionEndCenter {
                         String format = simpleDateFormat.format(new Date());
                         taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + format + " - 同步条数 : " + (Objects.isNull(kafkaReceive.numbers) ? 0 : kafkaReceive.numbers));
                         iPipelTaskLog.savePipelTaskLog(null, null, kafkaReceive.pipelTaskTraceId, taskMap, null, split[5], Integer.parseInt(split[3]));
+                        //-------------------------------------------------------------
+                        if (Objects.equals(Integer.parseInt(split[3]), OlapTableEnum.DATASERVICES.getValue())) {
+                            // 通过表id查询下半执行语句
+                            ResultEntity<BuildTableServiceDTO> buildTableService = consumeServeiceClient.getBuildTableServiceById(Integer.parseInt(split[5]));
+                            if (Objects.nonNull(buildTableService)) {
+                                BuildTableServiceDTO tableService = buildTableService.data;
+                                if (tableService != null && tableService.syncModeDTO != null && !StringUtils.isEmpty(tableService.syncModeDTO.customScriptAfter)) {
+                                    String customScriptAfter = tableService.syncModeDTO.customScriptAfter;
+                                    Integer targetDbId = tableService.targetDbId;
+                                    log.info("开始执行脚本:{},{}", customScriptAfter, targetDbId);
+                                    execSql(customScriptAfter, targetDbId);
+                                }
+
+                            } else {
+                                log.info("没有aftersql或者查询错误");
+                            }
+                        }
+                        //-------------------------------------------------------------
                     }
                 }
             }
@@ -186,11 +238,38 @@ public class MissionEndCenter {
         }
 
 
+    }
 
+    public void execSql(String customScriptAfter, Integer targetDbId) {
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(targetDbId);
+        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+            DataSourceDTO dataSource = fiDataDataSource.data;
+            Connection conn = null;
+            Statement st = null;
+            try {
+                Class.forName(dataSource.conType.getDriverName());
+                conn = DriverManager.getConnection(dataSource.conStr, dataSource.conAccount, dataSource.conPassword);
+                st = conn.createStatement();
+                //无需判断ddl语句执行结果,因为如果执行失败会进catch
+                log.info("开始执行脚本:{}", customScriptAfter);
+                st.execute(customScriptAfter);
+            } catch (Exception e) {
+                log.error(StackTraceHelper.getStackTraceInfo(e));
+                throw new FkException(ResultEnum.ERROR);
+            } finally {
+                try {
+                    st.close();
+                    conn.close();
+                } catch (SQLException e) {
+                    log.error(StackTraceHelper.getStackTraceInfo(e));
+                    throw new FkException(ResultEnum.ERROR);
+                }
 
-
-
-
+            }
+        } else {
+            log.error("userclient无法查询到目标库的连接信息");
+            throw new FkException(ResultEnum.ERROR);
+        }
 
     }
 
