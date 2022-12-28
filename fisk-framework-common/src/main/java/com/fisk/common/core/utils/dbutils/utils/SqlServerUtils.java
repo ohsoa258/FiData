@@ -115,7 +115,7 @@ public class SqlServerUtils {
 
             for (int i = 1; i <= columnCount; i++) {
                 TableColumnDTO dto = new TableColumnDTO();
-                dto.fieldName = metaData.getColumnLabel(i);
+                dto.fieldName = metaData.getColumnName(i);
                 dto.fieldType = metaData.getColumnTypeName(i).toLowerCase();
                 colNameList.add(dto);
             }
