@@ -27,6 +27,8 @@ import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -67,6 +69,7 @@ import com.fisk.dataaccess.vo.pgsql.TableListVO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
@@ -90,6 +93,8 @@ import java.sql.*;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -147,6 +152,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private TableSyncmodeImpl tableSyncmodeImpl;
     @Resource
     private FtpImpl ftpImpl;
+    @Resource
+    private DataManageClient dataManageClient;
     @Resource
     GetConfigDTO getConfig;
 
@@ -1544,7 +1551,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // dto -> po
         TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
 
-        synchronousMetadata(po.appId, po.id);
+        synchronousMetadata(po.appId, po);
         /*if (po.getTableName() == null) {
             po.setTableName("");
         }*/
@@ -1556,15 +1563,47 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * 同步元数据
      *
      * @param appId
-     * @param tableId
      */
-    public void synchronousMetadata(long appId, long tableId) {
+    public void synchronousMetadata(long appId, TableAccessPO po) {
         AppRegistrationPO registrationPO = appRegistrationMapper.selectById(appId);
         if (registrationPO == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
-        tableFieldsImpl.buildMetaDataInstanceAttribute(registrationPO, tableId, 2);
+        AppDataSourcePO dataSourcePO = appDataSourceMapper.selectById(appId);
+        if (dataSourcePO == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        List<MetaDataInstanceAttributeDTO> list = appRegistrationImpl.addDataSourceMetaData(registrationPO, dataSourcePO);
+
+        List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
+
+        MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+        table.setQualifiedName(list.get(0).dbList.get(0).qualifiedName + "_" + po.id);
+        table.setName(po.tableName);
+        table.setComment(String.valueOf(appId));
+        table.setDisplayName(po.displayName);
+        table.setOwner(registrationPO.appPrincipal);
+        tableList.add(table);
+
+        list.get(0).dbList.get(0).tableList = tableList;
+
+
+        //修改元数据
+        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+        cachedThreadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // 更新元数据内容
+                    log.info("维度表构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+                    dataManageClient.consumeMetaData(list);
+                } catch (Exception e) {
+                    log.error("【dataManageClient.MetaData()】方法报错,ex", e);
+                }
+            }
+        });
 
     }
 
