@@ -180,8 +180,8 @@ public class KafkaConsumer {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, consumerBootstrapServer);
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, enableAutoCommit);
-        //props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "100");
-        //props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "15000");
+        props.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, "3000");
+        props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valueDeserializer);
         props.put("fetch.message.max.bytes", "6291456");
