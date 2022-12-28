@@ -209,9 +209,12 @@ public class MissionEndCenter {
                         taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + format + " - 同步条数 : " + (Objects.isNull(kafkaReceive.numbers) ? 0 : kafkaReceive.numbers));
                         iPipelTaskLog.savePipelTaskLog(null, null, kafkaReceive.pipelTaskTraceId, taskMap, null, split[5], Integer.parseInt(split[3]));
                         //-------------------------------------------------------------
+                        log.info("开始执行脚本");
                         if (Objects.equals(Integer.parseInt(split[3]), OlapTableEnum.DATASERVICES.getValue())) {
                             // 通过表id查询下半执行语句
+                            log.info("确定是表服务");
                             ResultEntity<BuildTableServiceDTO> buildTableService = consumeServeiceClient.getBuildTableServiceById(Integer.parseInt(split[5]));
+                            log.info("请求afteraql返回结果:{}", JSON.toJSONString(buildTableService));
                             if (Objects.nonNull(buildTableService)) {
                                 BuildTableServiceDTO tableService = buildTableService.data;
                                 if (tableService != null && tableService.syncModeDTO != null && !StringUtils.isEmpty(tableService.syncModeDTO.customScriptAfter)) {
