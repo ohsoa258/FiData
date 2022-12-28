@@ -98,8 +98,13 @@ public class TableServiceImpl
         dto.tableSyncMode.type = AppServiceTypeEnum.TABLE.getValue();
         tableSyncMode.tableServiceTableSyncMode(dto.tableSyncMode);
 
+        BuildTableServiceDTO buildTableServiceDTO = buildParameter(dto);
+
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        buildTableServiceDTO.userId = userInfo.id;
+
         //推送task
-        publishTaskClient.publishBuildDataServices(buildParameter(dto));
+        publishTaskClient.publishBuildDataServices(buildTableServiceDTO);
 
         return ResultEnum.SUCCESS;
     }
@@ -221,9 +226,6 @@ public class TableServiceImpl
         data.fieldDtoList = dto.tableFieldList;
         //同步配置
         data.syncModeDTO = dto.tableSyncMode;
-
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-        data.userId = userInfo.id;
 
         if (StringUtils.isBlank(data.syncModeDTO.customScriptAfter)) {
             data.syncModeDTO.customScriptAfter = "select 'fisk' as fisk";
