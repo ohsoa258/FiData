@@ -27,6 +27,7 @@ import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDbAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
@@ -1565,8 +1566,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @param appId
      */
     public void synchronousMetadata(long appId, TableAccessPO po) {
-        AppRegistrationPO registrationPO = appRegistrationMapper.selectById(appId);
-        if (registrationPO == null) {
+        AppRegistrationPO app = appRegistrationMapper.selectById(appId);
+        if (app == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
@@ -1575,16 +1576,60 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
-        List<MetaDataInstanceAttributeDTO> list = appRegistrationImpl.addDataSourceMetaData(registrationPO, dataSourcePO);
+        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(app.targetDbId);
+        if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+
+        List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
+
+        // 实例
+        String rdbmsType = dataSourceConfig.data.conType.getName();
+        String platform = dataSourceConfig.data.platform;
+        String hostname = dataSourceConfig.data.conIp;
+        String port = dataSourceConfig.data.conPort.toString();
+        String protocol = dataSourceConfig.data.protocol;
+        String dbName = dataSourceConfig.data.conDbname;
+        MetaDataInstanceAttributeDTO instance = new MetaDataInstanceAttributeDTO();
+        instance.setRdbms_type(rdbmsType);
+        instance.setPlatform(platform);
+        instance.setHostname(hostname);
+        instance.setPort(port);
+        instance.setProtocol(protocol);
+        instance.setQualifiedName(hostname);
+        instance.setName(hostname);
+        instance.setContact_info(app.getAppPrincipal());
+        instance.setDescription(app.getAppDes());
+        instance.setComment(app.getAppDes());
+        instance.setOwner(app.createUser);
+        instance.setDisplayName(hostname);
+
+        // 库
+        List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
+        MetaDataDbAttributeDTO db = new MetaDataDbAttributeDTO();
+        db.setQualifiedName(hostname + "_" + dbName);
+        db.setName(dbName);
+        db.setContact_info(app.getAppPrincipal());
+        db.setDescription(app.getAppDes());
+        db.setComment(app.getAppDes());
+        db.setOwner(app.createUser);
+        db.setDisplayName(dbName);
+        db.setTableList(new ArrayList<>());
+        dbList.add(db);
+        instance.setDbList(dbList);
+        list.add(instance);
 
         List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
 
         MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
         table.setQualifiedName(list.get(0).dbList.get(0).qualifiedName + "_" + po.id);
-        table.setName(po.tableName);
+        table.setName(TableNameGenerateUtils.buildOdsTableName(po.getTableName(),
+                app.appAbbreviation,
+                app.whetherSchema));
         table.setComment(String.valueOf(appId));
         table.setDisplayName(po.displayName);
-        table.setOwner(registrationPO.appPrincipal);
+        table.setOwner(app.appPrincipal);
+        table.setDescription(po.tableDes);
         tableList.add(table);
 
         list.get(0).dbList.get(0).tableList = tableList;
