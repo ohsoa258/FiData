@@ -203,6 +203,11 @@ public class TableServiceImpl
         data.tableName = dto.tableService.tableName;
         data.sqlScript = dto.tableService.sqlScript;
         data.targetTable = dto.tableService.targetTable;
+
+        if (data.tableName.indexOf(".") > 1) {
+            data.schemaName = data.tableName.split("\\.")[0];
+        }
+
         //表字段
         data.fieldDtoList = dto.tableFieldList;
         //同步配置
@@ -213,6 +218,5 @@ public class TableServiceImpl
 
         return data;
     }
-
 
 }

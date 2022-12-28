@@ -26,6 +26,11 @@ public class BuildTableServiceDTO extends MQBaseDTO {
     public String tableName;
 
     /**
+     * schema名称
+     */
+    public String schemaName;
+
+    /**
      * 目标数据源id
      */
     public Integer targetDbId;
