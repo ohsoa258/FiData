@@ -1,6 +1,7 @@
 package com.fisk.dataservice.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
@@ -167,10 +168,10 @@ public class TableServiceImpl
 
     @Override
     public BuildTableServiceDTO getBuildTableServiceById(long id) {
+
         TableServiceSaveDTO data = getTableServiceById(id);
 
         return buildParameter(data);
-
     }
 
     /**
@@ -223,6 +224,14 @@ public class TableServiceImpl
 
         UserInfo userInfo = userHelper.getLoginUserInfo();
         data.userId = userInfo.id;
+
+        if (StringUtils.isBlank(data.syncModeDTO.customScriptAfter)) {
+            data.syncModeDTO.customScriptAfter = "select 'fisk' as fisk";
+        }
+
+        if (StringUtils.isBlank(data.syncModeDTO.customScriptBefore)) {
+            data.syncModeDTO.customScriptBefore = "select 'fisk' as fisk";
+        }
 
         return data;
     }
