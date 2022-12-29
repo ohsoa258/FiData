@@ -1,7 +1,7 @@
 package com.fisk.dataaccess.test;
 
 import com.fisk.common.core.utils.Dto.sftp.ExcelTreeDTO;
-import com.fisk.common.core.utils.sftp.;
+import com.fisk.common.core.utils.sftp.SftpUtils;
 import com.fisk.dataaccess.entity.NifiConfigPO;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.dataaccess.enums.FtpFileTypeEnum;
@@ -24,12 +24,12 @@ import javax.annotation.Resource;
 @RunWith(SpringRunner.class)
 public class SftpTest {
 
-//    @Test
-//    public void test1(){
-//        ChannelSftp sftp = SftpUtils.connect("192.168.21.21", 22, "sftp", "password01!", "");
-//
-//        SftpUtils utils = new SftpUtils();
-//        ExcelTreeDTO list = utils.getFile(sftp, "/", "xlsx");
-//        System.out.println(list);
-//    }
+    @Test
+    public void test1(){
+        ChannelSftp sftp = SftpUtils.connect("192.168.21.21", 22, "sftp", "password01!", "");
+
+        SftpUtils utils = new SftpUtils();
+        ExcelTreeDTO list = utils.getFile(sftp, "/", "xlsx");
+        System.out.println(list);
+    }
 }

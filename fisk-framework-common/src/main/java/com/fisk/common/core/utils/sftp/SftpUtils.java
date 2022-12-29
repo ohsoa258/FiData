@@ -505,7 +505,7 @@ public class SftpUtils {
             if (StringUtils.isEmpty(rsaPath)){
                 throw new FkException(ResultEnum.SFTP_RSA_IS_NULL);
             }
-            return connect(host, port, userName, pw, rsaPath);
+            sftp = connect(host, port, userName, pw, rsaPath);
         }else{
             // 密码认证
             if (StringUtils.isEmpty(userName) || StringUtils.isEmpty(pw)){
