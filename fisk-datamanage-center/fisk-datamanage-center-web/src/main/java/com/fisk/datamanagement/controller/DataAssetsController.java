@@ -14,6 +14,10 @@ import io.swagger.annotations.ApiOperation;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.streaming.SXSSFRow;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -63,15 +67,67 @@ public class DataAssetsController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, assetsDirectory.assetsDirectoryData());
     }
 
+//    /**
+//     * @param result
+//     * @param tableName
+//     * @throws IOException
+//     */
+//    public void exportTable(DataAssetsResultDTO result, String tableName) {
+//        HSSFWorkbook workbook = new HSSFWorkbook();
+//        HSSFSheet sheet = workbook.createSheet(tableName);
+//        HSSFRow row1 = sheet.createRow(0);
+//        for (int i = 0; i < result.columnList.size(); i++) {
+//            row1.createCell(i).setCellValue(result.columnList.get(i)[0]);
+//        }
+//
+//        //记录额外创建的sheet数量
+//        Integer index = 0;
+//        for (int i = 0; i < result.dataArray.size(); i++) {
+//            if ((i + 1) % max_row == 0) {
+//                sheet = workbook.createSheet(tableName + index);
+//                row1 = sheet.createRow(0);
+//                for (int j = 0; j < result.columnList.size(); j++) {
+//                    row1.createCell(j).setCellValue(result.columnList.get(j)[0]);
+//                }
+//                index++;
+//            }
+//            row1 = sheet.createRow((i + 1) - (index * max_row));
+//            JSONObject jsonObject = JSONObject.parseObject(result.dataArray.get(i).toString());
+//            for (int j = 0; j < result.columnList.size(); j++) {
+//                Object o = jsonObject.get(result.columnList.get(j)[0]);
+//                if (o == null) {
+//                    continue;
+//                }
+//                row1.createCell(j).setCellValue(o.toString());
+//            }
+//
+//        }
+//
+//        //将文件存到指定位置
+//        try {
+//            //输出Excel文件
+//            OutputStream output = response.getOutputStream();
+//            response.reset();
+//            response.setHeader("Content-disposition", "attachment; filename=" + tableName + ".xls");
+//            response.setContentType("application/x-xls");
+//            workbook.write(output);
+//            output.close();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//    }
+
     /**
+     * 导出Excel数据优化
+     *
      * @param result
      * @param tableName
-     * @throws IOException
      */
     public void exportTable(DataAssetsResultDTO result, String tableName) {
-        HSSFWorkbook workbook = new HSSFWorkbook();
-        HSSFSheet sheet = workbook.createSheet(tableName);
-        HSSFRow row1 = sheet.createRow(0);
+        SXSSFWorkbook workbook = new SXSSFWorkbook();
+        Sheet sheet = workbook.createSheet(tableName);
+        SXSSFRow row1 = (SXSSFRow) sheet.createRow(0);
         for (int i = 0; i < result.columnList.size(); i++) {
             row1.createCell(i).setCellValue(result.columnList.get(i)[0]);
         }
@@ -81,13 +137,13 @@ public class DataAssetsController {
         for (int i = 0; i < result.dataArray.size(); i++) {
             if ((i + 1) % max_row == 0) {
                 sheet = workbook.createSheet(tableName + index);
-                row1 = sheet.createRow(0);
+                row1 = (SXSSFRow) sheet.createRow(0);
                 for (int j = 0; j < result.columnList.size(); j++) {
                     row1.createCell(j).setCellValue(result.columnList.get(j)[0]);
                 }
                 index++;
             }
-            row1 = sheet.createRow((i + 1) - (index * max_row));
+            row1 = (SXSSFRow) sheet.createRow((i + 1) - (index * max_row));
             JSONObject jsonObject = JSONObject.parseObject(result.dataArray.get(i).toString());
             for (int j = 0; j < result.columnList.size(); j++) {
                 Object o = jsonObject.get(result.columnList.get(j)[0]);
@@ -104,7 +160,7 @@ public class DataAssetsController {
             //输出Excel文件
             OutputStream output = response.getOutputStream();
             response.reset();
-            response.setHeader("Content-disposition", "attachment; filename=" + tableName + ".xls");
+            response.setHeader("Content-disposition", "attachment; filename=" + tableName + ".xlsx");
             response.setContentType("application/x-xls");
             workbook.write(output);
             output.close();
