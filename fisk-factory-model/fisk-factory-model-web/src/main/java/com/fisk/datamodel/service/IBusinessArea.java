@@ -3,6 +3,7 @@ package com.fisk.datamodel.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
@@ -157,5 +158,13 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @return
      */
     List<AppBusinessInfoDTO> getBusinessAreaList();
+
+    /**
+     * 获取当前业务域下所有发布成功表
+     *
+     * @param businessId
+     * @return
+     */
+    List<TableNameDTO> getPublishSuccessTab(Integer businessId);
 
 }

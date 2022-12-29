@@ -8,6 +8,8 @@ import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
+import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.datamodel.BuildDataModelHelper;
@@ -149,8 +151,7 @@ public class DimensionImpl
                 throw new FkException(ResultEnum.TABLE_IS_EXIST);
             }
             int flat = stat.executeUpdate(buildTableSql(dto.dimensionTabName));
-            if (flat>=0)
-            {
+            if (flat>=0) {
                 String strSql = insertTableDataSql(dto.dimensionTabName, dto.startTime, dto.endTime);
                 stat.addBatch(strSql);
                 stat.executeBatch();
@@ -245,8 +246,7 @@ public class DimensionImpl
                         + calendarQuarter + ","
                         + calendarYear + ")"
                 );
-            }
-            else {
+            } else {
                 str.append(",('"+reStr+"',"
                         +dayNumberOfWeek+",'"
                         +englishDayNameOfWeek+"',"
@@ -269,11 +269,9 @@ public class DimensionImpl
      * @param dayNumberOfWeek
      * @return
      */
-    public String getEnglishDayNameOfWeek(int dayNumberOfWeek)
-    {
+    public String getEnglishDayNameOfWeek(int dayNumberOfWeek) {
         String name="";
-        switch (dayNumberOfWeek)
-        {
+        switch (dayNumberOfWeek) {
             case 1:
                 name="Monday";
                 break;
@@ -305,8 +303,7 @@ public class DimensionImpl
      * @param currentMonth
      * @return
      */
-    public int getCurrentMonth(int currentMonth)
-    {
+    public int getCurrentMonth(int currentMonth) {
         int dt = 0;
         if (currentMonth >= Calendar.JANUARY && currentMonth <= Calendar.MARCH) {
             dt = 1;
@@ -502,8 +499,7 @@ public class DimensionImpl
      * @param dimensionId
      * @return
      */
-    public DataModelVO niFiDelProcess(int businessAreaId,int dimensionId)
-    {
+    public DataModelVO niFiDelProcess(int businessAreaId,int dimensionId) {
         DataModelVO vo=new DataModelVO();
         vo.businessId= String.valueOf(businessAreaId);
         vo.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
@@ -522,8 +518,7 @@ public class DimensionImpl
      * @param dimensionName
      * @return
      */
-    public PgsqlDelTableDTO delDwDorisTable(String dimensionName)
-    {
+    public PgsqlDelTableDTO delDwDorisTable(String dimensionName) {
         PgsqlDelTableDTO dto=new PgsqlDelTableDTO();
         dto.businessTypeEnum= BusinessTypeEnum.DATAMODEL;
         dto.delApp=false;
@@ -537,8 +532,7 @@ public class DimensionImpl
     }
 
     @Override
-    public DimensionDTO getDimension(int id)
-    {
+    public DimensionDTO getDimension(int id) {
         DimensionPO po=mapper.selectById(id);
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -547,8 +541,7 @@ public class DimensionImpl
     }
 
     @Override
-    public ResultEnum updateDimensionSql(DimensionSqlDTO dto)
-    {
+    public ResultEnum updateDimensionSql(DimensionSqlDTO dto) {
         DimensionPO model = mapper.selectById(dto.id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
@@ -559,8 +552,7 @@ public class DimensionImpl
     }
 
     @Override
-    public List<DimensionMetaDTO>getDimensionNameList(DimensionQueryDTO dto)
-    {
+    public List<DimensionMetaDTO>getDimensionNameList(DimensionQueryDTO dto) {
         QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.orderByDesc("create_time").lambda().eq(DimensionPO::getBusinessId,dto.businessAreaId);
         if (dto.dimensionId != 0) {
@@ -618,8 +610,7 @@ public class DimensionImpl
     }
 
     @Override
-    public DimensionDateAttributeDTO getDimensionDateAttribute(int businessId)
-    {
+    public DimensionDateAttributeDTO getDimensionDateAttribute(int businessId) {
         DimensionDateAttributeDTO data=new DimensionDateAttributeDTO();
         //查询设置时间维度表
         QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
@@ -808,6 +799,43 @@ public class DimensionImpl
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         return DimensionMap.INSTANCES.poToDto(po);
+    }
+
+    @Override
+    public List<TableNameDTO> getPublishSuccessDimTable(Integer businessId) {
+        List<DimensionPO> list = this.query()
+                .select("dimension_tab_name", "business_id", "id")
+                .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
+                .eq("business_id", businessId)
+                .or()
+                .eq("share", true)
+                .list();
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+
+        List<TableNameDTO> data = new ArrayList<>();
+        for (DimensionPO po : list) {
+            TableNameDTO dto = new TableNameDTO();
+            dto.tableName = po.dimensionTabName;
+
+            DimensionAttributeListDTO dimensionAttributeList = dimensionAttributeImpl.getDimensionAttributeList((int) po.id);
+            if (CollectionUtils.isEmpty(dimensionAttributeList.attributeDTOList)) {
+                continue;
+            }
+            List<TableColumnDTO> columnList = new ArrayList<>();
+            for (DimensionAttributeDTO item : dimensionAttributeList.attributeDTOList) {
+                TableColumnDTO column = new TableColumnDTO();
+                column.fieldName = item.dimensionFieldEnName;
+                columnList.add(column);
+            }
+
+            dto.columnList = columnList;
+
+            data.add(dto);
+        }
+
+        return data;
     }
 
 }

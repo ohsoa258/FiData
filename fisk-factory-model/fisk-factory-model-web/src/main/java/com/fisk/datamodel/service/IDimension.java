@@ -2,6 +2,7 @@ package com.fisk.datamodel.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimension.DimensionDateAttributeDTO;
 import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
@@ -87,6 +88,14 @@ public interface IDimension extends IService<DimensionPO> {
      * @return
      */
     DimensionDTO getDimensionByName(String tableName);
+
+    /**
+     * 获取发布成功的维度表
+     *
+     * @param businessId
+     * @return
+     */
+    List<TableNameDTO> getPublishSuccessDimTable(Integer businessId);
 
     //void asyncSynchronousMetadata(DimensionPO model);
 

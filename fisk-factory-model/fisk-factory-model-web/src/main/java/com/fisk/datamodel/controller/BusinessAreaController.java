@@ -136,4 +136,11 @@ public class BusinessAreaController {
     public ResultEntity<List<AppBusinessInfoDTO>> getBusinessAreaList() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessAreaList());
     }
+
+    @GetMapping("/getPublishSuccessTab/{businessId}")
+    @ApiOperation(value = "获取业务域下发布成功表")
+    public ResultEntity<Object> getPublishSuccessTab(@PathVariable("businessId") int businessId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getPublishSuccessTab(businessId));
+    }
+
 }

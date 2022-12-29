@@ -9,6 +9,8 @@ import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
+import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
@@ -386,6 +388,41 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         } catch (Exception e) {
             log.error("【dataManageClient.MetaData()】方法报错,ex", e);
         }*/
+    }
+
+    @Override
+    public List<TableNameDTO> getPublishSuccessFactTable(Integer businessId) {
+        List<FactPO> list = this.query()
+                .select("fact_tab_name", "business_id", "id")
+                .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
+                .eq("business_id", businessId)
+                .list();
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+
+        List<TableNameDTO> data = new ArrayList<>();
+        for (FactPO po : list) {
+            TableNameDTO dto = new TableNameDTO();
+            dto.tableName = po.factTabName;
+
+            FactAttributeDetailDTO factAttributeDataList = factAttributeImpl.getFactAttributeDataList((int) po.id);
+            if (CollectionUtils.isEmpty(factAttributeDataList.attributeDTO)) {
+                continue;
+            }
+            List<TableColumnDTO> columnList = new ArrayList<>();
+            for (FactAttributeDTO item : factAttributeDataList.attributeDTO) {
+                TableColumnDTO column = new TableColumnDTO();
+                column.fieldName = item.factFieldEnName;
+                columnList.add(column);
+            }
+
+            dto.columnList = columnList;
+
+            data.add(dto);
+        }
+
+        return data;
     }
 
     /**

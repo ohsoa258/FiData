@@ -10,7 +10,8 @@ import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.service.IDimension;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -78,8 +79,14 @@ public class DimensionController {
 
     @ApiOperation("修改维度发布状态")
     @PutMapping("/updateDimensionPublishStatus")
-    public void updateDimensionPublishStatus(@RequestBody ModelPublishStatusDTO dto){
+    public void updateDimensionPublishStatus(@RequestBody ModelPublishStatusDTO dto) {
         service.updateDimensionPublishStatus(dto);
+    }
+
+    @ApiOperation("获取发布成功所有维度表")
+    @GetMapping("/getPublishSuccessDimTable/{businessId}")
+    public ResultEntity<Object> getPublishSuccessDimTable(@PathVariable("businessId") int businessId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getPublishSuccessDimTable(businessId));
     }
 
 

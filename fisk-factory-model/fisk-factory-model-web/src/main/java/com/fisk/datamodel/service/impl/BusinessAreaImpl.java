@@ -12,6 +12,7 @@ import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
@@ -1069,6 +1070,17 @@ public class BusinessAreaImpl
         queryWrapper.lambda().select(BusinessAreaPO::getId, BusinessAreaPO::getBusinessName);
         return BusinessAreaMap.INSTANCES.poListToBusinessAreaInfo(mapper.selectList(queryWrapper));
 
+    }
+
+    @Override
+    public List<TableNameDTO> getPublishSuccessTab(Integer businessId) {
+        List<TableNameDTO> list = new ArrayList<>();
+
+        list.addAll(dimensionImpl.getPublishSuccessDimTable(businessId));
+
+        list.addAll(factImpl.getPublishSuccessFactTable(businessId));
+
+        return list;
     }
 
 }
