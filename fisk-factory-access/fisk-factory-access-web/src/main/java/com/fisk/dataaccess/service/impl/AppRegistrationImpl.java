@@ -176,13 +176,15 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             }
         }
 
-        //
-        List<String> realtimeAccountList = appDataSourceMapper.getRealtimeAccountList();
         AppDataSourceDTO datasourceDTO = appRegistrationDTO.getAppDatasourceDTO();
+
+        //
+        /* todo 不筛查连接账号是否重复
+        List<String> realtimeAccountList = appDataSourceMapper.getRealtimeAccountList(datasourceDTO.realtimeAccount);
         // 当前为实时应用
         if (po.appType == 0 && realtimeAccountList.contains(datasourceDTO.realtimeAccount)) {
             return ResultEntityBuild.build(ResultEnum.REALTIME_ACCOUNT_ISEXIST);
-        }
+        }*/
 
         // 保存tb_app_registration数据
         boolean save = this.save(po);
@@ -373,7 +375,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 实时应用
         if (po.appType == 0) {
             QueryWrapper<AppDataSourcePO> wrapper = new QueryWrapper<>();
-            wrapper.lambda().eq(AppDataSourcePO::getRealtimeAccount, appDatasourceDTO.realtimeAccount);
+            wrapper.lambda()
+                    .eq(AppDataSourcePO::getRealtimeAccount, appDatasourceDTO.realtimeAccount)
+                    .eq(AppDataSourcePO::getAppId, appDatasourceDTO.appId);
             AppDataSourcePO appDataSourcePo = appDataSourceMapper.selectOne(wrapper);
             if (appDataSourcePo != null && appDataSourcePo.id != appDatasourceDTO.id) {
                 return ResultEnum.REALTIME_ACCOUNT_ISEXIST;
