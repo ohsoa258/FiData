@@ -15,4 +15,6 @@ public class TableServicePageDataDTO {
      */
     public String displayName;
 
+    public Integer publish;
+
 }
