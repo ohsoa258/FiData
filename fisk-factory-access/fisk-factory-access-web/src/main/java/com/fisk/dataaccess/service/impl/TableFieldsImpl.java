@@ -18,7 +18,10 @@ import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.flinkupload.FlinkFactoryHelper;
 import com.fisk.common.service.flinkupload.IFlinkJobUpload;
-import com.fisk.common.service.metadata.dto.metadata.*;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDbAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
@@ -75,6 +78,8 @@ import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -337,7 +342,24 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             tableList.add(table);
         }
         list.get(0).dbList.get(0).tableList = tableList;
-        try {
+
+
+        //修改元数据
+        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+        cachedThreadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // 更新元数据内容
+                    log.info("维度表构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+                    dataManageClient.consumeMetaData(list);
+                } catch (Exception e) {
+                    log.error("【dataManageClient.MetaData()】方法报错,ex", e);
+                }
+            }
+        });
+
+        /*try {
             MetaDataAttributeDTO data = new MetaDataAttributeDTO();
             data.instanceList = list;
             data.userId = userHelper.getLoginUserInfo().id;
@@ -346,7 +368,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             dataManageClient.metaData(data);
         } catch (Exception e) {
             log.error("【dataManageClient.MetaData()】方法报错,ex", e);
-        }
+        }*/
 
     }
 
@@ -604,7 +626,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      * @author Lock
      * @date 2022/7/5 16:51
      */
-    private void buildMetaDataInstanceAttribute(AppRegistrationPO app, long accessId, int flag) {
+    public void buildMetaDataInstanceAttribute(AppRegistrationPO app, long accessId, int flag) {
 
         int apiType = 1;
         int tableType = 2;
@@ -749,7 +771,22 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
         list.add(instance);
 
-        try {
+
+        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+        cachedThreadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    log.info("构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
+                    dataManageClient.consumeMetaData(list);
+                } catch (Exception e) {
+                    // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
+                    log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
+                }
+            }
+        });
+
+        /*try {
             MetaDataAttributeDTO data = new MetaDataAttributeDTO();
             data.instanceList = list;
             data.userId = userHelper.getLoginUserInfo().id;
@@ -758,7 +795,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             dataManageClient.metaData(data);
         } catch (Exception e) {
             log.error("【dataManageClient.MetaData()】方法报错,ex", e);
-        }
+        }*/
     }
 
     /**

@@ -10,7 +10,10 @@ import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.metadata.dto.metadata.*;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
@@ -50,6 +53,8 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -345,6 +350,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         if (userListByIds.code == ResultEnum.SUCCESS.getCode()) {
             table.owner = userListByIds.data.get(0).getUsername();
         }*/
+
         //字段
         List<MetaDataColumnAttributeDTO> columnList = setFactField(dto, table);
         if (CollectionUtils.isEmpty(columnList)) {
@@ -355,7 +361,22 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         tableList.add(table);
         data.dbList.get(0).tableList = tableList;
         list.add(data);
-        try {
+
+        //修改元数据
+        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+        cachedThreadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // 更新元数据内容
+                    log.info("维度表构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+                    dataManageClient.consumeMetaData(list);
+                } catch (Exception e) {
+                    log.error("【dataManageClient.MetaData()】方法报错,ex", e);
+                }
+            }
+        });
+        /*try {
             MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
             metaDataAttribute.instanceList = list;
             metaDataAttribute.userId = Long.parseLong(fact.createUser);
@@ -364,7 +385,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             dataManageClient.metaData(metaDataAttribute);
         } catch (Exception e) {
             log.error("【dataManageClient.MetaData()】方法报错,ex", e);
-        }
+        }*/
     }
 
     /**

@@ -27,6 +27,9 @@ import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDbAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -67,6 +70,7 @@ import com.fisk.dataaccess.vo.pgsql.TableListVO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
@@ -90,6 +94,8 @@ import java.sql.*;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -106,9 +112,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Resource
     private TableFieldsMapper fieldsMapper;
     @Resource
+    private AppRegistrationMapper appRegistrationMapper;
+    @Resource
     private AppRegistrationImpl appRegistrationImpl;
     @Resource
     private AppRegistrationMapper registrationMapper;
+    @Resource
+    private AppDataSourceMapper appDataSourceMapper;
     @Resource
     private AppDataSourceImpl appDataSourceImpl;
     @Resource
@@ -143,6 +153,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private TableSyncmodeImpl tableSyncmodeImpl;
     @Resource
     private FtpImpl ftpImpl;
+    @Resource
+    private DataManageClient dataManageClient;
     @Resource
     GetConfigDTO getConfig;
 
@@ -1539,11 +1551,105 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // dto -> po
         TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
+
+        synchronousMetadata(po.appId, po);
         /*if (po.getTableName() == null) {
             po.setTableName("");
         }*/
         //po.setPublish(0);
         return this.saveOrUpdate(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+    }
+
+    /**
+     * 同步元数据
+     *
+     * @param appId
+     */
+    public void synchronousMetadata(long appId, TableAccessPO po) {
+        AppRegistrationPO app = appRegistrationMapper.selectById(appId);
+        if (app == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        AppDataSourcePO dataSourcePO = appDataSourceMapper.selectById(appId);
+        if (dataSourcePO == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(app.targetDbId);
+        if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+
+        List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
+
+        // 实例
+        String rdbmsType = dataSourceConfig.data.conType.getName();
+        String platform = dataSourceConfig.data.platform;
+        String hostname = dataSourceConfig.data.conIp;
+        String port = dataSourceConfig.data.conPort.toString();
+        String protocol = dataSourceConfig.data.protocol;
+        String dbName = dataSourceConfig.data.conDbname;
+        MetaDataInstanceAttributeDTO instance = new MetaDataInstanceAttributeDTO();
+        instance.setRdbms_type(rdbmsType);
+        instance.setPlatform(platform);
+        instance.setHostname(hostname);
+        instance.setPort(port);
+        instance.setProtocol(protocol);
+        instance.setQualifiedName(hostname);
+        instance.setName(hostname);
+        instance.setContact_info(app.getAppPrincipal());
+        instance.setDescription(app.getAppDes());
+        instance.setComment(app.getAppDes());
+        instance.setOwner(app.createUser);
+        instance.setDisplayName(hostname);
+
+        // 库
+        List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
+        MetaDataDbAttributeDTO db = new MetaDataDbAttributeDTO();
+        db.setQualifiedName(hostname + "_" + dbName);
+        db.setName(dbName);
+        db.setContact_info(app.getAppPrincipal());
+        db.setDescription(app.getAppDes());
+        db.setComment(app.getAppDes());
+        db.setOwner(app.createUser);
+        db.setDisplayName(dbName);
+        db.setTableList(new ArrayList<>());
+        dbList.add(db);
+        instance.setDbList(dbList);
+        list.add(instance);
+
+        List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
+
+        MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+        table.setQualifiedName(list.get(0).dbList.get(0).qualifiedName + "_" + po.id);
+        table.setName(TableNameGenerateUtils.buildOdsTableName(po.getTableName(),
+                app.appAbbreviation,
+                app.whetherSchema));
+        table.setComment(String.valueOf(appId));
+        table.setDisplayName(po.displayName);
+        table.setOwner(app.appPrincipal);
+        table.setDescription(po.tableDes);
+        tableList.add(table);
+
+        list.get(0).dbList.get(0).tableList = tableList;
+
+
+        //修改元数据
+        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+        cachedThreadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // 更新元数据内容
+                    log.info("维度表构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+                    dataManageClient.consumeMetaData(list);
+                } catch (Exception e) {
+                    log.error("【dataManageClient.MetaData()】方法报错,ex", e);
+                }
+            }
+        });
+
     }
 
     @Override
