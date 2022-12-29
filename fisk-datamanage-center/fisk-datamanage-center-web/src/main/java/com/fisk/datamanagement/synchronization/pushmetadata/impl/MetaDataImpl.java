@@ -131,6 +131,7 @@ public class MetaDataImpl implements IMetaData {
                     continue;
                 }
                 for (MetaDataTableAttributeDTO table : db.tableList) {
+                    String tableName = table.name;
                     String tableGuid = metaDataTable(table, dbGuid, db.name);
                     //新增stg表
                     String stgTableGuid = null;
@@ -153,7 +154,7 @@ public class MetaDataImpl implements IMetaData {
                     //删除
                     deleteMetaData(qualifiedNames, tableGuid);
                     //同步血缘
-                    synchronizationTableKinShip(db.name, tableGuid, table.name.replace(stg_suffix, ""), stgTableGuid); //, table.columnList);
+                    synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid); //, table.columnList);
                 }
             }
         }

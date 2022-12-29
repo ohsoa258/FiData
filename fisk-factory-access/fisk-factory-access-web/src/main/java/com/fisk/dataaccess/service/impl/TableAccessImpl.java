@@ -1552,7 +1552,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // dto -> po
         TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
 
-        synchronousMetadata(po.appId, po);
+        if (po.appId != null) {
+            synchronousMetadata(model.appId, po);
+        }
         /*if (po.getTableName() == null) {
             po.setTableName("");
         }*/

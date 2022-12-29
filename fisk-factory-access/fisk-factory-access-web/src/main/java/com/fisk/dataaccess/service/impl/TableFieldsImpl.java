@@ -215,7 +215,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         String versionSql = getVersionSql(syncmodePo);
 
         //新增元数据信息
-        odsMetaDataInfo(accessPo.appId, accessPo.sqlScript);
+        odsMetaDataInfo(accessPo.appId, dto.sqlScript);
 
         // 发布
         publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO);
@@ -299,7 +299,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 
         //新增元数据信息
-        odsMetaDataInfo(model.appId, model.sqlScript);
+        odsMetaDataInfo(model.appId, dto.sqlScript);
 
         // 发布
         publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO);
@@ -314,6 +314,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      * @param sql
      */
     public void odsMetaDataInfo(long appId, String sql) {
+
+        if (StringUtils.isEmpty(sql)) {
+            return;
+        }
+
         AppRegistrationPO registrationPO = appRegistrationMapper.selectById(appId);
         if (registrationPO == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
