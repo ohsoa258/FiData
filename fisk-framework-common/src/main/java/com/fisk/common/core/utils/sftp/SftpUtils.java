@@ -1,5 +1,6 @@
 package com.fisk.common.core.utils.sftp;
 
+import com.fisk.common.core.enums.sftp.SftpAuthTypeEnum;
 import com.fisk.common.core.enums.sftp.SortTypeEnum;
 import com.fisk.common.core.enums.sftp.SortTypeNameEnum;
 import com.fisk.common.core.response.ResultEnum;
@@ -9,6 +10,7 @@ import com.fisk.common.core.utils.Dto.sftp.FilePropertySortDTO;
 import com.fisk.common.core.utils.Dto.sftp.FileTreeSortDTO;
 import com.fisk.common.framework.exception.FkException;
 import com.jcraft.jsch.*;
+import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -447,11 +449,13 @@ public class SftpUtils {
      * @param rUserName 源sftp用户名
      * @param rPw 源sftp密码
      * @param rKey 源sftp-rsa文件路径
+     * @param rAuthType 源sftp认证类型
      * @param tHost 目标sftp端口
      * @param tPort 目标sftp端口
      * @param tUserName 目标sftp用户名
      * @param tPw 目标sftp密码
      * @param tKey 目标sftp-rsa文件路径
+     * @param tAuthType 目标sftp认证类型
      * @param sortTypeName 排序类型（1：文件名，2：时间）
      * @param sortType 排序顺序类型（1：正序，2：默认，3：倒序）
      * @param index 需要复制的第几个文件
@@ -461,8 +465,8 @@ public class SftpUtils {
      * @throws SftpException
      * @throws IOException
      */
-    public static void copyFile(String rHost, Integer rPort, String rUserName, String rPw, String rKey,
-                         String tHost, Integer tPort, String tUserName, String tPw, String tKey,
+    public static void copyFile(String rHost, Integer rPort, String rUserName, String rPw, String rKey, Integer rAuthType,
+                         String tHost, Integer tPort, String tUserName, String tPw, String tKey, Integer tAuthType,
                          Integer sortTypeName, Integer sortType, Integer index, String currDir,
                          String targetDir, String targetFileName){
         InputStream ins = null;
@@ -471,9 +475,11 @@ public class SftpUtils {
         try{
             // 初始化sftp连接
             log.info("开始连接数据源");
-            currSftp = connect(rHost, rPort, rUserName, rPw, rKey);
+            currSftp = getSftpConnect(rAuthType, rUserName, rPw, rKey, rHost, rPort);
+
             log.info("数据源连接成功,开始连接目标数据");
-            targetSftp = connect(tHost, tPort, tUserName, tPw, tKey);
+            targetSftp = getSftpConnect(tAuthType, tUserName, tPw, tKey, tHost, tPort);
+
             log.info("目标数据源连接成功,开始获取字节流");
             // 获取文件字节流
             ins = getFileInputStream(currSftp, sortTypeName, sortType, index, currDir);
@@ -489,6 +495,25 @@ public class SftpUtils {
             disconnect(currSftp);
             disconnect(targetSftp);
         }
+    }
+
+    private static ChannelSftp getSftpConnect(Integer authType, String userName, String pw, String rsaPath,
+                                       String host, Integer port){
+        ChannelSftp sftp = null;
+        if (authType == SftpAuthTypeEnum.RSA_AUTH.getValue()){
+            // 密钥认证
+            if (StringUtils.isEmpty(rsaPath)){
+                throw new FkException(ResultEnum.SFTP_RSA_IS_NULL);
+            }
+            return connect(host, port, userName, pw, rsaPath);
+        }else{
+            // 密码认证
+            if (StringUtils.isEmpty(userName) || StringUtils.isEmpty(pw)){
+                throw new FkException(ResultEnum.SFTP_ACCOUNT_IS_NULL);
+            }
+            sftp = connect(host, port, userName, pw, null);
+        }
+        return sftp;
     }
 
 
