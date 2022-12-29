@@ -1005,7 +1005,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
        /* ProcessorEntity dispatchProcessor = new ProcessorEntity();
         ProcessorEntity publishKafkaProcessor = new ProcessorEntity();*/
         String inputPortId = "";
-        //createPublishKafkaProcessor(config, dto, groupId, 2);
+        createPublishKafkaProcessor(config, dto, groupId, 2, false);
         /*if (dto.groupStructureId == null) {
             dispatchProcessor = queryDispatchProcessor(config, groupId, cfgDbPoolId);
             //发送消息PublishKafka
@@ -1339,7 +1339,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //发送消息PublishKafka
         ProcessorEntity processorEntity2 = convertJsonProcessor(groupId, 0, 2);
         res.add(processorEntity2);
-        ProcessorEntity publishKafkaProcessor = createPublishKafkaProcessor(config, dto, groupId, 2);
+        ProcessorEntity publishKafkaProcessor = createPublishKafkaProcessor(config, dto, groupId, 2, true);
         componentConnector(groupId, dispatchProcessor.getId(), processorEntity2.getId(), AutoEndBranchTypeEnum.SUCCESS);
         componentConnector(groupId, processorEntity2.getId(), publishKafkaProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //原变量字段
@@ -2824,7 +2824,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      * @param dto
      * @return 组件对象
      */
-    public ProcessorEntity createPublishKafkaProcessor(DataAccessConfigDTO configDTO, BuildNifiFlowDTO dto, String groupId, int position) {
+    public ProcessorEntity createPublishKafkaProcessor(DataAccessConfigDTO configDTO, BuildNifiFlowDTO dto, String groupId, int position, boolean createProcessor) {
         BuildPublishKafkaProcessorDTO buildPublishKafkaProcessorDTO = new BuildPublishKafkaProcessorDTO();
         Map<String, String> variable = new HashMap<>();
         variable.put(ComponentIdTypeEnum.KAFKA_BROKERS.getName(), KafkaBrokers);
@@ -2849,9 +2849,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         }
         tableTopicService.updateTableTopic(tableTopicDTO);
         buildPublishKafkaProcessorDTO.TopicName = MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW;
-        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
-        verifyProcessorResult(processorEntityBusinessResult);
-        return processorEntityBusinessResult.data;
+        if (createProcessor) {
+            BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
+            verifyProcessorResult(processorEntityBusinessResult);
+            return processorEntityBusinessResult.data;
+        }
+        return null;
+
     }
 
 
