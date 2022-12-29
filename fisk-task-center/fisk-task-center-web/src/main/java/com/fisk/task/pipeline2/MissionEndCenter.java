@@ -213,7 +213,7 @@ public class MissionEndCenter {
                         if (Objects.equals(Integer.parseInt(split[3]), OlapTableEnum.DATASERVICES.getValue())) {
                             // 通过表id查询下半执行语句
                             log.info("确定是表服务");
-                            ResultEntity<BuildTableServiceDTO> buildTableService = consumeServeiceClient.getBuildTableServiceById(Integer.parseInt(split[5]));
+                            ResultEntity<BuildTableServiceDTO> buildTableService = consumeServeiceClient.getBuildTableServiceById(Long.parseLong(split[5]));
                             log.info("请求afteraql返回结果:{}", JSON.toJSONString(buildTableService));
                             if (Objects.nonNull(buildTableService)) {
                                 BuildTableServiceDTO tableService = buildTableService.data;
