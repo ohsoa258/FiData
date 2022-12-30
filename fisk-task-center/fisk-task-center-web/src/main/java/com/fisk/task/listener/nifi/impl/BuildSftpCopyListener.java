@@ -68,18 +68,22 @@ public class BuildSftpCopyListener implements ISftpCopyListener {
                         .collect(Collectors.toMap(TaskSettingDTO::getSettingKey, TaskSettingDTO::getValue));
                 // 执行sftp文件复制任务
                 log.info("开始执行复制方法,连接配置:{}", JSON.toJSONString(map));
-                SftpUtils.copyFile(map.get(TaskSettingEnum.sftp_source_ip.getAttributeName()), 22,
+                SftpUtils.copyFile(
+                        map.get(TaskSettingEnum.sftp_source_ip.getAttributeName()), 22,
                         map.get(TaskSettingEnum.sftp_source_account.getAttributeName()),
                         map.get(TaskSettingEnum.sftp_source_password.getAttributeName()),
                         map.get(TaskSettingEnum.sftp_source_rsa_file_path.getAttributeName()),
                         Integer.parseInt(map.get(TaskSettingEnum.sftp_source_authentication_type.getAttributeName())),
+
                         map.get(TaskSettingEnum.sftp_target_ip.getAttributeName()), 22,
                         map.get(TaskSettingEnum.sftp_target_account.getAttributeName()),
                         map.get(TaskSettingEnum.sftp_target_password.getAttributeName()),
                         map.get(TaskSettingEnum.sftp_target_rsa_file_path.getAttributeName()),
                         Integer.parseInt(map.get(TaskSettingEnum.sftp_target_authentication_type.getAttributeName())),
-                        Integer.valueOf(map.get(TaskSettingEnum.sftp_source_sortord.getAttributeName())),
+
                         Integer.valueOf(map.get(TaskSettingEnum.sftp_source_ordering_rule.getAttributeName())),
+                        Integer.valueOf(map.get(TaskSettingEnum.sftp_source_sortord.getAttributeName())),
+
                         Integer.valueOf(map.get(TaskSettingEnum.sftp_source_number.getAttributeName())),
                         map.get(TaskSettingEnum.sftp_source_folder.getAttributeName()),
                         map.get(TaskSettingEnum.sftp_target_folder.getAttributeName()),
