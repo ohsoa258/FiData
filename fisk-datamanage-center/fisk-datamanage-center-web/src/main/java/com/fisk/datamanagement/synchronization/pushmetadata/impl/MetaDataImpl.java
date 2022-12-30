@@ -151,10 +151,12 @@ public class MetaDataImpl implements IMetaData {
                             metaDataStgField(field, stgTableGuid);
                         }
                     }
-                    //删除
-                    deleteMetaData(qualifiedNames, tableGuid);
-                    //同步血缘
-                    synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid); //, table.columnList);
+                    if (!CollectionUtils.isEmpty(table.columnList)) {
+                        //删除
+                        deleteMetaData(qualifiedNames, tableGuid);
+                        //同步血缘
+                        synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid); //, table.columnList);
+                    }
                 }
             }
         }

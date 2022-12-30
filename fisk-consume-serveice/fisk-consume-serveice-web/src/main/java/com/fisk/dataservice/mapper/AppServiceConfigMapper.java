@@ -25,7 +25,7 @@ public interface AppServiceConfigMapper extends FKBaseMapper<AppServiceConfigPO>
      *
      * @return 查询结果
      */
-    @Select("SELECT id,api_id,app_id,api_state FROM tb_app_api WHERE app_id=#{appId} AND api_id=#{apiId} AND del_flag=1;")
+    @Select("SELECT id,api_id,app_id,api_state FROM tb_app_service_config WHERE app_id=#{appId} AND service_id=#{apiId} AND del_flag=1;")
     AppServiceConfigPO getSubscribeBy(@Param("appId") int appId, @Param("apiId") int apiId);
 
     /**
@@ -43,12 +43,12 @@ public interface AppServiceConfigMapper extends FKBaseMapper<AppServiceConfigPO>
      */
     @Select("SELECT\n" +
             "\tt1.id,\n" +
-            "\tt1.api_id,\n" +
+            "\tt1.service_id,\n" +
             "\tt1.app_id,\n" +
             "\tt1.api_state \n" +
             "FROM\n" +
-            "\ttb_app_api t1\n" +
-            "\tLEFT JOIN tb_api_config t2 ON t1.api_id = t2.id \n" +
+            "\ttb_app_service_config t1\n" +
+            "\tLEFT JOIN tb_api_config t2 ON t1.service_id = t2.id \n" +
             "WHERE\n" +
             "\tt1.app_id = #{appId} \n" +
             "\tAND t1.del_flag = 1 \n" +

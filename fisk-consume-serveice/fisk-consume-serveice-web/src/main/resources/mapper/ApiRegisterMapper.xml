@@ -65,7 +65,7 @@
         api.create_sql
         FROM
         tb_api_config api
-        LEFT JOIN tb_app_api appapi ON api.id = appapi.api_id
+        LEFT JOIN tb_app_service_config appapi ON api.id = appapi.service_id
         WHERE
         api.del_flag = 1
         AND appapi.del_flag = 1

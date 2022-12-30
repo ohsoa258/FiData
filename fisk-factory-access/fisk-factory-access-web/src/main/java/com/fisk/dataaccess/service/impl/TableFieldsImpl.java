@@ -346,6 +346,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             table.setComment("stg");
             tableList.add(table);
         }
+        list.get(0).description = "stg";
         list.get(0).dbList.get(0).tableList = tableList;
 
 

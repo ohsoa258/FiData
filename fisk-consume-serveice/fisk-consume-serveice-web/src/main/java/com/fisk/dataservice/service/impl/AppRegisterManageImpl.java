@@ -244,6 +244,7 @@ public class AppRegisterManageImpl
                     } else if (saveDTO.saveType == 2) {
                         // 存在则修改状态
                         data.setApiState(data.apiState = dto.apiState);
+                        data.setType(AppServiceTypeEnum.API.getValue());
                         appApiMapper.updateById(data);
                     }
                 } else {
@@ -253,6 +254,7 @@ public class AppRegisterManageImpl
                         continue;
                     // 不存在则新增
                     AppServiceConfigPO model = AppApiMap.INSTANCES.dtoToPo(dto);
+                    model.type = AppServiceTypeEnum.API.getValue();
                     appApiMapper.insert(model);
                 }
             }
