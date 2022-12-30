@@ -232,7 +232,9 @@ public class AppRegisterManageImpl
             for (AppApiSubDTO dto : saveDTO.dto) {
                 // 根据应用id和APIID查询是否存在订阅记录
                 QueryWrapper<AppServiceConfigPO> queryWrapper = new QueryWrapper<>();
-                queryWrapper.lambda().eq(AppServiceConfigPO::getAppId, dto.appId).eq(AppServiceConfigPO::getServiceId, dto.apiId)
+                queryWrapper.lambda().eq(AppServiceConfigPO::getAppId, dto.appId)
+                        .eq(AppServiceConfigPO::getServiceId, dto.apiId)
+                        .eq(AppServiceConfigPO::getType, AppServiceTypeEnum.API.getValue())
                         .eq(AppServiceConfigPO::getDelFlag, 1);
                 AppServiceConfigPO data = appApiMapper.selectOne(queryWrapper);
                 if (data != null) {
