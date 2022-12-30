@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.api.*;
+import com.fisk.dataservice.dto.appserviceconfig.AppTableServiceConfigDTO;
 import com.fisk.dataservice.service.IApiRegisterManageService;
 import com.fisk.dataservice.vo.api.*;
 import com.fisk.dataservice.vo.fileservice.FileServiceVO;
@@ -95,6 +96,13 @@ public class ApiRegisterController {
     @ApiOperation("预览")
     @PostMapping("/preview")
     public ResultEntity<ApiPreviewVO> preview(@RequestBody ApiPreviewDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.preview(dto));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.preview(dto));
     }
+
+    @ApiOperation("保存应用引入表服务配置")
+    @PostMapping("/appTableServiceConfig")
+    public ResultEntity<Object> appTableServiceConfig(@RequestBody List<AppTableServiceConfigDTO> dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.appTableServiceConfig(dto));
+    }
+
 }

@@ -19,6 +19,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.dataservice.BuildDataServiceHelper;
 import com.fisk.common.service.dbBEBuild.dataservice.IBuildDataServiceSqlCommand;
 import com.fisk.dataservice.dto.api.*;
+import com.fisk.dataservice.dto.appserviceconfig.AppTableServiceConfigDTO;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.ApiTypeEnum;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
@@ -288,6 +289,60 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         pageDTO.setItems(list.stream().skip((dto.current - 1) * dto.size).limit(dto.size).collect(Collectors.toList()));
 
         return pageDTO;
+    }
+
+    @Override
+    public ResultEnum appTableServiceConfig(List<AppTableServiceConfigDTO> dtoList) {
+        if (CollectionUtils.isEmpty(dtoList)) {
+            return ResultEnum.SUCCESS;
+        }
+
+        delAppServiceConfig(dtoList.get(0).appId, AppServiceTypeEnum.TABLE.getValue());
+
+        List<AppServiceConfigPO> poList = new ArrayList<>();
+
+        for (AppTableServiceConfigDTO item : dtoList) {
+            AppServiceConfigPO po = new AppServiceConfigPO();
+            po.type = AppServiceTypeEnum.TABLE.getValue();
+            po.serviceId = item.serviceId;
+            po.appId = item.appId;
+
+            poList.add(po);
+        }
+
+        batchAddAppServiceConfig(poList);
+
+        return ResultEnum.SUCCESS;
+    }
+
+    public ResultEnum delAppServiceConfig(Integer appId, Integer type) {
+        QueryWrapper<AppServiceConfigPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(AppServiceConfigPO::getAppId, appId)
+                .eq(AppServiceConfigPO::getType, type);
+
+        List<AppServiceConfigPO> poList = appServiceConfigMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(poList)) {
+            return ResultEnum.SUCCESS;
+        }
+
+        int flat = appServiceConfigMapper.delete(queryWrapper);
+        if (flat == 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        return ResultEnum.SUCCESS;
+
+    }
+
+    public ResultEnum batchAddAppServiceConfig(List<AppServiceConfigPO> poList) {
+        for (AppServiceConfigPO po : poList) {
+            int flat = appServiceConfigMapper.insert(po);
+            if (flat == 0) {
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            }
+        }
+        return ResultEnum.SUCCESS;
     }
 
 
