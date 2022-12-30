@@ -300,6 +300,7 @@ public class SftpUtils {
      * @return
      */
     public static FileTreeSortDTO getSortFile(ChannelSftp sftp, Integer sortTypeName, Integer sortType, String path) {
+        log.info("排序获取文件参数：排序方式-[{}],顺序-[{}],路径-[{}]", sortTypeName, sortType, path);
         FileTreeSortDTO list = new FileTreeSortDTO();
         try {
             // 文件
@@ -364,6 +365,7 @@ public class SftpUtils {
                         .collect(Collectors.toList());
             }
         }
+        log.info("排序后的文件名:{}", fileList);
         return fileList;
     }
 
@@ -518,8 +520,10 @@ public class SftpUtils {
 
 
     public static void main(String[] args) throws IOException, SftpException {
-//        ChannelSftp currSftp = connect("192.168.21.21", 22, "sftp", "password01!", "/upload/rsa/");
+        ChannelSftp currSftp = connect("192.168.21.21", 22, "sftp", "password01!", null);
 //        ChannelSftp targetSftp = connect("192.168.21.21", 22, "sftp", "password01!", "/upload/rsa/");
+        FileTreeSortDTO dto = getSortFile(currSftp, SortTypeNameEnum.FILENAME_SORT.getValue(),
+                SortTypeEnum.POSITIVE_SORT.getValue(), "/");
 //        copyFile("192.168.21.21", 22, "sftp", "password01!", "/.ssh/id_rsa_npw",
 //                "192.168.21.21", 22,  "sftp", "password01!", "/.ssh/id_rsa_npw",
 //                SortTypeNameEnum.FILENAME_SORT.getValue(), SortTypeEnum.POSITIVE_SORT.getValue(),
