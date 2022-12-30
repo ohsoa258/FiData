@@ -158,8 +158,8 @@ public class RoleServiceAssignmentImpl
 
             if (collect.contains(po.id)) {
                 dto.authority = true;
-                dto.path = "/" + po.serveUrl;
             }
+            dto.path = "/" + po.serveUrl;
             dto.children = new ArrayList<>();
             dto.children.add(buildChildTree(dto, list, collect));
             data.add(dto);
@@ -185,9 +185,9 @@ public class RoleServiceAssignmentImpl
                 obj.meta = iconChildren;
                 obj.serveCode = item.getServeCode();
                 obj.description = item.description;
+                obj.path = "/" + item.serveUrl;
                 if (collect.contains(item.id)) {
                     obj.authority = true;
-                    obj.path = "/" + item.serveUrl;
                 }
 
                 List<LoginServiceDTO> child = new ArrayList<>();
