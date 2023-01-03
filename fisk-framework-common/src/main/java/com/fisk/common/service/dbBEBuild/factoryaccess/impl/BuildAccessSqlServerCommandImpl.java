@@ -243,7 +243,8 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
                 break;
             case NUMERIC:
             case DECIMAL:
-                data[0] = SqlServerTypeEnum.NUMERIC.getName();
+            case FLOAT:
+                data[0] = SqlServerTypeEnum.FLOAT.getName();
                 break;
             default:
                 data[0] = SqlServerTypeEnum.NVARCHAR.getName();
