@@ -6,6 +6,7 @@ import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -83,7 +84,9 @@ public class PgSqlUtils {
                 tableStructure.fieldName = rs.getString("column_name");
                 tableStructure.fieldType = rs.getString("udt_name");
                 if (rs.getString("character_maximum_length") == null) {
-                    tableStructure.fieldLength = Integer.parseInt(rs.getString("numeric_precision"));
+                    if (!StringUtils.isEmpty(rs.getString("numeric_precision"))) {
+                        tableStructure.fieldLength = Integer.parseInt(rs.getString("numeric_precision"));
+                    }
                 } else {
                     tableStructure.fieldLength = Integer.parseInt(rs.getString("character_maximum_length"));
                 }

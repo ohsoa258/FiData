@@ -23,7 +23,7 @@ public class TableColumnDTO {
      * 字段长度
      */
     @ApiModelProperty(value = "字段长度", required = true)
-    public int fieldLength;
+    public int fieldLength = 0;
 
     /**
      * 字段描述

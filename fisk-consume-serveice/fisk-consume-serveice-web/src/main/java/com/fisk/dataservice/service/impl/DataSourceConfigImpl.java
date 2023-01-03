@@ -282,7 +282,7 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
             }
         } catch (Exception e) {
             log.error("【根据库获取表集合】,{}", e);
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            throw new FkException(ResultEnum.DATASOURCE_CONNECTERROR);
         } finally {
             AbstractCommonDbHelper.closeConnection(conn);
         }
