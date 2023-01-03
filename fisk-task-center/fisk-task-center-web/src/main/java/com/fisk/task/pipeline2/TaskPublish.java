@@ -270,9 +270,9 @@ public class TaskPublish {
                                     boolean goNext = true;
                                     for (Long upId : upPortList) {
                                         DispatchJobHierarchyDTO dispatchJobHierarchy = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(pipelTraceId, String.valueOf(upId));
-                                        if (!dispatchJobHierarchy.jobProcessed) {
+                                        /*if (!dispatchJobHierarchy.jobProcessed) {
                                             goNext = false;
-                                        }
+                                        }*/
                                         upPid = String.valueOf(dispatchJobHierarchy.id);
                                     }
                                     List<PipelTaskLogPO> list = iPipelTaskLog.query().eq("job_trace_id", nextJobTraceId).eq("task_id", taskNext.itselfPort.id).list();

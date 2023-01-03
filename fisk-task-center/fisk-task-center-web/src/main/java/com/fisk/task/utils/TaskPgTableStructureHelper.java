@@ -112,7 +112,7 @@ public class TaskPgTableStructureHelper
                     po.fieldType = item.fieldType + "(" + item.fieldLength + ")";
                 }
                 if ("FLOAT".equals(item.fieldType)) {
-                    po.fieldType = item.fieldType + "(18,9)";
+                    po.fieldType = item.fieldType;
                 }
                 poList.add(po);
                 if (item.associateDimensionId != 0 && item.associateDimensionFieldId != 0) {

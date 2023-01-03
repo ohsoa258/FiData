@@ -48,18 +48,18 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         //ods与stg类型不变,不然有的值,类型转换不来
         tableFieldsDTOS.forEach((l) -> {
             if (l.fieldType.contains("FLOAT")) {
-                sqlFileds.append("" + l.fieldName + " " + " numeric(18,9) ");
+                sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() +  " ");
             } else if (l.fieldType.contains("INT")) {
-                sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + " ");
+                sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
             } else if (l.fieldType.contains("TEXT")) {
-                sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + " ");
+                sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
             } else if (l.fieldType.contains("TIMESTAMP")) {
-                sqlFileds.append("" + l.fieldName + " datetime ");
+                sqlFileds.append("[" + l.fieldName + "] datetime ");
             } else {
-                sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + "(" + l.fieldLength + ") ");
+                sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + "(" + l.fieldLength + ") ");
             }
-            //todo 修改stg表,字段类型
-            stgSql.append("" + l.fieldName + " nvarchar(4000),");
+            // 修改stg表,字段类型
+            stgSql.append("[" + l.fieldName + "] nvarchar(4000),");
             if (l.isPrimarykey == 1) {
                 pksql.append("" + l.fieldName + ",");
                 sqlFileds.append("not null ,");
