@@ -10,12 +10,11 @@ import com.fisk.common.core.utils.Dto.sftp.FilePropertySortDTO;
 import com.fisk.common.core.utils.Dto.sftp.FileTreeSortDTO;
 import com.fisk.common.framework.exception.FkException;
 import com.jcraft.jsch.*;
-import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.*;
-import java.lang.reflect.Field;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -71,11 +70,11 @@ public class SftpUtils {
             sftp = (ChannelSftp) channel;
 
             //解决获取sftp文件中有中文名导致乱码问题
-            Class cl = ChannelSftp.class;
+            /*Class cl = ChannelSftp.class;
             Field field = cl.getDeclaredField("server_version");
             field.setAccessible(true);
             field.set(sftp, 2);
-            sftp.setFilenameEncoding("GBK");
+            sftp.setFilenameEncoding("GBK");*/
 
             //获取服务版本，判断是否连接成功
             sftp.getServerVersion();
