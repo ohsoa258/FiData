@@ -187,7 +187,7 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
         Optional<DataSourceDTO> first = allFiDataDataSource.stream()
                 .filter(e -> e.conDbname.equals(dto.dbName)).findFirst();
         if (!first.isPresent()) {
-            return new DataSourceQueryResultDTO();
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
 
         Instant inst1 = Instant.now();
