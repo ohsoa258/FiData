@@ -97,4 +97,9 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
      */
     public String sheetName;
 
+    /**
+     * sftp文件二进制数据
+     */
+    public String fileBinary;
+
 }

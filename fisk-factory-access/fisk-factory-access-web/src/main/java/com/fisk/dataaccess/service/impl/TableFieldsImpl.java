@@ -495,8 +495,12 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile == null ? maxRowsPerFlowFile : syncMode.maxRowsPerFlowFile;
             data.fetchSize = syncMode.fetchSize == null ? fetchSize : syncMode.fetchSize;
 
+            //类型是否为sftp
             if (DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType)) {
                 data.sftpFlow = true;
+                if (dataSourcePo.serviceType == 1) {
+                    data.fileBinary = dataSourcePo.fileBinary;
+                }
             }
 
             // 执行发布
