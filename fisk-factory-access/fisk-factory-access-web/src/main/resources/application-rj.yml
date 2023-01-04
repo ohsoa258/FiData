@@ -52,3 +52,4 @@ flink-api-config:
 
 sftp:
   file-path: D:\Fidata\upload\
+  nifi-file-path: /root/nifi-upoad/
