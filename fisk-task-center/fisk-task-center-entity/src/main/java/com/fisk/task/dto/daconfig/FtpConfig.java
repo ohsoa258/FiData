@@ -41,9 +41,19 @@ public class FtpConfig {
     public String sheetName;
 
     /**
-     * 公钥连接路径
+     * 上传Linux秘钥地址
      */
-    public String connectStr;
+    public String linuxPath;
+
+    /**
+     * sftp秘钥文件民
+     */
+    public String fileName;
+
+    /**
+     * sftp秘钥二进制数据
+     */
+    public String fileBinary;
 
 
 }

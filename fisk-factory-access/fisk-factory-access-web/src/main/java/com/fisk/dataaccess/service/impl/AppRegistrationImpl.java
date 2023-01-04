@@ -101,7 +101,9 @@ import static com.fisk.dataaccess.enums.HttpRequestEnum.POST;
  */
 @Service
 @Slf4j
-public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppRegistrationPO> implements IAppRegistration {
+public class AppRegistrationImpl
+        extends ServiceImpl<AppRegistrationMapper, AppRegistrationPO>
+        implements IAppRegistration {
 
     @Resource
     private AppDataSourceMapper appDataSourceMapper;

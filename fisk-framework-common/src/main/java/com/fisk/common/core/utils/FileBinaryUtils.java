@@ -8,7 +8,6 @@ import java.io.InputStream;
 
 /**
  * 文件互转二进制帮助类
- *
  * @author JianWenYang
  */
 public class FileBinaryUtils {

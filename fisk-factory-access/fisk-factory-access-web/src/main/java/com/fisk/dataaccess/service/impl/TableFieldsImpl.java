@@ -494,14 +494,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.generateVersionSql = versionSql;
             data.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile == null ? maxRowsPerFlowFile : syncMode.maxRowsPerFlowFile;
             data.fetchSize = syncMode.fetchSize == null ? fetchSize : syncMode.fetchSize;
-
-            //类型是否为sftp
-            if (DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType)) {
-                data.sftpFlow = true;
-                if (dataSourcePo.serviceType == 1) {
-                    data.fileBinary = dataSourcePo.fileBinary;
-                }
-            }
+            data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType) ? true : false;
 
             // 执行发布
             try {

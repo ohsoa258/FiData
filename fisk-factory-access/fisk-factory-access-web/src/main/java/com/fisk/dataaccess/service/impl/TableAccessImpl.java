@@ -158,6 +158,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Resource
     GetConfigDTO getConfig;
 
+    @Value("${sftp.nifi-file-path}")
+    private String nifiFilePath;
+
     /**
      * 数据库连接
      *
@@ -1031,7 +1034,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 break;
             case FTP:
             case SFTP:
-                dto.ftpConfig = buildFtpConfig(ftpConfig, modelDataSource, modelAccess);
+                dto.ftpConfig = buildFtpConfig(ftpConfig, modelDataSource, modelAccess, modelReg);
                 break;
             default:
                 break;
@@ -1108,7 +1111,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @author Lock
      * @date 2022/4/12 16:47
      */
-    private FtpConfig buildFtpConfig(FtpConfig ftpConfig, AppDataSourcePO modelDataSource, TableAccessPO modelAccess) {
+    private FtpConfig buildFtpConfig(FtpConfig ftpConfig, AppDataSourcePO modelDataSource, TableAccessPO modelAccess, AppRegistrationPO appRegistration) {
 
         if (StringUtils.isNotBlank(modelAccess.sqlScript)) {
             List<String> list = ftpImpl.encapsulationExcelParam(modelAccess.sqlScript);
@@ -1120,11 +1123,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         ftpConfig.hostname = modelDataSource.host;
         ftpConfig.port = modelDataSource.port;
         if (modelDataSource.serviceType == 1) {
-            ftpConfig.connectStr = modelDataSource.connectStr;
+            ftpConfig.linuxPath = nifiFilePath;
+            ftpConfig.fileBinary = modelDataSource.fileBinary;
+            ftpConfig.fileName = appRegistration.appAbbreviation;
             ftpConfig.password = null;
         } else {
             ftpConfig.password = modelDataSource.connectPwd;
-            ftpConfig.connectStr = null;
+            ftpConfig.linuxPath = null;
         }
         ftpConfig.username = modelDataSource.connectAccount;
         ftpConfig.ftpUseUtf8 = true;

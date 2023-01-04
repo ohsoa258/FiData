@@ -51,3 +51,4 @@ flink-api-config:
 
 sftp:
   file-path: /root/upload/
+  nifi-file-path: /root/nifi-upoad/

@@ -58,9 +58,4 @@ public class AppRegistrationPO extends BasePO {
      */
     public Integer targetDbId;
 
-    /**
-     * sftp秘钥二进制数据
-     */
-    public String fileBinary;
-
 }
