@@ -16,6 +16,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.CreateSchemaSqlUtils;
+import com.fisk.common.core.utils.FileBinaryUtils;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
@@ -197,6 +198,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         modelDataSource.setAppId(po.getId());
         modelDataSource.setCreateUser(String.valueOf(userId));
 
+        //sftp秘钥方式,存储二进制数据
+        if (DataSourceTypeEnum.SFTP.getName().equals(appRegistrationDTO.appDatasourceDTO.driveType.toLowerCase())
+                && appRegistrationDTO.appDatasourceDTO.serviceType == 1) {
+            modelDataSource.setFileBinary(fileToBinaryStr(datasourceDTO.connectStr));
+        }
+
         int insert = appDataSourceMapper.insert(modelDataSource);
         if (insert <= 0) {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
@@ -286,6 +293,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         data.qualifiedName = appRegistration.id + "_" + appRegistration.appAbbreviation;
         data.rdbms_type = dataSource.driveType;
         data.displayName = appRegistration.appName;
+        data.description = "stg";
         //库
         List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
         MetaDataDbAttributeDTO db = new MetaDataDbAttributeDTO();
@@ -299,6 +307,16 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         return list;
 
+    }
+
+    /**
+     * 将文件转为二进制字符串
+     *
+     * @param filePath
+     * @return
+     */
+    public String fileToBinaryStr(String filePath) {
+        return FileBinaryUtils.fileToBinStr(filePath);
     }
 
     @Override
@@ -388,6 +406,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         long appDataSid = appDataSourceImpl.query().eq("app_id", id).one().getId();
         modelDataSource.setId(appDataSid);
         modelDataSource.setAppId(id);
+
+        //sftp秘钥方式,存储二进制数据
+        if (DataSourceTypeEnum.SFTP.getName().equals(dto.appDatasourceDTO.driveType.toLowerCase())
+                && dto.appDatasourceDTO.serviceType == 1) {
+            modelDataSource.setFileBinary(fileToBinaryStr(dto.appDatasourceDTO.connectStr));
+        }
 
         //jtw类型配置返回结果json串
         if (dto.appDatasourceDTO.authenticationMethod != null && dto.appDatasourceDTO.authenticationMethod == 3) {

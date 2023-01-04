@@ -346,7 +346,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             table.setComment("stg");
             tableList.add(table);
         }
-        list.get(0).description = "stg";
+        //list.get(0).description = "stg";
         list.get(0).dbList.get(0).tableList = tableList;
 
 
@@ -494,7 +494,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.generateVersionSql = versionSql;
             data.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile == null ? maxRowsPerFlowFile : syncMode.maxRowsPerFlowFile;
             data.fetchSize = syncMode.fetchSize == null ? fetchSize : syncMode.fetchSize;
-            data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType) ? true : false;
+
+            if (DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType)) {
+                data.sftpFlow = true;
+            }
 
             // 执行发布
             try {
