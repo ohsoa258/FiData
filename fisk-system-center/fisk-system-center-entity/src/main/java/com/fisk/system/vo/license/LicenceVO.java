@@ -52,10 +52,16 @@ public class LicenceVO {
     public String servicesScope;
 
     /**
-     * 秘钥到期时间，年-月-日格式
+     * 秘钥到期时间，年/月/日格式
      */
     @ApiModelProperty(value = "秘钥到期时间，年/月/日格式")
     public String expirationDate;
+
+    /**
+     * 秘钥授权时间，年/月/日格式
+     */
+    @ApiModelProperty(value = "秘钥授权时间，年/月/日格式")
+    public String authorizationDate;
 
     /**
      * 许可证状态 0 未过期 1 已过期

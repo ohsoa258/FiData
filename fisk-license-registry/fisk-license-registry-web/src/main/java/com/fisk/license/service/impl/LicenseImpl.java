@@ -13,6 +13,7 @@ import com.fisk.common.core.utils.HardWareUtils;
 import com.fisk.common.core.utils.LicenseEnCryptUtils;
 import com.fisk.common.core.utils.RegexUtils;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.system.dto.LoginServiceDTO;
 import com.fisk.system.dto.license.LicenceDTO;
 import com.fisk.license.dto.AuthorizeLicenceDTO;
 import com.fisk.license.dto.VerifyLicenceDTO;
@@ -201,43 +202,55 @@ public class LicenseImpl extends ServiceImpl<LicenseMapper, LicencePO> implement
             if (data.size() != 6) {
                 return null;
             }
-            String platform = data.get(0);
-            String authorizer = data.get(1);
-            String mac = data.get(2);
+            String customerName = data.get(0);
+            String createUser = data.get(1);
+            String machinekey = data.get(2);
             List<String> menus = JSON.parseArray(data.get(3), String.class);
             String expireStamp = data.get(4);
             String authDateStamp = data.get(5);
-            if (StringUtils.isEmpty(platform) ||
-                    StringUtils.isEmpty(authorizer) ||
-                    StringUtils.isEmpty(mac) ||
+            if (StringUtils.isEmpty(customerName) ||
+                    StringUtils.isEmpty(createUser) ||
+                    StringUtils.isEmpty(machinekey) ||
                     CollectionUtils.isEmpty(menus) ||
                     StringUtils.isEmpty(expireStamp) ||
                     StringUtils.isEmpty(authDateStamp)) {
                 return null;
             }
             // 查询菜单url对应的名称
-            ResultEntity<Object> clientMenuList = userClient.getMenuList();
+            ResultEntity<Object> clientMenuList = userClient.getAllMenuList();
             if (clientMenuList == null || clientMenuList.getData() == null) {
                 return null;
             }
             List<String> menuNameList = new ArrayList<>();
             String json = JSONArray.toJSON(clientMenuList.getData()).toString();
-            List<ServiceRegistryDTO> menuList = JSONArray.parseArray(json, ServiceRegistryDTO.class);
+            List<LoginServiceDTO> menuList = JSONArray.parseArray(json, LoginServiceDTO.class);
             menuList.forEach(t -> {
-                if (CollectionUtils.isNotEmpty(t.getDtos())) {
-                    t.getDtos().forEach(next -> {
-                        String menuAddress = String.format("/%s/%s", t.getServeUrl(), next.getServeUrl());
-                        if (RegexUtils.isContains(menus, menuAddress)) {
-                            menuNameList.add(next.getServeCnName());
+                final String[] menuAddress = {t.getPath()};
+                if (RegexUtils.isContains(menus, menuAddress[0])) {
+                    menuNameList.add(t.getName());
+                }
+                if (CollectionUtils.isNotEmpty(t.getChildren())) {
+                    t.getChildren().forEach(next -> {
+                        menuAddress[0] += next.getPath();
+                        if (RegexUtils.isContains(menus, menuAddress[0])) {
+                            menuNameList.add(next.getName());
+                        }
+                        if (CollectionUtils.isNotEmpty(next.getChildren())) {
+                            next.getChildren().forEach(next1 -> {
+                                menuAddress[0] += next1.getPath();
+                                if (RegexUtils.isContains(menus, menuAddress[0])) {
+                                    menuNameList.add(next1.getName());
+                                }
+                            });
                         }
                     });
                 }
             });
             String expireDate = DateTimeUtils.stampToDate(expireStamp);
             String authDate = DateTimeUtils.stampToDate(authDateStamp);
-            licence.setPlatform(platform);
-            licence.setAuthorizer(authorizer);
-            licence.setMac(mac);
+            licence.setPlatform(customerName);
+            licence.setAuthorizer(createUser);
+            licence.setMac(machinekey);
             licence.setMenus(menus);
             licence.setMenuNames(menuNameList);
             licence.setExpireTime(expireDate);

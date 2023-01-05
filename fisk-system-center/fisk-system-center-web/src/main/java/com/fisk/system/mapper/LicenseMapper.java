@@ -2,8 +2,10 @@ package com.fisk.system.mapper;
 
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.system.entity.LicencePO;
+import com.fisk.system.vo.license.LicenceVO;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Update;
+
+import java.util.List;
 
 /**
  * @author dick
@@ -13,5 +15,5 @@ import org.apache.ibatis.annotations.Update;
  */
 @Mapper
 public interface LicenseMapper extends FKBaseMapper<LicencePO> {
-
+    List<LicenceVO> getAll();
 }

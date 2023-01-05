@@ -1,0 +1,29 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.system.mapper.LicenseMapper">
+
+    <select id="getAll" resultType="com.fisk.system.vo.license.LicenceVO">
+        SELECT
+            id,
+            customer_code AS customerCode,
+            customer_name AS customerName,
+            customer_license AS customerLicense,
+            machine_key AS machineKey,
+            services_scope AS servicesScope,
+            authorization_date AS authorizationDate,
+            expiration_date AS expirationDate,
+            CASE
+
+                WHEN expiration_date >= DATE_FORMAT( NOW(), '%Y-%m-%d' ) THEN
+                    '0' ELSE '1'
+                END AS licenseState,
+            create_time AS createTime,
+            create_user AS createUser
+        FROM
+            tb_system_licence
+        WHERE
+            del_flag = 1
+    </select>
+
+</mapper>

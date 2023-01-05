@@ -1,5 +1,6 @@
 package com.fisk.system.vo.license;
 
+import com.fisk.system.dto.LoginServiceDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -24,5 +25,5 @@ public class QueryLicenceVO {
      * 菜单列表
      */
     @ApiModelProperty(value = "菜单列表")
-    public List<MenuVO> menuList;
+    public List<LoginServiceDTO>   menuList;
 }
