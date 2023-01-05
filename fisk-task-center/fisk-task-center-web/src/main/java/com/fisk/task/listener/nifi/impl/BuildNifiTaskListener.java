@@ -1644,7 +1644,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildFetchSFTPProcessor.details = "query_phase";
         buildFetchSFTPProcessor.hostname = ftpConfig.hostname;
         buildFetchSFTPProcessor.password = ftpConfig.password;
-        buildFetchSFTPProcessor.privateKeyPath = ftpConfig.linuxPath;
+        buildFetchSFTPProcessor.privateKeyPath = ftpConfig.linuxPath + ftpConfig.fileName;
         buildFetchSFTPProcessor.port = ftpConfig.port;
         buildFetchSFTPProcessor.remoteFile = ftpConfig.remotePath + "/" + ftpConfig.fileFilterRegex;
         buildFetchSFTPProcessor.username = ftpConfig.username;
