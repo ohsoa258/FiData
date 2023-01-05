@@ -32,6 +32,7 @@ public class SwaggerConfig {
     public static final String UPLOAD = "upload-controller";
     public static final String DATASOURCE = "datasource-controller";
     public static final String EMAIL_SERVER_CONTROLLER = "email-server-controller";
+    public static final String LICENSE_CONTROLLER = "license-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -51,6 +52,7 @@ public class SwaggerConfig {
                 .tags(new Tag(UPLOAD,"上传管理"))
                 .tags(new Tag(DATASOURCE,"数据源管理"))
                 .tags(new Tag(EMAIL_SERVER_CONTROLLER, "邮件服务器API"))
+                .tags(new Tag(LICENSE_CONTROLLER, "license许可证管理"))
                 .securitySchemes(apiKey())
                 .securityContexts(securityContexts());
 

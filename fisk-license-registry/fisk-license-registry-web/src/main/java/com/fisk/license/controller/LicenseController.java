@@ -4,7 +4,6 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.license.config.SwaggerConfig;
-import com.fisk.license.dto.AddLicenceDTO;
 import com.fisk.license.dto.AuthorizeLicenceDTO;
 import com.fisk.license.dto.VerifyLicenceDTO;
 import com.fisk.license.service.ILicenseService;
@@ -28,20 +27,8 @@ import javax.annotation.Resource;
 @RequestMapping("/license")
 public class LicenseController {
 
-    /*
-     * 扩展逻辑
-     * 访问模式 新增表字段 LicenceType,UserInfo(名称、手机号、姓名)
-     *         Licence的Mac使用客户端IP
-     * */
-
     @Resource
     private ILicenseService service;
-
-//    @ApiOperation("生成许可证（Company）")
-//    @PostMapping("/createCompanyLicence")
-//    public ResultEntity<String> createCompanyLicence(@Validated @RequestBody AddLicenceDTO dto) {
-//        return service.createCompanyLicence(dto);
-//    }
 
     @ApiOperation("设置许可证（Company）")
     @PostMapping("/setCompanyLicence")

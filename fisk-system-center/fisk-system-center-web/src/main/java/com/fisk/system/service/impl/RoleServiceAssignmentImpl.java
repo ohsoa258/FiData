@@ -159,6 +159,7 @@ public class RoleServiceAssignmentImpl
         for (ServiceRegistryPO po : listParent) {
             LoginServiceDTO dto = new LoginServiceDTO();
 
+            dto.id=po.id;
             dto.name = po.serveUrl;
             dto.component = "Layout";
             dto.serveCode = po.getServeCode();
@@ -189,6 +190,7 @@ public class RoleServiceAssignmentImpl
             if (item.getParentServeCode().equals(pNode.getServeCode())) {
 
                 LoginServiceDTO obj = new LoginServiceDTO();
+                obj.id= item.id;
                 obj.name = item.serveUrl;
                 obj.component = item.serveUrl;
                 IconDTO iconChildren = new IconDTO();

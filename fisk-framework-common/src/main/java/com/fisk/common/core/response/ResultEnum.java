@@ -363,7 +363,9 @@ public enum ResultEnum {
      */
     LICENCE_DECRYPT_FAIL(160000,"licence解析异常"),
     MAC_DECRYPT_FAIL(160001,"Mac地址与当前计算机Mac不匹配"),
-    LICENCE_EXPIRED(160002,"licence已过期");
+    LICENCE_EXPIRED(160002,"licence已过期"),
+    CUSTOMER_ALREADY_EXISTS(160003,"客户已存在"),
+    CUSTOMER_NOT_EXISTS(160004,"客户不存在");
 
     ResultEnum(int code, String msg) {
         this.code = code;
