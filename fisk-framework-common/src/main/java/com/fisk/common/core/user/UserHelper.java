@@ -88,6 +88,7 @@ public class UserHelper {
         return userInfo;
     }
 
+
     /**
      * 获取当前登录的用户（mybatis的填充策略使用，获取不到用户信息会返回null）
      * 获取不到用户信息返回null
@@ -96,7 +97,41 @@ public class UserHelper {
      */
     public UserInfo getLoginUserInfoNotThrowError() {
         try {
-            return getLoginUserInfo();
+            // 获取请求属性集合
+            RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+            if (requestAttributes == null) {
+                return null;
+            }
+            // 获取request对象
+            HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
+            // 获取token
+            String token = request.getHeader(SystemConstants.HTTP_HEADER_AUTH);
+            if (StringUtils.isEmpty(token)) {
+                return null;
+            }
+            token = token.replace(SystemConstants.AUTH_TOKEN_HEADER, "");
+            // 解析token
+            SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+            // 获取claims
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            // 获取userId
+            long userId = Long.parseLong(claims.get(SystemConstants.CLAIM_ATTR_ID, String.class));
+            // 根据token中的id查询用户信息
+            Object redisData = redis.get(RedisKeyBuild.buildLoginUserInfo(userId));
+            if (redisData == null) {
+                return null;
+            }
+            UserInfo userInfo = (UserInfo) redisData;
+            // 如果请求中的token和redis中存储的token不一样，说明用户账号已经在其他地方重新登录，token已过期。
+            String loginToken = userInfo.token.replace(SystemConstants.AUTH_TOKEN_HEADER, "");
+            if (!loginToken.equals(token)) {
+                return null;
+            }
+            return userInfo;
         } catch (Exception ex) {
             return null;
         }
