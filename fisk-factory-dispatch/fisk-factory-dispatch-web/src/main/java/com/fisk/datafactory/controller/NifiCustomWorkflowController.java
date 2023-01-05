@@ -84,7 +84,7 @@ public class NifiCustomWorkflowController {
     @PutMapping("/updateWorkStatus")
     @ApiOperation("暂停/恢复管道运行")
     public ResultEntity<Object> updateWorkStatus(@Validated @RequestBody NifiCustomWorkflowUpdateDTO dto){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.updateWorkStatus(dto.getNifiCustomWorkflowId(), dto.getIfFire()));
+        return service.updateWorkStatus(dto.getNifiCustomWorkflowId(), dto.getIfFire());
     }
 
     @GetMapping("/getNifiCustomWorkFlowDrop")
