@@ -1,5 +1,6 @@
 package com.fisk.system.dto.license;
 
+import com.fisk.system.dto.LoginServiceDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -60,5 +61,5 @@ public class LicenceDTO {
      * 菜单集合
      */
     @ApiModelProperty(value = "菜单集合")
-    public List<MenuDTO> menuList;
+    public List<LoginServiceDTO> menuList;
 }

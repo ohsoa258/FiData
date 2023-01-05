@@ -10,6 +10,11 @@ import java.util.List;
 @Data
 public class LoginServiceDTO {
     /**
+     * ID
+     */
+    public Long id;
+
+    /**
      *服务中文名称
      */
     public String name;

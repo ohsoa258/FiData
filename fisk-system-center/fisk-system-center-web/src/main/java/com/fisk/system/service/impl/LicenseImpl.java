@@ -13,7 +13,6 @@ import com.fisk.common.core.utils.LicenseEnCryptUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.system.dto.LoginServiceDTO;
 import com.fisk.system.dto.license.LicenceDTO;
-import com.fisk.system.dto.license.MenuDTO;
 import com.fisk.system.entity.LicencePO;
 import com.fisk.system.mapper.LicenseMapper;
 import com.fisk.system.service.ILicenseService;
@@ -70,7 +69,7 @@ public class LicenseImpl extends ServiceImpl<LicenseMapper, LicencePO> implement
             // 授权人
             String authorizer = userHelper.getLoginUserInfo().getUsername();
             // 菜单url
-            List<String> menuList = dto.getMenuList().stream().map(MenuDTO::getName).collect(Collectors.toList());
+            List<String> menuList = dto.getMenuList().stream().map(LoginServiceDTO::getName).collect(Collectors.toList());
             String menuStr = JSON.toJSONString(menuList);
             // 过期时间
             String expireStamp = DateTimeUtils.dateToStamp(dto.getExpirationDate());
@@ -89,7 +88,7 @@ public class LicenseImpl extends ServiceImpl<LicenseMapper, LicencePO> implement
             licencePO.setCustomerName(dto.getCustomerName());
             licencePO.setCustomerLicense(licence);
             licencePO.setMachineKey(dto.getMachineKey());
-            List<Integer> menuIdList = dto.getMenuList().stream().map(MenuDTO::getId).collect(Collectors.toList());
+            List<Long> menuIdList = dto.getMenuList().stream().map(LoginServiceDTO::getId).collect(Collectors.toList());
             licencePO.setServicesScope(Joiner.on(",").join(menuIdList));
             licencePO.setExpirationDate(dto.getExpirationDate());
             licencePO.setAuthorizationDate(authDate);
@@ -121,7 +120,7 @@ public class LicenseImpl extends ServiceImpl<LicenseMapper, LicencePO> implement
             // 授权人
             String authorizer = userHelper.getLoginUserInfo().getUsername();
             // 菜单url
-            List<String> menuList = dto.getMenuList().stream().map(MenuDTO::getName).collect(Collectors.toList());
+            List<String> menuList = dto.getMenuList().stream().map(LoginServiceDTO::getName).collect(Collectors.toList());
             String menuStr = JSON.toJSONString(menuList);
             // 过期时间
             String expireStamp = DateTimeUtils.dateToStamp(dto.getExpirationDate());
@@ -140,7 +139,7 @@ public class LicenseImpl extends ServiceImpl<LicenseMapper, LicencePO> implement
             licencePO.setCustomerName(dto.getCustomerName());
             licencePO.setCustomerLicense(licence);
             licencePO.setMachineKey(dto.getMachineKey());
-            List<Integer> menuIdList = dto.getMenuList().stream().map(MenuDTO::getId).collect(Collectors.toList());
+            List<Long> menuIdList = dto.getMenuList().stream().map(LoginServiceDTO::getId).collect(Collectors.toList());
             licencePO.setServicesScope(Joiner.on(",").join(menuIdList));
             licencePO.setExpirationDate(dto.getExpirationDate());
             licencePO.setAuthorizationDate(authDate);

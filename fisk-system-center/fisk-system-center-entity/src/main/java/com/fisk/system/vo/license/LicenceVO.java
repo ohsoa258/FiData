@@ -64,10 +64,10 @@ public class LicenceVO {
     public String authorizationDate;
 
     /**
-     * 许可证状态 0 未过期 1 已过期
+     * 许可证状态
      */
-    @ApiModelProperty(value = "许可证状态 0 未过期 1 已过期")
-    public int licenseState;
+    @ApiModelProperty(value = "许可证状态")
+    public String licenseState;
 
     /**
      * 创建时间
