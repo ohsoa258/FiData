@@ -45,7 +45,7 @@ public class LicenseImpl extends ServiceImpl<LicenseMapper, LicencePO> implement
     @Override
     public ResultEntity<QueryLicenceVO> getCompanyLicence(String keyWord) {
         QueryLicenceVO licenceVO = new QueryLicenceVO();
-        List<LicenceVO> licenceVOS = baseMapper.getAll();
+        List<LicenceVO> licenceVOS = baseMapper.getAll(keyWord);
         licenceVO.setLicenceList(licenceVOS);
         List<LoginServiceDTO> allMenuList = roleServiceAssignment.getAllMenuList();
         licenceVO.setMenuList(allMenuList);
@@ -69,7 +69,7 @@ public class LicenseImpl extends ServiceImpl<LicenseMapper, LicencePO> implement
             // 授权人
             String authorizer = userHelper.getLoginUserInfo().getUsername();
             // 菜单url
-            List<String> menuList = dto.getMenuList().stream().map(LoginServiceDTO::getName).collect(Collectors.toList());
+            List<String> menuList = dto.getMenuList().stream().map(LoginServiceDTO::getPath).collect(Collectors.toList());
             String menuStr = JSON.toJSONString(menuList);
             // 过期时间
             String expireStamp = DateTimeUtils.dateToStamp(dto.getExpirationDate());
@@ -117,10 +117,15 @@ public class LicenseImpl extends ServiceImpl<LicenseMapper, LicencePO> implement
                 return ResultEnum.CUSTOMER_ALREADY_EXISTS;
             }
 
+            LicencePO licencePO = baseMapper.selectById(dto.getId());
+            if (licencePO == null) {
+                return ResultEnum.CUSTOMER_NOT_EXISTS;
+            }
+
             // 授权人
             String authorizer = userHelper.getLoginUserInfo().getUsername();
             // 菜单url
-            List<String> menuList = dto.getMenuList().stream().map(LoginServiceDTO::getName).collect(Collectors.toList());
+            List<String> menuList = dto.getMenuList().stream().map(LoginServiceDTO::getPath).collect(Collectors.toList());
             String menuStr = JSON.toJSONString(menuList);
             // 过期时间
             String expireStamp = DateTimeUtils.dateToStamp(dto.getExpirationDate());
@@ -134,8 +139,6 @@ public class LicenseImpl extends ServiceImpl<LicenseMapper, LicencePO> implement
             String licence = LicenseEnCryptUtils.encrypt(str);
             licence = licence.replaceAll("[\\s*\t\n\r]", "");
 
-            LicencePO licencePO = new LicencePO();
-            licencePO.setCustomerCode(dto.getCustomerCode());
             licencePO.setCustomerName(dto.getCustomerName());
             licencePO.setCustomerLicense(licence);
             licencePO.setMachineKey(dto.getMachineKey());

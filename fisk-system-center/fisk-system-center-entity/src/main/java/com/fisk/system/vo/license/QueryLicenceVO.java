@@ -25,5 +25,5 @@ public class QueryLicenceVO {
      * 菜单列表
      */
     @ApiModelProperty(value = "菜单列表")
-    public List<LoginServiceDTO>   menuList;
+    public List<LoginServiceDTO> menuList;
 }

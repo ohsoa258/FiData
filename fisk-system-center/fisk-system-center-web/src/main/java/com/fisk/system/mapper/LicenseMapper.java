@@ -1,9 +1,11 @@
 package com.fisk.system.mapper;
 
 import com.fisk.common.framework.mybatis.FKBaseMapper;
+import com.fisk.system.dto.roleinfo.RolePageDTO;
 import com.fisk.system.entity.LicencePO;
 import com.fisk.system.vo.license.LicenceVO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -15,5 +17,5 @@ import java.util.List;
  */
 @Mapper
 public interface LicenseMapper extends FKBaseMapper<LicencePO> {
-    List<LicenceVO> getAll();
+    List<LicenceVO> getAll(@Param("keyWord") String keyWord);
 }

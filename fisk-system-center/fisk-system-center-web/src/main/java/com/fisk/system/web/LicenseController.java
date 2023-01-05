@@ -28,7 +28,7 @@ public class LicenseController {
 
     @ApiOperation("查询许可证（Company）")
     @GetMapping("/getCompanyLicence")
-    public ResultEntity<QueryLicenceVO> getCompanyLicence(@RequestParam("keyWord") String keyWord) {
+    public ResultEntity<QueryLicenceVO> getCompanyLicence(@PathVariable("keyWord") String keyWord) {
         return service.getCompanyLicence(keyWord);
     }
 
