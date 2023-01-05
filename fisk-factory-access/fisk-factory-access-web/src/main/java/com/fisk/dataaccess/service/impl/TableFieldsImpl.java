@@ -40,6 +40,7 @@ import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.map.FlinkParameterMap;
 import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
+import com.fisk.dataaccess.map.TableSyncModeMap;
 import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
@@ -1194,4 +1195,38 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         List<TableFieldsPO> list = this.query().eq("table_access_id", tableAccessId).list();
         return TableFieldsMap.INSTANCES.poListToDtoFileList(list);
     }
+
+    @Override
+    public ResultEnum batchPublish(BatchPublishDTO dto) {
+        for (Long id : dto.ids) {
+            TableAccessPO accessPo = tableAccessImpl.query().eq("id", id).one();
+            if (accessPo == null) {
+                log.error("【物理表为空】,id={}", id);
+                continue;
+            }
+
+            TableSyncmodePO tableSyncmodePo = syncmodeImpl.query().eq("id", id).one();
+            if (tableSyncmodePo == null) {
+                log.error("【物理表同步配置为空】,id={}", id);
+                continue;
+            }
+            String versionSql = getVersionSql(tableSyncmodePo);
+
+            List<DeltaTimeDTO> systemVariable = systemVariables.getSystemVariable(id);
+
+            publish(true,
+                    accessPo.appId,
+                    accessPo.id,
+                    accessPo.tableName,
+                    1,
+                    dto.openTransmission,
+                    null,
+                    false,
+                    systemVariable,
+                    versionSql,
+                    TableSyncModeMap.INSTANCES.poToDto(tableSyncmodePo));
+        }
+        return ResultEnum.SUCCESS;
+    }
+
 }

@@ -5,10 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
-import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
-import com.fisk.dataaccess.dto.table.TableBusinessDTO;
-import com.fisk.dataaccess.dto.table.TableFieldsDTO;
-import com.fisk.dataaccess.dto.table.TableVersionDTO;
+import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.service.ITableFields;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -66,10 +63,10 @@ public class TableFieldsController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delVersionData(dto.getKeyStr()));
     }
 
-    /*@PostMapping("/test")
-    @ApiOperation(value = "对表进行操作时,查询依赖")
-    public void test(long appId, String sql) {
-        service.odsMetaDataInfo(appId,sql);
-    }*/
+    @PostMapping("/batchPublish")
+    @ApiOperation(value = "批量发布")
+    public ResultEntity<Object> batchPublish(@Validated @RequestBody BatchPublishDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.batchPublish(dto));
+    }
 
 }

@@ -6,10 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
-import com.fisk.dataaccess.dto.table.FieldNameDTO;
-import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
-import com.fisk.dataaccess.dto.table.TableBusinessDTO;
-import com.fisk.dataaccess.dto.table.TableFieldsDTO;
+import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 
@@ -83,6 +80,12 @@ public interface ITableFields extends IService<TableFieldsPO> {
      */
     List<FieldNameDTO> getTableFileInfo(long tableAccessId);
 
-    //void odsMetaDataInfo(long appId, String sql);
+    /**
+     * 批量发布
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum batchPublish(BatchPublishDTO dto);
 
 }
