@@ -1122,14 +1122,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         ftpConfig.hostname = modelDataSource.host;
         ftpConfig.port = modelDataSource.port;
-        if (modelDataSource.serviceType == 1) {
-            ftpConfig.linuxPath = nifiFilePath;
-            ftpConfig.fileBinary = modelDataSource.fileBinary;
-            ftpConfig.fileName = appRegistration.appAbbreviation;
-            ftpConfig.password = null;
-        } else {
-            ftpConfig.password = modelDataSource.connectPwd;
-            ftpConfig.linuxPath = null;
+        if (DataSourceTypeEnum.SFTP.getName().equals(modelDataSource.driveType)) {
+            if (modelDataSource.serviceType == 1) {
+                ftpConfig.linuxPath = nifiFilePath;
+                ftpConfig.fileBinary = modelDataSource.fileBinary;
+                ftpConfig.fileName = appRegistration.appAbbreviation;
+                ftpConfig.password = null;
+            } else {
+                ftpConfig.password = modelDataSource.connectPwd;
+                ftpConfig.linuxPath = null;
+            }
         }
         ftpConfig.username = modelDataSource.connectAccount;
         ftpConfig.ftpUseUtf8 = true;

@@ -53,6 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -243,7 +244,12 @@ public class BusinessProcessImpl
                 pushDto.customScript = customScript.getBatchScript(customScriptDto);
 
                 customScriptDto.execType = 2;
-                pushDto.factUpdateSql += customScript.getBatchScript(customScriptDto);
+
+                //自定义脚本
+                String batchScript = customScript.getBatchScript(customScriptDto);
+                if (!StringUtils.isEmpty(batchScript)) {
+                    pushDto.factUpdateSql += batchScript;
+                }
 
                 //获取事实表同步方式
                 Optional<SyncModePO> first = syncModePoList
