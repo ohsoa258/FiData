@@ -303,7 +303,6 @@ public class AppRegistrationImpl
         db.displayName = dataSource.dbName;
         db.qualifiedName = data.qualifiedName + "_" + dataSource.id;
         dbList.add(db);
-        data.dbList = new ArrayList<>();
         data.dbList = dbList;
 
         list.add(data);
