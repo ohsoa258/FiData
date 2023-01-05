@@ -2,9 +2,7 @@ package com.fisk.common.core.utils;
 
 import org.springframework.util.FileCopyUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
 
 /**
  * 文件互转二进制帮助类
@@ -47,6 +45,11 @@ public class FileBinaryUtils {
         } catch (Exception ex) {
             throw new RuntimeException("transform bin into File 出错", ex);
         }
+    }
+
+    public static InputStream getInputStream(String fileBinary) throws UnsupportedEncodingException {
+        byte[] bytes = fileBinary.getBytes("ISO-8859-1");
+        return new ByteArrayInputStream(bytes);
     }
 
 

@@ -272,7 +272,7 @@ public class PublishTaskController {
         log.info("任务发布中心调度");
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_UNIVERSAL_PUBLISH_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                pipelineTopicName,
+                MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW,
                 dto);
     }
 

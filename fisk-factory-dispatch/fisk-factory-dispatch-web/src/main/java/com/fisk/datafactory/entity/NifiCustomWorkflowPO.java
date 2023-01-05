@@ -44,4 +44,6 @@ public class NifiCustomWorkflowPO extends BasePO {
      */
     public int status;
 
+    public int workStatus;
+
 }

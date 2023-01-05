@@ -498,7 +498,7 @@ public class SftpUtils {
         }
     }
 
-    private static ChannelSftp getSftpConnect(Integer authType, String userName, String pw, String rsaPath,
+    public static ChannelSftp getSftpConnect(Integer authType, String userName, String pw, String rsaPath,
                                        String host, Integer port){
         ChannelSftp sftp = null;
         if (authType == SftpAuthTypeEnum.RSA_AUTH.getValue()){
@@ -519,14 +519,10 @@ public class SftpUtils {
 
 
     public static void main(String[] args) throws IOException, SftpException {
-        ChannelSftp currSftp = connect("192.168.21.21", 22, "sftp", "password01!", null);
-//        ChannelSftp targetSftp = connect("192.168.21.21", 22, "sftp", "password01!", "/upload/rsa/");
-        FileTreeSortDTO dto = getSortFile(currSftp, SortTypeNameEnum.FILENAME_SORT.getValue(),
-                SortTypeEnum.POSITIVE_SORT.getValue(), "/");
-//        copyFile("192.168.21.21", 22, "sftp", "password01!", "/.ssh/id_rsa_npw",
-//                "192.168.21.21", 22,  "sftp", "password01!", "/.ssh/id_rsa_npw",
-//                SortTypeNameEnum.FILENAME_SORT.getValue(), SortTypeEnum.POSITIVE_SORT.getValue(),
-//                1, "/upload/", "/upload/test/", "hhh.txt" );
+       //SftpAuthTypeEnum
+        ChannelSftp root = getSftpConnect(SftpAuthTypeEnum.USERNAME_PW_AUTH.getValue(), "root", "Password01!", null, "192.168.11.130", 22);
+        InputStream fileInputStream = getFileInputStream(root, SortTypeNameEnum.FILENAME_SORT.getValue(), SortTypeEnum.POSITIVE_SORT.getValue(), 1, "/root/upload/292/3005/0/");
+        uploadFile(root, fileInputStream, "/root/upload/292/3005/0/", "cfk.txt");
     }
 
 }
