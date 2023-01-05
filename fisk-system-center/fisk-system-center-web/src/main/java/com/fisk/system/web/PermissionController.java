@@ -93,4 +93,9 @@ public class PermissionController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, registerService.getServiceList());
     }
 
+    @GetMapping("/getAllMenuList")
+    @ApiOperation("获取服务列表")
+    public ResultEntity<Object> getAllMenuList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, registerService.getAllMenuList());
+    }
 }

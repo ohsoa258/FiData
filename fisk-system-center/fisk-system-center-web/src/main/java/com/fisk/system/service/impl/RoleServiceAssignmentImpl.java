@@ -130,6 +130,19 @@ public class RoleServiceAssignmentImpl
         return buildMenu(collect);
     }
 
+    @Override
+    public List<LoginServiceDTO> getAllMenuList() {
+        /*根据服务id集合获取服务列表*/
+        QueryWrapper<ServiceRegistryPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(ServiceRegistryPO::getDelFlag, 1);
+        List<ServiceRegistryPO> list = serviceRegistryMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+        List<Long> collect = list.stream().map(e -> e.getId()).collect(Collectors.toList());
+        return buildMenu(collect);
+    }
+
     public List<LoginServiceDTO> buildMenu(List<Long> collect) {
         QueryWrapper<ServiceRegistryPO> queryWrapper = new QueryWrapper<>();
         List<ServiceRegistryPO> list = serviceRegistryMapper.selectList(queryWrapper);

@@ -121,4 +121,11 @@ public interface UserClient {
      */
     @GetMapping("/info/getAllUserList")
     ResultEntity<List<UserDTO>> getAllUserList();
+
+    /**
+     * 获取菜单列表
+     * @return
+     */
+    @GetMapping("/auth/getAllMenuList")
+    ResultEntity<Object> getAllMenuList();
 }
