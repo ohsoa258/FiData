@@ -134,8 +134,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     @Resource
     private RedisTemplate redisTemplate;
 
-    private static Integer fetchSize = 50000;
-    private static Integer maxRowsPerFlowFile = 5000;
+    private static Integer fetchSize = 10000;
+    private static Integer maxRowsPerFlowFile = 10000;
 
     @Override
     public Page<DataReviewVO> listData(DataReviewQueryDTO query) {
