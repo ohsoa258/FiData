@@ -2,7 +2,6 @@ package com.fisk.license.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -14,7 +13,7 @@ import com.fisk.common.core.utils.HardWareUtils;
 import com.fisk.common.core.utils.LicenseEnCryptUtils;
 import com.fisk.common.core.utils.RegexUtils;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.license.dto.AddLicenceDTO;
+import com.fisk.system.dto.license.LicenceDTO;
 import com.fisk.license.dto.AuthorizeLicenceDTO;
 import com.fisk.license.dto.VerifyLicenceDTO;
 import com.fisk.license.entity.LicencePO;
@@ -33,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,50 +47,6 @@ public class LicenseImpl extends ServiceImpl<LicenseMapper, LicencePO> implement
 
     @Resource
     private UserClient userClient;
-
-    @Override
-    public ResultEntity<String> createCompanyLicence(AddLicenceDTO dto) {
-        String licence = "";
-        if (dto == null) {
-            return ResultEntityBuild.buildData(ResultEnum.PARAMTER_NOTNULL, licence);
-        }
-        if (StringUtils.isEmpty(dto.getPlatform()) ||
-                StringUtils.isEmpty(dto.getAuthorizer()) ||
-                StringUtils.isEmpty(dto.getMac()) ||
-                StringUtils.isEmpty(dto.getExpireTime()) ||
-                CollectionUtils.isEmpty(dto.getMenus()) ||
-                StringUtils.isEmpty(dto.getPlatform())) {
-            return ResultEntityBuild.buildData(ResultEnum.PARAMTER_NOTNULL, licence);
-        }
-        String mac = dto.getMac();
-        try {
-            // 平台
-            String platform = dto.getPlatform();
-            // 授权人
-            String authorizer = dto.getAuthorizer();
-            // 菜单url
-            String menuStr = JSON.toJSONString(dto.getMenus());
-            // 过期时间
-            String expireStamp = DateTimeUtils.dateToStamp(dto.getExpireTime());
-            // 授权时间
-            String authDateStamp = DateTimeUtils.dateToStamp(DateTimeUtils.getNowToShortDate("yyyy/MM/dd"));
-            // 参数拼接
-            String str = platform + "!@#" + authorizer + "!@#" + mac + "!@#" + menuStr + "!@#" + expireStamp + "!@#" + authDateStamp;
-
-            // 第二步：参数加密
-            licence = LicenseEnCryptUtils.encrypt(str);
-            // 第三步：解析加密数据
-            LicenceVO licenceVO = decryptCompanyLicense(licence);
-            if (licenceVO == null) {
-                return ResultEntityBuild.buildData(ResultEnum.LICENCE_DECRYPT_FAIL, licence);
-            }
-            licence = licence.replaceAll("[\\s*\t\n\r]", "");
-        } catch (Exception ex) {
-            log.error("【createCompanyLicence】 ex：" + ex);
-            throw new FkException(ResultEnum.ERROR, "【createCompanyLicence】 ex：" + ex);
-        }
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, licence);
-    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)

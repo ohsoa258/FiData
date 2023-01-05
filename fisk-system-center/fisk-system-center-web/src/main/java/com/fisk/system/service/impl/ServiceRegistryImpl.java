@@ -92,29 +92,26 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public  ResultEnum delServiceRegistry(int id) {
+    public ResultEnum delServiceRegistry(int id) {
         try {
             ServiceRegistryPO model = mapper.selectById(id);
             if (model == null) {
                 return ResultEnum.DATA_NOTEXISTS;
             }
             //判断是否为一级菜单
-            String parentType=ServiceTypeEnum.PARENT_LEVEL.getValue()+"";
-            if (parentType.equals(model.parentServeCode))
-            {
-               QueryWrapper<ServiceRegistryPO> queryWrapper=new QueryWrapper<>();
-               queryWrapper.lambda().eq(ServiceRegistryPO::getParentServeCode,model.serveCode);
-               List<ServiceRegistryPO> list=mapper.selectList(queryWrapper);
-               list.add(model);
-               for (ServiceRegistryPO item:list)
-               {
-                   int flat=mapper.deleteByIdWithFill(item);
-                   if (flat==0)
-                   {
-                       throw new FkException(ResultEnum.SAVE_DATA_ERROR);
-                   }
-               }
-               return ResultEnum.SUCCESS;
+            String parentType = ServiceTypeEnum.PARENT_LEVEL.getValue() + "";
+            if (parentType.equals(model.parentServeCode)) {
+                QueryWrapper<ServiceRegistryPO> queryWrapper = new QueryWrapper<>();
+                queryWrapper.lambda().eq(ServiceRegistryPO::getParentServeCode, model.serveCode);
+                List<ServiceRegistryPO> list = mapper.selectList(queryWrapper);
+                list.add(model);
+                for (ServiceRegistryPO item : list) {
+                    int flat = mapper.deleteByIdWithFill(item);
+                    if (flat == 0) {
+                        throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+                    }
+                }
+                return ResultEnum.SUCCESS;
             }
             return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         } catch (Exception e) {
@@ -152,13 +149,12 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
     }
 
     @Override
-    public List<ServiceRegistryDataDTO> getServiceRegistryList()
-    {
-        List<ServiceRegistryDataDTO> dto=new ArrayList<>();
-        QueryWrapper<ServiceRegistryPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.orderByDesc("create_time").lambda().eq(ServiceRegistryPO::getParentServeCode,"1");
-        List<ServiceRegistryPO> list=mapper.selectList(queryWrapper);
-        dto=ServiceRegistryMap.INSTANCES.poListToDtoList(list);
+    public List<ServiceRegistryDataDTO> getServiceRegistryList() {
+        List<ServiceRegistryDataDTO> dto = new ArrayList<>();
+        QueryWrapper<ServiceRegistryPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderByDesc("create_time").lambda().eq(ServiceRegistryPO::getParentServeCode, "1");
+        List<ServiceRegistryPO> list = mapper.selectList(queryWrapper);
+        dto = ServiceRegistryMap.INSTANCES.poListToDtoList(list);
         return dto;
     }
 

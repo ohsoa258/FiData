@@ -1,12 +1,16 @@
-package com.fisk.license.service;
+package com.fisk.system.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.license.dto.AuthorizeLicenceDTO;
 import com.fisk.license.dto.VerifyLicenceDTO;
 import com.fisk.license.entity.LicencePO;
 import com.fisk.license.vo.LicenceVO;
 import com.fisk.license.vo.VerifyLicenceVO;
+import com.fisk.system.dto.license.LicenceDTO;
+import com.fisk.system.entity.LicencePO;
+import com.fisk.system.vo.license.QueryLicenceVO;
 
 /**
  * @author dick
@@ -16,22 +20,22 @@ import com.fisk.license.vo.VerifyLicenceVO;
  */
 public interface ILicenseService extends IService<LicencePO> {
     /**
-     * 校验Url是否有访问权限
-     */
-    VerifyLicenceVO verifyCompanyLicenceByUrl(VerifyLicenceDTO dto);
-
-    /**
-     * 设置许可证
-     */
-    ResultEntity<String> setCompanyLicence(AuthorizeLicenceDTO dto);
-
-    /**
      * 查询许可证
      */
-    ResultEntity<LicenceVO> getCompanyLicence();
+    ResultEntity<QueryLicenceVO> getCompanyLicence(String keyWord);
 
     /**
-     * 获取计算机Mac地址
+     * 新增许可证
      */
-    ResultEntity<String> getMacAddress();
+    ResultEnum addCompanyLicence(LicenceDTO dto);
+
+    /**
+     * 编辑许可证
+     */
+    ResultEnum editCompanyLicence(LicenceDTO dto);
+
+    /**
+     * 删除许可证
+     */
+    ResultEnum deleteCompanyLicence(int id);
 }
