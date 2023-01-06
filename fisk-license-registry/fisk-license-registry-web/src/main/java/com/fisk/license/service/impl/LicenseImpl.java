@@ -225,20 +225,12 @@ public class LicenseImpl extends ServiceImpl<LicenseMapper, LicencePO> implement
             String json = JSONArray.toJSON(clientMenuList.getData()).toString();
             List<LoginServiceDTO> menuList = JSONArray.parseArray(json, LoginServiceDTO.class);
             menuList.forEach(t -> {
-                final String[] menuAddress = {t.getPath()};
-                if (RegexUtils.isContains(menus, menuAddress[0])) {
-                    menuNameList.add(t.getMeta().getTitle());
-                }
                 if (CollectionUtils.isNotEmpty(t.getChildren())) {
                     t.getChildren().forEach(next -> {
-                        menuAddress[0] += next.getPath();
-                        if (RegexUtils.isContains(menus, menuAddress[0])) {
-                            menuNameList.add(next.getMeta().getTitle());
-                        }
                         if (CollectionUtils.isNotEmpty(next.getChildren())) {
                             next.getChildren().forEach(next1 -> {
-                                menuAddress[0] += next1.getPath();
-                                if (RegexUtils.isContains(menus, menuAddress[0])) {
+                                String menuAddress = next1.getPath();
+                                if (RegexUtils.isContains(menus, menuAddress)) {
                                     menuNameList.add(next1.getMeta().getTitle());
                                 }
                             });
