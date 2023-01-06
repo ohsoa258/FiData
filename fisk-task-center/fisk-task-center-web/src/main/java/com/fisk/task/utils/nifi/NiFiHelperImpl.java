@@ -166,6 +166,9 @@ public class NiFiHelperImpl implements INiFiHelper {
         map.put("Database User", data.user);
         map.put("Password", data.pwd);
         map.put("Max Total Connections", "100");
+        if (StringUtils.isNotEmpty(data.dbcpMaxIdleConns)) {
+            map.put("dbcp-max-idle-conns", data.dbcpMaxIdleConns);
+        }
 
         ControllerServiceDTO dto = new ControllerServiceDTO();
         dto.setType(ControllerServiceTypeEnum.DBCP_CONNECTION_POOL.getName());

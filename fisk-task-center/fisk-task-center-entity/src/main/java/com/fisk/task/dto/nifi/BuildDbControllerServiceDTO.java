@@ -16,4 +16,8 @@ public class BuildDbControllerServiceDTO extends BaseProcessorDTO {
     public String driverLocation;
     public String user;
     public String pwd;
+    /**
+     * dbcp-max-idle-conns 最大连接数
+     */
+    public String dbcpMaxIdleConns;
 }

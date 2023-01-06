@@ -318,6 +318,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 sourceControllerService.user = dataSource.conAccount;
                 sourceControllerService.name = dataSource.name;
                 sourceControllerService.enabled = true;
+                sourceControllerService.dbcpMaxIdleConns = "50";
                 sourceControllerService.groupId = NifiConstants.ApiConstants.ROOT_NODE;
                 sourceControllerService.details = "details" + dataSource.name;
                 BusinessResult<ControllerServiceEntity> controllerServiceEntityBusinessResult = componentsBuild.buildDbControllerService(sourceControllerService);
