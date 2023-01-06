@@ -20,9 +20,18 @@ public class MqConstants {
 
     }
 
-    public static final class QueueConstants {
+    /**
+     * topic消费者组id
+     */
+    public static final class TopicGroupId{
 
-        public static final String INCREMENT_RESULT = "task.data.increment.result";
+        /**
+         * task模块kafka消费者组名称
+         */
+        public static final String TASK_GROUP_ID = "test";
+    }
+
+    public static final class QueueConstants {
 
         public static final String BUILD_NIFI_FLOW = "task.build.nifi.flow";
 
@@ -64,10 +73,6 @@ public class MqConstants {
 
         public static final String BUILD_ACCESS_API_FLOW = "build.access.api.flow";
 
-        public static final String BUILD_NIFI_PIPELINE_TOPICNAME_FLOW = "nifi.pipeline.topicName";
-
-        public static final String BUILD_UNIVERSAL_PUBLISH_FLOW = "task.build.universal_publish";
-
         public static final String BUILD_METADATA_FLOW = "task.build.metadata.flow";
 
         public static final String BUILD_EXEC_SCRIPT_FLOW = "build.exec.script.flow";
@@ -86,6 +91,11 @@ public class MqConstants {
          * build.sftpfile.copy.flow
          */
         public static final String BUILD_SFTP_FILE_COPY_FLOW = "build.sftpFile.copy";
+
+        /**
+         * task任务发布中心存放redis话题名称
+         */
+        public static final String TASK_PUBLIC_CENTER_TOPIC_NAME = "my-topic";
 
     }
 
