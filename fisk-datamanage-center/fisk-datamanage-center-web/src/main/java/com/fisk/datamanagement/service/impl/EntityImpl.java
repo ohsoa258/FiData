@@ -83,30 +83,31 @@ public class EntityImpl implements IEntity {
 
     /**
      * 获取元数据对象属性结构
+     *
      * @return
      */
-    public List<EntityTreeDTO> getEntityList()
-    {
-        List<EntityTreeDTO> list=new ArrayList<>();
-        try {
-            ResultDataDTO<String> data = atlasClient.get(searchBasic + "?typeName=rdbms_instance");
-            if (data.code != AtlasResultEnum.REQUEST_SUCCESS) {
-                throw new FkException(ResultEnum.BAD_REQUEST);
-            }
-            JSONObject jsonObj = JSON.parseObject(data.data);
-            JSONArray array = jsonObj.getJSONArray("entities");
-            //获取接入应用列表
-            ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
-            //获取建模业务域列表
-            ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
-            //获取数据源列表
-            ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
-            if (appList.code != ResultEnum.SUCCESS.getCode()
-                    || businessAreaList.code != ResultEnum.SUCCESS.getCode()
-                    || allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
-                throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
-            }
-            for (int i = 0; i < array.size(); i++) {
+    public List<EntityTreeDTO> getEntityList() {
+        List<EntityTreeDTO> list = new ArrayList<>();
+        //try {
+        ResultDataDTO<String> data = atlasClient.get(searchBasic + "?typeName=rdbms_instance");
+        if (data.code != AtlasResultEnum.REQUEST_SUCCESS) {
+            throw new FkException(ResultEnum.BAD_REQUEST);
+        }
+        JSONObject jsonObj = JSON.parseObject(data.data);
+        JSONArray array = jsonObj.getJSONArray("entities");
+        //获取接入应用列表
+        ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
+        //获取建模业务域列表
+        ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
+        //获取数据源列表
+        ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
+        if (appList.code != ResultEnum.SUCCESS.getCode()
+                || businessAreaList.code != ResultEnum.SUCCESS.getCode()
+                || allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        for (int i = 0; i < array.size(); i++) {
+            try {
                 if (EntityTypeEnum.DELETED.getName().equals(array.getJSONObject(i).getString("status"))) {
                     continue;
                 }
@@ -134,89 +135,95 @@ public class EntityImpl implements IEntity {
                 String referredEntities = jsonObj1.getString("referredEntities");
                 JSONObject guidEntityMap = JSON.parseObject(referredEntities);
                 Iterator sIterator = guidEntityMap.keySet().iterator();
-                List<EntityStagingDTO> stagingDTOList=new ArrayList<>();
+                List<EntityStagingDTO> stagingDTOList = new ArrayList<>();
                 //迭代器获取实例下key值
                 while (sIterator.hasNext()) {
-                    String key = sIterator.next().toString();
-                    String value = guidEntityMap.getString(key);
-                    JSONObject jsonValue = JSON.parseObject(value);
-                    //过滤已删除数据
-                    if (EntityTypeEnum.DELETED.getName().equals(jsonValue.getString("status"))) {
-                        continue;
-                    }
-                    //根据key获取json指定数据
-                    String typeName = jsonValue.getString("typeName");
-                    EntityStagingDTO childEntityDTO = new EntityStagingDTO();
-                    childEntityDTO.guid = jsonValue.getString("guid");
-                    String attributes = jsonValue.getString("attributes");
-                    JSONObject names = JSON.parseObject(attributes);
+                    try {
+                        String key = sIterator.next().toString();
+                        String value = guidEntityMap.getString(key);
+                        JSONObject jsonValue = JSON.parseObject(value);
+                        //过滤已删除数据
+                        if (EntityTypeEnum.DELETED.getName().equals(jsonValue.getString("status"))) {
+                            continue;
+                        }
+                        //根据key获取json指定数据
+                        String typeName = jsonValue.getString("typeName");
+                        EntityStagingDTO childEntityDTO = new EntityStagingDTO();
+                        childEntityDTO.guid = jsonValue.getString("guid");
+                        String attributes = jsonValue.getString("attributes");
+                        JSONObject names = JSON.parseObject(attributes);
 
-                    if ("stg".equals(names.getString("description"))) {
-                        continue;
-                    }
+                        if ("stg".equals(names.getString("description"))) {
+                            continue;
+                        }
 
-                    childEntityDTO.name = names.getString("name");
-                    childEntityDTO.type = typeName;
-                    childEntityDTO.displayName = names.getString("displayName");
-                    EntityTypeEnum typeNameEnum = EntityTypeEnum.getValue(typeName);
-                    switch (typeNameEnum) {
-                        case RDBMS_DB:
-                            childEntityDTO.parent = entityParentDTO.id;
-                            break;
-                        case RDBMS_TABLE:
-                            //实体为表时，需要获取所属应用或业务域
-                            String relationshipAttributes = jsonValue.getString("relationshipAttributes");
-                            JSONObject dbInfo = JSONObject.parseObject(relationshipAttributes);
-                            JSONObject dbObject = JSONObject.parseObject(dbInfo.getString("db"));
-                            Optional<DataSourceDTO> sourceData = allFiDataDataSource.data.stream().filter(e -> dbObject.getString("displayText").equals(e.conDbname)).findFirst();
-                            if (!sourceData.isPresent()) {
-                                continue;
-                            }
-                            Optional<AppBusinessInfoDTO> first = null;
-                            switch (sourceData.get().sourceBusinessType) {
-                                case ODS:
-                                    first = appList.data.stream().filter(e -> e.id == Integer.parseInt(names.getString("comment"))).findFirst();
-                                    break;
-                                case DW:
-                                    first = businessAreaList.data.stream().filter(e -> e.id == Integer.parseInt(names.getString("comment"))).findFirst();
-                                    break;
-                                default:
+                        childEntityDTO.name = names.getString("name");
+                        childEntityDTO.type = typeName;
+                        childEntityDTO.displayName = names.getString("displayName");
+                        EntityTypeEnum typeNameEnum = EntityTypeEnum.getValue(typeName);
+                        switch (typeNameEnum) {
+                            case RDBMS_DB:
+                                childEntityDTO.parent = entityParentDTO.id;
+                                break;
+                            case RDBMS_TABLE:
+                                //实体为表时，需要获取所属应用或业务域
+                                String relationshipAttributes = jsonValue.getString("relationshipAttributes");
+                                JSONObject dbInfo = JSONObject.parseObject(relationshipAttributes);
+                                JSONObject dbObject = JSONObject.parseObject(dbInfo.getString("db"));
+                                Optional<DataSourceDTO> sourceData = allFiDataDataSource.data.stream().filter(e -> dbObject.getString("displayText").equals(e.conDbname)).findFirst();
+                                if (!sourceData.isPresent()) {
                                     continue;
-                            }
-                            if (!first.isPresent()) {
-                                continue;
-                            }
-                            EntityStagingDTO dbStag = new EntityStagingDTO();
-                            dbStag.guid = dbObject.getString("guid") + "_" + first.get().name;
-                            dbStag.parent = dbObject.getString("guid");
-                            dbStag.name = first.get().name;
-                            dbStag.displayName = first.get().name;
-                            //库名
-                            dbStag.type = dbObject.getString("displayText");
-                            stagingDTOList.add(dbStag);
+                                }
+                                Optional<AppBusinessInfoDTO> first = null;
+                                switch (sourceData.get().sourceBusinessType) {
+                                    case ODS:
+                                        first = appList.data.stream().filter(e -> e.id == Integer.parseInt(names.getString("comment"))).findFirst();
+                                        break;
+                                    case DW:
+                                        first = businessAreaList.data.stream().filter(e -> e.id == Integer.parseInt(names.getString("comment"))).findFirst();
+                                        break;
+                                    default:
+                                        continue;
+                                }
+                                if (!first.isPresent()) {
+                                    continue;
+                                }
+                                EntityStagingDTO dbStag = new EntityStagingDTO();
+                                dbStag.guid = dbObject.getString("guid") + "_" + first.get().name;
+                                dbStag.parent = dbObject.getString("guid");
+                                dbStag.name = first.get().name;
+                                dbStag.displayName = first.get().name;
+                                //库名
+                                dbStag.type = dbObject.getString("displayText");
+                                stagingDTOList.add(dbStag);
 
-                            childEntityDTO.parent = dbStag.guid;
-                            break;
-                        case RDBMS_COLUMN:
-                            JSONObject tables = JSON.parseObject(names.getString("table"));
-                            childEntityDTO.parent = tables.getString("guid");
-                        default:
-                            break;
+                                childEntityDTO.parent = dbStag.guid;
+                                break;
+                            case RDBMS_COLUMN:
+                                JSONObject tables = JSON.parseObject(names.getString("table"));
+                                childEntityDTO.parent = tables.getString("guid");
+                            default:
+                                break;
+                        }
+                        stagingDTOList.add(childEntityDTO);
+                    } catch (Exception e) {
+                        log.error("getEntityTreeList while ex:" + e);
+                        continue;
                     }
-                    stagingDTOList.add(childEntityDTO);
                 }
                 List<EntityStagingDTO> collect = stagingDTOList.stream().distinct().collect(Collectors.toList());
                 list.add(buildChildTree(entityParentDTO, collect));
+            } catch (Exception e) {
+                log.error("getEntityTreeList ex:" + e);
+                continue;
             }
-            list.sort(Comparator.comparing(EntityTreeDTO::getLabel));
-        } catch (Exception e) {
-            log.error("getEntityTreeList ex:" + e);
-            throw new FkException(ResultEnum.SQL_ANALYSIS);
         }
-        String jsonString=JSONObject.toJSONString(list);
-        redisTemplate.opsForValue().set(metaDataEntity,jsonString);
+        list.sort(Comparator.comparing(EntityTreeDTO::getLabel));
+        String jsonString = JSONObject.toJSONString(list);
+        redisTemplate.opsForValue().set(metaDataEntity, jsonString);
         return list;
     }
+
 
     /**
      * 递归，建立子树形结构
