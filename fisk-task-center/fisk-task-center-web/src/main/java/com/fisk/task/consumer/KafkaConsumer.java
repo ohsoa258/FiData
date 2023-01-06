@@ -232,6 +232,13 @@ public class KafkaConsumer {
         taskPublish.taskPublish(message, ack);
     }
 
+    /**
+     * task.build.nifi.flow
+     *
+     * @param data
+     * @param ack
+     * @return
+     */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_NIFI_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     @MQConsumerLog
@@ -239,6 +246,13 @@ public class KafkaConsumer {
         return ResultEntityBuild.build(iNifiTaskListener.msg(data, ack));
     }
 
+    /**
+     * task.build.table.server.flow
+     *
+     * @param data
+     * @param ack
+     * @return
+     */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_TABLE_SERVER_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     @MQConsumerLog
@@ -246,6 +260,13 @@ public class KafkaConsumer {
         return ResultEntityBuild.build(iNifiTaskListener.buildDataServices(data, ack));
     }
 
+    /**
+     * task.build.atlas.tablecolumn.flow
+     *
+     * @param data
+     * @param ack
+     * @return
+     */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     @MQConsumerLog
@@ -253,6 +274,13 @@ public class KafkaConsumer {
         return ResultEntityBuild.build(buildAtlasTableAndColumnTaskListener.msg(data, ack));
     }
 
+    /**
+     * task.build.datamodel.doris.table.flow
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD)
@@ -260,6 +288,13 @@ public class KafkaConsumer {
         return ResultEntityBuild.build(buildDataModelDorisTableListener.msg(dataInfo, acke));
     }
 
+    /**
+     * task.build.doris.flow
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_DORIS_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     @MQConsumerLog(type = TraceTypeEnum.DORIS_MQ_BUILD)
@@ -267,6 +302,13 @@ public class KafkaConsumer {
         return ResultEntityBuild.build(buildDorisTaskListener.msg(dataInfo, acke));
     }
 
+    /**
+     * task.build.customwork.flow
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_CUSTOMWORK_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     @MQConsumerLog
@@ -274,6 +316,13 @@ public class KafkaConsumer {
         return ResultEntityBuild.build(buildNifiCustomWorkFlow.msg(dataInfo, acke));
     }
 
+    /**
+     * task.build.datainput.delete.pgsql.table.flow
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAINPUT_DELETE_PGSQL_TABLE_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_DELETE)
@@ -281,6 +330,13 @@ public class KafkaConsumer {
         return ResultEntityBuild.build(buildDataInputDeletePgTableListener.msg(dataInfo, acke));
     }
 
+    /**
+     * task.build.datainput.pgsql.table.flow
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_BUILD)
@@ -289,6 +345,13 @@ public class KafkaConsumer {
         return ResultEntityBuild.build(buildDataInputPgTableListener.msg(dataInfo, acke));
     }
 
+    /**
+     * task.build.olap.createmodel.flow
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_OLAP_CREATEMODEL_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     @MQConsumerLog(type = TraceTypeEnum.OLAP_CREATEMODEL_BUILD)
@@ -296,6 +359,13 @@ public class KafkaConsumer {
         return ResultEntityBuild.build(buildModelTaskListener.msg(dataInfo, acke));
     }
 
+    /**
+     * task.build.olap.wide.table.flow
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_OLAP_WIDE_TABLE_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     @MQConsumerLog
@@ -303,6 +373,13 @@ public class KafkaConsumer {
         return ResultEntityBuild.build(buildWideTableTaskListener.msg(dataInfo, acke));
     }
 
+    /**
+     * task.build.nifi.dispatch.flow
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     //@MQConsumerLog
@@ -310,6 +387,13 @@ public class KafkaConsumer {
         return ResultEntityBuild.build(iTriggerScheduling.unifiedControl(dataInfo, acke));
     }
 
+    /**
+     * task.build.immediatelyStart.flow
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_IMMEDIATELYSTART_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     @MQConsumerLog
@@ -331,6 +415,12 @@ public class KafkaConsumer {
         }
     }
 
+    /**
+     * task.build.governance.template.flow
+     *
+     * @param dataInfo
+     * @param acke
+     */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_GOVERNANCE_TEMPLATE_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     //@MQConsumerLog
@@ -339,11 +429,24 @@ public class KafkaConsumer {
         qualityReportListener.msg(dataInfo, acke);
     }
 
-    @KafkaListener(topics = "pipeline.supervision", containerFactory = "batchFactory", groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    /**
+     * pipeline.supervision
+     *
+     * @param dataInfo
+     * @param acke
+     */
+    @KafkaListener(topics = MqConstants.QueueConstants.PIPELINE_SUPERVISION, containerFactory = "batchFactory", groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     public void saveNifiStage(String dataInfo, Acknowledgment acke) {
         iNifiStage.saveNifiStage(dataInfo, acke);
     }
 
+    /**
+     * task.build.mdm.model
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
     @MQConsumerLog
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_MDM_MODEL_DATA, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
@@ -351,6 +454,13 @@ public class KafkaConsumer {
         return ResultEntityBuild.build(buildModelListener.msg(dataInfo, acke));
     }
 
+    /**
+     * task.build.mdm.entity
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
     @MQConsumerLog
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_MDM_ENTITY_DATA, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
@@ -358,24 +468,52 @@ public class KafkaConsumer {
         return ResultEntityBuild.build(buildModelListener.backgroundCreateTasks(dataInfo, acke));
     }
 
+    /**
+     * build.access.api.flow
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     public ResultEntity<Object> importData(String dataInfo, Acknowledgment acke) {
         return ResultEntityBuild.build(iNonRealTimeListener.importData(dataInfo, acke));
     }
 
+    /**
+     * task.build.metadata.flow
+     *
+     * @param dataInfo
+     * @param ack
+     * @return
+     */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_METADATA_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     public ResultEntity<Object> buildMetaData(String dataInfo, Acknowledgment ack) {
         return ResultEntityBuild.build(metaDataListener.metaData(dataInfo, ack));
     }
 
+    /**
+     * build.exec.script.flow
+     *
+     * @param dataInfo
+     * @param ack
+     * @return
+     */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     public ResultEntity<Object> buildExecScript(String dataInfo, Acknowledgment ack) {
         return ResultEntityBuild.build(iExecScriptListener.execScript(dataInfo, ack));
     }
 
+    /**
+     * build.sftpFile.copy
+     *
+     * @param dataInfo
+     * @param ack
+     * @return
+     */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_SFTP_FILE_COPY_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     public ResultEntity<Object> buildSftpCopyTask(String dataInfo, Acknowledgment ack) {

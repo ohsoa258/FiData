@@ -97,6 +97,11 @@ public class MqConstants {
          */
         public static final String TASK_PUBLIC_CENTER_TOPIC_NAME = "my-topic";
 
+        /**
+         * pipeline.supervision
+         */
+        public static final String PIPELINE_SUPERVISION = "pipeline.supervision";
+
     }
 
     /**
