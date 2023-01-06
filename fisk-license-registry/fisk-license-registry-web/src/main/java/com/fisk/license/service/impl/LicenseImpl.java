@@ -227,19 +227,19 @@ public class LicenseImpl extends ServiceImpl<LicenseMapper, LicencePO> implement
             menuList.forEach(t -> {
                 final String[] menuAddress = {t.getPath()};
                 if (RegexUtils.isContains(menus, menuAddress[0])) {
-                    menuNameList.add(t.getName());
+                    menuNameList.add(t.getMeta().getTitle());
                 }
                 if (CollectionUtils.isNotEmpty(t.getChildren())) {
                     t.getChildren().forEach(next -> {
                         menuAddress[0] += next.getPath();
                         if (RegexUtils.isContains(menus, menuAddress[0])) {
-                            menuNameList.add(next.getName());
+                            menuNameList.add(next.getMeta().getTitle());
                         }
                         if (CollectionUtils.isNotEmpty(next.getChildren())) {
                             next.getChildren().forEach(next1 -> {
                                 menuAddress[0] += next1.getPath();
                                 if (RegexUtils.isContains(menus, menuAddress[0])) {
-                                    menuNameList.add(next1.getName());
+                                    menuNameList.add(next1.getMeta().getTitle());
                                 }
                             });
                         }

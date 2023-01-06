@@ -83,8 +83,9 @@ public class LicenseImpl extends ServiceImpl<LicenseMapper, LicencePO> implement
             String licence = LicenseEnCryptUtils.encrypt(str);
             licence = licence.replaceAll("[\\s*\t\n\r]", "");
 
+            int maxId = 100001 + baseMapper.getMaxId();
             LicencePO licencePO = new LicencePO();
-            licencePO.setCustomerCode(dto.getCustomerCode());
+            licencePO.setCustomerCode(String.valueOf(maxId));
             licencePO.setCustomerName(dto.getCustomerName());
             licencePO.setCustomerLicense(licence);
             licencePO.setMachineKey(dto.getMachineKey());

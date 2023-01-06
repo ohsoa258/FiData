@@ -6,6 +6,7 @@ import com.fisk.system.entity.LicencePO;
 import com.fisk.system.vo.license.LicenceVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -17,5 +18,22 @@ import java.util.List;
  */
 @Mapper
 public interface LicenseMapper extends FKBaseMapper<LicencePO> {
+
+    /**
+     * 查询所有客户许可证信息
+     *
+     * @return 查询结果
+     */
     List<LicenceVO> getAll(@Param("keyWord") String keyWord);
+
+    /**
+     * 获取最大的ID
+     *
+     * @return 查询结果
+     */
+    @Select("SELECT\n" +
+            "\tifnull( MAX( id ), 0 ) AS maxId \n" +
+            "FROM\n" +
+            "\ttb_system_licence;")
+    int getMaxId();
 }
