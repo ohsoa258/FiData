@@ -7,6 +7,7 @@ import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.dto.access.NifiAccessDTO;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
@@ -362,5 +363,14 @@ public interface DataAccessClient {
     @ApiOperation("根据表名字段显示名称")
     @PostMapping("/DataOps/getTableColumnDisplay")
     ResultEntity<List<String[]>> getTableColumnDisplay(@Validated @RequestBody String tableName);
+
+    /**
+     * 元数据同步应用信息
+     *
+     * @return
+     */
+    @GetMapping("/appRegistration/synchronizationAppRegistration")
+    @ApiOperation(value = "元数据同步应用信息")
+    ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAppRegistration();
 
 }

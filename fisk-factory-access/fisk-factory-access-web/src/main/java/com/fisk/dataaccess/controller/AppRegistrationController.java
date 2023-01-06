@@ -11,6 +11,7 @@ import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
@@ -317,6 +318,12 @@ public class AppRegistrationController {
     @ApiOperation(value = "获取FiData ODS数据类型")
     public ResultEntity<Object> getDataTypeList(@PathVariable("appId") Integer appId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dataTypeList(appId));
+    }
+
+    @GetMapping("/synchronizationAppRegistration")
+    @ApiOperation(value = "元数据同步应用信息")
+    public ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAppRegistration() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.synchronizationAppRegistration());
     }
 
 }

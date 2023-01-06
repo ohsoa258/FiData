@@ -281,9 +281,7 @@ public class AppRegistrationImpl
      * @param dataSource
      */
     public List<MetaDataInstanceAttributeDTO> addDataSourceMetaData(AppRegistrationPO appRegistration, AppDataSourcePO dataSource) {
-        if (dataSource.driveType.toUpperCase().equals("SFTP")
-                || dataSource.driveType.toUpperCase().equals("FTP")
-                || dataSource.driveType.toUpperCase().equals("API")
+        if (dataSource.driveType.toUpperCase().equals("API")
                 || dataSource.driveType.toUpperCase().equals("RESTFULAPI")) {
             return null;
         }
@@ -296,6 +294,7 @@ public class AppRegistrationImpl
         data.rdbms_type = dataSource.driveType;
         data.displayName = appRegistration.appName;
         data.description = "stg";
+        data.comment = String.valueOf(appRegistration.id);
         //库
         List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
         MetaDataDbAttributeDTO db = new MetaDataDbAttributeDTO();
@@ -1698,6 +1697,31 @@ public class AppRegistrationImpl
             data.name = item.name;
             list.add(data);
         }
+        return list;
+    }
+
+    @Override
+    public List<MetaDataInstanceAttributeDTO> synchronizationAppRegistration() {
+        List<AppRegistrationPO> appRegistrationList = this.query().list();
+        if (CollectionUtils.isEmpty(appRegistrationList)) {
+            return new ArrayList<>();
+        }
+
+        List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
+
+        for (AppRegistrationPO appRegistration : appRegistrationList) {
+            AppDataSourcePO one = appDataSourceImpl.query().eq("app_id", appRegistration.id).one();
+            if (one == null) {
+                continue;
+            }
+            List<MetaDataInstanceAttributeDTO> data = addDataSourceMetaData(appRegistration, one);
+            if (CollectionUtils.isEmpty(data)) {
+                continue;
+            }
+
+            list.addAll(data);
+        }
+
         return list;
     }
 
