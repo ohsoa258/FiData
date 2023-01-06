@@ -779,10 +779,12 @@ public class MetaDataImpl implements IMetaData {
             atlasGuid = addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_TABLE, parentEntityGuid);
             isAdd = true;
         }
-        //同步业务分类
-        //associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
-        //同步业务元数据
-        //associatedBusinessMetaData(atlasGuid, dbName, dto.name);
+        if (!"stg".equals(dto.description)) {
+            //同步业务分类
+            associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
+            //同步业务元数据
+            associatedBusinessMetaData(atlasGuid, dbName, dto.name);
+        }
         if (isAdd) {
             return atlasGuid;
         }
@@ -1030,9 +1032,9 @@ public class MetaDataImpl implements IMetaData {
                     return;
                 }
                 data.typeName = first.get().name;
-                if (!StringUtils.isEmpty(first.get().appAbbreviation)) {
+                /*if (!StringUtils.isEmpty(first.get().appAbbreviation)) {
                     data.typeName = data.typeName + "_" + first.get().appAbbreviation;
-                }
+                }*/
             } else if (DataSourceConfigEnum.DMP_DW.getValue() == sourceData.get().id) {
                 //获取所有业务域
                 ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
