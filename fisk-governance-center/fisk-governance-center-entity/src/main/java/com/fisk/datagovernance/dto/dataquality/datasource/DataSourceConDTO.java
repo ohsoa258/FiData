@@ -37,7 +37,7 @@ public class DataSourceConDTO
      * ip
      */
     @ApiModelProperty(value = "ip")
-    @Length(min = 0, max = 50, message = "长度最多50")
+    @Length(min = 0, max = 255, message = "长度最多50")
     public String conIp;
 
     /**
