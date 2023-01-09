@@ -40,8 +40,10 @@ public class BloodCompensationImpl
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
 
-        //同步接入来源表元数据
+        //同步接入来源表元数据(解析接入表sql)
         synchronousAccessSourceMetaData(dataAccessMetaData.data);
+
+        //同步接入ods表以及stg表元数据
 
 
         return ResultEnum.SUCCESS;

@@ -136,7 +136,7 @@ public class MetaDataImpl implements IMetaData {
                     //新增stg表
                     String stgTableGuid = null;
                     if (!stg.equals(table.getComment())) {
-                        stgTableGuid = metaDataStgTable(table, dbGuid, db.name);
+                        stgTableGuid = metaDataStgTable(table, dbGuid);
                     }
                     if (StringUtils.isEmpty(tableGuid) || CollectionUtils.isEmpty(table.columnList)) {
                         continue;
@@ -151,12 +151,10 @@ public class MetaDataImpl implements IMetaData {
                             metaDataStgField(field, stgTableGuid);
                         }
                     }
-                    if (!CollectionUtils.isEmpty(table.columnList)) {
-                        //删除
-                        deleteMetaData(qualifiedNames, tableGuid);
-                        //同步血缘
-                        synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid); //, table.columnList);
-                    }
+                    //删除
+                    deleteMetaData(qualifiedNames, tableGuid);
+                    //同步血缘
+                    synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid); //, table.columnList);
                 }
             }
         }
@@ -780,16 +778,16 @@ public class MetaDataImpl implements IMetaData {
             isAdd = true;
         }
         //同步业务分类
-        //associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
+        associatedClassification(atlasGuid, dto.name, dbName, dto.comment);
         //同步业务元数据
-        //associatedBusinessMetaData(atlasGuid, dbName, dto.name);
+        associatedBusinessMetaData(atlasGuid, dbName, dto.name);
         if (isAdd) {
             return atlasGuid;
         }
         return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_TABLE, dto);
     }
 
-    public String metaDataStgTable(MetaDataTableAttributeDTO dto, String parentEntityGuid, String dbName) {
+    public String metaDataStgTable(MetaDataTableAttributeDTO dto, String parentEntityGuid) {
         String atlasGuid = getMetaDataConfig(dto.qualifiedName + stg_prefix);
         //替换前缀
         if (ods_suffix.equals(dto.name.substring(0, 4))) {
