@@ -97,4 +97,9 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
      */
     public String sheetName;
 
+    /**
+     * 目标数据源id
+     */
+    public Integer targetDbId;
+
 }

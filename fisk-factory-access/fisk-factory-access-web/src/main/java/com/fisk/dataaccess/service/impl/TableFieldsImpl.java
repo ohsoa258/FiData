@@ -473,6 +473,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         if (dataSourcePo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
+        AppRegistrationPO appRegistrationPo = appRegistration.query().eq("", appId).one();
+        if (appRegistrationPo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
         if (success && flag == 1 && !useExistTable) {
             UserInfo userInfo = userHelper.getLoginUserInfo();
             ResultEntity<BuildPhysicalTableDTO> result = tableAccessImpl.getBuildPhysicalTableDTO(accessId, appId);
@@ -482,6 +486,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.userId = userInfo.id;
             data.openTransmission = openTransmission;
             data.deltaTimes = deltaTimes;
+            data.targetDbId = appRegistrationPo.targetDbId;
 
             // 版本号入库、调用存储存储过程  
             List<TableFieldsPO> list = this.query().eq("table_access_id", accessId).list();
