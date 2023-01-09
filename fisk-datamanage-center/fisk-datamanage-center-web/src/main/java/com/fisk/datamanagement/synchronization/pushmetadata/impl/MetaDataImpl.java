@@ -159,7 +159,7 @@ public class MetaDataImpl implements IMetaData {
             }
         }
         //更新Redis
-        entityImpl.updateRedis();
+        //entityImpl.updateRedis();
         return ResultEnum.SUCCESS;
     }
 

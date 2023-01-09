@@ -279,7 +279,9 @@ public class AppRegistrationImpl
      */
     public List<MetaDataInstanceAttributeDTO> addDataSourceMetaData(AppRegistrationPO appRegistration, AppDataSourcePO dataSource) {
         if (dataSource.driveType.toUpperCase().equals("API")
-                || dataSource.driveType.toUpperCase().equals("RESTFULAPI")) {
+                || dataSource.driveType.toUpperCase().equals("RESTFULAPI")
+                || dataSource.driveType.toUpperCase().equals("SFTP")
+                || dataSource.driveType.toUpperCase().equals("FTP")) {
             return null;
         }
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();

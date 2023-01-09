@@ -44,7 +44,7 @@ public class BloodCompensationImpl
         synchronousAccessSourceMetaData(dataAccessMetaData.data);
 
         //同步接入ods表以及stg表元数据
-
+        synchronousAccessTableSourceMetaData();
 
         return ResultEnum.SUCCESS;
     }
@@ -54,7 +54,7 @@ public class BloodCompensationImpl
      *
      * @return
      */
-    public ResultEnum synchronousAccessSourceMetaData(List<DataAccessSourceTableDTO> dataAccessMetaData) {
+    public void synchronousAccessSourceMetaData(List<DataAccessSourceTableDTO> dataAccessMetaData) {
         //获取接入所有应用
         ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAppRegistration = dataAccessClient.synchronizationAppRegistration();
         if (synchronizationAppRegistration.code != ResultEnum.SUCCESS.getCode()) {
@@ -63,7 +63,7 @@ public class BloodCompensationImpl
 
         if (CollectionUtils.isEmpty(synchronizationAppRegistration.data)
                 || CollectionUtils.isEmpty(dataAccessMetaData)) {
-            return ResultEnum.SUCCESS;
+            return;
         }
 
         for (DataAccessSourceTableDTO accessTable : dataAccessMetaData) {
@@ -94,8 +94,16 @@ public class BloodCompensationImpl
             first.get().dbList.get(0).tableList = tableList;
         }
 
-        return metaData.consumeMetaData(synchronizationAppRegistration.data);
+        metaData.consumeMetaData(synchronizationAppRegistration.data);
 
+    }
+
+    public void synchronousAccessTableSourceMetaData() {
+        ResultEntity<List<MetaDataInstanceAttributeDTO>> accessTable = dataAccessClient.synchronizationAccessTable();
+        if (accessTable.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        metaData.consumeMetaData(accessTable.data);
     }
 
 }
