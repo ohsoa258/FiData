@@ -162,7 +162,15 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 return ResultEntityBuild.build(ResultEnum.CRON_ERROR);
             }
         }
-
+        //去除空workflowId
+        if (CollectionUtils.isNotEmpty(start)) {
+            String workflowId = start.get(0).workflowId;
+            list.stream().filter(Objects::nonNull).forEach(e -> {
+                if (StringUtils.isEmpty(e.workflowId)) {
+                    e.workflowId = workflowId;
+                }
+            });
+        }
         // 批量保存tb_nifi_custom_wokflow_detail
         boolean success = this.saveOrUpdateBatch(list);
         for (NifiCustomWorkflowDetailDTO detail : dto.list) {
@@ -698,11 +706,11 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         if (CollectionUtils.isNotEmpty(dto.taskSetting)) {
             //修改sftp组件的父子级配置,旨在解决修改一个组件就要发布整个管道的
             //if (Objects.equals(dto.componentsId, ChannelDataEnum.SFTP_FILE_COPY_TASK.getValue())) {
-                taskSetting.updateTaskSetting(dto.id, dto.taskSetting);
-                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPo = this.query().eq("pid", dto.id).one();
-                if(Objects.nonNull(nifiCustomWorkflowDetailPo)){
-                    taskSetting.updateTaskSetting(nifiCustomWorkflowDetailPo.id, dto.taskSetting);
-                }
+            taskSetting.updateTaskSetting(dto.id, dto.taskSetting);
+            NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPo = this.query().eq("pid", dto.id).one();
+            if (Objects.nonNull(nifiCustomWorkflowDetailPo)) {
+                taskSetting.updateTaskSetting(nifiCustomWorkflowDetailPo.id, dto.taskSetting);
+            }
             //}
         }
 
