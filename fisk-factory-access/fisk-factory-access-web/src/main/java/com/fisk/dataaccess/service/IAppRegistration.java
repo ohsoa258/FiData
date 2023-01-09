@@ -11,6 +11,7 @@ import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
@@ -283,5 +284,19 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return
      */
     JSONObject dataTypeList(Integer appId);
+
+    /**
+     * 元数据同步所有应用
+     *
+     * @return
+     */
+    List<MetaDataInstanceAttributeDTO> synchronizationAppRegistration();
+
+    /**
+     * 元数据同步所有接入表
+     *
+     * @return
+     */
+    List<MetaDataInstanceAttributeDTO> synchronizationAccessTable();
 
 }

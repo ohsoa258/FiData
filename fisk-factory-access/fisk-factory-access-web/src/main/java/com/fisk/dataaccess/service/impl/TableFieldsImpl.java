@@ -58,7 +58,6 @@ import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
-import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
@@ -506,6 +505,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             try {
                 TableAccessPO accessPo = tableAccessImpl.query().eq("id", accessId).one();
                 data.sheetName = accessPo.sheet;
+                List<MetaDataInstanceAttributeDTO> metaDataList = new ArrayList<>();
                 // 实时--RestfulAPI类型  or  非实时--api类型
                 //0实时
                 if ((registration.appType == 0
@@ -521,7 +521,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     // 创建表流程
                     publishTaskClient.publishBuildPhysicsTableTask(data);
                     // 构建元数据实时同步数据对象
-                    buildMetaDataInstanceAttribute(registration, accessId, 1);
+                    metaDataList = buildMetaDataInstanceAttribute(registration, accessId, 1);
                 } else if (registration.appType == 1) {
                     if (DataSourceTypeEnum.FTP.getName().equals(dataSourcePo.driveType) || data.sftpFlow) {
                         data.excelFlow = true;
@@ -533,8 +533,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     //log.info(JSON.toJSONString(data));
                     //publishTaskClient.publishBuildAtlasTableTask(data);
                     //构建元数据实时同步数据对象
-                    buildMetaDataInstanceAttribute(registration, accessId, 2);
+                    metaDataList = buildMetaDataInstanceAttribute(registration, accessId, 2);
                 }
+                //同步元数据
+                consumeMetaData(metaDataList);
 
 
             } catch (Exception e) {
@@ -638,7 +640,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      * @author Lock
      * @date 2022/7/5 16:51
      */
-    public void buildMetaDataInstanceAttribute(AppRegistrationPO app, long accessId, int flag) {
+    public List<MetaDataInstanceAttributeDTO> buildMetaDataInstanceAttribute(AppRegistrationPO app, long accessId, int flag) {
 
         int apiType = 1;
         int tableType = 2;
@@ -683,7 +685,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
         TableAccessPO tableAccess = tableAccessImpl.query().eq("id", accessId).one();
         if (tableAccess == null) {
-            return;
+            return new ArrayList<>();
         }
         List<Long> userIds = new ArrayList<>();
         // 表
@@ -698,13 +700,14 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             table.setDescription(tableAccess.getTableDes());
             table.setComment(String.valueOf(app.getId()));
             table.setDisplayName(tableAccess.displayName);
+            table.setOwner(app.appPrincipal);
 
             //所属人
-            userIds.add(Long.parseLong(tableAccess.createUser));
+            /*userIds.add(Long.parseLong(tableAccess.createUser));
             ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
             if (userListByIds.code == ResultEnum.SUCCESS.getCode()) {
                 table.setOwner(userListByIds.data.get(0).getUsername());
-            }
+            }*/
 
 
             // 字段
@@ -743,8 +746,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         table.setContact_info(app.getAppPrincipal());
                         table.setDescription(tb.getTableDes());
                         table.setComment(String.valueOf(app.getId()));
-                        table.setOwner(String.valueOf(tb.id));
-                        userIds.add(tb.id);
+                        table.setOwner(app.appPrincipal);
+                        //userIds.add(tb.id);
                         // 字段
                         List<MetaDataColumnAttributeDTO> columnList = this.query()
                                 .eq("table_access_id", tb.id)
@@ -760,13 +763,14 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                                     field.setComment(e.getDisplayName());
                                     field.setDataType(e.fieldType);
                                     field.setDisplayName(e.displayName);
+                                    field.setOwner(table.owner);
                                     return field;
                                 }).collect(Collectors.toList());
 
                         table.setColumnList(columnList);
                         return table;
                     }).collect(Collectors.toList());
-            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
+            /*ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
             if (userListByIds.code == ResultEnum.SUCCESS.getCode()) {
                 tableList.stream().forEach(e -> {
                     Optional<UserDTO> first = userListByIds.data.stream().filter(p -> p.id == Long.parseLong(e.owner)).findFirst();
@@ -775,7 +779,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         e.columnList.stream().map(p -> p.owner = e.owner).collect(Collectors.toList());
                     }
                 });
-            }
+            }*/
             db.setTableList(tableList);
             dbList.add(db);
             instance.setDbList(dbList);
@@ -783,7 +787,15 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
         list.add(instance);
 
+        return list;
+    }
 
+    /**
+     * 调用元数据
+     *
+     * @param list
+     */
+    public void consumeMetaData(List<MetaDataInstanceAttributeDTO> list) {
         ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
         cachedThreadPool.execute(new Runnable() {
             @Override
@@ -797,17 +809,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 }
             }
         });
-
-        /*try {
-            MetaDataAttributeDTO data = new MetaDataAttributeDTO();
-            data.instanceList = list;
-            data.userId = userHelper.getLoginUserInfo().id;
-            // 更新元数据内容
-            log.info("构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
-            dataManageClient.metaData(data);
-        } catch (Exception e) {
-            log.error("【dataManageClient.MetaData()】方法报错,ex", e);
-        }*/
     }
 
     /**

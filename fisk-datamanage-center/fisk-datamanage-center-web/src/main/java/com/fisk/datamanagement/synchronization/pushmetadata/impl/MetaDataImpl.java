@@ -136,7 +136,7 @@ public class MetaDataImpl implements IMetaData {
                     //新增stg表
                     String stgTableGuid = null;
                     if (!stg.equals(table.getComment())) {
-                        stgTableGuid = metaDataStgTable(table, dbGuid, db.name);
+                        stgTableGuid = metaDataStgTable(table, dbGuid);
                     }
                     if (StringUtils.isEmpty(tableGuid) || CollectionUtils.isEmpty(table.columnList)) {
                         continue;
@@ -151,12 +151,10 @@ public class MetaDataImpl implements IMetaData {
                             metaDataStgField(field, stgTableGuid);
                         }
                     }
-                    if (!CollectionUtils.isEmpty(table.columnList)) {
-                        //删除
-                        deleteMetaData(qualifiedNames, tableGuid);
-                        //同步血缘
-                        synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid); //, table.columnList);
-                    }
+                    //删除
+                    deleteMetaData(qualifiedNames, tableGuid);
+                    //同步血缘
+                    synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid); //, table.columnList);
                 }
             }
         }
@@ -791,7 +789,7 @@ public class MetaDataImpl implements IMetaData {
         return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_TABLE, dto);
     }
 
-    public String metaDataStgTable(MetaDataTableAttributeDTO dto, String parentEntityGuid, String dbName) {
+    public String metaDataStgTable(MetaDataTableAttributeDTO dto, String parentEntityGuid) {
         String atlasGuid = getMetaDataConfig(dto.qualifiedName + stg_prefix);
         //替换前缀
         if (ods_suffix.equals(dto.name.substring(0, 4))) {
@@ -1032,9 +1030,9 @@ public class MetaDataImpl implements IMetaData {
                     return;
                 }
                 data.typeName = first.get().name;
-                /*if (!StringUtils.isEmpty(first.get().appAbbreviation)) {
+                if (!StringUtils.isEmpty(first.get().appAbbreviation)) {
                     data.typeName = data.typeName + "_" + first.get().appAbbreviation;
-                }*/
+                }
             } else if (DataSourceConfigEnum.DMP_DW.getValue() == sourceData.get().id) {
                 //获取所有业务域
                 ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
