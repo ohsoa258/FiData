@@ -1722,7 +1722,8 @@ public class AppRegistrationImpl
         return list;
     }
 
-    public List<MetaDataInstanceAttributeDTO> aa() {
+    @Override
+    public List<MetaDataInstanceAttributeDTO> synchronizationAccessTable() {
         List<AppRegistrationPO> appRegistrationList = this.query().list();
         if (CollectionUtils.isEmpty(appRegistrationList)) {
             return new ArrayList<>();
@@ -1740,14 +1741,21 @@ public class AppRegistrationImpl
             }
             List<MetaDataTableAttributeDTO> metaDataTable = new ArrayList<>();
             for (TableAccessPO tableAccessPo : tableAccessPoList) {
-                metaDataTable.addAll(getAccessTableMetaData(appRegistrationPo, tableAccessPo.id, 1, metaDataInstance.dbList.get(0).qualifiedName));
+                metaDataTable.addAll(getAccessTableMetaData(appRegistrationPo, tableAccessPo.id, metaDataInstance.dbList.get(0).qualifiedName));
             }
-
+            metaDataInstance.dbList.get(0).tableList = metaDataTable;
+            list.add(metaDataInstance);
         }
 
         return list;
     }
 
+    /**
+     * 获取实例元数据
+     *
+     * @param app
+     * @return
+     */
     public MetaDataInstanceAttributeDTO getMetaDataInstance(AppRegistrationPO app) {
         ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(app.targetDbId);
         if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
@@ -1792,9 +1800,16 @@ public class AppRegistrationImpl
         return instance;
     }
 
+    /**
+     * 获取应用下所有表元数据
+     *
+     * @param app
+     * @param accessId
+     * @param qualifiedName
+     * @return
+     */
     public List<MetaDataTableAttributeDTO> getAccessTableMetaData(AppRegistrationPO app,
                                                                   long accessId,
-                                                                  int flag,
                                                                   String qualifiedName) {
 
         TableAccessPO tableAccess = tableAccessImpl.query().eq("id", accessId).one();
@@ -1805,74 +1820,37 @@ public class AppRegistrationImpl
         // 表
         List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
 
-        if (flag == 1) {
-            MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
-            table.setQualifiedName(qualifiedName + "_" + tableAccess.getId());
-            table.setName(TableNameGenerateUtils.buildOdsTableName(tableAccess.getTableName(),
-                    app.appAbbreviation,
-                    app.whetherSchema));
-            table.setContact_info(app.getAppPrincipal());
-            table.setDescription(tableAccess.getTableDes());
-            table.setComment(String.valueOf(app.getId()));
-            table.setDisplayName(tableAccess.displayName);
-            table.setOwner(app.appPrincipal);
+        MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+        table.setQualifiedName(qualifiedName + "_" + tableAccess.getId());
+        table.setName(TableNameGenerateUtils.buildOdsTableName(tableAccess.getTableName(),
+                app.appAbbreviation,
+                app.whetherSchema));
+        table.setContact_info(app.getAppPrincipal());
+        table.setDescription(tableAccess.getTableDes());
+        table.setComment(String.valueOf(app.getId()));
+        table.setDisplayName(tableAccess.displayName);
+        table.setOwner(app.appPrincipal);
 
-            // 字段
-            List<MetaDataColumnAttributeDTO> columnList = tableFieldsImpl.query().eq("table_access_id", tableAccess.id)
-                    .list()
-                    .stream()
-                    .filter(Objects::nonNull)
-                    .map(e -> {
-                        MetaDataColumnAttributeDTO field = new MetaDataColumnAttributeDTO();
-                        field.setQualifiedName(table.qualifiedName + "_" + e.getId());
-                        field.setName(e.getFieldName());
-                        field.setContact_info(app.getAppPrincipal());
-                        field.setDescription(e.getFieldDes());
-                        field.setComment(e.getDisplayName());
-                        field.setDataType(e.fieldType);
-                        field.setDisplayName(e.displayName);
-                        field.setOwner(table.owner);
-                        return field;
-                    }).collect(Collectors.toList());
+        // 字段
+        List<MetaDataColumnAttributeDTO> columnList = tableFieldsImpl.query().eq("table_access_id", tableAccess.id)
+                .list()
+                .stream()
+                .filter(Objects::nonNull)
+                .map(e -> {
+                    MetaDataColumnAttributeDTO field = new MetaDataColumnAttributeDTO();
+                    field.setQualifiedName(table.qualifiedName + "_" + e.getId());
+                    field.setName(e.getFieldName());
+                    field.setContact_info(app.getAppPrincipal());
+                    field.setDescription(e.getFieldDes());
+                    field.setComment(e.getDisplayName());
+                    field.setDataType(e.fieldType);
+                    field.setDisplayName(e.displayName);
+                    field.setOwner(table.owner);
+                    return field;
+                }).collect(Collectors.toList());
 
-            table.setColumnList(columnList);
-            tableList.add(table);
-        } else {
-            tableList = tableAccessImpl.query().eq("api_id", tableAccess.apiId).list()
-                    .stream().filter(Objects::nonNull)
-                    .map(tb -> {
-                        // 表
-                        MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
-                        table.setQualifiedName(qualifiedName + "_" + tb.getId());
-                        table.setName(TableNameGenerateUtils.buildOdsTableName(tb.getTableName(),
-                                app.appAbbreviation,
-                                app.whetherSchema));
-                        table.setContact_info(app.getAppPrincipal());
-                        table.setDescription(tb.getTableDes());
-                        table.setComment(String.valueOf(app.getId()));
-                        table.setOwner(app.appPrincipal);
-                        // 字段
-                        List<MetaDataColumnAttributeDTO> columnList = tableFieldsImpl.query()
-                                .eq("table_access_id", tb.id)
-                                .list()
-                                .stream()
-                                .filter(Objects::nonNull)
-                                .map(e -> {
-                                    MetaDataColumnAttributeDTO field = new MetaDataColumnAttributeDTO();
-                                    field.setQualifiedName(qualifiedName + "_" + tb.getId() + "_" + e.getId());
-                                    field.setName(e.getFieldName());
-                                    field.setContact_info(app.getAppPrincipal());
-                                    field.setDescription(e.getFieldDes());
-                                    field.setComment(e.getDisplayName());
-                                    field.setDataType(e.fieldType);
-                                    field.setDisplayName(e.displayName);
-                                    return field;
-                                }).collect(Collectors.toList());
-
-                        table.setColumnList(columnList);
-                        return table;
-                    }).collect(Collectors.toList());
-        }
+        table.setColumnList(columnList);
+        tableList.add(table);
 
         return tableList;
     }

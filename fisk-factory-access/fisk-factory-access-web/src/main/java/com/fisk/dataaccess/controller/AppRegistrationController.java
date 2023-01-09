@@ -326,4 +326,10 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.synchronizationAppRegistration());
     }
 
+    @GetMapping("/synchronizationAccessTable")
+    @ApiOperation(value = "元数据同步所有接入表")
+    public ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAccessTable() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.synchronizationAccessTable());
+    }
+
 }

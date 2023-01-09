@@ -292,4 +292,11 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      */
     List<MetaDataInstanceAttributeDTO> synchronizationAppRegistration();
 
+    /**
+     * 元数据同步所有接入表
+     *
+     * @return
+     */
+    List<MetaDataInstanceAttributeDTO> synchronizationAccessTable();
+
 }

@@ -373,4 +373,13 @@ public interface DataAccessClient {
     @ApiOperation(value = "元数据同步应用信息")
     ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAppRegistration();
 
+    /**
+     * 元数据同步所有接入表
+     *
+     * @return
+     */
+    @GetMapping("/appRegistration/synchronizationAccessTable")
+    @ApiOperation(value = "元数据同步所有接入表")
+    ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAccessTable();
+
 }
