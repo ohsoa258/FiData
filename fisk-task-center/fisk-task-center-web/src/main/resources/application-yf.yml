@@ -28,6 +28,7 @@ nifi:
     operation-interval: 2000
     number-of-operations: 5
     data-governance-url: http://10.178.188.31:8083
+    dispatch-email-url-prefix: http://10.178.188.31:82        # 此配置未生效
 nifi-ConcurrentTasks: 1
 nifi-FetchSize: 10000
 nifi-MaxRowsPerFlowFile: 10000

@@ -41,7 +41,7 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
     PipelLogMapper pipelLogMapper;
     @Resource
     DataFactoryClient dataFactoryClient;
-    @Value("${nifi.pipeline.data-governance-url}")
+    @Value("${nifi.pipeline.dispatch-email-url-prefix}")
     private String dispatchEmailUrlPrefix;
 
     @Override
