@@ -390,7 +390,7 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public ResultEntity<List<UserDTO>> getAllUserList() {
-        List<UserDTO>   userList = mapper.getUserListByIds(null);
+        List<UserDTO> userList = mapper.getUserListByIds(null);
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, userList);
     }
 
@@ -433,12 +433,15 @@ public class UserServiceImpl implements IUserService {
             //解析返回数据
             String result = EntityUtils.toString(entity, "UTF-8");
             JSONObject jsonObject = JSONObject.parseObject(result);
-            if (jsonObject.containsKey("code") && (Integer) jsonObject.get("code") == 200) {
+            String msg = "";
+            if ((Integer) jsonObject.get("code") == 200) {
                 jsonObject = JSON.parseObject(jsonObject.getString("data"));
                 token = jsonObject.getString("token");
+            } else {
+                msg = jsonObject.getString("msg");
             }
             if (StringUtils.isEmpty(token)) {
-                throw new FkException(ResultEnum.GET_JWT_TOKEN_ERROR);
+                throw new FkException(ResultEnum.GET_JWT_TOKEN_ERROR, msg);
             }
         } catch (IOException | ParseException e) {
             throw new FkException(ResultEnum.SEND_POST_REQUEST_ERROR);
