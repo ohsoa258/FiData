@@ -108,7 +108,7 @@ public class AtlasTest {
         bb.appId = 123L;
         service.publishTask(TaskTypeEnum.BUILD_NIFI_FLOW.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_NIFI_FLOW,
+                MqConstants.QueueConstants.NifiTopicConstants.BUILD_NIFI_FLOW,
                 bb);
     }
     @Test

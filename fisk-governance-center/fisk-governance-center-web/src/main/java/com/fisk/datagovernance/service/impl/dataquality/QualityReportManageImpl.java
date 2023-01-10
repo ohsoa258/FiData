@@ -856,7 +856,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
             unifiedControlDTO.setId(id);
             unifiedControlDTO.setScheduleType(SchedulingStrategyTypeEnum.CRON);
             unifiedControlDTO.setScheduleExpression(cron);
-            unifiedControlDTO.setTopic(MqConstants.QueueConstants.BUILD_GOVERNANCE_TEMPLATE_FLOW);
+            unifiedControlDTO.setTopic(MqConstants.QueueConstants.GovernanceTopicConstants.BUILD_GOVERNANCE_TEMPLATE_FLOW);
             unifiedControlDTO.setType(OlapTableEnum.GOVERNANCE);
             unifiedControlDTO.setDataClassifyEnum(DataClassifyEnum.UNIFIEDCONTROL);
             unifiedControlDTO.setDeleted(isDelTask);

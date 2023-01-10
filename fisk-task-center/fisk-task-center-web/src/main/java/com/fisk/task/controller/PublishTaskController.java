@@ -52,7 +52,7 @@ public class PublishTaskController {
     public ResultEntity<Object> publishBuildNifiFlowTask(@RequestBody BuildNifiFlowDTO data) {
         return iBuildKfkTaskService.publishTask("创建表:" + data.tableName + "的数据流任务",
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_NIFI_FLOW,
+                MqConstants.QueueConstants.NifiTopicConstants.BUILD_NIFI_FLOW,
                 data);
     }
 
@@ -61,7 +61,7 @@ public class PublishTaskController {
     public ResultEntity<Object> publishBuildDataServices(@RequestBody BuildTableServiceDTO data) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_TABLE_SERVER_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_TABLE_SERVER_FLOW,
+                MqConstants.QueueConstants.DataServiceTopicConstants.BUILD_TABLE_SERVER_FLOW,
                 data);
     }
 
@@ -76,7 +76,7 @@ public class PublishTaskController {
     public ResultEntity<Object> publishBuildDorisTask(@RequestBody TableInfoDTO data) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_DORIS_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_DORIS_FLOW,
+                MqConstants.QueueConstants.DorisTopicConstants.BUILD_DORIS_FLOW,
                 data);
     }
 
@@ -91,7 +91,7 @@ public class PublishTaskController {
     public ResultEntity<Object> publishBuildAtlasInstanceTask(@RequestBody AtlasEntityQueryDTO ArDto) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_ATLAS_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_ATLAS_INSTANCE_FLOW,
+                MqConstants.QueueConstants.MetaDataTopicConstants.BUILD_ATLAS_INSTANCE_FLOW,
                 ArDto);
     }
 
@@ -126,7 +126,7 @@ public class PublishTaskController {
         log.info("进入建表" + ArDto.tableName);
         return iBuildKfkTaskService.publishTask("数据湖表:" + ArDto.tableName + ",结构处理成功",
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW,
+                MqConstants.QueueConstants.DataInputTopicConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW,
                 ArDto);
     }
 
@@ -142,7 +142,7 @@ public class PublishTaskController {
     public ResultEntity<Object> publishBuildPGSqlStgToOdsTask(@RequestBody AtlasEntityDeleteDTO entityId) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_DATAINPUT_PGSQL_STGTOODS_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_STGTOODS_FLOW,
+                MqConstants.QueueConstants.DataInputTopicConstants.BUILD_DATAINPUT_PGSQL_STGTOODS_FLOW,
                 entityId);
     }
 
@@ -159,7 +159,7 @@ public class PublishTaskController {
     public ResultEntity<Object> publishBuildDorisIncrementalUpdateTask(@RequestBody AtlasEntityDeleteDTO entityId) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_DORIS_INCREMENTAL_UPDATE_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_DORIS_INCREMENTAL_FLOW,
+                MqConstants.QueueConstants.DorisTopicConstants.BUILD_DORIS_INCREMENTAL_FLOW,
                 entityId);
     }
 
@@ -174,7 +174,7 @@ public class PublishTaskController {
     public ResultEntity<Object> publishBuildAtlasEntityDeleteTask(@RequestBody AtlasEntityDeleteDTO entityId) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_ATLAS_ENTITYDELETE_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_ATLAS_ENTITYDELETE_FLOW,
+                MqConstants.QueueConstants.MetaDataTopicConstants.BUILD_ATLAS_ENTITYDELETE_FLOW,
                 entityId);
     }
 
@@ -189,7 +189,7 @@ public class PublishTaskController {
     public ResultEntity<Object> publishBuildDeletePgsqlTableTask(@RequestBody PgsqlDelTableDTO delTable) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_DATAINPUT_DELETE_PGSQL_STGTOODS_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_DATAINPUT_DELETE_PGSQL_TABLE_FLOW,
+                MqConstants.QueueConstants.DataInputTopicConstants.BUILD_DATAINPUT_DELETE_PGSQL_TABLE_FLOW,
                 delTable);
     }
 
@@ -204,7 +204,7 @@ public class PublishTaskController {
     public ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody ModelPublishDataDTO modelPublishDataDTO) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_DATAMODEL_DORIS_TABLE.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE,
+                MqConstants.QueueConstants.MdmTopicConstants.BUILD_DATAMODEL_DORIS_TABLE,
                 modelPublishDataDTO);
     }
 
@@ -219,7 +219,7 @@ public class PublishTaskController {
     public ResultEntity<Object> publishBuildNifiCustomWorkFlowTask(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_CUSTOMWORK_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_CUSTOMWORK_FLOW,
+                MqConstants.QueueConstants.DataServiceTopicConstants.BUILD_CUSTOMWORK_FLOW,
                 nifiCustomWorkListDTO);
     }
 
@@ -234,7 +234,7 @@ public class PublishTaskController {
     public ResultEntity<Object> immediatelyStart(@RequestBody BuildTableNifiSettingDTO buildTableNifiSetting) {
         return iBuildKfkTaskService.publishTask("【数据库运维】" + buildTableNifiSetting.tableNifiSettings.get(0).tableName + "表数据同步",
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_IMMEDIATELYSTART_FLOW,
+                MqConstants.QueueConstants.NifiTopicConstants.BUILD_IMMEDIATELYSTART_FLOW,
                 buildTableNifiSetting);
     }
 
@@ -244,7 +244,7 @@ public class PublishTaskController {
     public ResultEntity<Object> pushModelByName(@RequestBody ModelDTO dto) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.CREATE_ATTRIBUTE_TABLE_LOG.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_MDM_MODEL_DATA,
+                MqConstants.QueueConstants.MdmTopicConstants.BUILD_MDM_MODEL_DATA,
                 dto);
     }
 
@@ -253,7 +253,7 @@ public class PublishTaskController {
     public ResultEntity<Object> createBackendTable(@RequestBody EntityDTO dto) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BACKGROUND_TABLE_TASK_CREATION.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_MDM_ENTITY_DATA,
+                MqConstants.QueueConstants.MdmTopicConstants.BUILD_MDM_ENTITY_DATA,
                 dto);
     }
 
@@ -282,7 +282,7 @@ public class PublishTaskController {
         log.info("元数据实时同步");
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_METADATA_FLOW.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_METADATA_FLOW,
+                MqConstants.QueueConstants.MetaDataTopicConstants.BUILD_METADATA_FLOW,
                 dto);
     }
 
