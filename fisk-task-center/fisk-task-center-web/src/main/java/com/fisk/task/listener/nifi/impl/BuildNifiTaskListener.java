@@ -7,6 +7,7 @@ import com.davis.client.model.*;
 import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.constants.NifiConstants;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.sftp.SftpAuthTypeEnum;
 import com.fisk.common.core.enums.task.FuncNameEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
@@ -2042,13 +2043,25 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             DataSourceDTO dataSource = fiDataDataSource.data;
             IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSource.conType);
             String stgTableName = dbCommand.getStgAndTableName(config.processorConfig.targetTableName).get(0);
+            //pg不需要这个配置,默认true,SQL server是false
+            if (Objects.equals(dataSource.conType, DataSourceTypeEnum.SQLSERVER)) {
+                putDatabaseRecordDTO.putDbRecordTranslateFieldNames = "false";
+            } else if (Objects.equals(dataSource.conType, DataSourceTypeEnum.POSTGRESQL)) {
+                putDatabaseRecordDTO.putDbRecordTranslateFieldNames = "true";
+            }
             if (stgTableName.contains(".")) {
                 String[] split = stgTableName.split("\\.");
                 putDatabaseRecordDTO.TableName = split[1];
                 putDatabaseRecordDTO.schemaName = split[0];
             } else {
-                putDatabaseRecordDTO.TableName = stgTableName;
-                putDatabaseRecordDTO.schemaName = "dbo";
+                if (Objects.equals(dataSource.conType, DataSourceTypeEnum.SQLSERVER)) {
+                    putDatabaseRecordDTO.TableName = stgTableName;
+                    putDatabaseRecordDTO.schemaName = "dbo";
+                } else if (Objects.equals(dataSource.conType, DataSourceTypeEnum.POSTGRESQL)) {
+                    putDatabaseRecordDTO.TableName = stgTableName;
+                    putDatabaseRecordDTO.schemaName = "public";
+                }
+
             }
 
         } else {

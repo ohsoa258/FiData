@@ -46,26 +46,24 @@ public class BuildPgTableImpl implements IbuildTable {
         //ods与stg类型不变,不然有的值,类型转换不来
         tableFieldsDTOS.forEach((l) -> {
             if (l.fieldType.contains("FLOAT")) {
-                sqlFileds.append("\"" + l.fieldName + "\" " + " numeric ,");
+                sqlFileds.append("" + l.fieldName + " " + " numeric ,");
             } else if (l.fieldType.contains("INT")) {
-                sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + ",");
+                sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + ",");
             } else if (l.fieldType.contains("TEXT")) {
-                sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + ",");
-            } else if (l.fieldType.contains("TIMESTAMP")) {
-                sqlFileds.append("\"" + l.fieldName + "\" datetime,");
-            } else {
-                sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + "(" + l.fieldLength + "),");
+                sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + ",");
+            }  else {
+                sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + "(" + l.fieldLength + "),");
             }
-            stgSql.append("\"" + l.fieldName + "\" text,");
+            stgSql.append("" + l.fieldName + " text,");
             if (l.isPrimarykey == 1) {
-                pksql.append("\"" + l.fieldName + "\",");
+                pksql.append("" + l.fieldName + ",");
             }
 
         });
-        stgSql.append("fi_createtime varchar(50) DEFAULT (getdate()),fi_updatetime varchar(50),fi_enableflag varchar(50)," +
-                "fi_error_message varchar(250),fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3'," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT (newid())");
+        stgSql.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),fi_enableflag varchar(50)," +
+                "fi_error_message varchar(250),fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3'," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid()");
 
-        sqlFileds.append("fi_createtime varchar(50) DEFAULT (getdate()),fi_updatetime varchar(50),fidata_batch_code varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT (newid())");
+        sqlFileds.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),fidata_batch_code varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid()");
         String havePk = pksql.toString();
         if (havePk.length() != 14) {
             sqlFileds.append("," + pksql.substring(0, pksql.length() - 1) + ")");
@@ -142,10 +140,11 @@ public class BuildPgTableImpl implements IbuildTable {
                 sql += ",'" + syncMode + "'";
             }
         } else {
-            tableKey = targetTableName.substring(4) + "key";
+            List<String> stgAndTableName = getStgAndTableName(targetTableName);
+            tableKey = stgAndTableName.get(2);
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
-                sql += "stg_" + targetTableName + "'";
-                sql += ",'ods_" + targetTableName + "'";
+                sql += stgAndTableName.get(0) + "'";
+                sql += ",'" + stgAndTableName.get(1) + "'";
                 //同步方式
                 String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
                 if (StringUtils.isNotEmpty(buildNifiFlow.generateVersionSql)) {
@@ -157,8 +156,8 @@ public class BuildPgTableImpl implements IbuildTable {
                 String fieldList = config.targetDsConfig.tableFieldsList.stream().filter(Objects::nonNull)
                         .filter(e -> e.fieldName != null && !Objects.equals("", e.fieldName))
                         .map(t -> t.fieldName).collect(Collectors.joining("'',''"));
-                sql += fieldList + "','" + tableKey + "','" + targetTableName + "'";
-                sql += ",'ods_" + targetTableName.substring(4) + "'";
+                sql += fieldList + "','" + stgAndTableName.get(2) + "','" + stgAndTableName.get(0) + "'";
+                sql += ",'" + stgAndTableName.get(1) + "'";
                 //同步方式
                 String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
                 sql += ",'" + syncMode + "'";

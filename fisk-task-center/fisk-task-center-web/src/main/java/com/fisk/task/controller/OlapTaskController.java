@@ -46,7 +46,7 @@ public class OlapTaskController {
     public ResultEntity<Object> publishBuildAtomicKpiTask(@RequestBody BusinessAreaGetDataDTO businessAreaGetDataDTO) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_CREATEMODEL_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_OLAP_CREATEMODEL_FLOW,
+                MqConstants.QueueConstants.OlapTopicConstants.BUILD_OLAP_CREATEMODEL_FLOW,
                 businessAreaGetDataDTO);
     }
 
@@ -61,7 +61,7 @@ public class OlapTaskController {
 
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_WIDE_TABLE_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_OLAP_WIDE_TABLE_FLOW,
+                MqConstants.QueueConstants.OlapTopicConstants.BUILD_OLAP_WIDE_TABLE_FLOW,
                 wideTableFieldConfigTaskDTO);
     }
 
@@ -75,7 +75,7 @@ public class OlapTaskController {
     public ResultEntity<Object> publishBuildunifiedControlTask(@RequestBody UnifiedControlDTO unifiedControlDTO) {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW,
+                MqConstants.QueueConstants.DispatchTopicConstants.BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW,
                 unifiedControlDTO);
     }
 
