@@ -1067,8 +1067,12 @@ public class BusinessAreaImpl
     @Override
     public List<AppBusinessInfoDTO> getBusinessAreaList() {
         QueryWrapper<BusinessAreaPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().select(BusinessAreaPO::getId, BusinessAreaPO::getBusinessName);
-        return BusinessAreaMap.INSTANCES.poListToBusinessAreaInfo(mapper.selectList(queryWrapper));
+        queryWrapper.lambda().select(BusinessAreaPO::getId, BusinessAreaPO::getBusinessName, BusinessAreaPO::getBusinessDes);
+        List<BusinessAreaPO> pos = mapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(pos)) {
+            return new ArrayList<>();
+        }
+        return BusinessAreaMap.INSTANCES.poListToBusinessAreaInfo(pos);
 
     }
 
