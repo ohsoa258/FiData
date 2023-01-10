@@ -234,25 +234,27 @@ public class TaskPgTableStructureHelper
         String pgsqlDwUsername = "";
         String pgsqlDwPassword = "";
         String pgsqlDwDriverClass = "";
+        DataSourceTypeEnum type = null;
+        DataSourceDTO odsData = new DataSourceDTO();
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
-            DataSourceDTO data = fiDataDataSource.data;
-            pgsqlOdsUrl = data.conStr;
-            pgsqlOdsUsername = data.conAccount;
-            pgsqlOdsPassword = data.conPassword;
-            pgsqlOdsDriverClass = data.conType.getDriverName();
+            odsData = fiDataDataSource.data;
+            pgsqlOdsUrl = odsData.conStr;
+            pgsqlOdsUsername = odsData.conAccount;
+            pgsqlOdsPassword = odsData.conPassword;
+            pgsqlOdsDriverClass = odsData.conType.getDriverName();
         } else {
             log.error("userclient无法查询到ods库的连接信息");
             return ResultEnum.ERROR;
         }
-
+        DataSourceDTO dwData = new DataSourceDTO();
         ResultEntity<DataSourceDTO> fiDataDataDwSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
         if (fiDataDataDwSource.code == ResultEnum.SUCCESS.getCode()) {
-            DataSourceDTO data = fiDataDataDwSource.data;
-            pgsqlDwUrl = data.conStr;
-            pgsqlDwUsername = data.conAccount;
-            pgsqlDwPassword = data.conPassword;
-            pgsqlDwDriverClass = data.conType.getDriverName();
+            dwData = fiDataDataDwSource.data;
+            pgsqlDwUrl = dwData.conStr;
+            pgsqlDwUsername = dwData.conAccount;
+            pgsqlDwPassword = dwData.conPassword;
+            pgsqlDwDriverClass = dwData.conType.getDriverName();
         } else {
             log.error("userclient无法查询到dw库的连接信息");
             return ResultEnum.ERROR;
@@ -264,14 +266,16 @@ public class TaskPgTableStructureHelper
             Class.forName(pgsqlOdsDriverClass);
             // 数据接入
             conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlOdsPassword);
+            type = odsData.conType;
         } else {
             Class.forName(pgsqlDwDriverClass);
             // 数据建模
             conn = DriverManager.getConnection(pgsqlDwUrl, pgsqlDwUsername, pgsqlDwPassword);
+            type = dwData.conType;
         }
         try {
             //检查版本
-            ResultEnum resultEnum = checkVersion(version, conn);
+            ResultEnum resultEnum = checkVersion(version, conn, type);
             if (resultEnum == ResultEnum.TASK_TABLE_NOT_EXIST) {
                 return resultEnum;
             }
@@ -302,7 +306,7 @@ public class TaskPgTableStructureHelper
      * @return
      * @throws Exception
      */
-    public ResultEnum checkVersion(String version, Connection conn) throws Exception {
+    public ResultEnum checkVersion(String version, Connection conn, DataSourceTypeEnum type) throws Exception {
         try {
             QueryWrapper<TaskPgTableStructurePO> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda().eq(TaskPgTableStructurePO::getVersion, version);
@@ -318,7 +322,7 @@ public class TaskPgTableStructureHelper
                 if (!CollectionUtils.isEmpty(taskPgTableStructurePOList1)) {
                     //判断表是否存在
                     DatabaseMetaData metaData = conn.getMetaData();
-                    List<String> schemaAndTableName = TableNameGenerateUtils.getSchemaAndTableName(taskPgTableStructurePOList1.get(0).tableName);
+                    List<String> schemaAndTableName = TableNameGenerateUtils.getSchemaAndTableName(taskPgTableStructurePOList1.get(0).tableName, type);
                     ResultSet set = metaData.getTables(null, schemaAndTableName.get(0), schemaAndTableName.get(1), null);
                     if (set.next()) {
                         return ResultEnum.SUCCESS;

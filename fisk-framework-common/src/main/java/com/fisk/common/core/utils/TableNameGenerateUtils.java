@@ -1,9 +1,11 @@
 package com.fisk.common.core.utils;
 
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author JianWenYang
@@ -150,14 +152,18 @@ public class TableNameGenerateUtils {
      * @param tableName
      * @return
      */
-    public static List<String> getSchemaAndTableName(String tableName) {
+    public static List<String> getSchemaAndTableName(String tableName, DataSourceTypeEnum type) {
         List<String> list = new ArrayList<>();
         if (tableName.contains(".")) {
             String[] split = tableName.split("\\.");
             list.add(split[0]);
             list.add(split[1]);
         } else {
-            list.add("dbo");
+            if (Objects.equals(type, DataSourceTypeEnum.POSTGRESQL)) {
+                list.add("public");
+            } else if (Objects.equals(type, DataSourceTypeEnum.SQLSERVER)) {
+                list.add("dbo");
+            }
             list.add(tableName);
         }
         return list;
