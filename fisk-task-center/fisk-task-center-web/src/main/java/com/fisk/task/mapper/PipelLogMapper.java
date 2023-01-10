@@ -15,7 +15,7 @@ import java.util.List;
  */
 public interface PipelLogMapper extends FKBaseMapper<PipelLogPO> {
 
-    @Select("select * from tb_pipel_log where pipel_id=#{pipelLog.pipelId} and del_flag = 1 and create_time >= DATE_SUB( CURDATE( ), INTERVAL #{pipelLog.lookday} DAY ) order by create_time desc")
+
     List<PipelLogVO> getPipelLogs(@Param("pipelLog") PipelLogVO pipelLog);
 
     @Update("update tb_pipel_log set del_flag = 0 where pipel_trace_id=#{pipelTraceId} and type = #{type} and del_flag=1")
