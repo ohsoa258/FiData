@@ -367,6 +367,6 @@ public interface PublishTaskClient {
      * @return
      */
     @GetMapping("/dispatchLog/getPipelIdByPipelTraceId")
-    public ResultEntity<Object> getPipelIdByPipelTraceId(@RequestParam("pipelTraceId") String pipelTraceId);
+    public ResultEntity<String> getPipelIdByPipelTraceId(@RequestParam("pipelTraceId") String pipelTraceId);
 
 }

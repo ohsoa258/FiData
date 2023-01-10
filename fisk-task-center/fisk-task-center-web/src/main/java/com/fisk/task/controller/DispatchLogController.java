@@ -103,7 +103,7 @@ public class DispatchLogController {
      * @return
      */
     @GetMapping("/getPipelIdByPipelTraceId")
-    public ResultEntity<Object> getPipelIdByPipelTraceId(@RequestParam("pipelTraceId") String pipelTraceId){
+    public ResultEntity<String> getPipelIdByPipelTraceId(@RequestParam("pipelTraceId") String pipelTraceId){
         return iPipelLog.getPipelIdByTraceId(pipelTraceId);
     }
 }

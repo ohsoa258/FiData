@@ -281,7 +281,7 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
     }
 
     @Override
-    public ResultEntity<Object> getPipelIdByTraceId(String pipelTraceId) {
+    public ResultEntity<String> getPipelIdByTraceId(String pipelTraceId) {
         String pipelId = pipelLogMapper.getPipelIdByTraceId(pipelTraceId);
         return StringUtils.isEmpty(pipelId) ? null : ResultEntityBuild.buildData(ResultEnum.SUCCESS, pipelId);
     }

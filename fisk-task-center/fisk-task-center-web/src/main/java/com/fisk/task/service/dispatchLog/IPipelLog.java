@@ -21,5 +21,5 @@ public interface IPipelLog extends IService<PipelLogPO> {
 
     LogStatisticsForChartVO getLogStatisticsForChart(PipelLogVO pipelLog);
 
-    ResultEntity<Object> getPipelIdByTraceId(String pipelTraceId);
+    ResultEntity<String> getPipelIdByTraceId(String pipelTraceId);
 }

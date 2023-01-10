@@ -464,7 +464,7 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         if (StringUtils.isEmpty(pipelTraceId)){
             return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
         }
-        ResultEntity<Object> taskResult = null;
+        ResultEntity<String> taskResult = null;
         try{
             // 调用task模块获取pipel_id
             taskResult = publishTaskClient.getPipelIdByPipelTraceId(pipelTraceId);
@@ -475,7 +475,7 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
 
-        NifiCustomWorkflowPO po = mapper.selectById((Serializable) taskResult.data);
+        NifiCustomWorkflowPO po = mapper.selectById(taskResult.data);
         return po == null ? ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS) : ResultEntityBuild.build(ResultEnum.SUCCESS, po);
     }
 }
