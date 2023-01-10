@@ -40,6 +40,9 @@ public class BloodCompensationImpl
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
 
+        //新建业务分类
+        dataAccessClient.getAppList();
+
         //同步接入来源表元数据(解析接入表sql)
         synchronousAccessSourceMetaData(dataAccessMetaData.data);
 
