@@ -23,4 +23,7 @@ public interface PipelLogMapper extends FKBaseMapper<PipelLogPO> {
 
 
     List<LogStatisticsVO> getStatisticsLog(@Param("lookday") int lookday, @Param("pipelId") int pipelId, @Param("result") String result);
+
+    @Select("select distinct pipel_id from tb_pipel_log where pipel_trace_id = #{pipelTraceId} and del_flag = 1")
+    String getPipelIdByTraceId(@Param("pipelTraceId") String pipelTraceId);
 }

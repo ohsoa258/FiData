@@ -94,4 +94,10 @@ public class NifiCustomWorkflowController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getNifiCustomWorkFlowDrop());
     }
 
+    @GetMapping("/getNifiCustomWorkFlowPartInfo")
+    @ApiOperation(value = "依据pipelTraceId获取管道部分字段信息")
+    public ResultEntity<Object> getNifiCustomWorkFlowPartInfo(@RequestParam("pipelTraceId") String pipelTraceId){
+        return service.getNifiCustomWorkFlowPartInfo(pipelTraceId);
+    }
+
 }

@@ -96,4 +96,14 @@ public class DispatchLogController {
         objectResultEntity.code = 0;
         return objectResultEntity;
     }
+
+    /**
+     * 依据pipelTraceId查询pipelId
+     * @param pipelTraceId
+     * @return
+     */
+    @GetMapping("/getPipelIdByPipelTraceId")
+    public ResultEntity<Object> getPipelIdByPipelTraceId(@RequestParam("pipelTraceId") String pipelTraceId){
+        return iPipelLog.getPipelIdByTraceId(pipelTraceId);
+    }
 }

@@ -42,10 +42,12 @@ import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.annotations.ResultMap;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -457,4 +459,23 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
 
     }
 
+    @Override
+    public ResultEntity<Object> getNifiCustomWorkFlowPartInfo(String pipelTraceId) {
+        if (StringUtils.isEmpty(pipelTraceId)){
+            return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
+        }
+        ResultEntity<Object> taskResult = null;
+        try{
+            // 调用task模块获取pipel_id
+            taskResult = publishTaskClient.getPipelIdByPipelTraceId(pipelTraceId);
+            if (taskResult == null){
+                return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+            }
+        }catch (Exception e){
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+
+        NifiCustomWorkflowPO po = mapper.selectById((Serializable) taskResult.data);
+        return po == null ? ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS) : ResultEntityBuild.build(ResultEnum.SUCCESS, po);
+    }
 }

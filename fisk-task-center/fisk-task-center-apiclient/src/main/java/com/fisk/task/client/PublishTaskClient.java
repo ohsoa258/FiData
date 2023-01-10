@@ -24,10 +24,7 @@ import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.task.*;
 import com.fisk.task.po.TableNifiSettingPO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -363,5 +360,13 @@ public interface PublishTaskClient {
      */
     @PostMapping("/dispatchLog/getPipelLogVos")
     public ResultEntity<List<PipelLogVO>> getPipelLogVos(@RequestBody PipelLogVO pipelLog);
+
+    /**
+     * 依据pipelTraceId查询pipelId
+     * @param pipelTraceId
+     * @return
+     */
+    @GetMapping("/dispatchLog/getPipelIdByPipelTraceId")
+    public ResultEntity<Object> getPipelIdByPipelTraceId(@RequestParam("pipelTraceId") String pipelTraceId);
 
 }
