@@ -3,13 +3,18 @@ package com.fisk.datamanagement.synchronization.pushmetadata.impl;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
 import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.datamanagement.service.impl.ClassificationImpl;
 import com.fisk.datamanagement.synchronization.pushmetadata.IBloodCompensation;
+import com.fisk.datamodel.client.DataModelClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -22,31 +27,96 @@ import java.util.Optional;
  * @author JianWenYang
  */
 @Service
+@Slf4j
 public class BloodCompensationImpl
         implements IBloodCompensation {
 
     @Resource
     DataAccessClient dataAccessClient;
+    @Resource
+    DataModelClient dataModelClient;
 
     @Resource
     MetaDataImpl metaData;
+    @Resource
+    ClassificationImpl classification;
 
     @Override
     public ResultEnum systemSynchronousBlood() {
 
-        //获取所有接入表
-        ResultEntity<List<DataAccessSourceTableDTO>> dataAccessMetaData = dataAccessClient.getDataAccessMetaData();
-        if (dataAccessMetaData.code != ResultEnum.SUCCESS.getCode()) {
+        log.info("********开始同步数据接入********");
+
+        //获取接入业务分类
+        ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
+        if (appList.code != ResultEnum.SUCCESS.getCode()) {
+            log.error("获取接入应用列表失败");
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
 
-        //同步接入来源表元数据(解析接入表sql)
+        //同步数据接入业务分类
+        if (CollectionUtils.isEmpty(appList.data)) {
+            return ResultEnum.SUCCESS;
+        }
+        log.info("******开始同步接入业务分类******");
+        synchronousClassification(appList.data, 1);
+
+        //获取所有接入表
+        ResultEntity<List<DataAccessSourceTableDTO>> dataAccessMetaData = dataAccessClient.getDataAccessMetaData();
+        if (dataAccessMetaData.code != ResultEnum.SUCCESS.getCode()) {
+            log.error("【获取接入所有表失败】");
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+
+        log.info("******开始同步数据接入来源表元数据******");
+        //同步数据接入来源表元数据(解析接入表sql)
         synchronousAccessSourceMetaData(dataAccessMetaData.data);
 
-        //同步接入ods表以及stg表元数据
+        log.info("******开始同步数据接入ods表以及stg表元数据******");
+        //同步数据接入ods表以及stg表元数据
         synchronousAccessTableSourceMetaData();
 
+        log.info("********开始同步数据建模********");
+
+        ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
+        if (businessAreaList.code != ResultEnum.SUCCESS.getCode()) {
+            log.error("【获取建模业务域数据失败】");
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+
+        log.info("********开始同步建模业务分类********");
+        if (CollectionUtils.isEmpty(businessAreaList.data)) {
+            return ResultEnum.SUCCESS;
+        }
+        synchronousClassification(businessAreaList.data, 2);
+
+        log.info("********开始同步建模业务分类********");
+        synchronousDataModelTableSourceMetaData();
+
         return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 同步业务分类
+     *
+     * @param dtoList
+     */
+    public void synchronousClassification(List<AppBusinessInfoDTO> dtoList, Integer sourceType) {
+        for (AppBusinessInfoDTO item : dtoList) {
+            ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
+            classificationInfoDto.setName(item.name);
+            if (sourceType == 1) {
+                classificationInfoDto.setName(item.name + "_" + item.appAbbreviation);
+            }
+            classificationInfoDto.setDescription(item.appDes);
+            classificationInfoDto.setSourceType(sourceType);
+            classificationInfoDto.setDelete(false);
+            try {
+                classification.appSynchronousClassification(classificationInfoDto);
+            } catch (Exception e) {
+                log.error("【血缘补偿,同步业务分类失败】,分类名称:{}", item.name);
+                continue;
+            }
+        }
     }
 
     /**
@@ -104,6 +174,14 @@ public class BloodCompensationImpl
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
         metaData.consumeMetaData(accessTable.data);
+    }
+
+    public void synchronousDataModelTableSourceMetaData() {
+        ResultEntity<List<MetaDataInstanceAttributeDTO>> dataModelMetaData = dataModelClient.getDataModelMetaData();
+        if (dataModelMetaData.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        metaData.consumeMetaData(dataModelMetaData.data);
     }
 
 }

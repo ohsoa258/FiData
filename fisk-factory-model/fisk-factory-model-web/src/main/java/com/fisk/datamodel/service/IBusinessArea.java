@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
@@ -166,5 +167,12 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @return
      */
     List<TableNameDTO> getPublishSuccessTab(Integer businessId);
+
+    /**
+     * 获取数据建模元数据
+     *
+     * @return
+     */
+    List<MetaDataInstanceAttributeDTO> getDataModelMetaData();
 
 }

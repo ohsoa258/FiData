@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
@@ -141,6 +142,12 @@ public class BusinessAreaController {
     @ApiOperation(value = "获取业务域下发布成功表")
     public ResultEntity<Object> getPublishSuccessTab(@PathVariable("businessId") int businessId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getPublishSuccessTab(businessId));
+    }
+
+    @GetMapping("/getDataModelMetaData")
+    @ApiOperation(value = "获取数据建模所有元数据")
+    public ResultEntity<List<MetaDataInstanceAttributeDTO>> getDataModelMetaData() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataModelMetaData());
     }
 
 }

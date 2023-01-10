@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
+import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
@@ -19,6 +20,7 @@ import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -44,6 +46,7 @@ import com.fisk.datamodel.entity.fact.FactAttributePO;
 import com.fisk.datamodel.entity.fact.FactPO;
 import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.DataFactoryEnum;
+import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.BusinessAreaMap;
 import com.fisk.datamodel.mapper.BusinessAreaMapper;
@@ -1067,8 +1070,12 @@ public class BusinessAreaImpl
     @Override
     public List<AppBusinessInfoDTO> getBusinessAreaList() {
         QueryWrapper<BusinessAreaPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().select(BusinessAreaPO::getId, BusinessAreaPO::getBusinessName);
-        return BusinessAreaMap.INSTANCES.poListToBusinessAreaInfo(mapper.selectList(queryWrapper));
+        queryWrapper.lambda().select(BusinessAreaPO::getId, BusinessAreaPO::getBusinessName, BusinessAreaPO::getBusinessDes);
+        List<BusinessAreaPO> pos = mapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(pos)) {
+            return new ArrayList<>();
+        }
+        return BusinessAreaMap.INSTANCES.poListToBusinessAreaInfo(pos);
 
     }
 
@@ -1079,6 +1086,27 @@ public class BusinessAreaImpl
         list.addAll(dimensionImpl.getPublishSuccessDimTable(businessId));
 
         list.addAll(factImpl.getPublishSuccessFactTable(businessId));
+
+        return list;
+    }
+
+    @Override
+    public List<MetaDataInstanceAttributeDTO> getDataModelMetaData() {
+
+        List<BusinessAreaPO> businessAreaPOList = this.query().list();
+        if (CollectionUtils.isEmpty(businessAreaPOList)) {
+            return new ArrayList<>();
+        }
+
+        MetaDataInstanceAttributeDTO instance = dimensionImpl.getDataSourceConfig(DataSourceConfigEnum.DMP_DW.getValue());
+        instance.dbList.get(0).tableList = new ArrayList<>();
+        for (BusinessAreaPO item : businessAreaPOList) {
+            instance.dbList.get(0).tableList.addAll(factImpl.getFactMetaData(item.id, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_FACT.getValue(), item.getBusinessAdmin()));
+            instance.dbList.get(0).tableList.addAll(dimensionImpl.getDimensionMetaData(item.id, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_DIMENSION.getValue(), item.getBusinessAdmin()));
+        }
+
+        List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
+        list.add(instance);
 
         return list;
     }

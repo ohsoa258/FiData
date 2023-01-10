@@ -14,4 +14,6 @@ public class AppBusinessInfoDTO {
 
     public String appAbbreviation;
 
+    public String appDes;
+
 }

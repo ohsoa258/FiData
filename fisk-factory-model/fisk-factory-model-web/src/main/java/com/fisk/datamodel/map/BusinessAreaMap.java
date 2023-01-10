@@ -42,7 +42,8 @@ public interface BusinessAreaMap {
      * @return
      */
     @Mappings({
-            @Mapping(source = "businessName", target = "name")
+            @Mapping(source = "businessName", target = "name"),
+            @Mapping(source = "businessDes", target = "appDes")
     })
     AppBusinessInfoDTO poToBusinessAreaInfo(BusinessAreaPO po);
 

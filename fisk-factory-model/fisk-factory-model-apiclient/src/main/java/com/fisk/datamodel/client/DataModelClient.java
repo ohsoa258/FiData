@@ -14,6 +14,7 @@ import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
@@ -339,6 +340,15 @@ public interface DataModelClient {
      */
     @ApiOperation("自定义脚本列表")
     @PostMapping("/CustomScript/listCustomScript")
-    public ResultEntity<List<CustomScriptInfoDTO>> listCustomScript(@RequestBody CustomScriptQueryDTO dto);
+    ResultEntity<List<CustomScriptInfoDTO>> listCustomScript(@RequestBody CustomScriptQueryDTO dto);
+
+    /**
+     * 获取数据建模所有元数据
+     *
+     * @return
+     */
+    @GetMapping("/business/getDataModelMetaData")
+    @ApiOperation(value = "获取数据建模所有元数据")
+    ResultEntity<List<MetaDataInstanceAttributeDTO>> getDataModelMetaData();
 
 }
