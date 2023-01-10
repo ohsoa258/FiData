@@ -90,7 +90,7 @@ public class BloodCompensationImpl
         synchronousClassification(businessAreaList.data, 2);
 
         log.info("********开始同步建模业务分类********");
-
+        synchronousDataModelTableSourceMetaData();
 
         return ResultEnum.SUCCESS;
     }
@@ -174,6 +174,14 @@ public class BloodCompensationImpl
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
         metaData.consumeMetaData(accessTable.data);
+    }
+
+    public void synchronousDataModelTableSourceMetaData() {
+        ResultEntity<List<MetaDataInstanceAttributeDTO>> dataModelMetaData = dataModelClient.getDataModelMetaData();
+        if (dataModelMetaData.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        metaData.consumeMetaData(dataModelMetaData.data);
     }
 
 }

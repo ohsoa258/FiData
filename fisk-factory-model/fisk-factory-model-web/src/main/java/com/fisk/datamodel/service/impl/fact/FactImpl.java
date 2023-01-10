@@ -482,4 +482,58 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         return columnList;
     }
 
+    public List<MetaDataTableAttributeDTO> getFactMetaData(long businessId,
+                                                           String dbQualifiedName,
+                                                           Integer dataModelType,
+                                                           String businessAdmin) {
+        List<FactPO> factPOList = this.query()
+                .eq("business_id", businessId)
+                .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
+                .list();
+        if (CollectionUtils.isEmpty(factPOList)) {
+            return new ArrayList<>();
+        }
+
+        List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
+
+        for (FactPO fact : factPOList) {
+
+            MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+            table.contact_info = "";
+            table.description = fact.factTableDesc;
+            table.name = fact.factTabName;
+            table.comment = String.valueOf(fact.businessId);
+            table.qualifiedName = dbQualifiedName + "_" + dataModelType + "_" + fact.id;
+            table.displayName = fact.factTableCnName;
+            table.owner = businessAdmin;
+
+            //字段
+            table.columnList = getFactAttributeMetaData(fact.id, table);
+
+            tableList.add(table);
+        }
+
+        return tableList;
+    }
+
+    public List<MetaDataColumnAttributeDTO> getFactAttributeMetaData(long factId, MetaDataTableAttributeDTO table) {
+        FactAttributeDetailDTO factAttributeDataList = factAttributeImpl.getFactAttributeDataList((int) factId);
+        if (factAttributeDataList == null || factAttributeDataList.attributeDTO.size() == 0) {
+            return new ArrayList<>();
+        }
+        List<MetaDataColumnAttributeDTO> columnList = new ArrayList<>();
+        for (FactAttributeDTO field : factAttributeDataList.attributeDTO) {
+            MetaDataColumnAttributeDTO column = new MetaDataColumnAttributeDTO();
+            column.name = field.factFieldEnName;
+            column.qualifiedName = table.qualifiedName + "_" + field.id;
+            column.description = field.factFieldDes;
+            String fieldTypeLength = field.factFieldLength == 0 ? "" : "(" + field.factFieldLength + ")";
+            column.dataType = field.factFieldType + fieldTypeLength;
+            column.displayName = field.factFieldCnName;
+            column.owner = table.owner;
+            columnList.add(column);
+        }
+        return columnList;
+    }
+
 }

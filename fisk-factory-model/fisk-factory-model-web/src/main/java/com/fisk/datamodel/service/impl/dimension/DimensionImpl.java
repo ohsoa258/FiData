@@ -838,4 +838,52 @@ public class DimensionImpl
         return data;
     }
 
+    public List<MetaDataTableAttributeDTO> getDimensionMetaData(long businessId,
+                                                                String dbQualifiedName,
+                                                                Integer dataModelType,
+                                                                String businessAdmin) {
+        List<DimensionPO> list = this.query()
+                .eq("business_id", businessId)
+                .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
+                .list();
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+
+        List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
+
+        for (DimensionPO item : list) {
+            MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+            table.contact_info = "";
+            table.description = item.dimensionDesc;
+            table.name = item.dimensionTabName;
+            table.comment = String.valueOf(item.businessId);
+            table.qualifiedName = dbQualifiedName + "_" + dataModelType + "_" + item.id;
+            table.displayName = item.dimensionCnName;
+            table.owner = businessAdmin;
+
+            table.columnList = getDimensionAttributeMetaData(item.id, table);
+        }
+
+        return tableList;
+
+    }
+
+    public List<MetaDataColumnAttributeDTO> getDimensionAttributeMetaData(long dimensionId, MetaDataTableAttributeDTO table) {
+        List<MetaDataColumnAttributeDTO> columnList = new ArrayList<>();
+        DimensionAttributeListDTO dimensionAttributeList = dimensionAttributeImpl.getDimensionAttributeList((int) dimensionId);
+        for (DimensionAttributeDTO field : dimensionAttributeList.attributeDTOList) {
+            MetaDataColumnAttributeDTO column = new MetaDataColumnAttributeDTO();
+            String fieldTypeLength = field.dimensionFieldLength == 0 ? "" : "(" + field.dimensionFieldLength + ")";
+            column.dataType = field.dimensionFieldType + fieldTypeLength;
+            column.description = field.dimensionFieldDes;
+            column.name = field.dimensionFieldEnName;
+            column.qualifiedName = table.qualifiedName + "_" + field.id;
+            column.owner = table.owner;
+            column.displayName = field.dimensionFieldCnName;
+            columnList.add(column);
+        }
+        return columnList;
+    }
+
 }
