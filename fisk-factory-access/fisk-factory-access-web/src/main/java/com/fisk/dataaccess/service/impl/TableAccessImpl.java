@@ -305,7 +305,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         if (!saveField) {
-//            return ResultEnum.SAVE_DATA_ERROR;
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 

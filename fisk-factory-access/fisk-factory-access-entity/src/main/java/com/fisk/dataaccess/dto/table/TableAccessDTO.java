@@ -121,6 +121,9 @@ public class TableAccessDTO extends BaseDTO {
     @ApiModelProperty(value = "stg数据保留天数", required = true)
     public String keepNumber;
 
+    @ApiModelProperty(value = "应用数据源id", required = true)
+    public Integer appDataSourceId;
+
     /**
      * 表字段对象
      */

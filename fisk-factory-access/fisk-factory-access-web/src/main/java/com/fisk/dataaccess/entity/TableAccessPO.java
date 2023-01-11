@@ -114,4 +114,9 @@ public class TableAccessPO extends BasePO {
      */
     public String keepNumber;
 
+    /**
+     * 应用数据源id
+     */
+    public Integer appDataSourceId;
+
 }
