@@ -133,6 +133,9 @@ public class BuildAtlasTableAndColumnTaskListener
             bfd.generateVersionSql = buildPhysicalTableDTO.generateVersionSql;
             bfd.maxRowsPerFlowFile = buildPhysicalTableDTO.maxRowsPerFlowFile;
             bfd.fetchSize = buildPhysicalTableDTO.fetchSize;
+            // 新属性赋值
+            bfd.dataSourceDbId = buildPhysicalTableDTO.dataSourceDbId;
+            bfd.targetDbId = buildPhysicalTableDTO.targetDbId;
             log.info("nifi传入参数：" + JSON.toJSONString(bfd));
             pc.publishBuildNifiFlowTask(bfd);
             log.info("执行完成");

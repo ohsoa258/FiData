@@ -839,7 +839,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      * @param config 数据接入配置
      * @return 控制器服务对象
      */
-    private List<ControllerServiceEntity> buildDsConnectionPool(SynchronousTypeEnum synchronousTypeEnum, DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO buildNifiFlowDTO) {
+    private List<ControllerServiceEntity> buildDsConnectionPool(SynchronousTypeEnum synchronousTypeEnum, DataAccessConfigDTO config,
+                                                                String groupId, BuildNifiFlowDTO buildNifiFlowDTO) {
         List<ControllerServiceEntity> list = new ArrayList<>();
         NifiConfigPO nifiConfigPo = new NifiConfigPO();
         NifiConfigPO nifiSourceConfigPo = null;
@@ -871,8 +872,11 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                     data.setId(nifiSourceConfigPo.componentId);
                     sourceRes.data = data;
                 } else {
-                    BuildDbControllerServiceDTO sourceDto = buildDbControllerServiceDTO(config, groupId, DbPoolTypeEnum.SOURCE, synchronousTypeEnum);
-                    sourceRes = componentsBuild.buildDbControllerService(sourceDto);
+                    // 统一数据源改造
+                    String componentId = saveDbconfig(buildNifiFlowDTO.targetDbId);
+                    ControllerServiceEntity entity = new ControllerServiceEntity();
+                    entity.setId(componentId);
+                    sourceRes.data = entity;
                 }
             }
             if (targetRes.success && sourceRes.success) {

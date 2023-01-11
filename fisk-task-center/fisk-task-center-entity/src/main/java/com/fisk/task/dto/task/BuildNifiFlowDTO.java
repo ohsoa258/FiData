@@ -114,4 +114,13 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
      */
     public int fetchSize;
 
+    /**
+     * 数据来源id
+     */
+    public Integer dataSourceDbId;
+
+    /**
+     * 目标数据源id
+     */
+    public Integer targetDbId;
 }
