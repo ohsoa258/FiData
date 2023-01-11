@@ -70,7 +70,7 @@ public class LogsManageImpl extends ServiceImpl<LogsMapper, LogPO> implements IL
     public ResultEntity<TableServiceLogVO> pageTableServiceLog(LogQueryBasicsDTO dto) {
         TableServiceLogVO tableServiceLogVO = new TableServiceLogVO();
         try {
-            if (dto.getAppId() == 0) {
+            if (dto.getAppId() == 0 && dto.getTableServiceId() == 0) {
                 return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL, null);
             }
             // 第一步：判断表服务ID是否为空，为空则查询应用下所有的表服务ID

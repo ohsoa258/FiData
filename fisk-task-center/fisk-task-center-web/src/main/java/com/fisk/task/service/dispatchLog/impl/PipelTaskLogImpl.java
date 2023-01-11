@@ -267,11 +267,13 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
         int rowsCount = array.stream().toArray().length;
         responseVO.current = dto.current;
         responseVO.size = dto.size;
-        responseVO.total = rowsCount;
-        responseVO.page = (int) Math.ceil(1.0 * rowsCount / dto.size);
-        dto.current = dto.current - 1;
-        array = array.stream().skip((dto.current - 1 + 1) * dto.size).limit(dto.size).collect(Collectors.toList());
-        responseVO.setDataArray(array);
+        if (rowsCount > 0) {
+            responseVO.total = rowsCount;
+            responseVO.page = (int) Math.ceil(1.0 * rowsCount / dto.size);
+            dto.current = dto.current - 1;
+            array = array.stream().skip((dto.current - 1 + 1) * dto.size).limit(dto.size).collect(Collectors.toList());
+            responseVO.setDataArray(array);
+        }
         return ResultEntityBuild.build(ResultEnum.SUCCESS, responseVO);
     }
 }

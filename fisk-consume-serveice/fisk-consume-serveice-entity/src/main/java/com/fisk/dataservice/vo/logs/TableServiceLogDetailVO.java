@@ -15,7 +15,7 @@ public class TableServiceLogDetailVO {
      * 表ID
      */
     @ApiModelProperty(value = "表ID")
-    public int tableId;
+    public Long tableId;
 
     /**
      * 表名称

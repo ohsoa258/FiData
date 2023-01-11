@@ -17,25 +17,25 @@ public class DataServiceTableLogQueryVO {
      * 当前页，起始页为第一页
      */
     @ApiModelProperty(value = "当前页")
-    public Integer current;
+    public int current;
 
     /**
      * 每页大小
      */
     @ApiModelProperty(value = "每页大小")
-    public Integer size;
+    public int size;
 
     /**
      * 总条数
      */
     @ApiModelProperty(value = "total")
-    public Integer total;
+    public int total;
 
     /**
      * 总页数
      */
     @ApiModelProperty(value = "page")
-    public Integer page;
+    public int page;
 
     /**
      * 查询数据集
