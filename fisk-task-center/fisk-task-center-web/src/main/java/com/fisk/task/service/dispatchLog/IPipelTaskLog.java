@@ -1,8 +1,12 @@
 package com.fisk.task.service.dispatchLog;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.task.dto.dispatchlog.DataServiceTableLogQueryVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskMergeLogVO;
+import com.fisk.task.dto.dispatchlog.DataServiceTableLogVO;
+import com.fisk.task.dto.query.DataServiceTableLogQueryDTO;
 import com.fisk.task.entity.PipelTaskLogPO;
 
 
@@ -43,5 +47,11 @@ public interface IPipelTaskLog extends IService<PipelTaskLogPO> {
      */
     List<PipelTaskMergeLogVO> getPipelTaskLogVos(List<PipelTaskLogVO> pipelTaskLogs);
 
-
+    /**
+     * 获取数据服务表服务同步日志
+     *
+     * @param dto
+     * @return
+     */
+    ResultEntity<DataServiceTableLogQueryVO> getDataServiceTableLogVos(DataServiceTableLogQueryDTO dto);
 }
