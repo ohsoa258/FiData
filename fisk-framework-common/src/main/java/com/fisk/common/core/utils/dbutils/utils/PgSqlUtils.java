@@ -35,7 +35,7 @@ public class PgSqlUtils {
             List<TableNameDTO> list = new ArrayList<>();
             while (rs.next()) {
                 TableNameDTO tablePyhName = new TableNameDTO();
-                tablePyhName.tableName = rs.getString("tablename");
+                tablePyhName.tableName = rs.getString("schemaname") + "." + rs.getString("tablename");
                 list.add(tablePyhName);
             }
             return list;
@@ -56,11 +56,16 @@ public class PgSqlUtils {
     private static String buildQueryTableBySchemaSql() {
         StringBuilder str = new StringBuilder();
         str.append("select ");
-        str.append("tablename ");
+        str.append("tablename,schemaname ");
         str.append("from ");
         str.append("pg_tables ");
+        str.append("where ");
+        str.append("schemaname not in ");
+        str.append("(");
+        str.append("'pg_catalog','information_schema'");
+        str.append(")");
         str.append("ORDER BY ");
-        str.append("tablename;");
+        str.append("tablename,schemaname;");
 
         return str.toString();
     }
