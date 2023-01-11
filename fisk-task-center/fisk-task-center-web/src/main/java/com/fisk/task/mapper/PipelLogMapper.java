@@ -21,6 +21,5 @@ public interface PipelLogMapper extends FKBaseMapper<PipelLogPO> {
     @Update("update tb_pipel_log set del_flag = 0 where pipel_trace_id=#{pipelTraceId} and type = #{type} and del_flag=1")
     void updateByPipelTraceId(@Param("pipelTraceId")String pipelTraceId,@Param("type") int type);
 
-
     List<LogStatisticsVO> getStatisticsLog(@Param("lookday") int lookday, @Param("pipelId") int pipelId, @Param("result") String result);
 }

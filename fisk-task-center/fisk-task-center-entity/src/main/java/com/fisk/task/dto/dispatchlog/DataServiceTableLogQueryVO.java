@@ -1,16 +1,18 @@
-package com.fisk.dataservice.vo.apiservice;
+package com.fisk.task.dto.dispatchlog;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 import java.util.List;
 
 /**
  * @author dick
- * @version v1.0
- * @description 数据集
- * @date 2022/1/18 11:15
+ * @version 1.0
+ * @description 表服务日志
+ * @date 2023/1/10 17:00
  */
-public class ResponseVO {
+@Data
+public class DataServiceTableLogQueryVO {
     /**
      * 当前页，起始页为第一页
      */
@@ -39,5 +41,5 @@ public class ResponseVO {
      * 查询数据集
      */
     @ApiModelProperty(value = "查询数据集")
-    public List<Object> dataArray;
+    public List<DataServiceTableLogVO> dataArray;
 }

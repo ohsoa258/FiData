@@ -2,13 +2,18 @@ package com.fisk.task.service.dispatchLog.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
+import com.fisk.task.dto.dispatchlog.DataServiceTableLogQueryVO;
+import com.fisk.task.dto.dispatchlog.DataServiceTableLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskMergeLogVO;
+import com.fisk.task.dto.query.DataServiceTableLogQueryDTO;
 import com.fisk.task.entity.PipelTaskLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
@@ -16,6 +21,7 @@ import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.mapper.PipelTaskLogMapper;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.utils.StackTraceHelper;
+import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -27,6 +33,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author cfk
@@ -228,5 +235,43 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
         return pipelTaskMergeLogVos;
     }
 
-
+    @Override
+    public ResultEntity<DataServiceTableLogQueryVO> getDataServiceTableLogVos(DataServiceTableLogQueryDTO dto) {
+        DataServiceTableLogQueryVO responseVO = new DataServiceTableLogQueryVO();
+        if (dto.getTableList() == null || dto.getTableType() == 0) {
+            return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL, null);
+        }
+        List<Long> tableIdList = dto.getTableList().keySet().stream().collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(tableIdList)) {
+            return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL, null);
+        }
+        String tableIds = Joiner.on(",").join(tableIdList);
+        dto.setTableIds(tableIds);
+        if (dto.getCurrent() == 0) {
+            dto.setCurrent(1);
+        }
+        if (dto.getSize() == 0) {
+            dto.setSize(10);
+        }
+        List<DataServiceTableLogVO> array = baseMapper.getDataServiceTableLogs(dto);
+        if (CollectionUtils.isEmpty(array)) {
+            return ResultEntityBuild.build(ResultEnum.SUCCESS, responseVO);
+        }
+        array.forEach(t -> {
+            String tableDisplayName = dto.getTableList().get(t.getTableId());
+            t.setTableDisplayName(tableDisplayName);
+        });
+        if (StringUtils.isNotEmpty(dto.getKeyword())) {
+            array = array.stream().filter(t -> t.tableDisplayName.contains(dto.getKeyword()) || t.getMsg().contains(dto.getKeyword())).collect(Collectors.toList());
+        }
+        int rowsCount = array.stream().toArray().length;
+        responseVO.current = dto.current;
+        responseVO.size = dto.size;
+        responseVO.total = rowsCount;
+        responseVO.page = (int) Math.ceil(1.0 * rowsCount / dto.size);
+        dto.current = dto.current - 1;
+        array = array.stream().skip((dto.current - 1 + 1) * dto.size).limit(dto.size).collect(Collectors.toList());
+        responseVO.setDataArray(array);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, responseVO);
+    }
 }
