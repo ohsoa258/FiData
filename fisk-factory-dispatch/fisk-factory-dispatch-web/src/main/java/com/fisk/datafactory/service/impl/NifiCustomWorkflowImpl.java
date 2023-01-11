@@ -430,9 +430,17 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
 
     @Override
     public ResultEntity<Object> updateWorkStatus(String nifiCustomWorkflowId, boolean ifFire) {
+        // 查询workFlowid
+        String workFlowId = mapper.selectById(nifiCustomWorkflowId).workflowId;
         // 暂停/恢复管道工作运行状态
-        ResultEntity<Object> result = publishTaskClient.suspendCustomWorkNifiFlow(nifiCustomWorkflowId, ifFire);
-        if (result.getCode() == 500){
+        ResultEntity<Object> result = null;
+        try{
+            result = publishTaskClient.suspendCustomWorkNifiFlow(workFlowId, ifFire);
+        }catch (Exception e){
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+        if (result.getCode() == ResultEnum.ERROR.getCode()){
+            log.error("task服务修改状态失败，[{}]", result.getMsg());
             return ResultEntityBuild.build(ResultEnum.UPDATE_WORK_STATUS_ERROR);
         }
 
@@ -443,10 +451,9 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         }else{
             workStatus = NifiWorkStatusEnum.SUSPEND_STATUS.getValue();
         }
-        Integer flag = mapper.updateWorkStatus(nifiCustomWorkflowId, workStatus);
+        Integer flag = mapper.updateWorkStatus(workFlowId, workStatus);
         return flag == 1 ? ResultEntityBuild.build(ResultEnum.SUCCESS) : ResultEntityBuild.build(ResultEnum.UPDATE_WORK_STATUS_ERROR);
     }
-
 
     @Override
     public List<NifiCustomWorkFlowDropDTO> getNifiCustomWorkFlowDrop() {
