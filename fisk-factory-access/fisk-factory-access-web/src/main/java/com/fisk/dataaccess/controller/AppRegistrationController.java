@@ -23,7 +23,6 @@ import com.fisk.dataaccess.service.impl.TableAccessImpl;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
-import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
@@ -59,8 +58,6 @@ public class AppRegistrationController {
     private TableAccessImpl tableAccessImpl;
     @Resource
     private PublishTaskClient publishTaskClient;
-    @Resource
-    private DataManageClient dataManageClient;
 
     @PostMapping("/add")
     @ApiOperation(value = "添加")

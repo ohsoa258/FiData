@@ -176,7 +176,7 @@ public class AppRegistrationImpl
             }
         }
 
-        AppDataSourceDTO datasourceDTO = appRegistrationDTO.getAppDatasourceDTO();
+        List<AppDataSourceDTO> datasourceDTO = appRegistrationDTO.getAppDatasourceDTO();
 
         //
         /* todo 不筛查连接账号是否重复
@@ -192,27 +192,34 @@ public class AppRegistrationImpl
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
-        AppDataSourcePO modelDataSource = AppDataSourceMap.INSTANCES.dtoToPo(datasourceDTO);
+        List<AppDataSourcePO> modelDataSource = AppDataSourceMap.INSTANCES.listDtoToPo(datasourceDTO);
         // 保存tb_app_datasource数据
-        modelDataSource.setAppId(po.getId());
-        modelDataSource.setCreateUser(String.valueOf(userId));
+        modelDataSource.stream().map(e -> {
+            e.appId = po.getId();
+            e.createUser = String.valueOf(userId);
 
-        //sftp秘钥方式,存储二进制数据
-        if (DataSourceTypeEnum.SFTP.getName().equals(appRegistrationDTO.appDatasourceDTO.driveType.toLowerCase())
-                && appRegistrationDTO.appDatasourceDTO.serviceType == 1) {
-            modelDataSource.setFileBinary(fileToBinaryStr(datasourceDTO.connectStr));
-        }
+            //sftp秘钥方式,存储二进制数据
+            if (DataSourceTypeEnum.SFTP.getName().equals(e.driveType.toLowerCase()) && e.serviceType == 1) {
+                e.fileBinary = fileToBinaryStr(e.connectStr);
+            }
 
-        int insert = appDataSourceMapper.insert(modelDataSource);
-        if (insert <= 0) {
+            return e;
+        });
+
+
+        boolean insert = appDataSourceImpl.saveBatch(modelDataSource);
+        if (!insert) {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
         //jtw类型配置返回结果json串
-        if (appRegistrationDTO.appDatasourceDTO.authenticationMethod != null && appRegistrationDTO.appDatasourceDTO.authenticationMethod == 3) {
-            AppDataSourceDTO dataSourceByAppId = appDataSourceImpl.getDataSourceByAppId(po.getId());
-            apiResultConfig.apiResultConfig(dataSourceByAppId.id, appRegistrationDTO.appDatasourceDTO.apiResultConfigDtoList);
-        }
+        appRegistrationDTO.appDatasourceDTO.stream().map(e -> {
+            if (e.authenticationMethod != null && e.authenticationMethod == 3) {
+                AppDataSourceDTO dataSourceByAppId = appDataSourceImpl.getDataSourceByAppId(po.getId());
+                apiResultConfig.apiResultConfig(dataSourceByAppId.id, e.apiResultConfigDtoList);
+            }
+            return e;
+        });
 
         AtlasEntityQueryVO vo = new AtlasEntityQueryVO();
         vo.userId = userId;
@@ -227,7 +234,11 @@ public class AppRegistrationImpl
         addClassification(appRegistrationDTO);
 
         //数据库应用,需要新增元数据对象
-        List<MetaDataInstanceAttributeDTO> list = addDataSourceMetaData(po, modelDataSource);
+        List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
+        for (AppDataSourcePO item : modelDataSource) {
+            list.addAll(addDataSourceMetaData(po, item));
+        }
+
         if (!CollectionUtils.isEmpty(list)) {
             try {
                 MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
@@ -387,39 +398,51 @@ public class AppRegistrationImpl
         // 2.0修改关联表数据(tb_app_datasource)
 
         // 2.1dto->po
-        AppDataSourceDTO appDatasourceDTO = dto.getAppDatasourceDTO();
-        AppDataSourcePO modelDataSource = AppDataSourceMap.INSTANCES.dtoToPo(appDatasourceDTO);
+        List<AppDataSourceDTO> appDatasourceDTO = dto.getAppDatasourceDTO();
+        List<AppDataSourcePO> modelDataSource = AppDataSourceMap.INSTANCES.listDtoToPo(appDatasourceDTO);
 
         // 实时应用
         if (po.appType == 0) {
-            QueryWrapper<AppDataSourcePO> wrapper = new QueryWrapper<>();
-            wrapper.lambda()
-                    .eq(AppDataSourcePO::getRealtimeAccount, appDatasourceDTO.realtimeAccount)
-                    .eq(AppDataSourcePO::getAppId, appDatasourceDTO.appId);
-            AppDataSourcePO appDataSourcePo = appDataSourceMapper.selectOne(wrapper);
-            if (appDataSourcePo != null && appDataSourcePo.id != appDatasourceDTO.id) {
-                return ResultEnum.REALTIME_ACCOUNT_ISEXIST;
+
+            for (AppDataSourceDTO item : appDatasourceDTO) {
+                QueryWrapper<AppDataSourcePO> wrapper = new QueryWrapper<>();
+                wrapper.lambda()
+                        .eq(AppDataSourcePO::getRealtimeAccount, item.realtimeAccount)
+                        .eq(AppDataSourcePO::getAppId, item.appId);
+                AppDataSourcePO appDataSourcePo = appDataSourceMapper.selectOne(wrapper);
+                if (appDataSourcePo != null && appDataSourcePo.id != item.id) {
+                    throw new FkException(ResultEnum.REALTIME_ACCOUNT_ISEXIST);
+                }
             }
+
         }
 
         // 2.2修改数据
         long appDataSid = appDataSourceImpl.query().eq("app_id", id).one().getId();
-        modelDataSource.setId(appDataSid);
-        modelDataSource.setAppId(id);
 
-        //sftp秘钥方式,存储二进制数据
-        if (DataSourceTypeEnum.SFTP.getName().equals(dto.appDatasourceDTO.driveType.toLowerCase())
-                && dto.appDatasourceDTO.serviceType == 1) {
-            modelDataSource.setFileBinary(fileToBinaryStr(dto.appDatasourceDTO.connectStr));
-        }
+        modelDataSource.stream().map(e -> {
+            e.id = appDataSid;
+            e.appId = id;
+
+            //sftp秘钥方式,存储二进制数据
+            if (DataSourceTypeEnum.SFTP.getName().equals(e.driveType.toLowerCase())
+                    && e.serviceType == 1) {
+                e.setFileBinary(fileToBinaryStr(e.connectStr));
+            }
+
+            return e;
+        });
 
         //jtw类型配置返回结果json串
-        if (dto.appDatasourceDTO.authenticationMethod != null && dto.appDatasourceDTO.authenticationMethod == 3) {
-            AppDataSourceDTO dataSourceByAppId = appDataSourceImpl.getDataSourceByAppId(po.getId());
-            apiResultConfig.apiResultConfig(dataSourceByAppId.id, dto.appDatasourceDTO.apiResultConfigDtoList);
-        }
+        dto.appDatasourceDTO.stream().map(e -> {
+            if (e.authenticationMethod != null && e.authenticationMethod == 3) {
+                AppDataSourceDTO dataSourceByAppId = appDataSourceImpl.getDataSourceByAppId(po.getId());
+                apiResultConfig.apiResultConfig(dataSourceByAppId.id, e.apiResultConfigDtoList);
+            }
+            return e;
+        });
 
-        return appDataSourceMapper.updateById(modelDataSource) > 0 ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+        return appDataSourceImpl.updateBatchById(modelDataSource) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
     @Override
@@ -625,18 +648,21 @@ public class AppRegistrationImpl
                 .one();
         AppRegistrationDTO appRegistrationDTO = AppRegistrationMap.INSTANCES.poToDto(modelReg);
 
-        AppDataSourcePO modelDataSource = appDataSourceImpl.query()
+        List<AppDataSourcePO> modelDataSource = appDataSourceImpl.query()
                 .eq("app_id", id)
                 .eq("del_flag", 1)
-                .one();
-        AppDataSourceDTO appDataSourceDTO = AppDataSourceMap.INSTANCES.poToDto(modelDataSource);
-        // 数据库密码不展示
-        appDataSourceDTO.connectPwd = "";
+                .list();
+        List<AppDataSourceDTO> appDataSourceDTO = AppDataSourceMap.INSTANCES.listPoToDto(modelDataSource);
 
-        //jwt类型展示返回结果json配置
-        if (appDataSourceDTO.authenticationMethod != null && appDataSourceDTO.authenticationMethod == 3) {
-            appDataSourceDTO.apiResultConfigDtoList = apiResultConfig.getApiResultConfig(modelDataSource.id);
-        }
+        appDataSourceDTO.stream().map(e -> {
+            // 数据库密码不展示
+            e.connectPwd = "";
+            //jwt类型展示返回结果json配置
+            if (e.authenticationMethod != null && e.authenticationMethod == 3) {
+                e.apiResultConfigDtoList = apiResultConfig.getApiResultConfig(e.id);
+            }
+            return e;
+        });
 
         appRegistrationDTO.setAppDatasourceDTO(appDataSourceDTO);
 

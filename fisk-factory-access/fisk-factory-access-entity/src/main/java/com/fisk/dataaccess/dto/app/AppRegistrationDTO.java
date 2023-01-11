@@ -52,7 +52,7 @@ public class AppRegistrationDTO extends BaseDTO {
     @ApiModelProperty(value = "目标ods数据源id")
     public Integer targetDbId;
 
-    public AppDataSourceDTO appDatasourceDTO;
+    public List<AppDataSourceDTO> appDatasourceDTO;
 
 
     public AppRegistrationDTO(BaseEntity entity) {
