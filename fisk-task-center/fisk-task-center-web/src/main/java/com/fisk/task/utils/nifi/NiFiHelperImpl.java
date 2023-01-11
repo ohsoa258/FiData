@@ -40,6 +40,7 @@ import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.TableNifiSettingDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
+import com.fisk.task.dto.task.UpdateControllerServiceConfigDTO;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.postgre.datainput.IbuildTable;
 import com.fisk.task.listener.postgre.datainput.impl.BuildFactoryHelper;
@@ -2450,4 +2451,70 @@ public class NiFiHelperImpl implements INiFiHelper {
         }
     }
 
+    @Override
+    @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
+    public BusinessResult<String> UpdateDbControllerServiceConfig(UpdateControllerServiceConfigDTO dto) {
+        // 1、获取当前组件(校验是否合法存在)
+        ControllerServiceEntity entity = null;
+        try {
+            entity = NifiHelper.getControllerServicesApi().getControllerService(dto.getComponentId());
+        } catch (ApiException e) {
+            log.error("修改控制器组件配置时获取控制器组件出错");
+            return BusinessResult.of(false, "获取组件出错", null);
+        }
+        if (entity == null){
+            return BusinessResult.of(false, "控制器服务组件不存在", null);
+        }
+
+        // 2、查询组件状态，如果运行则禁用
+        if (entity.getComponent().getState() != ControllerServiceDTO.StateEnum.DISABLED){
+            // 组件未停止运行则需暂停组件
+            ControllerServiceRunStatusEntity statusEntity = new ControllerServiceRunStatusEntity();
+            statusEntity.setState(ControllerServiceRunStatusEntity.StateEnum.DISABLED);
+            try {
+                ControllerServiceEntity disRes = NifiHelper.getControllerServicesApi().updateRunStatus(dto.getComponentId(), statusEntity);
+            } catch (ApiException e) {
+                log.error("修改控制器服务配置暂停控制器出错，【" + e.getResponseBody() + "】", e);
+                return BusinessResult.of(false, "修改控制器服务配置暂停控制器出错", null);
+            }
+        }
+
+        // 3、添加组件配置参数
+        entity.setDisconnectedNodeAcknowledged(false);
+        entity.getComponent().setId(dto.getComponentId());
+        entity.getComponent().setName(dto.getComponentName());
+
+        // 设置jdbc连接属性
+        Map<String, String> map = new HashMap<>(5);
+        BuildDbControllerServiceDTO data = dto.getDbControllerServiceDTO();
+        map.put("Database Connection URL", data.conUrl);
+        map.put("Database Driver Class Name", data.driverName);
+        map.put("database-driver-locations", data.driverLocation);
+        map.put("Database User", data.user);
+        map.put("Password", data.pwd);
+        map.put("Max Total Connections", "100");
+        if (StringUtils.isNotEmpty(data.dbcpMaxIdleConns)) {
+            map.put("dbcp-max-idle-conns", data.dbcpMaxIdleConns);
+        }
+        entity.getComponent().setProperties(map);
+
+        // 4、更新配置
+        try {
+            NifiHelper.getControllerServicesApi().updateControllerService(dto.getComponentId(), entity);
+        } catch (ApiException e) {
+            log.error("修改控制器服务配置失败，【" + e.getResponseBody() + "】", e);
+            return BusinessResult.of(false, "修改控制器服务配置失败", null);
+        }
+
+        // 5、重新启动
+        ControllerServiceRunStatusEntity statusEntity = new ControllerServiceRunStatusEntity();
+        statusEntity.setState(ControllerServiceRunStatusEntity.StateEnum.ENABLED);
+        try {
+            NifiHelper.getControllerServicesApi().updateRunStatus(dto.getComponentId(), statusEntity);
+        } catch (ApiException e) {
+            log.error("修改控制器服务配置后启动控制器出错，【" + e.getResponseBody() + "】", e);
+            return BusinessResult.of(false, "修改控制器服务配置后启动控制器出错", null);
+        }
+        return BusinessResult.of(true, "修改控制器服务配置成功", null);
+    }
 }

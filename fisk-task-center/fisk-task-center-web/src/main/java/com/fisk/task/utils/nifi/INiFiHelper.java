@@ -11,6 +11,7 @@ import com.fisk.task.dto.nifi.FunnelDTO;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.TableNifiSettingDTO;
+import com.fisk.task.dto.task.UpdateControllerServiceConfigDTO;
 import com.fisk.task.vo.ProcessGroupsVO;
 
 import java.util.List;
@@ -577,8 +578,10 @@ public interface INiFiHelper {
      */
     public BusinessResult<ProcessorEntity> buildFetchSFTPProcess(BuildFetchSFTPProcessorDTO data);
 
-
-
-
+    /**
+     * 修改控制器服务配置信息
+     * @param dto 修改参数
+     */
+    BusinessResult<String> UpdateDbControllerServiceConfig(UpdateControllerServiceConfigDTO dto);
 
 }
