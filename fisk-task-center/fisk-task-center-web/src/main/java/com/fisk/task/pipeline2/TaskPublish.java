@@ -151,10 +151,10 @@ public class TaskPublish {
 
                             if (Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue())) {
                                 //调度脚本任务
-                                sendScriptTask(kafkaReceiveDTO, pipelineId, split[4]);
+                                sendScriptTask(kafkaReceiveDTO, pipelineId, split[4], split[6]);
                             } else if (Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue())) {
                                 //sftp复制任务
-                                sendSftpFileCopyTask(kafkaReceiveDTO, pipelineId, split[4]);
+                                sendSftpFileCopyTask(kafkaReceiveDTO, pipelineId, split[4], split[6]);
                             } else {
                                 log.info("发送的topic2:{},内容:{}", topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
                                 kafkaTemplateHelper.sendMessageAsync(topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
@@ -369,13 +369,16 @@ public class TaskPublish {
      * @param pipelineId
      * @param taskType
      */
-    public void sendScriptTask(KafkaReceiveDTO kafkaReceiveDTO, String pipelineId, String taskType) {
+    public void sendScriptTask(KafkaReceiveDTO kafkaReceiveDTO, String pipelineId, String taskType, String task) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         if (!StringUtils.isEmpty(kafkaReceiveDTO.scriptTaskIds)) {
             ExecScriptDTO execScript = new ExecScriptDTO();
             String[] scriptTaskId = kafkaReceiveDTO.scriptTaskIds.split(",");
             execScript.pipelTraceId = kafkaReceiveDTO.pipelTraceId;
             for (String taskId : scriptTaskId) {
+                if (!Objects.equals(task, taskId)) {
+                    continue;
+                }
                 execScript.pipelJobTraceId = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(kafkaReceiveDTO.pipelTraceId, String.valueOf(taskId)).jobTraceId;
                 execScript.pipelTaskTraceId = iPipelineTaskPublishCenter.getTaskHierarchy(kafkaReceiveDTO.pipelTraceId, String.valueOf(taskId)).taskTraceId;
                 execScript.taskId = taskId;
@@ -411,7 +414,7 @@ public class TaskPublish {
      * @param pipelineId
      * @param taskType
      */
-    public void sendSftpFileCopyTask(KafkaReceiveDTO kafkaReceiveDTO, String pipelineId, String taskType) {
+    public void sendSftpFileCopyTask(KafkaReceiveDTO kafkaReceiveDTO, String pipelineId, String taskType, String task) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         if (!StringUtils.isEmpty(kafkaReceiveDTO.sftpFileCopyTaskIds)) {
             SftpCopyDTO execScript = new SftpCopyDTO();
@@ -426,6 +429,9 @@ public class TaskPublish {
             scriptTaskId = (String[]) (set.toArray(new String[set.size()]));
             execScript.pipelTraceId = kafkaReceiveDTO.pipelTraceId;
             for (String taskId : scriptTaskId) {
+                if (!Objects.equals(task, taskId)) {
+                    continue;
+                }
                 execScript.pipelJobTraceId = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(kafkaReceiveDTO.pipelTraceId, String.valueOf(taskId)).jobTraceId;
                 execScript.pipelTaskTraceId = iPipelineTaskPublishCenter.getTaskHierarchy(kafkaReceiveDTO.pipelTraceId, String.valueOf(taskId)).taskTraceId;
                 execScript.taskId = taskId;
