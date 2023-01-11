@@ -218,7 +218,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         odsMetaDataInfo(accessPo.appId, dto.sqlScript);
 
         // 发布
-        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO);
+        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, dto.appDataSourceId);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -302,7 +302,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         odsMetaDataInfo(model.appId, dto.sqlScript);
 
         // 发布
-        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO);
+        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, model.appDataSourceId);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
@@ -467,8 +467,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                          boolean useExistTable,
                          List<DeltaTimeDTO> deltaTimes,
                          String versionSql,
-                         TableSyncmodeDTO syncMode) {
-        AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("app_id", appId).one();
+                         TableSyncmodeDTO syncMode,
+                         Integer appDataSourceId) {
+        AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("id", appDataSourceId).one();
         if (dataSourcePo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
@@ -1230,7 +1231,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     false,
                     systemVariable,
                     versionSql,
-                    TableSyncModeMap.INSTANCES.poToDto(tableSyncmodePo));
+                    TableSyncModeMap.INSTANCES.poToDto(tableSyncmodePo),
+                    accessPo.appDataSourceId);
         }
         return ResultEnum.SUCCESS;
     }
