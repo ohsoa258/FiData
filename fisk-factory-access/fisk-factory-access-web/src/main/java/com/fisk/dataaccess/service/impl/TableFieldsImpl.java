@@ -472,7 +472,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         if (dataSourcePo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        AppRegistrationPO appRegistrationPo = appRegistration.query().eq("", appId).one();
+        AppRegistrationPO appRegistrationPo = appRegistration.query().eq("id", appId).one();
         if (appRegistrationPo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }

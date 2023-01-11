@@ -11,16 +11,14 @@ import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
-import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
-import com.fisk.task.dto.dispatchlog.PipelLogVO;
-import com.fisk.task.dto.dispatchlog.PipelStageLogVO;
-import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
+import com.fisk.task.dto.dispatchlog.*;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
+import com.fisk.task.dto.query.DataServiceTableLogQueryDTO;
 import com.fisk.task.dto.task.*;
 import com.fisk.task.po.TableNifiSettingPO;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -369,4 +367,12 @@ public interface PublishTaskClient {
     @GetMapping("/dispatchLog/getPipelIdByPipelTraceId")
     public ResultEntity<String> getPipelIdByPipelTraceId(@RequestParam("pipelTraceId") String pipelTraceId);
 
+    /**
+     * 获取数据服务表服务同步日志
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    @PostMapping("/dispatchLog/getDataServiceTableLogVos")
+    ResultEntity<DataServiceTableLogQueryVO> getDataServiceTableLogVos(@RequestBody DataServiceTableLogQueryDTO dto);
 }

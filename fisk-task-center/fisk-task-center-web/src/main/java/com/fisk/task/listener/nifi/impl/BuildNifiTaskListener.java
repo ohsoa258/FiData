@@ -160,7 +160,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         BuildTableServiceDTO buildTableService = JSON.parseObject(dataInfo, BuildTableServiceDTO.class);
         try {
             TBETLIncrementalPO ETLIncremental = new TBETLIncrementalPO();
-            ETLIncremental.objectName = buildTableService.targetTable;
+            ETLIncremental.objectName = buildTableService.schemaName + "." + buildTableService.targetTable;
             ETLIncremental.enableFlag = "1";
             ETLIncremental.incrementalObjectivescoreBatchno = UUID.randomUUID().toString();
             Map<String, Object> conditionHashMap = new HashMap<>();
@@ -1468,6 +1468,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         res.add(updateField1);
 
         //查询条数
+        String fullTableName = buildTableService.schemaName + "." + buildTableService.targetTable;
+        config.processorConfig.targetTableName = fullTableName;
         ProcessorEntity queryNumbers = queryNumbers(dto, config, groupId, targetDbPoolId);
         tableNifiSettingPO.queryNumbersProcessorId = queryNumbers.getId();
         //连接器
@@ -1486,6 +1488,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         componentConnector(groupId, numberToJsonRes.getId(), evaluateJsons.getId(), AutoEndBranchTypeEnum.SUCCESS);
         componentsConnector(groupId, numberToJsonRes.getId(), supervisionId, autoEndBranchTypeEnums);
         //更新日志
+        config.targetDsConfig.targetTableName = fullTableName;
         ProcessorEntity processorEntity = CallDbLogProcedure(config, groupId, cfgDbPoolId);
         tableNifiSettingPO.saveNumbersProcessorId = processorEntity.getId();
         //连接器
@@ -1527,6 +1530,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 res.add(dispatchProcessor);
             }
         }
+        tableNifiSettingPO.tableName = fullTableName;
         tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
         return res;
     }
