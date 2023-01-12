@@ -277,10 +277,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             if (acke != null) {
                 acke.acknowledge();
             }
-            try{
+            try {
                 log.info("开始修改表服务发布状态，参数id：[{}]，status：[{}]", dto.id, dto.status);
                 consumeServeiceClient.updateTableServiceStatus(dto);
-            }catch (Exception e){
+            } catch (Exception e) {
                 throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
             }
         }
@@ -1406,7 +1406,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
         tableNifiSettingPO.consumeKafkaProcessorId = consumeKafkaProcessor.getId();
         //读取增量字段组件
+        config.processorConfig.targetTableName = buildTableService.schemaName + "." + buildTableService.targetTable;
         ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId, dto);
+        config.processorConfig.targetTableName = buildTableService.targetTable;
         componentConnector(groupId, evaluateJsonPathProcessor.getId(), queryField.getId(), AutoEndBranchTypeEnum.MATCHED);
         tableNifiSettingPO.queryIncrementProcessorId = queryField.getId();
         //创建数据转换json组件

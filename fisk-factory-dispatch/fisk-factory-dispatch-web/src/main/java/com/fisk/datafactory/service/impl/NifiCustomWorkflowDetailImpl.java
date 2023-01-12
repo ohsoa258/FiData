@@ -24,6 +24,7 @@ import com.fisk.datafactory.dto.customworkflowdetail.*;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.datafactory.enums.NifiWorkStatusEnum;
 import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
 import com.fisk.datafactory.map.NifiCustomWorkflowMap;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
@@ -143,6 +144,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             if (dto.flag) {
                 // 正在发布
                 workflowDTO.status = 3;
+                workflowDTO.workStatus = NifiWorkStatusEnum.RUNNING_STATUS.getValue();
             }
             workflowService.editData(workflowDTO);
         } catch (Exception e) {
