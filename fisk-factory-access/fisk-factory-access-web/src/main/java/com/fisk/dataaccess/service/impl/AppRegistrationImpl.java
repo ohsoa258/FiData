@@ -67,6 +67,8 @@ import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.datasource.DataSourceResultDTO;
+import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
@@ -194,18 +196,22 @@ public class AppRegistrationImpl
 
         List<AppDataSourcePO> modelDataSource = AppDataSourceMap.INSTANCES.listDtoToPo(datasourceDTO);
         // 保存tb_app_datasource数据
-        modelDataSource.stream().map(e -> {
-            e.appId = po.getId();
+        modelDataSource.stream().filter(Objects::nonNull).forEach(e -> {
+            e.setAppId(po.getId());
             e.createUser = String.valueOf(userId);
 
             //sftp秘钥方式,存储二进制数据
             if (DataSourceTypeEnum.SFTP.getName().equals(e.driveType.toLowerCase()) && e.serviceType == 1) {
                 e.fileBinary = fileToBinaryStr(e.connectStr);
             }
-
-            return e;
+            //同步到平台配置
+            if (!DataSourceTypeEnum.SFTP.getName().equals(e.driveType.toLowerCase())
+                    && !DataSourceTypeEnum.FTP.getName().equals(e.driveType.toLowerCase())
+                    && !DataSourceTypeEnum.API.getName().equals(e.driveType.toLowerCase())
+                    && !DataSourceTypeEnum.RestfulAPI.getName().equals(e.driveType.toLowerCase())) {
+                e.systemDataSourceId = synchronizationSystemDataSource(e, po.appName).id;
+            }
         });
-
 
         boolean insert = appDataSourceImpl.saveBatch(modelDataSource);
         if (!insert) {
@@ -330,6 +336,39 @@ public class AppRegistrationImpl
         return FileBinaryUtils.fileToBinStr(filePath);
     }
 
+    /**
+     * 数据源同步到系统平台配置中
+     *
+     * @param po
+     * @param name
+     * @return
+     */
+    public DataSourceResultDTO synchronizationSystemDataSource(AppDataSourcePO po, String name) {
+
+        DataSourceSaveDTO data = new DataSourceSaveDTO();
+        data.conAccount = po.connectAccount;
+        data.conDbname = po.dbName;
+        data.conIp = po.host;
+        data.conAccount = po.connectAccount;
+        data.conPassword = po.connectPwd;
+        data.conPort = Integer.parseInt(po.port);
+        data.name = name + "_" + po.dbName;
+        data.serviceName = po.serviceName;
+        data.serviceType = po.serviceType;
+        data.conStr = po.connectStr;
+        data.conType = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.getEnum(po.driveType.toUpperCase());
+        //外部数据源
+        data.sourceType = 2;
+        data.id = po.systemDataSourceId;
+
+        ResultEntity<DataSourceResultDTO> result = userClient.insertDataSourceByAccess(data);
+        if (result.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        return result.data;
+
+    }
+
     @Override
     public PageDTO<AppRegistrationDTO> listAppRegistration(String key, Integer page, Integer rows) {
 
@@ -420,17 +459,21 @@ public class AppRegistrationImpl
         // 2.2修改数据
         long appDataSid = appDataSourceImpl.query().eq("app_id", id).one().getId();
 
-        modelDataSource.stream().map(e -> {
+        modelDataSource.stream().filter(Objects::nonNull).forEach(e -> {
+            e.setAppId(po.getId());
             e.id = appDataSid;
-            e.appId = id;
 
             //sftp秘钥方式,存储二进制数据
-            if (DataSourceTypeEnum.SFTP.getName().equals(e.driveType.toLowerCase())
-                    && e.serviceType == 1) {
-                e.setFileBinary(fileToBinaryStr(e.connectStr));
+            if (DataSourceTypeEnum.SFTP.getName().equals(e.driveType.toLowerCase()) && e.serviceType == 1) {
+                e.fileBinary = fileToBinaryStr(e.connectStr);
             }
-
-            return e;
+            //同步到平台配置
+            if (!DataSourceTypeEnum.SFTP.getName().equals(e.driveType.toLowerCase())
+                    && !DataSourceTypeEnum.FTP.getName().equals(e.driveType.toLowerCase())
+                    && !DataSourceTypeEnum.API.getName().equals(e.driveType.toLowerCase())
+                    && !DataSourceTypeEnum.RestfulAPI.getName().equals(e.driveType.toLowerCase())) {
+                e.systemDataSourceId = synchronizationSystemDataSource(e, po.appName).id;
+            }
         });
 
         //jtw类型配置返回结果json串

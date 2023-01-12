@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.datasource.DataSourceQueryDTO;
+import com.fisk.system.dto.datasource.DataSourceResultDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.system.entity.DataSourcePO;
 
@@ -92,4 +93,13 @@ public interface IDataSourceManageService extends IService<DataSourcePO> {
      * @return 查询结果
      */
     ResultEntity<DataSourceDTO> getById(int datasourceId);
+
+    /**
+     * 同步数据接入添加数据源
+     *
+     * @param dto
+     * @return
+     */
+    DataSourceResultDTO insertDataSourceByAccess(DataSourceSaveDTO dto);
+
 }

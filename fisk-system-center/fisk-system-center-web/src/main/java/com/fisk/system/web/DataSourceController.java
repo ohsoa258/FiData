@@ -7,11 +7,11 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.datasource.DataSourceQueryDTO;
+import com.fisk.system.dto.datasource.DataSourceResultDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.system.service.IDataSourceManageService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -90,4 +90,11 @@ public class DataSourceController {
     public ResultEntity<Object> testConnection(@RequestBody DataSourceSaveDTO dto) {
         return ResultEntityBuild.build(service.testConnection(dto));
     }
+
+    @PostMapping("/insertDataSourceByAccess")
+    @ApiOperation("同步数据接入数据源")
+    public ResultEntity<DataSourceResultDTO> insertDataSourceByAccess(@RequestBody DataSourceSaveDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.insertDataSourceByAccess(dto));
+    }
+
 }

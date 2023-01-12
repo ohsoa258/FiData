@@ -147,4 +147,9 @@ public class AppDataSourcePO extends BasePO {
      */
     public String fileBinary;
 
+    /**
+     * 系统数据源配置id
+     */
+    public Integer systemDataSourceId = 0;
+
 }

@@ -144,6 +144,10 @@ public class BloodCompensationImpl
                 continue;
             }
 
+            if (CollectionUtils.isEmpty(first.get().dbList.get(0).tableList)) {
+                first.get().dbList.get(0).tableList = new ArrayList<>();
+            }
+
             //解析sql
             List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(accessTable.driveType, accessTable.sqlScript);
             if (CollectionUtils.isEmpty(res)) {
@@ -161,7 +165,7 @@ public class BloodCompensationImpl
                 tableList.add(table);
             }
 
-            first.get().dbList.get(0).tableList = tableList;
+            first.get().dbList.get(0).tableList.addAll(tableList);
         }
 
         metaData.consumeMetaData(synchronizationAppRegistration.data);

@@ -10,6 +10,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
+import com.fisk.dataaccess.dto.datasource.DataSourceInfoDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.dto.v3.DataSourceDTO;
 import com.fisk.dataaccess.dto.v3.SourceColumnMetaQueryDTO;
@@ -177,6 +178,25 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         }
 
         return null;
+    }
+
+    @Override
+    public List<DataSourceInfoDTO> getDataSourcesByAppId(Integer appId) {
+        List<AppDataSourcePO> list = this.query().select("db_name", "system_data_source_id").eq("app_id", appId).list();
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+
+        List<DataSourceInfoDTO> data = new ArrayList<>();
+
+        for (AppDataSourcePO po : list) {
+            DataSourceInfoDTO dto = new DataSourceInfoDTO();
+            dto.id = po.systemDataSourceId;
+            dto.name = po.dbName;
+            data.add(dto);
+        }
+
+        return data;
     }
 
     public AppDataSourceDTO getDataSourceByAppId(long appId) {

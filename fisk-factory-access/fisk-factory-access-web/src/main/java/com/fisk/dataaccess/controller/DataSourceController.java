@@ -47,4 +47,10 @@ public class DataSourceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getSourceColumnMeta(dto));
     }
 
+    @ApiOperation(value = "根据appId获取所有数据源")
+    @GetMapping("/getDataSourcesByAppId/{appId}")
+    public ResultEntity<Object> getDataSourcesByAppId(@PathVariable Integer appId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataSourcesByAppId(appId));
+    }
+
 }

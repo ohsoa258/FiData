@@ -486,6 +486,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.userId = userInfo.id;
             data.openTransmission = openTransmission;
             data.deltaTimes = deltaTimes;
+
+            //来源和目标数据源id
+            data.dataSourceDbId = dataSourcePo.systemDataSourceId;
             data.targetDbId = appRegistrationPo.targetDbId;
 
             // 版本号入库、调用存储存储过程  

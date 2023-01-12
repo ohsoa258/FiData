@@ -3,13 +3,19 @@ package com.fisk.system.client;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.datasource.DataSourceResultDTO;
+import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.dto.userinfo.UserDropDTO;
 import com.fisk.system.dto.userinfo.UserGroupQueryDTO;
 import com.fisk.system.dto.userinfo.UserPowerDTO;
 import com.fisk.system.vo.emailserver.EmailServerVO;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -124,8 +130,19 @@ public interface UserClient {
 
     /**
      * 获取菜单列表
+     *
      * @return
      */
     @GetMapping("/auth/getAllMenuList")
     ResultEntity<Object> getAllMenuList();
+
+    /**
+     * 同步数据接入数据源
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/datasource/insertDataSourceByAccess")
+    @ApiOperation("同步数据接入数据源")
+    ResultEntity<DataSourceResultDTO> insertDataSourceByAccess(@RequestBody DataSourceSaveDTO dto);
 }

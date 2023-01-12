@@ -25,4 +25,16 @@ public interface DataSourceMap {
             @Mapping(source = "sourceBusinessType.value", target = "sourceBusinessType"),
     })
     void dtoToPo(DataSourceSaveDTO dto, @MappingTarget DataSourcePO po);
+
+    /**
+     * editDto => po
+     *
+     * @param dto source
+     * @param po  target
+     */
+    @Mappings({
+            @Mapping(source = "conType.value", target = "conType"),
+            @Mapping(source = "sourceBusinessType.value", target = "sourceBusinessType"),
+    })
+    void accessDtoToPo(DataSourceSaveDTO dto, @MappingTarget DataSourcePO po);
 }

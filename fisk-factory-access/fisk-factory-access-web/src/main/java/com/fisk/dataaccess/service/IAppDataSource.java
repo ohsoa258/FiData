@@ -2,6 +2,7 @@ package com.fisk.dataaccess.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
+import com.fisk.dataaccess.dto.datasource.DataSourceInfoDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.dto.v3.DataSourceDTO;
 import com.fisk.dataaccess.dto.v3.SourceColumnMetaQueryDTO;
@@ -44,4 +45,13 @@ public interface IAppDataSource extends IService<AppDataSourcePO> {
      * @return
      */
     List<TableStructureDTO> getSourceColumnMeta(SourceColumnMetaQueryDTO dto);
+
+    /**
+     * 根据应用id获取数据源集合
+     *
+     * @param appId
+     * @return
+     */
+    List<DataSourceInfoDTO> getDataSourcesByAppId(Integer appId);
+
 }

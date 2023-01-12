@@ -17,10 +17,7 @@ import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.system.dto.GetConfigDTO;
-import com.fisk.system.dto.datasource.DataSourceDTO;
-import com.fisk.system.dto.datasource.DataSourcePageDTO;
-import com.fisk.system.dto.datasource.DataSourceQueryDTO;
-import com.fisk.system.dto.datasource.DataSourceSaveDTO;
+import com.fisk.system.dto.datasource.*;
 import com.fisk.system.entity.DataSourcePO;
 import com.fisk.system.map.DataSourceMap;
 import com.fisk.system.mapper.DataSourceMapper;
@@ -245,6 +242,19 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataSourceDTO);
     }
 
+    @Override
+    public DataSourceResultDTO insertDataSourceByAccess(DataSourceSaveDTO dto) {
+        DataSourcePO model = new DataSourcePO();
+        DataSourceMap.INSTANCES.accessDtoToPo(dto, model);
+        boolean flat = this.saveOrUpdate(model);
+        if (!flat) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        DataSourceResultDTO result = new DataSourceResultDTO();
+        result.id = (int) model.id;
+        return result;
+    }
+
     public List<DataSourceDTO> getAll(boolean isShowPwd) {
         List<DataSourceDTO> dataSourceList = new ArrayList<>();
         QueryWrapper<DataSourcePO> dataSourcePOQueryWrapper = new QueryWrapper<>();
@@ -285,4 +295,5 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         }
         return dataSourceDTO;
     }
+
 }
