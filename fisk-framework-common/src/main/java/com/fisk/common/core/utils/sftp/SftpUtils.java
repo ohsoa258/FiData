@@ -222,7 +222,7 @@ public class SftpUtils {
         log.info("参数信息，目录路径-[{}], 文件类型[{}]", path, fileType);
         // 校验目录格式
         if (path.length() != 1 && !path.endsWith("/")) {
-            //throw new FkException(ResultEnum.SFTP_DIR_PATH_ERROR);
+            throw new FkException(ResultEnum.SFTP_DIR_PATH_ERROR);
         }
 
         // 初始化顶级节点
