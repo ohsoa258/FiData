@@ -3131,8 +3131,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         kafkaRkeceiveDTO.pipelStageTraceId = UUID.randomUUID().toString();
         kafkaRkeceiveDTO.ifTaskStart = true;
         kafkaRkeceiveDTO.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
-        str.append("'").append(kafkaRkeceiveDTO.topic).append("' as topic, '").append(kafkaRkeceiveDTO.start_time).append("' as start_time, '").append(kafkaRkeceiveDTO.pipelTaskTraceId).append("'");
-        str.append(" as pipelTaskTraceId, '").append(kafkaRkeceiveDTO.fidata_batch_code).append("' as fidata_batch_code , '").append(kafkaRkeceiveDTO.pipelStageTraceId).append("' as pipelStageTraceId, '");
+        str.append("'").append(kafkaRkeceiveDTO.topic).append("' as topic, '").append(kafkaRkeceiveDTO.start_time).append("' as start_time, ").append("md5(UUID())");
+        str.append(" as pipelTaskTraceId, ").append("md5(UUID())").append(" as fidata_batch_code , ").append("md5(UUID())").append(" as pipelStageTraceId, '");
         str.append("true' as ifTaskStart , '").append(kafkaRkeceiveDTO.topicType).append("' as topicType");
         return str.toString();
     }
