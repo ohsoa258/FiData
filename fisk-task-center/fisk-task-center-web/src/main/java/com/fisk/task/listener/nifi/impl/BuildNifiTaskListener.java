@@ -18,6 +18,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.FileBinaryUtils;
 import com.fisk.common.core.utils.sftp.SftpUtils;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.consumeserveice.client.ConsumeServeiceClient;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.dto.access.NifiAccessDTO;
@@ -28,11 +29,13 @@ import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.dataaccess.enums.DeltaTimeParameterTypeEnum;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.dataaccess.enums.syncModeTypeEnum;
+import com.fisk.datafactory.enums.TableServicePublicStatusEnum;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckSyncDTO;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.dataservice.dto.tableservice.TableServicePublishStatusDTO;
 import com.fisk.dataservice.dto.tablesyncmode.TableSyncModeDTO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
@@ -140,6 +143,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     PublishTaskController pc;
     @Resource
     UserClient userClient;
+    @Resource
+    ConsumeServeiceClient consumeServeiceClient;
 
     @Resource
     RestTemplate httpClient;
@@ -158,6 +163,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
         log.info("表服务参数:{}", dataInfo);
         BuildTableServiceDTO buildTableService = JSON.parseObject(dataInfo, BuildTableServiceDTO.class);
+        // 修改表状态实体
+        TableServicePublishStatusDTO dto = new TableServicePublishStatusDTO();
         try {
             TBETLIncrementalPO ETLIncremental = new TBETLIncrementalPO();
             ETLIncremental.objectName = buildTableService.schemaName + "." + buildTableService.targetTable;
@@ -258,11 +265,23 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
             // 启动,保存
             enabledProcessor(taskGroupId, processorEntities);
+
+            dto.setId((int) buildTableService.id);
+            // 发布成功则状态置为1
+            dto.setStatus(TableServicePublicStatusEnum.PUBLIC_YES.getValue());
         } catch (Exception e) {
+            // 发布失败则状态置为2
+            dto.setStatus(TableServicePublicStatusEnum.PUBLIC_FAIL.getValue());
             log.error("表服务同步数据报错:{}", StackTraceHelper.getStackTraceInfo(e));
         } finally {
             if (acke != null) {
                 acke.acknowledge();
+            }
+            try{
+                log.info("开始修改表服务发布状态，参数id：[{}]，status：[{}]", dto.id, dto.status);
+                consumeServeiceClient.updateTableServiceStatus(dto);
+            }catch (Exception e){
+                throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
             }
         }
         return ResultEnum.SUCCESS;
