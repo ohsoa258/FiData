@@ -25,6 +25,7 @@ nifi:
   pipeline:
     topicName: my-topic
     waitTime: 30
+    maxTime: 10800
     operation-interval: 2000
     number-of-operations: 5
     data-governance-url: http://10.178.188.31:8083

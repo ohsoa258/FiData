@@ -104,6 +104,8 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
     IPipelineTaskPublishCenter iPipelineTaskPublishCenter;
     @Resource
     PublishTaskController publishTaskController;
+    @Value("${nifi.pipeline.maxTime}")
+    public String maxTime;
 
 
     @Override
@@ -350,7 +352,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                     map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
                                     map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers + "");
                                     log.info(itselfPort.id + "打印条数344" + JSON.toJSONString(map));
-                                    redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + itselfPort.id, map, 3000);
+                                    redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + itselfPort.id, map, Long.parseLong(maxTime));
                                     //redisUtil.hset(RedisKeyEnum.PIPEL_JOB.getName()+itselfPort.pid, DispatchLogEnum.jobend.getName(), simpleDateFormat.format(new Date()), 3000);
                                 } else {
                                     //如果结束支点不止它一个,不仅要装进去,还要等其他支点
@@ -358,8 +360,8 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                     map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
                                     map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers + "");
                                     log.info(itselfPort.id + "打印条数352" + JSON.toJSONString(map));
-                                    redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + itselfPort.id, map, 3000);
-                                    redisUtil.hmsset(hmgetKey, hmget, 3000);
+                                    redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + itselfPort.id, map, Long.parseLong(maxTime));
+                                    redisUtil.hmsset(hmgetKey, hmget, Long.parseLong(maxTime));
                                 }
                             } else {
                                 //如果map里面存在,判断map的记录个数,如果不是所有支点结束,刷新过期时间3000
@@ -372,15 +374,15 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                     map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
                                     map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers + "");
                                     log.info(itselfPort.id + "打印条数366" + JSON.toJSONString(map));
-                                    redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + itselfPort.id, map, 3000);
+                                    redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + itselfPort.id, map, Long.parseLong(maxTime));
                                     //redisUtil.hset(RedisKeyEnum.PIPEL_JOB.getName()+itselfPort.pid, DispatchLogEnum.jobend.getName(), simpleDateFormat.format(new Date()), 3000);
                                 } else {
                                     Map<String, Object> map = new HashMap<>();
                                     map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
                                     map.put(DispatchLogEnum.taskcount.getName(), kafkaReceiveDTO.numbers + "");
                                     log.info(itselfPort.id + "打印条数373" + JSON.toJSONString(map));
-                                    redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + itselfPort.id, map, 3000);
-                                    redisUtil.hmsset(hmgetKey, hmget, 3000);
+                                    redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + itselfPort.id, map, Long.parseLong(maxTime));
+                                    redisUtil.hmsset(hmgetKey, hmget, Long.parseLong(maxTime));
                                 }
                             }
                         }
@@ -437,7 +439,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                         }
                                     }
                                     if (hasKey && !goNext) {
-                                        redisUtil.expire(topic, 3000L);
+                                        redisUtil.expire(topic, Long.parseLong(maxTime));
                                         continue;
                                     }
                                 }
@@ -455,7 +457,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                         delayedTask(id, kafkaReceiveDTO.message, timer, kafkaReceiveDTO.pipelTraceId, nifiPortsHierarchyNextDTO.upPortList, topic, groupId);
 
                                     } else {
-                                        redisUtil.heartbeatDetection(topic, topicSelf.topicName, 3000L);
+                                        redisUtil.heartbeatDetection(topic, topicSelf.topicName, Long.parseLong(maxTime));
                                     }
                                 } else {
                                     topicContent = key.toString();
@@ -484,18 +486,18 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                                                 }
                                             } else {
                                                 if (topicContent.contains(topicSelf.topicName)) {
-                                                    redisUtil.expire(topic, 3000);
+                                                    redisUtil.expire(topic, Long.parseLong(maxTime));
                                                 } else {
-                                                    redisUtil.heartbeatDetection(topic, topicContent + "," + topicSelf.topicName, 3000);
+                                                    redisUtil.heartbeatDetection(topic, topicContent + "," + topicSelf.topicName, Long.parseLong(maxTime));
                                                 }
                                             }
 
                                         } else {
 
                                             if (topicContent.contains(topicSelf.topicName)) {
-                                                redisUtil.expire(topic, 3000L);
+                                                redisUtil.expire(topic, Long.parseLong(maxTime));
                                             } else {
-                                                redisUtil.heartbeatDetection(topic, topicContent + "," + topicSelf.topicName, 3000L);
+                                                redisUtil.heartbeatDetection(topic, topicContent + "," + topicSelf.topicName, Long.parseLong(maxTime));
                                             }
                                         }
                                     } else {
@@ -597,7 +599,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                     jobMap.put(String.valueOf(jobHierarchy.id), JSON.toJSONString(jobHierarchy));
                 }
                 //把job的运行情况加上
-                redisUtil.hmsset(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, jobMap, 3000);
+                redisUtil.hmsset(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, jobMap, Long.parseLong(maxTime));
             }
             if (Objects.equals(ResultEnum.SUCCESS.getCode(), taskLinkedList.code)) {
                 data = taskLinkedList.data;
@@ -612,9 +614,9 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                     tasks.put(String.valueOf(dto.id), JSON.toJSONString(dto));
                 }
                 //只是列表
-                redisUtil.hmsset(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, tasks, 3000);
+                redisUtil.hmsset(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, tasks, Long.parseLong(maxTime));
                 //原始数据
-                redisUtil.set(RedisKeyEnum.PIPEL_TRACE_ID.getName() + ":" + pipelTraceId, JSON.toJSONString(data), 3000);
+                redisUtil.set(RedisKeyEnum.PIPEL_TRACE_ID.getName() + ":" + pipelTraceId, JSON.toJSONString(data), Long.parseLong(maxTime));
 
             } else {
                 log.error("调度模块无此调度的dag图:" + taskLinkedList.msg);
@@ -689,7 +691,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
         if (success) {
             String value = UUID.randomUUID().toString();
             //刷新时间和创建key或者修改value,会产生延时任务
-            redisUtil.set(RedisKeyEnum.DELAYED_TASK.getName() + ":" + thisTopic, value, 3000);
+            redisUtil.set(RedisKeyEnum.DELAYED_TASK.getName() + ":" + thisTopic, value, Long.parseLong(maxTime));
             DelayedTask delayedTask = new DelayedTask(id, message, value, groupId, thisTopic, kafkaTemplateHelper, dataFactoryClient, iOlap, iPipelJobLog, iPipelLog, iPipelTaskLog, redisUtil, iTableNifiSettingService, dataAccessClient, iPipelineTaskPublishCenter, publishTaskController);
             timer.schedule(delayedTask, Long.parseLong(waitTime) * 1000);
         } else {

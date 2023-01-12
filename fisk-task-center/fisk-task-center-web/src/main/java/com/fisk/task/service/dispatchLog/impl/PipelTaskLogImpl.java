@@ -25,6 +25,7 @@ import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -46,6 +47,8 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
     PipelTaskLogMapper pipelTaskLogMapper;
     @Resource
     RedisUtil redisUtil;
+    @Value("${nifi.pipeline.maxTime}")
+    public String maxTime;
 
     @Override
     public void savePipelTaskLog(String pipelTraceId, String jobTraceId, String pipelTaskTraceId, Map<Integer, Object> map, String taskId, String tableId, int tableType) {
@@ -88,7 +91,7 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
                     if (Objects.equals(pipelTaskLog.type, DispatchLogEnum.taskstart.getValue())) {
                         //dto.taskStatus = DispatchLogEnum.taskstart;
                         taskMap.put(taskId, JSON.toJSONString(dto));
-                        redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, taskMap, 3000);
+                        redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, taskMap, Long.parseLong(maxTime));
                     } else if (Objects.equals(pipelTaskLog.type, DispatchLogEnum.taskend.getValue())) {
                        /* if (pipelTaskLog.msg.contains(NifiStageTypeEnum.PASS.getName())) {
                             dto.taskStatus = DispatchLogEnum.taskpass;
@@ -99,7 +102,7 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
                         }*/
 
                         taskMap.put(taskId, JSON.toJSONString(dto));
-                        redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, taskMap, 3000);
+                        redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, taskMap, Long.parseLong(maxTime));
                     }
                 }
             } catch (Exception e) {
