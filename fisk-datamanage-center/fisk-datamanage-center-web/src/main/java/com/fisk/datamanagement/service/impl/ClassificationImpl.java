@@ -8,6 +8,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.datamanagement.dto.classification.*;
+import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.map.ClassificationMap;
 import com.fisk.datamanagement.service.IClassification;
@@ -43,6 +44,8 @@ public class ClassificationImpl implements IClassification {
     private String bulkClassification;
     @Value("${atlas.entityByGuid}")
     private String entityByGuid;
+    @Value("${atlas.searchBasic}")
+    private String searchBasic;
     @Resource
     private RedisTemplate redisTemplate;
 
@@ -50,9 +53,8 @@ public class ClassificationImpl implements IClassification {
     EntityImpl entity;
 
     @Override
-    public ClassificationDefsDTO getClassificationList()
-    {
-        ClassificationDefsDTO data=new ClassificationDefsDTO();
+    public ClassificationDefsDTO getClassificationList() {
+        ClassificationDefsDTO data = new ClassificationDefsDTO();
         try {
             ResultDataDTO<String> result = atlasClient.get(typedefs + "?type=classification");
             if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
@@ -195,12 +197,6 @@ public class ClassificationImpl implements IClassification {
         ClassificationDefsDTO data = new ClassificationDefsDTO();
         List<ClassificationDefContentDTO> list = new ArrayList<>();
 
-        //同步主数据业务分类
-        ClassificationDefContentDTO masterData = new ClassificationDefContentDTO();
-        masterData.name = "主数据";
-        masterData.description = "主数据";
-        list.add(masterData);
-
         //同步数据接入业务分类
         ClassificationDefContentDTO dataAccess = new ClassificationDefContentDTO();
         dataAccess.name = "业务数据";
@@ -213,62 +209,54 @@ public class ClassificationImpl implements IClassification {
         dataModel.description = "分析数据";
         list.add(dataModel);
 
-        //分析数据下分析模型
-        ClassificationDefContentDTO analysisModel = new ClassificationDefContentDTO();
-        analysisModel.name = "分析模型";
-        analysisModel.description = "分析模型";
-        List<String> analysisModelSuperType = new ArrayList<>();
-        analysisModelSuperType.add(dataModel.name);
-        analysisModel.superTypes = analysisModelSuperType;
-        list.add(analysisModel);
-
-        //分析数据下派生指标
-        ClassificationDefContentDTO derivedIndicators = new ClassificationDefContentDTO();
-        derivedIndicators.name = "派生指标";
-        derivedIndicators.description = "派生指标";
-        List<String> derivedIndicatorsSuperType = new ArrayList<>();
-        derivedIndicatorsSuperType.add(analysisModel.name);
-        derivedIndicators.superTypes = derivedIndicatorsSuperType;
-        list.add(derivedIndicators);
-
-        //分析模型下宽表
-        ClassificationDefContentDTO wideTable = new ClassificationDefContentDTO();
-        wideTable.name = "宽表";
-        wideTable.description = "宽表";
-        List<String> wideTableSuperType = new ArrayList<>();
-        wideTableSuperType.add(analysisModel.name);
-        wideTable.superTypes = wideTableSuperType;
-        list.add(wideTable);
-
-        //分析模型下原子指标
-        ClassificationDefContentDTO atomicIndicators = new ClassificationDefContentDTO();
-        atomicIndicators.name = "原子指标";
-        atomicIndicators.description = "原子指标";
-        List<String> atomicIndicatorsSuperType = new ArrayList<>();
-        atomicIndicatorsSuperType.add(analysisModel.name);
-        atomicIndicators.superTypes = atomicIndicatorsSuperType;
-        list.add(atomicIndicators);
-
-        //分析模型下业务过程
-        ClassificationDefContentDTO businessProcess = new ClassificationDefContentDTO();
-        businessProcess.name = "业务过程";
-        businessProcess.description = "业务过程";
-        List<String> businessProcessSuperType = new ArrayList<>();
-        businessProcessSuperType.add(dataModel.name);
-        businessProcess.superTypes = businessProcessSuperType;
-        list.add(businessProcess);
-
-        //分析模型下维度
-        ClassificationDefContentDTO dimension = new ClassificationDefContentDTO();
-        dimension.name = "维度";
-        dimension.description = "维度";
-        List<String> dimensionSuperType = new ArrayList<>();
-        dimensionSuperType.add(dataModel.name);
-        dimension.superTypes = dimensionSuperType;
-        list.add(dimension);
         data.classificationDefs = list;
 
         return this.addClassification(data);
+    }
+
+    @Override
+    public ResultEnum delClassificationEntity(String classification) {
+
+        ClassificationDefsDTO classificationList = getClassificationList();
+        for (ClassificationDefContentDTO item : classificationList.classificationDefs) {
+            EntityFilterDTO dto = new EntityFilterDTO();
+            dto.classification = item.name;
+            dto.excludeDeletedEntities = false;
+            dto.limit = 10000;
+            dto.offset = 0;
+
+            String jsonParameter = JSONArray.toJSON(dto).toString();
+            ResultDataDTO<String> result = atlasClient.post(searchBasic, jsonParameter);
+            if (result.code != AtlasResultEnum.REQUEST_SUCCESS) {
+                JSONObject msg = JSON.parseObject(result.data);
+                throw new FkException(ResultEnum.BAD_REQUEST, msg.getString("errorMessage"));
+            }
+            JSONObject jsonObject = JSON.parseObject(result.data);
+
+            String entities = jsonObject.getString("entities");
+            if (entities == null) {
+                deleteClassification(item.name);
+                continue;
+            }
+            JSONArray jsonArray = JSON.parseArray(entities);
+            if (jsonArray.size() > 0) {
+                for (int i = 0; i < jsonArray.size(); i++) {
+                    JSONObject jsonObject1 = JSON.parseObject(jsonArray.get(i).toString());
+                    String guid = jsonObject1.getString("guid");
+                    String url = "/api/atlas/v2/entity/guid/";
+                    url += guid;
+                    url += "/classification/";
+                    url += item.name;
+
+                    ResultDataDTO<String> resultDataDTO = atlasClient.delete(url);
+
+                }
+            }
+
+            deleteClassification(item.name);
+        }
+
+        return ResultEnum.SUCCESS;
     }
 
 

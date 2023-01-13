@@ -560,7 +560,7 @@ public class AppRegistrationImpl
         // atlas物理表信息
         vo.tableList = tableList;
         vo.qualifiedNames = qualifiedNames;
-        vo.classifications = model.appName + "_" + model.appAbbreviation;
+        vo.classifications = model.appName;
         log.info("删除的应用信息,{}", vo);
 
         new Thread(new Runnable() {

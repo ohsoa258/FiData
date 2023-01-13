@@ -104,9 +104,6 @@ public class BloodCompensationImpl
         for (AppBusinessInfoDTO item : dtoList) {
             ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
             classificationInfoDto.setName(item.name);
-            if (sourceType == 1) {
-                classificationInfoDto.setName(item.name + "_" + item.appAbbreviation);
-            }
             classificationInfoDto.setDescription(item.appDes);
             classificationInfoDto.setSourceType(sourceType);
             classificationInfoDto.setDelete(false);

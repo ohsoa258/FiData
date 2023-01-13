@@ -80,4 +80,11 @@ public interface IClassification {
      */
     ResultEnum appSynchronousClassification(ClassificationInfoDTO dto);
 
+    /**
+     * 删除业务分类关联实体
+     *
+     * @param classification
+     */
+    ResultEnum delClassificationEntity(String classification);
+
 }
