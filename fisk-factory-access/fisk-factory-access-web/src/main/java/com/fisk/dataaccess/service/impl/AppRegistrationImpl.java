@@ -252,7 +252,7 @@ public class AppRegistrationImpl
     public void addClassification(AppRegistrationDTO appRegistrationDTO) {
         // 添加业务分类元数据信息
         ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
-        classificationInfoDto.setName(appRegistrationDTO.appName + "_" + appRegistrationDTO.appAbbreviation);
+        classificationInfoDto.setName(appRegistrationDTO.appName);
         classificationInfoDto.setDescription(appRegistrationDTO.appDes);
         classificationInfoDto.setSourceType(1);
         classificationInfoDto.setDelete(false);

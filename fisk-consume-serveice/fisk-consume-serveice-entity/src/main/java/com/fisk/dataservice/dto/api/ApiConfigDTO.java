@@ -99,7 +99,7 @@ public class ApiConfigDTO
      * 创建api类型
      */
     @ApiModelProperty(value = "创建api类型：1 创建新api 2 使用现有api")
-    public Integer createApiType;
+    public Integer createApiType = 0;
 
     /**
      * 现有api地址

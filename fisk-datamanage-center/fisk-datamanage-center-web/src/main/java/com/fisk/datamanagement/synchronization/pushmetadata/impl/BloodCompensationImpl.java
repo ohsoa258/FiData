@@ -47,18 +47,18 @@ public class BloodCompensationImpl
         log.info("********开始同步数据接入********");
 
         //获取接入业务分类
-        ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
+        /*ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
         if (appList.code != ResultEnum.SUCCESS.getCode()) {
             log.error("获取接入应用列表失败");
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
-        }
+        }*/
 
-        //同步数据接入业务分类
+        /*//同步数据接入业务分类
         if (CollectionUtils.isEmpty(appList.data)) {
             return ResultEnum.SUCCESS;
         }
         log.info("******开始同步接入业务分类******");
-        synchronousClassification(appList.data, 1);
+        synchronousClassification(appList.data, 1);*/
 
         //获取所有接入表
         ResultEntity<List<DataAccessSourceTableDTO>> dataAccessMetaData = dataAccessClient.getDataAccessMetaData();
@@ -77,7 +77,7 @@ public class BloodCompensationImpl
 
         log.info("********开始同步数据建模********");
 
-        ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
+        /*ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
         if (businessAreaList.code != ResultEnum.SUCCESS.getCode()) {
             log.error("【获取建模业务域数据失败】");
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
@@ -90,7 +90,7 @@ public class BloodCompensationImpl
         synchronousClassification(businessAreaList.data, 2);
 
         log.info("********开始同步建模业务分类********");
-        synchronousDataModelTableSourceMetaData();
+        synchronousDataModelTableSourceMetaData();*/
 
         return ResultEnum.SUCCESS;
     }
@@ -141,6 +141,10 @@ public class BloodCompensationImpl
                 continue;
             }
 
+            if (CollectionUtils.isEmpty(first.get().dbList.get(0).tableList)) {
+                first.get().dbList.get(0).tableList = new ArrayList<>();
+            }
+
             //解析sql
             List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(accessTable.driveType, accessTable.sqlScript);
             if (CollectionUtils.isEmpty(res)) {
@@ -158,7 +162,7 @@ public class BloodCompensationImpl
                 tableList.add(table);
             }
 
-            first.get().dbList.get(0).tableList = tableList;
+            first.get().dbList.get(0).tableList.addAll(tableList);
         }
 
         metaData.consumeMetaData(synchronizationAppRegistration.data);
