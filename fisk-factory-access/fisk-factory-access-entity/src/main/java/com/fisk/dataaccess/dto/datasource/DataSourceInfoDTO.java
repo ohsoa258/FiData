@@ -10,6 +10,6 @@ public class DataSourceInfoDTO {
 
     public String name;
 
-    public Integer id;
+    public long id;
 
 }

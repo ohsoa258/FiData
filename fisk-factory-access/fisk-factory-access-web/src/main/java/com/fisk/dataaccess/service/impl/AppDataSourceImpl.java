@@ -182,7 +182,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
 
     @Override
     public List<DataSourceInfoDTO> getDataSourcesByAppId(Integer appId) {
-        List<AppDataSourcePO> list = this.query().select("db_name", "system_data_source_id").eq("app_id", appId).list();
+        List<AppDataSourcePO> list = this.query().select("db_name", "id").eq("app_id", appId).list();
         if (CollectionUtils.isEmpty(list)) {
             return new ArrayList<>();
         }
@@ -191,7 +191,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
 
         for (AppDataSourcePO po : list) {
             DataSourceInfoDTO dto = new DataSourceInfoDTO();
-            dto.id = po.systemDataSourceId;
+            dto.id = po.id;
             dto.name = po.dbName;
             data.add(dto);
         }
