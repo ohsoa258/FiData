@@ -8,14 +8,12 @@ import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
-import com.fisk.common.core.enums.sftp.SftpAuthTypeEnum;
 import com.fisk.common.core.enums.task.FuncNameEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.enums.task.nifi.*;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.core.utils.FileBinaryUtils;
 import com.fisk.common.core.utils.sftp.SftpUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.consumeserveice.client.ConsumeServeiceClient;
@@ -67,7 +65,6 @@ import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
 import com.fisk.task.utils.StackTraceHelper;
 import com.fisk.task.utils.nifi.INiFiHelper;
-import com.jcraft.jsch.ChannelSftp;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -79,7 +76,6 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -121,6 +117,19 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     private String dataSourceOdsId;
     @Value("${fiData-data-dw-source}")
     private String dataSourceDwId;
+
+    @Value("${sftp-rsa-upload.userName}")
+    private String userName;
+    @Value("${sftp-rsa-upload.password}")
+    private String password;
+    @Value("${sftp-rsa-upload.host}")
+    private String host;
+    @Value("${sftp-rsa-upload.port}")
+    private Integer port;
+    @Value("${sftp-rsa-upload.rsaPath}")
+    private String rsaPath;
+
+
     @Resource
     INiFiHelper componentsBuild;
     @Resource
@@ -1588,18 +1597,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //getftp组件
         FtpConfig ftpConfig = config.ftpConfig;
         if (dto.sftpFlow) {
-/*            try {
-                if (ftpConfig != null && StringUtils.isNotEmpty(ftpConfig.fileBinary)) {
-                    InputStream inputStream = FileBinaryUtils.getInputStream(ftpConfig.fileBinary);
-                    ChannelSftp root = SftpUtils.getSftpConnect(SftpAuthTypeEnum.USERNAME_PW_AUTH.getValue(), "root", "Password01!", null, "192.168.21.21", 22);
-                    SftpUtils.uploadFile(root, inputStream, ftpConfig.linuxPath, ftpConfig.fileName);
-                }
-
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }*/
+            if (ftpConfig != null && StringUtils.isNotEmpty(ftpConfig.fileBinary)) {
+                // sftp上传二进制字符串rsa密钥文件
+                SftpUtils.uploadRsaFile(ftpConfig.fileBinary, ftpConfig.linuxPath, ftpConfig.fileName, userName, password, rsaPath, host, port);
+            }
             getFTPProcessor = createFetchSFTPProcessor(groupId, ftpConfig);
         } else {
             getFTPProcessor = createFetchFTPProcessor(groupId, ftpConfig);

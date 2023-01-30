@@ -49,6 +49,15 @@ pgsql-mdm:
   url: jdbc:postgresql://192.168.1.250:5432/dmp_mdm?stringtype=unspecified
   username: postgres
   type: PG
+
+# sftp-rsa-upload暂未使用
+sftp-rsa-upload:
+  userName: root
+  password: Password01!
+  rsaPath: null
+  host: 192.168.21.21
+  port: 22
+
 server:
   port: 7003
 spring:

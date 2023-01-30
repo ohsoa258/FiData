@@ -8,13 +8,13 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.Dto.sftp.FilePropertySortDTO;
 import com.fisk.common.core.utils.Dto.sftp.FileTreeSortDTO;
 import com.fisk.common.core.utils.Dto.sftp.SftpExcelTreeDTO;
+import com.fisk.common.core.utils.FileBinaryUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -447,6 +447,40 @@ public class SftpUtils {
     }
 
     /**
+     * 上传二进制密钥字符串文件到服务器指定目录下
+     *
+     * @param fileBinary 二进制密钥文件字符串
+     * @param linuxPath 服务器存储路径
+     * @param fileName 文件名
+     * @param userName 账号
+     * @param pw 密码
+     * @param rsaPath
+     * @param host 主机地址
+     * @param port 端口
+     * @return
+     * @throws IOException
+     */
+    public static boolean uploadRsaFile(String fileBinary, String linuxPath, String fileName,
+                                        String userName, String pw, String rsaPath, String host, Integer port) {
+        InputStream inputStream = null;
+        try {
+            inputStream = FileBinaryUtils.getInputStream(fileBinary);
+            ChannelSftp root = SftpUtils.getSftpConnect(SftpAuthTypeEnum.USERNAME_PW_AUTH.getValue(),
+                    userName, pw, rsaPath, host, port);
+            return SftpUtils.uploadFile(root, inputStream, linuxPath, fileName);
+        } catch (Exception e) {
+            log.error("上传二进制文件失败{}", e);
+            return false;
+        } finally {
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
      * 关闭流
      *
      * @param ins
@@ -537,17 +571,14 @@ public class SftpUtils {
 
 
     public static void main(String[] args) throws IOException, SftpException {
-        ChannelSftp currSftp = connect("192.168.21.21", 22, "sftp", "password01!", null);
-//        ChannelSftp targetSftp = connect("192.168.21.21", 22, "sftp", "password01!", "/upload/rsa/");
-//        FileTreeSortDTO dto = getSortFile(currSftp, SortTypeNameEnum.FILENAME_SORT.getValue(),
-//                SortTypeEnum.POSITIVE_SORT.getValue(), "/");
-//        copyFile("192.168.21.21", 22, "sftp", "password01!", "/.ssh/id_rsa_npw",
-//                "192.168.21.21", 22,  "sftp", "password01!", "/.ssh/id_rsa_npw",
-//                SortTypeNameEnum.FILENAME_SORT.getValue(), SortTypeEnum.POSITIVE_SORT.getValue(),
-//                1, "/upload/", "/upload/test/", "hhh.txt" );
-        String fileType = "xlsx";
-        SftpExcelTreeDTO treeDtos = getFile(currSftp, "/", fileType);
-        System.out.println(JSONObject.toJSON(treeDtos));
+        // 上传二进制文件测试
+        File file = new File("C:\\test\\id_rsa_npw");
+        byte[] fileBinary = new byte[(int) file.length()];
+        FileInputStream fis = new FileInputStream(file);
+        fis.read(fileBinary);
+        SftpUtils.uploadRsaFile(fileBinary.toString(), "/upload/test/", "rsa", "sftp", "password01!",
+                null, "192.168.21.21", 22);
+        fis.close();
     }
 
 }
