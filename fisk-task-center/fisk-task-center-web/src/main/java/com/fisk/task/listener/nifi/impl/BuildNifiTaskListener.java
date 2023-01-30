@@ -333,9 +333,12 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 BuildDbControllerServiceDTO sourceControllerService = new BuildDbControllerServiceDTO();
                 sourceControllerService.driverLocation = dataSource.conType.getDriverLocation();
                 sourceControllerService.driverName = dataSource.conType.getDriverName();
-                sourceControllerService.conUrl = dataSource.conStr;
-                sourceControllerService.pwd = dataSource.conPassword;
-                sourceControllerService.user = dataSource.conAccount;
+
+                // 拼接字符串读取配置变量值
+                sourceControllerService.conUrl = "${" + ComponentIdTypeEnum.DB_URL + dbId  + "}";
+                sourceControllerService.pwd = "${" + ComponentIdTypeEnum.DB_PASSWORD + dbId  + "}";
+                sourceControllerService.user = "${" + ComponentIdTypeEnum.DB_USERNAME + dbId  + "}";
+
                 sourceControllerService.name = dataSource.name;
                 sourceControllerService.enabled = true;
                 sourceControllerService.dbcpMaxIdleConns = "50";
