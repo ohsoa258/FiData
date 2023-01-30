@@ -43,6 +43,13 @@ public enum ComponentIdTypeEnum implements BaseEnum {
     DORIS_OLAP_DB_POOL_USERNAME(17,"DORIS_OLAP_DB_POOL_USERNAME"),
     DORIS_OLAP_DB_POOL_URL(18,"DORIS_OLAP_DB_POOL_URL"),
 
+    /**
+     * 加载所有数据源配置变量key
+     */
+    DB_USERNAME(19, "DATASOURCE_URL_"),
+    DB_PASSWORD(20, "DATASOURCE_USERNAME_"),
+    DB_URL(21, "DATASOURCE_PASSWORD_"),
+
     /*
     * 日常流程生成组Dailynififlow
     * */

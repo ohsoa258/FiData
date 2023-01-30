@@ -23,6 +23,7 @@ import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -47,6 +48,8 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
     IPipelLog iPipelLog;
     @Resource
     RedisUtil redisUtil;
+    @Value("${nifi.pipeline.maxTime}")
+    public String maxTime;
 
     @Override
     public void savePipelLog(String pipelTraceId, Map<Integer, Object> map, String pipelId) {
@@ -111,7 +114,7 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                         dto.jobProcessed = true;
                         jobMap.put(componentId, JSON.toJSONString(dto));
                     }
-                    redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, jobMap, 3000);
+                    redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, jobMap, Long.parseLong(maxTime));
                 }
             } catch (Exception e) {
                 log.error("redis中task集合数据不存在:" + pipelTraceId, e);
@@ -283,7 +286,7 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                 taskHierarchy.taskProcessed = true;
                 taskHierarchy.taskStatus = DispatchLogEnum.taskpass;
                 hmget.put(list.get(0).taskId, JSON.toJSONString(taskHierarchy));
-                redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + dto.pipelTraceId, hmget, 3000);
+                redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + dto.pipelTraceId, hmget, Long.parseLong(maxTime));
                 //这里
                 updateTaskStatus(list.get(0).taskId, dto.pipelTraceId, 1);
 
@@ -328,7 +331,7 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
         }
         i++;
         taskMap.put(String.valueOf(taskHierarchy.id), JSON.toJSONString(taskHierarchy));
-        redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, taskMap, 3000);
+        redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, taskMap, Long.parseLong(maxTime));
         List<NifiPortsHierarchyNextDTO> nextList = taskHierarchy.nextList;
         if (CollectionUtils.isNotEmpty(nextList)) {
             HashMap<Object, Object> map = new HashMap<>();
@@ -338,7 +341,7 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                 taskHierarchyNext.taskStatus = DispatchLogEnum.taskpass;
                 map.put(itselfPort, JSON.toJSONString(taskHierarchyNext));
             }
-            redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, map, 3000);
+            redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, map, Long.parseLong(maxTime));
             for (NifiPortsHierarchyNextDTO nifiPortsHierarchyNext : nextList) {
                 updateTaskStatus(String.valueOf(nifiPortsHierarchyNext.itselfPort), pipelTraceId, i);
             }
@@ -360,7 +363,7 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
         }
         j++;
         jobMap.put(String.valueOf(taskHierarchy.id), JSON.toJSONString(taskHierarchy));
-        redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, jobMap, 3000);
+        redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, jobMap, Long.parseLong(maxTime));
         if (CollectionUtils.isNotEmpty(taskHierarchy.outport)) {
             HashMap<Object, Object> map = new HashMap<>();
             for (Long jobId : taskHierarchy.outport) {
@@ -368,7 +371,7 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                 taskHierarchyNext.jobStatus = NifiStageTypeEnum.PASS;
                 map.put(String.valueOf(jobId), JSON.toJSONString(taskHierarchyNext));
             }
-            redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, map, 3000);
+            redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, map, Long.parseLong(maxTime));
             for (Long jobId : taskHierarchy.outport) {
                 updateJobStatus(String.valueOf(jobId), pipelTraceId, j);
             }

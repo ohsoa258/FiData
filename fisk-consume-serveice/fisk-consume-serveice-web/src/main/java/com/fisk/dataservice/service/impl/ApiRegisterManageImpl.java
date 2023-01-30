@@ -404,7 +404,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         }
 
         //第五步：保存调度(创建现有api类型才有调度)
-        if (dto.apiDTO.createApiType == 2) {
+        if (dto.apiDTO != null && dto.apiDTO.createApiType == 2) {
             dto.syncModeDTO.typeTableId = apiId;
             return tableSyncModeImpl.addApiTableSyncMode(dto.syncModeDTO);
         }

@@ -1,11 +1,13 @@
 package com.fisk.task.extend.actuators;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.davis.client.model.ControllerServiceEntity;
 import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -118,12 +121,43 @@ public class DefiningCommonVariablesImpl implements ApplicationRunner {
                 }
             }
 
+            // 设置数据源
+            setDatasourceInfo(configMap);
+
             iNiFiHelper.buildNifiGlobalVariable(configMap);
             log.info("创建变量完成");
         } catch (Exception e) {
             log.error("创建常量报错:" + StackTraceHelper.getStackTraceInfo(e));
         }
     }
+
+    /**
+     * 添加datasource数据源变量信息（用户名、密码、字符串）
+     *
+     * @param configMap 常用变量map集合
+     */
+    private void setDatasourceInfo(HashMap<String, String> configMap){
+        // 获取数据源信息
+        ResultEntity<List<DataSourceDTO>> result = null;
+        try{
+            result = userClient.getAll();
+        }catch (Exception e){
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+
+        // 添加数据源变量
+        List<DataSourceDTO> list = result.getData();
+        if (CollectionUtils.isNotEmpty(list)){
+            for (DataSourceDTO item : list) {
+                configMap.put(ComponentIdTypeEnum.DB_URL.getName() + item.id, item.conStr);
+                configMap.put(ComponentIdTypeEnum.DB_USERNAME.getName() + item.id, item.conAccount);
+                configMap.put(ComponentIdTypeEnum.DB_PASSWORD.getName() + item.id, item.conPassword);
+            }
+        }else{
+            log.error("userclient未查询到所有的数据源信息!");
+        }
+    }
+
 
     public String getKeytabCredentialsServiceId() {
         BuildKeytabCredentialsServiceDTO buildKeytabCredentialsService = new BuildKeytabCredentialsServiceDTO();

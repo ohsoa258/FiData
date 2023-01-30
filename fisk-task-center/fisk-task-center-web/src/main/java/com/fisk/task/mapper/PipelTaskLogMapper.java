@@ -1,7 +1,9 @@
 package com.fisk.task.mapper;
 
 import com.fisk.common.framework.mybatis.FKBaseMapper;
+import com.fisk.task.dto.dispatchlog.DataServiceTableLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
+import com.fisk.task.dto.query.DataServiceTableLogQueryDTO;
 import com.fisk.task.entity.PipelTaskLogPO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -19,4 +21,6 @@ public interface PipelTaskLogMapper extends FKBaseMapper<PipelTaskLogPO> {
 
     @Update("update tb_pipel_task_log set del_flag = 0 where task_trace_id=#{pipelJobId} and type = #{type} and del_flag=1")
     void updateByPipelTraceId(@Param("pipelJobId")String pipelJobId,@Param("type") int type);
+
+    List<DataServiceTableLogVO> getDataServiceTableLogs(@Param("query") DataServiceTableLogQueryDTO query);
 }

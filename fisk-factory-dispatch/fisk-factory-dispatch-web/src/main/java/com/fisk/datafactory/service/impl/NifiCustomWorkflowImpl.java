@@ -42,10 +42,12 @@ import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.annotations.ResultMap;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -428,9 +430,17 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
 
     @Override
     public ResultEntity<Object> updateWorkStatus(String nifiCustomWorkflowId, boolean ifFire) {
+        // 查询workFlowid
+        String workFlowId = mapper.selectById(nifiCustomWorkflowId).workflowId;
         // 暂停/恢复管道工作运行状态
-        ResultEntity<Object> result = publishTaskClient.suspendCustomWorkNifiFlow(nifiCustomWorkflowId, ifFire);
-        if (result.getCode() == 500){
+        ResultEntity<Object> result = null;
+        try{
+            result = publishTaskClient.suspendCustomWorkNifiFlow(workFlowId, ifFire);
+        }catch (Exception e){
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+        if (result.getCode() == ResultEnum.ERROR.getCode()){
+            log.error("task服务修改状态失败，[{}]", result.getMsg());
             return ResultEntityBuild.build(ResultEnum.UPDATE_WORK_STATUS_ERROR);
         }
 
@@ -441,10 +451,9 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         }else{
             workStatus = NifiWorkStatusEnum.SUSPEND_STATUS.getValue();
         }
-        Integer flag = mapper.updateWorkStatus(nifiCustomWorkflowId, workStatus);
+        Integer flag = mapper.updateWorkStatus(workFlowId, workStatus);
         return flag == 1 ? ResultEntityBuild.build(ResultEnum.SUCCESS) : ResultEntityBuild.build(ResultEnum.UPDATE_WORK_STATUS_ERROR);
     }
-
 
     @Override
     public List<NifiCustomWorkFlowDropDTO> getNifiCustomWorkFlowDrop() {
@@ -457,4 +466,23 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
 
     }
 
+    @Override
+    public ResultEntity<Object> getNifiCustomWorkFlowPartInfo(String pipelTraceId) {
+        if (StringUtils.isEmpty(pipelTraceId)){
+            return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
+        }
+        ResultEntity<String> taskResult = null;
+        try{
+            // 调用task模块获取pipel_id
+            taskResult = publishTaskClient.getPipelIdByPipelTraceId(pipelTraceId);
+            if (taskResult == null){
+                return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+            }
+        }catch (Exception e){
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+
+        NifiCustomWorkflowPO po = mapper.selectById(taskResult.data);
+        return po == null ? ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS) : ResultEntityBuild.build(ResultEnum.SUCCESS, po);
+    }
 }

@@ -45,4 +45,14 @@ public class MetadataMapAtlasPO extends BasePO {
      */
     public int clientId;
 
+    /**
+     * 数据类型: 1 数据接入  2 数据建模
+     *//*
+    public int dataType;
+
+    *//**
+     * 应用/业务域id
+     *//*
+    public int appId;*/
+
 }

@@ -13,4 +13,71 @@
 
     </select>
 
+    <select id="getDataServiceTableLogs" resultType="com.fisk.task.dto.dispatchlog.DataServiceTableLogVO">
+        SELECT
+            *
+        FROM
+            (
+                SELECT
+                    t1.table_id as tableId,
+                    t1.task_trace_id AS taskTraceId,
+                    t1.start_time AS startTime,
+                    CASE
+
+                        WHEN t2.msg IS NULL
+                            OR t2.msg = '' THEN
+                            '' ELSE t1.end_time
+                        END AS endTime,
+                    CASE
+
+                        WHEN t2.msg IS NULL
+                            OR t2.msg = '' THEN
+                            '暂无同步结束记录'
+                        WHEN t1.start_time != t1.end_time
+                        AND t2.msg IS NOT NULL
+                        AND t2.msg != '' THEN
+						t2.msg ELSE t2.msg
+					END AS msg
+                FROM
+                    (
+                    SELECT
+                    table_id,
+                    task_trace_id,
+                    MIN( create_time ) AS start_time,
+                    MAX( create_time ) AS end_time
+                    FROM
+                    tb_pipel_task_log
+                    WHERE
+                    table_type = #{query.tableType}
+                    AND table_id IN ( #{query.tableIds} )
+                    GROUP BY
+                    table_id,
+                    task_trace_id
+                    ORDER BY
+                    table_id ASC,
+                    start_time DESC
+                    ) t1
+                    LEFT JOIN (
+                    SELECT
+                    table_id,
+                    task_trace_id,
+                    create_time,
+                    msg
+                    FROM
+                    tb_pipel_task_log t2
+                    WHERE
+                    type = 8
+                    AND table_type = #{query.tableType}
+                    AND table_id IN ( #{query.tableIds} )
+                    GROUP BY
+                    table_id,
+                    task_trace_id,
+                    create_time,
+                    msg
+                    ) t2 ON t1.table_id = t2.table_id
+                    AND t1.task_trace_id = t2.task_trace_id
+                    AND t1.end_time = t2.create_time
+            ) result
+    </select>
+
 </mapper>

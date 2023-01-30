@@ -1,7 +1,7 @@
 package com.fisk.dataaccess.service;
 
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.core.utils.Dto.sftp.ExcelTreeDTO;
+import com.fisk.common.core.utils.Dto.sftp.SftpExcelTreeDTO;
 import com.fisk.dataaccess.dto.app.DbConnectionDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
 import com.fisk.dataaccess.dto.ftp.FtpPathDTO;
@@ -30,7 +30,7 @@ public interface ISftp {
      * @param dto
      * @return
      */
-    ExcelTreeDTO getFile(FtpPathDTO dto);
+    SftpExcelTreeDTO getFile(FtpPathDTO dto);
 
     /**
      * 预览文件

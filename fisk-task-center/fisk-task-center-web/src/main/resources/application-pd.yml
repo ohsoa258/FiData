@@ -23,9 +23,11 @@ nifi:
   pipeline:
     topicName: my-topic
     waitTime: 30
+    maxTime: 10800
     operation-interval: 2000
     number-of-operations: 5
     data-governance-url: http://10.220.108.140:10089
+    dispatch-email-url-prefix: http://10.220.108.140:10082
 nifi-ConcurrentTasks: 3
 nifi-FetchSize: 30000
 nifi-MaxRowsPerFlowFile: 10000

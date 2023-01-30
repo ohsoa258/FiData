@@ -18,6 +18,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.FileBinaryUtils;
 import com.fisk.common.core.utils.sftp.SftpUtils;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.consumeserveice.client.ConsumeServeiceClient;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.dto.access.NifiAccessDTO;
@@ -28,11 +29,13 @@ import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.dataaccess.enums.DeltaTimeParameterTypeEnum;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.dataaccess.enums.syncModeTypeEnum;
+import com.fisk.datafactory.enums.TableServicePublicStatusEnum;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckSyncDTO;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.dataservice.dto.tableservice.TableServicePublishStatusDTO;
 import com.fisk.dataservice.dto.tablesyncmode.TableSyncModeDTO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
@@ -140,6 +143,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     PublishTaskController pc;
     @Resource
     UserClient userClient;
+    @Resource
+    ConsumeServeiceClient consumeServeiceClient;
 
     @Resource
     RestTemplate httpClient;
@@ -158,9 +163,11 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
         log.info("表服务参数:{}", dataInfo);
         BuildTableServiceDTO buildTableService = JSON.parseObject(dataInfo, BuildTableServiceDTO.class);
+        // 修改表状态实体
+        TableServicePublishStatusDTO dto = new TableServicePublishStatusDTO();
         try {
             TBETLIncrementalPO ETLIncremental = new TBETLIncrementalPO();
-            ETLIncremental.objectName = buildTableService.targetTable;
+            ETLIncremental.objectName = buildTableService.schemaName + "." + buildTableService.targetTable;
             ETLIncremental.enableFlag = "1";
             ETLIncremental.incrementalObjectivescoreBatchno = UUID.randomUUID().toString();
             Map<String, Object> conditionHashMap = new HashMap<>();
@@ -258,11 +265,23 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
             // 启动,保存
             enabledProcessor(taskGroupId, processorEntities);
+
+            dto.setId((int) buildTableService.id);
+            // 发布成功则状态置为1
+            dto.setStatus(TableServicePublicStatusEnum.PUBLIC_YES.getValue());
         } catch (Exception e) {
+            // 发布失败则状态置为2
+            dto.setStatus(TableServicePublicStatusEnum.PUBLIC_FAIL.getValue());
             log.error("表服务同步数据报错:{}", StackTraceHelper.getStackTraceInfo(e));
         } finally {
             if (acke != null) {
                 acke.acknowledge();
+            }
+            try {
+                log.info("开始修改表服务发布状态，参数id：[{}]，status：[{}]", dto.id, dto.status);
+                consumeServeiceClient.updateTableServiceStatus(dto);
+            } catch (Exception e) {
+                throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
             }
         }
         return ResultEnum.SUCCESS;
@@ -1391,7 +1410,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
         tableNifiSettingPO.consumeKafkaProcessorId = consumeKafkaProcessor.getId();
         //读取增量字段组件
+        config.processorConfig.targetTableName = buildTableService.schemaName + "." + buildTableService.targetTable;
         ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId, dto);
+        config.processorConfig.targetTableName = buildTableService.targetTable;
         componentConnector(groupId, evaluateJsonPathProcessor.getId(), queryField.getId(), AutoEndBranchTypeEnum.MATCHED);
         tableNifiSettingPO.queryIncrementProcessorId = queryField.getId();
         //创建数据转换json组件
@@ -1472,6 +1493,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         res.add(updateField1);
 
         //查询条数
+        String fullTableName = buildTableService.schemaName + "." + buildTableService.targetTable;
+        config.processorConfig.targetTableName = fullTableName;
         ProcessorEntity queryNumbers = queryNumbers(dto, config, groupId, targetDbPoolId);
         tableNifiSettingPO.queryNumbersProcessorId = queryNumbers.getId();
         //连接器
@@ -1490,6 +1513,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         componentConnector(groupId, numberToJsonRes.getId(), evaluateJsons.getId(), AutoEndBranchTypeEnum.SUCCESS);
         componentsConnector(groupId, numberToJsonRes.getId(), supervisionId, autoEndBranchTypeEnums);
         //更新日志
+        config.targetDsConfig.targetTableName = fullTableName;
         ProcessorEntity processorEntity = CallDbLogProcedure(config, groupId, cfgDbPoolId);
         tableNifiSettingPO.saveNumbersProcessorId = processorEntity.getId();
         //连接器
@@ -1531,6 +1555,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 res.add(dispatchProcessor);
             }
         }
+        tableNifiSettingPO.tableName = fullTableName;
         tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
         return res;
     }
@@ -3110,8 +3135,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         kafkaRkeceiveDTO.pipelStageTraceId = UUID.randomUUID().toString();
         kafkaRkeceiveDTO.ifTaskStart = true;
         kafkaRkeceiveDTO.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
-        str.append("'").append(kafkaRkeceiveDTO.topic).append("' as topic, '").append(kafkaRkeceiveDTO.start_time).append("' as start_time, '").append(kafkaRkeceiveDTO.pipelTaskTraceId).append("'");
-        str.append(" as pipelTaskTraceId, '").append(kafkaRkeceiveDTO.fidata_batch_code).append("' as fidata_batch_code , '").append(kafkaRkeceiveDTO.pipelStageTraceId).append("' as pipelStageTraceId, '");
+        str.append("'").append(kafkaRkeceiveDTO.topic).append("' as topic, '").append(kafkaRkeceiveDTO.start_time).append("' as start_time, ").append("md5(UUID())");
+        str.append(" as pipelTaskTraceId, ").append("md5(UUID())").append(" as fidata_batch_code , ").append("md5(UUID())").append(" as pipelStageTraceId, '");
         str.append("true' as ifTaskStart , '").append(kafkaRkeceiveDTO.topicType).append("' as topicType");
         return str.toString();
     }
