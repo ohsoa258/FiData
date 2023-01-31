@@ -27,6 +27,8 @@ public class OdsQueryDTO {
     public FtpFileTypeEnum fileTypeEnum;
     @ApiModelProperty(value = "数据源类型", required = true)
     public DataSourceTypeEnum dataSourceTypeEnum;
+    @ApiModelProperty(value = "数据源id", required = true)
+    public int appDataSourceId;
 
     /*
      * 接入的增量时间参数

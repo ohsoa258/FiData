@@ -1559,7 +1559,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
 
         if (po.appId != null) {
-            synchronousMetadata(model.appId, po);
+            synchronousMetadata(model.appDataSourceId, po);
         }
         /*if (po.getTableName() == null) {
             po.setTableName("");
@@ -1571,16 +1571,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     /**
      * 同步元数据
      *
-     * @param appId
+     * @param appDataSourceId
      */
-    public void synchronousMetadata(long appId, TableAccessPO po) {
-        AppRegistrationPO app = appRegistrationMapper.selectById(appId);
-        if (app == null) {
+    public void synchronousMetadata(long appDataSourceId, TableAccessPO po) {
+        AppDataSourcePO dataSourcePO = appDataSourceMapper.selectById(appDataSourceId);
+        if (dataSourcePO == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
-        AppDataSourcePO dataSourcePO = appDataSourceMapper.selectById(appId);
-        if (dataSourcePO == null) {
+        AppRegistrationPO app = appRegistrationMapper.selectById(dataSourcePO.appId);
+        if (app == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
@@ -1634,7 +1634,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         table.setName(TableNameGenerateUtils.buildOdsTableName(po.getTableName(),
                 app.appAbbreviation,
                 app.whetherSchema));
-        table.setComment(String.valueOf(appId));
+        table.setComment(String.valueOf(dataSourcePO.appId));
         table.setDisplayName(po.displayName);
         table.setOwner(app.appPrincipal);
         table.setDescription(po.tableDes);
@@ -1938,7 +1938,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Override
     public OdsResultDTO getDataAccessQueryList(OdsQueryDTO query) {
-        AppDataSourcePO po = appDataSourceImpl.query().eq("id", query.appId).one();
+        AppDataSourcePO po = appDataSourceImpl.query().eq("id", query.appDataSourceId).one();
         if (po == null) {
             throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
         }
@@ -2132,7 +2132,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<TableFieldsDTO> listField = list.stream().map(TableFieldsMap.INSTANCES::poToDto).collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(listField)) {
             OdsQueryDTO queryDto = new OdsQueryDTO();
-            queryDto.appId = modelReg.id;
+            queryDto.appId = modelAccess.appId;
+            queryDto.appDataSourceId = dto.appDataSourceId;
             queryDto.querySql = modelAccess.sqlScript;
             queryDto.tableName = TableNameGenerateUtils.buildTableName(modelAccess.tableName, modelReg.appAbbreviation, modelReg.whetherSchema);
             return filterSqlFieldList(listField, queryDto);

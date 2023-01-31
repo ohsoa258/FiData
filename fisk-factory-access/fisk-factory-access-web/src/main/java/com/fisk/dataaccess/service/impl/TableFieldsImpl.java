@@ -215,7 +215,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         String versionSql = getVersionSql(syncmodePo);
 
         //新增元数据信息
-        odsMetaDataInfo(accessPo.appId, dto.sqlScript);
+        odsMetaDataInfo(dto.appDataSourceId, dto.sqlScript);
 
         // 发布
         publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, dto.appDataSourceId);
@@ -299,7 +299,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 
         //新增元数据信息
-        odsMetaDataInfo(model.appId, dto.sqlScript);
+        odsMetaDataInfo(model.appDataSourceId, dto.sqlScript);
 
         // 发布
         publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, model.appDataSourceId);
@@ -319,13 +319,13 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             return;
         }
 
-        AppRegistrationPO registrationPO = appRegistrationMapper.selectById(appId);
-        if (registrationPO == null) {
+        AppDataSourcePO po = appDataSourceMapper.selectById(appId);
+        if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
-        AppDataSourcePO po = appDataSourceMapper.selectById(appId);
-        if (po == null) {
+        AppRegistrationPO registrationPO = appRegistrationMapper.selectById(po.appId);
+        if (registrationPO == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
