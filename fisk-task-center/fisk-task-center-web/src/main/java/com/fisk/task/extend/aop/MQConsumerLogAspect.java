@@ -14,9 +14,7 @@ import com.fisk.task.mapper.TaskLogMapper;
 import com.fisk.task.utils.WsSessionManager;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.annotation.*;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
@@ -46,6 +44,8 @@ public class MQConsumerLogAspect {
         // 是否发送websocket消息通知
         boolean sendMsg = false;
 
+        int notificationType = 0;
+
         // 获取方法元数据
         try {
             Class<?> tClass = joinPoint.getTarget().getClass();
@@ -56,6 +56,7 @@ public class MQConsumerLogAspect {
             //获得任务类型注解
             MQConsumerLog ano = method.getAnnotation(MQConsumerLog.class);
             MDCHelper.setAppLogType(ano.type());
+            notificationType = ano.notificationType();
             sendMsg = ano.sendMsg();
         } catch (Exception ex) {
             log.error("方法元数据获取失败");
@@ -110,9 +111,15 @@ public class MQConsumerLogAspect {
             model.traceId = traceId;
             mapper.updateById(model);
         }
-
         if (sendMsg && Objects.nonNull(data) && Objects.nonNull(data.userId)) {
-            WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务开始处理", data.userId, MessageLevelEnum.MEDIUM);
+            if (notificationType == 1) {
+                //默认1环绕,2前置,3后置
+                WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务开始处理", data.userId, MessageLevelEnum.MEDIUM);
+            } else if (notificationType == 2) {
+                WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务开始处理", data.userId, MessageLevelEnum.MEDIUM);
+            } else if (notificationType == 3) {
+                log.info("后置通知没有开始");
+            }
         }
 
 
@@ -139,9 +146,22 @@ public class MQConsumerLogAspect {
         if (res instanceof ResultEntity<?>) {
             outPutMsg = ((ResultEntity<?>) res).msg;
         }
-
+        //默认1环绕,2前置,3后置
         if (sendMsg && Objects.nonNull(data) && Objects.nonNull(data.userId)) {
-            WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
+            //失败不管是什么类型都发失败通知
+            if (isSuccess) {
+                if (notificationType == 1) {
+                    //默认1环绕,2前置,3后置
+                    WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
+                } else if (notificationType == 2) {
+                    log.info("前置通知没有结束");
+                } else if (notificationType == 3) {
+                    WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
+                }
+            } else {
+                WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
+            }
+
         }
         MDCHelper.clear();
         return res;
