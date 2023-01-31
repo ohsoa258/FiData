@@ -106,13 +106,21 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public ResultEnum register(UserDTO dto) {
-        //1.判断用户名是否已存在
+        //1.判断用户账号是否已存在
         QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(UserPO::getUserAccount, dto.userAccount);
         UserPO data = mapper.selectOne(queryWrapper);
         if (data != null) {
             return ResultEnum.NAME_EXISTS;
+        }
+        // 判断用户名是否已存在
+        queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(UserPO::getUsername, dto.username);
+        UserPO userPO = mapper.selectOne(queryWrapper);
+        if (userPO != null){
+            return ResultEnum.USERNAME_EXISTS;
         }
         // 2.对密码进行加密
         dto.password = passwordEncoder.encode(dto.getPassword());
@@ -161,6 +169,14 @@ public class UserServiceImpl implements IUserService {
         UserPO data = mapper.selectOne(queryWrapper);
         if (data != null && data.id != dto.id) {
             return ResultEnum.NAME_EXISTS;
+        }
+        // 判断用户名是否重复
+        queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(UserPO::getUsername, dto.username);
+        UserPO userPO = mapper.selectOne(queryWrapper);
+        if (userPO != null){
+            return ResultEnum.USERNAME_EXISTS;
         }
         model.email = dto.email;
         model.username = dto.username;

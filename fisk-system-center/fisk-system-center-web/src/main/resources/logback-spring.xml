@@ -99,7 +99,7 @@
         -->
     </springProfile>
 
-    <springProfile name="uat,test,pd,demo,yf,rj">
+    <springProfile name="dev,uat,test,pd,demo,yf,rj">
         <logger name="org" level="info">
             <appender-ref ref="Console"/>
             <appender-ref ref="FILE"/>
