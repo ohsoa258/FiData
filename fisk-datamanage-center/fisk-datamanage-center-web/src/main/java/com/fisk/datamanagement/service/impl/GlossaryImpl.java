@@ -8,7 +8,6 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.category.CategoryDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryAttributeDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryDTO;
-import com.fisk.datamanagement.dto.glossary.GlossaryTermAttributeDTO;
 import com.fisk.datamanagement.dto.term.TermDTO;
 import com.fisk.datamanagement.dto.term.TermDetailsDTO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
@@ -22,7 +21,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * @author JianWenYang
@@ -86,7 +84,7 @@ public class GlossaryImpl implements IGlossary {
         List<TermDTO> list = new ArrayList<>();
         //是否为术语库
         if (parent) {
-            List<GlossaryAttributeDTO> glossaryList = getGlossaryList();
+            /*List<GlossaryAttributeDTO> glossaryList = getGlossaryList();
             if (CollectionUtils.isEmpty(glossaryList)) {
                 return list;
             }
@@ -97,7 +95,8 @@ public class GlossaryImpl implements IGlossary {
             for (GlossaryTermAttributeDTO term : first.get().terms) {
                 list.add(termImpl.getTerm(term.termGuid));
             }
-            return list;
+            return list;*/
+            return new ArrayList<>();
         }
         //查询类别关联下的术语
         CategoryDTO category = categoryImpl.getCategory(guid);

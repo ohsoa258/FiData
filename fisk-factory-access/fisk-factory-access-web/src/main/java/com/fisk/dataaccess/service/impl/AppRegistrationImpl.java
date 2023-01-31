@@ -269,7 +269,7 @@ public class AppRegistrationImpl
     public void addClassification(AppRegistrationDTO appRegistrationDTO) {
         // 添加业务分类元数据信息
         ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
-        classificationInfoDto.setName(appRegistrationDTO.appName + "_" + appRegistrationDTO.appAbbreviation);
+        classificationInfoDto.setName(appRegistrationDTO.appName);
         classificationInfoDto.setDescription(appRegistrationDTO.appDes);
         classificationInfoDto.setSourceType(1);
         classificationInfoDto.setDelete(false);
@@ -626,7 +626,7 @@ public class AppRegistrationImpl
         // atlas物理表信息
         vo.tableList = tableList;
         vo.qualifiedNames = qualifiedNames;
-        vo.classifications = model.appName + "_" + model.appAbbreviation;
+        vo.classifications = model.appName;
         log.info("删除的应用信息,{}", vo);
 
         new Thread(new Runnable() {

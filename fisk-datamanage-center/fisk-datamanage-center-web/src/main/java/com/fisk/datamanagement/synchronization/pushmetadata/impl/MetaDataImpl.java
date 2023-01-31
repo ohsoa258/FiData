@@ -1030,9 +1030,6 @@ public class MetaDataImpl implements IMetaData {
                     return;
                 }
                 data.typeName = first.get().name;
-                if (!StringUtils.isEmpty(first.get().appAbbreviation)) {
-                    data.typeName = data.typeName + "_" + first.get().appAbbreviation;
-                }
             } else if (DataSourceConfigEnum.DMP_DW.getValue() == sourceData.get().id) {
                 //获取所有业务域
                 ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();

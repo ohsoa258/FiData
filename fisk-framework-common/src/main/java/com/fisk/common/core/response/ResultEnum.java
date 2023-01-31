@@ -168,7 +168,7 @@ public enum ResultEnum {
     SFTP_FILE_COPY_FAIL(5079, "SFTP文件复制失败"),
     SFTP_RSA_IS_NULL(5080, "SFTP密钥文件路径不能为空"),
     SFTP_ACCOUNT_IS_NULL(5081, "SFTP账号密码不能为空"),
-
+    SFTP_DIR_PATH_ERROR(5082, "SFTP目录格式错误"),
 
 
     /**

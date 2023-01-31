@@ -1,20 +1,20 @@
 package com.fisk.common.core.utils.sftp;
 
+import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.enums.sftp.SftpAuthTypeEnum;
 import com.fisk.common.core.enums.sftp.SortTypeEnum;
 import com.fisk.common.core.enums.sftp.SortTypeNameEnum;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.core.utils.Dto.sftp.ExcelPropertyDTO;
-import com.fisk.common.core.utils.Dto.sftp.ExcelTreeDTO;
 import com.fisk.common.core.utils.Dto.sftp.FilePropertySortDTO;
 import com.fisk.common.core.utils.Dto.sftp.FileTreeSortDTO;
+import com.fisk.common.core.utils.Dto.sftp.SftpExcelTreeDTO;
+import com.fisk.common.core.utils.FileBinaryUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -62,7 +62,7 @@ public class SftpUtils {
             }
             session.setConfig(getSshConfig());
             //设置timeout时间
-            session.setTimeout(60000);
+            session.setTimeout(100000);
             session.connect();
 
             channel = session.openChannel("sftp");
@@ -170,108 +170,125 @@ public class SftpUtils {
      * @param fileType
      * @return
      */
-//    public static ExcelTreeDTO getFile(ChannelSftp sftp, String path, String fileType) {
-//        ExcelTreeDTO list = new ExcelTreeDTO();
-//        try {
-//            // 文件
-//            List<ExcelPropertyDTO> fileList = new ArrayList<>();
-//            // 文件夹
-//            List<ExcelPropertyDTO> directoryList = new ArrayList<>();
-//            fileType = "." + fileType;
-//            Vector vector = sftp.ls(path);
-//            Iterator iterator = vector.iterator();
-//            while (iterator.hasNext()) {
-//                ChannelSftp.LsEntry file = (ChannelSftp.LsEntry) iterator.next();
-//                String fileName = file.getFilename();
-//                //获取指定文件
-//                if (fileName.contains(fileType)) {
-//                    ExcelPropertyDTO dto = new ExcelPropertyDTO();
-//                    dto.fileName = fileName;
-//                    dto.fileFullName = path + fileName;
-//                    fileList.add(dto);
-//                } else {
-//                    if (filterFileName(fileName)) {
-//                        continue;
-//                    }
-//                    ExcelPropertyDTO dto = new ExcelPropertyDTO();
-//                    dto.fileName = fileName;
-//                    dto.fileFullName = path + fileName + ROOT_PATH;
-//                    directoryList.add(dto);
-//                }
-//            }
-//            list.fileList = fileList;
-//            list.directoryList = directoryList;
-//        } catch (SftpException e) {
-//            log.error("sftp获取文件失败,{}", e);
-//            return null;
-//        } finally {
-//            disconnect(sftp);
-//        }
-//        return list;
-//    }
+    /*public static ExcelTreeDTO getFile(ChannelSftp sftp, String path, String fileType) {
+        ExcelTreeDTO list = new ExcelTreeDTO();
+        try {
+            // 文件
+            List<ExcelPropertyDTO> fileList = new ArrayList<>();
+            // 文件夹
+            List<ExcelPropertyDTO> directoryList = new ArrayList<>();
+            fileType = "." + fileType;
+            Vector vector = sftp.ls(path);
+            Iterator iterator = vector.iterator();
+            while (iterator.hasNext()) {
+                ChannelSftp.LsEntry file = (ChannelSftp.LsEntry) iterator.next();
+                String fileName = file.getFilename();
+                //获取指定文件
+                if (fileName.contains(fileType)) {
+                    ExcelPropertyDTO dto = new ExcelPropertyDTO();
+                    dto.fileName = fileName;
+                    dto.fileFullName = path + fileName;
+                    fileList.add(dto);
+                } else {
+                    if (filterFileName(fileName)) {
+                        continue;
+                    }
+                    ExcelPropertyDTO dto = new ExcelPropertyDTO();
+                    dto.fileName = fileName;
+                    dto.fileFullName = path + fileName + ROOT_PATH;
+                    directoryList.add(dto);
+                }
+            }
+            list.fileList = fileList;
+            list.directoryList = directoryList;
+        } catch (SftpException e) {
+            log.error("sftp获取文件失败,{}", e);
+            return null;
+        } finally {
+            disconnect(sftp);
+        }
+        return list;
+    }*/
 
     /**
      * 递归获取sftp文件和文件夹
+     *
      * @param sftp
      * @param path
      * @param fileType
      * @return
      */
-    public static ExcelTreeDTO getFile(ChannelSftp sftp, String path, String fileType){
-        ExcelTreeDTO list = new ExcelTreeDTO();
-        List<ExcelPropertyDTO> fileList = new ArrayList<>();
-        List<ExcelPropertyDTO> dirList = new ArrayList<>();
+    public static SftpExcelTreeDTO getFile(ChannelSftp sftp, String path, String fileType) {
+        log.info("参数信息，目录路径-[{}], 文件类型[{}]", path, fileType);
+        // 校验目录格式
+        if (path.length() != 1 && !path.endsWith("/")) {
+            throw new FkException(ResultEnum.SFTP_DIR_PATH_ERROR);
+        }
+
+        // 初始化顶级节点
+        SftpExcelTreeDTO root = new SftpExcelTreeDTO();
+        String fileName = null;
+        if (!path.equals("/") && path.endsWith("/")) {
+            // 去掉开始、结尾字符
+            fileName = path.substring(1);
+            fileName = fileName.substring(0, fileName.length() - 1);
+        } else {
+            fileName = path;
+        }
+        root.setFileName(fileName);
+        root.setFileFullName(path);
+        root.setDirFlag(true);
 
         // 处理文件类型
         fileType = "." + fileType;
         try {
-             list = recurFile(sftp, path, fileType, fileList, dirList, list);
+            root.getChildren().addAll(recurFile(sftp, path, fileType));
         } catch (SftpException e) {
             log.info("sftp读取文件失败,{}", e);
             return null;
         } finally {
             disconnect(sftp);
         }
-        return list;
+        return root;
     }
 
-    private static ExcelTreeDTO recurFile(ChannelSftp sftp, String path, String fileType,
-                                          List<ExcelPropertyDTO> fileList, List<ExcelPropertyDTO> dirList, ExcelTreeDTO excelTreeDTO) throws SftpException {
-        // 获取当前目录中所有内容
+    /**
+     * 递归获取文件及目录树结构
+     *
+     * @param sftp     sftp连接
+     * @param path     目录路径
+     * @param fileType 文件类型，不包含"."符号
+     * @return
+     * @throws SftpException
+     */
+    private static List<SftpExcelTreeDTO> recurFile(ChannelSftp sftp, String path, String fileType) throws SftpException {
+        List<SftpExcelTreeDTO> tree = new ArrayList<>();
         Vector<ChannelSftp.LsEntry> vectors = sftp.ls(path);
-        for (int i = 0; i < vectors.size(); i++){
-            ChannelSftp.LsEntry entry = vectors.get(i);
-            // 获取当前文件名
-            String filename = entry.getFilename();
-            if (filterFileName(filename)){
-                continue;
-            }
-
-            // 获取文件
-            if (!entry.getAttrs().isDir()){
-                if (!filename.contains(fileType)){
-                    continue;
+        if (vectors.size() != 0) {
+            for (ChannelSftp.LsEntry entry : vectors) {
+                SftpExcelTreeDTO dto = new SftpExcelTreeDTO();
+                dto.setFileName(entry.getFilename());
+                dto.setDirFlag(entry.getAttrs().isDir());
+                if (entry.getAttrs().isDir()) {
+                    // 过滤错误文件夹
+                    if (filterFileName(entry.getFilename())) {
+                        continue;
+                    }
+                    dto.setFileFullName(path + entry.getFilename() + ROOT_PATH);
+                    if (!entry.getFilename().equals(".ssh")) {
+                        dto.getChildren().addAll(recurFile(sftp, dto.getFileFullName(), fileType));
+                    }
+                } else {
+                    // 过滤文件类型
+                    if (!entry.getFilename().contains(fileType)) {
+                        continue;
+                    }
+                    dto.setFileFullName(path + entry.getFilename());
                 }
-                ExcelPropertyDTO dto = new ExcelPropertyDTO();
-                dto.fileName = filename;
-                dto.fileFullName = path + filename;
-                // 加入到文件集合中
-                fileList.add(dto);
-            }else{
-                // 加入文件夹集合
-                ExcelPropertyDTO dto = new ExcelPropertyDTO();
-                dto.fileName = filename;
-                dto.fileFullName = path + filename + ROOT_PATH;
-                dirList.add(dto);
-                // 递归处理文件夹
-                if (!filename.equals(".ssh")){
-                    recurFile(sftp, dto.fileFullName, fileType, fileList, dirList, excelTreeDTO);
-                }
+                tree.add(dto);
             }
-            excelTreeDTO.fileList = fileList;
-            excelTreeDTO.directoryList = dirList;
         }
-        return excelTreeDTO;
+        return tree;
     }
 
     /**
@@ -285,9 +302,10 @@ public class SftpUtils {
             return true;
         } else if ("..".equals(fileName)) {
             return true;
-        } else{
+        } else {
             return false;
         }
+
     }
 
     /**
@@ -429,6 +447,40 @@ public class SftpUtils {
     }
 
     /**
+     * 上传二进制密钥字符串文件到服务器指定目录下
+     *
+     * @param fileBinary 二进制密钥文件字符串
+     * @param linuxPath 服务器存储路径
+     * @param fileName 文件名
+     * @param userName 账号
+     * @param pw 密码
+     * @param rsaPath
+     * @param host 主机地址
+     * @param port 端口
+     * @return
+     * @throws IOException
+     */
+    public static boolean uploadRsaFile(String fileBinary, String linuxPath, String fileName,
+                                        String userName, String pw, String rsaPath, String host, Integer port) {
+        InputStream inputStream = null;
+        try {
+            inputStream = FileBinaryUtils.getInputStream(fileBinary);
+            ChannelSftp root = SftpUtils.getSftpConnect(SftpAuthTypeEnum.USERNAME_PW_AUTH.getValue(),
+                    userName, pw, rsaPath, host, port);
+            return SftpUtils.uploadFile(root, inputStream, linuxPath, fileName);
+        } catch (Exception e) {
+            log.error("上传二进制文件失败{}", e);
+            return false;
+        } finally {
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
      * 关闭流
      *
      * @param ins
@@ -467,13 +519,13 @@ public class SftpUtils {
      * @throws IOException
      */
     public static void copyFile(String rHost, Integer rPort, String rUserName, String rPw, String rKey, Integer rAuthType,
-                         String tHost, Integer tPort, String tUserName, String tPw, String tKey, Integer tAuthType,
-                         Integer sortTypeName, Integer sortType, Integer index, String currDir,
-                         String targetDir, String targetFileName){
+                                String tHost, Integer tPort, String tUserName, String tPw, String tKey, Integer tAuthType,
+                                Integer sortTypeName, Integer sortType, Integer index, String currDir,
+                                String targetDir, String targetFileName) {
         InputStream ins = null;
         ChannelSftp currSftp = null;
         ChannelSftp targetSftp = null;
-        try{
+        try {
             // 初始化sftp连接
             log.info("开始连接数据源");
             currSftp = getSftpConnect(rAuthType, rUserName, rPw, rKey, rHost, rPort);
@@ -499,15 +551,15 @@ public class SftpUtils {
     }
 
     public static ChannelSftp getSftpConnect(Integer authType, String userName, String pw, String rsaPath,
-                                       String host, Integer port){
+                                             String host, Integer port) {
         ChannelSftp sftp = null;
-        if (authType == SftpAuthTypeEnum.RSA_AUTH.getValue()){
+        if (authType == SftpAuthTypeEnum.RSA_AUTH.getValue()) {
             // 密钥认证
-            if (StringUtils.isEmpty(rsaPath)){
+            if (StringUtils.isEmpty(rsaPath)) {
                 throw new FkException(ResultEnum.SFTP_RSA_IS_NULL);
             }
             sftp = connect(host, port, userName, pw, rsaPath);
-        }else{
+        } else {
             // 密码认证
             if (StringUtils.isEmpty(userName) || StringUtils.isEmpty(pw)){
                 throw new FkException(ResultEnum.SFTP_ACCOUNT_IS_NULL);
@@ -519,10 +571,14 @@ public class SftpUtils {
 
 
     public static void main(String[] args) throws IOException, SftpException {
-       //SftpAuthTypeEnum
-        ChannelSftp root = getSftpConnect(SftpAuthTypeEnum.USERNAME_PW_AUTH.getValue(), "root", "Password01!", null, "192.168.11.130", 22);
-        InputStream fileInputStream = getFileInputStream(root, SortTypeNameEnum.FILENAME_SORT.getValue(), SortTypeEnum.POSITIVE_SORT.getValue(), 1, "/root/upload/292/3005/0/");
-        uploadFile(root, fileInputStream, "/root/upload/292/3005/0/", "cfk.txt");
+        // 上传二进制文件测试
+        File file = new File("C:\\test\\id_rsa_npw");
+        byte[] fileBinary = new byte[(int) file.length()];
+        FileInputStream fis = new FileInputStream(file);
+        fis.read(fileBinary);
+        SftpUtils.uploadRsaFile(fileBinary.toString(), "/upload/test/", "rsa", "sftp", "password01!",
+                null, "192.168.21.21", 22);
+        fis.close();
     }
 
 }

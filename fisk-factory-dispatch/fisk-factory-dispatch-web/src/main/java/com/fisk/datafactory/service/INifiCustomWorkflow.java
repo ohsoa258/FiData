@@ -110,4 +110,11 @@ public interface INifiCustomWorkflow extends IService<NifiCustomWorkflowPO> {
      * @return
      */
     ResultEntity<Object> updateWorkStatus(String nifiCustomWorkflowId, boolean ifFire);
+
+    /**
+     * 依据pipelTraceId获取管道部分字段信息
+     * @param pipelTraceId
+     * @return
+     */
+    ResultEntity<Object> getNifiCustomWorkFlowPartInfo(String pipelTraceId);
 }

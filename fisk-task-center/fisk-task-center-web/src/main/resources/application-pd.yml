@@ -23,9 +23,11 @@ nifi:
   pipeline:
     topicName: my-topic
     waitTime: 30
+    maxTime: 10800
     operation-interval: 2000
     number-of-operations: 5
     data-governance-url: http://10.220.108.140:10089
+    dispatch-email-url-prefix: http://10.220.108.140:10082
 nifi-ConcurrentTasks: 3
 nifi-FetchSize: 30000
 nifi-MaxRowsPerFlowFile: 10000
@@ -45,6 +47,15 @@ pgsql-mdm:
   url: jdbc:postgresql://100.102.201.107:5433/dmp_mdm?stringtype=unspecified
   username: adminuser
   type: PG
+
+# sftp-rsa-upload暂未使用
+sftp-rsa-upload:
+  userName: root
+  password: Password01!
+  rsaPath: null
+  host: 192.168.21.21
+  port: 22
+
 server:
   port: 8099
 spring:

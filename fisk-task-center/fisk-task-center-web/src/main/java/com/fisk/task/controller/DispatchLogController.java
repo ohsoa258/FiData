@@ -2,6 +2,7 @@ package com.fisk.task.controller;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.task.dto.dispatchlog.*;
+import com.fisk.task.dto.query.DataServiceTableLogQueryDTO;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
 import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelStageLog;
@@ -95,5 +96,26 @@ public class DispatchLogController {
         objectResultEntity.data = iPipelStageLog.getPipelStageLogVos(taskId);
         objectResultEntity.code = 0;
         return objectResultEntity;
+    }
+
+    /**
+     * 依据pipelTraceId查询pipelId
+     * @param pipelTraceId
+     * @return
+     */
+    @GetMapping("/getPipelIdByPipelTraceId")
+    public ResultEntity<String> getPipelIdByPipelTraceId(@RequestParam("pipelTraceId") String pipelTraceId){
+        return iPipelLog.getPipelIdByTraceId(pipelTraceId);
+    }
+
+    /**
+     * 获取数据服务表服务同步日志
+     *
+     * @param dto
+     * @return 执行结果
+     */
+    @PostMapping("/getDataServiceTableLogVos")
+    public ResultEntity<DataServiceTableLogQueryVO> getDataServiceTableLogVos(@RequestBody DataServiceTableLogQueryDTO dto) {
+        return iPipelTaskLog.getDataServiceTableLogVos(dto);
     }
 }

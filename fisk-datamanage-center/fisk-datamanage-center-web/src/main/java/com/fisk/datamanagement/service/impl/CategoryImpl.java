@@ -12,8 +12,10 @@ import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 
 /**
  * @author JianWenYang
@@ -32,11 +34,14 @@ public class CategoryImpl implements ICategory {
     public ResultEnum addCategory(CategoryDTO dto)
     {
        try {
-           String jsonParameter= JSONArray.toJSON(dto).toString();
+           if (!CollectionUtils.isEmpty(dto.terms)) {
+               dto.terms = new ArrayList<>();
+           }
+           String jsonParameter = JSONArray.toJSON(dto).toString();
            JSONObject jsonObj = JSON.parseObject(jsonParameter);
-           String parentCategory=jsonObj.getString("parentCategory");
+           String parentCategory = jsonObj.getString("parentCategory");
            JSONObject parent = JSON.parseObject(parentCategory);
-           String parentValue=parent.getString("categoryGuid");
+           String parentValue = parent.getString("categoryGuid");
            if ("".equals(parentValue)) {
                jsonObj.remove("parentCategory");
                jsonParameter = jsonObj.toJSONString();

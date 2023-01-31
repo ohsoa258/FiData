@@ -1,7 +1,12 @@
 package com.fisk.task.service.dispatchLog.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflow.DispatchEmailDTO;
 import com.fisk.task.dto.dispatchlog.LogStatisticsForChartVO;
@@ -15,6 +20,8 @@ import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -34,6 +41,8 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
     PipelLogMapper pipelLogMapper;
     @Resource
     DataFactoryClient dataFactoryClient;
+    @Value("${nifi.pipeline.dispatch-email-url-prefix}")
+    private String dispatchEmailUrlPrefix;
 
     @Override
     public void savePipelLog(String pipelTraceId, Map<Integer, Object> map, String pipelId) {
@@ -76,7 +85,8 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
                     }
                 }
 
-                dispatchEmail.url = "【http://fidata.fisksoft.com:65115/#/DataFactory/pipelineSettings】";
+                dispatchEmail.url = "【"+ dispatchEmailUrlPrefix +"/#/DataFactory/pipelineSettings?pipelTraceId="
+                        + dispatchEmail.pipelTraceId+"】";
                 try {
                     Map<String, String> hashMap = new HashMap<>();
                     hashMap.put("运行结果", dispatchEmail.result);
@@ -268,5 +278,11 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
         }
         System.out.println(JSON.toJSONString(pipelLogs));
         System.out.println(JSON.toJSONString(pipelLogs1));
+    }
+
+    @Override
+    public ResultEntity<String> getPipelIdByTraceId(String pipelTraceId) {
+        String pipelId = pipelLogMapper.getPipelIdByTraceId(pipelTraceId);
+        return StringUtils.isEmpty(pipelId) ? null : ResultEntityBuild.buildData(ResultEnum.SUCCESS, pipelId);
     }
 }

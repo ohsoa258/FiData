@@ -3,6 +3,20 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.fisk.task.mapper.PipelLogMapper">
 
+
+    <select id="getPipelLogs" resultType="com.fisk.task.dto.dispatchlog.PipelLogVO">
+        select * from tb_pipel_log where pipel_id=#{pipelLog.pipelId} and del_flag = 1
+        <if test="pipelLog.pipelTraceId != null and pipelLog.pipelTraceId != '' ">
+            and pipel_trace_id=#{pipelLog.pipelTraceId}
+        </if>
+        <if test="pipelLog.lookday != null and pipelLog.lookday != '' ">
+            and create_time >= DATE_SUB( CURDATE( ), INTERVAL #{pipelLog.lookday} DAY )
+        </if>
+        order by create_time desc
+
+
+    </select>
+
     <select id="getStatisticsLog" resultType="com.fisk.task.dto.dispatchlog.LogStatisticsVO">
        		select b.days as days,count(1) as sum from (SELECT
                     DATE_FORMAT( `create_time`, '%Y-%m-%d' ) AS days,
