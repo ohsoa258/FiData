@@ -1489,7 +1489,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
         }
 
-        if (appDataSourceImpl.getDataSourceMeta(dto.appId) != null) {
+        if (appDataSourceImpl.getDataSourceMeta(dto.appDataSourceId) != null) {
             //校验相同schema,不同应用是否存在表名重复问题
             verifySchemaTable(dto.appId, dto.tableName);
         }
@@ -1537,7 +1537,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEnum.SQL_EXCEPT_CLEAR;
         }
 
-        if (model != null && appDataSourceImpl.getDataSourceMeta(model.appId) != null) {
+        if (model != null && appDataSourceImpl.getDataSourceMeta(model.appDataSourceId) != null) {
             //校验相同schema,不同应用是否存在表名重复问题
             verifySchemaTable(dto.appId, dto.tableName);
         }
@@ -1938,11 +1938,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Override
     public OdsResultDTO getDataAccessQueryList(OdsQueryDTO query) {
-        AppDataSourcePO po = appDataSourceImpl.query().eq("app_id", query.appId).one();
+        AppDataSourcePO po = appDataSourceImpl.query().eq("id", query.appId).one();
         if (po == null) {
             throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
         }
-        AppRegistrationPO registration = appRegistrationImpl.query().eq("id", query.appId).one();
+        AppRegistrationPO registration = appRegistrationImpl.query().eq("id", po.appId).one();
         if (registration == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
