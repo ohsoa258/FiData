@@ -2045,10 +2045,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTO(long tableId, long appId) {
 
         BuildPhysicalTableDTO dto = new BuildPhysicalTableDTO();
-
-        AppRegistrationPO registrationPo = appRegistrationImpl.query().eq("id", appId).one();
+        AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("id", appId).one();
+        AppRegistrationPO registrationPo = appRegistrationImpl.query().eq("id", dataSourcePo.appId).one();
         TableAccessPO tableAccessPo = this.query().eq("id", tableId).one();
-        AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", appId).one();
         List<TableFieldsPO> listPo = tableFieldsImpl.query().eq("table_access_id", tableId).list();
         if (tableAccessPo == null || registrationPo == null || dataSourcePo == null || CollectionUtils.isEmpty(listPo)) {
             return ResultEntityBuild.build(ResultEnum.NIFI_NOT_FIND_DATA);
