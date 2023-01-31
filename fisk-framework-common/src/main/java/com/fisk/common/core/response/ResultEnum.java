@@ -54,6 +54,8 @@ public enum ResultEnum {
     SQL_PARSING(1028, "sql解析失败"),
     COPY_ERROR(1029, "拷贝失败"),
     USERNAME_EXISTS(1030, "用户名不能重复"),
+    SYSTEM_TITLE_NULL(1031, "系统名称不能为空"),
+    SYSTEM_LOGO_NULL(1032, "系统logo文件不能为空"),
 
     /**
      * 报表可视化服务，错误码从2000开始
