@@ -44,7 +44,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     @Override
     public DataSourceDTO getDataSourceMeta(long appId) {
 
-        DataSourceDTO dataSource = mapper.getDataSource(appId);
+        DataSourceDTO dataSource = mapper.getDataSourceById(appId);
 
         if ("ftp".equalsIgnoreCase(dataSource.driveType) || "RestfulAPI".equalsIgnoreCase(dataSource.driveType) || "api".equalsIgnoreCase(dataSource.driveType)) {
             return null;
@@ -72,12 +72,12 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     @Override
     public DataSourceDTO setDataSourceMeta(long appId) {
         try {
-            DataSourceDTO dataSource = mapper.getDataSource(appId);
+            DataSourceDTO dataSource = mapper.getDataSourceById(appId);
             if (dataSource == null) {
                 log.error(appId + ":" + JSON.toJSONString(ResultEnum.DATASOURCE_INFORMATION_ISNULL));
                 return null;
             }
-            AppDataSourcePO po = this.query().eq("app_id", appId).one();
+            AppDataSourcePO po = this.query().eq("id", appId).one();
             dataSource.appName = po.dbName;
             if (DataSourceTypeEnum.MYSQL.getName().equalsIgnoreCase(dataSource.driveType)) {
                 MysqlConUtils mysqlConUtils = new MysqlConUtils();
@@ -123,12 +123,12 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
 
     @Override
     public List<TableStructureDTO> getSourceColumnMeta(SourceColumnMetaQueryDTO dto) {
-        DataSourceDTO dataSource = mapper.getDataSource(dto.appId);
+        DataSourceDTO dataSource = mapper.getDataSourceById(dto.appId);
         if (dataSource == null) {
             log.error(dto.appId + ":" + JSON.toJSONString(ResultEnum.DATASOURCE_INFORMATION_ISNULL));
             return null;
         }
-        AppDataSourcePO po = this.query().eq("app_id", dto.appId).one();
+        AppDataSourcePO po = this.query().eq("id", dto.appId).one();
         if (DataSourceTypeEnum.MYSQL.getName().equalsIgnoreCase(dataSource.driveType)) {
             MysqlConUtils mysqlConUtils = new MysqlConUtils();
             Connection conn = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL);

@@ -10,11 +10,11 @@
         a.app_des,
         a.app_type,
         a.app_principal,
-        a.create_time,
-        b.drive_type
+        a.create_time
+        /*b.drive_type*/
         FROM
         tb_app_registration AS a
-        LEFT JOIN tb_app_datasource AS b ON a.id = b.app_id
+        /*LEFT JOIN tb_app_datasource AS b ON a.id = b.app_id*/
         WHERE
         a.del_flag =1
         <if test="query.where !=null and query.where.length()>0 ">

@@ -108,5 +108,10 @@ public class TbTableAccessDTO {
      */
     public Integer syncMode;
 
+    /**
+     * 系统数据源id
+     */
+    public Integer appDataSourceId;
+
 
 }
