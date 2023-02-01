@@ -124,8 +124,8 @@ public class SystemLogoInfoServiceImpl implements SystemLogoInfoService {
      */
     @Override
     public ResultEnum updateLogoInfo(SystemLogoInfoDTO systemLogoInfoDTO, MultipartFile file) {
-        if (StringUtils.isEmpty(systemLogoInfoDTO.getTitle()) && file.isEmpty()){
-            return ResultEnum.SUCCESS;
+        if (systemLogoInfoDTO.getId() == null || systemLogoInfoDTO.getId() <= 0){
+            return ResultEnum.DATA_NOTEXISTS;
         }
         // 查询数据是否存在
         SystemLogoInfoPO info = mapper.selectById(systemLogoInfoDTO.getId());
@@ -133,16 +133,16 @@ public class SystemLogoInfoServiceImpl implements SystemLogoInfoService {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
-        SystemLogoInfoPO po = new SystemLogoInfoPO();
-        // 更新数据
-        if (!file.isEmpty()){
-            po.setLogo(getFileName(file));
+        // 文件不为空则处理文件
+        if (file != null && file.getSize() != 0){
+            info.setLogo(getFileName(file));
         }
+        // 标题不为空，则设置标题
         if (StringUtils.isNotEmpty(systemLogoInfoDTO.getTitle())){
-            po.setTitle(systemLogoInfoDTO.getTitle());
+            info.setTitle(systemLogoInfoDTO.getTitle());
         }
-        po.setId(systemLogoInfoDTO.getId());
-        int update = mapper.updateById(po);
+        info.setId(systemLogoInfoDTO.getId());
+        int update = mapper.updateById(info);
         return update > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 }

@@ -13,8 +13,6 @@ import javax.validation.constraints.Positive;
 @Data
 public class SystemLogoInfoDTO {
 
-    @NotNull(message = "id不能为空")
-    @Positive(message = "id必须大于0")
     private Integer id;
 
     private String title;

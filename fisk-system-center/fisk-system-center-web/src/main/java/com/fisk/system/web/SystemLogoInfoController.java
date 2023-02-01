@@ -51,10 +51,10 @@ public class SystemLogoInfoController {
      * @return
      */
     @ApiOperation("更新系统logo或title")
-    @PostMapping("/updateLogoInfo")
+    @PutMapping("/updateLogoInfo")
     @ControllerAOPConfig(printParams = false)
     @ResponseBody
-    public ResultEntity<Object> updateLogoInfo(@Valid SystemLogoInfoDTO systemLogoInfoDTO, @RequestParam(value = "file", required = false) MultipartFile file) {
+    public ResultEntity<Object> updateLogoInfo(SystemLogoInfoDTO systemLogoInfoDTO, @RequestParam(value = "file", required = false) MultipartFile file) {
         return ResultEntityBuild.build(systemLogoService.updateLogoInfo(systemLogoInfoDTO, file));
     }
 
