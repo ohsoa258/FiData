@@ -38,6 +38,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -220,10 +221,17 @@ public class AppRegistrationController {
         return service.getRepeatAppAbbreviation(appAbbreviation, whetherSchema);
     }
 
+    @ApiIgnore
     @ApiOperation(value = "获取所有应用以及表、字段数据")
     @GetMapping("/getDataAppRegistrationMeta")
     public ResultEntity<Object> getDataAppRegistrationMeta() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.getDataAppRegistrationMeta());
+    }
+
+    @ApiOperation(value = "获取不同ods数据源对应的应用以及表、字段数据")
+    @GetMapping("/getAllDataAppRegistrationMeta")
+    public ResultEntity<Object> getAllDataAppRegistrationMeta() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.getAllDataAppRegistrationMeta());
     }
 
     @ApiOperation(value = "根据sql语句,获取字段列表(数据建模)")

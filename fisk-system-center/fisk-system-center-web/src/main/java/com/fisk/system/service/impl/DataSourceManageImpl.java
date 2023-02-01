@@ -269,6 +269,12 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         return dataSourceList;
     }
 
+    /**
+     *
+     * @param isShowPwd
+     * @param t
+     * @return
+     */
     private DataSourceDTO poToDto(boolean isShowPwd, DataSourcePO t) {
         DataSourceDTO dataSourceDTO = new DataSourceDTO();
         dataSourceDTO.setId(Math.toIntExact(t.getId()));

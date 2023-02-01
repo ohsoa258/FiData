@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -23,6 +24,7 @@ import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
+import com.fisk.common.server.datasource.ExternalDataSourceDTO;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
@@ -38,6 +40,7 @@ import com.fisk.dataaccess.dto.GetConfigDTO;
 import com.fisk.dataaccess.dto.access.DataAccessTreeDTO;
 import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.dto.api.ApiColumnInfoDTO;
+import com.fisk.dataaccess.dto.datamodel.AppAllRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
@@ -88,6 +91,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.annotation.Resource;
 import java.sql.*;
@@ -1460,13 +1464,17 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         for (AppRegistrationDataDTO item : list) {
             item.tableDtoList = TableAccessMap.INSTANCES.poListToDtoList(tableAccessList.stream()
                     .filter(e -> e.appId == item.id).collect(Collectors.toList()));
-            item.tableDtoList.stream().map(e -> e.tableName = TableNameGenerateUtils.buildOdsTableName(e.tableName, item.appAbbreviation, item.whetherSchema)).collect(Collectors.toList());
-            if (item.tableDtoList.size() == 0 || tableFieldsList == null || tableFieldsList.size() == 0) {
+            item.tableDtoList.stream().map(e -> e.tableName = TableNameGenerateUtils
+                    .buildOdsTableName(e.tableName, item.appAbbreviation,
+                            item.whetherSchema)).collect(Collectors.toList());
+            if (item.tableDtoList.size() == 0 || tableFieldsList == null
+                    || tableFieldsList.size() == 0) {
                 continue;
             }
             item.tableDtoList.stream().map(e -> e.type = 1).collect(Collectors.toList());
             for (TableAccessDataDTO tableAccessDataDTO : item.tableDtoList) {
-                tableAccessDataDTO.fieldDtoList = TableFieldsMap.INSTANCES.poListToDtoList(tableFieldsList.stream()
+                tableAccessDataDTO.fieldDtoList = TableFieldsMap.INSTANCES
+                        .poListToDtoList(tableFieldsList.stream()
                         .filter(e -> e.tableAccessId == tableAccessDataDTO.id).collect(Collectors.toList()));
                 if (CollectionUtils.isEmpty(tableAccessDataDTO.fieldDtoList)) {
                     continue;
@@ -1477,6 +1485,99 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 反转: 倒序排序
         Collections.reverse(list);
         return list;
+    }
+
+    @Override
+    public List<AppAllRegistrationDataDTO> getAllDataAppRegistrationMeta() {
+        List<AppAllRegistrationDataDTO> root = new ArrayList<>();
+
+        // 获取所有的ods数据源
+        List<ExternalDataSourceDTO> fiDataDataSource = appRegistrationImpl.getFiDataDataSource();
+        if (CollectionUtils.isEmpty(fiDataDataSource)){
+            return root;
+        }
+        for (ExternalDataSourceDTO item : fiDataDataSource){
+            AppAllRegistrationDataDTO dto = new AppAllRegistrationDataDTO();
+            dto.setId(item.getId());
+            dto.setName(item.getName());
+            root.add(dto);
+        }
+
+        // 获取所有应用注册树
+        List<AppRegistrationDataDTO> appList = new ArrayList<>();
+        QueryWrapper<AppRegistrationPO> appQw = new QueryWrapper<>();
+        appQw.eq("del_flag", 1);
+        List<AppRegistrationPO> appPoList = registrationMapper.selectList(appQw);
+        if (CollectionUtils.isEmpty(appPoList)){
+            return root;
+        }
+        appList = appRegistrationDataDTOList(appPoList);
+
+        // 获取所有表配置数据,发布状态为3: 正在发布 -> 1:发布成功
+        QueryWrapper<TableAccessPO> wrapper = new QueryWrapper<>();
+        // 只需要发布状态为3: 正在发布 -> 1:发布成功
+        wrapper.lambda().eq(TableAccessPO::getPublish, 3).or().eq(TableAccessPO::getPublish, 1);
+        List<TableAccessPO> tableAccessList = accessMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(tableAccessList)){
+            // 存在多个应用，但每个应用下不存在表，则将应用赋值到每个root下
+            for (AppAllRegistrationDataDTO parent : root){
+                parent.setAppList(appList.stream().filter(e -> e.getTargetDbId() == parent.getId()).collect(Collectors.toList()));
+            }
+            return root;
+        }
+
+        // 应用下表数据不为空时，获取表中字段配置
+        List<TableFieldsPO> tableFieldsList = fieldsMapper.selectList(new QueryWrapper<>());
+        // 遍历每个ods数据源
+        for (AppRegistrationDataDTO item : appList) {
+            item.tableDtoList = TableAccessMap.INSTANCES.poListToDtoList(tableAccessList.stream()
+                    .filter(e -> e.appId == item.id).collect(Collectors.toList()));
+            item.tableDtoList.stream().map(e -> e.tableName = TableNameGenerateUtils
+                    .buildOdsTableName(e.tableName, item.appAbbreviation,
+                            item.whetherSchema)).collect(Collectors.toList());
+            if (item.tableDtoList.size() == 0 || tableFieldsList == null
+                    || tableFieldsList.size() == 0) {
+                continue;
+            }
+            item.tableDtoList.stream().map(e -> e.type = 1).collect(Collectors.toList());
+            for (TableAccessDataDTO tableAccessDataDTO : item.tableDtoList) {
+                tableAccessDataDTO.fieldDtoList = TableFieldsMap.INSTANCES
+                        .poListToDtoList(tableFieldsList.stream()
+                                .filter(e -> e.tableAccessId == tableAccessDataDTO.id).collect(Collectors.toList()));
+                if (CollectionUtils.isEmpty(tableAccessDataDTO.fieldDtoList)) {
+                    continue;
+                }
+                tableAccessDataDTO.fieldDtoList.stream().map(e -> e.type = 2).collect(Collectors.toList());
+            }
+        }
+
+        // 倒排
+        Collections.reverse(appList);
+
+        // 为当前ods划分应用
+        for (AppAllRegistrationDataDTO parent : root){
+            parent.setAppList(appList.stream().filter(e -> e.getTargetDbId() == parent.getId()).collect(Collectors.toList()));
+        }
+        return root;
+    }
+
+    private List<AppRegistrationDataDTO> appRegistrationDataDTOList(List<AppRegistrationPO> poList){
+        if (CollectionUtils.isEmpty(poList)){
+            return null;
+        }
+        List<AppRegistrationDataDTO> parent = new ArrayList<>();
+        for (AppRegistrationPO po : poList){
+            AppRegistrationDataDTO dto = new AppRegistrationDataDTO();
+            dto.setId(po.getId());
+            dto.setAppName(po.getAppName());
+            dto.setAppAbbreviation(po.getAppAbbreviation());
+            dto.setTargetDbId(po.getTargetDbId());
+            if (po.getWhetherSchema() != null){
+                dto.setWhetherSchema(po.getWhetherSchema());
+            }
+            parent.add(dto);
+        }
+        return parent;
     }
 
     @Override

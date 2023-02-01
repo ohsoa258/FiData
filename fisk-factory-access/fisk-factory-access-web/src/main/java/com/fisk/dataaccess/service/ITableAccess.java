@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.dataaccess.dto.access.DataAccessTreeDTO;
 import com.fisk.dataaccess.dto.api.ApiColumnInfoDTO;
+import com.fisk.dataaccess.dto.datamodel.AppAllRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
@@ -228,6 +229,13 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return list
      */
     List<AppRegistrationDataDTO> getDataAppRegistrationMeta();
+
+    /**
+     * 获取不同ods数据源对应的应用以及表、字段数据
+     *
+     * @return list
+     */
+    List<AppAllRegistrationDataDTO> getAllDataAppRegistrationMeta();
 
     /**
      * 物理表单表添加

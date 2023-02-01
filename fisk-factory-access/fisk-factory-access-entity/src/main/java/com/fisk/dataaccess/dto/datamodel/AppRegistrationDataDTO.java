@@ -14,6 +14,7 @@ public class AppRegistrationDataDTO {
     public String appName;
     public String appAbbreviation;
     public boolean whetherSchema;
+    public Integer targetDbId;
     public List<TableAccessDataDTO> tableDtoList;
 
 }
