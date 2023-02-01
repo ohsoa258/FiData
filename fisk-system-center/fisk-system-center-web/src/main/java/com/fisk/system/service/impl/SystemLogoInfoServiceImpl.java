@@ -15,10 +15,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import sun.misc.BASE64Encoder;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.UUID;
 
 /**
@@ -58,8 +64,19 @@ public class SystemLogoInfoServiceImpl implements SystemLogoInfoService {
 
         mapper.delete(null);
 
+        String fileStr = "";
+        BASE64Encoder encoder = new BASE64Encoder();
+        // 通过base64来转化图片
+        try {
+            fileStr = encoder.encode(file.getBytes());
+        } catch (IOException e) {
+            log.error("文件转码出错", e);
+            return ResultEnum.SAVE_DATA_ERROR;
+
+        }
+
         SystemLogoInfoPO info = new SystemLogoInfoPO();
-        info.setLogo(getFileName(file));
+        info.setLogo(fileStr);
         info.setTitle(title);
         // 存储到数据库
         int insert = mapper.insert(info);
@@ -102,7 +119,7 @@ public class SystemLogoInfoServiceImpl implements SystemLogoInfoService {
         log.info("结束存储文件到服务器");
 
         // 图片完整路径
-        return "/file/systemlogo/images/" + fileName;
+        return "/" + fileName;
     }
 
     /**
@@ -135,7 +152,17 @@ public class SystemLogoInfoServiceImpl implements SystemLogoInfoService {
 
         // 文件不为空则处理文件
         if (file != null && file.getSize() != 0){
-            info.setLogo(getFileName(file));
+            String fileStr = "";
+            BASE64Encoder encoder = new BASE64Encoder();
+            // 通过base64来转化图片
+            try {
+                fileStr = encoder.encode(file.getBytes());
+            } catch (IOException e) {
+                log.error("文件转码出错", e);
+                return ResultEnum.SAVE_DATA_ERROR;
+
+            }
+            info.setLogo(fileStr);
         }
         // 标题不为空，则设置标题
         if (StringUtils.isNotEmpty(systemLogoInfoDTO.getTitle())){
