@@ -213,7 +213,7 @@ public class KafkaConsumer {
      */
     @KafkaListener(topics = MqConstants.QueueConstants.NifiTopicConstants.BUILD_NIFI_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
-    @MQConsumerLog
+    @MQConsumerLog(notificationType = 3)
     public ResultEntity<Object> buildNifiTaskListener(String data, Acknowledgment ack) {
         return ResultEntityBuild.build(iNifiTaskListener.msg(data, ack));
     }
@@ -311,7 +311,7 @@ public class KafkaConsumer {
      */
     @KafkaListener(topics = MqConstants.QueueConstants.DataInputTopicConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
-    @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_BUILD)
+    @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_BUILD, notificationType = 2)
     public ResultEntity<Object> buildDataInputPgTableListener(String dataInfo, Acknowledgment acke) {
         log.info("进入建表");
         return ResultEntityBuild.build(buildDataInputPgTableListener.msg(dataInfo, acke));

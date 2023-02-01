@@ -28,7 +28,7 @@ public enum ResultEnum {
     DATA_NOTEXISTS(1003, "数据不存在"),
     ENUM_TYPE_ERROR(1004, "错误的枚举类型"),
     UPDATE_DATA_ERROR(1005, "数据更新失败"),
-    NAME_EXISTS(1006, "名称已存在"),
+    NAME_EXISTS(1006, "用户账号不能重复"),
     PARAMTER_ERROR(1007, "请求参数有误"),
     DATA_EXISTS(1008, "数据已存在"),
     REMOTE_SERVICE_CALLFAILED(1009, "远程服务调用失败"),
@@ -53,6 +53,9 @@ public enum ResultEnum {
     UPLOAD_ERROR(1027, "文件上传失败"),
     SQL_PARSING(1028, "sql解析失败"),
     COPY_ERROR(1029, "拷贝失败"),
+    USERNAME_EXISTS(1030, "用户名不能重复"),
+    SYSTEM_TITLE_NULL(1031, "系统名称不能为空"),
+    SYSTEM_LOGO_NULL(1032, "系统logo文件不能为空"),
 
     /**
      * 报表可视化服务，错误码从2000开始

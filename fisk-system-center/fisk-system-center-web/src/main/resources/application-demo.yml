@@ -15,3 +15,4 @@ mdmAuthorize:
 # 图片上传
 file:
   uploadurl: /root/static/file/dmp/images
+  logoUrl: /root/static/file/systemlogo/images
