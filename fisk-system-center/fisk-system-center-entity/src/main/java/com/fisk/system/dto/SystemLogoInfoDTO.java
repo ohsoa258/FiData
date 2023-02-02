@@ -1,4 +1,4 @@
-package com.fisk.system.entity;
+package com.fisk.system.dto;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -16,4 +16,14 @@ public class SystemLogoInfoDTO {
     private Integer id;
 
     private String title;
+
+    private String logo;
+
+    private String color;
+
+    private String size;
+
+    private String fontFamily;
+
+    private Boolean overStriking;
 }

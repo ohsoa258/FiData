@@ -7,7 +7,6 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.system.entity.SystemLogoInfoDTO;
 import com.fisk.system.entity.SystemLogoInfoPO;
-import com.fisk.system.enums.PictureSuffixTypeEnum;
 import com.fisk.system.mapper.SystemLogoInfoMapper;
 import com.fisk.system.service.SystemLogoInfoService;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +14,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import sun.misc.BASE64Encoder;
 
 import javax.annotation.Resource;
 import java.io.File;
@@ -81,45 +79,6 @@ public class SystemLogoInfoServiceImpl implements SystemLogoInfoService {
         // 存储到数据库
         int insert = mapper.insert(info);
         return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
-    }
-
-    private String getFileName(MultipartFile file){
-        //如果文件夹不存在，创建
-        File fileP = new File(logoUrl);
-
-        if (!fileP.isDirectory()) {
-            //递归生成文件夹
-            fileP.mkdirs();
-        }
-        String fileName = "";
-        String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null) {
-            return null;
-        }
-
-        String uuid = UUID.randomUUID().toString();
-        if (originalFilename.endsWith(PictureSuffixTypeEnum.JGP.getName())) {
-            fileName = String.format("%s.jpg", uuid);
-        } else if (originalFilename.endsWith(PictureSuffixTypeEnum.PNG.getName())) {
-            fileName = String.format("%s.jpg", uuid);
-        } else if (originalFilename.endsWith(PictureSuffixTypeEnum.JPEG.getName())) {
-            fileName = String.format("%s.jpeg", uuid);
-        } else if (originalFilename.endsWith(PictureSuffixTypeEnum.BMP.getName())) {
-            fileName = String.format("%s.bmp", uuid);
-        } else {
-            throw new FkException(ResultEnum.VISUAL_IMAGE_ERROR);
-        }
-        log.info("开始存储文件到服务器");
-
-        try {
-            file.transferTo(new File(fileP, fileName));
-        } catch (IOException e) {
-            throw new FkException(ResultEnum.ERROR);
-        }
-        log.info("结束存储文件到服务器");
-
-        // 图片完整路径
-        return "/" + fileName;
     }
 
     /**
