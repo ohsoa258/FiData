@@ -136,7 +136,7 @@ public class RequestFilter implements GlobalFilter, Ordered {
             }
         } catch (Exception e) {
             // 解析失败，token有误
-            log.info(e.getMessage());
+            log.error("错误信息: ", e);
             return buildResult(response, exchange, e.getMessage());
         }
         // step 5.放行

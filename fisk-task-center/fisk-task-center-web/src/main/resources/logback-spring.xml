@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
     <!-- 定义变量，下方可通过${}引用 -->
-    <property name="LOG_HOME" value="/root/fisk/fidata/logs/task"/>
+    <property name="LOG_HOME" value="./logs/task"/>
     <property name="appName" value="task"/>
     <springProperty scope="context" name="springAppName" source="spring.application.name"/>
     <contextName>${appName}</contextName>
@@ -106,7 +106,7 @@
         &ndash;&gt;
     </springProfile>-->
 
-    <springProfile name="uat,test,pd,demo,yf,dev,rj">
+    <springProfile name="uat,test,pd,demo,yf,dev,rj,sd">
         <logger name="org" level="info">
             <appender-ref ref="Console"/>
             <appender-ref ref="FILE"/>
