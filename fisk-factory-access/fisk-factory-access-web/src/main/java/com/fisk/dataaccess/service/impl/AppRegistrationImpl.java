@@ -233,7 +233,7 @@ public class AppRegistrationImpl
         }
 
         //新增业务分类
-        addClassification(appRegistrationDTO);
+        // addClassification(appRegistrationDTO);
 
         //数据库应用,需要新增元数据对象
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
@@ -244,6 +244,8 @@ public class AppRegistrationImpl
             }
         }
 
+        /*
+        // ——该模块暂未使用到元数据
         if (!CollectionUtils.isEmpty(list)) {
             try {
                 MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
@@ -256,15 +258,17 @@ public class AppRegistrationImpl
                 log.error("【dataManageClient.MetaData()】方法报错,ex", e);
             }
         }
+         */
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
     }
 
     /**
-     * 新增业务分类
+     * 新增业务分类——该模块暂未使用到元数据
      *
      * @param appRegistrationDTO
      */
+    /*
     public void addClassification(AppRegistrationDTO appRegistrationDTO) {
         // 添加业务分类元数据信息
         ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
@@ -278,6 +282,7 @@ public class AppRegistrationImpl
             throw new FkException(ResultEnum.BUSINESS_CLASSIFICATION_ERROR);
         }
     }
+     */
 
     /**
      * 新增元数据信息
@@ -631,11 +636,12 @@ public class AppRegistrationImpl
         vo.classifications = model.appName;
         log.info("删除的应用信息,{}", vo);
 
+        // ——该模块暂未使用到元数据
+        /*
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-
                     // 删除元数据实体
                     if (!CollectionUtils.isEmpty(vo.qualifiedNames)) {
                         MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
@@ -658,6 +664,7 @@ public class AppRegistrationImpl
                 }
             }
         }).start();
+         */
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
     }

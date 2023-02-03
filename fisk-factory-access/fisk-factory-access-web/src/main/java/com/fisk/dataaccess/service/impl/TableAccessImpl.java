@@ -1748,6 +1748,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         list.get(0).dbList.get(0).tableList = tableList;
 
 
+        // ——该模块暂未使用到元数据
+        /*
         //修改元数据
         ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
         cachedThreadPool.execute(new Runnable() {
@@ -1762,6 +1764,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 }
             }
         });
+         */
 
     }
 

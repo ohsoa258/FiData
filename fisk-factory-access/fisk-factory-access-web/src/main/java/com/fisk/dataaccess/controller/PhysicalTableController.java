@@ -253,7 +253,8 @@ public class PhysicalTableController {
         list.add(deleteTableDetailDto);
         dataFactoryClient.editByDeleteTable(list);
 
-        // 删除元数据
+        /*
+        // 删除元数据——该模块暂未使用到元数据
         MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
         metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.qualifiedNames);
         metaDataDeleteAttributeDto.setClassifications(nifiVO.classifications);
@@ -263,6 +264,7 @@ public class PhysicalTableController {
                 dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
             }
         }).start();
+         */
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
