@@ -511,7 +511,6 @@ public class BuildDataModelDorisTableListener
             } catch (ApiException e) {
                 log.error("组查询失败" + e);
             }
-            data.setId(appNifiSettingPO.targetDbPoolComponentId);
 
         } else {
             //创建应用组
@@ -676,7 +675,7 @@ public class BuildDataModelDorisTableListener
         if (appNifiSettingPO1 != null) {
             appNifiSettingPO = appNifiSettingPO1;
         }
-        appNifiSettingPO.targetDbPoolComponentId = controllerServiceEntity.getId();
+
         appNifiSettingPO.appId = String.valueOf(ModelPublishDataDTO.businessAreaId);
         appNifiSettingPO.type = dataClassifyEnum.getValue();
         //做判断,是否新增

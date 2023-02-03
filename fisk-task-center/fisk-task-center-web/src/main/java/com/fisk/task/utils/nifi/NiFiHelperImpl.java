@@ -1535,11 +1535,7 @@ public class NiFiHelperImpl implements INiFiHelper {
             //删除应用
             if (nifiRemoveDTOList.size() != 0 && nifiRemoveDTOList.get(0).delApp) {
                 //禁用2个控制器服务
-                for (String controllerServicesId : nifiRemoveDTOList.get(0).controllerServicesIds.subList(7, 9)) {
-                    if (controllerServicesId != null) {
-                        this.controllerServicesRunStatus(controllerServicesId);
-                    }
-                }
+
                 ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiRemoveDTOList.get(0).appId);
                 NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
                 appNifiSettingService.removeById(dataModelVO.businessId);
@@ -1649,8 +1645,7 @@ public class NiFiHelperImpl implements INiFiHelper {
                 controllerServicesIds.add(tableNifiSettingPO.convertAvroRecordSetWriterForCodeId);
                 controllerServicesIds.add(tableNifiSettingPO.convertPutDatabaseRecordForCodeId);
                 controllerServicesIds.add(tableNifiSettingPO.csvReaderId);
-                controllerServicesIds.add(appNifiSettingPO.targetDbPoolComponentId);
-                controllerServicesIds.add(appNifiSettingPO.sourceDbPoolComponentId);
+
                 //连接通道id
                 inputPortIds.add(tableNifiSettingPO.tableInputPortId);
                 inputPortIds.add(tableNifiSettingPO.processorInputPortId);

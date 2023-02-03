@@ -755,10 +755,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
         }
 
-        if (!data.groupConfig.newApp && data.targetDsConfig != null) {
-            targetDbPoolConfig.componentId = appNifiSettingPO.targetDbPoolComponentId;
-            sourceDsConfig.componentId = appNifiSettingPO.sourceDbPoolComponentId;
-        }
+
         data.targetDsConfig = targetDbPoolConfig;
         data.sourceDsConfig = sourceDsConfig;
         data.processorConfig = processorConfig;
@@ -876,25 +873,30 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         NifiConfigPO nifiConfigPo = new NifiConfigPO();
         NifiConfigPO nifiSourceConfigPo = null;
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
-            nifiConfigPo = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.PG_ODS_DB_POOL_COMPONENT_ID.getName()).one();
+            nifiConfigPo = nifiConfigService.query().eq("datasource_config_id", buildNifiFlowDTO.targetDbId).one();
+            nifiSourceConfigPo = nifiConfigService.query().eq("datasource_config_id", buildNifiFlowDTO.dataSourceDbId).one();
         } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             nifiConfigPo = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.DORIS_OLAP_DB_POOL_COMPONENT_ID.getName()).one();
             nifiSourceConfigPo = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.PG_DW_DB_POOL_COMPONENT_ID.getName()).one();
         } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
             nifiConfigPo = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.PG_DW_DB_POOL_COMPONENT_ID.getName()).one();
-            nifiSourceConfigPo = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.PG_ODS_DB_POOL_COMPONENT_ID.getName()).one();
+            //需注意,建模发布也需要有两个数据源
+            nifiSourceConfigPo = nifiConfigService.query().eq("datasource_config_id", buildNifiFlowDTO.dataSourceDbId).one();
         }
         BusinessResult<ControllerServiceEntity> targetRes = new BusinessResult<>(true, "控制器服务创建成功");
         BusinessResult<ControllerServiceEntity> sourceRes = new BusinessResult<>(true, "控制器服务创建成功");
         if (config.groupConfig.newApp || Objects.equals(buildNifiFlowDTO.dataClassifyEnum, DataClassifyEnum.CUSTOMWORKDATAACCESS) ||
                 Objects.equals(buildNifiFlowDTO.dataClassifyEnum, DataClassifyEnum.DATAMODELKPL)) {
-            BuildDbControllerServiceDTO targetDto = buildDbControllerServiceDTO(config, NifiConstants.ApiConstants.ROOT_NODE, DbPoolTypeEnum.TARGET, synchronousTypeEnum);
             if (nifiConfigPo != null) {
                 ControllerServiceEntity data = new ControllerServiceEntity();
                 data.setId(nifiConfigPo.componentId);
                 targetRes.data = data;
             } else {
-                targetRes = componentsBuild.buildDbControllerService(targetDto);
+                // 统一数据源改造
+                String componentId = saveDbconfig(buildNifiFlowDTO.targetDbId);
+                ControllerServiceEntity entity = new ControllerServiceEntity();
+                entity.setId(componentId);
+                targetRes.data = entity;
             }
             //来源库
             if (!buildNifiFlowDTO.excelFlow) {
