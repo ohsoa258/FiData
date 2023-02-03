@@ -46,9 +46,9 @@ public enum ComponentIdTypeEnum implements BaseEnum {
     /**
      * 加载所有数据源配置变量key
      */
-    DB_USERNAME(19, "DATASOURCE_URL_"),
-    DB_PASSWORD(20, "DATASOURCE_USERNAME_"),
-    DB_URL(21, "DATASOURCE_PASSWORD_"),
+    DB_USERNAME(19, "DATASOURCE_USERNAME_"),
+    DB_PASSWORD(20, "DATASOURCE_PASSWORD_"),
+    DB_URL(21, "DATASOURCE_URL_"),
 
     /*
     * 日常流程生成组Dailynififlow
