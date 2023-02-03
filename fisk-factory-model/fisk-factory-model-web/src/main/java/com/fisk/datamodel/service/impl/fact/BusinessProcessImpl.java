@@ -52,6 +52,7 @@ import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -69,6 +70,9 @@ import java.util.stream.Collectors;
 public class BusinessProcessImpl
         extends ServiceImpl<BusinessProcessMapper,BusinessProcessPO>
         implements IBusinessProcess {
+
+    @Value("${fiData-data-dw-source}")
+    private Integer targetDbId;
 
     @Resource
     BusinessProcessMapper mapper;
@@ -256,6 +260,9 @@ public class BusinessProcessImpl
                 if (appDto != null){
                     pushDto.dataSourceDbId = appDto.getTargetDbId();
                 }
+
+                // 关联目标dw库id
+                pushDto.setTargetDbId(targetDbId);
 
                 //获取自定义脚本
                 CustomScriptQueryDTO customScriptDto = new CustomScriptQueryDTO();

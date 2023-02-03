@@ -41,6 +41,7 @@ import com.fisk.datamodel.service.impl.TableHistoryImpl;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -57,6 +58,9 @@ import java.util.stream.Collectors;
 public class DimensionFolderImpl
         extends ServiceImpl<DimensionFolderMapper,DimensionFolderPO>
         implements IDimensionFolder {
+
+    @Value("${fiData-data-dw-source}")
+    private Integer targetDbId;
 
     @Resource
     DimensionFolderMapper mapper;
@@ -334,10 +338,14 @@ public class DimensionFolderImpl
                 //获取维度键update语句
                 pushDto.factUpdateSql = dimensionAttribute.buildDimensionUpdateSql(Math.toIntExact(item.id));
 
+                // 设置源数据库
                 AppRegistrationInfoDTO appDto = targetDbIdList.stream().filter(e -> e.getAppId() == item.getAppId()).findFirst().orElse(null);
                 if (appDto != null){
                     pushDto.dataSourceDbId = appDto.getTargetDbId();
                 }
+
+                // 设置目标dw库id
+                pushDto.setTargetDbId(targetDbId);
 
                 //获取自定义脚本
                 CustomScriptQueryDTO customScriptDto = new CustomScriptQueryDTO();

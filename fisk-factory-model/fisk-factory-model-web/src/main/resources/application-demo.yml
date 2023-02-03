@@ -22,3 +22,6 @@ fk:
     crypt:
       secret: ${random.uuid}
       strength: 6
+
+# 数据建模目标dw库id
+fiData-data-dw-source: 1
