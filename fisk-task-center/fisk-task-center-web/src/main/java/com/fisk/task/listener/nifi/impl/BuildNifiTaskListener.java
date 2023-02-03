@@ -344,9 +344,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 sourceControllerService.driverName = dataSource.conType.getDriverName();
 
                 // 拼接字符串读取配置变量值
-                sourceControllerService.conUrl = "${" + ComponentIdTypeEnum.DB_URL + dbId  + "}";
-                sourceControllerService.pwd = "${" + ComponentIdTypeEnum.DB_PASSWORD + dbId  + "}";
-                sourceControllerService.user = "${" + ComponentIdTypeEnum.DB_USERNAME + dbId  + "}";
+                sourceControllerService.conUrl = "${" + ComponentIdTypeEnum.DB_URL.getName() + dbId  + "}";
+                sourceControllerService.pwd = "${" + ComponentIdTypeEnum.DB_PASSWORD.getName() + dbId  + "}";
+                sourceControllerService.user = "${" + ComponentIdTypeEnum.DB_USERNAME.getName() + dbId  + "}";
 
                 sourceControllerService.name = dataSource.name;
                 sourceControllerService.enabled = true;
