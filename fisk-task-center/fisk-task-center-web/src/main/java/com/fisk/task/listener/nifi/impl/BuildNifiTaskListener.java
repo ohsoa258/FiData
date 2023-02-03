@@ -904,7 +904,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                     sourceRes.data = data;
                 } else {
                     // 统一数据源改造
-                    String componentId = saveDbconfig(buildNifiFlowDTO.targetDbId);
+                    String componentId = saveDbconfig(buildNifiFlowDTO.dataSourceDbId);
                     ControllerServiceEntity entity = new ControllerServiceEntity();
                     entity.setId(componentId);
                     sourceRes.data = entity;
