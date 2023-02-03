@@ -17,6 +17,7 @@ import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
+import com.fisk.dataaccess.dto.app.AppRegistrationInfoDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
@@ -299,4 +300,11 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      */
     List<MetaDataInstanceAttributeDTO> synchronizationAccessTable();
 
+    /**
+     * 依据应用id集合查询应用对应的目标源id集合
+     *
+     * @param appIds 应用id集合
+     * @return
+     */
+    List<AppRegistrationInfoDTO> getBatchTargetDbIdByAppIds(List<Integer> appIds);
 }

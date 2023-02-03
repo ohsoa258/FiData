@@ -13,6 +13,7 @@ import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.app.AppDriveTypeDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
+import com.fisk.dataaccess.dto.app.AppRegistrationInfoDTO;
 import com.fisk.dataaccess.dto.app.LogMessageFilterVO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.dataaccess.dto.dataops.TableInfoDTO;
@@ -382,4 +383,13 @@ public interface DataAccessClient {
     @ApiOperation(value = "元数据同步所有接入表")
     ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAccessTable();
 
+    /**
+     * 依据应用id集合批量查询目标源id集合
+     *
+     * @param appIds
+     * @return
+     */
+    @PostMapping("/appRegistration/getBatchTargetDbIdByAppIds")
+    @ApiOperation(value = "依据应用id集合查询目标源id集合")
+    ResultEntity<List<AppRegistrationInfoDTO>> getBatchTargetDbIdByAppIds(@RequestBody List<Integer> appIds);
 }

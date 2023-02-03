@@ -18,6 +18,7 @@ import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
+import com.fisk.dataaccess.dto.app.AppRegistrationInfoDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.impl.TableAccessImpl;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
@@ -337,4 +338,9 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.synchronizationAccessTable());
     }
 
+    @PostMapping("/getBatchTargetDbIdByAppIds")
+    @ApiOperation(value = "依据应用id集合查询目标源id集合")
+    public ResultEntity<List<AppRegistrationInfoDTO>> getBatchTargetDbIdByAppIds(@RequestBody List<Integer> appIds){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBatchTargetDbIdByAppIds(appIds));
+    }
 }

@@ -54,4 +54,14 @@ public class ModelPublishTableDTO {
      * 自定义脚本
      */
     public String customScript;
+
+    /**
+     * 目标源id
+     */
+    public Integer targetDbId;
+
+    /**
+     * 来源id
+     */
+    public Integer dataSourceDbId;
 }

@@ -9,6 +9,8 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.app.AppRegistrationInfoDTO;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.businessprocess.*;
@@ -98,6 +100,8 @@ public class BusinessProcessImpl
     CustomScriptImpl customScript;
     @Resource
     SyncModeMapper syncModeMapper;
+    @Resource
+    DataAccessClient dataAccessClient;
 
     @Override
     public IPage<BusinessProcessDTO> getBusinessProcessList(QueryDTO dto) {
@@ -221,6 +225,17 @@ public class BusinessProcessImpl
             List<SyncModePO> syncModePoList=syncModeMapper.selectList(syncModePoQueryWrapper);
             //发布历史添加数据
             addTableHistory(dto);
+
+            // 批量查询数据接入应用id对应的目标源id集合
+            List<Integer> appIds = factPoList.stream().map(FactPO::getAppId).collect(Collectors.toList());
+            List<AppRegistrationInfoDTO> targetDbIdList = new ArrayList<>();
+            try {
+                ResultEntity<List<AppRegistrationInfoDTO>> resultEntity = dataAccessClient.getBatchTargetDbIdByAppIds(appIds);
+                targetDbIdList = resultEntity.data;
+            }catch (Exception e){
+                throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+            }
+
             for (FactPO item : factPoList) {
                 // 封装的事实字段表集合
                 ModelPublishTableDTO pushDto = new ModelPublishTableDTO();
@@ -235,6 +250,12 @@ public class BusinessProcessImpl
 
                 //关联维度键脚本
                 pushDto.factUpdateSql = factAttribute.buildFactUpdateSql(Math.toIntExact(item.id));
+
+                // 关联建模数据来源id
+                AppRegistrationInfoDTO appDto = targetDbIdList.stream().filter(e -> e.getAppId() == item.appId).findFirst().orElse(null);
+                if (appDto != null){
+                    pushDto.dataSourceDbId = appDto.getTargetDbId();
+                }
 
                 //获取自定义脚本
                 CustomScriptQueryDTO customScriptDto = new CustomScriptQueryDTO();

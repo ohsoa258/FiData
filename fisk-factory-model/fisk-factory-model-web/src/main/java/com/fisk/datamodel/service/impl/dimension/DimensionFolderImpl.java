@@ -6,6 +6,8 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.app.AppRegistrationInfoDTO;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
@@ -21,6 +23,7 @@ import com.fisk.datamodel.entity.SyncModePO;
 import com.fisk.datamodel.entity.dimension.DimensionAttributePO;
 import com.fisk.datamodel.entity.dimension.DimensionFolderPO;
 import com.fisk.datamodel.entity.dimension.DimensionPO;
+import com.fisk.datamodel.entity.fact.FactPO;
 import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.enums.TableHistoryTypeEnum;
@@ -77,6 +80,8 @@ public class DimensionFolderImpl
     SyncModeMapper syncModeMapper;
     @Resource
     CustomScriptImpl customScript;
+    @Resource
+    DataAccessClient dataAccessClient;
 
     @Override
     public ResultEnum addDimensionFolder(DimensionFolderDTO dto) {
@@ -304,6 +309,16 @@ public class DimensionFolderImpl
             List<SyncModePO> syncModePoList=syncModeMapper.selectList(syncModePoQueryWrapper);
             //发布历史添加数据
             addTableHistory(dto);
+
+            // 批量查询数据接入应用id对应的目标源id集合
+            List<Integer> appIds = dimensionPoList.stream().map(DimensionPO::getAppId).collect(Collectors.toList());
+            List<AppRegistrationInfoDTO> targetDbIdList = new ArrayList<>();
+            try {
+                ResultEntity<List<AppRegistrationInfoDTO>> resultEntity = dataAccessClient.getBatchTargetDbIdByAppIds(appIds);
+                targetDbIdList = resultEntity.data;
+            }catch (Exception e){
+                throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+            }
             for (DimensionPO item : dimensionPoList) {
                 //拼接数据
                 ModelPublishTableDTO pushDto = new ModelPublishTableDTO();
@@ -318,6 +333,11 @@ public class DimensionFolderImpl
 
                 //获取维度键update语句
                 pushDto.factUpdateSql = dimensionAttribute.buildDimensionUpdateSql(Math.toIntExact(item.id));
+
+                AppRegistrationInfoDTO appDto = targetDbIdList.stream().filter(e -> e.getAppId() == item.getAppId()).findFirst().orElse(null);
+                if (appDto != null){
+                    pushDto.dataSourceDbId = appDto.getTargetDbId();
+                }
 
                 //获取自定义脚本
                 CustomScriptQueryDTO customScriptDto = new CustomScriptQueryDTO();

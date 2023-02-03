@@ -1822,6 +1822,32 @@ public class AppRegistrationImpl
     }
 
     /**
+     * 依据应用id集合查询应用对应的目标源id集合
+     *
+     * @param appIds 应用id集合
+     * @return
+     */
+    @Override
+    public List<AppRegistrationInfoDTO> getBatchTargetDbIdByAppIds(List<Integer> appIds) {
+        if (CollectionUtils.isEmpty(appIds)){
+            return null;
+        }
+
+        List<AppRegistrationInfoDTO> idList = new ArrayList<>();
+
+        List<AppRegistrationPO> appRegistrationPOList = mapper.selectBatchIds(appIds);
+        if (!CollectionUtils.isEmpty(appRegistrationPOList)){
+            idList = appRegistrationPOList.stream().map(e -> {
+                AppRegistrationInfoDTO item = new AppRegistrationInfoDTO();
+                item.setAppId(e.id);
+                item.setTargetDbId(e.targetDbId);
+                return item;
+            }).collect(Collectors.toList());
+        }
+        return idList;
+    }
+
+    /**
      * 获取实例元数据
      *
      * @param app
