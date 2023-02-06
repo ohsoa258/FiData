@@ -1,0 +1,32 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datagovernance.mapper.datasecurity.IntelligentDiscovery_LogsMapper">
+    <select id="filter"
+            resultType="com.fisk.datagovernance.vo.datasecurity.intelligentdiscovery.IntelligentDiscovery_LogsVO">
+        SELECT
+        id,
+        unique_id,
+        rule_id,
+        rule_name,
+        scan_reception_type_name,
+        scan_risk_count,
+        send_time,
+        send_result,
+        recipient_emails,
+        create_time,
+        create_user,
+        update_time,
+        update_user,
+        del_flag
+        FROM
+        tb_Intelligentdiscovery_logs
+        WHERE
+        del_flag = 1 AND rule_id=#{ruleId}
+        <if test="keyWord != null and keyWord != '' ">
+            AND (rule_name LIKE concat('%', #{keyWord}, '%')
+            OR send_time LIKE concat('%', #{keyWord}, '%')
+            OR send_result LIKE concat('%', #{keyWord}, '%'))
+        </if>
+    </select>
+</mapper>

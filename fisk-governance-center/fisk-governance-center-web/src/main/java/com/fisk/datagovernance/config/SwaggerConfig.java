@@ -38,6 +38,7 @@ public class SwaggerConfig {
     public static final String USER_GROUP_INFO = "user-group-info-controller";
     public static final String USER_GROUP_ASSIGNMENT = "user-group-assignment-controller";
     public static final String COLUMN_SECURITY_CONFIG = "column-security-config-controller\n";
+    public static final String INTELLIGENT_DISCOVERY = "intelligent-discovery-controller";
 
 
     @Bean
@@ -54,6 +55,7 @@ public class SwaggerConfig {
                 .tags(new Tag(TEMPLATE_CONTROLLER, "模板配置API"))
                 .tags(new Tag(DATA0PSLOG_CONTROLLER, "数据运维日志API"))
                 .tags(new Tag(DATA_QUALITY_CLIENT_CONTROLLER, "数据质量服务接口API"))
+                .tags(new Tag(INTELLIGENT_DISCOVERY, "数据安全-智能发现API"))
                 .tags(new Tag(TABLE_SECURITY_CONFIG_CONTROLLER, "表级安全API"))
                 .tags(new Tag(DATA_MASKING_CONFIG_CONTROLLER, "数据脱敏API"))
                 .tags(new Tag(ROW_SECURITY_CONFIG_CONTROLLER, "行级安全API"))

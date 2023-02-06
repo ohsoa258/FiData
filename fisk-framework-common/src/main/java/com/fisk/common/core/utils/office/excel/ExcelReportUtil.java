@@ -13,8 +13,10 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -58,7 +60,7 @@ public class ExcelReportUtil {
             fos = new FileOutputStream(filePath);
             workbook.write(fos);
         } catch (IOException e) {
-            log.error("质量报告生成异常，ex", e);
+            log.error("Excel生成异常，ex", e);
         } finally {
             try {
                 // 关闭输出流
@@ -66,7 +68,7 @@ public class ExcelReportUtil {
                     fos.close();
                 }
             } catch (IOException e) {
-                log.error("质量报告生成 流关闭失败，ex", e);
+                log.error("Excel生成异常 流关闭失败，ex", e);
             }
         }
     }
@@ -83,8 +85,7 @@ public class ExcelReportUtil {
      * @date 2022/8/11 10:52
      * @version v1.0
      */
-    public static void createSheet(XSSFWorkbook workbook, int sheetNum,
-                                   String sheetName, List<RowDto> headers, List<String> fields, List<List<DataDto>> result) {
+    public static void createSheet(XSSFWorkbook workbook, int sheetNum, String sheetName, List<RowDto> headers, List<String> fields, List<List<String>> result) {
         // 创建一个sheet
         XSSFSheet sheet = workbook.createSheet();
         workbook.setSheetName(sheetNum, sheetName);
@@ -129,12 +130,12 @@ public class ExcelReportUtil {
                 maxRowIndex++;
                 row = sheet.createRow(maxRowIndex);
                 row.setHeightInPoints(15);
-                List<DataDto> dataEntities = result.get(rowIndex);
+                List<String> dataEntities = result.get(rowIndex);
                 for (int cellIndex = 0; cellIndex < dataEntities.size(); cellIndex++) {
-                    DataDto dataEntity = dataEntities.get(cellIndex);
+                    String data = dataEntities.get(cellIndex);
                     cell = row.createCell(cellIndex);
                     cell.setCellStyle(style_data);
-                    cell.setCellValue(dataEntity.getFieldValue());
+                    cell.setCellValue(data);
                 }
             }
         }
@@ -233,5 +234,50 @@ public class ExcelReportUtil {
         RegionUtil.setBorderRight(HSSFCellStyle.BORDER_THIN, region, sheet, workbook); // 右边框
         RegionUtil.setBorderTop(HSSFCellStyle.BORDER_THIN, region, sheet, workbook); // 上边框
         sheet.addMergedRegion(region);
+    }
+
+    /**
+     * @param columnNameList 列名称
+     * @return void
+     * @description 读取Excel文件
+     * @author dick
+     * @date 2023/2/5 17:46
+     * @version v1.0
+     * @params absolutePath 文件绝对路径
+     */
+    public static List<HashMap<String, String>> readExcel(String absolutePath, List<String> columnNameList) {
+        List<HashMap<String, String>> mapList = new ArrayList<>();
+        XSSFWorkbook xssfWorkbook = null;
+        try {
+            //创建工作簿
+            xssfWorkbook = new XSSFWorkbook(new FileInputStream(absolutePath));
+            //读取第一个工作表
+            XSSFSheet sheet = xssfWorkbook.getSheetAt(0);
+            //获取最后一行的num，即总行数。此处从0开始计数
+            int maxRow = sheet.getLastRowNum();
+            if (maxRow > 1) {
+                for (int row = 1; row <= maxRow; row++) {
+                    HashMap<String, String> hashMap = new HashMap<>();
+                    int maxRol = sheet.getRow(row).getLastCellNum();
+                    for (int rol = 0; rol < maxRol; rol++) {
+                        String columnName = columnNameList.get(rol);
+                        String value = sheet.getRow(row).getCell(rol) != null ? sheet.getRow(row).getCell(rol).toString() : "";
+                        hashMap.put(columnName, value);
+                    }
+                    mapList.add(hashMap);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Excel读取异常，ex", e);
+        } finally {
+            try {
+                if (xssfWorkbook != null) {
+                    xssfWorkbook.close();
+                }
+            } catch (Exception e) {
+                log.error("Excel读取异常 流关闭失败，ex", e);
+            }
+        }
+        return mapList;
     }
 }

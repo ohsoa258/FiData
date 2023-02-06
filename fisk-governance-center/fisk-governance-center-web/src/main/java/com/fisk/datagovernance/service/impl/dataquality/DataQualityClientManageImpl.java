@@ -926,7 +926,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     public SheetDataDto resultSetToMap(DataSourceConVO dataSourceCon, String sql) {
         SheetDataDto sheetDataDto = new SheetDataDto();
         List<String> columnList = new ArrayList<>();
-        List<List<DataDto>> mapList = new ArrayList<>();
+        List<List<String>> mapList = new ArrayList<>();
         Statement st = null;
         Connection conn = null;
         try {
@@ -943,14 +943,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 columnList.add(metaData.getColumnLabel(columnIndex));
             }
             while (rs.next()) {
-                List<DataDto> objectMap = new ArrayList<>();
+                List<String> objectMap = new ArrayList<>();
                 for (int i = 1; i <= columnCount; i++) {
                     String columnName = metaData.getColumnLabel(i);
                     Object value = rs.getObject(columnName);
-                    DataDto dataDto = new DataDto();
-                    dataDto.setFieldName(columnName);
-                    dataDto.setFieldValue(value != null ? value.toString() : "");
-                    objectMap.add(dataDto);
+                    objectMap.add(value != null ? value.toString() : "");
                 }
                 mapList.add(objectMap);
             }
