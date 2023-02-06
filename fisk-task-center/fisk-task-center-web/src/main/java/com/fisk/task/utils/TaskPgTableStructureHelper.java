@@ -302,7 +302,7 @@ public class TaskPgTableStructureHelper
     private String subSql(String sql){
         String[] ds = sql.split("DECLARE");
         String[] d = ds[1].split("EXEC \\( @primary_key \\);");
-        return "DECLARE" + d[0] + "EXEC ( @primary_key );" + ds[0] + d[1];
+        return " DECLARE " + d[0] + " EXEC ( @primary_key ); " + ds[0] + d[1];
     }
 
     /**
