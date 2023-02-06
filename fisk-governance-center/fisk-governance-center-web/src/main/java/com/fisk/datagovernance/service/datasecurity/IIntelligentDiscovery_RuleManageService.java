@@ -42,7 +42,7 @@ public interface IIntelligentDiscovery_RuleManageService extends IService<Intell
 
     List<String> getNextCronExeTime(String cron);
 
-    ResultEnum collScan(int id);
+    ResultEntity<Object> createScanReport(int id);
 
     ResultEnum saveWhiteList(IntelligentDiscovery_WhiteListDTO dto);
 }

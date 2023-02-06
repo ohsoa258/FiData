@@ -278,16 +278,17 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         dataSourceDTO.setConPort(t.getConPort());
         dataSourceDTO.setConDbname(t.getConDbname());
         dataSourceDTO.setConType(DataSourceTypeEnum.getEnum(t.getConType()));
+        dataSourceDTO.setConTypeValue(t.getConType());
         dataSourceDTO.setConTypeName(DataSourceTypeEnum.getEnum(t.getConType()).getName());
         dataSourceDTO.setConAccount(t.getConAccount());
         dataSourceDTO.setPlatform(t.getPlatform());
         dataSourceDTO.setProtocol(t.getProtocol());
-        dataSourceDTO.setSourceType(t.getSourceType());
-        dataSourceDTO.setSourceBusinessType(SourceBusinessTypeEnum.getEnum(t.getSourceBusinessType()));
-        dataSourceDTO.setSourceBusinessTypeValue(t.getSourceBusinessType());
+        dataSourceDTO.setServiceType(t.getServiceType());
         dataSourceDTO.setServiceName(t.getServiceName());
         dataSourceDTO.setDomainName(t.getDomainName());
         dataSourceDTO.setSourceType(t.getSourceType());
+        dataSourceDTO.setSourceBusinessType(SourceBusinessTypeEnum.getEnum(t.getSourceBusinessType()));
+        dataSourceDTO.setSourceBusinessTypeValue(t.getSourceBusinessType());
         dataSourceDTO.setPurpose(t.getPurpose());
         dataSourceDTO.setPrincipal(t.getPrincipal());
         if (isShowPwd) {

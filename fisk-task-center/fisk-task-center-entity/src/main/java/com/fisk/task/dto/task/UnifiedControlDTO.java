@@ -26,7 +26,8 @@ public class UnifiedControlDTO extends MQBaseDTO {
     public String scheduleExpression;
     /**
      * topic
-     * 数据质量  BUILD_GOVERNANCE_TEMPLATE_FLOW
+     * 数据质量-质量报告  BUILD_GOVERNANCE_TEMPLATE_FLOW
+     * 数据安全-智能发现报告  BUILD_DATA_SECURITY_INTELLIGENT_DISCOVERY_FLOW
      */
     public String topic;
     /**
