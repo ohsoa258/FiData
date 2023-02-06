@@ -56,6 +56,7 @@ public enum ResultEnum {
     USERNAME_EXISTS(1030, "用户名不能重复"),
     SYSTEM_TITLE_NULL(1031, "系统名称不能为空"),
     SYSTEM_LOGO_NULL(1032, "系统logo文件不能为空"),
+    SYSTEM_LOGO_ERROR(1033, "系统logo获取出错"),
 
     /**
      * 报表可视化服务，错误码从2000开始

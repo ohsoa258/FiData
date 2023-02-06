@@ -2,7 +2,7 @@ package com.fisk.system.service;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.system.entity.SystemLogoInfoDTO;
+import com.fisk.system.dto.SystemLogoInfoDTO;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -17,11 +17,11 @@ public interface SystemLogoInfoService {
     /**
      * 存储系统logo及系统名称
      *
-     * @param title
+     * @param systemLogoInfoDTO
      * @param file
      * @return
      */
-    ResultEnum saveLogoInfo(String title, MultipartFile file);
+    ResultEnum saveLogoInfo(SystemLogoInfoDTO systemLogoInfoDTO, MultipartFile file);
 
     /**
      * 获取系统logo及系统名称

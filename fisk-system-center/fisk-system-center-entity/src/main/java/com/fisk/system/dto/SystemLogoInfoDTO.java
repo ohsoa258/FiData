@@ -1,4 +1,4 @@
-package com.fisk.system.entity;
+package com.fisk.system.dto;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -13,9 +13,17 @@ import javax.validation.constraints.Positive;
 @Data
 public class SystemLogoInfoDTO {
 
-    @NotNull(message = "id不能为空")
-    @Positive(message = "id必须大于0")
     private Integer id;
 
     private String title;
+
+    private String logo;
+
+    private String color;
+
+    private String size;
+
+    private String fontFamily;
+
+    private Boolean overStriking;
 }

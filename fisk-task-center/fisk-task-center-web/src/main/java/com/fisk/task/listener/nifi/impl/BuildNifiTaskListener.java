@@ -344,9 +344,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 sourceControllerService.driverName = dataSource.conType.getDriverName();
 
                 // 拼接字符串读取配置变量值
-                sourceControllerService.conUrl = "${" + ComponentIdTypeEnum.DB_URL + dbId  + "}";
-                sourceControllerService.pwd = "${" + ComponentIdTypeEnum.DB_PASSWORD + dbId  + "}";
-                sourceControllerService.user = "${" + ComponentIdTypeEnum.DB_USERNAME + dbId  + "}";
+                sourceControllerService.conUrl = "${" + ComponentIdTypeEnum.DB_URL.getName() + dbId  + "}";
+                sourceControllerService.pwd = "${" + ComponentIdTypeEnum.DB_PASSWORD.getName() + dbId  + "}";
+                sourceControllerService.user = "${" + ComponentIdTypeEnum.DB_USERNAME.getName() + dbId  + "}";
 
                 sourceControllerService.name = dataSource.name;
                 sourceControllerService.enabled = true;
@@ -904,7 +904,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                     sourceRes.data = data;
                 } else {
                     // 统一数据源改造
-                    String componentId = saveDbconfig(buildNifiFlowDTO.targetDbId);
+                    String componentId = saveDbconfig(buildNifiFlowDTO.dataSourceDbId);
                     ControllerServiceEntity entity = new ControllerServiceEntity();
                     entity.setId(componentId);
                     sourceRes.data = entity;

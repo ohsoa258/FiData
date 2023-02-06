@@ -4,17 +4,15 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.system.config.SwaggerConfig;
-import com.fisk.system.entity.SystemLogoInfoDTO;
+import com.fisk.system.dto.SystemLogoInfoDTO;
 import com.fisk.system.service.SystemLogoInfoService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import javax.validation.Valid;
 
 /**
  * @author SongJianJian
@@ -31,7 +29,7 @@ public class SystemLogoInfoController {
     /**
      * 新增系统logo及系统名称
      *
-     * @param title
+     * @param systemLogoInfoDTO
      * @param file
      * @return
      */
@@ -39,8 +37,8 @@ public class SystemLogoInfoController {
     @PostMapping("/saveLogoInfo")
     @ControllerAOPConfig(printParams = false)
     @ResponseBody
-    public ResultEntity<Object> saveLogoInfo(String title, @RequestParam(value = "file", required = true) MultipartFile file) {
-        return ResultEntityBuild.build(systemLogoService.saveLogoInfo(title, file));
+    public ResultEntity<Object> saveLogoInfo(SystemLogoInfoDTO systemLogoInfoDTO, @RequestParam(value = "file", required = true) MultipartFile file) {
+        return ResultEntityBuild.build(systemLogoService.saveLogoInfo(systemLogoInfoDTO, file));
     }
 
     /**
@@ -51,10 +49,10 @@ public class SystemLogoInfoController {
      * @return
      */
     @ApiOperation("更新系统logo或title")
-    @PostMapping("/updateLogoInfo")
+    @PutMapping("/updateLogoInfo")
     @ControllerAOPConfig(printParams = false)
     @ResponseBody
-    public ResultEntity<Object> updateLogoInfo(@Valid SystemLogoInfoDTO systemLogoInfoDTO, @RequestParam(value = "file", required = false) MultipartFile file) {
+    public ResultEntity<Object> updateLogoInfo(SystemLogoInfoDTO systemLogoInfoDTO, @RequestParam(value = "file", required = false) MultipartFile file) {
         return ResultEntityBuild.build(systemLogoService.updateLogoInfo(systemLogoInfoDTO, file));
     }
 
