@@ -74,4 +74,8 @@ public class DimensionPO extends BasePO {
      * 数据接入数据来源库id
      */
     public Integer dataSourceId;
+    /**
+     * 临时表名称
+     */
+    public String prefixTempName;
 }

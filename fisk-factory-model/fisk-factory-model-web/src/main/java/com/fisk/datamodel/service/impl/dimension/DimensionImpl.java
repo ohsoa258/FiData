@@ -33,6 +33,7 @@ import com.fisk.datamodel.entity.dimension.DimensionPO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
 import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
+import com.fisk.datamodel.enums.PrefixTempNameEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.dimension.DimensionMap;
 import com.fisk.datamodel.mapper.dimension.DimensionAttributeMapper;
@@ -119,6 +120,8 @@ public class DimensionImpl
             //生成物理表以及插入数据
             editDateDimension(dto, dto.dimensionTabName);
         }
+        // 设置临时表名称
+        model.setPrefixTempName(PrefixTempNameEnum.DIMENSION_TEMP_NAME.getName());
         int flat = mapper.insert(model);
         if (flat > 0 && dto.timeTable) {
             return addTimeTableAttribute(dto);
