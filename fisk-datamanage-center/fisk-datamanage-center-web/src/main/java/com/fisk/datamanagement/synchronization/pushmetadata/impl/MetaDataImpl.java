@@ -18,7 +18,7 @@ import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceFieldDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
-import com.fisk.datagovernance.client.DataQualityClient;
+import com.fisk.datagovernance.client.DataGovernanceClient;
 import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDelAssociatedEntityDTO;
@@ -86,7 +86,7 @@ public class MetaDataImpl implements IMetaData {
     @Resource
     DataModelClient dataModelClient;
     @Resource
-    DataQualityClient dataQualityClient;
+    DataGovernanceClient dataQualityClient;
 
     @Value("${atlas.entity}")
     private String entity;

@@ -54,7 +54,7 @@ import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
-import com.fisk.datagovernance.client.DataQualityClient;
+import com.fisk.datagovernance.client.DataGovernanceClient;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckWebDTO;
 import com.fisk.datagovernance.enums.dataquality.CheckRuleEnum;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
@@ -140,7 +140,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     @Value("${dataservice.pdf.prd_address}")
     private String pdf_prd_address;
     @Resource
-    private DataQualityClient dataQualityClient;
+    private DataGovernanceClient dataQualityClient;
     @Value("${data-quality-check.ip}")
     private String dataQualityCheckIp;
     @Value("${data-quality-check.db-name}")

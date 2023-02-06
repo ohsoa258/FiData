@@ -13,7 +13,7 @@ import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.listener.doris.BuildDorisTaskListener;
-import com.fisk.task.listener.governance.BuildQualityReportListener;
+import com.fisk.task.listener.governance.BuildGovernanceReportListener;
 import com.fisk.task.listener.mdm.BuildModelListener;
 import com.fisk.task.listener.metadata.IMetaDataListener;
 import com.fisk.task.listener.nifi.IExecScriptListener;
@@ -108,7 +108,7 @@ public class KafkaConsumer {
     @Resource
     IMetaDataListener metaDataListener;
     @Resource
-    BuildQualityReportListener qualityReportListener;
+    BuildGovernanceReportListener governanceReportListener;
     @Resource
     IExecScriptListener iExecScriptListener;
     @Resource
@@ -398,8 +398,23 @@ public class KafkaConsumer {
     //@MQConsumerLog
     public void buildQualityReportTaskListener(String dataInfo, Acknowledgment acke) {
         // 数据质量--质量报告 消费类
-        qualityReportListener.msg(dataInfo, acke);
+        governanceReportListener.dataQuality_QualityReport_Msg(dataInfo, acke);
     }
+
+    /**
+     * task.build.security.intelligent.discovery.flow
+     *
+     * @param dataInfo
+     * @param acke
+     */
+    @KafkaListener(topics = MqConstants.QueueConstants.DataSecurityTopicConstants.BUILD_DATA_SECURITY_INTELLIGENT_DISCOVERY_FLOW, containerFactory = "batchFactory",
+            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    //@MQConsumerLog
+    public void buildDataSecurityIntelligentDiscoveryReportTaskListener(String dataInfo, Acknowledgment acke) {
+        // 数据安全--智能发现报告 消费类
+        governanceReportListener.dataSecurity_IntelligentDiscoveryReport_Msg(dataInfo, acke);
+    }
+
 
     /**
      * pipeline.supervision
