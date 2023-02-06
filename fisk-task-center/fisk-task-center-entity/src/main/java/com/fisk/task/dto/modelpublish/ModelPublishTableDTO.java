@@ -64,4 +64,9 @@ public class ModelPublishTableDTO {
      * 来源id
      */
     public Integer dataSourceDbId;
+
+    /**
+     * 临时表名称
+     */
+    public String prefixTempName;
 }

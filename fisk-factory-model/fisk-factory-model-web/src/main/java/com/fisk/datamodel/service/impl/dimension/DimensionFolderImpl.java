@@ -354,6 +354,9 @@ public class DimensionFolderImpl
                 // 设置目标dw库id
                 pushDto.setTargetDbId(targetDbId);
 
+                // 设置维度表临时表名称
+                pushDto.setPrefixTempName(item.getPrefixTempName() + "_");
+
                 //获取自定义脚本
                 CustomScriptQueryDTO customScriptDto = new CustomScriptQueryDTO();
                 customScriptDto.type = 1;

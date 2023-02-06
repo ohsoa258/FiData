@@ -53,5 +53,9 @@ public class FactPO extends BasePO {
      * 数据建模数据来源库id
      */
     public Integer dataSourceId;
+    /**
+     * 临时表名称前缀
+     */
+    public String prefixTempName;
 
 }

@@ -31,6 +31,7 @@ import com.fisk.datamodel.entity.fact.FactAttributePO;
 import com.fisk.datamodel.entity.fact.FactPO;
 import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import com.fisk.datamodel.enums.FactAttributeEnum;
+import com.fisk.datamodel.enums.PrefixTempNameEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.fact.FactAttributeMap;
 import com.fisk.datamodel.map.fact.FactMap;
@@ -98,6 +99,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             return ResultEnum.FACT_EXIST;
         }
         FactPO model = FactMap.INSTANCES.dtoToPo(dto);
+        model.setPrefixTempName(PrefixTempNameEnum.DIMENSION_TEMP_NAME.getName());
         return mapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 

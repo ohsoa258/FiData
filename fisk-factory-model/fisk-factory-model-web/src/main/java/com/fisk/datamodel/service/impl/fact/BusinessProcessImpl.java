@@ -266,6 +266,9 @@ public class BusinessProcessImpl
                  */
                 pushDto.setDataSourceDbId(item.dataSourceId);
 
+                // 设置临时表名称前缀
+                pushDto.setPrefixTempName(item.prefixTempName + "_");
+
                 // 关联目标dw库id
                 pushDto.setTargetDbId(targetDbId);
 
