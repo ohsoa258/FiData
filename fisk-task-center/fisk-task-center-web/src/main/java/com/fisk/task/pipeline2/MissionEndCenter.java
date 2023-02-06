@@ -165,6 +165,7 @@ public class MissionEndCenter {
                         Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId);
                         boolean success = true;
                         boolean ifNext = true;
+                        Long jobId = 0L;
                         Iterator<Map.Entry<Object, Object>> nodeMap = hmget.entrySet().iterator();
                         while (nodeMap.hasNext()) {
                             Map.Entry<Object, Object> next = nodeMap.next();
@@ -174,6 +175,7 @@ public class MissionEndCenter {
                             }
                             if (!jobHierarchy.jobProcessed) {
                                 ifNext = false;
+                                jobId = jobHierarchy.id;
                                 break;
                             }
                         }
@@ -203,6 +205,8 @@ public class MissionEndCenter {
                                 }
                             }
                             iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
+                        } else {
+                            log.info("管道尚未结束:jobId:{}", jobId);
                         }
                     }
                 } else if (split.length == 6) {

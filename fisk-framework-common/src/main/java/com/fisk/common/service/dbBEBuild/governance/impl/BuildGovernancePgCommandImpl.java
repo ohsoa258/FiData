@@ -1,13 +1,12 @@
 package com.fisk.common.service.dbBEBuild.governance.impl;
 
 import com.fisk.common.service.dbBEBuild.governance.IBuildGovernanceSqlCommand;
+import com.fisk.common.service.dbBEBuild.governance.dto.KeyValueMapDto;
 import com.google.common.base.Joiner;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author dick
@@ -96,6 +95,164 @@ public class BuildGovernancePgCommandImpl implements IBuildGovernanceSqlCommand 
         str.append(" WHERE 1=1 ");
         str.append(editConditions);
         return str.toString();
+    }
+
+    @Override
+    public String buildQuerySchemaSql() {
+        String sql = "SELECT\n" +
+                "\tschemata.\"schema_name\" AS schemaname \n" +
+                "FROM\n" +
+                "\tinformation_schema.schemata AS schemata\n" +
+                "\tLEFT JOIN pg_tables tables ON schemata.\"schema_name\" = tables.schemaname \n" +
+                "WHERE\n" +
+                "\ttables.tablename IS NOT NULL \n" +
+                "\tAND tables.tablename <> '' \n" +
+                "\tAND schemata.\"schema_name\" NOT IN ( 'pg_catalog', 'information_schema' ) \n" +
+                "GROUP BY\n" +
+                "\t\"schema_name\" \n" +
+                "ORDER BY\n" +
+                "\t\"schema_name\"";
+        return sql;
+    }
+
+    @Override
+    public String buildQuerySchema_TableSql(List<String> schemaList) {
+        String sql = "";
+        if (CollectionUtils.isEmpty(schemaList)) {
+            return sql;
+        }
+        String schemaParams = "'" + StringUtils.join(schemaList, "','") + "'".toLowerCase();
+        sql = String.format("SELECT\n" +
+                "\ttable_schema AS \"schema\",\n" +
+                "\tTABLE_NAME AS tablename \n" +
+                "FROM\n" +
+                "\tinformation_schema.COLUMNS sc \n" +
+                "WHERE\n" +
+                "-- PG SQL区分大小写，转小写查询\n" +
+                "\tLOWER ( table_schema ) IN ( %s )\n" +
+                "\t\n" +
+                "GROUP BY\n" +
+                "\ttable_schema,\n" +
+                "TABLE_NAME \n" +
+                "ORDER BY\n" +
+                "\t\"schema\",\n" +
+                "\ttablename", schemaParams);
+        return sql;
+    }
+
+    @Override
+    public String buildQuerySchema_Table_FieldSql(List<String> schemaList, List<String> tableNameList,
+                                                  List<KeyValueMapDto> fieldNameList) {
+        String sql = "";
+        if (CollectionUtils.isEmpty(schemaList)) {
+            return sql;
+        }
+        String schemaParams = "'" + StringUtils.join(schemaList, "','") + "'".toLowerCase();
+
+        String tableParamsSql = "";
+        if (CollectionUtils.isNotEmpty(tableNameList)) {
+            String tableParams = "'" + StringUtils.join(tableNameList, "','") + "'".toLowerCase();
+            tableParamsSql = String.format("\t\t\t\tAND LOWER ( TABLE_NAME ) IN ( %s )\n", tableParams);
+        }
+
+        String fieldParamsSql = "";
+        if (CollectionUtils.isNotEmpty(fieldNameList)) {
+            String fieldParams = "";
+            for (KeyValueMapDto item : fieldNameList) {
+                // 字段名称为空则跳过，数据库表字段也不允许为空
+                if (item.getKey() == null || StringUtils.isEmpty(item.getKey().toString())
+                        || item.getValue() == null || StringUtils.isEmpty(item.getValue().toString())) {
+                    continue;
+                }
+                String operator = item.getKey().toString();
+                String value = item.getValue().toString().toLowerCase();
+                if (operator.equals("等于")) {
+                    fieldParams += " LOWER ( COLUMN_NAME ) = '" + value + "' OR";
+                } else if (operator.contains("包含")) {
+                    fieldParams += " COLUMN_NAME ILIKE '%" + value + "%' OR";
+                }
+            }
+            if (StringUtils.isNotEmpty(fieldParams)) {
+                fieldParams = fieldParams.substring(0, fieldParams.length() - 2);
+                fieldParamsSql = "\t\t\t\tAND ( " + fieldParams + " )\n";
+            }
+        }
+
+        sql = String.format("SELECT\n" +
+                "\t* \n" +
+                "FROM\n" +
+                "\t(\n" +
+                "\tSELECT\n" +
+                "\t\ttable_schema AS \"schema\",-- 模式\n" +
+                "\t\tTABLE_NAME AS tablename,-- 表名称\n" +
+                "\t\tCOLUMN_NAME AS fieldName,-- 字段名称\n" +
+                "\t\tudt_name AS fieldtype,-- 字段类型\n" +
+                "\t\tCOALESCE ( character_maximum_length, numeric_precision,- 1 ) AS fieldlength,-- 字段长度\n" +
+                "\t\t(\n" +
+                "\t\tSELECT\n" +
+                "\t\t\tpg_catalog.col_description ( C.oid, sc.ordinal_position :: INT ) \n" +
+                "\t\tFROM\n" +
+                "\t\t\tpg_catalog.pg_class C \n" +
+                "\t\tWHERE\n" +
+                "\t\t\tC.oid = ( SELECT ( '\"' || sc.TABLE_NAME || '\"' ) :: REGCLASS :: OID ) \n" +
+                "\t\t\tAND C.relname = sc.TABLE_NAME \n" +
+                "\t\t) AS fieldcomment,-- 字段注释\n" +
+                "\t\t(\n" +
+                "\t\tCASE\n" +
+                "\t\t\t\t\n" +
+                "\t\t\t\tWHEN (\n" +
+                "\t\t\t\tSELECT COUNT\n" +
+                "\t\t\t\t\t( pg_constraint.* ) \n" +
+                "\t\t\t\tFROM\n" +
+                "\t\t\t\t\tpg_constraint\n" +
+                "\t\t\t\t\tINNER JOIN pg_class ON pg_constraint.conrelid = pg_class.oid\n" +
+                "\t\t\t\t\tINNER JOIN pg_attribute ON pg_attribute.attrelid = pg_class.oid \n" +
+                "\t\t\t\t\tAND pg_attribute.attnum = ANY ( pg_constraint.conkey )\n" +
+                "\t\t\t\t\tINNER JOIN pg_type ON pg_type.oid = pg_attribute.atttypid \n" +
+                "\t\t\t\tWHERE\n" +
+                "\t\t\t\t\tpg_class.relname = sc.TABLE_NAME \n" +
+                "\t\t\t\t\tAND pg_constraint.contype = 'p' \n" +
+                "\t\t\t\t\tAND pg_attribute.attname = sc.COLUMN_NAME \n" +
+                "\t\t\t\t\t) > 0 THEN\n" +
+                "\t\t\t\t\t'YES' ELSE'NO' \n" +
+                "\t\t\t\tEND \n" +
+                "\t\t\t\t) AS fieldIsPrimaryKey,-- 是否是主键\n" +
+                "\t\t\tCASE\n" +
+                "\t\t\t\t\t\n" +
+                "\t\t\t\t\tWHEN column_default = '''''::character varying' THEN\n" +
+                "\t\t\t\t\t'Empty String' \n" +
+                "\t\t\t\t\tWHEN column_default = 'NULL::character varying' THEN\n" +
+                "\t\t\t\t\t'NULL' ELSE COALESCE ( NULLIF ( TRIM ( column_default ), '' ), '' ) \n" +
+                "\t\t\t\tEND AS fielddefaultvalue,-- 字段默认值\n" +
+                "\t\t\t\tis_nullable AS fieldisallownull -- 字段是否允许为空\n" +
+                "\t\t\t\t\n" +
+                "\t\t\tFROM\n" +
+                "\t\t\t\tinformation_schema.COLUMNS sc \n" +
+                "\t\t\tWHERE\n" +
+                "-- schema查询条件，在PGSQL中区分大小写\n" +
+                "\t\t\t\tLOWER ( table_schema ) IN ( %s )\n" +
+                "\t\t\t\t\n" +
+                "-- table查询条件，在PGSQL中区分大小写\n" +
+                "%s" +
+                "\t\t\t\t\n" +
+                "-- field查询条件，在PGSQL中区分大小写，ILIKE PGSQL独有语法，不区分大小写\n" +
+                "%s" +
+                "\t\t\t\t\n" +
+                "\t\t\t) T \n" +
+                "\t\tGROUP BY\n" +
+                "\t\t\t\"schema\",\n" +
+                "\t\t\ttablename,\n" +
+                "\t\t\tfieldName,\n" +
+                "\t\t\tfieldcommen,\n" +
+                "\t\t\tfieldtype,\n" +
+                "\t\t\tfieldlength,\n" +
+                "\t\t\tisprimarykey,\n" +
+                "\t\t\tfielddefaultvalue,\n" +
+                "\t\t\tfieldisallownull \n" +
+                "\t\tORDER BY\n" +
+                "\t\t\"schema\",\n" +
+                "\ttablename", schemaParams, tableParamsSql, fieldParamsSql);
+        return sql;
     }
 
     /**

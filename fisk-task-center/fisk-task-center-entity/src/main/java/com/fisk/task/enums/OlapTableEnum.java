@@ -31,8 +31,8 @@ public enum OlapTableEnum implements BaseEnum {
     GOVERNANCE(12, "数据质量"),
     CUSTOMIZESCRIPT(13,"自定义脚本任务"),
     SFTPFILECOPYTASK(14,"SFTP文件复制"),
-    DATASERVICES(15,"数据服务表")
-    ;
+    DATASERVICES(15,"数据服务表"),
+    DATASECURITY(16, "数据安全");
 
 
     OlapTableEnum(int value, String name) {
@@ -75,6 +75,8 @@ public enum OlapTableEnum implements BaseEnum {
                 return CUSTOMIZESCRIPT;
             case 14:
                 return SFTPFILECOPYTASK;
+            case 16:
+                return DATASECURITY;
             default:
                 return null;
         }

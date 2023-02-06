@@ -129,7 +129,15 @@ public class BuildDataModelDorisTableListener
         try {
             ModelPublishDataDTO inpData = JSON.parseObject(dataInfo, ModelPublishDataDTO.class);
             List<ModelPublishTableDTO> dimensionList = inpData.dimensionList;
-
+            ResultEntity<DataSourceDTO> DataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+            DataSourceTypeEnum conType = null;
+            if (DataSource.code == ResultEnum.SUCCESS.getCode()) {
+                DataSourceDTO dataSource = DataSource.data;
+                conType = dataSource.conType;
+            } else {
+                log.error("userclient无法查询到ods库的连接信息");
+                throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+            }
             for (ModelPublishTableDTO modelPublishTableDTO : dimensionList) {
                 id = Math.toIntExact(modelPublishTableDTO.tableId);
                 tableType = modelPublishTableDTO.createType;
@@ -138,7 +146,7 @@ public class BuildDataModelDorisTableListener
                 DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
                 Calendar calendar = Calendar.getInstance();
                 String version = df.format(calendar.getTime());
-                ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO, version, DataSourceTypeEnum.POSTGRESQL);
+                ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO, version, conType);
                 if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
                     taskPgTableStructureMapper.updatevalidVersion(version);
                     throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);

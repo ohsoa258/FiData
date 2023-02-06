@@ -1,6 +1,7 @@
 package com.fisk.common.service.dbBEBuild.governance.impl;
 
 import com.fisk.common.service.dbBEBuild.governance.IBuildGovernanceSqlCommand;
+import com.fisk.common.service.dbBEBuild.governance.dto.KeyValueMapDto;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
 
@@ -71,6 +72,21 @@ public class BuildGovernanceMySqlCommandImpl implements IBuildGovernanceSqlComma
         str.append(" WHERE 1=1 ");
         str.append(editConditions);
         return str.toString();
+    }
+
+    @Override
+    public String buildQuerySchemaSql() {
+        return null;
+    }
+
+    @Override
+    public String buildQuerySchema_TableSql(List<String> schemaList) {
+        return null;
+    }
+
+    @Override
+    public String buildQuerySchema_Table_FieldSql(List<String> schemaList, List<String> tableNameList, List<KeyValueMapDto> fieldNameList) {
+        return null;
     }
 
     /**

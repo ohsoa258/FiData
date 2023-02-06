@@ -162,9 +162,9 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        if (model.getSourceType() == 1) {
-            return ResultEnum.SYSTEM_DATA_SOURCE_NOT_OPERATION;
-        }
+//        if (model.getSourceType() == 1) {
+//            return ResultEnum.SYSTEM_DATA_SOURCE_NOT_OPERATION;
+//        }
         return baseMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.DELETE_ERROR;
     }
 

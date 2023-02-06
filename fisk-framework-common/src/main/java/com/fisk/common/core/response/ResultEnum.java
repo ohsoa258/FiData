@@ -54,6 +54,9 @@ public enum ResultEnum {
     SQL_PARSING(1028, "sql解析失败"),
     COPY_ERROR(1029, "拷贝失败"),
     USERNAME_EXISTS(1030, "用户名不能重复"),
+    SYSTEM_TITLE_NULL(1031, "系统名称不能为空"),
+    SYSTEM_LOGO_NULL(1032, "系统logo文件不能为空"),
+    SYSTEM_LOGO_ERROR(1033, "系统logo获取出错"),
 
     /**
      * 报表可视化服务，错误码从2000开始
@@ -293,7 +296,14 @@ public enum ResultEnum {
     FIELD_NAME_IS_SELECTED(12001, "当前字段已被设置,请重新选择"),
     ROW_SECURITYNAME_EXISTS(12002, "当前权限名称已存在"),
     USERGROUP_PERMISSION_ONLY(12003, "用户(组)已设置过权限,不允许设置两种,请检查参数"),
-    CAN_NOT_DELETE_NAME_OR_CODE(12003,"无法删除“name”或“code”"),
+    CAN_NOT_DELETE_NAME_OR_CODE(12004,"无法删除“name”或“code”"),
+    INTELLIGENT_DISCOVERY_RULE_NAME_ALREADY_EXISTS(12005,"智能发现规则名称已存在"),
+    INTELLIGENT_DISCOVERY_CONFIGURATION_DOES_NOT_EXIST(12006,"智能发现配置不存在"),
+    INTELLIGENT_DISCOVERY_SCAN_CONFIGURATION_DOES_NOT_EXIST(12007,"智能发现扫描配置不存在"),
+    INTELLIGENT_DISCOVERY_NO_RISK_FIELDS_FOUND(12008,"智能发现未发现风险信息"),
+    THE_MAIL_SERVER_DOES_NOT_EXIST(12009,"邮件服务器不存在"),
+    SMART_DISCOVERY_REPORT_FAILED_TO_GENERATE_ATTACHMENT(12010,"智能发现报告生成失败"),
+    FILE_DOES_NOT_EXIST(12011,"文件不存在"),
 
     /**
      * 元数据

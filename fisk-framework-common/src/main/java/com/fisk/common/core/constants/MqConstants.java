@@ -100,6 +100,11 @@ public class MqConstants {
             public static final String BUILD_GOVERNANCE_TEMPLATE_FLOW = "task.build.governance.template.flow";
         }
 
+        public static final class DataSecurityTopicConstants{
+
+            public static final String BUILD_DATA_SECURITY_INTELLIGENT_DISCOVERY_FLOW = "task.build.security.intelligent.discovery.flow";
+        }
+
         public static final class DispatchTopicConstants{
 
             public static final String BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW = "task.build.nifi.dispatch.flow";

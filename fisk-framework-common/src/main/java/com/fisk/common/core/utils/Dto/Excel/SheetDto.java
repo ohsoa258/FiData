@@ -22,5 +22,5 @@ public class SheetDto {
     public List<String> singFields;
 
     // 数据行
-    public List<List<DataDto>> dataRows;
+    public List<List<String>> dataRows;
 }

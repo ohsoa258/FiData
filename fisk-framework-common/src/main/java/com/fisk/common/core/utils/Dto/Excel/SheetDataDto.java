@@ -14,5 +14,5 @@ import java.util.List;
 public class SheetDataDto {
     public List<String> columns;
 
-    public List<List<DataDto>> columnData;
+    public List<List<String>> columnData;
 }
