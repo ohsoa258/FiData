@@ -230,7 +230,8 @@ public class BusinessProcessImpl
             //发布历史添加数据
             addTableHistory(dto);
 
-            // 批量查询数据接入应用id对应的目标源id集合
+            /*
+            // 批量查询数据接入应用id对应的目标源id集合——应用appId修改为dataSourceId后，该段代码暂时不用
             List<Integer> appIds = factPoList.stream().map(FactPO::getAppId).collect(Collectors.toList());
             List<AppRegistrationInfoDTO> targetDbIdList = new ArrayList<>();
             try {
@@ -239,6 +240,7 @@ public class BusinessProcessImpl
             }catch (Exception e){
                 throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
             }
+             */
 
             for (FactPO item : factPoList) {
                 // 封装的事实字段表集合
@@ -255,11 +257,14 @@ public class BusinessProcessImpl
                 //关联维度键脚本
                 pushDto.factUpdateSql = factAttribute.buildFactUpdateSql(Math.toIntExact(item.id));
 
-                // 关联建模数据来源id
+                /*
+                // 关联建模数据来源id——应用appId修改为dataSourceId后，该段代码暂时不用
                 AppRegistrationInfoDTO appDto = targetDbIdList.stream().filter(e -> e.getAppId() == item.appId).findFirst().orElse(null);
                 if (appDto != null){
                     pushDto.dataSourceDbId = appDto.getTargetDbId();
                 }
+                 */
+                pushDto.setDataSourceDbId(item.dataSourceId);
 
                 // 关联目标dw库id
                 pushDto.setTargetDbId(targetDbId);

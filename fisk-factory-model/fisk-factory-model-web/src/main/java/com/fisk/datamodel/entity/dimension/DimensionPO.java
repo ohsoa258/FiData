@@ -68,5 +68,10 @@ public class DimensionPO extends BasePO {
     /**
      * 数据接入应用id
      */
-    public Integer appId;
+    // public Integer appId;
+
+    /**
+     * 数据接入数据来源库id
+     */
+    public Integer dataSourceId;
 }

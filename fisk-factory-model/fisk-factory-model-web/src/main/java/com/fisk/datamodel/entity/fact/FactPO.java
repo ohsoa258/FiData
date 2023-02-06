@@ -47,6 +47,11 @@ public class FactPO extends BasePO {
     /**
      * 数据接入应用id
      */
-    public int appId;
+    // public int appId;
+
+    /**
+     * 数据建模数据来源库id
+     */
+    public Integer dataSourceId;
 
 }

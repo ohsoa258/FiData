@@ -204,7 +204,7 @@ public class DimensionAttributeImpl
         }
         //获取sql脚本
         data.sqlScript = dimensionPo.sqlScript;
-        data.appId = dimensionPo.appId;
+        data.dataSourceId = dimensionPo.dataSourceId;
         //获取表字段详情
         QueryWrapper<DimensionAttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId, dimensionId);

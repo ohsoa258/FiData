@@ -314,7 +314,8 @@ public class DimensionFolderImpl
             //发布历史添加数据
             addTableHistory(dto);
 
-            // 批量查询数据接入应用id对应的目标源id集合
+            /*
+            // 批量查询数据接入应用id对应的目标源id集合——应用appId修改为dataSourceId后，该段代码暂时不用
             List<Integer> appIds = dimensionPoList.stream().map(DimensionPO::getAppId).collect(Collectors.toList());
             List<AppRegistrationInfoDTO> targetDbIdList = new ArrayList<>();
             try {
@@ -323,6 +324,8 @@ public class DimensionFolderImpl
             }catch (Exception e){
                 throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
             }
+             */
+
             for (DimensionPO item : dimensionPoList) {
                 //拼接数据
                 ModelPublishTableDTO pushDto = new ModelPublishTableDTO();
@@ -338,11 +341,14 @@ public class DimensionFolderImpl
                 //获取维度键update语句
                 pushDto.factUpdateSql = dimensionAttribute.buildDimensionUpdateSql(Math.toIntExact(item.id));
 
-                // 设置源数据库
+                /*
+                // 关联数据来源数据库Id——应用appId修改为dataSourceId后，该段代码暂时不用
                 AppRegistrationInfoDTO appDto = targetDbIdList.stream().filter(e -> e.getAppId() == item.getAppId()).findFirst().orElse(null);
                 if (appDto != null){
                     pushDto.dataSourceDbId = appDto.getTargetDbId();
                 }
+                 */
+                pushDto.setDataSourceDbId(item.dataSourceId);
 
                 // 设置目标dw库id
                 pushDto.setTargetDbId(targetDbId);

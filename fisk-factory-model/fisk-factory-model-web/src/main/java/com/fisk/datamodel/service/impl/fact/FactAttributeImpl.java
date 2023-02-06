@@ -266,7 +266,7 @@ public class FactAttributeImpl
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         data.sqlScript = po.sqlScript;
-        data.appId = po.appId;
+        data.dataSourceId = po.dataSourceId;
         QueryWrapper<FactAttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(FactAttributePO::getFactId, factId);
         List<FactAttributePO> list = mapper.selectList(queryWrapper);

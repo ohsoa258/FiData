@@ -21,7 +21,8 @@ public class FactAttributeDetailDTO {
 
     public SyncModeDTO syncModeDTO;
 
-    public Integer appId;
+    // public Integer appId;
+    public Integer dataSourceId;
 
     public List<CustomScriptInfoDTO> customScriptList;
 }

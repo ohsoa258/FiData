@@ -1793,11 +1793,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         Connection conn = null;
         Statement st = null;
         try {
-            AppRegistrationPO appRegistrationPo = registrationMapper.selectById(query.appId);
-            if (appRegistrationPo == null) {
-                throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR);
-            }
-            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(appRegistrationPo.targetDbId);
+            // 数仓建模中直接关联数据接入中targetDbId
+//            AppRegistrationPO appRegistrationPo = registrationMapper.selectById(query.appId);
+//            if (appRegistrationPo == null) {
+//                throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR);
+//            }
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(query.dataSourceId);
             if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
@@ -2233,7 +2234,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<TableFieldsDTO> listField = list.stream().map(TableFieldsMap.INSTANCES::poToDto).collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(listField)) {
             OdsQueryDTO queryDto = new OdsQueryDTO();
-            queryDto.appId = modelAccess.appId;
+            // queryDto.appId = modelAccess.appId;
             queryDto.appDataSourceId = dto.appDataSourceId;
             queryDto.querySql = modelAccess.sqlScript;
             queryDto.tableName = TableNameGenerateUtils.buildTableName(modelAccess.tableName, modelReg.appAbbreviation, modelReg.whetherSchema);

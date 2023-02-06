@@ -17,8 +17,10 @@ public class OdsQueryDTO {
     public int pageIndex;
     @ApiModelProperty(value = "每页显示条数")
     public int pageSize;
-    @ApiModelProperty(value = "应用id", required = true)
+    @ApiModelProperty(value = "应用id", required = false)
     public long appId;
+    @ApiModelProperty(value = "关联的数据接入中对应的目标数据源id", required = true)
+    public Integer dataSourceId;
     @ApiModelProperty(value = "SQL脚本or预览的文本全路径", required = true)
     public String querySql;
     @ApiModelProperty(value = "当前物理表名称", required = true)

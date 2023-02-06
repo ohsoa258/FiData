@@ -547,7 +547,7 @@ public class DimensionImpl
             return ResultEnum.DATA_NOTEXISTS;
         }
         model.sqlScript = dto.sqlScript;
-        model.appId = dto.appId;
+        model.dataSourceId = dto.dataSourceId;
         return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
