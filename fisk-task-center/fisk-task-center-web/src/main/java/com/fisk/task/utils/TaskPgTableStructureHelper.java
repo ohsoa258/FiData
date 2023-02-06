@@ -280,6 +280,8 @@ public class TaskPgTableStructureHelper
                 return resultEnum;
             }
             log.info("执行存储过程返回修改语句:" + sql);
+            sql = subSql(sql);
+
             //修改表结构
             if (sql != null && sql.length() > 0) {
                 st = conn.createStatement();
@@ -296,6 +298,11 @@ public class TaskPgTableStructureHelper
             }
             conn.close();
         }
+    }
+    private String subSql(String sql){
+        String[] ds = sql.split("DECLARE");
+        String[] d = ds[1].split("EXEC \\( @primary_key \\);");
+        return "DECLARE" + d[0] + "EXEC ( @primary_key );" + ds[0] + d[1];
     }
 
     /**
