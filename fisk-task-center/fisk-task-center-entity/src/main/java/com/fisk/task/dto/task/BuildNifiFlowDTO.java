@@ -123,4 +123,9 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
      * 目标数据源id
      */
     public Integer targetDbId;
+
+    /**
+     * 临时表名称
+     */
+    public String prefixTempName;
 }

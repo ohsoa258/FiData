@@ -150,7 +150,6 @@ public class AppRegistrationImpl
     RedisUtil redisUtil;
     @Resource
     GetConfigDTO getConfig;
-
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEntity<AtlasEntityQueryVO> addData(AppRegistrationDTO appRegistrationDTO) {
@@ -242,7 +241,8 @@ public class AppRegistrationImpl
         //数据库应用,需要新增元数据对象
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
         for (AppDataSourcePO item : modelDataSource) {
-            list.addAll(addDataSourceMetaData(po, item));
+            List<MetaDataInstanceAttributeDTO> metaData = addDataSourceMetaData(po, item);
+            list.addAll(metaData);
         }
 
         if (!CollectionUtils.isEmpty(list)) {
@@ -830,8 +830,22 @@ public class AppRegistrationImpl
         data.page = query.page;
         // 筛选器左边的模糊搜索查询SQL拼接
         data.where = querySql.toString();
-
-        return baseMapper.filter(query.page, data);
+        Page<AppRegistrationVO> filter = baseMapper.filter(query.page, data);
+        if (filter.getRecords() != null){
+            // 查询驱动类型
+            List<AppRegistrationVO> appRegistrationVOList = filter.getRecords();
+            List<Long> appIds = appRegistrationVOList.stream().map(AppRegistrationVO::getId).collect(Collectors.toList());
+            QueryWrapper<AppDataSourcePO> qw = new QueryWrapper<>();
+            qw.in("app_id", appIds);
+            List<AppDataSourcePO> driveTypePOList = appDataSourceMapper.selectList(qw);
+            if (driveTypePOList != null){
+                for (AppRegistrationVO item : appRegistrationVOList){
+                    item.setDriveType(driveTypePOList.stream().filter(e -> e.getAppId() == item.getId()).findFirst().orElse(null).getDriveType());
+                }
+            }
+            filter.setRecords(appRegistrationVOList);
+        }
+        return filter;
     }
 
     @Override

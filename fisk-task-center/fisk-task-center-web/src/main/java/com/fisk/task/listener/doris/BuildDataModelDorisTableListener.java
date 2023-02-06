@@ -218,6 +218,7 @@ public class BuildDataModelDorisTableListener
                 bfd.updateSql = modelPublishTableDTO.factUpdateSql;
                 bfd.dataSourceDbId = modelPublishTableDTO.dataSourceDbId;
                 bfd.targetDbId = modelPublishTableDTO.targetDbId;
+                bfd.prefixTempName = modelPublishTableDTO.prefixTempName + "_";
                 if (modelPublishTableDTO.createType == 0) {
                     //类型为物理表
                     bfd.type = OlapTableEnum.DIMENSION;
