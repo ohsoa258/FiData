@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -91,7 +90,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-import springfox.documentation.annotations.ApiIgnore;
 
 import javax.annotation.Resource;
 import java.sql.*;
@@ -1014,9 +1012,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         groupConfig.setAppName(modelReg.getAppName());
         groupConfig.setAppDetails(modelReg.getAppDes());
         //3.数据源jdbc配置
-        AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", appid).eq("del_flag", 1).list().get(0);
         TableAccessPO modelAccess = this.query().eq("id", id).eq("app_id", appid).eq("del_flag", 1).one();
-        if (modelDataSource == null || modelAccess == null) {
+        if (modelAccess == null) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
+        AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("id", modelAccess.appDataSourceId).eq("del_flag", 1).one();
+        if (modelDataSource == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
         sourceDsConfig.setJdbcStr(modelDataSource.getConnectStr());
