@@ -18,11 +18,11 @@ import java.util.List;
 /**
  * @author dick
  * @version 1.0
- * @description 数据质量服务接口
+ * @description 数据治理服务接口
  * @date 2022/4/12 11:31
  */
 @FeignClient("datagovernance-service")
-public interface DataQualityClient {
+public interface DataGovernanceClient {
     /**
      * 数据校验 界面/接口验证
      *
@@ -58,10 +58,18 @@ public interface DataQualityClient {
     ResultEntity<List<DataSourceConVO>> getAllDataSource();
 
     /**
-     * 生成质量报告
+     * 数据质量-生成质量报告
      *
      * @return 操作结果
      */
     @GetMapping("/dataQualityClient/createQualityReport")
     ResultEntity<Object> createQualityReport(@RequestParam("id") int id);
+
+    /**
+     * 数据安全-生成智能发现报告
+     *
+     * @return 操作结果
+     */
+    @GetMapping("/intelligentdiscovery/createScanReport")
+    ResultEntity<Object> createScanReport(@RequestParam("id") int id);
 }

@@ -88,7 +88,7 @@ public class IntelligentDiscoveryController {
     @ApiOperation("预览智能发现规则扫描结果")
     @PostMapping("/previewScanResult")
     public ResultEntity<List<IntelligentDiscovery_ScanResultVO>> previewScanResult(@RequestParam("absolutePath") String absolutePath) {
-        return ResultEntityBuild.build(service.previewScanResult(absolutePath);
+        return service.previewScanResult(absolutePath);
     }
 
     @ApiOperation("获取智能发现规则扩展信息")
@@ -104,9 +104,9 @@ public class IntelligentDiscoveryController {
     }
 
     @ApiOperation("执行智能发现规则扫描并发送风险数据")
-    @PostMapping("/collScan")
-    public ResultEntity<Object> collScan(@RequestParam("id") int id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.collScan(id));
+    @GetMapping("/createScanReport")
+    public ResultEntity<Object> createScanReport(@RequestParam("id") int id) {
+        return service.createScanReport(id);
     }
 
     @ApiOperation("智能发现规则扫描风险项移入/移出白名单")

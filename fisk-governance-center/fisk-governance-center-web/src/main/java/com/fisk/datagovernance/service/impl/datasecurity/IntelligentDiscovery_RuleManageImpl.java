@@ -29,7 +29,6 @@ import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
-import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportRecipientDTO;
 import com.fisk.datagovernance.dto.datasecurity.intelligentdiscovery.*;
 import com.fisk.datagovernance.entity.dataquality.AttachmentInfoPO;
 import com.fisk.datagovernance.entity.datasecurity.*;
@@ -269,15 +268,24 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
             if (i <= 0) {
                 return ResultEnum.SAVE_DATA_ERROR;
             }
+            int ruleId = Math.toIntExact(intelligentDiscovery_rulePO.getId());
             if (CollectionUtils.isNotEmpty(intelligentDiscovery_scanPOList)) {
+                intelligentDiscovery_scanPOList.forEach(t -> {
+                    t.setRuleId(ruleId);
+                });
                 intelligentDiscovery_scanManage.saveBatch(intelligentDiscovery_scanPOList);
             }
             if (CollectionUtils.isNotEmpty(intelligentDiscovery_userPOList)) {
+                intelligentDiscovery_userPOList.forEach(t -> {
+                    t.setRuleId(ruleId);
+                });
                 intelligentDiscovery_userManage.saveBatch(intelligentDiscovery_userPOList);
             }
             if (intelligentDiscovery_noticePO != null) {
+                intelligentDiscovery_noticePO.setRuleId(ruleId);
                 intelligentDiscovery_noticeMapper.insert(intelligentDiscovery_noticePO);
             }
+            publishBuild_unifiedControlTask(ruleId, intelligentDiscovery_rulePO.getRuleState(), intelligentDiscovery_rulePO.getScanPeriod());
         } catch (Exception ex) {
             log.error("【addRule】ex：" + ex);
             throw new FkException(ResultEnum.ERROR, ex.getMessage());
@@ -328,17 +336,25 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
                 return ResultEnum.SAVE_DATA_ERROR;
             }
             if (CollectionUtils.isNotEmpty(intelligentDiscovery_scanPOList)) {
+                intelligentDiscovery_scanPOList.forEach(t -> {
+                    t.setRuleId(ruleId);
+                });
                 intelligentDiscovery_scanMapper.updateByRuleId(ruleId);
                 intelligentDiscovery_scanManage.saveBatch(intelligentDiscovery_scanPOList);
             }
             if (CollectionUtils.isNotEmpty(intelligentDiscovery_userPOList)) {
+                intelligentDiscovery_userPOList.forEach(t -> {
+                    t.setRuleId(ruleId);
+                });
                 intelligentDiscovery_userMapper.updateByRuleId(ruleId);
                 intelligentDiscovery_userManage.saveBatch(intelligentDiscovery_userPOList);
             }
             if (intelligentDiscovery_noticePO != null) {
+                intelligentDiscovery_noticePO.setRuleId(ruleId);
                 intelligentDiscovery_noticeMapper.updateByRuleId(ruleId);
                 intelligentDiscovery_noticeMapper.insert(intelligentDiscovery_noticePO);
             }
+            publishBuild_unifiedControlTask(ruleId, intelligentDiscovery_rulePO.getRuleState(), intelligentDiscovery_rulePO.getScanPeriod());
         } catch (Exception ex) {
             log.error("【editRule】ex：" + ex);
             throw new FkException(ResultEnum.ERROR, ex.getMessage());
@@ -357,11 +373,16 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
                 return ResultEnum.DATA_NOTEXISTS;
             }
             intelligentDiscovery_rulePO.setRuleState(intelligentDiscovery_rulePO.getRuleState() == 1 ? 0 : 1);
-            return baseMapper.updateById(intelligentDiscovery_rulePO) > 0 ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+            int i = baseMapper.updateById(intelligentDiscovery_rulePO);
+            if (i <= 0) {
+                return ResultEnum.UPDATE_DATA_ERROR;
+            }
+            publishBuild_unifiedControlTask(id, intelligentDiscovery_rulePO.getRuleState(), intelligentDiscovery_rulePO.getScanPeriod());
         } catch (Exception ex) {
             log.error("【editRuleState】ex：" + ex);
             throw new FkException(ResultEnum.ERROR, ex.getMessage());
         }
+        return ResultEnum.SUCCESS;
     }
 
     @Override
@@ -375,11 +396,19 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
             if (intelligentDiscovery_rulePO == null) {
                 return ResultEnum.DATA_NOTEXISTS;
             }
-            return baseMapper.deleteByIdWithFill(intelligentDiscovery_rulePO) > 0 ? ResultEnum.SUCCESS : ResultEnum.DELETE_ERROR;
+            int i = baseMapper.deleteByIdWithFill(intelligentDiscovery_rulePO);
+            if (i <= 0) {
+                return ResultEnum.DELETE_ERROR;
+            }
+            intelligentDiscovery_noticeMapper.updateByRuleId(id);
+            intelligentDiscovery_scanMapper.updateByRuleId(id);
+            intelligentDiscovery_userMapper.updateByRuleId(id);
+            publishBuild_unifiedControlTask(id, RuleStateEnum.Disable.getValue(), intelligentDiscovery_rulePO.getScanPeriod());
         } catch (Exception ex) {
             log.error("【deleteRule】ex：" + ex);
             throw new FkException(ResultEnum.ERROR, ex.getMessage());
         }
+        return ResultEnum.SUCCESS;
     }
 
     @Override
@@ -591,15 +620,15 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
     }
 
     @Override
-    public ResultEnum collScan(int id) {
+    public ResultEntity<Object> createScanReport(int id) {
         try {
             if (id == 0) {
-                return ResultEnum.PARAMTER_NOTNULL;
+                return ResultEntityBuild.buildData(ResultEnum.PARAMTER_NOTNULL, "");
             }
             // 查询智能发现基本信息
             IntelligentDiscovery_RulePO rulePO = baseMapper.selectById(id);
             if (rulePO == null) {
-                return ResultEnum.INTELLIGENT_DISCOVERY_CONFIGURATION_DOES_NOT_EXIST;
+                return ResultEntityBuild.buildData(ResultEnum.INTELLIGENT_DISCOVERY_CONFIGURATION_DOES_NOT_EXIST, "");
             }
             // 查询智能发现通知配置
             QueryWrapper<IntelligentDiscovery_NoticePO> intelligentDiscovery_noticePOQueryWrapper = new QueryWrapper<>();
@@ -625,7 +654,7 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
                     .eq(IntelligentDiscovery_ScanPO::getRuleId, id);
             List<IntelligentDiscovery_ScanPO> scanPOS = intelligentDiscovery_scanMapper.selectList(scanPOQueryWrapper);
             if (CollectionUtils.isEmpty(scanPOS)) {
-                return ResultEnum.INTELLIGENT_DISCOVERY_SCAN_CONFIGURATION_DOES_NOT_EXIST;
+                return ResultEntityBuild.buildData(ResultEnum.INTELLIGENT_DISCOVERY_SCAN_CONFIGURATION_DOES_NOT_EXIST, "");
             }
             List<Integer> dataSourceIdList = scanPOS.stream().map(IntelligentDiscovery_ScanPO::getDatasourceId).distinct().collect(Collectors.toList());
             // 查询智能发现扫描配置的数据源信息
@@ -633,7 +662,7 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
             List<DataSourceDTO> dataSourceList = dataDataSourceResult != null && dataDataSourceResult.getCode() == 0 && CollectionUtils.isNotEmpty(dataDataSourceResult.getData()) ? dataDataSourceResult.getData() : new ArrayList<>();
             dataSourceList = dataSourceList.stream().filter(t -> dataSourceIdList.contains(t.getId())).collect(Collectors.toList());
             if (CollectionUtils.isEmpty(dataSourceList)) {
-                return ResultEnum.DATA_SOURCE_ERROR;
+                return ResultEntityBuild.buildData(ResultEnum.DATA_SOURCE_ERROR, "");
             }
             // 查询智能发现扫描结果接收人
             QueryWrapper<IntelligentDiscovery_UserPO> userPOQueryWrapper = new QueryWrapper<>();
@@ -658,7 +687,7 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
             // 第一步：根据配置扫描数据库表字段
             List<IntelligentDiscovery_ScanResultVO> schema_table_fieldList = getSchema_Table_FieldList(whiteListPOS, scanPOS, dataSourceList, regExpRule, keyWordRules);
             if (CollectionUtils.isEmpty(schema_table_fieldList)) {
-                return ResultEnum.INTELLIGENT_DISCOVERY_NO_RISK_FIELDS_FOUND;
+                return ResultEntityBuild.buildData(ResultEnum.INTELLIGENT_DISCOVERY_NO_RISK_FIELDS_FOUND, "");
             }
             // 第二步：扫描出来的表字段写入到Excel并记录到附件信息
             AttachmentInfoPO attachmentInfoPO = new AttachmentInfoPO();
@@ -708,7 +737,7 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
             }
             File file = new File(attachmentInfoPO.getAbsolutePath());
             if (!file.exists()) {
-                return ResultEnum.SMART_DISCOVERY_REPORT_FAILED_TO_GENERATE_ATTACHMENT;
+                return ResultEntityBuild.buildData(ResultEnum.SMART_DISCOVERY_REPORT_FAILED_TO_GENERATE_ATTACHMENT, "");
             }
             // 第三步：发送通知提醒给指定用户并记录发送日志
             if (noticePO != null) {
@@ -727,7 +756,7 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
                 if (noticePO.getScanReceptionType() == ScanReceptionTypeEnum.EMAIL_NOTICE.getValue()) {
                     ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(noticePO.getEmailServerId());
                     if (emailServerById == null || emailServerById.getCode() != ResultEnum.SUCCESS.getCode() || emailServerById.getData() == null) {
-                        return ResultEnum.THE_MAIL_SERVER_DOES_NOT_EXIST;
+                        return ResultEntityBuild.buildData(ResultEnum.THE_MAIL_SERVER_DOES_NOT_EXIST, "");
                     }
                     EmailServerVO emailServerVO = emailServerById.getData();
                     MailServeiceDTO mailServeiceDTO = new MailServeiceDTO();
@@ -755,16 +784,14 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
                         logsPO.setSendResult("发送失败");
                     }
                 }
-
                 intelligentDiscovery_logsMapper.insert(logsPO);
                 attachmentInfoMapper.insert(attachmentInfoPO);
             }
-
         } catch (Exception ex) {
             log.error("【collScan】ex：" + ex);
             throw new FkException(ResultEnum.ERROR, ex.getMessage());
         }
-        return null;
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "");
     }
 
     @Override
