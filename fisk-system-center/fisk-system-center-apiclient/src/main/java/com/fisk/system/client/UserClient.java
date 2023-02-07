@@ -12,10 +12,7 @@ import com.fisk.system.dto.userinfo.UserPowerDTO;
 import com.fisk.system.vo.emailserver.EmailServerVO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -145,4 +142,20 @@ public interface UserClient {
     @PostMapping("/datasource/insertDataSourceByAccess")
     @ApiOperation("同步数据接入数据源")
     ResultEntity<DataSourceResultDTO> insertDataSourceByAccess(@RequestBody DataSourceSaveDTO dto);
+
+    /**
+     * 添加系统数据源，设置nifi启动参数
+     * @param dto
+     * @return
+     */
+    @PostMapping("/datasource/add")
+    ResultEntity<Object> addData(@RequestBody DataSourceSaveDTO dto);
+
+    /**
+     * 修改系统数据源，设置nifi启动参数
+     * @param dto
+     * @return
+     */
+    @PutMapping("/datasource/edit")
+    ResultEntity<Object> editData(@RequestBody DataSourceSaveDTO dto);
 }
