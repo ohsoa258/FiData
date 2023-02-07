@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.sql.*;
@@ -280,7 +281,9 @@ public class TaskPgTableStructureHelper
                 return resultEnum;
             }
             log.info("执行存储过程返回修改语句:" + sql);
-            sql = subSql(sql);
+            if (!StringUtils.isEmpty(sql) && sql.contains("DECLARE")){
+                sql = subSql(sql);
+            }
 
             //修改表结构
             if (sql != null && sql.length() > 0) {
@@ -299,6 +302,12 @@ public class TaskPgTableStructureHelper
             conn.close();
         }
     }
+
+    /**
+     * 包含DECLARE时，切分sql进行重组
+     * @param sql
+     * @return
+     */
     private String subSql(String sql){
         String[] ds = sql.split("DECLARE");
         String[] d = ds[1].split("EXEC \\( @primary_key \\);");
