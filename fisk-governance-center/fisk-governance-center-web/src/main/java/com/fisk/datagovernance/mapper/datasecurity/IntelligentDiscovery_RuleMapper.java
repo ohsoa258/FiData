@@ -22,10 +22,10 @@ public interface IntelligentDiscovery_RuleMapper extends FKBaseMapper<Intelligen
      */
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     @Insert("INSERT INTO tb_Intelligentdiscovery_rule(`rule_name`, `rule_type`, `rule_value`, `rule_describe`, `rule_state`," +
-            " `risk_level`, `scan_period`, `scan_reception_type`, `scan_risk_count`, `principal`," +
+            " `risk_level`, `scan_period`, `scan_risk_count`, `principal`," +
             " `create_time`, `create_user`, `del_flag`) " +
             "VALUES (#{ruleName}, #{ruleType}, #{ruleValue}, #{ruleDescribe}, #{ruleState}," +
-            " #{riskLevel}, #{scanPeriod}, #{scanReceptionType}, #{scanRiskCount}, #{principal}," +
+            " #{riskLevel}, #{scanPeriod}, #{scanRiskCount}, #{principal}," +
             " #{createTime}, #{createUser},1);")
     int insertOne(IntelligentDiscovery_RulePO po);
 }

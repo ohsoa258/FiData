@@ -12,7 +12,6 @@
         rule_state,
         risk_level,
         scan_period,
-        scan_reception_type,
         scan_risk_count,
         principal,
         create_time,

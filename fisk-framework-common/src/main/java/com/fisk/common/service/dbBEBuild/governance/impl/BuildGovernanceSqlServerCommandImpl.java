@@ -107,11 +107,11 @@ public class BuildGovernanceSqlServerCommandImpl implements IBuildGovernanceSqlC
     @Override
     public String buildQuerySchemaSql() {
         String sql = "SELECT DISTINCT\n" +
-                "\tschemaname \n" +
+                "\t[schema] \n" +
                 "FROM\n" +
-                "\t( SELECT schema_name( schema_id ) AS schemaname FROM sys.tables ) AS tab \n" +
+                "\t( SELECT schema_name( schema_id ) AS [schema] FROM sys.tables ) AS tab \n" +
                 "ORDER BY\n" +
-                "\tschemaname";
+                "\t[schema]";
         return sql;
     }
 
@@ -184,11 +184,11 @@ public class BuildGovernanceSqlServerCommandImpl implements IBuildGovernanceSqlC
                 "\t(\n" +
                 "\t\tSELECT schema_name( tb.schema_id ) AS [schema],-- 模式\n" +
                 "\t\td.name AS tablename,-- 表名称\n" +
-                "\t\ta.name AS fieldName,-- 字段名称\n" +
+                "\t\ta.name AS fieldname,-- 字段名称\n" +
                 "\t\tb.name AS fieldtype,-- 字段类型\n" +
                 "\t\tCOLUMNPROPERTY( a.id, a.name, 'PRECISION' ) AS fieldlength,-- 字段长度\n" +
                 "\t\tisnull( g.[value], '' ) AS fieldcomment,-- 字段注释\n" +
-                "\t\tCASEWHENEXISTS (\n" +
+                "\t\tCASE WHEN EXISTS (\n" +
                 "\t\t\t\tSELECT 1 FROM sysobjects WHERE xtype = 'PK' AND name IN (\n" +
                 "\t\t\t\t\t SELECT name \n" +
                 "\t\t\t\tFROM\n" +
@@ -199,9 +199,9 @@ public class BuildGovernanceSqlServerCommandImpl implements IBuildGovernanceSqlC
                 "\t\t\t\t\t ) \n" +
                 "\t\t\t\t) \n" +
                 "\t\t\t\t)  THEN 'YES' ELSE 'NO' \n" +
-                "\t\t\t\tEND AS fieldIsPrimaryKey,-- 是否是主键\n" +
+                "\t\t\t\tEND AS fieldisprimarykey,-- 是否是主键\n" +
                 "\t\t\tisnull( e.text, '' ) AS fielddefaultvalue,-- 字段默认值\n" +
-                "\t\t\tCASEWHEN a.isnullable= 1 THEN 'YES' ELSE 'NO' \n" +
+                "\t\t\tCASE WHEN a.isnullable= 1 THEN 'YES' ELSE 'NO' \n" +
                 "\t\t\tEND AS fieldisallownull  -- 字段是否允许为空\n" +
                 "\t\t\t\n" +
                 "\t\tFROM\n" +
@@ -223,11 +223,11 @@ public class BuildGovernanceSqlServerCommandImpl implements IBuildGovernanceSqlC
                 "\tGROUP BY\n" +
                 "\t\t[schema],\n" +
                 "\t\ttablename,\n" +
-                "\t\tfieldName,\n" +
-                "\t\tfieldcommen,\n" +
+                "\t\tfieldname,\n" +
+                "\t\tfieldcomment,\n" +
                 "\t\tfieldtype,\n" +
                 "\t\tfieldlength,\n" +
-                "\t\tisprimarykey,\n" +
+                "\t\tfieldisprimarykey,\n" +
                 "\t\tfielddefaultvalue,\n" +
                 "\t\tfieldisallownull \n" +
                 "\tORDER BY\n" +

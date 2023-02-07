@@ -150,7 +150,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                 .ne(DataSourcePO::getId, dto.id);
         DataSourcePO data = baseMapper.selectOne(queryWrapper);
         if (data != null) {
-            return ResultEnum.NAME_EXISTS;
+            return ResultEnum.DATA_SOURCE_NAME_ALREADY_EXISTS;
         }
         DataSourceMap.INSTANCES.dtoToPo(dto, model);
         return baseMapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
@@ -175,8 +175,8 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                 .eq(DataSourcePO::getSourceType, dto.sourceType)
                 .eq(DataSourcePO::getDelFlag, 1);
         DataSourcePO model = baseMapper.selectOne(queryWrapper);
-        if (model != null && model.getSourceType() == 2) {
-            return ResultEnum.NAME_EXISTS;
+        if (model != null) {
+            return ResultEnum.DATA_SOURCE_NAME_ALREADY_EXISTS;
         }
         model = new DataSourcePO();
         DataSourceMap.INSTANCES.dtoToPo(dto, model);

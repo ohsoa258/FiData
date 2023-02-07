@@ -100,13 +100,12 @@ public class BuildGovernancePgCommandImpl implements IBuildGovernanceSqlCommand 
     @Override
     public String buildQuerySchemaSql() {
         String sql = "SELECT\n" +
-                "\tschemata.\"schema_name\" AS schemaname \n" +
+                "\tschemata.\"schema_name\" AS \"schema\" \n" +
                 "FROM\n" +
                 "\tinformation_schema.schemata AS schemata\n" +
                 "\tLEFT JOIN pg_tables tables ON schemata.\"schema_name\" = tables.schemaname \n" +
                 "WHERE\n" +
-                "\ttables.tablename IS NOT NULL \n" +
-                "\tAND tables.tablename <> '' \n" +
+                "\t\tNULLIF ( tables.tablename, '' ) != ''  \n" +
                 "\tAND schemata.\"schema_name\" NOT IN ( 'pg_catalog', 'information_schema' ) \n" +
                 "GROUP BY\n" +
                 "\t\"schema_name\" \n" +
@@ -123,13 +122,15 @@ public class BuildGovernancePgCommandImpl implements IBuildGovernanceSqlCommand 
         }
         String schemaParams = "'" + StringUtils.join(schemaList, "','") + "'".toLowerCase();
         sql = String.format("SELECT\n" +
-                "\ttable_schema AS \"schema\",\n" +
-                "\tTABLE_NAME AS tablename \n" +
+                "\tsc.table_schema AS \"schema\",\n" +
+                "\tsc.TABLE_NAME AS tablename \n" +
                 "FROM\n" +
-                "\tinformation_schema.COLUMNS sc \n" +
-                "WHERE\n" +
-                "-- PG SQL区分大小写，转小写查询\n" +
-                "\tLOWER ( table_schema ) IN ( %s )\n" +
+                "\tinformation_schema.COLUMNS sc\n" +
+                "\tLEFT JOIN pg_tables tables ON sc.table_schema = tables.schemaname \n" +
+                "\tAND sc.\"table_name\" = tables.tablename \n" +
+                "\tWHERE-- PG SQL区分大小写，转小写查询\n" +
+                "\tLOWER ( table_schema ) IN ( %s ) \n" +
+                "\tAND NULLIF ( tables.tablename, '' ) != '' -- 此条件可过滤视图\n" +
                 "\t\n" +
                 "GROUP BY\n" +
                 "\ttable_schema,\n" +
@@ -185,7 +186,7 @@ public class BuildGovernancePgCommandImpl implements IBuildGovernanceSqlCommand 
                 "\tSELECT\n" +
                 "\t\ttable_schema AS \"schema\",-- 模式\n" +
                 "\t\tTABLE_NAME AS tablename,-- 表名称\n" +
-                "\t\tCOLUMN_NAME AS fieldName,-- 字段名称\n" +
+                "\t\tCOLUMN_NAME AS fieldname,-- 字段名称\n" +
                 "\t\tudt_name AS fieldtype,-- 字段类型\n" +
                 "\t\tCOALESCE ( character_maximum_length, numeric_precision,- 1 ) AS fieldlength,-- 字段长度\n" +
                 "\t\t(\n" +
@@ -216,7 +217,7 @@ public class BuildGovernancePgCommandImpl implements IBuildGovernanceSqlCommand 
                 "\t\t\t\t\t) > 0 THEN\n" +
                 "\t\t\t\t\t'YES' ELSE'NO' \n" +
                 "\t\t\t\tEND \n" +
-                "\t\t\t\t) AS fieldIsPrimaryKey,-- 是否是主键\n" +
+                "\t\t\t\t) AS fieldisprimarykey,-- 是否是主键\n" +
                 "\t\t\tCASE\n" +
                 "\t\t\t\t\t\n" +
                 "\t\t\t\t\tWHEN column_default = '''''::character varying' THEN\n" +
@@ -242,11 +243,11 @@ public class BuildGovernancePgCommandImpl implements IBuildGovernanceSqlCommand 
                 "\t\tGROUP BY\n" +
                 "\t\t\t\"schema\",\n" +
                 "\t\t\ttablename,\n" +
-                "\t\t\tfieldName,\n" +
-                "\t\t\tfieldcommen,\n" +
+                "\t\t\tfieldname,\n" +
+                "\t\t\tfieldcomment,\n" +
                 "\t\t\tfieldtype,\n" +
                 "\t\t\tfieldlength,\n" +
-                "\t\t\tisprimarykey,\n" +
+                "\t\t\tfieldisprimarykey,\n" +
                 "\t\t\tfielddefaultvalue,\n" +
                 "\t\t\tfieldisallownull \n" +
                 "\t\tORDER BY\n" +

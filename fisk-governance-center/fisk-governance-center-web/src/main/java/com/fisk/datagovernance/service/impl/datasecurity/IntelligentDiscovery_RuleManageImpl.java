@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.constants.MqConstants;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -493,7 +494,8 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
         try {
             // 数据源信息
             ResultEntity<List<DataSourceDTO>> dataDataSourceResult = userClient.getAll();
-            List<DataSourceDTO> dataSourceList = dataDataSourceResult != null && dataDataSourceResult.getCode() == 0 && CollectionUtils.isNotEmpty(dataDataSourceResult.getData()) ? dataDataSourceResult.getData() : null;
+            List<DataSourceDTO> dataSourceList = dataDataSourceResult != null && dataDataSourceResult.getCode() == 0 && CollectionUtils.isNotEmpty(dataDataSourceResult.getData()) ? dataDataSourceResult.getData() : new ArrayList<>();
+            dataSourceList = dataSourceList.stream().filter(t -> t.getConType() == DataSourceTypeEnum.SQLSERVER || t.getConType() == DataSourceTypeEnum.POSTGRESQL).collect(Collectors.toList());
             if (CollectionUtils.isNotEmpty(dataSourceList)) {
                 // 获取数据源信息的Schema和Table
                 List<IntelligentDiscovery_RuleExtInfo_SchemaVO> schema_tableList = getSchema_TableList(dataSourceList);
@@ -741,7 +743,6 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
             }
             // 第三步：发送通知提醒给指定用户并记录发送日志
             if (noticePO != null) {
-
                 IntelligentDiscovery_LogsPO logsPO = new IntelligentDiscovery_LogsPO();
                 String logUniqueId = UUID.randomUUID().toString().replace("-", "");
                 attachmentInfoPO.setObjectId(logUniqueId);
@@ -787,6 +788,10 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
                 intelligentDiscovery_logsMapper.insert(logsPO);
                 attachmentInfoMapper.insert(attachmentInfoPO);
             }
+
+            // 第四步：回写扫描风险数量到配置表
+            rulePO.setScanRiskCount(Math.toIntExact(schema_table_fieldList.stream().count()));
+            baseMapper.updateById(rulePO);
         } catch (Exception ex) {
             log.error("【collScan】ex：" + ex);
             throw new FkException(ResultEnum.ERROR, ex.getMessage());
@@ -946,7 +951,11 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
         }
 
         for (IntelligentDiscovery_ScanPO scanPO : scanList) {
-            DataSourceDTO dataSource = dataSourceList.stream().filter(t -> t.getId().equals(scanPO.getDatasourceId())).findFirst().orElse(null);
+            DataSourceDTO dataSource = dataSourceList.stream()
+                    .filter(t -> t.getId().equals(scanPO.getDatasourceId())
+                            && (t.getConType() == DataSourceTypeEnum.SQLSERVER || t.getConType() == DataSourceTypeEnum.POSTGRESQL))
+                    .findFirst()
+                    .orElse(null);
             if (dataSource == null) {
                 continue;
             }
@@ -970,7 +979,7 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
             }
 
             List<String> queryTableList = new ArrayList<>();
-            if (StringUtils.isEmpty(scanPO.getScanSchema())) {
+            if (StringUtils.isNotEmpty(scanPO.getScanTable())) {
                 queryTableList.add(scanPO.getScanTable());
             }
 
@@ -1035,12 +1044,11 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
                         scanResultVO.setFieldIsPrimaryKey(fieldIsPrimaryKey);
                         scanResultVO.setFieldDefaultValue(fieldDefaultValue);
                         scanResultVO.setFieldIsAllowNull(fieldIsAllowNull);
+                        scanResult.add(scanResultVO);
                     }
-                    scanResult.add(scanResultVO);
                 }
             }
         }
-
         return scanResult;
     }
 }
