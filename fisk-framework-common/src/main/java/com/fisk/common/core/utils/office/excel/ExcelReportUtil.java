@@ -40,7 +40,7 @@ public class ExcelReportUtil {
      * @params uploadUrl
      * @params fileName
      */
-    public static void createExcel(ExcelDto excelDto, String uploadUrl, String fileName) {
+    public static void createExcel(ExcelDto excelDto, String uploadUrl, String fileName, boolean isMergeRow) {
         //1.创建workbook
         XSSFWorkbook workbook = new XSSFWorkbook();
         FileOutputStream fos = null;
@@ -49,7 +49,7 @@ public class ExcelReportUtil {
             for (int i = 0; i < excelDto.getSheets().size(); i++) {
                 SheetDto sheet = excelDto.getSheets().get(i);
                 createSheet(workbook, i, sheet.getSheetName(), sheet.getSingRows(), sheet.getSingFields(),
-                        sheet.getDataRows());
+                        sheet.getDataRows(), isMergeRow);
             }
             //3.通过输出流写到文件里去
             File f = new File(uploadUrl);
@@ -75,17 +75,19 @@ public class ExcelReportUtil {
 
     /**
      * @param workbook
-     * @param sheetNum  (sheet的位置，0表示第一个表格中的第一个sheet)
-     * @param sheetName （sheet的名称）
-     * @param headers   （表格的标题）
-     * @param result    （表格的数据）
+     * @param sheetNum   (sheet的位置，0表示第一个表格中的第一个sheet)
+     * @param sheetName  （sheet的名称）
+     * @param headers    （表格的标题）
+     * @param result     （表格的数据）
+     * @param isMergeRow (是否合并行)
      * @return void
      * @description 生成Sheet
      * @author dick
      * @date 2022/8/11 10:52
      * @version v1.0
      */
-    public static void createSheet(XSSFWorkbook workbook, int sheetNum, String sheetName, List<RowDto> headers, List<String> fields, List<List<String>> result) {
+    public static void createSheet(XSSFWorkbook workbook, int sheetNum, String sheetName,
+                                   List<RowDto> headers, List<String> fields, List<List<String>> result, boolean isMergeRow) {
         // 创建一个sheet
         XSSFSheet sheet = workbook.createSheet();
         workbook.setSheetName(sheetNum, sheetName);
@@ -139,9 +141,11 @@ public class ExcelReportUtil {
                 }
             }
         }
-        // 合并标识行
-        int lastCol = headers.stream().filter(t -> t.getRowIndex() == 4).findFirst().get().getColumns().size();
-        setSheetCellRangeAddress(workbook, sheet, lastCol);
+        if (isMergeRow) {
+            // 合并标识行
+            int lastCol = headers.stream().filter(t -> t.getRowIndex() == 4).findFirst().get().getColumns().size();
+            setSheetCellRangeAddress(workbook, sheet, lastCol);
+        }
     }
 
     /**

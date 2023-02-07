@@ -864,7 +864,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         }
         if (CollectionUtils.isNotEmpty(sheets)) {
             excelDto.setSheets(sheets);
-            ExcelReportUtil.createExcel(excelDto, attachmentInfoPO.absolutePath, attachmentInfoPO.currentFileName);
+            ExcelReportUtil.createExcel(excelDto, attachmentInfoPO.absolutePath, attachmentInfoPO.currentFileName,true);
         }
         return ResultEnum.SUCCESS;
     }

@@ -111,7 +111,7 @@ public class IntelligentDiscoveryController {
 
     @ApiOperation("智能发现规则扫描风险项移入/移出白名单")
     @PostMapping("/saveWhiteList")
-    public ResultEntity<Object> saveWhiteList(IntelligentDiscovery_WhiteListDTO dto) {
+    public ResultEntity<Object> saveWhiteList(@RequestBody IntelligentDiscovery_WhiteListDTO dto) {
         return ResultEntityBuild.build(service.saveWhiteList(dto));
     }
 }

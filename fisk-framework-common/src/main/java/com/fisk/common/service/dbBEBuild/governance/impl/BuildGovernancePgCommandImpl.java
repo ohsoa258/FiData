@@ -191,7 +191,7 @@ public class BuildGovernancePgCommandImpl implements IBuildGovernanceSqlCommand 
                 "\t\tCOALESCE ( character_maximum_length, numeric_precision,- 1 ) AS fieldlength,-- 字段长度\n" +
                 "\t\t(\n" +
                 "\t\tSELECT\n" +
-                "\t\t\tpg_catalog.col_description ( C.oid, sc.ordinal_position :: INT ) \n" +
+                "\t\t\tCOALESCE ( NULLIF ( pg_catalog.col_description ( C.oid, sc.ordinal_position :: INT ) , '' ), '' ) \n" +
                 "\t\tFROM\n" +
                 "\t\t\tpg_catalog.pg_class C \n" +
                 "\t\tWHERE\n" +

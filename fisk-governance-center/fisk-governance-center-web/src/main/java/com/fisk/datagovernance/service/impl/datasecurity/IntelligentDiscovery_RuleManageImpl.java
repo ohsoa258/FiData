@@ -735,9 +735,9 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
             sheets.add(sheet);
             if (CollectionUtils.isNotEmpty(sheets)) {
                 excelDto.setSheets(sheets);
-                ExcelReportUtil.createExcel(excelDto, attachmentInfoPO.getAbsolutePath(), attachmentInfoPO.getCurrentFileName());
+                ExcelReportUtil.createExcel(excelDto, attachmentInfoPO.getAbsolutePath(), attachmentInfoPO.getCurrentFileName(), false);
             }
-            File file = new File(attachmentInfoPO.getAbsolutePath());
+            File file = new File(attachmentInfoPO.getAbsolutePath()+attachmentInfoPO.getCurrentFileName());
             if (!file.exists()) {
                 return ResultEntityBuild.buildData(ResultEnum.SMART_DISCOVERY_REPORT_FAILED_TO_GENERATE_ATTACHMENT, "");
             }
@@ -816,7 +816,7 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
             IntelligentDiscovery_WhiteListPO intelligentDiscovery_whiteListPO = intelligentDiscovery_whiteListMapper.selectOne(queryWrapper);
 
             if (intelligentDiscovery_whiteListPO != null) {
-                intelligentDiscovery_whiteListPO.setValidity(intelligentDiscovery_whiteListPO.getValidity());
+                intelligentDiscovery_whiteListPO.setValidity(dto.getValidity());
                 return intelligentDiscovery_whiteListMapper.updateById(intelligentDiscovery_whiteListPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
             } else {
                 intelligentDiscovery_whiteListPO = IntelligentDiscovery_WhiteListMap.INSTANCES.dtoToPo(dto);
@@ -992,7 +992,7 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
                     for (Map<String, Object> map : schema_Table_Field_Maps) {
                         boolean isMatch = true;
                         if (StringUtils.isNotEmpty(regExpRule)) {
-                            isMatch = Pattern.matches(regExpRule, map.get("fieldName").toString());
+                            isMatch = Pattern.matches(regExpRule, map.get("fieldname").toString());
                         }
                         if (!isMatch) {
                             continue;
