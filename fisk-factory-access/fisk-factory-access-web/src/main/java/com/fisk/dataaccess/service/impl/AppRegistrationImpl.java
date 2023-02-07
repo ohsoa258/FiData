@@ -242,7 +242,9 @@ public class AppRegistrationImpl
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
         for (AppDataSourcePO item : modelDataSource) {
             List<MetaDataInstanceAttributeDTO> metaData = addDataSourceMetaData(po, item);
-            list.addAll(metaData);
+            if (metaData != null){
+                list.addAll(metaData);
+            }
         }
 
         if (!CollectionUtils.isEmpty(list)) {
