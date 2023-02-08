@@ -255,7 +255,7 @@ public class KafkaConsumer {
      */
     @KafkaListener(topics = MqConstants.QueueConstants.MdmTopicConstants.BUILD_DATAMODEL_DORIS_TABLE, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
-    @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD)
+    @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD, notificationType = 2)
     public ResultEntity<Object> buildDataModelDorisTableListener(String dataInfo, Acknowledgment acke) {
         return ResultEntityBuild.build(buildDataModelDorisTableListener.msg(dataInfo, acke));
     }

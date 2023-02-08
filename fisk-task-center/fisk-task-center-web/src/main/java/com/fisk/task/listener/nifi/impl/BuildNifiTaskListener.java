@@ -431,10 +431,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             List<ControllerServiceEntity> dbPool = buildDsConnectionPool(dto.synchronousTypeEnum, configDTO, appGroupId, dto);
             String sourceId = "";
             if (!dto.excelFlow) {
-                appNifiSettingPO.sourceDbPoolComponentId = dbPool.get(0).getId();
+
                 sourceId = dbPool.get(0).getId();
             }
-            appNifiSettingPO.targetDbPoolComponentId = dbPool.get(1).getId();
+
 
             //4. 创建任务组创建时要把原任务组删掉,防止重复发布带来影响  dto.id, dto.appId
             DataModelVO dataModelVO = new DataModelVO();
@@ -499,11 +499,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
             //7. 回写id
             savaNifiConfig(cfgDbPool.getId(), ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID);
-            if (Objects.equals(dto.synchronousTypeEnum.getName(), SynchronousTypeEnum.TOPGODS.getName())) {
-                savaNifiConfig(dbPool.get(1).getId(), ComponentIdTypeEnum.PG_ODS_DB_POOL_COMPONENT_ID);
-            } else if (Objects.equals(dto.synchronousTypeEnum.getName(), SynchronousTypeEnum.PGTOPG.getName())) {
+            if (Objects.equals(dto.synchronousTypeEnum.getName(), SynchronousTypeEnum.PGTOPG.getName())) {
                 savaNifiConfig(dbPool.get(1).getId(), ComponentIdTypeEnum.PG_DW_DB_POOL_COMPONENT_ID);
-                savaNifiConfig(dbPool.get(0).getId(), ComponentIdTypeEnum.PG_ODS_DB_POOL_COMPONENT_ID);
             } else if (Objects.equals(dto.synchronousTypeEnum.getName(), SynchronousTypeEnum.PGTODORIS.getName())) {
                 savaNifiConfig(dbPool.get(1).getId(), ComponentIdTypeEnum.DORIS_OLAP_DB_POOL_COMPONENT_ID);
                 savaNifiConfig(dbPool.get(0).getId(), ComponentIdTypeEnum.PG_DW_DB_POOL_COMPONENT_ID);
@@ -922,10 +919,16 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         } else {
             ControllerServiceEntity sourceControllerService = new ControllerServiceEntity();
             if (!buildNifiFlowDTO.excelFlow) {
-                sourceControllerService = componentsBuild.getDbControllerService(config.sourceDsConfig.componentId);
+                String componentId = saveDbconfig(buildNifiFlowDTO.dataSourceDbId);
+                ControllerServiceEntity entity = new ControllerServiceEntity();
+                entity.setId(componentId);
+                sourceControllerService = entity;
             }
-            ControllerServiceEntity targetResControllerService = componentsBuild.getDbControllerService(config.targetDsConfig.componentId);
-            if (sourceControllerService != null && targetResControllerService != null) {
+            String componentId = saveDbconfig(buildNifiFlowDTO.targetDbId);
+            ControllerServiceEntity entity = new ControllerServiceEntity();
+            entity.setId(componentId);
+            ControllerServiceEntity targetResControllerService = entity;
+            if (!(buildNifiFlowDTO.excelFlow && sourceControllerService == null) && targetResControllerService != null) {
                 list.add(sourceControllerService);
                 list.add(targetResControllerService);
                 return list;
@@ -2098,6 +2101,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 }
 
             }
+            if (Objects.equals(dto.type, OlapTableEnum.FACT) || Objects.equals(dto.type, OlapTableEnum.CUSTOMWORKFACT)
+                    || Objects.equals(dto.type, OlapTableEnum.DIMENSION) || Objects.equals(dto.type, OlapTableEnum.CUSTOMWORKDIMENSION)) {
+                putDatabaseRecordDTO.TableName = stgTableName.replaceFirst("stg_", dto.prefixTempName);
+            }
 
         } else {
             log.error("userclient无法查询到ods库的连接信息");
@@ -2112,6 +2119,12 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         BusinessResult<ProcessorEntity> res = componentsBuild.buildPutDatabaseRecordProcess(putDatabaseRecordDTO);
         verifyProcessorResult(res);
         return res.data;
+    }
+
+    public static void main(String[] args) {
+        String dd = "stg_ffff";
+        dd = dd.replaceFirst("stg_", "temp_");
+        System.out.println(dd);
     }
 
     private ProcessorEntity createPutDatabase(String appGroupId, DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto, String targetDbPoolId, SynchronousTypeEnum synchronousTypeEnum, TableNifiSettingPO tableNifiSettingPO, BuildTableServiceDTO buildTableService) {

@@ -142,7 +142,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
             tableKey = targetTableName.substring(targetTableName.indexOf("_") + 1) + "key";
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
-                sql += "stg_" + targetTableName + "'";
+                sql += buildNifiFlow.prefixTempName + targetTableName + "'";
                 sql += ",'" + targetTableName + "'";
                 //同步方式
                 String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
@@ -156,7 +156,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                 String fieldList = config.modelPublishFieldDTOList.stream().filter(Objects::nonNull)
                         .filter(e -> e.fieldEnName != null && !Objects.equals("", e.fieldEnName))
                         .map(t -> t.fieldEnName).collect(Collectors.joining("'''',''''"));
-                sql += fieldList + "''','" + tableKey + "','stg_" + targetTableName + "'";
+                sql += fieldList + "''','" + tableKey + "','" + buildNifiFlow.prefixTempName + targetTableName + "'";
                 sql += ",'" + config.processorConfig.targetTableName + "'";
                 String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
                 sql += ",'" + syncMode + "'";
@@ -359,7 +359,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         //创建表
         log.info("pg_dw建表语句" + sql1);
         //String stgTable = sql1.replaceFirst(tableName, "stg_" + tableName);
-        String stgTable = "DROP TABLE IF EXISTS stg_" + tableName + "; CREATE TABLE stg_" + tableName + " (" + tablePk + " BIGINT IDENTITY(1,1) NOT NULL ," + stgSqlFileds.toString() + associatedKey + "fi_createtime varchar(50) DEFAULT(format(GETDATE(),'yyyy-MM-dd HH:mm:ss')),fi_updatetime varchar(50),fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3');";
+        String stgTable = "DROP TABLE IF EXISTS " + modelPublishTableDTO.prefixTempName + tableName + "; CREATE TABLE " + modelPublishTableDTO.prefixTempName + tableName + " (" + tablePk + " BIGINT IDENTITY(1,1) NOT NULL ," + stgSqlFileds.toString() + associatedKey + "fi_createtime varchar(50) DEFAULT(format(GETDATE(),'yyyy-MM-dd HH:mm:ss')),fi_updatetime varchar(50),fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3');";
         //stgTable += "create index " + tableName + "enableflagsy on stg_" + tableName + " (fi_enableflag);";
         sqlList.add(stgTable);
         sqlList.add(sql1);
