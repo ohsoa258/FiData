@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
     <!-- 定义变量，下方可通过${}引用 -->
-    <property name="LOG_HOME" value="/root/fisk/fidata/logs/fisk-license-registry"/>
+    <property name="LOG_HOME" value="./logs/fisk-license-registry"/>
     <property name="appName" value="fisk-license-registry"/>
     <springProperty scope="context" name="springAppName" source="spring.application.name"/>
     <contextName>${appName}</contextName>
