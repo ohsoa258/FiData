@@ -70,7 +70,7 @@ public class DataSourceController {
     @PostMapping("/add")
     @ApiOperation("添加数据源")
     public ResultEntity<Object> addDate(@RequestBody DataSourceSaveDTO dto) {
-        return ResultEntityBuild.build(service.insertDataSource(dto));
+        return service.insertDataSource(dto);
     }
 
     @PutMapping("/edit")

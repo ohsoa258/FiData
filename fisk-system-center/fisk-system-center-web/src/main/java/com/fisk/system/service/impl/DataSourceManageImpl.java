@@ -169,18 +169,19 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     }
 
     @Override
-    public ResultEnum insertDataSource(DataSourceSaveDTO dto) {
+    public ResultEntity<Object> insertDataSource(DataSourceSaveDTO dto) {
         QueryWrapper<DataSourcePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DataSourcePO::getName, dto.name)
                 .eq(DataSourcePO::getSourceType, dto.sourceType)
                 .eq(DataSourcePO::getDelFlag, 1);
         DataSourcePO model = baseMapper.selectOne(queryWrapper);
         if (model != null) {
-            return ResultEnum.DATA_SOURCE_NAME_ALREADY_EXISTS;
+            return ResultEntityBuild.build(ResultEnum.DATA_SOURCE_NAME_ALREADY_EXISTS);
         }
         model = new DataSourcePO();
         DataSourceMap.INSTANCES.dtoToPo(dto, model);
-        return baseMapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return baseMapper.insert(model) > 0 ? ResultEntityBuild.buildData(ResultEnum.SUCCESS, model.getId())
+                : ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
     }
 
     @SneakyThrows

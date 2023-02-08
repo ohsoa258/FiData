@@ -95,11 +95,14 @@ public class NifiController {
             log.error("system服务添加数据源失败，[{}]", resultEntity.getMsg());
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
+        Integer id = (Integer) resultEntity.getData();
+        log.info("开始向nifi中添加参数，数据源[{}],[{}]", id, dto);
         Map<String, String> map = new HashMap<>();
-        map.put(ComponentIdTypeEnum.DB_URL.getName(), dto.getConStr());
-        map.put(ComponentIdTypeEnum.DB_USERNAME.getName(), dto.getConAccount());
-        map.put(ComponentIdTypeEnum.DB_PASSWORD.getName(), dto.getConPassword());
+        map.put(ComponentIdTypeEnum.DB_URL.getName() + id, dto.getConStr());
+        map.put(ComponentIdTypeEnum.DB_USERNAME.getName() + id, dto.getConAccount());
+        map.put(ComponentIdTypeEnum.DB_PASSWORD.getName() + id, dto.getConPassword());
         iNiFiHelper.buildNifiGlobalVariable(map);
+        log.info("结束向nifi中添加参数");
         return resultEntity;
     }
 

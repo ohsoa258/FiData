@@ -76,7 +76,7 @@ public interface IDataSourceManageService extends IService<DataSourcePO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum insertDataSource(DataSourceSaveDTO dto);
+    ResultEntity<Object> insertDataSource(DataSourceSaveDTO dto);
 
 
     /**
