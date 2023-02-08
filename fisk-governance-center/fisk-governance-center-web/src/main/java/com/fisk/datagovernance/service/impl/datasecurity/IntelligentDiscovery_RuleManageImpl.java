@@ -13,6 +13,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.CronUtils;
 import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.common.core.utils.Dto.Excel.*;
@@ -491,6 +492,9 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
         IntelligentDiscovery_RuleExtInfoVO intelligentDiscovery_ruleExtInfoVO = new IntelligentDiscovery_RuleExtInfoVO();
         List<IntelligentDiscovery_RuleExtInfo_UserVO> fiDataUsers = new ArrayList<>();
         List<IntelligentDiscovery_RuleExtInfo_DataSourceVO> dataSources = new ArrayList<>();
+        List<IntelligentDiscovery_RuleExtInfo_EmailServiceVO> emailServices = new ArrayList<>();
+        IntelligentDiscovery_RuleExtInfo_UserInfoVO userInfo=new IntelligentDiscovery_RuleExtInfo_UserInfoVO();
+
         try {
             // 数据源信息
             ResultEntity<List<DataSourceDTO>> dataDataSourceResult = userClient.getAll();
@@ -535,8 +539,29 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
                 });
             }
 
+            // 邮件服务器列表
+            ResultEntity<List<EmailServerVO>> emailServerListResult = userClient.getEmailServerList();
+            List<EmailServerVO> emailServerList = emailServerListResult != null && emailServerListResult.getCode() == 0 && CollectionUtils.isNotEmpty(emailServerListResult.getData()) ? emailServerListResult.getData() : null;
+            if (CollectionUtils.isNotEmpty(emailServerList)) {
+                emailServerList.forEach(t -> {
+                    IntelligentDiscovery_RuleExtInfo_EmailServiceVO emailService = new IntelligentDiscovery_RuleExtInfo_EmailServiceVO();
+                    emailService.setId(t.getId());
+                    emailService.setName(t.getName());
+                    emailServices.add(emailService);
+                });
+            }
+
+            // 登录用户信息
+            UserInfo loginUserInfo = userHelper.getLoginUserInfo();
+            if (loginUserInfo!=null){
+                userInfo.setId(loginUserInfo.getId());
+                userInfo.setUsername(loginUserInfo.getUsername());
+            }
+
             intelligentDiscovery_ruleExtInfoVO.setDataSources(dataSources);
             intelligentDiscovery_ruleExtInfoVO.setFiDataUsers(fiDataUsers);
+            intelligentDiscovery_ruleExtInfoVO.setEmailServices(emailServices);
+            intelligentDiscovery_ruleExtInfoVO.setUserInfo(userInfo);
         } catch (Exception ex) {
             log.error("【getRuleExtInfo】ex：" + ex);
             throw new FkException(ResultEnum.ERROR, ex.getMessage());
@@ -737,7 +762,7 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
                 excelDto.setSheets(sheets);
                 ExcelReportUtil.createExcel(excelDto, attachmentInfoPO.getAbsolutePath(), attachmentInfoPO.getCurrentFileName(), false);
             }
-            File file = new File(attachmentInfoPO.getAbsolutePath()+attachmentInfoPO.getCurrentFileName());
+            File file = new File(attachmentInfoPO.getAbsolutePath() + attachmentInfoPO.getCurrentFileName());
             if (!file.exists()) {
                 return ResultEntityBuild.buildData(ResultEnum.SMART_DISCOVERY_REPORT_FAILED_TO_GENERATE_ATTACHMENT, "");
             }
