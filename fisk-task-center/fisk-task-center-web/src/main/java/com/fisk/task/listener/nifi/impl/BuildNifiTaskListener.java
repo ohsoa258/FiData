@@ -928,13 +928,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             ControllerServiceEntity entity = new ControllerServiceEntity();
             entity.setId(componentId);
             ControllerServiceEntity targetResControllerService = entity;
-            if (!(buildNifiFlowDTO.excelFlow && sourceControllerService == null) && targetResControllerService != null) {
-                list.add(sourceControllerService);
-                list.add(targetResControllerService);
-                return list;
-            } else {
-                throw new FkException(ResultEnum.TASK_NIFI_NO_COMPONENTS_FOUND);
-            }
+            list.add(sourceControllerService);
+            list.add(targetResControllerService);
+            return list;
         }
     }
 
