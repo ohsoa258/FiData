@@ -1807,14 +1807,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             st = conn.createStatement();
             Map<String, String> converSql = publishTaskClient.converSql(query.tableName, query.querySql, "", null).data;
             query.querySql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
-            //获取总条数
-            String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
+            //获取总条数 todo 不支持分页
+            /*String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
             ResultSet rSet = st.executeQuery(getTotalSql);
             int rowCount = 0;
             if (rSet.next()) {
                 rowCount = rSet.getInt("total");
             }
-            rSet.close();
+            rSet.close();*/
 
             int offset = (query.pageIndex - 1) * query.pageSize;
             IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceConfig.data.conType);
@@ -1825,7 +1825,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             array = resultSetToJsonArrayDataModel(rs);
             array.pageIndex = query.pageIndex;
             array.pageSize = query.pageSize;
-            array.total = rowCount;
             rs.close();
         } catch (SQLException e) {
             log.error("getTableFieldByQuery ex:", e);
