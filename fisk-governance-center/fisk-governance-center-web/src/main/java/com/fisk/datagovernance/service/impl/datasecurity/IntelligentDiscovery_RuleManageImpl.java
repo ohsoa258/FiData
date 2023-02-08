@@ -493,7 +493,7 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
         List<IntelligentDiscovery_RuleExtInfo_UserVO> fiDataUsers = new ArrayList<>();
         List<IntelligentDiscovery_RuleExtInfo_DataSourceVO> dataSources = new ArrayList<>();
         List<IntelligentDiscovery_RuleExtInfo_EmailServiceVO> emailServices = new ArrayList<>();
-        IntelligentDiscovery_RuleExtInfo_UserInfoVO userInfo=new IntelligentDiscovery_RuleExtInfo_UserInfoVO();
+        IntelligentDiscovery_RuleExtInfo_UserInfoVO userInfo = new IntelligentDiscovery_RuleExtInfo_UserInfoVO();
 
         try {
             // 数据源信息
@@ -553,7 +553,7 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
 
             // 登录用户信息
             UserInfo loginUserInfo = userHelper.getLoginUserInfo();
-            if (loginUserInfo!=null){
+            if (loginUserInfo != null) {
                 userInfo.setId(loginUserInfo.getId());
                 userInfo.setUsername(loginUserInfo.getUsername());
             }
