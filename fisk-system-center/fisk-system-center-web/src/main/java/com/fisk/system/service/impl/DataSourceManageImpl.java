@@ -180,7 +180,17 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         }
         model = new DataSourcePO();
         DataSourceMap.INSTANCES.dtoToPo(dto, model);
-        return baseMapper.insert(model) > 0 ? ResultEntityBuild.buildData(ResultEnum.SUCCESS, model.getId())
+        int flag = baseMapper.insert(model);
+        DataSourcePO newPo = null;
+        if (flag > 0){
+            // 查询数据源
+            queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(DataSourcePO::getName, dto.name)
+                    .eq(DataSourcePO::getSourceType, dto.sourceType)
+                    .eq(DataSourcePO::getDelFlag, 1);
+            newPo = baseMapper.selectOne(queryWrapper);
+        }
+        return flag > 0 ? ResultEntityBuild.buildData(ResultEnum.SUCCESS, newPo.getId())
                 : ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
     }
 
