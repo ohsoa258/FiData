@@ -1137,6 +1137,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 ftpConfig.linuxPath = null;
             }
         }
+        if (DataSourceTypeEnum.FTP.getName().equals(modelDataSource.driveType)) {
+            ftpConfig.password = modelDataSource.connectPwd;
+        }
         ftpConfig.username = modelDataSource.connectAccount;
         ftpConfig.ftpUseUtf8 = true;
         ftpConfig.sheetName = modelAccess.sheet;

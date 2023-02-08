@@ -459,11 +459,11 @@ public class AppRegistrationImpl
         }
 
         // 2.2修改数据
-        long appDataSid = appDataSourceImpl.query().eq("app_id", id).one().getId();
+        //long appDataSid = appDataSourceImpl.query().eq("app_id", id).one().getId();
 
         modelDataSource.stream().filter(Objects::nonNull).forEach(e -> {
             e.setAppId(po.getId());
-            e.id = appDataSid;
+            //e.id = appDataSid;
 
             //sftp秘钥方式,存储二进制数据
             if (DataSourceTypeEnum.SFTP.getName().equals(e.driveType.toLowerCase()) && e.serviceType == 1) {
@@ -487,7 +487,18 @@ public class AppRegistrationImpl
             return e;
         });
 
-        return appDataSourceImpl.updateBatchById(modelDataSource) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+        //删除数据源
+        List<AppDataSourcePO> list = appDataSourceImpl.query().select("id").eq("app_id", dto.id).list();
+        List<Long> collect = modelDataSource.stream().map(e -> e.id).collect(Collectors.toList());
+        List<AppDataSourcePO> collect1 = list.stream().filter(e -> !collect.contains(e.id)).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(collect1)) {
+            collect1.forEach(e -> {
+                appDataSourceImpl.removeById(e.id);
+            });
+        }
+
+
+        return appDataSourceImpl.saveOrUpdateBatch(modelDataSource) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
     @Override

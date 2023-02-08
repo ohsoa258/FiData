@@ -245,15 +245,38 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
 
     @Override
     public DataSourceResultDTO insertDataSourceByAccess(DataSourceSaveDTO dto) {
-        DataSourcePO model = new DataSourcePO();
-        DataSourceMap.INSTANCES.accessDtoToPo(dto, model);
-        boolean flat = this.saveOrUpdate(model);
-        if (!flat) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        DataSourcePO model = this.query().eq("name", dto.name).one();
+        if (model == null) {
+            model = new DataSourcePO();
+            DataSourceMap.INSTANCES.accessDtoToPo(dto, model);
+            boolean flat = this.save(model);
+            if (!flat) {
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            }
+        } else {
+            model = updateDataSourceByAccess(model, dto);
+            boolean flat = this.updateById(model);
+            if (!flat) {
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            }
         }
         DataSourceResultDTO result = new DataSourceResultDTO();
         result.id = (int) model.id;
         return result;
+    }
+
+    public DataSourcePO updateDataSourceByAccess(DataSourcePO po, DataSourceSaveDTO dto) {
+        po.conAccount = dto.conAccount;
+        po.conDbname = dto.conDbname;
+        po.conIp = dto.conIp;
+        po.conPassword = dto.conPassword;
+        po.conPort = dto.conPort;
+        po.conStr = dto.conStr;
+        po.serviceName = dto.serviceName;
+        po.serviceType = dto.serviceType;
+        po.conType = dto.conType.getValue();
+        po.name = dto.name;
+        return po;
     }
 
     public List<DataSourceDTO> getAll(boolean isShowPwd) {
