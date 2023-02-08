@@ -36,7 +36,12 @@ public enum serverModuleTypeEnum implements BaseEnum {
     /**
      * 数据治理_质量报告
      */
-    DATA_GOVERNANCE_QUALITY_REPORT("质量报告", 6);
+    DATA_GOVERNANCE_QUALITY_REPORT("质量报告", 6),
+
+    /**
+     * 数据治理_智能发现
+     */
+    DATA_SECURITY_INTELLIGENT_DISCOVERY_REPORT("智能发现报告", 7);
 
     private final String name;
     @EnumValue
