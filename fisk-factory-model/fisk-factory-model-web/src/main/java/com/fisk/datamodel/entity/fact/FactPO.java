@@ -57,5 +57,8 @@ public class FactPO extends BasePO {
      * 临时表名称前缀
      */
     public String prefixTempName;
-
+    /**
+     * 维度key数据同步脚本
+     */
+    public String dimensionKeyScript;
 }

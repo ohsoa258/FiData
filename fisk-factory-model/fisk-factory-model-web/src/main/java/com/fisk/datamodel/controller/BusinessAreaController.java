@@ -153,7 +153,7 @@ public class BusinessAreaController {
 
     @PostMapping("/buildDimensionKeyScript")
     @ApiOperation(value = "维度或者事实构建维度key脚本预览")
-    public ResultEntity<List<FiDataTableMetaDataDTO>> buildDimensionKeyScript(@RequestBody List<TableSourceRelationsDTO> dto) {
+    public ResultEntity<Object> buildDimensionKeyScript(@RequestBody List<TableSourceRelationsDTO> dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.buildDimensionKeyScript(dto));
     }
 

@@ -78,4 +78,8 @@ public class DimensionPO extends BasePO {
      * 临时表名称
      */
     public String prefixTempName;
+    /**
+     * 维度key数据同步脚本
+     */
+    public String dimensionKeyScript;
 }

@@ -24,6 +24,10 @@ public class DimensionAttributeAddDTO extends MQBaseDTO {
     public String businessAreaName;
     public int createType;
     /**
+     * 维度key数据同步脚本
+     */
+    public String dimensionKeyScript;
+    /**
      * 发布备注
      */
     public String remark;

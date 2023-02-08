@@ -12,6 +12,10 @@ import java.util.List;
 @Data
 public class FactAttributeAddDTO {
     public int factId;
+    /**
+     * 维度key数据同步脚本
+     */
+    public String dimensionKeyScript;
     public boolean isPublish;
     /**
      * 发布备注

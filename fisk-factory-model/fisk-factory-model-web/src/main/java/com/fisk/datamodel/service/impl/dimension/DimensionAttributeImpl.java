@@ -117,6 +117,7 @@ public class DimensionAttributeImpl
             dimensionIds.add(dto.dimensionId);
             //修改发布状态
             dimensionPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
+            dimensionPo.dimensionKeyScript = dto.dimensionKeyScript;
             if (mapper.updateById(dimensionPo) == 0) {
                 throw new FkException(ResultEnum.PUBLISH_FAILURE);
             }

@@ -1114,7 +1114,7 @@ public class BusinessAreaImpl
     }
 
     @Override
-    public String buildDimensionKeyScript(List<TableSourceRelationsDTO> dto) {
+    public Object buildDimensionKeyScript(List<TableSourceRelationsDTO> dto) {
         if (CollectionUtils.isEmpty(dto)) {
             return "";
         }

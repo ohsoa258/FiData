@@ -157,6 +157,7 @@ public class FactAttributeImpl
             dimensionIds.add(dto.factId);
             //修改发布状态
             factPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
+            factPo.dimensionKeyScript = dto.dimensionKeyScript;
             if (factMapper.updateById(factPo) == 0) {
                 throw new FkException(ResultEnum.PUBLISH_FAILURE);
             }

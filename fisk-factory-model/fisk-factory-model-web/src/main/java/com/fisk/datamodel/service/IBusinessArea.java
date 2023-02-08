@@ -182,6 +182,6 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @param dto
      * @return
      */
-    String buildDimensionKeyScript(List<TableSourceRelationsDTO> dto);
+    Object buildDimensionKeyScript(List<TableSourceRelationsDTO> dto);
 
 }
