@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.datamodel.config.SwaggerConfig;
@@ -148,6 +149,12 @@ public class BusinessAreaController {
     @ApiOperation(value = "获取数据建模所有元数据")
     public ResultEntity<List<MetaDataInstanceAttributeDTO>> getDataModelMetaData() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataModelMetaData());
+    }
+
+    @PostMapping("/buildDimensionKeyScript")
+    @ApiOperation(value = "维度或者事实构建维度key脚本预览")
+    public ResultEntity<List<FiDataTableMetaDataDTO>> buildDimensionKeyScript(@RequestBody List<TableSourceRelationsDTO> dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.buildDimensionKeyScript(dto));
     }
 
 }

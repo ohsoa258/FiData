@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
@@ -174,5 +175,13 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @return
      */
     List<MetaDataInstanceAttributeDTO> getDataModelMetaData();
+
+    /**
+     * 构建维度key脚本
+     *
+     * @param dto
+     * @return
+     */
+    String buildDimensionKeyScript(List<TableSourceRelationsDTO> dto);
 
 }

@@ -13,12 +13,14 @@ import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.utils.StringBuildUtils;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
@@ -1109,6 +1111,32 @@ public class BusinessAreaImpl
         list.add(instance);
 
         return list;
+    }
+
+    @Override
+    public String buildDimensionKeyScript(List<TableSourceRelationsDTO> dto) {
+        if (CollectionUtils.isEmpty(dto)) {
+            return "";
+        }
+
+        StringBuilder str = new StringBuilder();
+
+        for (TableSourceRelationsDTO item : dto) {
+            str.append("update ");
+            str.append(item.sourceTable);
+            str.append(" set ");
+            str.append(item.sourceTable).append(".").append(StringBuildUtils.dimensionKeyName(item.targetTable));
+            str.append(" = ");
+            str.append("from ");
+            str.append(item.targetTable);
+            str.append(" where ");
+            str.append(item.sourceTable).append(".").append(item.sourceColumn);
+            str.append(" = ");
+            str.append(item.targetTable).append(".").append(item.targetColumn);
+            str.append(";");
+        }
+
+        return str.toString();
     }
 
 }
