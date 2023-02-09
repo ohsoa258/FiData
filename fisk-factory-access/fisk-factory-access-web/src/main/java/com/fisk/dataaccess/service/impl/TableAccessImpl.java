@@ -1855,12 +1855,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
             dto.fieldType = metaData.getColumnTypeName(i).toLowerCase();
             dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
-            fieldNameDTOList.add(dto);
-
-            // 转换表字段类型和长度
-            List<String> list = transformField(dto.fieldType, dto.fieldLength);
-            dto.fieldType = list.get(0);
-            dto.fieldLength = list.get(1);
 
             fieldNameDTOList.add(dto);
         }
