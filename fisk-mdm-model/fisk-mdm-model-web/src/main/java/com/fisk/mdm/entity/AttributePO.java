@@ -33,7 +33,7 @@ public class AttributePO extends BasePO {
     /**
      * 描述
      */
-    lue = "`desc`")
+    @TableField(value = "`desc`")
     private String desc;
 
     /**
