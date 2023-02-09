@@ -27,8 +27,7 @@ public class ObjectInfoUtils {
         Map infoMap = null;
         for (int i = 0; i < fields.length; i++) {
             infoMap = new HashMap();
-            infoMap.put("name", fields[i].getName());
-            infoMap.put("value", getFieldValueByName(fields[i].getName(), o));
+            infoMap.put(fields[i].getName(), getFieldValueByName(fields[i].getName(), o));
             list.add(infoMap);
         }
         return list;
