@@ -2,6 +2,7 @@ package com.fisk.datamanagement.service;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
+import com.fisk.datamanagement.dto.businessclassification.BusinessClassificationTreeDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDelAssociatedEntityDTO;
@@ -26,7 +27,7 @@ public interface IClassification {
      *
      * @return
      */
-    List<ClassificationTreeDTO> getClassificationTree();
+    List<BusinessClassificationTreeDTO> getClassificationTree();
 
     /**
      * 更改业务分类

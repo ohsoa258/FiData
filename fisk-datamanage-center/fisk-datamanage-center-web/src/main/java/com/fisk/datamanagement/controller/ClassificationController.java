@@ -34,7 +34,7 @@ public class ClassificationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getClassificationList());
     }
 
-    @ApiOperation("获取业务类型树形列表")
+    @ApiOperation("获取业务类型树形列表-已重构")
     @GetMapping("/getClassificationTree")
     public ResultEntity<Object> getClassificationTree() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getClassificationTree());
@@ -46,13 +46,13 @@ public class ClassificationController {
         return ResultEntityBuild.build(service.updateClassification(dto));
     }
 
-    @ApiOperation("根据业务分类名称删除")
+    @ApiOperation("根据业务分类名称删除-已重构")
     @DeleteMapping("/deleteClassification/{classificationName}")
     public ResultEntity<Object> deleteClassification(@PathVariable("classificationName") String classificationName) {
         return ResultEntityBuild.build(service.deleteClassification(classificationName));
     }
 
-    @ApiOperation("添加业务分类以及属性")
+    @ApiOperation("添加业务分类以及属性-已重构")
     @PostMapping("/addClassification")
     public ResultEntity<Object> addClassification(@Validated @RequestBody ClassificationDefsDTO dto) {
         return ResultEntityBuild.build(service.addClassification(dto));

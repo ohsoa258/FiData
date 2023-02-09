@@ -1,10 +1,7 @@
 package com.fisk.datamanagement.dto.businessclassification;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.fisk.common.core.baseObject.dto.BaseDTO;
-import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 

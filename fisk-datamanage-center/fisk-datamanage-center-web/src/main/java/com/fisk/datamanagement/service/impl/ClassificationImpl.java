@@ -10,6 +10,7 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.datamanagement.dto.businessclassification.BusinessClassificationDTO;
+import com.fisk.datamanagement.dto.businessclassification.BusinessClassificationTreeDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
@@ -22,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
@@ -83,25 +85,50 @@ public class ClassificationImpl implements IClassification {
     }
 
     @Override
-    public List<ClassificationTreeDTO> getClassificationTree() {
-        ClassificationDefsDTO data = getClassificationList();
-        if (data == null || CollectionUtils.isEmpty(data.classificationDefs)) {
-            return new ArrayList<>();
+    public List<BusinessClassificationTreeDTO> getClassificationTree() {
+        // 查询所有数据
+        List<BusinessClassificationDTO> data = businessClassificationMapper.selectList(new QueryWrapper<>());
+        if (CollectionUtils.isEmpty(data)){
+            return null;
         }
-        //获取第一级
-        List<ClassificationDefContentDTO> firstLevel =
-                data.classificationDefs
-                        .stream()
-                        .filter(e -> e.superTypes.size() == 0)
-                        .collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(firstLevel)) {
-            return new ArrayList<>();
+
+        // 数据转换
+        List<BusinessClassificationTreeDTO> allData = data.stream().map(item -> {
+            BusinessClassificationTreeDTO dto = new BusinessClassificationTreeDTO();
+            dto.setId(item.id);
+            dto.setPid(item.pid);
+            dto.setName(item.name);
+            return dto;
+        }).collect(Collectors.toList());
+
+        // 获取父级
+        List<BusinessClassificationTreeDTO> parentList = allData.stream().filter(item -> StringUtils.isEmpty(item.pid)).collect(Collectors.toList());
+
+        // 递归处理子集
+        recursionClassificationTree(allData, parentList);
+        return parentList;
+    }
+
+    /**
+     * 递归处理子集数据
+     * @param allData 原始数据集
+     * @param parentList 父级数据集
+     */
+    private void recursionClassificationTree(List<BusinessClassificationTreeDTO> allData, List<BusinessClassificationTreeDTO> parentList){
+        // 遍历父级
+        for (BusinessClassificationTreeDTO parent : parentList){
+            // 子集容器
+            List<BusinessClassificationTreeDTO> children = new ArrayList<>();
+            for (BusinessClassificationTreeDTO sub : allData){
+                if (parent.getId().equals(sub.getPid())){
+                    children.add(sub);
+                }
+                // 递归处理
+                recursionClassificationTree(allData, children);
+            }
+            // 加入父级
+            parent.setChild(children);
         }
-        List<ClassificationTreeDTO> dto = ClassificationMap.INSTANCES.poListToDtoList(firstLevel);
-        for (ClassificationTreeDTO item : dto) {
-            buildChildTree(item, data.classificationDefs);
-        }
-        return dto;
     }
 
     /**
@@ -138,11 +165,29 @@ public class ClassificationImpl implements IClassification {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum deleteClassification(String classificationName)
     {
+        // 查询数据
         QueryWrapper<BusinessClassificationDTO> qw = new QueryWrapper<>();
         qw.eq("name", classificationName);
-        return businessClassificationMapper.delete(qw) > 0 ? ResultEnum.SUCCESS : ResultEnum.DELETE_ERROR;
+        BusinessClassificationDTO dto = businessClassificationMapper.selectOne(qw);
+        if (dto == null){
+            throw new FkException(ResultEnum.ERROR, "业务分类不存在");
+        }
+
+        List<String> idList = new ArrayList<>();
+
+        // 查询子集
+        qw = new QueryWrapper<>();
+        qw.eq("pid", dto.getId());
+        List<BusinessClassificationDTO> children = businessClassificationMapper.selectList(qw);
+        if (!CollectionUtils.isEmpty(children)){
+            idList = children.stream().map(BusinessClassificationDTO::getId).collect(Collectors.toList());
+        }
+        idList.add(dto.getId());
+
+        return businessClassificationMapper.deleteBatchIds(idList) > 0 ? ResultEnum.SUCCESS : ResultEnum.DELETE_ERROR;
     }
 
     @Override
