@@ -844,9 +844,9 @@ public class AppRegistrationImpl
         // 筛选器左边的模糊搜索查询SQL拼接
         data.where = querySql.toString();
         Page<AppRegistrationVO> filter = baseMapper.filter(query.page, data);
-        if (filter.getRecords() != null){
-            // 查询驱动类型
-            List<AppRegistrationVO> appRegistrationVOList = filter.getRecords();
+        // 查询驱动类型
+        List<AppRegistrationVO> appRegistrationVOList = filter.getRecords();
+        if (!CollectionUtils.isEmpty(appRegistrationVOList)){
             List<Long> appIds = appRegistrationVOList.stream().map(AppRegistrationVO::getId).collect(Collectors.toList());
             QueryWrapper<AppDataSourcePO> qw = new QueryWrapper<>();
             qw.in("app_id", appIds);
