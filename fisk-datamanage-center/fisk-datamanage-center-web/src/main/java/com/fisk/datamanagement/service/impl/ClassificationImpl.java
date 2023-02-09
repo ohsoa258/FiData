@@ -25,8 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import javax.xml.transform.Result;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -126,29 +124,59 @@ public class ClassificationImpl implements IClassification {
 
     @Override
     public ResultEnum updateClassification(ClassificationDefsDTO dto) {
-        String jsonParameter = JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.put(typedefs + "?type=classification", jsonParameter);
-        return atlasClient.newResultEnum(result);
+        ClassificationDefContentDTO param = dto.getClassificationDefs().get(0);
+        // 查询数据
+        QueryWrapper<BusinessClassificationDTO> qw = new QueryWrapper<>();
+        qw.eq("name", param.name).eq("del_flag", 1);
+        BusinessClassificationDTO model = businessClassificationMapper.selectOne(qw);
+        if (model == null){
+            throw new FkException(ResultEnum.ERROR, "业务分类不存在");
+        }
+        model.setDescription(param.description);
+
+        return businessClassificationMapper.updateByName(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
     public ResultEnum deleteClassification(String classificationName)
     {
-        ResultDataDTO<String> result = atlasClient.delete(delTypeDefs + classificationName);
-        return atlasClient.newResultEnum(result);
+        QueryWrapper<BusinessClassificationDTO> qw = new QueryWrapper<>();
+        qw.eq("name", classificationName);
+        return businessClassificationMapper.delete(qw) > 0 ? ResultEnum.SUCCESS : ResultEnum.DELETE_ERROR;
     }
 
     @Override
     public ResultEnum addClassification(ClassificationDefsDTO dto)
     {
-        //设置时间戳
-        dto.classificationDefs
-                .stream()
-                .map(e->e.createTime=System.currentTimeMillis())
-                .collect(Collectors.toList());
-        String jsonParameter=JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.post(typedefs + "?type=classification", jsonParameter);
-        return atlasClient.newResultEnum(result);
+        ClassificationDefContentDTO param = dto.getClassificationDefs().get(0);
+        if (StringUtils.isEmpty(param.name)){
+            throw new FkException(ResultEnum.ERROR, "业务分类名称不能为空");
+        }
+
+        // 查询数据
+        QueryWrapper<BusinessClassificationDTO> qw = new QueryWrapper<>();
+        qw.eq("name", param.name).eq("del_flag", 1);
+        BusinessClassificationDTO bcDTO = businessClassificationMapper.selectOne(qw);
+        if (bcDTO != null){
+            throw new FkException(ResultEnum.ERROR, "业务分类名称已经存在");
+        }
+
+        // 添加数据
+        BusinessClassificationDTO model = new BusinessClassificationDTO();
+        model.setName(param.name);
+        model.setDescription(param.description);
+
+        // 设置父级id
+        if (!CollectionUtils.isEmpty(param.superTypes)){
+            model.setPid(businessClassificationMapper.selectParentId(param.superTypes.get(0)));
+        }else {
+            model.setPid(null);
+        }
+
+        // 设置创建者信息
+        model.setCreateUser(userHelper.getLoginUserInfo().id.toString());
+
+        return businessClassificationMapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override

@@ -5,6 +5,7 @@ import com.fisk.datamanagement.dto.businessclassification.BusinessClassification
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 /**
  * @ClassName:
@@ -18,4 +19,7 @@ public interface BusinessClassificationMapper extends FKBaseMapper<BusinessClass
 
     @Select("select id from tb_business_classification where name = #{name} and del_flag = 1")
     String selectParentId(@Param("name") String name);
+
+    @Update("update tb_business_classification set description = #{model.description} where name = #{model.name} and del_flag = 1")
+    int updateByName(@Param("model") BusinessClassificationDTO model);
 }
