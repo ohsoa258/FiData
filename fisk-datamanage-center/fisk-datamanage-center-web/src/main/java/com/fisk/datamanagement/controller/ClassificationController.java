@@ -40,7 +40,7 @@ public class ClassificationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getClassificationTree());
     }
 
-    @ApiOperation("修改业务类型以及业务属性")
+    @ApiOperation("修改业务类型以及业务属性-已重构")
     @PutMapping("/updateClassification")
     public ResultEntity<Object> updateClassification(@Validated @RequestBody ClassificationDefsDTO dto) {
         return ResultEntityBuild.build(service.updateClassification(dto));
@@ -55,7 +55,7 @@ public class ClassificationController {
     @ApiOperation("添加业务分类以及属性-已重构")
     @PostMapping("/addClassification")
     public ResultEntity<Object> addClassification(@Validated @RequestBody ClassificationDefsDTO dto) {
-        return ResultEntityBuild.build(service.addClassification(dto, null));
+        return ResultEntityBuild.build(service.addClassification(dto));
     }
 
     @ApiOperation("业务分类添加关联entity")
@@ -70,13 +70,13 @@ public class ClassificationController {
         return ResultEntityBuild.build(service.classificationDelAssociatedEntity(dto));
     }
 
-    @ApiOperation("同步业务分类")
+    @ApiOperation("同步业务分类-已重构")
     @PostMapping("/synchronousClassification")
     public ResultEntity<Object> synchronousClassification() {
         return ResultEntityBuild.build(service.synchronousClassification());
     }
 
-    @ApiOperation("数据接入应用同步到业务分类")
+    @ApiOperation("数据接入应用同步到业务分类-已重构")
     @PostMapping("/appSynchronousClassification")
     public ResultEntity<Object> appSynchronousClassification(@Validated @RequestBody ClassificationInfoDTO dto) {
         return ResultEntityBuild.build(service.appSynchronousClassification(dto));

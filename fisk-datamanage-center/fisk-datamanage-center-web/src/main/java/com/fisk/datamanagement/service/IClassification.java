@@ -49,7 +49,7 @@ public interface IClassification {
      * @param dto
      * @return
      */
-    ResultEnum addClassification(ClassificationDefsDTO dto, String type);
+    ResultEnum addClassification(ClassificationDefsDTO dto);
 
     /**
      * 业务分类添加关联实体

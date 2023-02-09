@@ -3,6 +3,7 @@ package com.fisk.datamanagement.dto.businessclassification;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -17,10 +18,14 @@ public class BusinessClassificationTreeDTO {
 
     public String id;
 
-    @JsonIgnore
     public String pid;
 
     public String name;
+
+    public String description;
+
+    @JsonIgnore
+    public LocalDateTime createTime;
 
     public List<BusinessClassificationTreeDTO> child;
 

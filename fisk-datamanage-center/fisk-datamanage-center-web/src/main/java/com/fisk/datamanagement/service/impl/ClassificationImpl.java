@@ -98,12 +98,16 @@ public class ClassificationImpl implements IClassification {
             dto.setId(item.id);
             dto.setPid(item.pid);
             dto.setName(item.name);
+            dto.setDescription(item.description);
+            dto.setCreateTime(item.createTime);
             return dto;
         }).collect(Collectors.toList());
 
         // 获取父级
         List<BusinessClassificationTreeDTO> parentList = allData.stream().filter(item -> StringUtils.isEmpty(item.pid)).collect(Collectors.toList());
-
+        if (parentList.size() > 1){
+            parentList.sort(Comparator.comparing(BusinessClassificationTreeDTO::getCreateTime).reversed());
+        }
         // 递归处理子集
         recursionClassificationTree(allData, parentList);
         return parentList;
@@ -125,6 +129,7 @@ public class ClassificationImpl implements IClassification {
                 }
                 // 递归处理
                 recursionClassificationTree(allData, children);
+                children.sort(Comparator.comparing(BusinessClassificationTreeDTO::getCreateTime).reversed());
             }
             // 加入父级
             parent.setChild(children);
@@ -191,18 +196,17 @@ public class ClassificationImpl implements IClassification {
     }
 
     @Override
-    public ResultEnum addClassification(ClassificationDefsDTO dto, String type)
+    public ResultEnum addClassification(ClassificationDefsDTO dto)
     {
-        if (StringUtils.isEmpty(type)){
-            // 单个添加
-            ClassificationDefContentDTO param = dto.getClassificationDefs().get(0);
-            if (StringUtils.isEmpty(param.name)){
+        List<ClassificationDefContentDTO> classificationDefList = dto.getClassificationDefs();
+        for (ClassificationDefContentDTO item : classificationDefList){
+            if (StringUtils.isEmpty(item.name)){
                 throw new FkException(ResultEnum.ERROR, "业务分类名称不能为空");
             }
 
             // 查询数据
             QueryWrapper<BusinessClassificationDTO> qw = new QueryWrapper<>();
-            qw.eq("name", param.name).eq("del_flag", 1);
+            qw.eq("name", item.name).eq("del_flag", 1);
             BusinessClassificationDTO bcDTO = businessClassificationMapper.selectOne(qw);
             if (bcDTO != null){
                 throw new FkException(ResultEnum.ERROR, "业务分类名称已经存在");
@@ -210,24 +214,24 @@ public class ClassificationImpl implements IClassification {
 
             // 添加数据
             BusinessClassificationDTO model = new BusinessClassificationDTO();
-            model.setName(param.name);
-            model.setDescription(param.description);
+            model.setName(item.name);
+            model.setDescription(item.description);
 
             // 设置父级id
-            if (!CollectionUtils.isEmpty(param.superTypes)){
-                model.setPid(businessClassificationMapper.selectParentId(param.superTypes.get(0)));
+            if (!CollectionUtils.isEmpty(item.superTypes)){
+                model.setPid(businessClassificationMapper.selectParentId(item.superTypes.get(0)));
             }else {
                 model.setPid(null);
             }
 
             // 设置创建者信息
             model.setCreateUser(userHelper.getLoginUserInfo().id.toString());
-
-            return businessClassificationMapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
-        }else{
-            // 批量添加
-
+            int flag = businessClassificationMapper.insert(model);
+            if (flag < 0){
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
         }
+        return ResultEnum.SUCCESS;
     }
 
     @Override
@@ -276,8 +280,7 @@ public class ClassificationImpl implements IClassification {
         list.add(masterData);
 
         data.classificationDefs = list;
-        String type = "batch";
-        return this.addClassification(data, type);
+        return this.addClassification(data);
     }
 
     @Override
