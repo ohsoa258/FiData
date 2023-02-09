@@ -2133,7 +2133,7 @@ public class NiFiHelperImpl implements INiFiHelper {
             List<VariableEntity> variableEntityList = new ArrayList<>();
 
             // 遍历变量数据
-            Iterator<Map.Entry<String, String>> map = (Iterator<Map.Entry<String, String>>) variable.entrySet();
+            Iterator<Map.Entry<String, String>> map = variable.entrySet().iterator();
             while (map.hasNext()){
                 Map.Entry<String, String> entry = map.next();
                 String key = entry.getKey();
