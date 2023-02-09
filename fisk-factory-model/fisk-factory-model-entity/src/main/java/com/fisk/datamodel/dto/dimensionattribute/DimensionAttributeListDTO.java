@@ -24,6 +24,8 @@ public class DimensionAttributeListDTO {
 
     public Integer dataSourceId;
 
+    public String dimensionKeyScript;
+
     public List<CustomScriptInfoDTO> customScriptList;
 
 }

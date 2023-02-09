@@ -17,6 +17,8 @@ public class FactAttributeDetailDTO {
      */
     public String sqlScript;
 
+    public String dimensionKeyScript;
+
     public List<FactAttributeDTO> attributeDTO;
 
     public SyncModeDTO syncModeDTO;
