@@ -1,5 +1,6 @@
 package com.fisk.datamodel.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
@@ -183,5 +184,13 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @return
      */
     Object buildDimensionKeyScript(List<TableSourceRelationsDTO> dto);
+
+    /**
+     * 获取数据类型
+     *
+     * @param businessId
+     * @return
+     */
+    JSONObject dataTypeList(Integer businessId);
 
 }

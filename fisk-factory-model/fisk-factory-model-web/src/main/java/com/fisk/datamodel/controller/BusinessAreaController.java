@@ -157,4 +157,10 @@ public class BusinessAreaController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.buildDimensionKeyScript(dto));
     }
 
+    @GetMapping("/dataTypeList/{businessId}")
+    @ApiOperation(value = "获取建模数据类型")
+    public ResultEntity<Object> dataTypeList(@PathVariable("businessId") int businessId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dataTypeList(businessId));
+    }
+
 }
