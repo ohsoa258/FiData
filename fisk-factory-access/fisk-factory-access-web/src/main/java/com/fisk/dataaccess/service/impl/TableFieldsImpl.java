@@ -713,7 +713,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 table.setOwner(userListByIds.data.get(0).getUsername());
             }*/
 
-
             // 字段
             List<MetaDataColumnAttributeDTO> columnList = this.query().eq("table_access_id", tableAccess.id).list()
                     .stream()
