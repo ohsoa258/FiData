@@ -12,6 +12,7 @@ import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.dbdatatype.FiDataDataTypeEnum;
 import com.fisk.common.core.enums.dbdatatype.OracleTypeEnum;
+import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -1809,52 +1810,63 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return flag;
     }
 
-    @Override
-    public OdsResultDTO getTableFieldByQuery(OdsQueryDTO query) {
-        OdsResultDTO array = new OdsResultDTO();
-        Connection conn = null;
-        Statement st = null;
-        try {
-            // 数仓建模中直接关联数据接入中targetDbId
-//            AppRegistrationPO appRegistrationPo = registrationMapper.selectById(query.appId);
-//            if (appRegistrationPo == null) {
-//                throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR);
-//            }
-            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(query.dataSourceId);
-            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
-                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+    public static OdsResultDTO resultSetToJsonArrayDataModel(ResultSet rs) throws SQLException, JSONException {
+        OdsResultDTO data = new OdsResultDTO();
+        // json数组
+        JSONArray array = new JSONArray();
+        // 获取列数
+        ResultSetMetaData metaData = rs.getMetaData();
+        int columnCount = metaData.getColumnCount();
+        List<FieldNameDTO> fieldNameDTOList = new ArrayList<>();
+        // 遍历ResultSet中的每条数据
+        while (rs.next()) {
+            JSONObject jsonObj = new JSONObject();
+            // 遍历每一列
+            for (int i = 1; i <= columnCount; i++) {
+                String columnName = metaData.getColumnLabel(i);
+                //过滤ods表中pk和code默认字段
+                String tableName = metaData.getTableName(i) + "key";
+                if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equalsIgnoreCase(columnName)
+                        || tableName.equalsIgnoreCase("ods_" + columnName.toLowerCase())
+                        || "fi_createtime".equalsIgnoreCase(columnName)
+                        || "fi_updatetime".equalsIgnoreCase(columnName)) {
+                    continue;
+                }
+                //获取sql查询数据集合
+                String value = rs.getString(columnName);
+                jsonObj.put(columnName, value);
             }
-            conn = getConnection(dataSourceConfig.data);
-            st = conn.createStatement();
-            Map<String, String> converSql = publishTaskClient.converSql(query.tableName, query.querySql, "", null).data;
-            query.querySql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
-            //获取总条数 todo 不支持分页
-            /*String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
-            ResultSet rSet = st.executeQuery(getTotalSql);
-            int rowCount = 0;
-            if (rSet.next()) {
-                rowCount = rSet.getInt("total");
-            }
-            rSet.close();*/
-
-            int offset = (query.pageIndex - 1) * query.pageSize;
-            IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceConfig.data.conType);
-            query.querySql = dbCommand.buildPaging(query.querySql, query.pageSize, offset);
-
-            ResultSet rs = st.executeQuery(query.querySql);
-            //获取数据集
-            array = resultSetToJsonArrayDataModel(rs);
-            array.pageIndex = query.pageIndex;
-            array.pageSize = query.pageSize;
-            rs.close();
-        } catch (SQLException e) {
-            log.error("getTableFieldByQuery ex:", e);
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ":" + e.getMessage());
-        } finally {
-            AbstractCommonDbHelper.closeStatement(st);
-            AbstractCommonDbHelper.closeConnection(conn);
+            array.add(jsonObj);
         }
-        return array;
+        //获取列名
+        for (int i = 1; i <= columnCount; i++) {
+            FieldNameDTO dto = new FieldNameDTO();
+            //源表
+            dto.sourceTableName = metaData.getTableName(i);
+            // 源字段
+            dto.sourceFieldName = metaData.getColumnLabel(i);
+            dto.fieldName = metaData.getColumnLabel(i);
+            String tableName = metaData.getTableName(i) + "key";
+            if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equalsIgnoreCase(dto.fieldName)
+                    || tableName.equalsIgnoreCase("ods_" + dto.fieldName.toLowerCase())
+                    || "fi_createtime".equalsIgnoreCase(dto.fieldName)
+                    || "fi_updatetime".equalsIgnoreCase(dto.fieldName)) {
+                continue;
+            }
+            dto.fieldType = metaData.getColumnTypeName(i).toLowerCase();
+            dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
+            fieldNameDTOList.add(dto);
+
+            // 转换表字段类型和长度
+            List<String> list = transformField(dto.fieldType, dto.fieldLength);
+            dto.fieldType = list.get(0);
+            dto.fieldLength = list.get(1);
+
+            fieldNameDTOList.add(dto);
+        }
+        data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());
+        data.dataArray = array;
+        return data;
     }
 
     /**
@@ -1914,71 +1926,59 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return dto;
     }
 
-    public static OdsResultDTO resultSetToJsonArrayDataModel(ResultSet rs) throws SQLException, JSONException {
-        OdsResultDTO data = new OdsResultDTO();
-        // json数组
-        JSONArray array = new JSONArray();
-        // 获取列数
-        ResultSetMetaData metaData = rs.getMetaData();
-        int columnCount = metaData.getColumnCount();
-        List<FieldNameDTO> fieldNameDTOList = new ArrayList<>();
-        // 遍历ResultSet中的每条数据
-        while (rs.next()) {
-            JSONObject jsonObj = new JSONObject();
-            // 遍历每一列
-            for (int i = 1; i <= columnCount; i++) {
-                String columnName = metaData.getColumnLabel(i);
-                //过滤ods表中pk和code默认字段
-                String tableName = metaData.getTableName(i) + "key";
-                if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equalsIgnoreCase(columnName)
-                        || tableName.equalsIgnoreCase("ods_" + columnName.toLowerCase())
-                        || "fi_createtime".equalsIgnoreCase(columnName)
-                        || "fi_updatetime".equalsIgnoreCase(columnName)) {
-                    continue;
-                }
-                //获取sql查询数据集合
-                String value = rs.getString(columnName);
-                jsonObj.put(columnName, value);
+    @Override
+    public OdsResultDTO getTableFieldByQuery(OdsQueryDTO query) {
+        OdsResultDTO array = new OdsResultDTO();
+        Connection conn = null;
+        Statement st = null;
+        ResultEntity<DataSourceDTO> dataSourceConfig = null;
+        try {
+            dataSourceConfig = userClient.getFiDataDataSourceById(query.dataSourceId);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
-            array.add(jsonObj);
-        }
-        //获取列名
-        for (int i = 1; i <= columnCount; i++) {
-            FieldNameDTO dto = new FieldNameDTO();
-            String fieldType1 = "date";
-            String fieldType2 = "time";
-            //源表
-            dto.sourceTableName = metaData.getTableName(i);
-            // 源字段
-            dto.sourceFieldName = metaData.getColumnLabel(i);
-            dto.fieldName = metaData.getColumnLabel(i);
-            String tableName = metaData.getTableName(i) + "key";
-            if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equalsIgnoreCase(dto.fieldName)
-                    || tableName.equalsIgnoreCase("ods_" + dto.fieldName.toLowerCase())
-                    || "fi_createtime".equalsIgnoreCase(dto.fieldName)
-                    || "fi_updatetime".equalsIgnoreCase(dto.fieldName)) {
-                continue;
+            conn = getConnection(dataSourceConfig.data);
+            st = conn.createStatement();
+            Map<String, String> converSql = publishTaskClient.converSql(query.tableName, query.querySql, "", null).data;
+            query.querySql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
+            //获取总条数 todo 不支持分页
+            /*String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
+            ResultSet rSet = st.executeQuery(getTotalSql);
+            int rowCount = 0;
+            if (rSet.next()) {
+                rowCount = rSet.getInt("total");
             }
-            dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
-            if (dto.fieldType.contains("INT2") || dto.fieldType.contains("INT4") || dto.fieldType.contains("INT8")) {
-                dto.fieldType = "INT";
-            }
-            if (dto.fieldType.toLowerCase().contains(fieldType1) || dto.fieldType.toLowerCase().contains(fieldType2)) {
-                dto.fieldLength = "50";
-            } else {
-                dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
-            }
+            rSet.close();*/
 
-            // 转换表字段类型和长度
-            List<String> list = transformField(dto.fieldType, dto.fieldLength);
-            dto.fieldType = list.get(0);
-            dto.fieldLength = list.get(1);
+            int offset = (query.pageIndex - 1) * query.pageSize;
+            IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceConfig.data.conType);
+            query.querySql = dbCommand.buildPaging(query.querySql, query.pageSize, offset);
 
-            fieldNameDTOList.add(dto);
+            ResultSet rs = st.executeQuery(query.querySql);
+            //获取数据集
+            array = resultSetToJsonArrayDataModel(rs);
+            array.pageIndex = query.pageIndex;
+            array.pageSize = query.pageSize;
+            rs.close();
+        } catch (SQLException e) {
+            log.error("getTableFieldByQuery ex:", e);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ":" + e.getMessage());
+        } finally {
+            AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeConnection(conn);
         }
-        data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());
-        data.dataArray = array;
-        return data;
+        ResultEntity<List<DataSourceDTO>> allSource = userClient.getAll();
+        if (allSource.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_OPS_CONFIG_EXISTS);
+        }
+        Optional<DataSourceDTO> first = allSource.data.stream().filter(e -> e.sourceBusinessType == SourceBusinessTypeEnum.DW).findFirst();
+        if (!first.isPresent()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        //数据类型转换
+        typeConversion(dataSourceConfig.data.conType, array.fieldNameDTOList, first.get().id);
+
+        return array;
     }
 
     /**
