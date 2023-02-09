@@ -55,7 +55,7 @@ public class ClassificationController {
     @ApiOperation("添加业务分类以及属性-已重构")
     @PostMapping("/addClassification")
     public ResultEntity<Object> addClassification(@Validated @RequestBody ClassificationDefsDTO dto) {
-        return ResultEntityBuild.build(service.addClassification(dto));
+        return ResultEntityBuild.build(service.addClassification(dto, null));
     }
 
     @ApiOperation("业务分类添加关联entity")
