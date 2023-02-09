@@ -910,9 +910,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         List<AppRegistrationPO> appRegistrationPoList = new ArrayList<>();
         // 只需要RestfulAPI和api类型
         list.forEach(e -> {
-            AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).one();
-            if (DataSourceTypeEnum.API.getName().equalsIgnoreCase(appDataSourcePo.driveType) || DataSourceTypeEnum.RestfulAPI.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
-                appRegistrationPoList.add(e);
+            List<AppDataSourcePO> appDataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).list();
+            if (!CollectionUtils.isEmpty(appDataSourcePo)) {
+                for (AppDataSourcePO item : appDataSourcePo) {
+                    if (DataSourceTypeEnum.API.getName().equalsIgnoreCase(item.driveType) || DataSourceTypeEnum.RestfulAPI.getName().equalsIgnoreCase(item.driveType)) {
+                        appRegistrationPoList.add(e);
+                    }
+                }
             }
         });
 

@@ -1286,11 +1286,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             // 数据湖非实时物理表任务(mysql  sqlserver  oracle)
             case DATALAKE_TASK:
                 allAppList.forEach(e -> {
-                    AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).one();
-                    if (dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.MYSQL.getName()) ||
-                            dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName()) ||
-                            dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName())) {
-                        list.add(e);
+                    List<AppDataSourcePO> dataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).list();
+                    if (!CollectionUtils.isEmpty(dataSourcePo)) {
+                        for (AppDataSourcePO item : dataSourcePo) {
+                            if (item.driveType.equalsIgnoreCase(DataSourceTypeEnum.MYSQL.getName()) ||
+                                    item.driveType.equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName()) ||
+                                    item.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName())) {
+                                list.add(e);
+                            }
+                        }
                     }
                 });
 
@@ -1298,18 +1302,26 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             // 数据湖ftp任务
             case DATALAKE_FTP_TASK:
                 allAppList.forEach(e -> {
-                    AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).one();
-                    if (dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.FTP.getName())) {
-                        list.add(e);
+                    List<AppDataSourcePO> dataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).list();
+                    if (!CollectionUtils.isEmpty(dataSourcePo)) {
+                        for (AppDataSourcePO item : dataSourcePo) {
+                            if (item.driveType.equalsIgnoreCase(DataSourceTypeEnum.FTP.getName())) {
+                                list.add(e);
+                            }
+                        }
                     }
                 });
                 return bulidListChannelDataDTOByTableOrFTP(list);
             // 数据湖非实时api任务
             case DATALAKE_API_TASK:
                 allAppList.forEach(e -> {
-                    AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).one();
-                    if (dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.API.getName())) {
-                        list.add(e);
+                    List<AppDataSourcePO> dataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).list();
+                    if (!CollectionUtils.isEmpty(dataSourcePo)) {
+                        for (AppDataSourcePO item : dataSourcePo) {
+                            if (item.driveType.equalsIgnoreCase(DataSourceTypeEnum.API.getName())) {
+                                list.add(e);
+                            }
+                        }
                     }
                 });
                 return bulidListChannelDataDTOByAPI(list);
@@ -1332,27 +1344,33 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<ChannelDataDTO> channelDataDTOList = AppRegistrationMap.INSTANCES.listPoToChannelDataDto(list);
 
         for (AppRegistrationPO e : list) {
-            AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).one();
-            for (ChannelDataDTO f : channelDataDTOList) {
-                if (appDataSourcePo.appId == f.id) {
-                    if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.sqlserver.getName())
-                            || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.mysql.getName())
-                            || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.oracle.getName())
-                            || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.postgresql.getName())
-                            || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.sftp.getName())) {
-                        f.type = "数据湖表任务";
-                    }
-                    if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.api.getName())) {
-                        f.type = "数据湖非实时api任务";
-                    }
-                    if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.ftp.getName())) {
-                        f.type = "数据湖ftp任务";
-                    }
-                    if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.RestfulAPI.getName())) {
-                        f.type = "数据湖RestfulAPI任务";
+            List<AppDataSourcePO> appDataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).list();
+            if (CollectionUtils.isEmpty(appDataSourcePo)) {
+                continue;
+            }
+            for (AppDataSourcePO item : appDataSourcePo) {
+                for (ChannelDataDTO f : channelDataDTOList) {
+                    if (item.appId == f.id) {
+                        if (item.driveType.equalsIgnoreCase(DbTypeEnum.sqlserver.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.mysql.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.oracle.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.postgresql.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.sftp.getName())) {
+                            f.type = "数据湖表任务";
+                        }
+                        if (item.driveType.equalsIgnoreCase(DbTypeEnum.api.getName())) {
+                            f.type = "数据湖非实时api任务";
+                        }
+                        if (item.driveType.equalsIgnoreCase(DbTypeEnum.ftp.getName())) {
+                            f.type = "数据湖ftp任务";
+                        }
+                        if (item.driveType.equalsIgnoreCase(DbTypeEnum.RestfulAPI.getName())) {
+                            f.type = "数据湖RestfulAPI任务";
+                        }
                     }
                 }
             }
+
         }
 
         // 查询当前应用下面的所有表(type为空的是脏数据)
