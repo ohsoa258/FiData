@@ -24,7 +24,7 @@ public class ObjectInfoUtils {
     public static List<Map<String, Object>> getFiledsInfo(Object o) {
         Field[] fields = o.getClass().getDeclaredFields();
         List list = new ArrayList();
-        Map infoMap = null;
+        Map infoMap;
         for (int i = 0; i < fields.length; i++) {
             infoMap = new HashMap();
             infoMap.put(fields[i].getName(), getFieldValueByName(fields[i].getName(), o));
