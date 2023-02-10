@@ -13,8 +13,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class MetadataEntityTypePO extends BasePO {
 
-    public Integer id;
-
     public String type;
 
 }

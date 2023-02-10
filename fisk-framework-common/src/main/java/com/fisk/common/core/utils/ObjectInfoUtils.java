@@ -13,6 +13,8 @@ import java.util.Map;
 @Slf4j
 public class ObjectInfoUtils {
 
+    public String[] arr = new String[]{"name", "description", "displayName", "owner"};
+
     /**
      * 获取对象属性名和属性值
      *
