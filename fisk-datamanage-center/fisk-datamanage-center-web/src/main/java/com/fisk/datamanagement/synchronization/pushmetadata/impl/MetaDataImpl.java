@@ -711,7 +711,7 @@ public class MetaDataImpl implements IMetaData {
      * @return
      */
     public String metaDataInstance(MetaDataInstanceAttributeDTO dto) {
-        String atlasGuid = getMetaDataConfig(dto.qualifiedName);
+        /*String atlasGuid = getMetaDataConfig(dto.qualifiedName);
         //为空,则新增
         if (StringUtils.isEmpty(atlasGuid)) {
             EntityDTO entityDTO = new EntityDTO();
@@ -722,9 +722,12 @@ public class MetaDataImpl implements IMetaData {
             entityDTO.entity = entityTypeDTO;
             return addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_INSTANCE, "");
         }
-        return atlasGuid;
+        return atlasGuid;*/
         //修改
         //return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_INSTANCE, dto);
+
+
+        return "";
     }
 
     /**
