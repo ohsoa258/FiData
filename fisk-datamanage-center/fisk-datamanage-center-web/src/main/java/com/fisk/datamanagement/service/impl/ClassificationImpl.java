@@ -64,23 +64,36 @@ public class ClassificationImpl implements IClassification {
     @Override
     public ClassificationDefsDTO getClassificationList() {
         ClassificationDefsDTO data = new ClassificationDefsDTO();
-        try {
-            ResultDataDTO<String> result = atlasClient.get(typedefs + "?type=classification");
-            if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
-            {
-                throw new FkException(ResultEnum.BAD_REQUEST);
-            }
-            JSONObject jsonObj = JSON.parseObject(result.data);
-            String classificationDefs=jsonObj.getString("classificationDefs");
-            data.classificationDefs = JSONObject.parseArray(classificationDefs, ClassificationDefContentDTO.class);
-            //根据创建时间升序
-            data.classificationDefs.sort(Comparator.comparing(ClassificationDefContentDTO::getCreateTime));
-            //反转
-            Collections.reverse(data.classificationDefs);
-        } catch (Exception e) {
-            log.error("getClassificationList ex:" + e);
-            throw new FkException(ResultEnum.SQL_ANALYSIS);
+        // 获取全部数据
+        List<BusinessClassificationDTO> all = businessClassificationMapper.selectList(new QueryWrapper<>());
+        if (CollectionUtils.isEmpty(all)){
+            return null;
         }
+
+        // 数据转换
+        List<ClassificationDefContentDTO> allData = all.stream().map(item -> {
+            ClassificationDefContentDTO dto = new ClassificationDefContentDTO();
+            dto.setId(item.id);
+            dto.setPid(item.pid);
+            dto.setName(item.name);
+            dto.setDescription(item.description);
+            dto.setCreateTime(item.createTime);
+            return dto;
+        }).collect(Collectors.toList());
+
+        List<ClassificationDefContentDTO> allDatas = allData;
+
+        // 设置子集、父级
+        for (ClassificationDefContentDTO parent : allData){
+            List<ClassificationDefContentDTO> subList = allDatas.stream().filter(item -> !StringUtils.isEmpty(item.getPid()) && item.getPid().equals(parent.getId())).collect(Collectors.toList());
+            parent.setSubTypes(subList.stream().map(ClassificationDefContentDTO::getName).collect(Collectors.toList()));
+
+            if (!StringUtils.isEmpty(parent.getPid())){
+                List<ClassificationDefContentDTO> superList = allDatas.stream().filter(item -> item.getId().equals(parent.getPid())).collect(Collectors.toList());
+                parent.setSuperTypes(superList.stream().map(ClassificationDefContentDTO::getName).collect(Collectors.toList()));
+            }
+        }
+        data.setClassificationDefs(allData);
         return data;
     }
 

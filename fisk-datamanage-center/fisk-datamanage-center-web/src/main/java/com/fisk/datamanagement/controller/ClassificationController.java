@@ -28,7 +28,7 @@ public class ClassificationController {
     @Resource
     IClassification service;
 
-    @ApiOperation("获取业务分类列表")
+    @ApiOperation("获取业务分类列表-已重构")
     @GetMapping("/getClassificationList")
     public ResultEntity<Object> getClassificationList() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getClassificationList());
