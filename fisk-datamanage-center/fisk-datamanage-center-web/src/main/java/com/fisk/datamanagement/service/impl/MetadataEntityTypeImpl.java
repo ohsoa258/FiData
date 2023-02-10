@@ -6,10 +6,12 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.entity.MetadataEntityTypePO;
 import com.fisk.datamanagement.mapper.MetadataEntityTypeMapper;
 import com.fisk.datamanagement.service.IMetadataEntityType;
+import org.springframework.stereotype.Service;
 
 /**
  * @author JianWenYang
  */
+@Service
 public class MetadataEntityTypeImpl
         extends ServiceImpl<MetadataEntityTypeMapper, MetadataEntityTypePO>
         implements IMetadataEntityType {
@@ -21,7 +23,7 @@ public class MetadataEntityTypeImpl
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
-        return po.id;
+        return (int) po.id;
     }
 
 }

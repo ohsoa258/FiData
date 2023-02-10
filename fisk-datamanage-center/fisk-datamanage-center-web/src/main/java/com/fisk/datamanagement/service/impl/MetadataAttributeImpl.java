@@ -8,6 +8,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.entity.MetadataAttributePO;
 import com.fisk.datamanagement.mapper.MetadataAttributeMapper;
 import com.fisk.datamanagement.service.IMetadataAttribute;
+import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -19,6 +20,7 @@ import java.util.Map;
 /**
  * @author JianWenYang
  */
+@Service
 public class MetadataAttributeImpl
         extends ServiceImpl<MetadataAttributeMapper, MetadataAttributePO>
         implements IMetadataAttribute {

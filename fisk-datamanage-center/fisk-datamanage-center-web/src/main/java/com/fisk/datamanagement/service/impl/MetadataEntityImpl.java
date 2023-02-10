@@ -7,6 +7,7 @@ import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDT
 import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.mapper.MetadataEntityMapper;
 import com.fisk.datamanagement.service.IMetadataEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -14,6 +15,7 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
+@Service
 public class MetadataEntityImpl
         extends ServiceImpl<MetadataEntityMapper, MetadataEntityPO>
         implements IMetadataEntity {
