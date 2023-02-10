@@ -19,7 +19,6 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
-import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
@@ -166,7 +165,7 @@ public class BusinessAreaImpl
         dimensionFolder.addPublicDimensionFolder();
         dimensionFolder.addSystemDimensionFolder(dto.id);
 
-        // 添加元数据信息
+        /*// 添加元数据信息
         ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
         classificationInfoDto.setName(dto.businessName);
         classificationInfoDto.setDescription(dto.businessDes);
@@ -176,7 +175,7 @@ public class BusinessAreaImpl
             dataManageClient.appSynchronousClassification(classificationInfoDto);
         } catch (Exception e) {
             log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
-        }
+        }*/
 
         return ResultEnum.SUCCESS;
     }
@@ -296,7 +295,7 @@ public class BusinessAreaImpl
                 return ResultEnum.BUSINESS_AREA_EXISTS_ASSOCIATED;
             }
 
-            //删除元数据信息
+            /*//删除元数据信息
             ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
             classificationInfoDto.setName(model.getBusinessName());
             classificationInfoDto.setDescription(model.getBusinessDes());
@@ -307,7 +306,7 @@ public class BusinessAreaImpl
             } catch (Exception e) {
                 // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
                 log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
-            }
+            }*/
 
             return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         } catch (Exception e) {
