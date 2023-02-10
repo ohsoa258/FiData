@@ -86,9 +86,9 @@ public class CategoryImpl implements ICategory {
         GlossaryLibraryDTO model = new GlossaryLibraryDTO();
         model.setName(dto.name);
         if (!StringUtils.isEmpty(dto.parentCategory.categoryGuid)){
-            model.setPid(dto.parentCategory.categoryGuid);
+            model.setPid(Integer.parseInt(dto.parentCategory.categoryGuid));
         }else{
-            model.setPid(preLibrary.id);
+            model.setPid(Integer.parseInt(String.valueOf(preLibrary.getId())));
         }
         model.setShortDescription(dto.shortDescription);
         model.setLongDescription(dto.longDescription);
@@ -123,7 +123,7 @@ public class CategoryImpl implements ICategory {
         QueryWrapper<GlossaryLibraryDTO> qw = new QueryWrapper<>();
         qw.isNotNull("pid").eq("name", dto.name);
         GlossaryLibraryDTO model = glossaryLibraryMapper.selectOne(qw);
-        if (model != null && !model.id.equals(dto.guid)){
+        if (model != null && !String.valueOf(model.getId()).equals(dto.getGuid())){
             throw new FkException(ResultEnum.ERROR, "术语类别名称已存在");
         }
 

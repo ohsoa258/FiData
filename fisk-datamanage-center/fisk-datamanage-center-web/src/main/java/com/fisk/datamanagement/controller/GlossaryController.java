@@ -41,43 +41,43 @@ public class GlossaryController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getGlossaryList());
     }
 
-    @ApiOperation("添加术语库-已重构")
+    @ApiOperation("添加术语库--已重构")
     @PostMapping("/addGlossary")
     public ResultEntity<Object> addGlossary(@Validated @RequestBody GlossaryDTO dto) {
         return ResultEntityBuild.build(service.addGlossary(dto));
     }
 
-    @ApiOperation("删除术语库-已重构")
+    @ApiOperation("删除术语库--已重构")
     @DeleteMapping("/deleteGlossary/{guid}")
     public ResultEntity<Object> deleteGlossary(@PathVariable("guid") String guid) {
         return ResultEntityBuild.build(service.deleteGlossary(guid));
     }
 
-    @ApiOperation("修改术语库-已重构")
+    @ApiOperation("修改术语库--已重构")
     @PutMapping("/updateGlossary")
     public ResultEntity<Object> updateGlossary(@Validated @RequestBody GlossaryDTO dto) {
         return ResultEntityBuild.build(service.updateGlossary(dto));
     }
 
-    @ApiOperation("术语库下添加术语-已重构")
+    @ApiOperation("术语库下添加术语--已重构")
     @PostMapping("/addTerm")
     public ResultEntity<Object> addTerm(@Validated @RequestBody TermDTO dto) {
         return ResultEntityBuild.build(iTerm.addTerm(dto));
     }
 
-    @ApiOperation("获取术语详情-已重构")
+    @ApiOperation("获取术语详情--已重构")
     @GetMapping("/getTerm/{guid}")
     public ResultEntity<Object> getTerm(@PathVariable("guid") String guid) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iTerm.getTerm(guid));
     }
 
-    @ApiOperation("修改术语-已重构")
+    @ApiOperation("修改术语--已重构")
     @PutMapping("/updateTerm")
     public ResultEntity<Object> updateTerm(@Validated @RequestBody TermDTO dto) {
         return ResultEntityBuild.build(iTerm.updateTerm(dto));
     }
 
-    @ApiOperation("删除术语-已重构")
+    @ApiOperation("删除术语--已重构")
     @DeleteMapping("/deleteTerm/{guid}")
     public ResultEntity<Object> deleteTerm(@PathVariable("guid") String guid) {
         return ResultEntityBuild.build(iTerm.deleteTerm(guid));
@@ -95,7 +95,7 @@ public class GlossaryController {
         return ResultEntityBuild.build(iTerm.termDeleteAssignedEntities(dto));
     }
 
-    @ApiOperation("术语库下添加类别-已重构")
+    @ApiOperation("术语库下添加类别--已重构")
     @PostMapping("/addCategory")
     public ResultEntity<Object> addCategory(@Validated @RequestBody CategoryDTO dto) {
         return ResultEntityBuild.build(iCategory.addCategory(dto));
@@ -113,7 +113,7 @@ public class GlossaryController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iCategory.getCategory(guid));
     }
 
-    @ApiOperation("修改类别-已重构")
+    @ApiOperation("修改类别--已重构")
     @PutMapping("/updateCategory")
     public ResultEntity<Object> updateCategory(@Validated @RequestBody CategoryDTO dto) {
         return ResultEntityBuild.build(iCategory.updateCategory(dto));

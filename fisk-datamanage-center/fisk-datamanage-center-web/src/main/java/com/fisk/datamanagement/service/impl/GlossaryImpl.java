@@ -102,6 +102,7 @@ public class GlossaryImpl implements IGlossary {
         if (model == null){
             throw new FkException(ResultEnum.ERROR, "术语库不存在");
         }
+        // TODO 删除术语分类及分类下的术语
 
         if (glossaryLibraryMapper.deleteById(guid) > 0){
             return ResultEnum.SUCCESS;
@@ -129,7 +130,7 @@ public class GlossaryImpl implements IGlossary {
         qw = new QueryWrapper<>();
         qw.eq("name", dto.name).eq("del_flag", 1).isNull("pid");
         GlossaryLibraryDTO preModel = glossaryLibraryMapper.selectOne(qw);
-        if (preModel != null){
+        if (preModel != null && !String.valueOf(preModel.getId()).equals(dto.getGuid())){
             throw new FkException(ResultEnum.ERROR, "术语库名称不能重复");
         }
 
