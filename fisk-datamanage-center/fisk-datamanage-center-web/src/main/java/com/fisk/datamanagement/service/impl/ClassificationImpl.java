@@ -73,8 +73,9 @@ public class ClassificationImpl implements IClassification {
         // 数据转换
         List<ClassificationDefContentDTO> allData = all.stream().map(item -> {
             ClassificationDefContentDTO dto = new ClassificationDefContentDTO();
-            dto.setId(item.id);
-            dto.setPid(item.pid);
+            dto.setId(String.valueOf(item.id));
+            dto.setGuid(String.valueOf(item.id));
+            dto.setPid(String.valueOf(item.pid));
             dto.setName(item.name);
             dto.setDescription(item.description);
             dto.setCreateTime(item.createTime);
@@ -108,8 +109,13 @@ public class ClassificationImpl implements IClassification {
         // 数据转换
         List<BusinessClassificationTreeDTO> allData = data.stream().map(item -> {
             BusinessClassificationTreeDTO dto = new BusinessClassificationTreeDTO();
-            dto.setId(item.id);
-            dto.setPid(item.pid);
+            dto.setId(String.valueOf(item.id));
+            dto.setGuid(String.valueOf(item.id));
+            if (item.pid == null){
+                dto.setPid(null);
+            }else{
+                dto.setPid(item.getPid().toString());
+            }
             dto.setName(item.name);
             dto.setDescription(item.description);
             dto.setCreateTime(item.createTime);
@@ -197,7 +203,7 @@ public class ClassificationImpl implements IClassification {
             throw new FkException(ResultEnum.ERROR, "业务分类不存在");
         }
 
-        List<String> idList = new ArrayList<>();
+        List<Long> idList = new ArrayList<>();
 
         // 查询子集
         qw = new QueryWrapper<>();
@@ -238,7 +244,7 @@ public class ClassificationImpl implements IClassification {
 
             // 设置父级id
             if (!CollectionUtils.isEmpty(item.superTypes)){
-                model.setPid(businessClassificationMapper.selectParentId(item.superTypes.get(0)));
+                model.setPid(Integer.valueOf(businessClassificationMapper.selectParentId(item.superTypes.get(0))));
             }else {
                 model.setPid(null);
             }

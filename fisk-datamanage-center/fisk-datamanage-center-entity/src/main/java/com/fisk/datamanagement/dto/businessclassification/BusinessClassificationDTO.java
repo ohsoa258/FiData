@@ -2,6 +2,7 @@ package com.fisk.datamanagement.dto.businessclassification;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.fisk.common.core.baseObject.dto.BaseDTO;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -17,21 +18,11 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @TableName("tb_business_classification")
-public class BusinessClassificationDTO extends BaseDTO {
+public class BusinessClassificationDTO extends BasePO {
 
-    public String id;
-
-    public String pid;
+    public Integer pid;
 
     public String name;
 
     public String description;
-
-    public LocalDateTime createTime;
-
-    public String createUser;
-
-    public LocalDateTime updateTime;
-
-    public String updateUser;
 }

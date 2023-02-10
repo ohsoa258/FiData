@@ -17,6 +17,7 @@ public class ClassificationDefContentDTO {
     @ApiModelProperty(value = "业务分类父级id")
     public String pid;
 
+    @ApiModelProperty(value = "业务分类id")
     public String guid;
 
     @ApiModelProperty(value = "分类名称,添加后不可编辑")

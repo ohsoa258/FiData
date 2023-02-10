@@ -18,6 +18,8 @@ public class BusinessClassificationTreeDTO {
 
     public String id;
 
+    public String guid;
+
     public String pid;
 
     public String name;
