@@ -657,6 +657,9 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
             if (rulePO == null) {
                 return ResultEntityBuild.buildData(ResultEnum.INTELLIGENT_DISCOVERY_CONFIGURATION_DOES_NOT_EXIST, "");
             }
+            if (rulePO.getRuleState() == RuleStateEnum.Disable.getValue()){
+                return ResultEntityBuild.buildData(ResultEnum.SMART_DISCOVERY_IS_DISABLED, "");
+            }
             // 查询智能发现通知配置
             QueryWrapper<IntelligentDiscovery_NoticePO> intelligentDiscovery_noticePOQueryWrapper = new QueryWrapper<>();
             intelligentDiscovery_noticePOQueryWrapper.lambda()

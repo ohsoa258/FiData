@@ -305,6 +305,7 @@ public enum ResultEnum {
     THE_MAIL_SERVER_DOES_NOT_EXIST(12009,"邮件服务器不存在"),
     SMART_DISCOVERY_REPORT_FAILED_TO_GENERATE_ATTACHMENT(12010,"智能发现报告生成失败"),
     FILE_DOES_NOT_EXIST(12011,"文件不存在"),
+    SMART_DISCOVERY_IS_DISABLED(12012,"智能发现已禁用"),
 
     /**
      * 元数据
