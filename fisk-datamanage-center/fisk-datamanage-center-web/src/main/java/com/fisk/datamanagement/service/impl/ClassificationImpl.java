@@ -178,8 +178,11 @@ public class ClassificationImpl implements IClassification {
             throw new FkException(ResultEnum.ERROR, "业务分类不存在");
         }
         model.setDescription(param.description);
-
-        return businessClassificationMapper.updateByName(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        if (businessClassificationMapper.updateByName(model) > 0){
+            return ResultEnum.SUCCESS;
+        }else{
+            throw new FkException(ResultEnum.ERROR, "修改业务分类失败");
+        }
     }
 
     @Override
@@ -204,8 +207,11 @@ public class ClassificationImpl implements IClassification {
             idList = children.stream().map(BusinessClassificationDTO::getId).collect(Collectors.toList());
         }
         idList.add(dto.getId());
-
-        return businessClassificationMapper.deleteBatchIds(idList) > 0 ? ResultEnum.SUCCESS : ResultEnum.DELETE_ERROR;
+        if (businessClassificationMapper.deleteBatchIds(idList) > 0){
+            return ResultEnum.SUCCESS;
+        }else{
+            throw new FkException(ResultEnum.ERROR, "删除业务分类失败");
+        }
     }
 
     @Override
@@ -241,7 +247,7 @@ public class ClassificationImpl implements IClassification {
             model.setCreateUser(userHelper.getLoginUserInfo().id.toString());
             int flag = businessClassificationMapper.insert(model);
             if (flag < 0){
-                return ResultEnum.SAVE_DATA_ERROR;
+                throw new FkException(ResultEnum.ERROR, "保存失败");
             }
         }
         return ResultEnum.SUCCESS;
