@@ -8,6 +8,8 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.category.CategoryDTO;
+import com.fisk.datamanagement.dto.category.ChildrenCategoryDetailsDTO;
+import com.fisk.datamanagement.dto.glossary.GlossaryAnchorDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryLibraryDTO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
@@ -24,6 +26,8 @@ import javax.annotation.Resource;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -107,8 +111,60 @@ public class CategoryImpl implements ICategory {
     @Override
     public CategoryDTO getCategory(String guid)
     {
-        ResultDataDTO<String> result = atlasClient.get(category + "/" + guid);
-        return JSONObject.parseObject(result.data,CategoryDTO.class);
+        // 查询当前术语类别是否存在
+        QueryWrapper<GlossaryLibraryDTO> qw = new QueryWrapper<>();
+        qw.eq("id", guid);
+        GlossaryLibraryDTO libraryDto = glossaryLibraryMapper.selectOne(qw);
+        if (libraryDto == null){
+            throw new FkException(ResultEnum.ERROR, "术语类别不存在");
+        }
+
+        // 设置已查询的数据
+        CategoryDTO data = new CategoryDTO();
+        data.setGuid(String.valueOf(libraryDto.pid));
+        data.setName(libraryDto.name);
+        data.setShortDescription(libraryDto.shortDescription);
+        data.setLongDescription(libraryDto.longDescription);
+
+        // 设置全限定名
+        qw = new QueryWrapper<>();
+        qw.eq("del_flag", 1);
+        List<GlossaryLibraryDTO> allData = glossaryLibraryMapper.selectList(qw);
+
+        GlossaryLibraryDTO glossaryLibraryDTO = recursionData(allData, guid);
+        if (glossaryLibraryDTO != null){
+            data.setQualifiedName(libraryDto.name + "@" + glossaryLibraryDTO.name);
+        }
+        // 设置术语库id
+        GlossaryAnchorDTO parent = new GlossaryAnchorDTO();
+        parent.setGlossaryGuid(String.valueOf(glossaryLibraryDTO.getId()));
+        data.setAnchor(parent);
+
+        // 设置一级子集术语类别
+        List<ChildrenCategoryDetailsDTO> children = new ArrayList<>();
+        for (GlossaryLibraryDTO item : allData){
+            if (!StringUtils.isEmpty(item.pid) && String.valueOf(item.pid).equals(guid)){
+                ChildrenCategoryDetailsDTO detailsDTO = new ChildrenCategoryDetailsDTO();
+                detailsDTO.categoryGuid = String.valueOf(item.id);
+                detailsDTO.displayText = item.name;
+                detailsDTO.parentCategoryGuid = String.valueOf(glossaryLibraryDTO.id);
+                children.add(detailsDTO);
+            }
+        }
+        data.setChildrenCategories(children);
+
+        return data;
+    }
+
+    private GlossaryLibraryDTO recursionData(List<GlossaryLibraryDTO> allData, String guid){
+        for (GlossaryLibraryDTO item : allData){
+            if (guid.equals(item.id) && !StringUtils.isEmpty(item.pid)){
+                // pid不为空则递归
+                recursionData(allData, String.valueOf(item.pid));
+            }
+            return item;
+        }
+        return null;
     }
 
     @Override

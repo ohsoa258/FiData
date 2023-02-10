@@ -107,7 +107,7 @@ public class GlossaryController {
         return ResultEntityBuild.build(iCategory.deleteCategory(guid));
     }
 
-    @ApiOperation("获取类别详情")
+    @ApiOperation("获取类别详情--已重构")
     @GetMapping("/getCategory/{guid}")
     public ResultEntity<Object> getCategory(@PathVariable("guid") String guid) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iCategory.getCategory(guid));
