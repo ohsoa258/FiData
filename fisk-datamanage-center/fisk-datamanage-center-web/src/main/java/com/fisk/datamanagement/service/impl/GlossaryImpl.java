@@ -95,15 +95,53 @@ public class GlossaryImpl implements IGlossary {
     @Override
     public ResultEnum deleteGlossary(String guid)
     {
-        ResultDataDTO<String> result = atlasClient.delete(glossary +"/"+ guid);
-        return atlasClient.newResultEnum(result);
+        // 查询是否存在
+        QueryWrapper<GlossaryLibraryDTO> qw = new QueryWrapper<>();
+        qw.eq("id", guid).isNull("pid");
+        GlossaryLibraryDTO model = glossaryLibraryMapper.selectOne(qw);
+        if (model == null){
+            throw new FkException(ResultEnum.ERROR, "术语库不存在");
+        }
+
+        if (glossaryLibraryMapper.deleteById(guid) > 0){
+            return ResultEnum.SUCCESS;
+        }else{
+            throw new FkException(ResultEnum.ERROR, "删除失败");
+        }
     }
 
     @Override
     public ResultEnum updateGlossary(GlossaryDTO dto) {
-        String jsonParameter = JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.put(glossary + "/" + dto.guid, jsonParameter);
-        return atlasClient.newResultEnum(result);
+        // 校验数据
+        if (StringUtils.isEmpty(dto.name)){
+            throw new FkException(ResultEnum.ERROR, "术语库名称不能为空");
+        }
+
+        // 查询是否存在
+        QueryWrapper<GlossaryLibraryDTO> qw = new QueryWrapper<>();
+        qw.eq("id", dto.guid).eq("del_flag", 1).isNull("pid");
+        GlossaryLibraryDTO model = glossaryLibraryMapper.selectOne(qw);
+        if (model == null){
+            throw new FkException(ResultEnum.ERROR, "术语库不存在");
+        }
+
+        // 查询修改后的名称是否重复
+        qw = new QueryWrapper<>();
+        qw.eq("name", dto.name).eq("del_flag", 1).isNull("pid");
+        GlossaryLibraryDTO preModel = glossaryLibraryMapper.selectOne(qw);
+        if (preModel != null){
+            throw new FkException(ResultEnum.ERROR, "术语库名称不能重复");
+        }
+
+        // 修改术语库
+        model.setName(dto.name);
+        model.setShortDescription(dto.shortDescription);
+        model.setLongDescription(dto.longDescription);
+        model.setUpdateTime(LocalDateTime.now());
+        model.setUpdateUser(userHelper.getLoginUserInfo().id.toString());
+        qw = new QueryWrapper<>();
+        qw.eq("id", dto.guid);
+        return glossaryLibraryMapper.update(model, qw) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override

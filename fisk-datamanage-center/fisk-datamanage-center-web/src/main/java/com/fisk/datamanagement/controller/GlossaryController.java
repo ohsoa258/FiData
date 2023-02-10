@@ -47,13 +47,13 @@ public class GlossaryController {
         return ResultEntityBuild.build(service.addGlossary(dto));
     }
 
-    @ApiOperation("删除术语库")
+    @ApiOperation("删除术语库-已重构")
     @DeleteMapping("/deleteGlossary/{guid}")
     public ResultEntity<Object> deleteGlossary(@PathVariable("guid") String guid) {
         return ResultEntityBuild.build(service.deleteGlossary(guid));
     }
 
-    @ApiOperation("修改术语库")
+    @ApiOperation("修改术语库-已重构")
     @PutMapping("/updateGlossary")
     public ResultEntity<Object> updateGlossary(@Validated @RequestBody GlossaryDTO dto) {
         return ResultEntityBuild.build(service.updateGlossary(dto));
