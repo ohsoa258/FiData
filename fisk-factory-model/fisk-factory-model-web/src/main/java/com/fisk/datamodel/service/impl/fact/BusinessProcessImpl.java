@@ -10,7 +10,6 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.client.DataAccessClient;
-import com.fisk.dataaccess.dto.app.AppRegistrationInfoDTO;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.businessprocess.*;
@@ -255,7 +254,7 @@ public class BusinessProcessImpl
                 pushDto.queryStartTime = data1.get(SystemVariableTypeEnum.START_TIME.getValue());
 
                 //关联维度键脚本
-                pushDto.factUpdateSql = factAttribute.buildFactUpdateSql(Math.toIntExact(item.id));
+                pushDto.factUpdateSql = item.dimensionKeyScript;
 
                 /*
                 // 关联建模数据来源id——应用appId修改为dataSourceId后，该段代码暂时不用

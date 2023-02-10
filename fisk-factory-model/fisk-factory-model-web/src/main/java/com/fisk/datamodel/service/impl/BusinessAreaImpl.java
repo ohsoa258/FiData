@@ -1134,7 +1134,8 @@ public class BusinessAreaImpl
             str.append(" set ");
             str.append(item.sourceTable).append(".").append(StringBuildUtils.dimensionKeyName(item.targetTable));
             str.append(" = ");
-            str.append("from ");
+            str.append(item.targetTable).append(".").append(StringBuildUtils.dimensionKeyName(item.targetTable));
+            str.append(" from ");
             str.append(item.targetTable);
             str.append(" where ");
             str.append(item.sourceTable).append(".").append(item.sourceColumn);

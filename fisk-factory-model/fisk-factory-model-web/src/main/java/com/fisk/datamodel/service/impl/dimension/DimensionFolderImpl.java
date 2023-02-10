@@ -7,7 +7,6 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.client.DataAccessClient;
-import com.fisk.dataaccess.dto.app.AppRegistrationInfoDTO;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
@@ -23,7 +22,6 @@ import com.fisk.datamodel.entity.SyncModePO;
 import com.fisk.datamodel.entity.dimension.DimensionAttributePO;
 import com.fisk.datamodel.entity.dimension.DimensionFolderPO;
 import com.fisk.datamodel.entity.dimension.DimensionPO;
-import com.fisk.datamodel.entity.fact.FactPO;
 import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.enums.TableHistoryTypeEnum;
@@ -340,7 +338,7 @@ public class DimensionFolderImpl
                 pushDto.queryStartTime = data1.get(SystemVariableTypeEnum.START_TIME.getValue());
 
                 //获取维度键update语句
-                pushDto.factUpdateSql = dimensionAttribute.buildDimensionUpdateSql(Math.toIntExact(item.id));
+                pushDto.factUpdateSql = item.dimensionKeyScript;
 
                 /*
                 // 关联数据来源数据库Id——应用appId修改为dataSourceId后，该段代码暂时不用
