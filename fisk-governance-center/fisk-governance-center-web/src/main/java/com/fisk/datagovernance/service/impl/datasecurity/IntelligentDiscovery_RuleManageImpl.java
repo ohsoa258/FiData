@@ -315,7 +315,6 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
             if (CollectionUtils.isNotEmpty(intelligentDiscovery_rulePOS)) {
                 return ResultEnum.INTELLIGENT_DISCOVERY_RULE_NAME_ALREADY_EXISTS;
             }
-            intelligentDiscovery_rulePO = IntelligentDiscovery_RuleMap.INSTANCES.dtoToPo(dto);
             IntelligentDiscovery_NoticePO intelligentDiscovery_noticePO = null;
             List<IntelligentDiscovery_ScanPO> intelligentDiscovery_scanPOList = null;
             List<IntelligentDiscovery_UserPO> intelligentDiscovery_userPOList = null;
@@ -333,6 +332,7 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
                 dto.setRuleValue(ruleValue_Json);
             }
             int ruleId = Math.toIntExact(dto.getId());
+            intelligentDiscovery_rulePO = IntelligentDiscovery_RuleMap.INSTANCES.dtoToPo(dto);
             int i = baseMapper.updateById(intelligentDiscovery_rulePO);
             if (i <= 0) {
                 return ResultEnum.SAVE_DATA_ERROR;
