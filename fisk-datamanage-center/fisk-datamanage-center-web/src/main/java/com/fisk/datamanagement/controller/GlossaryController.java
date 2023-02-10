@@ -41,7 +41,7 @@ public class GlossaryController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getGlossaryList());
     }
 
-    @ApiOperation("添加术语库")
+    @ApiOperation("添加术语库-已重构")
     @PostMapping("/addGlossary")
     public ResultEntity<Object> addGlossary(@Validated @RequestBody GlossaryDTO dto) {
         return ResultEntityBuild.build(service.addGlossary(dto));
@@ -95,7 +95,7 @@ public class GlossaryController {
         return ResultEntityBuild.build(iTerm.termDeleteAssignedEntities(dto));
     }
 
-    @ApiOperation("术语库下添加类别")
+    @ApiOperation("术语库下添加类别-已重构")
     @PostMapping("/addCategory")
     public ResultEntity<Object> addCategory(@Validated @RequestBody CategoryDTO dto) {
         return ResultEntityBuild.build(iCategory.addCategory(dto));

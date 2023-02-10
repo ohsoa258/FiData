@@ -3,9 +3,14 @@ package com.fisk.datamanagement.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.category.CategoryDTO;
+import com.fisk.datamanagement.dto.glossary.GlossaryLibraryDTO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
+import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
 import com.fisk.datamanagement.service.ICategory;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
@@ -13,8 +18,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.io.File;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 /**
@@ -25,6 +33,11 @@ import java.util.ArrayList;
 public class CategoryImpl implements ICategory {
 
     @Resource
+    GlossaryLibraryMapper glossaryLibraryMapper;
+    @Resource
+    UserHelper userHelper;
+
+    @Resource
     AtlasClient atlasClient;
 
     @Value("${atlas.glossary.category}")
@@ -33,28 +46,55 @@ public class CategoryImpl implements ICategory {
     @Override
     public ResultEnum addCategory(CategoryDTO dto)
     {
-       try {
-           if (!CollectionUtils.isEmpty(dto.terms)) {
-               dto.terms = new ArrayList<>();
-           }
-           String jsonParameter = JSONArray.toJSON(dto).toString();
-           JSONObject jsonObj = JSON.parseObject(jsonParameter);
-           String parentCategory = jsonObj.getString("parentCategory");
-           JSONObject parent = JSON.parseObject(parentCategory);
-           String parentValue = parent.getString("categoryGuid");
-           if ("".equals(parentValue)) {
-               jsonObj.remove("parentCategory");
-               jsonParameter = jsonObj.toJSONString();
-           } else {
-               jsonObj.remove("guid");
-               jsonParameter = jsonObj.toJSONString();
-           }
-           ResultDataDTO<String> result = atlasClient.post(category, jsonParameter);
-           return result.code == AtlasResultEnum.REQUEST_SUCCESS ? ResultEnum.SUCCESS : ResultEnum.BAD_REQUEST;
-       } catch (Exception e) {
-           log.error("addCategory ex:", e);
-           return ResultEnum.PARAMTER_ERROR;
-       }
+        // 校验术语分类名称
+        if (StringUtils.isEmpty(dto.name)){
+            throw new FkException(ResultEnum.ERROR, "术语分类名称不能为空");
+        }
+
+        // 校验术语库是否为空
+        if (StringUtils.isEmpty(dto.anchor.getGlossaryGuid())){
+            throw new FkException(ResultEnum.ERROR, "所属术语库id不能为空");
+        }
+
+        // 校验术语分类名称是否重复,所有术语下均不能重复
+        QueryWrapper<GlossaryLibraryDTO> qw = new QueryWrapper<>();
+        qw.eq("name", dto.name).eq("del_flag", 1).isNotNull("pid");
+        GlossaryLibraryDTO preCategory = glossaryLibraryMapper.selectOne(qw);
+        if (preCategory != null){
+            throw new FkException(ResultEnum.ERROR, "术语分类名称不能重复");
+        }
+
+        // 校验所属术语库是否存在
+        qw = new QueryWrapper<>();
+        qw.eq("id", dto.anchor.glossaryGuid).eq("del_flag", 1).isNull("pid");
+        GlossaryLibraryDTO preLibrary = glossaryLibraryMapper.selectOne(qw);
+        if (preLibrary == null){
+            throw new FkException(ResultEnum.ERROR, "所属术语库不存在");
+        }
+
+        // 校验父级术语分类是否存在
+        if(!StringUtils.isEmpty(dto.parentCategory.categoryGuid)){
+            qw = new QueryWrapper<>();
+            qw.eq("id", dto.parentCategory.categoryGuid).eq("del_flag", 1).isNotNull("pid");
+            GlossaryLibraryDTO preParentCategory = glossaryLibraryMapper.selectOne(qw);
+            if (preParentCategory == null){
+                throw new FkException(ResultEnum.ERROR, "所属术语父级分类不存在");
+            }
+        }
+
+        // 新增术语分类
+        GlossaryLibraryDTO model = new GlossaryLibraryDTO();
+        model.setName(dto.name);
+        if (!StringUtils.isEmpty(dto.parentCategory.categoryGuid)){
+            model.setPid(dto.parentCategory.categoryGuid);
+        }else{
+            model.setPid(preLibrary.id);
+        }
+        model.setShortDescription(dto.shortDescription);
+        model.setLongDescription(dto.longDescription);
+        model.setCreateTime(LocalDateTime.now());
+        model.setCreateUser(userHelper.getLoginUserInfo().id.toString());
+        return glossaryLibraryMapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.ERROR;
     }
 
     @Override

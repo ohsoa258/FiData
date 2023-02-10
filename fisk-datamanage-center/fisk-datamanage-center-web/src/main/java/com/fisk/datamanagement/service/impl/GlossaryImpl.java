@@ -2,23 +2,29 @@ package com.fisk.datamanagement.service.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.category.CategoryDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryAttributeDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryDTO;
+import com.fisk.datamanagement.dto.glossary.GlossaryLibraryDTO;
 import com.fisk.datamanagement.dto.term.TermDTO;
 import com.fisk.datamanagement.dto.term.TermDetailsDTO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
+import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
 import com.fisk.datamanagement.service.IGlossary;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +34,12 @@ import java.util.List;
 @Service
 @Slf4j
 public class GlossaryImpl implements IGlossary {
+
+    @Resource
+    UserHelper userHelper;
+
+    @Resource
+    GlossaryLibraryMapper glossaryLibraryMapper;
 
     @Resource
     AtlasClient atlasClient;
@@ -60,9 +72,24 @@ public class GlossaryImpl implements IGlossary {
     @Override
     public ResultEnum addGlossary(GlossaryDTO dto)
     {
-        String jsonParameter= JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.post(glossary,jsonParameter);
-        return atlasClient.newResultEnum(result);
+        if (StringUtils.isEmpty(dto.getName())){
+            throw new FkException(ResultEnum.ERROR, "术语库名称不能为空");
+        }
+        // 查询是否存在
+        QueryWrapper<GlossaryLibraryDTO> qw = new QueryWrapper<>();
+        qw.eq("name", dto.getName()).eq("del_flag", 1).isNull("pid");
+        GlossaryLibraryDTO preModel = glossaryLibraryMapper.selectOne(qw);
+        if (preModel != null){
+            throw new FkException(ResultEnum.ERROR, "术语库名称不能重复");
+        }
+        // 新增术语库
+        GlossaryLibraryDTO model = new GlossaryLibraryDTO();
+        model.setName(dto.name);
+        model.setShortDescription(dto.shortDescription);
+        model.setLongDescription(dto.longDescription);
+        model.setCreateTime(LocalDateTime.now());
+        model.setCreateUser(userHelper.getLoginUserInfo().id.toString());
+        return glossaryLibraryMapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
