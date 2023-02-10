@@ -363,7 +363,7 @@ public class DimensionImpl
         ResultEnum result = dimensionAttributeImpl.addTimeTableAttribute(list, (int) po.id);
         if (result.getCode() == ResultEnum.SUCCESS.getCode()) {
             //同步到atlas
-            synchronousMetadata(DataSourceConfigEnum.DMP_DW.getValue(), po, DataModelTableTypeEnum.DW_DIMENSION.getValue());
+            //synchronousMetadata(DataSourceConfigEnum.DMP_DW.getValue(), po, DataModelTableTypeEnum.DW_DIMENSION.getValue());
         }
         return result;
     }
@@ -395,16 +395,16 @@ public class DimensionImpl
         int flat = mapper.updateById(model);
         if (flat > 0 && dto.timeTable) {
             //同步atlas
-            DimensionPO dimensionPo = mapper.selectById(dto.id);
+            /*DimensionPO dimensionPo = mapper.selectById(dto.id);
             if (dimensionPo != null) {
                 synchronousMetadata(DataSourceConfigEnum.DMP_DW.getValue(), dimensionPo, DataModelTableTypeEnum.DW_DIMENSION.getValue());
-            }
+            }*/
         }
 
         //同步元数据
-        if (model.isPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue()) {
+        /*if (model.isPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue()) {
             asyncSynchronousMetadata(model);
-        }
+        }*/
 
         return flat > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -485,9 +485,9 @@ public class DimensionImpl
                 if (dataSourceConfigOlap != null && !CollectionUtils.isEmpty(dataSourceConfigOlap.dbList)) {
                     delQualifiedName.add(dataSourceConfigOlap.dbList.get(0).qualifiedName + "_" + DataModelTableTypeEnum.DORIS_DIMENSION.getValue() + "_" + id);
                 }
-                deleteDto.qualifiedNames = delQualifiedName;
+                /*deleteDto.qualifiedNames = delQualifiedName;
                 deleteDto.classifications = businessArea.getBusinessName();
-                dataManageClient.deleteMetaData(deleteDto);
+                dataManageClient.deleteMetaData(deleteDto);*/
             }
             return flat > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         } catch (Exception e) {

@@ -56,8 +56,6 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -162,9 +160,9 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
                 if (dataSourceConfigOlap != null && !CollectionUtils.isEmpty(dataSourceConfigOlap.dbList)) {
                     delQualifiedName.add(dataSourceConfigOlap.dbList.get(0).qualifiedName + "_" + DataModelTableTypeEnum.DORIS_FACT.getValue() + "_" + id);
                 }
-                deleteDto.qualifiedNames = delQualifiedName;
+                /*deleteDto.qualifiedNames = delQualifiedName;
                 deleteDto.classifications = businessArea.getBusinessName();
-                dataManageClient.deleteMetaData(deleteDto);
+                dataManageClient.deleteMetaData(deleteDto);*/
             }
 
             return flat > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -312,7 +310,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         }
 
         //0:DW发布状态
-        int dataSourceId;
+        /*int dataSourceId;
         int dataModelType;
         if (dto.type == 0) {
             fact.isPublish = dto.status;
@@ -322,13 +320,13 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             fact.dorisPublish = dto.status;
             dataSourceId = DataSourceConfigEnum.DMP_OLAP.getValue();
             dataModelType = DataModelTableTypeEnum.DORIS_FACT.getValue();
-        }
+        }*/
         int flat = mapper.updateById(fact);
         if (flat == 0 || dto.status != PublicStatusEnum.PUBLIC_SUCCESS.getValue()) {
             log.info("维度表更改状态失败!");
             return;
         }
-        //实时更新元数据
+        /*//实时更新元数据
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
         MetaDataInstanceAttributeDTO data = dimensionImpl.getDataSourceConfig(dataSourceId);
         if (data == null) {
@@ -348,12 +346,12 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         table.owner = businessAreaPO.getBusinessAdmin();
 
         //所属人
-        /*List<Long> ids = new ArrayList<>();
+        *//*List<Long> ids = new ArrayList<>();
         ids.add(Long.parseLong(fact.createUser));
         ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(ids);
         if (userListByIds.code == ResultEnum.SUCCESS.getCode()) {
             table.owner = userListByIds.data.get(0).getUsername();
-        }*/
+        }*//*
 
         //字段
         List<MetaDataColumnAttributeDTO> columnList = setFactField(dto, table);
@@ -380,7 +378,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
                 }
             }
         });
-
+*/
     }
 
     @Override
