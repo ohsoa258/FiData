@@ -1,7 +1,9 @@
 package com.fisk.datamanagement.dto.businessclassification;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fisk.common.core.baseObject.dto.BaseDTO;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
@@ -12,32 +14,24 @@ import java.time.LocalDateTime;
  * @Copyright: 2023 by 湖~Tloml
  * @Description:
  **/
+@EqualsAndHashCode(callSuper = true)
 @Data
 @TableName("tb_business_classification")
-public class BusinessClassificationDTO{
+public class BusinessClassificationDTO extends BaseDTO {
 
-    @TableId(value = "id", type = IdType.ASSIGN_UUID)
     public String id;
 
-    @TableField(value = "pid")
     public String pid;
 
-    @TableField(value = "name")
     public String name;
 
-    @TableField(value = "description")
     public String description;
 
-    @TableField(value = "create_time", fill = FieldFill.INSERT)
     public LocalDateTime createTime;
 
     public String createUser;
 
-    @TableField(value = "update_time", fill = FieldFill.UPDATE)
     public LocalDateTime updateTime;
 
     public String updateUser;
-
-    @TableLogic
-    public int delFlag;
 }
