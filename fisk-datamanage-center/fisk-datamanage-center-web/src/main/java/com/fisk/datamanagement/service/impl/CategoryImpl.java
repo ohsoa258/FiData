@@ -114,9 +114,33 @@ public class CategoryImpl implements ICategory {
     @Override
     public ResultEnum updateCategory(CategoryDTO dto)
     {
-        String jsonParameter = JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.put(category + "/" + dto.guid, jsonParameter);
-        return atlasClient.newResultEnum(result);
+        // 校验名称是否为空
+        if (StringUtils.isEmpty(dto.name)){
+            throw new FkException(ResultEnum.ERROR, "术语类别名称不能为空");
+        }
+
+        // 查询名称是否重复
+        QueryWrapper<GlossaryLibraryDTO> qw = new QueryWrapper<>();
+        qw.isNotNull("pid").eq("name", dto.name);
+        GlossaryLibraryDTO model = glossaryLibraryMapper.selectOne(qw);
+        if (model != null && !model.id.equals(dto.guid)){
+            throw new FkException(ResultEnum.ERROR, "术语类别名称已存在");
+        }
+
+        // 查询就数据
+        qw = new QueryWrapper<>();
+        qw.eq("id", dto.guid);
+        GlossaryLibraryDTO currModel = glossaryLibraryMapper.selectOne(qw);
+        currModel.setName(dto.name);
+        currModel.setShortDescription(dto.shortDescription);
+        currModel.setLongDescription(dto.longDescription);
+        currModel.setUpdateTime(LocalDateTime.now());
+        currModel.setUpdateUser(userHelper.getLoginUserInfo().id.toString());
+        if (glossaryLibraryMapper.updateById(currModel) > 0){
+            return ResultEnum.SUCCESS;
+        }else{
+            throw new FkException(ResultEnum.ERROR, "术语分类修改失败");
+        }
     }
 
 

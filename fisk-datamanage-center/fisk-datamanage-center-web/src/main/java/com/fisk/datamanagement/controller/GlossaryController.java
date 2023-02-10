@@ -113,7 +113,7 @@ public class GlossaryController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iCategory.getCategory(guid));
     }
 
-    @ApiOperation("修改类别")
+    @ApiOperation("修改类别-已重构")
     @PutMapping("/updateCategory")
     public ResultEntity<Object> updateCategory(@Validated @RequestBody CategoryDTO dto) {
         return ResultEntityBuild.build(iCategory.updateCategory(dto));
