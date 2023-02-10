@@ -65,7 +65,7 @@ public class GlossaryController {
         return ResultEntityBuild.build(iTerm.addTerm(dto));
     }
 
-    @ApiOperation("获取术语详情")
+    @ApiOperation("获取术语详情-已重构")
     @GetMapping("/getTerm/{guid}")
     public ResultEntity<Object> getTerm(@PathVariable("guid") String guid) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iTerm.getTerm(guid));

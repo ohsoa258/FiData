@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.datamanagement.dto.category.CategoryDetailsDTO;
+import com.fisk.datamanagement.dto.glossary.GlossaryAnchorDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryLibraryDTO;
 import com.fisk.datamanagement.dto.glossary.NewGlossaryDTO;
 import com.fisk.datamanagement.dto.term.TermAssignedEntities;
@@ -17,6 +19,7 @@ import com.fisk.datamanagement.mapper.GlossaryMapper;
 import com.fisk.datamanagement.service.ITerm;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -24,6 +27,7 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.*;
 
 /**
  * @author JianWenYang
@@ -93,14 +97,54 @@ public class TermImpl implements ITerm {
     @Override
     public TermDTO getTerm(String guid)
     {
-        TermDTO dto;
-        ResultDataDTO<String> result = atlasClient.get(term + "/" + guid);
-        if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
-        {
-            throw new FkException(ResultEnum.BAD_REQUEST);
+        // 查询术语
+        QueryWrapper<NewGlossaryDTO> qw = new QueryWrapper<>();
+        qw.eq("id", guid);
+        NewGlossaryDTO model = glossaryMapper.selectOne(qw);
+        if (model == null){
+            throw new FkException(ResultEnum.ERROR, "数据不存在");
         }
-        dto= JSONObject.parseObject(result.data, TermDTO.class);
+
+        // 创建对象
+        TermDTO dto = new TermDTO();
+
+        // 查询所有术语库及类别
+        List<GlossaryLibraryDTO> allData = glossaryLibraryMapper.selectList(new QueryWrapper<>());
+
+        // 设置限定名、术语库id依赖
+        GlossaryLibraryDTO recursionData = recursionData(allData, guid);
+        GlossaryAnchorDTO gDto = new GlossaryAnchorDTO();
+        dto.setGuid(model.id);
+        dto.setShortDescription(model.shortDescription);
+        dto.setLongDescription(model.longDescription);
+        if (recursionData != null){
+            gDto.setGlossaryGuid(recursionData.id);
+            // todo relation暂时不明
+            // gDto.setRelationGuid();
+            dto.setAnchor(gDto);
+            dto.setQualifiedName(model.name + "@" + recursionData.name);
+        }
+
+        // 设置所属术语类别
+        CategoryDetailsDTO categoryDetailsDTO = new CategoryDetailsDTO();
+        categoryDetailsDTO.setCategoryGuid(model.glossaryLibraryId);
+        GlossaryLibraryDTO libraryDTO = allData.stream().filter(item -> item.id.equals(model.glossaryLibraryId)).findFirst().orElse(null);
+        if (libraryDTO != null){
+            categoryDetailsDTO.setDisplayText(libraryDTO.name);
+        }
+        dto.setCategories(Collections.singletonList(categoryDetailsDTO));
         return dto;
+    }
+
+    private GlossaryLibraryDTO recursionData(List<GlossaryLibraryDTO> allData, String guid){
+        for (GlossaryLibraryDTO item : allData){
+            if (guid.equals(item.id) && !StringUtils.isEmpty(item.pid)){
+                // pid不为空则递归
+                recursionData(allData, item.pid);
+            }
+            return item;
+        }
+        return null;
     }
 
     @Override
