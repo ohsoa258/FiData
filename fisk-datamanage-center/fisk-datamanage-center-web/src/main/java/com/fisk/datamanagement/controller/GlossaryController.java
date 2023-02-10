@@ -59,7 +59,7 @@ public class GlossaryController {
         return ResultEntityBuild.build(service.updateGlossary(dto));
     }
 
-    @ApiOperation("术语库下添加术语")
+    @ApiOperation("术语库下添加术语-已重构")
     @PostMapping("/addTerm")
     public ResultEntity<Object> addTerm(@Validated @RequestBody TermDTO dto) {
         return ResultEntityBuild.build(iTerm.addTerm(dto));
@@ -71,13 +71,13 @@ public class GlossaryController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iTerm.getTerm(guid));
     }
 
-    @ApiOperation("修改术语")
+    @ApiOperation("修改术语-已重构")
     @PutMapping("/updateTerm")
     public ResultEntity<Object> updateTerm(@Validated @RequestBody TermDTO dto) {
         return ResultEntityBuild.build(iTerm.updateTerm(dto));
     }
 
-    @ApiOperation("删除术语")
+    @ApiOperation("删除术语-已重构")
     @DeleteMapping("/deleteTerm/{guid}")
     public ResultEntity<Object> deleteTerm(@PathVariable("guid") String guid) {
         return ResultEntityBuild.build(iTerm.deleteTerm(guid));
