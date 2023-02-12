@@ -42,8 +42,19 @@ public enum EntityTypeEnum implements BaseEnum {
     public static EntityTypeEnum getValue(String name) {
         EntityTypeEnum[] carTypeEnums = values();
         for (EntityTypeEnum carTypeEnum : carTypeEnums) {
-            String queryName=carTypeEnum.name;
+            String queryName = carTypeEnum.name;
             if (queryName.equals(name)) {
+                return carTypeEnum;
+            }
+        }
+        return EntityTypeEnum.OTHER;
+    }
+
+    public static EntityTypeEnum getValue(Integer value) {
+        EntityTypeEnum[] carTypeEnums = values();
+        for (EntityTypeEnum carTypeEnum : carTypeEnums) {
+            Integer queryName = carTypeEnum.value;
+            if (queryName.equals(value)) {
                 return carTypeEnum;
             }
         }

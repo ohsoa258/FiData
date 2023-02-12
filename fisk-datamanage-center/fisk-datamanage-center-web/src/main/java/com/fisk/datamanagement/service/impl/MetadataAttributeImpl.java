@@ -10,12 +10,10 @@ import com.fisk.datamanagement.mapper.MetadataAttributeMapper;
 import com.fisk.datamanagement.service.IMetadataAttribute;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author JianWenYang
@@ -45,7 +43,17 @@ public class MetadataAttributeImpl
 
     @Override
     public ResultEnum addMetadataAttribute(Object object, Integer entityId) {
-        Map<String, Object> map = ObjectInfoUtils.getObjectKeyAndValue(object);
+
+        String[] fieldNames = ObjectInfoUtils.getFiledName(object);
+
+        Map<String, Object> map = new HashMap<>();
+        for (String item : fieldNames) {
+            if (StringUtils.isEmpty(item)) {
+                continue;
+            }
+            Object value = ObjectInfoUtils.getFieldValueByName(item, object);
+            map.put(item, value);
+        }
 
         List<MetadataAttributePO> dataList = new ArrayList<>();
 
@@ -83,6 +91,22 @@ public class MetadataAttributeImpl
         }
 
         return ResultEnum.SUCCESS;
+
+    }
+
+    public Map setMedataAttribute(Integer metadataEntityId) {
+        Map map = new HashMap();
+
+        List<MetadataAttributePO> list = this.query().select("name", "value").eq("metadata_entity_id", metadataEntityId).list();
+        if (CollectionUtils.isEmpty(list)) {
+            return map;
+        }
+
+        for (MetadataAttributePO item : list) {
+            map.put(item.name, item.value);
+        }
+
+        return map;
 
     }
 
