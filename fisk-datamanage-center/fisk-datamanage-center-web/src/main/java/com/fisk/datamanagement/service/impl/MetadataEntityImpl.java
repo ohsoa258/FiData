@@ -177,7 +177,7 @@ public class MetadataEntityImpl
         infoMap.put("qualifiedName", one.qualifiedName);
         infoMap.put("displayName", one.displayName);
 
-        tea(one, infoMap);
+        getEntityRelation(one, infoMap);
 
         Map map2 = new HashMap();
         map2.put("attributes", infoMap);
@@ -189,25 +189,25 @@ public class MetadataEntityImpl
 
     }
 
-    public Map tea(MetadataEntityPO po, Map map) {
+    public Map getEntityRelation(MetadataEntityPO po, Map map) {
 
         Map attributeMap = new HashMap();
 
         EntityTypeEnum value = EntityTypeEnum.getValue(po.typeId);
         switch (value) {
             case RDBMS_INSTANCE:
-                map.put("databases", aa((int) po.id, value, "parent_id"));
+                map.put("databases", getEntityRelationInfo((int) po.id, value, "parent_id"));
                 break;
             case RDBMS_DB:
-                map.put("instance", aa((int) po.id, value, "id"));
-                map.put("tables", aa((int) po.id, value, "parent_id"));
+                map.put("instance", getEntityRelationInfo((int) po.id, value, "id"));
+                map.put("tables", getEntityRelationInfo((int) po.id, value, "parent_id"));
                 break;
             case RDBMS_TABLE:
-                map.put("db", aa((int) po.id, value, "id"));
-                map.put("columns", aa((int) po.id, value, "parent_id"));
+                map.put("db", getEntityRelationInfo((int) po.id, value, "id"));
+                map.put("columns", getEntityRelationInfo((int) po.id, value, "parent_id"));
                 break;
             case RDBMS_COLUMN:
-                map.put("table", aa((int) po.id, value, "id"));
+                map.put("table", getEntityRelationInfo((int) po.id, value, "id"));
                 break;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
@@ -218,7 +218,7 @@ public class MetadataEntityImpl
 
     }
 
-    public List<Map> aa(Integer entityId, EntityTypeEnum entityTypeEnum, String fileName) {
+    public List<Map> getEntityRelationInfo(Integer entityId, EntityTypeEnum entityTypeEnum, String fileName) {
 
         List<MetadataEntityPO> list = this.query().ne("description", stg).eq(fileName, entityId).list();
         if (CollectionUtils.isEmpty(list)) {
