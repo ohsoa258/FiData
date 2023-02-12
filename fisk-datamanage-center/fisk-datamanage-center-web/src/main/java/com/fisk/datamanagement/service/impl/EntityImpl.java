@@ -4,14 +4,10 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.server.metadata.AppBusinessInfoDTO;
-import com.fisk.common.service.mdmBEBuild.CommonMethods;
 import com.fisk.dataaccess.client.DataAccessClient;
-import com.fisk.datamanagement.dto.businessmetadataconfig.BusinessMetadataConfigDTO;
 import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
@@ -22,14 +18,14 @@ import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.system.client.UserClient;
-import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -67,9 +63,11 @@ public class EntityImpl implements IEntity {
     @Value("${spring.metadataentity}")
     private String metaDataEntity;
 
+    @Resource
+    MetadataEntityImpl metadataEntity;
+
     @Override
-    public List<EntityTreeDTO> getEntityTreeList()
-    {
+    public List<EntityTreeDTO> getEntityTreeList() {
         List<EntityTreeDTO> list;
         Boolean exist = redisTemplate.hasKey(metaDataEntity);
         if (exist) {
@@ -87,8 +85,9 @@ public class EntityImpl implements IEntity {
      * @return
      */
     public List<EntityTreeDTO> getEntityList() {
-        List<EntityTreeDTO> list = new ArrayList<>();
-        //try {
+
+        return metadataEntity.getMetadataEntityTree();
+        /*//try {
         ResultDataDTO<String> data = atlasClient.get(searchBasic + "?typeName=rdbms_instance");
         if (data.code != AtlasResultEnum.REQUEST_SUCCESS) {
             throw new FkException(ResultEnum.BAD_REQUEST);
@@ -221,7 +220,7 @@ public class EntityImpl implements IEntity {
         list.sort(Comparator.comparing(EntityTreeDTO::getLabel));
         String jsonString = JSONObject.toJSONString(list);
         redisTemplate.opsForValue().set(metaDataEntity, jsonString);
-        return list;
+        return list;*/
     }
 
 
@@ -296,9 +295,9 @@ public class EntityImpl implements IEntity {
     }
 
     @Override
-    public JSONObject getEntity(String guid)
-    {
-        Boolean exist = redisTemplate.hasKey("metaDataEntityData:" + guid);
+    public JSONObject getEntity(String guid) {
+        return metadataEntity.getMetadataEntityDetails(guid);
+        /*Boolean exist = redisTemplate.hasKey("metaDataEntityData:" + guid);
         if (exist) {
             String data = redisTemplate.opsForValue().get("metaDataEntityData:" + guid).toString();
             return JSON.parseObject(data);
@@ -313,7 +312,7 @@ public class EntityImpl implements IEntity {
         for (BusinessMetadataConfigDTO item : businessMetadataConfigList) {
             keyMap.put(item.attributeName, item.attributeCnName);
         }
-        return CommonMethods.changeJsonObj(data, keyMap);
+        return CommonMethods.changeJsonObj(data, keyMap);*/
     }
 
     @Override
