@@ -58,13 +58,13 @@ public class ClassificationController {
         return ResultEntityBuild.build(service.addClassification(dto));
     }
 
-    @ApiOperation("业务分类添加关联entity")
+    @ApiOperation("业务分类添加关联entity-已重构")
     @PostMapping("/classificationAddAssociatedEntity")
     public ResultEntity<Object> classificationAddAssociatedEntity(@Validated @RequestBody ClassificationAddEntityDTO dto) {
         return ResultEntityBuild.build(service.classificationAddAssociatedEntity(dto));
     }
 
-    @ApiOperation("业务分类删除关联entity")
+    @ApiOperation("业务分类删除关联entity-已重构")
     @DeleteMapping("/classificationDelAssociatedEntity")
     public ResultEntity<Object> classificationDelAssociatedEntity(@Validated @RequestBody ClassificationDelAssociatedEntityDTO dto) {
         return ResultEntityBuild.build(service.classificationDelAssociatedEntity(dto));

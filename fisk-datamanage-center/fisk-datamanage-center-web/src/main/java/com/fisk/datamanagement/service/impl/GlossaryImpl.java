@@ -8,17 +8,18 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.category.CategoryDTO;
-import com.fisk.datamanagement.dto.glossary.GlossaryAttributeDTO;
-import com.fisk.datamanagement.dto.glossary.GlossaryDTO;
-import com.fisk.datamanagement.dto.glossary.GlossaryLibraryDTO;
+import com.fisk.datamanagement.dto.category.CategoryDetailsDTO;
+import com.fisk.datamanagement.dto.glossary.*;
 import com.fisk.datamanagement.dto.term.TermDTO;
 import com.fisk.datamanagement.dto.term.TermDetailsDTO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
+import com.fisk.datamanagement.mapper.GlossaryMapper;
 import com.fisk.datamanagement.service.IGlossary;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -26,7 +27,10 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -42,6 +46,9 @@ public class GlossaryImpl implements IGlossary {
     GlossaryLibraryMapper glossaryLibraryMapper;
 
     @Resource
+    GlossaryMapper glossaryMapper;
+
+    @Resource
     AtlasClient atlasClient;
 
     @Value("${atlas.glossary.url}")
@@ -53,20 +60,73 @@ public class GlossaryImpl implements IGlossary {
 
     @Override
     public List<GlossaryAttributeDTO> getGlossaryList() {
-        List<GlossaryAttributeDTO> list;
-        try {
-            ResultDataDTO<String> result = atlasClient.get(glossary);
-            if (result.code != AtlasResultEnum.REQUEST_SUCCESS) {
-                throw new FkException(ResultEnum.BAD_REQUEST);
+        // 查询术语术语库数据
+        List<GlossaryLibraryDTO> gAllData = glossaryLibraryMapper.selectList(new QueryWrapper<>());
+        if (CollectionUtils.isEmpty(gAllData)){
+            return null;
+        }
+
+        // 数据转换
+        List<GlossaryAttributeDTO> data = gAllData.stream().map(item -> {
+            GlossaryAttributeDTO dto = new GlossaryAttributeDTO();
+            dto.setGuid(String.valueOf(item.id));
+            if (item.pid == null){
+                dto.setPid(null);
+            }else{
+                dto.setPid(item.pid.toString());
             }
-            list=JSONObject.parseArray(result.data, GlossaryAttributeDTO.class);
+            dto.setQualifiedName(item.name);
+            dto.setName(item.name);
+            dto.setShortDescription(item.shortDescription);
+            dto.setLongDescription(item.longDescription);
+            return dto;
+        }).collect(Collectors.toList());
+
+        // 获取父级NewGlossaryDTO
+        List<GlossaryAttributeDTO> parent = data.stream().filter(item -> StringUtils.isEmpty(item.pid)).collect(Collectors.toList());
+
+        // 设置所有子集、术语列表
+        for (GlossaryAttributeDTO item : parent){
+            List<GlossaryCategoryAttributeDTO> c = new ArrayList<>();
+            item.setCategories(recursionChildren(data, item.getGuid(), c));
         }
-        catch (Exception e)
-        {
-            log.error("getGlossaryList ex:"+e);
-            throw new FkException(ResultEnum.SQL_ANALYSIS);
+
+        // 设置所有术语
+        List<NewGlossaryDTO> termData = glossaryMapper.selectList(new QueryWrapper<>());
+        if (CollectionUtils.isEmpty(termData)){
+            return parent;
         }
-        return list;
+        for (GlossaryAttributeDTO item : parent){
+            List<String> idList = item.getCategories().stream().map(GlossaryCategoryAttributeDTO::getCategoryGuid).collect(Collectors.toList());
+
+            List<GlossaryTermAttributeDTO> tList = new ArrayList<>();
+            termData.stream().filter(t -> {
+                if (idList.contains(t.getGlossaryLibraryId().toString())){
+                    GlossaryTermAttributeDTO dto = new GlossaryTermAttributeDTO();
+                    dto.setTermGuid(String.valueOf(t.id));
+                    dto.setDisplayText(t.name);
+                    tList.add(dto);
+                }
+                return false;
+            }).collect(Collectors.toList());
+            item.setTerms(tList);
+        }
+
+        return parent;
+    }
+
+    private List<GlossaryCategoryAttributeDTO> recursionChildren(List<GlossaryAttributeDTO> allData, String pid, List<GlossaryCategoryAttributeDTO> data){
+        for (GlossaryAttributeDTO item : allData){
+            if (!StringUtils.isEmpty(item.pid) && item.getPid().equals(pid)){
+                GlossaryCategoryAttributeDTO dto = new GlossaryCategoryAttributeDTO();
+                dto.setDisplayText(item.name);
+                dto.setCategoryGuid(item.guid);
+                dto.setParentCategoryGuid(item.pid);
+                data.add(dto);
+                recursionChildren(allData, item.guid, data);
+            }
+        }
+        return data;
     }
 
     @Override
@@ -150,29 +210,52 @@ public class GlossaryImpl implements IGlossary {
         List<TermDTO> list = new ArrayList<>();
         //是否为术语库
         if (parent) {
-            /*List<GlossaryAttributeDTO> glossaryList = getGlossaryList();
-            if (CollectionUtils.isEmpty(glossaryList)) {
-                return list;
-            }
-            Optional<GlossaryAttributeDTO> first = glossaryList.stream().filter(e -> e.guid.equals(guid)).findFirst();
-            if (!first.isPresent()) {
-                return list;
-            }
-            for (GlossaryTermAttributeDTO term : first.get().terms) {
-                list.add(termImpl.getTerm(term.termGuid));
-            }
-            return list;*/
             return new ArrayList<>();
         }
-        //查询类别关联下的术语
-        CategoryDTO category = categoryImpl.getCategory(guid);
-        if (category == null || CollectionUtils.isEmpty(category.terms)) {
-            return list;
+        // 查询术语信息
+        NewGlossaryDTO model = glossaryMapper.selectById(guid);
+        if (model == null){
+            return new ArrayList<>();
         }
-        for (TermDetailsDTO term : category.terms) {
-            list.add(termImpl.getTerm(term.termGuid));
+
+        TermDTO dto = new TermDTO();
+        dto.setGuid(String.valueOf(model.id));
+        dto.setName(model.name);
+        dto.setShortDescription(model.shortDescription);
+        dto.setLongDescription(model.longDescription);
+
+        // 加载所有数据
+        List<GlossaryLibraryDTO> allData = glossaryLibraryMapper.selectList(new QueryWrapper<>());
+
+        // 查询术语所在术语库中的术语类别
+        GlossaryLibraryDTO category = allData.stream().filter(item -> item.id == model.glossaryLibraryId).findFirst().orElse(null);
+        if (category != null) {
+            CategoryDetailsDTO cdDto = new CategoryDetailsDTO();
+            cdDto.setDisplayText(category.name);
+            cdDto.setCategoryGuid(String.valueOf(category.id));
+            dto.setCategories(Collections.singletonList(cdDto));
+            // 查询所在术语库
+            GlossaryLibraryDTO libraryDTO = recursionData(allData, category.getPid().toString());
+            if (libraryDTO != null){
+                // 设置全限定名
+                dto.setQualifiedName(model.name + "@" + libraryDTO.name);
+                GlossaryAnchorDTO gaDto = new GlossaryAnchorDTO();
+                gaDto.setGlossaryGuid(String.valueOf(libraryDTO.id));
+                dto.setAnchor(gaDto);
+            }
         }
-        return list;
+
+        return Collections.singletonList(dto);
+    }
+
+    private GlossaryLibraryDTO recursionData(List<GlossaryLibraryDTO> allData, String pid){
+        for (GlossaryLibraryDTO item : allData){
+            if (!StringUtils.isEmpty(item.pid) && !String.valueOf(item.id).equals(pid)){
+                recursionData(allData, String.valueOf(item.pid));
+            }
+            return item;
+        }
+        return null;
     }
 
 }

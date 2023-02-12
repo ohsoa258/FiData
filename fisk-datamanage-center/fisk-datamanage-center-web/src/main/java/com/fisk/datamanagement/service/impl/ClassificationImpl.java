@@ -13,9 +13,15 @@ import com.fisk.datamanagement.dto.businessclassification.BusinessClassification
 import com.fisk.datamanagement.dto.businessclassification.BusinessClassificationTreeDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
+import com.fisk.datamanagement.dto.glossary.GlossaryLibraryDTO;
+import com.fisk.datamanagement.dto.metadatamapatlas.MetaDataClassificationMapDTO;
+import com.fisk.datamanagement.dto.metadatamapatlas.MetaDataGlossaryMapDTO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.map.ClassificationMap;
 import com.fisk.datamanagement.mapper.BusinessClassificationMapper;
+import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
+import com.fisk.datamanagement.mapper.MetaDataClassificationMapMapper;
+import com.fisk.datamanagement.mapper.MetaDataGlossaryMapMapper;
 import com.fisk.datamanagement.service.IClassification;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
@@ -41,6 +47,10 @@ public class ClassificationImpl implements IClassification {
     BusinessClassificationMapper businessClassificationMapper;
     @Resource
     UserHelper userHelper;
+    @Resource
+    GlossaryLibraryMapper glossaryLibraryMapper;
+    @Resource
+    MetaDataClassificationMapMapper metaDataClassificationMapMapper;
 
     @Resource
     AtlasClient atlasClient;
@@ -67,7 +77,7 @@ public class ClassificationImpl implements IClassification {
         // 获取全部数据
         List<BusinessClassificationDTO> all = businessClassificationMapper.selectList(new QueryWrapper<>());
         if (CollectionUtils.isEmpty(all)){
-            return null;
+            return new ClassificationDefsDTO();
         }
 
         // 数据转换
@@ -103,7 +113,7 @@ public class ClassificationImpl implements IClassification {
         // 查询所有数据
         List<BusinessClassificationDTO> data = businessClassificationMapper.selectList(new QueryWrapper<>());
         if (CollectionUtils.isEmpty(data)){
-            return null;
+            return new ArrayList<>();
         }
 
         // 数据转换
@@ -262,20 +272,37 @@ public class ClassificationImpl implements IClassification {
     @Override
     public ResultEnum classificationAddAssociatedEntity(ClassificationAddEntityDTO dto)
     {
-        String jsonParameter=JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.post(bulkClassification, jsonParameter);
+
+        // 业务分类和实体id
+        MetaDataClassificationMapDTO model = new MetaDataClassificationMapDTO();
+        model.setMetaDataEntityId(Integer.parseInt(dto.entityGuids.get(0)));
+
+        // 查询分类id
+        QueryWrapper<GlossaryLibraryDTO> qw = new QueryWrapper<>();
+        qw.eq("name", dto.classification.typeName);
+        GlossaryLibraryDTO dlDto = glossaryLibraryMapper.selectOne(qw);
+        model.setBusinessClassificationId((int) dlDto.id);
+        if (metaDataClassificationMapMapper.insert(model) <= 0){
+            throw new FkException(ResultEnum.ERROR, "业务分类关联实体失败");
+        }
+//        String jsonParameter=JSONArray.toJSON(dto).toString();
+//        ResultDataDTO<String> result = atlasClient.post(bulkClassification, jsonParameter);
         Boolean exist = redisTemplate.hasKey("metaDataEntityData:"+dto.entityGuids.get(0));
         if (exist)
         {
             entity.setRedis(dto.entityGuids.get(0));
         }
-        return atlasClient.newResultEnum(result);
+        return ResultEnum.SUCCESS;
     }
 
     @Override
     public ResultEnum classificationDelAssociatedEntity(ClassificationDelAssociatedEntityDTO dto) {
-        ResultDataDTO<String> result = atlasClient.delete(entityByGuid + "/" + dto.entityGuid + "/classification/" + dto.classificationName);
-        return atlasClient.newResultEnum(result);
+        if (metaDataClassificationMapMapper.deleteById(dto.entityGuid) <= 0){
+            throw new FkException(ResultEnum.ERROR, "业务分类删除实体失败");
+        }
+
+//        ResultDataDTO<String> result = atlasClient.delete(entityByGuid + "/" + dto.entityGuid + "/classification/" + dto.classificationName);
+        return ResultEnum.SUCCESS;
     }
 
     @Override

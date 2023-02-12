@@ -6,7 +6,7 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class GlossaryTermCategoryDTO {
+public class GlossaryTermCategoryDTO extends NewGlossaryDTO {
 
     public String relationGuid;
 

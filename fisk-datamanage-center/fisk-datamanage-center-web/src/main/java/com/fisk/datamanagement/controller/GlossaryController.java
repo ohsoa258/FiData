@@ -35,7 +35,7 @@ public class GlossaryController {
     @Resource
     ICategory iCategory;
 
-    @ApiOperation("获取术语库列表,包含术语库下术语、类别")
+    @ApiOperation("获取术语库列表,包含术语库下术语、类别--已重构")
     @GetMapping("/getGlossaryList")
     public ResultEntity<Object> getGlossaryList() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getGlossaryList());
@@ -83,13 +83,13 @@ public class GlossaryController {
         return ResultEntityBuild.build(iTerm.deleteTerm(guid));
     }
 
-    @ApiOperation("术语关联entity")
+    @ApiOperation("术语关联entity--已重构")
     @PostMapping("/termAssignedEntities")
     public ResultEntity<Object> termAssignedEntities(@Validated @RequestBody TermAssignedEntities dto) {
         return ResultEntityBuild.build(iTerm.termAssignedEntities(dto));
     }
 
-    @ApiOperation("术语删除关联entity")
+    @ApiOperation("术语删除关联entity--已重构")
     @PutMapping("/termDeleteAssignedEntities")
     public ResultEntity<Object> termDeleteAssignedEntities(@Validated @RequestBody TermAssignedEntities dto) {
         return ResultEntityBuild.build(iTerm.termDeleteAssignedEntities(dto));
@@ -101,7 +101,7 @@ public class GlossaryController {
         return ResultEntityBuild.build(iCategory.addCategory(dto));
     }
 
-    @ApiOperation("删除类别")
+    @ApiOperation("删除类别--已重构")
     @DeleteMapping("/deleteCategory/{guid}")
     public ResultEntity<Object> deleteCategory(@PathVariable("guid") String guid) {
         return ResultEntityBuild.build(iCategory.deleteCategory(guid));
@@ -119,7 +119,7 @@ public class GlossaryController {
         return ResultEntityBuild.build(iCategory.updateCategory(dto));
     }
 
-    @ApiOperation("获取术语库或类别关联术语")
+    @ApiOperation("获取术语库或类别关联术语--已重构")
     @GetMapping("/getTermList")
     public ResultEntity<Object> getTermList(@RequestParam(value = "guid") String guid, @RequestParam(value = "parent") Boolean parent) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTermList(guid, parent));

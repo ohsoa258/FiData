@@ -11,11 +11,13 @@ import com.fisk.datamanagement.dto.category.CategoryDetailsDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryAnchorDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryLibraryDTO;
 import com.fisk.datamanagement.dto.glossary.NewGlossaryDTO;
+import com.fisk.datamanagement.dto.metadatamapatlas.MetaDataGlossaryMapDTO;
 import com.fisk.datamanagement.dto.term.TermAssignedEntities;
 import com.fisk.datamanagement.dto.term.TermDTO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
 import com.fisk.datamanagement.mapper.GlossaryMapper;
+import com.fisk.datamanagement.mapper.MetaDataGlossaryMapMapper;
 import com.fisk.datamanagement.service.ITerm;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
@@ -43,6 +45,9 @@ public class TermImpl implements ITerm {
 
     @Resource
     GlossaryMapper glossaryMapper;
+
+    @Resource
+    MetaDataGlossaryMapMapper metaDataGlossaryMapMapper;
 
     @Value("${atlas.glossary.term}")
     public String term;
@@ -226,27 +231,37 @@ public class TermImpl implements ITerm {
     @Override
     public ResultEnum termAssignedEntities(TermAssignedEntities dto)
     {
-        String jsonParameter= JSONArray.toJSON(dto.dto).toString();
-        ResultDataDTO<String> result = atlasClient.post(terms + "/" + dto.termGuid+"/assignedEntities",jsonParameter);
+        // 存储关联实体
+        MetaDataGlossaryMapDTO model = new MetaDataGlossaryMapDTO();
+        model.setGlossaryId(Integer.parseInt(dto.termGuid));
+        model.setMetaDataEntityId(Integer.parseInt(dto.dto.get(0).guid));
+        if (metaDataGlossaryMapMapper.insert(model) <= 0){
+            throw new FkException(ResultEnum.ERROR, "术语关联实体失败");
+        }
+//        String jsonParameter= JSONArray.toJSON(dto.dto).toString();
+//        ResultDataDTO<String> result = atlasClient.post(terms + "/" + dto.termGuid+"/assignedEntities",jsonParameter);
         Boolean exist = redisTemplate.hasKey("metaDataEntityData:"+dto.dto.get(0).guid);
         if (exist)
         {
             entity.setRedis(dto.dto.get(0).guid);
         }
-        return atlasClient.newResultEnum(result);
+        return ResultEnum.SUCCESS;
     }
 
     @Override
     public ResultEnum termDeleteAssignedEntities(TermAssignedEntities dto)
     {
-        String jsonParameter= JSONArray.toJSON(dto.dto).toString();
-        ResultDataDTO<String> result = atlasClient.put(terms + "/" + dto.termGuid+"/assignedEntities",jsonParameter);
-        if (result.code == AtlasResultEnum.BAD_REQUEST)
-        {
-            JSONObject msg= JSON.parseObject(result.data);
-            throw new FkException(ResultEnum.BAD_REQUEST,msg.getString("errorMessage"));
+        if (metaDataGlossaryMapMapper.deleteById(dto.termGuid) <= 0){
+            throw new FkException(ResultEnum.ERROR, "术语关联实体删除失败");
         }
-        return atlasClient.newResultEnum(result);
+//        String jsonParameter= JSONArray.toJSON(dto.dto).toString();
+//        ResultDataDTO<String> result = atlasClient.put(terms + "/" + dto.termGuid+"/assignedEntities",jsonParameter);
+//        if (result.code == AtlasResultEnum.BAD_REQUEST)
+//        {
+//            JSONObject msg= JSON.parseObject(result.data);
+//            throw new FkException(ResultEnum.BAD_REQUEST,msg.getString("errorMessage"));
+//        }
+        return ResultEnum.SUCCESS;
     }
 
 }

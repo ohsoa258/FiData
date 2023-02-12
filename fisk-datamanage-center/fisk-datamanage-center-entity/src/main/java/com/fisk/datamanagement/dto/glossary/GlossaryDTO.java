@@ -9,6 +9,7 @@ import lombok.Data;
 @Data
 public class GlossaryDTO {
     public String guid;
+    public String pid;
     public String qualifiedName;
     @ApiModelProperty(value = "名称",required=true)
     public String name;

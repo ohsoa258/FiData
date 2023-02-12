@@ -10,6 +10,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.category.CategoryDTO;
 import com.fisk.datamanagement.dto.category.ChildrenCategoryDetailsDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryAnchorDTO;
+import com.fisk.datamanagement.dto.glossary.GlossaryAttributeDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryLibraryDTO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
@@ -104,8 +105,38 @@ public class CategoryImpl implements ICategory {
     @Override
     public ResultEnum deleteCategory(String guid)
     {
-        ResultDataDTO<String> result = atlasClient.delete(category + "/" + guid);
-        return atlasClient.newResultEnum(result);
+        // 查询是否存在
+        QueryWrapper<GlossaryLibraryDTO> qw = new QueryWrapper<>();
+        qw.eq("id", guid).isNotNull("pid");
+        GlossaryLibraryDTO model = glossaryLibraryMapper.selectOne(qw);
+        if (model == null){
+            throw new FkException(ResultEnum.ERROR, "术语类别不存在");
+        }
+
+        // 查询所有术语
+        qw = new QueryWrapper<>();
+        qw.isNotNull("pid");
+        List<GlossaryLibraryDTO> allData = glossaryLibraryMapper.selectList(qw);
+        // 递归获取id
+        List<String> idList  = recursionCategoryId(allData, guid, new ArrayList<>());
+        idList.add(guid);
+
+        // 批量删除
+        if (glossaryLibraryMapper.deleteBatchIds(idList) > 0){
+            return ResultEnum.SUCCESS;
+        }else{
+            throw new FkException(ResultEnum.ERROR, "术语类别删除失败");
+        }
+    }
+
+    private List<String> recursionCategoryId(List<GlossaryLibraryDTO> allData, String id, List<String> idList){
+        for (GlossaryLibraryDTO item : allData){
+            if (String.valueOf(item.pid).equals(id)){
+                idList.add(String.valueOf(item.id));
+                recursionCategoryId(allData, String.valueOf(item.id), idList);
+            }
+        }
+        return idList;
     }
 
     @Override
