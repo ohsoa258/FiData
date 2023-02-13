@@ -25,6 +25,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.server.datasource.ExternalDataSourceDTO;
+import com.fisk.common.service.accessAndTask.DataTranDTO;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
@@ -1933,7 +1934,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
             conn = getConnection(dataSourceConfig.data);
             st = conn.createStatement();
-            Map<String, String> converSql = publishTaskClient.converSql(query.tableName, query.querySql, "", null).data;
+            DataTranDTO dto = new DataTranDTO();
+            dto.tableName = query.tableName;
+            dto.querySql = query.querySql;
+            Map<String, String> converSql = publishTaskClient.converSql(dto).data;
             query.querySql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             //获取总条数 todo 不支持分页
             /*String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
@@ -2097,7 +2101,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             Instant inst3 = Instant.now();
             String tableName = TableNameGenerateUtils.buildTableName(query.tableName, registration.appAbbreviation, registration.whetherSchema);
             log.info("时间增量值:{}", JSON.toJSONString(query.deltaTimes));
-            Map<String, String> converSql = publishTaskClient.converSql(tableName, query.querySql, po.driveType, JSON.toJSONString(query.deltaTimes)).data;
+            // 传参改动
+            DataTranDTO dto = new DataTranDTO();
+            dto.tableName = tableName;
+            dto.querySql = query.querySql;
+            dto.driveType = po.driveType;
+            dto.deltaTimes = JSON.toJSONString(query.deltaTimes);
+            Map<String, String> converSql = publishTaskClient.converSql(dto).data;
             log.info("拼语句执行时间 : " + Duration.between(inst2, inst3).toMillis());
 
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
@@ -2183,7 +2193,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 && !dto.driveType.getName().equals(DbTypeEnum.ftp.getName())
                 && !dto.driveType.getName().equals(DbTypeEnum.sftp.getName())) {
             String tableName = TableNameGenerateUtils.buildTableName(tableAccessPo.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
-            Map<String, String> converSql = publishTaskClient.converSql(tableName, tableAccessPo.sqlScript, dataSourcePo.driveType, null).data;
+            DataTranDTO dtDto = new DataTranDTO();
+            dtDto.tableName = tableName;
+            dtDto.querySql = tableAccessPo.sqlScript;
+            dtDto.driveType = dataSourcePo.driveType;
+            Map<String, String> converSql = publishTaskClient.converSql(dtDto).data;
             //String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             dto.selectSql = tableAccessPo.sqlScript;
             dto.queryStartTime = converSql.get(SystemVariableTypeEnum.START_TIME.getValue());

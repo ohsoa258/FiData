@@ -1,6 +1,7 @@
 package com.fisk.task.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.service.accessAndTask.DataTranDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
@@ -180,17 +181,10 @@ public interface PublishTaskClient {
     /**
      * 拼接sql替换时间
      *
-     * @param tableName tableName
-     * @param sql       sql
-     * @param driveType driveType
      * @return 返回值
      */
-    @GetMapping("/TBETLIncremental/converSql")
-    ResultEntity<Map<String, String>> converSql(
-            @RequestParam("tableName") String tableName,
-            @RequestParam("sql") String sql,
-            @RequestParam(value = "driveType", required = false) String driveType,
-            @RequestParam(value = "deltaTimes", required = false) String deltaTimes);
+    @PostMapping("/TBETLIncremental/converSql")
+    ResultEntity<Map<String, String>> converSql(@RequestBody DataTranDTO dto);
 
     /**
      * getSqlForPgOds
