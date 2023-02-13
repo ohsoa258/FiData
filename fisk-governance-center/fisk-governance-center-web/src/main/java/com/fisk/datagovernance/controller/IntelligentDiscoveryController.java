@@ -11,10 +11,7 @@ import com.fisk.datagovernance.dto.datasecurity.intelligentdiscovery.Intelligent
 import com.fisk.datagovernance.dto.datasecurity.intelligentdiscovery.IntelligentDiscovery_RuleQueryDTO;
 import com.fisk.datagovernance.dto.datasecurity.intelligentdiscovery.IntelligentDiscovery_WhiteListDTO;
 import com.fisk.datagovernance.service.datasecurity.IIntelligentDiscovery_RuleManageService;
-import com.fisk.datagovernance.vo.datasecurity.intelligentdiscovery.IntelligentDiscovery_LogsVO;
-import com.fisk.datagovernance.vo.datasecurity.intelligentdiscovery.IntelligentDiscovery_RuleExtInfoVO;
-import com.fisk.datagovernance.vo.datasecurity.intelligentdiscovery.IntelligentDiscovery_RuleVO;
-import com.fisk.datagovernance.vo.datasecurity.intelligentdiscovery.IntelligentDiscovery_ScanResultVO;
+import com.fisk.datagovernance.vo.datasecurity.intelligentdiscovery.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
@@ -87,7 +84,7 @@ public class IntelligentDiscoveryController {
 
     @ApiOperation("预览智能发现规则扫描结果")
     @PostMapping("/previewScanResult")
-    public ResultEntity<List<IntelligentDiscovery_ScanResultVO>> previewScanResult(@RequestParam("absolutePath") String absolutePath) {
+    public ResultEntity<IntelligentDiscovery_ScanResultVO> previewScanResult(@RequestParam("absolutePath") String absolutePath) {
         return service.previewScanResult(absolutePath);
     }
 
