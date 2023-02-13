@@ -436,6 +436,7 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
                         if (file.exists()) {
                             logsVO.setExistReport(true);
                             logsVO.setOriginalName(attachmentInfoPO.getOriginalName());
+                            logsVO.setAbsolutePath(filePath);
                         }
                     }
                 }

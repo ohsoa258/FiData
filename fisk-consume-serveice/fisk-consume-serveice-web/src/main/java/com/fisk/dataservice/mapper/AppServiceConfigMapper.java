@@ -25,7 +25,7 @@ public interface AppServiceConfigMapper extends FKBaseMapper<AppServiceConfigPO>
      *
      * @return 查询结果
      */
-    @Select("SELECT id,api_id,app_id,api_state FROM tb_app_service_config WHERE app_id=#{appId} AND service_id=#{apiId} AND del_flag=1;")
+    @Select("SELECT id,service_id,app_id,api_state FROM tb_app_service_config WHERE app_id=#{appId} AND service_id=#{apiId} AND del_flag=1;")
     AppServiceConfigPO getSubscribeBy(@Param("appId") int appId, @Param("apiId") int apiId);
 
     /**
