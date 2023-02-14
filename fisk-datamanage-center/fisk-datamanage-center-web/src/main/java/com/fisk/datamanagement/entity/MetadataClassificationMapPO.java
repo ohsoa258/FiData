@@ -16,6 +16,7 @@ public class MetadataClassificationMapPO extends BasePO {
 
     public Integer metadataEntityId;
 
+
     public Integer businessClassificationId;
 
 }
