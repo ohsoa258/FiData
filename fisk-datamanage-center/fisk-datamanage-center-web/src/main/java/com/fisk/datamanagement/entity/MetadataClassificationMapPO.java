@@ -15,10 +15,9 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @TableName(value = "tb_metadata_classification_map")
-public class MetaDataClassificationMapPO extends BasePO {
+public class MetadataClassificationMapPO extends BasePO {
 
-    public Integer metaDataEntityId;
-
+    public Integer metadataEntityId;
 
     public Integer businessClassificationId;
 }
