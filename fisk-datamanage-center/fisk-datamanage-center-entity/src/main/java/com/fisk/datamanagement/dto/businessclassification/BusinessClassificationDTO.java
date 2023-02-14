@@ -15,14 +15,18 @@ import java.time.LocalDateTime;
  * @Copyright: 2023 by 湖~Tloml
  * @Description:
  **/
-@EqualsAndHashCode(callSuper = true)
 @Data
-@TableName("tb_business_classification")
-public class BusinessClassificationDTO extends BasePO {
+public class BusinessClassificationDTO{
 
     public Integer pid;
 
     public String name;
 
     public String description;
+
+    public LocalDateTime createTime;
+
+    public String createUser;
+
+    public Boolean delFlag;
 }

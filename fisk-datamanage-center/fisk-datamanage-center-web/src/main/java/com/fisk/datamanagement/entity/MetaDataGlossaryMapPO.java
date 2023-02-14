@@ -1,4 +1,4 @@
-package com.fisk.datamanagement.dto.metadatamapatlas;
+package com.fisk.datamanagement.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.dto.BaseDTO;
@@ -14,10 +14,12 @@ import lombok.EqualsAndHashCode;
  * @Description:
  **/
 
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class MetaDataClassificationMapDTO extends BaseDTO {
+@TableName(value = "tb_metadata_glossary_map")
+public class MetaDataGlossaryMapPO extends BasePO {
 
     public Integer metaDataEntityId;
 
-    public Integer businessClassificationId;
+    public Integer glossaryId;
 }

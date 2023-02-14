@@ -1,6 +1,7 @@
 package com.fisk.datamanagement.dto.metadatamapatlas;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fisk.common.core.baseObject.dto.BaseDTO;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,10 +14,8 @@ import lombok.EqualsAndHashCode;
  * @Description:
  **/
 
-@EqualsAndHashCode(callSuper = true)
 @Data
-@TableName(value = "tb_metadata_glossary_map")
-public class MetaDataGlossaryMapDTO extends BasePO {
+public class MetaDataGlossaryMapDTO extends BaseDTO {
 
     public Integer metaDataEntityId;
 

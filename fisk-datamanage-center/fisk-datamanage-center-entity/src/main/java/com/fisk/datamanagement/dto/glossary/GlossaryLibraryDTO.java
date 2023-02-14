@@ -1,6 +1,7 @@
 package com.fisk.datamanagement.dto.glossary;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fisk.common.core.baseObject.dto.BaseDTO;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
 
@@ -14,8 +15,7 @@ import java.time.LocalDateTime;
  * @Description:
  **/
 @Data
-@TableName("tb_glossary_library")
-public class GlossaryLibraryDTO extends BasePO {
+public class GlossaryLibraryDTO extends BaseDTO {
 
     public Integer pid;
 

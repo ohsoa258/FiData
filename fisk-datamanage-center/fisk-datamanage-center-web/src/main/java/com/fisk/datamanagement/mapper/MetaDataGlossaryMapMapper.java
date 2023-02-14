@@ -2,6 +2,7 @@ package com.fisk.datamanagement.mapper;
 
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datamanagement.dto.metadatamapatlas.MetaDataGlossaryMapDTO;
+import com.fisk.datamanagement.entity.MetaDataGlossaryMapPO;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -12,5 +13,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @Description:
  **/
 @Mapper
-public interface MetaDataGlossaryMapMapper extends FKBaseMapper<MetaDataGlossaryMapDTO> {
+public interface MetaDataGlossaryMapMapper extends FKBaseMapper<MetaDataGlossaryMapPO> {
 }
