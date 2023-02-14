@@ -12,7 +12,6 @@ import lombok.EqualsAndHashCode;
  * @Copyright: 2023 by 湖~Tloml
  * @Description:
  **/
-
 @EqualsAndHashCode(callSuper = true)
 @Data
 @TableName(value = "tb_metadata_classification_map")
