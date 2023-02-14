@@ -9,6 +9,8 @@ import com.monitorjbl.xlsx.StreamingReader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -105,7 +107,7 @@ public class ExcelUtils {
                     }
                     List<String> col = new ArrayList<>();
                     for (int j = 0; j < lastCellNum; j++) {
-                        Object obj = getCellFormatValue(row.getCell(j));
+                        Object obj = getCellFormatValue(row.getCell(j), wb);
                         obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
                         col.add((String) obj);
                     }
@@ -150,21 +152,21 @@ public class ExcelUtils {
 
 
     /**
+     * @return java.lang.Object
      * @description 根据Cell类型设置数据
      * @author Lock
      * @date 2021/12/28 10:25
      * @version v1.0
      * @params cell excel单元格对象
-     * @return java.lang.Object
      */
-    private static Object getCellFormatValue(Cell cell) {
+    private static Object getCellFormatValue(Cell cell, Workbook workbook) {
         Object cellvalue = "";
         try {
             if (cell != null) {
+                FormulaEvaluator formulaEvaluator = new XSSFFormulaEvaluator((XSSFWorkbook) workbook);
                 // 判断当前Cell的Type
                 switch (cell.getCellType()) {
                     case NUMERIC:
-                    case FORMULA:
                         // 判断当前的cell为Date, 取时间类型；数字则转字符串
                         cellvalue = DateUtil.isCellDateFormatted(cell) ? cell.getDateCellValue() : String.valueOf(cell.getNumericCellValue());
                         break;
@@ -172,6 +174,12 @@ public class ExcelUtils {
                     case STRING:
                         cellvalue = cell.getRichStringCellValue().getString();
                         break;
+                    case FORMULA:
+                        //获取公式，可以理解为已String类型获取cell的值输出
+                        //String cellFormula = cell.getCellFormula();
+                        //执行公式，此处cell的值就是公式
+                        CellValue evaluate = formulaEvaluator.evaluate(cell);
+                        cellvalue = evaluate.formatAsString();
                     default:
                         break;
                 }
