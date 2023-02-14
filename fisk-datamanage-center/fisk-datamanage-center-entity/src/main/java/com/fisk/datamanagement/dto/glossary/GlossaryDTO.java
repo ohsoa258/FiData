@@ -8,6 +8,8 @@ import lombok.Data;
  */
 @Data
 public class GlossaryDTO {
+    public String displayText;
+    public String termGuid;
     public String guid;
     public String pid;
     public String qualifiedName;

@@ -3,16 +3,23 @@ package com.fisk.datamanagement.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.datamanagement.dto.classification.ClassificationDTO;
 import com.fisk.datamanagement.dto.entity.*;
+import com.fisk.datamanagement.dto.glossary.GlossaryDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
+import com.fisk.datamanagement.dto.search.EntitiesDTO;
+import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
+import com.fisk.datamanagement.entity.*;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
+import com.fisk.datamanagement.mapper.*;
 import com.fisk.datamanagement.service.IEntity;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
@@ -22,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -48,7 +56,21 @@ public class EntityImpl implements IEntity {
     @Resource
     BusinessMetadataConfigImpl businessMetadataConfigImpl;
     @Resource
+    MetadataEntityMapper metadataEntityMapper;
+    @Resource
+    MetaDataGlossaryMapMapper metaDataGlossaryMapMapper;
+    @Resource
     private RedisTemplate redisTemplate;
+    @Resource
+    GlossaryMapper glossaryMapper;
+    @Resource
+    MetadataEntityTypeMapper metadataEntityTypeMapper;
+    @Resource
+    MetadataAttributeMapper metadataAttributeMapper;
+    @Resource
+    MetaDataClassificationMapMapper metaDataClassificationMapMapper;
+    @Resource
+    BusinessClassificationMapper businessClassificationMapper;
 
     @Value("${atlas.searchBasic}")
     private String searchBasic;
@@ -371,16 +393,73 @@ public class EntityImpl implements IEntity {
     }
 
     @Override
-    public JSONObject searchBasicEntity(EntityFilterDTO dto)
+    public SearchBusinessGlossaryEntityDTO searchBasicEntity(EntityFilterDTO dto)
     {
-        String jsonParameter=JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.post(searchBasic, jsonParameter);
-        if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
-        {
-            JSONObject msg=JSON.parseObject(result.data);
-            throw new FkException(ResultEnum.BAD_REQUEST,msg.getString("errorMessage"));
+        SearchBusinessGlossaryEntityDTO searchDto = new SearchBusinessGlossaryEntityDTO();
+        searchDto.approximateCount = "-1";
+        searchDto.queryType = "BASIC";
+        searchDto.searchParameters.excludeDeletedEntities = true;
+        searchDto.searchParameters.includeClassificationAttributes = true;
+        searchDto.searchParameters.includeSubClassifications = true;
+        searchDto.searchParameters.includeSubTypes = true;
+        searchDto.searchParameters.limit = dto.limit;
+        searchDto.searchParameters.offset = dto.offset;
+        searchDto.searchParameters.termName = dto.termName;
+
+        // 查询术语id
+        QueryWrapper<GlossaryPO> gQw = new QueryWrapper<>();
+        gQw.eq("name", dto.termName.split("@")[0]);
+        GlossaryPO glossaryPO = glossaryMapper.selectOne(gQw);
+        if (glossaryPO == null){
+            return searchDto;
         }
-        return JSON.parseObject(result.data);
+
+        // 查询术语对应的实体集合
+        QueryWrapper<MetaDataGlossaryMapPO> mgQw = new QueryWrapper<>();
+        mgQw.eq("glossary_id", glossaryPO.id);
+        List<MetaDataGlossaryMapPO> metaDataGlossaryMapPOList = metaDataGlossaryMapMapper.selectList(mgQw);
+        if (CollectionUtils.isEmpty(metaDataGlossaryMapPOList)){
+            return searchDto;
+        }
+        List<Integer> entityIdList = metaDataGlossaryMapPOList.stream().map(MetaDataGlossaryMapPO::getMetaDataEntityId).collect(Collectors.toList());
+        List<MetadataEntityPO> metadataEntityPOList = metadataEntityMapper.selectBatchIds(entityIdList);
+        if (CollectionUtils.isEmpty(metadataEntityPOList)){
+            return searchDto;
+        }
+
+        List<EntitiesDTO> entitiesDTOList = new ArrayList<>();
+        for (MetadataEntityPO item : metadataEntityPOList){
+            EntitiesDTO eDto = new EntitiesDTO();
+            eDto.displayText = item.displayName;
+            eDto.typeName = metadataEntityTypeMapper.selectNameById(item.typeId);
+            eDto.guid = String.valueOf(item.id);
+            eDto.status = "ACTIVE";
+            eDto.attributes.name = item.name;
+            eDto.attributes.description = item.description;
+            eDto.attributes.qualifiedName = item.qualifiedName;
+            eDto.attributes.owner = item.owner;
+
+            GlossaryDTO term = new GlossaryDTO();
+            term.termGuid = String.valueOf(glossaryPO.id);
+            term.displayText = glossaryPO.name;
+            eDto.meanings.add(term);
+
+            eDto.meaningNames.add(glossaryPO.name);
+            // 查询对应业务分类
+            MetadataClassificationMapPO mdcMapPo = metaDataClassificationMapMapper.selectById(item.id);
+            if (mdcMapPo != null){
+                BusinessClassificationPO businessClassificationPO = businessClassificationMapper.selectById(mdcMapPo.businessClassificationId);
+                ClassificationDTO cDto = new ClassificationDTO();
+                cDto.typeName = businessClassificationPO.name;
+                cDto.entityGuid = String.valueOf(businessClassificationPO.id);
+                eDto.classifications.add(cDto);
+            }
+
+            entitiesDTOList.add(eDto);
+        }
+
+        searchDto.entities = entitiesDTOList;
+        return searchDto;
     }
 
     @Override

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
+import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
 
 import java.util.List;
 
@@ -51,7 +52,7 @@ public interface IEntity {
      * @param dto
      * @return
      */
-    JSONObject searchBasicEntity(EntityFilterDTO dto);
+    SearchBusinessGlossaryEntityDTO searchBasicEntity(EntityFilterDTO dto);
 
     /**
      * 根据实体id,获取审计列表

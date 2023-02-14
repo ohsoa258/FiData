@@ -3,9 +3,12 @@ package com.fisk.datamanagement.service.impl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.datamanagement.dto.assetsdirectory.AssetsDirectoryDTO;
+import com.fisk.datamanagement.dto.classification.ClassificationDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDefContentDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
+import com.fisk.datamanagement.dto.search.EntitiesDTO;
+import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.service.IAssetsDirectory;
 import org.springframework.stereotype.Service;
@@ -59,6 +62,7 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
             data.add(setAssetsDirectory(classification.guid, classification.name, "", 0, false, classification.superTypes));
             parameter.classification = classification.name;
             //获取关联实体数据
+            /*
             JSONObject jsonObject = entity.searchBasicEntity(parameter);
             Object entities1 = jsonObject.get("entities");
             if (entities1 == null) {
@@ -78,6 +82,27 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
                         && entityList.contains(entities.getJSONObject(i).getString("guid"))) {
                     data.add(setAssetsDirectory(entities.getJSONObject(i).getString("guid"),
                             entities.getJSONObject(i).getString("displayText"),
+                            classification.guid, 0, true, null));
+                }
+            }
+             */
+            SearchBusinessGlossaryEntityDTO eDto = entity.searchBasicEntity(parameter);
+            List<EntitiesDTO> entities = eDto.entities;
+            if (entities == null) {
+                continue;
+            }
+            for (int i = 0; i < entities.size(); i++) {
+                //获取业务过程直接关联的实体
+                List<String> entityList = new ArrayList<>();
+                List<ClassificationDTO> classifications = entities.get(i).getClassifications();
+                for (int j = 0; j < classifications.size(); j++) {
+                    entityList.add(classifications.get(i).entityGuid);
+                }
+                if (EntityTypeEnum.RDBMS_TABLE.getName().equals(entities.get(i).typeName)
+                        && "ACTIVE".equals(entities.get(i).status)
+                        && entityList.contains(entities.get(i).guid)) {
+                    data.add(setAssetsDirectory(entities.get(i).guid,
+                            entities.get(i).displayText,
                             classification.guid, 0, true, null));
                 }
             }
