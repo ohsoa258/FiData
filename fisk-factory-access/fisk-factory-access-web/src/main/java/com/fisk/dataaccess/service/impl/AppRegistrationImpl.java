@@ -78,6 +78,7 @@ import com.fisk.task.enums.OlapTableEnum;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -151,6 +152,8 @@ public class AppRegistrationImpl
     @Resource
     GetConfigDTO getConfig;
 
+    @Value("${string.open-metadata}")
+    private Boolean openMetadata;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -237,28 +240,32 @@ public class AppRegistrationImpl
             VerifySchema(po.appAbbreviation, po.targetDbId);
         }
 
-        //新增业务分类
-        addClassification(appRegistrationDTO);
+        if (openMetadata) {
+            //新增业务分类
+            addClassification(appRegistrationDTO);
+        }
 
         //数据库应用,需要新增元数据对象
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
         for (AppDataSourcePO item : modelDataSource) {
             List<MetaDataInstanceAttributeDTO> metaData = addDataSourceMetaData(po, item);
-            if (metaData != null){
+            if (metaData != null) {
                 list.addAll(metaData);
             }
         }
 
-        if (!CollectionUtils.isEmpty(list)) {
-            try {
-                MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
-                metaDataAttribute.instanceList = list;
-                metaDataAttribute.userId = Long.parseLong(userHelper.getLoginUserInfo().id.toString());
-                // 更新元数据内容
-                log.info("数据接入ods构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
-                dataManageClient.consumeMetaData(list);
-            } catch (Exception e) {
-                log.error("【dataManageClient.MetaData()】方法报错,ex", e);
+        if (openMetadata) {
+            if (!CollectionUtils.isEmpty(list)) {
+                try {
+                    MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
+                    metaDataAttribute.instanceList = list;
+                    metaDataAttribute.userId = Long.parseLong(userHelper.getLoginUserInfo().id.toString());
+                    // 更新元数据内容
+                    log.info("数据接入ods构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+                    dataManageClient.consumeMetaData(list);
+                } catch (Exception e) {
+                    log.error("【dataManageClient.MetaData()】方法报错,ex", e);
+                }
             }
         }
 
