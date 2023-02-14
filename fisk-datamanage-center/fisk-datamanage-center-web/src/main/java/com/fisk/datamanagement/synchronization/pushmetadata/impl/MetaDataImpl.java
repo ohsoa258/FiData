@@ -157,7 +157,7 @@ public class MetaDataImpl implements IMetaData {
                     //删除
                     deleteMetaData(qualifiedNames, tableGuid);
                     //同步血缘
-                    synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid); //, table.columnList);
+                    synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid);
                 }
             }
         }
@@ -181,7 +181,7 @@ public class MetaDataImpl implements IMetaData {
     public void synchronizationTableKinShip(String dbName,
                                             String tableGuid,
                                             String tableName,
-                                            String stgTableGuid) //,List<MetaDataColumnAttributeDTO> columnList
+                                            String stgTableGuid)
     {
         try {
 
@@ -1274,7 +1274,7 @@ public class MetaDataImpl implements IMetaData {
             return dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname;
         }
         int dataSourceId = 0;
-        //暂不支持同步ods血缘
+        //同步ods血缘
         if (dataSourceInfo.id == DataSourceConfigEnum.DMP_ODS.getValue()) {
             return "ods";
         }
