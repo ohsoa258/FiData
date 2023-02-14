@@ -2265,7 +2265,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             OdsQueryDTO queryDto = new OdsQueryDTO();
             // queryDto.appId = modelAccess.appId;
             queryDto.appDataSourceId = dto.appDataSourceId;
-            queryDto.querySql = modelAccess.sqlScript;
+            queryDto.querySql = dto.sqlScript;
             queryDto.tableName = TableNameGenerateUtils.buildTableName(modelAccess.tableName, modelReg.appAbbreviation, modelReg.whetherSchema);
             return filterSqlFieldList(listField, queryDto);
         }

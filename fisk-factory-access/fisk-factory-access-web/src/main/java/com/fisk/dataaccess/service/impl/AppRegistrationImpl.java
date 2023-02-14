@@ -150,6 +150,8 @@ public class AppRegistrationImpl
     RedisUtil redisUtil;
     @Resource
     GetConfigDTO getConfig;
+
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEntity<AtlasEntityQueryVO> addData(AppRegistrationDTO appRegistrationDTO) {
