@@ -17,6 +17,7 @@ import com.fisk.datamanagement.dto.glossary.GlossaryLibraryDTO;
 import com.fisk.datamanagement.dto.metadatamapatlas.MetaDataClassificationMapDTO;
 import com.fisk.datamanagement.dto.metadatamapatlas.MetaDataGlossaryMapDTO;
 import com.fisk.datamanagement.entity.BusinessClassificationPO;
+import com.fisk.datamanagement.entity.MetadataClassificationMapPO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.map.ClassificationMap;
 import com.fisk.datamanagement.mapper.BusinessClassificationMapper;
@@ -188,18 +189,18 @@ public class ClassificationImpl implements IClassification {
     public ResultEnum updateClassification(ClassificationDefsDTO dto) {
         ClassificationDefContentDTO param = dto.getClassificationDefs().get(0);
         // 查询数据
-        QueryWrapper<BusinessClassificationDTO> qw = new QueryWrapper<>();
+        QueryWrapper<BusinessClassificationPO> qw = new QueryWrapper<>();
         qw.eq("name", param.name).eq("del_flag", 1);
-//        BusinessClassificationDTO model = businessClassificationMapper.selectOne(qw);
-//        if (model == null){
-//            throw new FkException(ResultEnum.ERROR, "业务分类不存在");
-//        }
-//        model.setDescription(param.description);
-//        if (businessClassificationMapper.updateByName(model) > 0){
+        BusinessClassificationPO model = businessClassificationMapper.selectOne(qw);
+        if (model == null){
+            throw new FkException(ResultEnum.ERROR, "业务分类不存在");
+        }
+        model.setDescription(param.description);
+        if (businessClassificationMapper.updateByName(model) > 0){
             return ResultEnum.SUCCESS;
-//        }else{
-//            throw new FkException(ResultEnum.ERROR, "修改业务分类失败");
-//        }
+        }else{
+            throw new FkException(ResultEnum.ERROR, "修改业务分类失败");
+        }
     }
 
     @Override
@@ -241,15 +242,15 @@ public class ClassificationImpl implements IClassification {
             }
 
             // 查询数据
-            QueryWrapper<BusinessClassificationDTO> qw = new QueryWrapper<>();
+            QueryWrapper<BusinessClassificationPO> qw = new QueryWrapper<>();
             qw.eq("name", item.name).eq("del_flag", 1);
-//            BusinessClassificationDTO bcDTO = businessClassificationMapper.selectOne(qw);
-//            if (bcDTO != null){
-//                throw new FkException(ResultEnum.ERROR, "业务分类名称已经存在");
-//            }
+            BusinessClassificationPO bcPO = businessClassificationMapper.selectOne(qw);
+            if (bcPO != null){
+                throw new FkException(ResultEnum.ERROR, "业务分类名称已经存在");
+            }
 
             // 添加数据
-            BusinessClassificationDTO model = new BusinessClassificationDTO();
+            BusinessClassificationPO model = new BusinessClassificationPO();
             model.setName(item.name);
             model.setDescription(item.description);
 
@@ -262,10 +263,10 @@ public class ClassificationImpl implements IClassification {
 
             // 设置创建者信息
             model.setCreateUser(userHelper.getLoginUserInfo().id.toString());
-//            int flag = businessClassificationMapper.insert(model);
-//            if (flag < 0){
-//                throw new FkException(ResultEnum.ERROR, "保存失败");
-//            }
+            int flag = businessClassificationMapper.insert(model);
+            if (flag < 0){
+                throw new FkException(ResultEnum.ERROR, "保存失败");
+            }
         }
         return ResultEnum.SUCCESS;
     }
@@ -275,24 +276,24 @@ public class ClassificationImpl implements IClassification {
     {
 
         // 业务分类和实体id
-//        MetaDataClassificationMapDTO model = new MetaDataClassificationMapDTO();
-//        model.setMetaDataEntityId(Integer.parseInt(dto.entityGuids.get(0)));
-//
-//        // 查询分类id
-//        QueryWrapper<GlossaryLibraryDTO> qw = new QueryWrapper<>();
-//        qw.eq("name", dto.classification.typeName);
-//        GlossaryLibraryDTO dlDto = glossaryLibraryMapper.selectOne(qw);
-//        model.setBusinessClassificationId((int) dlDto.id);
-//        if (metaDataClassificationMapMapper.insert(model) <= 0){
-//            throw new FkException(ResultEnum.ERROR, "业务分类关联实体失败");
-//        }
-////        String jsonParameter=JSONArray.toJSON(dto).toString();
-////        ResultDataDTO<String> result = atlasClient.post(bulkClassification, jsonParameter);
-//        Boolean exist = redisTemplate.hasKey("metaDataEntityData:"+dto.entityGuids.get(0));
-//        if (exist)
-//        {
-//            entity.setRedis(dto.entityGuids.get(0));
-//        }
+        MetadataClassificationMapPO model = new MetadataClassificationMapPO();
+        model.setMetadataEntityId(Integer.parseInt(dto.entityGuids.get(0)));
+
+        // 查询分类id
+        QueryWrapper<BusinessClassificationPO> qw = new QueryWrapper<>();
+        qw.eq("name", dto.classification.typeName);
+        BusinessClassificationPO bcPo = businessClassificationMapper.selectOne(qw);
+        model.setBusinessClassificationId((int) bcPo.id);
+        if (metaDataClassificationMapMapper.insert(model) <= 0){
+            throw new FkException(ResultEnum.ERROR, "业务分类关联实体失败");
+        }
+//        String jsonParameter=JSONArray.toJSON(dto).toString();
+//        ResultDataDTO<String> result = atlasClient.post(bulkClassification, jsonParameter);
+        Boolean exist = redisTemplate.hasKey("metaDataEntityData:"+dto.entityGuids.get(0));
+        if (exist)
+        {
+            entity.setRedis(dto.entityGuids.get(0));
+        }
         return ResultEnum.SUCCESS;
     }
 

@@ -28,55 +28,55 @@ public class ClassificationController {
     @Resource
     IClassification service;
 
-    @ApiOperation("获取业务分类列表-已重构")
+    @ApiOperation("获取业务分类列表.已重构")
     @GetMapping("/getClassificationList")
     public ResultEntity<Object> getClassificationList() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getClassificationList());
     }
 
-    @ApiOperation("获取业务类型树形列表-已重构")
+    @ApiOperation("获取业务分类树形列表.已重构")
     @GetMapping("/getClassificationTree")
     public ResultEntity<Object> getClassificationTree() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getClassificationTree());
     }
 
-    @ApiOperation("修改业务类型以及业务属性-已重构")
+    @ApiOperation("修改业务类型以及业务属性.已重构")
     @PutMapping("/updateClassification")
     public ResultEntity<Object> updateClassification(@Validated @RequestBody ClassificationDefsDTO dto) {
         return ResultEntityBuild.build(service.updateClassification(dto));
     }
 
-    @ApiOperation("根据业务分类名称删除-已重构")
+    @ApiOperation("根据业务分类名称删除.已重构")
     @DeleteMapping("/deleteClassification/{classificationName}")
     public ResultEntity<Object> deleteClassification(@PathVariable("classificationName") String classificationName) {
         return ResultEntityBuild.build(service.deleteClassification(classificationName));
     }
 
-    @ApiOperation("添加业务分类以及属性-已重构")
+    @ApiOperation("添加业务分类以及属性.已重构")
     @PostMapping("/addClassification")
     public ResultEntity<Object> addClassification(@Validated @RequestBody ClassificationDefsDTO dto) {
         return ResultEntityBuild.build(service.addClassification(dto));
     }
 
-    @ApiOperation("业务分类添加关联entity-已重构")
+    @ApiOperation("业务分类添加关联entity.已重构")
     @PostMapping("/classificationAddAssociatedEntity")
     public ResultEntity<Object> classificationAddAssociatedEntity(@Validated @RequestBody ClassificationAddEntityDTO dto) {
         return ResultEntityBuild.build(service.classificationAddAssociatedEntity(dto));
     }
 
-    @ApiOperation("业务分类删除关联entity-已重构")
+    @ApiOperation("业务分类删除关联entity.已重构")
     @DeleteMapping("/classificationDelAssociatedEntity")
     public ResultEntity<Object> classificationDelAssociatedEntity(@Validated @RequestBody ClassificationDelAssociatedEntityDTO dto) {
         return ResultEntityBuild.build(service.classificationDelAssociatedEntity(dto));
     }
 
-    @ApiOperation("同步业务分类-已重构")
+    @ApiOperation("同步业务分类.已重构")
     @PostMapping("/synchronousClassification")
     public ResultEntity<Object> synchronousClassification() {
         return ResultEntityBuild.build(service.synchronousClassification());
     }
 
-    @ApiOperation("数据接入应用同步到业务分类-已重构")
+    @ApiOperation("数据接入应用同步到业务分类.已重构")
     @PostMapping("/appSynchronousClassification")
     public ResultEntity<Object> appSynchronousClassification(@Validated @RequestBody ClassificationInfoDTO dto) {
         return ResultEntityBuild.build(service.appSynchronousClassification(dto));

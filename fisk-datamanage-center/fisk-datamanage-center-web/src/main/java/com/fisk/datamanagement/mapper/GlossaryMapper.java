@@ -1,7 +1,6 @@
 package com.fisk.datamanagement.mapper;
 
 import com.fisk.common.framework.mybatis.FKBaseMapper;
-import com.fisk.datamanagement.dto.glossary.NewGlossaryDTO;
 import com.fisk.datamanagement.entity.GlossaryPO;
 import org.apache.ibatis.annotations.Mapper;
 

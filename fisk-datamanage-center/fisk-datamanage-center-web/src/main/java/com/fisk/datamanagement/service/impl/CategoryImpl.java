@@ -12,8 +12,12 @@ import com.fisk.datamanagement.dto.category.ChildrenCategoryDetailsDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryAnchorDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryAttributeDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryLibraryDTO;
+import com.fisk.datamanagement.dto.term.TermDetailsDTO;
+import com.fisk.datamanagement.entity.GlossaryLibraryPO;
+import com.fisk.datamanagement.entity.GlossaryPO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
+import com.fisk.datamanagement.mapper.GlossaryMapper;
 import com.fisk.datamanagement.service.ICategory;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
@@ -41,6 +45,8 @@ public class CategoryImpl implements ICategory {
     GlossaryLibraryMapper glossaryLibraryMapper;
     @Resource
     UserHelper userHelper;
+    @Resource
+    GlossaryMapper glossaryMapper;
 
     @Resource
     AtlasClient atlasClient;
@@ -61,176 +67,189 @@ public class CategoryImpl implements ICategory {
             throw new FkException(ResultEnum.ERROR, "所属术语库id不能为空");
         }
 
-//        // 校验术语分类名称是否重复,所有术语下均不能重复
-//        QueryWrapper<GlossaryLibraryDTO> qw = new QueryWrapper<>();
-//        qw.eq("name", dto.name).eq("del_flag", 1).isNotNull("pid");
-//        GlossaryLibraryDTO preCategory = glossaryLibraryMapper.selectOne(qw);
-//        if (preCategory != null){
-//            throw new FkException(ResultEnum.ERROR, "术语分类名称不能重复");
-//        }
-//
-//        // 校验所属术语库是否存在
-//        qw = new QueryWrapper<>();
-//        qw.eq("id", dto.anchor.glossaryGuid).eq("del_flag", 1).isNull("pid");
-//        GlossaryLibraryDTO preLibrary = glossaryLibraryMapper.selectOne(qw);
-//        if (preLibrary == null){
-//            throw new FkException(ResultEnum.ERROR, "所属术语库不存在");
-//        }
-//
-//        // 校验父级术语分类是否存在
-//        if(!StringUtils.isEmpty(dto.parentCategory.categoryGuid)){
-//            qw = new QueryWrapper<>();
-//            qw.eq("id", dto.parentCategory.categoryGuid).eq("del_flag", 1).isNotNull("pid");
-//            GlossaryLibraryDTO preParentCategory = glossaryLibraryMapper.selectOne(qw);
-//            if (preParentCategory == null){
-//                throw new FkException(ResultEnum.ERROR, "所属术语父级分类不存在");
-//            }
-//        }
-//
-//        // 新增术语分类
-//        GlossaryLibraryDTO model = new GlossaryLibraryDTO();
-//        model.setName(dto.name);
-//        if (!StringUtils.isEmpty(dto.parentCategory.categoryGuid)){
-//            model.setPid(Integer.parseInt(dto.parentCategory.categoryGuid));
-//        }else{
-//            model.setPid(Integer.parseInt(String.valueOf(preLibrary.getId())));
-//        }
-//        model.setShortDescription(dto.shortDescription);
-//        model.setLongDescription(dto.longDescription);
-//        model.setCreateTime(LocalDateTime.now());
-//        model.setCreateUser(userHelper.getLoginUserInfo().id.toString());
-//        return glossaryLibraryMapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.ERROR;
-        return null;
+        // 校验术语分类名称是否重复,所有术语下均不能重复
+        QueryWrapper<GlossaryLibraryPO> qw = new QueryWrapper<>();
+        qw.eq("name", dto.name).eq("del_flag", 1).isNotNull("pid");
+        GlossaryLibraryPO preCategory = glossaryLibraryMapper.selectOne(qw);
+        if (preCategory != null){
+            throw new FkException(ResultEnum.ERROR, "术语分类名称不能重复");
+        }
+
+        // 校验所属术语库是否存在
+        qw = new QueryWrapper<>();
+        qw.eq("id", dto.anchor.glossaryGuid).eq("del_flag", 1).isNull("pid");
+        GlossaryLibraryPO preLibrary = glossaryLibraryMapper.selectOne(qw);
+        if (preLibrary == null){
+            throw new FkException(ResultEnum.ERROR, "所属术语库不存在");
+        }
+
+        // 校验父级术语分类是否存在
+        if(!StringUtils.isEmpty(dto.parentCategory.categoryGuid)){
+            qw = new QueryWrapper<>();
+            qw.eq("id", dto.parentCategory.categoryGuid).eq("del_flag", 1).isNotNull("pid");
+            GlossaryLibraryPO preParentCategory = glossaryLibraryMapper.selectOne(qw);
+            if (preParentCategory == null){
+                throw new FkException(ResultEnum.ERROR, "所属术语父级分类不存在");
+            }
+        }
+
+        // 新增术语分类
+        GlossaryLibraryPO model = new GlossaryLibraryPO();
+        model.setName(dto.name);
+        if (!StringUtils.isEmpty(dto.parentCategory.categoryGuid)){
+            model.setPid(Integer.parseInt(dto.parentCategory.categoryGuid));
+        }else{
+            model.setPid(Integer.parseInt(String.valueOf(preLibrary.getId())));
+        }
+        model.setShortDescription(dto.shortDescription);
+        model.setLongDescription(dto.longDescription);
+        model.setCreateUser(userHelper.getLoginUserInfo().id.toString());
+        if (glossaryLibraryMapper.insert(model) > 0){
+            return ResultEnum.SUCCESS;
+        }else {
+            throw new FkException(ResultEnum.ERROR, "术语分类添加失败");
+        }
     }
 
     @Override
     public ResultEnum deleteCategory(String guid)
     {
-//        // 查询是否存在
-//        QueryWrapper<GlossaryLibraryDTO> qw = new QueryWrapper<>();
-//        qw.eq("id", guid).isNotNull("pid");
-//        GlossaryLibraryDTO model = glossaryLibraryMapper.selectOne(qw);
-//        if (model == null){
-//            throw new FkException(ResultEnum.ERROR, "术语类别不存在");
-//        }
-//
-//        // 查询所有术语
-//        qw = new QueryWrapper<>();
-//        qw.isNotNull("pid");
-//        List<GlossaryLibraryDTO> allData = glossaryLibraryMapper.selectList(qw);
-//        // 递归获取id
-//        List<String> idList  = recursionCategoryId(allData, guid, new ArrayList<>());
-//        idList.add(guid);
-//
-//        // 批量删除
-//        if (glossaryLibraryMapper.deleteBatchIds(idList) > 0){
-//            return ResultEnum.SUCCESS;
-//        }else{
-//            throw new FkException(ResultEnum.ERROR, "术语类别删除失败");
-//        }
-        return null;
+        // 查询是否存在
+        QueryWrapper<GlossaryLibraryPO> qw = new QueryWrapper<>();
+        qw.eq("id", guid).isNotNull("pid");
+        GlossaryLibraryPO model = glossaryLibraryMapper.selectOne(qw);
+        if (model == null){
+            throw new FkException(ResultEnum.ERROR, "术语类别不存在");
+        }
+
+        // 查询所有术语
+        qw = new QueryWrapper<>();
+        qw.isNotNull("pid");
+        List<GlossaryLibraryPO> allData = glossaryLibraryMapper.selectList(qw);
+        // 递归获取id
+        List<String> idList  = recursionCategoryId(allData, guid, new ArrayList<>());
+        idList.add(guid);
+
+        // 批量删除
+        if (glossaryLibraryMapper.deleteBatchIds(idList) > 0){
+            return ResultEnum.SUCCESS;
+        }else{
+            throw new FkException(ResultEnum.ERROR, "术语类别删除失败");
+        }
     }
 
-//    private List<String> recursionCategoryId(List<GlossaryLibraryDTO> allData, String id, List<String> idList){
-//        for (GlossaryLibraryDTO item : allData){
-//            if (String.valueOf(item.pid).equals(id)){
-//                idList.add(String.valueOf(item.id));
-//                recursionCategoryId(allData, String.valueOf(item.id), idList);
-//            }
-//        }
-//        return idList;
-//    }
+    private List<String> recursionCategoryId(List<GlossaryLibraryPO> allData, String id, List<String> idList){
+        for (GlossaryLibraryPO item : allData){
+            if (String.valueOf(item.pid).equals(id)){
+                idList.add(String.valueOf(item.id));
+                recursionCategoryId(allData, String.valueOf(item.id), idList);
+            }
+        }
+        return idList;
+    }
 
     @Override
     public CategoryDTO getCategory(String guid)
     {
         // 查询当前术语类别是否存在
-//        QueryWrapper<GlossaryLibraryDTO> qw = new QueryWrapper<>();
-//        qw.eq("id", guid);
-//        GlossaryLibraryDTO libraryDto = glossaryLibraryMapper.selectOne(qw);
-//        if (libraryDto == null){
-//            throw new FkException(ResultEnum.ERROR, "术语类别不存在");
-//        }
+        QueryWrapper<GlossaryLibraryPO> qw = new QueryWrapper<>();
+        qw.eq("id", guid);
+        GlossaryLibraryPO libraryDto = glossaryLibraryMapper.selectOne(qw);
+        if (libraryDto == null){
+            throw new FkException(ResultEnum.ERROR, "术语类别不存在");
+        }
 
         // 设置已查询的数据
         CategoryDTO data = new CategoryDTO();
-//        data.setGuid(String.valueOf(libraryDto.pid));
-//        data.setName(libraryDto.name);
-//        data.setShortDescription(libraryDto.shortDescription);
-//        data.setLongDescription(libraryDto.longDescription);
-//
-//        // 设置全限定名
-//        qw = new QueryWrapper<>();
-//        qw.eq("del_flag", 1);
-//        List<GlossaryLibraryDTO> allData = glossaryLibraryMapper.selectList(qw);
-//
-//        GlossaryLibraryDTO glossaryLibraryDTO = recursionData(allData, guid);
-//        if (glossaryLibraryDTO != null){
-//            data.setQualifiedName(libraryDto.name + "@" + glossaryLibraryDTO.name);
-//        }
-//        // 设置术语库id
-//        GlossaryAnchorDTO parent = new GlossaryAnchorDTO();
-//        parent.setGlossaryGuid(String.valueOf(glossaryLibraryDTO.getId()));
-//        data.setAnchor(parent);
-//
-//        // 设置一级子集术语类别
-//        List<ChildrenCategoryDetailsDTO> children = new ArrayList<>();
-//        for (GlossaryLibraryDTO item : allData){
-//            if (!StringUtils.isEmpty(item.pid) && String.valueOf(item.pid).equals(guid)){
-//                ChildrenCategoryDetailsDTO detailsDTO = new ChildrenCategoryDetailsDTO();
-//                detailsDTO.categoryGuid = String.valueOf(item.id);
-//                detailsDTO.displayText = item.name;
-//                detailsDTO.parentCategoryGuid = String.valueOf(glossaryLibraryDTO.id);
-//                children.add(detailsDTO);
-//            }
-//        }
-//        data.setChildrenCategories(children);
+        data.setGuid(String.valueOf(libraryDto.pid));
+        data.setName(libraryDto.name);
+        data.setShortDescription(libraryDto.shortDescription);
+        data.setLongDescription(libraryDto.longDescription);
+
+        // 设置全限定名
+        qw = new QueryWrapper<>();
+        qw.eq("del_flag", 1);
+        List<GlossaryLibraryPO> allData = glossaryLibraryMapper.selectList(qw);
+
+        GlossaryLibraryPO glPO = recursionData(allData, guid);
+        if (glPO != null){
+            data.setQualifiedName(libraryDto.name + "@" + glPO.name);
+        }
+        // 设置术语库id
+        GlossaryAnchorDTO parent = new GlossaryAnchorDTO();
+        parent.setGlossaryGuid(String.valueOf(glPO.getId()));
+        data.setAnchor(parent);
+
+        // 设置一级子集术语类别
+        List<ChildrenCategoryDetailsDTO> children = new ArrayList<>();
+        for (GlossaryLibraryPO item : allData){
+            if (!StringUtils.isEmpty(item.pid) && String.valueOf(item.pid).equals(guid)){
+                ChildrenCategoryDetailsDTO detailsDTO = new ChildrenCategoryDetailsDTO();
+                detailsDTO.categoryGuid = String.valueOf(item.id);
+                detailsDTO.displayText = item.name;
+                detailsDTO.parentCategoryGuid = String.valueOf(glPO.id);
+                children.add(detailsDTO);
+            }
+        }
+        data.setChildrenCategories(children);
+
+        // 查询术语类别下的术语
+        QueryWrapper<GlossaryPO> gQw = new QueryWrapper<>();
+        gQw.eq("glossary_library_id", guid);
+        List<GlossaryPO> termPoList = glossaryMapper.selectList(gQw);
+        if (!CollectionUtils.isEmpty(termPoList)){
+            List<TermDetailsDTO> termList = termPoList.stream().map(item -> {
+                TermDetailsDTO dto = new TermDetailsDTO();
+                dto.setDisplayText(item.name);
+                dto.setTermGuid(String.valueOf(item.id));
+                return dto;
+            }).collect(Collectors.toList());
+            data.setTerms(termList);
+        }
 
         return data;
     }
 
-//    private GlossaryLibraryDTO recursionData(List<GlossaryLibraryDTO> allData, String guid){
-//        for (GlossaryLibraryDTO item : allData){
-//            if (guid.equals(item.id) && !StringUtils.isEmpty(item.pid)){
-//                // pid不为空则递归
-//                recursionData(allData, String.valueOf(item.pid));
-//            }
-//            return item;
-//        }
-//        return null;
-//    }
+    private GlossaryLibraryPO recursionData(List<GlossaryLibraryPO> allData, String guid){
+        for (GlossaryLibraryPO item : allData){
+            if (guid.equals(String.valueOf(item.id)) && item.pid != null){
+                // pid不为空则递归
+                recursionData(allData, String.valueOf(item.pid));
+            }
+            return item;
+        }
+        return null;
+    }
 
     @Override
     public ResultEnum updateCategory(CategoryDTO dto)
     {
         // 校验名称是否为空
-//        if (StringUtils.isEmpty(dto.name)){
-//            throw new FkException(ResultEnum.ERROR, "术语类别名称不能为空");
-//        }
-//
-//        // 查询名称是否重复
-//        QueryWrapper<GlossaryLibraryDTO> qw = new QueryWrapper<>();
-//        qw.isNotNull("pid").eq("name", dto.name);
-//        GlossaryLibraryDTO model = glossaryLibraryMapper.selectOne(qw);
-//        if (model != null && !String.valueOf(model.getId()).equals(dto.getGuid())){
-//            throw new FkException(ResultEnum.ERROR, "术语类别名称已存在");
-//        }
-//
-//        // 查询就数据
-//        qw = new QueryWrapper<>();
-//        qw.eq("id", dto.guid);
-//        GlossaryLibraryDTO currModel = glossaryLibraryMapper.selectOne(qw);
-//        currModel.setName(dto.name);
-//        currModel.setShortDescription(dto.shortDescription);
-//        currModel.setLongDescription(dto.longDescription);
-//        currModel.setUpdateTime(LocalDateTime.now());
-//        currModel.setUpdateUser(userHelper.getLoginUserInfo().id.toString());
-//        if (glossaryLibraryMapper.updateById(currModel) > 0){
-//            return ResultEnum.SUCCESS;
-//        }else{
-//            throw new FkException(ResultEnum.ERROR, "术语分类修改失败");
-//        }
-        return null;
+        if (StringUtils.isEmpty(dto.name)){
+            throw new FkException(ResultEnum.ERROR, "术语类别名称不能为空");
+        }
+
+        // 查询名称是否重复
+        QueryWrapper<GlossaryLibraryPO> qw = new QueryWrapper<>();
+        qw.isNotNull("pid").eq("name", dto.name);
+        GlossaryLibraryPO model = glossaryLibraryMapper.selectOne(qw);
+        if (model != null && !String.valueOf(model.getId()).equals(dto.getGuid())){
+            throw new FkException(ResultEnum.ERROR, "术语类别名称已存在");
+        }
+
+        // 查询就数据
+        qw = new QueryWrapper<>();
+        qw.eq("id", dto.guid);
+        GlossaryLibraryPO currModel = glossaryLibraryMapper.selectOne(qw);
+        currModel.setName(dto.name);
+        currModel.setShortDescription(dto.shortDescription);
+        currModel.setLongDescription(dto.longDescription);
+        currModel.setUpdateUser(userHelper.getLoginUserInfo().id.toString());
+        if (glossaryLibraryMapper.updateById(currModel) > 0){
+            return ResultEnum.SUCCESS;
+        }else{
+            throw new FkException(ResultEnum.ERROR, "术语分类修改失败");
+        }
     }
 
 

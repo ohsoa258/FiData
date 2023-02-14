@@ -1,7 +1,6 @@
 package com.fisk.datamanagement.mapper;
 
 import com.fisk.common.framework.mybatis.FKBaseMapper;
-import com.fisk.datamanagement.dto.businessclassification.BusinessClassificationDTO;
 import com.fisk.datamanagement.entity.BusinessClassificationPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -22,5 +21,5 @@ public interface BusinessClassificationMapper extends FKBaseMapper<BusinessClass
     String selectParentId(@Param("name") String name);
 
     @Update("update tb_business_classification set description = #{model.description} where name = #{model.name} and del_flag = 1")
-    int updateByName(@Param("model") BusinessClassificationDTO model);
+    int updateByName(@Param("model") BusinessClassificationPO model);
 }
