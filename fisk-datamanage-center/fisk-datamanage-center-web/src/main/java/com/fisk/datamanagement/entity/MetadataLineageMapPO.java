@@ -17,4 +17,8 @@ public class MetadataLineageMapPO extends BasePO {
 
     public String displayText;
 
+    public String description;
+
+    public String typeName;
+
 }

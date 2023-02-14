@@ -12,4 +12,8 @@ public class MetadataLineageMapDTO {
 
     public String displayText;
 
+    public String description;
+
+    public String typeName;
+
 }

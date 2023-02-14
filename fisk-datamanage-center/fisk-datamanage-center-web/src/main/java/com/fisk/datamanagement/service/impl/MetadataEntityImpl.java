@@ -15,6 +15,8 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
 import com.fisk.datamanagement.dto.entity.EntityTreeDTO;
+import com.fisk.datamanagement.dto.lineagemaprelation.LineageMapRelationDTO;
+import com.fisk.datamanagement.dto.metadatalineagemap.MetadataLineageMapDTO;
 import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.mapper.MetadataEntityMapper;
@@ -41,11 +43,17 @@ public class MetadataEntityImpl
 
     private static final String stg = "stg";
     private static final String stg_prefix = "_stg";
+    private static final String processName = "抽取";
 
     @Resource
     MetadataEntityTypeImpl metadataEntityType;
     @Resource
     MetadataAttributeImpl metadataAttribute;
+    @Resource
+    MetadataLineageMapImpl metadataLineageMap;
+    @Resource
+    LineageMapRelationImpl lineageMapRelation;
+
     @Resource
     MetadataEntityMapper metadataEntityMapper;
 
@@ -487,30 +495,52 @@ public class MetadataEntityImpl
      */
     public void synchronizationStgOdsKinShip(String odsTableGuid, String sqlScript, String stgQualifiedName) {
 
-        /*QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(MetadataMapAtlasPO::getQualifiedName, stgQualifiedName);
-        List<MetadataMapAtlasPO> poList = metadataMapAtlasMapper.selectList(queryWrapper);
+        QueryWrapper<MetadataEntityPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(MetadataEntityPO::getQualifiedName, stgQualifiedName);
+        List<MetadataEntityPO> poList = metadataEntityMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(poList)) {
             return;
         }
-        List<EntityIdAndTypeDTO> list = new ArrayList<>();
-        for (MetadataMapAtlasPO item : poList) {
-            EntityIdAndTypeDTO dto = new EntityIdAndTypeDTO();
-            dto.guid = item.atlasGuid;
-            dto.typeName = EntityTypeEnum.RDBMS_TABLE.getName();
-            list.add(dto);
-        }
 
-        //解析数据
-        JSONObject jsonObj = JSON.parseObject(getDetail.data);
-        JSONObject entityObject = JSON.parseObject(jsonObj.getString("entity"));
-        JSONObject relationShip = JSON.parseObject(entityObject.getString("relationshipAttributes"));
-        JSONArray relationShipAttribute = JSON.parseArray(relationShip.getString("outputFromProcesses"));
-        if (relationShipAttribute.size() == 0) {
+        List<Long> collect = poList.stream().map(e -> e.getId()).collect(Collectors.toList());
+
+        addProcess(sqlScript, collect, odsTableGuid, processName);
+
+        /*if (relationShipAttribute.size() == 0) {
             //addProcess(EntityTypeEnum.RDBMS_TABLE, sqlScript, list, odsTableGuid, "抽取");
         } else {
 
         }*/
+
+    }
+
+    public void addProcess(String sql,
+                           List<Long> tableList,
+                           String atlasGuid,
+                           String processName) {
+        //去除换行符,以及转小写
+        sql = sql.replace("\n", "").toLowerCase();
+
+        //新增process
+        MetadataLineageMapDTO dto = new MetadataLineageMapDTO();
+        dto.displayText = processName;
+        dto.metadataEntityId = Integer.parseInt(atlasGuid);
+        dto.description = sql;
+        dto.description = EntityTypeEnum.PROCESS.getName();
+
+        Long id = metadataLineageMap.addMetadataLineageMap(dto);
+
+        List<LineageMapRelationDTO> dtoList = new ArrayList<>();
+        for (Long item : tableList) {
+            LineageMapRelationDTO data = new LineageMapRelationDTO();
+            data.fromEntityId = item.intValue();
+            data.toEntityId = Integer.parseInt(atlasGuid);
+            data.metadataLineageMapId = id.intValue();
+            dtoList.add(data);
+        }
+        //新增process关联关系
+        lineageMapRelation.addLineageMapRelation(dtoList);
+
     }
 
 
