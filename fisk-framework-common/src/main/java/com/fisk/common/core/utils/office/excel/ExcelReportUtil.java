@@ -259,7 +259,7 @@ public class ExcelReportUtil {
             XSSFSheet sheet = xssfWorkbook.getSheetAt(0);
             //获取最后一行的num，即总行数。此处从0开始计数
             int maxRow = sheet.getLastRowNum();
-            if (maxRow > 1) {
+            if (maxRow >= 1) {
                 for (int row = 1; row <= maxRow; row++) {
                     HashMap<String, String> hashMap = new HashMap<>();
                     int maxRol = sheet.getRow(row).getLastCellNum();

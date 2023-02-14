@@ -721,7 +721,8 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
             // 第一步：根据配置扫描数据库表字段
             List<IntelligentDiscovery_ScanDataVO> schema_table_fieldList = getSchema_Table_FieldList(whiteListPOS, scanPOS, dataSourceList, regExpRule, keyWordRules);
             if (CollectionUtils.isEmpty(schema_table_fieldList)) {
-                return ResultEntityBuild.buildData(ResultEnum.INTELLIGENT_DISCOVERY_NO_RISK_FIELDS_FOUND, "");
+                // return ResultEntityBuild.buildData(ResultEnum.INTELLIGENT_DISCOVERY_NO_RISK_FIELDS_FOUND, "");
+                schema_table_fieldList = new ArrayList<>();
             }
             // 第二步：扫描出来的表字段写入到Excel并记录到附件信息
             AttachmentInfoPO attachmentInfoPO = new AttachmentInfoPO();
@@ -774,52 +775,63 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
                 return ResultEntityBuild.buildData(ResultEnum.SMART_DISCOVERY_REPORT_FAILED_TO_GENERATE_ATTACHMENT, "");
             }
             // 第三步：发送通知提醒给指定用户并记录发送日志
-            if (noticePO != null) {
-                IntelligentDiscovery_LogsPO logsPO = new IntelligentDiscovery_LogsPO();
-                String logUniqueId = UUID.randomUUID().toString().replace("-", "");
-                attachmentInfoPO.setObjectId(logUniqueId);
-                logsPO.setRuleId(id);
-                logsPO.setUniqueId(logUniqueId);
-                logsPO.setRuleName(rulePO.getRuleName());
-                logsPO.setScanReceptionTypeName(ScanReceptionTypeEnum.getEnum(noticePO.getScanReceptionType()).getName());
-                logsPO.setScanRiskCount(Math.toIntExact(schema_table_fieldList.stream().count()));
-                logsPO.setSendTime(DateTimeUtils.getNow());
-                logsPO.setRecipientEmails(recipientEmailStr);
+            IntelligentDiscovery_LogsPO logsPO = new IntelligentDiscovery_LogsPO();
+            String logUniqueId = UUID.randomUUID().toString().replace("-", "");
+            attachmentInfoPO.setObjectId(logUniqueId);
+            logsPO.setRuleId(id);
+            logsPO.setUniqueId(logUniqueId);
+            logsPO.setRuleName(rulePO.getRuleName());
+            logsPO.setScanRiskCount(Math.toIntExact(schema_table_fieldList.stream().count()));
+            logsPO.setSendTime(DateTimeUtils.getNow());
+            logsPO.setRecipientEmails(recipientEmailStr);
 
+            if (noticePO != null) {
+                logsPO.setScanReceptionTypeName(ScanReceptionTypeEnum.getEnum(noticePO.getScanReceptionType()).getName());
                 if (noticePO.getScanReceptionType() == ScanReceptionTypeEnum.EMAIL_NOTICE.getValue()) {
-                    ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(noticePO.getEmailServerId());
-                    if (emailServerById == null || emailServerById.getCode() != ResultEnum.SUCCESS.getCode() || emailServerById.getData() == null) {
-                        return ResultEntityBuild.buildData(ResultEnum.THE_MAIL_SERVER_DOES_NOT_EXIST, "");
+                    if (StringUtils.isNotEmpty(recipientEmailStr)) {
+                        ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(noticePO.getEmailServerId());
+                        if (emailServerById == null
+                                || emailServerById.getCode() != ResultEnum.SUCCESS.getCode()
+                                || emailServerById.getData() == null) {
+                            return ResultEntityBuild.buildData(ResultEnum.THE_MAIL_SERVER_DOES_NOT_EXIST, "");
+                        }
+                        EmailServerVO emailServerVO = emailServerById.getData();
+                        MailServeiceDTO mailServeiceDTO = new MailServeiceDTO();
+                        mailServeiceDTO.setOpenAuth(true);
+                        mailServeiceDTO.setOpenDebug(true);
+                        mailServeiceDTO.setHost(emailServerVO.getEmailServer());
+                        mailServeiceDTO.setProtocol(emailServerVO.getEmailServerType().getName());
+                        mailServeiceDTO.setUser(emailServerVO.getEmailServerAccount());
+                        mailServeiceDTO.setPassword(emailServerVO.getEmailServerPwd());
+                        mailServeiceDTO.setPort(emailServerVO.getEmailServerPort());
+                        MailSenderDTO mailSenderDTO = new MailSenderDTO();
+                        mailSenderDTO.setUser(emailServerVO.getEmailServerAccount());
+                        mailSenderDTO.setSubject(noticePO.getSubject());
+                        mailSenderDTO.setBody(noticePO.getBody());
+                        mailSenderDTO.setToAddress(recipientEmailStr);
+                        mailSenderDTO.setSendAttachment(true);
+                        mailSenderDTO.setAttachmentName(attachmentInfoPO.getCurrentFileName());
+                        mailSenderDTO.setAttachmentPath(attachmentInfoPO.getAbsolutePath());
+                        mailSenderDTO.setAttachmentActualName(attachmentInfoPO.getOriginalName());
+                        mailSenderDTO.setCompanyLogoPath(logoPaht);
+                        try {
+                            MailSenderUtils.send(mailServeiceDTO, mailSenderDTO);
+                            logsPO.setSendResult("已发送");
+                        } catch (Exception emailEx) {
+                            logsPO.setSendResult("发送失败");
+                        }
+                    } else {
+                        logsPO.setSendResult("未配置邮件收件人");
                     }
-                    EmailServerVO emailServerVO = emailServerById.getData();
-                    MailServeiceDTO mailServeiceDTO = new MailServeiceDTO();
-                    mailServeiceDTO.setOpenAuth(true);
-                    mailServeiceDTO.setOpenDebug(true);
-                    mailServeiceDTO.setHost(emailServerVO.getEmailServer());
-                    mailServeiceDTO.setProtocol(emailServerVO.getEmailServerType().getName());
-                    mailServeiceDTO.setUser(emailServerVO.getEmailServerAccount());
-                    mailServeiceDTO.setPassword(emailServerVO.getEmailServerPwd());
-                    mailServeiceDTO.setPort(emailServerVO.getEmailServerPort());
-                    MailSenderDTO mailSenderDTO = new MailSenderDTO();
-                    mailSenderDTO.setUser(emailServerVO.getEmailServerAccount());
-                    mailSenderDTO.setSubject(noticePO.getSubject());
-                    mailSenderDTO.setBody(noticePO.getBody());
-                    mailSenderDTO.setToAddress(recipientEmailStr);
-                    mailSenderDTO.setSendAttachment(true);
-                    mailSenderDTO.setAttachmentName(attachmentInfoPO.getCurrentFileName());
-                    mailSenderDTO.setAttachmentPath(attachmentInfoPO.getAbsolutePath());
-                    mailSenderDTO.setAttachmentActualName(attachmentInfoPO.getOriginalName());
-                    mailSenderDTO.setCompanyLogoPath(logoPaht);
-                    try {
-                        MailSenderUtils.send(mailServeiceDTO, mailSenderDTO);
-                        logsPO.setSendResult("已发送");
-                    } catch (Exception emailEx) {
-                        logsPO.setSendResult("发送失败");
-                    }
+                } else {
+                    logsPO.setSendResult("暂只支持邮件通知方式");
                 }
-                intelligentDiscovery_logsMapper.insert(logsPO);
-                attachmentInfoMapper.insert(attachmentInfoPO);
+            } else {
+                logsPO.setSendResult("未配置通知方式");
             }
+
+            intelligentDiscovery_logsMapper.insert(logsPO);
+            attachmentInfoMapper.insert(attachmentInfoPO);
 
             // 第四步：回写扫描风险数量到配置表
             rulePO.setScanRiskCount(Math.toIntExact(schema_table_fieldList.stream().count()));
