@@ -157,7 +157,7 @@ public class MetaDataImpl implements IMetaData {
                     //删除
                     deleteMetaData(qualifiedNames, tableGuid);
                     //同步血缘
-                    //synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid); //, table.columnList);
+                    synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid); //, table.columnList);
                 }
             }
         }

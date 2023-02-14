@@ -5,10 +5,13 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.ObjectInfoUtils;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.datamanagement.dto.metadataattribute.MetadataAttributeDTO;
 import com.fisk.datamanagement.entity.MetadataAttributePO;
+import com.fisk.datamanagement.map.MetadataAttributeMap;
 import com.fisk.datamanagement.mapper.MetadataAttributeMapper;
 import com.fisk.datamanagement.service.IMetadataAttribute;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -27,6 +30,15 @@ public class MetadataAttributeImpl
     MetadataAttributeMapper mapper;
 
     /**
+     * 技术属性
+     */
+    private Integer technologyAttribute = 0;
+    /**
+     * 自定义属性
+     */
+    private Integer customAttribute = 1;
+
+    /**
      * 操作元数据属性
      *
      * @param object
@@ -34,7 +46,7 @@ public class MetadataAttributeImpl
      * @return
      */
     public ResultEnum operationMetadataAttribute(Object object, Integer entityId) {
-        delMetadataAttribute(entityId);
+        delMetadataAttribute(entityId, technologyAttribute);
 
         addMetadataAttribute(object, entityId);
 
@@ -64,6 +76,7 @@ public class MetadataAttributeImpl
             String key = iterator.next();
             po.name = key;
             po.value = map.get(key).toString();
+            po.groupType = 0;
 
             dataList.add(po);
         }
@@ -76,9 +89,11 @@ public class MetadataAttributeImpl
     }
 
     @Override
-    public ResultEnum delMetadataAttribute(Integer entityId) {
+    public ResultEnum delMetadataAttribute(Integer entityId, Integer group) {
         QueryWrapper<MetadataAttributePO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(MetadataAttributePO::getMetadataEntityId, entityId);
+        queryWrapper.lambda()
+                .eq(MetadataAttributePO::getMetadataEntityId, entityId)
+                .eq(MetadataAttributePO::getGroupType, group);
 
         List<MetadataAttributePO> metadataAttributePOS = mapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(metadataAttributePOS)) {
@@ -94,10 +109,14 @@ public class MetadataAttributeImpl
 
     }
 
-    public Map setMedataAttribute(Integer metadataEntityId) {
+    public Map setMedataAttribute(Integer metadataEntityId, Integer group) {
         Map map = new HashMap();
 
-        List<MetadataAttributePO> list = this.query().select("name", "value").eq("metadata_entity_id", metadataEntityId).list();
+        List<MetadataAttributePO> list = this.query()
+                .select("name", "value")
+                .eq("metadata_entity_id", metadataEntityId)
+                .eq("group_type", group)
+                .list();
         if (CollectionUtils.isEmpty(list)) {
             return map;
         }
@@ -107,7 +126,29 @@ public class MetadataAttributeImpl
         }
 
         return map;
+    }
 
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ResultEnum metadataCustomAttribute(List<MetadataAttributeDTO> dtoList) {
+        if (CollectionUtils.isEmpty(dtoList)) {
+            return ResultEnum.SUCCESS;
+        }
+
+        delMetadataAttribute(dtoList.get(0).metadataEntityId, customAttribute);
+
+        dtoList.stream().map(e -> {
+            e.groupType = customAttribute;
+            return e;
+        });
+
+        List<MetadataAttributePO> metadataAttributePOS = MetadataAttributeMap.INSTANCES.dtoListToPoList(dtoList);
+        boolean flat = this.saveBatch(metadataAttributePOS);
+        if (!flat) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        return ResultEnum.SUCCESS;
     }
 
 }

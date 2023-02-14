@@ -19,6 +19,9 @@ public class MetadataAttributePO extends BasePO {
 
     public String value;
 
-    public String group;
+    /**
+     * 0 技术属性 1 元数据属性
+     */
+    public Integer groupType;
 
 }

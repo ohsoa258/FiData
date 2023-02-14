@@ -163,6 +163,12 @@ public class MetadataEntityImpl
         return ResultEnum.SUCCESS;
     }
 
+    /**
+     * 获取元数据详情
+     *
+     * @param entityId
+     * @return
+     */
     public JSONObject getMetadataEntityDetails(String entityId) {
 
         MetadataEntityPO one = this.query().eq("id", entityId).one();
@@ -170,7 +176,7 @@ public class MetadataEntityImpl
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
-        Map infoMap = metadataAttribute.setMedataAttribute(Integer.parseInt(entityId));
+        Map infoMap = metadataAttribute.setMedataAttribute(Integer.parseInt(entityId), 0);
         infoMap.put("name", one.name);
         infoMap.put("description", one.description);
         infoMap.put("owner", one.owner);
@@ -182,6 +188,12 @@ public class MetadataEntityImpl
         Map map2 = new HashMap();
         map2.put("attributes", infoMap);
 
+        map2.put("relationshipAttributes", getRelationshipAttributes(one));
+
+        //map2.put("classifications", "");
+
+        getMetadataCustom(map2, Integer.parseInt(entityId));
+
         Map map = new HashMap();
         map.put("entity", map2);
 
@@ -189,6 +201,13 @@ public class MetadataEntityImpl
 
     }
 
+    /**
+     * 获取实体上下级关系
+     *
+     * @param po
+     * @param map
+     * @return
+     */
     public Map getEntityRelation(MetadataEntityPO po, Map map) {
 
         Map attributeMap = new HashMap();
@@ -199,25 +218,32 @@ public class MetadataEntityImpl
                 map.put("databases", getEntityRelationInfo((int) po.id, value, "parent_id"));
                 break;
             case RDBMS_DB:
-                map.put("instance", getEntityRelationInfo((int) po.id, value, "id"));
+                map.put("instance", getEntityRelationInfo((int) po.id, value, "id").get(0));
                 map.put("tables", getEntityRelationInfo((int) po.id, value, "parent_id"));
                 break;
             case RDBMS_TABLE:
-                map.put("db", getEntityRelationInfo((int) po.id, value, "id"));
+                map.put("db", getEntityRelationInfo((int) po.id, value, "id").get(0));
                 map.put("columns", getEntityRelationInfo((int) po.id, value, "parent_id"));
                 break;
             case RDBMS_COLUMN:
-                map.put("table", getEntityRelationInfo((int) po.id, value, "id"));
+                map.put("table", getEntityRelationInfo((int) po.id, value, "id").get(0));
                 break;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
-
         }
 
         return attributeMap;
 
     }
 
+    /**
+     * 获取实体上下级关系id或类型名称
+     *
+     * @param entityId
+     * @param entityTypeEnum
+     * @param fileName
+     * @return
+     */
     public List<Map> getEntityRelationInfo(Integer entityId, EntityTypeEnum entityTypeEnum, String fileName) {
 
         List<MetadataEntityPO> list = this.query().ne("description", stg).eq(fileName, entityId).list();
@@ -235,8 +261,80 @@ public class MetadataEntityImpl
         }
 
         return mapList;
-
     }
 
+    /**
+     * 获取元数据自定义属性
+     *
+     * @param map
+     * @param entityId
+     * @return
+     */
+    public Map getMetadataCustom(Map map, Integer entityId) {
+        Map map1 = metadataAttribute.setMedataAttribute(entityId, 1);
+
+        if (map1.size() == 0) {
+            return map;
+        }
+        map.put("customAttributes", map1);
+
+        return map;
+    }
+
+
+    public Map getRelationshipAttributes(MetadataEntityPO po) {
+        Map attributeMap = new HashMap();
+
+        EntityTypeEnum value = EntityTypeEnum.getValue(po.typeId);
+        switch (value) {
+            case RDBMS_INSTANCE:
+                attributeMap.put("databases", getEntityRelationAttributesInfo((int) po.id, value, "parent_id"));
+                break;
+            case RDBMS_DB:
+                attributeMap.put("instance", getEntityRelationAttributesInfo((int) po.id, value, "id").get(0));
+                attributeMap.put("tables", getEntityRelationAttributesInfo((int) po.id, value, "parent_id"));
+                break;
+            case RDBMS_TABLE:
+                attributeMap.put("db", getEntityRelationAttributesInfo((int) po.id, value, "id").get(0));
+                attributeMap.put("columns", getEntityRelationAttributesInfo((int) po.id, value, "parent_id"));
+                break;
+            case RDBMS_COLUMN:
+                attributeMap.put("table", getEntityRelationAttributesInfo((int) po.id, value, "id").get(0));
+                break;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+
+        return attributeMap;
+    }
+
+    /**
+     * 获取实体上下级关系id或类型名称
+     *
+     * @param entityId
+     * @param entityTypeEnum
+     * @param fileName
+     * @return
+     */
+    public List<Map> getEntityRelationAttributesInfo(Integer entityId, EntityTypeEnum entityTypeEnum, String fileName) {
+
+        List<MetadataEntityPO> list = this.query().ne("description", stg).eq(fileName, entityId).list();
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+
+        List<Map> mapList = new ArrayList<>();
+        for (MetadataEntityPO item : list) {
+
+            Map infoMap = new HashMap();
+            infoMap.put("guid", item.id);
+            infoMap.put("displayText", item.displayName);
+            infoMap.put("entityStatus", "ACTIVE");
+            infoMap.put("typeName", entityTypeEnum.getName());
+            mapList.add(infoMap);
+        }
+
+        return mapList;
+    }
 
 }
