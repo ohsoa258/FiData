@@ -15,10 +15,10 @@ import java.util.List;
 public class ExcelDTO {
 
     @ApiModelProperty(value = "excel预览内容")
-    public List<List<String>> excelContent;
+    public List<List<Object>> excelContent;
 
     @ApiModelProperty(value = "excel字段列表")
-    public List<String> excelField;
+    public List<Object> excelField;
 
     @ApiModelProperty(value = "sheet名称")
     public String sheetName;
