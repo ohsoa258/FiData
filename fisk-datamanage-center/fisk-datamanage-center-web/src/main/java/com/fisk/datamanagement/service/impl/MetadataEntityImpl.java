@@ -190,7 +190,7 @@ public class MetadataEntityImpl
 
         map2.put("relationshipAttributes", getRelationshipAttributes(one));
 
-        map2.put("classifications", "");
+        //map2.put("classifications", "");
 
         getMetadataCustom(map2, Integer.parseInt(entityId));
 
