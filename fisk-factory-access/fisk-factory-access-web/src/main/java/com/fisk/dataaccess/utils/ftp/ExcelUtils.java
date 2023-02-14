@@ -115,7 +115,7 @@ public class ExcelUtils {
                 }
                 return content;
             } catch (Exception e) {
-                log.error("", e);
+                log.error("预览失败:{}", e);
 
             }
         }
@@ -159,21 +159,25 @@ public class ExcelUtils {
      */
     private static Object getCellFormatValue(Cell cell) {
         Object cellvalue = "";
-        if (cell != null) {
-            // 判断当前Cell的Type
-            switch (cell.getCellType()) {
-                case NUMERIC:
-                case FORMULA:
-                    // 判断当前的cell为Date, 取时间类型；数字则转字符串
-                    cellvalue = DateUtil.isCellDateFormatted(cell) ? cell.getDateCellValue() : String.valueOf(cell.getNumericCellValue());
-                    break;
-                // 如果当前Cell的Type为STRING
-                case STRING:
-                    cellvalue = cell.getRichStringCellValue().getString();
-                    break;
-                default:
-                    break;
+        try {
+            if (cell != null) {
+                // 判断当前Cell的Type
+                switch (cell.getCellType()) {
+                    case NUMERIC:
+                    case FORMULA:
+                        // 判断当前的cell为Date, 取时间类型；数字则转字符串
+                        cellvalue = DateUtil.isCellDateFormatted(cell) ? cell.getDateCellValue() : String.valueOf(cell.getNumericCellValue());
+                        break;
+                    // 如果当前Cell的Type为STRING
+                    case STRING:
+                        cellvalue = cell.getRichStringCellValue().getString();
+                        break;
+                    default:
+                        break;
+                }
             }
+        } catch (Exception e) {
+            log.error("获取表格类型失败,{}", e);
         }
         return cellvalue;
     }
