@@ -3,23 +3,32 @@ package com.fisk.datamanagement.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
+import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataBaseAttributeDTO;
+import com.fisk.common.service.sqlparser.SqlParserUtils;
+import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
 import com.fisk.datamanagement.dto.entity.EntityTreeDTO;
 import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.mapper.MetadataEntityMapper;
 import com.fisk.datamanagement.service.IMetadataEntity;
+import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -31,12 +40,19 @@ public class MetadataEntityImpl
         implements IMetadataEntity {
 
     private static final String stg = "stg";
+    private static final String stg_prefix = "_stg";
+
     @Resource
     MetadataEntityTypeImpl metadataEntityType;
     @Resource
     MetadataAttributeImpl metadataAttribute;
     @Resource
     MetadataEntityMapper metadataEntityMapper;
+
+    @Resource
+    UserClient userClient;
+    @Resource
+    DataAccessClient dataAccessClient;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -336,5 +352,166 @@ public class MetadataEntityImpl
 
         return mapList;
     }
+
+    public void synchronizationTableKinShip(String dbName,
+                                            String tableGuid,
+                                            String tableName,
+                                            String stgTableGuid) {
+        String dbQualifiedName = whetherSynchronization(dbName, false);
+        if (StringUtils.isEmpty(dbQualifiedName)) {
+            return;
+        }
+
+        //获取dw表信息
+        ResultEntity<Object> result;
+
+        List<EntityIdAndTypeDTO> inputTableList = new ArrayList<>();
+
+        Optional<SourceTableDTO> first = null;
+
+        List<SourceTableDTO> list = null;
+
+        ResultEntity<List<DataAccessSourceTableDTO>> odsResult = new ResultEntity<>();
+
+        DataSourceDTO dataSourceInfo = getDataSourceInfo(dbName);
+
+        boolean delete = false;
+
+        String sqlScript = null;
+
+        if (dataSourceInfo.sourceBusinessType == SourceBusinessTypeEnum.ODS) {
+            //同步stg与接入表血缘
+            odsResult = dataAccessClient.getDataAccessMetaData();
+            if (odsResult.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(odsResult.data)) {
+                return;
+            }
+            Optional<DataAccessSourceTableDTO> first1 = odsResult.data.stream().filter(e -> e.tableName.equals(tableName)).findFirst();
+            if (!first1.isPresent()) {
+                return;
+            }
+
+            //解析sql
+            List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(dataSourceInfo.conType.getName().toLowerCase(), first1.get().sqlScript);
+            if (CollectionUtils.isEmpty(res)) {
+                return;
+            }
+            //解析表名集合
+            List<String> collect = res.stream().map(e -> e.name).collect(Collectors.toList());
+            String dbQualifiedNames = first1.get().appId + "_" + first1.get().appAbbreviation + "_" + first1.get().appId;
+
+            List<Integer> fromEntityIdList = getOdsTableList(collect, dbQualifiedNames);
+
+            if (CollectionUtils.isEmpty(inputTableList)) {
+                return;
+            }
+            sqlScript = first1.get().sqlScript;
+
+            //添加stg到ods血缘
+            String stgQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname + "_" + first1.get().id + stg_prefix;
+            synchronizationStgOdsKinShip(tableGuid, sqlScript, stgQualifiedName);
+        }
+
+    }
+
+    public String whetherSynchronization(String dbName, boolean isSkip) {
+        DataSourceDTO dataSourceInfo = getDataSourceInfo(dbName);
+        if (dataSourceInfo == null) {
+            return null;
+        }
+        if (isSkip) {
+            return dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname;
+        }
+        int dataSourceId = 0;
+        //同步ods血缘
+        if (dataSourceInfo.id == DataSourceConfigEnum.DMP_ODS.getValue()) {
+            return "ods";
+        }
+        //dw
+        else if (dataSourceInfo.id == DataSourceConfigEnum.DMP_DW.getValue()) {
+            dataSourceId = DataSourceConfigEnum.DMP_ODS.getValue();
+        }
+        //olap
+        else if (dataSourceInfo.id == DataSourceConfigEnum.DMP_OLAP.getValue()) {
+            dataSourceId = DataSourceConfigEnum.DMP_DW.getValue();
+        }
+        ResultEntity<DataSourceDTO> resultDataSource = userClient.getFiDataDataSourceById(dataSourceId);
+        if (resultDataSource.code != ResultEnum.SUCCESS.getCode() && resultDataSource.data == null) {
+            return null;
+        }
+        return resultDataSource.data.conIp + "_" + resultDataSource.data.conDbname;
+    }
+
+    /**
+     * 根据库名,获取数据源配置信息
+     *
+     * @param dbName
+     * @return
+     */
+    public DataSourceDTO getDataSourceInfo(String dbName) {
+        //获取所有数据源
+        ResultEntity<List<DataSourceDTO>> result = userClient.getAllFiDataDataSource();
+        if (result.code != ResultEnum.SUCCESS.getCode()) {
+            return null;
+        }
+        //根据数据库筛选
+        Optional<DataSourceDTO> first = result.data.stream().filter(e -> dbName.equals(e.conDbname)).findFirst();
+        if (!first.isPresent()) {
+            return null;
+        }
+        return first.get();
+    }
+
+    public List<Integer> getOdsTableList(List<String> tableNameList, String dbQualifiedName) {
+
+        List<String> tableQualifiedNameList = tableNameList.stream().map(e -> dbQualifiedName + "_" + e).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(tableQualifiedNameList)) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        QueryWrapper<MetadataEntityPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("qualified_name", tableQualifiedNameList);
+        List<MetadataEntityPO> poList = metadataEntityMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(poList)) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        return (List) poList.stream().map(e -> e.getId()).collect(Collectors.toList());
+    }
+
+    /**
+     * 同步stg相关血缘
+     *
+     * @param odsTableGuid
+     * @param sqlScript
+     * @param stgQualifiedName
+     */
+    public void synchronizationStgOdsKinShip(String odsTableGuid, String sqlScript, String stgQualifiedName) {
+
+        /*QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(MetadataMapAtlasPO::getQualifiedName, stgQualifiedName);
+        List<MetadataMapAtlasPO> poList = metadataMapAtlasMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(poList)) {
+            return;
+        }
+        List<EntityIdAndTypeDTO> list = new ArrayList<>();
+        for (MetadataMapAtlasPO item : poList) {
+            EntityIdAndTypeDTO dto = new EntityIdAndTypeDTO();
+            dto.guid = item.atlasGuid;
+            dto.typeName = EntityTypeEnum.RDBMS_TABLE.getName();
+            list.add(dto);
+        }
+
+        //解析数据
+        JSONObject jsonObj = JSON.parseObject(getDetail.data);
+        JSONObject entityObject = JSON.parseObject(jsonObj.getString("entity"));
+        JSONObject relationShip = JSON.parseObject(entityObject.getString("relationshipAttributes"));
+        JSONArray relationShipAttribute = JSON.parseArray(relationShip.getString("outputFromProcesses"));
+        if (relationShipAttribute.size() == 0) {
+            //addProcess(EntityTypeEnum.RDBMS_TABLE, sqlScript, list, odsTableGuid, "抽取");
+        } else {
+
+        }*/
+    }
+
 
 }
