@@ -344,9 +344,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 sourceControllerService.driverName = dataSource.conType.getDriverName();
 
                 // 拼接字符串读取配置变量值
-                sourceControllerService.conUrl = "${" + ComponentIdTypeEnum.DB_URL.getName() + dbId  + "}";
-                sourceControllerService.pwd = "${" + ComponentIdTypeEnum.DB_PASSWORD.getName() + dbId  + "}";
-                sourceControllerService.user = "${" + ComponentIdTypeEnum.DB_USERNAME.getName() + dbId  + "}";
+                sourceControllerService.conUrl = "${" + ComponentIdTypeEnum.DB_URL.getName() + dbId + "}";
+                sourceControllerService.pwd = "${" + ComponentIdTypeEnum.DB_PASSWORD.getName() + dbId + "}";
+                sourceControllerService.user = "${" + ComponentIdTypeEnum.DB_USERNAME.getName() + dbId + "}";
 
                 sourceControllerService.name = dataSource.name;
                 sourceControllerService.enabled = true;
@@ -1593,6 +1593,11 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     }
 
     public List<ProcessorEntity> createExcelProcessorEntity(String appGroupId, String groupId, DataAccessConfigDTO config, TableNifiSettingPO tableNifiSettingPO, String supervisionId, List<AutoEndBranchTypeEnum> autoEndBranchTypeEnums, BuildNifiFlowDTO dto) {
+        config.targetDsConfig.tableFieldsList.stream().filter(Objects::nonNull)
+                .forEach(e -> {
+                    e.fieldName = e.fieldName.replaceAll(" ","_");
+                    e.sourceFieldName = e.fieldName;
+                });
         List<ProcessorEntity> processorEntities = new ArrayList<>();
         ProcessorEntity getFTPProcessor = null;
         //getftp组件
@@ -1680,7 +1685,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildFetchSFTPProcessor.details = "query_phase";
         buildFetchSFTPProcessor.hostname = ftpConfig.hostname;
         buildFetchSFTPProcessor.password = ftpConfig.password;
-        buildFetchSFTPProcessor.privateKeyPath = ftpConfig.linuxPath + ftpConfig.fileName;
+        buildFetchSFTPProcessor.privateKeyPath = StringUtils.isEmpty(ftpConfig.fileName) ? null : (ftpConfig.fileName + ftpConfig.fileName);
         buildFetchSFTPProcessor.port = ftpConfig.port;
         buildFetchSFTPProcessor.remoteFile = ftpConfig.remotePath + "/" + ftpConfig.fileFilterRegex;
         buildFetchSFTPProcessor.username = ftpConfig.username;

@@ -339,7 +339,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
 
         });
 
-        String sql1 = "CREATE TABLE " + modelPublishTableDTO.tableName + " ( " + tablePk + " varchar(50), ";
+        String sql1 = "CREATE TABLE " + modelPublishTableDTO.tableName + " ( " + tablePk + " BIGINT, ";
         //String associatedKey = associatedConditions(fieldList);
         String associatedKey = "";
         String sql2 = sqlFileds.toString() + associatedKey;
