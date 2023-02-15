@@ -52,6 +52,7 @@ import com.fisk.task.dto.pgsql.TableListDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -101,6 +102,9 @@ public class DimensionImpl
 
     @Resource
     DataSourceConfigUtil dataSourceConfigUtil;
+
+    @Value("${spring.open-metadata}")
+    private Boolean openMetadata;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -361,7 +365,7 @@ public class DimensionImpl
             list.add(attributeDTO);
         }
         ResultEnum result = dimensionAttributeImpl.addTimeTableAttribute(list, (int) po.id);
-        if (result.getCode() == ResultEnum.SUCCESS.getCode()) {
+        if (result.getCode() == ResultEnum.SUCCESS.getCode() && openMetadata) {
             //同步到atlas
             synchronousMetadata(DataSourceConfigEnum.DMP_DW.getValue(), po, DataModelTableTypeEnum.DW_DIMENSION.getValue());
         }
@@ -393,7 +397,7 @@ public class DimensionImpl
         model.dimensionDesc = dto.dimensionDesc;
         model.dimensionFolderId = dto.dimensionFolderId;
         int flat = mapper.updateById(model);
-        if (flat > 0 && dto.timeTable) {
+        if (flat > 0 && dto.timeTable && openMetadata) {
             //同步atlas
             DimensionPO dimensionPo = mapper.selectById(dto.id);
             if (dimensionPo != null) {
@@ -402,7 +406,7 @@ public class DimensionImpl
         }
 
         //同步元数据
-        if (model.isPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue()) {
+        if (model.isPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue() && openMetadata) {
             asyncSynchronousMetadata(model);
         }
 
@@ -472,8 +476,6 @@ public class DimensionImpl
 
             int flat = mapper.deleteByIdWithFill(model);
             if (flat > 0) {
-                //删除atlas
-                MetaDataDeleteAttributeDTO deleteDto = new MetaDataDeleteAttributeDTO();
                 List<String> delQualifiedName = new ArrayList<>();
                 //删除dw
                 MetaDataInstanceAttributeDTO dataSourceConfigDw = getDataSourceConfig(DataSourceConfigEnum.DMP_DW.getValue());
@@ -485,9 +487,14 @@ public class DimensionImpl
                 if (dataSourceConfigOlap != null && !CollectionUtils.isEmpty(dataSourceConfigOlap.dbList)) {
                     delQualifiedName.add(dataSourceConfigOlap.dbList.get(0).qualifiedName + "_" + DataModelTableTypeEnum.DORIS_DIMENSION.getValue() + "_" + id);
                 }
-                deleteDto.qualifiedNames = delQualifiedName;
-                deleteDto.classifications = businessArea.getBusinessName();
-                dataManageClient.deleteMetaData(deleteDto);
+
+                if (openMetadata) {
+                    //删除atlas
+                    MetaDataDeleteAttributeDTO deleteDto = new MetaDataDeleteAttributeDTO();
+                    deleteDto.qualifiedNames = delQualifiedName;
+                    deleteDto.classifications = businessArea.getBusinessName();
+                    dataManageClient.deleteMetaData(deleteDto);
+                }
             }
             return flat > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         } catch (Exception e) {
@@ -662,7 +669,9 @@ public class DimensionImpl
             log.info("维度表更改状态失败!");
             return;
         }
-        synchronousMetadata(dataSourceId, dimension, dataModelType);
+        if (openMetadata) {
+            synchronousMetadata(dataSourceId, dimension, dataModelType);
+        }
     }
 
     /**

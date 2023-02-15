@@ -37,6 +37,7 @@ import com.fisk.task.enums.OlapTableEnum;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -64,6 +65,9 @@ public class PhysicalTableController {
     private DataFactoryClient dataFactoryClient;
     @Resource
     DataManageClient dataManageClient;
+
+    @Value("${spring.open-metadata}")
+    private Boolean openMetadata;
 
     /**
      * 根据是否为实时,查询应用名称集合
@@ -253,16 +257,18 @@ public class PhysicalTableController {
         list.add(deleteTableDetailDto);
         dataFactoryClient.editByDeleteTable(list);
 
-        // 删除元数据
-        MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
-        metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.qualifiedNames);
-        metaDataDeleteAttributeDto.setClassifications(nifiVO.classifications);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
-            }
-        }).start();
+        if (openMetadata) {
+            // 删除元数据
+            MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
+            metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.qualifiedNames);
+            metaDataDeleteAttributeDto.setClassifications(nifiVO.classifications);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
+                }
+            }).start();
+        }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }

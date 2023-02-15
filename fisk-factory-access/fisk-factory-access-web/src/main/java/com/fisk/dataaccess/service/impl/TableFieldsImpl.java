@@ -65,6 +65,7 @@ import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -87,7 +88,10 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsPO> implements ITableFields {
+public class TableFieldsImpl
+        extends ServiceImpl<TableFieldsMapper, TableFieldsPO>
+        implements ITableFields {
+
     @Resource
     private GenerateCondition generateCondition;
     @Resource
@@ -129,6 +133,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
     @Resource
     FlinkConfigDTO flinkConfig;
+
+    @Value("${spring.open-metadata}")
+    private Boolean openMetadata;
 
     @Resource
     private RedisTemplate redisTemplate;
@@ -214,8 +221,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         // 版本语句
         String versionSql = getVersionSql(syncmodePo);
 
-        //新增元数据信息
-        odsMetaDataInfo(dto.appDataSourceId, dto.sqlScript);
+        if (openMetadata) {
+            //新增元数据信息
+            odsMetaDataInfo(dto.appDataSourceId, dto.sqlScript);
+        }
 
         // 发布
         publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, dto.appDataSourceId);
@@ -298,8 +307,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             systemVariables.addSystemVariables(dto.id, dto.deltaTimes);
         }
 
-        //新增元数据信息
-        odsMetaDataInfo(model.appDataSourceId, dto.sqlScript);
+        if (openMetadata) {
+            //新增元数据信息
+            odsMetaDataInfo(model.appDataSourceId, dto.sqlScript);
+        }
 
         // 发布
         publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, model.appDataSourceId);
@@ -364,17 +375,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 }
             }
         });
-
-        /*try {
-            MetaDataAttributeDTO data = new MetaDataAttributeDTO();
-            data.instanceList = list;
-            data.userId = userHelper.getLoginUserInfo().id;
-            // 更新元数据内容
-            log.info("构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
-            dataManageClient.metaData(data);
-        } catch (Exception e) {
-            log.error("【dataManageClient.MetaData()】方法报错,ex", e);
-        }*/
 
     }
 
@@ -539,9 +539,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     //构建元数据实时同步数据对象
                     metaDataList = buildMetaDataInstanceAttribute(registration, accessId, 2);
                 }
-                //同步元数据
-                consumeMetaData(metaDataList);
-
+                if (openMetadata) {
+                    //同步元数据
+                    consumeMetaData(metaDataList);
+                }
 
             } catch (Exception e) {
                 log.info("发布失败", e);

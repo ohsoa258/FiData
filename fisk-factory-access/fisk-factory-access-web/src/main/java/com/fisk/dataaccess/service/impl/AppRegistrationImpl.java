@@ -152,7 +152,7 @@ public class AppRegistrationImpl
     @Resource
     GetConfigDTO getConfig;
 
-    @Value("${string.open-metadata}")
+    @Value("${spring.open-metadata}")
     private Boolean openMetadata;
 
     @Override
@@ -243,18 +243,15 @@ public class AppRegistrationImpl
         if (openMetadata) {
             //新增业务分类
             addClassification(appRegistrationDTO);
-        }
 
-        //数据库应用,需要新增元数据对象
-        List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
-        for (AppDataSourcePO item : modelDataSource) {
-            List<MetaDataInstanceAttributeDTO> metaData = addDataSourceMetaData(po, item);
-            if (metaData != null) {
-                list.addAll(metaData);
+            //数据库应用,需要新增元数据对象
+            List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
+            for (AppDataSourcePO item : modelDataSource) {
+                List<MetaDataInstanceAttributeDTO> metaData = addDataSourceMetaData(po, item);
+                if (metaData != null) {
+                    list.addAll(metaData);
+                }
             }
-        }
-
-        if (openMetadata) {
             if (!CollectionUtils.isEmpty(list)) {
                 try {
                     MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
@@ -653,33 +650,35 @@ public class AppRegistrationImpl
         vo.classifications = model.appName;
         log.info("删除的应用信息,{}", vo);
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
+        if (openMetadata) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
 
-                    // 删除元数据实体
-                    if (!CollectionUtils.isEmpty(vo.qualifiedNames)) {
-                        MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
-                        metaDataDeleteAttributeDto.setQualifiedNames(vo.getQualifiedNames());
-                        metaDataDeleteAttributeDto.classifications = vo.classifications;
-                        dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
+                        // 删除元数据实体
+                        if (!CollectionUtils.isEmpty(vo.qualifiedNames)) {
+                            MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
+                            metaDataDeleteAttributeDto.setQualifiedNames(vo.getQualifiedNames());
+                            metaDataDeleteAttributeDto.classifications = vo.classifications;
+                            dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
+                        }
+
+                        // 删除业务分类
+                        ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
+                        classificationInfoDto.setName(vo.classifications);
+                        classificationInfoDto.setDescription(model.appDes);
+                        classificationInfoDto.setSourceType(1);
+                        classificationInfoDto.setDelete(true);
+
+                        dataManageClient.appSynchronousClassification(classificationInfoDto);
+                    } catch (Exception e) {
+                        // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
+                        log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
                     }
-
-                    // 删除业务分类
-                    ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
-                    classificationInfoDto.setName(vo.classifications);
-                    classificationInfoDto.setDescription(model.appDes);
-                    classificationInfoDto.setSourceType(1);
-                    classificationInfoDto.setDelete(true);
-
-                    dataManageClient.appSynchronousClassification(classificationInfoDto);
-                } catch (Exception e) {
-                    // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
-                    log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
                 }
-            }
-        }).start();
+            }).start();
+        }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
     }

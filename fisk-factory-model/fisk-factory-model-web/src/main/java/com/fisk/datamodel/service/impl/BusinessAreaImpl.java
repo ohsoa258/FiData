@@ -82,6 +82,7 @@ import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -156,6 +157,9 @@ public class BusinessAreaImpl
     @Resource
     private UserClient userClient;
 
+    @Value("${spring.open-metadata}")
+    private Boolean openMetadata;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(BusinessAreaDTO dto) {
@@ -173,16 +177,18 @@ public class BusinessAreaImpl
         dimensionFolder.addPublicDimensionFolder();
         dimensionFolder.addSystemDimensionFolder(dto.id);
 
-        // 添加元数据信息
-        ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
-        classificationInfoDto.setName(dto.businessName);
-        classificationInfoDto.setDescription(dto.businessDes);
-        classificationInfoDto.setSourceType(2);
-        classificationInfoDto.setDelete(false);
-        try {
-            dataManageClient.appSynchronousClassification(classificationInfoDto);
-        } catch (Exception e) {
-            log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
+        if (openMetadata) {
+            // 添加元数据信息
+            ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
+            classificationInfoDto.setName(dto.businessName);
+            classificationInfoDto.setDescription(dto.businessDes);
+            classificationInfoDto.setSourceType(2);
+            classificationInfoDto.setDelete(false);
+            try {
+                dataManageClient.appSynchronousClassification(classificationInfoDto);
+            } catch (Exception e) {
+                log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
+            }
         }
 
         return ResultEnum.SUCCESS;
@@ -303,17 +309,19 @@ public class BusinessAreaImpl
                 return ResultEnum.BUSINESS_AREA_EXISTS_ASSOCIATED;
             }
 
-            //删除元数据信息
-            ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
-            classificationInfoDto.setName(model.getBusinessName());
-            classificationInfoDto.setDescription(model.getBusinessDes());
-            classificationInfoDto.setSourceType(2);
-            classificationInfoDto.setDelete(true);
-            try {
-                dataManageClient.appSynchronousClassification(classificationInfoDto);
-            } catch (Exception e) {
-                // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
-                log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
+            if (openMetadata) {
+                //删除元数据信息
+                ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
+                classificationInfoDto.setName(model.getBusinessName());
+                classificationInfoDto.setDescription(model.getBusinessDes());
+                classificationInfoDto.setSourceType(2);
+                classificationInfoDto.setDelete(true);
+                try {
+                    dataManageClient.appSynchronousClassification(classificationInfoDto);
+                } catch (Exception e) {
+                    // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
+                    log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
+                }
             }
 
             return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;

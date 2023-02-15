@@ -152,6 +152,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     @Resource
     private BuildHttpRequestImpl buildHttpRequest;
 
+    @Value("${spring.open-metadata}")
+    private Boolean openMetadata;
+
     @Override
     public ApiConfigDTO getData(long id) {
 
@@ -343,11 +346,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 删除nifi流程
             publishTaskClient.deleteNifiFlow(dataModelVO);
 
-            // 删除元数据
-            MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
-            metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.qualifiedNames);
-            metaDataDeleteAttributeDto.setClassifications(nifiVO.classifications);
-            dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
+            if (openMetadata) {
+                // 删除元数据
+                MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
+                metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.qualifiedNames);
+                metaDataDeleteAttributeDto.setClassifications(nifiVO.classifications);
+                dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
+            }
         }
 
         // 删除factory-dispatch对应的api配置

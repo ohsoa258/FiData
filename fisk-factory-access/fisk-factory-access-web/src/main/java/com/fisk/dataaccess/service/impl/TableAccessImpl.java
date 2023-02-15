@@ -164,6 +164,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Value("${sftp.nifi-file-path}")
     private String nifiFilePath;
+    @Value("${spring.open-metadata}")
+    private Boolean openMetadata;
 
     /**
      * 数据库连接
@@ -1683,7 +1685,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // dto -> po
         TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
 
-        if (po.appId != null) {
+        if (po.appId != null && openMetadata) {
             synchronousMetadata(model.appDataSourceId, po);
         }
         /*if (po.getTableName() == null) {
