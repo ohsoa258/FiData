@@ -284,14 +284,18 @@ public class BusinessProcessImpl
                 customScriptDto.type = 2;
                 customScriptDto.tableId = Integer.parseInt(String.valueOf(item.id));
                 customScriptDto.execType = 1;
-                pushDto.customScript = customScript.getBatchScript(customScriptDto);
+
+                String beforeCustomScript = customScript.getBatchScript(customScriptDto);
+                if (!StringUtils.isEmpty(beforeCustomScript)) {
+                    pushDto.customScript = beforeCustomScript;
+                }
 
                 customScriptDto.execType = 2;
 
                 //自定义脚本
                 String batchScript = customScript.getBatchScript(customScriptDto);
                 if (!StringUtils.isEmpty(batchScript)) {
-                    pushDto.factUpdateSql += batchScript;
+                    pushDto.customScriptAfter = batchScript;
                 }
 
                 //获取事实表同步方式
