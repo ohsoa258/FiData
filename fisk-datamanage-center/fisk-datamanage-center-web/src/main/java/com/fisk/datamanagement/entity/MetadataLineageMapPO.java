@@ -13,8 +13,6 @@ import lombok.EqualsAndHashCode;
 @TableName(value = "tb_metadata_lineage_map")
 public class MetadataLineageMapPO extends BasePO {
 
-    public Integer metadataEntityId;
-
     public String displayText;
 
     public String description;

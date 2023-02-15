@@ -524,7 +524,6 @@ public class MetadataEntityImpl
         //新增process
         MetadataLineageMapDTO dto = new MetadataLineageMapDTO();
         dto.displayText = processName;
-        dto.metadataEntityId = Integer.parseInt(atlasGuid);
         dto.description = sql;
         dto.description = EntityTypeEnum.PROCESS.getName();
 
@@ -540,7 +539,6 @@ public class MetadataEntityImpl
         }
         //新增process关联关系
         lineageMapRelation.addLineageMapRelation(dtoList);
-
     }
 
 

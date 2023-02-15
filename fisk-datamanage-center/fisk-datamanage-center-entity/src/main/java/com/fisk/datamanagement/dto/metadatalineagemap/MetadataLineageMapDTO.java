@@ -8,8 +8,6 @@ import lombok.Data;
 @Data
 public class MetadataLineageMapDTO {
 
-    public Integer metadataEntityId;
-
     public String displayText;
 
     public String description;
