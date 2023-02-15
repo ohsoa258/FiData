@@ -83,6 +83,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import static com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.*;
+
 /**
  * @author Lock
  */
@@ -491,6 +493,12 @@ public class TableFieldsImpl
             data.dataSourceDbId = dataSourcePo.systemDataSourceId;
             data.targetDbId = appRegistrationPo.targetDbId;
 
+            // pg库则将表名转换为小写
+            boolean typeFlag = getTargetDbType(data.targetDbId);
+            if (typeFlag){
+                data.tableName = data.tableName.toLowerCase();
+            }
+
             // 版本号入库、调用存储存储过程  
             List<TableFieldsPO> list = this.query().eq("table_access_id", accessId).list();
             AppRegistrationPO registration = iAppRegistration.getById(appId);
@@ -555,6 +563,16 @@ public class TableFieldsImpl
         if (dataSourcePo.driveType.equalsIgnoreCase("ORACLE-CDC")) {
             cdcScriptUploadFlink(cdcDto, accessId);
         }
+    }
+
+    private boolean getTargetDbType(Integer dbId){
+        ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(dbId);
+        if (result.code == ResultEnum.SUCCESS.getCode()){
+            DataSourceDTO dataSource = result.getData();
+            log.info("数据源连接类型，{}, 枚举中PG类型，{}", dataSource.getConType().getValue(), POSTGRESQL.getValue());
+            return POSTGRESQL.getValue() == dataSource.getConType().getValue();
+        }
+        return false;
     }
 
     /**
