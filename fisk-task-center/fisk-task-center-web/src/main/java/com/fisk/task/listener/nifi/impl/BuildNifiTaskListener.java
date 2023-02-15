@@ -129,6 +129,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     @Value("${sftp-rsa-upload.rsaPath}")
     private String rsaPath;
 
+    @Value("${nifi-data-security-enable}")
+    private boolean enable;
+
 
     @Resource
     INiFiHelper componentsBuild;
@@ -1146,7 +1149,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             componentConnector(groupId, logProcessor.getId(), delSqlRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
         }
         //------------------------------------------
-        if (dto.excelFlow) {
+        log.info("是否调用数据安全接口，{}", enable);
+        if (dto.excelFlow && enable) {
             //ftp文件拷贝
             ProcessorEntity replaceTextForFtpProcess = replaceTextForFtpProcess(config, groupId, dto);
             tableNifiSettingPO.replaceTextForFtpProcessorId = replaceTextForFtpProcess.getId();

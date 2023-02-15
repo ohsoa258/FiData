@@ -34,6 +34,8 @@ nifi-MaxRowsPerFlowFile: 10000
 nifi-OutputBatchSize: 1
 fiData-data-ods-source: 2
 fiData-data-dw-source: 1
+# 是否调用数据质量接口
+nifi-data-security-enable: true
 pgsql-datamodel:
   driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
   password: Password01!
