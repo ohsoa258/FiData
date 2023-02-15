@@ -15,6 +15,7 @@
             t2.api_name as ServiceName,
             t2.api_desc as ServiceDesc,
             1 as displayName,
+            t2.datasource_id as dataSourceId,
             t1.create_time AS create_time,
             t2.create_time AS t2create_time,
             t3.create_time AS t3create_time
