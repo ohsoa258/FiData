@@ -32,6 +32,7 @@ public class DataOpsImpl implements IDataOps {
 
     @Override
     public DataModelTableInfoDTO getTableInfo(String tableName) {
+        tableName = tableName.replace("dbo.", "");
         DataModelQueryDTO tableInfo = businessAreaMapper.getTableInfo(tableName);
         if (tableInfo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
