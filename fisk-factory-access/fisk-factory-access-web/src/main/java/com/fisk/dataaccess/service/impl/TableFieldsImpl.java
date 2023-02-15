@@ -497,6 +497,12 @@ public class TableFieldsImpl
             boolean typeFlag = getTargetDbType(data.targetDbId);
             if (typeFlag){
                 data.tableName = data.tableName.toLowerCase();
+                // 将字段集合转换为小写
+                List<TableFieldsDTO> tableFieldsDTOList = data.tableFieldsDTOS;
+                data.tableFieldsDTOS = tableFieldsDTOList.stream().map(item -> {
+                    item.fieldName = item.fieldName.toLowerCase();
+                    return item;
+                }).collect(Collectors.toList());
             }
 
             // 版本号入库、调用存储存储过程  
