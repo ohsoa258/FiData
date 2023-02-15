@@ -13,7 +13,6 @@ import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
-import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
 import com.fisk.datamanagement.dto.entity.EntityTreeDTO;
 import com.fisk.datamanagement.dto.lineagemaprelation.LineageMapRelationDTO;
 import com.fisk.datamanagement.dto.metadatalineagemap.MetadataLineageMapDTO;
@@ -373,7 +372,7 @@ public class MetadataEntityImpl
         //获取dw表信息
         ResultEntity<Object> result;
 
-        List<EntityIdAndTypeDTO> inputTableList = new ArrayList<>();
+        List<Integer> fromEntityIdList = new ArrayList<>();
 
         Optional<SourceTableDTO> first = null;
 
@@ -407,17 +406,23 @@ public class MetadataEntityImpl
             List<String> collect = res.stream().map(e -> e.name).collect(Collectors.toList());
             String dbQualifiedNames = first1.get().appId + "_" + first1.get().appAbbreviation + "_" + first1.get().appId;
 
-            List<Integer> fromEntityIdList = getOdsTableList(collect, dbQualifiedNames);
+            fromEntityIdList = getOdsTableList(collect, dbQualifiedNames);
 
-            if (CollectionUtils.isEmpty(inputTableList)) {
+            if (CollectionUtils.isEmpty(fromEntityIdList)) {
                 return;
             }
+
             sqlScript = first1.get().sqlScript;
 
             //添加stg到ods血缘
             String stgQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname + "_" + first1.get().id + stg_prefix;
             synchronizationStgOdsKinShip(tableGuid, sqlScript, stgQualifiedName);
         }
+        //转类型
+        List<Long> longList = fromEntityIdList.stream()
+                .map(Integer::longValue)
+                .collect(Collectors.toList());
+        addProcess(sqlScript, longList, stgTableGuid, "抽取");
 
     }
 
