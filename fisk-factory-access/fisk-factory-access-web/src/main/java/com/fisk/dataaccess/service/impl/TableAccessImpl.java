@@ -1147,6 +1147,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         ftpConfig.username = modelDataSource.connectAccount;
         ftpConfig.ftpUseUtf8 = true;
         ftpConfig.sheetName = modelAccess.sheet;
+        ftpConfig.startLine = modelAccess.startLine;
 
         return ftpConfig;
     }

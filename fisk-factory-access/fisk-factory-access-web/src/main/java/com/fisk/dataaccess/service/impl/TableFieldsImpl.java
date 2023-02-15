@@ -213,6 +213,7 @@ public class TableFieldsImpl
             return ResultEnum.TABLE_NOT_EXIST;
         }
         accessPo.sheet = dto.sheet;
+        accessPo.startLine = dto.startLine;
         tableAccessImpl.updateById(accessPo);
 
         //系统变量
@@ -302,6 +303,7 @@ public class TableFieldsImpl
         // 修改发布状态
         model.publish = 0;
         model.sheet = dto.sheet;
+        model.startLine = dto.startLine;
         tableAccessImpl.updateById(model);
 
         //系统变量
@@ -315,7 +317,8 @@ public class TableFieldsImpl
         }
 
         // 发布
-        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, model.appDataSourceId);
+        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null,
+                false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, model.appDataSourceId);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }

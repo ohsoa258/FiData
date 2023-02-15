@@ -1619,7 +1619,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //componentsConnector(groupId, getFTPProcessor.getId(), supervisionId, autoEndBranchTypeEnums);
         tableNifiSettingPO.getFtpProcessorId = getFTPProcessor.getId();
         //ToCSV
-        ProcessorEntity convertExcelToCSVProcessor = createConvertExcelToCSVProcessor(groupId);
+        ProcessorEntity convertExcelToCSVProcessor = createConvertExcelToCSVProcessor(groupId, ftpConfig);
         componentsConnector(groupId, convertExcelToCSVProcessor.getId(), supervisionId, autoEndBranchTypeEnums);
         tableNifiSettingPO.convertExcelToCsvProcessorId = convertExcelToCSVProcessor.getId();
         //连接器
@@ -1702,15 +1702,18 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         return processorEntityBusinessResult.data;
     }
 
-    public ProcessorEntity createConvertExcelToCSVProcessor(String groupId) {
+    public ProcessorEntity createConvertExcelToCSVProcessor(String groupId, FtpConfig ftpConfig) {
+        log.info("Ftp连接信息配置，{}", JSON.toJSONString(ftpConfig));
         BuildConvertExcelToCSVProcessorDTO buildConvertExcelToCSVrocessorDTO = new BuildConvertExcelToCSVProcessorDTO();
         buildConvertExcelToCSVrocessorDTO.csvFormat = "excel";
         buildConvertExcelToCSVrocessorDTO.formatCellValues = true;
         buildConvertExcelToCSVrocessorDTO.includeHeaderLine = true;
-        buildConvertExcelToCSVrocessorDTO.numberOfRowsToSkip = 1;
+//        buildConvertExcelToCSVrocessorDTO.numberOfRowsToSkip = 1;
         buildConvertExcelToCSVrocessorDTO.details = "transition_phase";
         buildConvertExcelToCSVrocessorDTO.groupId = groupId;
         buildConvertExcelToCSVrocessorDTO.name = "ConvertExcelToCSV";
+        buildConvertExcelToCSVrocessorDTO.sheetName = ftpConfig.sheetName;
+        buildConvertExcelToCSVrocessorDTO.startLine = String.valueOf(ftpConfig.startLine);
         buildConvertExcelToCSVrocessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2, 9);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildConvertExcelToCSVProcess(buildConvertExcelToCSVrocessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);

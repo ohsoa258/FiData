@@ -2410,10 +2410,12 @@ public class NiFiHelperImpl implements INiFiHelper {
 
         Map<String, String> map = new HashMap<>(2);
         //excel-extract-first-row
-        map.put("excel-extract-first-row", String.valueOf(data.numberOfRowsToSkip));
+//        map.put("excel-extract-first-row", String.valueOf(data.numberOfRowsToSkip));
         map.put("excel-format-values", String.valueOf(data.formatCellValues));
         //excel
         map.put("CSV Format", data.csvFormat);
+        map.put("extract-sheets", data.sheetName);
+        map.put("excel-extract-first-row", data.startLine);
 
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
