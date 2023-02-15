@@ -54,4 +54,10 @@ public class AppApiSubVO {
 
     @ApiModelProperty(value = "类型：1api服务 2表服务 3 文件服务")
     public Integer type;
+
+    /**
+     * 数据源ID
+     */
+    @ApiModelProperty(value = "数据源ID")
+    public Integer dataSourceId;
 }
