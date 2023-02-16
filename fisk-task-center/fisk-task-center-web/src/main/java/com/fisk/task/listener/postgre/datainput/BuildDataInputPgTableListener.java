@@ -82,18 +82,17 @@ public class BuildDataInputPgTableListener {
         DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
         Calendar calendar = Calendar.getInstance();
         String version = df.format(calendar.getTime());
-        ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(dto, version,conType);
-        log.info("执行修改语句返回结果:" + resultEnum);
-        if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
-            taskPgTableStructureMapper.updatevalidVersion(version);
-            throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
-        }
-        log.info("保存版本号方法执行成功");
+        ResultEnum resultEnum = ResultEnum.SQL_ERROR;
         try {
+            resultEnum = taskPgTableStructureHelper.saveTableStructure(dto, version, conType);
+            log.info("执行修改语句返回结果:" + resultEnum);
+
+            log.info("保存版本号方法执行成功");
+
             List<String> sqlList = dbCommand.buildStgAndOdsTable(buildPhysicalTableDTO);
             log.info("建表语句:" + JSON.toJSONString(sqlList));
-            BusinessResult Result = iJdbcBuild.postgreBuildTable(sqlList.get(1), BusinessTypeEnum.DATAINPUT);
-            if (!Result.success) {
+            BusinessResult result = iJdbcBuild.postgreBuildTable(sqlList.get(1), BusinessTypeEnum.DATAINPUT);
+            if (!result.success) {
                 throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
             }
             if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
@@ -127,6 +126,9 @@ public class BuildDataInputPgTableListener {
 
             return ResultEnum.SUCCESS;
         } catch (Exception e) {
+            if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
+                taskPgTableStructureMapper.updatevalidVersion(version);
+            }
             if (((buildPhysicalTableDTO.apiId != null && buildPhysicalTableDTO.appType == 0) || Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.api))) {
                 modelPublishStatusDTO.publish = PublishTypeEnum.FAIL.getValue();
                 dc.updateApiPublishStatus(modelPublishStatusDTO);
@@ -138,7 +140,7 @@ public class BuildDataInputPgTableListener {
                 dc.updateTablePublishStatus(modelPublishStatus);
             }
             log.error("创建表失败" + StackTraceHelper.getStackTraceInfo(e));
-            return ResultEnum.ERROR;
+            throw new FkException(ResultEnum.ERROR, StackTraceHelper.getStackTraceInfo(e));
         } finally {
             if (acke != null) {
                 acke.acknowledge();

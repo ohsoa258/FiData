@@ -149,6 +149,7 @@ public class MQConsumerLogAspect {
         //默认1环绕,2前置,3后置
         if (sendMsg && Objects.nonNull(data) && Objects.nonNull(data.userId)) {
             //失败不管是什么类型都发失败通知
+            log.info("切面处理结果:{}", isSuccess);
             if (isSuccess) {
                 if (notificationType == 1) {
                     //默认1环绕,2前置,3后置
@@ -159,7 +160,7 @@ public class MQConsumerLogAspect {
                     WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
                 }
             } else {
-                WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
+                WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【处理失败】", data.userId, MessageLevelEnum.HIGH);
             }
 
         }
