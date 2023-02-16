@@ -643,13 +643,32 @@ public class SftpUtils {
     public static void copySmbFilesToSFTP(String smbUserName, String smbPassWord, String smbIp, String smbPath,
                                           String wildcardText, String targetDir, String targetFileName,
                                           Integer sortTypeName, Integer sortType, Integer index,
-                                          Integer sftpAuthType, String sftpUserName,
-                                          String sftpPassWord, String rsaPath,
-                                          String sftpHost, Integer sftpPort) {
+                                          Integer sftpAuthType, String sftpUserName, String sftpPassWord,
+                                          String rsaPath, String sftpHost, Integer sftpPort) {
         if (StringUtils.isEmpty(smbUserName) || StringUtils.isEmpty(smbPassWord) || StringUtils.isEmpty(smbIp)
                 || StringUtils.isEmpty(smbPath) || StringUtils.isEmpty(targetDir) || StringUtils.isEmpty(targetFileName)) {
             throw new FkException(ResultEnum.PARAMTER_NOTNULL);
         }
+        log.info(String.format("【copySmbFilesToSFTP】请求参数：" +
+                        "smbUserName：%s，" +
+                        "smbPassWord：%s，" +
+                        "smbIp：%s，" +
+                        "smbPath：%s，" +
+                        "wildcardText：%s，" +
+                        "targetDir：%s，" +
+                        "targetFileName：%s，" +
+                        "sortTypeName：%s，" +
+                        "sortType：%s，" +
+                        "index：%s，" +
+                        "sftpAuthType：%s，" +
+                        "sftpUserName：%s，" +
+                        "sftpPassWord：%s，" +
+                        "rsaPath：%s，" +
+                        "sftpHost：%s，" +
+                        "sftpPort：%s", smbUserName, smbPassWord, smbIp, smbPath, wildcardText, targetDir,
+                targetFileName, sortTypeName, sortType, index, sftpAuthType, sftpUserName, sftpPassWord,
+                rsaPath, sftpHost, sftpPort)
+        );
         ChannelSftp targetSftp = null;
         SmbFileInputStream smbFileInputStream = null;
         try {
@@ -762,7 +781,7 @@ public class SftpUtils {
                 "fiskpwd01!",
                 "192.168.1.32",
                 "/DIP_Show/FiskDIP_log4netfile/EDPExceLSTG/SFTPCopy/",
-                "%_2", "/upload/test/",
+                "%_1%", "/upload/test/",
                 "Copy_WindowsFile.xlsx", 2, 3, 1, SftpAuthTypeEnum.USERNAME_PW_AUTH.getValue()
                 , "sftp", "password01!", "", "192.168.21.21", 22);
 //        int code = 0;
