@@ -56,6 +56,7 @@ import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.datamodel.enums.SyncModeEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
@@ -72,6 +73,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import javax.validation.constraints.NotNull;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -214,6 +216,18 @@ public class TableFieldsImpl
         }
         accessPo.sheet = dto.sheet;
         accessPo.startLine = dto.startLine;
+        // 判断where条件是否传递
+        int syncType = dto.tableSyncmodeDTO.syncMode;
+        if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()){
+            // 获取脚本
+            String whereScript = (String) previewCoverCondition(dto.businessDTO);
+            log.info("数据{}", whereScript);
+            if (!whereScript.contains("where")){
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR, "获取业务时间覆盖where条件失败");
+            }
+            accessPo.whereScript = whereScript;
+        }
+        log.info("业务时间覆盖where条件语句, {}", accessPo.whereScript);
         tableAccessImpl.updateById(accessPo);
 
         //系统变量
@@ -304,6 +318,17 @@ public class TableFieldsImpl
         model.publish = 0;
         model.sheet = dto.sheet;
         model.startLine = dto.startLine;
+        // 判断where条件是否传递
+        int syncType = dto.tableSyncmodeDTO.syncMode;
+        if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()){
+            // 获取脚本
+            String whereScript = (String) previewCoverCondition(dto.businessDTO);
+            if (!whereScript.contains("where")){
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR, "获取业务时间覆盖where条件失败");
+            }
+            model.whereScript = whereScript;
+        }
+        log.info("业务时间覆盖where条件语句, {}", model.whereScript);
         tableAccessImpl.updateById(model);
 
         //系统变量

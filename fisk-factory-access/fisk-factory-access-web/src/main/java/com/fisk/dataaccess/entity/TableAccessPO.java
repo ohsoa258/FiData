@@ -124,4 +124,9 @@ public class TableAccessPO extends BasePO {
      */
     public Integer appDataSourceId;
 
+    /**
+     * 业务时间覆盖的where条件
+     */
+    public String whereScript;
+
 }

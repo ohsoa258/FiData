@@ -130,6 +130,9 @@ public class TableAccessNonDTO extends BaseDTO {
     @ApiModelProperty(value = "发布时,是否立即同步数据", required = true)
     public boolean openTransmission;
 
+    @ApiModelProperty(value = "业务时间覆盖，需要传递拼接的sql条件", required = false)
+    public String whereScript;
+
     public TableAccessNonDTO(BaseEntity entity) {
         super(entity);
     }
