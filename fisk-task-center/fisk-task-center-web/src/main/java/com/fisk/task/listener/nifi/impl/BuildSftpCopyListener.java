@@ -25,6 +25,7 @@ import com.fisk.task.service.dispatchLog.IPipelJobLog;
 import com.fisk.task.utils.KafkaTemplateHelper;
 import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
@@ -69,7 +70,7 @@ public class BuildSftpCopyListener implements ISftpCopyListener {
                 log.info("开始执行复制方法,连接配置:{}", JSON.toJSONString(map));
 
                 String sftp_source_type = map.get(TaskSettingEnum.sftp_source_type.getAttributeName());
-                if (sftp_source_type.equals(SourceTypeEnum.SFTP.getValue())) {
+                if (StringUtils.isEmpty(sftp_source_type) || sftp_source_type.equals(SourceTypeEnum.SFTP.getValue())) {
                     SftpUtils.copyFile(
                             map.get(TaskSettingEnum.sftp_source_ip.getAttributeName()), 22,
                             map.get(TaskSettingEnum.sftp_source_account.getAttributeName()),
