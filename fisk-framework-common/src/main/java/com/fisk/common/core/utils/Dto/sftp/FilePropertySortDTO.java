@@ -1,7 +1,10 @@
 package com.fisk.common.core.utils.Dto.sftp;
 
 import io.swagger.annotations.ApiModelProperty;
+import jcifs.smb.SmbFile;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 /**
  * @author Lock
@@ -20,4 +23,10 @@ public class FilePropertySortDTO {
 
     @ApiModelProperty(value = "最后修改时间")
     public Integer modifyTime;
+
+    @ApiModelProperty(value = "最后修改时间")
+    public LocalDateTime lastModified;
+
+    @ApiModelProperty(value = "文件信息")
+    public SmbFile smbFile;
 }
