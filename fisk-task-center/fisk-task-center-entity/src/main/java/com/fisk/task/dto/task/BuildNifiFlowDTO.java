@@ -128,4 +128,16 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
      * 临时表名称
      */
     public String prefixTempName;
+
+    /**
+     * 自定义脚本执行前
+     */
+    public String customScriptBefore;
+
+    /**
+     * 自定义脚本执行后
+     */
+    public String customScriptAfter;
+
+
 }

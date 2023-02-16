@@ -1599,7 +1599,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     public List<ProcessorEntity> createExcelProcessorEntity(String appGroupId, String groupId, DataAccessConfigDTO config, TableNifiSettingPO tableNifiSettingPO, String supervisionId, List<AutoEndBranchTypeEnum> autoEndBranchTypeEnums, BuildNifiFlowDTO dto) {
         config.targetDsConfig.tableFieldsList.stream().filter(Objects::nonNull)
                 .forEach(e -> {
-                    e.fieldName = e.fieldName.replaceAll(" ","_");
+                    e.fieldName = e.fieldName.replaceAll(" ", "_");
                     e.sourceFieldName = e.fieldName;
                 });
         List<ProcessorEntity> processorEntities = new ArrayList<>();
@@ -2377,6 +2377,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         callDbProcedureProcessorDTO.executsql = executsql;
         callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
         callDbProcedureProcessorDTO.haveNextOne = true;
+        callDbProcedureProcessorDTO.sqlPreQuery = buildNifiFlow.customScriptBefore;
+        callDbProcedureProcessorDTO.sqlPostQuery = buildNifiFlow.customScriptAfter;
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;

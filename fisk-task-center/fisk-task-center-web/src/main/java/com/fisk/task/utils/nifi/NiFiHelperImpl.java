@@ -791,6 +791,8 @@ public class NiFiHelperImpl implements INiFiHelper {
         Map<String, String> map = new HashMap<>(2);
         map.put("Database Connection Pooling Service", buildCallDbProcedureProcessorDTO.dbConnectionId);
         map.put("SQL select query", buildCallDbProcedureProcessorDTO.executsql);
+        map.put("sql-pre-query", buildCallDbProcedureProcessorDTO.sqlPreQuery);
+        map.put("sql-post-query", buildCallDbProcedureProcessorDTO.sqlPostQuery);
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setAutoTerminatedRelationships(autoRes);
@@ -2121,7 +2123,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         buildNifiGlobalVariable(variable);
 
         // 处理存在的变量数据
-        try{
+        try {
             // 获取变量注册实体信息
             VariableRegistryEntity variableRegistryEntity = NifiHelper.getProcessGroupsApi().getVariableRegistry(NifiConstants.ApiConstants.ROOT_NODE, true);
             VariableRegistryDTO registry = variableRegistryEntity.getVariableRegistry();
@@ -2134,19 +2136,19 @@ public class NiFiHelperImpl implements INiFiHelper {
 
             // 遍历变量数据
             Iterator<Map.Entry<String, String>> map = variable.entrySet().iterator();
-            while (map.hasNext()){
+            while (map.hasNext()) {
                 Map.Entry<String, String> entry = map.next();
                 String key = entry.getKey();
                 // 设置变量默认不存在
                 boolean exist = true;
-                for (int i = 0; i < variables.size() ; i++){
+                for (int i = 0; i < variables.size(); i++) {
                     VariableDTO variableDTO = variables.get(i).getVariable();
                     String name = variableDTO.getName();
-                    if (Objects.equals(key, name)){
+                    if (Objects.equals(key, name)) {
                         exist = false;
                     }
                 }
-                if (exist){
+                if (exist) {
                     // 存在变量则需要更新
                     VariableEntity variableEntity = new VariableEntity();
                     VariableDTO variableDTO = new VariableDTO();
@@ -2166,7 +2168,7 @@ public class NiFiHelperImpl implements INiFiHelper {
             variableRegistryEntity.setProcessGroupRevision(processGroupRevision);
             log.info(JSON.toJSONString(variableRegistryEntity));
             NifiHelper.getProcessGroupsApi().updateVariableRegistry(variableRegistryEntity.getVariableRegistry().getProcessGroupId(), newVariableRegistryEntity);
-        }catch (ApiException e){
+        } catch (ApiException e) {
             log.error("创建全局变量失败", e);
         }
     }
@@ -2511,12 +2513,12 @@ public class NiFiHelperImpl implements INiFiHelper {
             log.error("修改控制器组件配置时获取控制器组件出错");
             return BusinessResult.of(false, "获取组件出错", null);
         }
-        if (entity == null){
+        if (entity == null) {
             return BusinessResult.of(false, "控制器服务组件不存在", null);
         }
 
         // 2、查询组件状态，如果运行则禁用
-        if (entity.getComponent().getState() != ControllerServiceDTO.StateEnum.DISABLED){
+        if (entity.getComponent().getState() != ControllerServiceDTO.StateEnum.DISABLED) {
             // 组件未停止运行则需暂停组件
             ControllerServiceRunStatusEntity statusEntity = new ControllerServiceRunStatusEntity();
             statusEntity.setState(ControllerServiceRunStatusEntity.StateEnum.DISABLED);
