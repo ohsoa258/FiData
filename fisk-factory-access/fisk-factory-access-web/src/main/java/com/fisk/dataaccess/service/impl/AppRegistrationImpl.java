@@ -25,14 +25,16 @@ import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.datasource.ExternalDataSourceDTO;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
-import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbMetaData.dto.*;
-import com.fisk.common.service.metadata.dto.metadata.*;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDbAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -148,6 +150,8 @@ public class AppRegistrationImpl
     RedisUtil redisUtil;
     @Resource
     GetConfigDTO getConfig;
+
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEntity<AtlasEntityQueryVO> addData(AppRegistrationDTO appRegistrationDTO) {
@@ -176,6 +180,7 @@ public class AppRegistrationImpl
         }
 
         List<AppDataSourceDTO> datasourceDTO = appRegistrationDTO.getAppDatasourceDTO();
+
         //
         /* todo 不筛查连接账号是否重复
         List<String> realtimeAccountList = appDataSourceMapper.getRealtimeAccountList(datasourceDTO.realtimeAccount);
@@ -277,10 +282,18 @@ public class AppRegistrationImpl
         classificationInfoDto.setSourceType(1);
         classificationInfoDto.setDelete(false);
 
-        ResultEntity<Object> objectResultEntity = dataManageClient.appSynchronousClassification(classificationInfoDto);
-        if (objectResultEntity.code != ResultEnum.SUCCESS.getCode()) {
-            throw new FkException(ResultEnum.BUSINESS_CLASSIFICATION_ERROR);
-        }
+        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+        cachedThreadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    dataManageClient.appSynchronousClassification(classificationInfoDto);
+                } catch (Exception e) {
+                    // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
+                    log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
+                }
+            }
+        });
     }
      */
 
@@ -357,12 +370,23 @@ public class AppRegistrationImpl
         data.sourceType = 2;
         data.id = po.systemDataSourceId;
 
-        ResultEntity<DataSourceResultDTO> result = userClient.insertDataSourceByAccess(data);
-        if (result.code != ResultEnum.SUCCESS.getCode()) {
+        DataSourceResultDTO dto = new DataSourceResultDTO();
+
+        if (data.id != null && data.id != 0) {
+            ResultEntity<Object> objectResultEntity = userClient.editData(data);
+            if (objectResultEntity.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            }
+            dto.id = (int) data.id;
+            return dto;
+        }
+
+        ResultEntity<Object> objectResultEntity = publishTaskClient.addDataSetParams(data);
+        if (objectResultEntity.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
-        return result.data;
-
+        dto.id = (int) objectResultEntity.data;
+        return dto;
     }
 
     @Override
