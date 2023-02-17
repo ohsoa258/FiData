@@ -36,6 +36,8 @@ fiData-data-ods-source: 5
 fiData-data-dw-source: 1
 # 是否调用数据质量接口
 nifi-data-security-enable: true
+# consumeServer启动控制
+consumer-server-enable: false
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
   password: Password01!
