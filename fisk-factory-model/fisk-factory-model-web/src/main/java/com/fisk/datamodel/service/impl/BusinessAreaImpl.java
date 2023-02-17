@@ -74,6 +74,9 @@ import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.daconfig.DataSourceConfig;
+import com.fisk.task.dto.daconfig.ProcessorConfig;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
@@ -159,6 +162,8 @@ public class BusinessAreaImpl
 
     @Value("${spring.open-metadata}")
     private Boolean openMetadata;
+    @Value("${fiData-data-dw-source}")
+    private Integer targetDbId;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -1176,6 +1181,43 @@ public class BusinessAreaImpl
         return command.dataTypeList();
 
 
+    }
+
+    /**
+     * 覆盖方式代码预览
+     *
+     * @return
+     */
+    public String overlayCodePreview(OverlayCodePreviewDTO dto) {
+
+        DataAccessConfigDTO data = new DataAccessConfigDTO();
+
+        ProcessorConfig processorConfig = new ProcessorConfig();
+        processorConfig.targetTableName = dto.targetTableName;
+        data.processorConfig = processorConfig;
+
+        DataSourceConfig targetDsConfig = new DataSourceConfig();
+        targetDsConfig.syncMode = dto.syncMode;
+        data.targetDsConfig = targetDsConfig;
+
+        data.businessDTO = dto.tableBusiness;
+
+        List<String> collect = dto.modelPublishFieldDTOList.stream().filter(e -> e.isPrimaryKey == 1).map(e -> e.fieldEnName).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(collect)) {
+            data.businessKeyAppend = String.join(",", collect);
+        }
+
+
+        return "";
+    }
+
+    public DataSourceDTO getTargetDbInfo() {
+        ResultEntity<DataSourceDTO> dataDataSource = userClient.getFiDataDataSourceById(targetDbId);
+        if (dataDataSource.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+
+        return dataDataSource.data;
     }
 
 }
