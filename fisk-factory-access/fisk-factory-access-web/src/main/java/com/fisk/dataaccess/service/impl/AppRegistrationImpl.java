@@ -487,6 +487,12 @@ public class AppRegistrationImpl
             if (DataSourceTypeEnum.SFTP.getName().equals(e.driveType.toLowerCase()) && e.serviceType == 1) {
                 e.fileBinary = fileToBinaryStr(e.connectStr);
             }
+
+            if (e.id != 0) {
+                AppDataSourcePO byId = appDataSourceImpl.getById(e.id);
+                e.systemDataSourceId = byId.systemDataSourceId;
+            }
+
             //同步到平台配置
             if (!DataSourceTypeEnum.SFTP.getName().equals(e.driveType.toLowerCase())
                     && !DataSourceTypeEnum.FTP.getName().equals(e.driveType.toLowerCase())
