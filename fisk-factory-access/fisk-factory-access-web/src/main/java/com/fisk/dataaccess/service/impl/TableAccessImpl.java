@@ -2189,6 +2189,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.appAbbreviation = registrationPo.appAbbreviation;
         dto.tableName = tableAccessPo.tableName;
         dto.selectSql = tableAccessPo.sqlScript;
+        dto.whereScript = tableAccessPo.whereScript;
         // 非实时物理表才有sql
         if (!dto.driveType.getName().equals(DbTypeEnum.RestfulAPI.getName())
                 && !dto.driveType.getName().equals(DbTypeEnum.api.getName())

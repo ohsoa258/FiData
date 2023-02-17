@@ -218,11 +218,12 @@ public class TableFieldsImpl
         accessPo.startLine = dto.startLine;
         // 判断where条件是否传递
         int syncType = dto.tableSyncmodeDTO.syncMode;
+        log.info("syncType类型，{}", syncType);
         if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()){
             // 获取脚本
             String whereScript = (String) previewCoverCondition(dto.businessDTO);
-            log.info("数据{}", whereScript);
-            if (!whereScript.contains("where")){
+            log.info("where条件数据{}", whereScript);
+            if (!whereScript.contains("WHERE")){
                 throw new FkException(ResultEnum.SAVE_DATA_ERROR, "获取业务时间覆盖where条件失败");
             }
             accessPo.whereScript = whereScript;
@@ -320,13 +321,17 @@ public class TableFieldsImpl
         model.startLine = dto.startLine;
         // 判断where条件是否传递
         int syncType = dto.tableSyncmodeDTO.syncMode;
+        log.info("syncType类型，{}", syncType);
         if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()){
             // 获取脚本
             String whereScript = (String) previewCoverCondition(dto.businessDTO);
-            if (!whereScript.contains("where")){
+            log.info("where条件数据{}", whereScript);
+            if (!whereScript.contains("WHERE")){
                 throw new FkException(ResultEnum.SAVE_DATA_ERROR, "获取业务时间覆盖where条件失败");
             }
             model.whereScript = whereScript;
+        }else {
+            model.whereScript = "";
         }
         log.info("业务时间覆盖where条件语句, {}", model.whereScript);
         tableAccessImpl.updateById(model);
@@ -521,6 +526,9 @@ public class TableFieldsImpl
             data.dataSourceDbId = dataSourcePo.systemDataSourceId;
             data.targetDbId = appRegistrationPo.targetDbId;
 
+            // 拼接删除ods的sql
+            String tbName = TableNameGenerateUtils.buildOdsTableName(data.tableName, appRegistrationPo.appAbbreviation, appRegistrationPo.whetherSchema);
+
             // pg库则将表名转换为小写
             boolean typeFlag = getTargetDbType(data.targetDbId);
             if (typeFlag){
@@ -531,6 +539,13 @@ public class TableFieldsImpl
                     item.fieldName = item.fieldName.toLowerCase();
                     return item;
                 }).collect(Collectors.toList());
+                tbName = tbName.toLowerCase();
+            }
+            int syncType = syncMode.syncMode;
+            log.info("syncType类型，{}，判断拼接删除ods的sql", syncType);
+            if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()){
+                data.whereScript = "DELETE FROM " + tbName + " " + data.whereScript;
+                log.info("删除ods表的sql，{}", data.whereScript);
             }
 
             // 版本号入库、调用存储存储过程  

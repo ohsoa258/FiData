@@ -136,6 +136,7 @@ public class BuildAtlasTableAndColumnTaskListener
             // 新属性赋值
             bfd.dataSourceDbId = buildPhysicalTableDTO.dataSourceDbId;
             bfd.targetDbId = buildPhysicalTableDTO.targetDbId;
+            bfd.whereScript = buildPhysicalTableDTO.whereScript;
             log.info("nifi传入参数：" + JSON.toJSONString(bfd));
             pc.publishBuildNifiFlowTask(bfd);
             log.info("执行完成");

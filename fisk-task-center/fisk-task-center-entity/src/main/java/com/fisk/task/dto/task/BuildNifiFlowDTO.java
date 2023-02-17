@@ -139,5 +139,10 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
      */
     public String customScriptAfter;
 
+    /**
+     * 执行删除ods的sql语句
+     */
+    public String whereScript;
+
 
 }

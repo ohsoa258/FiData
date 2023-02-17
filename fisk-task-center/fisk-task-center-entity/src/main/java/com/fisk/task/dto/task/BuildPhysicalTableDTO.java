@@ -107,4 +107,8 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
      */
     public Integer targetDbId;
 
+    /**
+     * 执行删除ods的sql语句
+     */
+    public String whereScript;
 }
