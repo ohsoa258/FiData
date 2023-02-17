@@ -369,11 +369,21 @@ public class AppRegistrationImpl
         data.sourceType = 2;
         data.id = po.systemDataSourceId;
 
+        DataSourceResultDTO dto = new DataSourceResultDTO();
+
+        if (data.id != null && data.id != 0) {
+            ResultEntity<Object> objectResultEntity = userClient.editData(data);
+            if (objectResultEntity.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            }
+            dto.id = (int) data.id;
+            return dto;
+        }
+
         ResultEntity<Object> objectResultEntity = publishTaskClient.addDataSetParams(data);
         if (objectResultEntity.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
-        DataSourceResultDTO dto = new DataSourceResultDTO();
         dto.id = (int) objectResultEntity.data;
         return dto;
 
