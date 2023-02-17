@@ -88,7 +88,8 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
 
     @Override
     public ResultEnum addData(NifiCustomWorkflowDTO dto) {
-
+        //新创建管道状态默认空
+        dto.workStatus = 1;
         List<String> workflowNameList = this.list().stream().map(po -> po.workflowName).collect(Collectors.toList());
         if (workflowNameList.contains(dto.workflowName)) {
             return ResultEnum.WORKFLOWNAME_EXISTS;

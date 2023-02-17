@@ -141,10 +141,11 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
         }
         try {
+            NifiCustomWorkflowPO one = workflowService.query().eq("id", dto.dto.id).one();
+            workflowDTO.workStatus = one.workStatus;
             if (dto.flag) {
                 // 正在发布
                 workflowDTO.status = 3;
-                workflowDTO.workStatus = NifiWorkStatusEnum.RUNNING_STATUS.getValue();
             }
             workflowService.editData(workflowDTO);
         } catch (Exception e) {
