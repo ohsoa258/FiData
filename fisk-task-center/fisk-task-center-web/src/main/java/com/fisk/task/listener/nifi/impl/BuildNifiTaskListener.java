@@ -511,7 +511,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             return resultEnum;
         } catch (Exception e) {
             resultEnum = ResultEnum.ERROR;
-            modelPublishStatusDTO.publish = 2;
+            modelPublishStatusDTO.publish = 3;
             modelPublishStatusDTO.publishErrorMsg = StackTraceHelper.getStackTraceInfo(e);
             if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
                 client.updateTablePublishStatus(modelPublishStatusDTO);
