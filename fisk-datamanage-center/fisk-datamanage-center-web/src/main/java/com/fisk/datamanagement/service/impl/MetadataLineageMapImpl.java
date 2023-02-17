@@ -8,10 +8,12 @@ import com.fisk.datamanagement.entity.MetadataLineageMapPO;
 import com.fisk.datamanagement.map.MetadataLineageMap;
 import com.fisk.datamanagement.mapper.MetadataLineageMapper;
 import com.fisk.datamanagement.service.IMetadataLineageMap;
+import org.springframework.stereotype.Service;
 
 /**
  * @author JianWenYang
  */
+@Service
 public class MetadataLineageMapImpl
         extends ServiceImpl<MetadataLineageMapper, MetadataLineageMapPO>
         implements IMetadataLineageMap {

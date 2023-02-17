@@ -404,7 +404,7 @@ public class MetadataEntityImpl
             }
             //解析表名集合
             List<String> collect = res.stream().map(e -> e.name).collect(Collectors.toList());
-            String dbQualifiedNames = first1.get().appId + "_" + first1.get().appAbbreviation + "_" + first1.get().appId;
+            String dbQualifiedNames = first1.get().appId + "_" + first1.get().appAbbreviation + "_" + first1.get().dataSourceId;
 
             fromEntityIdList = getOdsTableList(collect, dbQualifiedNames);
 

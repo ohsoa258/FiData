@@ -75,7 +75,7 @@ public class MetadataAttributeImpl
             po.metadataEntityId = entityId;
             String key = iterator.next();
             po.name = key;
-            po.value = map.get(key).toString();
+            po.value = map.get(key) == null ? "" : map.get(key).toString();
             po.groupType = 0;
 
             dataList.add(po);

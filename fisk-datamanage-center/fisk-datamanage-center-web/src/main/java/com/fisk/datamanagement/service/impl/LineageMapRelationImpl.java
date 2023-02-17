@@ -8,12 +8,14 @@ import com.fisk.datamanagement.entity.LineageMapRelationPO;
 import com.fisk.datamanagement.map.LineageMapRelationMap;
 import com.fisk.datamanagement.mapper.LineageMapRelationMapper;
 import com.fisk.datamanagement.service.ILineageMapRelation;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 /**
  * @author JianWenYang
  */
+@Service
 public class LineageMapRelationImpl
         extends ServiceImpl<LineageMapRelationMapper, LineageMapRelationPO>
         implements ILineageMapRelation {

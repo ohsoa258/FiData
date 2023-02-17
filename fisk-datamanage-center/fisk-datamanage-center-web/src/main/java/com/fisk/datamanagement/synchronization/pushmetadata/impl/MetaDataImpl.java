@@ -183,7 +183,8 @@ public class MetaDataImpl implements IMetaData {
                                             String tableName,
                                             String stgTableGuid)
     {
-        try {
+        metadataEntity.synchronizationTableKinShip(dbName, tableGuid, tableName, stgTableGuid);
+        /*try {
 
             //获取实体详情
             ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + stgTableGuid);
@@ -241,7 +242,8 @@ public class MetaDataImpl implements IMetaData {
                 String stgQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname + "_" + first1.get().id + stg_prefix;
                 synchronizationStgOdsKinShip(tableGuid, sqlScript, stgQualifiedName);
 
-            } else if (dataSourceInfo.id == DataSourceConfigEnum.DMP_DW.getValue()) {
+            }
+            else if (dataSourceInfo.id == DataSourceConfigEnum.DMP_DW.getValue()) {
                 //获取ods表信息
                 odsResult = dataAccessClient.getDataAccessMetaData();
                 if (odsResult.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(odsResult.data)) {
@@ -294,7 +296,8 @@ public class MetaDataImpl implements IMetaData {
                         dataSourceInfo.conType.getName().toLowerCase(),
                         list,
                         newDbQualifiedName1);
-            } else if (dataSourceInfo.id == DataSourceConfigEnum.DMP_OLAP.getValue()) {
+            }
+            else if (dataSourceInfo.id == DataSourceConfigEnum.DMP_OLAP.getValue()) {
                 result = dataModelClient.getDataModelTable(2);
                 if (result.code != ResultEnum.SUCCESS.getCode()) {
                     return;
@@ -354,7 +357,7 @@ public class MetaDataImpl implements IMetaData {
         } catch (Exception e) {
             log.error("同步表血缘失败,表guid" + tableGuid + " ex:", e);
             return;
-        }
+        }*/
     }
 
     public void synchronizationStgAndCustomScriptTableKinShip(String stgQualifiedName,

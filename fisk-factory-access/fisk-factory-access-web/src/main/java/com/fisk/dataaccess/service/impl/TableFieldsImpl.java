@@ -289,7 +289,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         success = syncmodeImpl.saveOrUpdate(modelSync);
 
         // 修改发布状态
-        model.publish = 0;
+        //model.publish = 0;
         model.sheet = dto.sheet;
         tableAccessImpl.updateById(model);
 
@@ -523,7 +523,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     data.appType = registration.appType;
                     data.apiId = accessPo.apiId;
                     // 创建表流程
-                    publishTaskClient.publishBuildPhysicsTableTask(data);
+                    //publishTaskClient.publishBuildPhysicsTableTask(data);
                     // 构建元数据实时同步数据对象
                     metaDataList = buildMetaDataInstanceAttribute(registration, accessId, 1);
                 } else if (registration.appType == 1) {
@@ -532,7 +532,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     }
                     // 非实时物理表发布
                     // 创建表流程
-                    publishTaskClient.publishBuildPhysicsTableTask(data);
+                    //publishTaskClient.publishBuildPhysicsTableTask(data);
                     // 生成nifi流程
                     //log.info(JSON.toJSONString(data));
                     //publishTaskClient.publishBuildAtlasTableTask(data);
