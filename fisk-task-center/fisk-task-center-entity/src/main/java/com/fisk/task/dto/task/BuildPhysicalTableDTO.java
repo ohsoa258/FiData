@@ -111,4 +111,9 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
      * 执行删除ods的sql语句
      */
     public String whereScript;
+
+    /**
+     * 从stg加载数据同步到ods的sql语句
+     */
+    public String syncStgToOdsSql;
 }

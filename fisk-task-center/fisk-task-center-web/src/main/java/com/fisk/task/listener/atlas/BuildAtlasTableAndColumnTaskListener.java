@@ -137,6 +137,8 @@ public class BuildAtlasTableAndColumnTaskListener
             bfd.dataSourceDbId = buildPhysicalTableDTO.dataSourceDbId;
             bfd.targetDbId = buildPhysicalTableDTO.targetDbId;
             bfd.whereScript = buildPhysicalTableDTO.whereScript;
+            // stg抽取数据加载到ods的sql语句
+            bfd.syncStgToOdsSql = buildPhysicalTableDTO.syncStgToOdsSql;
             log.info("nifi传入参数：" + JSON.toJSONString(bfd));
             pc.publishBuildNifiFlowTask(bfd);
             log.info("执行完成");

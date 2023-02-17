@@ -144,5 +144,10 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
      */
     public String whereScript;
 
+    /**
+     * 从stg抽取数据同步到ods的sql语句
+     */
+    public String syncStgToOdsSql;
+
 
 }
