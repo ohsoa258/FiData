@@ -6,11 +6,14 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
+import com.fisk.common.core.enums.task.FuncNameEnum;
+import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
@@ -76,11 +79,13 @@ import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.daconfig.DataSourceConfig;
+import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
 import com.fisk.task.dto.daconfig.ProcessorConfig;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -1188,12 +1193,31 @@ public class BusinessAreaImpl
      *
      * @return
      */
-    public String overlayCodePreview(OverlayCodePreviewDTO dto) {
+    @Override
+    public Object overlayCodePreview(OverlayCodePreviewDTO dto) {
+
+        String tableName;
+        String prefixTempName;
+        if (dto.type == 1) {
+            DimensionPO po = dimensionMapper.selectById(dto.id);
+            if (po == null) {
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+            tableName = po.dimensionTabName;
+            prefixTempName = po.prefixTempName;
+        } else {
+            FactPO factPO = factMapper.selectById(dto.id);
+            if (factPO == null) {
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+            tableName = factPO.factTabName;
+            prefixTempName = factPO.prefixTempName;
+        }
 
         DataAccessConfigDTO data = new DataAccessConfigDTO();
 
         ProcessorConfig processorConfig = new ProcessorConfig();
-        processorConfig.targetTableName = dto.targetTableName;
+        processorConfig.targetTableName = tableName;
         data.processorConfig = processorConfig;
 
         DataSourceConfig targetDsConfig = new DataSourceConfig();
@@ -1207,8 +1231,20 @@ public class BusinessAreaImpl
             data.businessKeyAppend = String.join(",", collect);
         }
 
+        BuildNifiFlowDTO buildNifiFlow = new BuildNifiFlowDTO();
+        buildNifiFlow.updateSql = dto.updateSql;
+        buildNifiFlow.prefixTempName = prefixTempName;
 
-        return "";
+        OverLoadCodeDTO dataModel = new OverLoadCodeDTO();
+        dataModel.buildNifiFlow = buildNifiFlow;
+        dataModel.config = data;
+        dataModel.funcName = FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName();
+        dataModel.dataSourceType = DataSourceTypeEnum.SQLSERVER;
+        dataModel.synchronousTypeEnum = SynchronousTypeEnum.PGTOPG;
+
+        return "test";
+
+        //return publishTaskClient.overlayCodePreview(dataModel);
     }
 
     public DataSourceDTO getTargetDbInfo() {

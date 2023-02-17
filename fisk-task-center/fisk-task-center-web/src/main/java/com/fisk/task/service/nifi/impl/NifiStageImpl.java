@@ -20,6 +20,8 @@ import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaQueryTableDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaTableDetailDTO;
+import com.fisk.system.client.UserClient;
+import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.nifi.NifiStageMessageDTO;
@@ -31,6 +33,8 @@ import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
+import com.fisk.task.listener.postgre.datainput.IbuildTable;
+import com.fisk.task.listener.postgre.datainput.impl.BuildFactoryHelper;
 import com.fisk.task.map.NifiStageMap;
 import com.fisk.task.map.NifiStageMapImpl;
 import com.fisk.task.mapper.NifiStageMapper;
@@ -83,6 +87,8 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
     IPipelineTaskPublishCenter iPipelineTaskPublishCenter;
     @Resource
     KafkaTemplateHelper kafkaTemplateHelper;
+    @Resource
+    UserClient userClient;
 
 
     @Override
@@ -328,6 +334,12 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
         dispatchExceptionHandlingDTO.pipelTaskTraceId = nifiStageMessage.pipelTaskTraceId;
         iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
         kafkaTemplateHelper.sendMessageAsync("my-topic", param);
+    }
+
+    @Override
+    public String overlayCodePreview(OverLoadCodeDTO dto) {
+        IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dto.dataSourceType);
+        return dbCommand.assemblySql(dto.config, dto.synchronousTypeEnum, dto.funcName, dto.buildNifiFlow);
     }
 
 

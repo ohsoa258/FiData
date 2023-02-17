@@ -193,4 +193,12 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      */
     JSONObject dataTypeList(Integer businessId);
 
+    /**
+     * 建模覆盖方式代码预览
+     *
+     * @param dto
+     * @return
+     */
+    Object overlayCodePreview(OverlayCodePreviewDTO dto);
+
 }

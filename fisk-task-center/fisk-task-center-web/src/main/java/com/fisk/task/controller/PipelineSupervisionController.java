@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
+import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
@@ -83,6 +84,17 @@ public class PipelineSupervisionController {
     @PostMapping("/getPipelineTableLog")
     public ResultEntity<List<PipelineTableLogVO>> getPipelineTableLog(@RequestParam("data") String data, @RequestParam("pipelineTableQuery") String pipelineTableQuery) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iPipelineTableLog.getPipelineTableLogs(data, pipelineTableQuery));
+    }
+
+    /**
+     * 数据建模覆盖方式预览代码
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/overlayCodePreview")
+    public ResultEntity<Object> overlayCodePreview(@RequestBody OverLoadCodeDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, iNifiStage.overlayCodePreview(dto));
     }
 
 }

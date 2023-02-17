@@ -14,11 +14,18 @@ public class OverlayCodePreviewDTO {
 
    public List<ModelPublishFieldDTO> modelPublishFieldDTOList;
 
-   public String targetTableName;
-
    public Integer syncMode;
 
    public TableBusinessDTO tableBusiness;
+
+   public String updateSql;
+
+   public Integer id;
+
+   /**
+    * 0 维度 1 事实
+    */
+   public Integer type;
 
 
 }

@@ -12,6 +12,7 @@ import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
 import com.fisk.task.dto.dispatchlog.*;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
@@ -381,5 +382,8 @@ public interface PublishTaskClient {
      */
     @PostMapping("/nifi/add")
     ResultEntity<Object> addDataSetParams(@RequestBody DataSourceSaveDTO dto);
+
+    @PostMapping("/pipeline/overlayCodePreview")
+    ResultEntity<Object> overlayCodePreview(@RequestBody OverLoadCodeDTO dto);
 
 }
