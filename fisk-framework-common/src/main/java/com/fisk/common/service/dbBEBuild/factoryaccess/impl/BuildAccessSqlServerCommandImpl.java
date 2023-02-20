@@ -165,6 +165,8 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
         jsonObject.put("字符串型", "NVARCHAR");
         jsonObject.put("整型", "INT");
         jsonObject.put("大整型", "BIGINT");
+        jsonObject.put("日期类型", "DATE");
+        jsonObject.put("时间类型", "TIME");
         jsonObject.put("时间戳类型", "TIMESTAMP");
         jsonObject.put("浮点型", "FLOAT");
         jsonObject.put("文本型", "TEXT");

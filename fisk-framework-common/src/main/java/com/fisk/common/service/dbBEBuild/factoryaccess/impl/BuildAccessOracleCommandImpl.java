@@ -76,6 +76,7 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("字符串型", "VARCHAR2");
         jsonObject.put("整型", "INT");
+        jsonObject.put("日期类型", "DATE");
         jsonObject.put("时间戳类型", "TIMESTAMP");
         jsonObject.put("浮点型", "NUMBER");
         jsonObject.put("文本型", "CLOB");
