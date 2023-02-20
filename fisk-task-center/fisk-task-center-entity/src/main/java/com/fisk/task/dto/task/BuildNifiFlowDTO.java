@@ -149,5 +149,10 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
      */
     public String syncStgToOdsSql;
 
+    /**
+     * 临时表(建模temp_tablename)建表语句
+     */
+    public String buildTableSql;
+
 
 }

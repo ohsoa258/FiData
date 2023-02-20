@@ -2546,6 +2546,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         querySqlDto.name = "Exec Target Delete";
         querySqlDto.details = "query_phase";
         querySqlDto.postSql = buildNifiFlow.whereScript;
+        querySqlDto.preSql = buildNifiFlow.buildTableSql;
         querySqlDto.groupId = groupId;
         querySqlDto.querySql = componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName(), buildNifiFlow);
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
