@@ -346,12 +346,12 @@ public class AppRegisterManageImpl
 //            return ResultEntityBuild.buildData(ResultEnum.DS_APPAPIDOC_ERROR, saveFilePath);
 //        }
 
-        String fileName = null;
-        try {
-            fileName = new String(appConfigPO.getAppName().getBytes("UTF-8"), "ISO-8859-1") + ".pdf";
-        } catch (UnsupportedEncodingException e) {
-            log.error("生成API文档时，字符编码异常：" + e);
-        }
+        String fileName = "APIServiceDoc" + v + ".pdf";
+//        try {
+//            fileName = new String(appConfigPO.getAppName().getBytes("UTF-8"), "ISO-8859-1") + ".pdf";
+//        } catch (UnsupportedEncodingException e) {
+//            log.error("生成API文档时，字符编码异常：" + e);
+//        }
         OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl",
                 templatePath, fileName, "接口文档", docDTO, response);
         try {
@@ -445,7 +445,7 @@ public class AppRegisterManageImpl
      * 生成API文档DTO
      *
      * @param apiList           API信息
-     * @param parmasList        API参数信息
+     * @param paramsList        API参数信息
      * @param builtinParamsList API内置参数信息
      * @param fieldList         API字段信息
      * @return
