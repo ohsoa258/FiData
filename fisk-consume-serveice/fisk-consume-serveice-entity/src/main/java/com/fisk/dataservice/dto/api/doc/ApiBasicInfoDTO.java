@@ -86,6 +86,11 @@ public class ApiBasicInfoDTO {
     public String apiRequestExamplesCatalogue;
 
     /**
+     * API请求参数_固定部分
+     */
+    public List<ApiRequestDTO> apiRequestDTOS_Fixed;
+
+    /**
      * API请求参数
      */
     public List<ApiRequestDTO> apiRequestDTOS;
@@ -119,4 +124,9 @@ public class ApiBasicInfoDTO {
      * API返回参数 目录
      */
     public String apiResponseCatalogue;
+
+    /**
+     * API返回参数 顶部描述
+     */
+    public String apiResponseHeaderDesc;
 }

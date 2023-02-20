@@ -327,6 +327,7 @@ public class ApiConstants {
             "            \"apiRequestCatalogue\":\"2.4.7.\",\n" +
             "            \"apiResponseExamples\":\"\",\n" +
             "            \"apiResponseExamplesCatalogue\":\"2.4.8.\",\n" +
+            "            \"apiResponseHeaderDesc\":\"返回参数说明\",\n" +
             "            \"apiResponseDTOS\":[\n" +
             "                {\n" +
             "                    \"parmName\":\"msg\",\n" +

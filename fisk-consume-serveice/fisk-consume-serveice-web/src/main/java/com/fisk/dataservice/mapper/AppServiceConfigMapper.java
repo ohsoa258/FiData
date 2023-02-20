@@ -8,6 +8,7 @@ import com.fisk.dataservice.vo.app.AppApiSubVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -54,4 +55,8 @@ public interface AppServiceConfigMapper extends FKBaseMapper<AppServiceConfigPO>
             "\tAND t1.del_flag = 1 \n" +
             "\tAND t2.del_flag = 1 ")
     List<AppServiceConfigPO> getSubscribeListBy(@Param("appId") int appId);
+
+    @Update("update tb_app_service_config set api_state=#{apiState},type=#{type},service_id=#{serviceId} where id=#{id}")
+    Long updateSubscribeById(@Param("apiState") int apiState, @Param("type") int type,
+                             @Param("serviceId") int serviceId, @Param("id") Long id);
 }
