@@ -496,9 +496,13 @@ public class NiFiHelperImpl implements INiFiHelper {
         //组件属性
         Map<String, String> map = new HashMap<>(5);
         map.put("Database Connection Pooling Service", data.dbConnectionId);
-        map.put("sql-pre-query", data.preSql);
+        if (!StringUtils.isEmpty(data.preSql)){
+            map.put("sql-pre-query", data.preSql);
+        }
         map.put("SQL select query", data.querySql);
-        map.put("sql-post-query", data.postSql);
+        if (!StringUtils.isEmpty(data.postSql)){
+            map.put("sql-post-query", data.postSql);
+        }
         map.put("esql-max-rows", data.MaxRowsPerFlowFile);
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
