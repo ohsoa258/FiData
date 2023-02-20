@@ -208,6 +208,8 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                         pipelJobMergeLogVo.result = "失败";
                     } else if (pipelJobLogVo.msg.contains("跳过")) {
                         pipelJobMergeLogVo.result = "跳过";
+                    } else if (pipelJobLogVo.msg.contains("禁止")) {
+                        pipelJobMergeLogVo.result = "禁用";
                     }
                 }
             } catch (ParseException e) {
@@ -228,6 +230,8 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                                 pipelJobMergeLogVo.result = "失败";
                             } else if (pipelJobLog.msg.contains("跳过")) {
                                 pipelJobMergeLogVo.result = "跳过";
+                            } else if (pipelJobLog.msg.contains("禁止")) {
+                                pipelJobMergeLogVo.result = "禁用";
                             }
                         }
                     } catch (ParseException e) {

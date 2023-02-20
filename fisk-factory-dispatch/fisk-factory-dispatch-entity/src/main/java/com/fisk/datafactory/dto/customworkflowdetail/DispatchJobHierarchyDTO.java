@@ -33,4 +33,9 @@ public class DispatchJobHierarchyDTO {
      */
     public String jobTraceId;
 
+    /**
+     * 是否禁用
+     */
+    public Boolean forbidden;
+
 }

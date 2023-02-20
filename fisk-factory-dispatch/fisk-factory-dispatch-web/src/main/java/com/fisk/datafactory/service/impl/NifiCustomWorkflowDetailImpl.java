@@ -99,15 +99,21 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             log.error("调度报错", e);
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
-        dto.id = model.id;
         // 保存
-        return dto;
+        return NifiCustomWorkflowDetailMap.INSTANCES.poToDto(baseMapper.selectById(model.id));
+
     }
 
     @Override
     public List<NifiCustomWorkflowDetailDTO> addDataList(List<NifiCustomWorkflowDetailDTO> list) {
-
-        return list.stream().map(this::addData).collect(Collectors.toList());
+        List<NifiCustomWorkflowDetailDTO> collect = list.stream().map(this::addData).collect(Collectors.toList());
+        List<NifiCustomWorkflowDetailDTO> nifiCustomWorkflowDetailDtos = new ArrayList<>();
+        collect.stream().filter(Objects::nonNull)
+                .forEach(e -> {
+                    NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDto = NifiCustomWorkflowDetailMap.INSTANCES.poToDto(mapper.selectById(e.id));
+                    nifiCustomWorkflowDetailDtos.add(JSON.parseObject(JSON.toJSONString(nifiCustomWorkflowDetailDto), NifiCustomWorkflowDetailDTO.class));
+                });
+        return nifiCustomWorkflowDetailDtos;
     }
 
     @Override
@@ -893,11 +899,40 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 //是管道某个支线的最后一级
                 dispatchJobHierarchy.last = true;
             }
-
+            dispatchJobHierarchy.forbidden = e.forbidden;
 
             dtos.add(dispatchJobHierarchy);
         });
         return dtos;
+    }
+
+    @Override
+    public ResultEnum forbiddenTask(List<ForbiddenTaskDTO> dto) {
+        if (CollectionUtils.isNotEmpty(dto)) {
+            boolean ifNext = false;
+            for (ForbiddenTaskDTO forbiddenTask : dto) {
+                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetail = this.getById(forbiddenTask.taskId);
+                nifiCustomWorkflowDetail.forbidden = forbiddenTask.forbidden;
+                mapper.forbiddenTask(nifiCustomWorkflowDetail);
+                if (nifiCustomWorkflowDetail.pid != 0) {
+                    ifNext = true;
+                }
+            }
+            //如果是任务组,要改任务组下所有的task
+            if (!ifNext) {
+                for (ForbiddenTaskDTO forbiddenTask : dto) {
+                    NifiCustomWorkflowDetailPO nifiCustomWorkflowDetail = this.getById(forbiddenTask.taskId);
+                    if (nifiCustomWorkflowDetail.pid == 0 && !forbiddenTask.forbidden) {
+                        List<NifiCustomWorkflowDetailPO> nifiCustomWorkflowDetailPos = this.query().eq("pid", nifiCustomWorkflowDetail.id).list();
+                        for (NifiCustomWorkflowDetailPO detail : nifiCustomWorkflowDetailPos) {
+                            detail.forbidden = false;
+                            mapper.forbiddenTask(detail);
+                        }
+                    }
+                }
+            }
+        }
+        return ResultEnum.SUCCESS;
     }
 
 }
