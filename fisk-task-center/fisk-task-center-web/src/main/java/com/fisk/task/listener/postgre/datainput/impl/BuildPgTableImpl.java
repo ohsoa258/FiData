@@ -51,9 +51,9 @@ public class BuildPgTableImpl implements IbuildTable {
                 sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + ",");
             } else if (l.fieldType.contains("TEXT")) {
                 sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + ",");
-            } else if (l.fieldType.contains("DATE")){
+            } else if (l.fieldType.toUpperCase().equals("DATE")){
                 sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + ",");
-            } else if (l.fieldType.contains("TIME")){
+            } else if (l.fieldType.toUpperCase().equals("TIME")){
                 sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + ",");
             } else {
                 sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + "(" + l.fieldLength + "),");
