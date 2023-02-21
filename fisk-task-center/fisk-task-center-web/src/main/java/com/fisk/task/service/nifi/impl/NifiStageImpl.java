@@ -337,7 +337,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
     }
 
     @Override
-    public String overlayCodePreview(OverLoadCodeDTO dto) {
+    public Object overlayCodePreview(OverLoadCodeDTO dto) {
         IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dto.dataSourceType);
         return dbCommand.assemblySql(dto.config, dto.synchronousTypeEnum, dto.funcName, dto.buildNifiFlow);
     }

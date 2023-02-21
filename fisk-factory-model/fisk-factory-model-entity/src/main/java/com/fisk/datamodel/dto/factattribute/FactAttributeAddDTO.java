@@ -18,6 +18,10 @@ public class FactAttributeAddDTO {
     public String dimensionKeyScript;
     public boolean isPublish;
     /**
+     * 覆盖脚本
+     */
+    public String coverScript;
+    /**
      * 发布备注
      */
     public String remark;

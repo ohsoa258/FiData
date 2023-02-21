@@ -35,7 +35,7 @@ public interface INifiStage {
      * @param dto
      * @return
      */
-    String overlayCodePreview(OverLoadCodeDTO dto);
+    Object overlayCodePreview(OverLoadCodeDTO dto);
 
 
 }

@@ -169,6 +169,7 @@ public class RoleServiceAssignmentImpl
             icon.icon = po.icon;
             dto.meta = icon;
             dto.description = po.description;
+            dto.sequenceNo = po.sequenceNo;
 
             if (collect.contains(po.id)) {
                 dto.authority = true;
@@ -200,6 +201,7 @@ public class RoleServiceAssignmentImpl
                 obj.meta = iconChildren;
                 obj.serveCode = item.getServeCode();
                 obj.description = item.description;
+                obj.sequenceNo = item.sequenceNo;
                 obj.path = "/" + item.serveUrl;
                 if (collect.contains(item.id)) {
                     obj.authority = true;
