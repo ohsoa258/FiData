@@ -19,6 +19,7 @@ import com.fisk.common.server.datasource.ExternalDataSourceDTO;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
+import com.fisk.datafactory.dto.components.TableUsageDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.*;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
@@ -768,7 +769,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
     @Override
     public List<ChannelDataDTO> getTableIds(NifiComponentsDTO dto) {
-
+        List<ChannelDataDTO> list = new ArrayList<>();
         ChannelDataEnum channelDataEnum = ChannelDataEnum.getName(Math.toIntExact(dto.id));
 
         switch (Objects.requireNonNull(channelDataEnum)) {
@@ -777,7 +778,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             case DATALAKE_FTP_TASK:
             case DATALAKE_API_TASK:
                 ResultEntity<List<ChannelDataDTO>> result = dataAccessClient.getTableId();
-                return result.data;
+                list = result.data;
+                break;
             // 数仓维度表任务
             case DW_DIMENSION_TASK:
                 // 数仓事实表任务
@@ -789,11 +791,56 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 // 分析模型宽表任务
             case OLAP_WIDETABLE_TASK:
                 ResultEntity<List<ChannelDataDTO>> resultEntity = dataModelClient.getTableId(dto);
-                return resultEntity.data;
+                list = resultEntity.data;
+                break;
             default:
                 break;
         }
-        return null;
+        //查出表被哪个管道哪个任务用
+        getTableUsage(list);
+        return list;
+    }
+
+    private void getTableUsage(List<ChannelDataDTO> list) {
+        if (CollectionUtils.isNotEmpty(list)) {
+            list.stream().filter(Objects::nonNull)
+                    .forEach(e -> {
+                        log.info("----------------------" + JSON.toJSONString(e));
+                        String type = e.type;
+                        if (CollectionUtils.isNotEmpty(e.list)) {
+                            e.list.stream().filter(Objects::nonNull)
+                                    .forEach(v -> {
+                                        //组装数据
+                                        if (v.id != 0L) {
+                                            List<NifiCustomWorkflowDetailPO> nifiCustomWorkflowDetailPos = this.query().eq("component_type", type).eq("table_id", v.id).list();
+                                            List<TableUsageDTO> tableUsageDtos = new ArrayList<>();
+                                            if (CollectionUtils.isNotEmpty(nifiCustomWorkflowDetailPos)) {
+                                                nifiCustomWorkflowDetailPos.stream().filter(Objects::nonNull)
+                                                        .forEach(a -> {
+                                                            String workflowId = a.workflowId;
+                                                            NifiCustomWorkflowPO nifiCustomWorkflowPo = nifiCustomWorkflowImpl.query().eq("workflow_id", workflowId).one();
+                                                            TableUsageDTO tableUsage = new TableUsageDTO();
+                                                            tableUsage.jobId = a.pid;
+                                                            NifiCustomWorkflowDetailPO one = this.query().eq("id", a.pid).one();
+                                                            log.info(a.pid + "==============================" + JSON.toJSONString(one));
+                                                            if (Objects.isNull(one)) {
+                                                                return;
+                                                            }
+                                                            tableUsage.jobName = one.componentName;
+                                                            tableUsage.pipelId = nifiCustomWorkflowPo.id;
+                                                            tableUsage.pipelName = nifiCustomWorkflowPo.workflowName;
+                                                            tableUsage.taskId = a.id;
+                                                            tableUsage.taskName = a.componentName;
+                                                            tableUsage.tableOrder = a.tableOrder;
+                                                            tableUsageDtos.add(JSON.parseObject(JSON.toJSONString(tableUsage), TableUsageDTO.class));
+                                                        });
+                                            }
+                                            v.tableUsages = JSON.parseArray(JSON.toJSONString(tableUsageDtos), TableUsageDTO.class);
+                                        }
+                                    });
+                        }
+                    });
+        }
     }
 
     @Override
