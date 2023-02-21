@@ -70,7 +70,7 @@ public class BuildSftpCopyListener implements ISftpCopyListener {
                 log.info("开始执行复制方法,连接配置:{}", JSON.toJSONString(map));
 
                 String sftp_source_type = map.get(TaskSettingEnum.sftp_source_type.getAttributeName());
-                if (StringUtils.isEmpty(sftp_source_type) || sftp_source_type.equals(SourceTypeEnum.SFTP.getValue())) {
+                if (StringUtils.isEmpty(sftp_source_type) || sftp_source_type.equals(String.valueOf(SourceTypeEnum.SFTP.getValue()))) {
                     SftpUtils.copyFile(
                             map.get(TaskSettingEnum.sftp_source_ip.getAttributeName()), 22,
                             map.get(TaskSettingEnum.sftp_source_account.getAttributeName()),
@@ -93,7 +93,7 @@ public class BuildSftpCopyListener implements ISftpCopyListener {
                             map.get(TaskSettingEnum.sftp_target_file_name.getAttributeName()),
                             map.get(TaskSettingEnum.sftp_source_file_match_wildcard.getAttributeName())
                     );
-                } else if (sftp_source_type.equals(SourceTypeEnum.WINDOWS.getValue())) {
+                } else if (sftp_source_type.equals(String.valueOf(SourceTypeEnum.WINDOWS.getValue()))) {
                     SftpUtils.copySmbFilesToSFTP(
                             map.get(TaskSettingEnum.sftp_source_account.getAttributeName()),
                             map.get(TaskSettingEnum.sftp_source_password.getAttributeName()),
@@ -113,6 +113,7 @@ public class BuildSftpCopyListener implements ISftpCopyListener {
                     );
                 } else {
                     log.info("【sftpCopyTask】错误的源类型");
+                    throw new FkException(ResultEnum.ERROR);
                 }
             }
             log.info("sftp复制任务执行完成");

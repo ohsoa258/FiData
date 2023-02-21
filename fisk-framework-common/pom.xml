@@ -241,6 +241,14 @@
         </dependency>
         <!-- windows共享目录读取 end -->
 
+        <!-- sql语法解析 start -->
+        <dependency>
+            <groupId>com.github.jsqlparser</groupId>
+            <artifactId>jsqlparser</artifactId>
+            <version>4.1</version>
+        </dependency>
+        <!-- sql语法解析 end -->
+
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
