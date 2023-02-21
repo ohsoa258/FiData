@@ -1226,6 +1226,8 @@ public class BusinessAreaImpl
 
         data.businessDTO = dto.tableBusiness;
 
+        data.modelPublishFieldDTOList = dto.modelPublishFieldDTOList;
+
         List<String> collect = dto.modelPublishFieldDTOList.stream().filter(e -> e.isPrimaryKey == 1).map(e -> e.fieldEnName).collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(collect)) {
             data.businessKeyAppend = String.join(",", collect);
@@ -1238,13 +1240,16 @@ public class BusinessAreaImpl
         OverLoadCodeDTO dataModel = new OverLoadCodeDTO();
         dataModel.buildNifiFlow = buildNifiFlow;
         dataModel.config = data;
-        dataModel.funcName = FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName();
+        dataModel.funcName = FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_OUTPUT.getName();
         dataModel.dataSourceType = DataSourceTypeEnum.SQLSERVER;
         dataModel.synchronousTypeEnum = SynchronousTypeEnum.PGTOPG;
 
-        return "test";
+        ResultEntity<Object> objectResultEntity = publishTaskClient.overlayCodePreview(dataModel);
+        if (objectResultEntity.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
 
-        //return publishTaskClient.overlayCodePreview(dataModel);
+        return objectResultEntity.data;
     }
 
     public DataSourceDTO getTargetDbInfo() {
