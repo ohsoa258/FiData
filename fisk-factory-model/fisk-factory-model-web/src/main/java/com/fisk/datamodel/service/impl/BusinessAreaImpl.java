@@ -72,6 +72,7 @@ import com.fisk.datamodel.service.impl.fact.BusinessProcessImpl;
 import com.fisk.datamodel.service.impl.fact.FactAttributeImpl;
 import com.fisk.datamodel.service.impl.fact.FactImpl;
 import com.fisk.datamodel.service.impl.widetable.WideTableImpl;
+import com.fisk.datamodel.utils.mysql.DataSourceConfigUtil;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.system.client.UserClient;
@@ -159,6 +160,8 @@ public class BusinessAreaImpl
     private WideTableImpl wideTableImpl;
     @Resource
     private RedisUtil redisUtil;
+    @Resource
+    DataSourceConfigUtil dataSourceConfigUtil;
 
     @Resource
     private DataManageClient dataManageClient;
@@ -1248,6 +1251,18 @@ public class BusinessAreaImpl
         if (objectResultEntity.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
+
+        /*Connection conn = null;
+        Statement stat = null;
+        try {
+            conn = dataSourceConfigUtil.getConnection();
+            stat = conn.createStatement();
+
+            stat.executeQuery(objectResultEntity.data.toString());
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }*/
 
         return objectResultEntity.data;
     }

@@ -181,7 +181,7 @@ public class WideTableImpl
             IBuildDataModelSqlCommand command = BuildDataModelHelper.getDBCommand(dwSource.conType);
             newSql = command.buildPageSql(newSql, pageSize);
 
-            conn = dataSourceConfigUtil.getStatement();
+            conn = dataSourceConfigUtil.getConnection();
             st = conn.createStatement();
 
             ResultSet rs = st.executeQuery(newSql);
@@ -231,7 +231,7 @@ public class WideTableImpl
             IBuildDataModelSqlCommand command = BuildDataModelHelper.getDBCommand(dwSource.conType);
             newSql = command.buildPageSql(newSql, pageSize);
 
-            conn = dataSourceConfigUtil.getStatement();
+            conn = dataSourceConfigUtil.getConnection();
             st = conn.createStatement();
 
             ResultSet rs = st.executeQuery(newSql);
@@ -347,7 +347,7 @@ public class WideTableImpl
             if (po == null) {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
-            conn = dataSourceConfigUtil.getStatement();
+            conn = dataSourceConfigUtil.getConnection();
             st = conn.createStatement();
             String delSql = "drop table " + po.name;
             boolean execute = st.execute(delSql);

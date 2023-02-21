@@ -143,7 +143,7 @@ public class DimensionImpl
         Connection conn = null;
         Statement stat = null;
         try {
-            conn = dataSourceConfigUtil.getStatement();
+            conn = dataSourceConfigUtil.getConnection();
             stat = conn.createStatement();
             if (!dto.dimensionTabName.equals(oldTimeTable)) {
                 //删除表
