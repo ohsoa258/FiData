@@ -1,5 +1,8 @@
 package com.fisk.datagovernance.service.impl.dataops;
 
+import com.alibaba.druid.sql.parser.SQLParserUtils;
+import com.alibaba.druid.sql.parser.SQLStatementParser;
+import com.alibaba.druid.sql.parser.Token;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -183,6 +186,9 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             if (postgreDTO == null) {
                 return ResultEntityBuild.buildData(ResultEnum.DATA_OPS_CONFIG_EXISTS, executeResultVO);
             }
+            if (StringUtils.isEmpty(dto.executeSql)){
+                return ResultEntityBuild.buildData(ResultEnum.PARAMTER_NOTNULL, executeResultVO);
+            }
             conn = DataSourceConManageImpl.getStatement(postgreDTO.getDataSourceTypeEnum(),
                     postgreDTO.getSqlUrl(), postgreDTO.getSqlUsername(), postgreDTO.getSqlPassword());
             st = conn.createStatement();
@@ -193,8 +199,10 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             主要的DDL动词：CREATE（创建）、DROP（删除）、ALTER（修改）、TRUNCATE（截断）、RENAME（重命名）
             DML主要指数据的增删查改: SELECT、DELETE、UPDATE、INSERT、CALL(执行存储过程)
            * */
-            net.sf.jsqlparser.statement.Statement statement = CCJSqlParserUtil.parse(dto.executeSql);
-            if (statement instanceof Select) {
+            String sql = dto.executeSql;
+            SQLStatementParser parser = SQLParserUtils.createSQLStatementParser(
+                    sql, postgreDTO.getDataSourceTypeEnum().getName().toLowerCase());
+            if (Token.SELECT.equals(parser.getExprParser().getLexer().token())) {
                 // SQL 语句是查询操作
                 String tableName = String.format("(%s) AS tb_page", dto.executeSql);
                 IBuildGovernanceSqlCommand dbCommand = BuildGovernanceHelper.getDBCommand(postgreDTO.getDataSourceTypeEnum());
