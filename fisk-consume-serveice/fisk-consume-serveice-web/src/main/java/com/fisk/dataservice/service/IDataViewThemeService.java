@@ -1,6 +1,7 @@
 package com.fisk.dataservice.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.dto.dataanalysisview.DataViewThemeDTO;
 import com.fisk.dataservice.entity.DataViewThemePO;
@@ -44,4 +45,12 @@ public interface IDataViewThemeService extends IService<DataViewThemePO> {
      * @return
      */
     ResultEnum updateViewTheme(DataViewThemeDTO dto);
+
+    /**
+     * 分页查询数据视图主题列表
+     * @param pageNum
+     * @param pageSize
+     * @return
+     */
+    PageDTO<DataViewThemeDTO> getViewThemeList(Integer pageNum, Integer pageSize);
 }

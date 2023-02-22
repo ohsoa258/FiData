@@ -4,7 +4,9 @@ package com.fisk.dataservice.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -212,6 +214,36 @@ public class DataViewThemeServiceImpl
             updateRelAccountList(relAccountList);
         }
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public PageDTO<DataViewThemeDTO> getViewThemeList(Integer pageNum, Integer pageSize) {
+        Page<DataViewThemePO> poPage = new Page<>(pageNum, pageSize);
+
+        // 查询数据
+        QueryWrapper<DataViewThemePO> qw = new QueryWrapper<>();
+        qw.eq("del_flag", DelFlagEnum.NORMAL_FLAG.getValue()).orderByDesc("create_time");
+        baseMapper.selectPage(poPage, qw);
+
+        List<DataViewThemePO> records = poPage.getRecords();
+        PageDTO<DataViewThemeDTO> pageDTO = new PageDTO<>();
+        if (!CollectionUtils.isEmpty(records)){
+            pageDTO.setTotal(poPage.getTotal());
+            pageDTO.setTotalPage(poPage.getPages());
+            List<DataViewThemeDTO> dtoRecords = DataViewMap.INSTANCES.poToDto(records);
+
+            // 查询关联账号
+            List<Integer> themeIds = dtoRecords.stream().map(DataViewThemeDTO::getId).collect(Collectors.toList());
+            QueryWrapper<DataViewAccountPO> aqw = new QueryWrapper<>();
+            aqw.in("view_theme_id", themeIds);
+            List<DataViewAccountPO> poList = dataViewAccountMapper.selectList(aqw);
+            for (DataViewThemeDTO parent : dtoRecords){
+                List<DataViewAccountPO> accList = poList.stream().filter(item -> item.getViewThemeId().equals(parent.getId())).collect(Collectors.toList());
+                parent.setRelAccountList(DataViewMap.INSTANCES.accountListPoToDto(accList));
+            }
+            pageDTO.setItems(dtoRecords);
+        }
+        return pageDTO;
     }
 
     private void verifyDataSource(Integer targetDbId){

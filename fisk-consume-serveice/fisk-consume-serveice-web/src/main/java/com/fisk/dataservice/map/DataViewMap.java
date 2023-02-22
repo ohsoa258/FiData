@@ -1,6 +1,8 @@
 package com.fisk.dataservice.map;
 
+import com.fisk.dataservice.dto.dataanalysisview.DataViewAccountDTO;
 import com.fisk.dataservice.dto.dataanalysisview.DataViewThemeDTO;
+import com.fisk.dataservice.entity.DataViewAccountPO;
 import com.fisk.dataservice.entity.DataViewThemePO;
 import com.fisk.dataservice.entity.FieldConfigPO;
 import com.fisk.dataservice.vo.api.FieldConfigVO;
@@ -29,4 +31,20 @@ public interface DataViewMap {
      * @return target
      */
     DataViewThemePO dtoToPo(DataViewThemeDTO dto);
+
+    /**
+     * po -> dto
+     *
+     * @param records
+     * @return
+     */
+    List<DataViewThemeDTO> poToDto(List<DataViewThemePO> records);
+
+    /**
+     * poList -> dtoList
+     *
+     * @param subList
+     * @return
+     */
+    List<DataViewAccountDTO> accountListPoToDto(List<DataViewAccountPO> subList);
 }

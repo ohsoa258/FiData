@@ -1,5 +1,6 @@
 package com.fisk.dataservice.controller;
 
+import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -53,5 +54,13 @@ public class DataAnalysisViewController {
         return ResultEntityBuild.build(dataViewThemeService.updateViewTheme(dto));
     }
 
+    @ApiOperation("分页获取视图主题列表")
+    @GetMapping("/getViewThemeList")
+    public ResultEntity<PageDTO<DataViewThemeDTO>> getViewThemeList(
+        @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+        @RequestParam(value = "pageSize", defaultValue = "2") Integer pageSize
+    ){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewThemeService.getViewThemeList(pageNum, pageSize));
+    }
 
 }
