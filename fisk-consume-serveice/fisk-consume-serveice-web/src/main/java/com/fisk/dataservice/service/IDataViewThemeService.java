@@ -19,7 +19,7 @@ import java.util.List;
 public interface IDataViewThemeService extends IService<DataViewThemePO> {
 
     /**
-     * 新增视图接口
+     * 新增视图主题接口
      * @param dto
      * @return
      */
@@ -30,4 +30,18 @@ public interface IDataViewThemeService extends IService<DataViewThemePO> {
      * @return
      */
     List<DataSourceDTO> getTargetDbList();
+
+    /**
+     * 删除数据视图主题
+     * @param viewThemeId
+     * @return
+     */
+    ResultEnum removeViewTheme(Integer viewThemeId);
+
+    /**
+     * 修改视图主题
+     * @param dto
+     * @return
+     */
+    ResultEnum updateViewTheme(DataViewThemeDTO dto);
 }

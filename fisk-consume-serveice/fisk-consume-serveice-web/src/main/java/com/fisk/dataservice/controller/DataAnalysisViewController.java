@@ -29,16 +29,28 @@ public class DataAnalysisViewController {
     @Resource
     private IDataViewThemeService dataViewThemeService;
 
+    @ApiOperation("删除视图主题")
+    @DeleteMapping("/removeViewTheme")
+    public ResultEntity<Object> removeViewTheme(@RequestParam("viewThemeId") Integer viewThemeId){
+        return ResultEntityBuild.build(dataViewThemeService.removeViewTheme(viewThemeId));
+    }
+
     @ApiOperation("获取目标数据源")
     @GetMapping("/getTargetDbList")
     public ResultEntity<Object> getTargetDbList(){
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataViewThemeService.getTargetDbList());
     }
 
-    @ApiOperation("新增视图")
+    @ApiOperation("新增视图主题")
     @PostMapping("/addViewTheme")
     public ResultEntity<Object> addViewTheme(@Validated @RequestBody DataViewThemeDTO dto){
         return ResultEntityBuild.build(dataViewThemeService.addViewTheme(dto));
+    }
+
+    @ApiOperation("修改视图主题")
+    @PutMapping("/updateViewTheme")
+    public ResultEntity<Object> updateViewTheme(@Validated @RequestBody DataViewThemeDTO dto){
+        return ResultEntityBuild.build(dataViewThemeService.updateViewTheme(dto));
     }
 
 

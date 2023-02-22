@@ -35,6 +35,9 @@ public class DataViewThemeDTO extends BaseDTO{
     @NotEmpty(message = "视图主题简称不能为空")
     private String themeAbbr ;
 
+    @ApiModelProperty(value = "视图主题描述")
+    private String themeDesc ;
+
     @ApiModelProperty(value= "是否用作schema名称", required = true)
     private Boolean whetherSchema ;
 
