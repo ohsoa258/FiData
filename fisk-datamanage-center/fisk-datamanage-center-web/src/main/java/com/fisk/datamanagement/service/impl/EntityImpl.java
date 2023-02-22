@@ -107,7 +107,10 @@ public class EntityImpl implements IEntity {
      */
     public List<EntityTreeDTO> getEntityList() {
 
-        return metadataEntity.getMetadataEntityTree();
+        List<EntityTreeDTO> metadataEntityTree = metadataEntity.getMetadataEntityTree();
+        String jsonString = JSONObject.toJSONString(metadataEntityTree);
+        redisTemplate.opsForValue().set(metaDataEntity, jsonString);
+        return metadataEntityTree;
         /*//try {
         ResultDataDTO<String> data = atlasClient.get(searchBasic + "?typeName=rdbms_instance");
         if (data.code != AtlasResultEnum.REQUEST_SUCCESS) {
@@ -505,7 +508,7 @@ public class EntityImpl implements IEntity {
     {
 
 
-        return new LineAgeDTO();
+        return metadataEntity.getMetaDataKinship(guid);
         /*try {
             ResultDataDTO<String> result = atlasClient.get(lineage + "/" + guid + "?depth=9");
             if (result.code != AtlasResultEnum.REQUEST_SUCCESS) {

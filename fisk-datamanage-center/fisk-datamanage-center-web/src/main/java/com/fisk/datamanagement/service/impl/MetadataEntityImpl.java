@@ -115,7 +115,7 @@ public class MetadataEntityImpl
     public List<EntityTreeDTO> getMetadataEntityTree() {
         List<EntityTreeDTO> list = new ArrayList<>();
 
-        List<MetadataEntityPO> poList = this.query().ne("description", stg).list();
+        List<MetadataEntityPO> poList = metadataEntityMapper.selectMetadataEntity(EntityTypeEnum.PROCESS.getValue());
         if (CollectionUtils.isEmpty(poList)) {
             return list;
         }
@@ -532,19 +532,22 @@ public class MetadataEntityImpl
         //新增process
         MetadataEntityPO po = new MetadataEntityPO();
         po.name = processName;
-        po.description = "process";
-        po.displayName = sql;
+        po.description = sql;
+        po.displayName = processName;
         po.typeId = EntityTypeEnum.PROCESS.getValue();
         po.qualifiedName = sql;
 
-        Integer id = metadataEntityMapper.insert(po);
+        Integer flat = metadataEntityMapper.insert(po);
+        if (flat == 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
 
         List<LineageMapRelationDTO> dtoList = new ArrayList<>();
         for (Long item : tableList) {
             LineageMapRelationDTO data = new LineageMapRelationDTO();
             data.fromEntityId = item.intValue();
             data.toEntityId = Integer.parseInt(atlasGuid);
-            data.metadataEntityId = id;
+            data.metadataEntityId = (int) po.id;
             dtoList.add(data);
         }
         //新增process关联关系
@@ -567,6 +570,7 @@ public class MetadataEntityImpl
         dto.guidEntityMap = new ArrayList<>();
 
         List<LineageMapRelationPO> poList = new ArrayList<>();
+        poList.addAll(list);
 
         for (LineageMapRelationPO po : list) {
             boolean flat = true;
@@ -576,6 +580,7 @@ public class MetadataEntityImpl
                 List<LineageMapRelationPO> list1 = lineageMapRelation.query().in("to_entity_id", ids).list();
                 if (CollectionUtils.isEmpty(list1)) {
                     flat = false;
+                    break;
                 }
                 poList.addAll(list1);
                 ids.clear();
@@ -583,49 +588,68 @@ public class MetadataEntityImpl
             }
         }
 
+        //获取process-toEntityId
+        List<LineageMapRelationPO> list2 = lineageMapRelation.query()
+                .eq("from_entity_id", guid)
+                .list();
+        if (!CollectionUtils.isEmpty(list2)) {
+            poList.addAll(list2);
+            for (LineageMapRelationPO po : list2) {
+                boolean flat = true;
+                List<Integer> ids = new ArrayList<>();
+                ids.add(po.toEntityId);
+                while (flat) {
+                    List<LineageMapRelationPO> list1 = lineageMapRelation.query().in("from_entity_id", ids).list();
+                    if (CollectionUtils.isEmpty(list1)) {
+                        flat = false;
+                        break;
+                    }
+                    poList.addAll(list1);
+                    ids.clear();
+                    ids.addAll(list1.stream().map(e -> e.fromEntityId).collect(Collectors.toList()));
+                }
+            }
+        }
+
+
         if (CollectionUtils.isEmpty(poList)) {
             return dto;
         }
 
+        List<Integer> idList = new ArrayList<>();
         for (LineageMapRelationPO po : poList) {
-            LineAgeDTO dto1 = addLine(po);
-            dto.relations.addAll(dto1.relations);
-            dto.guidEntityMap.addAll(dto1.guidEntityMap);
+            idList.add(po.metadataEntityId);
+            idList.add(po.fromEntityId);
+            idList.add(po.toEntityId);
+            addLine(po, dto);
         }
 
-        dto.guidEntityMap.stream().distinct();
-        dto.relations.stream().distinct();
+        List<Integer> collect = idList.stream().distinct().collect(Collectors.toList());
+        List<MetadataEntityPO> id = metadataEntity.query().in("id", collect).list();
+        for (MetadataEntityPO item : id) {
+            dto.guidEntityMap.add(addJsonObject(item));
+        }
 
         return dto;
     }
 
-    public LineAgeDTO addLine(LineageMapRelationPO po) {
+    public LineAgeDTO addLine(LineageMapRelationPO po, LineAgeDTO dataList) {
 
-        MetadataEntityPO processPo = metadataEntity.query().eq("id", po.metadataEntityId).one();
-        if (processPo == null) {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        Optional<LineAgeRelationsDTO> first1 = dataList.relations.stream()
+                .filter(e -> e.fromEntityId.equals(String.valueOf(po.fromEntityId)) && e.toEntityId.equals(String.valueOf(po.metadataEntityId)))
+                .findFirst();
+        if (!first1.isPresent()) {
+            dataList.relations.add(addRelation(po.fromEntityId, po.metadataEntityId));
         }
-        LineAgeDTO data = new LineAgeDTO();
-        data.guidEntityMap = new ArrayList<>();
-        data.relations = new ArrayList<>();
 
-        data.guidEntityMap.add(addJsonObject(processPo));
-        data.relations.add(addRelation(po.metadataEntityId, po.toEntityId));
-        data.relations.add(addRelation(po.fromEntityId, po.metadataEntityId));
-
-        MetadataEntityPO fromEntityPo = metadataEntity.query().eq("id", po.fromEntityId).one();
-        if (fromEntityPo == null) {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        Optional<LineAgeRelationsDTO> first = dataList.relations.stream()
+                .filter(e -> e.fromEntityId.equals(String.valueOf(po.metadataEntityId)) && e.toEntityId.equals(String.valueOf(po.toEntityId)))
+                .findFirst();
+        if (!first.isPresent()) {
+            dataList.relations.add(addRelation(po.metadataEntityId, po.toEntityId));
         }
-        data.guidEntityMap.add(addJsonObject(fromEntityPo));
 
-        MetadataEntityPO toEntityPo = metadataEntity.query().eq("id", po.toEntityId).one();
-        if (toEntityPo == null) {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
-        }
-        data.guidEntityMap.add(addJsonObject(toEntityPo));
-
-        return data;
+        return dataList;
     }
 
     public JSONObject addJsonObject(MetadataEntityPO po) {

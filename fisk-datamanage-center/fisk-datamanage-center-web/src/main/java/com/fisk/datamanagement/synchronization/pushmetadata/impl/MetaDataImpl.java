@@ -719,7 +719,7 @@ public class MetaDataImpl implements IMetaData {
     public String metaDataInstance(MetaDataInstanceAttributeDTO dto) {
         Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
         if (metadataEntity == null) {
-            return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_INSTANCE.getName(), "1").toString();
+            return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_INSTANCE.getName(), "-1").toString();
         }
 
         return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_INSTANCE.getName()).toString();
