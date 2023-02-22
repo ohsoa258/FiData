@@ -14,10 +14,13 @@ import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.datamanagement.dto.entity.EntityTreeDTO;
+import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
+import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
 import com.fisk.datamanagement.dto.lineagemaprelation.LineageMapRelationDTO;
-import com.fisk.datamanagement.dto.metadatalineagemap.MetadataLineageMapDTO;
+import com.fisk.datamanagement.entity.LineageMapRelationPO;
 import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
+import com.fisk.datamanagement.mapper.LineageMapRelationMapper;
 import com.fisk.datamanagement.mapper.MetadataEntityMapper;
 import com.fisk.datamanagement.service.IMetadataEntity;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
@@ -52,9 +55,13 @@ public class MetadataEntityImpl
     MetadataLineageMapImpl metadataLineageMap;
     @Resource
     LineageMapRelationImpl lineageMapRelation;
+    @Resource
+    MetadataEntityImpl metadataEntity;
 
     @Resource
     MetadataEntityMapper metadataEntityMapper;
+    @Resource
+    LineageMapRelationMapper lineageMapRelationMapper;
 
     @Resource
     UserClient userClient;
@@ -372,7 +379,7 @@ public class MetadataEntityImpl
         //获取dw表信息
         ResultEntity<Object> result;
 
-        List<Integer> fromEntityIdList = new ArrayList<>();
+        List<Long> fromEntityIdList = new ArrayList<>();
 
         Optional<SourceTableDTO> first = null;
 
@@ -418,11 +425,7 @@ public class MetadataEntityImpl
             String stgQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname + "_" + first1.get().id + stg_prefix;
             synchronizationStgOdsKinShip(tableGuid, sqlScript, stgQualifiedName);
         }
-        //转类型
-        List<Long> longList = fromEntityIdList.stream()
-                .map(Integer::longValue)
-                .collect(Collectors.toList());
-        addProcess(sqlScript, longList, stgTableGuid, "抽取");
+        addProcess(sqlScript, fromEntityIdList, stgTableGuid, "抽取");
 
     }
 
@@ -474,7 +477,7 @@ public class MetadataEntityImpl
         return first.get();
     }
 
-    public List<Integer> getOdsTableList(List<String> tableNameList, String dbQualifiedName) {
+    public List<Long> getOdsTableList(List<String> tableNameList, String dbQualifiedName) {
 
         List<String> tableQualifiedNameList = tableNameList.stream().map(e -> dbQualifiedName + "_" + e).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(tableQualifiedNameList)) {
@@ -527,23 +530,126 @@ public class MetadataEntityImpl
         sql = sql.replace("\n", "").toLowerCase();
 
         //新增process
-        MetadataLineageMapDTO dto = new MetadataLineageMapDTO();
-        dto.displayText = processName;
-        dto.description = sql;
-        dto.description = EntityTypeEnum.PROCESS.getName();
+        MetadataEntityPO po = new MetadataEntityPO();
+        po.name = processName;
+        po.description = "process";
+        po.displayName = sql;
+        po.typeId = EntityTypeEnum.PROCESS.getValue();
+        po.qualifiedName = sql;
 
-        Long id = metadataLineageMap.addMetadataLineageMap(dto);
+        Integer id = metadataEntityMapper.insert(po);
 
         List<LineageMapRelationDTO> dtoList = new ArrayList<>();
         for (Long item : tableList) {
             LineageMapRelationDTO data = new LineageMapRelationDTO();
             data.fromEntityId = item.intValue();
             data.toEntityId = Integer.parseInt(atlasGuid);
-            data.metadataLineageMapId = id.intValue();
+            data.metadataEntityId = id;
             dtoList.add(data);
         }
         //新增process关联关系
         lineageMapRelation.addLineageMapRelation(dtoList);
+    }
+
+
+    public LineAgeDTO getMetaDataKinship(String guid) {
+
+        //获取process-fromEntityId
+        List<LineageMapRelationPO> list = lineageMapRelation.query()
+                .eq("to_entity_id", guid)
+                .list();
+        if (CollectionUtils.isEmpty(list)) {
+            return new LineAgeDTO();
+        }
+
+        LineAgeDTO dto = new LineAgeDTO();
+        dto.relations = new ArrayList<>();
+        dto.guidEntityMap = new ArrayList<>();
+
+        List<LineageMapRelationPO> poList = new ArrayList<>();
+
+        for (LineageMapRelationPO po : list) {
+            boolean flat = true;
+            List<Integer> ids = new ArrayList<>();
+            ids.add(po.fromEntityId);
+            while (flat) {
+                List<LineageMapRelationPO> list1 = lineageMapRelation.query().in("to_entity_id", ids).list();
+                if (CollectionUtils.isEmpty(list1)) {
+                    flat = false;
+                }
+                poList.addAll(list1);
+                ids.clear();
+                ids.addAll(list1.stream().map(e -> e.fromEntityId).collect(Collectors.toList()));
+            }
+        }
+
+        if (CollectionUtils.isEmpty(poList)) {
+            return dto;
+        }
+
+        for (LineageMapRelationPO po : poList) {
+            LineAgeDTO dto1 = addLine(po);
+            dto.relations.addAll(dto1.relations);
+            dto.guidEntityMap.addAll(dto1.guidEntityMap);
+        }
+
+        dto.guidEntityMap.stream().distinct();
+        dto.relations.stream().distinct();
+
+        return dto;
+    }
+
+    public LineAgeDTO addLine(LineageMapRelationPO po) {
+
+        MetadataEntityPO processPo = metadataEntity.query().eq("id", po.metadataEntityId).one();
+        if (processPo == null) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        LineAgeDTO data = new LineAgeDTO();
+        data.guidEntityMap = new ArrayList<>();
+        data.relations = new ArrayList<>();
+
+        data.guidEntityMap.add(addJsonObject(processPo));
+        data.relations.add(addRelation(po.metadataEntityId, po.toEntityId));
+        data.relations.add(addRelation(po.fromEntityId, po.metadataEntityId));
+
+        MetadataEntityPO fromEntityPo = metadataEntity.query().eq("id", po.fromEntityId).one();
+        if (fromEntityPo == null) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        data.guidEntityMap.add(addJsonObject(fromEntityPo));
+
+        MetadataEntityPO toEntityPo = metadataEntity.query().eq("id", po.toEntityId).one();
+        if (toEntityPo == null) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        data.guidEntityMap.add(addJsonObject(toEntityPo));
+
+        return data;
+    }
+
+    public JSONObject addJsonObject(MetadataEntityPO po) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("guid", po.id);
+        jsonObject.put("typeName", EntityTypeEnum.getValue(po.typeId).getName());
+        jsonObject.put("status", "ACTIVE");
+        jsonObject.put("displayText", po.displayName);
+
+        JSONObject attribute = new JSONObject();
+        attribute.put("description", po.description);
+        attribute.put("name", po.name);
+        attribute.put("qualifiedName", po.displayName);
+        jsonObject.put("attributes", attribute);
+
+        return jsonObject;
+    }
+
+    public LineAgeRelationsDTO addRelation(Integer fromEntityId, Integer toEntityId) {
+        LineAgeRelationsDTO line = new LineAgeRelationsDTO();
+        line.fromEntityId = String.valueOf(fromEntityId);
+        line.toEntityId = String.valueOf(toEntityId);
+
+        return line;
     }
 
 

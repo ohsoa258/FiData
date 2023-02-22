@@ -78,8 +78,6 @@ import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -349,8 +347,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         //list.get(0).description = "stg";
         list.get(0).dbList.get(0).tableList = tableList;
 
+        log.info("维度表构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+        dataManageClient.consumeMetaData(list);
 
-        //修改元数据
+        /*//修改元数据
         ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
         cachedThreadPool.execute(new Runnable() {
             @Override
@@ -363,7 +363,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     log.error("【dataManageClient.MetaData()】方法报错,ex", e);
                 }
             }
-        });
+        });*/
 
         /*try {
             MetaDataAttributeDTO data = new MetaDataAttributeDTO();
@@ -799,7 +799,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      * @param list
      */
     public void consumeMetaData(List<MetaDataInstanceAttributeDTO> list) {
-        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+        log.info("构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
+        dataManageClient.consumeMetaData(list);
+        /*ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
         cachedThreadPool.execute(new Runnable() {
             @Override
             public void run() {
@@ -811,7 +813,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
                 }
             }
-        });
+        });*/
     }
 
     /**

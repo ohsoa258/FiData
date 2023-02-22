@@ -29,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -504,15 +503,17 @@ public class EntityImpl implements IEntity {
     @Override
     public LineAgeDTO getMetaDataKinship(String guid)
     {
-        try {
+
+
+        return new LineAgeDTO();
+        /*try {
+            ResultDataDTO<String> result = atlasClient.get(lineage + "/" + guid + "?depth=9");
+            if (result.code != AtlasResultEnum.REQUEST_SUCCESS) {
+                throw new FkException(ResultEnum.BAD_REQUEST);
+            }
             LineAgeDTO dto=new LineAgeDTO();
             dto.relations=new ArrayList<>();
             dto.guidEntityMap=new ArrayList<>();
-            ResultDataDTO<String> result = atlasClient.get(lineage + "/" + guid + "?depth=9");
-            if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
-            {
-                throw new FkException(ResultEnum.BAD_REQUEST);
-            }
             //解析数据
             JSONObject jsonObj = JSON.parseObject(result.data);
             //判断是否存在血缘关系
@@ -557,7 +558,7 @@ public class EntityImpl implements IEntity {
         {
             log.error("getMetaDataKinship ex:"+e);
             throw new FkException(ResultEnum.SQL_ANALYSIS);
-        }
+        }*/
     }
 
     public LineAgeDTO getInPutData(String guid,

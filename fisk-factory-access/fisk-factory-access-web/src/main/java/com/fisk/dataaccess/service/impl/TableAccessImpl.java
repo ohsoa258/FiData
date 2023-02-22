@@ -2171,11 +2171,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 && !dto.driveType.getName().equals(DbTypeEnum.ftp.getName())
                 && !dto.driveType.getName().equals(DbTypeEnum.sftp.getName())) {
             String tableName = TableNameGenerateUtils.buildTableName(tableAccessPo.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
-            Map<String, String> converSql = publishTaskClient.converSql(tableName, tableAccessPo.sqlScript, dataSourcePo.driveType, null).data;
+            //Map<String, String> converSql = publishTaskClient.converSql(tableName, tableAccessPo.sqlScript, dataSourcePo.driveType, null).data;
             //String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             dto.selectSql = tableAccessPo.sqlScript;
-            dto.queryStartTime = converSql.get(SystemVariableTypeEnum.START_TIME.getValue());
-            dto.queryEndTime = converSql.get(SystemVariableTypeEnum.END_TIME.getValue());
+            //dto.queryStartTime = converSql.get(SystemVariableTypeEnum.START_TIME.getValue());
+            //dto.queryEndTime = converSql.get(SystemVariableTypeEnum.END_TIME.getValue());
         }
         //        dto.selectSql = tableAccessPo.sqlScript;
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
