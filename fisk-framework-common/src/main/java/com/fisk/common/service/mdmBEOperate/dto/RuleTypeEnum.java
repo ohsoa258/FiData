@@ -1,4 +1,4 @@
-package com.fisk.mdm.enums;
+package com.fisk.common.service.mdmBEOperate.dto;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fisk.common.core.enums.BaseEnum;

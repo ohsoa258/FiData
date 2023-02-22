@@ -3,8 +3,8 @@ package com.fisk.mdm.utlis;
 import com.fisk.common.core.mapstruct.EnumTypeConversionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.mdmBEOperate.dto.RuleTypeEnum;
 import com.fisk.mdm.enums.*;
-import org.apache.xmlbeans.impl.xb.xsdschema.Public;
 import org.springframework.stereotype.Component;
 
 /**

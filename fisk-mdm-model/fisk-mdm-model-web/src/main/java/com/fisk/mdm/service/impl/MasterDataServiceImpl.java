@@ -21,6 +21,7 @@ import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
 import com.fisk.common.service.pageFilter.dto.OperatorVO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
+import com.fisk.common.service.mdmBEOperate.dto.CodeRuleDTO;
 import com.fisk.mdm.dto.masterdata.*;
 import com.fisk.mdm.dto.stgbatch.StgBatchDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupDetailsDTO;
@@ -33,6 +34,7 @@ import com.fisk.mdm.map.ModelMap;
 import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.mapper.ModelMapper;
+import com.fisk.mdm.service.CodeRuleService;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.IMasterDataService;
 import com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils;
@@ -40,6 +42,7 @@ import com.fisk.mdm.utlis.DataSynchronizationUtils;
 import com.fisk.mdm.utlis.MasterDataFormatVerifyUtils;
 import com.fisk.mdm.vo.attribute.AttributeColumnVO;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupDropDownVO;
+import com.fisk.mdm.vo.codeRule.CodeRuleVO;
 import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberListVO;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
@@ -100,6 +103,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
     AttributeGroupServiceImpl attributeGroupService;
     @Resource
     ViwGroupServiceImpl viwGroupService;
+    @Resource
+    CodeRuleService  codeRuleService;
 
     @Resource
     AttributeMapper attributeMapper;
@@ -703,6 +708,12 @@ public class MasterDataServiceImpl implements IMasterDataService {
         //成功条数、错误条数
         AtomicInteger successCount = new AtomicInteger(0);
         AtomicInteger errorCount = new AtomicInteger(0);
+        //获取code编码规则
+        List<CodeRuleVO> codeRuleVOS= codeRuleService.getDataByEntityId(dto.getEntityId());
+        List<CodeRuleDTO> codeRuleDTO=null;
+        if (codeRuleVOS.isEmpty()){
+            codeRuleDTO= codeRuleVOS.get(0).getGroupDetailsList();
+        }
         //code生成规则
         IBuildCodeCommand buildCodeCommand = BuildCodeHelper.getCodeCommand();
         //用户id
