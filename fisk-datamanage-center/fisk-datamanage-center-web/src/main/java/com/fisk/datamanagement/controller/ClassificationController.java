@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
+import com.fisk.datamanagement.dto.classification.ClassificationAttributeDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDelAssociatedEntityDTO;
 import com.fisk.datamanagement.service.IClassification;
@@ -89,9 +90,20 @@ public class ClassificationController {
     }
 
     @ApiOperation("业务分类下新增属性")
-    @GetMapping("/addClassificationAttribute")
-    public ResultEntity<Object> addClassificationAttribute(String classification) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addClassificationAttribute(classification));
+    @PostMapping("/addClassificationAttribute")
+    public ResultEntity<Object> addClassificationAttribute(@Validated @RequestBody ClassificationAttributeDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addClassificationAttribute(dto));
     }
 
+    @ApiOperation("查询业务分类属性类型列表")
+    @GetMapping("/getClassificationAttributeList")
+    public ResultEntity<Object> getClassificationAttributeList(@RequestParam(value = "guid", defaultValue = "") String guid) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getClassificationAttributeList(guid));
+    }
+
+    @ApiOperation("删除业务分类属性类型")
+    @GetMapping("/delClassificationAttribute")
+    public ResultEntity<Object> delClassificationAttribute(@RequestParam(value = "id", defaultValue = "0") Integer id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delClassificationAttribute(id));
+    }
 }

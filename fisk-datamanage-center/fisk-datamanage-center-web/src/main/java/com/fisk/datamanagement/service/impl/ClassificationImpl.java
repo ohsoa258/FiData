@@ -13,15 +13,13 @@ import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.datamanagement.dto.businessclassification.BusinessClassificationTreeDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
-import com.fisk.datamanagement.entity.BusinessClassificationPO;
-import com.fisk.datamanagement.entity.MetadataClassificationMapPO;
+import com.fisk.datamanagement.entity.*;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.map.ClassificationMap;
-import com.fisk.datamanagement.mapper.BusinessClassificationMapper;
-import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
-import com.fisk.datamanagement.mapper.MetaDataClassificationMapMapper;
+import com.fisk.datamanagement.mapper.*;
 import com.fisk.datamanagement.service.IClassification;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
+import com.fisk.datamanagement.vo.AttributeTypeVO;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +32,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -53,6 +52,11 @@ public class ClassificationImpl
     GlossaryLibraryMapper glossaryLibraryMapper;
     @Resource
     MetaDataClassificationMapMapper metaDataClassificationMapMapper;
+
+    @Resource
+    AttributeTypeMapper attributeTypeMapper;
+    @Resource
+    ClassificationMapper classificationMapper;
 
     @Resource
     AtlasClient atlasClient;
@@ -400,6 +404,80 @@ public class ClassificationImpl
             deleteClassification(item.name);
         }
 
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum addClassificationAttribute(ClassificationAttributeDTO dto) {
+        // 查询业务分类是否存在
+        BusinessClassificationPO model = businessClassificationMapper.selectById(dto.getGuid());
+        if(Objects.isNull(model)){
+            throw new FkException(ResultEnum.ERROR, "业务分类不存在");
+        }
+
+        // 根据属性类型查询属性id
+        QueryWrapper<AttributeTypePO> qw = new QueryWrapper<>();
+        qw.eq("name", dto.getTypeName());
+        AttributeTypePO typePo = attributeTypeMapper.selectOne(qw);
+        if (Objects.isNull(typePo)){
+            throw new FkException(ResultEnum.ERROR, "属性类型不存在");
+        }
+
+        // 查询是否重复
+        QueryWrapper<ClassificationPO> cqw = new QueryWrapper<>();
+        qw.eq("name", dto.getTypeName()).eq("attribute_type_id", typePo).eq("business_classification_id", dto.getGuid());
+        ClassificationPO classificationPO = classificationMapper.selectOne(cqw);
+        if (!Objects.isNull(classificationPO)){
+            throw new FkException(ResultEnum.ERROR, "属性已存在");
+        }
+
+        // 添加业务分类属性
+        ClassificationPO po = new ClassificationPO();
+        po.setAttributeTypeId(typePo.getTypeId());
+        po.setAttributeName(dto.getName());
+        po.setBusinessClassificationId(Integer.parseInt(dto.getGuid()));
+
+        int insert = classificationMapper.insert(po);
+        if (insert <= 0){
+            throw new FkException(ResultEnum.ERROR, "添加属性失败");
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public List<AttributeTypeVO> getClassificationAttributeList(String guid) {
+        // 查询业务分类属性列表
+        QueryWrapper<ClassificationPO> qw = new QueryWrapper<>();
+        qw.eq("business_classification_id", guid);
+        List<ClassificationPO> classificationPOList = classificationMapper.selectList(qw);
+        if (CollectionUtils.isEmpty(classificationPOList)){
+            return new ArrayList<>();
+        }
+
+        List<AttributeTypeVO> list = new ArrayList<>();
+        for (ClassificationPO model : classificationPOList){
+            AttributeTypeVO vo = new AttributeTypeVO();
+            vo.setGuid(guid);
+            vo.setName(model.getAttributeName());
+            vo.setTypeId(model.getAttributeTypeId());
+            vo.setTypeName(attributeTypeMapper.selectTypeName(model.getAttributeTypeId()));
+            list.add(vo);
+        }
+        return list;
+    }
+
+    @Override
+    public ResultEnum delClassificationAttribute(Integer id) {
+        // 查询是否存在
+        ClassificationPO model = classificationMapper.selectById(id);
+        if (Objects.isNull(model)){
+            throw new FkException(ResultEnum.ERROR, "数据不存在");
+        }
+
+        int i = classificationMapper.deleteById(id);
+        if (i <= 0){
+            throw new FkException(ResultEnum.ERROR, "删除失败");
+        }
         return ResultEnum.SUCCESS;
     }
 
