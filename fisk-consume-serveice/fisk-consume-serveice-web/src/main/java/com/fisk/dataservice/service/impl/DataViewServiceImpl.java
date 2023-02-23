@@ -15,6 +15,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
+import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.dataservice.dto.dataanalysisview.DataViewDTO;
 import com.fisk.dataservice.dto.dataanalysisview.DataSourceViewDTO;
@@ -123,6 +124,44 @@ public class DataViewServiceImpl
             log.error("数据视图主题获取redis中数据表结构失败,", e);
         }
         return dataSourceViewDTO;
+    }
+
+    @Override
+    public List<TableStructureDTO> getSourceColumnMeta(Integer viewThemeId, String tableName, Integer queryType) {
+        if (viewThemeId == 0 || StringUtils.isEmpty(tableName)){
+            throw new FkException(ResultEnum.DA_VIEWTHEMEID_TABLENAME_ERROR);
+        }
+        // 查询targetDbId
+        Integer targetDbId = dataViewThemeMapper.selectDbId(viewThemeId);
+        if (Objects.isNull(targetDbId)){
+            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
+        }
+        ResultEntity<List<DataSourceDTO>> result;
+        try{
+            result = userClient.getAllFiDataDataSource();
+            if (result.getCode() != ResultEnum.SUCCESS.getCode()){
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+        }catch (Exception e){
+            log.error("数据分析视图调用userClient失败", e);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+
+        List<DataSourceDTO> dsList = result.getData();
+        DataSourceDTO dsDto = dsList.stream().filter(item -> item.id.equals(targetDbId)).findFirst().orElse(null);
+        log.info("数据主题视图获取表字段信息的数据源，[{}]", JSON.toJSONString(dsDto));
+        if (dsDto == null) {
+            log.error(viewThemeId + ":" + JSON.toJSONString(ResultEnum.DATASOURCE_INFORMATION_ISNULL));
+            return null;
+        }
+
+        if (DataSourceTypeEnum.SQLSERVER.getName().equalsIgnoreCase(dsDto.conType.toString())) {
+            SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
+            Connection conn = DbConnectionHelper.connection(dsDto.conStr, dsDto.conAccount,
+                    dsDto.conPassword, DataSourceTypeEnum.SQLSERVER);
+            return sqlServerPlusUtils.getViewField(conn, tableName);
+        }
+        return null;
     }
 
     private void setDataSourceMeta(Integer viewThemeId, DataSourceDTO dsDTO){

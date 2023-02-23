@@ -2,9 +2,12 @@ package com.fisk.dataservice.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.baseObject.dto.PageDTO;
+import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataservice.dto.dataanalysisview.DataViewDTO;
 import com.fisk.dataservice.dto.dataanalysisview.DataSourceViewDTO;
 import com.fisk.dataservice.entity.DataViewPO;
+
+import java.util.List;
 
 /**
  * @ClassName:
@@ -30,4 +33,13 @@ public interface IDataViewService extends IService<DataViewPO> {
      * @return
      */
     DataSourceViewDTO getDataSourceMeta(Integer viewThemeId);
+
+    /**
+     * 查询数据库表中的字段结构信息
+     * @param viewThemeId
+     * @param tableName
+     * @param queryType
+     * @return
+     */
+    List<TableStructureDTO> getSourceColumnMeta(Integer viewThemeId, String tableName, Integer queryType);
 }
