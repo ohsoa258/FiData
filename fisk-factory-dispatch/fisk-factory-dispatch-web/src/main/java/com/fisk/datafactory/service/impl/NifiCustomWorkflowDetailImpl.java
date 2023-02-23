@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.MqConstants;
+import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.enums.task.TaskTypeEnum;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
@@ -812,6 +814,30 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                                     .forEach(v -> {
                                         //组装数据
                                         if (v.id != 0L) {
+
+                                            ChannelDataEnum channelDataEnum = ChannelDataEnum.getValue(type);
+                                            switch (Objects.requireNonNull(channelDataEnum)) {
+                                                // 数据湖非实时物理表任务
+                                                case DATALAKE_TASK:
+                                                case DATALAKE_FTP_TASK:
+                                                case DATALAKE_API_TASK:
+                                                    v.setSourceId(DataSourceConfigEnum.DMP_ODS.getValue());
+                                                    v.setTableBusinessType(TableBusinessTypeEnum.NONE.getValue());
+                                                    break;
+                                                // 数仓维度表任务
+                                                case DW_DIMENSION_TASK:
+                                                    v.setSourceId(DataSourceConfigEnum.DMP_DW.getValue());
+                                                    v.setTableBusinessType(TableBusinessTypeEnum.DW_DIMENSION.getValue());
+                                                    break;
+                                                // 数仓事实表任务
+                                                case DW_FACT_TASK:
+                                                    v.setSourceId(DataSourceConfigEnum.DMP_DW.getValue());
+                                                    v.setTableBusinessType(TableBusinessTypeEnum.DW_FACT.getValue());
+                                                    break;
+                                                default:
+                                                    break;
+                                            }
+
                                             List<NifiCustomWorkflowDetailPO> nifiCustomWorkflowDetailPos = this.query().eq("component_type", type).eq("table_id", v.id).list();
                                             List<TableUsageDTO> tableUsageDtos = new ArrayList<>();
                                             if (CollectionUtils.isNotEmpty(nifiCustomWorkflowDetailPos)) {
