@@ -51,9 +51,10 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                 sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
             } else if (l.fieldType.contains("TEXT")) {
                 sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
-            }else if (l.fieldType.toUpperCase().equals("DATE")){
+                stgSql.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + ",");
+            } else if (l.fieldType.toUpperCase().equals("DATE")) {
                 sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
-            } else if (l.fieldType.toUpperCase().equals("TIME")){
+            } else if (l.fieldType.toUpperCase().equals("TIME")) {
                 sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
             } else if (l.fieldType.contains("TIMESTAMP")) {
                 sqlFileds.append("[" + l.fieldName + "] datetime ");
@@ -61,7 +62,9 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                 sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + "(" + l.fieldLength + ") ");
             }
             // 修改stg表,字段类型
-            stgSql.append("[" + l.fieldName + "] nvarchar(4000),");
+            if (!l.fieldType.contains("TEXT")) {
+                stgSql.append("[" + l.fieldName + "] nvarchar(4000),");
+            }
             if (l.isPrimarykey == 1) {
                 pksql.append("" + l.fieldName + ",");
                 sqlFileds.append("not null ,");
@@ -325,7 +328,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         fieldList.forEach((l) -> {
             if (l.fieldType.contains("INT") || l.fieldType.contains("TEXT")) {
                 sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(",");
-                stgSqlFileds.append("[").append(l.fieldEnName).append("] nvarchar(4000),");
+                stgSqlFileds.append("[").append(l.fieldEnName).append("] ntext,");
             } else if (l.fieldType.toLowerCase().contains("numeric") || l.fieldType.toLowerCase().contains("float")) {
                 sqlFileds.append("[").append(l.fieldEnName).append("] float ,");
                 stgSqlFileds.append("[").append(l.fieldEnName).append("] nvarchar(4000),");
