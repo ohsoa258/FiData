@@ -178,14 +178,14 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
             case INT2:
             case INT4:
             case BIT:
-            case FLOAT4:
-            case FLOAT8:
                 data[0] = SqlServerTypeEnum.INT.getName();
                 break;
             case INT8:
                 data[0] = SqlServerTypeEnum.BIGINT.getName();
                 break;
             case NUMERIC:
+            case FLOAT4:
+            case FLOAT8:
             case DECIMAL:
                 data[0] = SqlServerTypeEnum.FLOAT.getName();
                 break;
