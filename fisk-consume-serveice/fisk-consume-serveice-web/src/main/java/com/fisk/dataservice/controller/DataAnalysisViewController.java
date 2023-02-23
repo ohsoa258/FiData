@@ -95,9 +95,17 @@ public class DataAnalysisViewController {
     public ResultEntity<Object> getSourceColumnMeta(
             @RequestParam(value = "viewThemeId", defaultValue = "0") Integer viewThemeId,
             @RequestParam(value = "tableName", defaultValue = "") String tableName,
-            @RequestParam(value = "queryType", defaultValue = "1") Integer queryType
-            ){
+            @RequestParam(value = "queryType", defaultValue = "1") Integer queryType){
         return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.getSourceColumnMeta(viewThemeId, tableName, queryType));
+    }
+
+    @ApiOperation("获取数据源表字段结构信息")
+    @PostMapping("/getDataAccessQueryList")
+    public ResultEntity<Object> getDataAccessQueryList(
+            @RequestParam(value = "viewThemeId", defaultValue = "0") Integer viewThemeId,
+            @RequestParam(value = "tableName", defaultValue = "") String tableName,
+            @RequestParam(value = "queryType", defaultValue = "1") Integer queryType){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.getDataAccessQueryList(viewThemeId, tableName, queryType));
     }
 
 
