@@ -3,10 +3,8 @@ package com.fisk.datamanagement.service;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.datamanagement.dto.businessclassification.BusinessClassificationTreeDTO;
-import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
-import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
-import com.fisk.datamanagement.dto.classification.ClassificationDelAssociatedEntityDTO;
-import com.fisk.datamanagement.dto.classification.ClassificationTreeDTO;
+import com.fisk.datamanagement.dto.classification.*;
+import com.fisk.datamanagement.vo.AttributeTypeVO;
 
 import java.util.List;
 
@@ -88,4 +86,14 @@ public interface IClassification {
      */
     ResultEnum delClassificationEntity(String classification);
 
+    /**
+     * 新增业务分类属性
+     * @param dto
+     * @return
+     */
+    ResultEnum addClassificationAttribute(ClassificationAttributeDTO dto);
+
+    List<AttributeTypeVO> getClassificationAttributeList(String guid);
+
+    ResultEnum delClassificationAttribute(Integer id);
 }
