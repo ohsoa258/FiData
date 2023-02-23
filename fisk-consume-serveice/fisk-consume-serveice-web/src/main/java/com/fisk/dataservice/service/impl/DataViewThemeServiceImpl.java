@@ -182,7 +182,7 @@ public class DataViewThemeServiceImpl
         }
 
         //删除视图主题关联账号
-        List<Integer> accountIds = dataViewAccountMapper.selectIdListByViewThemeId(viewThemeId);
+        List<Integer> accountIds = dataViewAccountMapper.selectIdListByViewThemeId(viewThemeId, DelFlagEnum.NORMAL_FLAG.getValue());
         if (!CollectionUtils.isEmpty(accountIds)){
             int flag = dataViewAccountMapper.deleteBatchIds(accountIds);
             if (flag <= 0){
