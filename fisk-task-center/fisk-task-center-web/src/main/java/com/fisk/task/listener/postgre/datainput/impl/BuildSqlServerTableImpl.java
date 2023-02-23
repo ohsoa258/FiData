@@ -99,6 +99,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         if (StringUtils.isNotEmpty(havePk)) {
             // stg_sql1 += ";alter table " + odsTableName + " add constraint " + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "_pkey primary key(" + havePk.substring(0, havePk.length() - 1) + ")";
         }
+        stg_sql1 = "if not exists (select * from sysobjects where id = object_id('" + odsTableName + "') and OBJECTPROPERTY(id, 'IsUserTable') = 1) " + stg_sql1;
         sqlList.add(stg_sql1);
         sqlList.add(stg_sql2);
         return sqlList;
