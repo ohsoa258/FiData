@@ -88,4 +88,10 @@ public class ClassificationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delClassificationEntity(classification));
     }
 
+    @ApiOperation("业务分类下新增属性")
+    @GetMapping("/addClassificationAttribute")
+    public ResultEntity<Object> addClassificationAttribute(String classification) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addClassificationAttribute(classification));
+    }
+
 }
