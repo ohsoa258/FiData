@@ -5,17 +5,14 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
-import com.fisk.datamanagement.dto.businessclassification.BusinessClassificationDTO;
 import com.fisk.datamanagement.dto.businessclassification.BusinessClassificationTreeDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
-import com.fisk.datamanagement.dto.glossary.GlossaryLibraryDTO;
-import com.fisk.datamanagement.dto.metadatamapatlas.MetaDataClassificationMapDTO;
-import com.fisk.datamanagement.dto.metadatamapatlas.MetaDataGlossaryMapDTO;
 import com.fisk.datamanagement.entity.BusinessClassificationPO;
 import com.fisk.datamanagement.entity.MetadataClassificationMapPO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
@@ -23,7 +20,6 @@ import com.fisk.datamanagement.map.ClassificationMap;
 import com.fisk.datamanagement.mapper.BusinessClassificationMapper;
 import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
 import com.fisk.datamanagement.mapper.MetaDataClassificationMapMapper;
-import com.fisk.datamanagement.mapper.MetaDataGlossaryMapMapper;
 import com.fisk.datamanagement.service.IClassification;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
@@ -35,7 +31,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -43,7 +41,9 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class ClassificationImpl implements IClassification {
+public class ClassificationImpl
+        extends ServiceImpl<BusinessClassificationMapper, BusinessClassificationPO>
+        implements IClassification {
 
     @Resource
     BusinessClassificationMapper businessClassificationMapper;
@@ -262,7 +262,7 @@ public class ClassificationImpl implements IClassification {
             }
 
             // 设置创建者信息
-            model.setCreateUser(userHelper.getLoginUserInfo().id.toString());
+            //model.setCreateUser(userHelper.getLoginUserInfo().id.toString());
             int flag = businessClassificationMapper.insert(model);
             if (flag < 0){
                 throw new FkException(ResultEnum.ERROR, "保存失败");
@@ -339,24 +339,25 @@ public class ClassificationImpl implements IClassification {
 
     @Override
     public ResultEnum synchronousClassification() {
-        ClassificationDefsDTO data = new ClassificationDefsDTO();
-        List<ClassificationDefContentDTO> list = new ArrayList<>();
+        List<BusinessClassificationPO> poList = new ArrayList<>();
 
         //同步数据接入业务分类
-        ClassificationDefContentDTO dataAccess = new ClassificationDefContentDTO();
+        BusinessClassificationPO dataAccess = new BusinessClassificationPO();
         dataAccess.name = "业务数据";
         dataAccess.description = "业务数据";
-        list.add(dataAccess);
+        poList.add(dataAccess);
 
         //同步数仓建模业务分类
-        ClassificationDefContentDTO dataModel = new ClassificationDefContentDTO();
+        BusinessClassificationPO dataModel = new BusinessClassificationPO();
         dataModel.name = "分析数据";
         dataModel.description = "分析数据";
-        list.add(dataModel);
+        poList.add(dataModel);
 
-        data.classificationDefs = list;
-
-        return this.addClassification(data);
+        boolean flat = this.saveBatch(poList);
+        if (flat) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        return ResultEnum.SUCCESS;
     }
 
     @Override

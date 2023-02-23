@@ -303,8 +303,8 @@ public enum ResultEnum {
     INTELLIGENT_DISCOVERY_SCAN_CONFIGURATION_DOES_NOT_EXIST(12007,"智能发现扫描配置不存在"),
     INTELLIGENT_DISCOVERY_NO_RISK_FIELDS_FOUND(12008,"智能发现未发现风险信息"),
     THE_MAIL_SERVER_DOES_NOT_EXIST(12009,"邮件服务器不存在"),
-    SMART_DISCOVERY_REPORT_FAILED_TO_GENERATE_ATTACHMENT(12010,"智能发现报告生成失败"),
-    FILE_DOES_NOT_EXIST(12011,"文件不存在"),
+    SMART_DISCOVERY_REPORT_FAILED_TO_GENERATE_ATTACHMENT(12010, "智能发现报告生成失败"),
+    FILE_DOES_NOT_EXIST(12011, "文件不存在"),
 
     /**
      * 元数据
@@ -313,6 +313,7 @@ public enum ResultEnum {
     NO_CONTENT(13002, "没有内容"),
     NOT_SUPPORT(13003, "暂不支持该类型数据查询"),
     DATA_SOURCE_CONFIG(13004, "获取元数据配置文件失败"),
+    BUSINESS_CLASSIFICATION_ERROR(13005, "新增业务元数据失败"),
 
     /**
      * 数据运维

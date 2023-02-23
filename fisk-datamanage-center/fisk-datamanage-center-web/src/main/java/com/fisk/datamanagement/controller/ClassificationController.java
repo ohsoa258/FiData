@@ -82,7 +82,7 @@ public class ClassificationController {
         return ResultEntityBuild.build(service.appSynchronousClassification(dto));
     }
 
-    @ApiOperation("获取业务类型树形列表")
+    @ApiOperation("删除业务分类")
     @GetMapping("/delClassificationEntity")
     public ResultEntity<Object> delClassificationEntity(String classification) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delClassificationEntity(classification));

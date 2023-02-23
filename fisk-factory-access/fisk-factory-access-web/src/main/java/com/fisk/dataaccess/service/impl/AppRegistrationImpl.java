@@ -88,8 +88,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -178,7 +176,6 @@ public class AppRegistrationImpl
         }
 
         List<AppDataSourceDTO> datasourceDTO = appRegistrationDTO.getAppDatasourceDTO();
-
         //
         /* todo 不筛查连接账号是否重复
         List<String> realtimeAccountList = appDataSourceMapper.getRealtimeAccountList(datasourceDTO.realtimeAccount);
@@ -276,7 +273,12 @@ public class AppRegistrationImpl
         classificationInfoDto.setSourceType(1);
         classificationInfoDto.setDelete(false);
 
-        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+        ResultEntity<Object> objectResultEntity = dataManageClient.appSynchronousClassification(classificationInfoDto);
+        if (objectResultEntity.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.BUSINESS_CLASSIFICATION_ERROR);
+        }
+
+        /*ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
         cachedThreadPool.execute(new Runnable() {
             @Override
             public void run() {
@@ -287,7 +289,7 @@ public class AppRegistrationImpl
                     log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
                 }
             }
-        });
+        });*/
     }
 
     /**
