@@ -40,7 +40,7 @@ public class MetadataClassificationMapImpl
         return list.stream().map(e -> e.metadataEntityId).collect(Collectors.toList());
     }
 
-    public List<Integer> getMetadataEntity(Integer classificationId, Integer pageIndex, Integer pageSize) {
+    public List<Integer> getMetadataEntity(Integer classificationId, Integer offset, Integer pageSize) {
         List<MetadataClassificationMapPO> list = this.query()
                 .eq("business_classification_id", classificationId)
                 .select("metadata_entity_id")
@@ -50,7 +50,7 @@ public class MetadataClassificationMapImpl
         }
 
         return list.stream()
-                .skip((pageIndex - 1) * pageSize)
+                .skip(offset)
                 .limit(pageSize)
                 .map(e -> e.metadataEntityId).collect(Collectors.toList());
     }

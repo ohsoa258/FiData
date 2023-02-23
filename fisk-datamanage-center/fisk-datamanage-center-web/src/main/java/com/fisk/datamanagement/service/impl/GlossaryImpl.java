@@ -1,27 +1,21 @@
 package com.fisk.datamanagement.service.impl;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.datamanagement.dto.category.CategoryDTO;
 import com.fisk.datamanagement.dto.category.CategoryDetailsDTO;
 import com.fisk.datamanagement.dto.glossary.*;
 import com.fisk.datamanagement.dto.term.TermDTO;
-import com.fisk.datamanagement.dto.term.TermDetailsDTO;
 import com.fisk.datamanagement.entity.GlossaryLibraryPO;
 import com.fisk.datamanagement.entity.GlossaryPO;
-import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
 import com.fisk.datamanagement.mapper.GlossaryMapper;
 import com.fisk.datamanagement.service.IGlossary;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
-import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -29,7 +23,6 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,7 +32,9 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class GlossaryImpl implements IGlossary {
+public class GlossaryImpl
+        extends ServiceImpl<GlossaryMapper, GlossaryPO>
+        implements IGlossary {
 
     @Resource
     UserHelper userHelper;
@@ -258,14 +253,22 @@ public class GlossaryImpl implements IGlossary {
         return list;
     }
 
-    private GlossaryLibraryPO recursionData(List<GlossaryLibraryPO> allData, String pid){
-        for (GlossaryLibraryPO item : allData){
-            if (!StringUtils.isEmpty(item.pid) && !String.valueOf(item.id).equals(pid)){
+    private GlossaryLibraryPO recursionData(List<GlossaryLibraryPO> allData, String pid) {
+        for (GlossaryLibraryPO item : allData) {
+            if (!StringUtils.isEmpty(item.pid) && !String.valueOf(item.id).equals(pid)) {
                 recursionData(allData, String.valueOf(item.pid));
             }
             return item;
         }
         return null;
+    }
+
+    public GlossaryPO getInfoByName(String glossaryName) {
+        GlossaryPO po = this.query().eq("name", glossaryName).one();
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return po;
     }
 
 }

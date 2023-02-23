@@ -13,24 +13,29 @@ import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.datamanagement.dto.classification.ClassificationDTO;
 import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
 import com.fisk.datamanagement.dto.entity.EntityTreeDTO;
+import com.fisk.datamanagement.dto.glossary.GlossaryDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
 import com.fisk.datamanagement.dto.lineagemaprelation.LineageMapRelationDTO;
 import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
 import com.fisk.datamanagement.entity.BusinessClassificationPO;
+import com.fisk.datamanagement.entity.GlossaryPO;
 import com.fisk.datamanagement.entity.LineageMapRelationPO;
 import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.mapper.BusinessClassificationMapper;
+import com.fisk.datamanagement.mapper.MetaDataGlossaryMapMapper;
 import com.fisk.datamanagement.mapper.MetadataEntityMapper;
 import com.fisk.datamanagement.service.IMetadataEntity;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.userinfo.UserDTO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,12 +68,16 @@ public class MetadataEntityImpl
     @Resource
     ClassificationImpl classification;
     @Resource
+    GlossaryImpl glossary;
+    @Resource
     MetadataClassificationMapImpl metadataClassificationMap;
 
     @Resource
     MetadataEntityMapper metadataEntityMapper;
     @Resource
     BusinessClassificationMapper businessClassificationMapper;
+    @Resource
+    MetaDataGlossaryMapMapper metaDataGlossaryMapMapper;
 
     @Resource
     UserClient userClient;
@@ -625,17 +634,21 @@ public class MetadataEntityImpl
 
         List<Integer> idList = new ArrayList<>();
         for (LineageMapRelationPO po : poList) {
-            idList.add(po.metadataEntityId);
             idList.add(po.fromEntityId);
+            idList.add(po.metadataEntityId);
             idList.add(po.toEntityId);
             addLine(po, dto);
         }
 
         List<Integer> collect = idList.stream().distinct().collect(Collectors.toList());
-        List<MetadataEntityPO> id = metadataEntity.query().in("id", collect).list();
+        for (Integer id : collect) {
+            MetadataEntityPO one = this.query().eq("id", id).one();
+            dto.guidEntityMap.add(addJsonObject(one));
+        }
+        /*List<MetadataEntityPO> id = metadataEntity.query().in("id", collect).list();
         for (MetadataEntityPO item : id) {
             dto.guidEntityMap.add(addJsonObject(item));
-        }
+        }*/
 
         return dto;
     }
@@ -692,7 +705,7 @@ public class MetadataEntityImpl
 
             BusinessClassificationPO classificationPo = classification.getInfoByName(dto.classification);
             //获取业务分类关联的实体id
-            List<Integer> metadataEntity = metadataClassificationMap.getMetadataEntity((int) classificationPo.id);
+            List<Integer> metadataEntity = metadataClassificationMap.getMetadataEntity((int) classificationPo.id, dto.offset, dto.limit);
             if (CollectionUtils.isEmpty(metadataEntity)) {
                 return data;
             }
@@ -704,6 +717,12 @@ public class MetadataEntityImpl
 
             List<EntitiesDTO> entitiesDtoList = new ArrayList<>();
 
+            List<String> collect = list.stream().map(e -> e.createUser).collect(Collectors.toList());
+            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(collect.stream().map(Long::parseLong).collect(Collectors.toList()));
+            if (userListByIds.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            }
+
             for (MetadataEntityPO po : list) {
                 EntitiesDTO entitiesDto = new EntitiesDTO();
                 entitiesDto.guid = String.valueOf(po.id);
@@ -713,11 +732,44 @@ public class MetadataEntityImpl
                 entitiesDto.attributes = new EntityAttributesDTO();
                 entitiesDto.attributes.name = po.name;
                 entitiesDto.attributes.description = po.description;
-                entitiesDto.attributes.owner = "";
+
+                Optional<UserDTO> first = userListByIds.data.stream().filter(e -> e.id.toString().equals(po.createUser)).findFirst();
+                if (first.isPresent()) {
+                    entitiesDto.attributes.owner = first.get().username;
+                }
 
                 //该实体关联的所有业务分类
                 entitiesDto.classificationNames = new ArrayList<>();
                 entitiesDto.classificationNames = businessClassificationMapper.selectClassification((int) po.id);
+
+                if (!CollectionUtils.isEmpty(entitiesDto.classificationNames)) {
+                    entitiesDto.classifications = new ArrayList<>();
+                    for (String item : entitiesDto.classificationNames) {
+
+                        BusinessClassificationPO infoByName = classification.getInfoByName(item);
+
+                        ClassificationDTO classificationDTO = new ClassificationDTO();
+                        classificationDTO.typeName = infoByName.name;
+                        classificationDTO.entityGuid = String.valueOf(infoByName.id);
+
+                        entitiesDto.classifications.add(classificationDTO);
+                    }
+                }
+
+                //获取术语库
+                entitiesDto.meaningNames = new ArrayList<>();
+                entitiesDto.meaningNames = metaDataGlossaryMapMapper.selectGlossary((int) po.id);
+                if (!CollectionUtils.isEmpty(entitiesDto.meaningNames)) {
+                    entitiesDto.meanings = new ArrayList<>();
+                    for (String item : entitiesDto.meaningNames) {
+                        GlossaryPO infoByName = glossary.getInfoByName(item);
+
+                        GlossaryDTO glossaryDTO = new GlossaryDTO();
+                        glossaryDTO.termGuid = String.valueOf(infoByName.id);
+                        glossaryDTO.displayText = infoByName.name;
+                        entitiesDto.meanings.add(glossaryDTO);
+                    }
+                }
 
                 entitiesDtoList.add(entitiesDto);
             }
