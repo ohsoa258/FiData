@@ -1,11 +1,14 @@
 package com.fisk.dataservice.map;
 
 import com.fisk.dataservice.dto.dataanalysisview.DataViewAccountDTO;
+import com.fisk.dataservice.dto.dataanalysisview.DataViewDTO;
 import com.fisk.dataservice.dto.dataanalysisview.DataViewThemeDTO;
 import com.fisk.dataservice.entity.DataViewAccountPO;
+import com.fisk.dataservice.entity.DataViewPO;
 import com.fisk.dataservice.entity.DataViewThemePO;
 import com.fisk.dataservice.entity.FieldConfigPO;
 import com.fisk.dataservice.vo.api.FieldConfigVO;
+import com.fisk.dataservice.vo.dataanalysisview.DataViewThemeVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
@@ -47,4 +50,19 @@ public interface DataViewMap {
      * @return
      */
     List<DataViewAccountDTO> accountListPoToDto(List<DataViewAccountPO> subList);
+
+    /**
+     * 数据视图po -> vo
+     *
+     * @param model
+     * @return
+     */
+    DataViewThemeVO dataViewPoToVo(DataViewThemePO model);
+
+    /**
+     * 数据视图 list: po -> dto
+     * @param records
+     * @return
+     */
+    List<DataViewDTO> dataViewPoToDto(List<DataViewPO> records);
 }

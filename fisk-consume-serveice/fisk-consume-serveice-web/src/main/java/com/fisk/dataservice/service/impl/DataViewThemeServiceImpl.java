@@ -16,27 +16,30 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.dataservice.dto.dataanalysisview.DataViewAccountDTO;
+import com.fisk.dataservice.dto.dataanalysisview.DataViewDTO;
 import com.fisk.dataservice.dto.dataanalysisview.DataViewThemeDTO;
 import com.fisk.dataservice.entity.DataViewAccountPO;
+import com.fisk.dataservice.entity.DataViewPO;
 import com.fisk.dataservice.entity.DataViewThemePO;
 import com.fisk.dataservice.enums.AccountJurisdictionEnum;
 import com.fisk.dataservice.map.DataViewMap;
 import com.fisk.dataservice.mapper.DataViewAccountMapper;
+import com.fisk.dataservice.mapper.DataViewMapper;
 import com.fisk.dataservice.mapper.DataViewThemeMapper;
 import com.fisk.dataservice.service.IDataViewThemeService;
+import com.fisk.dataservice.vo.dataanalysisview.DataSourceVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.common.protocol.types.Field;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -63,6 +66,9 @@ public class DataViewThemeServiceImpl
 
     @Resource
     private DataViewAccountMapper dataViewAccountMapper;
+
+    @Resource
+    private DataViewMapper dataViewMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -129,7 +135,7 @@ public class DataViewThemeServiceImpl
     }
 
     @Override
-    public List<DataSourceDTO> getTargetDbList() {
+    public List<DataSourceVO> getTargetDbList() {
         ResultEntity<List<DataSourceDTO>> result;
         try{
             result = userClient.getAllFiDataDataSource();
@@ -145,7 +151,17 @@ public class DataViewThemeServiceImpl
         List<DataSourceDTO> targetDbList = dsList.stream().filter(item -> item.sourceBusinessTypeValue == SourceBusinessTypeEnum.DW.getValue()
                 || item.sourceBusinessTypeValue == SourceBusinessTypeEnum.ODS.getValue()).collect(Collectors.toList());
 
-        return targetDbList;
+        List<DataSourceVO> list = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(targetDbList)){
+            targetDbList.stream().filter(item -> {
+                DataSourceVO model = new DataSourceVO();
+                model.setId(item.getId());
+                model.setName(item.getName());
+                list.add(model);
+                return false;
+            }).collect(Collectors.toList());
+        }
+        return list;
     }
 
     @Override
@@ -244,6 +260,34 @@ public class DataViewThemeServiceImpl
             pageDTO.setItems(dtoRecords);
         }
         return pageDTO;
+    }
+
+    @Override
+    public DataSourceVO getDataSourceByViewThemeId(Integer viewThemeId) {
+        // 查询targetDbId
+        Integer targetDbId = baseMapper.selectDbId(viewThemeId);
+        if (Objects.isNull(targetDbId)){
+            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
+        }
+        ResultEntity<List<DataSourceDTO>> result;
+        try{
+            result = userClient.getAllFiDataDataSource();
+            if (result.getCode() != ResultEnum.SUCCESS.getCode()){
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+        }catch (Exception e){
+            log.error("数据分析视图调用userClient失败", e);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+
+        List<DataSourceDTO> dsList = result.getData();
+        DataSourceDTO dataSourceDTO = dsList.stream().filter(item -> item.id.equals(targetDbId)).findFirst().orElse(null);
+        DataSourceVO vo = new DataSourceVO();
+        if (!Objects.isNull(dataSourceDTO)){
+            vo.setId(dataSourceDTO.id);
+            vo.setName(dataSourceDTO.name);
+        }
+        return vo;
     }
 
     private void verifyDataSource(Integer targetDbId){

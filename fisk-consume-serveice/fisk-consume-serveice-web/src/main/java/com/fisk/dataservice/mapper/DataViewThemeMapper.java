@@ -35,4 +35,12 @@ public interface DataViewThemeMapper extends FKBaseMapper<DataViewThemePO> {
      */
     @Select("select id from tb_view_theme where theme_name = #{themeName} and del_flag = #{value}")
     Integer selectViewThemeId(@Param("themeName") String themeName, @Param("value") int value);
+
+    /**
+     * 查询数据视图 主题的目标dbId
+     * @param viewThemeId
+     * @return
+     */
+    @Select("select target_db_id from tb_view_theme where id = #{viewThemeId}")
+    Integer selectDbId(@Param("viewThemeId") Integer viewThemeId);
 }
