@@ -63,7 +63,12 @@ public class TermImpl implements ITerm {
             throw new FkException(ResultEnum.ERROR, "术语名称不能为空");
         }
 
-        String categoryId = dto.categories.get(0).categoryGuid;
+        String categoryId = null;
+        try{
+            categoryId = dto.categories.get(0).categoryGuid;
+        }catch (Exception e){
+            throw new FkException(ResultEnum.ERROR, "请在术语类别下创建术语");
+        }
         // 校验是否在术语库下创建术语
         if (!StringUtils.isEmpty(dto.getAnchor().getGlossaryGuid()) && StringUtils.isEmpty(categoryId)){
             throw new FkException(ResultEnum.ERROR, "请在术语类别下创建术语");
