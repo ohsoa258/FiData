@@ -317,26 +317,41 @@ public class DataViewThemeServiceImpl
     private void updateRelAccountList(List<DataViewAccountDTO> list){
         for (DataViewAccountDTO dto : list){
             if (StringUtils.isEmpty(dto.getAccountName()) || StringUtils.isEmpty(dto.getAccountDesc())
-                    || dto.getViewThemeId() == null || dto.getId() == null){
-                throw new FkException(ResultEnum.UPDATE_DATA_ERROR);
-            }
-            // 查询账号名称是否重复
-            QueryWrapper<DataViewAccountPO> qw = new QueryWrapper<>();
-            qw.ne("id", dto.getId()).eq("view_theme_id", dto.getViewThemeId())
-                    .eq("account_name", dto.getAccountName());
-            Integer count = dataViewAccountMapper.selectCount(qw);
-            if (count > 0){
-                throw new FkException(ResultEnum.DS_VIEW_THEME_ACCOUNT_EXIST);
+                    || dto.getViewThemeId() == null){
+                throw new FkException(ResultEnum.DS_VIEW_THEME_ACCOUNT_ERROR);
             }
             DataViewAccountPO po = new DataViewAccountPO();
-            po.setId(dto.getId());
+            if (dto.getId() != null){
+                po.setId(dto.getId());
+            }
             po.setViewThemeId(dto.getViewThemeId());
             po.setAccountName(dto.getAccountName());
             po.setAccountDesc(dto.getAccountDesc());
-            po.setJurisdiction(dto.getJurisdiction());
-            int flag = dataViewAccountMapper.updateById(po);
-            if (flag <= 0){
-                throw new FkException(ResultEnum.UPDATE_DATA_ERROR);
+            po.setJurisdiction(AccountJurisdictionEnum.READ_ONLY.getName());
+            if (po.getId() == 0){
+                log.info("新增");
+                // 查询是否存在重复数据
+                QueryWrapper<DataViewAccountPO> insertQw = new QueryWrapper<>();
+                insertQw.eq("view_theme_id", dto.getViewThemeId()).eq("account_name", dto.getAccountName());
+                DataViewAccountPO preModel = dataViewAccountMapper.selectOne(insertQw);
+                if (Objects.isNull(preModel)){
+                    log.info("不存在当前账号时则添加");
+                    int save = dataViewAccountMapper.insert(po);
+                    if (save <= 0){
+                        throw new FkException(ResultEnum.DA_VIEWTHEME_UPDATE_ACCOUNT_ERROR);
+                    }
+                }
+            }else{
+                // 查询修改后的账号名称是否重复
+                QueryWrapper<DataViewAccountPO> insertQw = new QueryWrapper<>();
+                insertQw.ne("id", po.getId()).eq("view_theme_id", dto.getViewThemeId()).eq("account_name", dto.getAccountName());
+                DataViewAccountPO preModel = dataViewAccountMapper.selectOne(insertQw);
+                if (Objects.isNull(preModel)){
+                    int update = dataViewAccountMapper.updateById(po);
+                    if (update <= 0){
+                        throw new FkException(ResultEnum.UPDATE_DATA_ERROR);
+                    }
+                }
             }
         }
     }
