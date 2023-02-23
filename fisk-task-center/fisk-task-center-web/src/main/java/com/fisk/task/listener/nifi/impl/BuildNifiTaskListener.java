@@ -1330,6 +1330,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 res.addAll(excelProcessorEntity);
             } else {
                 executeSQLRecord = createExecuteSQLRecord(appGroupId, config, groupId, dto, sourceDbPoolId, tableNifiSettingPO);
+                componentsConnector(groupId, executeSQLRecord.getId(), supervisionId, autoEndBranchTypeEnums);
             }
 
         }
