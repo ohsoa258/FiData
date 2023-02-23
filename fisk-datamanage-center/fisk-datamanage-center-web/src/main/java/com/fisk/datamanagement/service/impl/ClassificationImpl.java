@@ -287,13 +287,11 @@ public class ClassificationImpl
         if (metaDataClassificationMapMapper.insert(model) <= 0){
             throw new FkException(ResultEnum.ERROR, "业务分类关联实体失败");
         }
-//        String jsonParameter=JSONArray.toJSON(dto).toString();
-//        ResultDataDTO<String> result = atlasClient.post(bulkClassification, jsonParameter);
-        Boolean exist = redisTemplate.hasKey("metaDataEntityData:"+dto.entityGuids.get(0));
+        /*Boolean exist = redisTemplate.hasKey("metaDataEntityData:"+dto.entityGuids.get(0));
         if (exist)
         {
             entity.setRedis(dto.entityGuids.get(0));
-        }
+        }*/
         return ResultEnum.SUCCESS;
     }
 
@@ -403,6 +401,14 @@ public class ClassificationImpl
         }
 
         return ResultEnum.SUCCESS;
+    }
+
+    public BusinessClassificationPO getInfoByName(String classificationName) {
+        BusinessClassificationPO po = this.query().eq("name", classificationName).one();
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return po;
     }
 
 

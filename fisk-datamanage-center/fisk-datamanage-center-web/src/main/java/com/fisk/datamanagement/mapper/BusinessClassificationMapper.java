@@ -7,6 +7,8 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+import java.util.List;
+
 /**
  * @ClassName:
  * @Author: 湖~Tloml
@@ -22,4 +24,8 @@ public interface BusinessClassificationMapper extends FKBaseMapper<BusinessClass
 
     @Update("update tb_business_classification set description = #{model.description} where name = #{model.name} and del_flag = 1")
     int updateByName(@Param("model") BusinessClassificationPO model);
+
+    @Select("SELECT b.`name` FROM tb_metadata_classification_map a LEFT JOIN tb_business_classification b ON a.business_classification_id = b.id WHERE a.metadata_entity_id = #{entityId} and a.del_flag = 1 and b.del_flag = 1")
+    List<String> selectClassification(@Param("entityId") Integer entityId);
+
 }

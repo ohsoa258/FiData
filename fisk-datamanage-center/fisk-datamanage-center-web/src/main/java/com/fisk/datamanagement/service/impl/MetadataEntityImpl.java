@@ -13,14 +13,19 @@ import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
+import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
 import com.fisk.datamanagement.dto.entity.EntityTreeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
 import com.fisk.datamanagement.dto.lineagemaprelation.LineageMapRelationDTO;
+import com.fisk.datamanagement.dto.search.EntitiesDTO;
+import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
+import com.fisk.datamanagement.entity.BusinessClassificationPO;
 import com.fisk.datamanagement.entity.LineageMapRelationPO;
 import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
-import com.fisk.datamanagement.mapper.LineageMapRelationMapper;
+import com.fisk.datamanagement.mapper.BusinessClassificationMapper;
 import com.fisk.datamanagement.mapper.MetadataEntityMapper;
 import com.fisk.datamanagement.service.IMetadataEntity;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
@@ -52,16 +57,18 @@ public class MetadataEntityImpl
     @Resource
     MetadataAttributeImpl metadataAttribute;
     @Resource
-    MetadataLineageMapImpl metadataLineageMap;
-    @Resource
     LineageMapRelationImpl lineageMapRelation;
     @Resource
     MetadataEntityImpl metadataEntity;
+    @Resource
+    ClassificationImpl classification;
+    @Resource
+    MetadataClassificationMapImpl metadataClassificationMap;
 
     @Resource
     MetadataEntityMapper metadataEntityMapper;
     @Resource
-    LineageMapRelationMapper lineageMapRelationMapper;
+    BusinessClassificationMapper businessClassificationMapper;
 
     @Resource
     UserClient userClient;
@@ -676,5 +683,49 @@ public class MetadataEntityImpl
         return line;
     }
 
+
+    public SearchBusinessGlossaryEntityDTO searchBasicEntity(EntityFilterDTO dto) {
+        SearchBusinessGlossaryEntityDTO data = new SearchBusinessGlossaryEntityDTO();
+
+        //搜索是否为业务分类
+        if (StringUtils.isNotBlank(dto.classification)) {
+
+            BusinessClassificationPO classificationPo = classification.getInfoByName(dto.classification);
+            //获取业务分类关联的实体id
+            List<Integer> metadataEntity = metadataClassificationMap.getMetadataEntity((int) classificationPo.id);
+            if (CollectionUtils.isEmpty(metadataEntity)) {
+                return data;
+            }
+
+            List<MetadataEntityPO> list = this.query().in("id", metadataEntity).list();
+            if (CollectionUtils.isEmpty(list)) {
+                return data;
+            }
+
+            List<EntitiesDTO> entitiesDtoList = new ArrayList<>();
+
+            for (MetadataEntityPO po : list) {
+                EntitiesDTO entitiesDto = new EntitiesDTO();
+                entitiesDto.guid = String.valueOf(po.id);
+                entitiesDto.displayText = po.displayName;
+                entitiesDto.typeName = EntityTypeEnum.getValue(po.typeId).getName();
+                entitiesDto.status = "ACTIVE";
+                entitiesDto.attributes = new EntityAttributesDTO();
+                entitiesDto.attributes.name = po.name;
+                entitiesDto.attributes.description = po.description;
+                entitiesDto.attributes.owner = "";
+
+                //该实体关联的所有业务分类
+                entitiesDto.classificationNames = new ArrayList<>();
+                entitiesDto.classificationNames = businessClassificationMapper.selectClassification((int) po.id);
+
+                entitiesDtoList.add(entitiesDto);
+            }
+
+            data.entities = entitiesDtoList;
+        }
+
+        return data;
+    }
 
 }

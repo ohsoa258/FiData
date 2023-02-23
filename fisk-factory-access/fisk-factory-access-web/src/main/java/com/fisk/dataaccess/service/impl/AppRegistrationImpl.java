@@ -277,19 +277,6 @@ public class AppRegistrationImpl
         if (objectResultEntity.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.BUSINESS_CLASSIFICATION_ERROR);
         }
-
-        /*ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
-        cachedThreadPool.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    dataManageClient.appSynchronousClassification(classificationInfoDto);
-                } catch (Exception e) {
-                    // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
-                    log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
-                }
-            }
-        });*/
     }
 
     /**

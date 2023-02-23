@@ -3,20 +3,15 @@ package com.fisk.datamanagement.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.client.DataAccessClient;
-import com.fisk.datamanagement.dto.classification.ClassificationDTO;
 import com.fisk.datamanagement.dto.entity.*;
-import com.fisk.datamanagement.dto.glossary.GlossaryDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
-import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
-import com.fisk.datamanagement.entity.*;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.mapper.*;
@@ -397,7 +392,9 @@ public class EntityImpl implements IEntity {
     @Override
     public SearchBusinessGlossaryEntityDTO searchBasicEntity(EntityFilterDTO dto)
     {
-        SearchBusinessGlossaryEntityDTO searchDto = new SearchBusinessGlossaryEntityDTO();
+
+        return metadataEntity.searchBasicEntity(dto);
+        /*SearchBusinessGlossaryEntityDTO searchDto = new SearchBusinessGlossaryEntityDTO();
         searchDto.approximateCount = "-1";
         searchDto.queryType = "BASIC";
         searchDto.searchParameters.excludeDeletedEntities = true;
@@ -461,7 +458,7 @@ public class EntityImpl implements IEntity {
         }
 
         searchDto.entities = entitiesDTOList;
-        return searchDto;
+        return searchDto;*/
     }
 
     @Override

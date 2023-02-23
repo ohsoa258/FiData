@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
+import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
@@ -786,7 +787,7 @@ public class MetaDataImpl implements IMetaData {
 
         if (!"stg".equals(dto.description)) {
             //同步业务分类
-            //associatedClassification(metadataEntity.toString(), dto.name, dbName, dto.comment);
+            associatedClassification(metadataEntity.toString(), dto.name, dbName, dto.comment);
             //同步业务元数据
             //associatedBusinessMetaData(metadataEntity.toString(), dbName, dto.name);
         }
@@ -1058,7 +1059,7 @@ public class MetaDataImpl implements IMetaData {
             dto.entityGuids.add(tableGuid);
             ClassificationDTO data = new ClassificationDTO();
             //ods表关联业务数据分类
-            if (DataSourceConfigEnum.DMP_ODS.getValue() == sourceData.get().id) {
+            if (SourceBusinessTypeEnum.ODS == sourceData.get().sourceBusinessType) {
                 //获取接入应用列表
                 ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
                 if (appList.code != ResultEnum.SUCCESS.getCode()) {
