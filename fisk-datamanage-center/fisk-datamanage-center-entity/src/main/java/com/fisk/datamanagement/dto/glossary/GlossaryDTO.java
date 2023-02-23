@@ -10,6 +10,7 @@ import lombok.Data;
 public class GlossaryDTO {
     public String displayText;
     public String termGuid;
+    public Integer glossaryLibraryId;
     public String guid;
     public String pid;
     public String qualifiedName;

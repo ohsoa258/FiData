@@ -212,39 +212,50 @@ public class GlossaryImpl implements IGlossary {
             return new ArrayList<>();
         }
         // 查询术语信息
-        GlossaryPO model = glossaryMapper.selectById(guid);
-        if (model == null){
+        QueryWrapper<GlossaryPO> qw = new QueryWrapper<>();
+        qw.eq("glossary_library_id", guid);
+        List<GlossaryPO> termList = glossaryMapper.selectList(qw);
+        if (CollectionUtils.isEmpty(termList)){
             return new ArrayList<>();
         }
 
-        TermDTO dto = new TermDTO();
-        dto.setGuid(String.valueOf(model.id));
-        dto.setName(model.name);
-        dto.setShortDescription(model.shortDescription);
-        dto.setLongDescription(model.longDescription);
+        List<TermDTO> list = new ArrayList<>();
+        for (GlossaryPO model : termList){
+            TermDTO dto = new TermDTO();
+            dto.setGuid(String.valueOf(model.id));
+            dto.setGlossaryLibraryId(Integer.parseInt(guid));
+            dto.setName(model.name);
+            dto.setShortDescription(model.shortDescription);
+            dto.setLongDescription(model.longDescription);
+            list.add(dto);
+        }
 
         // 加载所有数据
         List<GlossaryLibraryPO> allData = glossaryLibraryMapper.selectList(new QueryWrapper<>());
 
-        // 查询术语所在术语库中的术语类别
-        GlossaryLibraryPO category = allData.stream().filter(item -> item.id == model.glossaryLibraryId).findFirst().orElse(null);
-        if (category != null) {
-            CategoryDetailsDTO cdDto = new CategoryDetailsDTO();
-            cdDto.setDisplayText(category.name);
-            cdDto.setCategoryGuid(String.valueOf(category.id));
-            dto.setCategories(Collections.singletonList(cdDto));
-            // 查询所在术语库
-            GlossaryLibraryPO libraryPO = recursionData(allData, category.getPid().toString());
-            if (libraryPO != null){
-                // 设置全限定名
-                dto.setQualifiedName(model.name + "@" + libraryPO.name);
-                GlossaryAnchorDTO gaDto = new GlossaryAnchorDTO();
-                gaDto.setGlossaryGuid(String.valueOf(libraryPO.id));
-                dto.setAnchor(gaDto);
+        if (!CollectionUtils.isEmpty(allData)){
+            for (TermDTO model : list){
+                // 查询术语所在术语库中的术语类别
+                GlossaryLibraryPO category = allData.stream().filter(item -> item.id == model.glossaryLibraryId).findFirst().orElse(null);
+                if (category != null) {
+                    CategoryDetailsDTO cdDto = new CategoryDetailsDTO();
+                    cdDto.setDisplayText(category.name);
+                    cdDto.setCategoryGuid(String.valueOf(category.id));
+                    model.setCategories(Collections.singletonList(cdDto));
+                    // 查询所在术语库
+                    GlossaryLibraryPO libraryPO = recursionData(allData, category.getPid().toString());
+                    if (libraryPO != null){
+                        // 设置全限定名
+                        model.setQualifiedName(model.name + "@" + libraryPO.name);
+                        GlossaryAnchorDTO gaDto = new GlossaryAnchorDTO();
+                        gaDto.setGlossaryGuid(String.valueOf(libraryPO.id));
+                        model.setAnchor(gaDto);
+                    }
+                }
             }
         }
 
-        return Collections.singletonList(dto);
+        return list;
     }
 
     private GlossaryLibraryPO recursionData(List<GlossaryLibraryPO> allData, String pid){
