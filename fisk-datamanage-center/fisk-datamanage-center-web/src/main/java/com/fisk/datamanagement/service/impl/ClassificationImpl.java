@@ -425,7 +425,8 @@ public class ClassificationImpl
 
         // 查询是否重复
         QueryWrapper<ClassificationPO> cqw = new QueryWrapper<>();
-        qw.eq("name", dto.getTypeName()).eq("attribute_type_id", typePo).eq("business_classification_id", dto.getGuid());
+        cqw.eq("attribute_name", dto.getName()).eq("attribute_type_id", typePo.getTypeId())
+                .eq("business_classification_id", dto.getGuid());
         ClassificationPO classificationPO = classificationMapper.selectOne(cqw);
         if (!Objects.isNull(classificationPO)){
             throw new FkException(ResultEnum.ERROR, "属性已存在");
