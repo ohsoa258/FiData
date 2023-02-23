@@ -208,6 +208,7 @@ public class DataViewServiceImpl
                 // 表结构
                 dataSource.tableDtoList = pgsqlUtils.getTableNameAndColumnsPlus(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL));
                 //视图结构
+
                 dataSource.viewDtoList = new ArrayList<>();
 
             } else if (DataSourceTypeEnum.ORACLE_CDC.getName().equalsIgnoreCase(dataSource.driveType)) {
