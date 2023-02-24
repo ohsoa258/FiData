@@ -104,4 +104,12 @@ public interface ITableFields extends IService<TableFieldsPO> {
      */
     ResultEnum delFile(long id);
 
+    /**
+     * 编辑字段
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum updateFile(TableFieldsDTO dto);
+
 }

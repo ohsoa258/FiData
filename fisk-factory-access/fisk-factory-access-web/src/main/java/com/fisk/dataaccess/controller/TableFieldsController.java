@@ -81,4 +81,10 @@ public class TableFieldsController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delFile(id));
     }
 
+    @PutMapping("/updateFile")
+    @ApiOperation(value = "编辑单个字段")
+    public ResultEntity<Object> updateFile(@Validated @RequestBody TableFieldsDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.updateFile(dto));
+    }
+
 }

@@ -1333,8 +1333,30 @@ public class TableFieldsImpl
         if (flat == 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
-        return ResultEnum.SUCCESS;
 
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum updateFile(TableFieldsDTO dto) {
+        TableFieldsPO po = this.query().eq("id", dto.id).one();
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        po.fieldName = dto.fieldName;
+        po.fieldLength = dto.fieldLength;
+        po.fieldType = dto.fieldType;
+        po.fieldDes = dto.fieldDes;
+        po.displayName = dto.displayName;
+        po.fieldPrecision = dto.fieldPrecision;
+
+        int flat = baseMapper.updateById(po);
+        if (flat == 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        return ResultEnum.SUCCESS;
     }
 
 }
