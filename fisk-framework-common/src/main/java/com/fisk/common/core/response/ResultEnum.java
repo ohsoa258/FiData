@@ -270,6 +270,7 @@ public enum ResultEnum {
     DS_VIEW_THEME_ACCOUNT_EXIST(11029, "当前视图主题下存在重复的关联账号名称"),
     DA_VIEWTHEMEID_TABLENAME_ERROR(11030, "视图主题id或表名不能为空"),
     DA_VIEWTHEME_UPDATE_ACCOUNT_ERROR(11031, "更新视图主题关联账号时添加账号失败"),
+    DS_DATA_VIEW_EXIST(11032, "数据视图已存在"),
 
     /**
      * 数据质量

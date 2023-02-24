@@ -2,9 +2,10 @@ package com.fisk.dataservice.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.baseObject.dto.PageDTO;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
-import com.fisk.dataservice.dto.dataanalysisview.DataViewDTO;
-import com.fisk.dataservice.dto.dataanalysisview.DataSourceViewDTO;
+import com.fisk.dataservice.dto.dataanalysisview.*;
 import com.fisk.dataservice.entity.DataViewPO;
 
 import java.util.List;
@@ -42,4 +43,41 @@ public interface IDataViewService extends IService<DataViewPO> {
      * @return
      */
     List<TableStructureDTO> getSourceColumnMeta(Integer viewThemeId, String tableName, Integer queryType);
+
+    /**
+     * 查询sql执行后的结果数据
+     * @param dto
+     * @return
+     */
+    OdsResultDTO getDataAccessQueryList(SelSqlResultDTO dto);
+
+    /**
+     * 新增数据视图
+     * @param dto
+     * @return
+     */
+    ResultEnum addDataView(SaveDataViewDTO dto);
+
+    /**
+     * 删除数据视图
+     *
+     * @param targetDbId
+     * @param viewId
+     * @return
+     */
+    ResultEnum removeDataView(Integer targetDbId, Integer viewId);
+
+    /**
+     * 修改数据视图
+     * @param dto
+     * @return
+     */
+    ResultEnum editDataView(EditDataViewDTO dto);
+
+    /**
+     * 获取数据视图字段信息
+     * @param viewThemeId
+     * @return
+     */
+//     getViewTable(Integer viewThemeId);
 }

@@ -5,8 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.config.SwaggerConfig;
-import com.fisk.dataservice.dto.dataanalysisview.DataViewDTO;
-import com.fisk.dataservice.dto.dataanalysisview.DataViewThemeDTO;
+import com.fisk.dataservice.dto.dataanalysisview.*;
 import com.fisk.dataservice.service.IDataViewService;
 import com.fisk.dataservice.service.IDataViewThemeService;
 import com.fisk.dataservice.vo.dataanalysisview.DataViewThemeVO;
@@ -101,13 +100,35 @@ public class DataAnalysisViewController {
 
     @ApiOperation("获取数据源表字段结构信息")
     @PostMapping("/getDataAccessQueryList")
-    public ResultEntity<Object> getDataAccessQueryList(
-            @RequestParam(value = "viewThemeId", defaultValue = "0") Integer viewThemeId,
-            @RequestParam(value = "tableName", defaultValue = "") String tableName,
-            @RequestParam(value = "queryType", defaultValue = "1") Integer queryType){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.getDataAccessQueryList(viewThemeId, tableName, queryType));
+    public ResultEntity<Object> getDataAccessQueryList(@Validated @RequestBody SelSqlResultDTO dto){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.getDataAccessQueryList(dto));
     }
 
+    @ApiOperation("添加数据视图")
+    @PostMapping("/addDataView")
+    public ResultEntity<Object> addDataView(@Validated @RequestBody SaveDataViewDTO dto){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.addDataView(dto));
+    }
 
+    @ApiOperation("删除数据视图")
+    @DeleteMapping("/removeDataView")
+    public ResultEntity<Object> removeDataView(
+            @RequestParam(value = "viewId", defaultValue = "0") Integer viewId,
+            @RequestParam(value = "targetDbId", defaultValue = "0") Integer targetDbId){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.removeDataView(targetDbId, viewId));
+    }
+
+    @ApiOperation("修改数据视图")
+    @PutMapping("/editDataView")
+    public ResultEntity<Object> editDataView(@Validated @RequestBody EditDataViewDTO dto){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.editDataView(dto));
+    }
+
+//    @ApiOperation("获取数据视图字段信息")
+//    @GetMapping("/getViewTable")
+//    public ResultEntity<Object> getViewTable(
+//            @RequestParam(value = "viewThemeId", defaultValue = "0") Integer viewThemeId){
+//        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.getViewTable(viewThemeId));
+//    }
 
 }

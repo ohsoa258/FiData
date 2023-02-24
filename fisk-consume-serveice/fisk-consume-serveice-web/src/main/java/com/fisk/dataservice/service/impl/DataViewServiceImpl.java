@@ -2,24 +2,37 @@ package com.fisk.dataservice.service.impl;
 
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONException;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
+import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
-import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
+import com.fisk.common.service.accessAndTask.DataTranDTO;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
+import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
+import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
+import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
+import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
+import com.fisk.dataaccess.dto.table.FieldNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
+import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.datafactory.enums.DelFlagEnum;
-import com.fisk.dataservice.dto.dataanalysisview.DataViewDTO;
-import com.fisk.dataservice.dto.dataanalysisview.DataSourceViewDTO;
+import com.fisk.dataservice.dto.dataanalysisview.*;
 import com.fisk.dataservice.entity.DataViewPO;
+import com.fisk.dataservice.entity.DataViewThemePO;
 import com.fisk.dataservice.map.DataViewMap;
 import com.fisk.dataservice.mapper.DataViewMapper;
 import com.fisk.dataservice.mapper.DataViewThemeMapper;
@@ -28,14 +41,23 @@ import com.fisk.dataservice.util.DbConnectionHelper;
 import com.fisk.dataservice.util.SqlServerPlusUtils;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.task.client.PublishTaskClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.sql.Connection;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
+import java.sql.*;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @ClassName:
@@ -61,6 +83,9 @@ public class DataViewServiceImpl
 
     @Resource
     private RedisUtil redisUtil;
+
+    @Resource
+    private PublishTaskClient publishTaskClient;
 
     @Override
     public PageDTO<DataViewDTO> getViewList(Integer viewThemeId, Integer pageNum, Integer pageSize) {
@@ -162,6 +187,401 @@ public class DataViewServiceImpl
             return sqlServerPlusUtils.getViewField(conn, tableName);
         }
         return null;
+    }
+
+    @Override
+    public OdsResultDTO getDataAccessQueryList(SelSqlResultDTO dto) {
+
+        // 获取数据源
+        // 查询targetDbId
+        Integer targetDbId = dto.getTargetDbId();
+        if (Objects.isNull(targetDbId)){
+            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
+        }
+        ResultEntity<List<DataSourceDTO>> result;
+        try{
+            result = userClient.getAllFiDataDataSource();
+            if (result.getCode() != ResultEnum.SUCCESS.getCode()){
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+        }catch (Exception e){
+            log.error("数据分析视图执行sql调用userClient失败", e);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+
+        List<DataSourceDTO> dsList = result.getData();
+        DataSourceDTO dsDto = dsList.stream().filter(item -> item.id.equals(targetDbId)).findFirst().orElse(null);
+        log.info("数据主题视图获取执行sql结果信息的数据源，[{}]", JSON.toJSONString(dsDto));
+        if (dsDto == null) {
+            log.error(dto.viewThemeId + ":" + JSON.toJSONString(ResultEnum.DATASOURCE_INFORMATION_ISNULL));
+            return null;
+        }
+
+        // 查询视图主题
+        DataViewThemePO theme = dataViewThemeMapper.selectById(dto.viewThemeId);
+        if (theme == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        OdsResultDTO array = new OdsResultDTO();
+        Instant inst1 = Instant.now();
+        Connection conn = null;
+        Statement st = null;
+        ResultSet rs = null;
+        DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.getEnum(dsDto.conType.getName().toUpperCase());
+        try {
+            AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
+            conn = helper.connection(dsDto.conStr, dsDto.conAccount, dsDto.conPassword, dataSourceTypeEnum);
+            st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            st.setMaxRows(10);
+
+            //cdc模式
+//            if (po.driveType.equalsIgnoreCase(com.fisk.dataaccess.enums.DataSourceTypeEnum.ORACLE_CDC.getName())) {
+//                query.querySql = "SELECT * FROM " + query.querySql;
+//            }
+
+            //系统变量替换
+//            if (!org.springframework.util.CollectionUtils.isEmpty(query.deltaTimes)) {
+//                for (DeltaTimeDTO item : query.deltaTimes) {
+//                    boolean empty = org.apache.commons.lang3.StringUtils.isEmpty(item.variableValue);
+//                    if (item.deltaTimeParameterTypeEnum != DeltaTimeParameterTypeEnum.VARIABLE || empty) {
+//                        continue;
+//                    }
+//                    item.variableValue = AbstractCommonDbHelper.executeTotalSql(item.variableValue, conn, item.systemVariableTypeEnum.getName());
+//                }
+//            }
+
+            assert st != null;
+            Instant inst2 = Instant.now();
+            log.info("流式设置执行时间 : " + Duration.between(inst1, inst2).toMillis());
+            Instant inst3 = Instant.now();
+            String tableName = TableNameGenerateUtils.buildTableName(dto.viewName, theme.getThemeAbbr(), theme.getWhetherSchema());
+//            log.info("时间增量值:{}", JSON.toJSONString(query.deltaTimes));
+            // 传参改动
+            DataTranDTO dataTrandto = new DataTranDTO();
+            dataTrandto.tableName = tableName;
+            dataTrandto.querySql = dto.querySql;
+            dataTrandto.driveType = dsDto.conType.getName();
+//            dataTrandto.deltaTimes = JSON.toJSONString(query.deltaTimes);
+            Map<String, String> converSql = publishTaskClient.converSql(dataTrandto).data;
+            log.info("拼语句执行时间 : " + Duration.between(inst2, inst3).toMillis());
+
+            String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
+            rs = st.executeQuery(sql);
+            Instant inst4 = Instant.now();
+            log.info("执行sql时间 : " + Duration.between(inst3, inst4).toMillis());
+            //获取数据集
+            array = resultSetToJsonArrayDataAccess(rs);
+
+            Instant inst5 = Instant.now();
+            log.info("封装数据执行时间 : " + Duration.between(inst4, inst5).toMillis());
+
+            array.sql = sql;
+        } catch (Exception e) {
+            log.error("数据接入执行自定义sql失败,ex:{}", e);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e.getMessage());
+        } finally {
+            AbstractCommonDbHelper.closeResultSet(rs);
+            AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeConnection(conn);
+        }
+        Instant inst5 = Instant.now();
+        System.out.println("最终执行时间 : " + Duration.between(inst1, inst5).toMillis());
+
+        //数据类型转换
+        typeConversion(dataSourceTypeEnum, array.fieldNameDTOList, dto.targetDbId);
+
+        return array;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResultEnum addDataView(SaveDataViewDTO dto) {
+        log.info("保存数据视图参数,[{}]", JSON.toJSONString(dto));
+        // 查询视图是否重复
+        QueryWrapper<DataViewPO> qw = new QueryWrapper<>();
+        qw.eq("name", dto.getName()).eq("del_flag", DelFlagEnum.NORMAL_FLAG.getValue());
+        DataViewPO dataViewPO = baseMapper.selectOne(qw);
+        if (!Objects.isNull(dataViewPO)){
+            throw new FkException(ResultEnum.DS_DATA_VIEW_EXIST);
+        }
+
+        // 校验数据源是否合法
+        Integer targetDbId = dto.getTargetDbId();
+        if (Objects.isNull(targetDbId)){
+            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
+        }
+        ResultEntity<List<DataSourceDTO>> result;
+        try{
+            result = userClient.getAllFiDataDataSource();
+            if (result.getCode() != ResultEnum.SUCCESS.getCode()){
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+        }catch (Exception e){
+            log.error("数据分析视图保存视图调用userClient失败", e);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+
+        List<DataSourceDTO> dsList = result.getData();
+        DataSourceDTO dsDto = dsList.stream().filter(item -> item.id.equals(targetDbId)).findFirst().orElse(null);
+        log.info("数据主题视图图保存视图的数据源，[{}]", JSON.toJSONString(dsDto));
+        if (dsDto == null) {
+            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
+        }
+
+        // 存储数据视图
+        DataViewPO model = new DataViewPO();
+        model.setViewThemeId(dto.getViewThemeId());
+        model.setName(dto.getName());
+        model.setDisplayName(dto.getDisplayName());
+        model.setViewScript(dto.getViewScript());
+        model.setViewDesc(dto.getViewDesc());
+        int insert = baseMapper.insert(model);
+        if (insert <= 0){
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        // 向目标数据库中创建视图
+        createView(model, dsDto);
+
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum removeDataView(Integer targetDbId, Integer viewId) {
+        // 查询数据视图是否存在
+        DataViewPO model = baseMapper.selectById(viewId);
+        if (Objects.isNull(model)){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        // 校验数据源是否合法
+        if (Objects.isNull(targetDbId)){
+            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
+        }
+        ResultEntity<List<DataSourceDTO>> result;
+        try{
+            result = userClient.getAllFiDataDataSource();
+            if (result.getCode() != ResultEnum.SUCCESS.getCode()){
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+        }catch (Exception e){
+            log.error("数据分析视图删除视图调用userClient失败", e);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+
+        List<DataSourceDTO> dsList = result.getData();
+        DataSourceDTO dsDto = dsList.stream().filter(item -> item.id.equals(targetDbId)).findFirst().orElse(null);
+        log.info("数据主题视图图删除视图的数据源，[{}]", JSON.toJSONString(dsDto));
+        if (dsDto == null) {
+            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
+        }
+
+        // 删除数据视图
+        log.info("数据视图信息，[{}]", JSON.toJSONString(model));
+        int del = baseMapper.deleteById(viewId);
+        if (del <= 0){
+            throw new FkException(ResultEnum.DELETE_ERROR);
+        }
+
+        // 删除数据库视图
+        removeView(model, dsDto);
+        return ResultEnum.SUCCESS;
+
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResultEnum editDataView(EditDataViewDTO dto) {
+        List<DataViewPO> allData = baseMapper.selectList(new QueryWrapper<>());
+        if (CollectionUtils.isEmpty(allData)){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        // 获取当前视图
+        DataViewPO preModel = allData.stream().filter(item -> item.getId() == dto.getViewId()).findFirst().orElse(null);
+        log.info("数据视图，[{}]", JSON.toJSONString(preModel));
+        if (Objects.isNull(preModel)){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        List<String> nameList = allData.stream().filter(item -> item.getId() != dto.getViewId()).map(DataViewPO::getName).collect(Collectors.toList());
+        List<String> displayNameList = allData.stream().filter(item -> item.getId() != dto.getViewId()).map(DataViewPO::getDisplayName).collect(Collectors.toList());
+        if (nameList.contains(dto.getName()) || displayNameList.contains(dto.getDisplayName())){
+            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "视图名称或视图显示名称与已有数据重复");
+        }
+
+        // 校验数据源
+        DataSourceDTO dataSourceDTO = checkDataSource(dto.getTargetDbId());
+
+        // 修改数据库中的数据视图
+        updateView(dto.getName(), preModel, dataSourceDTO);
+
+        // 修改数据记录
+        preModel.setName(dto.getName());
+        preModel.setDisplayName(dto.getDisplayName());
+        preModel.setViewDesc(dto.getViewDesc());
+        if (baseMapper.updateById(preModel) <= 0){
+            throw new FkException(ResultEnum.UPDATE_DATA_ERROR);
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    private DataSourceDTO checkDataSource(Integer targetDbId){
+        // 校验数据源是否合法
+        ResultEntity<List<DataSourceDTO>> result;
+        try{
+            result = userClient.getAllFiDataDataSource();
+            if (result.getCode() != ResultEnum.SUCCESS.getCode()){
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+        }catch (Exception e){
+            log.error("数据分析视图修改视图调用userClient失败", e);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+
+        List<DataSourceDTO> dsList = result.getData();
+        DataSourceDTO dsDto = dsList.stream().filter(item -> item.id.equals(targetDbId)).findFirst().orElse(null);
+        log.info("数据主题视图图修改视图的数据源，[{}]", JSON.toJSONString(dsDto));
+        if (dsDto == null) {
+            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
+        }
+        return dsDto;
+    }
+
+    private void updateView(String name, DataViewPO model, DataSourceDTO dataSourceDto){
+        if (getView(name, dataSourceDto)){
+            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "目标库中已存在该数据视图");
+        }
+        // 创建新视图
+        DataViewPO view = new DataViewPO();
+        view.setName(name);
+        view.setViewScript(model.getViewScript());
+        createView(view, dataSourceDto);
+
+        // 删除旧视图
+        removeView(model, dataSourceDto);
+    }
+
+    private boolean getView(String name, DataSourceDTO dataSourceDTO){
+        String getViewSql = "SELECT * FROM " + name;
+        log.info("查询视图语句,[{}]", getViewSql);
+
+        AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
+        Connection connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
+                dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+        try {
+            log.info("开始查询视图");
+            abstractDbHelper.executeSql(getViewSql, connection);
+            log.info("查询视图成功");
+        } catch (SQLException e) {
+            return false;
+        }
+        return true;
+    }
+
+    private void removeView(DataViewPO model, DataSourceDTO dataSourceDTO){
+        String removeViewSql = "DROP VIEW IF EXISTS " + model.getName();
+        log.info("删除视图语句,[{}]", removeViewSql);
+
+        AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
+        Connection connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
+                dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+        try {
+            log.info("开始删除视图");
+            abstractDbHelper.executeSql(removeViewSql, connection);
+        } catch (SQLException e) {
+            log.error("删除视图向目标数据库删除视图失败,", e);
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "目标数据库删除视图失败");
+        }
+        log.info("删除视图成功");
+    }
+
+    private void createView(DataViewPO model, DataSourceDTO dataSourceDTO){
+        String createViewSql = "create view " + model.getName() + " as " + model.getViewScript();
+        log.info("创建视图语句,[{}]", createViewSql);
+
+        AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
+        Connection connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
+                dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+        try {
+            abstractDbHelper.executeSql(createViewSql, connection);
+        } catch (SQLException e) {
+            log.error("保存视图向目标数据库创建视图失败,", e);
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "目标数据库创建视图失败,或目标库中已存在该视图");
+        }
+        log.info("创建视图成功");
+    }
+
+    public void typeConversion(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum dataSourceTypeEnum,
+                               List<FieldNameDTO> fieldList,
+                               Integer targetDbId) {
+
+        //目标数据源
+        ResultEntity<DataSourceDTO> targetDataSource = userClient.getFiDataDataSourceById(targetDbId);
+        if (targetDataSource.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_OPS_CONFIG_EXISTS);
+        }
+
+        IBuildAccessSqlCommand command = BuildFactoryAccessHelper.getDBCommand(dataSourceTypeEnum);
+        DataTypeConversionDTO dto = new DataTypeConversionDTO();
+        for (FieldNameDTO field : fieldList) {
+            dto.dataLength = field.fieldLength;
+            dto.dataType = field.fieldType;
+            dto.precision = field.sourceFieldPrecision;
+            String[] data = command.dataTypeConversion(dto, targetDataSource.data.conType);
+            field.fieldType = data[0].toUpperCase();
+            field.fieldLength = data[1];
+        }
+
+    }
+
+    public static OdsResultDTO resultSetToJsonArrayDataAccess(ResultSet rs) throws SQLException, JSONException {
+        OdsResultDTO data = new OdsResultDTO();
+        // json数组
+        JSONArray array = new JSONArray();
+        // 获取列数
+        ResultSetMetaData metaData = rs.getMetaData();
+        int columnCount = metaData.getColumnCount();
+        List<FieldNameDTO> fieldNameDTOList = new ArrayList<>();
+        // 遍历ResultSet中的每条数据
+        int count = 1;
+        // 预览展示10行
+        int row = 10;
+        while (rs.next() && count <= row) {
+            JSONObject jsonObj = new JSONObject();
+            // 遍历每一列
+            for (int i = 1; i <= columnCount; i++) {
+                String columnName = metaData.getColumnLabel(i);
+                //过滤ods表中pk和code默认字段
+                String tableName = metaData.getTableName(i) + "key";
+                if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equals(columnName) || tableName.equals("ods_" + columnName)) {
+                    continue;
+                }
+                //获取sql查询数据集合
+                String value = rs.getString(columnName);
+                jsonObj.put(columnName, value);
+            }
+            count++;
+            array.add(jsonObj);
+        }
+        //获取列名
+        for (int i = 1; i <= columnCount; i++) {
+            FieldNameDTO dto = new FieldNameDTO();
+            dto.sourceTableName = metaData.getTableName(i);
+            dto.sourceFieldName = metaData.getColumnLabel(i);
+            dto.sourceFieldType = metaData.getColumnTypeName(i).toUpperCase();
+            dto.sourceFieldPrecision = metaData.getScale(i);
+            dto.fieldName = metaData.getColumnLabel(i);
+            String tableName = metaData.getTableName(i) + "key";
+            if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equals(dto.fieldName)
+                    || tableName.equals("ods_" + dto.fieldName)) {
+                continue;
+            }
+            dto.fieldType = metaData.getColumnTypeName(i).toLowerCase();
+            dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
+            fieldNameDTOList.add(dto);
+        }
+        data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());
+        data.dataArray = array;
+        return data;
     }
 
     private void setDataSourceMeta(Integer viewThemeId, DataSourceDTO dsDTO){
