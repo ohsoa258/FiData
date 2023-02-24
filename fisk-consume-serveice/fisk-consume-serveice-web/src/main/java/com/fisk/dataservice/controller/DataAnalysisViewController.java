@@ -111,7 +111,7 @@ public class DataAnalysisViewController {
     @ApiOperation("添加数据视图")
     @PostMapping("/addDataView")
     public ResultEntity<Object> addDataView(@Validated @RequestBody SaveDataViewDTO dto){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.addDataView(dto));
+        return ResultEntityBuild.build(dataViewService.addDataView(dto));
     }
 
     @ApiOperation("删除数据视图")
@@ -119,13 +119,13 @@ public class DataAnalysisViewController {
     public ResultEntity<Object> removeDataView(
             @RequestParam(value = "viewId", defaultValue = "0") Integer viewId,
             @RequestParam(value = "targetDbId", defaultValue = "0") Integer targetDbId){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.removeDataView(targetDbId, viewId));
+        return ResultEntityBuild.build(dataViewService.removeDataView(targetDbId, viewId));
     }
 
     @ApiOperation("修改数据视图名称")
     @PutMapping("/editDataView")
     public ResultEntity<Object> editDataView(@Validated @RequestBody EditDataViewDTO dto){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.editDataView(dto));
+        return ResultEntityBuild.build(dataViewService.editDataView(dto));
     }
 
     @ApiOperation("获取数据视图字段信息")
