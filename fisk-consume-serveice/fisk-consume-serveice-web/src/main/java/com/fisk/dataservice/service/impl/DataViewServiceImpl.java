@@ -431,7 +431,9 @@ public class DataViewServiceImpl
         DataSourceDTO dataSourceDTO = checkDataSource(dto.getTargetDbId());
 
         // 修改数据库中的数据视图
-        updateView(dto.getName(), preModel, dataSourceDTO);
+        if (!dto.getName().equals(preModel.getName())){
+            updateView(dto.getName(), preModel, dataSourceDTO);
+        }
 
         // 修改数据记录
         preModel.setName(dto.getName());
