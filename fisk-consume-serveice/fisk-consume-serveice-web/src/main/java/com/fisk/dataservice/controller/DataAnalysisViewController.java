@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.dataanalysisview.*;
+import com.fisk.dataservice.service.IDataViewFieldsService;
 import com.fisk.dataservice.service.IDataViewService;
 import com.fisk.dataservice.service.IDataViewThemeService;
 import com.fisk.dataservice.vo.dataanalysisview.DataViewThemeVO;
@@ -35,6 +36,9 @@ public class DataAnalysisViewController {
 
     @Resource
     private IDataViewService dataViewService;
+
+    @Resource
+    private IDataViewFieldsService dataViewFieldsService;
 
     @ApiOperation("删除视图主题")
     @DeleteMapping("/removeViewTheme")
@@ -124,11 +128,11 @@ public class DataAnalysisViewController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.editDataView(dto));
     }
 
-//    @ApiOperation("获取数据视图字段信息")
-//    @GetMapping("/getViewTable")
-//    public ResultEntity<Object> getViewTable(
-//            @RequestParam(value = "viewThemeId", defaultValue = "0") Integer viewThemeId){
-//        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.getViewTable(viewThemeId));
-//    }
+    @ApiOperation("获取数据视图字段信息")
+    @GetMapping("/getViewTable")
+    public ResultEntity<Object> getViewTableFields(
+            @RequestParam(value = "viewId", defaultValue = "0") Integer viewId){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.getViewTableFields(viewId));
+    }
 
 }

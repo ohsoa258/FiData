@@ -14,6 +14,7 @@ import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.framework.exception.FkException;
@@ -33,9 +34,13 @@ import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.dataservice.dto.dataanalysisview.*;
 import com.fisk.dataservice.entity.DataViewPO;
 import com.fisk.dataservice.entity.DataViewThemePO;
+import com.fisk.dataservice.entity.ViewFieldsPO;
+import com.fisk.dataservice.map.DataViewFieldsMap;
 import com.fisk.dataservice.map.DataViewMap;
+import com.fisk.dataservice.mapper.DataViewFieldsMapper;
 import com.fisk.dataservice.mapper.DataViewMapper;
 import com.fisk.dataservice.mapper.DataViewThemeMapper;
+import com.fisk.dataservice.service.IDataViewFieldsService;
 import com.fisk.dataservice.service.IDataViewService;
 import com.fisk.dataservice.util.DbConnectionHelper;
 import com.fisk.dataservice.util.SqlServerPlusUtils;
@@ -86,6 +91,12 @@ public class DataViewServiceImpl
 
     @Resource
     private PublishTaskClient publishTaskClient;
+
+    @Resource
+    private IDataViewFieldsService dataViewFieldsService;
+
+    @Resource
+    private DataViewFieldsMapper dataViewFieldsMapper;
 
     @Override
     public PageDTO<DataViewDTO> getViewList(Integer viewThemeId, Integer pageNum, Integer pageSize) {
@@ -343,6 +354,14 @@ public class DataViewServiceImpl
         // 向目标数据库中创建视图
         createView(model, dsDto);
 
+        // 查询主键
+        // 查询视图是否重复
+        QueryWrapper<DataViewPO> qw2 = new QueryWrapper<>();
+        qw2.eq("name", dto.getName()).eq("del_flag", DelFlagEnum.NORMAL_FLAG.getValue());
+        DataViewPO po = baseMapper.selectOne(qw2);
+
+        // 存储字段信息
+        dataViewFieldsService.saveViewFields(dto, po.getViewThemeId(), dsDto);
         return ResultEnum.SUCCESS;
     }
 
@@ -422,6 +441,13 @@ public class DataViewServiceImpl
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR);
         }
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public List<DataViewFieldsDTO> getViewTableFields(Integer viewId) {
+        QueryWrapper<ViewFieldsPO> qw = new QueryWrapper<>();
+        qw.eq("view_id", viewId).eq("del_flag", DelFlagEnum.NORMAL_FLAG.getValue());
+        return DataViewFieldsMap.INSTANCES.PoToDtoList(dataViewFieldsMapper.selectList(qw));
     }
 
     private DataSourceDTO checkDataSource(Integer targetDbId){

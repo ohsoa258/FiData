@@ -48,4 +48,5 @@ public class SaveDataViewDTO extends BaseDTO {
     @ApiModelProperty(value = "目标数据源id")
     @NotNull(message = "目标数据源id不能为空'")
     private Integer targetDbId ;
+
 }
