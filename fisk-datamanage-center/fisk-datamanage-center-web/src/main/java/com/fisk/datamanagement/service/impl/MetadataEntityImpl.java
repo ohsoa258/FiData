@@ -64,13 +64,15 @@ public class MetadataEntityImpl
     @Resource
     LineageMapRelationImpl lineageMapRelation;
     @Resource
-    MetadataEntityImpl metadataEntity;
+    BusinessMetadataConfigImpl businessMetadataConfigImpl;
     @Resource
     ClassificationImpl classification;
     @Resource
     GlossaryImpl glossary;
     @Resource
     MetadataClassificationMapImpl metadataClassificationMap;
+    @Resource
+    MetadataBusinessMetadataMapImpl metadataBusinessMetadataMap;
 
     @Resource
     MetadataEntityMapper metadataEntityMapper;
@@ -229,17 +231,23 @@ public class MetadataEntityImpl
         infoMap.put("qualifiedName", one.qualifiedName);
         infoMap.put("displayName", one.displayName);
 
+        //获取实体关联实体信息
         getEntityRelation(one, infoMap);
 
         Map map2 = new HashMap();
         map2.put("attributes", infoMap);
-
         map2.put("relationshipAttributes", getRelationshipAttributes(one));
 
         //map2.put("classifications", "");
 
+        //自定义属性
         getMetadataCustom(map2, Integer.parseInt(entityId));
 
+        //获取业务元数据
+        Map businessMetadata = metadataBusinessMetadataMap.getBusinessMetadata(entityId);
+        map2.put("businessAttributes", businessMetadata);
+
+        //返回拼接JSON传
         Map map = new HashMap();
         map.put("entity", map2);
 
@@ -261,18 +269,18 @@ public class MetadataEntityImpl
         EntityTypeEnum value = EntityTypeEnum.getValue(po.typeId);
         switch (value) {
             case RDBMS_INSTANCE:
-                map.put("databases", getEntityRelationInfo((int) po.id, value, "parent_id"));
+                map.put("databases", getEntityRelationInfo((int) po.id, EntityTypeEnum.RDBMS_DB, "parent_id"));
                 break;
             case RDBMS_DB:
-                map.put("instance", getEntityRelationInfo((int) po.id, value, "id").get(0));
-                map.put("tables", getEntityRelationInfo((int) po.id, value, "parent_id"));
+                map.put("instance", getEntityRelationInfo(po.parentId, EntityTypeEnum.RDBMS_INSTANCE, "id").get(0));
+                map.put("tables", getEntityRelationInfo((int) po.id, EntityTypeEnum.RDBMS_TABLE, "parent_id"));
                 break;
             case RDBMS_TABLE:
-                map.put("db", getEntityRelationInfo((int) po.id, value, "id").get(0));
-                map.put("columns", getEntityRelationInfo((int) po.id, value, "parent_id"));
+                map.put("db", getEntityRelationInfo(po.parentId, EntityTypeEnum.RDBMS_DB, "id").get(0));
+                map.put("columns", getEntityRelationInfo((int) po.id, EntityTypeEnum.RDBMS_COLUMN, "parent_id"));
                 break;
             case RDBMS_COLUMN:
-                map.put("table", getEntityRelationInfo((int) po.id, value, "id").get(0));
+                map.put("table", getEntityRelationInfo(po.parentId, EntityTypeEnum.RDBMS_TABLE, "id").get(0));
                 break;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
@@ -334,18 +342,18 @@ public class MetadataEntityImpl
         EntityTypeEnum value = EntityTypeEnum.getValue(po.typeId);
         switch (value) {
             case RDBMS_INSTANCE:
-                attributeMap.put("databases", getEntityRelationAttributesInfo((int) po.id, value, "parent_id"));
+                attributeMap.put("databases", getEntityRelationAttributesInfo((int) po.id, EntityTypeEnum.RDBMS_DB, "parent_id"));
                 break;
             case RDBMS_DB:
-                attributeMap.put("instance", getEntityRelationAttributesInfo((int) po.id, value, "id").get(0));
-                attributeMap.put("tables", getEntityRelationAttributesInfo((int) po.id, value, "parent_id"));
+                attributeMap.put("instance", getEntityRelationAttributesInfo(po.parentId, EntityTypeEnum.RDBMS_INSTANCE, "id").get(0));
+                attributeMap.put("tables", getEntityRelationAttributesInfo((int) po.id, EntityTypeEnum.RDBMS_TABLE, "parent_id"));
                 break;
             case RDBMS_TABLE:
-                attributeMap.put("db", getEntityRelationAttributesInfo((int) po.id, value, "id").get(0));
-                attributeMap.put("columns", getEntityRelationAttributesInfo((int) po.id, value, "parent_id"));
+                attributeMap.put("db", getEntityRelationAttributesInfo(po.parentId, EntityTypeEnum.RDBMS_DB, "id").get(0));
+                attributeMap.put("columns", getEntityRelationAttributesInfo((int) po.id, EntityTypeEnum.RDBMS_COLUMN, "parent_id"));
                 break;
             case RDBMS_COLUMN:
-                attributeMap.put("table", getEntityRelationAttributesInfo((int) po.id, value, "id").get(0));
+                attributeMap.put("table", getEntityRelationAttributesInfo(po.parentId, EntityTypeEnum.RDBMS_TABLE, "id").get(0));
                 break;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);

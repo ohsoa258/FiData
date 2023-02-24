@@ -381,11 +381,11 @@ public class AppRegistrationImpl
             return dto;
         }
 
-        ResultEntity<Object> objectResultEntity = publishTaskClient.addDataSetParams(data);
+        /*ResultEntity<Object> objectResultEntity = publishTaskClient.addDataSetParams(data);
         if (objectResultEntity.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
-        dto.id = (int) objectResultEntity.data;
+        dto.id = (int) objectResultEntity.data;*/
         return dto;
     }
 

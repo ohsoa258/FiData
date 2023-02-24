@@ -23,7 +23,12 @@ import com.fisk.datagovernance.client.DataGovernanceClient;
 import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDelAssociatedEntityDTO;
-import com.fisk.datamanagement.dto.entity.*;
+import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
+import com.fisk.datamanagement.dto.entity.EntityDTO;
+import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
+import com.fisk.datamanagement.dto.entity.EntityTypeDTO;
+import com.fisk.datamanagement.dto.metadatabusinessmetadatamap.EditMetadataBusinessMetadataMapDTO;
+import com.fisk.datamanagement.dto.metadatabusinessmetadatamap.MetadataBusinessMetadataMapDTO;
 import com.fisk.datamanagement.dto.process.*;
 import com.fisk.datamanagement.dto.relationship.RelationshipDTO;
 import com.fisk.datamanagement.entity.BusinessMetadataConfigPO;
@@ -36,6 +41,7 @@ import com.fisk.datamanagement.mapper.BusinessMetadataConfigMapper;
 import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
 import com.fisk.datamanagement.service.impl.ClassificationImpl;
 import com.fisk.datamanagement.service.impl.EntityImpl;
+import com.fisk.datamanagement.service.impl.MetadataBusinessMetadataMapImpl;
 import com.fisk.datamanagement.service.impl.MetadataEntityImpl;
 import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
@@ -72,6 +78,8 @@ public class MetaDataImpl implements IMetaData {
     AtlasClient atlasClient;
     @Resource
     EntityImpl entityImpl;
+    @Resource
+    MetadataBusinessMetadataMapImpl metadataBusinessMetadataMap;
     @Resource
     ClassificationImpl classification;
     @Resource
@@ -170,6 +178,11 @@ public class MetaDataImpl implements IMetaData {
     @Override
     public void synchronousTableBusinessMetaData(BusinessMetaDataInfoDTO dto) {
         associatedBusinessMetaData(null, dto.dbName, dto.tableName);
+    }
+
+    @Override
+    public void test() {
+
     }
 
     /**
@@ -789,7 +802,7 @@ public class MetaDataImpl implements IMetaData {
             //同步业务分类
             associatedClassification(metadataEntity.toString(), dto.name, dbName, dto.comment);
             //同步业务元数据
-            //associatedBusinessMetaData(metadataEntity.toString(), dbName, dto.name);
+            associatedBusinessMetaData(metadataEntity.toString(), dbName, dto.name);
         }
 
         return metadataEntity.toString();
@@ -797,35 +810,6 @@ public class MetaDataImpl implements IMetaData {
     }
 
     public String metaDataStgTable(MetaDataTableAttributeDTO dto, String parentEntityId) {
-        /*String atlasGuid = getMetaDataConfig(dto.qualifiedName + stg_prefix);
-        //替换前缀
-        if (ods_suffix.equals(dto.name.substring(0, 4))) {
-            dto.name = dto.name.replace(ods_suffix, stg_suffix);
-        } else {
-            dto.name = stg_suffix + dto.name;
-        }
-        dto.qualifiedName = dto.qualifiedName + stg_prefix;
-        dto.description = stg;
-        boolean isAdd = false;
-        if (StringUtils.isEmpty(atlasGuid)) {
-            EntityDTO entityDTO = new EntityDTO();
-            EntityTypeDTO entityTypeDTO = new EntityTypeDTO();
-            entityTypeDTO.typeName = EntityTypeEnum.RDBMS_TABLE.getName();
-            EntityIdAndTypeDTO parentEntity = new EntityIdAndTypeDTO();
-            EntityAttributesDTO attributesDTO = MetaDataMap.INSTANCES.tableDtoToAttribute(dto);
-            parentEntity.typeName = EntityTypeEnum.RDBMS_DB.getName();
-            parentEntity.guid = parentEntityGuid;
-            attributesDTO.db = parentEntity;
-            entityTypeDTO.attributes = attributesDTO;
-            entityDTO.entity = entityTypeDTO;
-            atlasGuid = addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_TABLE, parentEntityGuid);
-            isAdd = true;
-        }
-        if (isAdd) {
-            return atlasGuid;
-        }
-        return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_TABLE, dto);*/
-
         Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName + stg_prefix);
         //替换前缀
         if (ods_suffix.equals(dto.name.substring(0, 4))) {
@@ -940,21 +924,6 @@ public class MetaDataImpl implements IMetaData {
      * @return
      */
     public String metaDataField(MetaDataColumnAttributeDTO dto, String parentEntityId) {
-        /*String atlasGuid = getMetaDataConfig(dto.qualifiedName);
-        if (StringUtils.isEmpty(atlasGuid)) {
-            EntityDTO entityDTO = new EntityDTO();
-            EntityTypeDTO entityTypeDTO = new EntityTypeDTO();
-            entityTypeDTO.typeName = EntityTypeEnum.RDBMS_COLUMN.getName();
-            EntityIdAndTypeDTO parentEntity = new EntityIdAndTypeDTO();
-            EntityAttributesDTO attributesDTO = MetaDataMap.INSTANCES.fieldDtoToAttribute(dto);
-            parentEntity.typeName = EntityTypeEnum.RDBMS_TABLE.getName();
-            parentEntity.guid = parentEntityGuid;
-            attributesDTO.table = parentEntity;
-            entityTypeDTO.attributes = attributesDTO;
-            entityDTO.entity = entityTypeDTO;
-            return addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_COLUMN, parentEntityGuid);
-        }
-        return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_COLUMN, dto);*/
 
         Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
         if (metadataEntity == null) {
@@ -965,25 +934,6 @@ public class MetaDataImpl implements IMetaData {
     }
 
     public String metaDataStgField(MetaDataColumnAttributeDTO dto, String parentEntityId) {
-        /*String atlasGuid = getMetaDataConfig(dto.qualifiedName + stg_prefix);
-        dto.name = stg_suffix + dto.name;
-        dto.qualifiedName = dto.qualifiedName + stg_prefix;
-        dto.description = stg;
-        if (StringUtils.isEmpty(atlasGuid)) {
-            EntityDTO entityDTO = new EntityDTO();
-            EntityTypeDTO entityTypeDTO = new EntityTypeDTO();
-            entityTypeDTO.typeName = EntityTypeEnum.RDBMS_COLUMN.getName();
-            EntityIdAndTypeDTO parentEntity = new EntityIdAndTypeDTO();
-            EntityAttributesDTO attributesDTO = MetaDataMap.INSTANCES.fieldDtoToAttribute(dto);
-            parentEntity.typeName = EntityTypeEnum.RDBMS_TABLE.getName();
-            parentEntity.guid = parentEntityGuid;
-            attributesDTO.table = parentEntity;
-            entityTypeDTO.attributes = attributesDTO;
-            entityDTO.entity = entityTypeDTO;
-            return addMetaDataConfig(JSONArray.toJSON(entityDTO).toString(), dto.qualifiedName, EntityTypeEnum.RDBMS_COLUMN, parentEntityGuid);
-        }
-        return updateMetaDataEntity(atlasGuid, EntityTypeEnum.RDBMS_COLUMN, dto);*/
-
         Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName + stg_prefix);
         dto.name = stg_suffix + dto.name;
         dto.qualifiedName = dto.qualifiedName + stg_prefix;
@@ -994,11 +944,6 @@ public class MetaDataImpl implements IMetaData {
         }
 
         return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_COLUMN.getName()).toString();
-    }
-
-    @Override
-    public void test() {
-        synchronousDisplay();
     }
 
     public void synchronousDisplay() {
@@ -1027,7 +972,6 @@ public class MetaDataImpl implements IMetaData {
             if (result.code != AtlasResultEnum.REQUEST_SUCCESS) {
                 return;
             }
-
         }
 
 
@@ -1193,17 +1137,6 @@ public class MetaDataImpl implements IMetaData {
      * @param parentEntityGuid
      */
     public void deleteMetaData(List<String> qualifiedNameList, String parentEntityGuid) {
-        /*QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper
-                .notIn("qualified_name", qualifiedNameList)
-                .select("atlas_guid")
-                .lambda()
-                .eq(MetadataMapAtlasPO::getParentAtlasGuid, parentEntityGuid);
-        List<String> guidList = (List) metadataMapAtlasMapper.selectObjs(queryWrapper);
-        for (String guid : guidList) {
-            entityImpl.deleteEntity(guid);
-        }
-        metadataMapAtlasMapper.delete(queryWrapper);*/
         this.metadataEntity.delMetadataEntity(qualifiedNameList, parentEntityGuid);
     }
 
@@ -1764,37 +1697,43 @@ public class MetaDataImpl implements IMetaData {
     public ResultEnum setBusinessMetaDataAttributeValue(String guid,
                                                         TableRuleInfoDTO tableRuleInfoDTO,
                                                         List<BusinessMetadataConfigPO> poList) {
-        EntityAssociatedMetaDataDTO dto = new EntityAssociatedMetaDataDTO();
-        dto.guid = guid;
+
+        //分组获取业务元数据类别
         Map<String, List<BusinessMetadataConfigPO>> collect = poList.stream()
                 .collect(Collectors.groupingBy(BusinessMetadataConfigPO::getBusinessMetadataName));
-        JSONObject jsonObject = new JSONObject();
-        for (String businessMetaDataName : collect.keySet()) {
-            JSONObject attributeJson = new JSONObject();
-            if ("QualityRules".equals(businessMetaDataName)) {
-                //校验规则
-                attributeJson.put("ValidationRules", tableRuleInfoDTO.checkRules);
-                attributeJson.put("CleaningRules", tableRuleInfoDTO.filterRules);
-                attributeJson.put("LifeCycle", tableRuleInfoDTO.lifecycleRules);
-                attributeJson.put("AlarmSet", tableRuleInfoDTO.noticeRules);
-            } else if ("BusinessDefinition".equals(businessMetaDataName)) {
-                attributeJson.put("BusinessName", tableRuleInfoDTO.businessName);
-            } else if ("BusinessRules".equals(businessMetaDataName)) {
-                attributeJson.put("UpdateRules", tableRuleInfoDTO.updateRules);
-                attributeJson.put("TransformationRules", tableRuleInfoDTO.transformationRules == null ? "" : tableRuleInfoDTO.transformationRules);
-                attributeJson.put("ComputationalFormula", "");
-                attributeJson.put("KnownDataProblem", tableRuleInfoDTO.knownDataProblem == null ? "" : tableRuleInfoDTO.knownDataProblem);
-                attributeJson.put("DirectionsForUse", tableRuleInfoDTO.directionsForUse == null ? "" : tableRuleInfoDTO.directionsForUse);
-                attributeJson.put("ValidValueConstraint", tableRuleInfoDTO.validValueConstraint);
-            } else {
-                attributeJson.put("DataResponsibilityDepartment", "");
-                attributeJson.put("DataResponsiblePerson", tableRuleInfoDTO.dataResponsiblePerson);
-                attributeJson.put("Stakeholders", tableRuleInfoDTO.stakeholders);
-            }
-            jsonObject.put(businessMetaDataName, attributeJson);
+        if (CollectionUtils.isEmpty(collect)) {
+            throw new FkException(ResultEnum.DATA_SUBMIT_ERROR);
         }
-        dto.businessMetaDataAttribute = jsonObject;
-        return entityImpl.entityAssociatedMetaData(dto);
+
+        Integer metadataEntityId = Integer.parseInt(guid);
+        List<MetadataBusinessMetadataMapDTO> list = new ArrayList<>();
+
+        for (String businessMetaDataName : collect.keySet()) {
+            List<BusinessMetadataConfigPO> list1 = collect.get(businessMetaDataName);
+            switch (businessMetaDataName) {
+                case "QualityRules":
+                    list.addAll(metadataBusinessMetadataMap.setQualityRules(list1, metadataEntityId, tableRuleInfoDTO));
+                    break;
+                case "BusinessDefinition":
+                    list.addAll(metadataBusinessMetadataMap.setBusinessDefinition(list1, metadataEntityId, tableRuleInfoDTO));
+                    break;
+                case "BusinessRules":
+                    list.addAll(metadataBusinessMetadataMap.setBusinessRules(list1, metadataEntityId, tableRuleInfoDTO));
+                    break;
+                case "ManagementRules":
+                    list.addAll(metadataBusinessMetadataMap.setManagementRules(list1, metadataEntityId, tableRuleInfoDTO));
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        EditMetadataBusinessMetadataMapDTO data = new EditMetadataBusinessMetadataMapDTO();
+        data.metadataEntityId = Integer.parseInt(guid);
+        data.list = list;
+
+        return metadataBusinessMetadataMap.operationMetadataBusinessMetadataMap(data);
     }
+
 
 }
