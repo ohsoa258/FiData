@@ -67,17 +67,14 @@ public class DataViewThemeServiceImpl
     @Resource
     private DataViewAccountMapper dataViewAccountMapper;
 
-    @Resource
-    private DataViewMapper dataViewMapper;
-
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addViewTheme(DataViewThemeDTO dto) {
-        Long userId = userHelper.getLoginUserInfo().getId();
-
         // 查询视图主题是否已经存在
         QueryWrapper<DataViewThemePO> qw = new QueryWrapper<>();
-        qw.eq("theme_name", dto.getThemeName()).eq("del_flag", DelFlagEnum.NORMAL_FLAG.getValue());
+        qw.lambda().eq(DataViewThemePO::getThemeName, dto.getThemeName())
+                .eq(DataViewThemePO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
+//        qw.eq("theme_name", dto.getThemeName()).eq("del_flag", DelFlagEnum.NORMAL_FLAG.getValue());
         DataViewThemePO prePo = baseMapper.selectOne(qw);
         if (!Objects.isNull(prePo)){
             throw new FkException(ResultEnum.DS_VIEW_THEME_EXISTS);
@@ -95,7 +92,6 @@ public class DataViewThemeServiceImpl
 
         // dto -> po
         DataViewThemePO model = DataViewMap.INSTANCES.dtoToPo(dto);
-        model.setCreateUser(userId.toString());
         boolean save = this.save(model);
         if (!save){
             log.info("入库参数，[{}]", JSON.toJSONString(model));

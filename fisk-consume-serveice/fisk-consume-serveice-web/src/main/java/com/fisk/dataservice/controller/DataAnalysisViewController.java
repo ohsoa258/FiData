@@ -9,14 +9,12 @@ import com.fisk.dataservice.dto.dataanalysisview.*;
 import com.fisk.dataservice.service.IDataViewFieldsService;
 import com.fisk.dataservice.service.IDataViewService;
 import com.fisk.dataservice.service.IDataViewThemeService;
-import com.fisk.dataservice.vo.dataanalysisview.DataViewThemeVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.validation.constraints.NotNull;
 
 /**
  * @ClassName: 数据分析视图服务
@@ -37,9 +35,6 @@ public class DataAnalysisViewController {
     @Resource
     private IDataViewService dataViewService;
 
-    @Resource
-    private IDataViewFieldsService dataViewFieldsService;
-
     @ApiOperation("删除视图主题")
     @DeleteMapping("/removeViewTheme")
     public ResultEntity<Object> removeViewTheme(@RequestParam("viewThemeId") Integer viewThemeId){
@@ -52,7 +47,7 @@ public class DataAnalysisViewController {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataViewThemeService.getTargetDbList());
     }
 
-    @ApiOperation("新增视图主题")
+    @ApiOperation("新增视图主题-已优化")
     @PostMapping("/addViewTheme")
     public ResultEntity<Object> addViewTheme(@Validated @RequestBody DataViewThemeDTO dto){
         return ResultEntityBuild.build(dataViewThemeService.addViewTheme(dto));
