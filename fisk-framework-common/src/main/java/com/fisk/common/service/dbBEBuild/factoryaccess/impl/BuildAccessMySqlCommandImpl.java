@@ -200,7 +200,7 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
                 break;
             case MEDIUMTEXT:
             case TEXT:
-                data[0] = SqlServerTypeEnum.TEXT.getName();
+                data[0] = SqlServerTypeEnum.NTEXT.getName();
                 break;
             case DATE:
             case TIMESTAMP:

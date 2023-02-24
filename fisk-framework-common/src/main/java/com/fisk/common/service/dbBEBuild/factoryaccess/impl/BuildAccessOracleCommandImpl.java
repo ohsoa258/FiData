@@ -112,7 +112,7 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = SqlServerTypeEnum.FLOAT.getName();
                 break;
             case CLOB:
-                data[0] = SqlServerTypeEnum.TEXT.getName();
+                data[0] = SqlServerTypeEnum.NTEXT.getName();
                 break;
             case DATE:
             case TIMESTAMP:

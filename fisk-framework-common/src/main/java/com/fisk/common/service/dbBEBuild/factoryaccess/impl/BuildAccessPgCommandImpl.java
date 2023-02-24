@@ -190,7 +190,7 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = SqlServerTypeEnum.FLOAT.getName();
                 break;
             case TEXT:
-                data[0] = SqlServerTypeEnum.TEXT.getName();
+                data[0] = SqlServerTypeEnum.NTEXT.getName();
                 break;
             case DATE:
             case TIMESTAMP:
