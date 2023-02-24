@@ -8,6 +8,7 @@ import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataBaseAttributeDTO;
 import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
@@ -21,6 +22,7 @@ import com.fisk.datamanagement.dto.glossary.GlossaryDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
 import com.fisk.datamanagement.dto.lineagemaprelation.LineageMapRelationDTO;
+import com.fisk.datamanagement.dto.metadataclassificationmap.MetadataClassificationMapInfoDTO;
 import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
 import com.fisk.datamanagement.entity.BusinessClassificationPO;
@@ -29,9 +31,11 @@ import com.fisk.datamanagement.entity.LineageMapRelationPO;
 import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.mapper.BusinessClassificationMapper;
+import com.fisk.datamanagement.mapper.MetaDataClassificationMapMapper;
 import com.fisk.datamanagement.mapper.MetaDataGlossaryMapMapper;
 import com.fisk.datamanagement.mapper.MetadataEntityMapper;
 import com.fisk.datamanagement.service.IMetadataEntity;
+import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
@@ -64,8 +68,6 @@ public class MetadataEntityImpl
     @Resource
     LineageMapRelationImpl lineageMapRelation;
     @Resource
-    BusinessMetadataConfigImpl businessMetadataConfigImpl;
-    @Resource
     ClassificationImpl classification;
     @Resource
     GlossaryImpl glossary;
@@ -80,11 +82,15 @@ public class MetadataEntityImpl
     BusinessClassificationMapper businessClassificationMapper;
     @Resource
     MetaDataGlossaryMapMapper metaDataGlossaryMapMapper;
+    @Resource
+    MetaDataClassificationMapMapper metaDataClassificationMapMapper;
 
     @Resource
     UserClient userClient;
     @Resource
     DataAccessClient dataAccessClient;
+    @Resource
+    DataModelClient dataModelClient;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -143,6 +149,39 @@ public class MetadataEntityImpl
             return list;
         }
 
+        //获取实体关联业务分类数据
+        List<MetadataClassificationMapInfoDTO> classificationMap = metaDataClassificationMapMapper.getMetaDataClassificationMap();
+        if (!CollectionUtils.isEmpty(classificationMap)) {
+            //获取所有表类型
+            List<MetadataEntityPO> collect = poList.stream().filter(e -> e.typeId == EntityTypeEnum.RDBMS_TABLE.getValue()).collect(Collectors.toList());
+
+            //获取接入应用列表
+            ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
+            //获取建模业务域列表
+            /*ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
+            if (appList.code != ResultEnum.SUCCESS.getCode()
+                    || businessAreaList.code != ResultEnum.SUCCESS.getCode()){
+                throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            }*/
+
+            /*for (MetadataClassificationMapPO item : classificationMap){
+                List<MetadataEntityPO> collect1 = collect.stream().filter(e -> e.id == item.metadataEntityId).collect(Collectors.toList());
+                if (CollectionUtils.isEmpty(collect1)){
+                    continue;
+                }
+
+                MetadataEntityPO po = new MetadataEntityPO();
+                po.id = GenerationRandomUtils.generateRandom6DigitNumber();
+                po.displayName = "测试";
+
+                for (MetadataEntityPO table : collect1){
+                    po.parentId = table.parentId;
+                    table.parentId = (int)po.id;
+                }
+                poList.add(po);
+            }*/
+        }
+
         for (MetadataEntityPO item : parentList) {
             EntityTreeDTO dto = new EntityTreeDTO();
             dto.id = String.valueOf(item.id);
@@ -159,7 +198,7 @@ public class MetadataEntityImpl
     public EntityTreeDTO buildChildTree(EntityTreeDTO pNode, List<MetadataEntityPO> poList) {
         List<EntityTreeDTO> list = new ArrayList<>();
         for (MetadataEntityPO item : poList) {
-            if (item.getParentId().toString().equals(pNode.getId().toString())) {
+            if (item.getParentId().toString().equals(pNode.getId())) {
                 EntityTreeDTO dto = new EntityTreeDTO();
                 dto.id = String.valueOf(item.id);
                 dto.label = item.name;
