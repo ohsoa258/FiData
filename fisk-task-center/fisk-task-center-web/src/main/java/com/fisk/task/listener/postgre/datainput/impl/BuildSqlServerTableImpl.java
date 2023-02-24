@@ -56,7 +56,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                 sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
             } else if (l.fieldType.toUpperCase().equals("TIME")) {
                 sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
-            } else if (l.fieldType.contains("TIMESTAMP")) {
+            } else if (l.fieldType.contains("TIMESTAMP") || StringUtils.equals(l.fieldType.toUpperCase(), "DATETIME")) {
                 sqlFileds.append("[" + l.fieldName + "] datetime ");
             } else {
                 sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + "(" + l.fieldLength + ") ");

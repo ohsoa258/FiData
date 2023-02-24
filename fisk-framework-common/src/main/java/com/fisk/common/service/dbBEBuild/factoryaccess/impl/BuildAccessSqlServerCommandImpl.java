@@ -202,7 +202,11 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = PgTypeEnum.TEXT.getName();
                 break;
             case DATE:
+                data[0] = PgTypeEnum.DATE.getName();
+                break;
             case TIME:
+                data[0] = PgTypeEnum.TIME.getName();
+                break;
             case TIMESTAMP:
             case DATETIME:
                 data[0] = PgTypeEnum.TIMESTAMP.getName();
@@ -240,10 +244,14 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = SqlServerTypeEnum.NTEXT.getName();
                 break;
             case DATE:
+                data[0] = SqlServerTypeEnum.DATE.getName();
+                break;
             case TIME:
+                data[0] = SqlServerTypeEnum.TIME.getName();
+                break;
             case TIMESTAMP:
             case DATETIME:
-                data[0] = SqlServerTypeEnum.TIMESTAMP.getName();
+                data[0] = SqlServerTypeEnum.DATETIME.getName();
                 break;
             case NUMERIC:
             case DECIMAL:
