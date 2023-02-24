@@ -1314,6 +1314,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             componentConnector(groupId, replaceTextForFtpProcess.getId(), invokeHTTPForFtpProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
             res.add(replaceTextForFtpProcess);
             res.add(invokeHTTPForFtpProcessor);
+        } else {
+            tableNifiSettingPO.replaceTextForFtpProcessorId = null;
+            tableNifiSettingPO.invokeHttpForFtpProcessorId = null;
         }
         //连接器
         componentsConnector(groupId, logProcessor.getId(), supervisionId, autoEndBranchTypeEnums);
