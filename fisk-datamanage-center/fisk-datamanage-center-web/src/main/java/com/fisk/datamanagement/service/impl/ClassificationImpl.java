@@ -10,6 +10,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
+import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.datamanagement.dto.businessclassification.BusinessClassificationTreeDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
@@ -191,20 +192,31 @@ public class ClassificationImpl
 
     @Override
     public ResultEnum updateClassification(ClassificationDefsDTO dto) {
+        // 参数校验
+        if (CollectionUtils.isEmpty(dto.getClassificationDefs())){
+            throw new FkException(ResultEnum.ERROR, "修改业务分类参数错误");
+        }
         ClassificationDefContentDTO param = dto.getClassificationDefs().get(0);
-        // 查询数据
+
+        // 查询是否存在重复数据
+        List<String> nameList = businessClassificationMapper.selectNameList(param.getGuid(), DelFlagEnum.NORMAL_FLAG.getValue());
+        if (nameList.contains(param.name)){
+            throw new FkException(ResultEnum.ERROR, "业务分类名称已存在");
+        }
+
+        // 查询当前业务分类
         QueryWrapper<BusinessClassificationPO> qw = new QueryWrapper<>();
-        qw.eq("name", param.name).eq("del_flag", 1);
+        qw.eq("id", param.guid).eq("del_flag", 1);
         BusinessClassificationPO model = businessClassificationMapper.selectOne(qw);
-        if (model == null){
+        if (Objects.isNull(model)){
             throw new FkException(ResultEnum.ERROR, "业务分类不存在");
         }
+        model.setName(param.name);
         model.setDescription(param.description);
-        if (businessClassificationMapper.updateByName(model) > 0){
-            return ResultEnum.SUCCESS;
-        }else{
+        if (businessClassificationMapper.updateById(model) <= 0){
             throw new FkException(ResultEnum.ERROR, "修改业务分类失败");
         }
+        return ResultEnum.SUCCESS;
     }
 
     @Override

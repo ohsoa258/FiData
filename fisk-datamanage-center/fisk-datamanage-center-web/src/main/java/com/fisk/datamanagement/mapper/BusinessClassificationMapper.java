@@ -28,4 +28,6 @@ public interface BusinessClassificationMapper extends FKBaseMapper<BusinessClass
     @Select("SELECT b.`name` FROM tb_metadata_classification_map a LEFT JOIN tb_business_classification b ON a.business_classification_id = b.id WHERE a.metadata_entity_id = #{entityId} and a.del_flag = 1 and b.del_flag = 1")
     List<String> selectClassification(@Param("entityId") Integer entityId);
 
+    @Select("select `name` from tb_business_classification where id != #{guid} and del_flag = #{flag}")
+    List<String> selectNameList(@Param("guid") String guid, @Param("flag") int flag);
 }
