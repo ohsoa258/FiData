@@ -169,13 +169,13 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
         jsonObject.put("时间类型", "TIME");
         jsonObject.put("时间戳类型", "TIMESTAMP");
         jsonObject.put("浮点型", "FLOAT");
-        jsonObject.put("文本型", "TEXT");
+        jsonObject.put("文本型", "NTEXT");
         return jsonObject;
     }
 
     @Override
     public String buildVersionDeleteSql(String tableName) {
-        String sql= String.format("DELETE FROM %s WHERE ISNULL(fi_version,'') NOT IN ",tableName);
+        String sql = String.format("DELETE FROM %s WHERE ISNULL(fi_version,'') NOT IN ", tableName);
         return sql;
     }
 
@@ -198,6 +198,7 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = PgTypeEnum.INT8.getName();
                 break;
             case TEXT:
+            case NTEXT:
                 data[0] = PgTypeEnum.TEXT.getName();
                 break;
             case DATE:
@@ -235,7 +236,8 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = SqlServerTypeEnum.BIGINT.getName();
                 break;
             case TEXT:
-                data[0] = SqlServerTypeEnum.TEXT.getName();
+            case NTEXT:
+                data[0] = SqlServerTypeEnum.NTEXT.getName();
                 break;
             case DATE:
             case TIME:
@@ -275,6 +277,7 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
             case BIGINT:
                 data[0] = MySqlTypeEnum.BIGINT.getName();
                 break;
+            case NTEXT:
             case TEXT:
                 data[0] = MySqlTypeEnum.TEXT.getName();
                 break;
@@ -311,6 +314,7 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = OracleTypeEnum.INT.getName();
                 break;
             case TEXT:
+            case NTEXT:
                 data[0] = OracleTypeEnum.CLOB.getName();
                 break;
             case DATE:
