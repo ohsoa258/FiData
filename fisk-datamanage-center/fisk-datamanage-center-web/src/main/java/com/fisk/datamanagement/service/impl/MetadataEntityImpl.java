@@ -292,7 +292,7 @@ public class MetadataEntityImpl
      */
     public List<Map> getEntityRelationInfo(Integer entityId, EntityTypeEnum entityTypeEnum, String fileName) {
 
-        List<MetadataEntityPO> list = this.query().ne("description", stg).eq(fileName, entityId).list();
+        List<MetadataEntityPO> list = this.query().eq(fileName, entityId).list();
         if (CollectionUtils.isEmpty(list)) {
             return new ArrayList<>();
         }
@@ -364,7 +364,7 @@ public class MetadataEntityImpl
      */
     public List<Map> getEntityRelationAttributesInfo(Integer entityId, EntityTypeEnum entityTypeEnum, String fileName) {
 
-        List<MetadataEntityPO> list = this.query().ne("description", stg).eq(fileName, entityId).list();
+        List<MetadataEntityPO> list = this.query().eq(fileName, entityId).list();
         if (CollectionUtils.isEmpty(list)) {
             return new ArrayList<>();
         }
@@ -641,6 +641,9 @@ public class MetadataEntityImpl
         }
 
         List<Integer> collect = idList.stream().distinct().collect(Collectors.toList());
+        //反转
+        Collections.reverse(collect);
+
         for (Integer id : collect) {
             MetadataEntityPO one = this.query().eq("id", id).one();
             dto.guidEntityMap.add(addJsonObject(one));
