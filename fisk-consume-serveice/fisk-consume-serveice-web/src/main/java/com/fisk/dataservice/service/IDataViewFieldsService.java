@@ -2,6 +2,7 @@ package com.fisk.dataservice.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.dataservice.dto.dataanalysisview.*;
+import com.fisk.dataservice.entity.DataViewPO;
 import com.fisk.dataservice.entity.ViewFieldsPO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 
@@ -15,4 +16,6 @@ import com.fisk.system.dto.datasource.DataSourceDTO;
 public interface IDataViewFieldsService extends IService<ViewFieldsPO> {
 
     void saveViewFields(SaveDataViewDTO dto, Integer dataViewId, DataSourceDTO dsDto);
+
+    void updateViewFields(DataViewPO dto, Integer viewThemeId, DataSourceDTO dataSourceDTO);
 }

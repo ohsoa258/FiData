@@ -122,7 +122,7 @@ public class DataAnalysisViewController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.removeDataView(targetDbId, viewId));
     }
 
-    @ApiOperation("修改数据视图")
+    @ApiOperation("修改数据视图名称")
     @PutMapping("/editDataView")
     public ResultEntity<Object> editDataView(@Validated @RequestBody EditDataViewDTO dto){
         return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.editDataView(dto));
@@ -134,5 +134,12 @@ public class DataAnalysisViewController {
             @RequestParam(value = "viewId", defaultValue = "0") Integer viewId){
         return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.getViewTableFields(viewId));
     }
+
+    @ApiOperation("修改数据视图及执行脚本内容")
+    @PutMapping("/updateDataView")
+    public ResultEntity<Object> updateDataView(@Validated @RequestBody UpdateDataViewDTO dto){
+        return ResultEntityBuild.build(dataViewService.updateDataView(dto));
+    }
+
 
 }

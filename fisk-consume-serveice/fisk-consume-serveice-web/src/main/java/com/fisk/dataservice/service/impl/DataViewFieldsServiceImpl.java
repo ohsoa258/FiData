@@ -2,13 +2,16 @@ package com.fisk.dataservice.service.impl;
 
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.FieldNameDTO;
+import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.dataservice.dto.dataanalysisview.*;
+import com.fisk.dataservice.entity.DataViewPO;
 import com.fisk.dataservice.entity.ViewFieldsPO;
 import com.fisk.dataservice.mapper.DataViewFieldsMapper;
 import com.fisk.dataservice.service.IDataViewFieldsService;
@@ -38,6 +41,9 @@ public class DataViewFieldsServiceImpl
 
     @Resource
     private IDataViewService dataViewService;
+
+    @Resource
+    private DataViewFieldsMapper dataViewFieldsMapper;
 
 
     @Override
@@ -80,5 +86,50 @@ public class DataViewFieldsServiceImpl
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据视图字段信息保存失败");
         }
 
+    }
+
+    @Override
+    public void updateViewFields(DataViewPO dto, Integer viewThemeId, DataSourceDTO dataSourceDTO) {
+        // 获取sql执行结果数据
+        SelSqlResultDTO selDto = new SelSqlResultDTO();
+        selDto.setViewName(dto.getName());
+        selDto.setQuerySql(dto.getViewScript());
+        selDto.setTargetDbId(dataSourceDTO.id);
+        selDto.setViewThemeId(viewThemeId);
+        selDto.setDataSourceTypeEnum(dataSourceDTO.conType.getName());
+        OdsResultDTO resultDTO = dataViewService.getDataAccessQueryList(selDto);
+        log.info("字段数据集,[{}]", JSON.toJSONString(resultDTO));
+        if (Objects.isNull(resultDTO)){
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据视图字段信息查询失败");
+        }
+
+        List<FieldNameDTO> fieldList = resultDTO.getFieldNameDTOList();
+        if (CollectionUtils.isEmpty(fieldList)){
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据视图字段信息查询失败");
+        }
+        List<ViewFieldsPO> poList = new ArrayList<>();
+
+        for (FieldNameDTO item : fieldList){
+            ViewFieldsPO model = new ViewFieldsPO();
+            model.setViewId((int) dto.getId());
+            model.setFieldName(item.getFieldName());
+            model.setShowName(item.getFieldName());
+            model.setFieldDesc(item.getFieldDes());
+            model.setFieldPrecision(item.getFieldPrecision());
+            model.setFieldLength(item.getFieldLength());
+            model.setFieldType(item.getFieldType());
+            model.setDataType(item.getFieldType());
+            poList.add(model);
+        }
+
+        // 删除历史数据
+        QueryWrapper<ViewFieldsPO> qw = new QueryWrapper<>();
+        qw.eq("view_id", dto.getId()).eq("del_flag", DelFlagEnum.NORMAL_FLAG.getValue());
+        dataViewFieldsMapper.delete(qw);
+
+        boolean flag = this.saveBatch(poList);
+        if (!flag){
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据视图字段信息保存失败");
+        }
     }
 }

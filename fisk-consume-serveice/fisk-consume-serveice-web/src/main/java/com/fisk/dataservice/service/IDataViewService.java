@@ -81,4 +81,11 @@ public interface IDataViewService extends IService<DataViewPO> {
      * @return
      */
     List<DataViewFieldsDTO> getViewTableFields(Integer viewId);
+
+    /**
+     * 修改数据视图及sql执行内容
+     * @param dto
+     * @return
+     */
+    ResultEnum updateDataView(UpdateDataViewDTO dto);
 }

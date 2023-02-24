@@ -452,6 +452,30 @@ public class DataViewServiceImpl
         return DataViewFieldsMap.INSTANCES.PoToDtoList(dataViewFieldsMapper.selectList(qw));
     }
 
+    @Override
+    public ResultEnum updateDataView(UpdateDataViewDTO dto) {
+        log.info("修改数据视图参数,[{}]", JSON.toJSONString(dto));
+        DataViewPO model = baseMapper.selectById(dto.getViewId());
+        if (Objects.isNull(model)){
+            throw new FkException(ResultEnum.UPDATE_DATA_ERROR);
+        }
+
+        model.setViewScript(dto.getViewScript());
+        if (baseMapper.updateById(model) <= 0){
+            throw new FkException(ResultEnum.UPDATE_DATA_ERROR);
+        }
+
+        // 修改数据库视图
+        DataSourceDTO dataSourceDTO = checkDataSource(dto.getTargetDbId());
+        removeView(model, dataSourceDTO);
+        createView(model, dataSourceDTO);
+
+        // 更新字段信息
+        // 存储字段信息
+        dataViewFieldsService.updateViewFields(model, dto.getViewThemeId(), dataSourceDTO);
+        return ResultEnum.SUCCESS;
+    }
+
     private DataSourceDTO checkDataSource(Integer targetDbId){
         // 校验数据源是否合法
         ResultEntity<List<DataSourceDTO>> result;
