@@ -73,7 +73,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import javax.validation.constraints.NotNull;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -85,7 +84,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import static com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.*;
+import static com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL;
 
 /**
  * @author Lock
@@ -1306,6 +1305,36 @@ public class TableFieldsImpl
                     accessPo.appDataSourceId);
         }
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum addFile(TableFieldsDTO dto) {
+        TableFieldsPO po = this.query().eq("table_access_id", dto.tableAccessId)
+                .eq("field_name", dto.fieldName).one();
+        if (po != null) {
+            throw new FkException(ResultEnum.DATA_EXISTS);
+        }
+
+        boolean flat = this.save(TableFieldsMap.INSTANCES.dtoToPo(dto));
+        if (!flat) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum delFile(long id) {
+        TableFieldsPO po = this.query().eq("id", id).select("id").one();
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        int flat = baseMapper.deleteByIdWithFill(po);
+        if (flat == 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        return ResultEnum.SUCCESS;
+
     }
 
 }
