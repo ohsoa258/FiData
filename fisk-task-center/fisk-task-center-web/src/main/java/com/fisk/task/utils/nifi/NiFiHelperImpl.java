@@ -2421,6 +2421,9 @@ public class NiFiHelperImpl implements INiFiHelper {
         //excel
         map.put("CSV Format", data.csvFormat);
         map.put("extract-sheets", data.sheetName);
+        if (StringUtils.isEmpty(data.startLine)|| data.startLine.equals("0")){
+            data.startLine = "1";
+        }
         map.put("excel-extract-first-row", data.startLine);
 
         //组件配置信息
