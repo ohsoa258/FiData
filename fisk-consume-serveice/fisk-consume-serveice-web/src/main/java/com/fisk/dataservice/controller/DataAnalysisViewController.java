@@ -37,17 +37,17 @@ public class DataAnalysisViewController {
 
     @ApiOperation("删除视图主题")
     @DeleteMapping("/removeViewTheme")
-    public ResultEntity<Object> removeViewTheme(@RequestParam("viewThemeId") Integer viewThemeId){
+    public ResultEntity<Object> removeViewTheme(@RequestParam(value = "viewThemeId", defaultValue = "0") Integer viewThemeId){
         return ResultEntityBuild.build(dataViewThemeService.removeViewTheme(viewThemeId));
     }
 
-    @ApiOperation("获取目标数据源")
+    @ApiOperation("获取目标数据源列表")
     @GetMapping("/getTargetDbList")
     public ResultEntity<Object> getTargetDbList(){
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataViewThemeService.getTargetDbList());
     }
 
-    @ApiOperation("新增视图主题-已优化")
+    @ApiOperation("新增视图主题")
     @PostMapping("/addViewTheme")
     public ResultEntity<Object> addViewTheme(@Validated @RequestBody DataViewThemeDTO dto){
         return ResultEntityBuild.build(dataViewThemeService.addViewTheme(dto));
@@ -72,7 +72,7 @@ public class DataAnalysisViewController {
     public ResultEntity<PageDTO<DataViewDTO>> getViewList(
             @RequestParam(value = "viewThemeId", defaultValue = "0") Integer viewThemeId,
             @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
-            @RequestParam(value = "pageSize", defaultValue = "2") Integer pageSize){
+            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize){
         return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.getViewList(viewThemeId, pageNum, pageSize));
     }
 
@@ -112,9 +112,8 @@ public class DataAnalysisViewController {
     @ApiOperation("删除数据视图")
     @DeleteMapping("/removeDataView")
     public ResultEntity<Object> removeDataView(
-            @RequestParam(value = "viewId", defaultValue = "0") Integer viewId,
-            @RequestParam(value = "targetDbId", defaultValue = "0") Integer targetDbId){
-        return ResultEntityBuild.build(dataViewService.removeDataView(targetDbId, viewId));
+            @RequestParam(value = "viewId", defaultValue = "0") Integer viewId){
+        return ResultEntityBuild.build(dataViewService.removeDataView(viewId));
     }
 
     @ApiOperation("修改数据视图名称")

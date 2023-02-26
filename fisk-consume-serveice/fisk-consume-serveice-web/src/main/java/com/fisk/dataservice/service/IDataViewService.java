@@ -62,11 +62,10 @@ public interface IDataViewService extends IService<DataViewPO> {
     /**
      * 删除数据视图
      *
-     * @param targetDbId
      * @param viewId
      * @return
      */
-    ResultEnum removeDataView(Integer targetDbId, Integer viewId);
+    ResultEnum removeDataView(Integer viewId);
 
     /**
      * 修改数据视图

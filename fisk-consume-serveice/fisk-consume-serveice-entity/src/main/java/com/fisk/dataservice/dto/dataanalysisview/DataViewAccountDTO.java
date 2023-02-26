@@ -37,8 +37,8 @@ public class DataViewAccountDTO extends BaseDTO {
     @NotEmpty(message = "账号描述不能为空")
     private String accountDesc ;
 
-    @JsonIgnore
     @ApiModelProperty(value = "数据库账号密码")
+    @NotEmpty(message = "账号密码不能为空")
     private String accountPsd ;
 
     @ApiModelProperty(value = "数据库账号权限")

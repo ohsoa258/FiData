@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -14,9 +15,9 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.CreateSchemaSqlUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
+import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.dataservice.dto.dataanalysisview.DataViewAccountDTO;
-import com.fisk.dataservice.dto.dataanalysisview.DataViewDTO;
 import com.fisk.dataservice.dto.dataanalysisview.DataViewThemeDTO;
 import com.fisk.dataservice.entity.DataViewAccountPO;
 import com.fisk.dataservice.entity.DataViewPO;
@@ -36,7 +37,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import javax.validation.constraints.NotNull;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -51,12 +54,9 @@ import java.util.stream.Collectors;
  **/
 @Service
 @Slf4j
-public class DataViewThemeServiceImpl 
-        extends ServiceImpl<DataViewThemeMapper, DataViewThemePO> 
+public class DataViewThemeServiceImpl
+        extends ServiceImpl<DataViewThemeMapper, DataViewThemePO>
         implements IDataViewThemeService {
-
-    @Resource
-    private UserHelper userHelper;
 
     @Resource
     private DataViewThemeMapper baseMapper;
@@ -67,52 +67,54 @@ public class DataViewThemeServiceImpl
     @Resource
     private DataViewAccountMapper dataViewAccountMapper;
 
+    @Resource
+    private DataViewMapper dataViewMapper;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addViewTheme(DataViewThemeDTO dto) {
+        log.info("保存数据视图主题参数，[{}]", JSON.toJSONString(dto));
         // 查询视图主题是否已经存在
         QueryWrapper<DataViewThemePO> qw = new QueryWrapper<>();
         qw.lambda().eq(DataViewThemePO::getThemeName, dto.getThemeName())
                 .eq(DataViewThemePO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
-//        qw.eq("theme_name", dto.getThemeName()).eq("del_flag", DelFlagEnum.NORMAL_FLAG.getValue());
         DataViewThemePO prePo = baseMapper.selectOne(qw);
         if (!Objects.isNull(prePo)){
             throw new FkException(ResultEnum.DS_VIEW_THEME_EXISTS);
         }
 
-        // 校验应用简称
-        if (!dto.getWhetherSchema()){
-            List<String> abbrList = baseMapper.getAbbreviation(DelFlagEnum.NORMAL_FLAG.getValue());
-            if (abbrList.contains(dto.getThemeAbbr())){
-                throw new FkException(ResultEnum.DS_VIEW_THEME_ABBR_VALID);
-            }
-        }
+        // 校验数据源
+        DataSourceDTO dataSourceDTO = verifyDataSource(dto.getTargetDbId());
 
-        verifyDataSource(dto.getTargetDbId());
+        // 校验架构是否已经存在，不包含则创建架构
+        boolean schemaFlag = false;
+        List<String> abbrList = baseMapper.getAbbreviation(DelFlagEnum.NORMAL_FLAG.getValue());
+        if (!abbrList.contains(dto.getThemeAbbr())){
+            schemaFlag = true;
+        }
 
         // dto -> po
         DataViewThemePO model = DataViewMap.INSTANCES.dtoToPo(dto);
         boolean save = this.save(model);
         if (!save){
-            log.info("入库参数，[{}]", JSON.toJSONString(model));
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
-        // 是否添加schema
-        if (dto.getWhetherSchema()){
-            verifySchema(model.getThemeAbbr(), model.getTargetDbId());
+        // 创建架构
+        if (schemaFlag){
+            createSchema(model.getThemeAbbr(), model.getTargetDbId());
         }
 
         // 处理关联账号
         if (!CollectionUtils.isEmpty(dto.getRelAccountList())){
             Integer viewThemeId = baseMapper.selectViewThemeId(dto.getThemeName(), DelFlagEnum.NORMAL_FLAG.getValue());
-            saveRelationAccount(dto.getRelAccountList(), viewThemeId);
+            saveRelationAccount(dto.getRelAccountList(), viewThemeId, dataSourceDTO);
         }
 
         return ResultEnum.SUCCESS;
     }
 
-    private void saveRelationAccount(List<DataViewAccountDTO> dtoList, Integer viewThemeId){
+    private void saveRelationAccount(List<DataViewAccountDTO> dtoList, Integer viewThemeId, DataSourceDTO dataSourceDTO){
         log.info("视图主题id，[{}, 账号集合，{}]", viewThemeId, JSON.toJSONString(dtoList));
         for (DataViewAccountDTO dto : dtoList){
             if (StringUtils.isEmpty(dto.getAccountName()) || StringUtils.isEmpty(dto.getAccountDesc())){
@@ -122,11 +124,41 @@ public class DataViewThemeServiceImpl
             po.setViewThemeId(viewThemeId);
             po.setAccountName(dto.getAccountName());
             po.setAccountDesc(dto.getAccountDesc());
+            po.setAccountPsd(dto.getAccountPsd());
             po.setJurisdiction(AccountJurisdictionEnum.READ_ONLY.getName());
             int insert = dataViewAccountMapper.insert(po);
             if (insert <= 0){
                 throw new FkException(ResultEnum.DS_VIEW_THEME_ACCOUNT_SAVE);
             }
+
+            // 向数据库中添加账号信息
+            String sql = null;
+            if (DataSourceTypeEnum.SQLSERVER.getName().equalsIgnoreCase(dataSourceDTO.conType.getName())){
+                sql = "CREATE LOGIN " + po.getAccountName() + " with " + " PASSWORD=" + "'" + po.getAccountPsd() + "'";
+            }else if (DataSourceTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(dataSourceDTO.conType.getName())){
+                sql = "CREATE USER "+ po.getAccountName() + " WITH PASSWORD " + "'" + po.getAccountPsd() + "'";
+            }
+            execSql(sql, dataSourceDTO);
+        }
+    }
+
+    private void execSql(String sql, DataSourceDTO dataSourceDTO){
+        log.info("sql执行语句,[{}]", sql);
+        try {
+            AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
+            Connection connection = null;
+            if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName())){
+                connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
+                        dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+            }else if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
+                connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
+                        dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.PG);
+            }
+            assert connection != null;
+            abstractDbHelper.executeSql(sql, connection);
+        } catch (SQLException e) {
+            log.error("数据分析视图目标数据库执行sql失败,", e);
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, e.getMessage());
         }
     }
 
@@ -163,9 +195,6 @@ public class DataViewThemeServiceImpl
     @Override
     public ResultEnum removeViewTheme(Integer viewThemeId) {
         // 查询数据
-        if (viewThemeId <= 0){
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
-        }
         DataViewThemePO model = baseMapper.selectById(viewThemeId);
         if (Objects.isNull(model)){
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -177,15 +206,49 @@ public class DataViewThemeServiceImpl
             throw new FkException(ResultEnum.DELETE_ERROR);
         }
 
-        //删除视图主题关联账号
-        List<Integer> accountIds = dataViewAccountMapper.selectIdListByViewThemeId(viewThemeId, DelFlagEnum.NORMAL_FLAG.getValue());
-        if (!CollectionUtils.isEmpty(accountIds)){
-            int flag = dataViewAccountMapper.deleteBatchIds(accountIds);
+        // 删除不使用的架构
+        QueryWrapper<DataViewThemePO> qw = new QueryWrapper<>();
+        qw.lambda().ne(DataViewThemePO::getId, viewThemeId).eq(DataViewThemePO::getThemeAbbr, model.getThemeAbbr())
+                .eq(DataViewThemePO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
+        Integer schemaCount = baseMapper.selectCount(qw);
+        if (schemaCount <= 0){
+            removeSchema(model.getThemeAbbr(), model.getTargetDbId());
+        }
+
+        // 删除数据视图
+        QueryWrapper<DataViewPO> dqw = new QueryWrapper<>();
+        dqw.lambda().eq(DataViewPO::getViewThemeId, viewThemeId);
+        dataViewMapper.delete(dqw);
+
+        // 删除视图主题关联账号
+        QueryWrapper<DataViewAccountPO> accountQw = new QueryWrapper<>();
+        accountQw.lambda().eq(DataViewAccountPO::getViewThemeId, viewThemeId).eq(DataViewAccountPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
+        List<DataViewAccountPO> accountList = dataViewAccountMapper.selectList(accountQw);
+        if (!CollectionUtils.isEmpty(accountList)){
+            int flag = dataViewAccountMapper.deleteBatchIds(accountList.stream().map(DataViewAccountPO::getId).collect(Collectors.toList()));
             if (flag <= 0){
                 throw new FkException(ResultEnum.DELETE_ERROR);
             }
         }
         return ResultEnum.SUCCESS;
+    }
+
+    private void removeSchema(String themeAbbr, Integer targetDbId){
+        try {
+            String sql = "DROP SCHEMA IF EXISTS " + themeAbbr;
+            log.info("删除架构语句,[{}]", sql);
+
+            DataSourceDTO dataSourceDTO = verifyDataSource(targetDbId);
+
+            AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
+            Connection connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
+                    dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+            abstractDbHelper.executeSql(sql, connection);
+        } catch (SQLException e) {
+            log.error("删除数据库架构失败,", e);
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "目标数据库删除结果失败，或架构不存在");
+        }
+        log.info("删除架构执行成功");
     }
 
     @Override
@@ -203,8 +266,8 @@ public class DataViewThemeServiceImpl
 
         // 判断视图主题名称是否重复
         QueryWrapper<DataViewThemePO> qw = new QueryWrapper<>();
-        qw.ne("id", dto.getId()).eq("theme_name", dto.getThemeName())
-                .eq("del_flag", DelFlagEnum.NORMAL_FLAG.getValue());
+        qw.lambda().ne(DataViewThemePO::getId, dto.getId()).eq(DataViewThemePO::getThemeName, dto.getThemeName())
+                .eq(DataViewThemePO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
         Integer count = baseMapper.selectCount(qw);
         if (count > 0){
             throw new FkException(ResultEnum.DS_VIEW_THEME_NAME_EXIST);
@@ -220,6 +283,8 @@ public class DataViewThemeServiceImpl
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR);
         }
 
+        // todo 修改架构信息
+
         // 更新账号信息
         List<DataViewAccountDTO> relAccountList = dto.getRelAccountList();
         if (!CollectionUtils.isEmpty(relAccountList)){
@@ -234,7 +299,8 @@ public class DataViewThemeServiceImpl
 
         // 查询数据
         QueryWrapper<DataViewThemePO> qw = new QueryWrapper<>();
-        qw.eq("del_flag", DelFlagEnum.NORMAL_FLAG.getValue()).orderByDesc("create_time");
+        qw.lambda().eq(DataViewThemePO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue())
+                .orderByDesc(DataViewThemePO::getCreateTime);
         baseMapper.selectPage(poPage, qw);
 
         List<DataViewThemePO> records = poPage.getRecords();
@@ -247,7 +313,7 @@ public class DataViewThemeServiceImpl
             // 查询关联账号
             List<Integer> themeIds = dtoRecords.stream().map(DataViewThemeDTO::getId).collect(Collectors.toList());
             QueryWrapper<DataViewAccountPO> aqw = new QueryWrapper<>();
-            aqw.in("view_theme_id", themeIds);
+            aqw.lambda().in(DataViewAccountPO::getViewThemeId, themeIds);
             List<DataViewAccountPO> poList = dataViewAccountMapper.selectList(aqw);
             for (DataViewThemeDTO parent : dtoRecords){
                 List<DataViewAccountPO> accList = poList.stream().filter(item -> item.getViewThemeId().equals(parent.getId())).collect(Collectors.toList());
@@ -261,23 +327,8 @@ public class DataViewThemeServiceImpl
     @Override
     public DataSourceVO getDataSourceByViewThemeId(Integer viewThemeId) {
         // 查询targetDbId
-        Integer targetDbId = baseMapper.selectDbId(viewThemeId);
-        if (Objects.isNull(targetDbId)){
-            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
-        }
-        ResultEntity<List<DataSourceDTO>> result;
-        try{
-            result = userClient.getAllFiDataDataSource();
-            if (result.getCode() != ResultEnum.SUCCESS.getCode()){
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
-            }
-        }catch (Exception e){
-            log.error("数据分析视图调用userClient失败", e);
-            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
-        }
+        DataSourceDTO dataSourceDTO = verifyDataSource(baseMapper.selectDbId(viewThemeId));
 
-        List<DataSourceDTO> dsList = result.getData();
-        DataSourceDTO dataSourceDTO = dsList.stream().filter(item -> item.id.equals(targetDbId)).findFirst().orElse(null);
         DataSourceVO vo = new DataSourceVO();
         if (!Objects.isNull(dataSourceDTO)){
             vo.setId(dataSourceDTO.id);
@@ -286,8 +337,9 @@ public class DataViewThemeServiceImpl
         return vo;
     }
 
-    private void verifyDataSource(Integer targetDbId){
+    private DataSourceDTO verifyDataSource(Integer targetDbId){
         try{
+            log.info("开始校验数据源信息");
             // 查询数据源是否存在
             ResultEntity<List<DataSourceDTO>> dsResult = userClient.getAllFiDataDataSource();
             if (dsResult.getCode() != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(dsResult.data)){
@@ -304,6 +356,8 @@ public class DataViewThemeServiceImpl
             if (Objects.isNull(dataSourceDTO)){
                 throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
             }
+            log.info("结束校验数据源信息");
+            return dataSourceDTO;
         }catch (Exception e){
             log.error("数据分析视图调用userClient失败", e);
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
@@ -358,13 +412,22 @@ public class DataViewThemeServiceImpl
      * @param schemaName
      * @param targetDbId
      */
-    public void verifySchema(String schemaName, Integer targetDbId) {
-        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(targetDbId);
-        if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
-            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+    public void createSchema(String schemaName, Integer targetDbId) {
+        ResultEntity<DataSourceDTO> dataSourceConfig = null;
+        try{
+            dataSourceConfig = userClient.getFiDataDataSourceById(targetDbId);
+            log.info("创建架构获取数据源， [{}]", JSON.toJSONString(dataSourceConfig));
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+            }
+        }catch (Exception e){
+            log.error("数据分析视图服务创建视图调用userClient失败,", e);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
+
         AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
         Connection connection = helper.connection(dataSourceConfig.data.conStr, dataSourceConfig.data.conAccount, dataSourceConfig.data.conPassword, dataSourceConfig.data.conType);
+        log.info("已获取数据库连接");
         CreateSchemaSqlUtils.buildSchemaSql(connection, schemaName, dataSourceConfig.data.conType);
     }
 }
