@@ -8,11 +8,13 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.category.CategoryDetailsDTO;
 import com.fisk.datamanagement.dto.glossary.*;
+import com.fisk.datamanagement.dto.metadataglossarymap.MetaDataGlossaryMapDTO;
 import com.fisk.datamanagement.dto.term.TermDTO;
 import com.fisk.datamanagement.entity.GlossaryLibraryPO;
 import com.fisk.datamanagement.entity.GlossaryPO;
 import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
 import com.fisk.datamanagement.mapper.GlossaryMapper;
+import com.fisk.datamanagement.mapper.MetaDataGlossaryMapMapper;
 import com.fisk.datamanagement.service.IGlossary;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import lombok.extern.slf4j.Slf4j;
@@ -22,9 +24,7 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -38,12 +38,12 @@ public class GlossaryImpl
 
     @Resource
     UserHelper userHelper;
-
     @Resource
     GlossaryLibraryMapper glossaryLibraryMapper;
-
     @Resource
     GlossaryMapper glossaryMapper;
+    @Resource
+    MetaDataGlossaryMapMapper metaDataGlossaryMapMapper;
 
     @Resource
     AtlasClient atlasClient;
@@ -269,6 +269,23 @@ public class GlossaryImpl
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         return po;
+    }
+
+    public List<Map> getEntityGlossData(Integer entityId) {
+        List<MetaDataGlossaryMapDTO> entityGlossary = metaDataGlossaryMapMapper.getEntityGlossary(entityId);
+        if (CollectionUtils.isEmpty(entityGlossary)) {
+            return new ArrayList<>();
+        }
+        List<Map> list = new ArrayList<>();
+        for (MetaDataGlossaryMapDTO item : entityGlossary) {
+            Map map = new HashMap();
+            map.put("displayText", item.glossaryName);
+            map.put("guid", item.glossaryId);
+            list.add(map);
+        }
+
+        return list;
+
     }
 
 }

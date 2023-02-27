@@ -411,6 +411,9 @@ public class MetadataEntityImpl
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
 
+        //实体关联术语
+        attributeMap.put("meanings", glossary.getEntityGlossData((int) po.id));
+
         return attributeMap;
     }
 

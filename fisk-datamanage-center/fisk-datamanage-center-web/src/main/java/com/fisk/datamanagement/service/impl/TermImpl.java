@@ -19,11 +19,14 @@ import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -232,7 +235,7 @@ public class TermImpl implements ITerm {
         // 存储关联实体
         MetaDataGlossaryMapPO model = new MetaDataGlossaryMapPO();
         model.setGlossaryId(Integer.parseInt(dto.termGuid));
-        model.setMetaDataEntityId(Integer.parseInt(dto.dto.get(0).guid));
+        model.setMetadataEntityId(Integer.parseInt(dto.dto.get(0).guid));
         if (metaDataGlossaryMapMapper.insert(model) <= 0){
             throw new FkException(ResultEnum.ERROR, "术语关联实体失败");
         }
@@ -247,18 +250,25 @@ public class TermImpl implements ITerm {
     }
 
     @Override
-    public ResultEnum termDeleteAssignedEntities(TermAssignedEntities dto)
-    {
-        if (metaDataGlossaryMapMapper.deleteById(dto.termGuid) <= 0){
+    public ResultEnum termDeleteAssignedEntities(TermAssignedEntities dto) {
+
+        List<String> collect = dto.dto.stream().map(e -> e.guid).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(collect)) {
+            return ResultEnum.SUCCESS;
+        }
+
+        QueryWrapper<MetaDataGlossaryMapPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("metadata_entity_id", collect).eq("glossary_id", dto.termGuid);
+
+        List<MetaDataGlossaryMapPO> metaDataGlossaryMapPOS = metaDataGlossaryMapMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(metaDataGlossaryMapPOS)) {
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+
+        if (metaDataGlossaryMapMapper.delete(queryWrapper) == 0) {
             throw new FkException(ResultEnum.ERROR, "术语关联实体删除失败");
         }
-//        String jsonParameter= JSONArray.toJSON(dto.dto).toString();
-//        ResultDataDTO<String> result = atlasClient.put(terms + "/" + dto.termGuid+"/assignedEntities",jsonParameter);
-//        if (result.code == AtlasResultEnum.BAD_REQUEST)
-//        {
-//            JSONObject msg= JSON.parseObject(result.data);
-//            throw new FkException(ResultEnum.BAD_REQUEST,msg.getString("errorMessage"));
-//        }
+
         return ResultEnum.SUCCESS;
     }
 

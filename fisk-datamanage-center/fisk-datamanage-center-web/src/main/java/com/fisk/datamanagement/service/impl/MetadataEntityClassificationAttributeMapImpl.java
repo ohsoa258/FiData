@@ -6,6 +6,7 @@ import com.fisk.datamanagement.dto.MetadataEntityClassificationAttributeMapDTO;
 import com.fisk.datamanagement.entity.MetadataEntityClassificationAttributePO;
 import com.fisk.datamanagement.mapper.MetadataEntityClassificationAttributeMapper;
 import com.fisk.datamanagement.service.IMetadataEntityClassificationAttributeMap;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 /**
  * @author JianWenYang
  */
+@Service
 public class MetadataEntityClassificationAttributeMapImpl
         extends ServiceImpl<MetadataEntityClassificationAttributeMapper, MetadataEntityClassificationAttributePO>
         implements IMetadataEntityClassificationAttributeMap {

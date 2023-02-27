@@ -1,7 +1,6 @@
 package com.fisk.datamanagement.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.core.baseObject.dto.BaseDTO;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,7 +18,7 @@ import lombok.EqualsAndHashCode;
 @TableName(value = "tb_metadata_glossary_map")
 public class MetaDataGlossaryMapPO extends BasePO {
 
-    public Integer metaDataEntityId;
+    public Integer metadataEntityId;
 
     public Integer glossaryId;
 }
