@@ -271,7 +271,7 @@ public class PgsqlUtils {
             // 提交要执行的批处理，防止 JDBC 执行事务处理
             con.commit();
         } catch (SQLException e) {
-            log.error("批量执行SQL异常: {}", e.getMessage());
+            log.error(String.format("批量执行SQL异常: %s", e.getMessage()), e);
             // 执行sql异常,重置记录的条数
             countSql = 0;
             ApiSqlResultDTO apiSqlResultDto = new ApiSqlResultDTO();
@@ -384,7 +384,7 @@ public class PgsqlUtils {
             // 提交要执行的批处理，防止 JDBC 执行事务处理
             con.commit();
         } catch (SQLException e) {
-            log.error("批量执行SQL异常: {}", e.getMessage());
+            log.error(String.format("批量执行SQL异常: %s", e.getMessage()), e);
             // 执行sql异常,重置记录的条数
             countSql = 0;
             ApiSqlResultDTO apiSqlResultDto = new ApiSqlResultDTO();
