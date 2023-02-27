@@ -12,6 +12,7 @@ import com.fisk.datamanagement.dto.metadataglossarymap.MetaDataGlossaryMapDTO;
 import com.fisk.datamanagement.dto.term.TermDTO;
 import com.fisk.datamanagement.entity.GlossaryLibraryPO;
 import com.fisk.datamanagement.entity.GlossaryPO;
+import com.fisk.datamanagement.entity.MetaDataGlossaryMapPO;
 import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
 import com.fisk.datamanagement.mapper.GlossaryMapper;
 import com.fisk.datamanagement.mapper.MetaDataGlossaryMapMapper;
@@ -285,7 +286,20 @@ public class GlossaryImpl
         }
 
         return list;
+    }
 
+    public List<Integer> getClassificationByEntityId(Integer glossaryId, Integer offset, Integer pageSize) {
+
+        QueryWrapper<MetaDataGlossaryMapPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("metadata_entity_id").lambda().eq(MetaDataGlossaryMapPO::getGlossaryId, glossaryId);
+        List<MetaDataGlossaryMapPO> list = metaDataGlossaryMapMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+        return list.stream()
+                .skip(offset)
+                .limit(pageSize)
+                .map(e -> e.metadataEntityId).collect(Collectors.toList());
     }
 
 }

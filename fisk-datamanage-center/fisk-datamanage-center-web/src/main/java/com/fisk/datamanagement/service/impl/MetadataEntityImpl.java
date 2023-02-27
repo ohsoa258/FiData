@@ -766,82 +766,87 @@ public class MetadataEntityImpl
     public SearchBusinessGlossaryEntityDTO searchBasicEntity(EntityFilterDTO dto) {
         SearchBusinessGlossaryEntityDTO data = new SearchBusinessGlossaryEntityDTO();
 
+        List<MetadataEntityPO> list = new ArrayList<>();
+        List<Integer> metadataEntity = new ArrayList<>();
+
         //搜索是否为业务分类
         if (StringUtils.isNotBlank(dto.classification)) {
-
             BusinessClassificationPO classificationPo = classification.getInfoByName(dto.classification);
             //获取业务分类关联的实体id
-            List<Integer> metadataEntity = metadataClassificationMap.getMetadataEntity((int) classificationPo.id, dto.offset, dto.limit);
-            if (CollectionUtils.isEmpty(metadataEntity)) {
-                return data;
-            }
-
-            List<MetadataEntityPO> list = this.query().in("id", metadataEntity).list();
-            if (CollectionUtils.isEmpty(list)) {
-                return data;
-            }
-
-            List<EntitiesDTO> entitiesDtoList = new ArrayList<>();
-
-            List<String> collect = list.stream().map(e -> e.createUser).collect(Collectors.toList());
-            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(collect.stream().map(Long::parseLong).collect(Collectors.toList()));
-            if (userListByIds.code != ResultEnum.SUCCESS.getCode()) {
-                throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
-            }
-
-            for (MetadataEntityPO po : list) {
-                EntitiesDTO entitiesDto = new EntitiesDTO();
-                entitiesDto.guid = String.valueOf(po.id);
-                entitiesDto.displayText = po.displayName;
-                entitiesDto.typeName = EntityTypeEnum.getValue(po.typeId).getName();
-                entitiesDto.status = "ACTIVE";
-                entitiesDto.attributes = new EntityAttributesDTO();
-                entitiesDto.attributes.name = po.name;
-                entitiesDto.attributes.description = po.description;
-
-                Optional<UserDTO> first = userListByIds.data.stream().filter(e -> e.id.toString().equals(po.createUser)).findFirst();
-                if (first.isPresent()) {
-                    entitiesDto.attributes.owner = first.get().username;
-                }
-
-                //该实体关联的所有业务分类
-                entitiesDto.classificationNames = new ArrayList<>();
-                entitiesDto.classificationNames = businessClassificationMapper.selectClassification((int) po.id);
-
-                if (!CollectionUtils.isEmpty(entitiesDto.classificationNames)) {
-                    entitiesDto.classifications = new ArrayList<>();
-                    for (String item : entitiesDto.classificationNames) {
-
-                        BusinessClassificationPO infoByName = classification.getInfoByName(item);
-
-                        ClassificationDTO classificationDTO = new ClassificationDTO();
-                        classificationDTO.typeName = infoByName.name;
-                        classificationDTO.entityGuid = String.valueOf(infoByName.id);
-
-                        entitiesDto.classifications.add(classificationDTO);
-                    }
-                }
-
-                //获取术语库
-                entitiesDto.meaningNames = new ArrayList<>();
-                entitiesDto.meaningNames = metaDataGlossaryMapMapper.selectGlossary((int) po.id);
-                if (!CollectionUtils.isEmpty(entitiesDto.meaningNames)) {
-                    entitiesDto.meanings = new ArrayList<>();
-                    for (String item : entitiesDto.meaningNames) {
-                        GlossaryPO infoByName = glossary.getInfoByName(item);
-
-                        GlossaryDTO glossaryDTO = new GlossaryDTO();
-                        glossaryDTO.termGuid = String.valueOf(infoByName.id);
-                        glossaryDTO.displayText = infoByName.name;
-                        entitiesDto.meanings.add(glossaryDTO);
-                    }
-                }
-
-                entitiesDtoList.add(entitiesDto);
-            }
-
-            data.entities = entitiesDtoList;
+            metadataEntity = metadataClassificationMap.getMetadataEntity((int) classificationPo.id, dto.offset, dto.limit);
+        } else if (!StringUtils.isEmpty(dto.termName)) {
+            GlossaryPO infoByName = glossary.getInfoByName(dto.termName);
+            metadataEntity = glossary.getClassificationByEntityId((int) infoByName.id, dto.offset, dto.limit);
         }
+        if (CollectionUtils.isEmpty(metadataEntity)) {
+            return data;
+        }
+
+        list = this.query().in("id", metadataEntity).list();
+        if (CollectionUtils.isEmpty(list)) {
+            return data;
+        }
+
+        List<EntitiesDTO> entitiesDtoList = new ArrayList<>();
+
+        List<String> collect = list.stream().map(e -> e.createUser).collect(Collectors.toList());
+        ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(collect.stream().map(Long::parseLong).collect(Collectors.toList()));
+        if (userListByIds.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+
+        for (MetadataEntityPO po : list) {
+            EntitiesDTO entitiesDto = new EntitiesDTO();
+            entitiesDto.guid = String.valueOf(po.id);
+            entitiesDto.displayText = po.displayName;
+            entitiesDto.typeName = EntityTypeEnum.getValue(po.typeId).getName();
+            entitiesDto.status = "ACTIVE";
+            entitiesDto.attributes = new EntityAttributesDTO();
+            entitiesDto.attributes.name = po.name;
+            entitiesDto.attributes.description = po.description;
+
+            Optional<UserDTO> first = userListByIds.data.stream().filter(e -> e.id.toString().equals(po.createUser)).findFirst();
+            if (first.isPresent()) {
+                entitiesDto.attributes.owner = first.get().username;
+            }
+
+            //该实体关联的所有业务分类
+            entitiesDto.classificationNames = new ArrayList<>();
+            entitiesDto.classificationNames = businessClassificationMapper.selectClassification((int) po.id);
+
+            if (!CollectionUtils.isEmpty(entitiesDto.classificationNames)) {
+                entitiesDto.classifications = new ArrayList<>();
+                for (String item : entitiesDto.classificationNames) {
+
+                    BusinessClassificationPO infoByName = classification.getInfoByName(item);
+
+                    ClassificationDTO classificationDTO = new ClassificationDTO();
+                    classificationDTO.typeName = infoByName.name;
+                    classificationDTO.entityGuid = String.valueOf(infoByName.id);
+
+                    entitiesDto.classifications.add(classificationDTO);
+                }
+            }
+
+            //获取术语库
+            entitiesDto.meaningNames = new ArrayList<>();
+            entitiesDto.meaningNames = metaDataGlossaryMapMapper.selectGlossary((int) po.id);
+            if (!CollectionUtils.isEmpty(entitiesDto.meaningNames)) {
+                entitiesDto.meanings = new ArrayList<>();
+                for (String item : entitiesDto.meaningNames) {
+                    GlossaryPO infoByName = glossary.getInfoByName(item);
+
+                    GlossaryDTO glossaryDTO = new GlossaryDTO();
+                    glossaryDTO.termGuid = String.valueOf(infoByName.id);
+                    glossaryDTO.displayText = infoByName.name;
+                    entitiesDto.meanings.add(glossaryDTO);
+                }
+            }
+
+            entitiesDtoList.add(entitiesDto);
+        }
+
+        data.entities = entitiesDtoList;
 
         return data;
     }
