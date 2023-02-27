@@ -527,6 +527,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         } catch (Exception e) {
             resultEnum = ResultEnum.PUSH_DATA_ERROR;
+            log.error(String.format("【APICode：%s】推送数据失败，数据详情【%s】", dto.apiCode, dto.pushData), e);
         }
         return ResultEntityBuild.build(resultEnum, msg);
     }
@@ -619,6 +620,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         } catch (Exception e) {
             resultEnum = ResultEnum.PUSH_DATA_ERROR;
+            log.error(String.format("【APICode：%s】推送数据失败，数据详情【%s】", dto.apiCode, dto.pushData), e);
         }
         return ResultEntityBuild.build(resultEnum, msg);
     }
