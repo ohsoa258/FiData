@@ -23,8 +23,18 @@ public interface MetaDataClassificationMapMapper extends FKBaseMapper<MetadataCl
      *
      * @return
      */
-    @Select("SELECT a.business_classification_id,a.metadata_entity_id,b.`name` FROM `tb_metadata_classification_map` a left join tb_business_classification b on a.business_classification_id = b.id\n" +
-            "where a.del_flag = 1 and b.del_flag = 1")
+    @Select("SELECT\n" +
+            "\ta.business_classification_id,\n" +
+            "\ta.metadata_entity_id,\n" +
+            "\tb.`name` \n" +
+            "FROM\n" +
+            "\t`tb_metadata_classification_map` a\n" +
+            "\tLEFT JOIN tb_business_classification b ON a.business_classification_id = b.id\n" +
+            "\tLEFT JOIN tb_metadata_entity c on a.metadata_entity_id = c.id\n" +
+            "WHERE\n" +
+            "\ta.del_flag = 1 \n" +
+            "\tAND b.del_flag = 1 \n" +
+            "\tAND b.pid IS NOT NULL\n")
     List<MetadataClassificationMapInfoDTO> getMetaDataClassificationMap();
 
 }

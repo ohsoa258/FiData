@@ -85,12 +85,12 @@ public class EntityImpl implements IEntity {
     @Override
     public List<EntityTreeDTO> getEntityTreeList() {
         List<EntityTreeDTO> list;
-        Boolean exist = redisTemplate.hasKey(metaDataEntity);
+        /*Boolean exist = redisTemplate.hasKey(metaDataEntity);
         if (exist) {
             String treeList = redisTemplate.opsForValue().get(metaDataEntity).toString();
             list = JSONObject.parseArray(treeList, EntityTreeDTO.class);
             return list;
-        }
+        }*/
         list = getEntityList();
         return list;
     }
@@ -103,8 +103,8 @@ public class EntityImpl implements IEntity {
     public List<EntityTreeDTO> getEntityList() {
 
         List<EntityTreeDTO> metadataEntityTree = metadataEntity.getMetadataEntityTree();
-        String jsonString = JSONObject.toJSONString(metadataEntityTree);
-        redisTemplate.opsForValue().set(metaDataEntity, jsonString);
+        /*String jsonString = JSONObject.toJSONString(metadataEntityTree);
+        redisTemplate.opsForValue().set(metaDataEntity, jsonString);*/
         return metadataEntityTree;
         /*//try {
         ResultDataDTO<String> data = atlasClient.get(searchBasic + "?typeName=rdbms_instance");

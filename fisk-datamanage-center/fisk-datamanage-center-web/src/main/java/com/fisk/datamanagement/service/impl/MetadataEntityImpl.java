@@ -7,8 +7,8 @@ import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.GenerationRandomUtils;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataBaseAttributeDTO;
 import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
@@ -71,6 +71,8 @@ public class MetadataEntityImpl
     ClassificationImpl classification;
     @Resource
     GlossaryImpl glossary;
+    @Resource
+    MetadataEntityClassificationAttributeMapImpl metadataEntityClassificationAttributeMap;
     @Resource
     MetadataClassificationMapImpl metadataClassificationMap;
     @Resource
@@ -152,34 +154,40 @@ public class MetadataEntityImpl
         //获取实体关联业务分类数据
         List<MetadataClassificationMapInfoDTO> classificationMap = metaDataClassificationMapMapper.getMetaDataClassificationMap();
         if (!CollectionUtils.isEmpty(classificationMap)) {
-            //获取所有表类型
-            List<MetadataEntityPO> collect = poList.stream().filter(e -> e.typeId == EntityTypeEnum.RDBMS_TABLE.getValue()).collect(Collectors.toList());
 
-            //获取接入应用列表
-            ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
-            //获取建模业务域列表
-            /*ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
-            if (appList.code != ResultEnum.SUCCESS.getCode()
-                    || businessAreaList.code != ResultEnum.SUCCESS.getCode()){
-                throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
-            }*/
+            Map<String, List<MetadataClassificationMapInfoDTO>> collect2 = classificationMap.stream().collect(Collectors.groupingBy(MetadataClassificationMapInfoDTO::getName));
 
-            /*for (MetadataClassificationMapPO item : classificationMap){
-                List<MetadataEntityPO> collect1 = collect.stream().filter(e -> e.id == item.metadataEntityId).collect(Collectors.toList());
-                if (CollectionUtils.isEmpty(collect1)){
+            for (String classification : collect2.keySet()) {
+                MetadataEntityPO po = new MetadataEntityPO();
+                po.id = GenerationRandomUtils.generateRandom6DigitNumber();
+                po.displayName = classification;
+                po.name = classification;
+                po.typeId = EntityTypeEnum.DB_NAME.getValue();
+
+                List<MetadataClassificationMapInfoDTO> mapInfoDTOS = collect2.get(classification);
+                if (CollectionUtils.isEmpty(mapInfoDTOS)) {
                     continue;
                 }
 
-                MetadataEntityPO po = new MetadataEntityPO();
-                po.id = GenerationRandomUtils.generateRandom6DigitNumber();
-                po.displayName = "测试";
+                List<Integer> collect1 = mapInfoDTOS.stream()
+                        .map(e -> e.metadataEntityId)
+                        .collect(Collectors.toList());
 
-                for (MetadataEntityPO table : collect1){
-                    po.parentId = table.parentId;
-                    table.parentId = (int)po.id;
+                List<Long> collect4 = collect1.stream().map(Long::valueOf).collect(Collectors.toList());
+
+                List<MetadataEntityPO> collect3 = poList.stream()
+                        .filter(e -> collect4.contains(e.id))
+                        .collect(Collectors.toList());
+                if (CollectionUtils.isEmpty(collect3)) {
+                    continue;
+                }
+                po.parentId = collect3.get(0).parentId;
+
+                for (MetadataEntityPO table : collect3) {
+                    table.parentId = (int) po.id;
                 }
                 poList.add(po);
-            }*/
+            }
         }
 
         for (MetadataEntityPO item : parentList) {
@@ -203,6 +211,9 @@ public class MetadataEntityImpl
                 dto.id = String.valueOf(item.id);
                 dto.label = item.name;
                 dto.type = EntityTypeEnum.getValue(item.typeId).getName();
+                if (item.typeId == EntityTypeEnum.DB_NAME.getValue()) {
+                    dto.type = pNode.displayName;
+                }
                 dto.parentId = pNode.id;
                 dto.displayName = item.displayName;
                 list.add(buildChildTree(dto, poList));
@@ -277,7 +288,9 @@ public class MetadataEntityImpl
         map2.put("attributes", infoMap);
         map2.put("relationshipAttributes", getRelationshipAttributes(one));
 
-        //map2.put("classifications", "");
+        //实体关联业务分类
+        List<Map> classifications = metadataEntityClassificationAttributeMap.getMetadataEntityClassificationAttribute(Integer.parseInt(entityId));
+        map2.put("classifications", classifications);
 
         //自定义属性
         getMetadataCustom(map2, Integer.parseInt(entityId));
