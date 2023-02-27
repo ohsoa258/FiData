@@ -18,4 +18,6 @@ public interface IDataViewFieldsService extends IService<ViewFieldsPO> {
     void saveViewFields(SaveDataViewDTO dto, Integer dataViewId, DataSourceDTO dsDto);
 
     void updateViewFields(DataViewPO dto, Integer viewThemeId, DataSourceDTO dataSourceDTO);
+
+    void saveBatchViewFields(DataViewPO dto, Integer dataViewId, DataSourceDTO dataSourceDTO);
 }

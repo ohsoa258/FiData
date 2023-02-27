@@ -87,4 +87,11 @@ public interface IDataViewService extends IService<DataViewPO> {
      * @return
      */
     ResultEnum updateDataView(UpdateDataViewDTO dto);
+
+    /**
+     * 批量添加数据视图
+     * @param dto
+     * @return
+     */
+    ResultEnum addBatchDataView(SaveBatchDataViewDTO dto);
 }

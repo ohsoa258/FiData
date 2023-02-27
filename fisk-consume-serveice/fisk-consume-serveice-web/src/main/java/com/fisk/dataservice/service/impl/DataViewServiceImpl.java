@@ -431,6 +431,60 @@ public class DataViewServiceImpl
         return ResultEnum.SUCCESS;
     }
 
+    @Override
+    public ResultEnum addBatchDataView(SaveBatchDataViewDTO dto) {
+        if (CollectionUtils.isEmpty(dto.getTableNameList())){
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        // 处理数据源
+        DataViewThemePO dataViewThemePO = dataViewThemeMapper.selectById(dto.getViewThemeId());
+        DataSourceDTO dataSourceDTO = verifyDataSource(dataViewThemePO.getTargetDbId());
+
+        // 存储数据视图
+        List<String> tableNameList = dto.getTableNameList();
+        for (String tableName : tableNameList){
+            // 查询是否存在
+            QueryWrapper<DataViewPO> qw = new QueryWrapper<>();
+            qw.lambda().ne(DataViewPO::getViewThemeId, dto.getViewThemeId()).eq(DataViewPO::getName, tableName)
+                    .eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
+            DataViewPO dataViewPO = baseMapper.selectOne(qw);
+            if (!Objects.isNull(dataViewPO)){
+                continue;
+            }
+
+            // 不存在当前视图则创建
+            DataViewPO model = new DataViewPO();
+            model.setViewThemeId(dto.getViewThemeId());
+            model.setName(tableName);
+            model.setDisplayName(tableName);
+            String sql = "select * from " + tableName;
+            model.setViewScript(sql);
+            model.setViewDesc("");
+            int insert = baseMapper.insert(model);
+            if (insert <= 0){
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            }
+
+            // 向目标数据库中创建视图
+            batchCreateView(model, dataSourceDTO, dataViewThemePO);
+
+            // 查询主键
+            QueryWrapper<DataViewPO> qw2 = new QueryWrapper<>();
+            qw2.lambda().eq(DataViewPO::getName, tableName).eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
+            DataViewPO po = baseMapper.selectOne(qw2);
+
+            // 存储字段信息
+            dataViewFieldsService.saveBatchViewFields(model, (int) po.getId(), dataSourceDTO);
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    private void batchCreateView(DataViewPO model, DataSourceDTO dataSourceDTO, DataViewThemePO dataViewThemePO){
+        String createViewSql = "create view " + dataViewThemePO.getThemeAbbr() + ".theme_" + dataViewThemePO.getId() + "_" + model.getName() + " as " + model.getViewScript();
+        execSql(createViewSql, dataSourceDTO);
+    }
+
     private DataSourceDTO checkDataSource(Integer targetDbId){
         // 校验数据源是否合法
         ResultEntity<List<DataSourceDTO>> result;

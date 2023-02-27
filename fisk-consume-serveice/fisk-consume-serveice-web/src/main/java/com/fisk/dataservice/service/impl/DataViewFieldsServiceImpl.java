@@ -132,4 +132,45 @@ public class DataViewFieldsServiceImpl
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据视图字段信息保存失败");
         }
     }
+
+    @Override
+    public void saveBatchViewFields(DataViewPO dto, Integer dataViewId, DataSourceDTO dataSourceDTO) {
+        // 获取sql执行结果数据
+        SelSqlResultDTO selDto = new SelSqlResultDTO();
+        selDto.setViewName(dto.getName());
+        selDto.setQuerySql(dto.getViewScript());
+        selDto.setTargetDbId(dataSourceDTO.getId());
+        selDto.setViewThemeId(dto.getViewThemeId());
+        selDto.setDataSourceTypeEnum(dataSourceDTO.conType.getName());
+        OdsResultDTO resultDTO = dataViewService.getDataAccessQueryList(selDto);
+        log.info("字段数据集,[{}]", JSON.toJSONString(resultDTO));
+        if (Objects.isNull(resultDTO)){
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据视图字段信息查询失败");
+        }
+
+        List<FieldNameDTO> fieldList = resultDTO.getFieldNameDTOList();
+        if (CollectionUtils.isEmpty(fieldList)){
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据视图字段信息查询失败");
+        }
+        List<ViewFieldsPO> poList = new ArrayList<>();
+
+        for (FieldNameDTO item : fieldList){
+            ViewFieldsPO model = new ViewFieldsPO();
+            model.setViewId(dataViewId);
+            model.setFieldName(item.getFieldName());
+            model.setShowName(item.getFieldName());
+            model.setFieldDesc(item.getFieldDes());
+            model.setFieldPrecision(item.getFieldPrecision());
+            model.setFieldLength(item.getFieldLength());
+            model.setFieldType(item.getFieldType());
+            model.setDataType(item.getFieldType());
+            poList.add(model);
+        }
+
+        boolean flag = this.saveBatch(poList);
+        if (!flag){
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据视图字段信息保存失败");
+        }
+    }
+
 }

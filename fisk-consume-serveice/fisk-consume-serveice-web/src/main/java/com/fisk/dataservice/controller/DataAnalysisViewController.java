@@ -135,5 +135,10 @@ public class DataAnalysisViewController {
         return ResultEntityBuild.build(dataViewService.updateDataView(dto));
     }
 
+    @ApiOperation("批量添加数据视图")
+    @PostMapping("/addBatchDataView")
+    public ResultEntity<Object> addBatchDataView(@Validated @RequestBody SaveBatchDataViewDTO dto){
+        return ResultEntityBuild.build(dataViewService.addBatchDataView(dto));
+    }
 
 }
