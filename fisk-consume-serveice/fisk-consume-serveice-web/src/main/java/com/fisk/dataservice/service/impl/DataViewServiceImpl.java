@@ -305,7 +305,7 @@ public class DataViewServiceImpl
         log.info("保存数据视图参数,[{}]", JSON.toJSONString(dto));
         // 查询视图是否重复
         QueryWrapper<DataViewPO> qw = new QueryWrapper<>();
-        qw.lambda().ne(DataViewPO::getViewThemeId, dto.getViewThemeId()).eq(DataViewPO::getName, dto.getName()).eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
+        qw.lambda().eq(DataViewPO::getViewThemeId, dto.getViewThemeId()).eq(DataViewPO::getName, dto.getName()).eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
         DataViewPO dataViewPO = baseMapper.selectOne(qw);
         if (!Objects.isNull(dataViewPO)){
             throw new FkException(ResultEnum.DS_DATA_VIEW_EXIST);
@@ -446,24 +446,22 @@ public class DataViewServiceImpl
         for (String tableName : tableNameList){
             // 查询是否存在
             QueryWrapper<DataViewPO> qw = new QueryWrapper<>();
-            qw.lambda().ne(DataViewPO::getViewThemeId, dto.getViewThemeId()).eq(DataViewPO::getName, tableName)
+            qw.lambda().eq(DataViewPO::getViewThemeId, dto.getViewThemeId()).eq(DataViewPO::getName, tableName)
                     .eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
             DataViewPO dataViewPO = baseMapper.selectOne(qw);
-            if (!Objects.isNull(dataViewPO)){
-                continue;
-            }
-
-            // 不存在当前视图则创建
             DataViewPO model = new DataViewPO();
+            // 不存在当前视图则创建
             model.setViewThemeId(dto.getViewThemeId());
             model.setName(tableName);
             model.setDisplayName(tableName);
             String sql = "select * from " + tableName;
             model.setViewScript(sql);
             model.setViewDesc("");
-            int insert = baseMapper.insert(model);
-            if (insert <= 0){
-                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            if (Objects.isNull(dataViewPO)){
+                int insert = baseMapper.insert(model);
+                if (insert <= 0){
+                    throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+                }
             }
 
             // 向目标数据库中创建视图
@@ -471,7 +469,7 @@ public class DataViewServiceImpl
 
             // 查询主键
             QueryWrapper<DataViewPO> qw2 = new QueryWrapper<>();
-            qw2.lambda().eq(DataViewPO::getName, tableName).eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
+            qw2.lambda().eq(DataViewPO::getViewThemeId, dto.getViewThemeId()).eq(DataViewPO::getName, tableName).eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
             DataViewPO po = baseMapper.selectOne(qw2);
 
             // 存储字段信息
@@ -481,6 +479,10 @@ public class DataViewServiceImpl
     }
 
     private void batchCreateView(DataViewPO model, DataSourceDTO dataSourceDTO, DataViewThemePO dataViewThemePO){
+        // 删除历史视图
+        removeView(model, dataSourceDTO);
+
+        // 创建新视图
         String createViewSql = "create view " + dataViewThemePO.getThemeAbbr() + ".theme_" + dataViewThemePO.getId() + "_" + model.getName() + " as " + model.getViewScript();
         execSql(createViewSql, dataSourceDTO);
     }
@@ -543,7 +545,7 @@ public class DataViewServiceImpl
 
     private void removeView(DataViewPO model, DataSourceDTO dataSourceDTO){
         // 获取视图主题
-        DataViewThemePO dataViewThemePO = getViewThemeInfo(model.getId());
+        DataViewThemePO dataViewThemePO = dataViewThemeMapper.selectById(model.getViewThemeId());
         String removeViewSql = "DROP VIEW IF EXISTS " + dataViewThemePO.getThemeAbbr() + ".theme_" + dataViewThemePO.getId() + "_" + model.getName();
         execSql(removeViewSql, dataSourceDTO);
         log.info("删除视图成功");
@@ -579,7 +581,7 @@ public class DataViewServiceImpl
             abstractDbHelper.executeSql(sql, connection);
         } catch (SQLException e) {
             log.error("数据分析视图目标数据库执行sql失败,", e);
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "目标sql执行失败");
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, e.getMessage());
         }
     }
 
