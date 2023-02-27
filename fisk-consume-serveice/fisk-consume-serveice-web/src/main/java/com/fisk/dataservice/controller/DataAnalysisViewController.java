@@ -59,6 +59,12 @@ public class DataAnalysisViewController {
         return ResultEntityBuild.build(dataViewThemeService.updateViewTheme(dto));
     }
 
+    @ApiOperation("删除视图主题用户")
+    @DeleteMapping("/removeAccount")
+    public ResultEntity<Object> removeAccount(@RequestParam(value = "accountId", defaultValue = "0") Integer accountId){
+        return ResultEntityBuild.build(dataViewThemeService.removeAccount(accountId));
+    }
+
     @ApiOperation("分页获取视图主题列表")
     @GetMapping("/getViewThemeList")
     public ResultEntity<PageDTO<DataViewThemeDTO>> getViewThemeList(

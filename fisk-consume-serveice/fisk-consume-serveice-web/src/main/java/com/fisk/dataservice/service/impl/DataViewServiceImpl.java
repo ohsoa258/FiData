@@ -34,12 +34,14 @@ import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.dataservice.dto.dataanalysisview.*;
 import com.fisk.dataservice.entity.DataViewPO;
+import com.fisk.dataservice.entity.DataViewRolePO;
 import com.fisk.dataservice.entity.DataViewThemePO;
 import com.fisk.dataservice.entity.ViewFieldsPO;
 import com.fisk.dataservice.map.DataViewFieldsMap;
 import com.fisk.dataservice.map.DataViewMap;
 import com.fisk.dataservice.mapper.DataViewFieldsMapper;
 import com.fisk.dataservice.mapper.DataViewMapper;
+import com.fisk.dataservice.mapper.DataViewRoleMapper;
 import com.fisk.dataservice.mapper.DataViewThemeMapper;
 import com.fisk.dataservice.service.IDataViewFieldsService;
 import com.fisk.dataservice.service.IDataViewService;
@@ -99,6 +101,9 @@ public class DataViewServiceImpl
 
     @Resource
     private DataViewFieldsMapper dataViewFieldsMapper;
+
+    @Resource
+    private DataViewRoleMapper dataViewRoleMapper;
 
     @Override
     public PageDTO<DataViewDTO> getViewList(Integer viewThemeId, Integer pageNum, Integer pageSize) {
@@ -336,7 +341,39 @@ public class DataViewServiceImpl
 
         // 存储字段信息
         dataViewFieldsService.saveViewFields(dto, po.getViewThemeId(), dsDto);
+
+        // 为关联的主题角色授权视图权限
+        relationGrant(model, dsDto);
+
         return ResultEnum.SUCCESS;
+    }
+
+    private void relationGrant(DataViewPO model, DataSourceDTO dataSourceDTO) {
+        try {
+            // 查询架构
+            DataViewThemePO dataViewThemePO = dataViewThemeMapper.selectById(model.getViewThemeId());
+            // 查询角色信息
+            QueryWrapper<DataViewRolePO> qw = new QueryWrapper<>();
+            qw.lambda().eq(DataViewRolePO::getDbName, dataSourceDTO.getConDbname());
+            DataViewRolePO rolePo = dataViewRoleMapper.selectOne(qw);
+            String viewName = dataViewThemePO.getThemeAbbr() + "_" + dataViewThemePO.getId() + "_" + model.getName();
+            String sql = "grant select on " + dataViewThemePO.getThemeAbbr() + "." + viewName + " to " + rolePo.getRoleName();
+
+            AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
+            Connection connection = null;
+            if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName())){
+                connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
+                        dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+            }else if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
+                connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
+                        dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.PG);
+            }
+            assert connection != null;
+            abstractDbHelper.executeSql(sql, connection);
+            log.info("数据库角色关联视图sql执行结束,[{}]", sql);
+        } catch (SQLException e) {
+            log.error("数据分析视图目标数据库执行sql失败,", e);
+        }
     }
 
     @Override
