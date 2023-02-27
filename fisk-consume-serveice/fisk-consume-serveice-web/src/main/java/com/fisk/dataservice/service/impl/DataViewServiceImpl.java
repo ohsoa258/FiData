@@ -434,6 +434,9 @@ public class DataViewServiceImpl
         if (baseMapper.updateById(preModel) <= 0){
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR);
         }
+
+        // 修改角色权限
+        relationGrant(preModel, dataSourceDTO);
         return ResultEnum.SUCCESS;
     }
 

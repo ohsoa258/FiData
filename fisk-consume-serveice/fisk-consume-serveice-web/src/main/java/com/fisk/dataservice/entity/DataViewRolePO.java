@@ -23,4 +23,6 @@ public class DataViewRolePO extends BasePO {
     /**  */
     @ApiModelProperty(name = "",notes = "")
     private String roleName ;
+
+    private Integer themeId;
 }
