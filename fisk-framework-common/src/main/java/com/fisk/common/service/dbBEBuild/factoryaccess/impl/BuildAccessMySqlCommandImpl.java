@@ -121,10 +121,16 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = MySqlTypeEnum.TEXT.getName();
                 break;
             case DATE:
+                data[0] = MySqlTypeEnum.DATE.getName();
+                break;
             case TIMESTAMP:
-            case TIME:
-            case DATETIME:
                 data[0] = MySqlTypeEnum.TIMESTAMP.getName();
+                break;
+            case TIME:
+                data[0] = MySqlTypeEnum.TIME.getName();
+                break;
+            case DATETIME:
+                data[0] = MySqlTypeEnum.DATETIME.getName();
                 break;
             default:
                 data[0] = MySqlTypeEnum.VARCHAR.getName();
@@ -160,10 +166,14 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = PgTypeEnum.TEXT.getName();
                 break;
             case DATE:
-            case TIMESTAMP:
-            case TIME:
+                data[0] = PgTypeEnum.DATE.getName();
+                break;
             case DATETIME:
+            case TIMESTAMP:
                 data[0] = PgTypeEnum.TIMESTAMP.getName();
+                break;
+            case TIME:
+                data[0] = PgTypeEnum.TIME.getName();
                 break;
             default:
                 data[0] = PgTypeEnum.VARCHAR.getName();
@@ -203,10 +213,16 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = SqlServerTypeEnum.NTEXT.getName();
                 break;
             case DATE:
+                data[0] = SqlServerTypeEnum.DATE.getName();
+                break;
             case TIMESTAMP:
-            case TIME:
-            case DATETIME:
                 data[0] = SqlServerTypeEnum.TIMESTAMP.getName();
+                break;
+            case TIME:
+                data[0] = SqlServerTypeEnum.TIME.getName();
+                break;
+            case DATETIME:
+                data[0] = SqlServerTypeEnum.DATETIME.getName();
                 break;
             default:
                 data[0] = SqlServerTypeEnum.NVARCHAR.getName();
@@ -243,6 +259,8 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = OracleTypeEnum.CLOB.getName();
                 break;
             case DATE:
+                data[0] = OracleTypeEnum.DATE.getName();
+                break;
             case TIMESTAMP:
             case TIME:
             case DATETIME:

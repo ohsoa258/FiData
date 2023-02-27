@@ -290,10 +290,16 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = MySqlTypeEnum.TEXT.getName();
                 break;
             case DATE:
+                data[0] = MySqlTypeEnum.DATE.getName();
+                break;
             case TIME:
+                data[0] = MySqlTypeEnum.TIME.getName();
+                break;
             case TIMESTAMP:
-            case DATETIME:
                 data[0] = MySqlTypeEnum.TIMESTAMP.getName();
+                break;
+            case DATETIME:
+                data[0] = MySqlTypeEnum.DATETIME.getName();
                 break;
             case NUMERIC:
             case DECIMAL:
@@ -326,6 +332,8 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = OracleTypeEnum.CLOB.getName();
                 break;
             case DATE:
+                data[0] = OracleTypeEnum.DATE.getName();
+                break;
             case TIME:
             case TIMESTAMP:
             case DATETIME:

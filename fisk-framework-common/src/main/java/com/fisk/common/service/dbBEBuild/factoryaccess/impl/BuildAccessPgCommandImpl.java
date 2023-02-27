@@ -193,8 +193,12 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = SqlServerTypeEnum.NTEXT.getName();
                 break;
             case DATE:
-            case TIMESTAMP:
+                data[0] = SqlServerTypeEnum.DATE.getName();
+                break;
             case TIME:
+                data[0] = SqlServerTypeEnum.TIME.getName();
+                break;
+            case TIMESTAMP:
             case TIMESTAMPtz:
                 data[0] = SqlServerTypeEnum.TIMESTAMP.getName();
                 break;
@@ -231,7 +235,11 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = PgTypeEnum.TEXT.getName();
                 break;
             case DATE:
+                data[0] = PgTypeEnum.DATE.getName();
+                break;
             case TIME:
+                data[0] = PgTypeEnum.TIME.getName();
+                break;
             case TIMESTAMP:
             case TIMESTAMPtz:
                 data[0] = PgTypeEnum.TIMESTAMP.getName();
@@ -273,6 +281,8 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = OracleTypeEnum.CLOB.getName();
                 break;
             case DATE:
+                data[0] = OracleTypeEnum.DATE.getName();
+                break;
             case TIMESTAMP:
             case TIME:
             case TIMESTAMPtz:
@@ -310,7 +320,11 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = MySqlTypeEnum.FLOAT.getName();
                 break;
             case TIME:
+                data[0] = MySqlTypeEnum.TIME.getName();
+                break;
             case DATE:
+                data[0] = MySqlTypeEnum.DATE.getName();
+                break;
             case TIMESTAMP:
             case TIMESTAMPtz:
                 data[0] = MySqlTypeEnum.TIMESTAMP.getName();

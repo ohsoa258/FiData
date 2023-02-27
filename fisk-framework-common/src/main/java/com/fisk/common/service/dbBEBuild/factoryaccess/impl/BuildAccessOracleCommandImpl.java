@@ -115,6 +115,8 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = SqlServerTypeEnum.NTEXT.getName();
                 break;
             case DATE:
+                data[0] = SqlServerTypeEnum.DATE.getName();
+                break;
             case TIMESTAMP:
             case TIMESTAMPWITHLOCALTIMEZONE:
             case TIMESTAMPWITHTIMEZONE:
@@ -156,6 +158,8 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = PgTypeEnum.TEXT.getName();
                 break;
             case DATE:
+                data[0] = PgTypeEnum.DATE.getName();
+                break;
             case TIMESTAMP:
             case TIMESTAMPWITHLOCALTIMEZONE:
             case TIMESTAMPWITHTIMEZONE:
@@ -194,6 +198,8 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = OracleTypeEnum.CLOB.getName();
                 break;
             case DATE:
+                data[0] = OracleTypeEnum.DATE.getName();
+                break;
             case TIMESTAMP:
             case TIMESTAMPWITHLOCALTIMEZONE:
             case TIMESTAMPWITHTIMEZONE:
@@ -232,6 +238,8 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = MySqlTypeEnum.TEXT.getName();
                 break;
             case DATE:
+                data[0] = MySqlTypeEnum.DATE.getName();
+                break;
             case TIMESTAMP:
             case TIMESTAMPWITHLOCALTIMEZONE:
             case TIMESTAMPWITHTIMEZONE:
