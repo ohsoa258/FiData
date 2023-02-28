@@ -152,7 +152,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         try {
             NifiCustomWorkflowPO one = workflowService.query().eq("id", dto.dto.id).one();
             workflowDTO.workStatus = one.workStatus;
-            if (dto.flag) {
+            if (!dto.flag) {
                 // 正在发布
                 workflowDTO.status = 3;
             }
