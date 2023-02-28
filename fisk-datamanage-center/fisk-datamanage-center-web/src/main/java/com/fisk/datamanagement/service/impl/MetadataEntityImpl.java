@@ -145,16 +145,19 @@ public class MetadataEntityImpl
         if (CollectionUtils.isEmpty(poList)) {
             return list;
         }
-
+        //获取父级实体
         List<MetadataEntityPO> parentList = poList.stream().filter(e -> e.parentId == -1).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(parentList)) {
             return list;
         }
 
+        HashMap<Long, Integer> idList = new HashMap<>();
+        idList.put(0L, 0);
+
         //获取实体关联业务分类数据
         List<MetadataClassificationMapInfoDTO> classificationMap = metaDataClassificationMapMapper.getMetaDataClassificationMap();
         if (!CollectionUtils.isEmpty(classificationMap)) {
-
+            //根据业务分类名称分组
             Map<String, List<MetadataClassificationMapInfoDTO>> collect2 = classificationMap.stream().collect(Collectors.groupingBy(MetadataClassificationMapInfoDTO::getName));
 
             for (String classification : collect2.keySet()) {
@@ -181,11 +184,28 @@ public class MetadataEntityImpl
                 if (CollectionUtils.isEmpty(collect3)) {
                     continue;
                 }
-                po.parentId = collect3.get(0).parentId;
+
+                int parentId = collect3.get(0).parentId;
 
                 for (MetadataEntityPO table : collect3) {
+                    Integer integer = idList.get(table.id);
+                    if (integer != null && integer != 0) {
+                        parentId = integer;
+                        MetadataEntityPO po1 = new MetadataEntityPO();
+                        po1.typeId = table.typeId;
+                        po1.id = table.id;
+                        po1.name = table.name;
+                        po1.displayName = table.displayName;
+                        po1.qualifiedName = table.qualifiedName;
+                        po1.owner = table.owner;
+                        po1.parentId = (int) po.id;
+                        poList.add(po1);
+                        continue;
+                    }
                     table.parentId = (int) po.id;
+                    idList.put(table.id, parentId);
                 }
+                po.parentId = parentId;
                 poList.add(po);
             }
         }
@@ -775,7 +795,8 @@ public class MetadataEntityImpl
             //获取业务分类关联的实体id
             metadataEntity = metadataClassificationMap.getMetadataEntity((int) classificationPo.id, dto.offset, dto.limit);
         } else if (!StringUtils.isEmpty(dto.termName)) {
-            GlossaryPO infoByName = glossary.getInfoByName(dto.termName);
+            String[] split = dto.termName.split("@");
+            GlossaryPO infoByName = glossary.getInfoByName(split[0]);
             metadataEntity = glossary.getClassificationByEntityId((int) infoByName.id, dto.offset, dto.limit);
         }
         if (CollectionUtils.isEmpty(metadataEntity)) {
@@ -798,7 +819,7 @@ public class MetadataEntityImpl
         for (MetadataEntityPO po : list) {
             EntitiesDTO entitiesDto = new EntitiesDTO();
             entitiesDto.guid = String.valueOf(po.id);
-            entitiesDto.displayText = po.displayName;
+            entitiesDto.displayText = po.name;
             entitiesDto.typeName = EntityTypeEnum.getValue(po.typeId).getName();
             entitiesDto.status = "ACTIVE";
             entitiesDto.attributes = new EntityAttributesDTO();
