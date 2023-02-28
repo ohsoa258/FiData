@@ -10,6 +10,7 @@ import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
@@ -39,6 +40,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -57,6 +59,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Resource
     private UserClient userClient;
+
+    @Resource
+    private UserHelper userHelper;
 
     @Resource
     private DataAccessClient dataAccessClient;
@@ -81,21 +86,11 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         PageDTO<DataSourceConVO> pageDTO = new PageDTO<>();
         List<DataSourceConVO> allDataSource = getAllDataSource();
         if (CollectionUtils.isNotEmpty(allDataSource)) {
-            if (query != null && StringUtils.isNotEmpty(query.keyword)) {
-                allDataSource = allDataSource.stream().filter(
-                        t -> (t.getConDbname().contains(query.keyword)) ||
-                                t.getConType().getName().contains(query.keyword)).collect(Collectors.toList());
-            }
             allDataSource.forEach(t -> {
                 if (t.getDatasourceType() != SourceTypeEnum.FiData) {
                     t.setConPassword("");
                 }
             });
-        }
-        if (CollectionUtils.isNotEmpty(allDataSource)) {
-            pageDTO.setTotal(Long.valueOf(allDataSource.size()));
-            query.current = query.current - 1;
-            allDataSource = allDataSource.stream().sorted(Comparator.comparing(DataSourceConVO::getCreateTime).reversed()).skip((query.current - 1 + 1) * query.size).limit(query.size).collect(Collectors.toList());
         }
         pageDTO.setItems(allDataSource);
         return pageDTO;
@@ -104,49 +99,43 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     @Override
     public ResultEnum add(DataSourceConDTO dto) {
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
-        if (dto.datasourceType == SourceTypeEnum.FiData) {
-            queryWrapper.lambda().eq(DataSourceConPO::getDatasourceId, dto.datasourceId)
-                    .eq(DataSourceConPO::getDelFlag, 1);
-        } else {
-            queryWrapper.lambda().eq(DataSourceConPO::getName, dto.name)
-                    .eq(DataSourceConPO::getDelFlag, 1);
-        }
+        queryWrapper.lambda().eq(DataSourceConPO::getDatasourceId, dto.getDatasourceId())
+                .eq(DataSourceConPO::getDelFlag, 1);
         DataSourceConPO data = mapper.selectOne(queryWrapper);
         if (data != null) {
             return ResultEnum.DATA_QUALITY_DATASOURCE_EXISTS;
         }
         DataSourceConPO model = DataSourceConMap.INSTANCES.dtoToPo(dto);
-        if (model.getDatasourceType() == SourceTypeEnum.custom.getValue()) {
-            setMetaDataToRedis(model, 1);
+        model.setCreateTime(LocalDateTime.now());
+        model.setCreateUser(String.valueOf(userHelper.getLoginUserInfo().getId()));
+        int insert = mapper.insert(model);
+        if (insert <= 0) {
+            return ResultEnum.SAVE_DATA_ERROR;
         }
-        return mapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        if (model.getDatasourceType() == SourceTypeEnum.custom.getValue()) {
+            setMetaDataToRedis(Math.toIntExact(model.getId()), 1);
+        }
+        return ResultEnum.SUCCESS;
     }
 
     @Override
     public ResultEnum edit(DataSourceConEditDTO dto) {
-        DataSourceConPO model = mapper.selectById(dto.id);
+        DataSourceConPO model = mapper.selectById(dto.getId());
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
-        if (dto.datasourceType == SourceTypeEnum.FiData) {
-            queryWrapper.lambda()
-                    .eq(DataSourceConPO::getDatasourceId, dto.datasourceId)
-                    .eq(DataSourceConPO::getDelFlag, 1)
-                    .ne(DataSourceConPO::getId, dto.id);
-        } else {
-            queryWrapper.lambda()
-                    .eq(DataSourceConPO::getName, dto.name)
-                    .eq(DataSourceConPO::getDelFlag, 1)
-                    .ne(DataSourceConPO::getId, dto.id);
-        }
+        queryWrapper.lambda()
+                .eq(DataSourceConPO::getDatasourceId, dto.getDatasourceId())
+                .eq(DataSourceConPO::getDelFlag, 1)
+                .ne(DataSourceConPO::getId, dto.getId());
         DataSourceConPO data = mapper.selectOne(queryWrapper);
         if (data != null) {
             return ResultEnum.DATA_QUALITY_DATASOURCE_EXISTS;
         }
         DataSourceConMap.INSTANCES.editDtoToPo(dto, model);
         if (dto.getDatasourceType() == SourceTypeEnum.custom) {
-            setMetaDataToRedis(model, 2);
+            setMetaDataToRedis(Math.toIntExact(model.getId()), 2);
         }
         return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -158,7 +147,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             return ResultEnum.DATA_NOTEXISTS;
         }
         if (model.getDatasourceType() == SourceTypeEnum.custom.getValue()) {
-            setMetaDataToRedis(model, 3);
+            setMetaDataToRedis(Math.toIntExact(model.getId()), 3);
         }
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -168,20 +157,43 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     public ResultEnum testConnection(TestConnectionDTO dto) {
         Connection conn = null;
         try {
-            conn = getStatement(dto.getConType(), dto.getConStr(), dto.getConAccount(), dto.getConPassword());
-            return ResultEnum.SUCCESS;
+            switch (dto.getConType()) {
+                case MYSQL:
+                    Class.forName(DataSourceTypeEnum.MYSQL.getDriverName());
+                    conn = DriverManager.getConnection(dto.getConStr(), dto.getConAccount(), dto.getConPassword());
+                    return ResultEnum.SUCCESS;
+                case SQLSERVER:
+                    Class.forName(DataSourceTypeEnum.SQLSERVER.getDriverName());
+                    conn = DriverManager.getConnection(dto.getConStr(), dto.getConAccount(), dto.getConPassword());
+                    return ResultEnum.SUCCESS;
+                case POSTGRESQL:
+                    Class.forName(DataSourceTypeEnum.POSTGRESQL.getDriverName());
+                    conn = DriverManager.getConnection(dto.getConStr(), dto.getConAccount(), dto.getConPassword());
+                    return ResultEnum.SUCCESS;
+                case DORIS:
+                    Class.forName(DataSourceTypeEnum.DORIS.getDriverName());
+                    conn = DriverManager.getConnection(dto.getConStr(), dto.getConAccount(), dto.getConPassword());
+                    return ResultEnum.SUCCESS;
+                case ORACLE:
+                    Class.forName(DataSourceTypeEnum.ORACLE.getDriverName());
+                    conn = DriverManager.getConnection(dto.getConStr(), dto.getConAccount(), dto.getConPassword());
+                    return ResultEnum.SUCCESS;
+                default:
+                    return ResultEnum.DS_DATASOURCE_CON_WARN;
+            }
         } catch (Exception e) {
             if (conn != null) {
                 conn.close();
             }
-            return ResultEnum.DS_DATASOURCE_CON_ERROR;
+            log.error("测试连接异常：" + e);
+            return ResultEnum.DATASOURCE_CONNECTERROR;
         } finally {
             try {
                 if (conn != null) {
                     conn.close();
                 }
             } catch (SQLException e) {
-                return ResultEnum.DS_DATASOURCE_CON_ERROR;
+                throw new FkException(ResultEnum.DATASOURCE_CONNECTCLOSEERROR);
             }
         }
     }
@@ -190,15 +202,14 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     public FiDataMetaDataTreeDTO getFiDataConfigMetaData(boolean isComputeRuleCount) {
         // 第一步：获取Tree
         FiDataMetaDataTreeDTO fiDataMetaDataTreeBase = null;
-        QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda()
-                .eq(DataSourceConPO::getDatasourceType, SourceTypeEnum.FiData.getValue())
-                .eq(DataSourceConPO::getDelFlag, 1);
-        List<DataSourceConPO> dataSourceConPOList = mapper.selectList(queryWrapper);
-        if (CollectionUtils.isNotEmpty(dataSourceConPOList)) {
-            dataSourceConPOList = dataSourceConPOList.stream()
-                    .sorted(Comparator.comparing(DataSourceConPO::getDatasourceId))
+
+        List<DataSourceConVO> dataSourceConVOList = getFiDataDataSource();
+
+        if (CollectionUtils.isNotEmpty(dataSourceConVOList)) {
+            dataSourceConVOList = dataSourceConVOList.stream()
+                    .sorted(Comparator.comparing(DataSourceConVO::getDatasourceId))
                     .collect(Collectors.toList());
+
             fiDataMetaDataTreeBase = new FiDataMetaDataTreeDTO();
             fiDataMetaDataTreeBase.setId("-10");
             fiDataMetaDataTreeBase.setParentId("-100");
@@ -207,8 +218,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             fiDataMetaDataTreeBase.setLevelType(LevelTypeEnum.BASEFOLDER);
             fiDataMetaDataTreeBase.setSourceType(SourceTypeEnum.FiData.getValue());
             fiDataMetaDataTreeBase.children = new ArrayList<>();
-            for (DataSourceConPO dataSourceConPO : dataSourceConPOList) {
-                List<FiDataMetaDataDTO> fiDataMetaData = redisUtil.getFiDataMetaData(String.valueOf(dataSourceConPO.datasourceId));
+
+            for (DataSourceConVO dataSourceConVO : dataSourceConVOList) {
+                List<FiDataMetaDataDTO> fiDataMetaData = redisUtil.getFiDataMetaData(String.valueOf(dataSourceConVO.getDatasourceId()));
                 if (CollectionUtils.isNotEmpty(fiDataMetaData)) {
                     fiDataMetaDataTreeBase.children.add(fiDataMetaData.get(0).children.get(0));
                 }
@@ -227,13 +239,10 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     public FiDataMetaDataTreeDTO getCustomizeMetaData(boolean isComputeRuleCount) {
         // 第一步：获取Tree
         FiDataMetaDataTreeDTO fiDataMetaDataTreeBase = null;
-        QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda()
-                .eq(DataSourceConPO::getDatasourceType, SourceTypeEnum.custom.getValue())
-                .eq(DataSourceConPO::getDelFlag, 1);
-        List<DataSourceConPO> dataSourceConPOList = mapper.selectList(queryWrapper);
 
-        if (CollectionUtils.isNotEmpty(dataSourceConPOList)) {
+        List<DataSourceConVO> dataSourceConVOList = getCustomizeDataSource();
+
+        if (CollectionUtils.isNotEmpty(dataSourceConVOList)) {
             fiDataMetaDataTreeBase = new FiDataMetaDataTreeDTO();
             fiDataMetaDataTreeBase.setId("-20");
             fiDataMetaDataTreeBase.setParentId("-200");
@@ -242,7 +251,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             fiDataMetaDataTreeBase.setLevelType(LevelTypeEnum.BASEFOLDER);
             fiDataMetaDataTreeBase.setSourceType(SourceTypeEnum.custom.getValue());
             List<FiDataMetaDataTreeDTO> fiDataMetaDataTree_Ips = new ArrayList<>();
-            List<String> conIp = dataSourceConPOList.stream().map(t -> t.getConIp()).distinct().collect(Collectors.toList());
+            List<String> conIp = dataSourceConVOList.stream().map(t -> t.getConIp()).distinct().collect(Collectors.toList());
             for (String ip : conIp) {
                 String uuid_Ip = UUID.randomUUID().toString().replace("-", "");
                 FiDataMetaDataTreeDTO fiDataMetaDataTree_Ip = new FiDataMetaDataTreeDTO();
@@ -253,13 +262,13 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 fiDataMetaDataTree_Ip.setLevelType(LevelTypeEnum.FOLDER);
                 fiDataMetaDataTree_Ip.setSourceType(SourceTypeEnum.custom.getValue());
                 List<FiDataMetaDataTreeDTO> fiDataMetaDataTree_Ip_DataBases = new ArrayList<>();
-                List<DataSourceConPO> dataSourceConPOS = dataSourceConPOList.stream().filter(t -> t.getConIp().equals(ip)).collect(Collectors.toList());
-                for (DataSourceConPO dataSource : dataSourceConPOS) {
+                List<DataSourceConVO> dataSourceConVOS = dataSourceConVOList.stream().filter(t -> t.getConIp().equals(ip)).collect(Collectors.toList());
+                for (DataSourceConVO dataSource : dataSourceConVOS) {
                     FiDataMetaDataTreeDTO fiDataMetaDataTree_DataBase;
                     String redisKey = metaDataEntityKey + "_" + dataSource.getId();
                     Boolean exist = redisTemplate.hasKey(redisKey);
                     if (!exist) {
-                        setMetaDataToRedis(dataSource, 1);
+                        setMetaDataToRedis(dataSource.getId(), 1);
                     }
                     String json = redisTemplate.opsForValue().get(redisKey).toString();
                     if (StringUtils.isNotEmpty(json)) {
@@ -284,105 +293,92 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     @Override
-    public Object reloadFiDataDataSource() {
-        ResultEntity<List<DataSourceDTO>> fiDataDataSource = userClient.getAllFiDataDataSource();
-        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(fiDataDataSource.getData())) {
-            for (DataSourceDTO fiDataSourceDTO : fiDataDataSource.getData()) {
-                try {
-                    FiDataMetaDataReqDTO reqDTO = new FiDataMetaDataReqDTO();
-                    reqDTO.setDataSourceId(String.valueOf(fiDataSourceDTO.id));
-                    reqDTO.setDataSourceName(fiDataSourceDTO.getConDbname());
-                    switch (fiDataSourceDTO.id) {
-                        case 1:
-                        case 4:
-                            // dw olap
-                            log.info("【reloadFiDataDataSource】dw olap 数据源同步redis开始，数据源：" + fiDataSourceDTO.getConDbname());
-                            dataModelClient.setDataModelStructure(reqDTO);
-                            log.info("【reloadFiDataDataSource】dw olap 数据源同步redis结束，数据源：" + fiDataSourceDTO.getConDbname());
-                            break;
-                        case 2:
-                            // ods
-                            log.info("【reloadFiDataDataSource】ods 数据源同步redis开始，数据源：" + fiDataSourceDTO.getConDbname());
-                            dataAccessClient.setDataAccessStructure(reqDTO);
-                            log.info("【reloadFiDataDataSource】ods 数据源同步redis结束，数据源：" + fiDataSourceDTO.getConDbname());
-                            break;
-                        case 3:
-                            // mdm
-                            log.info("【reloadFiDataDataSource】mdm 数据源同步redis开始，数据源：" + fiDataSourceDTO.getConDbname());
-                            mdmClient.setMDMDataStructure(reqDTO);
-                            log.info("【reloadFiDataDataSource】mdm 数据源同步redis结束，数据源：" + fiDataSourceDTO.getConDbname());
-                            break;
-                    }
-                } catch (Exception ex) {
-                    log.error("【reloadFiDataDataSource】FiData数据源同步redis失败,Id:" + fiDataSourceDTO.getId());
-                    log.error("【reloadFiDataDataSource】FiData数据源同步redis失败,DbName:" + fiDataSourceDTO.getConDbname());
-                    continue;
+    public Object reloadDataSource(int id) {
+        List<DataSourceConVO> allDataSource = getAllDataSource();
+        DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == id).findFirst().orElse(null);
+        if (dataSourceConVO == null) {
+            return ResultEnum.DS_DATASOURCE_NOTEXISTS;
+        }
+        SourceTypeEnum datasourceType = dataSourceConVO.getDatasourceType();
+        switch (datasourceType) {
+            case FiData:
+                FiDataMetaDataReqDTO reqDTO = new FiDataMetaDataReqDTO();
+                reqDTO.setDataSourceId(String.valueOf(dataSourceConVO.getDatasourceId()));
+                reqDTO.setDataSourceName(dataSourceConVO.getConDbname());
+                switch (dataSourceConVO.getDatasourceId()) {
+                    case 1:
+                    case 4:
+                        dataModelClient.setDataModelStructure(reqDTO);
+                        break;
+                    case 2:
+                        dataAccessClient.setDataAccessStructure(reqDTO);
+                        break;
+                    case 3:
+                        mdmClient.setMDMDataStructure(reqDTO);
+                        break;
                 }
-            }
+                break;
+            case custom:
+                setMetaDataToRedis(dataSourceConVO.getId(), 2);
+                break;
         }
         return ResultEnum.SUCCESS;
     }
 
-    @Override
-    public Object reloadCustomizeDataSource() {
-        setMetaDataToRedis();
-        return ResultEnum.SUCCESS;
+    public List<DataSourceConVO> getFiDataDataSource() {
+        List<DataSourceConVO> allDataSource = getAllDataSource();
+        if (CollectionUtils.isNotEmpty(allDataSource)) {
+            allDataSource = allDataSource.stream().filter(t -> t.getDatasourceType().getValue() == SourceTypeEnum.FiData.getValue()).collect(Collectors.toList());
+        }
+        return allDataSource;
     }
 
-    /**
-     * @return java.util.List<com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO>
-     * @description 查询数据质量所有数据源信息，含FiData系统数据源
-     * @author dick
-     * @date 2022/12/1 12:17
-     * @version v1.0
-     * @params
-     */
+    public List<DataSourceConVO> getCustomizeDataSource() {
+        List<DataSourceConVO> allDataSource = getAllDataSource();
+        if (CollectionUtils.isNotEmpty(allDataSource)) {
+            allDataSource = allDataSource.stream().filter(t -> t.getDatasourceType().getValue() == SourceTypeEnum.custom.getValue()).collect(Collectors.toList());
+        }
+        return allDataSource;
+    }
+
     public List<DataSourceConVO> getAllDataSource() {
         List<DataSourceConVO> dataSourceList = new ArrayList<>();
-        // FiData数据源信息
-        ResultEntity<List<DataSourceDTO>> fiDataDataSourceResult = userClient.getAllFiDataDataSource();
-        final List<DataSourceDTO> fiDataDataSources = fiDataDataSourceResult != null && fiDataDataSourceResult.getCode() == 0
-                ? userClient.getAllFiDataDataSource().getData() : null;
+
+        // 系统管理中所有数据源
+        ResultEntity<List<DataSourceDTO>> systemDataSourceResult = userClient.getAll();
+        List<DataSourceDTO> systemDataSources = systemDataSourceResult != null && systemDataSourceResult.getCode() == 0 ? userClient.getAllFiDataDataSource().getData() : null;
+
         // 数据质量数据源信息
         QueryWrapper<DataSourceConPO> dataSourceConPOQueryWrapper = new QueryWrapper<>();
         dataSourceConPOQueryWrapper.lambda()
                 .eq(DataSourceConPO::getDelFlag, 1);
         List<DataSourceConPO> dataSourceConPOList = baseMapper.selectList(dataSourceConPOQueryWrapper);
         DateTimeFormatter pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        if (CollectionUtils.isNotEmpty(dataSourceConPOList)) {
+
+        // 组装数据源具体字段信息
+        if (CollectionUtils.isNotEmpty(dataSourceConPOList) && CollectionUtils.isNotEmpty(systemDataSources)) {
             dataSourceConPOList.forEach(t -> {
                 DataSourceConVO dataSourceConVO = new DataSourceConVO();
                 dataSourceConVO.setId(Math.toIntExact(t.getId()));
                 dataSourceConVO.setDatasourceType(SourceTypeEnum.getEnum(t.getDatasourceType()));
                 dataSourceConVO.setDatasourceId(t.getDatasourceId());
                 dataSourceConVO.setCreateTime(t.getCreateTime().format(pattern));
-                if (t.getDatasourceType() == 2) {
-                    dataSourceConVO.setName(t.getName());
-                    dataSourceConVO.setConStr(t.getConStr());
-                    dataSourceConVO.setConIp(t.getConIp());
-                    dataSourceConVO.setConPort(t.getConPort());
-                    dataSourceConVO.setConDbname(t.getConDbname());
-                    dataSourceConVO.setConType(DataSourceTypeEnum.getEnum(t.getConType()));
-                    dataSourceConVO.setConAccount(t.getConAccount());
-                    dataSourceConVO.setConPassword(t.getConPassword());
+                Optional<DataSourceDTO> first = systemDataSources.stream().filter(item -> item.getId() == t.getDatasourceId()).findFirst();
+                if (first.isPresent()) {
+                    DataSourceDTO dataSourceDTO = first.get();
+                    dataSourceConVO.setName(dataSourceDTO.getName());
+                    dataSourceConVO.setConStr(dataSourceDTO.getConStr());
+                    dataSourceConVO.setConIp(dataSourceDTO.getConIp());
+                    dataSourceConVO.setConPort(dataSourceDTO.getConPort());
+                    dataSourceConVO.setConDbname(dataSourceDTO.getConDbname());
+                    dataSourceConVO.setConType(DataSourceTypeEnum.getEnum(dataSourceDTO.getConType().getValue()));
+                    dataSourceConVO.setConAccount(dataSourceDTO.getConAccount());
+                    dataSourceConVO.setConPassword(dataSourceDTO.getConPassword());
                     dataSourceList.add(dataSourceConVO);
-                } else if (t.getDatasourceType() == 1 && CollectionUtils.isNotEmpty(fiDataDataSources)) {
-                    Optional<DataSourceDTO> first = fiDataDataSources.stream().filter(item -> item.getId() == t.getDatasourceId()).findFirst();
-                    if (first.isPresent()) {
-                        DataSourceDTO dataSourceDTO = first.get();
-                        dataSourceConVO.setName(dataSourceDTO.getName());
-                        dataSourceConVO.setConStr(dataSourceDTO.getConStr());
-                        dataSourceConVO.setConIp(dataSourceDTO.getConIp());
-                        dataSourceConVO.setConPort(dataSourceDTO.getConPort());
-                        dataSourceConVO.setConDbname(dataSourceDTO.getConDbname());
-                        dataSourceConVO.setConType(DataSourceTypeEnum.getEnum(dataSourceDTO.getConType().getValue()));
-                        dataSourceConVO.setConAccount(dataSourceDTO.getConAccount());
-                        dataSourceConVO.setConPassword(dataSourceDTO.getConPassword());
-                        dataSourceList.add(dataSourceConVO);
-                    }
                 }
             });
         }
+
         return dataSourceList;
     }
 
@@ -827,11 +823,20 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @params datasourceId
      * @params operationType 操作类型 1、新增 2、修改 3、删除
      */
-    public void setMetaDataToRedis(DataSourceConPO dataSourceConPO, int operationType) {
+    public void setMetaDataToRedis(int id, int operationType) {
         if (StringUtils.isEmpty(metaDataEntityKey)) {
             return;
         }
-        String redisKey = metaDataEntityKey + "_" + dataSourceConPO.getId();
+        List<DataSourceConVO> allDataSource = getAllDataSource();
+        if (CollectionUtils.isEmpty(allDataSource)) {
+            return;
+        }
+        DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == id).findFirst().orElse(null);
+        if (dataSourceConVO == null) {
+            return;
+        }
+
+        String redisKey = metaDataEntityKey + "_" + dataSourceConVO.getId();
         if (operationType == 3) {
             Boolean exist = redisTemplate.hasKey(redisKey);
             if (exist) {
@@ -839,14 +844,14 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             }
         } else if (operationType == 1 || operationType == 2) {
             FiDataMetaDataTreeDTO fiDataMetaDataTree_DataBase = new FiDataMetaDataTreeDTO();
-            fiDataMetaDataTree_DataBase.setId(String.valueOf(dataSourceConPO.getId()));
+            fiDataMetaDataTree_DataBase.setId(String.valueOf(dataSourceConVO.getId()));
             fiDataMetaDataTree_DataBase.setParentId("");
-            fiDataMetaDataTree_DataBase.setLabel(dataSourceConPO.getName());
-            fiDataMetaDataTree_DataBase.setLabelAlias(dataSourceConPO.getName());
+            fiDataMetaDataTree_DataBase.setLabel(dataSourceConVO.getName());
+            fiDataMetaDataTree_DataBase.setLabelAlias(dataSourceConVO.getName());
             fiDataMetaDataTree_DataBase.setLevelType(LevelTypeEnum.DATABASE);
-            fiDataMetaDataTree_DataBase.setSourceId(Math.toIntExact(dataSourceConPO.getId()));
+            fiDataMetaDataTree_DataBase.setSourceId(Math.toIntExact(dataSourceConVO.getId()));
             fiDataMetaDataTree_DataBase.setSourceType(SourceTypeEnum.custom.getValue());
-            fiDataMetaDataTree_DataBase.setChildren(getCustomizeMetaData_Table(dataSourceConPO));
+            fiDataMetaDataTree_DataBase.setChildren(getCustomizeMetaData_Table(dataSourceConVO));
             String json = JSONArray.toJSON(fiDataMetaDataTree_DataBase).toString();
             redisTemplate.opsForValue().set(redisKey, json);
         }
@@ -860,20 +865,16 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @version v1.0
      */
     public void setMetaDataToRedis() {
-        QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda()
-                .eq(DataSourceConPO::getDelFlag, 1)
-                .eq(DataSourceConPO::getDatasourceType, SourceTypeEnum.custom.getValue());
-        List<DataSourceConPO> dataSourceConPOs = mapper.selectList(queryWrapper);
-        if (CollectionUtils.isNotEmpty(dataSourceConPOs)) {
-            for (DataSourceConPO dataSourceConPO : dataSourceConPOs) {
+        List<DataSourceConVO> customizeDataSource = getCustomizeDataSource();
+        if (CollectionUtils.isNotEmpty(customizeDataSource)) {
+            for (DataSourceConVO dataSourceConVO : customizeDataSource) {
                 try {
-                    log.info("【setMetaDataToRedis】自定义数据源同步redis开始，数据源：" + dataSourceConPO.getConDbname());
-                    setMetaDataToRedis(dataSourceConPO, 2);
-                    log.info("【setMetaDataToRedis】自定义数据源同步redis结束，数据源：" + dataSourceConPO.getConDbname());
+                    log.info("【setMetaDataToRedis】自定义数据源同步redis开始，数据源：" + dataSourceConVO.getConDbname());
+                    setMetaDataToRedis(dataSourceConVO.getId(), 2);
+                    log.info("【setMetaDataToRedis】自定义数据源同步redis结束，数据源：" + dataSourceConVO.getConDbname());
                 } catch (Exception ex) {
-                    log.error("【setMetaDataToRedis】自定义数据源同步redis失败,Id:" + dataSourceConPO.getId());
-                    log.error("【setMetaDataToRedis】自定义数据源同步redis失败,DbName:" + dataSourceConPO.getConDbname());
+                    log.error("【setMetaDataToRedis】自定义数据源同步redis失败,Id:" + dataSourceConVO.getId());
+                    log.error("【setMetaDataToRedis】自定义数据源同步redis失败,DbName:" + dataSourceConVO.getConDbname());
                     continue;
                 }
             }
@@ -888,25 +889,22 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @version v1.0
      * @params conPo
      */
-    public List<FiDataMetaDataTreeDTO> getCustomizeMetaData_Table(DataSourceConPO conPo) {
+    public List<FiDataMetaDataTreeDTO> getCustomizeMetaData_Table(DataSourceConVO dataSourceConVO) {
         List<FiDataMetaDataTreeDTO> fiDataMetaDataTrees = new ArrayList<>();
         MysqlConUtils mysqlConUtils = new MysqlConUtils();
         SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
         PostgresConUtils postgresConUtils = new PostgresConUtils();
         try {
             List<TablePyhNameDTO> tableNameAndColumns = null;
-            switch (DataSourceTypeEnum.values()[conPo.conType]) {
+            switch (dataSourceConVO.getConType()) {
                 case MYSQL:
-                    // 表结构
-                    tableNameAndColumns = mysqlConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.MYSQL);
+                    tableNameAndColumns = mysqlConUtils.getTableNameAndColumns(dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword(), DataSourceTypeEnum.MYSQL);
                     break;
                 case SQLSERVER:
-                    // 表结构
-                    tableNameAndColumns = sqlServerPlusUtils.getTableNameAndColumnsPlus(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.SQLSERVER);
+                    tableNameAndColumns = sqlServerPlusUtils.getTableNameAndColumnsPlus(dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword(), DataSourceTypeEnum.SQLSERVER);
                     break;
                 case POSTGRESQL:
-                    // 表结构
-                    tableNameAndColumns = postgresConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.POSTGRESQL);
+                    tableNameAndColumns = postgresConUtils.getTableNameAndColumns(dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword(), DataSourceTypeEnum.POSTGRESQL);
                     break;
             }
             if (CollectionUtils.isNotEmpty(tableNameAndColumns)) {
@@ -915,10 +913,10 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     String uuid_TableId = UUID.randomUUID().toString().replace("-", "");
                     FiDataMetaDataTreeDTO fiDataMetaDataTree_Table = new FiDataMetaDataTreeDTO();
                     fiDataMetaDataTree_Table.setId(uuid_TableId);
-                    fiDataMetaDataTree_Table.setParentId(String.valueOf(conPo.id));
+                    fiDataMetaDataTree_Table.setParentId(String.valueOf(dataSourceConVO.getId()));
                     fiDataMetaDataTree_Table.setLabel(table.tableFullName);
                     fiDataMetaDataTree_Table.setLabelAlias(table.tableFullName);
-                    fiDataMetaDataTree_Table.setSourceId(Math.toIntExact(conPo.id));
+                    fiDataMetaDataTree_Table.setSourceId(Math.toIntExact(dataSourceConVO.getId()));
                     fiDataMetaDataTree_Table.setSourceType(SourceTypeEnum.custom.getValue());
                     fiDataMetaDataTree_Table.setLevelType(LevelTypeEnum.TABLE);
                     List<FiDataMetaDataTreeDTO> fiDataMetaDataTree_Table_Children = new ArrayList<>();
@@ -931,7 +929,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                             fiDataMetaDataTree_Field.setParentId(uuid_TableId);
                             fiDataMetaDataTree_Field.setLabel(field.fieldName);
                             fiDataMetaDataTree_Field.setLabelAlias(field.fieldName);
-                            fiDataMetaDataTree_Field.setSourceId(Math.toIntExact(conPo.id));
+                            fiDataMetaDataTree_Field.setSourceId(Math.toIntExact(dataSourceConVO.getId()));
                             fiDataMetaDataTree_Field.setSourceType(SourceTypeEnum.custom.getValue());
                             fiDataMetaDataTree_Field.setLevelType(LevelTypeEnum.FIELD);
                             fiDataMetaDataTree_Field.setLabelType(field.fieldType);
