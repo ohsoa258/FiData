@@ -1260,6 +1260,10 @@ public class BusinessAreaImpl
         data.targetDsConfig = targetDsConfig;
 
         data.businessDTO = dto.tableBusiness;
+        data.businessDTO.otherLogic = 1;
+        if (dto.syncMode == 4) {
+            data.businessDTO.otherLogic = 2;
+        }
 
         data.modelPublishFieldDTOList = dto.modelPublishFieldDTOList;
 

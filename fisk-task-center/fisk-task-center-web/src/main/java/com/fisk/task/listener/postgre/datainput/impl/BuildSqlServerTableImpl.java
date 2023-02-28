@@ -326,18 +326,25 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         StringBuilder stgSqlFileds = new StringBuilder();
         log.info("pg_dw建表字段信息:" + fieldList);
         fieldList.forEach((l) -> {
-            if (l.fieldType.contains("INT") || l.fieldType.contains("TEXT")) {
-                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(",");
-                stgSqlFileds.append("[").append(l.fieldEnName).append("] ntext,");
-            } else if (l.fieldType.toLowerCase().contains("numeric") || l.fieldType.toLowerCase().contains("float")) {
-                sqlFileds.append("[").append(l.fieldEnName).append("] float ,");
-                stgSqlFileds.append("[").append(l.fieldEnName).append("] nvarchar(4000),");
-            } else if (l.fieldType.contains("TIMESTAMP")) {
-                sqlFileds.append("[").append(l.fieldEnName).append("] datetime ,");
-                stgSqlFileds.append("[").append(l.fieldEnName).append("] nvarchar(4000),");
+            if (l.fieldType.contains("FLOAT")) {
+                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.contains("INT")) {
+                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.contains("TEXT")) {
+                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(", ");
+                stgSqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(",");
+            } else if (l.fieldType.toUpperCase().equals("DATE")) {
+                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.toUpperCase().equals("TIME")) {
+                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.contains("TIMESTAMP") || StringUtils.equals(l.fieldType.toUpperCase(), "DATETIME")) {
+                sqlFileds.append("[").append(l.fieldEnName).append("] datetime, ");
             } else {
-                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append("(").append(l.fieldLength).append(") ,");
-                stgSqlFileds.append("[").append(l.fieldEnName).append("] nvarchar(4000),");
+                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append("(").append(l.fieldLength).append("), ");
+            }
+            // 修改stg表,字段类型
+            if (!l.fieldType.contains("TEXT")) {
+                stgSqlFileds.append("[" + l.fieldEnName + "] nvarchar(4000),");
             }
             if (l.isPrimaryKey == 1) {
                 pksql.append("").append(l.fieldEnName).append(" ,");
