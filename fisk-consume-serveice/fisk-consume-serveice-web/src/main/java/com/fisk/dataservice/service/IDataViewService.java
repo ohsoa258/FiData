@@ -7,7 +7,6 @@ import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataservice.dto.dataanalysisview.*;
 import com.fisk.dataservice.entity.DataViewPO;
-import com.fisk.dataservice.entity.ViewFieldsPO;
 
 import java.util.List;
 
@@ -94,4 +93,6 @@ public interface IDataViewService extends IService<DataViewPO> {
      * @return
      */
     ResultEnum addBatchDataView(SaveBatchDataViewDTO dto);
+
+    OdsResultDTO getPreviewData(Integer viewThemeId, String tableName);
 }

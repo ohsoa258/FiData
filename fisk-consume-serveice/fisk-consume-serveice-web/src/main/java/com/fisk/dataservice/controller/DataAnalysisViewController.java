@@ -59,10 +59,12 @@ public class DataAnalysisViewController {
         return ResultEntityBuild.build(dataViewThemeService.updateViewTheme(dto));
     }
 
-    @ApiOperation("删除视图主题用户")
-    @DeleteMapping("/removeAccount")
-    public ResultEntity<Object> removeAccount(@RequestParam(value = "accountId", defaultValue = "0") Integer accountId){
-        return ResultEntityBuild.build(dataViewThemeService.removeAccount(accountId));
+    @ApiOperation("批量添加视图预览单表数据")
+    @GetMapping("/getPreviewData")
+    public ResultEntity<Object> getPreviewData(
+            @RequestParam(value = "viewThemeId", defaultValue = "0") Integer viewThemeId,
+            @RequestParam(value = "tableName", defaultValue = "") String tableName){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewService.getPreviewData(viewThemeId, tableName));
     }
 
     @ApiOperation("分页获取视图主题列表")

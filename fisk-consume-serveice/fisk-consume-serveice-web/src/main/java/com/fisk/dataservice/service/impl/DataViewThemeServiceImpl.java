@@ -129,7 +129,7 @@ public class DataViewThemeServiceImpl
         List<String> dataList = dtoList.stream().map(DataViewAccountDTO::getAccountName).collect(Collectors.toList());
         for (String item : dataList){
             if (nameList.contains(item)){
-                throw new FkException(ResultEnum.SAVE_DATA_ERROR, "当前主题下包含已经存在的账号名称");
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR, item + "：该账号已存在");
             }
         }
         // 创建数据库角色
@@ -201,9 +201,22 @@ public class DataViewThemeServiceImpl
             if (insertFlag <= 0){
                 throw new FkException(ResultEnum.SAVE_DATA_ERROR, "添加数据库角色失败");
             }
-
+        }
+        try{
             // 执行sql
-            execSql(roleSql, dataSourceDTO);
+            AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
+            Connection connection = null;
+            if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName())){
+                connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
+                        dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+            }else if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
+                connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
+                        dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.PG);
+            }
+            abstractDbHelper.executeSql(roleSql, connection);
+            log.info("数据分析视图服务sql执行结束,[{}]", roleSql);
+        }catch (Exception e){
+            log.error("执行sql失败", e.getMessage());
         }
     }
 
@@ -439,23 +452,6 @@ public class DataViewThemeServiceImpl
             vo.setName(dataSourceDTO.name);
         }
         return vo;
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public ResultEnum removeAccount(Integer accountId) {
-        DataViewAccountPO dataViewAccountPO = dataViewAccountMapper.selectById(accountId);
-        if (dataViewAccountPO != null){
-            // 删除数据库用户
-            int del = dataViewAccountMapper.deleteById(accountId);
-            if (del <= 0){
-                throw new FkException(ResultEnum.DELETE_ERROR);
-            }
-            // 删除登录用户
-            DataViewThemePO dataViewThemePO = baseMapper.selectById(dataViewAccountPO.getViewThemeId());
-            removeLogin(Collections.singletonList(dataViewAccountPO), verifyDataSource(dataViewThemePO.getTargetDbId()));
-        }
-        return ResultEnum.SUCCESS;
     }
 
     private DataSourceDTO verifyDataSource(Integer targetDbId){

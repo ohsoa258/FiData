@@ -65,11 +65,4 @@ public interface IDataViewThemeService extends IService<DataViewThemePO> {
      * @return
      */
     DataSourceVO getDataSourceByViewThemeId(Integer viewThemeId);
-
-    /**
-     * 删除账户
-     * @param accountId
-     * @return
-     */
-    ResultEnum removeAccount(Integer accountId);
 }

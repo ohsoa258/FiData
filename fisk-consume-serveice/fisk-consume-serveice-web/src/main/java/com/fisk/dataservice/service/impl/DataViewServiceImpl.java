@@ -15,7 +15,6 @@ import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
-import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.framework.exception.FkException;
@@ -57,8 +56,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.Pattern;
 import java.sql.*;
 import java.time.Duration;
 import java.time.Instant;
@@ -245,22 +242,6 @@ public class DataViewServiceImpl
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             st.setMaxRows(10);
 
-            //cdc模式
-//            if (po.driveType.equalsIgnoreCase(com.fisk.dataaccess.enums.DataSourceTypeEnum.ORACLE_CDC.getName())) {
-//                query.querySql = "SELECT * FROM " + query.querySql;
-//            }
-
-            //系统变量替换
-//            if (!org.springframework.util.CollectionUtils.isEmpty(query.deltaTimes)) {
-//                for (DeltaTimeDTO item : query.deltaTimes) {
-//                    boolean empty = org.apache.commons.lang3.StringUtils.isEmpty(item.variableValue);
-//                    if (item.deltaTimeParameterTypeEnum != DeltaTimeParameterTypeEnum.VARIABLE || empty) {
-//                        continue;
-//                    }
-//                    item.variableValue = AbstractCommonDbHelper.executeTotalSql(item.variableValue, conn, item.systemVariableTypeEnum.getName());
-//                }
-//            }
-
             assert st != null;
             Instant inst2 = Instant.now();
             log.info("流式设置执行时间 : " + Duration.between(inst1, inst2).toMillis());
@@ -302,6 +283,28 @@ public class DataViewServiceImpl
         typeConversion(dataSourceTypeEnum, array.fieldNameDTOList, dto.targetDbId);
 
         return array;
+    }
+
+    @Override
+    public OdsResultDTO getPreviewData(Integer viewThemeId, String tableName) {
+        if (viewThemeId == 0 || StringUtils.isEmpty(tableName)){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        DataViewThemePO dataViewThemePO = dataViewThemeMapper.selectById(viewThemeId);
+        if (dataViewThemePO == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        DataSourceDTO dataSourceDTO = verifyDataSource(dataViewThemePO.getTargetDbId());
+        SelSqlResultDTO dto = new SelSqlResultDTO();
+        dto.setViewThemeId(viewThemeId);
+        dto.setViewName(tableName);
+        dto.setQuerySql("select * from " + tableName);
+        dto.setPageNum(1);
+        dto.setPageSize(100);
+        dto.setDataSourceTypeEnum(dataSourceDTO.conType.getName());
+        dto.setTargetDbId(dataSourceDTO.getId());
+        return this.getDataAccessQueryList(dto);
     }
 
     @Override
