@@ -1929,6 +1929,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         OdsResultDTO array = new OdsResultDTO();
         Connection conn = null;
         Statement st = null;
+        ResultSet rs = null;
         ResultEntity<DataSourceDTO> dataSourceConfig = null;
         try {
             dataSourceConfig = userClient.getFiDataDataSourceById(query.dataSourceId);
@@ -1936,31 +1937,17 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
             conn = getConnection(dataSourceConfig.data);
-            st = conn.createStatement();
+            st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            st.setMaxRows(10);
             DataTranDTO dto = new DataTranDTO();
             dto.tableName = query.tableName;
             dto.querySql = query.querySql;
             Map<String, String> converSql = publishTaskClient.converSql(dto).data;
             query.querySql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
-            //获取总条数 todo 不支持分页
-            /*String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
-            ResultSet rSet = st.executeQuery(getTotalSql);
-            int rowCount = 0;
-            if (rSet.next()) {
-                rowCount = rSet.getInt("total");
-            }
-            rSet.close();*/
-
-            int offset = (query.pageIndex - 1) * query.pageSize;
-            IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceConfig.data.conType);
-            query.querySql = dbCommand.buildPaging(query.querySql, query.pageSize, offset);
-
-            ResultSet rs = st.executeQuery(query.querySql);
-            //获取数据集
-            array = resultSetToJsonArrayDataModel(rs);
-            array.pageIndex = query.pageIndex;
-            array.pageSize = query.pageSize;
-            rs.close();
+            rs = st.executeQuery(query.querySql);
+            // 获取数据集
+            array = resultSetToJsonArrayDataAccess(rs);
+            array.sql = query.querySql;
         } catch (SQLException e) {
             log.error("getTableFieldByQuery ex:", e);
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ":" + e.getMessage());
@@ -1980,6 +1967,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         typeConversion(dataSourceConfig.data.conType, array.fieldNameDTOList, first.get().id);
 
         return array;
+
     }
 
     /**
