@@ -5,16 +5,14 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.datamanagement.config.SwaggerConfig;
-import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
-import com.fisk.datamanagement.dto.classification.ClassificationAttributeDTO;
-import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
-import com.fisk.datamanagement.dto.classification.ClassificationDelAssociatedEntityDTO;
+import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.service.IClassification;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.annotation.Resource;
 
@@ -41,7 +39,7 @@ public class ClassificationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getClassificationTree());
     }
 
-    @ApiOperation("修改业务类型以及业务属性.已重构")
+    @ApiOperation("修改业务类型.已重构")
     @PutMapping("/updateClassification")
     public ResultEntity<Object> updateClassification(@Validated @RequestBody ClassificationDefsDTO dto) {
         return ResultEntityBuild.build(service.updateClassification(dto));
@@ -83,6 +81,7 @@ public class ClassificationController {
         return ResultEntityBuild.build(service.appSynchronousClassification(dto));
     }
 
+    @ApiIgnore
     @ApiOperation("删除业务分类")
     @GetMapping("/delClassificationEntity")
     public ResultEntity<Object> delClassificationEntity(String classification) {
@@ -101,9 +100,15 @@ public class ClassificationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getClassificationAttributeList(guid));
     }
 
-    @ApiOperation("删除业务分类属性类型")
-    @GetMapping("/delClassificationAttribute")
-    public ResultEntity<Object> delClassificationAttribute(@RequestParam(value = "id", defaultValue = "0") Integer id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delClassificationAttribute(id));
+    @ApiOperation("修改业务分类属性")
+    @PutMapping("/updateClassificationAttribute")
+    public ResultEntity<Object> updateClassificationAttribute(@Validated @RequestBody UpdateClassificationAttributeDTO dto) {
+        return ResultEntityBuild.build(service.updateClassificationAttribute(dto));
+    }
+
+    @ApiOperation("删除业务分类属性")
+    @DeleteMapping("/removeClassificationAttribute")
+    public ResultEntity<Object> delClassificationAttribute(@RequestParam(value = "guid", defaultValue = "0") Integer guid) {
+        return ResultEntityBuild.build(service.delClassificationAttribute(guid));
     }
 }

@@ -429,7 +429,7 @@ public class ClassificationImpl
 
         // 根据属性类型查询属性id
         QueryWrapper<AttributeTypePO> qw = new QueryWrapper<>();
-        qw.eq("name", dto.getTypeName());
+        qw.lambda().eq(AttributeTypePO::getName, dto.getTypeName());
         AttributeTypePO typePo = attributeTypeMapper.selectOne(qw);
         if (Objects.isNull(typePo)){
             throw new FkException(ResultEnum.ERROR, "属性类型不存在");
@@ -437,11 +437,12 @@ public class ClassificationImpl
 
         // 查询是否重复
         QueryWrapper<ClassificationPO> cqw = new QueryWrapper<>();
-        cqw.eq("attribute_name", dto.getName()).eq("attribute_type_id", typePo.getTypeId())
-                .eq("business_classification_id", dto.getGuid());
+        cqw.lambda().ne(ClassificationPO::getId, dto.guid)
+                .eq(ClassificationPO::getBusinessClassificationId, dto.getGuid())
+                .eq(ClassificationPO::getAttributeName, dto.getName());
         ClassificationPO classificationPO = classificationMapper.selectOne(cqw);
         if (!Objects.isNull(classificationPO)){
-            throw new FkException(ResultEnum.ERROR, "属性已存在");
+            throw new FkException(ResultEnum.ERROR, "当前业务分类下已存在该属性名称");
         }
 
         // 添加业务分类属性
@@ -490,6 +491,43 @@ public class ClassificationImpl
         int i = classificationMapper.deleteById(id);
         if (i <= 0){
             throw new FkException(ResultEnum.ERROR, "删除失败");
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum updateClassificationAttribute(UpdateClassificationAttributeDTO dto) {
+        log.info("属性参数[{}]", JSON.toJSONString(dto));
+        // 查询数据
+        ClassificationPO model = classificationMapper.selectById(dto.guid);
+        if (Objects.isNull(model)){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        // 查询是否重复
+        QueryWrapper<ClassificationPO> cqw = new QueryWrapper<>();
+        cqw.lambda().ne(ClassificationPO::getId, dto.guid)
+                .eq(ClassificationPO::getBusinessClassificationId, model.getBusinessClassificationId())
+                .eq(ClassificationPO::getAttributeName, dto.getName());
+        ClassificationPO classificationPO = classificationMapper.selectOne(cqw);
+        if (!Objects.isNull(classificationPO)){
+            throw new FkException(ResultEnum.ERROR, "当前业务分类下已存在该属性名称");
+        }
+
+        // 查询业务分类类型id
+        QueryWrapper<AttributeTypePO> qw = new QueryWrapper<>();
+        qw.lambda().eq(AttributeTypePO::getName, dto.getTypeName());
+        AttributeTypePO typePo = attributeTypeMapper.selectOne(qw);
+        if (Objects.isNull(typePo)){
+            throw new FkException(ResultEnum.ERROR, "属性类型不存在");
+        }
+
+        // 更新属性
+        model.setAttributeName(dto.getName());
+        model.setAttributeTypeId(typePo.getTypeId());
+
+        if (classificationMapper.updateById(model) <= 0){
+            throw new FkException(ResultEnum.UPDATE_DATA_ERROR);
         }
         return ResultEnum.SUCCESS;
     }
