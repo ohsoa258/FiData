@@ -164,7 +164,8 @@ public class KafkaConsumer {
             props.put("sasl.mechanism", "GSSAPI");                //认证代码
             props.put("security.protocol", "SASL_PLAINTEXT");
         }
-        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 500);
+        //每次最多消费3条,慢慢来
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 3);
         props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, sessionTimeoutMs);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         return props;

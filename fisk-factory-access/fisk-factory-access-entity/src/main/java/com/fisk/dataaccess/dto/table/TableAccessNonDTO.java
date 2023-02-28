@@ -133,6 +133,8 @@ public class TableAccessNonDTO extends BaseDTO {
     @ApiModelProperty(value = "业务时间覆盖，需要传递拼接的sql条件", required = false)
     public String whereScript;
 
+    public List<TableHistoryDTO> tableHistorys;
+
     public TableAccessNonDTO(BaseEntity entity) {
         super(entity);
     }
