@@ -471,7 +471,7 @@ public class ClassificationImpl
         List<AttributeTypeVO> list = new ArrayList<>();
         for (ClassificationPO model : classificationPOList){
             AttributeTypeVO vo = new AttributeTypeVO();
-            vo.setGuid(guid);
+            vo.setGuid(String.valueOf(model.getId()));
             vo.setName(model.getAttributeName());
             vo.setTypeId(model.getAttributeTypeId());
             vo.setTypeName(attributeTypeMapper.selectTypeName(model.getAttributeTypeId()));
