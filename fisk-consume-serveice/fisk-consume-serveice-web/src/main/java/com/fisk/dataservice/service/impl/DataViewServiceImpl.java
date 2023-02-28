@@ -361,8 +361,8 @@ public class DataViewServiceImpl
             QueryWrapper<DataViewRolePO> qw = new QueryWrapper<>();
             qw.lambda().eq(DataViewRolePO::getThemeId, model.getViewThemeId());
             DataViewRolePO rolePo = dataViewRoleMapper.selectOne(qw);
-            String viewName = dataViewThemePO.getThemeAbbr() + "_" + dataViewThemePO.getId() + "_" + model.getName();
-            String sql = "grant select on " + dataViewThemePO.getThemeAbbr() + "." + viewName + " to " + rolePo.getRoleName();
+            String viewName = dataViewThemePO.getThemeAbbr() + ".theme_" + dataViewThemePO.getId() + "_" + model.getName();
+            String sql = "grant select on " + viewName + " to " + rolePo.getRoleName();
 
             AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
             Connection connection = null;
