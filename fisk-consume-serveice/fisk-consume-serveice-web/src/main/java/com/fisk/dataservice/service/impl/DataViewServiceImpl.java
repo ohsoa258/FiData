@@ -341,7 +341,7 @@ public class DataViewServiceImpl
 
         // 查询主键
         QueryWrapper<DataViewPO> qw2 = new QueryWrapper<>();
-        qw2.lambda().eq(DataViewPO::getName, dto.getName()).eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
+        qw2.lambda().eq(DataViewPO::getViewThemeId, dto.getViewThemeId()).eq(DataViewPO::getName, dto.getName()).eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
         DataViewPO po = baseMapper.selectOne(qw2);
 
         // 存储字段信息
@@ -363,6 +363,9 @@ public class DataViewServiceImpl
             DataViewRolePO rolePo = dataViewRoleMapper.selectOne(qw);
             String viewName = dataViewThemePO.getThemeAbbr() + ".theme_" + dataViewThemePO.getId() + "_" + model.getName();
             String sql = "grant select on " + viewName + " to " + rolePo.getRoleName();
+            if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
+                sql = "grant select on table " + viewName + " to " + rolePo.getRoleName();
+            }
 
             AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
             Connection connection = null;

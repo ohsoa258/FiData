@@ -22,10 +22,11 @@ public interface DataViewThemeMapper extends FKBaseMapper<DataViewThemePO> {
     /**
      * 获取视图主题简称
      * @return
+     * @param targetDbId
      * @param flag
      */
-    @Select("select theme_abbr from tb_view_theme where del_flag = #{flag}")
-    List<String> getAbbreviation(@Param("flag") int flag);
+    @Select("select theme_abbr from tb_view_theme where target_db_id = #{targetDbId} and del_flag = #{flag}")
+    List<String> getAbbreviation(@Param("targetDbId") Integer targetDbId, @Param("flag") int flag);
 
     /**
      * 查询视图主题id

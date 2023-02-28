@@ -95,7 +95,7 @@ public class DataViewThemeServiceImpl
 
         // 校验架构是否已经存在，不包含则创建架构
         boolean schemaFlag = false;
-        List<String> abbrList = baseMapper.getAbbreviation(DelFlagEnum.NORMAL_FLAG.getValue());
+        List<String> abbrList = baseMapper.getAbbreviation(dataSourceDTO.getId(), DelFlagEnum.NORMAL_FLAG.getValue());
         if (!abbrList.contains(dto.getThemeAbbr())){
             schemaFlag = true;
         }
@@ -199,6 +199,9 @@ public class DataViewThemeServiceImpl
         log.info("开始关联数据库角色，【{}{}】", viewThemeId, JSON.toJSONString(po));
         String roleName = dataSourceDTO.conDbname + "_viewThemeRole_" + viewThemeId;
         String relationSql = "exec sp_adduser " + po.getAccountName() + "," + po.getAccountName() + "," + roleName;
+        if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
+            relationSql = "grant " + roleName + " to " + po.getAccountName();
+        }
         execSql(relationSql, dataSourceDTO);
         log.info("关联数据库角色结束");
     }
@@ -211,6 +214,9 @@ public class DataViewThemeServiceImpl
     private void createRole(DataSourceDTO dataSourceDTO, Integer viewThemeId){
         String roleName = dataSourceDTO.conDbname + "_viewThemeRole_" + viewThemeId;
         String roleSql = "exec sp_addrole " + roleName;
+        if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
+            roleSql = "create role " + roleName;
+        }
 
         // 存储入库
         DataViewRolePO roleModel = new DataViewRolePO();
@@ -350,6 +356,10 @@ public class DataViewThemeServiceImpl
 
             String sql1 = "ALTER AUTHORIZATION ON SCHEMA::" + dataViewRolePO.getRoleName() + " TO " + "dbo";
             String sql2 = "DROP ROLE IF EXISTS" + dataViewRolePO.getRoleName();
+            if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
+                sql1 = "REASSIGN OWNED BY " + dataViewRolePO.getRoleName() + " TO postgres";
+                sql2 = "DROP USER " + dataViewRolePO.getRoleName();
+            }
             AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
             Connection connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
                     dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
@@ -370,6 +380,11 @@ public class DataViewThemeServiceImpl
                 AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
                 Connection connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
                         dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+                if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
+                    sql = "DROP user if exists " + item.getAccountName();
+                    abstractDbHelper.executeSql(sql, connection);
+                    return;
+                }
                 abstractDbHelper.executeSql(sql, connection);
                 abstractDbHelper.executeSql(sql1, connection);
                 abstractDbHelper.executeSql(sql2, connection);
