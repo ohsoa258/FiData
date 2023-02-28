@@ -313,7 +313,9 @@ public class DataViewServiceImpl
         log.info("保存数据视图参数,[{}]", JSON.toJSONString(dto));
         // 查询视图是否重复
         QueryWrapper<DataViewPO> qw = new QueryWrapper<>();
-        qw.lambda().eq(DataViewPO::getViewThemeId, dto.getViewThemeId()).eq(DataViewPO::getName, dto.getName()).eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
+        qw.lambda().eq(DataViewPO::getViewThemeId, dto.getViewThemeId())
+                .eq(DataViewPO::getName, dto.getName())
+                .eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
         DataViewPO dataViewPO = baseMapper.selectOne(qw);
         if (!Objects.isNull(dataViewPO)){
             throw new FkException(ResultEnum.DS_DATA_VIEW_EXIST);
@@ -357,7 +359,7 @@ public class DataViewServiceImpl
             DataViewThemePO dataViewThemePO = dataViewThemeMapper.selectById(model.getViewThemeId());
             // 查询角色信息
             QueryWrapper<DataViewRolePO> qw = new QueryWrapper<>();
-            qw.lambda().eq(DataViewRolePO::getDbName, dataSourceDTO.getConDbname());
+            qw.lambda().eq(DataViewRolePO::getThemeId, model.getViewThemeId());
             DataViewRolePO rolePo = dataViewRoleMapper.selectOne(qw);
             String viewName = dataViewThemePO.getThemeAbbr() + "_" + dataViewThemePO.getId() + "_" + model.getName();
             String sql = "grant select on " + dataViewThemePO.getThemeAbbr() + "." + viewName + " to " + rolePo.getRoleName();
@@ -423,7 +425,8 @@ public class DataViewServiceImpl
         }
 
         // 校验数据源
-        DataSourceDTO dataSourceDTO = checkDataSource(dto.getTargetDbId());
+        DataViewThemePO dataViewThemePO = dataViewThemeMapper.selectById(preModel.getViewThemeId());
+        DataSourceDTO dataSourceDTO = checkDataSource(dataViewThemePO.getTargetDbId());
 
         // 修改数据库中的数据视图
         if (!dto.getName().equals(preModel.getName())){
