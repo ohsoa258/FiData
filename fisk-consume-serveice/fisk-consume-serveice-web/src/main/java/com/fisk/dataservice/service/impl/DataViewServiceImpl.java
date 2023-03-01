@@ -345,7 +345,7 @@ public class DataViewServiceImpl
         DataViewPO po = baseMapper.selectOne(qw2);
 
         // 存储字段信息
-        dataViewFieldsService.saveViewFields(dto, po.getViewThemeId(), dsDto);
+        dataViewFieldsService.saveViewFields(dto, (int)po.getId(), dsDto);
 
         // 为关联的主题角色授权视图权限
         relationGrant(model, dsDto);
