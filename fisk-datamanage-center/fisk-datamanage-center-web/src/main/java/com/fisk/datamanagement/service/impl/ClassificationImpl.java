@@ -58,6 +58,10 @@ public class ClassificationImpl
     AttributeTypeMapper attributeTypeMapper;
     @Resource
     ClassificationMapper classificationMapper;
+    @Resource
+    MetadataEntityClassificationAttributeMapper metadataEntityClassificationAttributeMapper;
+    @Resource
+    MetadataEntityClassificationAttributeMapImpl metadataEntityClassificationAttributeMap;
 
     @Resource
     AtlasClient atlasClient;
@@ -287,9 +291,9 @@ public class ClassificationImpl
         return ResultEnum.SUCCESS;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
-    public ResultEnum classificationAddAssociatedEntity(ClassificationAddEntityDTO dto)
-    {
+    public ResultEnum classificationAddAssociatedEntity(ClassificationAddEntityDTO dto) {
 
         // 业务分类和实体id
         MetadataClassificationMapPO model = new MetadataClassificationMapPO();
@@ -300,9 +304,34 @@ public class ClassificationImpl
         qw.eq("name", dto.classification.typeName);
         BusinessClassificationPO bcPo = businessClassificationMapper.selectOne(qw);
         model.setBusinessClassificationId((int) bcPo.id);
-        if (metaDataClassificationMapMapper.insert(model) <= 0){
+        if (metaDataClassificationMapMapper.insert(model) <= 0) {
             throw new FkException(ResultEnum.ERROR, "业务分类关联实体失败");
         }
+
+        //查询业务分类下属性
+        QueryWrapper<ClassificationPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(ClassificationPO::getBusinessClassificationId, bcPo.id);
+        List<ClassificationPO> list = classificationMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(list)) {
+            return ResultEnum.SUCCESS;
+        }
+        List<Integer> collect = list.stream().map(e -> e.getAttributeTypeId()).collect(Collectors.toList());
+
+        List<MetadataEntityClassificationAttributePO> dataList = new ArrayList<>();
+        for (Integer id : collect) {
+            MetadataEntityClassificationAttributePO po = new MetadataEntityClassificationAttributePO();
+            po.attributeTypeId = id;
+            po.metadataEntityId = Integer.parseInt(dto.entityGuids.get(0));
+            po.classificationId = (int) bcPo.id;
+
+            dataList.add(po);
+        }
+
+        boolean flat = metadataEntityClassificationAttributeMap.saveBatch(dataList);
+        if (!flat) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
         /*Boolean exist = redisTemplate.hasKey("metaDataEntityData:"+dto.entityGuids.get(0));
         if (exist)
         {
@@ -313,11 +342,40 @@ public class ClassificationImpl
 
     @Override
     public ResultEnum classificationDelAssociatedEntity(ClassificationDelAssociatedEntityDTO dto) {
-        if (metaDataClassificationMapMapper.deleteById(dto.entityGuid) <= 0){
-            throw new FkException(ResultEnum.ERROR, "业务分类删除实体失败");
+
+        QueryWrapper<BusinessClassificationPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(BusinessClassificationPO::getName, dto.classificationName);
+        BusinessClassificationPO po = businessClassificationMapper.selectOne(queryWrapper);
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
-//        ResultDataDTO<String> result = atlasClient.delete(entityByGuid + "/" + dto.entityGuid + "/classification/" + dto.classificationName);
+        QueryWrapper<MetadataClassificationMapPO> queryWrapper1 = new QueryWrapper<>();
+        queryWrapper1.lambda()
+                .eq(MetadataClassificationMapPO::getBusinessClassificationId, po.id)
+                .eq(MetadataClassificationMapPO::getMetadataEntityId, dto.entityGuid);
+        MetadataClassificationMapPO classificationMapPO = metaDataClassificationMapMapper.selectOne(queryWrapper1);
+        if (classificationMapPO == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        int flat = metaDataClassificationMapMapper.deleteById(classificationMapPO.id);
+        if (flat == 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        QueryWrapper<MetadataEntityClassificationAttributePO> queryWrapper2 = new QueryWrapper<>();
+        queryWrapper2.lambda()
+                .eq(MetadataEntityClassificationAttributePO::getClassificationId, po.id)
+                .eq(MetadataEntityClassificationAttributePO::getMetadataEntityId, dto.entityGuid);
+        List<MetadataEntityClassificationAttributePO> attribute = metadataEntityClassificationAttributeMapper.selectList(queryWrapper2);
+        if (CollectionUtils.isEmpty(attribute)) {
+            return ResultEnum.SUCCESS;
+        }
+        boolean remove = metadataEntityClassificationAttributeMap.remove(queryWrapper2);
+        if (!remove) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
         return ResultEnum.SUCCESS;
     }
 

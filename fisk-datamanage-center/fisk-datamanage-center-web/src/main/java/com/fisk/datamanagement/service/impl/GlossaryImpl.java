@@ -272,6 +272,14 @@ public class GlossaryImpl
         return po;
     }
 
+    public GlossaryPO getInfoByName(Integer id) {
+        GlossaryPO po = this.query().eq("id", id).one();
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return po;
+    }
+
     public List<Map> getEntityGlossData(Integer entityId) {
         List<MetaDataGlossaryMapDTO> entityGlossary = metaDataGlossaryMapMapper.getEntityGlossary(entityId);
         if (CollectionUtils.isEmpty(entityGlossary)) {

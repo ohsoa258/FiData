@@ -19,4 +19,6 @@ public class MetadataEntityClassificationAttributePO extends BasePO {
 
     public String value;
 
+    public Integer classificationId;
+
 }

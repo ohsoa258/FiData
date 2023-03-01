@@ -23,6 +23,7 @@ import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
 import com.fisk.datamanagement.dto.lineagemaprelation.LineageMapRelationDTO;
 import com.fisk.datamanagement.dto.metadataclassificationmap.MetadataClassificationMapInfoDTO;
+import com.fisk.datamanagement.dto.metadataglossarymap.MetaDataGlossaryMapDTO;
 import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
 import com.fisk.datamanagement.entity.BusinessClassificationPO;
@@ -153,6 +154,27 @@ public class MetadataEntityImpl
 
         HashMap<Long, Integer> idList = new HashMap<>();
         idList.put(0L, 0);
+
+        /*//获取接入应用列表
+        ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
+        //获取建模业务域列表
+        ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
+
+        if (appList.code != ResultEnum.SUCCESS.getCode() || businessAreaList.code != ResultEnum.SUCCESS.getCode()){
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+
+        List<AppBusinessInfoDTO> newList = new ArrayList<>();
+        newList.addAll(appList.data);
+        newList.addAll(businessAreaList.data);
+
+        if (CollectionUtils.isEmpty(newList)){
+            return list;
+        }
+
+        for (AppBusinessInfoDTO item : newList){
+
+        }*/
 
         //获取实体关联业务分类数据
         List<MetadataClassificationMapInfoDTO> classificationMap = metaDataClassificationMapMapper.getMetaDataClassificationMap();
@@ -782,7 +804,6 @@ public class MetadataEntityImpl
         return line;
     }
 
-
     public SearchBusinessGlossaryEntityDTO searchBasicEntity(EntityFilterDTO dto) {
         SearchBusinessGlossaryEntityDTO data = new SearchBusinessGlossaryEntityDTO();
 
@@ -851,11 +872,15 @@ public class MetadataEntityImpl
 
             //获取术语库
             entitiesDto.meaningNames = new ArrayList<>();
-            entitiesDto.meaningNames = metaDataGlossaryMapMapper.selectGlossary((int) po.id);
+
+            List<MetaDataGlossaryMapDTO> entityGlossary = metaDataGlossaryMapMapper.getEntityGlossary((int) po.id);
+
+
+            entitiesDto.meaningNames = entityGlossary.stream().map(e -> e.glossaryName).collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(entitiesDto.meaningNames)) {
                 entitiesDto.meanings = new ArrayList<>();
-                for (String item : entitiesDto.meaningNames) {
-                    GlossaryPO infoByName = glossary.getInfoByName(item);
+                for (MetaDataGlossaryMapDTO item : entityGlossary) {
+                    GlossaryPO infoByName = glossary.getInfoByName(item.metadataEntityId);
 
                     GlossaryDTO glossaryDTO = new GlossaryDTO();
                     glossaryDTO.termGuid = String.valueOf(infoByName.id);
