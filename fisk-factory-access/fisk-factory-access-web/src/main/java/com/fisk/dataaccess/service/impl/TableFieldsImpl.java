@@ -907,7 +907,7 @@ public class TableFieldsImpl
             fieldDTO.fieldId = po.id;
             fieldDTO.fieldEnName = po.fieldName;
             fieldDTO.fieldType = po.fieldType;
-            fieldDTO.fieldLength = Math.toIntExact(po.fieldLength);
+            fieldDTO.fieldLength = po.fieldLength == null ? 0 : Math.toIntExact(po.fieldLength);
             fieldDTO.isPrimaryKey = po.isPrimarykey;
             fieldDTO.fieldPrecision = po.fieldPrecision;
             fieldList.add(fieldDTO);
