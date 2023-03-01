@@ -1157,8 +1157,12 @@ public class BusinessAreaImpl
             str.append(" = ");
             str.append(item.targetTable).append(".").append(StringBuildUtils.dimensionKeyName(item.targetTable));
             str.append(" from ");
-            str.append(item.targetTable);
-            str.append(" where ");
+            str.append(item.sourceTable);
+            if (!StringUtils.isEmpty(item.joinType)){
+                str.append(" ").append(item.joinType);
+                str.append(" ").append(item.targetTable);
+            }
+            str.append(" on ");
             str.append(item.sourceTable).append(".").append(item.sourceColumn);
             str.append(" = ");
             str.append(item.targetTable).append(".").append(item.targetColumn);
