@@ -46,7 +46,7 @@ public class MetadataEntityClassificationAttributeMapImpl
 
         for (MetadataClassificationMapInfoDTO item : metaDataClassificationMap) {
             Map map = new HashMap();
-            map.put("typeName", item);
+            map.put("typeName", item.name);
             map.put("entityGuid", metadataEntityId);
             map.put("entityStatus", "ACTIVE");
 

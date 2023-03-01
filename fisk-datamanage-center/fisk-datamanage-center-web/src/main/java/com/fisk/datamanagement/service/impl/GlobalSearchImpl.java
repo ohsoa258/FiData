@@ -150,11 +150,12 @@ public class GlobalSearchImpl implements IGlobalSearch {
             Integer entityId = (int) po.id;
 
             //业务分类
-            List<MetadataEntityClassificationAttributeMapDTO> metadataEntityClassification = metadataEntityClassificationAttributeMap.getMetadataEntityClassification(entityId);
+            List<MetadataEntityClassificationAttributeMapDTO> metadataEntityClassification = metadataEntityClassificationAttributeMap
+                    .getMetadataEntityClassification(entityId);
             if (CollectionUtils.isEmpty(metadataEntityClassification)) {
                 mapPo.put("classificationNames", new ArrayList<>());
             } else {
-                List<String> collect1 = metadataEntityClassification.stream().map(e -> e.classificationName).collect(Collectors.toList());
+                List<String> collect1 = metadataEntityClassification.stream().map(e -> e.classificationName).distinct().collect(Collectors.toList());
                 mapPo.put("classificationNames", collect1);
             }
             //术语
