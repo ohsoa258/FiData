@@ -31,7 +31,7 @@ public class SaveDataViewDTO extends BaseDTO {
 
     @ApiModelProperty(value = "视图名称")
     @NotEmpty(message = "视图名称不能为空'")
-    @Pattern(regexp = "^\\w+$", message = "视图名称只能包含字母、数字、下划线")
+    @Pattern(regexp = "^[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)*$", message = "视图名称只能包含字母和下划线，且必须以字母开始")
     private String name ;
 
     @ApiModelProperty(value = "视图显示名称")

@@ -34,7 +34,7 @@ public class DataViewThemeDTO extends BaseDTO{
 
     @ApiModelProperty(value = "视图主题简称", required = true)
     @NotEmpty(message = "视图主题简称不能为空")
-    @Pattern(regexp = "^[A-Za-z][A-Za-z]*(?:_[A-Za-z]+)*$", message = "应用简称只能包含字母和下划线，且必须以字母开始结尾")
+    @Pattern(regexp = "^[A-Za-z][A-Za-z]*(?:_[A-Za-z]+)*$", message = "主题简称只能包含字母和下划线，且必须以字母开始结尾")
     private String themeAbbr ;
 
     @ApiModelProperty(value = "视图主题描述")

@@ -421,8 +421,10 @@ public class DataViewServiceImpl
         if (Objects.isNull(preModel)){
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        List<String> nameList = allData.stream().filter(item -> item.getId() != dto.getViewId()).map(DataViewPO::getName).collect(Collectors.toList());
-        List<String> displayNameList = allData.stream().filter(item -> item.getId() != dto.getViewId()).map(DataViewPO::getDisplayName).collect(Collectors.toList());
+        List<String> nameList = allData.stream().filter(item -> item.getViewThemeId().equals(preModel.getViewThemeId())
+                && item.getId() != preModel.getId()).map(DataViewPO::getName).collect(Collectors.toList());
+        List<String> displayNameList = allData.stream().filter(item -> item.getViewThemeId().equals(preModel.getViewThemeId())
+                && item.getId() != preModel.getId()).map(DataViewPO::getDisplayName).collect(Collectors.toList());
         if (nameList.contains(dto.getName()) || displayNameList.contains(dto.getDisplayName())){
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "视图名称或视图显示名称与已有数据重复");
         }
