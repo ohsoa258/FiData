@@ -516,7 +516,15 @@ public class TableFieldsImpl
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         if (!CollectionUtils.isEmpty(dto)) {
-            iTableHistory.addTableHistory(dto);
+            log.info("开始记录发布日志");
+            for (TableHistoryDTO tableHistory : dto) {
+                if (tableHistory.tableId.longValue() == accessId) {
+                    log.info("记录发布日志的表id:{}", accessId);
+                    List<TableHistoryDTO> list = new ArrayList<>();
+                    list.add(tableHistory);
+                    iTableHistory.addTableHistory(list);
+                }
+            }
         }
         if (success && flag == 1 && !useExistTable) {
             UserInfo userInfo = userHelper.getLoginUserInfo();
@@ -1310,7 +1318,7 @@ public class TableFieldsImpl
                     versionSql,
                     TableSyncModeMap.INSTANCES.poToDto(tableSyncmodePo),
                     accessPo.appDataSourceId,
-                    dto.dto);
+                    dto.tableHistorys);
         }
         return ResultEnum.SUCCESS;
     }
