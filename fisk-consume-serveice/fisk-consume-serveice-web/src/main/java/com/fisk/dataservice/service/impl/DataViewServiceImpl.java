@@ -535,7 +535,7 @@ public class DataViewServiceImpl
 
     private void batchCreateView(DataViewPO model, DataSourceDTO dataSourceDTO, DataViewThemePO dataViewThemePO){
         // 删除历史视图
-        removeView(model, dataSourceDTO);
+        removeBatchView(model, dataSourceDTO);
 
         // 创建新视图
         String viewName = model.getName().split("\\.")[1];
@@ -599,11 +599,19 @@ public class DataViewServiceImpl
         return true;
     }
 
-    private void removeView(DataViewPO model, DataSourceDTO dataSourceDTO){
+    private void removeBatchView(DataViewPO model, DataSourceDTO dataSourceDTO){
         // 获取视图主题
         DataViewThemePO dataViewThemePO = dataViewThemeMapper.selectById(model.getViewThemeId());
         String viewName = model.getName().split("\\.")[1];
         String removeViewSql = "DROP VIEW IF EXISTS " + dataViewThemePO.getThemeAbbr() + ".theme_" + dataViewThemePO.getId() + "_" + viewName;
+        execSql(removeViewSql, dataSourceDTO);
+        log.info("删除视图成功");
+    }
+
+    private void removeView(DataViewPO model, DataSourceDTO dataSourceDTO){
+        // 获取视图主题
+        DataViewThemePO dataViewThemePO = dataViewThemeMapper.selectById(model.getViewThemeId());
+        String removeViewSql = "DROP VIEW IF EXISTS " + dataViewThemePO.getThemeAbbr() + ".theme_" + dataViewThemePO.getId() + "_" + model.getName();
         execSql(removeViewSql, dataSourceDTO);
         log.info("删除视图成功");
     }
