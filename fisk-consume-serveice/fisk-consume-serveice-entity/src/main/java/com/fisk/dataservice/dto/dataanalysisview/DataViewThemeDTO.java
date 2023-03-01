@@ -5,11 +5,10 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.Length;
+import org.hibernate.validator.constraints.Range;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
+import javax.validation.constraints.*;
 import java.util.List;
 
 /**
@@ -29,12 +28,12 @@ public class DataViewThemeDTO extends BaseDTO{
     private Integer id ;
 
     @ApiModelProperty(value = "视图主题名称", required = true)
-    @NotEmpty(message = "视图主题名称不能为空")
+    @Length(min = 1, max = 50, message = "视图主题名称不能为空，且长度最大50")
     private String themeName ;
 
     @ApiModelProperty(value = "视图主题简称", required = true)
-    @NotEmpty(message = "视图主题简称不能为空")
     @Pattern(regexp = "^[A-Za-z][A-Za-z]*(?:_[A-Za-z]+)*$", message = "主题简称只能包含字母和下划线，且必须以字母开始结尾")
+    @Length(min = 1, max = 10, message = "主题简称不能为空，且长度最大10")
     private String themeAbbr ;
 
     @ApiModelProperty(value = "视图主题描述")

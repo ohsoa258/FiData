@@ -483,6 +483,7 @@ public class DataViewServiceImpl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum addBatchDataView(SaveBatchDataViewDTO dto) {
         if (CollectionUtils.isEmpty(dto.getTableNameList())){
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
@@ -503,8 +504,9 @@ public class DataViewServiceImpl
             DataViewPO model = new DataViewPO();
             // 不存在当前视图则创建
             model.setViewThemeId(dto.getViewThemeId());
-            model.setName(tableName);
-            model.setDisplayName(tableName);
+            String viewName = tableName.split("\\.")[1];
+            model.setName(viewName);
+            model.setDisplayName(viewName);
             String sql = "select * from " + tableName;
             model.setViewScript(sql);
             model.setViewDesc("");
@@ -514,13 +516,15 @@ public class DataViewServiceImpl
                     throw new FkException(ResultEnum.SAVE_DATA_ERROR);
                 }
             }
+            model.setName(tableName);
+            model.setDisplayName(tableName);
 
             // 向目标数据库中创建视图
             batchCreateView(model, dataSourceDTO, dataViewThemePO);
 
             // 查询主键
             QueryWrapper<DataViewPO> qw2 = new QueryWrapper<>();
-            qw2.lambda().eq(DataViewPO::getViewThemeId, dto.getViewThemeId()).eq(DataViewPO::getName, tableName).eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
+            qw2.lambda().eq(DataViewPO::getViewThemeId, dto.getViewThemeId()).eq(DataViewPO::getName, viewName).eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
             DataViewPO po = baseMapper.selectOne(qw2);
 
             // 存储字段信息
@@ -534,7 +538,8 @@ public class DataViewServiceImpl
         removeView(model, dataSourceDTO);
 
         // 创建新视图
-        String createViewSql = "create view " + dataViewThemePO.getThemeAbbr() + ".theme_" + dataViewThemePO.getId() + "_" + model.getName() + " as " + model.getViewScript();
+        String viewName = model.getName().split("\\.")[1];
+        String createViewSql = "create view " + dataViewThemePO.getThemeAbbr() + ".theme_" + dataViewThemePO.getId() + "_" + viewName + " as " + model.getViewScript();
         execSql(createViewSql, dataSourceDTO);
     }
 
@@ -597,7 +602,8 @@ public class DataViewServiceImpl
     private void removeView(DataViewPO model, DataSourceDTO dataSourceDTO){
         // 获取视图主题
         DataViewThemePO dataViewThemePO = dataViewThemeMapper.selectById(model.getViewThemeId());
-        String removeViewSql = "DROP VIEW IF EXISTS " + dataViewThemePO.getThemeAbbr() + ".theme_" + dataViewThemePO.getId() + "_" + model.getName();
+        String viewName = model.getName().split("\\.")[1];
+        String removeViewSql = "DROP VIEW IF EXISTS " + dataViewThemePO.getThemeAbbr() + ".theme_" + dataViewThemePO.getId() + "_" + viewName;
         execSql(removeViewSql, dataSourceDTO);
         log.info("删除视图成功");
     }

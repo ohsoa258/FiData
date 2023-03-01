@@ -5,11 +5,10 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.Length;
+import org.hibernate.validator.constraints.Range;
 
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Positive;
+import javax.validation.constraints.*;
 
 /**
  * @ClassName:
@@ -30,8 +29,8 @@ public class SaveDataViewDTO extends BaseDTO {
     private Integer viewThemeId ;
 
     @ApiModelProperty(value = "视图名称")
-    @NotEmpty(message = "视图名称不能为空'")
-    @Pattern(regexp = "^[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)*$", message = "视图名称只能包含字母和下划线，且必须以字母开始")
+    @Pattern(regexp = "^[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)*$", message = "视图名称只能包含字母和下划线，且必须以字母开始/字母或数字结尾")
+    @Length(min = 1, max = 50, message = "视图名称不能为空且长度最大50")
     private String name ;
 
     @ApiModelProperty(value = "视图显示名称")

@@ -8,7 +8,10 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.Length;
+import org.hibernate.validator.constraints.Range;
 
+import javax.validation.constraints.Max;
 import javax.validation.constraints.NotEmpty;
 
 /**
@@ -30,15 +33,14 @@ public class DataViewAccountDTO extends BaseDTO {
     private Integer viewThemeId ;
 
     @ApiModelProperty(value= "数据库账号名称", required = true)
-    @NotEmpty(message = "账号名称不能为空")
+    @Length(min = 1, max = 50, message = "账号名称不能为空，且长度最大50")
     private String accountName ;
 
     @ApiModelProperty(value = "数据库账号描述", required = true)
-    @NotEmpty(message = "账号描述不能为空")
     private String accountDesc ;
 
     @ApiModelProperty(value = "数据库账号密码")
-    @NotEmpty(message = "账号密码不能为空")
+    @Length(min = 8, max = 20, message = "密码不能为空，且长度为8-20位")
     private String accountPsd ;
 
     @ApiModelProperty(value = "数据库账号权限")

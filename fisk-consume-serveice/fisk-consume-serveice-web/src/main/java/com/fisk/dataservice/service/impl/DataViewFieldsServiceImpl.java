@@ -57,7 +57,7 @@ public class DataViewFieldsServiceImpl
         selDto.setViewThemeId(dto.getViewThemeId());
         selDto.setDataSourceTypeEnum(dsDto.conType.getName());
         OdsResultDTO resultDTO = dataViewService.getDataAccessQueryList(selDto);
-        log.info("字段数据集,[{}]", JSON.toJSONString(resultDTO));
+//        log.info("字段数据集,[{}]", JSON.toJSONString(resultDTO));
         if (Objects.isNull(resultDTO)){
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据视图字段信息查询失败");
         }
@@ -98,7 +98,7 @@ public class DataViewFieldsServiceImpl
         selDto.setViewThemeId(viewThemeId);
         selDto.setDataSourceTypeEnum(dataSourceDTO.conType.getName());
         OdsResultDTO resultDTO = dataViewService.getDataAccessQueryList(selDto);
-        log.info("字段数据集,[{}]", JSON.toJSONString(resultDTO));
+//        log.info("字段数据集,[{}]", JSON.toJSONString(resultDTO));
         if (Objects.isNull(resultDTO)){
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据视图字段信息查询失败");
         }
@@ -143,7 +143,7 @@ public class DataViewFieldsServiceImpl
         selDto.setViewThemeId(dto.getViewThemeId());
         selDto.setDataSourceTypeEnum(dataSourceDTO.conType.getName());
         OdsResultDTO resultDTO = dataViewService.getDataAccessQueryList(selDto);
-        log.info("字段数据集,[{}]", JSON.toJSONString(resultDTO));
+//        log.info("字段数据集,[{}]", JSON.toJSONString(resultDTO));
         if (Objects.isNull(resultDTO)){
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据视图字段信息查询失败");
         }
