@@ -25,7 +25,7 @@ public class EntityFilterDTO {
     public List<String> attributes;
     @ApiModelProperty(value = "每页条数",required = true)
     public int limit;
-    @ApiModelProperty(value = "偏移量",required = true)
+    @ApiModelProperty(value = "偏移量", required = true)
     public int offset;
     @ApiModelProperty(value = "筛选元数据对象下实体类型,默认值为null,typeName包括:rdbms_instance/rdbms_db/rdbms_table/rdbms_column")
     public String typeName;
@@ -35,4 +35,6 @@ public class EntityFilterDTO {
     public String termName;
     @ApiModelProperty(value = "根据suggestions值,筛选")
     public String query;
+    @ApiModelProperty(value = "根据属性标签查询")
+    public String label;
 }

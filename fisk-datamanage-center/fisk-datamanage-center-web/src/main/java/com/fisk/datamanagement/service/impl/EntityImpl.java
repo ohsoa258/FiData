@@ -11,6 +11,7 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
+import com.fisk.datamanagement.dto.metadatalabelmap.MetadataLabelMapParameter;
 import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
@@ -24,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -65,6 +67,9 @@ public class EntityImpl implements IEntity {
     MetaDataClassificationMapMapper metaDataClassificationMapMapper;
     @Resource
     BusinessClassificationMapper businessClassificationMapper;
+
+    @Resource
+    MetadataLabelMapImpl metadataLabelMap;
 
     @Value("${atlas.searchBasic}")
     private String searchBasic;
@@ -475,16 +480,9 @@ public class EntityImpl implements IEntity {
     }
 
     @Override
-    public ResultEnum entityAssociatedLabel(EntityAssociatedLabelDTO dto)
-    {
-        String jsonParameter=JSONArray.toJSON(dto.list).toString();
-        ResultDataDTO<String> result = atlasClient.post(entityByGuid + "/" + dto.guid + "/labels", jsonParameter);
-        Boolean exist = redisTemplate.hasKey("metaDataEntityData:"+dto.guid);
-        if (exist)
-        {
-            setRedis(dto.guid);
-        }
-        return atlasClient.newResultEnum(result);
+    @Transactional(rollbackFor = Exception.class)
+    public ResultEnum entityAssociatedLabel(MetadataLabelMapParameter dto) {
+        return metadataLabelMap.operationMetadataLabelMap(dto);
     }
 
     @Override

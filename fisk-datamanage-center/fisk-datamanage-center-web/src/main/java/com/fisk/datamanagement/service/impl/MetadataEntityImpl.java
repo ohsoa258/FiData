@@ -73,6 +73,8 @@ public class MetadataEntityImpl
     @Resource
     GlossaryImpl glossary;
     @Resource
+    MetadataLabelMapImpl metadataLabelMap;
+    @Resource
     MetadataEntityClassificationAttributeMapImpl metadataEntityClassificationAttributeMap;
     @Resource
     MetadataClassificationMapImpl metadataClassificationMap;
@@ -316,7 +318,9 @@ public class MetadataEntityImpl
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
-        Map infoMap = metadataAttribute.setMedataAttribute(Integer.parseInt(entityId), 0);
+        int metadataEntityId = Integer.parseInt(entityId);
+
+        Map infoMap = metadataAttribute.setMedataAttribute(metadataEntityId, 0);
         infoMap.put("name", one.name);
         infoMap.put("description", one.description);
         infoMap.put("owner", one.owner);
@@ -331,7 +335,7 @@ public class MetadataEntityImpl
         map2.put("relationshipAttributes", getRelationshipAttributes(one));
 
         //实体关联业务分类
-        List<Map> classifications = metadataEntityClassificationAttributeMap.getMetadataEntityClassificationAttribute(Integer.parseInt(entityId));
+        List<Map> classifications = metadataEntityClassificationAttributeMap.getMetadataEntityClassificationAttribute(metadataEntityId);
         map2.put("classifications", classifications);
 
         //自定义属性
@@ -340,6 +344,10 @@ public class MetadataEntityImpl
         //获取业务元数据
         Map businessMetadata = metadataBusinessMetadataMap.getBusinessMetadata(entityId);
         map2.put("businessAttributes", businessMetadata);
+
+        //获取属性标签
+        List<Integer> labelIdList = metadataLabelMap.getLabelIdList(metadataEntityId);
+        map2.put("labels", labelIdList);
 
         //返回拼接JSON传
         Map map = new HashMap();
@@ -819,6 +827,8 @@ public class MetadataEntityImpl
             String[] split = dto.termName.split("@");
             GlossaryPO infoByName = glossary.getInfoByName(split[0]);
             metadataEntity = glossary.getClassificationByEntityId((int) infoByName.id, dto.offset, dto.limit);
+        } else if (!StringUtils.isEmpty(dto.label)) {
+            metadataEntity = metadataLabelMap.getEntityLabelIdList(dto.label, dto.offset, dto.limit);
         }
         if (CollectionUtils.isEmpty(metadataEntity)) {
             return data;

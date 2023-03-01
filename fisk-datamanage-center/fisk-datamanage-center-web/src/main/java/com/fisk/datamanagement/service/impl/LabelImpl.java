@@ -2,9 +2,11 @@ package com.fisk.datamanagement.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.label.LabelDTO;
 import com.fisk.datamanagement.dto.label.LabelDataDTO;
+import com.fisk.datamanagement.dto.label.LabelInfoDTO;
 import com.fisk.datamanagement.dto.label.LabelQueryDTO;
 import com.fisk.datamanagement.entity.CategoryPO;
 import com.fisk.datamanagement.entity.LabelPO;
@@ -24,7 +26,9 @@ import java.util.List;
  * @author JianWenYang
  */
 @Service
-public class LabelImpl implements ILabel {
+public class LabelImpl
+        extends ServiceImpl<LabelMapper, LabelPO>
+        implements ILabel {
 
 
     @Resource
@@ -106,12 +110,8 @@ public class LabelImpl implements ILabel {
     }
 
     @Override
-    public List<String> atlasGetLabel()
-    {
-        QueryWrapper<LabelPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.select("label_cn_name").orderByDesc("create_time");
-        List<String> list=(List)mapper.selectObjs(queryWrapper);
-        return list;
+    public List<LabelInfoDTO> atlasGetLabel() {
+        return mapper.getLabelList();
     }
 
 }

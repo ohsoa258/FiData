@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
+import com.fisk.datamanagement.dto.metadatalabelmap.MetadataLabelMapParameter;
 import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
 
 import java.util.List;
@@ -63,10 +64,11 @@ public interface IEntity {
 
     /**
      * 实体批量关联标签
+     *
      * @param dto
      * @return
      */
-    ResultEnum entityAssociatedLabel(EntityAssociatedLabelDTO dto);
+    ResultEnum entityAssociatedLabel(MetadataLabelMapParameter dto);
 
     /**
      * 实体批量关联业务元数据

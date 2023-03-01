@@ -23,6 +23,7 @@ public interface IMetadataAttribute {
      * 删除元数据属性
      *
      * @param entityId
+     * @param group
      * @return
      */
     ResultEnum delMetadataAttribute(Integer entityId, Integer group);

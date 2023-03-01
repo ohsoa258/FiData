@@ -1,26 +1,22 @@
 package com.fisk.datamanagement.service.impl;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.category.CategoryDTO;
 import com.fisk.datamanagement.dto.category.ChildrenCategoryDetailsDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryAnchorDTO;
-import com.fisk.datamanagement.dto.glossary.GlossaryAttributeDTO;
-import com.fisk.datamanagement.dto.glossary.GlossaryLibraryDTO;
 import com.fisk.datamanagement.dto.term.TermDetailsDTO;
+import com.fisk.datamanagement.entity.CategoryPO;
 import com.fisk.datamanagement.entity.GlossaryLibraryPO;
 import com.fisk.datamanagement.entity.GlossaryPO;
-import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
 import com.fisk.datamanagement.mapper.GlossaryMapper;
+import com.fisk.datamanagement.mapper.LabelCategoryMapper;
 import com.fisk.datamanagement.service.ICategory;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
-import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,8 +24,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.io.File;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,7 +33,9 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class CategoryImpl implements ICategory {
+public class CategoryImpl
+        extends ServiceImpl<LabelCategoryMapper, CategoryPO>
+        implements ICategory {
 
     @Resource
     GlossaryLibraryMapper glossaryLibraryMapper;

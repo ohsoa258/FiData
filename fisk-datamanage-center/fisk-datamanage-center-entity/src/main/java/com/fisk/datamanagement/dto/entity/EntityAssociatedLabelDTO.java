@@ -10,8 +10,8 @@ import java.util.List;
 @Data
 public class EntityAssociatedLabelDTO {
 
-    public String guid;
+    public Integer guid;
 
-    public List<String> list;
+    public List<Integer> list;
 
 }
