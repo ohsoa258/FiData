@@ -45,8 +45,8 @@ public class BuildDataModelOracleCommandImpl implements IBuildDataModelSqlComman
         str.append("EnglishMonthName varchar2(10) not null,");
         str.append("MonthNumberOfYear number not null,");
         str.append("CalendarQuarter number not null,");
-        str.append("CalendarYear number not null)");
-        str.append("FullDateKey date not null)");
+        str.append("CalendarYear number not null,");
+        str.append("FullDateKey date not null,");
         str.append("Is_WeekDay number not null)");
 
         return str.toString();

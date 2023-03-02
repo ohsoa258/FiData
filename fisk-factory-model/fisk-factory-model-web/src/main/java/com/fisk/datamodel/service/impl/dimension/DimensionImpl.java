@@ -258,8 +258,8 @@ public class DimensionImpl
                         + englishMonthName + "',"
                         + monthNumberOfYear + ","
                         + calendarQuarter + ","
-                        + calendarYear + ","
-                        + fullDateStr + ","
+                        + calendarYear + ",'"
+                        + fullDateStr + "',"
                         + weekDay + ")"
                 );
             } else {
@@ -272,8 +272,8 @@ public class DimensionImpl
                         +englishMonthName+"',"
                         +monthNumberOfYear+","
                         +calendarQuarter+","
-                        +calendarYear+","
-                        +fullDateStr+","
+                        +calendarYear+",'"
+                        +fullDateStr+"',"
                         +weekDay+")"
                 );
             }
