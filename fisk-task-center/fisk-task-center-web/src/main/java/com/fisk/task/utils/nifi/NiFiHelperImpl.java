@@ -2123,55 +2123,45 @@ public class NiFiHelperImpl implements INiFiHelper {
 
     @Override
     public void updateNifiGlobalVariable(Map<String, String> variable) {
-        // 调用创建接口，创建被删除的变量
-        buildNifiGlobalVariable(variable);
-
-        // 处理存在的变量数据
         try {
-            // 获取变量注册实体信息
-            VariableRegistryEntity variableRegistryEntity = NifiHelper.getProcessGroupsApi().getVariableRegistry(NifiConstants.ApiConstants.ROOT_NODE, true);
-            VariableRegistryDTO registry = variableRegistryEntity.getVariableRegistry();
+            VariableRegistryEntity variableRegistry = NifiHelper.getProcessGroupsApi().getVariableRegistry(NifiConstants.ApiConstants.ROOT_NODE, true);
+            VariableRegistryDTO registry = variableRegistry.getVariableRegistry();
             List<VariableEntity> variables = registry.getVariables();
-
-            // 新变量容器
-            VariableRegistryEntity newVariableRegistryEntity = new VariableRegistryEntity();
-            VariableRegistryDTO variableRegistryDTO = new VariableRegistryDTO();
-            List<VariableEntity> variableEntityList = new ArrayList<>();
-
-            // 遍历变量数据
-            Iterator<Map.Entry<String, String>> map = variable.entrySet().iterator();
-            while (map.hasNext()) {
-                Map.Entry<String, String> entry = map.next();
-                String key = entry.getKey();
-                // 设置变量默认不存在
-                boolean exist = true;
+            List<VariableEntity> variableEntities = new ArrayList<>();
+            Iterator<Map.Entry<String, String>> externalStructureMap = variable.entrySet().iterator();
+            VariableRegistryEntity variableRegistryEntity = new VariableRegistryEntity();
+            VariableRegistryDTO registryDTO = new VariableRegistryDTO();
+            while (externalStructureMap.hasNext()) {
+                Map.Entry<String, String> next = externalStructureMap.next();
+                String key = next.getKey();
+                Boolean existent = false;
                 for (int i = 0; i < variables.size(); i++) {
+                    //判断有没有再保存创建
                     VariableDTO variableDTO = variables.get(i).getVariable();
                     String name = variableDTO.getName();
                     if (Objects.equals(key, name)) {
-                        exist = false;
+                        existent = true;
                     }
                 }
-                if (exist) {
-                    // 存在变量则需要更新
+                if (existent) {
                     VariableEntity variableEntity = new VariableEntity();
                     VariableDTO variableDTO = new VariableDTO();
                     variableDTO.setName(key);
                     variableDTO.setValue(variable.get(key));
                     variableEntity.setVariable(variableDTO);
-                    variableEntityList.add(variableEntity);
+                    variableEntities.add(variableEntity);
                 }
             }
-            variableRegistryDTO.setVariables(variableEntityList);
-            variableRegistryDTO.setProcessGroupId(variableRegistryEntity.getVariableRegistry().getProcessGroupId());
-            newVariableRegistryEntity.setDisconnectedNodeAcknowledged(null);
-            newVariableRegistryEntity.setVariableRegistry(variableRegistryDTO);
-            // 更新变量数据
+            registryDTO.setVariables(variableEntities);
+            registryDTO.setProcessGroupId(variableRegistry.getVariableRegistry().getProcessGroupId());
+            variableRegistryEntity.setDisconnectedNodeAcknowledged(null);
+            variableRegistryEntity.setVariableRegistry(registryDTO);
+            //连续插入变量查询最新版本
             VariableRegistryEntity newVariableRegistry = NifiHelper.getProcessGroupsApi().getVariableRegistry(NifiConstants.ApiConstants.ROOT_NODE, true);
             RevisionDTO processGroupRevision = newVariableRegistry.getProcessGroupRevision();
             variableRegistryEntity.setProcessGroupRevision(processGroupRevision);
             log.info(JSON.toJSONString(variableRegistryEntity));
-            NifiHelper.getProcessGroupsApi().updateVariableRegistry(variableRegistryEntity.getVariableRegistry().getProcessGroupId(), newVariableRegistryEntity);
+            NifiHelper.getProcessGroupsApi().updateVariableRegistry(variableRegistry.getVariableRegistry().getProcessGroupId(), variableRegistryEntity);
         } catch (ApiException e) {
             log.error("创建全局变量失败", e);
         }

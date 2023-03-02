@@ -104,7 +104,9 @@ public class BuildDataModelSqlServerCommandImpl implements IBuildDataModelSqlCom
         str.append("EnglishMonthName varchar(10) not null,");
         str.append("MonthNumberOfYear int not null,");
         str.append("CalendarQuarter int not null,");
-        str.append("CalendarYear int not null)");
+        str.append("CalendarYear int not null,");
+        str.append("FullDateKey date not null,");
+        str.append("Is_WeekDay int not null)");
 
         return str.toString();
     }
