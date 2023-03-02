@@ -108,7 +108,7 @@ public class MetadataLabelMapImpl
         }
 
         List<Long> collect1 = list.stream().map(e -> e.id).collect(Collectors.toList());
-        List<MetadataLabelMapPO> entityIds = this.query().select("metadata_entity_id").in("label_id", collect1).list();
+        List<MetadataLabelMapPO> entityIds = this.query().in("label_id", collect1).list();
 
         return entityIds.stream().map(e -> e.metadataEntityId).skip(offset)
                 .limit(pageSize).collect(Collectors.toList());

@@ -53,7 +53,7 @@ public class ProcessImpl implements IProcess {
     @Override
     public ProcessDTO getProcess(String processGuid) {
         ProcessDTO dto = new ProcessDTO();
-        ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + processGuid);
+        /*ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + processGuid);
         if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS) {
             return dto;
         }
@@ -85,8 +85,7 @@ public class ProcessImpl implements IProcess {
                     .stream()
                     .filter(e -> !delInputGuidList.contains(e.guid)).collect(Collectors.toList());
 
-        }
-        //获取process输出血缘
+        }*/
         return dto;
     }
 
