@@ -914,7 +914,12 @@ public class MetadataEntityImpl
         lineageMapRelation.addLineageMapRelation(dtoList);
     }
 
-
+    /**
+     * 获取血缘
+     *
+     * @param guid
+     * @return
+     */
     public LineAgeDTO getMetaDataKinship(String guid) {
 
         //获取process-fromEntityId
@@ -992,10 +997,6 @@ public class MetadataEntityImpl
             MetadataEntityPO one = this.query().eq("id", id).one();
             dto.guidEntityMap.add(addJsonObject(one));
         }
-        /*List<MetadataEntityPO> id = metadataEntity.query().in("id", collect).list();
-        for (MetadataEntityPO item : id) {
-            dto.guidEntityMap.add(addJsonObject(item));
-        }*/
 
         return dto;
     }
@@ -1043,40 +1044,51 @@ public class MetadataEntityImpl
         return line;
     }
 
+    /**
+     * 根据类型，查询关联实体数据
+     *
+     * @param dto
+     * @return
+     */
     public SearchBusinessGlossaryEntityDTO searchBasicEntity(EntityFilterDTO dto) {
         SearchBusinessGlossaryEntityDTO data = new SearchBusinessGlossaryEntityDTO();
 
-        List<MetadataEntityPO> list = new ArrayList<>();
         List<Integer> metadataEntity = new ArrayList<>();
 
-        //搜索是否为业务分类
-        if (StringUtils.isNotBlank(dto.classification)) {
+        //搜索业务分类
+        if (!StringUtils.isEmpty(dto.classification)) {
             BusinessClassificationPO classificationPo = classification.getInfoByName(dto.classification);
             //获取业务分类关联的实体id
             metadataEntity = metadataClassificationMap.getMetadataEntity((int) classificationPo.id, dto.offset, dto.limit);
-        } else if (!StringUtils.isEmpty(dto.termName)) {
+        }
+        //搜索术语
+        else if (!StringUtils.isEmpty(dto.termName)) {
             String[] split = dto.termName.split("@");
             GlossaryPO infoByName = glossary.getInfoByName(split[0]);
             metadataEntity = glossary.getClassificationByEntityId((int) infoByName.id, dto.offset, dto.limit);
-        } else if (!StringUtils.isEmpty(dto.label)) {
+        }
+        //搜索属性标签
+        else if (!StringUtils.isEmpty(dto.label)) {
             metadataEntity = metadataLabelMap.getEntityLabelIdList(dto.label, dto.offset, dto.limit);
         }
         if (CollectionUtils.isEmpty(metadataEntity)) {
             return data;
         }
 
-        list = this.query().in("id", metadataEntity).list();
+        //查询关联实体
+        List<MetadataEntityPO> list = this.query().in("id", metadataEntity).list();
         if (CollectionUtils.isEmpty(list)) {
             return data;
         }
 
-        List<EntitiesDTO> entitiesDtoList = new ArrayList<>();
-
         List<String> collect = list.stream().map(e -> e.createUser).collect(Collectors.toList());
+        //获取用户集合
         ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(collect.stream().map(Long::parseLong).collect(Collectors.toList()));
         if (userListByIds.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
+
+        List<EntitiesDTO> entitiesDtoList = new ArrayList<>();
 
         for (MetadataEntityPO po : list) {
             EntitiesDTO entitiesDto = new EntitiesDTO();
@@ -1088,6 +1100,7 @@ public class MetadataEntityImpl
             entitiesDto.attributes.name = po.name;
             entitiesDto.attributes.description = po.description;
 
+            //用户名id替换名称
             Optional<UserDTO> first = userListByIds.data.stream().filter(e -> e.id.toString().equals(po.createUser)).findFirst();
             if (first.isPresent()) {
                 entitiesDto.attributes.owner = first.get().username;
@@ -1115,7 +1128,6 @@ public class MetadataEntityImpl
             entitiesDto.meaningNames = new ArrayList<>();
 
             List<MetaDataGlossaryMapDTO> entityGlossary = metaDataGlossaryMapMapper.getEntityGlossary((int) po.id);
-
 
             entitiesDto.meaningNames = entityGlossary.stream().map(e -> e.glossaryName).collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(entitiesDto.meaningNames)) {
