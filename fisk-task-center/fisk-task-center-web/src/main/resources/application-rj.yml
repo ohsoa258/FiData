@@ -93,7 +93,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       session:
         timeout:
-          ms: 300000
+          ms: 600000
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
       acks: 0

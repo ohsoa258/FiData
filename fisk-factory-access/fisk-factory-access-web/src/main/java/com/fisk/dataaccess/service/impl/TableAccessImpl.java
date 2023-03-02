@@ -1570,7 +1570,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             for (TableAccessDataDTO tableAccessDataDTO : item.tableDtoList) {
                 tableAccessDataDTO.fieldDtoList = TableFieldsMap.INSTANCES
                         .poListToDtoList(tableFieldsList.stream()
-                                .filter(e -> e.tableAccessId == tableAccessDataDTO.id).collect(Collectors.toList()));
+                                .filter(e -> e.tableAccessId != null && e.tableAccessId == tableAccessDataDTO.id).collect(Collectors.toList()));
                 if (CollectionUtils.isEmpty(tableAccessDataDTO.fieldDtoList)) {
                     continue;
                 }

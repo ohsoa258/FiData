@@ -392,4 +392,24 @@ public class DimensionAttributeImpl
         return factAttribute.buildUpdateSql(configDetailsMap);
     }
 
+    @Override
+    public ResultEnum addDimensionAttribute(DimensionAttributeDTO dto) {
+        List<DimensionAttributePO> list = this.query().eq("dimension_id", dto.associateDimensionId)
+                .eq("dimension_field_en_name", dto.dimensionFieldEnName).list();
+        if (!CollectionUtils.isEmpty(list)) {
+            throw new FkException(ResultEnum.DATA_EXISTS);
+        }
+
+        DimensionAttributePO dimensionAttributePO = DimensionAttributeMap.INSTANCES.dtoToPo(dto);
+        dimensionAttributePO.dimensionId = dto.associateDimensionId;
+        dimensionAttributePO.associateDimensionId = 0;
+
+        boolean flat = this.save(dimensionAttributePO);
+        if (!flat) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        return ResultEnum.SUCCESS;
+    }
+
 }

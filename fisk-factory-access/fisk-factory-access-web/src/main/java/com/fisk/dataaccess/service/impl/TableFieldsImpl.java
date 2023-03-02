@@ -48,6 +48,7 @@ import com.fisk.dataaccess.mapper.TableFieldsMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.service.ITableFields;
+import com.fisk.dataaccess.service.ITableHistory;
 import com.fisk.dataaccess.utils.files.FileTxtUtils;
 import com.fisk.dataaccess.utils.sql.DbConnectionHelper;
 import com.fisk.dataaccess.utils.sql.OracleCdcUtils;
@@ -142,6 +143,8 @@ public class TableFieldsImpl
 
     @Resource
     private RedisTemplate redisTemplate;
+    @Resource
+    ITableHistory iTableHistory;
 
     private static Integer fetchSize = 10000;
     private static Integer maxRowsPerFlowFile = 10000;
@@ -218,11 +221,11 @@ public class TableFieldsImpl
         // 判断where条件是否传递
         int syncType = dto.tableSyncmodeDTO.syncMode;
         log.info("syncType类型，{}", syncType);
-        if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()){
+        if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
             // 获取脚本
             String whereScript = (String) previewCoverCondition(dto.businessDTO);
             log.info("where条件数据{}", whereScript);
-            if (!whereScript.contains("WHERE")){
+            if (!whereScript.contains("WHERE")) {
                 throw new FkException(ResultEnum.SAVE_DATA_ERROR, "获取业务时间覆盖where条件失败");
             }
             accessPo.whereScript = whereScript;
@@ -244,7 +247,7 @@ public class TableFieldsImpl
         }
 
         // 发布
-        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, dto.appDataSourceId);
+        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, dto.appDataSourceId, dto.tableHistorys);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -321,15 +324,15 @@ public class TableFieldsImpl
         // 判断where条件是否传递
         int syncType = dto.tableSyncmodeDTO.syncMode;
         log.info("syncType类型，{}", syncType);
-        if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()){
+        if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
             // 获取脚本
             String whereScript = (String) previewCoverCondition(dto.businessDTO);
             log.info("where条件数据{}", whereScript);
-            if (!whereScript.contains("WHERE")){
+            if (!whereScript.contains("WHERE")) {
                 throw new FkException(ResultEnum.SAVE_DATA_ERROR, "获取业务时间覆盖where条件失败");
             }
             model.whereScript = whereScript;
-        }else {
+        } else {
             model.whereScript = "";
         }
         log.info("业务时间覆盖where条件语句, {}", model.whereScript);
@@ -347,7 +350,7 @@ public class TableFieldsImpl
 
         // 发布
         publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null,
-                false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, model.appDataSourceId);
+                false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, model.appDataSourceId, dto.tableHistorys);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
@@ -502,7 +505,8 @@ public class TableFieldsImpl
                          List<DeltaTimeDTO> deltaTimes,
                          String versionSql,
                          TableSyncmodeDTO syncMode,
-                         Integer appDataSourceId) {
+                         Integer appDataSourceId,
+                         List<TableHistoryDTO> dto) {
         AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("id", appDataSourceId).one();
         if (dataSourcePo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -510,6 +514,17 @@ public class TableFieldsImpl
         AppRegistrationPO appRegistrationPo = appRegistration.query().eq("id", appId).one();
         if (appRegistrationPo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        if (!CollectionUtils.isEmpty(dto)) {
+            log.info("开始记录发布日志");
+            for (TableHistoryDTO tableHistory : dto) {
+                if (tableHistory.tableId.longValue() == accessId) {
+                    log.info("记录发布日志的表id:{}", accessId);
+                    List<TableHistoryDTO> list = new ArrayList<>();
+                    list.add(tableHistory);
+                    iTableHistory.addTableHistory(list);
+                }
+            }
         }
         if (success && flag == 1 && !useExistTable) {
             UserInfo userInfo = userHelper.getLoginUserInfo();
@@ -530,7 +545,7 @@ public class TableFieldsImpl
 
             // pg库则将表名转换为小写
             boolean typeFlag = getTargetDbType(data.targetDbId);
-            if (typeFlag){
+            if (typeFlag) {
                 data.tableName = data.tableName.toLowerCase();
                 // 将字段集合转换为小写
                 List<TableFieldsDTO> tableFieldsDTOList = data.tableFieldsDTOS;
@@ -542,7 +557,7 @@ public class TableFieldsImpl
             }
             int syncType = syncMode.syncMode;
             log.info("syncType类型，{}，判断拼接删除ods的sql", syncType);
-            if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()){
+            if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
                 data.whereScript = "DELETE FROM " + tbName + " " + data.whereScript;
                 log.info("删除ods表的sql，{}", data.whereScript);
             }
@@ -559,7 +574,7 @@ public class TableFieldsImpl
             data.generateVersionSql = versionSql;
             data.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile == null ? maxRowsPerFlowFile : syncMode.maxRowsPerFlowFile;
             data.fetchSize = syncMode.fetchSize == null ? fetchSize : syncMode.fetchSize;
-            data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType) ? true : false;
+            data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType);
 
             // 执行发布
             try {
@@ -613,9 +628,9 @@ public class TableFieldsImpl
         }
     }
 
-    private boolean getTargetDbType(Integer dbId){
+    private boolean getTargetDbType(Integer dbId) {
         ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(dbId);
-        if (result.code == ResultEnum.SUCCESS.getCode()){
+        if (result.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO dataSource = result.getData();
             log.info("数据源连接类型，{}, 枚举中PG类型，{}", dataSource.getConType().getValue(), POSTGRESQL.getValue());
             return POSTGRESQL.getValue() == dataSource.getConType().getValue();
@@ -900,7 +915,7 @@ public class TableFieldsImpl
             fieldDTO.fieldId = po.id;
             fieldDTO.fieldEnName = po.fieldName;
             fieldDTO.fieldType = po.fieldType;
-            fieldDTO.fieldLength = Math.toIntExact(po.fieldLength);
+            fieldDTO.fieldLength = po.fieldLength == null ? 0 : Math.toIntExact(po.fieldLength);
             fieldDTO.isPrimaryKey = po.isPrimarykey;
             fieldDTO.fieldPrecision = po.fieldPrecision;
             fieldList.add(fieldDTO);
@@ -1302,7 +1317,8 @@ public class TableFieldsImpl
                     systemVariable,
                     versionSql,
                     TableSyncModeMap.INSTANCES.poToDto(tableSyncmodePo),
-                    accessPo.appDataSourceId);
+                    accessPo.appDataSourceId,
+                    dto.tableHistorys);
         }
         return ResultEnum.SUCCESS;
     }

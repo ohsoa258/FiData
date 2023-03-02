@@ -33,6 +33,7 @@ import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
+import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
@@ -1189,8 +1190,12 @@ public class BusinessAreaImpl
             str.append(" = ");
             str.append(item.targetTable).append(".").append(StringBuildUtils.dimensionKeyName(item.targetTable));
             str.append(" from ");
-            str.append(item.targetTable);
-            str.append(" where ");
+            str.append(item.sourceTable);
+            if (!StringUtils.isEmpty(item.joinType)){
+                str.append(" ").append(item.joinType);
+                str.append(" ").append(item.targetTable);
+            }
+            str.append(" on ");
             str.append(item.sourceTable).append(".").append(item.sourceColumn);
             str.append(" = ");
             str.append(item.targetTable).append(".").append(item.targetColumn);
@@ -1259,7 +1264,7 @@ public class BusinessAreaImpl
         targetDsConfig.syncMode = dto.syncMode;
         data.targetDsConfig = targetDsConfig;
 
-        data.businessDTO = dto.tableBusiness;
+        data.businessDTO = dto.tableBusiness == null ? new TableBusinessDTO() : dto.tableBusiness;
         data.businessDTO.otherLogic = 1;
         if (dto.syncMode == 4) {
             data.businessDTO.otherLogic = 2;

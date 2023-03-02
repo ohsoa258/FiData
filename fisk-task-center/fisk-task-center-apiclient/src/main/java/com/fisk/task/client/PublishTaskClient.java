@@ -24,10 +24,7 @@ import com.fisk.task.dto.query.DataServiceTableLogQueryDTO;
 import com.fisk.task.dto.task.*;
 import com.fisk.task.po.TableNifiSettingPO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -382,6 +379,15 @@ public interface PublishTaskClient {
      */
     @PostMapping("/nifi/add")
     ResultEntity<Object> addDataSetParams(@RequestBody DataSourceSaveDTO dto);
+
+    /**
+     * 同步数据源更新nifi变量
+     *
+     * @param dto
+     * @return
+     */
+    @PutMapping("/nifi/edit")
+    ResultEntity<Object> editDataSetParams(@RequestBody DataSourceSaveDTO dto);
 
     @PostMapping("/pipeline/overlayCodePreview")
     ResultEntity<Object> overlayCodePreview(@RequestBody OverLoadCodeDTO dto);

@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeUpdateDTO;
 import com.fisk.datamodel.service.IDimensionAttribute;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -76,6 +77,12 @@ public class DimensionAttributeController {
     @ApiOperation("根据维度id获取维度字段及其关联详情(nifi)")
     public ResultEntity<List<ModelPublishFieldDTO>> selectDimensionAttributeList(@RequestParam("dimensionId") int dimensionId) {
         return service.selectDimensionAttributeList(dimensionId);
+    }
+
+    @ApiOperation("新增单个维度字段")
+    @PostMapping("/addDimensionAttribute")
+    public ResultEntity<Object> addDimensionAttribute(@RequestBody DimensionAttributeDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addDimensionAttribute(dto));
     }
 
 }
