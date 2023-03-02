@@ -1,6 +1,9 @@
 package com.fisk.datamanagement.service;
 
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataBaseAttributeDTO;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -26,5 +29,13 @@ public interface IMetadataEntity {
      * @return
      */
     Integer updateMetadataEntity(MetaDataBaseAttributeDTO dto, Integer entityId, String rdbmsType);
+
+    /**
+     * 批量删除元数据实体
+     *
+     * @param ids
+     * @return
+     */
+    ResultEnum delMetadataEntity(List<Integer> ids);
 
 }

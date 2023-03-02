@@ -35,8 +35,6 @@ import java.util.stream.Collectors;
 public class GlobalSearchImpl implements IGlobalSearch {
 
     @Resource
-    MetadataEntityImpl metadataEntity;
-    @Resource
     MetadataEntityMapper metadataEntityMapper;
     @Resource
     MetaDataGlossaryMapMapper metaDataGlossaryMapMapper;
@@ -56,8 +54,6 @@ public class GlobalSearchImpl implements IGlobalSearch {
     private String searchQuick;
     @Value("${atlas.searchSuggestions}")
     private String searchSuggestions;
-    @Value("${atlas.searchDsl}")
-    private String searchDsl;
 
     @Override
     public JSONObject searchQuick(String query, int limit, int offset) {

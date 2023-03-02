@@ -24,7 +24,6 @@ import com.fisk.datamanagement.vo.AttributeTypeVO;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -50,8 +49,6 @@ public class ClassificationImpl
     @Resource
     UserHelper userHelper;
     @Resource
-    GlossaryLibraryMapper glossaryLibraryMapper;
-    @Resource
     MetaDataClassificationMapMapper metaDataClassificationMapMapper;
 
     @Resource
@@ -66,21 +63,9 @@ public class ClassificationImpl
     @Resource
     AtlasClient atlasClient;
 
-    @Value("${atlas.typedefs}")
-    private String typedefs;
-    @Value("${atlas.delTypeDefs}")
-    private String delTypeDefs;
-    @Value("${atlas.bulkClassification}")
-    private String bulkClassification;
-    @Value("${atlas.entityByGuid}")
-    private String entityByGuid;
     @Value("${atlas.searchBasic}")
     private String searchBasic;
-    @Resource
-    private RedisTemplate redisTemplate;
 
-    @Resource
-    EntityImpl entity;
 
     @Override
     public ClassificationDefsDTO getClassificationList() {
@@ -332,11 +317,6 @@ public class ClassificationImpl
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
-        /*Boolean exist = redisTemplate.hasKey("metaDataEntityData:"+dto.entityGuids.get(0));
-        if (exist)
-        {
-            entity.setRedis(dto.entityGuids.get(0));
-        }*/
         return ResultEnum.SUCCESS;
     }
 

@@ -16,9 +16,7 @@ import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
 import com.fisk.datamanagement.mapper.GlossaryMapper;
 import com.fisk.datamanagement.mapper.LabelCategoryMapper;
 import com.fisk.datamanagement.service.ICategory;
-import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -43,12 +41,6 @@ public class CategoryImpl
     UserHelper userHelper;
     @Resource
     GlossaryMapper glossaryMapper;
-
-    @Resource
-    AtlasClient atlasClient;
-
-    @Value("${atlas.glossary.category}")
-    public String category;
 
     @Override
     public ResultEnum addCategory(CategoryDTO dto)

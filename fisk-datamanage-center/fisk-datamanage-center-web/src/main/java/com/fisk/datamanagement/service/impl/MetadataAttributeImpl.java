@@ -17,6 +17,7 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -137,10 +138,10 @@ public class MetadataAttributeImpl
 
         delMetadataAttribute(dtoList.get(0).metadataEntityId, customAttribute);
 
-        dtoList.stream().map(e -> {
+        dtoList = dtoList.stream().map(e -> {
             e.groupType = customAttribute;
             return e;
-        });
+        }).collect(Collectors.toList());
 
         List<MetadataAttributePO> metadataAttributePOS = MetadataAttributeMap.INSTANCES.dtoListToPoList(dtoList);
         boolean flat = this.saveBatch(metadataAttributePOS);

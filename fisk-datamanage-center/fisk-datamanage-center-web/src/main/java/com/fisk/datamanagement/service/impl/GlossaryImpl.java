@@ -17,9 +17,7 @@ import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
 import com.fisk.datamanagement.mapper.GlossaryMapper;
 import com.fisk.datamanagement.mapper.MetaDataGlossaryMapMapper;
 import com.fisk.datamanagement.service.IGlossary;
-import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -45,16 +43,6 @@ public class GlossaryImpl
     GlossaryMapper glossaryMapper;
     @Resource
     MetaDataGlossaryMapMapper metaDataGlossaryMapMapper;
-
-    @Resource
-    AtlasClient atlasClient;
-
-    @Value("${atlas.glossary.url}")
-    private String glossary;
-    @Resource
-    TermImpl termImpl;
-    @Resource
-    CategoryImpl categoryImpl;
 
     @Override
     public List<GlossaryAttributeDTO> getGlossaryList() {

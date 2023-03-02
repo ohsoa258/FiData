@@ -14,4 +14,6 @@ public class LineageMapRelationDTO {
 
     public Integer toEntityId;
 
+    public Integer processType;
+
 }

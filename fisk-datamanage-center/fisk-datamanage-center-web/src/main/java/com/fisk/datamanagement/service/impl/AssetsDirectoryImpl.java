@@ -1,7 +1,5 @@
 package com.fisk.datamanagement.service.impl;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.fisk.datamanagement.dto.assetsdirectory.AssetsDirectoryDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDefContentDTO;
@@ -61,31 +59,6 @@ public class AssetsDirectoryImpl implements IAssetsDirectory {
         for (ClassificationDefContentDTO classification : classificationList.classificationDefs) {
             data.add(setAssetsDirectory(classification.guid, classification.name, "", 0, false, classification.superTypes));
             parameter.classification = classification.name;
-            //获取关联实体数据
-            /*
-            JSONObject jsonObject = entity.searchBasicEntity(parameter);
-            Object entities1 = jsonObject.get("entities");
-            if (entities1 == null) {
-                continue;
-            }
-            JSONArray entities = jsonObject.getJSONArray("entities");
-            for (int i = 0; i < entities.size(); i++) {
-                //获取业务过程直接关联的实体
-                List<String> entityList = new ArrayList<>();
-                String classifications = entities.getJSONObject(i).getString("classifications");
-                JSONArray array = JSONArray.parseArray(classifications);
-                for (int j = 0; j < array.size(); j++) {
-                    entityList.add(array.getJSONObject(j).getString("entityGuid"));
-                }
-                if (EntityTypeEnum.RDBMS_TABLE.getName().equals(entities.getJSONObject(i).getString("typeName"))
-                        && "ACTIVE".equals(entities.getJSONObject(i).getString("status"))
-                        && entityList.contains(entities.getJSONObject(i).getString("guid"))) {
-                    data.add(setAssetsDirectory(entities.getJSONObject(i).getString("guid"),
-                            entities.getJSONObject(i).getString("displayText"),
-                            classification.guid, 0, true, null));
-                }
-            }
-             */
             SearchBusinessGlossaryEntityDTO eDto = entity.searchBasicEntity(parameter);
             List<EntitiesDTO> entities = eDto.entities;
             if (entities == null) {

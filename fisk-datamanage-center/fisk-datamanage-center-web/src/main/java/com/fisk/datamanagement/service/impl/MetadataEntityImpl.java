@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -17,6 +18,7 @@ import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDTO;
 import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
+import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
 import com.fisk.datamanagement.dto.entity.EntityTreeDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
@@ -31,13 +33,17 @@ import com.fisk.datamanagement.entity.GlossaryPO;
 import com.fisk.datamanagement.entity.LineageMapRelationPO;
 import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
+import com.fisk.datamanagement.enums.ProcessTypeEnum;
 import com.fisk.datamanagement.mapper.BusinessClassificationMapper;
 import com.fisk.datamanagement.mapper.MetaDataClassificationMapMapper;
 import com.fisk.datamanagement.mapper.MetaDataGlossaryMapMapper;
 import com.fisk.datamanagement.mapper.MetadataEntityMapper;
 import com.fisk.datamanagement.service.IMetadataEntity;
 import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.datamodel.dto.customscript.CustomScriptInfoDTO;
+import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
+import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.userinfo.UserDTO;
@@ -61,6 +67,7 @@ public class MetadataEntityImpl
     private static final String stg = "stg";
     private static final String stg_prefix = "_stg";
     private static final String processName = "抽取";
+    private static final String dim_prefix = "dim_";
 
     @Resource
     MetadataEntityTypeImpl metadataEntityType;
@@ -141,6 +148,25 @@ public class MetadataEntityImpl
         return (int) po.id;
     }
 
+    @Override
+    public ResultEnum delMetadataEntity(List<Integer> ids) {
+        QueryWrapper<MetadataEntityPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("id", ids);
+
+        List<MetadataEntityPO> metadataEntityPOS = metadataEntityMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(metadataEntityPOS)) {
+            return ResultEnum.SUCCESS;
+        }
+
+        boolean remove = this.remove(queryWrapper);
+        if (!remove) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        return ResultEnum.SUCCESS;
+
+    }
+
     public List<EntityTreeDTO> getMetadataEntityTree() {
         List<EntityTreeDTO> list = new ArrayList<>();
 
@@ -156,27 +182,6 @@ public class MetadataEntityImpl
 
         HashMap<Long, Integer> idList = new HashMap<>();
         idList.put(0L, 0);
-
-        /*//获取接入应用列表
-        ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
-        //获取建模业务域列表
-        ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
-
-        if (appList.code != ResultEnum.SUCCESS.getCode() || businessAreaList.code != ResultEnum.SUCCESS.getCode()){
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
-        }
-
-        List<AppBusinessInfoDTO> newList = new ArrayList<>();
-        newList.addAll(appList.data);
-        newList.addAll(businessAreaList.data);
-
-        if (CollectionUtils.isEmpty(newList)){
-            return list;
-        }
-
-        for (AppBusinessInfoDTO item : newList){
-
-        }*/
 
         //获取实体关联业务分类数据
         List<MetadataClassificationMapInfoDTO> classificationMap = metaDataClassificationMapMapper.getMetaDataClassificationMap();
@@ -518,10 +523,12 @@ public class MetadataEntityImpl
 
         DataSourceDTO dataSourceInfo = getDataSourceInfo(dbName);
 
-        boolean delete = false;
+        //血缘是否存在其他关联
+        boolean existCorrelation = false;
 
         String sqlScript = null;
 
+        //判断流程类型
         if (dataSourceInfo.sourceBusinessType == SourceBusinessTypeEnum.ODS) {
             //同步stg与接入表血缘
             odsResult = dataAccessClient.getDataAccessMetaData();
@@ -543,7 +550,6 @@ public class MetadataEntityImpl
             String dbQualifiedNames = first1.get().appId + "_" + first1.get().appAbbreviation + "_" + first1.get().dataSourceId;
 
             fromEntityIdList = getOdsTableList(collect, dbQualifiedNames);
-
             if (CollectionUtils.isEmpty(fromEntityIdList)) {
                 return;
             }
@@ -553,8 +559,75 @@ public class MetadataEntityImpl
             //添加stg到ods血缘
             String stgQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname + "_" + first1.get().id + stg_prefix;
             synchronizationStgOdsKinShip(tableGuid, sqlScript, stgQualifiedName);
+        } else if (dataSourceInfo.sourceBusinessType == SourceBusinessTypeEnum.DW) {
+            //获取ods表信息
+            odsResult = dataAccessClient.getDataAccessMetaData();
+            if (odsResult.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(odsResult.data)) {
+                return;
+            }
+            result = dataModelClient.getDataModelTable(1);
+            if (result.code != ResultEnum.SUCCESS.getCode()) {
+                return;
+            }
+            //序列化
+            list = JSON.parseArray(JSON.toJSONString(result.data), SourceTableDTO.class);
+            first = list.stream().filter(e -> tableName.equals(e.tableName)).findFirst();
+            if (!first.isPresent()) {
+                return;
+            }
+            //解析sql脚本
+            List<TableMetaDataObject> tableMetaDataObjects = SqlParserUtils.sqlDriveConversionName(dataSourceInfo.conType.getName().toLowerCase(), first.get().sqlScript);
+            if (CollectionUtils.isEmpty(tableMetaDataObjects)) {
+                return;
+            }
+            List<String> tableList = tableMetaDataObjects
+                    .stream()
+                    .map(e -> e.getName())
+                    .distinct()
+                    .collect(Collectors.toList());
+            //获取输入参数
+            fromEntityIdList = getTableList(tableList, odsResult.data, dbQualifiedName);
+            if (CollectionUtils.isEmpty(fromEntityIdList)) {
+                return;
+            }
+            sqlScript = first.get().sqlScript;
+            existCorrelation = true;
+
+            //stg与事实维度关联以及自定义脚本血缘
+            String stgQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname + "_";
+            if (dim_prefix.equals(first.get().tableName.substring(0, 4))) {
+                stgQualifiedName += "1";
+            } else {
+                stgQualifiedName += "2";
+            }
+            stgQualifiedName = stgQualifiedName + "_" + first.get().id + stg_prefix;
+            String newDbQualifiedName1 = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname;
+
+            synchronizationStgAndCustomScriptTableKinShip(stgQualifiedName,
+                    tableGuid,
+                    sqlScript,
+                    (int) first.get().id,
+                    first.get().tableName,
+                    dataSourceInfo.conType.getName().toLowerCase(),
+                    list,
+                    newDbQualifiedName1);
         }
-        addProcess(sqlScript, fromEntityIdList, stgTableGuid, "抽取");
+
+        //判断是否已有血缘关系，存在则先删除
+        lineageMapRelation.delLineageMapRelationProcess(Integer.parseInt(stgTableGuid), ProcessTypeEnum.SQL_PROCESS);
+
+        //新增process
+        addProcess(sqlScript, fromEntityIdList, stgTableGuid, "抽取", ProcessTypeEnum.SQL_PROCESS);
+
+        if (existCorrelation) {
+
+            String newDbQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname;
+            //关联维度
+            associateInputTableList(first.get(), newDbQualifiedName, DataModelTableTypeEnum.DW_DIMENSION, stgTableGuid);
+
+            //新增自定义脚本
+            synchronizationCustomScriptKinShip((int) first.get().id, first.get().tableName, list, stgTableGuid, dataSourceInfo.conType.getName().toLowerCase(), newDbQualifiedName, 1);
+        }
 
     }
 
@@ -624,6 +697,35 @@ public class MetadataEntityImpl
     }
 
     /**
+     * 获取ods与dw表血缘输入参数
+     *
+     * @param tableNameList
+     * @param dtoList
+     * @param dbQualifiedName
+     * @return
+     */
+    public List<Long> getTableList(List<String> tableNameList,
+                                   List<DataAccessSourceTableDTO> dtoList,
+                                   String dbQualifiedName) {
+        List<Long> list = new ArrayList<>();
+
+        List<String> tableQualifiedNameList = dtoList.stream()
+                .filter(e -> tableNameList.contains(e.tableName))
+                .map(e -> dbQualifiedName + "_" + e.getId()).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(tableQualifiedNameList)) {
+            return list;
+        }
+        QueryWrapper<MetadataEntityPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("qualified_name", tableQualifiedNameList);
+        List<MetadataEntityPO> poList = metadataEntityMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(poList)) {
+            return list;
+        }
+
+        return (List) poList.stream().map(e -> e.getId()).collect(Collectors.toList());
+    }
+
+    /**
      * 同步stg相关血缘
      *
      * @param odsTableGuid
@@ -641,20 +743,148 @@ public class MetadataEntityImpl
 
         List<Long> collect = poList.stream().map(e -> e.getId()).collect(Collectors.toList());
 
-        addProcess(sqlScript, collect, odsTableGuid, processName);
+        //判断是否已有血缘关系，存在则先删除
+        lineageMapRelation.delLineageMapRelationProcess(Integer.parseInt(odsTableGuid), ProcessTypeEnum.TEMP_TABLE_PROCESS);
 
-        /*if (relationShipAttribute.size() == 0) {
-            //addProcess(EntityTypeEnum.RDBMS_TABLE, sqlScript, list, odsTableGuid, "抽取");
-        } else {
-
-        }*/
+        addProcess(sqlScript, collect, odsTableGuid, processName, ProcessTypeEnum.TEMP_TABLE_PROCESS);
 
     }
+
+    public void synchronizationStgAndCustomScriptTableKinShip(String stgQualifiedName,
+                                                              String tableGuid,
+                                                              String sqlScript,
+                                                              Integer tableId,
+                                                              String tableName,
+                                                              String conType,
+                                                              List<SourceTableDTO> sourceTableDTOList,
+                                                              String newDbQualifiedName) {
+
+        QueryWrapper<MetadataEntityPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(MetadataEntityPO::getQualifiedName, stgQualifiedName);
+        List<MetadataEntityPO> poList = metadataEntityMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(poList)) {
+            return;
+        }
+
+        List<Long> collect = poList.stream().map(e -> e.getId()).collect(Collectors.toList());
+
+        //判断是否已有血缘关系，存在则先删除
+        lineageMapRelation.delLineageMapRelationProcess(Integer.parseInt(tableGuid), ProcessTypeEnum.TEMP_TABLE_PROCESS);
+
+        addProcess(sqlScript, collect, tableGuid, processName, ProcessTypeEnum.CUSTOM_SCRIPT_PROCESS);
+
+        synchronizationCustomScriptKinShip(tableId, tableName, sourceTableDTOList, tableGuid, conType, newDbQualifiedName, 2);
+    }
+
+    public void synchronizationCustomScriptKinShip(Integer tableId,
+                                                   String tableName,
+                                                   List<SourceTableDTO> list,
+                                                   String tableGuid,
+                                                   String driveType,
+                                                   String dbQualifiedName,
+                                                   Integer execType) {
+
+        CustomScriptQueryDTO dto = new CustomScriptQueryDTO();
+        dto.tableId = tableId;
+        dto.execType = execType;
+        dto.type = 2;
+        if (dim_prefix.equals(tableName.substring(0, 4))) {
+            dto.type = 1;
+        }
+
+        ResultEntity<List<CustomScriptInfoDTO>> listResultEntity = dataModelClient.listCustomScript(dto);
+        if (listResultEntity.code != ResultEnum.SUCCESS.getCode()
+                || CollectionUtils.isEmpty(listResultEntity.data)) {
+            return;
+        }
+
+        //判断是否已有血缘关系，存在则先删除
+        lineageMapRelation.delLineageMapRelationProcess(Integer.parseInt(tableGuid), ProcessTypeEnum.CUSTOM_SCRIPT_PROCESS);
+
+        for (CustomScriptInfoDTO item : listResultEntity.data) {
+            //解析sql
+            List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(driveType.toLowerCase(), item.script);
+            if (CollectionUtils.isEmpty(res)) {
+                return;
+            }
+
+            //获取输入表集合
+            List<String> collect = res.stream().map(e -> e.getName()).collect(Collectors.toList());
+
+            List<Long> inputTableList = getDwTableList(collect, list, dbQualifiedName);
+            if (CollectionUtils.isEmpty(inputTableList)) {
+                continue;
+            }
+            addProcess(item.script, inputTableList, tableGuid, processName, ProcessTypeEnum.CUSTOM_SCRIPT_PROCESS);
+
+        }
+    }
+
+    public List<Long> getDwTableList(List<String> tableNameList,
+                                     List<SourceTableDTO> dtoList,
+                                     String dbQualifiedName) {
+        List<EntityIdAndTypeDTO> list = new ArrayList<>();
+
+        List<String> tableQualifiedNameList = dtoList.stream()
+                .filter(e -> tableNameList.contains(e.tableName))
+                .map(e -> {
+                    if (dim_prefix.equals(e.tableName.substring(0, 4))) {
+                        return dbQualifiedName + "_1_" + e.getId();
+                    }
+                    return dbQualifiedName + "_2_" + e.getId();
+                })
+                .collect(Collectors.toList());
+
+        if (CollectionUtils.isEmpty(tableQualifiedNameList)) {
+            return new ArrayList<>();
+        }
+        QueryWrapper<MetadataEntityPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("qualified_name", tableQualifiedNameList);
+        List<MetadataEntityPO> poList = metadataEntityMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(poList)) {
+            return new ArrayList<>();
+        }
+        return poList.stream().map(e -> e.getId()).collect(Collectors.toList());
+    }
+
+    public void associateInputTableList(SourceTableDTO dto,
+                                        String dbQualifiedName,
+                                        DataModelTableTypeEnum dataModelTableTypeEnum,
+                                        String tableGuid) {
+        List<EntityIdAndTypeDTO> inputTableList = new ArrayList<>();
+        List<Integer> associateIdList = dto.fieldList.stream().filter(e -> e.associatedDim == true)
+                .map(e -> e.getAssociatedDimId()).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(associateIdList)) {
+            return;
+        }
+        List<String> associateDimensionQualifiedNames = associateIdList.stream().map(e -> {
+            return dbQualifiedName + "_" + dataModelTableTypeEnum.getValue() + "_" + e;
+        }).collect(Collectors.toList());
+
+        //判断是否已有血缘关系，存在则先删除
+        lineageMapRelation.delLineageMapRelationProcess(Integer.parseInt(tableGuid), ProcessTypeEnum.DIMENSION_PROCESS);
+
+        for (String item : associateDimensionQualifiedNames) {
+            QueryWrapper<MetadataEntityPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("qualified_name", item).select("id");
+            MetadataEntityPO po = metadataEntityMapper.selectOne(queryWrapper);
+            if (po == null) {
+                continue;
+            }
+            List<Long> ids = new ArrayList<>();
+            ids.add(po.id);
+
+            addProcess("", ids, tableGuid, "关联维度", ProcessTypeEnum.DIMENSION_PROCESS);
+        }
+
+    }
+
 
     public void addProcess(String sql,
                            List<Long> tableList,
                            String atlasGuid,
-                           String processName) {
+                           String processName,
+                           ProcessTypeEnum processType) {
         //去除换行符,以及转小写
         sql = sql.replace("\n", "").toLowerCase();
 
@@ -677,6 +907,7 @@ public class MetadataEntityImpl
             data.fromEntityId = item.intValue();
             data.toEntityId = Integer.parseInt(atlasGuid);
             data.metadataEntityId = (int) po.id;
+            data.processType = processType.getValue();
             dtoList.add(data);
         }
         //新增process关联关系

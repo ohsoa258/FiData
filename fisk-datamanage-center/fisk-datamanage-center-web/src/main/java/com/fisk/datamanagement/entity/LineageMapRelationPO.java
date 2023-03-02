@@ -19,4 +19,6 @@ public class LineageMapRelationPO extends BasePO {
 
     public Integer toEntityId;
 
+    public Integer processType;
+
 }
