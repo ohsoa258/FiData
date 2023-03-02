@@ -196,6 +196,7 @@ public class DimensionImpl
         StringBuilder str = new StringBuilder();
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd");
         Date date;
         try {
             date = sdf.parse(startTime);
@@ -204,6 +205,8 @@ public class DimensionImpl
             return "";
         }
         calendar.setTime(date);
+        // 设置每一周的第一天是哪一天
+        calendar.setFirstDayOfWeek(Calendar.MONDAY);
         calendar.add(Calendar.DAY_OF_YEAR,-1);
         boolean flat=true;
         String[] monthName = {"January", "February",
@@ -241,6 +244,10 @@ public class DimensionImpl
             int calendarQuarter=getCurrentMonth(calendar.get(Calendar.MONTH) + 1);
             //季度年
             int calendarYear=calendar.get(Calendar.YEAR);
+            //FullDateDay
+            String fullDateStr = sdf2.format(dt1);
+            // 是否是工作日
+            int weekDay = dayNumberOfWeek == 6 || dayNumberOfWeek == 7 ? 0 : 1;
             if (i == 0) {
                 str.append(" values('" + reStr + "',"
                         + dayNumberOfWeek + ",'"
@@ -251,7 +258,9 @@ public class DimensionImpl
                         + englishMonthName + "',"
                         + monthNumberOfYear + ","
                         + calendarQuarter + ","
-                        + calendarYear + ")"
+                        + calendarYear + ","
+                        + fullDateStr + ","
+                        + weekDay + ")"
                 );
             } else {
                 str.append(",('"+reStr+"',"
@@ -263,7 +272,9 @@ public class DimensionImpl
                         +englishMonthName+"',"
                         +monthNumberOfYear+","
                         +calendarQuarter+","
-                        +calendarYear+")"
+                        +calendarYear+","
+                        +fullDateStr+","
+                        +weekDay+")"
                 );
             }
             i+=1;
@@ -332,23 +343,24 @@ public class DimensionImpl
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        String[] columnList = {"FullDateAlternateKey", "DayNumberOfWeek",
-                "EnglishDayNameOfWeek", "DayNumberOfMonth", "DayNumberOfYear", "WeekNumberOfYear", "EnglishMonthName",
-                "MonthNumberOfYear", "CalendarQuarter", "CalendarYear"};
-        String[] columnDataTypeList = {"DATE", "INT", "VARCHAR", "INT", "INT", "INT", "VARCHAR", "INT", "INT", "INT"};
-        String[] columnDataTypeLengthList = {"0", "0", "10", "0", "0", "0", "10", "0", "0", "0"};
+        String[] columnList = {"FullDateAlternateKey", "DayNumberOfWeek", "EnglishDayNameOfWeek", "DayNumberOfMonth",
+                "DayNumberOfYear", "WeekNumberOfYear", "EnglishMonthName", "MonthNumberOfYear",
+                "CalendarQuarter", "CalendarYear", "FullDateKey", "Is_WeekDay"};
+        String[] columnDataTypeList = {"DATE", "INT", "VARCHAR", "INT", "INT", "INT", "VARCHAR", "INT", "INT", "INT", "DATE", "INT"};
+        String[] columnDataTypeLengthList = {"0", "0", "10", "0", "0", "0", "10", "0", "0", "0", "0", "0"};
         DataSourceDTO odsSource = dataSourceConfigUtil.getDwSource();
         switch (odsSource.conType) {
             case MYSQL:
                 break;
             case ORACLE:
-                columnDataTypeList = new String[]{"DATE", "NUMBER", "VARCHAR2", "NUMBER", "NUMBER", "NUMBER", "VARCHAR2", "NUMBER", "NUMBER", "NUMBER"};
+                columnDataTypeList = new String[]{"DATE", "NUMBER", "VARCHAR2", "NUMBER", "NUMBER", "NUMBER",
+                        "VARCHAR2", "NUMBER", "NUMBER", "NUMBER", "DATE", "NUMBER"};
                 break;
             case SQLSERVER:
-                columnDataTypeList = new String[]{"DATE", "INT", "VARCHAR", "INT", "INT", "INT", "VARCHAR", "INT", "INT", "INT"};
+                columnDataTypeList = new String[]{"DATE", "INT", "VARCHAR", "INT", "INT", "INT", "VARCHAR", "INT", "INT", "INT", "DATE", "INT"};
                 break;
             case POSTGRESQL:
-                columnDataTypeList = new String[]{"DATE", "INT2", "VARCHAR", "INT2", "INT2", "INT2", "VARCHAR", "INT2", "INT2", "INT2"};
+                columnDataTypeList = new String[]{"DATE", "INT2", "VARCHAR", "INT2", "INT2", "INT2", "VARCHAR", "INT2", "INT2", "INT2",  "DATE", "INT2"};
                 break;
             case DORIS:
                 break;
