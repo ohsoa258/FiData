@@ -786,7 +786,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         publishTaskClient.consumer(JSON.toJSONString(kafkaReceive));
     }
 
-    public static KafkaReceiveDTO getKafkaReceive(ApiImportDataDTO dto,Integer numbers,OlapTableEnum olapTableEnum,String topic){
+    public static KafkaReceiveDTO getKafkaReceive(ApiImportDataDTO dto, Integer numbers, OlapTableEnum olapTableEnum, String topic) {
         return KafkaReceiveDTO.builder()
                 .pipelTraceId(dto.pipelTraceId)
                 .pipelTaskTraceId(dto.pipelTaskTraceId)
@@ -1237,6 +1237,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             JSONObject json = JSON.parseObject(jsonStr);
             jsonUtils.rootNodeHandler(schemas, json, targetTable);
         } catch (Exception e) {
+            log.error(String.format("解析Json数据失败，表名称：%s，Json: %s", tablePrefixName, jsonStr), e);
             return ResultEntityBuild.build(ResultEnum.JSON_ROOTNODE_HANDLER_ERROR);
         }
         targetTable.forEach(System.out::println);
@@ -1276,6 +1277,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
             }
         } catch (Exception e) {
+            log.error(String.format("调用数据质量接口报错，表名称：%s", tablePrefixName), e);
             return ResultEntityBuild.build(ResultEnum.DATA_QUALITY_FEIGN_ERROR);
         }
         System.out.println("开始执行sql");
@@ -1289,6 +1291,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 excuteResult = pgsqlUtils.executeBatchPgsql(importDataDto, tablePrefixName, targetTable, apiTableDtoList, targetDbId);
             }
         } catch (Exception e) {
+            log.error(String.format("推送数据报错，表名称：%s，", tablePrefixName), e);
             return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR);
         }
         resultEnum = ResultEnum.getEnum(excuteResult.code);
