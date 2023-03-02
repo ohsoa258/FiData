@@ -150,7 +150,7 @@ public class NifiController {
         }
         if (!map.isEmpty()){
             log.info("开始更新nifi变量数据：【{}】", JSON.toJSONString(map));
-            iNiFiHelper.buildNifiGlobalVariable(map);
+            iNiFiHelper.updateNifiGlobalVariable(map);
             log.info("更新nifi变量结束");
         }
         return resultEntity;
