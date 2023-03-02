@@ -53,4 +53,8 @@ public class NifiCustomWorkflowDetailPO extends BasePO {
      * 数据源id
      */
     public Integer dataSourceId;
+    /**
+     * 是否禁用
+     */
+    public Boolean forbidden;
 }

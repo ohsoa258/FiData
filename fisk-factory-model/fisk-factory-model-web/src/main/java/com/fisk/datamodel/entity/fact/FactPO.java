@@ -61,4 +61,8 @@ public class FactPO extends BasePO {
      * 维度key数据同步脚本
      */
     public String dimensionKeyScript;
+    /**
+     * 覆盖方式预览脚本
+     */
+    public String coverScript;
 }

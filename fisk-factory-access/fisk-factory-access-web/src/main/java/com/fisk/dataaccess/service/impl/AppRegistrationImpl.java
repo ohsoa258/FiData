@@ -25,16 +25,14 @@ import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.datasource.ExternalDataSourceDTO;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbMetaData.dto.*;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataDbAttributeDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -80,6 +78,7 @@ import com.fisk.task.enums.OlapTableEnum;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -90,6 +89,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -151,6 +152,8 @@ public class AppRegistrationImpl
     @Resource
     GetConfigDTO getConfig;
 
+    @Value("${spring.open-metadata}")
+    private Boolean openMetadata;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -237,43 +240,40 @@ public class AppRegistrationImpl
             VerifySchema(po.appAbbreviation, po.targetDbId);
         }
 
-        //新增业务分类
-        // addClassification(appRegistrationDTO);
+        if (openMetadata) {
+            //新增业务分类
+            addClassification(appRegistrationDTO);
 
-        //数据库应用,需要新增元数据对象
-        List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
-        for (AppDataSourcePO item : modelDataSource) {
-            List<MetaDataInstanceAttributeDTO> metaData = addDataSourceMetaData(po, item);
-            if (metaData != null){
-                list.addAll(metaData);
+            //数据库应用,需要新增元数据对象
+            List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
+            for (AppDataSourcePO item : modelDataSource) {
+                List<MetaDataInstanceAttributeDTO> metaData = addDataSourceMetaData(po, item);
+                if (metaData != null) {
+                    list.addAll(metaData);
+                }
+            }
+            if (!CollectionUtils.isEmpty(list)) {
+                try {
+                    MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
+                    metaDataAttribute.instanceList = list;
+                    metaDataAttribute.userId = Long.parseLong(userHelper.getLoginUserInfo().id.toString());
+                    // 更新元数据内容
+                    log.info("数据接入ods构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+                    dataManageClient.consumeMetaData(list);
+                } catch (Exception e) {
+                    log.error("【dataManageClient.MetaData()】方法报错,ex", e);
+                }
             }
         }
-
-        /*
-        // ——该模块暂未使用到元数据
-        if (!CollectionUtils.isEmpty(list)) {
-            try {
-                MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
-                metaDataAttribute.instanceList = list;
-                metaDataAttribute.userId = Long.parseLong(userHelper.getLoginUserInfo().id.toString());
-                // 更新元数据内容
-                log.info("数据接入ods构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
-                dataManageClient.consumeMetaData(list);
-            } catch (Exception e) {
-                log.error("【dataManageClient.MetaData()】方法报错,ex", e);
-            }
-        }
-         */
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
     }
 
     /**
-     * 新增业务分类——该模块暂未使用到元数据
+     * 新增业务分类
      *
      * @param appRegistrationDTO
      */
-    /*
     public void addClassification(AppRegistrationDTO appRegistrationDTO) {
         // 添加业务分类元数据信息
         ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
@@ -295,7 +295,6 @@ public class AppRegistrationImpl
             }
         });
     }
-     */
 
     /**
      * 新增元数据信息
@@ -381,12 +380,13 @@ public class AppRegistrationImpl
             return dto;
         }
 
-        /*ResultEntity<Object> objectResultEntity = publishTaskClient.addDataSetParams(data);
+        ResultEntity<Object> objectResultEntity = publishTaskClient.addDataSetParams(data);
         if (objectResultEntity.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
-        dto.id = (int) objectResultEntity.data;*/
+        dto.id = (int) objectResultEntity.data;
         return dto;
+
     }
 
     @Override
@@ -666,35 +666,35 @@ public class AppRegistrationImpl
         vo.classifications = model.appName;
         log.info("删除的应用信息,{}", vo);
 
-        // ——该模块暂未使用到元数据
-        /*
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    // 删除元数据实体
-                    if (!CollectionUtils.isEmpty(vo.qualifiedNames)) {
-                        MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
-                        metaDataDeleteAttributeDto.setQualifiedNames(vo.getQualifiedNames());
-                        metaDataDeleteAttributeDto.classifications = vo.classifications;
-                        dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
+        if (openMetadata) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+
+                        // 删除元数据实体
+                        if (!CollectionUtils.isEmpty(vo.qualifiedNames)) {
+                            MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
+                            metaDataDeleteAttributeDto.setQualifiedNames(vo.getQualifiedNames());
+                            metaDataDeleteAttributeDto.classifications = vo.classifications;
+                            dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
+                        }
+
+                        // 删除业务分类
+                        ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
+                        classificationInfoDto.setName(vo.classifications);
+                        classificationInfoDto.setDescription(model.appDes);
+                        classificationInfoDto.setSourceType(1);
+                        classificationInfoDto.setDelete(true);
+
+                        dataManageClient.appSynchronousClassification(classificationInfoDto);
+                    } catch (Exception e) {
+                        // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
+                        log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
                     }
-
-                    // 删除业务分类
-                    ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
-                    classificationInfoDto.setName(vo.classifications);
-                    classificationInfoDto.setDescription(model.appDes);
-                    classificationInfoDto.setSourceType(1);
-                    classificationInfoDto.setDelete(true);
-
-                    dataManageClient.appSynchronousClassification(classificationInfoDto);
-                } catch (Exception e) {
-                    // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
-                    log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
                 }
-            }
-        }).start();
-         */
+            }).start();
+        }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
     }

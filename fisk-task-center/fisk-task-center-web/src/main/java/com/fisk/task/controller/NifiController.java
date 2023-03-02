@@ -130,10 +130,10 @@ public class NifiController {
         if (entity.getCode() == ResultEnum.SUCCESS.getCode()){
             DataSourceDTO data = entity.getData();
             Map<String, String> map = new HashMap<>();
-            map.put(ComponentIdTypeEnum.DB_URL.getName(), data.getConStr());
-            map.put(ComponentIdTypeEnum.DB_USERNAME.getName(), data.getConAccount());
-            map.put(ComponentIdTypeEnum.DB_PASSWORD.getName(), data.getConPassword());
-            iNiFiHelper.buildNifiGlobalVariable(map);
+            map.put(ComponentIdTypeEnum.DB_URL.getName() + dto.getId(), data.getConStr());
+            map.put(ComponentIdTypeEnum.DB_USERNAME.getName() + dto.getId(), data.getConAccount());
+            map.put(ComponentIdTypeEnum.DB_PASSWORD.getName() + dto.getId(), data.getConPassword());
+            iNiFiHelper.updateNifiGlobalVariable(map);
         }
         return resultEntity;
     }

@@ -3,6 +3,7 @@ package com.fisk.task.listener.nifi.impl;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.factory.TaskSettingEnum;
+import com.fisk.common.core.enums.sftp.SourceTypeEnum;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -24,6 +25,7 @@ import com.fisk.task.service.dispatchLog.IPipelJobLog;
 import com.fisk.task.utils.KafkaTemplateHelper;
 import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
@@ -54,8 +56,6 @@ public class BuildSftpCopyListener implements ISftpCopyListener {
         data = "[" + data + "]";
         SftpCopyDTO dto = new SftpCopyDTO();
         try {
-
-
             List<SftpCopyDTO> sftpCopys = JSON.parseArray(data, SftpCopyDTO.class);
 
             for (SftpCopyDTO sftpCopy : sftpCopys) {
@@ -68,26 +68,53 @@ public class BuildSftpCopyListener implements ISftpCopyListener {
                         .collect(Collectors.toMap(TaskSettingDTO::getSettingKey, TaskSettingDTO::getValue));
                 // 执行sftp文件复制任务
                 log.info("开始执行复制方法,连接配置:{}", JSON.toJSONString(map));
-                SftpUtils.copyFile(
-                        map.get(TaskSettingEnum.sftp_source_ip.getAttributeName()), 22,
-                        map.get(TaskSettingEnum.sftp_source_account.getAttributeName()),
-                        map.get(TaskSettingEnum.sftp_source_password.getAttributeName()),
-                        map.get(TaskSettingEnum.sftp_source_rsa_file_path.getAttributeName()),
-                        Integer.parseInt(map.get(TaskSettingEnum.sftp_source_authentication_type.getAttributeName())),
 
-                        map.get(TaskSettingEnum.sftp_target_ip.getAttributeName()), 22,
-                        map.get(TaskSettingEnum.sftp_target_account.getAttributeName()),
-                        map.get(TaskSettingEnum.sftp_target_password.getAttributeName()),
-                        map.get(TaskSettingEnum.sftp_target_rsa_file_path.getAttributeName()),
-                        Integer.parseInt(map.get(TaskSettingEnum.sftp_target_authentication_type.getAttributeName())),
+                String sftp_source_type = map.get(TaskSettingEnum.sftp_source_type.getAttributeName());
+                if (StringUtils.isEmpty(sftp_source_type) || sftp_source_type.equals(String.valueOf(SourceTypeEnum.SFTP.getValue()))) {
+                    SftpUtils.copyFile(
+                            map.get(TaskSettingEnum.sftp_source_ip.getAttributeName()), 22,
+                            map.get(TaskSettingEnum.sftp_source_account.getAttributeName()),
+                            map.get(TaskSettingEnum.sftp_source_password.getAttributeName()),
+                            map.get(TaskSettingEnum.sftp_source_rsa_file_path.getAttributeName()),
+                            Integer.parseInt(map.get(TaskSettingEnum.sftp_source_authentication_type.getAttributeName())),
 
-                        Integer.valueOf(map.get(TaskSettingEnum.sftp_source_ordering_rule.getAttributeName())),
-                        Integer.valueOf(map.get(TaskSettingEnum.sftp_source_sortord.getAttributeName())),
+                            map.get(TaskSettingEnum.sftp_target_ip.getAttributeName()), 22,
+                            map.get(TaskSettingEnum.sftp_target_account.getAttributeName()),
+                            map.get(TaskSettingEnum.sftp_target_password.getAttributeName()),
+                            map.get(TaskSettingEnum.sftp_target_rsa_file_path.getAttributeName()),
+                            Integer.parseInt(map.get(TaskSettingEnum.sftp_target_authentication_type.getAttributeName())),
 
-                        Integer.valueOf(map.get(TaskSettingEnum.sftp_source_number.getAttributeName())),
-                        map.get(TaskSettingEnum.sftp_source_folder.getAttributeName()),
-                        map.get(TaskSettingEnum.sftp_target_folder.getAttributeName()),
-                        map.get(TaskSettingEnum.sftp_target_file_name.getAttributeName()));
+                            Integer.valueOf(map.get(TaskSettingEnum.sftp_source_ordering_rule.getAttributeName())),
+                            Integer.valueOf(map.get(TaskSettingEnum.sftp_source_sortord.getAttributeName())),
+
+                            Integer.valueOf(map.get(TaskSettingEnum.sftp_source_number.getAttributeName())),
+                            map.get(TaskSettingEnum.sftp_source_folder.getAttributeName()),
+                            map.get(TaskSettingEnum.sftp_target_folder.getAttributeName()),
+                            map.get(TaskSettingEnum.sftp_target_file_name.getAttributeName()),
+                            map.get(TaskSettingEnum.sftp_source_file_match_wildcard.getAttributeName())
+                    );
+                } else if (sftp_source_type.equals(String.valueOf(SourceTypeEnum.WINDOWS.getValue()))) {
+                    SftpUtils.copySmbFilesToSFTP(
+                            map.get(TaskSettingEnum.sftp_source_account.getAttributeName()),
+                            map.get(TaskSettingEnum.sftp_source_password.getAttributeName()),
+                            map.get(TaskSettingEnum.sftp_source_ip.getAttributeName()),
+                            map.get(TaskSettingEnum.sftp_source_folder.getAttributeName()),
+                            map.get(TaskSettingEnum.sftp_source_file_match_wildcard.getAttributeName()),
+                            map.get(TaskSettingEnum.sftp_target_folder.getAttributeName()),
+                            map.get(TaskSettingEnum.sftp_target_file_name.getAttributeName()),
+                            Integer.valueOf(map.get(TaskSettingEnum.sftp_source_ordering_rule.getAttributeName())),
+                            Integer.valueOf(map.get(TaskSettingEnum.sftp_source_sortord.getAttributeName())),
+                            Integer.valueOf(map.get(TaskSettingEnum.sftp_source_number.getAttributeName())),
+                            Integer.parseInt(map.get(TaskSettingEnum.sftp_target_authentication_type.getAttributeName())),
+                            map.get(TaskSettingEnum.sftp_target_account.getAttributeName()),
+                            map.get(TaskSettingEnum.sftp_target_password.getAttributeName()),
+                            map.get(TaskSettingEnum.sftp_target_rsa_file_path.getAttributeName()),
+                            map.get(TaskSettingEnum.sftp_target_ip.getAttributeName()), 22
+                    );
+                } else {
+                    log.info("【sftpCopyTask】错误的源类型");
+                    throw new FkException(ResultEnum.ERROR);
+                }
             }
             log.info("sftp复制任务执行完成");
             return ResultEnum.SUCCESS;

@@ -37,5 +37,7 @@ public class LoginServiceDTO {
 
     public String description;
 
+    public Integer sequenceNo;
+
     public List<LoginServiceDTO> children;
 }

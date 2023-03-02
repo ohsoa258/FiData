@@ -12,7 +12,6 @@ import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
-import com.fisk.task.entity.TaskDwDimPO;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.postgre.datainput.IbuildTable;
 import com.fisk.task.mapper.TaskDwDimMapper;
@@ -22,7 +21,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -53,13 +51,20 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                 sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
             } else if (l.fieldType.contains("TEXT")) {
                 sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
-            } else if (l.fieldType.contains("TIMESTAMP")) {
+                stgSql.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + ",");
+            } else if (l.fieldType.toUpperCase().equals("DATE")) {
+                sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
+            } else if (l.fieldType.toUpperCase().equals("TIME")) {
+                sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
+            } else if (l.fieldType.contains("TIMESTAMP") || StringUtils.equals(l.fieldType.toUpperCase(), "DATETIME")) {
                 sqlFileds.append("[" + l.fieldName + "] datetime ");
             } else {
                 sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + "(" + l.fieldLength + ") ");
             }
             // 修改stg表,字段类型
-            stgSql.append("[" + l.fieldName + "] nvarchar(4000),");
+            if (!l.fieldType.contains("TEXT")) {
+                stgSql.append("[" + l.fieldName + "] nvarchar(4000),");
+            }
             if (l.isPrimarykey == 1) {
                 pksql.append("" + l.fieldName + ",");
                 sqlFileds.append("not null ,");
@@ -97,6 +102,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         if (StringUtils.isNotEmpty(havePk)) {
             // stg_sql1 += ";alter table " + odsTableName + " add constraint " + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "_pkey primary key(" + havePk.substring(0, havePk.length() - 1) + ")";
         }
+        stg_sql1 = "if not exists (select * from sysobjects where id = object_id('" + odsTableName + "') and OBJECTPROPERTY(id, 'IsUserTable') = 1) " + stg_sql1;
         sqlList.add(stg_sql1);
         sqlList.add(stg_sql2);
         return sqlList;
@@ -320,18 +326,25 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         StringBuilder stgSqlFileds = new StringBuilder();
         log.info("pg_dw建表字段信息:" + fieldList);
         fieldList.forEach((l) -> {
-            if (l.fieldType.contains("INT") || l.fieldType.contains("TEXT")) {
-                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(",");
-                stgSqlFileds.append("[").append(l.fieldEnName).append("] nvarchar(4000),");
-            } else if (l.fieldType.toLowerCase().contains("numeric") || l.fieldType.toLowerCase().contains("float")) {
-                sqlFileds.append("[").append(l.fieldEnName).append("] float ,");
-                stgSqlFileds.append("[").append(l.fieldEnName).append("] nvarchar(4000),");
-            } else if (l.fieldType.contains("TIMESTAMP")) {
-                sqlFileds.append("[").append(l.fieldEnName).append("] datetime ,");
-                stgSqlFileds.append("[").append(l.fieldEnName).append("] nvarchar(4000),");
+            if (l.fieldType.contains("FLOAT")) {
+                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.contains("INT")) {
+                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.contains("TEXT")) {
+                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(", ");
+                stgSqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(",");
+            } else if (l.fieldType.toUpperCase().equals("DATE")) {
+                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.toUpperCase().equals("TIME")) {
+                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.contains("TIMESTAMP") || StringUtils.equals(l.fieldType.toUpperCase(), "DATETIME")) {
+                sqlFileds.append("[").append(l.fieldEnName).append("] datetime, ");
             } else {
-                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append("(").append(l.fieldLength).append(") ,");
-                stgSqlFileds.append("[").append(l.fieldEnName).append("] nvarchar(4000),");
+                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append("(").append(l.fieldLength).append("), ");
+            }
+            // 修改stg表,字段类型
+            if (!l.fieldType.contains("TEXT")) {
+                stgSqlFileds.append("[" + l.fieldEnName + "] nvarchar(4000),");
             }
             if (l.isPrimaryKey == 1) {
                 pksql.append("").append(l.fieldEnName).append(" ,");
@@ -339,7 +352,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
 
         });
 
-        String sql1 = "CREATE TABLE " + modelPublishTableDTO.tableName + " ( " + tablePk + " varchar(50), ";
+        String sql1 = "CREATE TABLE " + modelPublishTableDTO.tableName + " ( " + tablePk + " BIGINT, ";
         //String associatedKey = associatedConditions(fieldList);
         String associatedKey = "";
         String sql2 = sqlFileds.toString() + associatedKey;

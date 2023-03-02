@@ -3,6 +3,7 @@ server:
 spring:
   application:
     name: datamodel-service
+  open-metadata: false
   # 日志输入环境
   profiles:
     active: dev

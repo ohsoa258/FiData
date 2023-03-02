@@ -6,10 +6,14 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
+import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
+import com.fisk.common.core.enums.task.FuncNameEnum;
+import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
@@ -19,13 +23,17 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
+import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
+import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
+import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
@@ -65,17 +73,26 @@ import com.fisk.datamodel.service.impl.fact.BusinessProcessImpl;
 import com.fisk.datamodel.service.impl.fact.FactAttributeImpl;
 import com.fisk.datamodel.service.impl.fact.FactImpl;
 import com.fisk.datamodel.service.impl.widetable.WideTableImpl;
+import com.fisk.datamodel.utils.mysql.DataSourceConfigUtil;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.daconfig.DataSourceConfig;
+import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
+import com.fisk.task.dto.daconfig.ProcessorConfig;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -144,9 +161,18 @@ public class BusinessAreaImpl
     private WideTableImpl wideTableImpl;
     @Resource
     private RedisUtil redisUtil;
+    @Resource
+    DataSourceConfigUtil dataSourceConfigUtil;
 
     @Resource
     private DataManageClient dataManageClient;
+    @Resource
+    private UserClient userClient;
+
+    @Value("${spring.open-metadata}")
+    private Boolean openMetadata;
+    @Value("${fiData-data-dw-source}")
+    private Integer targetDbId;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -165,17 +191,19 @@ public class BusinessAreaImpl
         dimensionFolder.addPublicDimensionFolder();
         dimensionFolder.addSystemDimensionFolder(dto.id);
 
-        /*// 添加元数据信息
-        ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
-        classificationInfoDto.setName(dto.businessName);
-        classificationInfoDto.setDescription(dto.businessDes);
-        classificationInfoDto.setSourceType(2);
-        classificationInfoDto.setDelete(false);
-        try {
-            dataManageClient.appSynchronousClassification(classificationInfoDto);
-        } catch (Exception e) {
-            log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
-        }*/
+        if (openMetadata) {
+            // 添加元数据信息
+            ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
+            classificationInfoDto.setName(dto.businessName);
+            classificationInfoDto.setDescription(dto.businessDes);
+            classificationInfoDto.setSourceType(2);
+            classificationInfoDto.setDelete(false);
+            try {
+                dataManageClient.appSynchronousClassification(classificationInfoDto);
+            } catch (Exception e) {
+                log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
+            }
+        }
 
         return ResultEnum.SUCCESS;
     }
@@ -295,18 +323,20 @@ public class BusinessAreaImpl
                 return ResultEnum.BUSINESS_AREA_EXISTS_ASSOCIATED;
             }
 
-            /*//删除元数据信息
-            ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
-            classificationInfoDto.setName(model.getBusinessName());
-            classificationInfoDto.setDescription(model.getBusinessDes());
-            classificationInfoDto.setSourceType(2);
-            classificationInfoDto.setDelete(true);
-            try {
-                dataManageClient.appSynchronousClassification(classificationInfoDto);
-            } catch (Exception e) {
-                // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
-                log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
-            }*/
+            if (openMetadata) {
+                //删除元数据信息
+                ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
+                classificationInfoDto.setName(model.getBusinessName());
+                classificationInfoDto.setDescription(model.getBusinessDes());
+                classificationInfoDto.setSourceType(2);
+                classificationInfoDto.setDelete(true);
+                try {
+                    dataManageClient.appSynchronousClassification(classificationInfoDto);
+                } catch (Exception e) {
+                    // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
+                    log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
+                }
+            }
 
             return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         } catch (Exception e) {
@@ -1126,9 +1156,14 @@ public class BusinessAreaImpl
             str.append(" set ");
             str.append(item.sourceTable).append(".").append(StringBuildUtils.dimensionKeyName(item.targetTable));
             str.append(" = ");
-            str.append("from ");
-            str.append(item.targetTable);
-            str.append(" where ");
+            str.append(item.targetTable).append(".").append(StringBuildUtils.dimensionKeyName(item.targetTable));
+            str.append(" from ");
+            str.append(item.sourceTable);
+            if (!StringUtils.isEmpty(item.joinType)){
+                str.append(" ").append(item.joinType);
+                str.append(" ").append(item.targetTable);
+            }
+            str.append(" on ");
             str.append(item.sourceTable).append(".").append(item.sourceColumn);
             str.append(" = ");
             str.append(item.targetTable).append(".").append(item.targetColumn);
@@ -1136,6 +1171,118 @@ public class BusinessAreaImpl
         }
 
         return str.toString();
+    }
+
+    @Override
+    public JSONObject dataTypeList(Integer businessId) {
+        //todo 暂时不传参 方便后期可能dw存在多个
+        if (businessId != 0) {
+            return new JSONObject();
+        }
+
+        ResultEntity<List<DataSourceDTO>> all = userClient.getAll();
+        if (all.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+
+        Optional<DataSourceDTO> first = all.data.stream().filter(e -> e.sourceBusinessType == SourceBusinessTypeEnum.DW).findFirst();
+        if (!first.isPresent()) {
+            throw new FkException(ResultEnum.DATA_OPS_CONFIG_EXISTS);
+        }
+
+        IBuildAccessSqlCommand command = BuildFactoryAccessHelper.getDBCommand(first.get().conType);
+        return command.dataTypeList();
+
+
+    }
+
+    /**
+     * 覆盖方式代码预览
+     *
+     * @return
+     */
+    @Override
+    public Object overlayCodePreview(OverlayCodePreviewDTO dto) {
+
+        String tableName;
+        String prefixTempName;
+        if (dto.type == 1) {
+            DimensionPO po = dimensionMapper.selectById(dto.id);
+            if (po == null) {
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+            tableName = po.dimensionTabName;
+            prefixTempName = po.prefixTempName;
+        } else {
+            FactPO factPO = factMapper.selectById(dto.id);
+            if (factPO == null) {
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+            tableName = factPO.factTabName;
+            prefixTempName = factPO.prefixTempName;
+        }
+
+        DataAccessConfigDTO data = new DataAccessConfigDTO();
+
+        ProcessorConfig processorConfig = new ProcessorConfig();
+        processorConfig.targetTableName = tableName;
+        data.processorConfig = processorConfig;
+
+        DataSourceConfig targetDsConfig = new DataSourceConfig();
+        targetDsConfig.syncMode = dto.syncMode;
+        data.targetDsConfig = targetDsConfig;
+
+        data.businessDTO = dto.tableBusiness == null ? new TableBusinessDTO() : dto.tableBusiness;
+        data.businessDTO.otherLogic = 1;
+        if (dto.syncMode == 4) {
+            data.businessDTO.otherLogic = 2;
+        }
+
+        data.modelPublishFieldDTOList = dto.modelPublishFieldDTOList;
+
+        List<String> collect = dto.modelPublishFieldDTOList.stream().filter(e -> e.isPrimaryKey == 1).map(e -> e.fieldEnName).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(collect)) {
+            data.businessKeyAppend = String.join(",", collect);
+        }
+
+        BuildNifiFlowDTO buildNifiFlow = new BuildNifiFlowDTO();
+        buildNifiFlow.updateSql = dto.updateSql;
+        buildNifiFlow.prefixTempName = prefixTempName;
+
+        OverLoadCodeDTO dataModel = new OverLoadCodeDTO();
+        dataModel.buildNifiFlow = buildNifiFlow;
+        dataModel.config = data;
+        dataModel.funcName = FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_OUTPUT.getName();
+        dataModel.dataSourceType = DataSourceTypeEnum.SQLSERVER;
+        dataModel.synchronousTypeEnum = SynchronousTypeEnum.PGTOPG;
+
+        ResultEntity<Object> objectResultEntity = publishTaskClient.overlayCodePreview(dataModel);
+        if (objectResultEntity.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+
+        /*Connection conn = null;
+        Statement stat = null;
+        try {
+            conn = dataSourceConfigUtil.getConnection();
+            stat = conn.createStatement();
+
+            stat.executeQuery(objectResultEntity.data.toString());
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }*/
+
+        return objectResultEntity.data;
+    }
+
+    public DataSourceDTO getTargetDbInfo() {
+        ResultEntity<DataSourceDTO> dataDataSource = userClient.getFiDataDataSourceById(targetDbId);
+        if (dataDataSource.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+
+        return dataDataSource.data;
     }
 
 }

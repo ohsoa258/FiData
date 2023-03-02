@@ -107,25 +107,28 @@ public class DimensionAttributeImpl
             }
         }
         //添加或修改维度字段
-        List<DimensionAttributePO> poList=DimensionAttributeMap.INSTANCES.dtoListToPoList(dto.list);
-        poList.stream().map(e->e.dimensionId=dto.dimensionId).collect(Collectors.toList());
-        boolean result=this.saveOrUpdateBatch(poList);
+        List<DimensionAttributePO> poList = DimensionAttributeMap.INSTANCES.dtoListToPoList(dto.list);
+        poList.stream().map(e -> e.dimensionId = dto.dimensionId).collect(Collectors.toList());
+        boolean result = this.saveOrUpdateBatch(poList);
+        if (!result) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        //修改发布状态
+        dimensionPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
+        dimensionPo.dimensionKeyScript = dto.dimensionKeyScript;
+        if (mapper.updateById(dimensionPo) == 0) {
+            throw new FkException(ResultEnum.PUBLISH_FAILURE);
+        }
         //是否发布
         if (dto.isPublish) {
             DimensionFolderPublishQueryDTO queryDTO = new DimensionFolderPublishQueryDTO();
             List<Integer> dimensionIds = new ArrayList<>();
             dimensionIds.add(dto.dimensionId);
-            //修改发布状态
-            dimensionPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
-            dimensionPo.dimensionKeyScript = dto.dimensionKeyScript;
-            if (mapper.updateById(dimensionPo) == 0) {
-                throw new FkException(ResultEnum.PUBLISH_FAILURE);
-            }
             queryDTO.dimensionIds = dimensionIds;
             queryDTO.businessAreaId = dimensionPo.businessId;
-            queryDTO.remark=dto.remark;
-            queryDTO.syncMode=dto.syncModeDTO.syncMode;
-            queryDTO.openTransmission=dto.openTransmission;
+            queryDTO.remark = dto.remark;
+            queryDTO.syncMode = dto.syncModeDTO.syncMode;
+            queryDTO.openTransmission = dto.openTransmission;
             return dimensionFolder.batchPublishDimensionFolder(queryDTO);
         }
         return result ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -206,6 +209,7 @@ public class DimensionAttributeImpl
         //获取sql脚本
         data.sqlScript = dimensionPo.sqlScript;
         data.dataSourceId = dimensionPo.dataSourceId;
+        data.dimensionKeyScript = dimensionPo.dimensionKeyScript;
         //获取表字段详情
         QueryWrapper<DimensionAttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId, dimensionId);
@@ -386,6 +390,26 @@ public class DimensionAttributeImpl
         }
 
         return factAttribute.buildUpdateSql(configDetailsMap);
+    }
+
+    @Override
+    public ResultEnum addDimensionAttribute(DimensionAttributeDTO dto) {
+        List<DimensionAttributePO> list = this.query().eq("dimension_id", dto.associateDimensionId)
+                .eq("dimension_field_en_name", dto.dimensionFieldEnName).list();
+        if (!CollectionUtils.isEmpty(list)) {
+            throw new FkException(ResultEnum.DATA_EXISTS);
+        }
+
+        DimensionAttributePO dimensionAttributePO = DimensionAttributeMap.INSTANCES.dtoToPo(dto);
+        dimensionAttributePO.dimensionId = dto.associateDimensionId;
+        dimensionAttributePO.associateDimensionId = 0;
+
+        boolean flat = this.save(dimensionAttributePO);
+        if (!flat) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        return ResultEnum.SUCCESS;
     }
 
 }

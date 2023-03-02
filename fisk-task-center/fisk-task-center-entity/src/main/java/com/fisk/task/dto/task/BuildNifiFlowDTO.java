@@ -128,4 +128,31 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
      * 临时表名称
      */
     public String prefixTempName;
+
+    /**
+     * 自定义脚本执行前
+     */
+    public String customScriptBefore;
+
+    /**
+     * 自定义脚本执行后
+     */
+    public String customScriptAfter;
+
+    /**
+     * 执行删除ods的sql语句
+     */
+    public String whereScript;
+
+    /**
+     * 从stg抽取数据同步到ods的sql语句
+     */
+    public String syncStgToOdsSql;
+
+    /**
+     * 临时表(建模temp_tablename)建表语句
+     */
+    public String buildTableSql;
+
+
 }

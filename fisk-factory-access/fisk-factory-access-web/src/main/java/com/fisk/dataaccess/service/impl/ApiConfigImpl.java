@@ -152,6 +152,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     @Resource
     private BuildHttpRequestImpl buildHttpRequest;
 
+    @Value("${spring.open-metadata}")
+    private Boolean openMetadata;
+
     @Override
     public ApiConfigDTO getData(long id) {
 
@@ -343,13 +346,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 删除nifi流程
             publishTaskClient.deleteNifiFlow(dataModelVO);
 
-            /*
-            // 删除元数据——该模块暂未使用到元数据
-            MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
-            metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.qualifiedNames);
-            metaDataDeleteAttributeDto.setClassifications(nifiVO.classifications);
-            dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
-             */
+            if (openMetadata) {
+                // 删除元数据
+                MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
+                metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.qualifiedNames);
+                metaDataDeleteAttributeDto.setClassifications(nifiVO.classifications);
+                dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
+            }
         }
 
         // 删除factory-dispatch对应的api配置
@@ -524,6 +527,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         } catch (Exception e) {
             resultEnum = ResultEnum.PUSH_DATA_ERROR;
+            log.error(String.format("【APICode：%s】推送数据失败，数据详情【%s】", dto.apiCode, dto.pushData), e);
         }
         return ResultEntityBuild.build(resultEnum, msg);
     }
@@ -616,6 +620,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         } catch (Exception e) {
             resultEnum = ResultEnum.PUSH_DATA_ERROR;
+            log.error(String.format("【APICode：%s】推送数据失败，数据详情【%s】", dto.apiCode, dto.pushData), e);
         }
         return ResultEntityBuild.build(resultEnum, msg);
     }
@@ -912,9 +917,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         List<AppRegistrationPO> appRegistrationPoList = new ArrayList<>();
         // 只需要RestfulAPI和api类型
         list.forEach(e -> {
-            AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).one();
-            if (DataSourceTypeEnum.API.getName().equalsIgnoreCase(appDataSourcePo.driveType) || DataSourceTypeEnum.RestfulAPI.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
-                appRegistrationPoList.add(e);
+            List<AppDataSourcePO> appDataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).list();
+            if (!CollectionUtils.isEmpty(appDataSourcePo)) {
+                for (AppDataSourcePO item : appDataSourcePo) {
+                    if (DataSourceTypeEnum.API.getName().equalsIgnoreCase(item.driveType) || DataSourceTypeEnum.RestfulAPI.getName().equalsIgnoreCase(item.driveType)) {
+                        appRegistrationPoList.add(e);
+                    }
+                }
             }
         });
 

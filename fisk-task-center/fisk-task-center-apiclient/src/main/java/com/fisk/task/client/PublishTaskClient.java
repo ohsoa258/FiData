@@ -1,7 +1,7 @@
 package com.fisk.task.client;
 
 import com.fisk.common.core.response.ResultEntity;
-import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
+import com.fisk.common.service.accessAndTask.DataTranDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
@@ -9,8 +9,10 @@ import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
 import com.fisk.task.dto.dispatchlog.*;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
@@ -22,7 +24,10 @@ import com.fisk.task.dto.query.DataServiceTableLogQueryDTO;
 import com.fisk.task.dto.task.*;
 import com.fisk.task.po.TableNifiSettingPO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 import java.util.Map;
@@ -177,17 +182,10 @@ public interface PublishTaskClient {
     /**
      * 拼接sql替换时间
      *
-     * @param tableName tableName
-     * @param sql       sql
-     * @param driveType driveType
      * @return 返回值
      */
-    @GetMapping("/TBETLIncremental/converSql")
-    ResultEntity<Map<String, String>> converSql(
-            @RequestParam("tableName") String tableName,
-            @RequestParam("sql") String sql,
-            @RequestParam(value = "driveType", required = false) String driveType,
-            @RequestParam(value = "deltaTimes", required = false) String deltaTimes);
+    @PostMapping("/TBETLIncremental/converSql")
+    ResultEntity<Map<String, String>> converSql(@RequestBody DataTranDTO dto);
 
     /**
      * getSqlForPgOds
@@ -375,4 +373,17 @@ public interface PublishTaskClient {
      */
     @PostMapping("/dispatchLog/getDataServiceTableLogVos")
     ResultEntity<DataServiceTableLogQueryVO> getDataServiceTableLogVos(@RequestBody DataServiceTableLogQueryDTO dto);
+
+    /**
+     * 同步数据源添加nifi变量
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/nifi/add")
+    ResultEntity<Object> addDataSetParams(@RequestBody DataSourceSaveDTO dto);
+
+    @PostMapping("/pipeline/overlayCodePreview")
+    ResultEntity<Object> overlayCodePreview(@RequestBody OverLoadCodeDTO dto);
+
 }

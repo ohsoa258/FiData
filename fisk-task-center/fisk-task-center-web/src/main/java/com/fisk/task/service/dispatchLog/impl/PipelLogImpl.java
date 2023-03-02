@@ -208,7 +208,23 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
                 }
             }
         }
+        // 处理超过50分钟的失败任务
+        handleIsFailStatus(pipelMergeLogs);
         return pipelMergeLogs;
+    }
+
+    private void handleIsFailStatus(List<PipelMergeLog> pipelMergeLogs){
+        for (PipelMergeLog item : pipelMergeLogs){
+            Date endTime = item.getEndTime();
+            if (endTime == null){
+                Date currDate = new Date();
+                long totalTime = (currDate.getTime() - item.startTime.getTime()) / (1000 * 60);
+                if (totalTime >= 50){
+                    item.result = "失败";
+                    item.pipelStatu = "已失败";
+                }
+            }
+        }
     }
 
     @Override

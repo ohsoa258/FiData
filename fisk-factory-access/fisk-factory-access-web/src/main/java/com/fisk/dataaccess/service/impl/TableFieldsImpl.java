@@ -48,6 +48,7 @@ import com.fisk.dataaccess.mapper.TableFieldsMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.service.ITableFields;
+import com.fisk.dataaccess.service.ITableHistory;
 import com.fisk.dataaccess.utils.files.FileTxtUtils;
 import com.fisk.dataaccess.utils.sql.DbConnectionHelper;
 import com.fisk.dataaccess.utils.sql.OracleCdcUtils;
@@ -56,6 +57,7 @@ import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.datamodel.enums.SyncModeEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
@@ -65,6 +67,7 @@ import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -82,12 +85,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import static com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL;
+
 /**
  * @author Lock
  */
 @Service
 @Slf4j
-public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsPO> implements ITableFields {
+public class TableFieldsImpl
+        extends ServiceImpl<TableFieldsMapper, TableFieldsPO>
+        implements ITableFields {
+
     @Resource
     private GenerateCondition generateCondition;
     @Resource
@@ -130,8 +138,13 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     @Resource
     FlinkConfigDTO flinkConfig;
 
+    @Value("${spring.open-metadata}")
+    private Boolean openMetadata;
+
     @Resource
     private RedisTemplate redisTemplate;
+    @Resource
+    ITableHistory iTableHistory;
 
     private static Integer fetchSize = 10000;
     private static Integer maxRowsPerFlowFile = 10000;
@@ -204,6 +217,20 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             return ResultEnum.TABLE_NOT_EXIST;
         }
         accessPo.sheet = dto.sheet;
+        accessPo.startLine = dto.startLine;
+        // 判断where条件是否传递
+        int syncType = dto.tableSyncmodeDTO.syncMode;
+        log.info("syncType类型，{}", syncType);
+        if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
+            // 获取脚本
+            String whereScript = (String) previewCoverCondition(dto.businessDTO);
+            log.info("where条件数据{}", whereScript);
+            if (!whereScript.contains("WHERE")) {
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR, "获取业务时间覆盖where条件失败");
+            }
+            accessPo.whereScript = whereScript;
+        }
+        log.info("业务时间覆盖where条件语句, {}", accessPo.whereScript);
         tableAccessImpl.updateById(accessPo);
 
         //系统变量
@@ -214,11 +241,13 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         // 版本语句
         String versionSql = getVersionSql(syncmodePo);
 
-        //新增元数据信息
-        odsMetaDataInfo(dto.appDataSourceId, dto.sqlScript);
+        if (openMetadata) {
+            //新增元数据信息
+            odsMetaDataInfo(dto.appDataSourceId, dto.sqlScript);
+        }
 
         // 发布
-        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, dto.appDataSourceId);
+        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, dto.appDataSourceId, dto.tableHistorys);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -291,6 +320,22 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         // 修改发布状态
         model.publish = 0;
         model.sheet = dto.sheet;
+        model.startLine = dto.startLine;
+        // 判断where条件是否传递
+        int syncType = dto.tableSyncmodeDTO.syncMode;
+        log.info("syncType类型，{}", syncType);
+        if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
+            // 获取脚本
+            String whereScript = (String) previewCoverCondition(dto.businessDTO);
+            log.info("where条件数据{}", whereScript);
+            if (!whereScript.contains("WHERE")) {
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR, "获取业务时间覆盖where条件失败");
+            }
+            model.whereScript = whereScript;
+        } else {
+            model.whereScript = "";
+        }
+        log.info("业务时间覆盖where条件语句, {}", model.whereScript);
         tableAccessImpl.updateById(model);
 
         //系统变量
@@ -298,11 +343,14 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             systemVariables.addSystemVariables(dto.id, dto.deltaTimes);
         }
 
-        //新增元数据信息
-        odsMetaDataInfo(model.appDataSourceId, dto.sqlScript);
+        if (openMetadata) {
+            //新增元数据信息
+            odsMetaDataInfo(model.appDataSourceId, dto.sqlScript);
+        }
 
         // 发布
-        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, model.appDataSourceId);
+        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null,
+                false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, model.appDataSourceId, dto.tableHistorys);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
@@ -366,17 +414,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 }
             }
         });*/
-
-        /*try {
-            MetaDataAttributeDTO data = new MetaDataAttributeDTO();
-            data.instanceList = list;
-            data.userId = userHelper.getLoginUserInfo().id;
-            // 更新元数据内容
-            log.info("构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
-            dataManageClient.metaData(data);
-        } catch (Exception e) {
-            log.error("【dataManageClient.MetaData()】方法报错,ex", e);
-        }*/
 
     }
 
@@ -470,7 +507,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                          List<DeltaTimeDTO> deltaTimes,
                          String versionSql,
                          TableSyncmodeDTO syncMode,
-                         Integer appDataSourceId) {
+                         Integer appDataSourceId,
+                         List<TableHistoryDTO> dto) {
         AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("id", appDataSourceId).one();
         if (dataSourcePo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -478,6 +516,17 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         AppRegistrationPO appRegistrationPo = appRegistration.query().eq("id", appId).one();
         if (appRegistrationPo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        if (!CollectionUtils.isEmpty(dto)) {
+            log.info("开始记录发布日志");
+            for (TableHistoryDTO tableHistory : dto) {
+                if (tableHistory.tableId.longValue() == accessId) {
+                    log.info("记录发布日志的表id:{}", accessId);
+                    List<TableHistoryDTO> list = new ArrayList<>();
+                    list.add(tableHistory);
+                    iTableHistory.addTableHistory(list);
+                }
+            }
         }
         if (success && flag == 1 && !useExistTable) {
             UserInfo userInfo = userHelper.getLoginUserInfo();
@@ -493,6 +542,28 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.dataSourceDbId = dataSourcePo.systemDataSourceId;
             data.targetDbId = appRegistrationPo.targetDbId;
 
+            // 拼接删除ods的sql
+            String tbName = TableNameGenerateUtils.buildOdsTableName(data.tableName, appRegistrationPo.appAbbreviation, appRegistrationPo.whetherSchema);
+
+            // pg库则将表名转换为小写
+            boolean typeFlag = getTargetDbType(data.targetDbId);
+            if (typeFlag) {
+                data.tableName = data.tableName.toLowerCase();
+                // 将字段集合转换为小写
+                List<TableFieldsDTO> tableFieldsDTOList = data.tableFieldsDTOS;
+                data.tableFieldsDTOS = tableFieldsDTOList.stream().map(item -> {
+                    item.fieldName = item.fieldName.toLowerCase();
+                    return item;
+                }).collect(Collectors.toList());
+                tbName = tbName.toLowerCase();
+            }
+            int syncType = syncMode.syncMode;
+            log.info("syncType类型，{}，判断拼接删除ods的sql", syncType);
+            if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
+                data.whereScript = "DELETE FROM " + tbName + " " + data.whereScript;
+                log.info("删除ods表的sql，{}", data.whereScript);
+            }
+
             // 版本号入库、调用存储存储过程  
             List<TableFieldsPO> list = this.query().eq("table_access_id", accessId).list();
             AppRegistrationPO registration = iAppRegistration.getById(appId);
@@ -505,7 +576,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.generateVersionSql = versionSql;
             data.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile == null ? maxRowsPerFlowFile : syncMode.maxRowsPerFlowFile;
             data.fetchSize = syncMode.fetchSize == null ? fetchSize : syncMode.fetchSize;
-            data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType) ? true : false;
+            data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType);
 
             // 执行发布
             try {
@@ -541,9 +612,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     //构建元数据实时同步数据对象
                     metaDataList = buildMetaDataInstanceAttribute(registration, accessId, 2);
                 }
-                //同步元数据
-                consumeMetaData(metaDataList);
-
+                if (openMetadata) {
+                    //同步元数据
+                    consumeMetaData(metaDataList);
+                }
 
             } catch (Exception e) {
                 log.info("发布失败", e);
@@ -556,6 +628,16 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         if (dataSourcePo.driveType.equalsIgnoreCase("ORACLE-CDC")) {
             cdcScriptUploadFlink(cdcDto, accessId);
         }
+    }
+
+    private boolean getTargetDbType(Integer dbId) {
+        ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(dbId);
+        if (result.code == ResultEnum.SUCCESS.getCode()) {
+            DataSourceDTO dataSource = result.getData();
+            log.info("数据源连接类型，{}, 枚举中PG类型，{}", dataSource.getConType().getValue(), POSTGRESQL.getValue());
+            return POSTGRESQL.getValue() == dataSource.getConType().getValue();
+        }
+        return false;
     }
 
     /**
@@ -837,7 +919,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             fieldDTO.fieldId = po.id;
             fieldDTO.fieldEnName = po.fieldName;
             fieldDTO.fieldType = po.fieldType;
-            fieldDTO.fieldLength = Math.toIntExact(po.fieldLength);
+            fieldDTO.fieldLength = po.fieldLength == null ? 0 : Math.toIntExact(po.fieldLength);
             fieldDTO.isPrimaryKey = po.isPrimarykey;
             fieldDTO.fieldPrecision = po.fieldPrecision;
             fieldList.add(fieldDTO);
@@ -1239,8 +1321,61 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     systemVariable,
                     versionSql,
                     TableSyncModeMap.INSTANCES.poToDto(tableSyncmodePo),
-                    accessPo.appDataSourceId);
+                    accessPo.appDataSourceId,
+                    dto.tableHistorys);
         }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum addFile(TableFieldsDTO dto) {
+        TableFieldsPO po = this.query().eq("table_access_id", dto.tableAccessId)
+                .eq("field_name", dto.fieldName).one();
+        if (po != null) {
+            throw new FkException(ResultEnum.DATA_EXISTS);
+        }
+
+        boolean flat = this.save(TableFieldsMap.INSTANCES.dtoToPo(dto));
+        if (!flat) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum delFile(long id) {
+        TableFieldsPO po = this.query().eq("id", id).select("id").one();
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        int flat = baseMapper.deleteByIdWithFill(po);
+        if (flat == 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum updateFile(TableFieldsDTO dto) {
+        TableFieldsPO po = this.query().eq("id", dto.id).one();
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        po.fieldName = dto.fieldName;
+        po.fieldLength = dto.fieldLength;
+        po.fieldType = dto.fieldType;
+        po.fieldDes = dto.fieldDes;
+        po.displayName = dto.displayName;
+        po.fieldPrecision = dto.fieldPrecision;
+
+        int flat = baseMapper.updateById(po);
+        if (flat == 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
         return ResultEnum.SUCCESS;
     }
 

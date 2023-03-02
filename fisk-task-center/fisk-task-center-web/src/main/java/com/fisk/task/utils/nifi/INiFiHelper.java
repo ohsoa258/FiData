@@ -473,6 +473,12 @@ public interface INiFiHelper {
     void buildNifiGlobalVariable(Map<String, String> variable);
 
     /**
+     * 修改nifi全局变量
+     * @param variable
+     */
+    void updateNifiGlobalVariable(Map<String, String> variable);
+
+    /**
      * getSqlForPgOds
      *
      * @param config 配置信息

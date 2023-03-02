@@ -70,6 +70,11 @@ public class TableAccessPO extends BasePO {
     public String sheet;
 
     /**
+     * excel sheet数据开始读取行数
+     */
+    public Integer startLine;
+
+    /**
      * 发布错误信息
      */
     public String publishErrorMsg;
@@ -118,5 +123,10 @@ public class TableAccessPO extends BasePO {
      * 应用数据源id
      */
     public Integer appDataSourceId;
+
+    /**
+     * 业务时间覆盖的where条件
+     */
+    public String whereScript;
 
 }

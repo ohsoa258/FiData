@@ -28,6 +28,10 @@ public class DimensionAttributeAddDTO extends MQBaseDTO {
      */
     public String dimensionKeyScript;
     /**
+     * 覆盖脚本
+     */
+    public String coverScript;
+    /**
      * 发布备注
      */
     public String remark;

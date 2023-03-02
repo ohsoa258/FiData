@@ -16,6 +16,7 @@ import com.fisk.common.core.utils.dbutils.utils.OracleUtils;
 import com.fisk.common.core.utils.dbutils.utils.PgSqlUtils;
 import com.fisk.common.core.utils.dbutils.utils.SqlServerUtils;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.accessAndTask.DataTranDTO;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
@@ -220,7 +221,12 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
             log.info("流式设置执行时间 : " + Duration.between(inst1, inst2).toMillis());
             Instant inst3 = Instant.now();
             log.info("时间增量值:{}", JSON.toJSONString(dto.deltaTimes));
-            Map<String, String> converSql = publishTaskClient.converSql(dto.tableName, dto.querySql, first.get().conType.getName().toUpperCase(), JSON.toJSONString(dto.deltaTimes)).data;
+            DataTranDTO dtDto = new DataTranDTO();
+            dtDto.tableName = dto.tableName;
+            dtDto.querySql = dto.querySql;
+            dtDto.driveType = first.get().conType.getName().toUpperCase();
+            dtDto.deltaTimes = JSON.toJSONString(dto.deltaTimes);
+            Map<String, String> converSql = publishTaskClient.converSql(dtDto).data;
             log.info("拼语句执行时间 : " + Duration.between(inst2, inst3).toMillis());
 
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());

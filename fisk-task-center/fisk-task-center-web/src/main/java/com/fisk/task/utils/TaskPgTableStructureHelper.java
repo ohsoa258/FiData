@@ -6,6 +6,7 @@ import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -141,7 +142,7 @@ public class TaskPgTableStructureHelper
             return updatePgTableStructure(sql, version, dto.createType);
         } catch (Exception ex) {
             log.error("saveTableStructure:" + ex);
-            return ResultEnum.SAVE_DATA_ERROR;
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, StackTraceHelper.getStackTraceInfo(ex));
         }
     }
 
@@ -281,7 +282,7 @@ public class TaskPgTableStructureHelper
                 return resultEnum;
             }
             log.info("执行存储过程返回修改语句:" + sql);
-            if (!StringUtils.isEmpty(sql) && sql.contains("DECLARE")){
+            if (!StringUtils.isEmpty(sql) && sql.contains("DECLARE")) {
                 sql = subSql(sql);
             }
 
@@ -294,7 +295,7 @@ public class TaskPgTableStructureHelper
             return ResultEnum.SUCCESS;
         } catch (SQLException e) {
             log.error("updatePgTableStructure:" + StackTraceHelper.getStackTraceInfo(e));
-            return ResultEnum.SQL_ERROR;
+            throw new FkException(ResultEnum.SQL_ERROR, StackTraceHelper.getStackTraceInfo(e));
         } finally {
             if (st != null) {
                 st.close();
@@ -305,13 +306,17 @@ public class TaskPgTableStructureHelper
 
     /**
      * 包含DECLARE时，切分sql进行重组
+     *
      * @param sql
      * @return
      */
-    private String subSql(String sql){
+    private String subSql(String sql) {
         String[] ds = sql.split("DECLARE");
         String[] d = ds[1].split("EXEC \\( @primary_key \\);");
-        return " DECLARE " + d[0] + " EXEC ( @primary_key ); " + ds[0] + d[1];
+        if (d.length > 1) {
+            return " DECLARE " + d[0] + " EXEC ( @primary_key ); " + ds[0] + d[1];
+        }
+        return " DECLARE " + d[0] + " EXEC ( @primary_key ); " + ds[0];
     }
 
     /**

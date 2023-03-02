@@ -319,8 +319,8 @@ public interface DataModelClient {
      * @return
      */
     @ApiOperation("根据表名获取接入表信息")
-    @PostMapping("/DataOps/getTableInfo")
-    ResultEntity<DataModelTableInfoDTO> getTableInfo(@Validated @RequestBody String tableName);
+    @GetMapping("/DataOps/getTableInfo/{tableName}")
+    ResultEntity<DataModelTableInfoDTO> getTableInfo(@PathVariable("tableName") String tableName);
 
     /**
      * 根据表名获取接入表信息

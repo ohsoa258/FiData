@@ -10,10 +10,7 @@ import com.fisk.datagovernance.dto.datasecurity.intelligentdiscovery.Intelligent
 import com.fisk.datagovernance.dto.datasecurity.intelligentdiscovery.IntelligentDiscovery_RuleQueryDTO;
 import com.fisk.datagovernance.dto.datasecurity.intelligentdiscovery.IntelligentDiscovery_WhiteListDTO;
 import com.fisk.datagovernance.entity.datasecurity.IntelligentDiscovery_RulePO;
-import com.fisk.datagovernance.vo.datasecurity.intelligentdiscovery.IntelligentDiscovery_LogsVO;
-import com.fisk.datagovernance.vo.datasecurity.intelligentdiscovery.IntelligentDiscovery_RuleExtInfoVO;
-import com.fisk.datagovernance.vo.datasecurity.intelligentdiscovery.IntelligentDiscovery_RuleVO;
-import com.fisk.datagovernance.vo.datasecurity.intelligentdiscovery.IntelligentDiscovery_ScanResultVO;
+import com.fisk.datagovernance.vo.datasecurity.intelligentdiscovery.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -36,7 +33,7 @@ public interface IIntelligentDiscovery_RuleManageService extends IService<Intell
 
     void downloadRuleScanResult(String uniqueId, HttpServletResponse response);
 
-    ResultEntity<List<IntelligentDiscovery_ScanResultVO>> previewScanResult(String absolutePath);
+    ResultEntity<IntelligentDiscovery_ScanResultVO> previewScanResult(String absolutePath);
 
     IntelligentDiscovery_RuleExtInfoVO getRuleExtInfo();
 

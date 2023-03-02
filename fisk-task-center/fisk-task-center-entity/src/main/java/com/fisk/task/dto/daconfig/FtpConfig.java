@@ -41,6 +41,11 @@ public class FtpConfig {
     public String sheetName;
 
     /**
+     * excel 开始读取数据行数
+     */
+    public Integer startLine;
+
+    /**
      * 上传Linux秘钥地址
      */
     public String linuxPath;

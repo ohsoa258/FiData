@@ -53,6 +53,10 @@ public class NifiCustomWorkflowDetailDTO {
     public String inport;
     public String outport;
     public Boolean flag;
+    /**
+     * 是否禁用,true不禁用,false 禁用
+     */
+    public Boolean forbidden;
 
     @ApiModelProperty(value = "外部数据源id", required = true)
     public Integer dataSourceId;

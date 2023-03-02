@@ -20,6 +20,7 @@ import com.fisk.datamanagement.dto.datamasking.DataMaskingSourceDTO;
 import com.fisk.datamanagement.dto.datamasking.DataMaskingTargetDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +44,9 @@ public class DatamaskingConfigServiceImpl extends ServiceImpl<DatamaskingConfigM
 
     @Resource
     private DataManageClient dataManageClient;
+
+    @Value("${spring.open-metadata}")
+    private Boolean openMetadata;
 
     @Override
     public DatamaskingConfigDTO getData(long id) {

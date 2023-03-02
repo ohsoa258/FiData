@@ -30,6 +30,10 @@ public class FactDataDTO {
      */
     public int dorisPublish;
     /**
+     * 临时表名称前缀
+     */
+    public String prefixTempName;
+    /**
      * 事实表下字段列表
      */
     public List<FactAttributeDataDTO> attributeList;

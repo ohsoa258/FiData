@@ -56,6 +56,11 @@ public class ModelPublishTableDTO {
     public String customScript;
 
     /**
+     * 自定义脚本最后执行
+     */
+    public String customScriptAfter;
+
+    /**
      * 目标源id
      */
     public Integer targetDbId;

@@ -19,12 +19,9 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
-import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
-import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
-import com.fisk.dataaccess.enums.syncModeTypeEnum;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.system.client.UserClient;
@@ -70,7 +67,6 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
-import java.sql.DriverManager;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -500,9 +496,13 @@ public class NiFiHelperImpl implements INiFiHelper {
         //组件属性
         Map<String, String> map = new HashMap<>(5);
         map.put("Database Connection Pooling Service", data.dbConnectionId);
-        map.put("sql-pre-query", data.preSql);
+        if (!StringUtils.isEmpty(data.preSql)){
+            map.put("sql-pre-query", data.preSql);
+        }
         map.put("SQL select query", data.querySql);
-        map.put("sql-post-query", data.postSql);
+        if (!StringUtils.isEmpty(data.postSql)){
+            map.put("sql-post-query", data.postSql);
+        }
         map.put("esql-max-rows", data.MaxRowsPerFlowFile);
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
@@ -795,6 +795,8 @@ public class NiFiHelperImpl implements INiFiHelper {
         Map<String, String> map = new HashMap<>(2);
         map.put("Database Connection Pooling Service", buildCallDbProcedureProcessorDTO.dbConnectionId);
         map.put("SQL select query", buildCallDbProcedureProcessorDTO.executsql);
+        map.put("sql-pre-query", buildCallDbProcedureProcessorDTO.sqlPreQuery);
+        map.put("sql-post-query", buildCallDbProcedureProcessorDTO.sqlPostQuery);
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setAutoTerminatedRelationships(autoRes);
@@ -2119,6 +2121,62 @@ public class NiFiHelperImpl implements INiFiHelper {
         }
     }
 
+    @Override
+    public void updateNifiGlobalVariable(Map<String, String> variable) {
+        // 调用创建接口，创建被删除的变量
+        buildNifiGlobalVariable(variable);
+
+        // 处理存在的变量数据
+        try {
+            // 获取变量注册实体信息
+            VariableRegistryEntity variableRegistryEntity = NifiHelper.getProcessGroupsApi().getVariableRegistry(NifiConstants.ApiConstants.ROOT_NODE, true);
+            VariableRegistryDTO registry = variableRegistryEntity.getVariableRegistry();
+            List<VariableEntity> variables = registry.getVariables();
+
+            // 新变量容器
+            VariableRegistryEntity newVariableRegistryEntity = new VariableRegistryEntity();
+            VariableRegistryDTO variableRegistryDTO = new VariableRegistryDTO();
+            List<VariableEntity> variableEntityList = new ArrayList<>();
+
+            // 遍历变量数据
+            Iterator<Map.Entry<String, String>> map = variable.entrySet().iterator();
+            while (map.hasNext()) {
+                Map.Entry<String, String> entry = map.next();
+                String key = entry.getKey();
+                // 设置变量默认不存在
+                boolean exist = true;
+                for (int i = 0; i < variables.size(); i++) {
+                    VariableDTO variableDTO = variables.get(i).getVariable();
+                    String name = variableDTO.getName();
+                    if (Objects.equals(key, name)) {
+                        exist = false;
+                    }
+                }
+                if (exist) {
+                    // 存在变量则需要更新
+                    VariableEntity variableEntity = new VariableEntity();
+                    VariableDTO variableDTO = new VariableDTO();
+                    variableDTO.setName(key);
+                    variableDTO.setValue(variable.get(key));
+                    variableEntity.setVariable(variableDTO);
+                    variableEntityList.add(variableEntity);
+                }
+            }
+            variableRegistryDTO.setVariables(variableEntityList);
+            variableRegistryDTO.setProcessGroupId(variableRegistryEntity.getVariableRegistry().getProcessGroupId());
+            newVariableRegistryEntity.setDisconnectedNodeAcknowledged(null);
+            newVariableRegistryEntity.setVariableRegistry(variableRegistryDTO);
+            // 更新变量数据
+            VariableRegistryEntity newVariableRegistry = NifiHelper.getProcessGroupsApi().getVariableRegistry(NifiConstants.ApiConstants.ROOT_NODE, true);
+            RevisionDTO processGroupRevision = newVariableRegistry.getProcessGroupRevision();
+            variableRegistryEntity.setProcessGroupRevision(processGroupRevision);
+            log.info(JSON.toJSONString(variableRegistryEntity));
+            NifiHelper.getProcessGroupsApi().updateVariableRegistry(variableRegistryEntity.getVariableRegistry().getProcessGroupId(), newVariableRegistryEntity);
+        } catch (ApiException e) {
+            log.error("创建全局变量失败", e);
+        }
+    }
+
     /*
      *创建notify组件
      * */
@@ -2358,10 +2416,15 @@ public class NiFiHelperImpl implements INiFiHelper {
 
         Map<String, String> map = new HashMap<>(2);
         //excel-extract-first-row
-        map.put("excel-extract-first-row", String.valueOf(data.numberOfRowsToSkip));
+//        map.put("excel-extract-first-row", String.valueOf(data.numberOfRowsToSkip));
         map.put("excel-format-values", String.valueOf(data.formatCellValues));
         //excel
         map.put("CSV Format", data.csvFormat);
+        map.put("extract-sheets", data.sheetName);
+        if (StringUtils.isEmpty(data.startLine)|| data.startLine.equals("0")){
+            data.startLine = "1";
+        }
+        map.put("excel-extract-first-row", data.startLine);
 
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
@@ -2457,12 +2520,12 @@ public class NiFiHelperImpl implements INiFiHelper {
             log.error("修改控制器组件配置时获取控制器组件出错");
             return BusinessResult.of(false, "获取组件出错", null);
         }
-        if (entity == null){
+        if (entity == null) {
             return BusinessResult.of(false, "控制器服务组件不存在", null);
         }
 
         // 2、查询组件状态，如果运行则禁用
-        if (entity.getComponent().getState() != ControllerServiceDTO.StateEnum.DISABLED){
+        if (entity.getComponent().getState() != ControllerServiceDTO.StateEnum.DISABLED) {
             // 组件未停止运行则需暂停组件
             ControllerServiceRunStatusEntity statusEntity = new ControllerServiceRunStatusEntity();
             statusEntity.setState(ControllerServiceRunStatusEntity.StateEnum.DISABLED);

@@ -69,4 +69,22 @@ public class TableFieldsController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.batchPublish(dto));
     }
 
+    @PostMapping("/addFile")
+    @ApiOperation(value = "新增单个字段")
+    public ResultEntity<Object> addFile(@Validated @RequestBody TableFieldsDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addFile(dto));
+    }
+
+    @DeleteMapping("/delFile/{id}")
+    @ApiOperation(value = "删除单个字段")
+    public ResultEntity<Object> delFile(@PathVariable("id") long id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delFile(id));
+    }
+
+    @PutMapping("/updateFile")
+    @ApiOperation(value = "编辑单个字段")
+    public ResultEntity<Object> updateFile(@Validated @RequestBody TableFieldsDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.updateFile(dto));
+    }
+
 }

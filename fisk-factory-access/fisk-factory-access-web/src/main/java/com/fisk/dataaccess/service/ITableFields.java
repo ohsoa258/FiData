@@ -88,4 +88,28 @@ public interface ITableFields extends IService<TableFieldsPO> {
      */
     ResultEnum batchPublish(BatchPublishDTO dto);
 
+    /**
+     * 新增字段
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum addFile(TableFieldsDTO dto);
+
+    /**
+     * 删除字段
+     *
+     * @param id
+     * @return
+     */
+    ResultEnum delFile(long id);
+
+    /**
+     * 编辑字段
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum updateFile(TableFieldsDTO dto);
+
 }

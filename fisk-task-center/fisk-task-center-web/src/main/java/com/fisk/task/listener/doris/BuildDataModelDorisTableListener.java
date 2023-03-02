@@ -218,7 +218,10 @@ public class BuildDataModelDorisTableListener
                 bfd.updateSql = modelPublishTableDTO.factUpdateSql;
                 bfd.dataSourceDbId = modelPublishTableDTO.dataSourceDbId;
                 bfd.targetDbId = modelPublishTableDTO.targetDbId;
-                bfd.prefixTempName = modelPublishTableDTO.prefixTempName + "_";
+                bfd.prefixTempName = modelPublishTableDTO.prefixTempName;
+                bfd.customScriptBefore = modelPublishTableDTO.customScript;
+                bfd.customScriptAfter = modelPublishTableDTO.customScriptAfter;
+                bfd.buildTableSql = pgdbTable2.get(0);
                 if (modelPublishTableDTO.createType == 0) {
                     //类型为物理表
                     bfd.type = OlapTableEnum.DIMENSION;

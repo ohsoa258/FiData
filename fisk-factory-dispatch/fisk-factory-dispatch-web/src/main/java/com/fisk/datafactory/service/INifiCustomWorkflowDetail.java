@@ -82,6 +82,9 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
      */
     ResultEnum deleteDataList(WorkflowTaskGroupDTO dto);
 
+
+
+
     /**
      * 根据不同的类型,获取不同tree
      *
@@ -123,5 +126,13 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
 
 
     List<DispatchJobHierarchyDTO> getJobList(QueryJobHierarchyDTO dto);
+
+    /**
+     * 开启或禁用一个或几个任务组或任务
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum forbiddenTask(List<ForbiddenTaskDTO> dto);
 
 }

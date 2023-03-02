@@ -11,6 +11,7 @@ import org.springframework.kafka.support.Acknowledgment;
 public interface INifiTaskListener {
     /**
      * 接入,建模nifi流程
+     *
      * @param dataInfo
      * @param acke
      * @return
@@ -19,9 +20,28 @@ public interface INifiTaskListener {
 
     /**
      * 表服务nifi流程
+     *
      * @param dataInfo
      * @param acke
      * @return
      */
     ResultEnum buildDataServices(String dataInfo, Acknowledgment acke);
+
+    /**
+     * 创建接入nifi流程
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
+    ResultEnum buildAccessNifiProcess(String dataInfo, Acknowledgment acke);
+
+    /**
+     * 创建建模nifi流程
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
+    ResultEnum buildModelNifiProcess(String dataInfo, Acknowledgment acke);
 }

@@ -12,6 +12,7 @@ import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.dbdatatype.FiDataDataTypeEnum;
 import com.fisk.common.core.enums.dbdatatype.OracleTypeEnum;
+import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -24,6 +25,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.server.datasource.ExternalDataSourceDTO;
+import com.fisk.common.service.accessAndTask.DataTranDTO;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
@@ -162,6 +164,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Value("${sftp.nifi-file-path}")
     private String nifiFilePath;
+    @Value("${spring.open-metadata}")
+    private Boolean openMetadata;
 
     /**
      * 数据库连接
@@ -1143,6 +1147,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         ftpConfig.username = modelDataSource.connectAccount;
         ftpConfig.ftpUseUtf8 = true;
         ftpConfig.sheetName = modelAccess.sheet;
+        ftpConfig.startLine = modelAccess.startLine;
 
         return ftpConfig;
     }
@@ -1286,11 +1291,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             // 数据湖非实时物理表任务(mysql  sqlserver  oracle)
             case DATALAKE_TASK:
                 allAppList.forEach(e -> {
-                    AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).one();
-                    if (dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.MYSQL.getName()) ||
-                            dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName()) ||
-                            dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName())) {
-                        list.add(e);
+                    List<AppDataSourcePO> dataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).list();
+                    if (!CollectionUtils.isEmpty(dataSourcePo)) {
+                        for (AppDataSourcePO item : dataSourcePo) {
+                            if (item.driveType.equalsIgnoreCase(DataSourceTypeEnum.MYSQL.getName()) ||
+                                    item.driveType.equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName()) ||
+                                    item.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName())) {
+                                list.add(e);
+                            }
+                        }
                     }
                 });
 
@@ -1298,18 +1307,26 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             // 数据湖ftp任务
             case DATALAKE_FTP_TASK:
                 allAppList.forEach(e -> {
-                    AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).one();
-                    if (dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.FTP.getName())) {
-                        list.add(e);
+                    List<AppDataSourcePO> dataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).list();
+                    if (!CollectionUtils.isEmpty(dataSourcePo)) {
+                        for (AppDataSourcePO item : dataSourcePo) {
+                            if (item.driveType.equalsIgnoreCase(DataSourceTypeEnum.FTP.getName())) {
+                                list.add(e);
+                            }
+                        }
                     }
                 });
                 return bulidListChannelDataDTOByTableOrFTP(list);
             // 数据湖非实时api任务
             case DATALAKE_API_TASK:
                 allAppList.forEach(e -> {
-                    AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).one();
-                    if (dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.API.getName())) {
-                        list.add(e);
+                    List<AppDataSourcePO> dataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).list();
+                    if (!CollectionUtils.isEmpty(dataSourcePo)) {
+                        for (AppDataSourcePO item : dataSourcePo) {
+                            if (item.driveType.equalsIgnoreCase(DataSourceTypeEnum.API.getName())) {
+                                list.add(e);
+                            }
+                        }
                     }
                 });
                 return bulidListChannelDataDTOByAPI(list);
@@ -1332,27 +1349,33 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<ChannelDataDTO> channelDataDTOList = AppRegistrationMap.INSTANCES.listPoToChannelDataDto(list);
 
         for (AppRegistrationPO e : list) {
-            AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).one();
-            for (ChannelDataDTO f : channelDataDTOList) {
-                if (appDataSourcePo.appId == f.id) {
-                    if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.sqlserver.getName())
-                            || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.mysql.getName())
-                            || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.oracle.getName())
-                            || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.postgresql.getName())
-                            || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.sftp.getName())) {
-                        f.type = "数据湖表任务";
-                    }
-                    if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.api.getName())) {
-                        f.type = "数据湖非实时api任务";
-                    }
-                    if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.ftp.getName())) {
-                        f.type = "数据湖ftp任务";
-                    }
-                    if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.RestfulAPI.getName())) {
-                        f.type = "数据湖RestfulAPI任务";
+            List<AppDataSourcePO> appDataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).list();
+            if (CollectionUtils.isEmpty(appDataSourcePo)) {
+                continue;
+            }
+            for (AppDataSourcePO item : appDataSourcePo) {
+                for (ChannelDataDTO f : channelDataDTOList) {
+                    if (item.appId == f.id) {
+                        if (item.driveType.equalsIgnoreCase(DbTypeEnum.sqlserver.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.mysql.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.oracle.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.postgresql.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.sftp.getName())) {
+                            f.type = "数据湖表任务";
+                        }
+                        if (item.driveType.equalsIgnoreCase(DbTypeEnum.api.getName())) {
+                            f.type = "数据湖非实时api任务";
+                        }
+                        if (item.driveType.equalsIgnoreCase(DbTypeEnum.ftp.getName())) {
+                            f.type = "数据湖ftp任务";
+                        }
+                        if (item.driveType.equalsIgnoreCase(DbTypeEnum.RestfulAPI.getName())) {
+                            f.type = "数据湖RestfulAPI任务";
+                        }
                     }
                 }
             }
+
         }
 
         // 查询当前应用下面的所有表(type为空的是脏数据)
@@ -1547,7 +1570,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             for (TableAccessDataDTO tableAccessDataDTO : item.tableDtoList) {
                 tableAccessDataDTO.fieldDtoList = TableFieldsMap.INSTANCES
                         .poListToDtoList(tableFieldsList.stream()
-                                .filter(e -> e.tableAccessId == tableAccessDataDTO.id).collect(Collectors.toList()));
+                                .filter(e -> e.tableAccessId != null && e.tableAccessId == tableAccessDataDTO.id).collect(Collectors.toList()));
                 if (CollectionUtils.isEmpty(tableAccessDataDTO.fieldDtoList)) {
                     continue;
                 }
@@ -1663,7 +1686,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // dto -> po
         TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
 
-        if (po.appId != null) {
+        if (po.appId != null && openMetadata) {
             synchronousMetadata(model.appDataSourceId, po);
         }
         /*if (po.getTableName() == null) {
@@ -1748,8 +1771,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         list.get(0).dbList.get(0).tableList = tableList;
 
 
-        // ——该模块暂未使用到元数据
-        /*
         //修改元数据
         ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
         cachedThreadPool.execute(new Runnable() {
@@ -1764,7 +1785,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 }
             }
         });
-         */
 
     }
 
@@ -1794,52 +1814,57 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return flag;
     }
 
-    @Override
-    public OdsResultDTO getTableFieldByQuery(OdsQueryDTO query) {
-        OdsResultDTO array = new OdsResultDTO();
-        Connection conn = null;
-        Statement st = null;
-        try {
-            // 数仓建模中直接关联数据接入中targetDbId
-//            AppRegistrationPO appRegistrationPo = registrationMapper.selectById(query.appId);
-//            if (appRegistrationPo == null) {
-//                throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR);
-//            }
-            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(query.dataSourceId);
-            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
-                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+    public static OdsResultDTO resultSetToJsonArrayDataModel(ResultSet rs) throws SQLException, JSONException {
+        OdsResultDTO data = new OdsResultDTO();
+        // json数组
+        JSONArray array = new JSONArray();
+        // 获取列数
+        ResultSetMetaData metaData = rs.getMetaData();
+        int columnCount = metaData.getColumnCount();
+        List<FieldNameDTO> fieldNameDTOList = new ArrayList<>();
+        // 遍历ResultSet中的每条数据
+        while (rs.next()) {
+            JSONObject jsonObj = new JSONObject();
+            // 遍历每一列
+            for (int i = 1; i <= columnCount; i++) {
+                String columnName = metaData.getColumnLabel(i);
+                //过滤ods表中pk和code默认字段
+                String tableName = metaData.getTableName(i) + "key";
+                if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equalsIgnoreCase(columnName)
+                        || tableName.equalsIgnoreCase("ods_" + columnName.toLowerCase())
+                        || "fi_createtime".equalsIgnoreCase(columnName)
+                        || "fi_updatetime".equalsIgnoreCase(columnName)) {
+                    continue;
+                }
+                //获取sql查询数据集合
+                String value = rs.getString(columnName);
+                jsonObj.put(columnName, value);
             }
-            conn = getConnection(dataSourceConfig.data);
-            st = conn.createStatement();
-            Map<String, String> converSql = publishTaskClient.converSql(query.tableName, query.querySql, "", null).data;
-            query.querySql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
-            //获取总条数 todo 不支持分页
-            /*String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
-            ResultSet rSet = st.executeQuery(getTotalSql);
-            int rowCount = 0;
-            if (rSet.next()) {
-                rowCount = rSet.getInt("total");
-            }
-            rSet.close();*/
-
-            int offset = (query.pageIndex - 1) * query.pageSize;
-            IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceConfig.data.conType);
-            query.querySql = dbCommand.buildPaging(query.querySql, query.pageSize, offset);
-
-            ResultSet rs = st.executeQuery(query.querySql);
-            //获取数据集
-            array = resultSetToJsonArrayDataModel(rs);
-            array.pageIndex = query.pageIndex;
-            array.pageSize = query.pageSize;
-            rs.close();
-        } catch (SQLException e) {
-            log.error("getTableFieldByQuery ex:", e);
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ":" + e.getMessage());
-        } finally {
-            AbstractCommonDbHelper.closeStatement(st);
-            AbstractCommonDbHelper.closeConnection(conn);
+            array.add(jsonObj);
         }
-        return array;
+        //获取列名
+        for (int i = 1; i <= columnCount; i++) {
+            FieldNameDTO dto = new FieldNameDTO();
+            //源表
+            dto.sourceTableName = metaData.getTableName(i);
+            // 源字段
+            dto.sourceFieldName = metaData.getColumnLabel(i);
+            dto.fieldName = metaData.getColumnLabel(i);
+            String tableName = metaData.getTableName(i) + "key";
+            if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equalsIgnoreCase(dto.fieldName)
+                    || tableName.equalsIgnoreCase("ods_" + dto.fieldName.toLowerCase())
+                    || "fi_createtime".equalsIgnoreCase(dto.fieldName)
+                    || "fi_updatetime".equalsIgnoreCase(dto.fieldName)) {
+                continue;
+            }
+            dto.fieldType = metaData.getColumnTypeName(i).toLowerCase();
+            dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
+
+            fieldNameDTOList.add(dto);
+        }
+        data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());
+        data.dataArray = array;
+        return data;
     }
 
     /**
@@ -1899,71 +1924,50 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return dto;
     }
 
-    public static OdsResultDTO resultSetToJsonArrayDataModel(ResultSet rs) throws SQLException, JSONException {
-        OdsResultDTO data = new OdsResultDTO();
-        // json数组
-        JSONArray array = new JSONArray();
-        // 获取列数
-        ResultSetMetaData metaData = rs.getMetaData();
-        int columnCount = metaData.getColumnCount();
-        List<FieldNameDTO> fieldNameDTOList = new ArrayList<>();
-        // 遍历ResultSet中的每条数据
-        while (rs.next()) {
-            JSONObject jsonObj = new JSONObject();
-            // 遍历每一列
-            for (int i = 1; i <= columnCount; i++) {
-                String columnName = metaData.getColumnLabel(i);
-                //过滤ods表中pk和code默认字段
-                String tableName = metaData.getTableName(i) + "key";
-                if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equalsIgnoreCase(columnName)
-                        || tableName.equalsIgnoreCase("ods_" + columnName.toLowerCase())
-                        || "fi_createtime".equalsIgnoreCase(columnName)
-                        || "fi_updatetime".equalsIgnoreCase(columnName)) {
-                    continue;
-                }
-                //获取sql查询数据集合
-                String value = rs.getString(columnName);
-                jsonObj.put(columnName, value);
+    @Override
+    public OdsResultDTO getTableFieldByQuery(OdsQueryDTO query) {
+        OdsResultDTO array = new OdsResultDTO();
+        Connection conn = null;
+        Statement st = null;
+        ResultSet rs = null;
+        ResultEntity<DataSourceDTO> dataSourceConfig = null;
+        try {
+            dataSourceConfig = userClient.getFiDataDataSourceById(query.dataSourceId);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
-            array.add(jsonObj);
+            conn = getConnection(dataSourceConfig.data);
+            st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            st.setMaxRows(10);
+            DataTranDTO dto = new DataTranDTO();
+            dto.tableName = query.tableName;
+            dto.querySql = query.querySql;
+            Map<String, String> converSql = publishTaskClient.converSql(dto).data;
+            query.querySql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
+            rs = st.executeQuery(query.querySql);
+            // 获取数据集
+            array = resultSetToJsonArrayDataAccess(rs);
+            array.sql = query.querySql;
+        } catch (SQLException e) {
+            log.error("getTableFieldByQuery ex:", e);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ":" + e.getMessage());
+        } finally {
+            AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeConnection(conn);
         }
-        //获取列名
-        for (int i = 1; i <= columnCount; i++) {
-            FieldNameDTO dto = new FieldNameDTO();
-            String fieldType1 = "date";
-            String fieldType2 = "time";
-            //源表
-            dto.sourceTableName = metaData.getTableName(i);
-            // 源字段
-            dto.sourceFieldName = metaData.getColumnLabel(i);
-            dto.fieldName = metaData.getColumnLabel(i);
-            String tableName = metaData.getTableName(i) + "key";
-            if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equalsIgnoreCase(dto.fieldName)
-                    || tableName.equalsIgnoreCase("ods_" + dto.fieldName.toLowerCase())
-                    || "fi_createtime".equalsIgnoreCase(dto.fieldName)
-                    || "fi_updatetime".equalsIgnoreCase(dto.fieldName)) {
-                continue;
-            }
-            dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
-            if (dto.fieldType.contains("INT2") || dto.fieldType.contains("INT4") || dto.fieldType.contains("INT8")) {
-                dto.fieldType = "INT";
-            }
-            if (dto.fieldType.toLowerCase().contains(fieldType1) || dto.fieldType.toLowerCase().contains(fieldType2)) {
-                dto.fieldLength = "50";
-            } else {
-                dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
-            }
-
-            // 转换表字段类型和长度
-            List<String> list = transformField(dto.fieldType, dto.fieldLength);
-            dto.fieldType = list.get(0);
-            dto.fieldLength = list.get(1);
-
-            fieldNameDTOList.add(dto);
+        ResultEntity<List<DataSourceDTO>> allSource = userClient.getAll();
+        if (allSource.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_OPS_CONFIG_EXISTS);
         }
-        data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());
-        data.dataArray = array;
-        return data;
+        Optional<DataSourceDTO> first = allSource.data.stream().filter(e -> e.sourceBusinessType == SourceBusinessTypeEnum.DW).findFirst();
+        if (!first.isPresent()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        //数据类型转换
+        typeConversion(dataSourceConfig.data.conType, array.fieldNameDTOList, first.get().id);
+
+        return array;
+
     }
 
     /**
@@ -2088,7 +2092,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             Instant inst3 = Instant.now();
             String tableName = TableNameGenerateUtils.buildTableName(query.tableName, registration.appAbbreviation, registration.whetherSchema);
             log.info("时间增量值:{}", JSON.toJSONString(query.deltaTimes));
-            Map<String, String> converSql = publishTaskClient.converSql(tableName, query.querySql, po.driveType, JSON.toJSONString(query.deltaTimes)).data;
+            // 传参改动
+            DataTranDTO dto = new DataTranDTO();
+            dto.tableName = tableName;
+            dto.querySql = query.querySql;
+            dto.driveType = po.driveType;
+            dto.deltaTimes = JSON.toJSONString(query.deltaTimes);
+            Map<String, String> converSql = publishTaskClient.converSql(dto).data;
             log.info("拼语句执行时间 : " + Duration.between(inst2, inst3).toMillis());
 
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
@@ -2167,6 +2177,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.appAbbreviation = registrationPo.appAbbreviation;
         dto.tableName = tableAccessPo.tableName;
         dto.selectSql = tableAccessPo.sqlScript;
+        dto.whereScript = tableAccessPo.whereScript;
         // 非实时物理表才有sql
         if (!dto.driveType.getName().equals(DbTypeEnum.RestfulAPI.getName())
                 && !dto.driveType.getName().equals(DbTypeEnum.api.getName())
@@ -2174,11 +2185,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 && !dto.driveType.getName().equals(DbTypeEnum.ftp.getName())
                 && !dto.driveType.getName().equals(DbTypeEnum.sftp.getName())) {
             String tableName = TableNameGenerateUtils.buildTableName(tableAccessPo.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
-            //Map<String, String> converSql = publishTaskClient.converSql(tableName, tableAccessPo.sqlScript, dataSourcePo.driveType, null).data;
+            DataTranDTO dtDto = new DataTranDTO();
+            dtDto.tableName = tableName;
+            dtDto.querySql = tableAccessPo.sqlScript;
+            dtDto.driveType = dataSourcePo.driveType;
+            Map<String, String> converSql = publishTaskClient.converSql(dtDto).data;
             //String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             dto.selectSql = tableAccessPo.sqlScript;
-            //dto.queryStartTime = converSql.get(SystemVariableTypeEnum.START_TIME.getValue());
-            //dto.queryEndTime = converSql.get(SystemVariableTypeEnum.END_TIME.getValue());
+            dto.queryStartTime = converSql.get(SystemVariableTypeEnum.START_TIME.getValue());
+            dto.queryEndTime = converSql.get(SystemVariableTypeEnum.END_TIME.getValue());
         }
         //        dto.selectSql = tableAccessPo.sqlScript;
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
@@ -2242,7 +2257,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             OdsQueryDTO queryDto = new OdsQueryDTO();
             // queryDto.appId = modelAccess.appId;
             queryDto.appDataSourceId = dto.appDataSourceId;
-            queryDto.querySql = modelAccess.sqlScript;
+            queryDto.querySql = dto.sqlScript;
             queryDto.tableName = TableNameGenerateUtils.buildTableName(modelAccess.tableName, modelReg.appAbbreviation, modelReg.whetherSchema);
             return filterSqlFieldList(listField, queryDto);
         }

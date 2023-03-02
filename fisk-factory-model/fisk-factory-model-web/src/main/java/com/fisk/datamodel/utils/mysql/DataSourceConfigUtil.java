@@ -41,7 +41,7 @@ public class DataSourceConfigUtil {
      *
      * @return statement
      */
-    public Connection getStatement() {
+    public Connection getConnection() {
         DataSourceDTO dwSource = getDwSource();
         AbstractCommonDbHelper commonDbHelper = new AbstractCommonDbHelper();
         return commonDbHelper.connection(dwSource.conStr, dwSource.conAccount, dwSource.conPassword, dwSource.conType);

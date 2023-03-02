@@ -143,4 +143,11 @@ public class NifiCustomWorkflowDetailController {
     public ResultEntity<List<DispatchJobHierarchyDTO>> getJobList(@RequestBody QueryJobHierarchyDTO dto) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.getJobList(dto));
     }
+
+    @PostMapping("/forbiddenTask")
+    @ApiOperation(value = "开启或禁用一个或几个--任务组或任务")
+    public ResultEntity<Object> forbiddenTask(@RequestBody List<ForbiddenTaskDTO> dto) {
+
+        return ResultEntityBuild.build(service.forbiddenTask(dto));
+    }
 }

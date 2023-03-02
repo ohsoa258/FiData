@@ -2,12 +2,12 @@ package com.fisk.datamodel.service.impl.dimension;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.dataaccess.client.DataAccessClient;
-import com.fisk.dataaccess.dto.app.AppRegistrationInfoDTO;
+import com.fisk.common.service.accessAndTask.DataTranDTO;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
@@ -23,7 +23,6 @@ import com.fisk.datamodel.entity.SyncModePO;
 import com.fisk.datamodel.entity.dimension.DimensionAttributePO;
 import com.fisk.datamodel.entity.dimension.DimensionFolderPO;
 import com.fisk.datamodel.entity.dimension.DimensionPO;
-import com.fisk.datamodel.entity.fact.FactPO;
 import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.enums.TableHistoryTypeEnum;
@@ -38,6 +37,8 @@ import com.fisk.datamodel.mapper.dimension.DimensionMapper;
 import com.fisk.datamodel.service.IDimensionFolder;
 import com.fisk.datamodel.service.impl.CustomScriptImpl;
 import com.fisk.datamodel.service.impl.TableHistoryImpl;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
@@ -56,11 +57,14 @@ import java.util.stream.Collectors;
  */
 @Service
 public class DimensionFolderImpl
-        extends ServiceImpl<DimensionFolderMapper,DimensionFolderPO>
+        extends ServiceImpl<DimensionFolderMapper, DimensionFolderPO>
         implements IDimensionFolder {
 
     @Value("${fiData-data-dw-source}")
     private Integer targetDbId;
+
+    @Resource
+    UserClient userClient;
 
     @Resource
     DimensionFolderMapper mapper;
@@ -79,13 +83,10 @@ public class DimensionFolderImpl
     @Resource
     DimensionImpl dimensionImpl;
     @Resource
-    DimensionAttributeImpl dimensionAttribute;
-    @Resource
     SyncModeMapper syncModeMapper;
     @Resource
     CustomScriptImpl customScript;
-    @Resource
-    DataAccessClient dataAccessClient;
+    private DataSourceTypeEnum dataSourceTypeEnum;
 
     @Override
     public ResultEnum addDimensionFolder(DimensionFolderDTO dto) {
@@ -275,15 +276,18 @@ public class DimensionFolderImpl
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum batchPublishDimensionFolder(DimensionFolderPublishQueryDTO dto)
     {
-        try{
-            BusinessAreaPO businessAreaPo=businessAreaMapper.selectById(dto.businessAreaId);
+        try {
+            BusinessAreaPO businessAreaPo = businessAreaMapper.selectById(dto.businessAreaId);
             if (businessAreaPo == null) {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
+
+            getDwDbType(targetDbId);
+
             //获取维度文件夹下所有维度
-            QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
-            queryWrapper.in("id",dto.dimensionIds);
-            List<DimensionPO> dimensionPoList=dimensionMapper.selectList(queryWrapper);
+            QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.in("id", dto.dimensionIds);
+            List<DimensionPO> dimensionPoList = dimensionMapper.selectList(queryWrapper);
             if (CollectionUtils.isEmpty(dimensionPoList)) {
                 throw new FkException(ResultEnum.PUBLISH_FAILURE, "维度表为空");
             }
@@ -331,16 +335,19 @@ public class DimensionFolderImpl
                 //拼接数据
                 ModelPublishTableDTO pushDto = new ModelPublishTableDTO();
                 pushDto.tableId = Integer.parseInt(String.valueOf(item.id));
-                pushDto.tableName = item.dimensionTabName;
+                pushDto.tableName = convertName(item.dimensionTabName);
                 pushDto.createType = CreateTypeEnum.CREATE_DIMENSION.getValue();
-                ResultEntity<Map<String, String>> converMap = publishTaskClient.converSql(pushDto.tableName, item.sqlScript, "", null);
+                DataTranDTO dtDto = new DataTranDTO();
+                dtDto.tableName = pushDto.tableName;
+                dtDto.querySql = item.sqlScript;
+                ResultEntity<Map<String, String>> converMap = publishTaskClient.converSql(dtDto);
                 Map<String, String> data1 = converMap.data;
                 pushDto.queryEndTime = data1.get(SystemVariableTypeEnum.END_TIME.getValue());
                 pushDto.sqlScript = data1.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
                 pushDto.queryStartTime = data1.get(SystemVariableTypeEnum.START_TIME.getValue());
 
                 //获取维度键update语句
-                pushDto.factUpdateSql = dimensionAttribute.buildDimensionUpdateSql(Math.toIntExact(item.id));
+                pushDto.factUpdateSql = item.dimensionKeyScript;
 
                 /*
                 // 关联数据来源数据库Id——应用appId修改为dataSourceId后，该段代码暂时不用
@@ -362,14 +369,16 @@ public class DimensionFolderImpl
                 customScriptDto.type = 1;
                 customScriptDto.tableId = Integer.parseInt(String.valueOf(item.id));
                 customScriptDto.execType = 1;
-                pushDto.customScript = customScript.getBatchScript(customScriptDto);
-
+                String beforeCustomScript = customScript.getBatchScript(customScriptDto);
+                if (!StringUtils.isEmpty(beforeCustomScript)) {
+                    pushDto.customScript = beforeCustomScript;
+                }
                 customScriptDto.execType = 2;
 
                 //自定义脚本
                 String batchScript = customScript.getBatchScript(customScriptDto);
                 if (!StringUtils.isEmpty(batchScript)) {
-                    pushDto.factUpdateSql += batchScript;
+                    pushDto.customScriptAfter = batchScript;
                 }
 
                 //获取维度表同步方式
@@ -403,7 +412,7 @@ public class DimensionFolderImpl
     public ModelPublishFieldDTO pushField(DimensionAttributePO attributePo) {
         ModelPublishFieldDTO fieldDTO = new ModelPublishFieldDTO();
         fieldDTO.fieldId = attributePo.id;
-        fieldDTO.fieldEnName = attributePo.dimensionFieldEnName;
+        fieldDTO.fieldEnName = convertName(attributePo.dimensionFieldEnName);
         fieldDTO.fieldType = attributePo.dimensionFieldType;
         fieldDTO.fieldLength = attributePo.dimensionFieldLength;
         fieldDTO.attributeType = attributePo.attributeType;
@@ -420,6 +429,21 @@ public class DimensionFolderImpl
             fieldDTO.associateDimensionFieldName = dimensionAttributePo == null ? "" : dimensionAttributePo.dimensionFieldEnName;
         }
         return fieldDTO;
+    }
+
+    public void getDwDbType(Integer dbId) {
+        ResultEntity<DataSourceDTO> fiDataDataSourceById = userClient.getFiDataDataSourceById(dbId);
+        if (fiDataDataSourceById.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        dataSourceTypeEnum = fiDataDataSourceById.data.conType;
+    }
+
+    public String convertName(String name) {
+        if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
+            return name.toLowerCase();
+        }
+        return name;
     }
 
     /**

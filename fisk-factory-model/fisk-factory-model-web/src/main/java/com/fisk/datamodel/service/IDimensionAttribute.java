@@ -78,9 +78,18 @@ public interface IDimensionAttribute {
 
     /**
      * 获取维度字段列表数据(宽表)
+     *
      * @param dimensionId
      * @return
      */
     List<DimensionAttributeUpdateDTO> getDimensionAttributeDataList(int dimensionId);
+
+    /**
+     * 新增单个维度字段
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum addDimensionAttribute(DimensionAttributeDTO dto);
 
 }

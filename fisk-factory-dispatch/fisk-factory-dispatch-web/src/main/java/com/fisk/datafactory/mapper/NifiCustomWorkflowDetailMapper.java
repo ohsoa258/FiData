@@ -14,4 +14,7 @@ public interface NifiCustomWorkflowDetailMapper extends FKBaseMapper<NifiCustomW
 
     @Update("update tb_nifi_custom_workflow_detail set del_flag=0 where del_flag=1 and pid!=0 and workflow_id = #{nifiCustomWorkflowDetail.workflowId} and component_type = #{nifiCustomWorkflowDetail.componentType}")
     void deleteByType(@Param("nifiCustomWorkflowDetail")NifiCustomWorkflowDetailPO nifiCustomWorkflowDetail);
+
+    @Update("update tb_nifi_custom_workflow_detail set forbidden = #{nifiCustomWorkflowDetail.forbidden} where id = #{nifiCustomWorkflowDetail.id}")
+    void forbiddenTask(@Param("nifiCustomWorkflowDetail")NifiCustomWorkflowDetailPO nifiCustomWorkflowDetail);
 }

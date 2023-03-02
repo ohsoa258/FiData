@@ -49,7 +49,7 @@ public class DruidTest {
         String edit_sql = "UPDATE cfg.c_smonrt SET ID=1";
 
         SQLStatementParser parser = SQLParserUtils.createSQLStatementParser(
-                edit_sql, "sqlserver");
+                sql, DbType.postgresql);
         // 只接收SELECT
         if (!Token.SELECT.equals(parser.getExprParser().getLexer().token())) {
             System.out.println("不支持 " + parser.getExprParser().getLexer().token() + " 语法，仅支持 SELECT 语法");

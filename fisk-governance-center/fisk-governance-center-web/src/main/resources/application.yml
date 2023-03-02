@@ -3,6 +3,7 @@ server:
 spring:
   application:
     name: datagovernance-service
+  open-metadata: false
   profiles:
     active: dev
   jackson:

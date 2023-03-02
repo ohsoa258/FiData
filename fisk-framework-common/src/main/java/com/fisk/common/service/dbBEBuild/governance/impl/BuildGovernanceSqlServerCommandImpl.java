@@ -28,8 +28,8 @@ public class BuildGovernanceSqlServerCommandImpl implements IBuildGovernanceSqlC
         } else {
             str.append(" ORDER BY 1");
         }
-        // OFFSET 从0开始
-        str.append(" OFFSET " + (pageIndex - 1) * pageSize + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY;");
+        // pageIndex 从0开始
+        str.append(" OFFSET " + pageIndex * pageSize + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY;");
         return str.toString();
     }
 

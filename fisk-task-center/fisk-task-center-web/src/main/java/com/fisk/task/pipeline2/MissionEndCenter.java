@@ -1,7 +1,9 @@
 package com.fisk.task.pipeline2;
 
 import com.alibaba.fastjson.JSON;
+import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.constants.MqConstants;
+import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -25,14 +27,18 @@ import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
+import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
 import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
+import com.fisk.task.service.nifi.IJdbcBuild;
 import com.fisk.task.service.nifi.IOlap;
+import com.fisk.task.service.nifi.ITableNifiSettingService;
 import com.fisk.task.utils.KafkaTemplateHelper;
 import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -53,6 +59,9 @@ import java.util.*;
 @Slf4j
 @Component
 public class MissionEndCenter {
+    @Value("${consumer-server-enable}")
+    private Boolean consumerServerEnable;
+
     @Resource
     IOlap iOlap;
     @Resource
@@ -71,6 +80,10 @@ public class MissionEndCenter {
     ConsumeServeiceClient consumeServeiceClient;
     @Resource
     UserClient userClient;
+    @Resource
+    ITableNifiSettingService iTableNifiSettingService;
+    @Resource
+    IJdbcBuild iJdbcBuild;
 
 
     public void missionEndCenter(String data, Acknowledgment acke) {
@@ -119,6 +132,9 @@ public class MissionEndCenter {
                         //taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + format);
                         taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + format);
 
+                    } else if (Objects.nonNull(taskHierarchyDto.itselfPort) && !taskHierarchyDto.itselfPort.forbidden) {
+                        //禁止运行
+                        taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.FORBIDDEN.getName() + " - " + format);
                     } else if (!Objects.equals(taskHierarchyDto.taskStatus, DispatchLogEnum.taskpass) && !Objects.equals(taskHierarchyDto.taskStatus, DispatchLogEnum.taskfailure)) {
                         Map<Object, Object> pipelTask = redisUtil.getAndDel(RedisKeyEnum.PIPEL_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId);
                         log.info(itselfPort.id + "拿打印条数89" + JSON.toJSONString(pipelTask));
@@ -140,6 +156,9 @@ public class MissionEndCenter {
                                 jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
                             } else if (Objects.equals(dispatchJobHierarchy.jobStatus, NifiStageTypeEnum.PASS)) {
                                 jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + simpleDateFormat.format(new Date()));
+                            } else if (!dispatchJobHierarchy.forbidden) {
+                                //job禁止运行
+                                jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.FORBIDDEN.getName() + " - " + simpleDateFormat.format(new Date()));
                             } else {
                                 jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
                             }
@@ -155,6 +174,9 @@ public class MissionEndCenter {
                             jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
                         } else if (Objects.equals(dispatchJobHierarchy.jobStatus, NifiStageTypeEnum.PASS)) {
                             jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + simpleDateFormat.format(new Date()));
+                        } else if (!dispatchJobHierarchy.forbidden) {
+                            //job禁止运行
+                            jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.FORBIDDEN.getName() + " - " + simpleDateFormat.format(new Date()));
                         } else {
                             jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
                         }
@@ -186,22 +208,25 @@ public class MissionEndCenter {
                             } else {
                                 pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
                             }
-                            // 通过管道id,查询关联表服务
-                            ResultEntity<List<BuildTableServiceDTO>> result = consumeServeiceClient.getTableListByPipelineId(Integer.valueOf(pipelineId));
-                            if (result != null && result.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(result.data)) {
-                                List<BuildTableServiceDTO> list = result.data;
-                                for (BuildTableServiceDTO buildTableService : list) {
-                                    KafkaReceiveDTO kafkaRkeceive = KafkaReceiveDTO.builder().build();
-                                    kafkaRkeceive.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.DATASERVICES.getValue() + ".0." + buildTableService.id;
-                                    kafkaRkeceive.start_time = simpleDateFormat.format(new Date());
-                                    kafkaRkeceive.pipelTaskTraceId = UUID.randomUUID().toString();
-                                    kafkaRkeceive.fidata_batch_code = kafkaRkeceive.pipelTaskTraceId;
-                                    kafkaRkeceive.pipelStageTraceId = UUID.randomUUID().toString();
-                                    kafkaRkeceive.ifTaskStart = true;
-                                    kafkaRkeceive.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
-                                    //pc.universalPublish(kafkaRkeceiveDTO);
-                                    log.info("表服务关联触发流程参数:{}", JSON.toJSONString(kafkaRkeceive));
-                                    kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaRkeceive));
+                            log.info("consumerServerEnable参数，{}", consumerServerEnable);
+                            if (consumerServerEnable) {
+                                // 通过管道id,查询关联表服务
+                                ResultEntity<List<BuildTableServiceDTO>> result = consumeServeiceClient.getTableListByPipelineId(Integer.valueOf(pipelineId));
+                                if (result != null && result.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(result.data)) {
+                                    List<BuildTableServiceDTO> list = result.data;
+                                    for (BuildTableServiceDTO buildTableService : list) {
+                                        KafkaReceiveDTO kafkaRkeceive = KafkaReceiveDTO.builder().build();
+                                        kafkaRkeceive.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.DATASERVICES.getValue() + ".0." + buildTableService.id;
+                                        kafkaRkeceive.start_time = simpleDateFormat.format(new Date());
+                                        kafkaRkeceive.pipelTaskTraceId = UUID.randomUUID().toString();
+                                        kafkaRkeceive.fidata_batch_code = kafkaRkeceive.pipelTaskTraceId;
+                                        kafkaRkeceive.pipelStageTraceId = UUID.randomUUID().toString();
+                                        kafkaRkeceive.ifTaskStart = true;
+                                        kafkaRkeceive.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
+                                        //pc.universalPublish(kafkaRkeceiveDTO);
+                                        log.info("表服务关联触发流程参数:{}", JSON.toJSONString(kafkaRkeceive));
+                                        kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaRkeceive));
+                                    }
                                 }
                             }
                             iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
@@ -216,8 +241,17 @@ public class MissionEndCenter {
                         taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + format + " - 同步条数 : " + (Objects.isNull(kafkaReceive.numbers) ? 0 : kafkaReceive.numbers));
                         iPipelTaskLog.savePipelTaskLog(null, null, kafkaReceive.pipelTaskTraceId, taskMap, null, split[5], Integer.parseInt(split[3]));
                         //-------------------------------------------------------------
+                        //如果是事实维度表要删掉临时表
+                        if (Objects.equals(Integer.parseInt(split[3]), OlapTableEnum.DIMENSION.getValue()) || Objects.equals(Integer.parseInt(split[3]), OlapTableEnum.FACT.getValue())) {
+                            TableNifiSettingPO tableNifiSetting = iTableNifiSettingService.query().eq("table_access_id", split[5]).eq("type", split[3]).one();
+                            String tableName = tableNifiSetting.tableName;
+                            String dropSql = "DROP TABLE IF EXISTS temp_" + tableName;
+                             dropSql += ";DROP TABLE IF EXISTS stg_" + tableName;
+                            iJdbcBuild.postgreBuildTable(dropSql, BusinessTypeEnum.DATAMODEL);
+                        }
                         log.info("开始执行脚本");
-                        if (Objects.equals(Integer.parseInt(split[3]), OlapTableEnum.DATASERVICES.getValue())) {
+                        log.info("consumerServerEnable参数，{}", consumerServerEnable);
+                        if (consumerServerEnable && Objects.equals(Integer.parseInt(split[3]), OlapTableEnum.DATASERVICES.getValue())) {
                             // 通过表id查询下半执行语句
                             log.info("确定是表服务");
                             ResultEntity<BuildTableServiceDTO> buildTableService = consumeServeiceClient.getBuildTableServiceById(Long.parseLong(split[5]));

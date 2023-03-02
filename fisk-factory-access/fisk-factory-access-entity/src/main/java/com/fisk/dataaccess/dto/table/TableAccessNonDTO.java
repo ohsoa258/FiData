@@ -87,6 +87,12 @@ public class TableAccessNonDTO extends BaseDTO {
     @ApiModelProperty(value = "excel sheet页名称", required = true)
     public String sheet;
 
+    /**
+     * excel sheet 开始读取数据行数
+     */
+    @ApiModelProperty(value = "excel sheet开始读数据行数", required = true)
+    public Integer startLine;
+
     @ApiModelProperty(value = "发布错误信息", required = true)
     public String publishErrorMsg;
 
@@ -123,6 +129,11 @@ public class TableAccessNonDTO extends BaseDTO {
 
     @ApiModelProperty(value = "发布时,是否立即同步数据", required = true)
     public boolean openTransmission;
+
+    @ApiModelProperty(value = "业务时间覆盖，需要传递拼接的sql条件", required = false)
+    public String whereScript;
+
+    public List<TableHistoryDTO> tableHistorys;
 
     public TableAccessNonDTO(BaseEntity entity) {
         super(entity);

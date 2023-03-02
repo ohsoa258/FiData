@@ -70,4 +70,10 @@ public class IntelligentDiscovery_LogsVO {
      */
     @ApiModelProperty(value = "报告名称")
     public String originalName;
+
+    /**
+     * 报告文件绝对路径
+     */
+    @ApiModelProperty(value = "报告文件绝对路径")
+    public String absolutePath;
 }

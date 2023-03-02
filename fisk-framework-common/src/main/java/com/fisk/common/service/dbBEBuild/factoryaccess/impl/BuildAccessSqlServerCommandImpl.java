@@ -165,15 +165,18 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
         jsonObject.put("字符串型", "NVARCHAR");
         jsonObject.put("整型", "INT");
         jsonObject.put("大整型", "BIGINT");
+        jsonObject.put("日期类型", "DATE");
+        jsonObject.put("时间类型", "TIME");
+        jsonObject.put("日期时间类型", "DATETIME");
         jsonObject.put("时间戳类型", "TIMESTAMP");
         jsonObject.put("浮点型", "FLOAT");
-        jsonObject.put("文本型", "TEXT");
+        jsonObject.put("文本型", "NTEXT");
         return jsonObject;
     }
 
     @Override
     public String buildVersionDeleteSql(String tableName) {
-        String sql= String.format("DELETE FROM %s WHERE ISNULL(fi_version,'') NOT IN ",tableName);
+        String sql = String.format("DELETE FROM %s WHERE ISNULL(fi_version,'') NOT IN ", tableName);
         return sql;
     }
 
@@ -196,10 +199,15 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = PgTypeEnum.INT8.getName();
                 break;
             case TEXT:
+            case NTEXT:
                 data[0] = PgTypeEnum.TEXT.getName();
                 break;
             case DATE:
+                data[0] = PgTypeEnum.DATE.getName();
+                break;
             case TIME:
+                data[0] = PgTypeEnum.TIME.getName();
+                break;
             case TIMESTAMP:
             case DATETIME:
                 data[0] = PgTypeEnum.TIMESTAMP.getName();
@@ -233,13 +241,18 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = SqlServerTypeEnum.BIGINT.getName();
                 break;
             case TEXT:
-                data[0] = SqlServerTypeEnum.TEXT.getName();
+            case NTEXT:
+                data[0] = SqlServerTypeEnum.NTEXT.getName();
                 break;
             case DATE:
+                data[0] = SqlServerTypeEnum.DATE.getName();
+                break;
             case TIME:
+                data[0] = SqlServerTypeEnum.TIME.getName();
+                break;
             case TIMESTAMP:
             case DATETIME:
-                data[0] = SqlServerTypeEnum.TIMESTAMP.getName();
+                data[0] = SqlServerTypeEnum.DATETIME.getName();
                 break;
             case NUMERIC:
             case DECIMAL:
@@ -273,14 +286,21 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
             case BIGINT:
                 data[0] = MySqlTypeEnum.BIGINT.getName();
                 break;
+            case NTEXT:
             case TEXT:
                 data[0] = MySqlTypeEnum.TEXT.getName();
                 break;
             case DATE:
+                data[0] = MySqlTypeEnum.DATE.getName();
+                break;
             case TIME:
+                data[0] = MySqlTypeEnum.TIME.getName();
+                break;
             case TIMESTAMP:
-            case DATETIME:
                 data[0] = MySqlTypeEnum.TIMESTAMP.getName();
+                break;
+            case DATETIME:
+                data[0] = MySqlTypeEnum.DATETIME.getName();
                 break;
             case NUMERIC:
             case DECIMAL:
@@ -309,9 +329,12 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = OracleTypeEnum.INT.getName();
                 break;
             case TEXT:
+            case NTEXT:
                 data[0] = OracleTypeEnum.CLOB.getName();
                 break;
             case DATE:
+                data[0] = OracleTypeEnum.DATE.getName();
+                break;
             case TIME:
             case TIMESTAMP:
             case DATETIME:

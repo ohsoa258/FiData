@@ -25,5 +25,14 @@ public class BuildConvertExcelToCSVProcessorDTO extends BaseProcessorDTO {
      * */
     public boolean includeHeaderLine;
 
+    /**
+     * 第一个sheet页名称, nifi真实名 extract-sheets
+     */
+    public String sheetName;
+
+    /**
+     * excel 开始读取数据行数 nifi真实名 excel-extract-first-row
+     */
+    public String startLine;
 
 }

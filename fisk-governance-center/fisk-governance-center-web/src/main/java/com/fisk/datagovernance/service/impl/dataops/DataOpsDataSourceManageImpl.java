@@ -1,5 +1,8 @@
 package com.fisk.datagovernance.service.impl.dataops;
 
+import com.alibaba.druid.sql.parser.SQLParserUtils;
+import com.alibaba.druid.sql.parser.SQLStatementParser;
+import com.alibaba.druid.sql.parser.Token;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -9,6 +12,8 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbBEBuild.governance.BuildGovernanceHelper;
+import com.fisk.common.service.dbBEBuild.governance.IBuildGovernanceSqlCommand;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
@@ -32,17 +37,18 @@ import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.BuildTableNifiSettingDTO;
 import com.fisk.task.dto.task.TableNifiSettingDTO;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.statement.select.Select;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+
 import javax.annotation.Resource;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -180,6 +186,9 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             if (postgreDTO == null) {
                 return ResultEntityBuild.buildData(ResultEnum.DATA_OPS_CONFIG_EXISTS, executeResultVO);
             }
+            if (StringUtils.isEmpty(dto.executeSql)){
+                return ResultEntityBuild.buildData(ResultEnum.PARAMTER_NOTNULL, executeResultVO);
+            }
             conn = DataSourceConManageImpl.getStatement(postgreDTO.getDataSourceTypeEnum(),
                     postgreDTO.getSqlUrl(), postgreDTO.getSqlUsername(), postgreDTO.getSqlPassword());
             st = conn.createStatement();
@@ -190,6 +199,17 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             主要的DDL动词：CREATE（创建）、DROP（删除）、ALTER（修改）、TRUNCATE（截断）、RENAME（重命名）
             DML主要指数据的增删查改: SELECT、DELETE、UPDATE、INSERT、CALL(执行存储过程)
            * */
+            String sql = dto.executeSql;
+            SQLStatementParser parser = SQLParserUtils.createSQLStatementParser(
+                    sql, postgreDTO.getDataSourceTypeEnum().getName().toLowerCase());
+            if (Token.SELECT.equals(parser.getExprParser().getLexer().token())) {
+                // SQL 语句是查询操作
+                String tableName = String.format("(%s) AS tb_page", dto.executeSql);
+                IBuildGovernanceSqlCommand dbCommand = BuildGovernanceHelper.getDBCommand(postgreDTO.getDataSourceTypeEnum());
+                dto.current = dto.current - 1;
+                String buildQuerySchemaSql = dbCommand.buildPagingSql(tableName, "*", "", dto.current, dto.size);
+                dto.executeSql = buildQuerySchemaSql;
+            }
             boolean execute = st.execute(dto.executeSql);
             if (execute) {
                 executeResultVO.setExecuteType(1);
@@ -212,15 +232,15 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                 rs.close();
                 if (array != null && array.size() > 0) {
                     List<Object> collect = array;
-                    if (dto.current != null && dto.size != null) {
-                        int rowsCount = array.stream().toArray().length;
-                        executeResultVO.setCurrent(dto.current);
-                        executeResultVO.setSize(dto.size);
-                        executeResultVO.setTotal(rowsCount);
-                        executeResultVO.setPage((int) Math.ceil(1.0 * rowsCount / dto.size));
-                        dto.current = dto.current - 1;
-                        collect = array.stream().skip((dto.current - 1 + 1) * dto.size).limit(dto.size).collect(Collectors.toList());
-                    }
+//                    if (dto.current != null && dto.size != null) {
+//                        int rowsCount = array.stream().toArray().length;
+//                        executeResultVO.setCurrent(dto.current);
+//                        executeResultVO.setSize(dto.size);
+//                        executeResultVO.setTotal(rowsCount);
+//                        executeResultVO.setPage((int) Math.ceil(1.0 * rowsCount / dto.size));
+//                        dto.current = dto.current - 1;
+//                        collect = array.stream().skip((dto.current - 1 + 1) * dto.size).limit(dto.size).collect(Collectors.toList());
+//                    }
                     executeResultVO.setDataArray(collect);
                 }
                 executeResultVO.setExecuteState(true);

@@ -318,7 +318,10 @@ public class TaskPublish {
         String jobTraceId = dispatchJobHierarchy.jobTraceId;
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         // 如果正常,找下游,记下游的开始,并调用真正的下游任务
-        if (!Objects.equals(taskHierarchy.taskStatus, DispatchLogEnum.taskfailure) && !Objects.equals(taskHierarchy.taskStatus, DispatchLogEnum.taskpass)) {
+        if (!Objects.equals(taskHierarchy.taskStatus, DispatchLogEnum.taskfailure) &&
+                !Objects.equals(taskHierarchy.taskStatus, DispatchLogEnum.taskpass) &&
+                //不禁用
+                Objects.nonNull(taskHierarchy.itselfPort) && taskHierarchy.itselfPort.forbidden) {
             //正常发布,调用相应流程
             if (Objects.equals(type, OlapTableEnum.PHYSICS_API)) {
                 //非实时api发布

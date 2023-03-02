@@ -60,85 +60,94 @@ public class BuildAtlasTableAndColumnTaskListener
     public ResultEnum msg(String dataInfo, Acknowledgment acke) {
         log.info("进入Atlas生成表和字段");
         log.info("dataInfo:" + dataInfo);
+        dataInfo = "[" + dataInfo + "]";
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            BuildPhysicalTableDTO buildPhysicalTableDTO = JSON.parseObject(dataInfo, BuildPhysicalTableDTO.class);
-            String physicalSelect = createPhysicalTable(buildPhysicalTableDTO);
-            //endregion
-            TBETLIncrementalPO ETLIncremental = new TBETLIncrementalPO();
-            if (buildPhysicalTableDTO.whetherSchema) {
-                ETLIncremental.objectName = buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName;
-            } else {
-                ETLIncremental.objectName = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
-            }
-            List<DeltaTimeDTO> deltaTimes = buildPhysicalTableDTO.deltaTimes;
-            if (!CollectionUtils.isEmpty(deltaTimes)) {
+            BuildPhysicalTableDTO buildPhysicalTableDTO = new BuildPhysicalTableDTO();
+            List<BuildPhysicalTableDTO> list = JSON.parseArray(dataInfo, BuildPhysicalTableDTO.class);
+            for (BuildPhysicalTableDTO buildPhysicalTable : list) {
+                buildPhysicalTableDTO = buildPhysicalTable;
+                String physicalSelect = createPhysicalTable(buildPhysicalTableDTO);
+                //endregion
+                TBETLIncrementalPO ETLIncremental = new TBETLIncrementalPO();
+                if (buildPhysicalTableDTO.whetherSchema) {
+                    ETLIncremental.objectName = buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName;
+                } else {
+                    ETLIncremental.objectName = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
+                }
+                List<DeltaTimeDTO> deltaTimes = buildPhysicalTableDTO.deltaTimes;
+                if (!CollectionUtils.isEmpty(deltaTimes)) {
 
-                for (DeltaTimeDTO dto : deltaTimes) {
-                    if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT) &&
-                            Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.START_TIME)) {
-                        ETLIncremental.incrementalObjectivescoreStart = sdf.parse(dto.variableValue);
-                    }
-                    if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT) &&
-                            Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.END_TIME)) {
-                        ETLIncremental.incrementalObjectivescoreEnd = sdf.parse(dto.variableValue);
+                    for (DeltaTimeDTO dto : deltaTimes) {
+                        if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT) &&
+                                Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.START_TIME)) {
+                            ETLIncremental.incrementalObjectivescoreStart = sdf.parse(dto.variableValue);
+                        }
+                        if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT) &&
+                                Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.END_TIME)) {
+                            ETLIncremental.incrementalObjectivescoreEnd = sdf.parse(dto.variableValue);
+                        }
                     }
                 }
-            }
-            ETLIncremental.enableFlag = "1";
-            ETLIncremental.incrementalObjectivescoreBatchno = UUID.randomUUID().toString();
-            Map<String, Object> conditionHashMap = new HashMap<>();
-            conditionHashMap.put("object_name", ETLIncremental.objectName);
-            List<TBETLIncrementalPO> tbetlIncrementalPos = incrementalMapper.selectByMap(conditionHashMap);
-            if (tbetlIncrementalPos != null && tbetlIncrementalPos.size() > 0) {
-                log.info("此表已有同步记录,无需重复添加");
-            } else {
-                incrementalMapper.insert(ETLIncremental);
-            }
+                ETLIncremental.enableFlag = "1";
+                ETLIncremental.incrementalObjectivescoreBatchno = UUID.randomUUID().toString();
+                Map<String, Object> conditionHashMap = new HashMap<>();
+                conditionHashMap.put("object_name", ETLIncremental.objectName);
+                List<TBETLIncrementalPO> tbetlIncrementalPos = incrementalMapper.selectByMap(conditionHashMap);
+                if (tbetlIncrementalPos != null && tbetlIncrementalPos.size() > 0) {
+                    log.info("此表已有同步记录,无需重复添加");
+                } else {
+                    incrementalMapper.insert(ETLIncremental);
+                }
 
-            TableNifiSettingPO one = tableNifiSettingService.query().eq("app_id", buildPhysicalTableDTO.appId).eq("table_access_id", buildPhysicalTableDTO.dbId).eq("type", OlapTableEnum.PHYSICS.getValue()).one();
-            TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
-            if (one != null) {
-                tableNifiSettingPO = one;
-            }
-            tableNifiSettingPO.appId = Integer.valueOf(buildPhysicalTableDTO.appId);
-            if (buildPhysicalTableDTO.whetherSchema) {
-                tableNifiSettingPO.tableName = buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName;
-            } else {
-                tableNifiSettingPO.tableName = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
-            }
+                TableNifiSettingPO one = tableNifiSettingService.query().eq("app_id", buildPhysicalTableDTO.appId).eq("table_access_id", buildPhysicalTableDTO.dbId).eq("type", OlapTableEnum.PHYSICS.getValue()).one();
+                TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
+                if (one != null) {
+                    tableNifiSettingPO = one;
+                }
+                tableNifiSettingPO.appId = Integer.valueOf(buildPhysicalTableDTO.appId);
+                if (buildPhysicalTableDTO.whetherSchema) {
+                    tableNifiSettingPO.tableName = buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName;
+                } else {
+                    tableNifiSettingPO.tableName = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
+                }
 
-            tableNifiSettingPO.tableAccessId = Integer.valueOf(buildPhysicalTableDTO.dbId);
-            tableNifiSettingPO.selectSql = physicalSelect;
-            tableNifiSettingPO.type = OlapTableEnum.PHYSICS.getValue();
-            tableNifiSettingPO.syncMode = buildPhysicalTableDTO.syncMode;
-            tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
-            log.info("开始执行nifi创建数据同步");
-            BuildNifiFlowDTO bfd = new BuildNifiFlowDTO();
-            bfd.userId = buildPhysicalTableDTO.userId;
-            bfd.appId = Long.parseLong(buildPhysicalTableDTO.appId);
-            bfd.id = Long.parseLong(buildPhysicalTableDTO.dbId);
-            bfd.synchronousTypeEnum = SynchronousTypeEnum.TOPGODS;
-            bfd.tableName = tableNifiSettingPO.tableName;
-            //类型为物理表
-            bfd.type = OlapTableEnum.PHYSICS;
-            //来源为数据接入
-            bfd.dataClassifyEnum = DataClassifyEnum.DATAACCESS;
-            bfd.queryStartTime = buildPhysicalTableDTO.queryStartTime;
-            bfd.queryEndTime = buildPhysicalTableDTO.queryEndTime;
-            bfd.openTransmission = buildPhysicalTableDTO.openTransmission;
-            bfd.excelFlow = buildPhysicalTableDTO.excelFlow;
-            bfd.sftpFlow = buildPhysicalTableDTO.sftpFlow;
-            bfd.deltaTimes = deltaTimes;
-            bfd.generateVersionSql = buildPhysicalTableDTO.generateVersionSql;
-            bfd.maxRowsPerFlowFile = buildPhysicalTableDTO.maxRowsPerFlowFile;
-            bfd.fetchSize = buildPhysicalTableDTO.fetchSize;
-            // 新属性赋值
-            bfd.dataSourceDbId = buildPhysicalTableDTO.dataSourceDbId;
-            bfd.targetDbId = buildPhysicalTableDTO.targetDbId;
-            log.info("nifi传入参数：" + JSON.toJSONString(bfd));
-            pc.publishBuildNifiFlowTask(bfd);
-            log.info("执行完成");
+                tableNifiSettingPO.tableAccessId = Integer.valueOf(buildPhysicalTableDTO.dbId);
+                tableNifiSettingPO.selectSql = physicalSelect;
+                tableNifiSettingPO.type = OlapTableEnum.PHYSICS.getValue();
+                tableNifiSettingPO.syncMode = buildPhysicalTableDTO.syncMode;
+                tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
+                log.info("开始执行nifi创建数据同步");
+                BuildNifiFlowDTO bfd = new BuildNifiFlowDTO();
+                bfd.userId = buildPhysicalTableDTO.userId;
+                bfd.appId = Long.parseLong(buildPhysicalTableDTO.appId);
+                bfd.id = Long.parseLong(buildPhysicalTableDTO.dbId);
+                bfd.synchronousTypeEnum = SynchronousTypeEnum.TOPGODS;
+                bfd.tableName = tableNifiSettingPO.tableName;
+                //类型为物理表
+                bfd.type = OlapTableEnum.PHYSICS;
+                //来源为数据接入
+                bfd.dataClassifyEnum = DataClassifyEnum.DATAACCESS;
+                bfd.queryStartTime = buildPhysicalTableDTO.queryStartTime;
+                bfd.queryEndTime = buildPhysicalTableDTO.queryEndTime;
+                bfd.openTransmission = buildPhysicalTableDTO.openTransmission;
+                bfd.excelFlow = buildPhysicalTableDTO.excelFlow;
+                bfd.sftpFlow = buildPhysicalTableDTO.sftpFlow;
+                bfd.deltaTimes = deltaTimes;
+                bfd.generateVersionSql = buildPhysicalTableDTO.generateVersionSql;
+                bfd.maxRowsPerFlowFile = buildPhysicalTableDTO.maxRowsPerFlowFile;
+                bfd.fetchSize = buildPhysicalTableDTO.fetchSize;
+                // 新属性赋值
+                bfd.dataSourceDbId = buildPhysicalTableDTO.dataSourceDbId;
+                bfd.targetDbId = buildPhysicalTableDTO.targetDbId;
+                bfd.whereScript = buildPhysicalTableDTO.whereScript;
+                bfd.buildTableSql = buildPhysicalTableDTO.buildTableSql;
+                // stg抽取数据加载到ods的sql语句
+                bfd.syncStgToOdsSql = buildPhysicalTableDTO.syncStgToOdsSql;
+                log.info("nifi传入参数：" + JSON.toJSONString(bfd));
+                pc.publishBuildNifiFlowTask(bfd);
+                log.info("执行完成");
+            }
             return ResultEnum.SUCCESS;
         } catch (Exception e) {
             return ResultEnum.ERROR;

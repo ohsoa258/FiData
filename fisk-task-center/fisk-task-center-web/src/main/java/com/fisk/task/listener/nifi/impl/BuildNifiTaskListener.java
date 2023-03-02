@@ -129,6 +129,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     @Value("${sftp-rsa-upload.rsaPath}")
     private String rsaPath;
 
+    @Value("${nifi-data-security-enable}")
+    private boolean enable;
+
 
     @Resource
     INiFiHelper componentsBuild;
@@ -296,80 +299,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         return ResultEnum.SUCCESS;
     }
 
-    public void deleteGroup(String tableCompconentId) {
-        try {
-            NifiHelper.getProcessGroupsApi().createEmptyAllConnectionsRequest(tableCompconentId);
-            ScheduleComponentsEntity scheduleComponentsEntity = new ScheduleComponentsEntity();
-            scheduleComponentsEntity.setId(tableCompconentId);
-            scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.STOPPED);
-            scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
-            NifiHelper.getFlowApi().scheduleComponents(tableCompconentId, scheduleComponentsEntity);
-            scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.DISABLED);
-            NifiHelper.getFlowApi().scheduleComponents(tableCompconentId, scheduleComponentsEntity);
-            RemotePortRunStatusEntity remotePortRunStatusEntity = new RemotePortRunStatusEntity();
-            remotePortRunStatusEntity.setDisconnectedNodeAcknowledged(false);
-            remotePortRunStatusEntity.setState(RemotePortRunStatusEntity.StateEnum.STOPPED);
-            //NifiHelper.getRemoteProcessGroupsApi().updateRemoteProcessGroupRunStatus(tableCompconentId, remotePortRunStatusEntity);
-            ActivateControllerServicesEntity activateControllerServicesEntity = new ActivateControllerServicesEntity();
-            activateControllerServicesEntity.setId(tableCompconentId);
-            activateControllerServicesEntity.setDisconnectedNodeAcknowledged(false);
-            activateControllerServicesEntity.setState(ActivateControllerServicesEntity.StateEnum.DISABLED);
-            NifiHelper.getFlowApi().activateControllerServices(tableCompconentId, activateControllerServicesEntity);
-            ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(tableCompconentId);
-            RevisionDTO revision = processGroup.getRevision();
-            NifiHelper.getProcessGroupsApi().removeProcessGroup(tableCompconentId, String.valueOf(revision.getVersion()), revision.getClientId(), false);
-        } catch (ApiException e) {
-            log.error("删除组失败:" + StackTraceHelper.getStackTraceInfo(e));
-        }
-    }
-
-
-    /**
-     * 保存统一数据源控制器服务
-     *
-     * @param dbId
-     * @return
-     */
-    public String saveDbconfig(Integer dbId) {
-        String sourceControllerServiceId = "";
-        NifiConfigPO targetNifiConfig = nifiConfigService.query().eq("datasource_config_id", dbId).one();
-        if (Objects.nonNull(targetNifiConfig)) {
-            sourceControllerServiceId = targetNifiConfig.componentId;
-        } else {
-            ResultEntity<DataSourceDTO> targetDataSource = userClient.getFiDataDataSourceById(dbId);
-            if (targetDataSource.code == ResultEnum.SUCCESS.getCode()) {
-                DataSourceDTO dataSource = targetDataSource.data;
-                BuildDbControllerServiceDTO sourceControllerService = new BuildDbControllerServiceDTO();
-                sourceControllerService.driverLocation = dataSource.conType.getDriverLocation();
-                sourceControllerService.driverName = dataSource.conType.getDriverName();
-
-                // 拼接字符串读取配置变量值
-                sourceControllerService.conUrl = "${" + ComponentIdTypeEnum.DB_URL.getName() + dbId  + "}";
-                sourceControllerService.pwd = "${" + ComponentIdTypeEnum.DB_PASSWORD.getName() + dbId  + "}";
-                sourceControllerService.user = "${" + ComponentIdTypeEnum.DB_USERNAME.getName() + dbId  + "}";
-
-                sourceControllerService.name = dataSource.name;
-                sourceControllerService.enabled = true;
-                sourceControllerService.dbcpMaxIdleConns = "50";
-                sourceControllerService.groupId = NifiConstants.ApiConstants.ROOT_NODE;
-                sourceControllerService.details = "details" + dataSource.name;
-                BusinessResult<ControllerServiceEntity> controllerServiceEntityBusinessResult = componentsBuild.buildDbControllerService(sourceControllerService);
-                sourceControllerServiceId = controllerServiceEntityBusinessResult.data.getId();
-                NifiConfigPO nifiConfig = new NifiConfigPO();
-                nifiConfig.componentId = sourceControllerServiceId;
-                nifiConfig.componentKey = dataSource.name;
-                nifiConfig.datasourceConfigId = String.valueOf(dbId);
-                nifiConfigService.save(nifiConfig);
-            } else {
-                log.error("userclient无法查询到外部数据源的连接信息");
-            }
-        }
-        return sourceControllerServiceId;
-    }
-
-
     @Override
-    public ResultEnum msg(String data, Acknowledgment ack) {
+    public ResultEnum buildAccessNifiProcess(String data, Acknowledgment ack) {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
         ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
         modelPublishStatusDTO.publish = 1;
@@ -405,7 +336,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             if (appNifiSettingPO1 != null) {
                 appNifiSettingPO = appNifiSettingPO1;
             }
-            NifiConfigPO nifiConfigPO = new NifiConfigPO();
             log.info("【数据接入配置项参数】" + JSON.toJSONString(configDTO));
             //1. 获取数据接入配置库连接池
             ControllerServiceEntity cfgDbPool = buildCfgDsPool(configDTO);
@@ -418,13 +348,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             appGroupId = groupEntity.getId();
             appParentGroupId = groupEntity.getComponent().getParentGroupId();
 
-            // 创建input_port组件(应用)  (后期入库)
-//        appInputPortId = buildPortComponent(configDTO.groupConfig.appName, appParentGroupId, groupEntity.getPosition().getX(), groupEntity.getPosition().getY(), PortComponentEnum.APP_INPUT_PORT_COMPONENT);
-            // 创建output_port组件(应用) (后期入库)
-//        appOutputPortId = buildPortComponent(configDTO.groupConfig.appName, appParentGroupId, groupEntity.getPosition().getX(), groupEntity.getPosition().getY(), PortComponentEnum.APP_OUTPUT_PORT_COMPONENT);
-
-            //3. 创建jdbc连接池
-            //List<ControllerServiceEntity> dbPool = buildDsConnectionPool(configDTO, groupEntity.getId(),dto);
             if (dto.groupStructureId != null) {
                 appGroupId = dto.groupStructureId;
             }
@@ -508,7 +431,241 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             return resultEnum;
         } catch (Exception e) {
             resultEnum = ResultEnum.ERROR;
-            modelPublishStatusDTO.publish = 2;
+            modelPublishStatusDTO.publish = 3;
+            modelPublishStatusDTO.publishErrorMsg = StackTraceHelper.getStackTraceInfo(e);
+            if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
+                client.updateTablePublishStatus(modelPublishStatusDTO);
+            }
+            log.error("nifi流程创建失败" + StackTraceHelper.getStackTraceInfo(e));
+            return resultEnum;
+        } finally {
+            ack.acknowledge();
+        }
+    }
+
+    @Override
+    public ResultEnum buildModelNifiProcess(String dataInfo, Acknowledgment acke) {
+        return null;
+    }
+
+    public void deleteGroup(String tableCompconentId) {
+        try {
+            NifiHelper.getProcessGroupsApi().createEmptyAllConnectionsRequest(tableCompconentId);
+            ScheduleComponentsEntity scheduleComponentsEntity = new ScheduleComponentsEntity();
+            scheduleComponentsEntity.setId(tableCompconentId);
+            scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.STOPPED);
+            scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
+            NifiHelper.getFlowApi().scheduleComponents(tableCompconentId, scheduleComponentsEntity);
+            scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.DISABLED);
+            NifiHelper.getFlowApi().scheduleComponents(tableCompconentId, scheduleComponentsEntity);
+            RemotePortRunStatusEntity remotePortRunStatusEntity = new RemotePortRunStatusEntity();
+            remotePortRunStatusEntity.setDisconnectedNodeAcknowledged(false);
+            remotePortRunStatusEntity.setState(RemotePortRunStatusEntity.StateEnum.STOPPED);
+            //NifiHelper.getRemoteProcessGroupsApi().updateRemoteProcessGroupRunStatus(tableCompconentId, remotePortRunStatusEntity);
+            ActivateControllerServicesEntity activateControllerServicesEntity = new ActivateControllerServicesEntity();
+            activateControllerServicesEntity.setId(tableCompconentId);
+            activateControllerServicesEntity.setDisconnectedNodeAcknowledged(false);
+            activateControllerServicesEntity.setState(ActivateControllerServicesEntity.StateEnum.DISABLED);
+            NifiHelper.getFlowApi().activateControllerServices(tableCompconentId, activateControllerServicesEntity);
+            ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(tableCompconentId);
+            RevisionDTO revision = processGroup.getRevision();
+            NifiHelper.getProcessGroupsApi().removeProcessGroup(tableCompconentId, String.valueOf(revision.getVersion()), revision.getClientId(), false);
+        } catch (ApiException e) {
+            log.error("删除组失败:" + StackTraceHelper.getStackTraceInfo(e));
+        }
+    }
+
+
+    /**
+     * 保存统一数据源控制器服务
+     *
+     * @param dbId
+     * @return
+     */
+    public String saveDbconfig(Integer dbId) {
+        String sourceControllerServiceId = "";
+        NifiConfigPO targetNifiConfig = nifiConfigService.query().eq("datasource_config_id", dbId).one();
+        if (Objects.nonNull(targetNifiConfig)) {
+            sourceControllerServiceId = targetNifiConfig.componentId;
+        } else {
+            ResultEntity<DataSourceDTO> targetDataSource = userClient.getFiDataDataSourceById(dbId);
+            if (targetDataSource.code == ResultEnum.SUCCESS.getCode()) {
+                DataSourceDTO dataSource = targetDataSource.data;
+                BuildDbControllerServiceDTO sourceControllerService = new BuildDbControllerServiceDTO();
+                sourceControllerService.driverLocation = dataSource.conType.getDriverLocation();
+                sourceControllerService.driverName = dataSource.conType.getDriverName();
+
+                // 拼接字符串读取配置变量值
+                sourceControllerService.conUrl = "${" + ComponentIdTypeEnum.DB_URL.getName() + dbId + "}";
+                sourceControllerService.pwd = "${" + ComponentIdTypeEnum.DB_PASSWORD.getName() + dbId + "}";
+                sourceControllerService.user = "${" + ComponentIdTypeEnum.DB_USERNAME.getName() + dbId + "}";
+
+                sourceControllerService.name = dataSource.name;
+                sourceControllerService.enabled = true;
+                sourceControllerService.dbcpMaxIdleConns = "50";
+                sourceControllerService.groupId = NifiConstants.ApiConstants.ROOT_NODE;
+                sourceControllerService.details = "details" + dataSource.name;
+                BusinessResult<ControllerServiceEntity> controllerServiceEntityBusinessResult = componentsBuild.buildDbControllerService(sourceControllerService);
+                sourceControllerServiceId = controllerServiceEntityBusinessResult.data.getId();
+                NifiConfigPO nifiConfig = new NifiConfigPO();
+                nifiConfig.componentId = sourceControllerServiceId;
+                nifiConfig.componentKey = dataSource.name;
+                nifiConfig.datasourceConfigId = String.valueOf(dbId);
+                nifiConfigService.save(nifiConfig);
+            } else {
+                log.error("userclient无法查询到外部数据源的连接信息");
+            }
+        }
+        return sourceControllerServiceId;
+    }
+
+
+    @Override
+    public ResultEnum msg(String data, Acknowledgment ack) {
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
+        ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
+        modelPublishStatusDTO.publish = 1;
+        log.info("创建nifi流程发布参数:" + data);
+        data = "[" + data + "]";
+        List<BuildNifiFlowDTO> buildNifiFlows = JSON.parseArray(data, BuildNifiFlowDTO.class);
+        BuildNifiFlowDTO dto = new BuildNifiFlowDTO();
+        try {
+            for (BuildNifiFlowDTO buildNifiFlow : buildNifiFlows) {
+                dto = buildNifiFlow;
+                modelPublishStatusDTO.tableId = dto.id;
+                if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
+                    client.updateTablePublishStatus(modelPublishStatusDTO);
+                }
+                //获取数据接入配置项
+                DataAccessConfigDTO configDTO = getConfigData(dto.id, dto.appId, dto.synchronousTypeEnum, dto.type, dto.dataClassifyEnum, dto.tableName, dto.selectSql, dto);
+                if (configDTO == null) {
+                    log.error("数据接入配置项获取失败。id: 【" + dto.id + "】, appId: 【" + dto.appId + "】");
+                    return ResultEnum.NOTFOUND;
+                }
+                AppNifiSettingPO appNifiSettingPO = new AppNifiSettingPO();
+                AppNifiSettingPO appNifiSettingPO1 = new AppNifiSettingPO();
+                if (dto.nifiCustomWorkflowId != null) {
+                    appNifiSettingPO1 = appNifiSettingService.query().eq("app_id", dto.appId).eq("nifi_custom_workflow_id", dto.nifiCustomWorkflowId).eq("type", dto.dataClassifyEnum.getValue()).eq("del_flag", 1).one();
+
+                } else {
+                    List<AppNifiSettingPO> list = appNifiSettingService.query().eq("app_id", dto.appId).eq("type", dto.dataClassifyEnum.getValue()).eq("del_flag", 1).list();
+                    if (list != null && list.size() != 0) {
+                        for (AppNifiSettingPO appNifiSettingPO2 : list) {
+                            if (appNifiSettingPO2.nifiCustomWorkflowId == null) {
+                                appNifiSettingPO1 = appNifiSettingPO2;
+                            }
+                        }
+                    }
+
+                }
+                if (appNifiSettingPO1 != null) {
+                    appNifiSettingPO = appNifiSettingPO1;
+                }
+                NifiConfigPO nifiConfigPO = new NifiConfigPO();
+                log.info("【数据接入配置项参数】" + JSON.toJSONString(configDTO));
+                //1. 获取数据接入配置库连接池
+                ControllerServiceEntity cfgDbPool = buildCfgDsPool(configDTO);
+
+                //2. 创建应用组
+                ProcessGroupEntity groupEntity = buildAppGroup(configDTO, dto.groupComponentId);
+                appNifiSettingPO.appId = String.valueOf(dto.appId);
+                appNifiSettingPO.appComponentId = groupEntity.getId();
+                appNifiSettingPO.type = dto.dataClassifyEnum.getValue();
+                appGroupId = groupEntity.getId();
+                appParentGroupId = groupEntity.getComponent().getParentGroupId();
+
+                // 创建input_port组件(应用)  (后期入库)
+//        appInputPortId = buildPortComponent(configDTO.groupConfig.appName, appParentGroupId, groupEntity.getPosition().getX(), groupEntity.getPosition().getY(), PortComponentEnum.APP_INPUT_PORT_COMPONENT);
+                // 创建output_port组件(应用) (后期入库)
+//        appOutputPortId = buildPortComponent(configDTO.groupConfig.appName, appParentGroupId, groupEntity.getPosition().getX(), groupEntity.getPosition().getY(), PortComponentEnum.APP_OUTPUT_PORT_COMPONENT);
+
+                //3. 创建jdbc连接池
+                //List<ControllerServiceEntity> dbPool = buildDsConnectionPool(configDTO, groupEntity.getId(),dto);
+                if (dto.groupStructureId != null) {
+                    appGroupId = dto.groupStructureId;
+                }
+                List<ControllerServiceEntity> dbPool = buildDsConnectionPool(dto.synchronousTypeEnum, configDTO, appGroupId, dto);
+                String sourceId = "";
+                if (!dto.excelFlow) {
+
+                    sourceId = dbPool.get(0).getId();
+                }
+
+
+                //4. 创建任务组创建时要把原任务组删掉,防止重复发布带来影响  dto.id, dto.appId
+                DataModelVO dataModelVO = new DataModelVO();
+                dataModelVO.dataClassifyEnum = dto.dataClassifyEnum;
+                dataModelVO.delBusiness = false;
+                dataModelVO.businessId = String.valueOf(dto.appId);
+                dataModelVO.userId = dto.userId;
+                DataModelTableVO dataModelTableVO = new DataModelTableVO();
+                dataModelTableVO.type = dto.type;
+                List<Long> ids = new ArrayList<>();
+                ids.add(dto.id);
+                dataModelTableVO.ids = ids;
+                dataModelVO.indicatorIdList = dataModelTableVO;
+                TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
+                if (dto.workflowDetailId != null) {
+                    tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", dto.appId).eq("nifi_custom_workflow_detail_id", dto.workflowDetailId).eq("table_access_id", dto.id).eq("type", dto.type.getValue()).one();
+
+                } else {
+                    tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", dto.appId).eq("table_access_id", dto.id).eq("type", dto.type.getValue()).one();
+
+                }
+                if (tableNifiSettingPO != null && tableNifiSettingPO.tableComponentId != null) {
+                    componentsBuild.deleteNifiFlow(dataModelVO);
+                }
+                ProcessGroupEntity taskGroupEntity = buildTaskGroup(configDTO, groupEntity.getId());
+
+                if (dto.nifiCustomWorkflowId != null && dto.nifiCustomWorkflowId != "") {
+                    // 创建input_port(任务)   (后期入库)
+                    tableInputPortId = buildPortComponent(configDTO.taskGroupConfig.appName, groupEntity.getId(),
+                            groupEntity.getPosition().getX(), groupEntity.getPosition().getY(), PortComponentEnum.TASK_INPUT_PORT_COMPONENT);
+                    // 创建output_port(任务)   (后期入库)
+                    tableOutputPortId = buildPortComponent(configDTO.taskGroupConfig.appName, groupEntity.getId(),
+                            groupEntity.getPosition().getX(), groupEntity.getPosition().getY(), PortComponentEnum.TASK_OUTPUT_PORT_COMPONENT);
+                }
+
+                groupEntityId = groupEntity.getId();
+                taskGroupEntityId = taskGroupEntity.getId();
+
+                //5. 创建组件
+
+                List<ProcessorEntity> processors = buildProcessorVersion2(groupEntity.getId(), configDTO, taskGroupEntity.getId(), sourceId, dbPool.get(1).getId(), cfgDbPool.getId(), appNifiSettingPO, dto);
+                enabledProcessor(taskGroupEntity.getId(), processors);
+                //7. 如果是接入,同步一次,然后把调度组件停掉
+                if (dto.groupStructureId == null && dto.openTransmission) {
+                    String topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type.getValue() + "." + dto.appId + "." + dto.id;
+                    int value = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
+                    if (Objects.equals(value, OlapTableEnum.KPI)) {
+                        topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.KPI.getValue() + "." + dto.appId + "." + dto.id;
+                    }
+                    KafkaReceiveDTO kafkaRkeceiveDTO = KafkaReceiveDTO.builder().build();
+                    kafkaRkeceiveDTO.topic = topicName;
+                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    kafkaRkeceiveDTO.start_time = simpleDateFormat.format(new Date());
+                    kafkaRkeceiveDTO.pipelTaskTraceId = UUID.randomUUID().toString();
+                    kafkaRkeceiveDTO.fidata_batch_code = kafkaRkeceiveDTO.pipelTaskTraceId;
+                    kafkaRkeceiveDTO.pipelStageTraceId = UUID.randomUUID().toString();
+                    kafkaRkeceiveDTO.ifTaskStart = true;
+                    kafkaRkeceiveDTO.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
+                    //pc.universalPublish(kafkaRkeceiveDTO);
+                    kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaRkeceiveDTO));
+                }
+
+                //7. 回写id
+                savaNifiConfig(cfgDbPool.getId(), ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID);
+                if (Objects.equals(dto.synchronousTypeEnum.getName(), SynchronousTypeEnum.PGTOPG.getName())) {
+                    savaNifiConfig(dbPool.get(1).getId(), ComponentIdTypeEnum.PG_DW_DB_POOL_COMPONENT_ID);
+                } else if (Objects.equals(dto.synchronousTypeEnum.getName(), SynchronousTypeEnum.PGTODORIS.getName())) {
+                    savaNifiConfig(dbPool.get(1).getId(), ComponentIdTypeEnum.DORIS_OLAP_DB_POOL_COMPONENT_ID);
+                    savaNifiConfig(dbPool.get(0).getId(), ComponentIdTypeEnum.PG_DW_DB_POOL_COMPONENT_ID);
+                }
+            }
+            return resultEnum;
+        } catch (Exception e) {
+            resultEnum = ResultEnum.ERROR;
+            modelPublishStatusDTO.publish = 3;
             modelPublishStatusDTO.publishErrorMsg = StackTraceHelper.getStackTraceInfo(e);
             if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
                 client.updateTablePublishStatus(modelPublishStatusDTO);
@@ -1146,7 +1303,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             componentConnector(groupId, logProcessor.getId(), delSqlRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
         }
         //------------------------------------------
-        if (dto.excelFlow) {
+        log.info("是否调用数据安全接口，{}", enable);
+        if (dto.excelFlow && enable) {
             //ftp文件拷贝
             ProcessorEntity replaceTextForFtpProcess = replaceTextForFtpProcess(config, groupId, dto);
             tableNifiSettingPO.replaceTextForFtpProcessorId = replaceTextForFtpProcess.getId();
@@ -1156,6 +1314,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             componentConnector(groupId, replaceTextForFtpProcess.getId(), invokeHTTPForFtpProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
             res.add(replaceTextForFtpProcess);
             res.add(invokeHTTPForFtpProcessor);
+        } else {
+            tableNifiSettingPO.replaceTextForFtpProcessorId = null;
+            tableNifiSettingPO.invokeHttpForFtpProcessorId = null;
         }
         //连接器
         componentsConnector(groupId, logProcessor.getId(), supervisionId, autoEndBranchTypeEnums);
@@ -1172,6 +1333,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 res.addAll(excelProcessorEntity);
             } else {
                 executeSQLRecord = createExecuteSQLRecord(appGroupId, config, groupId, dto, sourceDbPoolId, tableNifiSettingPO);
+                componentsConnector(groupId, executeSQLRecord.getId(), supervisionId, autoEndBranchTypeEnums);
             }
 
         }
@@ -1593,6 +1755,11 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     }
 
     public List<ProcessorEntity> createExcelProcessorEntity(String appGroupId, String groupId, DataAccessConfigDTO config, TableNifiSettingPO tableNifiSettingPO, String supervisionId, List<AutoEndBranchTypeEnum> autoEndBranchTypeEnums, BuildNifiFlowDTO dto) {
+        config.targetDsConfig.tableFieldsList.stream().filter(Objects::nonNull)
+                .forEach(e -> {
+                    e.fieldName = e.fieldName.replaceAll(" ", "_");
+                    e.sourceFieldName = e.fieldName;
+                });
         List<ProcessorEntity> processorEntities = new ArrayList<>();
         ProcessorEntity getFTPProcessor = null;
         //getftp组件
@@ -1610,7 +1777,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //componentsConnector(groupId, getFTPProcessor.getId(), supervisionId, autoEndBranchTypeEnums);
         tableNifiSettingPO.getFtpProcessorId = getFTPProcessor.getId();
         //ToCSV
-        ProcessorEntity convertExcelToCSVProcessor = createConvertExcelToCSVProcessor(groupId);
+        ProcessorEntity convertExcelToCSVProcessor = createConvertExcelToCSVProcessor(groupId, ftpConfig);
         componentsConnector(groupId, convertExcelToCSVProcessor.getId(), supervisionId, autoEndBranchTypeEnums);
         tableNifiSettingPO.convertExcelToCsvProcessorId = convertExcelToCSVProcessor.getId();
         //连接器
@@ -1680,7 +1847,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildFetchSFTPProcessor.details = "query_phase";
         buildFetchSFTPProcessor.hostname = ftpConfig.hostname;
         buildFetchSFTPProcessor.password = ftpConfig.password;
-        buildFetchSFTPProcessor.privateKeyPath = ftpConfig.linuxPath + ftpConfig.fileName;
+        buildFetchSFTPProcessor.privateKeyPath = StringUtils.isEmpty(ftpConfig.fileName) ? null : (ftpConfig.fileName + ftpConfig.fileName);
         buildFetchSFTPProcessor.port = ftpConfig.port;
         buildFetchSFTPProcessor.remoteFile = ftpConfig.remotePath + "/" + ftpConfig.fileFilterRegex;
         buildFetchSFTPProcessor.username = ftpConfig.username;
@@ -1693,15 +1860,18 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         return processorEntityBusinessResult.data;
     }
 
-    public ProcessorEntity createConvertExcelToCSVProcessor(String groupId) {
+    public ProcessorEntity createConvertExcelToCSVProcessor(String groupId, FtpConfig ftpConfig) {
+        log.info("Ftp连接信息配置，{}", JSON.toJSONString(ftpConfig));
         BuildConvertExcelToCSVProcessorDTO buildConvertExcelToCSVrocessorDTO = new BuildConvertExcelToCSVProcessorDTO();
         buildConvertExcelToCSVrocessorDTO.csvFormat = "excel";
         buildConvertExcelToCSVrocessorDTO.formatCellValues = true;
         buildConvertExcelToCSVrocessorDTO.includeHeaderLine = true;
-        buildConvertExcelToCSVrocessorDTO.numberOfRowsToSkip = 1;
+//        buildConvertExcelToCSVrocessorDTO.numberOfRowsToSkip = 1;
         buildConvertExcelToCSVrocessorDTO.details = "transition_phase";
         buildConvertExcelToCSVrocessorDTO.groupId = groupId;
         buildConvertExcelToCSVrocessorDTO.name = "ConvertExcelToCSV";
+        buildConvertExcelToCSVrocessorDTO.sheetName = ftpConfig.sheetName;
+        buildConvertExcelToCSVrocessorDTO.startLine = String.valueOf(ftpConfig.startLine);
         buildConvertExcelToCSVrocessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2, 9);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildConvertExcelToCSVProcess(buildConvertExcelToCSVrocessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
@@ -2365,6 +2535,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         callDbProcedureProcessorDTO.executsql = executsql;
         callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
         callDbProcedureProcessorDTO.haveNextOne = true;
+        callDbProcedureProcessorDTO.sqlPreQuery = buildNifiFlow.customScriptBefore;
+        callDbProcedureProcessorDTO.sqlPostQuery = buildNifiFlow.customScriptAfter;
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;
@@ -2531,6 +2703,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
         querySqlDto.name = "Exec Target Delete";
         querySqlDto.details = "query_phase";
+        querySqlDto.postSql = buildNifiFlow.whereScript;
+        querySqlDto.preSql = buildNifiFlow.buildTableSql;
         querySqlDto.groupId = groupId;
         querySqlDto.querySql = componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName(), buildNifiFlow);
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {

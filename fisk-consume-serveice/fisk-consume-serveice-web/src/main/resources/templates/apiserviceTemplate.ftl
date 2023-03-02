@@ -175,7 +175,8 @@
                     <b style="font-size: 12px">${apiCatalogueItem.catalogueIndex}</b>&nbsp;&nbsp;${apiCatalogueItem.catalogueName}
                 </li>
             <#elseif apiCatalogueItem.grade  == 3>
-                <li>&nbsp;&nbsp;<b style="font-size: 12px;">${apiCatalogueItem.catalogueIndex}</b>&nbsp;&nbsp;${apiCatalogueItem.catalogueName}
+                <li>&nbsp;&nbsp;<b
+                            style="font-size: 12px;">${apiCatalogueItem.catalogueIndex}</b>&nbsp;&nbsp;${apiCatalogueItem.catalogueName}
                 </li>
             </#if>
         </#list>
@@ -244,9 +245,9 @@
         <div>
             <p style="text-indent: 2em;font-size: 12px">${prdAddress}</p>
         </div>
-<#--        <div>-->
-<#--            <p style="text-indent: 2em;font-size: 12px">${prdAddress}</p>-->
-<#--        </div>-->
+        <#--        <div>-->
+        <#--            <p style="text-indent: 2em;font-size: 12px">${prdAddress}</p>-->
+        <#--        </div>-->
     </div>
     <#list apiBasicInfoDTOS as apiBasicItem>
         <div>
@@ -346,15 +347,15 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <#list apiBasicItem.apiRequestDTOS as apiRequestItem>
-                        <tr style="${apiRequestItem.trStyle!}">
+                    <#list apiBasicItem.apiRequestDTOS_Fixed as apiRequestItem_Fixed>
+                        <tr style="${apiRequestItem_Fixed.trStyle!}">
                             <td style="border-collapse: collapse;
             border: 1px solid #c6c6c6;
             padding: 8px 9px;
             font-size: 12px;
             font-weight: normal;
             text-align: center;
-            word-break: break-all;">${apiRequestItem.parmName!}
+            word-break: break-all;">${apiRequestItem_Fixed.parmName!}
                             </td>
                             <td style="border-collapse: collapse;
             border: 1px solid #c6c6c6;
@@ -362,7 +363,7 @@
             font-size: 12px;
             font-weight: normal;
             text-align: center;
-            word-break: break-all;">${apiRequestItem.isRequired!}
+            word-break: break-all;">${apiRequestItem_Fixed.isRequired!}
                             </td>
                             <td style="border-collapse: collapse;
             border: 1px solid #c6c6c6;
@@ -370,7 +371,7 @@
             font-size: 12px;
             font-weight: normal;
             text-align: center;
-            word-break: break-all;">${apiRequestItem.parmType!}
+            word-break: break-all;">${apiRequestItem_Fixed.parmType!}
                             </td>
                             <td style="border-collapse: collapse;
             border: 1px solid #c6c6c6;
@@ -378,13 +379,98 @@
             font-size: 12px;
             font-weight: normal;
             text-align: center;
-            word-break: break-all;">${apiRequestItem.parmDesc!}
+            word-break: break-all;">${apiRequestItem_Fixed.parmDesc!}
                             </td>
                         </tr>
                     </#list>
                     </tbody>
                 </table>
             </div>
+
+            <#if apiBasicItem.apiRequestDTOS?? && (apiBasicItem.apiRequestDTOS?size>0)>
+                <div>
+                    <p>parmList参数说明</p>
+                </div>
+                <div>
+                    <table style="border-collapse: collapse; margin: auto; border: 1px solid #c6c6c6;width: 100%">
+                        <thead>
+                        <tr>
+                            <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">参数名
+                            </th>
+                            <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">必填
+                            </th>
+                            <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">类型
+                            </th>
+                            <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">说明
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <#list apiBasicItem.apiRequestDTOS as apiRequestItem>
+                            <tr style="${apiRequestItem.trStyle!}">
+                                <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${apiRequestItem.parmName!}
+                                </td>
+                                <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${apiRequestItem.isRequired!}
+                                </td>
+                                <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${apiRequestItem.parmType!}
+                                </td>
+                                <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${apiRequestItem.parmDesc!}
+                                </td>
+                            </tr>
+                        </#list>
+                        </tbody>
+                    </table>
+                </div>
+            </#if>
+
         </div>
         <div>
             <div>
@@ -397,7 +483,7 @@
         </div>
         <div>
             <div>
-                <p style="font-weight: bold;">${apiBasicItem.apiResponseCatalogue}&nbsp;&nbsp;返回参数说明</p>
+                <p style="font-weight: bold;">${apiBasicItem.apiResponseCatalogue}&nbsp;&nbsp;${apiBasicItem.apiResponseHeaderDesc}</p>
             </div>
             <div>
                 <table style="border-collapse: collapse; margin: auto; border: 1px solid #c6c6c6;width: 100%">

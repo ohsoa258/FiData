@@ -146,25 +146,26 @@ public class FactAttributeImpl
         }
         // TODO 添加事实字段(新增了config_details字段,用于存维度key的json连线配置信息)
         List<FactAttributePO> poList = FactAttributeMap.INSTANCES.addDtoToPoList(dto.list);
-        poList.stream().map(e->e.factId=dto.factId).collect(Collectors.toList());
+        poList.stream().map(e -> e.factId = dto.factId).collect(Collectors.toList());
         if (!this.saveOrUpdateBatch(poList)) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        //修改发布状态
+        factPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
+        factPo.dimensionKeyScript = dto.dimensionKeyScript;
+        if (factMapper.updateById(factPo) == 0) {
+            throw new FkException(ResultEnum.PUBLISH_FAILURE);
         }
         //是否发布
         if (dto.isPublish) {
             BusinessProcessPublishQueryDTO queryDTO = new BusinessProcessPublishQueryDTO();
             List<Integer> dimensionIds = new ArrayList<>();
             dimensionIds.add(dto.factId);
-            //修改发布状态
-            factPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
-            factPo.dimensionKeyScript = dto.dimensionKeyScript;
-            if (factMapper.updateById(factPo) == 0) {
-                throw new FkException(ResultEnum.PUBLISH_FAILURE);
-            }
+
             queryDTO.factIds = dimensionIds;
             queryDTO.businessAreaId = factPo.businessId;
-            queryDTO.remark=dto.remark;
-            queryDTO.syncMode=dto.syncModeDTO.syncMode;
+            queryDTO.remark = dto.remark;
+            queryDTO.syncMode = dto.syncModeDTO.syncMode;
             queryDTO.openTransmission=dto.openTransmission;
             return businessProcess.batchPublishBusinessProcess(queryDTO);
         }
@@ -268,6 +269,7 @@ public class FactAttributeImpl
         }
         data.sqlScript = po.sqlScript;
         data.dataSourceId = po.dataSourceId;
+        data.dimensionKeyScript = po.dimensionKeyScript;
         QueryWrapper<FactAttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(FactAttributePO::getFactId, factId);
         List<FactAttributePO> list = mapper.selectList(queryWrapper);

@@ -9,8 +9,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.dataaccess.client.DataAccessClient;
-import com.fisk.dataaccess.dto.app.AppRegistrationInfoDTO;
+import com.fisk.common.service.accessAndTask.DataTranDTO;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.businessprocess.*;
@@ -48,6 +47,7 @@ import com.fisk.datamodel.mapper.fact.FactMapper;
 import com.fisk.datamodel.service.IBusinessProcess;
 import com.fisk.datamodel.service.impl.CustomScriptImpl;
 import com.fisk.datamodel.service.impl.TableHistoryImpl;
+import com.fisk.datamodel.service.impl.dimension.DimensionFolderImpl;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
@@ -99,13 +99,13 @@ public class BusinessProcessImpl
     @Resource
     TableHistoryImpl tableHistory;
     @Resource
+    DimensionFolderImpl dimensionFolder;
+    @Resource
     FactImpl factImpl;
     @Resource
     CustomScriptImpl customScript;
     @Resource
     SyncModeMapper syncModeMapper;
-    @Resource
-    DataAccessClient dataAccessClient;
 
     @Override
     public IPage<BusinessProcessDTO> getBusinessProcessList(QueryDTO dto) {
@@ -193,14 +193,17 @@ public class BusinessProcessImpl
     public ResultEnum batchPublishBusinessProcess(BusinessProcessPublishQueryDTO dto)
     {
         try {
-            BusinessAreaPO businessAreaPo=businessAreaMapper.selectById(dto.businessAreaId);
+            BusinessAreaPO businessAreaPo = businessAreaMapper.selectById(dto.businessAreaId);
             if (businessAreaPo == null) {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
+
+            dimensionFolder.getDwDbType(targetDbId);
+
             //获取业务过程下所有事实
-            QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
-            queryWrapper.in("id",dto.factIds);
-            List<FactPO> factPoList=factMapper.selectList(queryWrapper);
+            QueryWrapper<FactPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.in("id", dto.factIds);
+            List<FactPO> factPoList = factMapper.selectList(queryWrapper);
             if (CollectionUtils.isEmpty(factPoList)) {
                 throw new FkException(ResultEnum.PUBLISH_FAILURE, "事实表为空");
             }
@@ -246,16 +249,20 @@ public class BusinessProcessImpl
                 // 封装的事实字段表集合
                 ModelPublishTableDTO pushDto = new ModelPublishTableDTO();
                 pushDto.tableId = Integer.parseInt(String.valueOf(item.id));
-                pushDto.tableName = item.factTabName;
+                pushDto.tableName = dimensionFolder.convertName(item.factTabName);
                 pushDto.createType = CreateTypeEnum.CREATE_FACT.getValue();
-                ResultEntity<Map<String, String>> converMap = publishTaskClient.converSql(pushDto.tableName, item.sqlScript, "", null);
+                DataTranDTO dtDto = new DataTranDTO();
+                dtDto.tableName = pushDto.tableName;
+                dtDto.querySql = item.sqlScript;
+                Map<String, String> converSql = publishTaskClient.converSql(dtDto).data;
+                ResultEntity<Map<String, String>> converMap = publishTaskClient.converSql(dtDto);
                 Map<String, String> data1 = converMap.data;
                 pushDto.queryEndTime = data1.get(SystemVariableTypeEnum.END_TIME.getValue());
                 pushDto.sqlScript = data1.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
                 pushDto.queryStartTime = data1.get(SystemVariableTypeEnum.START_TIME.getValue());
 
                 //关联维度键脚本
-                pushDto.factUpdateSql = factAttribute.buildFactUpdateSql(Math.toIntExact(item.id));
+                pushDto.factUpdateSql = item.dimensionKeyScript;
 
                 /*
                 // 关联建模数据来源id——应用appId修改为dataSourceId后，该段代码暂时不用
@@ -277,14 +284,18 @@ public class BusinessProcessImpl
                 customScriptDto.type = 2;
                 customScriptDto.tableId = Integer.parseInt(String.valueOf(item.id));
                 customScriptDto.execType = 1;
-                pushDto.customScript = customScript.getBatchScript(customScriptDto);
+
+                String beforeCustomScript = customScript.getBatchScript(customScriptDto);
+                if (!StringUtils.isEmpty(beforeCustomScript)) {
+                    pushDto.customScript = beforeCustomScript;
+                }
 
                 customScriptDto.execType = 2;
 
                 //自定义脚本
                 String batchScript = customScript.getBatchScript(customScriptDto);
                 if (!StringUtils.isEmpty(batchScript)) {
-                    pushDto.factUpdateSql += batchScript;
+                    pushDto.customScriptAfter = batchScript;
                 }
 
                 //获取事实表同步方式
@@ -329,9 +340,9 @@ public class BusinessProcessImpl
 
     public ModelPublishFieldDTO pushField(FactAttributePO attributePo){
         ModelPublishFieldDTO fieldDTO=new ModelPublishFieldDTO();
-        fieldDTO.fieldId=attributePo.id;
-        fieldDTO.fieldEnName=attributePo.factFieldEnName;
-        fieldDTO.fieldType=attributePo.factFieldType;
+        fieldDTO.fieldId = attributePo.id;
+        fieldDTO.fieldEnName = dimensionFolder.convertName(attributePo.factFieldEnName);
+        fieldDTO.fieldType = attributePo.factFieldType;
         fieldDTO.fieldLength=attributePo.factFieldLength;
         fieldDTO.attributeType=attributePo.attributeType;
         fieldDTO.sourceFieldName=attributePo.sourceFieldName;
