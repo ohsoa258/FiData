@@ -1,6 +1,7 @@
 package com.fisk.common.core.utils;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.utils.Dto.SqlParmDto;
 import com.fisk.common.core.utils.Dto.SqlWhereDto;
 import com.google.common.base.Joiner;
@@ -62,13 +63,17 @@ public class SqlParmUtils {
      * @param symbol 符号
      * @return String
      */
-    public static String SqlParams(List<SqlParmDto> list, String repSql, String symbol) {
+    public static String SqlParams(List<SqlParmDto> list, String repSql, String symbol, DataSourceTypeEnum dataSourceType) {
         String sql = repSql;
         if (CollectionUtils.isEmpty(list) || sql == null || sql.isEmpty())
             return sql;
+        String flag = "";
+        if (dataSourceType == DataSourceTypeEnum.MYSQL || dataSourceType == DataSourceTypeEnum.SQLSERVER) {
+            flag = "N";
+        }
         for (SqlParmDto item : list) {
             String targetKey = String.format("%s%s", symbol, item.parmName);
-            String replacement = StringUtils.isEmpty(item.parmValue) ? "NULL" : "N'" + item.parmValue + "'";
+            String replacement = StringUtils.isEmpty(item.parmValue) ? "NULL" : flag + "'" + item.parmValue + "'";
             sql = sql.replace(targetKey, replacement);
         }
         return sql;
