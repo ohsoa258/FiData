@@ -211,7 +211,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
 
             // 第八步：替换SQL中的参数
             List<SqlParmDto> sqlParamsDto = ApiParmMap.INSTANCES.listPoToSqlParmDto(parmList);
-            String s = SqlParmUtils.SqlParams(sqlParamsDto, sql, "@");
+            String s = SqlParmUtils.SqlParams(sqlParamsDto, sql, "@", dataSourceConVO.getConType());
             if (s != null && s.length() > 0)
                 sql = s;
 
