@@ -372,9 +372,9 @@ public class AppRegistrationImpl
         DataSourceResultDTO dto = new DataSourceResultDTO();
 
         if (data.id != null && data.id != 0) {
-            ResultEntity<Object> objectResultEntity = userClient.editData(data);
+            ResultEntity<Object> objectResultEntity = publishTaskClient.editDataSetParams(data);
             if (objectResultEntity.code != ResultEnum.SUCCESS.getCode()) {
-                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+                throw new FkException(ResultEnum.UPDATE_DATA_ERROR);
             }
             dto.id = (int) data.id;
             return dto;

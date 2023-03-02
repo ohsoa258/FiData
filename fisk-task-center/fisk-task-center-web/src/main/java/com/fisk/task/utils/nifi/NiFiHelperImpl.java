@@ -2097,7 +2097,7 @@ public class NiFiHelperImpl implements INiFiHelper {
                         existent = true;
                     }
                 }
-                if (!existent) {
+                if (existent) {
                     VariableEntity variableEntity = new VariableEntity();
                     VariableDTO variableDTO = new VariableDTO();
                     variableDTO.setName(key);
@@ -2171,7 +2171,7 @@ public class NiFiHelperImpl implements INiFiHelper {
             RevisionDTO processGroupRevision = newVariableRegistry.getProcessGroupRevision();
             variableRegistryEntity.setProcessGroupRevision(processGroupRevision);
             log.info(JSON.toJSONString(variableRegistryEntity));
-            NifiHelper.getProcessGroupsApi().updateVariableRegistry(variableRegistryEntity.getVariableRegistry().getProcessGroupId(), newVariableRegistryEntity);
+            NifiHelper.getProcessGroupsApi().submitUpdateVariableRegistryRequest(variableRegistryEntity.getVariableRegistry().getProcessGroupId(), newVariableRegistryEntity);
         } catch (ApiException e) {
             log.error("创建全局变量失败", e);
         }
