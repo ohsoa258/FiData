@@ -81,8 +81,6 @@ import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL;
@@ -391,7 +389,7 @@ public class TableFieldsImpl
             table.setName(item.name);
             table.setComment(String.valueOf(appId));
             table.setDisplayName(item.name);
-            table.setComment("stg");
+            table.setDescription("stg");
             tableList.add(table);
         }
         //list.get(0).description = "stg";
@@ -788,7 +786,7 @@ public class TableFieldsImpl
             table.setDescription(tableAccess.getTableDes());
             table.setComment(String.valueOf(app.getId()));
             table.setDisplayName(tableAccess.displayName);
-            table.setOwner(app.appPrincipal);
+            table.setOwner(app.createUser);
 
             //所属人
             /*userIds.add(Long.parseLong(tableAccess.createUser));

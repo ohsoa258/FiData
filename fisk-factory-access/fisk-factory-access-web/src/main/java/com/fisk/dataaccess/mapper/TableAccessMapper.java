@@ -146,7 +146,8 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
             "a.table_des from tb_table_access a \n" +
             "join tb_app_datasource b on a.app_data_source_id = b.id \n" +
             "join tb_app_registration c on c.id = b.app_id\n" +
-            "where a.del_flag=1 and a.publish=1")
+            "where a.del_flag=1 ")
+    //and a.publish=1
     List<DataAccessSourceTableDTO> listTableMetaData();
 
     /**

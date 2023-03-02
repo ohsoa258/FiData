@@ -1,6 +1,5 @@
 package com.fisk.datamanagement.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.datamanagement.dto.MetadataEntityClassificationAttributeMapDTO;
@@ -16,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -40,11 +40,15 @@ public class MetadataEntityClassificationAttributeMapImpl
             return mapList;
         }
 
-        QueryWrapper<MetadataEntityClassificationAttributePO> queryWrapper = new QueryWrapper<>();
-        List<MetadataEntityClassificationAttributePO> poList = mapper.selectList(queryWrapper);
+        List<MetadataClassificationMapInfoDTO> classificationMapInfoDTOList = metaDataClassificationMap
+                .stream()
+                .filter(e -> e.metadataEntityId.equals(metadataEntityId))
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(classificationMapInfoDTOList)) {
+            return mapList;
+        }
 
-
-        for (MetadataClassificationMapInfoDTO item : metaDataClassificationMap) {
+        for (MetadataClassificationMapInfoDTO item : classificationMapInfoDTOList) {
             Map map = new HashMap();
             map.put("typeName", item.name);
             map.put("entityGuid", metadataEntityId);

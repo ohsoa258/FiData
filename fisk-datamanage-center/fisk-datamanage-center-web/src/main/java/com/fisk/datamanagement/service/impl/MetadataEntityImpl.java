@@ -8,6 +8,7 @@ import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.GenerationRandomUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataBaseAttributeDTO;
@@ -98,6 +99,9 @@ public class MetadataEntityImpl
     MetaDataClassificationMapMapper metaDataClassificationMapMapper;
 
     @Resource
+    UserHelper userHelper;
+
+    @Resource
     UserClient userClient;
     @Resource
     DataAccessClient dataAccessClient;
@@ -116,6 +120,7 @@ public class MetadataEntityImpl
         po.qualifiedName = dto.qualifiedName;
         //父级
         po.parentId = Integer.parseInt(parentEntityId);
+        po.createUser = dto.owner;
 
         boolean save = this.save(po);
         if (!save) {
@@ -1025,7 +1030,7 @@ public class MetadataEntityImpl
         jsonObject.put("guid", po.id);
         jsonObject.put("typeName", EntityTypeEnum.getValue(po.typeId).getName());
         jsonObject.put("status", "ACTIVE");
-        jsonObject.put("displayText", po.displayName);
+        jsonObject.put("displayText", po.name);
 
         JSONObject attribute = new JSONObject();
         attribute.put("description", po.description);
@@ -1128,12 +1133,11 @@ public class MetadataEntityImpl
             entitiesDto.meaningNames = new ArrayList<>();
 
             List<MetaDataGlossaryMapDTO> entityGlossary = metaDataGlossaryMapMapper.getEntityGlossary((int) po.id);
-
             entitiesDto.meaningNames = entityGlossary.stream().map(e -> e.glossaryName).collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(entitiesDto.meaningNames)) {
                 entitiesDto.meanings = new ArrayList<>();
                 for (MetaDataGlossaryMapDTO item : entityGlossary) {
-                    GlossaryPO infoByName = glossary.getInfoByName(item.metadataEntityId);
+                    GlossaryPO infoByName = glossary.getInfoByName(item.glossaryName);
 
                     GlossaryDTO glossaryDTO = new GlossaryDTO();
                     glossaryDTO.termGuid = String.valueOf(infoByName.id);
