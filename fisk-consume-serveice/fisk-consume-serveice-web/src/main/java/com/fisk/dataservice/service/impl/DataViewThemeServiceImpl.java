@@ -564,6 +564,7 @@ public class DataViewThemeServiceImpl
                     currList.add(po);
                 }else{
                     po.setId(dto.getId());
+                    po.setDelFlag(DelFlagEnum.NORMAL_FLAG.getValue());
                     // 判断是否对账号或密码进行了修改
                     DataViewAccountPO accountPO = allList.stream().filter(e -> e.getId() == po.getId()).findFirst().orElse(null);
                     if (accountPO == null){
