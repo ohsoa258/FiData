@@ -169,7 +169,7 @@ public class DataViewThemeServiceImpl
             }
         }else{
             for (DataViewAccountDTO dto : dtoList){
-                if (StringUtils.isEmpty(dto.getAccountName()) || StringUtils.isEmpty(dto.getAccountDesc())){
+                if (StringUtils.isEmpty(dto.getAccountName()) || StringUtils.isEmpty(dto.getAccountPsd())){
                     throw new FkException(ResultEnum.DS_VIEW_THEME_ACCOUNT_ERROR);
                 }
                 DataViewAccountPO po = new DataViewAccountPO();
