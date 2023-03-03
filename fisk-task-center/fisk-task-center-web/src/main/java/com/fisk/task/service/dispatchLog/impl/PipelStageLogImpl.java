@@ -97,12 +97,12 @@ public class PipelStageLogImpl extends ServiceImpl<PipelStateLogMapper, PipelSta
 
     @Override
     public List<String> getPipelStates(String taskPipelineId) {
-        List<PipelTaskLogPO> taskLogs = iPipelTaskLog.query().eq("task_trace_id", taskPipelineId).list();
-        if (CollectionUtils.isNotEmpty(taskLogs)) {
-            List<String> msg = taskLogs.stream().map(d -> d.msg).collect(Collectors.toList());
+        List<PipelStageLogPO> pipelStageLogs = this.query().eq("task_trace_id", taskPipelineId).list();
+        if (CollectionUtils.isNotEmpty(pipelStageLogs)) {
+            List<String> msg = pipelStageLogs.stream().map(d -> d.msg).collect(Collectors.toList());
             return msg;
         }
-        return null;
+        return new ArrayList<>();
     }
 
 
