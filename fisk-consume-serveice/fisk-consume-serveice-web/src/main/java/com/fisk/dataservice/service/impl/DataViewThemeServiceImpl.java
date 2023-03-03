@@ -528,78 +528,50 @@ public class DataViewThemeServiceImpl
         List<DataViewAccountPO> allList = dataViewAccountMapper.selectList(qw);
         log.info("原始数据{}", JSON.toJSONString(allList));
 
-        // 编辑主题无用户数据，则删除历史数据
-        if (CollectionUtils.isEmpty(list) && !CollectionUtils.isEmpty(allList)){
-            // 删除被删除的用户数据
-            dataViewAccountMapper.deleteBatchIds(allList.stream().map(DataViewAccountPO::getId).collect(Collectors.toList()));
-
-            // 删除系统数据库用户
-            removeLogin(allList, dataSourceDTO);
-        }else{
-            // 编辑主题有用户数据，则更新数据
-            List<DataViewAccountPO> currList = new ArrayList<>();
-            for (DataViewAccountDTO dto : list){
-                if (StringUtils.isEmpty(dto.getAccountName()) || StringUtils.isEmpty(dto.getAccountPsd())){
-                    throw new FkException(ResultEnum.DS_VIEW_THEME_ACCOUNT_ERROR);
-                }
-
-                qw = new QueryWrapper<>();
-                DataViewAccountPO po = new DataViewAccountPO();
-                po.setViewThemeId(viewThemeId);
-                po.setAccountName(dto.getAccountName());
-                po.setAccountDesc(dto.getAccountDesc());
-                po.setAccountPsd(dto.getAccountPsd());
-                po.setJurisdiction(AccountJurisdictionEnum.READ_ONLY.getName());
-                if (dto.getId() == null){
-                    // 新增用户
-                    qw.lambda().eq(DataViewAccountPO::getAccountName, dto.getAccountName());
-                    DataViewAccountPO preModel = dataViewAccountMapper.selectOne(qw);
-                    if (!Objects.isNull(preModel)){
-                        throw new FkException(ResultEnum.SAVE_DATA_ERROR, dto.getAccountName() + "：该账号名称已存在");
-                    }
-                    int save = dataViewAccountMapper.insert(po);
-                    if (save <= 0){
-                        throw new FkException(ResultEnum.DA_VIEWTHEME_UPDATE_ACCOUNT_ERROR);
-                    }
-                    currList.add(po);
-                }else{
-                    po.setId(dto.getId());
-                    po.setDelFlag(DelFlagEnum.NORMAL_FLAG.getValue());
-                    // 判断是否对账号或密码进行了修改
-                    DataViewAccountPO accountPO = allList.stream().filter(e -> e.getId() == po.getId()).findFirst().orElse(null);
-                    if (accountPO == null){
-                        continue;
-                    }
-                    if (accountPO.getId() != po.getId() && accountPO.getAccountName().equals(po.getAccountName())){
-                        throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "账号名称已存在");
-                    }
-                    if (!accountPO.getAccountName().equals(po.getAccountName()) || !accountPO.getAccountPsd().equals(po.getAccountPsd())){
-                        currList.add(po);
-                    }
-                    int update = dataViewAccountMapper.updateById(po);
-                    if (update <= 0){
-                        throw new FkException(ResultEnum.UPDATE_DATA_ERROR);
-                    }
-                }
-            }
-            // 过滤出需要删除的数据
-            List<DataViewAccountPO> list1 = currList.stream().filter(item -> item.getId() != 0).collect(Collectors.toList());
-            List<Long> idList = list1.stream().map(DataViewAccountPO::getId).collect(Collectors.toList());
-
-            List<DataViewAccountPO> list2 = null;
-            if (!CollectionUtils.isEmpty(allList)){
-                list2 = allList.stream().filter(item -> !idList.contains(item.getId())).collect(Collectors.toList());
-                // 删除被删除的用户数据
-                dataViewAccountMapper.deleteBatchIds(list2.stream().map(DataViewAccountPO::getId).collect(Collectors.toList()));
-            }
-
-            if (!CollectionUtils.isEmpty(list2)){
-                // 删除系统数据库用户
-                removeLogin(list2, dataSourceDTO);
-            }
-            // 创建新用户数据
-            saveRelationAccount(DataViewMap.INSTANCES.accountListPoToDto(currList), viewThemeId, dataSourceDTO, "update");
+        if (CollectionUtils.isEmpty(list) && CollectionUtils.isEmpty(allList)){
+            return;
         }
+
+        if (CollectionUtils.isEmpty(list) && !CollectionUtils.isEmpty(allList)){
+            dataViewAccountMapper.deleteBatchIds(allList.stream().map(DataViewAccountPO::getId).collect(Collectors.toList()));
+            removeLogin(allList, dataSourceDTO);
+            return;
+        }
+
+        if (!CollectionUtils.isEmpty(allList)){
+            dataViewAccountMapper.deleteBatchIds(allList.stream().map(DataViewAccountPO::getId).collect(Collectors.toList()));
+        }
+
+        List<DataViewAccountPO> currList = new ArrayList<>();
+        for (DataViewAccountDTO dto : list){
+            if (StringUtils.isEmpty(dto.getAccountName()) || StringUtils.isEmpty(dto.getAccountPsd())){
+                throw new FkException(ResultEnum.DS_VIEW_THEME_ACCOUNT_ERROR);
+            }
+
+            qw = new QueryWrapper<>();
+            DataViewAccountPO po = new DataViewAccountPO();
+            po.setViewThemeId(viewThemeId);
+            po.setAccountName(dto.getAccountName());
+            po.setAccountDesc(dto.getAccountDesc());
+            po.setAccountPsd(dto.getAccountPsd());
+            po.setJurisdiction(AccountJurisdictionEnum.READ_ONLY.getName());
+            qw.lambda().eq(DataViewAccountPO::getAccountName, dto.getAccountName());
+            DataViewAccountPO preModel = dataViewAccountMapper.selectOne(qw);
+            if (!Objects.isNull(preModel)){
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR, dto.getAccountName() + "：该账号名称已存在");
+            }
+            int save = dataViewAccountMapper.insert(po);
+            if (save <= 0){
+                throw new FkException(ResultEnum.DA_VIEWTHEME_UPDATE_ACCOUNT_ERROR);
+            }
+            currList.add(po);
+        }
+
+        if (CollectionUtils.isEmpty(currList)){
+            return;
+        }
+        removeLogin(currList, dataSourceDTO);
+        saveRelationAccount(DataViewMap.INSTANCES.accountListPoToDto(currList), viewThemeId, dataSourceDTO, "update");
     }
 
     /**
