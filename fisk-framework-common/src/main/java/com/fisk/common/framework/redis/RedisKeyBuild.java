@@ -33,6 +33,16 @@ public class RedisKeyBuild {
     /**
      * 组装redis的key
      *
+     * @param viewThemeId 视图主题id
+     * @return redis key
+     */
+    public static String buildViewThemeDataSourceKey(long viewThemeId) {
+        return RedisKeyEnum.DATASOURCE_VIEW_KEY.getName() + ":" + viewThemeId;
+    }
+
+    /**
+     * 组装redis的key
+     *
      * @param appId 应用id
      * @return redis key
      */
