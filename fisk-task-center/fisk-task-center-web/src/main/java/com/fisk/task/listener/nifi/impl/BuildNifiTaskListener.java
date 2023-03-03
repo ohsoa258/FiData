@@ -655,6 +655,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 }
                 if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
                     modelPublishStatusDTO.subRunId = subRunId;
+                    modelPublishStatusDTO.tableHistoryId = dto.tableHistoryId;
                     client.updateTablePublishStatus(modelPublishStatusDTO);
                 }
                 //7. 回写id
