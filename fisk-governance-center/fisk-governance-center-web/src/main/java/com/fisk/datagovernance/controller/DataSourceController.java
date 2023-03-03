@@ -1,6 +1,6 @@
 package com.fisk.datagovernance.controller;
 
-import com.fisk.common.core.baseObject.dto.PageDTO;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -43,7 +43,7 @@ public class DataSourceController {
 
     @PostMapping("/page")
     @ApiOperation("数据质量，获取所有数据源配置信息")
-    public ResultEntity<PageDTO<DataSourceConVO>> page(@RequestBody DataSourceConQuery query) {
+    public ResultEntity<Page<DataSourceConVO>> page(@RequestBody DataSourceConQuery query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.page(query));
     }
 

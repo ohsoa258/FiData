@@ -4,8 +4,8 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -82,8 +82,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     private RedisTemplate redisTemplate;
 
     @Override
-    public PageDTO<DataSourceConVO> page(DataSourceConQuery query) {
-        PageDTO<DataSourceConVO> pageDTO = new PageDTO<>();
+    public Page<DataSourceConVO> page(DataSourceConQuery query) {
+        Page<DataSourceConVO> pageDTO = new Page<>();
         List<DataSourceConVO> allDataSource = getAllDataSource();
         if (CollectionUtils.isNotEmpty(allDataSource)) {
             allDataSource.forEach(t -> {
@@ -92,7 +92,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 }
             });
         }
-        pageDTO.setItems(allDataSource);
+        pageDTO.setRecords(allDataSource);
         return pageDTO;
     }
 
