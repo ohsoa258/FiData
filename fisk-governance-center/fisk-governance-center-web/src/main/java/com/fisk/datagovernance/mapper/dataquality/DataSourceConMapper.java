@@ -6,9 +6,7 @@ import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConQuery;
 import com.fisk.datagovernance.dto.dataquality.datasource.TableRuleCountDTO;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -26,6 +24,15 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
      * @return 查询结果
      */
     Page<DataSourceConVO> listDataSourceCon(Page<DataSourceConVO> page, @Param("query") DataSourceConQuery query);
+
+    /**
+     * 新增一条数据并返回生成的主键id
+     *
+     * @return 执行结果
+     */
+    @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
+    @Insert("INSERT INTO tb_datasource_config(`datasource_id`, `datasource_type`,  `create_time`, `create_user`, `del_flag`) VALUES (#{datasourceId}, #{datasourceType}, #{createTime}, #{createUser},1);")
+    int insertOne(DataSourceConPO po);
 
     /**
      * 查询FiData数据质量规则

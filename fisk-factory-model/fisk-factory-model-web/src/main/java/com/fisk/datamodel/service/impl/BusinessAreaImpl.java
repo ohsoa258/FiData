@@ -101,6 +101,7 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Lock
@@ -802,8 +803,20 @@ public class BusinessAreaImpl
     private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> buildBusinessChildren(String id, String dourceType, TableBusinessTypeEnum tableBusinessTypeEnum) {
 
         // 建模暂时没有schema的设置
-
         List<BusinessAreaPO> businessPoList = this.query().orderByDesc("create_time").list();
+
+        // 维度文件夹（公共域维度）
+        DimensionFolderPO dimensionFolderPO_Public = null;
+        List<DimensionFolderPO> dimensionFolderPOList_Public = dimensionFolderImpl.query()
+                .eq("share", 1)
+                .list()
+                .stream()
+                .filter(Objects::nonNull).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(dimensionFolderPOList_Public)) {
+            dimensionFolderPO_Public = dimensionFolderPOList_Public.get(0);
+        }
+        DimensionFolderPO finalDimensionFolderPO_Public = dimensionFolderPO_Public;
+        final boolean[] isSetTb_Public = {false};
 
         HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = new HashMap<>();
         List<FiDataMetaDataTreeDTO> key = new ArrayList<>();
@@ -824,82 +837,34 @@ public class BusinessAreaImpl
 
                     List<FiDataMetaDataTreeDTO> folderList = new ArrayList<>();
 
-                    // 第四层 - 1: 维度文件夹
-                    List<FiDataMetaDataTreeDTO> dimensionFolderTreeList = dimensionFolderImpl.query()
+                    List<FiDataMetaDataTreeDTO> dimensionFolderTreeList = new ArrayList<>();
+
+                    // 第四层 - 1: 维度文件夹（公共域维度）
+                    if (finalDimensionFolderPO_Public != null) {
+                        FiDataMetaDataTreeDTO dimensionFolderTreeDto_public = getDimensionFolder(uuid_businessId, finalDimensionFolderPO_Public, id);
+                        // 表字段信息单独再保存一份
+                        if (dimensionFolderTreeDto_public != null && !isSetTb_Public[0] && !CollectionUtils.isEmpty(dimensionFolderTreeDto_public.getChildren())) {
+                            isSetTb_Public[0] = true;
+                            key.addAll(dimensionFolderTreeDto_public.getChildren());
+                        }
+                        dimensionFolderTreeList.add(dimensionFolderTreeDto_public);
+                    }
+
+                    // 第四层 - 1: 维度文件夹（当前域维度）
+                    List<DimensionFolderPO> dimensionFolderPOS = dimensionFolderImpl.query()
                             .eq("business_id", business.id)
                             .list()
                             .stream()
-                            .filter(Objects::nonNull)
-                            .map(dimensionFolder -> {
-                                FiDataMetaDataTreeDTO dimensionFolderTreeDto = new FiDataMetaDataTreeDTO();
-                                String uuid_dimensionFolderId = UUID.randomUUID().toString().replace("-", "");
-                                dimensionFolderTreeDto.setId(uuid_dimensionFolderId); //  String.valueOf(dimensionFolder.id)
-                                dimensionFolderTreeDto.setParentId(uuid_businessId); //  String.valueOf(business.id)
-                                dimensionFolderTreeDto.setLabel(dimensionFolder.dimensionFolderCnName);
-                                dimensionFolderTreeDto.setLabelAlias(dimensionFolder.dimensionFolderCnName);
-                                dimensionFolderTreeDto.setLabelDesc(dimensionFolder.dimensionFolderDesc);
-                                dimensionFolderTreeDto.setLevelType(LevelTypeEnum.FOLDER);
-                                dimensionFolderTreeDto.setSourceId(Integer.parseInt(id));
-                                dimensionFolderTreeDto.setSourceType(1);
-
-                                // 第五层: 维度表
-                                List<FiDataMetaDataTreeDTO> dimensionTreeList = dimensionImpl.query()
-                                        .eq("dimension_folder_id", dimensionFolder.id)
-                                        .list()
-                                        .stream()
-                                        .filter(Objects::nonNull)
-                                        .map(dimension -> {
-                                            FiDataMetaDataTreeDTO dimensionTreeDto = new FiDataMetaDataTreeDTO();
-                                            dimensionTreeDto.setId(String.valueOf(dimension.id));
-                                            dimensionTreeDto.setParentId(uuid_dimensionFolderId); // String.valueOf(dimensionFolder.id)
-                                            dimensionTreeDto.setLabel(dimension.dimensionTabName);
-                                            dimensionTreeDto.setLabelAlias(dimension.dimensionTabName);
-                                            dimensionTreeDto.setLabelRelName(dimension.dimensionTabName);
-                                            dimensionTreeDto.setLevelType(LevelTypeEnum.TABLE);
-                                            dimensionTreeDto.setPublishState(String.valueOf(dimension.isPublish != 1 ? 0 : 1));
-                                            dimensionTreeDto.setLabelDesc(dimension.dimensionDesc);
-                                            dimensionTreeDto.setSourceId(Integer.parseInt(id));
-                                            dimensionTreeDto.setSourceType(1);
-                                            dimensionTreeDto.setLabelBusinessType(TableBusinessTypeEnum.DW_DIMENSION.getValue());
-                                            // 第六层: 维度字段
-                                            List<FiDataMetaDataTreeDTO> dimensionAttributeTreeList = dimensionAttribute.query()
-                                                    .eq("dimension_id", dimension.id)
-                                                    .list()
-                                                    .stream()
-                                                    .filter(Objects::nonNull)
-                                                    .map(field -> {
-                                                        FiDataMetaDataTreeDTO dimensionAttributeTreeDto = new FiDataMetaDataTreeDTO();
-                                                        dimensionAttributeTreeDto.setId(String.valueOf(field.id));
-                                                        dimensionAttributeTreeDto.setParentId(String.valueOf(dimension.id));
-                                                        dimensionAttributeTreeDto.setLabel(field.dimensionFieldEnName);
-                                                        dimensionAttributeTreeDto.setLabelAlias(field.dimensionFieldEnName);
-                                                        dimensionAttributeTreeDto.setLevelType(LevelTypeEnum.FIELD);
-                                                        dimensionAttributeTreeDto.setPublishState(String.valueOf(dimension.isPublish != 1 ? 0 : 1));
-                                                        dimensionAttributeTreeDto.setLabelLength(String.valueOf(field.dimensionFieldLength));
-                                                        dimensionAttributeTreeDto.setLabelType(field.dimensionFieldType);
-                                                        dimensionAttributeTreeDto.setLabelDesc(field.dimensionFieldDes);
-                                                        dimensionAttributeTreeDto.setSourceId(Integer.parseInt(id));
-                                                        dimensionAttributeTreeDto.setSourceType(1);
-                                                        dimensionAttributeTreeDto.setLabelBusinessType(TableBusinessTypeEnum.DW_DIMENSION.getValue());
-                                                        dimensionAttributeTreeDto.setParentName(dimension.dimensionTabName);
-                                                        dimensionAttributeTreeDto.setParentNameAlias(dimension.dimensionTabName);
-                                                        dimensionAttributeTreeDto.setParentLabelRelName(dimension.dimensionTabName);
-                                                        return dimensionAttributeTreeDto;
-                                                    }).collect(Collectors.toList());
-
-                                            // 维度表子级
-                                            dimensionTreeDto.setChildren(dimensionAttributeTreeList);
-                                            return dimensionTreeDto;
-                                        }).collect(Collectors.toList());
-
-                                // 维度文件夹子级
-                                dimensionFolderTreeDto.setChildren(dimensionTreeList);
-                                // 表字段信息单独再保存一份
-                                if (!CollectionUtils.isEmpty(dimensionTreeList)) {
-                                    key.addAll(dimensionTreeList);
-                                }
-                                return dimensionFolderTreeDto;
-                            }).collect(Collectors.toList());
+                            .filter(Objects::nonNull).collect(Collectors.toList());
+                    for (DimensionFolderPO dimensionFolder : dimensionFolderPOS) {
+                        FiDataMetaDataTreeDTO dimensionFolderTreeDto = getDimensionFolder(uuid_businessId, dimensionFolder, id);
+                        // 表字段信息单独再保存一份
+                        if (dimensionFolderTreeDto != null &&
+                                !CollectionUtils.isEmpty(dimensionFolderTreeDto.getChildren())) {
+                            key.addAll(dimensionFolderTreeDto.getChildren());
+                        }
+                        dimensionFolderTreeList.add(dimensionFolderTreeDto);
+                    }
 
                     // 第四层 - 2: 事实文件夹
                     List<FiDataMetaDataTreeDTO> businessProcessTreeList = this.businessProcessImpl.query()
@@ -1096,6 +1061,73 @@ public class BusinessAreaImpl
 
         hashMap.put(key, value);
         return hashMap;
+    }
+
+    public FiDataMetaDataTreeDTO getDimensionFolder(String uuid_businessId, DimensionFolderPO dimensionFolder, String id) {
+        FiDataMetaDataTreeDTO dimensionFolderTreeDto = new FiDataMetaDataTreeDTO();
+        String uuid_dimensionFolderId = UUID.randomUUID().toString().replace("-", "");
+        dimensionFolderTreeDto.setId(uuid_dimensionFolderId); //  String.valueOf(dimensionFolder.id)
+        dimensionFolderTreeDto.setParentId(uuid_businessId); //  String.valueOf(business.id)
+        dimensionFolderTreeDto.setLabel(dimensionFolder.dimensionFolderCnName);
+        dimensionFolderTreeDto.setLabelAlias(dimensionFolder.dimensionFolderCnName);
+        dimensionFolderTreeDto.setLabelDesc(dimensionFolder.dimensionFolderDesc);
+        dimensionFolderTreeDto.setLevelType(LevelTypeEnum.FOLDER);
+        dimensionFolderTreeDto.setSourceId(Integer.parseInt(id));
+        dimensionFolderTreeDto.setSourceType(1);
+
+        // 第五层: 维度表
+        List<FiDataMetaDataTreeDTO> dimensionTreeList = dimensionImpl.query()
+                .eq("dimension_folder_id", dimensionFolder.id)
+                .list()
+                .stream()
+                .filter(Objects::nonNull)
+                .map(dimension -> {
+                    FiDataMetaDataTreeDTO dimensionTreeDto = new FiDataMetaDataTreeDTO();
+                    dimensionTreeDto.setId(String.valueOf(dimension.id));
+                    dimensionTreeDto.setParentId(uuid_dimensionFolderId); // String.valueOf(dimensionFolder.id)
+                    dimensionTreeDto.setLabel(dimension.dimensionTabName);
+                    dimensionTreeDto.setLabelAlias(dimension.dimensionTabName);
+                    dimensionTreeDto.setLabelRelName(dimension.dimensionTabName);
+                    dimensionTreeDto.setLevelType(LevelTypeEnum.TABLE);
+                    dimensionTreeDto.setPublishState(String.valueOf(dimension.isPublish != 1 ? 0 : 1));
+                    dimensionTreeDto.setLabelDesc(dimension.dimensionDesc);
+                    dimensionTreeDto.setSourceId(Integer.parseInt(id));
+                    dimensionTreeDto.setSourceType(1);
+                    dimensionTreeDto.setLabelBusinessType(TableBusinessTypeEnum.DW_DIMENSION.getValue());
+                    // 第六层: 维度字段
+                    List<FiDataMetaDataTreeDTO> dimensionAttributeTreeList = dimensionAttribute.query()
+                            .eq("dimension_id", dimension.id)
+                            .list()
+                            .stream()
+                            .filter(Objects::nonNull)
+                            .map(field -> {
+                                FiDataMetaDataTreeDTO dimensionAttributeTreeDto = new FiDataMetaDataTreeDTO();
+                                dimensionAttributeTreeDto.setId(String.valueOf(field.id));
+                                dimensionAttributeTreeDto.setParentId(String.valueOf(dimension.id));
+                                dimensionAttributeTreeDto.setLabel(field.dimensionFieldEnName);
+                                dimensionAttributeTreeDto.setLabelAlias(field.dimensionFieldEnName);
+                                dimensionAttributeTreeDto.setLevelType(LevelTypeEnum.FIELD);
+                                dimensionAttributeTreeDto.setPublishState(String.valueOf(dimension.isPublish != 1 ? 0 : 1));
+                                dimensionAttributeTreeDto.setLabelLength(String.valueOf(field.dimensionFieldLength));
+                                dimensionAttributeTreeDto.setLabelType(field.dimensionFieldType);
+                                dimensionAttributeTreeDto.setLabelDesc(field.dimensionFieldDes);
+                                dimensionAttributeTreeDto.setSourceId(Integer.parseInt(id));
+                                dimensionAttributeTreeDto.setSourceType(1);
+                                dimensionAttributeTreeDto.setLabelBusinessType(TableBusinessTypeEnum.DW_DIMENSION.getValue());
+                                dimensionAttributeTreeDto.setParentName(dimension.dimensionTabName);
+                                dimensionAttributeTreeDto.setParentNameAlias(dimension.dimensionTabName);
+                                dimensionAttributeTreeDto.setParentLabelRelName(dimension.dimensionTabName);
+                                return dimensionAttributeTreeDto;
+                            }).collect(Collectors.toList());
+
+                    // 维度表子级
+                    dimensionTreeDto.setChildren(dimensionAttributeTreeList);
+                    return dimensionTreeDto;
+                }).collect(Collectors.toList());
+
+        dimensionFolderTreeDto.setChildren(dimensionTreeList);
+
+        return dimensionFolderTreeDto;
     }
 
     @Override

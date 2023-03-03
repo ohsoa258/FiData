@@ -1,6 +1,6 @@
 package com.fisk.datagovernance.controller;
 
-import com.fisk.common.core.baseObject.dto.PageDTO;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -43,7 +43,7 @@ public class DataSourceController {
 
     @PostMapping("/page")
     @ApiOperation("数据质量，获取所有数据源配置信息")
-    public ResultEntity<PageDTO<DataSourceConVO>> page(@RequestBody DataSourceConQuery query) {
+    public ResultEntity<Page<DataSourceConVO>> page(@RequestBody DataSourceConQuery query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.page(query));
     }
 
@@ -83,16 +83,10 @@ public class DataSourceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCustomizeMetaData(true));
     }
 
-    @PostMapping("/reloadCustomizeDataSource")
-    @ApiOperation("数据质量，自定义数据库信息同步到redis")
-    public ResultEntity<Object> reloadCustomizeDataSource() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.reloadCustomizeDataSource());
-    }
-
-    @PostMapping("/reloadFiDataDataSource")
-    @ApiOperation("数据质量，FiData数据库信息同步到redis")
-    public ResultEntity<Object> reloadFiDataDataSource() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.reloadFiDataDataSource());
+    @PostMapping("/reloadDataSource")
+    @ApiOperation("数据质量，刷新数据源元数据信息")
+    public ResultEntity<Object> reloadDataSource(@RequestParam("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.reloadDataSource(id));
     }
 
     @PostMapping("/getDataOpsTableSource")

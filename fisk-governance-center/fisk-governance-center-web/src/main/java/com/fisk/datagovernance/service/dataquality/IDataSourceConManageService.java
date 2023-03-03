@@ -1,17 +1,13 @@
 package com.fisk.datagovernance.service.dataquality;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
-import com.fisk.datagovernance.vo.dataquality.datasource.DataExampleSourceVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
-import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceVO;
 
-import java.util.List;
 
 /**
  * 数据源接口
@@ -26,7 +22,7 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      * @param query 查询参数
      * @return 查询结果
      */
-    PageDTO<DataSourceConVO> page(DataSourceConQuery query);
+    Page<DataSourceConVO> page(DataSourceConQuery query);
 
     /**
      * 保存数据
@@ -79,12 +75,5 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      *
      * @return 查询结果
      */
-    Object reloadFiDataDataSource();
-
-    /**
-     * 数据库信息同步到redis
-     *
-     * @return 查询结果
-     */
-    Object reloadCustomizeDataSource();
+    Object reloadDataSource(int id);
 }

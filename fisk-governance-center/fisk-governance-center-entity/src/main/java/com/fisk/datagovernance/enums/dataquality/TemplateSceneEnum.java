@@ -10,16 +10,16 @@ import com.fisk.common.core.enums.BaseEnum;
  */
 public enum TemplateSceneEnum implements BaseEnum {
     NONE(0, "空"),
-    DATACHECK_WEBCHECK(100, "页面校验"),
-    DATACHECK_SYNCCHECK(101, "同步校验"),
-    DATACHECK_QUALITYREPORT(102, "校验报告"),
-    BUSINESSFILTER_WEBFILTER(200, "页面清洗"),
-    BUSINESSFILTER_SYNCFILTER(201, "同步清洗"),
-    BUSINESSFILTER_FILTERREPORT(202, "清洗报告"),
-    LIFECYCLE_REPORT(300, "回收报告"),
-    NOTICE_DATACHECK(400, "数据校验告警"),
-    NOTICE_BUSINESSFILTER(401, "业务清洗告警"),
-    NOTICE_LIFECYCLE(402, "生命周期告警");
+    DATACHECK_WEBCHECK(100, "同步前"),
+    DATACHECK_SYNCCHECK(101, "同步中"),
+    DATACHECK_QUALITYREPORT(102, "同步后"),
+    BUSINESSFILTER_WEBFILTER(200, "同步前"),
+    BUSINESSFILTER_SYNCFILTER(201, "同步中"),
+    BUSINESSFILTER_FILTERREPORT(202, "同步后"),
+    LIFECYCLE_REPORT(300, "同步后");
+//    NOTICE_DATACHECK(400, "数据校验告警"),
+//    NOTICE_BUSINESSFILTER(401, "业务清洗告警"),
+//    NOTICE_LIFECYCLE(402, "生命周期告警");
 
     TemplateSceneEnum(int value, String name) {
         this.name = name;

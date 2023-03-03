@@ -560,6 +560,11 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         ApiPreviewVO apiPreviewVO = new ApiPreviewVO();
         String sql = dto.apiDTO.getCreateSql();
 
+        // 查询数据源信息
+        DataSourceConVO dataSourceConVO = dataSourceConManageImpl.getAllDataSource().stream().filter(t -> t.getId() == dto.apiDTO.getDatasourceId()).findFirst().orElse(null);
+        if (dataSourceConVO == null)
+            return apiPreviewVO;
+
         // 第一步：拼接过滤条件
         if (dto.apiDTO.getApiType() == ApiTypeEnum.SQL.getValue()) {
             sql = String.format("SELECT %s FROM %s WHERE 1=1 ", sql, dto.apiDTO.getTableName());
@@ -574,15 +579,10 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         // 第二步：拼接参数条件
         if (CollectionUtils.isNotEmpty(dto.parmDTO)) {
             List<SqlParmDto> sqlParamsDto = ApiParmMap.INSTANCES.listDtoToSqlParmDto(dto.parmDTO);
-            String s = SqlParmUtils.SqlParams(sqlParamsDto, sql, "@");
+            String s = SqlParmUtils.SqlParams(sqlParamsDto, sql, "@",dataSourceConVO.getConType());
             if (s != null && s.length() > 0)
                 sql = s;
         }
-
-        // 第三步：查询数据源信息
-        DataSourceConVO dataSourceConVO = dataSourceConManageImpl.getAllDataSource().stream().filter(t -> t.getId() == dto.apiDTO.getDatasourceId()).findFirst().orElse(null);
-        if (dataSourceConVO == null)
-            return apiPreviewVO;
 
         // 第四步：如果是编辑，查询上次配置的字段信息，如果描述信息不为空，使用该描述。如果为空使用系统查询出来的描述信息
         List<FieldConfigPO> fieldConfigPOS = null;
