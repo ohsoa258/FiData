@@ -325,7 +325,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             }
         } catch (Exception ex) {
             log.info("【reloadDataSource】刷新数据源失败：" + ex);
-            return ResultEnum.DATA_QUALITY_DATA_SOURCE_REFRESH_FAILED;
+            return ResultEnum.DS_DATA_SOURCE_REFRESH_FAILED;
         }
         return ResultEnum.SUCCESS;
     }
