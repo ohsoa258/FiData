@@ -75,5 +75,5 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      *
      * @return 查询结果
      */
-    Object reloadDataSource(int id);
+    ResultEnum reloadDataSource(int id);
 }

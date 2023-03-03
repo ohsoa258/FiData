@@ -85,13 +85,13 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     public Page<DataSourceConVO> page(DataSourceConQuery query) {
         Page<DataSourceConVO> pageDTO = new Page<>();
         List<DataSourceConVO> allDataSource = getAllDataSource();
-        if (CollectionUtils.isNotEmpty(allDataSource)) {
-            allDataSource.forEach(t -> {
-                if (t.getDatasourceType() != SourceTypeEnum.FiData) {
-                    t.setConPassword("");
-                }
-            });
-        }
+//        if (CollectionUtils.isNotEmpty(allDataSource)) {
+//            allDataSource.forEach(t -> {
+//                if (t.getDatasourceType() != SourceTypeEnum.FiData) {
+//                    t.setConPassword("");
+//                }
+//            });
+//        }
         pageDTO.setRecords(allDataSource);
         return pageDTO;
     }
@@ -293,34 +293,39 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     @Override
-    public Object reloadDataSource(int id) {
-        List<DataSourceConVO> allDataSource = getAllDataSource();
-        DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == id).findFirst().orElse(null);
-        if (dataSourceConVO == null) {
-            return ResultEnum.DS_DATASOURCE_NOTEXISTS;
-        }
-        SourceTypeEnum datasourceType = dataSourceConVO.getDatasourceType();
-        switch (datasourceType) {
-            case FiData:
-                FiDataMetaDataReqDTO reqDTO = new FiDataMetaDataReqDTO();
-                reqDTO.setDataSourceId(String.valueOf(dataSourceConVO.getDatasourceId()));
-                reqDTO.setDataSourceName(dataSourceConVO.getConDbname());
-                switch (dataSourceConVO.getDatasourceId()) {
-                    case 1:
-                    case 4:
-                        dataModelClient.setDataModelStructure(reqDTO);
-                        break;
-                    case 2:
-                        dataAccessClient.setDataAccessStructure(reqDTO);
-                        break;
-                    case 3:
-                        mdmClient.setMDMDataStructure(reqDTO);
-                        break;
-                }
-                break;
-            case custom:
-                setMetaDataToRedis(dataSourceConVO.getId(), 2);
-                break;
+    public ResultEnum reloadDataSource(int id) {
+        try {
+            List<DataSourceConVO> allDataSource = getAllDataSource();
+            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == id).findFirst().orElse(null);
+            if (dataSourceConVO == null) {
+                return ResultEnum.DS_DATASOURCE_NOTEXISTS;
+            }
+            SourceTypeEnum datasourceType = dataSourceConVO.getDatasourceType();
+            switch (datasourceType) {
+                case FiData:
+                    FiDataMetaDataReqDTO reqDTO = new FiDataMetaDataReqDTO();
+                    reqDTO.setDataSourceId(String.valueOf(dataSourceConVO.getDatasourceId()));
+                    reqDTO.setDataSourceName(dataSourceConVO.getConDbname());
+                    switch (dataSourceConVO.getDatasourceId()) {
+                        case 1:
+                        case 4:
+                            dataModelClient.setDataModelStructure(reqDTO);
+                            break;
+                        case 2:
+                            dataAccessClient.setDataAccessStructure(reqDTO);
+                            break;
+                        case 3:
+                            mdmClient.setMDMDataStructure(reqDTO);
+                            break;
+                    }
+                    break;
+                case custom:
+                    setMetaDataToRedis(dataSourceConVO.getId(), 2);
+                    break;
+            }
+        } catch (Exception ex) {
+            log.info("【reloadDataSource】刷新数据源失败：" + ex);
+            return ResultEnum.DATA_QUALITY_DATA_SOURCE_REFRESH_FAILED;
         }
         return ResultEnum.SUCCESS;
     }
@@ -346,7 +351,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
         // 系统管理中所有数据源
         ResultEntity<List<DataSourceDTO>> systemDataSourceResult = userClient.getAll();
-        List<DataSourceDTO> systemDataSources = systemDataSourceResult != null && systemDataSourceResult.getCode() == 0 ? userClient.getAllFiDataDataSource().getData() : null;
+        List<DataSourceDTO> systemDataSources = systemDataSourceResult != null && systemDataSourceResult.getCode() == 0 ? systemDataSourceResult.getData() : null;
 
         // 数据质量数据源信息
         QueryWrapper<DataSourceConPO> dataSourceConPOQueryWrapper = new QueryWrapper<>();

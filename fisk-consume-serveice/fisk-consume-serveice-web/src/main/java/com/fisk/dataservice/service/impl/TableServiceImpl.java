@@ -50,7 +50,6 @@ public class TableServiceImpl
     @Resource
     private UserHelper userHelper;
 
-
     @Resource
     TableServiceMapper mapper;
 

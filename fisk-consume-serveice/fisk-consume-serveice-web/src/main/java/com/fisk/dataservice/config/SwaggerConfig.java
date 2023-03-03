@@ -78,7 +78,7 @@ public class SwaggerConfig {
 
         return new ApiInfoBuilder()
                 .title("菲斯科  白泽项目  接口文档")
-                .description("Create by Lock")
+                .description("Create by Dick")
                 .version("1.0.0测试版")
                 .build();
     }

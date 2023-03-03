@@ -58,4 +58,9 @@ public class FilterSqlConstants {
      * 数据安全--智能识别
      */
     public static final String DATA_SECURITY_INTELLIGENT_DISCOVERY_SQL = " where Field in('rule_name','principal','risk_level','scan_risk_count')";
+    /**
+     * 表同步服务--应用注册
+     */
+    public static final String TABLE_APP_REGISTRATION_SQL = " where Field in('app_name','app_principal','app_desc','create_time','create_user')";
+
 }

@@ -86,7 +86,7 @@ public class DataSourceController {
     @PostMapping("/reloadDataSource")
     @ApiOperation("数据质量，刷新数据源元数据信息")
     public ResultEntity<Object> reloadDataSource(@RequestParam("id") int id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.reloadDataSource(id));
+        return ResultEntityBuild.build(service.reloadDataSource(id));
     }
 
     @PostMapping("/getDataOpsTableSource")

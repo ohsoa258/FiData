@@ -77,7 +77,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     private ApiParmManageImpl apiParmManageImpl;
 
     @Resource
-    TableSyncModeImpl tableSyncModeImpl;
+    private TableSyncModeImpl tableSyncModeImpl;
 
     @Resource
     private AppServiceConfigMapper appServiceConfigMapper;

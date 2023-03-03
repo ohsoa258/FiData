@@ -1,20 +1,25 @@
 package com.fisk.dataservice.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.dataservice.dto.app.AppRegisterDTO;
+import com.fisk.dataservice.dto.app.AppRegisterEditDTO;
+import com.fisk.dataservice.dto.app.AppRegisterQueryDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceColumnQueryDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceQueryDTO;
-import com.fisk.dataservice.dto.tableservice.TableServiceDTO;
-import com.fisk.dataservice.dto.tableservice.TableServicePageQueryDTO;
-import com.fisk.dataservice.dto.tableservice.TableServicePublishStatusDTO;
-import com.fisk.dataservice.dto.tableservice.TableServiceSaveDTO;
+import com.fisk.dataservice.dto.tableservice.*;
 import com.fisk.dataservice.service.IDataSourceConfig;
+import com.fisk.dataservice.service.ITableAppManageService;
 import com.fisk.dataservice.service.ITableService;
+import com.fisk.dataservice.vo.app.AppRegisterVO;
+import com.fisk.dataservice.vo.tableservice.TableAppVO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -31,9 +36,47 @@ public class TableServiceController {
     @Resource
     ITableService service;
     @Resource
+    ITableAppManageService tableAppManageService;
+    @Resource
     IDataSourceConfig dataSourceConfig;
     @Resource
     DataFactoryClient dataFactoryClient;
+
+    @ApiOperation(value = "应用过滤字段")
+    @GetMapping("/getColumn")
+    public ResultEntity<Object> getBusinessColumn() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAppManageService.getColumn());
+    }
+
+    @ApiOperation(value = "筛选器")
+    @PostMapping("/pageFilter")
+    public ResultEntity<Page<TableAppVO>> pageFilter(@RequestBody TableAppQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAppManageService.pageFilter(dto));
+    }
+
+    @ApiOperation("添加应用")
+    @PostMapping("/add")
+    public ResultEntity<Object> addData(@Validated @RequestBody TableAppDTO dto) {
+        return ResultEntityBuild.build(tableAppManageService.addData(dto));
+    }
+
+    @ApiOperation("编辑应用")
+    @PutMapping("/edit")
+    public ResultEntity<Object> editData(@Validated @RequestBody TableAppDTO dto) {
+        return ResultEntityBuild.build(tableAppManageService.editData(dto));
+    }
+
+    @ApiOperation("删除应用")
+    @DeleteMapping("/delete/{tableAppId}")
+    public ResultEntity<Object> deleteData(@PathVariable("tableAppId") int tableAppId) {
+        return ResultEntityBuild.build(tableAppManageService.deleteData(tableAppId));
+    }
+
+    @ApiOperation("检查数据源是否没有被引用")
+    @PostMapping("/checkDataSourceIsNoUse")
+    public ResultEntity<Object> checkDataSourceIsNoUse(@RequestBody TableAppDatasourceDTO dto) {
+        return ResultEntityBuild.build(tableAppManageService.checkDataSourceIsNoUse(dto));
+    }
 
     @ApiOperation("分页获取表服务数据")
     @PostMapping("/getTableServiceListData")
