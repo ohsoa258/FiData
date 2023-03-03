@@ -262,6 +262,15 @@ public enum ResultEnum {
     DS_APISERVICE_API_APPINFO_EXISTS(10021, "应用账号/密码错误，请核对"),
     DS_DATASOURCE_READ_ERROR(10022, "数据源信息读取失败"),
     DS_DATASOURCE_EXISTS(11023, "数据源已存在"),
+    DS_VIEW_THEME_EXISTS(11024, "视图主题已经存在"),
+    DS_VIEW_THEME_ABBR_VALID(11025, "视图主题简称无效"),
+    DS_VIEW_THEME_ACCOUNT_SAVE(11026, "视图主题关联账号保存失败"),
+    DS_VIEW_THEME_ACCOUNT_ERROR(11027, "视图主题关联账号名称和密码不能为空"),
+    DS_VIEW_THEME_NAME_EXIST(11028, "视图主题名称已存在"),
+    DS_VIEW_THEME_ACCOUNT_EXIST(11029, "当前视图主题下存在重复的关联账号名称"),
+    DA_VIEWTHEMEID_TABLENAME_ERROR(11030, "视图主题id或表名不能为空"),
+    DA_VIEWTHEME_UPDATE_ACCOUNT_ERROR(11031, "更新视图主题关联账号时添加账号失败"),
+    DS_DATA_VIEW_EXIST(11032, "数据视图已存在"),
 
     /**
      * 数据质量

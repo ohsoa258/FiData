@@ -3,6 +3,7 @@ package com.fisk.common.service.dbMetaData.utils;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.service.dbMetaData.dto.DataBaseViewDTO;
+import com.fisk.common.service.dbMetaData.dto.TableNameDTO;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import com.fisk.common.framework.exception.FkException;
@@ -177,5 +178,49 @@ public class MysqlConUtils {
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
         }
         return colNameList;
+    }
+
+    public List<TableNameDTO> getViewTableNameAndColumns(String url, String user, String password, String mysql) {
+        List<TableNameDTO> list = new ArrayList<>();
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            Class.forName(mysql);
+            conn = DriverManager.getConnection(url, user, password);
+            stmt = conn.createStatement();
+
+            int tag = 0;
+            List<String> tableNames = getTablesPlus(conn);
+            if (CollectionUtils.isNotEmpty(tableNames)){
+                for (String tableName : tableNames) {
+                    // mysql没有架构概念
+                    List<TableStructureDTO> colNames = getColNames(stmt, tableName);
+                    TableNameDTO tablePyhNameDTO = new TableNameDTO();
+                    // mysql没有架构概念
+                    tablePyhNameDTO.setTableFullName(tableName);
+                    tablePyhNameDTO.setTableName(tableName);
+                    tablePyhNameDTO.setFields(colNames);
+                    tag++;
+                    tablePyhNameDTO.setTag(tag);
+                    list.add(tablePyhNameDTO);
+                }
+            }
+        } catch (Exception e) {
+            log.error("【getTableNameAndColumns】获取表名报错：", e);
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        }finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception e) {
+                log.error("【getTableNameAndColumnsPlus】关闭数据库连接异常：", e);
+                throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+            }
+        }
+        return list;
     }
 }

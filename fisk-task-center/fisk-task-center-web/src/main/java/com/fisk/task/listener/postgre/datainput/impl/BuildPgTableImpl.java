@@ -11,17 +11,13 @@ import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
-import com.fisk.task.entity.TaskDwDimPO;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.postgre.datainput.IbuildTable;
-import com.fisk.task.mapper.TaskDwDimMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -32,7 +28,6 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 public class BuildPgTableImpl implements IbuildTable {
-
 
 
     @Override
@@ -51,9 +46,9 @@ public class BuildPgTableImpl implements IbuildTable {
                 sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + ",");
             } else if (l.fieldType.contains("TEXT")) {
                 sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + ",");
-            } else if (l.fieldType.toUpperCase().equals("DATE")){
+            } else if (l.fieldType.toUpperCase().equals("DATE")) {
                 sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + ",");
-            } else if (l.fieldType.toUpperCase().equals("TIME")){
+            } else if (l.fieldType.toUpperCase().equals("TIME")) {
                 sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + ",");
             } else {
                 sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + "(" + l.fieldLength + "),");
@@ -128,7 +123,7 @@ public class BuildPgTableImpl implements IbuildTable {
                 sql += ",'" + targetTableName + "'";
                 //同步方式
                 String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
-                if (StringUtils.isNotEmpty(buildNifiFlow.generateVersionSql)) {
+                if (Objects.nonNull(buildNifiFlow) && StringUtils.isNotEmpty(buildNifiFlow.generateVersionSql)) {
                     sql += ",'" + syncModeTypeEnum.FULL_VOLUME_VERSION.getName() + "'";
                 } else {
                     sql += ",'" + syncMode + "'";
@@ -151,7 +146,7 @@ public class BuildPgTableImpl implements IbuildTable {
                 sql += ",'" + stgAndTableName.get(1) + "'";
                 //同步方式
                 String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
-                if (StringUtils.isNotEmpty(buildNifiFlow.generateVersionSql)) {
+                if (Objects.nonNull(buildNifiFlow) && StringUtils.isNotEmpty(buildNifiFlow.generateVersionSql)) {
                     sql += ",'" + syncModeTypeEnum.FULL_VOLUME_VERSION.getName() + "'";
                 } else {
                     sql += ",'" + syncMode + "'";
