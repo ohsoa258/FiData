@@ -265,7 +265,7 @@ public enum ResultEnum {
     DS_VIEW_THEME_EXISTS(11024, "视图主题已经存在"),
     DS_VIEW_THEME_ABBR_VALID(11025, "视图主题简称无效"),
     DS_VIEW_THEME_ACCOUNT_SAVE(11026, "视图主题关联账号保存失败"),
-    DS_VIEW_THEME_ACCOUNT_ERROR(11027, "视图主题关联账号名称和描述不能为空"),
+    DS_VIEW_THEME_ACCOUNT_ERROR(11027, "视图主题关联账号名称和密码不能为空"),
     DS_VIEW_THEME_NAME_EXIST(11028, "视图主题名称已存在"),
     DS_VIEW_THEME_ACCOUNT_EXIST(11029, "当前视图主题下存在重复的关联账号名称"),
     DA_VIEWTHEMEID_TABLENAME_ERROR(11030, "视图主题id或表名不能为空"),

@@ -137,7 +137,7 @@ public class DataViewThemeServiceImpl
             createRole(dataSourceDTO, viewThemeId);
 
             for (DataViewAccountDTO dto : dtoList){
-                if (StringUtils.isEmpty(dto.getAccountName()) || StringUtils.isEmpty(dto.getAccountDesc())){
+                if (StringUtils.isEmpty(dto.getAccountName()) || StringUtils.isEmpty(dto.getAccountPsd())){
                     throw new FkException(ResultEnum.DS_VIEW_THEME_ACCOUNT_ERROR);
                 }
                 DataViewAccountPO po = new DataViewAccountPO();
@@ -539,7 +539,7 @@ public class DataViewThemeServiceImpl
             // 编辑主题有用户数据，则更新数据
             List<DataViewAccountPO> currList = new ArrayList<>();
             for (DataViewAccountDTO dto : list){
-                if (StringUtils.isEmpty(dto.getAccountName()) || StringUtils.isEmpty(dto.getAccountDesc())){
+                if (StringUtils.isEmpty(dto.getAccountName()) || StringUtils.isEmpty(dto.getAccountPsd())){
                     throw new FkException(ResultEnum.DS_VIEW_THEME_ACCOUNT_ERROR);
                 }
 
