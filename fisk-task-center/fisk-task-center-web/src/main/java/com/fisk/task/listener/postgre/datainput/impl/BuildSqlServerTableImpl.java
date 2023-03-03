@@ -268,11 +268,11 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
                 querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,convert(varchar(100),getdate(),120) as end_time," +
                         "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + stgAndTableName.get(1) + " where fidata_batch_code='${pipelTraceId:isEmpty():ifElse(${pipelTaskTraceId},${pipelTraceId})}'";
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + stgAndTableName.get(1) + " with (nolock) where  fidata_batch_code='${pipelTraceId:isEmpty():ifElse(${pipelTaskTraceId},${pipelTraceId})}'";
             } else {
                 querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,convert(varchar(100),getdate(),120) as end_time," +
                         "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName + " where fidata_batch_code='${fidata_batch_code}'";
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName + " with (nolock) where fidata_batch_code='${fidata_batch_code}'";
             }
 
         }
@@ -304,6 +304,12 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         }
         return querySql;
 
+    }
+
+    @Override
+    public String getTotalSql(String sql, SynchronousTypeEnum synchronousTypeEnum) {
+        sql = sql.replaceAll(FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName(), FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_OUTPUT.getName());
+        return sql;
     }
 
 

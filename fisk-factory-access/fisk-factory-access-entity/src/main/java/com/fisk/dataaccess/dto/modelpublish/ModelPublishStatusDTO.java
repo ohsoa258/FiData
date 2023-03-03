@@ -26,4 +26,12 @@ public class ModelPublishStatusDTO {
      * 发布错误信息
      */
     public String publishErrorMsg;
+    /**
+     * 关联发布日志标识
+     */
+    public String subRunId;
+    /**
+     * 发布历史id
+     */
+    public Long tableHistoryId;
 }

@@ -392,4 +392,13 @@ public interface PublishTaskClient {
     @PostMapping("/pipeline/overlayCodePreview")
     ResultEntity<Object> overlayCodePreview(@RequestBody OverLoadCodeDTO dto);
 
+
+    /**
+     * 依据pipelTraceId查询pipelId
+     * @param pipelTraceId
+     * @return
+     */
+    @GetMapping("/dispatchLog/getPipelStates")
+    ResultEntity<List<String>> getPipelStates(@RequestParam("pipelTraceId") String pipelTraceId);
+
 }

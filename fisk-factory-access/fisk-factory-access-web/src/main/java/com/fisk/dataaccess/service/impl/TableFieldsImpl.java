@@ -515,6 +515,7 @@ public class TableFieldsImpl
         if (appRegistrationPo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
+        Long tableHistoryId = 0L;
         if (!CollectionUtils.isEmpty(dto)) {
             log.info("开始记录发布日志");
             for (TableHistoryDTO tableHistory : dto) {
@@ -522,7 +523,7 @@ public class TableFieldsImpl
                     log.info("记录发布日志的表id:{}", accessId);
                     List<TableHistoryDTO> list = new ArrayList<>();
                     list.add(tableHistory);
-                    iTableHistory.addTableHistory(list);
+                    tableHistoryId = iTableHistory.addTableHistory(list);
                 }
             }
         }
@@ -575,7 +576,7 @@ public class TableFieldsImpl
             data.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile == null ? maxRowsPerFlowFile : syncMode.maxRowsPerFlowFile;
             data.fetchSize = syncMode.fetchSize == null ? fetchSize : syncMode.fetchSize;
             data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType);
-
+            data.tableHistoryId = tableHistoryId;
             // 执行发布
             try {
                 TableAccessPO accessPo = tableAccessImpl.query().eq("id", accessId).one();

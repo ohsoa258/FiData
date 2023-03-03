@@ -285,14 +285,19 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                 log.info("第一处调用保存task日志");
                 //iPipelTaskLog.savePipelTaskLog(dto.pipelTraceId, dto.pipelJobTraceId, dto.pipelTaskTraceId, stageMap, list.get(0).taskId, null, 0);
                 Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + dto.pipelTraceId);
-                TaskHierarchyDTO taskHierarchy = JSON.parseObject(hmget.get(list.get(0).taskId).toString(), TaskHierarchyDTO.class);
-                //这里只改本级状态
-                taskHierarchy.taskProcessed = true;
-                taskHierarchy.taskStatus = DispatchLogEnum.taskpass;
-                hmget.put(list.get(0).taskId, JSON.toJSONString(taskHierarchy));
-                redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + dto.pipelTraceId, hmget, Long.parseLong(maxTime));
-                //这里
-                updateTaskStatus(list.get(0).taskId, dto.pipelTraceId, 1);
+                if (hmget != null && hmget.size() != 0) {
+                    TaskHierarchyDTO taskHierarchy = JSON.parseObject(hmget.get(list.get(0).taskId).toString(), TaskHierarchyDTO.class);
+                    //这里只改本级状态
+                    taskHierarchy.taskProcessed = true;
+                    taskHierarchy.taskStatus = DispatchLogEnum.taskpass;
+                    hmget.put(list.get(0).taskId, JSON.toJSONString(taskHierarchy));
+                    redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + dto.pipelTraceId, hmget, Long.parseLong(maxTime));
+                    //这里
+                    updateTaskStatus(list.get(0).taskId, dto.pipelTraceId, 1);
+                } else {
+                    log.info("单次发布无需修改状态,或未找到redis内相关数据");
+                }
+
 
             }
         }

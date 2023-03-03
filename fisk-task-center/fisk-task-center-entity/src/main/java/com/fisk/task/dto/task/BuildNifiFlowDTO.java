@@ -154,5 +154,10 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
      */
     public String buildTableSql;
 
+    /**
+     * 发布历史id
+     */
+    public Long tableHistoryId;
+
 
 }

@@ -166,6 +166,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private String nifiFilePath;
     @Value("${spring.open-metadata}")
     private Boolean openMetadata;
+    @Resource
+    TableHistoryMapper tableHistoryMapper;
 
     /**
      * 数据库连接
@@ -2204,6 +2206,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableAccessPO model = baseMapper.selectById(dto.tableId);
         if (model != null) {
             baseMapper.updatePublishStatus(dto.tableId, dto.publish, StringUtils.isNotBlank(dto.publishErrorMsg) ? dto.publishErrorMsg : "");
+            tableHistoryMapper.updateSubRunId(dto.tableHistoryId, dto.subRunId);
         }
     }
 

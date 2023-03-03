@@ -14,7 +14,21 @@ import java.util.List;
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface TableHistoryMap {
     TableHistoryMap INSTANCES = Mappers.getMapper(TableHistoryMap.class);
+    /**
+     * dto => po
+     *
+     * @param po source
+     * @return target
+     */
+    TableHistoryPO dtoToPo(TableHistoryDTO po);
 
+    /**
+     * po => dto
+     *
+     * @param po po
+     * @return dto
+     */
+    TableHistoryDTO poToDto(TableHistoryPO po);
     /**
      * dto==>Po
      * @param dto

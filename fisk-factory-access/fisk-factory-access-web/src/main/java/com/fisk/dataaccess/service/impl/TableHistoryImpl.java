@@ -2,13 +2,17 @@ package com.fisk.dataaccess.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.table.TableHistoryDTO;
 import com.fisk.dataaccess.entity.TableHistoryPO;
 import com.fisk.dataaccess.map.TableHistoryMap;
 import com.fisk.dataaccess.mapper.TableHistoryMapper;
 import com.fisk.dataaccess.service.ITableHistory;
+import com.fisk.task.client.PublishTaskClient;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -22,9 +26,11 @@ public class TableHistoryImpl extends ServiceImpl<TableHistoryMapper, TableHisto
 
     @Resource
     TableHistoryMapper mapper;
+    @Resource
+    PublishTaskClient publishTaskClient;
 
     @Override
-    public ResultEnum addTableHistory(List<TableHistoryDTO> dto) {
+    public long addTableHistory(List<TableHistoryDTO> dto) {
         dto.stream().filter(Objects::nonNull)
                 .forEach(e -> {
                     if (e.openTransmission) {
@@ -33,8 +39,14 @@ public class TableHistoryImpl extends ServiceImpl<TableHistoryMapper, TableHisto
                         e.remark = e.remark + " --> 未同步";
                     }
                 });
-
-        return this.saveBatch(TableHistoryMap.INSTANCES.dtoListToPoList(dto)) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        if (!CollectionUtils.isEmpty(dto)) {
+            //虽然用的list,实际上一张表发布仅有一条日志
+            TableHistoryPO tableHistory = TableHistoryMap.INSTANCES.dtoToPo(dto.get(0));
+            this.save(tableHistory);
+            return tableHistory.id;
+        } else {
+            throw new FkException(ResultEnum.ERROR, "添加发布历史失败");
+        }
     }
 
     @Override
@@ -42,7 +54,16 @@ public class TableHistoryImpl extends ServiceImpl<TableHistoryMapper, TableHisto
         QueryWrapper<TableHistoryPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(TableHistoryPO::getTableId, dto.tableId)
                 .eq(TableHistoryPO::getTableType, dto.tableType);
-        return TableHistoryMap.INSTANCES.poListToDtoList(mapper.selectList(queryWrapper));
+        List<TableHistoryDTO> list = TableHistoryMap.INSTANCES.poListToDtoList(mapper.selectList(queryWrapper));
+        list.forEach(
+                e -> {
+                    ResultEntity<List<String>> resultEntity = publishTaskClient.getPipelStates(e.subRunId);
+                    if (Objects.equals(resultEntity.code, ResultEnum.SUCCESS.getCode())) {
+                        e.msg = resultEntity.data;
+                    }
+                }
+        );
+        return list;
     }
 
 }

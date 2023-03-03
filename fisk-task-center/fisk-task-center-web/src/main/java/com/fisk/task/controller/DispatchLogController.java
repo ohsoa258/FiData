@@ -118,4 +118,21 @@ public class DispatchLogController {
     public ResultEntity<DataServiceTableLogQueryVO> getDataServiceTableLogVos(@RequestBody DataServiceTableLogQueryDTO dto) {
         return iPipelTaskLog.getDataServiceTableLogVos(dto);
     }
+
+    /**
+     * 依据pipelTraceId查询pipelId
+     * @param pipelTraceId
+     * @return
+     */
+    @GetMapping("/getPipelStates")
+    public ResultEntity<List<String>> getPipelStates(@RequestParam("pipelTraceId") String pipelTraceId){
+        ResultEntity<List<String>> objectResultEntity = new ResultEntity<>();
+        objectResultEntity.data = iPipelStageLog.getPipelStates(pipelTraceId);
+        objectResultEntity.code = 0;
+        return objectResultEntity;
+    }
+
+
+
+
 }

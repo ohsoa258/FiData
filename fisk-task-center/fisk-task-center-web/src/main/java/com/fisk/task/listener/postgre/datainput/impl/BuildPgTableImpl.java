@@ -267,6 +267,12 @@ public class BuildPgTableImpl implements IbuildTable {
     }
 
     @Override
+    public String getTotalSql(String sql, SynchronousTypeEnum synchronousTypeEnum) {
+        //待定
+        return sql;
+    }
+
+    @Override
     public List<String> getStgAndTableName(String tableName) {
         return TableNameGenerateUtils.getStgAndTableName(tableName);
     }
