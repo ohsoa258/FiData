@@ -1,6 +1,8 @@
 package com.fisk.task.listener.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.davis.client.ApiException;
 import com.davis.client.model.ProcessorRunStatusEntity;
 import com.davis.client.model.*;
@@ -8,6 +10,7 @@ import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.enums.task.FuncNameEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
@@ -60,10 +63,7 @@ import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.service.pipeline.ITableTopicService;
 import com.fisk.task.service.pipeline.impl.NifiConfigServiceImpl;
-import com.fisk.task.utils.KafkaTemplateHelper;
-import com.fisk.task.utils.NifiHelper;
-import com.fisk.task.utils.NifiPositionHelper;
-import com.fisk.task.utils.StackTraceHelper;
+import com.fisk.task.utils.*;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -160,6 +160,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     @Resource
     RestTemplate httpClient;
+    @Resource
+    PostgreHelper postgreHelper;
 
     public String appParentGroupId;
     public String appGroupId;
@@ -529,13 +531,11 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         data = "[" + data + "]";
         List<BuildNifiFlowDTO> buildNifiFlows = JSON.parseArray(data, BuildNifiFlowDTO.class);
         BuildNifiFlowDTO dto = new BuildNifiFlowDTO();
+        String subRunId = "";
         try {
             for (BuildNifiFlowDTO buildNifiFlow : buildNifiFlows) {
                 dto = buildNifiFlow;
                 modelPublishStatusDTO.tableId = dto.id;
-                if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
-                    client.updateTablePublishStatus(modelPublishStatusDTO);
-                }
                 //获取数据接入配置项
                 DataAccessConfigDTO configDTO = getConfigData(dto.id, dto.appId, dto.synchronousTypeEnum, dto.type, dto.dataClassifyEnum, dto.tableName, dto.selectSql, dto);
                 if (configDTO == null) {
@@ -645,6 +645,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     kafkaRkeceiveDTO.start_time = simpleDateFormat.format(new Date());
                     kafkaRkeceiveDTO.pipelTaskTraceId = UUID.randomUUID().toString();
+                    subRunId = kafkaRkeceiveDTO.pipelTaskTraceId;
                     kafkaRkeceiveDTO.fidata_batch_code = kafkaRkeceiveDTO.pipelTaskTraceId;
                     kafkaRkeceiveDTO.pipelStageTraceId = UUID.randomUUID().toString();
                     kafkaRkeceiveDTO.ifTaskStart = true;
@@ -652,7 +653,11 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                     //pc.universalPublish(kafkaRkeceiveDTO);
                     kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaRkeceiveDTO));
                 }
-
+                if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
+                    modelPublishStatusDTO.subRunId = subRunId;
+                    modelPublishStatusDTO.tableHistoryId = dto.tableHistoryId;
+                    client.updateTablePublishStatus(modelPublishStatusDTO);
+                }
                 //7. 回写id
                 savaNifiConfig(cfgDbPool.getId(), ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID);
                 if (Objects.equals(dto.synchronousTypeEnum.getName(), SynchronousTypeEnum.PGTOPG.getName())) {
@@ -667,13 +672,17 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             resultEnum = ResultEnum.ERROR;
             modelPublishStatusDTO.publish = 3;
             modelPublishStatusDTO.publishErrorMsg = StackTraceHelper.getStackTraceInfo(e);
+            modelPublishStatusDTO.tableHistoryId = dto.tableHistoryId;
+            modelPublishStatusDTO.subRunId = subRunId;
             if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
                 client.updateTablePublishStatus(modelPublishStatusDTO);
             }
             log.error("nifi流程创建失败" + StackTraceHelper.getStackTraceInfo(e));
             return resultEnum;
         } finally {
-            ack.acknowledge();
+            if (ack != null) {
+                ack.acknowledge();
+            }
         }
 
     }
@@ -2530,6 +2539,33 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
         log.info("同步类型为:" + syncMode + config.targetDsConfig.syncMode);
         executsql = componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName(), buildNifiFlow);
+        //代码处理预览sql
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
+        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+            DataSourceDTO dataSource = fiDataDataSource.data;
+            IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSource.conType);
+            executsql = dbCommand.getTotalSql(executsql, synchronousTypeEnum);
+            if (Objects.equals(DataSourceTypeEnum.POSTGRESQL, dataSource.conType)) {
+                //待定
+            } else if (Objects.equals(DataSourceTypeEnum.SQLSERVER, dataSource.conType)) {
+                BusinessTypeEnum businessTypeEnum = Objects.equals(SynchronousTypeEnum.TOPGODS, synchronousTypeEnum) ? BusinessTypeEnum.DATAINPUT : BusinessTypeEnum.DATAMODEL;
+                JSONArray list = postgreHelper.postgreQuery(executsql, businessTypeEnum);
+                StringBuilder sqlBuilder = new StringBuilder();
+                if (CollectionUtils.isEmpty(list)) {
+                    executsql = executsql.replaceAll(FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_OUTPUT.getName(), FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName());
+                } else {
+                    for (Object o : list) {
+                        //转成JSONObject,获取属性
+                        JSONObject jsonObject = JSON.parseObject(o.toString());
+                        sqlBuilder.append(jsonObject.get(""));
+                    }
+                    executsql = sqlBuilder.toString();
+                }
+            }
+        } else {
+            log.error("userclient无法查询到ods库的连接信息");
+            throw new FkException(ResultEnum.ERROR);
+        }
         //callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
         callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
         callDbProcedureProcessorDTO.executsql = executsql;

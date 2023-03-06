@@ -15,7 +15,7 @@ public interface ITableHistory {
      * @param dto
      * @return
      */
-    ResultEnum addTableHistory(List<TableHistoryDTO> dto);
+    long addTableHistory(List<TableHistoryDTO> dto);
 
     /**
      * 根据参数,获取发布列表

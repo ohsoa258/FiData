@@ -28,4 +28,12 @@ public interface IPipelStageLog extends IService<PipelStageLogPO> {
      * @return
      */
     public List<PipelStageLogVO> getPipelStageLogVos(String taskId);
+
+    /**
+     * 通过任务taskid获取报错日志
+     * @param taskPipelineId
+     * @return
+     */
+    List<String> getPipelStates(String taskPipelineId);
+
 }

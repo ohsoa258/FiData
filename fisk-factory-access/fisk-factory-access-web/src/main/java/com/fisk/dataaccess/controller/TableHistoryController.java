@@ -39,7 +39,7 @@ public class TableHistoryController {
     @ApiOperation("添加发布历史")
     @PostMapping("/addTableHistory")
     public ResultEntity<Object> addTableHistory(@Validated @RequestBody List<TableHistoryDTO> dto) {
-        return ResultEntityBuild.build(service.addTableHistory(dto));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addTableHistory(dto));
     }
 
 }

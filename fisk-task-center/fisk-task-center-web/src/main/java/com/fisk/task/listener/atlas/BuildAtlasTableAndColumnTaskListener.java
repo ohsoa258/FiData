@@ -24,6 +24,7 @@ import com.fisk.task.mapper.TBETLIncrementalMapper;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
+import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.TriggerUtils;
 import org.quartz.impl.triggers.CronTriggerImpl;
@@ -144,12 +145,15 @@ public class BuildAtlasTableAndColumnTaskListener
                 bfd.buildTableSql = buildPhysicalTableDTO.buildTableSql;
                 // stg抽取数据加载到ods的sql语句
                 bfd.syncStgToOdsSql = buildPhysicalTableDTO.syncStgToOdsSql;
+                //发布历史id
+                bfd.tableHistoryId = buildPhysicalTableDTO.tableHistoryId;
                 log.info("nifi传入参数：" + JSON.toJSONString(bfd));
                 pc.publishBuildNifiFlowTask(bfd);
                 log.info("执行完成");
             }
             return ResultEnum.SUCCESS;
         } catch (Exception e) {
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.ERROR;
         }
     }

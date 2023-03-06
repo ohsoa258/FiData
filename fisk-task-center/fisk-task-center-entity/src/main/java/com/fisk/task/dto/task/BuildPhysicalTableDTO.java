@@ -121,4 +121,9 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
      * 临时表(建模temp_tablename)建表语句
      */
     public String buildTableSql;
+
+    /**
+     * 发布历史id
+     */
+    public Long tableHistoryId;
 }

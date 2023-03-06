@@ -69,7 +69,21 @@ public interface IbuildTable {
      */
     List<String> buildDwStgAndOdsTable(ModelPublishTableDTO modelPublishTableDTO);
 
+    /**
+     * 查询同步数据数量
+     * @param dto
+     * @param config
+     * @param groupId
+     * @return
+     */
     public String queryNumbersFieldForTableServer(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId);
+
+    /**
+     * 输出返回语句
+     * @param sql
+     * @return
+     */
+    String getTotalSql(String sql,SynchronousTypeEnum synchronousTypeEnum);
 
 
 }
