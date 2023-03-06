@@ -82,6 +82,17 @@ public class TableServiceImpl
         return DataSourceConMap.INSTANCES.voListToDtoInfo(allExternalDataSource.data);
     }
 
+    @Override
+    public List<DataSourceConfigInfoDTO> getAllDataSourceConfig() {
+
+        ResultEntity<List<DataSourceDTO>> all = client.getAll();
+        if (all.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+
+        return DataSourceConMap.INSTANCES.voListToDtoInfo(all.data);
+    }
+
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum TableServiceSave(TableServiceSaveDTO dto) {

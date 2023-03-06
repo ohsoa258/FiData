@@ -71,7 +71,7 @@ public class TableAppManageImpl
     private TableServiceMapper tableServiceMapper;
 
     @Override
-    public List<FilterFieldDTO> getColumn() {
+    public List<FilterFieldDTO> getFilterColumn() {
         MetaDataConfigDTO dto = new MetaDataConfigDTO();
         dto.url = getConfig.url;
         dto.userName = getConfig.username;

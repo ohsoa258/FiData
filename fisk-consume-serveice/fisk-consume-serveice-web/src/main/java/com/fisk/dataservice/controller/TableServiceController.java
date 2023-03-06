@@ -42,9 +42,9 @@ public class TableServiceController {
     DataFactoryClient dataFactoryClient;
 
     @ApiOperation(value = "应用过滤字段")
-    @GetMapping("/getColumn")
-    public ResultEntity<Object> getBusinessColumn() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAppManageService.getColumn());
+    @GetMapping("/getFilterColumn")
+    public ResultEntity<Object> getFilterColumn() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAppManageService.getFilterColumn());
     }
 
     @ApiOperation(value = "筛选器")
@@ -83,7 +83,7 @@ public class TableServiceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableServiceListData(dto));
     }
 
-    @ApiOperation("获取fidata系统库表信息")
+    @ApiOperation("获取FiData系统库表信息")
     @GetMapping("/getDbTableInfoList")
     public ResultEntity<Object> getDbTableInfoList() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, dataSourceConfig.getTableInfoList());
@@ -111,6 +111,12 @@ public class TableServiceController {
     @GetMapping("/getDataSourceConfig")
     public ResultEntity<Object> getDataSourceConfig() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataSourceConfig());
+    }
+
+    @ApiOperation("获取平台所有数据源配置")
+    @GetMapping("/getAllDataSourceConfig")
+    public ResultEntity<Object> getAllDataSourceConfig() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllDataSourceConfig());
     }
 
     @ApiOperation("表服务配置保存")

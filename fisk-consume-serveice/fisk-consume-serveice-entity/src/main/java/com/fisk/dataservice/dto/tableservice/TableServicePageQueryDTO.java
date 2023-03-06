@@ -16,6 +16,9 @@ public class TableServicePageQueryDTO {
     @ApiModelProperty(value = "发布状态")
     public Integer publish;
 
+    @ApiModelProperty(value = "表应用ID")
+    public Integer tableAppId;
+
     public Page<TableServicePageDataDTO> page;
 
 }

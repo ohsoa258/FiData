@@ -41,7 +41,12 @@ public enum serverModuleTypeEnum implements BaseEnum {
     /**
      * 数据治理_智能发现
      */
-    DATA_SECURITY_INTELLIGENT_DISCOVERY_REPORT("智能发现报告", 7);
+    DATA_SECURITY_INTELLIGENT_DISCOVERY_REPORT("智能发现报告", 7),
+
+    /**
+     * 表服务
+     */
+    TABLE_SERVICE("表服务", 8);
 
     private final String name;
     @EnumValue

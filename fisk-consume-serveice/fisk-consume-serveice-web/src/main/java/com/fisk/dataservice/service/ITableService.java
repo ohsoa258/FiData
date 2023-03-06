@@ -44,6 +44,13 @@ public interface ITableService {
     List<DataSourceConfigInfoDTO> getDataSourceConfig();
 
     /**
+     * 获取平台所有数据源配置
+     *
+     * @return
+     */
+    List<DataSourceConfigInfoDTO> getAllDataSourceConfig();
+
+    /**
      * 表服务保存
      *
      * @param dto

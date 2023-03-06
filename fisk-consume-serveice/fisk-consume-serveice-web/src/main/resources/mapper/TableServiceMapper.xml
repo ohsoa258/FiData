@@ -4,15 +4,19 @@
 <mapper namespace="com.fisk.dataservice.mapper.TableServiceMapper">
 
     <select id="getTableServiceListData" resultType="com.fisk.dataservice.dto.tableservice.TableServicePageDataDTO">
-        select
+        SELECT
         a.id,
         a.table_name,
         a.display_name,
         a.publish
-        from
-        tb_table_service a
-        where
-        a.del_flag=1
+        FROM
+        tb_app_service_config s
+        LEFT JOIN tb_table_service a ON a.id = s.service_id
+        WHERE
+        a.del_flag = 1
+        AND s.del_flag = 1
+        AND s.api_state = 1
+        AND s.app_id = #{query.tableAppId}
         <if test="query.tableName != null and query.tableName.length()>0">
             and a.table_name like CONCAT('%',#{query.tableName},'%')
         </if>

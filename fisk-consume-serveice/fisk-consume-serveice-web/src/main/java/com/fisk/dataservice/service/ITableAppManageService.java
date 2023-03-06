@@ -18,7 +18,7 @@ public interface ITableAppManageService extends IService<TableAppPO> {
      *
      * @return 字段
      */
-    List<FilterFieldDTO> getColumn();
+    List<FilterFieldDTO> getFilterColumn();
 
     /**
      * 筛选器
