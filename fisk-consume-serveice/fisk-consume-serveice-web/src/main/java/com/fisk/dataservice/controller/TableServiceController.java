@@ -5,18 +5,16 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.client.DataFactoryClient;
-import com.fisk.dataservice.dto.app.AppRegisterDTO;
-import com.fisk.dataservice.dto.app.AppRegisterEditDTO;
-import com.fisk.dataservice.dto.app.AppRegisterQueryDTO;
+import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.datasource.DataSourceColumnQueryDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceQueryDTO;
 import com.fisk.dataservice.dto.tableservice.*;
 import com.fisk.dataservice.service.IDataSourceConfig;
 import com.fisk.dataservice.service.ITableAppManageService;
 import com.fisk.dataservice.service.ITableService;
-import com.fisk.dataservice.vo.app.AppRegisterVO;
 import com.fisk.dataservice.vo.tableservice.TableAppVO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.validation.annotation.Validated;
@@ -28,6 +26,7 @@ import java.util.List;
 /**
  * @author JianWenYang
  */
+@Api(tags = {SwaggerConfig.TAG_7})
 @RestController
 @RequestMapping("/tableService")
 @EnableAsync
