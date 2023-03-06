@@ -110,6 +110,11 @@ public class PgSqlUtils {
     }
 
     public static String buildSelectColumnInfo(String tableName) {
+        String[] names = null;
+        if (tableName.contains(".")){
+            names = tableName.split("\\.");
+            tableName = names[1];
+        }
         StringBuilder str = new StringBuilder();
 
         str.append("SELECT ");
@@ -120,10 +125,18 @@ public class PgSqlUtils {
         str.append("FROM ");
         str.append("information_schema.COLUMNS ");
         str.append("WHERE ");
+        if (names != null){
+            str.append("LOWER (TABLE_SCHEMA) = LOWER");
+            str.append("('");
+            str.append(names[0]);
+            str.append("')");
+            str.append(" and ");
+        }
         str.append("LOWER (TABLE_NAME) = LOWER");
         str.append("('");
         str.append(tableName);
         str.append("')");
+        log.info("查询sql：{}", str.toString());
 
         return str.toString();
     }

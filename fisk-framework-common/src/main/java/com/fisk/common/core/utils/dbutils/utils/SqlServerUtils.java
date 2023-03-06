@@ -1,5 +1,6 @@
 package com.fisk.common.core.utils.dbutils.utils;
 
+import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
@@ -78,7 +79,12 @@ public class SqlServerUtils {
             colNameList = new ArrayList<>();
 
             DatabaseMetaData metaData = conn.getMetaData();
-            resultSet = metaData.getColumns(null, "%", tableName, "%");
+            if (tableName.contains(".")){
+                String[] str = tableName.split("\\.");
+                resultSet = metaData.getColumns(null, str[0], str[1], "%");
+            }else{
+                resultSet = metaData.getColumns(null, "%", tableName, "%");
+            }
             while (resultSet.next()) {
                 TableColumnDTO dto = new TableColumnDTO();
                 dto.fieldName = resultSet.getString("COLUMN_NAME");

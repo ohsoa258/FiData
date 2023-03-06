@@ -422,7 +422,7 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
             log.error("【获取表信息失败】,{}", e);
             return null;
         } finally {
-            AbstractCommonDbHelper.closeConnection(conn);
+//            AbstractCommonDbHelper.closeConnection(conn);
         }
     }
 
