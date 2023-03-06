@@ -146,9 +146,6 @@ public class DataViewThemeServiceImpl
                 po.setAccountDesc(dto.getAccountDesc());
                 po.setAccountPsd(dto.getAccountPsd());
                 po.setJurisdiction(AccountJurisdictionEnum.READ_ONLY.getName());
-                // 查询数据库中是否存在
-                // DataViewAccountPO dataViewAccountPO = accountList.stream().filter(item -> item.getAccountName().equals(dto.getAccountName())).findFirst().orElse(null);
-                // if (dataViewAccountPO == null){
                 int insert = dataViewAccountMapper.insert(po);
                 if (insert <= 0){
                     throw new FkException(ResultEnum.DS_VIEW_THEME_ACCOUNT_SAVE);
@@ -159,10 +156,13 @@ public class DataViewThemeServiceImpl
                 String sql = null;
                 if (DataSourceTypeEnum.SQLSERVER.getName().equalsIgnoreCase(dataSourceDTO.conType.getName())){
                     sql = "CREATE LOGIN " + po.getAccountName() + " with " + " PASSWORD=" + "'" + po.getAccountPsd() + "'";
+                    execSql(sql, dataSourceDTO);
+                    sql = "create user " + po.getAccountName() + " for login " + po.getAccountName();
+                    execSql(sql, dataSourceDTO);
                 }else if (DataSourceTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(dataSourceDTO.conType.getName())){
                     sql = "CREATE USER "+ po.getAccountName() + " WITH PASSWORD " + "'" + po.getAccountPsd() + "'";
+                    execSql(sql, dataSourceDTO);
                 }
-                execSql(sql, dataSourceDTO);
 
                 // 创建数据库用户并关联角色
                 relationRole(dataSourceDTO, viewThemeId, po);
@@ -183,10 +183,13 @@ public class DataViewThemeServiceImpl
                 String sql = null;
                 if (DataSourceTypeEnum.SQLSERVER.getName().equalsIgnoreCase(dataSourceDTO.conType.getName())){
                     sql = "CREATE LOGIN " + po.getAccountName() + " with " + " PASSWORD=" + "'" + po.getAccountPsd() + "'";
+                    execSql(sql, dataSourceDTO);
+                    sql = "create user " + po.getAccountName() + " for login " + po.getAccountName();
+                    execSql(sql, dataSourceDTO);
                 }else if (DataSourceTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(dataSourceDTO.conType.getName())){
                     sql = "CREATE USER "+ po.getAccountName() + " WITH PASSWORD " + "'" + po.getAccountPsd() + "'";
+                    execSql(sql, dataSourceDTO);
                 }
-                execSql(sql, dataSourceDTO);
 
                 // 创建数据库用户并关联角色
                 relationRole(dataSourceDTO, viewThemeId, po);
@@ -198,7 +201,7 @@ public class DataViewThemeServiceImpl
     private void relationRole(DataSourceDTO dataSourceDTO, Integer viewThemeId, DataViewAccountPO po){
         log.info("开始关联数据库角色，【{}{}】", viewThemeId, JSON.toJSONString(po));
         String roleName = dataSourceDTO.conDbname + "_viewThemeRole_" + viewThemeId;
-        String relationSql = "exec sp_adduser " + po.getAccountName() + "," + po.getAccountName() + "," + roleName;
+        String relationSql = "exec sp_addrolemember " + roleName + "," + po.getAccountName();
         if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
             relationSql = "grant " + roleName + " to " + po.getAccountName();
         }
@@ -373,21 +376,22 @@ public class DataViewThemeServiceImpl
     private void removeLogin(List<DataViewAccountPO> accountList, DataSourceDTO dataSourceDTO){
         try {
             for (DataViewAccountPO item : accountList){
-                String sql = "ALTER AUTHORIZATION ON SCHEMA::" + item.getAccountName() + " TO " + "dbo";
-                String sql1 = "drop user if exists " + item.getAccountName();
                 String sql2 = "drop login " + item.getAccountName();
+                String sql1 = "drop user if exists " + item.getAccountName();
 
                 AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
                 Connection connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
                         dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
                 if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
-                    sql = "DROP user if exists " + item.getAccountName();
+                    connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
+                            dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.PG);
+                    String sql = "DROP user if exists " + item.getAccountName();
                     abstractDbHelper.executeSql(sql, connection);
-                    return;
+                    log.info("删除数据结束，{}", sql);
+                }else{
+                    abstractDbHelper.executeSql(sql1, connection);
+                    abstractDbHelper.executeSql(sql2, connection);
                 }
-                abstractDbHelper.executeSql(sql, connection);
-                abstractDbHelper.executeSql(sql1, connection);
-                abstractDbHelper.executeSql(sql2, connection);
             }
         } catch (SQLException e) {
             log.error("删除数据库登录用户失败,", e);
@@ -413,7 +417,7 @@ public class DataViewThemeServiceImpl
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     public ResultEnum updateViewTheme(DataViewThemeDTO dto) {
         // 查询数据视图主题
         Integer themeId = dto.getId();
@@ -540,6 +544,7 @@ public class DataViewThemeServiceImpl
 
         if (!CollectionUtils.isEmpty(allList)){
             dataViewAccountMapper.deleteBatchIds(allList.stream().map(DataViewAccountPO::getId).collect(Collectors.toList()));
+            removeLogin(allList, dataSourceDTO);
         }
 
         List<DataViewAccountPO> currList = new ArrayList<>();
@@ -570,7 +575,6 @@ public class DataViewThemeServiceImpl
         if (CollectionUtils.isEmpty(currList)){
             return;
         }
-        removeLogin(currList, dataSourceDTO);
         saveRelationAccount(DataViewMap.INSTANCES.accountListPoToDto(currList), viewThemeId, dataSourceDTO, "update");
     }
 
