@@ -307,6 +307,7 @@ public class DataViewThemeServiceImpl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum removeViewTheme(Integer viewThemeId) {
         // 查询数据
         DataViewThemePO model = baseMapper.selectById(viewThemeId);
@@ -318,15 +319,6 @@ public class DataViewThemeServiceImpl
         boolean removeFlag = this.removeById(viewThemeId);
         if (!removeFlag){
             throw new FkException(ResultEnum.DELETE_ERROR);
-        }
-
-        // 删除不使用的架构
-        QueryWrapper<DataViewThemePO> qw = new QueryWrapper<>();
-        qw.lambda().ne(DataViewThemePO::getId, viewThemeId).eq(DataViewThemePO::getThemeAbbr, model.getThemeAbbr())
-                .eq(DataViewThemePO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
-        Integer schemaCount = baseMapper.selectCount(qw);
-        if (schemaCount <= 0){
-            removeSchema(model.getThemeAbbr(), model.getTargetDbId());
         }
 
         // 删除数据视图
@@ -348,6 +340,15 @@ public class DataViewThemeServiceImpl
             // 删除角色
             removeRole(viewThemeId, verifyDataSource(model.getTargetDbId()));
         }
+
+//        // 删除不使用的架构
+//        QueryWrapper<DataViewThemePO> qw = new QueryWrapper<>();
+//        qw.lambda().ne(DataViewThemePO::getId, viewThemeId).eq(DataViewThemePO::getThemeAbbr, model.getThemeAbbr())
+//                .eq(DataViewThemePO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
+//        Integer schemaCount = baseMapper.selectCount(qw);
+//        if (schemaCount <= 0){
+//            removeSchema(model.getThemeAbbr(), model.getTargetDbId());
+//        }
         return ResultEnum.SUCCESS;
     }
 
@@ -358,7 +359,7 @@ public class DataViewThemeServiceImpl
             DataViewRolePO dataViewRolePO = dataViewRoleMapper.selectOne(qw);
 
             String sql1 = "ALTER AUTHORIZATION ON SCHEMA::" + dataViewRolePO.getRoleName() + " TO " + "dbo";
-            String sql2 = "DROP ROLE IF EXISTS" + dataViewRolePO.getRoleName();
+            String sql2 = "DROP ROLE IF EXISTS " + dataViewRolePO.getRoleName();
             if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
                 sql1 = "REASSIGN OWNED BY " + dataViewRolePO.getRoleName() + " TO postgres";
                 sql2 = "DROP USER " + dataViewRolePO.getRoleName();
@@ -400,14 +401,21 @@ public class DataViewThemeServiceImpl
 
     private void removeSchema(String themeAbbr, Integer targetDbId){
         try {
+            // 删除角色和用户TODO
             String sql = "DROP SCHEMA IF EXISTS " + themeAbbr;
             log.info("删除架构语句,[{}]", sql);
 
             DataSourceDTO dataSourceDTO = verifyDataSource(targetDbId);
 
             AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
-            Connection connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
-                    dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+            Connection connection = null;
+            if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName())){
+                connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
+                        dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+            }else{
+                connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
+                        dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.PG);
+            }
             abstractDbHelper.executeSql(sql, connection);
         } catch (SQLException e) {
             log.error("删除数据库架构失败,", e);
