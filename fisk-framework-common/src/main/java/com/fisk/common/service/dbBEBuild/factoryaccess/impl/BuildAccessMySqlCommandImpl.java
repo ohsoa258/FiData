@@ -103,8 +103,10 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
         String[] data = new String[2];
         data[1] = dto.dataLength;
         switch (typeEnum) {
-            case INT:
             case BIT:
+                data[0] = MySqlTypeEnum.BIT.getName();
+                break;
+            case INT:
             case SMALLINT:
                 data[0] = MySqlTypeEnum.INT.getName();
                 break;
@@ -150,8 +152,10 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
         String[] data = new String[2];
         data[1] = dto.dataLength;
         switch (typeEnum) {
-            case INT:
             case BIT:
+                data[0] = PgTypeEnum.BIT.getName();
+                break;
+            case INT:
             case SMALLINT:
                 data[0] = PgTypeEnum.INT4.getName();
                 break;
@@ -193,8 +197,10 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
         String[] data = new String[2];
         data[1] = dto.dataLength;
         switch (typeEnum) {
-            case INT:
             case BIT:
+                data[0] = SqlServerTypeEnum.BIT.getName();
+                break;
+            case INT:
             case SMALLINT:
                 data[0] = SqlServerTypeEnum.INT.getName();
                 break;

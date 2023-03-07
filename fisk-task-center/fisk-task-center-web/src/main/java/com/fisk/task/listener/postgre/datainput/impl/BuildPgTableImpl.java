@@ -50,7 +50,9 @@ public class BuildPgTableImpl implements IbuildTable {
                 sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + ",");
             } else if (l.fieldType.toUpperCase().equals("TIME")) {
                 sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + ",");
-            } else {
+            } else if(l.fieldType.contains("BIT")){
+                sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + ",");
+            }else{
                 sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + "(" + l.fieldLength + "),");
             }
             stgSql.append("" + l.fieldName + " text,");
