@@ -1,5 +1,6 @@
 package com.fisk.dataservice.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -14,6 +15,7 @@ import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
 import com.fisk.dataservice.dto.tableservice.*;
 import com.fisk.dataservice.entity.AppServiceConfigPO;
 import com.fisk.dataservice.entity.TableServicePO;
+import com.fisk.dataservice.entity.TableSyncModePO;
 import com.fisk.dataservice.enums.ApiStateTypeEnum;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
 import com.fisk.dataservice.map.DataSourceConMap;
@@ -78,7 +80,7 @@ public class TableServiceImpl
         appServiceConfigPO.setAppId(dto.getTableAppId());
         appServiceConfigPO.setServiceId(Math.toIntExact(data.getId()));
         appServiceConfigPO.setApiState(ApiStateTypeEnum.Enable.getValue());
-        appServiceConfigPO.setType(2);
+        appServiceConfigPO.setType(AppServiceTypeEnum.TABLE.getValue());
         int insert = appServiceConfigMapper.insert(appServiceConfigPO);
         if (insert <= 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
@@ -163,6 +165,16 @@ public class TableServiceImpl
 
         tableSyncMode.delTableServiceSyncMode(id, AppServiceTypeEnum.TABLE.getValue());
 
+        QueryWrapper<AppServiceConfigPO> appServiceConfigPOQueryWrapper = new QueryWrapper<>();
+        appServiceConfigPOQueryWrapper.lambda()
+                .eq(AppServiceConfigPO::getServiceId, id)
+                .eq(AppServiceConfigPO::getType, AppServiceTypeEnum.TABLE.getValue());
+        List<AppServiceConfigPO> appServiceConfigPOS = appServiceConfigMapper.selectList(appServiceConfigPOQueryWrapper);
+        if (CollectionUtils.isNotEmpty(appServiceConfigPOS)) {
+            if (appServiceConfigMapper.deleteByIdWithFill(appServiceConfigPOS.get(0)) <= 0) {
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            }
+        }
         return ResultEnum.SUCCESS;
     }
 
