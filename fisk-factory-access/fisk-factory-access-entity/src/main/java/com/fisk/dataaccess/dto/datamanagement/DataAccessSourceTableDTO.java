@@ -25,6 +25,8 @@ public class DataAccessSourceTableDTO {
 
     public Integer appId;
 
+    public Integer dataSourceId;
+
     public String appAbbreviation;
 
     public String sqlScript;

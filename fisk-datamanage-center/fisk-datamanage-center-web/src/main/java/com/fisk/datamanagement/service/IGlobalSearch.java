@@ -3,6 +3,7 @@ package com.fisk.datamanagement.service;
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryAttributeDTO;
+import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.dto.search.SearchDslDTO;
 
 import java.util.List;
@@ -20,7 +21,17 @@ public interface IGlobalSearch {
      * @param offset
      * @return
      */
-    JSONObject searchQuick(String query, int limit, int offset);
+   /* JSONObject searchQuick(String query, int limit, int offset);*/
+
+
+    /**
+     * 全局搜索--查询Entity
+     * @param query
+     * @param limit
+     * @param offset
+     * @return
+     */
+    List<EntitiesDTO>  searchQuick(String query,int limit, int offset);
 
     /**
      * 全局搜索--查询Suggestions
@@ -29,6 +40,8 @@ public interface IGlobalSearch {
      * @return
      */
     JSONObject searchSuggestions(String prefixString);
+
+
 
     /**
      * 全局搜索--查询业务分类
@@ -53,5 +66,10 @@ public interface IGlobalSearch {
      * @return
      */
     JSONObject searchDsl(SearchDslDTO dto);
+
+
+
+
+
 
 }

@@ -81,8 +81,6 @@ import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL;
@@ -391,14 +389,16 @@ public class TableFieldsImpl
             table.setName(item.name);
             table.setComment(String.valueOf(appId));
             table.setDisplayName(item.name);
-            table.setComment("stg");
+            table.setDescription("stg");
             tableList.add(table);
         }
         //list.get(0).description = "stg";
         list.get(0).dbList.get(0).tableList = tableList;
 
+        log.info("构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+        dataManageClient.consumeMetaData(list);
 
-        //修改元数据
+        /*//修改元数据
         ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
         cachedThreadPool.execute(new Runnable() {
             @Override
@@ -411,7 +411,7 @@ public class TableFieldsImpl
                     log.error("【dataManageClient.MetaData()】方法报错,ex", e);
                 }
             }
-        });
+        });*/
 
     }
 
@@ -787,7 +787,7 @@ public class TableFieldsImpl
             table.setDescription(tableAccess.getTableDes());
             table.setComment(String.valueOf(app.getId()));
             table.setDisplayName(tableAccess.displayName);
-            table.setOwner(app.appPrincipal);
+            table.setOwner(app.createUser);
 
             //所属人
             /*userIds.add(Long.parseLong(tableAccess.createUser));
@@ -883,7 +883,9 @@ public class TableFieldsImpl
      * @param list
      */
     public void consumeMetaData(List<MetaDataInstanceAttributeDTO> list) {
-        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+        log.info("构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
+        dataManageClient.consumeMetaData(list);
+        /*ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
         cachedThreadPool.execute(new Runnable() {
             @Override
             public void run() {
@@ -895,7 +897,7 @@ public class TableFieldsImpl
                     log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
                 }
             }
-        });
+        });*/
     }
 
     /**
