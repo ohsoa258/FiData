@@ -35,4 +35,6 @@ public class TableServiceDTO {
     @ApiModelProperty(value = "来源库id", required = true)
     public Integer sourceDbId;
 
+    @ApiModelProperty(value = "表应用ID")
+    public Integer tableAppId;
 }

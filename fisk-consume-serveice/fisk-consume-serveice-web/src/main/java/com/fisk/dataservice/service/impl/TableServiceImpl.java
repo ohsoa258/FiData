@@ -12,10 +12,13 @@ import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
 import com.fisk.dataservice.dto.tableservice.*;
+import com.fisk.dataservice.entity.AppServiceConfigPO;
 import com.fisk.dataservice.entity.TableServicePO;
+import com.fisk.dataservice.enums.ApiStateTypeEnum;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
 import com.fisk.dataservice.map.DataSourceConMap;
 import com.fisk.dataservice.map.TableServiceMap;
+import com.fisk.dataservice.mapper.AppServiceConfigMapper;
 import com.fisk.dataservice.mapper.TableServiceMapper;
 import com.fisk.dataservice.service.ITableService;
 import com.fisk.system.client.UserClient;
@@ -53,6 +56,9 @@ public class TableServiceImpl
     @Resource
     TableServiceMapper mapper;
 
+    @Resource
+    private AppServiceConfigMapper appServiceConfigMapper;
+
     @Override
     public Page<TableServicePageDataDTO> getTableServiceListData(TableServicePageQueryDTO dto) {
         return mapper.getTableServiceListData(dto.page, dto);
@@ -66,6 +72,15 @@ public class TableServiceImpl
         }
         TableServicePO data = TableServiceMap.INSTANCES.dtoToPo(dto);
         if (!this.save(data)) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        AppServiceConfigPO appServiceConfigPO = new AppServiceConfigPO();
+        appServiceConfigPO.setAppId(dto.getTableAppId());
+        appServiceConfigPO.setServiceId(Math.toIntExact(data.getId()));
+        appServiceConfigPO.setApiState(ApiStateTypeEnum.Enable.getValue());
+        appServiceConfigPO.setType(2);
+        int insert = appServiceConfigMapper.insert(appServiceConfigPO);
+        if (insert <= 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         return ResultEntityBuild.build(ResultEnum.SUCCESS, data.id);
