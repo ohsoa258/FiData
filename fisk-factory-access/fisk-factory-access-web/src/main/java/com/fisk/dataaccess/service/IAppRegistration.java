@@ -21,6 +21,7 @@ import com.fisk.dataaccess.dto.app.AppRegistrationInfoDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
+import com.fisk.dataaccess.vo.datafactory.SyncTableCountVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
@@ -307,4 +308,10 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return
      */
     List<AppRegistrationInfoDTO> getBatchTargetDbIdByAppIds(List<Integer> appIds);
+
+    /**
+     * 获取数据接入不同同步类型下的表个数
+     * @return
+     */
+    SyncTableCountVO getSyncTableCount();
 }

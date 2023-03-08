@@ -29,4 +29,10 @@ public class SystemWebIndexController {
     public ResultEntity<Object> getDataAccessNum() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataAccessNum());
     }
+
+    @ApiOperation("数据接入同步类型表个数统计")
+    @GetMapping("/getSyncTableCount")
+    public ResultEntity<Object> getSyncTableCount(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getSyncTableCount());
+    }
 }

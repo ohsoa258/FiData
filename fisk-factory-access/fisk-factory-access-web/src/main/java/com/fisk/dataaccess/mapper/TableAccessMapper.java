@@ -10,10 +10,12 @@ import com.fisk.dataaccess.dto.table.TableNameDTO;
 import com.fisk.dataaccess.dto.table.TableNameTreeDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessQueryDTO;
+import com.fisk.dataaccess.entity.SyncTableCountPO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.TableNameVO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
+import com.fisk.datafactory.enums.DelFlagEnum;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -197,4 +199,7 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
      */
     TableQueryDTO getTableInfo(@Param("tableName") String tableName);
 
+    @Select("select s.sync_mode as syncMode, count(1) as count from tb_table_access as a right join tb_table_syncmode as s on a.id = s.id " +
+            "where a.del_flag = #{flag} group by s.sync_mode")
+    List<SyncTableCountPO> getSyncTableCount(int flag);
 }

@@ -57,6 +57,7 @@ import com.fisk.dataaccess.utils.httprequest.Impl.BuildHttpRequestImpl;
 import com.fisk.dataaccess.utils.sql.*;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
+import com.fisk.dataaccess.vo.datafactory.SyncTableCountVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.pgsql.TableListVO;
 import com.fisk.datafactory.client.DataFactoryClient;
@@ -64,7 +65,9 @@ import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.datamodel.enums.SyncModeEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.datasource.DataSourceResultDTO;
@@ -1910,6 +1913,28 @@ public class AppRegistrationImpl
             }).collect(Collectors.toList());
         }
         return idList;
+    }
+
+    @Override
+    public SyncTableCountVO getSyncTableCount(){
+        List<SyncTableCountPO> list = tableAccessMapper.getSyncTableCount(DelFlagEnum.NORMAL_FLAG.getValue());
+        SyncTableCountVO model = new SyncTableCountVO();
+        if (!CollectionUtils.isEmpty(list)){
+            Map<Integer, Integer> map = list.stream().collect(Collectors.toMap(SyncTableCountPO::getSyncMode, SyncTableCountPO::getCount));
+            log.info("数据{}", JSON.toJSONString(map));
+            model.setAppendCoverCount(map.get(SyncModeEnum.FULL_AMOUNT.getValue()));
+            model.setFullCoverCount(map.get(SyncModeEnum.INCREMENTAL.getValue()));
+            model.setBusinessTimeCoverCount(map.get(SyncModeEnum.CUSTOM_OVERRIDE.getValue()));
+            Integer delKey = map.get(SyncModeEnum.DELETE_INSERT.getValue());
+            Integer key = map.get(SyncModeEnum.TIME_COVER.getValue());
+            model.setBusinessKeyCoverCount(delKey);
+            if (!Objects.isNull(key)){
+                model.setBusinessKeyCoverCount(delKey + key);
+            }
+            model.setTotalCount(model.getAppendCoverCount() + model.getBusinessKeyCoverCount()
+                    + model.getBusinessTimeCoverCount() + model.getFullCoverCount());
+        }
+        return model;
     }
 
     /**
