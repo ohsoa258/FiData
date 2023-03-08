@@ -78,7 +78,6 @@ import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
-import com.sun.xml.internal.ws.api.model.CheckedException;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -1917,23 +1916,26 @@ public class AppRegistrationImpl
     }
 
     @Override
-    public SyncTableCountVO getSyncTableCount(){
-        List<SyncTableCountPO> list = tableAccessMapper.getSyncTableCount(DelFlagEnum.NORMAL_FLAG.getValue());
+    public SyncTableCountVO getSyncTableCount(Integer appId){
+        if (appId == 0){
+            throw new FkException(ResultEnum.PARAMTER_ERROR);
+        }
+
+        List<SyncTableCountPO> list = tableAccessMapper.getSyncTableCount(appId, DelFlagEnum.NORMAL_FLAG.getValue());
         SyncTableCountVO model = new SyncTableCountVO();
         if (!CollectionUtils.isEmpty(list)){
             Map<Integer, Integer> map = list.stream().collect(Collectors.toMap(SyncTableCountPO::getSyncMode, SyncTableCountPO::getCount));
             log.info("数据{}", JSON.toJSONString(map));
-            model.setAppendCoverCount(map.get(SyncModeEnum.FULL_AMOUNT.getValue()));
-            model.setFullCoverCount(map.get(SyncModeEnum.INCREMENTAL.getValue()));
-            model.setBusinessTimeCoverCount(map.get(SyncModeEnum.CUSTOM_OVERRIDE.getValue()));
-            Integer delKey = map.get(SyncModeEnum.DELETE_INSERT.getValue());
-            Integer key = map.get(SyncModeEnum.TIME_COVER.getValue());
-            model.setBusinessKeyCoverCount(delKey);
-            if (!Objects.isNull(key)){
-                model.setBusinessKeyCoverCount(delKey + key);
-            }
-            model.setTotalCount(model.getAppendCoverCount() + model.getBusinessKeyCoverCount()
-                    + model.getBusinessTimeCoverCount() + model.getFullCoverCount());
+            int appendCount = map.get(SyncModeEnum.FULL_AMOUNT.getValue()) == null ? 0 : map.get(SyncModeEnum.FULL_AMOUNT.getValue());
+            int fullCount = map.get(SyncModeEnum.INCREMENTAL.getValue()) == null ? 0 : map.get(SyncModeEnum.INCREMENTAL.getValue());
+            int timeCount = map.get(SyncModeEnum.CUSTOM_OVERRIDE.getValue()) == null ? 0 : map.get(SyncModeEnum.CUSTOM_OVERRIDE.getValue());
+            int delKey = map.get(SyncModeEnum.DELETE_INSERT.getValue()) == null ? 0 : map.get(SyncModeEnum.DELETE_INSERT.getValue());
+            int key = map.get(SyncModeEnum.TIME_COVER.getValue()) == null ? 0 : map.get(SyncModeEnum.TIME_COVER.getValue());
+            model.setAppendCoverCount(appendCount);
+            model.setFullCoverCount(fullCount);
+            model.setBusinessTimeCoverCount(timeCount);
+            model.setBusinessKeyCoverCount(delKey + key);
+            model.setTotalCount(appendCount + fullCount + timeCount + delKey + key);
         }
         return model;
     }

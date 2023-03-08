@@ -201,6 +201,6 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
     TableQueryDTO getTableInfo(@Param("tableName") String tableName);
 
     @Select("select s.sync_mode as syncMode, count(1) as count from tb_table_access as a right join tb_table_syncmode as s on a.id = s.id " +
-            "where a.del_flag = #{flag} group by s.sync_mode")
-    List<SyncTableCountPO> getSyncTableCount(int flag);
+            "where a.del_flag = #{flag} and a.app_id = #{appId} group by s.sync_mode")
+    List<SyncTableCountPO> getSyncTableCount(@Param("appId") Integer appId, @Param("flag") int flag);
 }

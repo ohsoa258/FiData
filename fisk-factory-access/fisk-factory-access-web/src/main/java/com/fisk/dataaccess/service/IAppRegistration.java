@@ -312,6 +312,7 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
     /**
      * 获取数据接入不同同步类型下的表个数
      * @return
+     * @param appId
      */
-    SyncTableCountVO getSyncTableCount();
+    SyncTableCountVO getSyncTableCount(Integer appId);
 }
