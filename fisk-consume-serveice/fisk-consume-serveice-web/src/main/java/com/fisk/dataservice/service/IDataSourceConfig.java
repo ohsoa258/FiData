@@ -19,7 +19,7 @@ public interface IDataSourceConfig {
      *
      * @return
      */
-    List<DataSourceInfoDTO> getTableInfoList();
+    List<DataSourceInfoDTO> getTableInfoList(long tableAppId);
 
     /**
      * 获取表字段集合

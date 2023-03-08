@@ -84,9 +84,9 @@ public class TableServiceController {
     }
 
     @ApiOperation("获取FiData系统库表信息")
-    @GetMapping("/getDbTableInfoList")
-    public ResultEntity<Object> getDbTableInfoList() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataSourceConfig.getTableInfoList());
+    @GetMapping("/getDbTableInfoList/{tableAppId}")
+    public ResultEntity<Object> getDbTableInfoList(@PathVariable("tableAppId") long tableAppId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataSourceConfig.getTableInfoList(tableAppId));
     }
 
     @ApiOperation("获取表字段信息")

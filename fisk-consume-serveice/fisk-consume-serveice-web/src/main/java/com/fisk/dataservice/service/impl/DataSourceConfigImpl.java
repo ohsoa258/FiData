@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
@@ -29,6 +30,8 @@ import com.fisk.dataservice.dto.datasource.DataSourceColumnQueryDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceInfoDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceQueryDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceQueryResultDTO;
+import com.fisk.dataservice.entity.TableAppDatasourcePO;
+import com.fisk.dataservice.mapper.TableAppDatasourceMapper;
 import com.fisk.dataservice.service.IDataSourceConfig;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
@@ -57,6 +60,9 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
 
     @Resource
     private PublishTaskClient publishTaskClient;
+
+    @Resource
+    private TableAppDatasourceMapper tableAppDatasourceMapper;
 
     @Resource
     UserClient client;
@@ -153,14 +159,24 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
     }
 
     @Override
-    public List<DataSourceInfoDTO> getTableInfoList() {
+    public List<DataSourceInfoDTO> getTableInfoList(long tableAppId) {
         //获取数据源
         List<DataSourceDTO> allFiDataDataSource = getAllFiDataDataSource();
 
+        //获取配置的数据
+        QueryWrapper<TableAppDatasourcePO> tableAppDatasourcePOQueryWrapper = new QueryWrapper<>();
+        tableAppDatasourcePOQueryWrapper.lambda().eq(TableAppDatasourcePO::getDelFlag, 1)
+                .eq(TableAppDatasourcePO::getTableAppId, tableAppId)
+                .eq(TableAppDatasourcePO::getDatasourceType, 1);
+        List<TableAppDatasourcePO> tableAppDatasourcePOList = tableAppDatasourceMapper.selectList(tableAppDatasourcePOQueryWrapper);
+        if (CollectionUtils.isEmpty(tableAppDatasourcePOList)) {
+            return new ArrayList<>();
+        }
+        List<Integer> dataSourceIdList = tableAppDatasourcePOList.stream().map(t -> t.getDatasourceId()).collect(Collectors.toList());
+
         //过滤数据
         List<DataSourceDTO> dataList = allFiDataDataSource.stream()
-                .filter(e -> e.sourceBusinessType == SourceBusinessTypeEnum.DW
-                        || e.sourceBusinessType == SourceBusinessTypeEnum.ODS)
+                .filter(e -> dataSourceIdList.contains(e.getId()))
                 .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(dataList)) {
             return new ArrayList<>();
