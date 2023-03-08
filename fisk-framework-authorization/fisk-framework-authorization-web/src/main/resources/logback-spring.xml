@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
     <!-- 定义变量，下方可通过${}引用 -->
-    <property name="LOG_HOME" value="/root/fisk/fidata/logs/auth"/>
+    <property name="LOG_HOME" value="./logs/auth"/>
     <property name="appName" value="auth"/>
     <springProperty scope="context" name="springAppName" source="spring.application.name"/>
     <contextName>${appName}</contextName>
@@ -99,7 +99,7 @@
         -->
     </springProfile>
 
-    <springProfile name="uat,test,pd,demo,yf,rj">
+    <springProfile name="uat,test,pd,demo,yf,rj,sd">
         <logger name="org" level="info">
             <appender-ref ref="Console"/>
             <appender-ref ref="FILE"/>

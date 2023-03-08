@@ -5,10 +5,10 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.config.SwaggerConfig;
-import com.fisk.datamanagement.dto.entity.EntityAssociatedLabelDTO;
 import com.fisk.datamanagement.dto.entity.EntityAssociatedMetaDataDTO;
 import com.fisk.datamanagement.dto.entity.EntityDTO;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
+import com.fisk.datamanagement.dto.metadatalabelmap.MetadataLabelMapParameter;
 import com.fisk.datamanagement.service.IEntity;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -72,7 +72,7 @@ public class MetaDataEntityController {
 
     @ApiOperation("实体添加标签")
     @PostMapping("/entityAssociatedLabel")
-    public ResultEntity<Object> entityAssociatedLabel(@Validated @RequestBody EntityAssociatedLabelDTO dto) {
+    public ResultEntity<Object> entityAssociatedLabel(@Validated @RequestBody MetadataLabelMapParameter dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.entityAssociatedLabel(dto));
     }
 

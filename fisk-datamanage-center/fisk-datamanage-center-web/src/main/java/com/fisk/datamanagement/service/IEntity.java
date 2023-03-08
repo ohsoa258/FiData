@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
+import com.fisk.datamanagement.dto.metadatalabelmap.MetadataLabelMapParameter;
+import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
 
 import java.util.List;
 
@@ -51,7 +53,7 @@ public interface IEntity {
      * @param dto
      * @return
      */
-    JSONObject searchBasicEntity(EntityFilterDTO dto);
+    SearchBusinessGlossaryEntityDTO searchBasicEntity(EntityFilterDTO dto);
 
     /**
      * 根据实体id,获取审计列表
@@ -62,10 +64,11 @@ public interface IEntity {
 
     /**
      * 实体批量关联标签
+     *
      * @param dto
      * @return
      */
-    ResultEnum entityAssociatedLabel(EntityAssociatedLabelDTO dto);
+    ResultEnum entityAssociatedLabel(MetadataLabelMapParameter dto);
 
     /**
      * 实体批量关联业务元数据
@@ -87,5 +90,6 @@ public interface IEntity {
      * @return
      */
     EntityInstanceDTO getInstanceDetail(String guid);
+
 
 }

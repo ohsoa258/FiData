@@ -1,0 +1,48 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datamanagement.mapper.MetadataEntityMapper">
+
+    <select id="selectMetadataEntity" resultType="com.fisk.datamanagement.entity.MetadataEntityPO">
+        SELECT * FROM tb_metadata_entity WHERE type_id != #{type} and (description IS NULL or description != 'stg');
+    </select>
+
+    <!--查询抽取详情，和输入输出源-->
+    <resultMap id="processMap" type="com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO">
+        <id property="id" column="id" />
+        <result property="name" column="tbname"/>
+        <result property="description" column="tbdes"/>
+        <collection property="relationDTOList" ofType="com.fisk.datamanagement.dto.lineagemaprelation.LineageMapRelationDTO">
+            <id property="id" column="lmid"/>
+            <result property="fromEntityId" column="fromid" />
+            <result property="toEntityId" column="toid"/>
+        </collection>
+    </resultMap>
+    <select id="getProcess" resultMap="processMap">
+        SELECT tb1.id,tb1.name tbname,tb1.description tbdes,lmr.from_entity_id fromid,lmr.to_entity_id toid,lmr.id lmid
+        FROM tb_metadata_entity tb1
+        LEFT JOIN tb_lineage_map_relation lmr on tb1.id = lmr.metadata_entity_id
+        WHERE tb1.id=#{guid} AND tb1.del_flag=1
+    </select>
+
+
+    <!--全局Entites搜索-->
+    <resultMap id="queryEntity" type="com.fisk.datamanagement.dto.search.EntitiesDTO">
+        <id property="guid" column="guid"/>
+        <result property="displayText" column="ename"/>
+        <result property="typeName" column="tname"/>
+        <association property="attributes"  javaType="com.fisk.datamanagement.dto.entity.EntityAttributesDTO">
+            <result property="name" column="ename"/>
+            <result property="qualifiedName" column="qname"/>
+        </association>
+    </resultMap>
+    <select id="searchEntitys" resultMap="queryEntity">
+        SELECT  tme.id guid,tme.`name` ename,tme.qualified_name qname,tmp.type tname
+        FROM tb_metadata_entity tme
+        LEFT JOIN tb_metadata_entity_type tmp ON tme.type_id = tmp .id
+        WHERE tme.`name` LIKE CONCAT('%',#{query},'%') AND (tme.description != 'stg' or description is null) AND  tme.del_flag = 1
+        LIMIT #{offset},#{limit}
+    </select>
+
+
+</mapper>

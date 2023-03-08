@@ -25,6 +25,12 @@ public class GlobalSearchController {
     @Resource
     IGlobalSearch service;
 
+ /*   @ApiOperation("首页文本框查询Entity")
+    @GetMapping("/searchQuick")
+    public ResultEntity<Object> searchQuick(String query, int limit, int offset) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchQuick(query, limit, offset));
+    }*/
+
     @ApiOperation("首页文本框查询Entity")
     @GetMapping("/searchQuick")
     public ResultEntity<Object> searchQuick(String query, int limit, int offset) {
