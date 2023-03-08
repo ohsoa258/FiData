@@ -75,6 +75,7 @@ import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
+import com.sun.xml.internal.ws.api.model.CheckedException;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -951,7 +952,7 @@ public class AppRegistrationImpl
                 default:
                     break;
             }
-        } catch (Exception e) {
+        } catch (Exception e){
             log.error("测试连接失败:{}", e);
             throw new FkException(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
         }

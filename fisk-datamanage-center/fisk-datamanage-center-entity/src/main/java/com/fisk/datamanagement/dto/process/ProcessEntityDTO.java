@@ -2,6 +2,8 @@ package com.fisk.datamanagement.dto.process;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author JianWenYang
  */

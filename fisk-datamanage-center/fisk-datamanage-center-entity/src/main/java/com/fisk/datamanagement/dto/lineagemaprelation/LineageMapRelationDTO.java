@@ -7,6 +7,7 @@ import lombok.Data;
  */
 @Data
 public class LineageMapRelationDTO {
+    public Integer id;
 
     public Integer metadataEntityId;
 

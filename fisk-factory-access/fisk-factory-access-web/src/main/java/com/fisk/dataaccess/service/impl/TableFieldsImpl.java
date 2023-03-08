@@ -395,7 +395,7 @@ public class TableFieldsImpl
         //list.get(0).description = "stg";
         list.get(0).dbList.get(0).tableList = tableList;
 
-        log.info("维度表构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+        log.info("构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
         dataManageClient.consumeMetaData(list);
 
         /*//修改元数据

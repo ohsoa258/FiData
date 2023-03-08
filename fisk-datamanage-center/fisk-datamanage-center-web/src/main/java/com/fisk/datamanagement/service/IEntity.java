@@ -91,4 +91,5 @@ public interface IEntity {
      */
     EntityInstanceDTO getInstanceDetail(String guid);
 
+
 }

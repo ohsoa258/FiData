@@ -2,6 +2,7 @@ package com.fisk.datamanagement.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
@@ -9,6 +10,7 @@ import com.fisk.datamanagement.dto.MetadataEntityClassificationAttributeMapDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryAttributeDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryTermAttributeDTO;
+import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.dto.search.SearchDslDTO;
 import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
@@ -50,19 +52,26 @@ public class GlobalSearchImpl implements IGlobalSearch {
     @Resource
     UserClient userClient;
 
+
     @Value("${atlas.searchQuick}")
     private String searchQuick;
     @Value("${atlas.searchSuggestions}")
     private String searchSuggestions;
 
-    @Override
+   /* @Override
     public JSONObject searchQuick(String query, int limit, int offset) {
         ResultDataDTO<String> result = atlasClient.get(searchQuick + "?query=" + query + "&limit=" + limit + "&offset=" + offset);
+
         if (result.code != AtlasResultEnum.REQUEST_SUCCESS) {
             JSONObject msg = JSON.parseObject(result.data);
             throw new FkException(ResultEnum.BAD_REQUEST, msg.getString("errorMessage"));
         }
         return JSON.parseObject(result.data);
+    }*/
+
+    @Override
+    public List<EntitiesDTO> searchQuick(String query, int limit, int offset) {
+        return metadataEntityMapper.searchEntitys(query, offset ,limit);
     }
 
     @Override

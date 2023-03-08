@@ -31,7 +31,7 @@ public class ProcessController {
         return ResultEntityBuild.build(service.addProcess(dto));
     }
 
-    @ApiOperation("获取process详情")
+    @ApiOperation("获取process详情.已重构")
     @GetMapping("/getProcess/{guid}")
     public ResultEntity<Object> getProcess(@PathVariable String guid) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getProcess(guid));
