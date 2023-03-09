@@ -317,6 +317,7 @@ public class FactAttributeImpl
         queryDto.execType = 2;
         data.customScriptList.addAll(customScript.listCustomScript(queryDto));
 
+        data.deltaTimes = systemVariables.getSystemVariable(factId, CreateTypeEnum.CREATE_FACT.getValue());
         return data;
     }
 

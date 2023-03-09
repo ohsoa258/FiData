@@ -252,6 +252,9 @@ public class DimensionAttributeImpl
         queryDto.execType = 2;
         data.customScriptList.addAll(customScript.listCustomScript(queryDto));
 
+        // 系统变量
+        data.deltaTimes = systemVariables.getSystemVariable(dimensionId, CreateTypeEnum.CREATE_DIMENSION.getValue());
+
         return data;
     }
 
