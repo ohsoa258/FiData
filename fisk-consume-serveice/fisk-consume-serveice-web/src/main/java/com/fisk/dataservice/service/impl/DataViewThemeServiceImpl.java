@@ -96,7 +96,10 @@ public class DataViewThemeServiceImpl
         // 校验架构是否已经存在，不包含则创建架构
         boolean schemaFlag = false;
         List<String> abbrList = baseMapper.getAbbreviation(dataSourceDTO.getId(), DelFlagEnum.NORMAL_FLAG.getValue());
-        if (!abbrList.contains(dto.getThemeAbbr())){
+        if (dto.getWhetherSchema() && abbrList.contains(dto.getThemeAbbr())){
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "当前架构已被其他主题使用");
+        }
+        if (dto.getWhetherSchema() && !abbrList.contains(dto.getThemeAbbr())){
             schemaFlag = true;
         }
 
@@ -126,7 +129,7 @@ public class DataViewThemeServiceImpl
 
         // 创建登录用户、数据库用户、并关联角色信息
         if (StringUtils.isEmpty(type)){
-            List<String> nameList = dataViewAccountMapper.selectNameList(DelFlagEnum.NORMAL_FLAG.getValue());
+            List<String> nameList = dataViewAccountMapper.selectNameList(dataSourceDTO.getId(), DelFlagEnum.NORMAL_FLAG.getValue());
             List<String> dataList = dtoList.stream().map(DataViewAccountDTO::getAccountName).collect(Collectors.toList());
             for (String item : dataList){
                 if (nameList.contains(item)){
@@ -341,14 +344,16 @@ public class DataViewThemeServiceImpl
             removeRole(viewThemeId, verifyDataSource(model.getTargetDbId()));
         }
 
-//        // 删除不使用的架构
-//        QueryWrapper<DataViewThemePO> qw = new QueryWrapper<>();
-//        qw.lambda().ne(DataViewThemePO::getId, viewThemeId).eq(DataViewThemePO::getThemeAbbr, model.getThemeAbbr())
-//                .eq(DataViewThemePO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
-//        Integer schemaCount = baseMapper.selectCount(qw);
-//        if (schemaCount <= 0){
-//            removeSchema(model.getThemeAbbr(), model.getTargetDbId());
-//        }
+        // 删除数据库角色
+        QueryWrapper<DataViewRolePO> qw = new QueryWrapper<>();
+        qw.lambda().eq(DataViewRolePO::getThemeId, viewThemeId);
+        dataViewRoleMapper.delete(qw);
+
+        // 删除不使用的架构
+        if (model.getWhetherSchema()){
+            removeSchema(model.getThemeAbbr(), model.getTargetDbId());
+        }
+
         return ResultEnum.SUCCESS;
     }
 
@@ -568,7 +573,7 @@ public class DataViewThemeServiceImpl
             po.setAccountDesc(dto.getAccountDesc());
             po.setAccountPsd(dto.getAccountPsd());
             po.setJurisdiction(AccountJurisdictionEnum.READ_ONLY.getName());
-            qw.lambda().eq(DataViewAccountPO::getAccountName, dto.getAccountName());
+            qw.lambda().eq(DataViewAccountPO::getViewThemeId, po.getViewThemeId()).eq(DataViewAccountPO::getAccountName, dto.getAccountName());
             DataViewAccountPO preModel = dataViewAccountMapper.selectOne(qw);
             if (!Objects.isNull(preModel)){
                 throw new FkException(ResultEnum.SAVE_DATA_ERROR, dto.getAccountName() + "：该账号名称已存在");
