@@ -29,10 +29,7 @@ import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
 import com.fisk.datamodel.entity.fact.FactPO;
-import com.fisk.datamodel.enums.DataModelTableTypeEnum;
-import com.fisk.datamodel.enums.FactAttributeEnum;
-import com.fisk.datamodel.enums.PrefixTempNameEnum;
-import com.fisk.datamodel.enums.PublicStatusEnum;
+import com.fisk.datamodel.enums.*;
 import com.fisk.datamodel.map.fact.FactAttributeMap;
 import com.fisk.datamodel.map.fact.FactMap;
 import com.fisk.datamodel.mapper.fact.FactAttributeMapper;
@@ -40,6 +37,7 @@ import com.fisk.datamodel.mapper.fact.FactMapper;
 import com.fisk.datamodel.service.IFact;
 import com.fisk.datamodel.service.impl.AtomicIndicatorsImpl;
 import com.fisk.datamodel.service.impl.BusinessAreaImpl;
+import com.fisk.datamodel.service.impl.SystemVariablesImpl;
 import com.fisk.datamodel.service.impl.dimension.DimensionImpl;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
@@ -87,6 +85,8 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     DimensionImpl dimensionImpl;
     @Resource
     DataManageClient dataManageClient;
+    @Resource
+    SystemVariablesImpl systemVariables;
 
     @Value("${spring.open-metadata}")
     private Boolean openMetadata;
@@ -223,7 +223,11 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     @Override
     public FactDTO getFact(int id)
     {
-        return FactMap.INSTANCES.poToDto(mapper.selectById(id));
+        FactDTO factDTO = FactMap.INSTANCES.poToDto(mapper.selectById(id));
+        if (factDTO != null){
+            factDTO.deltaTimes = systemVariables.getSystemVariable(id, CreateTypeEnum.CREATE_FACT.getValue());
+        }
+        return factDTO;
     }
 
     @Override

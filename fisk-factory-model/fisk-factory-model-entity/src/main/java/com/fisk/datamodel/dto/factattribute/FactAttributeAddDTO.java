@@ -1,5 +1,6 @@
 package com.fisk.datamodel.dto.factattribute;
 
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptDTO;
 import com.fisk.datamodel.dto.syncmode.SyncModeDTO;
 import lombok.Data;
@@ -36,4 +37,9 @@ public class FactAttributeAddDTO {
      * 自定义脚本集合
      */
     public List<CustomScriptDTO> customScriptList;
+
+    /**
+     * 接入的增量时间参数
+     */
+    public List<DeltaTimeDTO> deltaTimes;
 }

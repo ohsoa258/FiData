@@ -1,6 +1,9 @@
 package com.fisk.datamodel.dto.fact;
 
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -28,5 +31,10 @@ public class FactDTO {
      * 事实表描述
      */
     public String factTableDesc;
+
+    /*
+     * 接入的增量时间参数
+     */
+    public List<DeltaTimeDTO> deltaTimes;
 
 }

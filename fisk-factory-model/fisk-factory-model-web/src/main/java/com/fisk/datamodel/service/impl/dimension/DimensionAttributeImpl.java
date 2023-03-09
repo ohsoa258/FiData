@@ -16,6 +16,7 @@ import com.fisk.datamodel.entity.TableBusinessPO;
 import com.fisk.datamodel.entity.dimension.DimensionAttributePO;
 import com.fisk.datamodel.entity.dimension.DimensionPO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
+import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.enums.SyncModeEnum;
 import com.fisk.datamodel.enums.TableHistoryTypeEnum;
@@ -28,6 +29,7 @@ import com.fisk.datamodel.mapper.fact.FactAttributeMapper;
 import com.fisk.datamodel.service.IDimensionAttribute;
 import com.fisk.datamodel.service.impl.CustomScriptImpl;
 import com.fisk.datamodel.service.impl.SyncModeImpl;
+import com.fisk.datamodel.service.impl.SystemVariablesImpl;
 import com.fisk.datamodel.service.impl.TableBusinessImpl;
 import com.fisk.datamodel.service.impl.fact.FactAttributeImpl;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -62,6 +64,8 @@ public class DimensionAttributeImpl
     TableBusinessImpl tableBusiness;
     @Resource
     CustomScriptImpl customScript;
+    @Resource
+    SystemVariablesImpl systemVariables;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -71,6 +75,12 @@ public class DimensionAttributeImpl
         if (dimensionPo == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+
+        //系统变量
+        if (!org.springframework.util.CollectionUtils.isEmpty(dto.deltaTimes)) {
+            systemVariables.addSystemVariables(dto.dimensionId, dto.deltaTimes, CreateTypeEnum.CREATE_DIMENSION.getValue());
+        }
+
         //添加增量配置
         SyncModePO syncModePo = SyncModeMap.INSTANCES.dtoToPo(dto.syncModeDTO);
         boolean syncMode = this.syncMode.saveOrUpdate(syncModePo);
@@ -270,6 +280,11 @@ public class DimensionAttributeImpl
         po.dimensionFieldEnName=dto.dimensionFieldEnName;
         po.dimensionFieldType=dto.dimensionFieldType;
         ////po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
+
+        //系统变量
+        if (!CollectionUtils.isEmpty(dto.deltaTimes)) {
+            systemVariables.addSystemVariables(dto.id, dto.deltaTimes, CreateTypeEnum.CREATE_DIMENSION.getValue());
+        }
         return attributeMapper.updateById(po)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
