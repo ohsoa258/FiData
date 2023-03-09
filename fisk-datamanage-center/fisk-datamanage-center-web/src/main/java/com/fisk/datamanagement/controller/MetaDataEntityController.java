@@ -9,7 +9,9 @@ import com.fisk.datamanagement.dto.entity.EntityAssociatedMetaDataDTO;
 import com.fisk.datamanagement.dto.entity.EntityDTO;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
 import com.fisk.datamanagement.dto.metadatalabelmap.MetadataLabelMapParameter;
+import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.service.IEntity;
+import com.fisk.datamanagement.service.IMetaDataEntityOperationLog;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -27,6 +29,10 @@ public class MetaDataEntityController {
 
     @Resource
     IEntity service;
+
+    @Resource
+    private IMetaDataEntityOperationLog iMetaDataEntityOperationLog;
+
 
     @ApiOperation("获取atlas元数据对象树形列表")
     @GetMapping("/getEntityList")
@@ -66,8 +72,8 @@ public class MetaDataEntityController {
 
     @ApiOperation("根据guid获取实体审计列表")
     @GetMapping("/getAuditsList/{guid}")
-    public ResultEntity<Object> getAuditsList(@PathVariable("guid") String guid) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAuditsList(guid));
+    public ResultEntity<Object> getAuditsList(@PathVariable("guid") Integer guid) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, iMetaDataEntityOperationLog.selectLogList(guid, EntityTypeEnum.RDBMS_TABLE.getValue()));
     }
 
     @ApiOperation("实体添加标签")

@@ -6,7 +6,7 @@ import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.entity.MetadataEntityPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.ResultMap;
+
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
