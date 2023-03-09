@@ -75,7 +75,6 @@ import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
-import com.sun.xml.internal.ws.api.model.CheckedException;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -953,6 +952,12 @@ public class AppRegistrationImpl
                     break;
             }
         } catch (Exception e){
+            //数据库账号或密码不正确
+            ResultEnum resultEnum = ((FkException) e).getResultEnum();
+            if(resultEnum.getCode()==4001){
+                log.error("测试连接用户名或密码不正确:{}", e);
+                throw new FkException(ResultEnum.REALTIME_ACCOUNT_OR_PWD_ERROR);
+            }
             log.error("测试连接失败:{}", e);
             throw new FkException(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
         }

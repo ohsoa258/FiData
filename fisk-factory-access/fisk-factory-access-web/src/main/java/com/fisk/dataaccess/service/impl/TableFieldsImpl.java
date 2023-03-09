@@ -139,6 +139,7 @@ public class TableFieldsImpl
     @Value("${spring.open-metadata}")
     private Boolean openMetadata;
 
+
     @Resource
     private RedisTemplate redisTemplate;
     @Resource
@@ -155,7 +156,6 @@ public class TableFieldsImpl
         DataReviewPageDTO data = new DataReviewPageDTO();
         data.page = query.page;
         data.where = querySql.toString();
-
         return baseMapper.filter(query.page, data);
     }
 
@@ -609,8 +609,7 @@ public class TableFieldsImpl
                     //publishTaskClient.publishBuildAtlasTableTask(data);
                     //构建元数据实时同步数据对象
                     metaDataList = buildMetaDataInstanceAttribute(registration, accessId, 2);
-                }
-                if (openMetadata) {
+                }if (openMetadata) { //
                     //同步元数据
                     consumeMetaData(metaDataList);
                 }
