@@ -36,16 +36,16 @@ import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StopWatch;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotNull;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.sql.Statement;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -425,6 +425,21 @@ public class DataViewThemeServiceImpl
                     abstractDbHelper.executeSql(sql, connection);
                     log.info("删除数据结束，{}", sql);
                 }else{
+                    // 先查询是否处于登录状态
+                    String sql = "SELECT session_id FROM sys.dm_exec_sessions WHERE login_name='" + item.getAccountName() + "'" + " AND status = 'sleeping'";
+                    Statement st = null;
+                    StopWatch stopWatch = new StopWatch();
+                    stopWatch.start();
+                    st = connection.createStatement();
+                    ResultSet res = st.executeQuery(sql);
+                    while (res.next()){
+                        int sessioonId = res.getInt("session_id");
+                        log.info("session_id is {}", sessioonId);
+                        if (sessioonId != 0){
+                            sql = "kill " + sessioonId;
+                            abstractDbHelper.executeSql(sql, connection);
+                        }
+                    }
                     abstractDbHelper.executeSql(sql1, connection);
                     abstractDbHelper.executeSql(sql2, connection);
                 }
@@ -434,6 +449,38 @@ public class DataViewThemeServiceImpl
         }
     }
 
+//    private void killSessionIdAccount(String loginName){
+//        AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
+//
+//        Statement st = null;
+//        String code = UUID.randomUUID().toString();
+//        StopWatch stopWatch = new StopWatch();
+//        try {
+//            String sql = "SELECT session_id FROM sys.dm_exec_sessions WHERE login_name='" + loginName + "'" + " AND status = 'sleeping'";
+//            stopWatch.start();
+//            log.info("【execQuery】【" + code + "】执行sql: 【" + sql + "】");
+//            st = connection.createStatement();
+//            ResultSet res = st.executeQuery(sql);
+//            log.info("结果集{}", res.toString());
+//            while (res.next()){
+//                int sessioonId = res.getInt("session_id");
+//                if (sessioonId != 0){
+//                    sql = "kill " + sessioonId;
+//                    abstractDbHelper.executeSql(sql, connection);
+//                }
+//            }
+//        } catch (SQLException ex) {
+//            log.error("【execQuery】【" + code + "】执行sql查询报错, ex", ex);
+//            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ex.getLocalizedMessage());
+//        } finally {
+//            abstractDbHelper.closeStatement(st);
+//            abstractDbHelper.closeConnection(connection);
+//            stopWatch.stop();
+//            log.info("【execQuery】【" + code + "】执行时间: 【" + stopWatch.getTotalTimeMillis() + "毫秒】");
+//        }
+//
+//    }
+
     public static void main(String[] args) {
         AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
         Connection connection = abstractDbHelper.connection(
@@ -442,9 +489,34 @@ public class DataViewThemeServiceImpl
                 "password01!",
                 com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
 
-        String sql = "SELECT session_id FROM sys.dm_exec_sessions WHERE login_name='sa' AND status = 'sleeping'";
-        List<Integer> lists = AbstractCommonDbHelper.execQueryResultList(sql, connection, Integer.class);
-        log.info("数据", JSON.toJSONString(lists));
+        Statement st = null;
+        String code = UUID.randomUUID().toString();
+        StopWatch stopWatch = new StopWatch();
+        try {
+            String sql = "SELECT session_id FROM sys.dm_exec_sessions WHERE login_name='sqltestc' AND status = 'sleeping'";
+            stopWatch.start();
+            log.info("【execQuery】【" + code + "】执行sql: 【" + sql + "】");
+            st = connection.createStatement();
+            ResultSet res = st.executeQuery(sql);
+            log.info("结果集{}", res.toString());
+            while (res.next()){
+                int sessioonId = res.getInt("session_id");
+                sql = "kill " + sessioonId;
+                abstractDbHelper.executeSql(sql, connection);
+                System.out.println(sessioonId);
+            }
+        } catch (SQLException ex) {
+            log.error("【execQuery】【" + code + "】执行sql查询报错, ex", ex);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ex.getLocalizedMessage());
+        } finally {
+            /*closeStatement(st);
+            closeConnection(con);*/
+            stopWatch.stop();
+            log.info("【execQuery】【" + code + "】执行时间: 【" + stopWatch.getTotalTimeMillis() + "毫秒】");
+        }
+        String sql = "SELECT cast(session_id as Integer) FROM sys.dm_exec_sessions WHERE login_name='sqltestc' AND status = 'sleeping'";
+//        List<Integer> lists = AbstractCommonDbHelper.execQueryResultList(sql, connection, Integer.class);
+//        log.info("数据{}", JSON.toJSONString(lists));
 //            abstractDbHelper.execQueryResultList
 //            abstractDbHelper.executeSql(sql2, connection);
 
