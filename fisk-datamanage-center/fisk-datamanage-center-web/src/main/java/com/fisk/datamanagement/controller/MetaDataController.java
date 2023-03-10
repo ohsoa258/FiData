@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.datamanagement.aop.OperateLog;
 import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;

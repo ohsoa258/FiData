@@ -17,6 +17,7 @@ import com.fisk.datamodel.client.DataModelClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -144,9 +145,15 @@ public class BloodCompensationImpl
             if (CollectionUtils.isEmpty(first.get().dbList.get(0).tableList)) {
                 first.get().dbList.get(0).tableList = new ArrayList<>();
             }
-
             //解析sql
-            List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(accessTable.driveType, accessTable.sqlScript);
+            List<TableMetaDataObject> res=null;
+            if(StringUtils.isEmpty(accessTable.driveType)||StringUtils.isEmpty(accessTable.sqlScript)){
+                continue;
+            }else{
+                res = SqlParserUtils.sqlDriveConversionName(accessTable.driveType,accessTable.sqlScript);
+            }
+
+
             if (CollectionUtils.isEmpty(res)) {
                 continue;
             }

@@ -8,6 +8,8 @@ import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
@@ -93,6 +95,9 @@ public class MetaDataImpl implements IMetaData {
 
     @Resource
     MetadataEntityImpl metadataEntity;
+
+    @Resource
+    private UserHelper userHelper;
 
     @Value("${atlas.entity}")
     private String entity;

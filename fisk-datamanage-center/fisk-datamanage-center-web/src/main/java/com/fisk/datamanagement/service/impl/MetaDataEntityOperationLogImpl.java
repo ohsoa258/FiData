@@ -19,27 +19,29 @@ import java.util.List;
  * @description
  */
 @Service
+@Slf4j
 public class MetaDataEntityOperationLogImpl implements IMetaDataEntityOperationLog {
     @Resource
     private MetaDataEntityOperationLogMapper logMapper;
 
 
     @Override
-    public boolean addOperationLog(MetaDataEntityOperationLogDTO logDTO) {
-
-        if(logDTO!=null){
+    public void addOperationLog(MetaDataEntityOperationLogDTO logDTO) {
+        try {
             MetaDataEntityOperationLogPO entityOperationLogPO = MetaDataEntityOperationLogMap.INSTANCES.logDtoToPo(logDTO);
             int flag = logMapper.insert(entityOperationLogPO);
             if(flag>0){ //判断日志记录是否成功
-                return true;
+                log.info("日志记录成功");
+            }else{
+                log.info("日志记录失败");
             }
+        }catch (Exception e){
+            log.info("日志记录异常:{}",e);
         }
-        return false;
     }
 
     @Override
     public List<MetaDataEntityOperationLogDTO> selectLogList(Integer entityId,Integer typeId) {
-
         List<MetaDataEntityOperationLogPO> operationLogPOS = logMapper.selectOperationLog(entityId,typeId);
         List<MetaDataEntityOperationLogDTO> logDTOS = MetaDataEntityOperationLogMap.INSTANCES.logPoToDto(operationLogPOS);
         return logDTOS;
