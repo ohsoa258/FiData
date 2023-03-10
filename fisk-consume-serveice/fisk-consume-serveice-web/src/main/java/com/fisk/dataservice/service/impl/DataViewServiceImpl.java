@@ -550,6 +550,10 @@ public class DataViewServiceImpl
             // 向目标数据库中创建视图
             batchCreateView(model, dataSourceDTO, dataViewThemePO);
 
+            // 为关联的主题角色授权视图权限
+            model.setName(viewName);
+            relationGrant(model, dataSourceDTO);
+
             // 查询主键
             QueryWrapper<DataViewPO> qw2 = new QueryWrapper<>();
             qw2.lambda().eq(DataViewPO::getViewThemeId, dto.getViewThemeId()).eq(DataViewPO::getName, viewName).eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
