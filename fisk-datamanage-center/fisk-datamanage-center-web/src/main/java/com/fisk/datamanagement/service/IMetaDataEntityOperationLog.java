@@ -11,7 +11,7 @@ public interface IMetaDataEntityOperationLog {
      * @param logDTO
      * @return
      */
-    boolean addOperationLog(MetaDataEntityOperationLogDTO logDTO);
+    void addOperationLog(MetaDataEntityOperationLogDTO logDTO);
 
     /**
      * 根据元数据id查询对应的日志
