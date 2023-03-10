@@ -32,6 +32,7 @@ import com.fisk.datamodel.entity.dimension.DimensionPO;
 import com.fisk.datamodel.entity.fact.BusinessProcessPO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
 import com.fisk.datamodel.entity.fact.FactPO;
+import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.enums.SyncModeEnum;
 import com.fisk.datamodel.enums.TableHistoryTypeEnum;
@@ -48,6 +49,7 @@ import com.fisk.datamodel.mapper.fact.FactMapper;
 import com.fisk.datamodel.service.IFactAttribute;
 import com.fisk.datamodel.service.impl.CustomScriptImpl;
 import com.fisk.datamodel.service.impl.SyncModeImpl;
+import com.fisk.datamodel.service.impl.SystemVariablesImpl;
 import com.fisk.datamodel.service.impl.TableBusinessImpl;
 import com.fisk.datamodel.service.impl.widetable.WideTableImpl;
 import com.fisk.datamodel.utils.mysql.DataSourceConfigUtil;
@@ -94,6 +96,8 @@ public class FactAttributeImpl
     DataSourceConfigUtil dataSourceConfigUtil;
     @Resource
     CustomScriptImpl customScript;
+    @Resource
+    SystemVariablesImpl systemVariables;
 
     @Override
     public List<FactAttributeListDTO> getFactAttributeList(int factId) {
@@ -108,6 +112,12 @@ public class FactAttributeImpl
         if (factPo == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+
+        //系统变量
+        if (!org.springframework.util.CollectionUtils.isEmpty(dto.deltaTimes)) {
+            systemVariables.addSystemVariables(dto.factId, dto.deltaTimes, CreateTypeEnum.CREATE_FACT.getValue());
+        }
+
         //添加增量配置
         SyncModePO syncModePo = SyncModeMap.INSTANCES.dtoToPo(dto.syncModeDTO);
         boolean syncMode = this.syncMode.saveOrUpdate(syncModePo);
@@ -203,6 +213,11 @@ public class FactAttributeImpl
         po.factFieldLength=dto.factFieldLength;
         po.factFieldEnName=dto.factFieldEnName;
         po.factFieldType=dto.factFieldType;
+
+        //系统变量
+        if (!org.springframework.util.CollectionUtils.isEmpty(dto.deltaTimes)) {
+            systemVariables.addSystemVariables(dto.id, dto.deltaTimes, CreateTypeEnum.CREATE_FACT.getValue());
+        }
         return mapper.updateById(po)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -302,6 +317,7 @@ public class FactAttributeImpl
         queryDto.execType = 2;
         data.customScriptList.addAll(customScript.listCustomScript(queryDto));
 
+        data.deltaTimes = systemVariables.getSystemVariable(factId, CreateTypeEnum.CREATE_FACT.getValue());
         return data;
     }
 

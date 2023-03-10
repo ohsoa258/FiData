@@ -29,6 +29,11 @@ public interface DataViewAccountMapper extends FKBaseMapper<DataViewAccountPO> {
     @Select("select id from tb_database_account where view_theme_id = #{viewThemeId} and del_flag = #{flag}")
     List<Integer> selectIdListByViewThemeId(@Param("viewThemeId") Integer viewThemeId, @Param("flag") Integer flag);
 
-    @Select("select account_name from tb_database_account where del_flag = #{value}")
-    List<String> selectNameList(@Param("value") int value);
+    @Select("select a.account_name from tb_database_account as a right join tb_view_theme as v " +
+            "on v.target_db_id = #{id} and a.view_theme_id = v.id where a.del_flag = #{value}")
+    List<String> selectNameList(@Param("id") Integer id, @Param("value") int value);
+
+    @Select("select a.* from tb_database_account as a right join tb_view_theme as v on v.target_db_id = #{id} and a.view_theme_id = v.id \n" +
+            "where a.del_flag = 1 and a.account_name = 'sjj1'\n")
+    DataViewAccountPO selectUserInfo(Integer viewThemeId, String accountName, Integer id);
 }

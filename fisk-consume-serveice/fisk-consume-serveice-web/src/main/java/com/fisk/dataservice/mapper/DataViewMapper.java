@@ -19,4 +19,11 @@ import java.util.List;
 public interface DataViewMapper extends FKBaseMapper<DataViewPO> {
     @Select("select view_theme_id from tb_view where id = #{id}")
     String selectThemeId(@Param("id") long id);
+
+    @Select("SELECT t.theme_name from tb_view as v left join tb_view_theme as t on v.view_theme_id = t.id " +
+            "WHERE v.name = #{name} and t.target_db_id = #{targetDbId}")
+    String selectAbbrName(@Param("targetDbId") Integer targetDbId, @Param("name") String name);
+
+    @Select("SELECT * FROM tb_view WHERE del_flag=1 AND view_theme_id = #{viewThemeId} AND name = #{viewName} AND del_flag = #{value}")
+    DataViewPO selectId(@Param("viewThemeId")Integer viewThemeId, @Param("viewName") String viewName, @Param("value") int value);
 }

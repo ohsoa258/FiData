@@ -1,6 +1,9 @@
 package com.fisk.datamodel.dto.dimension;
 
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -33,4 +36,11 @@ public class DimensionDTO {
      * 结束时间
      */
     public String endTime;
+
+    /*
+     * 接入的增量时间参数
+     */
+    public List<DeltaTimeDTO> deltaTimes;
+
+
 }

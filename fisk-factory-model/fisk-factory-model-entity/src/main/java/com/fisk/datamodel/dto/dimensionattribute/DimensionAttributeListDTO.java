@@ -1,5 +1,6 @@
 package com.fisk.datamodel.dto.dimensionattribute;
 
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptInfoDTO;
 import com.fisk.datamodel.dto.syncmode.SyncModeDTO;
 import lombok.Data;
@@ -27,5 +28,9 @@ public class DimensionAttributeListDTO {
     public String dimensionKeyScript;
 
     public List<CustomScriptInfoDTO> customScriptList;
+    /*
+     * 接入的增量时间参数
+     */
+    public List<DeltaTimeDTO> deltaTimes;
 
 }

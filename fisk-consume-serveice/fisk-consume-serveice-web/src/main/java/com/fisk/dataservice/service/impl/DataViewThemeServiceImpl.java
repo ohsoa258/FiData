@@ -36,12 +36,15 @@ import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StopWatch;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotNull;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -93,10 +96,19 @@ public class DataViewThemeServiceImpl
         // 校验数据源
         DataSourceDTO dataSourceDTO = verifyDataSource(dto.getTargetDbId());
 
+        // 校验未选择架构的情况下是否存在重复简称
+        Integer count = baseMapper.selectAbbr(dto.getTargetDbId(), dto.getThemeAbbr());
+        if (count != null && count > 0){
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "当前简称已被其他主题使用");
+        }
+
         // 校验架构是否已经存在，不包含则创建架构
         boolean schemaFlag = false;
         List<String> abbrList = baseMapper.getAbbreviation(dataSourceDTO.getId(), DelFlagEnum.NORMAL_FLAG.getValue());
-        if (!abbrList.contains(dto.getThemeAbbr())){
+        if (dto.getWhetherSchema() && abbrList.contains(dto.getThemeAbbr())){
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "当前架构已被其他主题使用");
+        }
+        if (dto.getWhetherSchema() && !abbrList.contains(dto.getThemeAbbr())){
             schemaFlag = true;
         }
 
@@ -126,7 +138,7 @@ public class DataViewThemeServiceImpl
 
         // 创建登录用户、数据库用户、并关联角色信息
         if (StringUtils.isEmpty(type)){
-            List<String> nameList = dataViewAccountMapper.selectNameList(DelFlagEnum.NORMAL_FLAG.getValue());
+            List<String> nameList = dataViewAccountMapper.selectNameList(dataSourceDTO.getId(), DelFlagEnum.NORMAL_FLAG.getValue());
             List<String> dataList = dtoList.stream().map(DataViewAccountDTO::getAccountName).collect(Collectors.toList());
             for (String item : dataList){
                 if (nameList.contains(item)){
@@ -200,13 +212,50 @@ public class DataViewThemeServiceImpl
 
     private void relationRole(DataSourceDTO dataSourceDTO, Integer viewThemeId, DataViewAccountPO po){
         log.info("开始关联数据库角色，【{}{}】", viewThemeId, JSON.toJSONString(po));
-        String roleName = dataSourceDTO.conDbname + "_viewThemeRole_" + viewThemeId;
+        DataViewThemePO dataViewThemePO = baseMapper.selectById(viewThemeId);
+        String roleName = dataSourceDTO.conDbname + "_viewThemeRole_" + dataViewThemePO.getThemeAbbr();
         String relationSql = "exec sp_addrolemember " + roleName + "," + po.getAccountName();
         if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
             relationSql = "grant " + roleName + " to " + po.getAccountName();
         }
         execSql(relationSql, dataSourceDTO);
         log.info("关联数据库角色结束");
+
+        // 更新角色视图权限信息
+        updateRoleViewInfo(roleName, viewThemeId, dataSourceDTO);
+    }
+
+    private void updateRoleViewInfo(String roleName, Integer viewThemeId, DataSourceDTO dataSourceDTO) {
+        // 查询架构
+        DataViewThemePO dataViewThemePO = baseMapper.selectById(viewThemeId);
+        QueryWrapper<DataViewPO> qw = new QueryWrapper<>();
+        qw.lambda().eq(DataViewPO::getViewThemeId, viewThemeId).eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
+        List<DataViewPO> dataViewPOList = dataViewMapper.selectList(qw);
+        try {
+            AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
+            Connection connection = null;
+            if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName())){
+                connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
+                        dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+            }else if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
+                connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
+                        dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.PG);
+            }
+            if (!CollectionUtils.isEmpty(dataViewPOList)){
+                for (DataViewPO item : dataViewPOList){
+                    if (!dataViewThemePO.getWhetherSchema()){
+                        dataViewThemePO.setThemeAbbr("dbo");
+                        if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
+                            dataViewThemePO.setThemeAbbr("public");
+                        }
+                    }
+                    String sql = "GRANT SELECT ON " + dataViewThemePO.getThemeAbbr() + "." + item.getName() + " TO " + roleName;
+                    abstractDbHelper.executeSql(sql, connection);
+                }
+            }
+        } catch (SQLException e) {
+            log.error("数据分析视图目标数据库执行sql失败,", e);
+        }
     }
 
     /**
@@ -215,7 +264,8 @@ public class DataViewThemeServiceImpl
      * @param viewThemeId 数据视图主题id
      */
     private void createRole(DataSourceDTO dataSourceDTO, Integer viewThemeId){
-        String roleName = dataSourceDTO.conDbname + "_viewThemeRole_" + viewThemeId;
+        DataViewThemePO dataViewThemePO = baseMapper.selectById(viewThemeId);
+        String roleName = dataSourceDTO.conDbname + "_viewThemeRole_" + dataViewThemePO.getThemeAbbr();
         String roleSql = "exec sp_addrole " + roleName;
         if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
             roleSql = "create role " + roleName;
@@ -341,14 +391,16 @@ public class DataViewThemeServiceImpl
             removeRole(viewThemeId, verifyDataSource(model.getTargetDbId()));
         }
 
-//        // 删除不使用的架构
-//        QueryWrapper<DataViewThemePO> qw = new QueryWrapper<>();
-//        qw.lambda().ne(DataViewThemePO::getId, viewThemeId).eq(DataViewThemePO::getThemeAbbr, model.getThemeAbbr())
-//                .eq(DataViewThemePO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
-//        Integer schemaCount = baseMapper.selectCount(qw);
-//        if (schemaCount <= 0){
-//            removeSchema(model.getThemeAbbr(), model.getTargetDbId());
-//        }
+        // 删除数据库角色
+        QueryWrapper<DataViewRolePO> qw = new QueryWrapper<>();
+        qw.lambda().eq(DataViewRolePO::getThemeId, viewThemeId);
+        dataViewRoleMapper.delete(qw);
+
+        // 删除不使用的架构
+        if (model.getWhetherSchema()){
+            removeSchema(model.getThemeAbbr(), model.getTargetDbId());
+        }
+
         return ResultEnum.SUCCESS;
     }
 
@@ -390,6 +442,21 @@ public class DataViewThemeServiceImpl
                     abstractDbHelper.executeSql(sql, connection);
                     log.info("删除数据结束，{}", sql);
                 }else{
+                    // 先查询是否处于登录状态
+                    String sql = "SELECT session_id FROM sys.dm_exec_sessions WHERE login_name='" + item.getAccountName() + "'" + " AND status = 'sleeping'";
+                    Statement st = null;
+                    StopWatch stopWatch = new StopWatch();
+                    stopWatch.start();
+                    st = connection.createStatement();
+                    ResultSet res = st.executeQuery(sql);
+                    while (res.next()){
+                        int sessioonId = res.getInt("session_id");
+                        log.info("session_id is {}", sessioonId);
+                        if (sessioonId != 0){
+                            sql = "kill " + sessioonId;
+                            abstractDbHelper.executeSql(sql, connection);
+                        }
+                    }
                     abstractDbHelper.executeSql(sql1, connection);
                     abstractDbHelper.executeSql(sql2, connection);
                 }
@@ -568,7 +635,7 @@ public class DataViewThemeServiceImpl
             po.setAccountDesc(dto.getAccountDesc());
             po.setAccountPsd(dto.getAccountPsd());
             po.setJurisdiction(AccountJurisdictionEnum.READ_ONLY.getName());
-            qw.lambda().eq(DataViewAccountPO::getAccountName, dto.getAccountName());
+            qw.lambda().eq(DataViewAccountPO::getViewThemeId, po.getViewThemeId()).eq(DataViewAccountPO::getAccountName, dto.getAccountName());
             DataViewAccountPO preModel = dataViewAccountMapper.selectOne(qw);
             if (!Objects.isNull(preModel)){
                 throw new FkException(ResultEnum.SAVE_DATA_ERROR, dto.getAccountName() + "：该账号名称已存在");

@@ -311,7 +311,7 @@ public class DataViewServiceImpl
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addDataView(SaveDataViewDTO dto) {
         log.info("保存数据视图参数,[{}]", JSON.toJSONString(dto));
-        // 查询视图是否重复
+        // 查询当前视图主题下视图是否重复
         QueryWrapper<DataViewPO> qw = new QueryWrapper<>();
         qw.lambda().eq(DataViewPO::getViewThemeId, dto.getViewThemeId())
                 .eq(DataViewPO::getName, dto.getName())
@@ -319,6 +319,12 @@ public class DataViewServiceImpl
         DataViewPO dataViewPO = baseMapper.selectOne(qw);
         if (!Objects.isNull(dataViewPO)){
             throw new FkException(ResultEnum.DS_DATA_VIEW_EXIST);
+        }
+
+        // 未创建架构是否存在重复
+        String themeName = baseMapper.selectAbbrName(dto.getTargetDbId(), dto.getName());
+        if (!StringUtils.isEmpty(themeName)){
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "视图主题：" + themeName + " 下已存在该视图名称");
         }
 
         // 校验数据源是否合法
@@ -361,7 +367,13 @@ public class DataViewServiceImpl
             QueryWrapper<DataViewRolePO> qw = new QueryWrapper<>();
             qw.lambda().eq(DataViewRolePO::getThemeId, model.getViewThemeId());
             DataViewRolePO rolePo = dataViewRoleMapper.selectOne(qw);
-            String viewName = dataViewThemePO.getThemeAbbr() + ".theme_" + dataViewThemePO.getId() + "_" + model.getName();
+            if (!dataViewThemePO.getWhetherSchema()){
+                dataViewThemePO.setThemeAbbr("dbo");
+                if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
+                    dataViewThemePO.setThemeAbbr("public");
+                }
+            }
+            String viewName = dataViewThemePO.getThemeAbbr() + "." + model.getName();
             String sql = "grant select on " + viewName + " to " + rolePo.getRoleName();
             if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
                 sql = "grant select on table " + viewName + " to " + rolePo.getRoleName();
@@ -423,15 +435,24 @@ public class DataViewServiceImpl
         }
         List<String> nameList = allData.stream().filter(item -> item.getViewThemeId().equals(preModel.getViewThemeId())
                 && item.getId() != preModel.getId()).map(DataViewPO::getName).collect(Collectors.toList());
+        if (nameList.contains(dto.getName())){
+            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "当前视图主题下已存在该视图名称");
+        }
         List<String> displayNameList = allData.stream().filter(item -> item.getViewThemeId().equals(preModel.getViewThemeId())
                 && item.getId() != preModel.getId()).map(DataViewPO::getDisplayName).collect(Collectors.toList());
-        if (nameList.contains(dto.getName()) || displayNameList.contains(dto.getDisplayName())){
-            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "视图名称或视图显示名称与已有数据重复");
+        if (displayNameList.contains(dto.getDisplayName())){
+            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "当前视图主题下已存在该视图显示名称");
         }
 
         // 校验数据源
         DataViewThemePO dataViewThemePO = dataViewThemeMapper.selectById(preModel.getViewThemeId());
         DataSourceDTO dataSourceDTO = checkDataSource(dataViewThemePO.getTargetDbId());
+
+        // 未创建架构是否存在重复
+        String themeName = baseMapper.selectAbbrName(dataSourceDTO.id, dto.getName());
+        if (!StringUtils.isEmpty(themeName)){
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "视图主题：" + themeName + " 下已存在该视图名称");
+        }
 
         // 修改数据库中的数据视图
         if (!dto.getName().equals(preModel.getName())){
@@ -508,11 +529,19 @@ public class DataViewServiceImpl
             if (tableName.contains(".")){
                 viewName = tableName.split("\\.")[1];
             }
+            // 判断是否无架构
+            if (!dataViewThemePO.getWhetherSchema()){
+                viewName = "view_" + viewName;
+            }
             model.setName(viewName);
             model.setDisplayName(viewName);
             String sql = "select * from " + tableName;
             model.setViewScript(sql);
             model.setViewDesc("");
+            DataViewPO viewPo = baseMapper.selectId(dto.getViewThemeId(), viewName, DelFlagEnum.NORMAL_FLAG.getValue());
+            if (viewPo != null){
+                baseMapper.deleteById(viewPo.getId());
+            }
             if (Objects.isNull(dataViewPO)){
                 int insert = baseMapper.insert(model);
                 if (insert <= 0){
@@ -525,10 +554,12 @@ public class DataViewServiceImpl
             // 向目标数据库中创建视图
             batchCreateView(model, dataSourceDTO, dataViewThemePO);
 
+            // 为关联的主题角色授权视图权限
+            model.setName(viewName);
+            relationGrant(model, dataSourceDTO);
+
             // 查询主键
-            QueryWrapper<DataViewPO> qw2 = new QueryWrapper<>();
-            qw2.lambda().eq(DataViewPO::getViewThemeId, dto.getViewThemeId()).eq(DataViewPO::getName, viewName).eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
-            DataViewPO po = baseMapper.selectOne(qw2);
+            DataViewPO po = baseMapper.selectId(dto.getViewThemeId(), viewName, DelFlagEnum.NORMAL_FLAG.getValue());
 
             // 存储字段信息
             dataViewFieldsService.saveBatchViewFields(model, (int) po.getId(), dataSourceDTO);
@@ -545,7 +576,17 @@ public class DataViewServiceImpl
         if (model.getName().contains(".")){
             viewName = model.getName().split("\\.")[1];
         }
-        String createViewSql = "create view " + dataViewThemePO.getThemeAbbr() + ".theme_" + dataViewThemePO.getId() + "_" + viewName + " as " + model.getViewScript();
+        // 判断是否无架构
+        if (!dataViewThemePO.getWhetherSchema()){
+            viewName = "view_" + viewName;
+        }
+        if (!dataViewThemePO.getWhetherSchema()){
+            dataViewThemePO.setThemeAbbr("dbo");
+            if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
+                dataViewThemePO.setThemeAbbr("public");
+            }
+        }
+        String createViewSql = "create view " + dataViewThemePO.getThemeAbbr() + "." + viewName + " as " + model.getViewScript();
         execSql(createViewSql, dataSourceDTO);
     }
 
@@ -589,7 +630,13 @@ public class DataViewServiceImpl
     }
 
     private boolean getView(String name, DataViewThemePO dataViewThemePO, DataSourceDTO dataSourceDTO){
-        String getViewSql = "SELECT * FROM " + dataViewThemePO.getThemeAbbr() + ".theme_" + dataViewThemePO.getId() +  name;
+        if (!dataViewThemePO.getWhetherSchema()){
+            dataViewThemePO.setThemeAbbr("dbo");
+            if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
+                dataViewThemePO.setThemeAbbr("public");
+            }
+        }
+        String getViewSql = "SELECT * FROM " + dataViewThemePO.getThemeAbbr() + "." +  name;
         log.info("查询视图语句,[{}]", getViewSql);
 
         AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
@@ -612,7 +659,17 @@ public class DataViewServiceImpl
         if (model.getName().contains(".")){
             viewName = model.getName().split("\\.")[1];
         }
-        String removeViewSql = "DROP VIEW IF EXISTS " + dataViewThemePO.getThemeAbbr() + ".theme_" + dataViewThemePO.getId() + "_" + viewName;
+        // 判断是否无架构
+        if (!dataViewThemePO.getWhetherSchema()){
+            viewName = "view_" + viewName;
+        }
+        if (!dataViewThemePO.getWhetherSchema()){
+            dataViewThemePO.setThemeAbbr("dbo");
+            if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
+                dataViewThemePO.setThemeAbbr("public");
+            }
+        }
+        String removeViewSql = "DROP VIEW IF EXISTS " + dataViewThemePO.getThemeAbbr() + "." + viewName;
         execSql(removeViewSql, dataSourceDTO);
         log.info("删除视图成功");
     }
@@ -620,7 +677,13 @@ public class DataViewServiceImpl
     private void removeView(DataViewPO model, DataSourceDTO dataSourceDTO){
         // 获取视图主题
         DataViewThemePO dataViewThemePO = dataViewThemeMapper.selectById(model.getViewThemeId());
-        String removeViewSql = "DROP VIEW IF EXISTS " + dataViewThemePO.getThemeAbbr() + ".theme_" + dataViewThemePO.getId() + "_" + model.getName();
+        if (!dataViewThemePO.getWhetherSchema()){
+            dataViewThemePO.setThemeAbbr("dbo");
+            if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
+                dataViewThemePO.setThemeAbbr("public");
+            }
+        }
+        String removeViewSql = "DROP VIEW IF EXISTS " + dataViewThemePO.getThemeAbbr() + "." + model.getName();
         execSql(removeViewSql, dataSourceDTO);
         log.info("删除视图成功");
     }
@@ -633,8 +696,14 @@ public class DataViewServiceImpl
     private void createView(DataViewPO model, DataSourceDTO dataSourceDTO){
         // 查询数据视图主题架构简称
         DataViewThemePO dataViewThemePO = getViewThemeInfo(model.getId());
+        if (!dataViewThemePO.getWhetherSchema()){
+            dataViewThemePO.setThemeAbbr("dbo");
+            if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
+                dataViewThemePO.setThemeAbbr("public");
+            }
+        }
 
-        String createViewSql = "create view " + dataViewThemePO.getThemeAbbr() + ".theme_" + dataViewThemePO.getId() + "_" + model.getName() + " as " + model.getViewScript();
+        String createViewSql = "create view " + dataViewThemePO.getThemeAbbr() + "." + model.getName() + " as " + model.getViewScript();
         execSql(createViewSql, dataSourceDTO);
         log.info("创建视图成功");
     }

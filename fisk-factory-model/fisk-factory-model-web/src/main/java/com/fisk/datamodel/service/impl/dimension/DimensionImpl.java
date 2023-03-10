@@ -31,16 +31,14 @@ import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.dimension.DimensionAttributePO;
 import com.fisk.datamodel.entity.dimension.DimensionPO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
-import com.fisk.datamodel.enums.DataModelTableTypeEnum;
-import com.fisk.datamodel.enums.DimensionAttributeEnum;
-import com.fisk.datamodel.enums.PrefixTempNameEnum;
-import com.fisk.datamodel.enums.PublicStatusEnum;
+import com.fisk.datamodel.enums.*;
 import com.fisk.datamodel.map.dimension.DimensionMap;
 import com.fisk.datamodel.mapper.dimension.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.dimension.DimensionMapper;
 import com.fisk.datamodel.mapper.fact.FactAttributeMapper;
 import com.fisk.datamodel.service.IDimension;
 import com.fisk.datamodel.service.impl.BusinessAreaImpl;
+import com.fisk.datamodel.service.impl.SystemVariablesImpl;
 import com.fisk.datamodel.utils.mysql.DataSourceConfigUtil;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
@@ -102,6 +100,8 @@ public class DimensionImpl
 
     @Resource
     DataSourceConfigUtil dataSourceConfigUtil;
+    @Resource
+    SystemVariablesImpl systemVariables;
 
     @Value("${spring.open-metadata}")
     private Boolean openMetadata;
@@ -559,7 +559,9 @@ public class DimensionImpl
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        return DimensionMap.INSTANCES.poToDto(po);
+        DimensionDTO dimensionDTO = DimensionMap.INSTANCES.poToDto(po);
+        dimensionDTO.deltaTimes = systemVariables.getSystemVariable(id, CreateTypeEnum.CREATE_DIMENSION.getValue());
+        return dimensionDTO;
     }
 
     @Override
