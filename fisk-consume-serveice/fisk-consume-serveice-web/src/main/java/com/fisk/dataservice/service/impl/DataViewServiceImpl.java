@@ -369,9 +369,9 @@ public class DataViewServiceImpl
             DataViewRolePO rolePo = dataViewRoleMapper.selectOne(qw);
             if (!dataViewThemePO.getWhetherSchema()){
                 dataViewThemePO.setThemeAbbr("dbo");
-            }
-            if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
-                dataViewThemePO.setThemeAbbr("public");
+                if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
+                    dataViewThemePO.setThemeAbbr("public");
+                }
             }
             String viewName = dataViewThemePO.getThemeAbbr() + "." + model.getName();
             String sql = "grant select on " + viewName + " to " + rolePo.getRoleName();
@@ -630,9 +630,9 @@ public class DataViewServiceImpl
     private boolean getView(String name, DataViewThemePO dataViewThemePO, DataSourceDTO dataSourceDTO){
         if (!dataViewThemePO.getWhetherSchema()){
             dataViewThemePO.setThemeAbbr("dbo");
-        }
-        if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
-            dataViewThemePO.setThemeAbbr("public");
+            if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
+                dataViewThemePO.setThemeAbbr("public");
+            }
         }
         String getViewSql = "SELECT * FROM " + dataViewThemePO.getThemeAbbr() + "." +  name;
         log.info("查询视图语句,[{}]", getViewSql);
@@ -659,7 +659,10 @@ public class DataViewServiceImpl
         }
         // 判断是否无架构
         if (!dataViewThemePO.getWhetherSchema()){
-            viewName = "view_" + viewName;
+            dataViewThemePO.setThemeAbbr("dbo");
+            if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
+                dataViewThemePO.setThemeAbbr("public");
+            }
         }
         String removeViewSql = "DROP VIEW IF EXISTS " + dataViewThemePO.getThemeAbbr() + "." + viewName;
         execSql(removeViewSql, dataSourceDTO);

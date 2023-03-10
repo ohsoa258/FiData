@@ -233,6 +233,12 @@ public class DataViewThemeServiceImpl
             }
             if (!CollectionUtils.isEmpty(dataViewPOList)){
                 for (DataViewPO item : dataViewPOList){
+                    if (!dataViewThemePO.getWhetherSchema()){
+                        dataViewThemePO.setThemeAbbr("dbo");
+                        if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
+                            dataViewThemePO.setThemeAbbr("public");
+                        }
+                    }
                     String sql = "GRANT SELECT ON " + dataViewThemePO.getThemeAbbr() + "." + item.getName() + " TO " + roleName;
                     abstractDbHelper.executeSql(sql, connection);
                 }
