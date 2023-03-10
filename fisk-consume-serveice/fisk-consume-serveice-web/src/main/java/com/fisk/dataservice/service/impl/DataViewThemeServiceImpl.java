@@ -210,6 +210,36 @@ public class DataViewThemeServiceImpl
         }
         execSql(relationSql, dataSourceDTO);
         log.info("关联数据库角色结束");
+
+        // 更新角色视图权限信息
+        updateRoleViewInfo(roleName, viewThemeId, dataSourceDTO);
+    }
+
+    private void updateRoleViewInfo(String roleName, Integer viewThemeId, DataSourceDTO dataSourceDTO) {
+        // 查询架构
+        DataViewThemePO dataViewThemePO = baseMapper.selectById(viewThemeId);
+        QueryWrapper<DataViewPO> qw = new QueryWrapper<>();
+        qw.lambda().eq(DataViewPO::getViewThemeId, viewThemeId).eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
+        List<DataViewPO> dataViewPOList = dataViewMapper.selectList(qw);
+        try {
+            AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
+            Connection connection = null;
+            if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName())){
+                connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
+                        dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+            }else if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
+                connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
+                        dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.PG);
+            }
+            if (!CollectionUtils.isEmpty(dataViewPOList)){
+                for (DataViewPO item : dataViewPOList){
+                    String sql = "GRANT SELECT ON " + dataViewThemePO.getThemeAbbr() + "." + item.getName() + " TO " + roleName;
+                    abstractDbHelper.executeSql(sql, connection);
+                }
+            }
+        } catch (SQLException e) {
+            log.error("数据分析视图目标数据库执行sql失败,", e);
+        }
     }
 
     /**
