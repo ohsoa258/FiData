@@ -529,6 +529,10 @@ public class DataViewServiceImpl
             if (tableName.contains(".")){
                 viewName = tableName.split("\\.")[1];
             }
+            // 判断是否无架构
+            if (!dataViewThemePO.getWhetherSchema()){
+                viewName = "view_" + viewName;
+            }
             model.setName(viewName);
             model.setDisplayName(viewName);
             String sql = "select * from " + tableName;
@@ -565,6 +569,10 @@ public class DataViewServiceImpl
         String viewName = model.getName();
         if (model.getName().contains(".")){
             viewName = model.getName().split("\\.")[1];
+        }
+        // 判断是否无架构
+        if (!dataViewThemePO.getWhetherSchema()){
+            viewName = "view_" + viewName;
         }
         if (!dataViewThemePO.getWhetherSchema()){
             dataViewThemePO.setThemeAbbr("dbo");
@@ -644,6 +652,10 @@ public class DataViewServiceImpl
         String viewName = model.getName();
         if (model.getName().contains(".")){
             viewName = model.getName().split("\\.")[1];
+        }
+        // 判断是否无架构
+        if (!dataViewThemePO.getWhetherSchema()){
+            viewName = "view_" + viewName;
         }
         String removeViewSql = "DROP VIEW IF EXISTS " + dataViewThemePO.getThemeAbbr() + "." + viewName;
         execSql(removeViewSql, dataSourceDTO);
