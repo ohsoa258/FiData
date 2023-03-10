@@ -434,6 +434,22 @@ public class DataViewThemeServiceImpl
         }
     }
 
+    public static void main(String[] args) {
+        AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
+        Connection connection = abstractDbHelper.connection(
+                "jdbc:sqlserver://192.168.1.35:1433;databaseName=dmp_ods;user=sa;password=password01!",
+                "sa",
+                "password01!",
+                com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
+
+        String sql = "SELECT session_id FROM sys.dm_exec_sessions WHERE login_name='sa' AND status = 'sleeping'";
+        List<Integer> lists = AbstractCommonDbHelper.execQueryResultList(sql, connection, Integer.class);
+        log.info("数据", JSON.toJSONString(lists));
+//            abstractDbHelper.execQueryResultList
+//            abstractDbHelper.executeSql(sql2, connection);
+
+    }
+
     private void removeSchema(String themeAbbr, Integer targetDbId){
         try {
             // 删除角色和用户TODO
