@@ -538,6 +538,10 @@ public class DataViewServiceImpl
             String sql = "select * from " + tableName;
             model.setViewScript(sql);
             model.setViewDesc("");
+            DataViewPO viewPo = baseMapper.selectId(dto.getViewThemeId(), viewName, DelFlagEnum.NORMAL_FLAG.getValue());
+            if (viewPo != null){
+                baseMapper.deleteById(viewPo.getId());
+            }
             if (Objects.isNull(dataViewPO)){
                 int insert = baseMapper.insert(model);
                 if (insert <= 0){
@@ -555,9 +559,7 @@ public class DataViewServiceImpl
             relationGrant(model, dataSourceDTO);
 
             // 查询主键
-            QueryWrapper<DataViewPO> qw2 = new QueryWrapper<>();
-            qw2.lambda().eq(DataViewPO::getViewThemeId, dto.getViewThemeId()).eq(DataViewPO::getName, viewName).eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
-            DataViewPO po = baseMapper.selectOne(qw2);
+            DataViewPO po = baseMapper.selectId(dto.getViewThemeId(), viewName, DelFlagEnum.NORMAL_FLAG.getValue());
 
             // 存储字段信息
             dataViewFieldsService.saveBatchViewFields(model, (int) po.getId(), dataSourceDTO);
@@ -658,6 +660,9 @@ public class DataViewServiceImpl
             viewName = model.getName().split("\\.")[1];
         }
         // 判断是否无架构
+        if (!dataViewThemePO.getWhetherSchema()){
+            viewName = "view_" + viewName;
+        }
         if (!dataViewThemePO.getWhetherSchema()){
             dataViewThemePO.setThemeAbbr("dbo");
             if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){

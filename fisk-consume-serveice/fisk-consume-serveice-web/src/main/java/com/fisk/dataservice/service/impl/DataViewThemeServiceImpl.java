@@ -36,12 +36,15 @@ import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StopWatch;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotNull;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -92,6 +95,12 @@ public class DataViewThemeServiceImpl
 
         // 校验数据源
         DataSourceDTO dataSourceDTO = verifyDataSource(dto.getTargetDbId());
+
+        // 校验未选择架构的情况下是否存在重复简称
+        Integer count = baseMapper.selectAbbr(dto.getTargetDbId(), dto.getThemeAbbr());
+        if (count != null && count > 0){
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "当前简称已被其他主题使用");
+        }
 
         // 校验架构是否已经存在，不包含则创建架构
         boolean schemaFlag = false;
@@ -203,7 +212,8 @@ public class DataViewThemeServiceImpl
 
     private void relationRole(DataSourceDTO dataSourceDTO, Integer viewThemeId, DataViewAccountPO po){
         log.info("开始关联数据库角色，【{}{}】", viewThemeId, JSON.toJSONString(po));
-        String roleName = dataSourceDTO.conDbname + "_viewThemeRole_" + viewThemeId;
+        DataViewThemePO dataViewThemePO = baseMapper.selectById(viewThemeId);
+        String roleName = dataSourceDTO.conDbname + "_viewThemeRole_" + dataViewThemePO.getThemeAbbr();
         String relationSql = "exec sp_addrolemember " + roleName + "," + po.getAccountName();
         if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
             relationSql = "grant " + roleName + " to " + po.getAccountName();
@@ -254,7 +264,8 @@ public class DataViewThemeServiceImpl
      * @param viewThemeId 数据视图主题id
      */
     private void createRole(DataSourceDTO dataSourceDTO, Integer viewThemeId){
-        String roleName = dataSourceDTO.conDbname + "_viewThemeRole_" + viewThemeId;
+        DataViewThemePO dataViewThemePO = baseMapper.selectById(viewThemeId);
+        String roleName = dataSourceDTO.conDbname + "_viewThemeRole_" + dataViewThemePO.getThemeAbbr();
         String roleSql = "exec sp_addrole " + roleName;
         if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
             roleSql = "create role " + roleName;
@@ -431,6 +442,21 @@ public class DataViewThemeServiceImpl
                     abstractDbHelper.executeSql(sql, connection);
                     log.info("删除数据结束，{}", sql);
                 }else{
+                    // 先查询是否处于登录状态
+                    String sql = "SELECT session_id FROM sys.dm_exec_sessions WHERE login_name='" + item.getAccountName() + "'" + " AND status = 'sleeping'";
+                    Statement st = null;
+                    StopWatch stopWatch = new StopWatch();
+                    stopWatch.start();
+                    st = connection.createStatement();
+                    ResultSet res = st.executeQuery(sql);
+                    while (res.next()){
+                        int sessioonId = res.getInt("session_id");
+                        log.info("session_id is {}", sessioonId);
+                        if (sessioonId != 0){
+                            sql = "kill " + sessioonId;
+                            abstractDbHelper.executeSql(sql, connection);
+                        }
+                    }
                     abstractDbHelper.executeSql(sql1, connection);
                     abstractDbHelper.executeSql(sql2, connection);
                 }
