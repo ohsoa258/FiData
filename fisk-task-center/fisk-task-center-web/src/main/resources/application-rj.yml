@@ -24,7 +24,7 @@ nifi:
 
   pipeline:
     topicName: my-topic
-    waitTime: 30
+    waitTime: 10
     maxTime: 10800
     operation-interval: 2000
     number-of-operations: 5
