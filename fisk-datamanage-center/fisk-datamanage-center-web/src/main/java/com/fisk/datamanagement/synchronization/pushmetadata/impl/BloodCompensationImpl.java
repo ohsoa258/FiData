@@ -49,6 +49,8 @@ public class BloodCompensationImpl
 
         //获取接入业务分类
         ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
+
+        log.info("********获取接入业务分类********:{}",appList);
         if (appList.code != ResultEnum.SUCCESS.getCode()) {
             log.error("获取接入应用列表失败");
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
@@ -63,6 +65,7 @@ public class BloodCompensationImpl
 
         //获取所有接入表
         ResultEntity<List<DataAccessSourceTableDTO>> dataAccessMetaData = dataAccessClient.getDataAccessMetaData();
+        log.info("********获取所有接入表********:{}",dataAccessMetaData);
         if (dataAccessMetaData.code != ResultEnum.SUCCESS.getCode()) {
             log.error("【获取接入所有表失败】");
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
@@ -79,6 +82,7 @@ public class BloodCompensationImpl
         log.info("********开始同步数据建模********");
 
         ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
+        log.info("********开始同步数据建模********:{}",businessAreaList);
         if (businessAreaList.code != ResultEnum.SUCCESS.getCode()) {
             log.error("【获取建模业务域数据失败】");
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
@@ -147,7 +151,7 @@ public class BloodCompensationImpl
             }
             //解析sql
             List<TableMetaDataObject> res=null;
-            if(StringUtils.isEmpty(accessTable.driveType)||StringUtils.isEmpty(accessTable.sqlScript)){
+            if(accessTable.driveType.equals("sftp")||accessTable.driveType.equals("ftp")||StringUtils.isEmpty(accessTable.driveType)||StringUtils.isEmpty(accessTable.sqlScript)){
                 continue;
             }else{
                 res = SqlParserUtils.sqlDriveConversionName(accessTable.driveType,accessTable.sqlScript);
