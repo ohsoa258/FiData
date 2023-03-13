@@ -74,4 +74,9 @@ public class ModelPublishTableDTO {
      * 临时表名称
      */
     public String prefixTempName;
+
+    /**
+     * 预览sql语句脚本
+     */
+    public String execSql;
 }

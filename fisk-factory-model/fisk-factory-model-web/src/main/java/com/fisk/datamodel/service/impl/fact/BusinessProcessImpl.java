@@ -278,6 +278,7 @@ public class BusinessProcessImpl
 
                 // 关联目标dw库id
                 pushDto.setTargetDbId(targetDbId);
+                pushDto.setExecSql(item.coverScript);
 
                 //获取自定义脚本
                 CustomScriptQueryDTO customScriptDto = new CustomScriptQueryDTO();
