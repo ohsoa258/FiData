@@ -32,5 +32,9 @@ public class DimensionAttributeListDTO {
      * 接入的增量时间参数
      */
     public List<DeltaTimeDTO> deltaTimes;
+    /**
+     * 预览nifi调用SQL执行语句
+     */
+    public String execSql;
 
 }

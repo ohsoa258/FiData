@@ -33,4 +33,9 @@ public class FactAttributeDetailDTO {
      * 接入的增量时间参数
      */
     public List<DeltaTimeDTO> deltaTimes;
+
+    /**
+     * 预览覆盖脚本
+     */
+    public String execSql;
 }
