@@ -2,6 +2,7 @@ package com.fisk.datamanagement.service;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataBaseAttributeDTO;
+import io.swagger.models.auth.In;
 
 import java.util.List;
 
@@ -37,5 +38,7 @@ public interface IMetadataEntity {
      * @return
      */
     ResultEnum delMetadataEntity(List<Integer> ids);
+
+
 
 }

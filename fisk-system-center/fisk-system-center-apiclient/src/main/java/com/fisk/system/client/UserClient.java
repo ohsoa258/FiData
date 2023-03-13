@@ -158,4 +158,8 @@ public interface UserClient {
      */
     @PutMapping("/datasource/edit")
     ResultEntity<Object> editData(@RequestBody DataSourceSaveDTO dto);
+
+    @GetMapping("/info/getCurrentUserInfo")
+    public ResultEntity<Object> getCurrentUserInfo();
+
 }

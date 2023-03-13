@@ -98,8 +98,6 @@ public class MetadataEntityImpl
     @Resource
     MetaDataClassificationMapMapper metaDataClassificationMapMapper;
 
-    @Resource
-    UserHelper userHelper;
 
     @Resource
     UserClient userClient;
@@ -138,6 +136,8 @@ public class MetadataEntityImpl
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
+
+
         po.owner = dto.owner;
         po.displayName = dto.displayName;
         po.name = dto.name;
@@ -171,6 +171,7 @@ public class MetadataEntityImpl
         return ResultEnum.SUCCESS;
 
     }
+
 
     public List<EntityTreeDTO> getMetadataEntityTree() {
         List<EntityTreeDTO> list = new ArrayList<>();
