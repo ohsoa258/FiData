@@ -8,6 +8,8 @@ import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
@@ -26,10 +28,12 @@ import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
 import com.fisk.datamanagement.dto.entity.EntityTypeDTO;
 import com.fisk.datamanagement.dto.metadatabusinessmetadatamap.EditMetadataBusinessMetadataMapDTO;
 import com.fisk.datamanagement.dto.metadatabusinessmetadatamap.MetadataBusinessMetadataMapDTO;
+import com.fisk.datamanagement.dto.metadataentityoperationLog.MetaDataEntityOperationLogDTO;
 import com.fisk.datamanagement.dto.process.ProcessAttributesPutDTO;
 import com.fisk.datamanagement.dto.process.ProcessUniqueAttributesDTO;
 import com.fisk.datamanagement.dto.relationship.RelationshipDTO;
 import com.fisk.datamanagement.entity.BusinessMetadataConfigPO;
+import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.entity.MetadataMapAtlasPO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.DataTypeEnum;
@@ -37,6 +41,7 @@ import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.map.MetadataMapAtlasMap;
 import com.fisk.datamanagement.mapper.BusinessMetadataConfigMapper;
 import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
+import com.fisk.datamanagement.service.IMetaDataEntityOperationLog;
 import com.fisk.datamanagement.service.impl.ClassificationImpl;
 import com.fisk.datamanagement.service.impl.EntityImpl;
 import com.fisk.datamanagement.service.impl.MetadataBusinessMetadataMapImpl;
@@ -48,7 +53,9 @@ import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
 import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.UserInfoCurrentDTO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.BuildMetaDataDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +65,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -84,6 +92,9 @@ public class MetaDataImpl implements IMetaData {
     PublishTaskClient client;
     @Resource
     UserClient userClient;
+
+    @Resource
+    UserHelper userHelper;
     @Resource
     DataAccessClient dataAccessClient;
     @Resource
@@ -91,8 +102,17 @@ public class MetaDataImpl implements IMetaData {
     @Resource
     DataGovernanceClient dataQualityClient;
 
+
+
     @Resource
     MetadataEntityImpl metadataEntity;
+
+
+    @Resource
+    private IMetaDataEntityOperationLog operationLog;
+
+
+
 
     @Value("${atlas.entity}")
     private String entity;
@@ -149,9 +169,8 @@ public class MetaDataImpl implements IMetaData {
                     }
                     List<String> qualifiedNames = new ArrayList<>();
                     for (MetaDataColumnAttributeDTO field : table.columnList) {
-                        metaDataField(field, tableGuid);
+                        metaDataField(field, tableGuid,instance.owner);
                         qualifiedNames.add(field.qualifiedName);
-
                         if (!stg.equals(table.getComment())) {
                             //新增stg表字段
                             metaDataStgField(field, stgTableGuid);
@@ -460,6 +479,7 @@ public class MetaDataImpl implements IMetaData {
      * @param parentEntityId
      * @return
      */
+
     public String metaDataTable(MetaDataTableAttributeDTO dto, String parentEntityId, String dbName) {
 
         Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
@@ -594,13 +614,29 @@ public class MetaDataImpl implements IMetaData {
      * @param parentEntityId
      * @return
      */
-    public String metaDataField(MetaDataColumnAttributeDTO dto, String parentEntityId) {
-
+    public String metaDataField(MetaDataColumnAttributeDTO dto, String parentEntityId,String createUser) {
+        MetaDataEntityOperationLogDTO operationLogDTO = new MetaDataEntityOperationLogDTO();
         Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
         if (metadataEntity == null) {
+            operationLogDTO.setOperationType("新增");
+            operationLogDTO.setBeforeChange("");
+            operationLogDTO.setAfterChange(dto.getName());
+            operationLogDTO.setCreateTime(LocalDateTime.now());
+            operationLogDTO.setCreateUser(createUser);
+            operationLogDTO.setMetadataEntityId(parentEntityId);
+            operationLog.addOperationLog(operationLogDTO);
             return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_COLUMN.getName(), parentEntityId).toString();
         }
-
+        MetadataEntityPO entityPO = this.metadataEntity.query().eq("id", metadataEntity).one();
+        if(!entityPO.getName().equals(dto.getName())){
+            operationLogDTO.setOperationType("修改");
+            operationLogDTO.setBeforeChange(entityPO.getName());
+            operationLogDTO.setAfterChange(dto.getName());
+            operationLogDTO.setCreateTime(LocalDateTime.now());
+            operationLogDTO.setCreateUser(createUser);
+            operationLogDTO.setMetadataEntityId(parentEntityId);
+            operationLog.addOperationLog(operationLogDTO);
+        }
         return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_COLUMN.getName()).toString();
     }
 

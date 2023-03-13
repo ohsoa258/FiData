@@ -24,6 +24,8 @@ import java.util.List;
 @EnableConfigurationProperties({ ServerProperties.class, ResourceProperties.class })
 public class ErrorHandlerConfiguration {
 
+
+
     private final ServerProperties serverProperties;
     private final ApplicationContext applicationContext;
     private final ResourceProperties resourceProperties;

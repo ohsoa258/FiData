@@ -259,6 +259,10 @@ public class AbstractCommonDbHelper {
             return connection;
         } catch (SQLException e) {
             log.error("【connection】数据库连接获取失败, ex", e);
+            if(e.getErrorCode()==1045){
+                //抛出密码不正确异常
+                throw new FkException(ResultEnum.USER_ACCOUNTPASSWORD_ERROR, e.getLocalizedMessage());
+            }
             throw new FkException(ResultEnum.VISUAL_CONNECTION_ERROR, e.getLocalizedMessage());
         } catch (Exception e) {
             log.error("【connection】" + type.getName() + "数据库驱动加载失败, ex", e);

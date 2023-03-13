@@ -955,6 +955,12 @@ public class AppRegistrationImpl
                     break;
             }
         } catch (Exception e){
+            //数据库账号或密码不正确
+            ResultEnum resultEnum = ((FkException) e).getResultEnum();
+            if(resultEnum.getCode()==4001){
+                log.error("测试连接用户名或密码不正确:{}", e);
+                throw new FkException(ResultEnum.REALTIME_ACCOUNT_OR_PWD_ERROR);
+            }
             log.error("测试连接失败:{}", e);
             throw new FkException(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
         }
@@ -1846,18 +1852,19 @@ public class AppRegistrationImpl
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
 
         for (AppRegistrationPO appRegistration : appRegistrationList) {
-            AppDataSourcePO one = appDataSourceImpl.query().eq("app_id", appRegistration.id).one();
-            if (one == null) {
-                continue;
-            }
-            List<MetaDataInstanceAttributeDTO> data = addDataSourceMetaData(appRegistration, one);
-            if (CollectionUtils.isEmpty(data)) {
-                continue;
-            }
+            List<AppDataSourcePO> one = appDataSourceImpl.query().eq("app_id", appRegistration.id).list();
+            for (AppDataSourcePO appDataSourcePO : one) {
+                if (one == null) {
+                    continue;
+                }
+                List<MetaDataInstanceAttributeDTO> data = addDataSourceMetaData(appRegistration, appDataSourcePO);
+                if (CollectionUtils.isEmpty(data)) {
+                    continue;
+                }
 
-            list.addAll(data);
+                list.addAll(data);
+            }
         }
-
         return list;
     }
 
@@ -1885,7 +1892,6 @@ public class AppRegistrationImpl
             metaDataInstance.dbList.get(0).tableList = metaDataTable;
             list.add(metaDataInstance);
         }
-
         return list;
     }
 
