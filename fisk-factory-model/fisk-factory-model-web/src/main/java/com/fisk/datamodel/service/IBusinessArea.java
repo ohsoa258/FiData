@@ -201,4 +201,10 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      */
     Object overlayCodePreview(OverlayCodePreviewDTO dto);
 
+    /**
+     * 建模覆盖方式代码预览
+     * @param dto
+     * @return
+     */
+    Object overlayCodePreviewTest(OverlayCodePreviewDTO dto);
 }

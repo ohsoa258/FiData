@@ -163,10 +163,16 @@ public class BusinessAreaController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dataTypeList(businessId));
     }
 
+//    @PostMapping("/overlayCodePreview")
+//    @ApiOperation(value = "覆盖方式预览代码")
+//    public ResultEntity<Object> overlayCodePreview(@RequestBody OverlayCodePreviewDTO dto) {
+//        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.overlayCodePreview(dto));
+//    }
+
     @PostMapping("/overlayCodePreview")
-    @ApiOperation(value = "覆盖方式预览代码")
-    public ResultEntity<Object> overlayCodePreview(@RequestBody OverlayCodePreviewDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.overlayCodePreview(dto));
+    @ApiOperation(value = "覆盖方式预览代码2")
+    public ResultEntity<Object> overlayCodePreviewTest(@RequestBody OverlayCodePreviewDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.overlayCodePreviewTest(dto));
     }
 
 }

@@ -126,6 +126,7 @@ public class DimensionAttributeImpl
         //修改发布状态
         dimensionPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
         dimensionPo.dimensionKeyScript = dto.dimensionKeyScript;
+        dimensionPo.coverScript = dto.execSql;
         if (mapper.updateById(dimensionPo) == 0) {
             throw new FkException(ResultEnum.PUBLISH_FAILURE);
         }
@@ -254,6 +255,8 @@ public class DimensionAttributeImpl
 
         // 系统变量
         data.deltaTimes = systemVariables.getSystemVariable(dimensionId, CreateTypeEnum.CREATE_DIMENSION.getValue());
+
+        data.execSql = dimensionPo.coverScript;
 
         return data;
     }

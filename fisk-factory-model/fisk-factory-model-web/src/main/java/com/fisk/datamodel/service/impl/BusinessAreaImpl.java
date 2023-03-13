@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.common.core.enums.factory.BusinessTimeEnum;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
@@ -18,12 +19,15 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.StringBuildUtils;
+import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
+import com.fisk.common.core.utils.dbutils.utils.SqlServerUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
@@ -33,13 +37,17 @@ import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
+import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
+import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
+import com.fisk.dataaccess.enums.syncModeTypeEnum;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.dto.GetConfigDTO;
+import com.fisk.datamodel.dto.TableStructDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
@@ -96,8 +104,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StopWatch;
+import springfox.documentation.spring.web.json.Json;
 
 import javax.annotation.Resource;
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -111,6 +122,9 @@ import java.util.stream.Stream;
 public class BusinessAreaImpl
         extends ServiceImpl<BusinessAreaMapper,
         BusinessAreaPO> implements IBusinessArea {
+
+    @Value("${fiData-data-dw-source}")
+    private Integer dwSource;
 
     @Resource
     GenerateCondition generateCondition;
@@ -162,8 +176,6 @@ public class BusinessAreaImpl
     private WideTableImpl wideTableImpl;
     @Resource
     private RedisUtil redisUtil;
-    @Resource
-    DataSourceConfigUtil dataSourceConfigUtil;
 
     @Resource
     private DataManageClient dataManageClient;
@@ -1306,6 +1318,326 @@ public class BusinessAreaImpl
         }*/
 
         return objectResultEntity.data;
+    }
+
+    @Override
+    public Object overlayCodePreviewTest(OverlayCodePreviewDTO dto) {
+        // 事实表全量覆盖
+        String tableName;
+        String prefixTempName;
+        if (dto.type == 2){
+            // 事实表全量覆盖
+            FactPO factPO = factMapper.selectById(dto.id);
+            if (factPO == null){
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+            tableName = factPO.factTabName;
+            prefixTempName = factPO.prefixTempName;
+        }else{
+            DimensionPO po = dimensionMapper.selectById(dto.id);
+            if (po == null) {
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+            tableName = po.dimensionTabName;
+            prefixTempName = po.prefixTempName;
+        }
+
+        // 获取数据源信息
+        ResultEntity<DataSourceDTO> dataSourceConfig = null;
+        try{
+            dataSourceConfig = userClient.getFiDataDataSourceById(dwSource);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+            }
+        }catch (Exception e){
+            log.error("调用userClient服务获取数据源失败,", e);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+
+        DataAccessConfigDTO data = new DataAccessConfigDTO();
+
+        ProcessorConfig processorConfig = new ProcessorConfig();
+        processorConfig.targetTableName = tableName;
+        data.processorConfig = processorConfig;
+
+        DataSourceConfig targetDsConfig = new DataSourceConfig();
+        targetDsConfig.syncMode = dto.syncMode;
+        data.targetDsConfig = targetDsConfig;
+
+        data.businessDTO = dto.tableBusiness == null ? new TableBusinessDTO() : dto.tableBusiness;
+        data.businessDTO.otherLogic = 1;
+        if (dto.syncMode == 4) {
+            data.businessDTO.otherLogic = 2;
+        }
+
+        data.modelPublishFieldDTOList = dto.modelPublishFieldDTOList;
+
+        List<String> collect = dto.modelPublishFieldDTOList.stream().filter(e -> e.isPrimaryKey == 1).map(e -> e.fieldEnName).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(collect)) {
+            data.businessKeyAppend = String.join(",", collect);
+        }
+
+        BuildNifiFlowDTO buildNifiFlow = new BuildNifiFlowDTO();
+        buildNifiFlow.updateSql = dto.updateSql;
+        buildNifiFlow.prefixTempName = prefixTempName;
+
+        OverLoadCodeDTO dataModel = new OverLoadCodeDTO();
+        dataModel.buildNifiFlow = buildNifiFlow;
+        dataModel.config = data;
+        dataModel.funcName = FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_OUTPUT.getName();
+        dataModel.dataSourceType = DataSourceTypeEnum.SQLSERVER;
+        dataModel.synchronousTypeEnum = SynchronousTypeEnum.PGTOPG;
+
+        // 获取ods表字段数据
+        List<TableStructDTO> odsFieldList = getColumnsName(dataSourceConfig.data.id, tableName);
+        if (CollectionUtils.isEmpty(odsFieldList)){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS, "ods表字段信息查询失败");
+        }
+        return getOdsSql(odsFieldList, dataModel, dataSourceConfig.data, dto);
+
+    }
+
+    /**
+     * 拼接ods插入sql语句
+     * @param odsFieldList
+     * @param dataModel
+     * @param data
+     * @param dto
+     */
+    private String getOdsSql(List<TableStructDTO> odsFieldList, OverLoadCodeDTO dataModel, DataSourceDTO data, OverlayCodePreviewDTO dto) {
+        log.info("获取ods插入sql参数{},{}", JSON.toJSONString(odsFieldList), dataModel);
+
+        String tableKey = "";
+        String targetTableName = dataModel.config.processorConfig.targetTableName;
+        List<String> stgAndTableName = TableNameGenerateUtils.getStgAndTableName(targetTableName);
+        log.info("stgAntTableName集合{}", JSON.toJSONString(stgAndTableName));
+        String fieldStr = "";
+        StringBuilder odsInsertSql = new StringBuilder("insert into " + targetTableName + "(");
+        StringBuilder fieldBuilder = new StringBuilder();
+        String selStgField = "";
+        // 按照不同数据源获取key字段
+        if (Objects.equals(dataModel.synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)){
+            tableKey = targetTableName.substring(targetTableName.indexOf("_") + 1) + "key";
+        }else{
+            tableKey = stgAndTableName.get(2);
+        }
+        // 字段去重
+        String finalTableKey = tableKey;
+        odsFieldList = odsFieldList.stream().filter(item -> !item.getFieldName().equals(finalTableKey)).collect(Collectors.toList());
+        // 业务主键
+        if (dataModel.config.targetDsConfig.syncMode == syncModeTypeEnum.INCREMENT_MERGE.getValue()){
+            return getMergeSql(odsFieldList, dataModel, tableKey, dto, stgAndTableName);
+        }
+
+        // 非业务主键
+        fieldBuilder.append(tableKey).append(",");
+
+        // 拼接ods字段
+        for (TableStructDTO field : odsFieldList){
+            fieldBuilder.append(field.fieldName).append(",");
+        }
+        fieldStr = fieldBuilder.toString();
+        fieldStr = fieldStr.substring(0,fieldStr.length() - 1);
+        odsInsertSql.append(fieldStr);
+        odsInsertSql.append(") select ");
+
+        // 拼接查询stg字段及字段转换
+        StringBuilder selStgSql = new StringBuilder();
+        selStgSql.append(tableKey);
+        selStgSql.append(",");
+        for (TableStructDTO item : odsFieldList){
+            selStgSql.append(fieldTypeTransform(item));
+            selStgSql.append(",");
+        }
+        selStgField = selStgSql.toString();
+        selStgField = selStgField.substring(0, selStgField.length() - 1);
+
+        // 拼接条件
+        odsInsertSql.append(selStgField);
+        odsInsertSql.append(" from ");
+        odsInsertSql.append(stgAndTableName.get(0));
+        // 业务时间覆盖拼接参数
+        if (dataModel.config.targetDsConfig.syncMode == syncModeTypeEnum.TIME_INCREMENT.getValue()){
+            TableBusinessDTO tbDto = dataModel.config.businessDTO;
+            String whereStr = previewCoverCondition(tbDto, data);
+            odsInsertSql.append(" ");
+            odsInsertSql.append(whereStr);
+        }
+        String sql = odsInsertSql.toString();
+
+        // 判断有无更新语句
+        if (!StringUtils.isEmpty(dto.getUpdateSql())){
+            sql += ";";
+            sql += dto.updateSql;
+        }
+        log.info("非业务主键sql预览：{}", JSON.toJSONString(sql));
+
+        return sql;
+
+    }
+
+    private String getMergeSql(List<TableStructDTO> odsFieldList, OverLoadCodeDTO dataModel, String tableKey, OverlayCodePreviewDTO dto, List<String> stgAndTableName) {
+        String targetTableName = dataModel.config.processorConfig.targetTableName;
+        String stgName = stgAndTableName.get(0);
+        String mergeSql = "";
+        // 1、拼接stg表
+        mergeSql = "MERGE INTO " + targetTableName + " AS T USING " + stgName + " AS S ON( ";
+
+        // 2、拼接主键关联条件
+        StringBuilder pkBuilder = new StringBuilder();
+        String pkSql = "";
+        List<String> collect = dto.modelPublishFieldDTOList.stream().filter(e -> e.isPrimaryKey == 1).map(e -> e.fieldEnName).collect(Collectors.toList());
+        for (String key : collect){
+            pkBuilder.append(" AND T.");
+            pkBuilder.append(key);
+            pkBuilder.append("= S.");
+            pkBuilder.append(key);
+        }
+        pkBuilder.append(")");
+        pkSql = pkBuilder.toString();
+        // 去掉前面的and
+        pkSql = pkSql.substring(5, pkSql.length());
+        pkSql = pkSql.replace(",)", ")");
+        // 组合
+        mergeSql += pkSql;
+
+        // 3、拼接更新语句
+        StringBuilder upBuilder = new StringBuilder(" WHEN MATCHED THEN UPDATE SET ");
+        String upSql = "";
+        upBuilder.append("T.");
+        upBuilder.append(tableKey);
+        upBuilder.append(" = S.");
+        upBuilder.append(tableKey);
+        upBuilder.append(",");
+        for (TableStructDTO item : odsFieldList){
+            upBuilder.append("T.");
+            upBuilder.append(item.fieldName);
+            upBuilder.append(" = S.");
+            upBuilder.append(item.fieldName);
+            upBuilder.append(",");
+        }
+        // 去除尾部的,符号
+        upSql = upBuilder.toString();
+        upSql = upSql.substring(0, upSql.length() - 1);
+        // 组合
+        mergeSql += upSql;
+
+        // 4、拼接插入语句
+        StringBuilder insBuilder = new StringBuilder(" WHEN NOT MATCHED THEN INSERT (");
+        String insSql = "";
+        insBuilder.append(tableKey);
+        insBuilder.append(",");
+        for (TableStructDTO item : odsFieldList){
+            insBuilder.append(item.fieldName);
+            insBuilder.append(",");
+        }
+        insBuilder.append(") VALUES( ");
+        insBuilder.append("S.");
+        insBuilder.append(tableKey);
+        insBuilder.append(",");
+        for (TableStructDTO item : odsFieldList){
+            insBuilder.append("S.");
+            insBuilder.append(item.fieldName);
+            insBuilder.append(",");
+        }
+        insBuilder.append(")");
+        // 去除尾部的,符号
+        insSql = insBuilder.toString();
+        insSql = insSql.replace(",)", ")");
+        // 组合
+        mergeSql += insSql;
+
+        // 判断有无更新语句
+        if (!StringUtils.isEmpty(dto.getUpdateSql())){
+            mergeSql += ";";
+            mergeSql += dto.updateSql;
+        }
+        mergeSql += ";";
+        log.info("业务主键sql{}", mergeSql);
+        return mergeSql;
+    }
+
+    private String fieldTypeTransform(TableStructDTO item) {
+        log.info("字段名称-类型：{}-{}", item.fieldName, item.fieldType);
+        String fieldInfo = "";
+        if (item.fieldType.contains("date") || item.fieldType.contains("time")){
+            fieldInfo = "DATEADD(minute, cast(left(" + item.fieldName + ",10) as bigint)/60, '1970-1-1')";
+        }else if (!item.fieldType.equals("nvarchar")){
+            fieldInfo = "CAST(" + item.fieldName + " AS " + item.fieldType + ")";
+        }else{
+            fieldInfo = item.fieldName;
+        }
+        return fieldInfo;
+    }
+
+    private String previewCoverCondition(TableBusinessDTO dto, DataSourceDTO dataSource) {
+        //数据库时间
+        Integer businessDate = 0;
+
+        IBuildAccessSqlCommand command = BuildFactoryAccessHelper.getDBCommand(dataSource.conType);
+
+        //查询数据库时间sql
+        String timeSql = command.buildQueryTimeSql(BusinessTimeEnum.getValue(dto.businessTimeFlag));
+        AbstractCommonDbHelper commonDbHelper = new AbstractCommonDbHelper();
+        Connection connection = commonDbHelper.connection(dataSource.conStr, dataSource.conAccount, dataSource.conPassword, dataSource.conType);
+        businessDate = Integer.parseInt(AbstractCommonDbHelper.executeTotalSql(timeSql, connection, "tmp"));
+
+        StringBuilder str = new StringBuilder();
+        str.append("where ");
+        str.append(dto.businessTimeField + " ");
+
+        //普通模式
+        if (dto.otherLogic == 1 || businessDate < dto.businessDate) {
+            str.append(dto.businessOperator + " ");
+            str.append("DATEADD");
+            str.append("(");
+            str.append(dto.rangeDateUnit);
+            str.append(",");
+            str.append(dto.businessRange);
+            str.append(",GETDATE()) AND enableflag='Y';");
+            return str.toString();
+        }
+        //高级模式
+        str.append(dto.businessOperatorStandby);
+        str.append("DATEADD");
+        str.append("(");
+        str.append(dto.rangeDateUnitStandby);
+        str.append(",");
+        str.append(dto.businessRangeStandby);
+        str.append(",GETDATE()) AND enableflag='Y';");
+        log.info("预览业务时间覆盖,where条件:{}", str);
+        return str.toString();
+    }
+
+    /**
+     * 根据tableName获取tableFields
+     *
+     * @param tableName tableName
+     * @return tableName中的表字段
+     */
+    public List<TableStructDTO> getColumnsName(Integer targetDbId, String tableName) {
+        ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(targetDbId);
+        DataSourceDTO data = result.getData();
+        log.info("数据源连接信息：{}", JSON.toJSONString(data));
+        String selOdsFieldSql = "SELECT name AS column_name,TYPE_NAME(system_type_id) AS column_type,ROW_NUMBER() OVER(ORDER BY system_type_id ) AS rid " +
+                "FROM sys.columns WHERE object_id = OBJECT_ID('" + tableName + "')";
+        List<TableStructDTO> list = new ArrayList<>();
+        try (Connection connection = DriverManager.getConnection(data.conStr, data.conAccount, data.conPassword);
+             Statement st = connection.createStatement();
+             ResultSet res = st.executeQuery(selOdsFieldSql)){
+            while (res.next()){
+                TableStructDTO dto = new TableStructDTO();
+                dto.setFieldName(res.getString("column_name"));
+                dto.setFieldType(res.getString("column_type"));
+                dto.setRid(res.getInt("rid"));
+                list.add(dto);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            log.info("获取表字段数据错误");
+        }
+        log.info("字段数据{}", JSON.toJSONString(list));
+        return list;
     }
 
     public DataSourceDTO getTargetDbInfo() {

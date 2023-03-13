@@ -163,6 +163,7 @@ public class FactAttributeImpl
         //修改发布状态
         factPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
         factPo.dimensionKeyScript = dto.dimensionKeyScript;
+        factPo.coverScript = dto.execSql;
         if (factMapper.updateById(factPo) == 0) {
             throw new FkException(ResultEnum.PUBLISH_FAILURE);
         }
@@ -316,6 +317,7 @@ public class FactAttributeImpl
 
         queryDto.execType = 2;
         data.customScriptList.addAll(customScript.listCustomScript(queryDto));
+        data.execSql = po.coverScript;
 
         data.deltaTimes = systemVariables.getSystemVariable(factId, CreateTypeEnum.CREATE_FACT.getValue());
         return data;
