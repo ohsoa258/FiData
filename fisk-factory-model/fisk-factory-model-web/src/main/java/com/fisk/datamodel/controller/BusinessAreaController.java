@@ -169,4 +169,10 @@ public class BusinessAreaController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.overlayCodePreview(dto));
     }
 
+    @PostMapping("/overlayCodePreview2")
+    @ApiOperation(value = "覆盖方式预览代码2")
+    public ResultEntity<Object> overlayCodePreviewTest(@RequestBody OverlayCodePreviewDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.overlayCodePreviewTest(dto));
+    }
+
 }
