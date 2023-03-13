@@ -82,8 +82,8 @@ public class HeartbeatService {
                 // 第一步  创建rediskey 先判断有没有这个key,没有创建,设置过期时间30秒
                 String value = UUID.randomUUID().toString();
                 //刷新时间和创建key或者修改value,会产生延时任务
-                redisUtil.set(RedisKeyEnum.DELAYED_TASK.getName() + ":" + topic, value, 3000);
-                redisUtil.set(topic, value, 30);
+                redisUtil.set(RedisKeyEnum.DELAYED_TASK.getName() + ":" + topic, value, Long.parseLong(waitTime) * 100);
+                redisUtil.set(topic, value, Long.parseLong(waitTime));
                 // 第二步  创建延时队列,延时时间要比rediskey过期时间长5秒,且可配置,需要携带的参数有报错信息
                 DelayedTask2 delayedTask2 = new DelayedTask2(kafkaReceive, value, topic, kafkaTemplateHelper,
                         dataFactoryClient,

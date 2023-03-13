@@ -152,9 +152,9 @@ public class DelayedTask2 extends TimerTask {
                     Timer timer = new Timer();
                     String value = UUID.randomUUID().toString();
                     //刷新时间和创建key或者修改value,会产生延时任务
-                    redisUtil.set(RedisKeyEnum.DELAYED_TASK.getName() + ":" + topic, value, 3000);
+                    redisUtil.set(RedisKeyEnum.DELAYED_TASK.getName() + ":" + topic, value, Long.parseLong(waitTime) * 100);
                     DelayedTask2 delayedTaskAgain = new DelayedTask2(kafkaReceive, value, topic, kafkaTemplateHelper, dataFactoryClient, iOlap, iPipelJobLog, iPipelLog, iPipelTaskLog, redisUtil, iTableNifiSettingService, dataAccessClient, iPipelineTaskPublishCenter, publishTaskController);
-                    timer.schedule(delayedTaskAgain, 35000);
+                    timer.schedule(delayedTaskAgain, (Long.parseLong(waitTime) + 5) * 1000);
                     return;
                 }
             }
