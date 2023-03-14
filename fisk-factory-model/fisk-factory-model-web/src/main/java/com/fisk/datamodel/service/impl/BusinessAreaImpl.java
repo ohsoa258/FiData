@@ -1512,8 +1512,8 @@ public class BusinessAreaImpl
         for (TableStructDTO item : odsFieldList){
             upBuilder.append("T.");
             upBuilder.append(item.fieldName);
-            upBuilder.append(" = S.");
-            upBuilder.append(item.fieldName);
+            // 类型转换
+            upBuilder.append(fieldTypeTransformKey(item));
             upBuilder.append(",");
         }
         // 去除尾部的,符号
@@ -1536,8 +1536,9 @@ public class BusinessAreaImpl
         insBuilder.append(tableKey);
         insBuilder.append(",");
         for (TableStructDTO item : odsFieldList){
-            insBuilder.append("S.");
-            insBuilder.append(item.fieldName);
+            // 类型转换
+            String str = fieldTypeTransformKey(item);
+            insBuilder.append(str.replace(" = ", ""));
             insBuilder.append(",");
         }
         insBuilder.append(")");
@@ -1554,6 +1555,19 @@ public class BusinessAreaImpl
         }
         log.info("业务主键sql{}", mergeSql);
         return mergeSql;
+    }
+
+    private String fieldTypeTransformKey(TableStructDTO item) {
+        log.info("字段名称-类型：{}-{}", item.fieldName, item.fieldType);
+        String fieldInfo = "";
+        if (item.fieldType.contains("date") || item.fieldType.contains("time")){
+            fieldInfo = " = DATEADD(minute, cast(left(S." + item.fieldName + ",10) as bigint)/60, '1970-1-1')";
+        }else if (!item.fieldType.equals("nvarchar")){
+            fieldInfo = " = CAST(S." + item.fieldName + " AS " + item.fieldType + ")";
+        }else{
+            fieldInfo = " = S." + item.fieldName;
+        }
+        return fieldInfo;
     }
 
     private String fieldTypeTransform(TableStructDTO item) {
