@@ -7,6 +7,7 @@ import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
 import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.service.ITableFields;
+import com.fisk.datamodel.dto.businessarea.OverlayCodePreviewDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -85,6 +86,12 @@ public class TableFieldsController {
     @ApiOperation(value = "编辑单个字段")
     public ResultEntity<Object> updateFile(@Validated @RequestBody TableFieldsDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.updateFile(dto));
+    }
+
+    @PostMapping("/overlayCodePreview")
+    @ApiOperation(value = "覆盖方式预览代码")
+    public ResultEntity<Object> overlayCodePreviewTest(@RequestBody OverlayCodePreviewDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.overlayCodePreview(dto));
     }
 
 }

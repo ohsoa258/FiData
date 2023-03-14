@@ -9,6 +9,7 @@ import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
 import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
+import com.fisk.datamodel.dto.businessarea.OverlayCodePreviewDTO;
 
 import java.util.List;
 
@@ -112,4 +113,10 @@ public interface ITableFields extends IService<TableFieldsPO> {
      */
     ResultEnum updateFile(TableFieldsDTO dto);
 
+    /**
+     * 数据接入SQL预览接口
+     * @param dto
+     * @return
+     */
+    Object overlayCodePreview(OverlayCodePreviewDTO dto);
 }
