@@ -221,6 +221,8 @@ public class BuildDataModelDorisTableListener
                 bfd.prefixTempName = modelPublishTableDTO.prefixTempName;
                 bfd.customScriptBefore = modelPublishTableDTO.customScript;
                 bfd.customScriptAfter = modelPublishTableDTO.customScriptAfter;
+                // 设置预览SQL执行语句
+                bfd.syncStgToOdsSql = modelPublishTableDTO.execSql;
                 bfd.buildTableSql = pgdbTable2.get(0);
                 if (modelPublishTableDTO.createType == 0) {
                     //类型为物理表
@@ -231,8 +233,6 @@ public class BuildDataModelDorisTableListener
                 }
                 bfd.maxRowsPerFlowFile = modelPublishTableDTO.maxRowsPerFlowFile;
                 bfd.fetchSize = modelPublishTableDTO.fetchSize;
-                // 设置预览SQL执行语句
-                bfd.execSql = modelPublishTableDTO.execSql;
                 log.info("nifi传入参数：" + JSON.toJSONString(bfd));
                 TableNifiSettingPO one = tableNifiSettingService.query().eq("app_id", bfd.appId).eq("table_access_id", bfd.id).eq("type", bfd.type.getValue()).one();
                 TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
