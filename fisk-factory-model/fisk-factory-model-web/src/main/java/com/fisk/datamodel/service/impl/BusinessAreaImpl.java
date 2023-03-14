@@ -1365,10 +1365,10 @@ public class BusinessAreaImpl
         data.targetDsConfig = targetDsConfig;
 
         data.businessDTO = dto.tableBusiness == null ? new TableBusinessDTO() : dto.tableBusiness;
-        data.businessDTO.otherLogic = 1;
-        if (dto.syncMode == 4) {
-            data.businessDTO.otherLogic = 2;
-        }
+//        data.businessDTO.otherLogic = 1;
+//        if (dto.syncMode == 4) {
+//            data.businessDTO.otherLogic = 2;
+//        }
 
         data.modelPublishFieldDTOList = dto.modelPublishFieldDTOList;
 
@@ -1546,13 +1546,12 @@ public class BusinessAreaImpl
         insSql = insSql.replace(",)", ")");
         // 组合
         mergeSql += insSql;
+        mergeSql += ";";
 
         // 判断有无更新语句
         if (!StringUtils.isEmpty(dto.getUpdateSql())){
-            mergeSql += ";";
             mergeSql += dto.updateSql;
         }
-        mergeSql += ";";
         log.info("业务主键sql{}", mergeSql);
         return mergeSql;
     }
@@ -1571,6 +1570,7 @@ public class BusinessAreaImpl
     }
 
     private String previewCoverCondition(TableBusinessDTO dto, DataSourceDTO dataSource) {
+        log.info("拼接条件{}", JSON.toJSONString(dto));
         //数据库时间
         Integer businessDate = 0;
 
@@ -1594,7 +1594,7 @@ public class BusinessAreaImpl
             str.append(dto.rangeDateUnit);
             str.append(",");
             str.append(dto.businessRange);
-            str.append(",GETDATE()) AND enableflag='Y';");
+            str.append(",GETDATE());");
             return str.toString();
         }
         //高级模式
@@ -1604,7 +1604,7 @@ public class BusinessAreaImpl
         str.append(dto.rangeDateUnitStandby);
         str.append(",");
         str.append(dto.businessRangeStandby);
-        str.append(",GETDATE()) AND enableflag='Y';");
+        str.append(",GETDATE());");
         log.info("预览业务时间覆盖,where条件:{}", str);
         return str.toString();
     }
