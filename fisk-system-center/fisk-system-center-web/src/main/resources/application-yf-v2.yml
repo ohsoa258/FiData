@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://10.195.135.247:3306/dmp_system_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: nifi_owne
+    password: ABCabc1234
+
+  redis:
+    host: 10.195.135.248
+    port: 6379
+    password: 80405390
+
+# 图片上传
+file:
+  uploadurl: /root/nginx/app/file/dmp/images
+  logoUrl: /root/nginx/app/file/systemlogo/images

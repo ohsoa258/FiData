@@ -1365,10 +1365,10 @@ public class BusinessAreaImpl
         data.targetDsConfig = targetDsConfig;
 
         data.businessDTO = dto.tableBusiness == null ? new TableBusinessDTO() : dto.tableBusiness;
-        data.businessDTO.otherLogic = 1;
-        if (dto.syncMode == 4) {
-            data.businessDTO.otherLogic = 2;
-        }
+//        data.businessDTO.otherLogic = 1;
+//        if (dto.syncMode == 4) {
+//            data.businessDTO.otherLogic = 2;
+//        }
 
         data.modelPublishFieldDTOList = dto.modelPublishFieldDTOList;
 
@@ -1512,8 +1512,8 @@ public class BusinessAreaImpl
         for (TableStructDTO item : odsFieldList){
             upBuilder.append("T.");
             upBuilder.append(item.fieldName);
-            upBuilder.append(" = S.");
-            upBuilder.append(item.fieldName);
+            // 类型转换
+            upBuilder.append(fieldTypeTransformKey(item));
             upBuilder.append(",");
         }
         // 去除尾部的,符号
@@ -1536,8 +1536,9 @@ public class BusinessAreaImpl
         insBuilder.append(tableKey);
         insBuilder.append(",");
         for (TableStructDTO item : odsFieldList){
-            insBuilder.append("S.");
-            insBuilder.append(item.fieldName);
+            // 类型转换
+            String str = fieldTypeTransformKey(item);
+            insBuilder.append(str.replace(" = ", ""));
             insBuilder.append(",");
         }
         insBuilder.append(")");
@@ -1546,15 +1547,27 @@ public class BusinessAreaImpl
         insSql = insSql.replace(",)", ")");
         // 组合
         mergeSql += insSql;
+        mergeSql += ";";
 
         // 判断有无更新语句
         if (!StringUtils.isEmpty(dto.getUpdateSql())){
-            mergeSql += ";";
             mergeSql += dto.updateSql;
         }
-        mergeSql += ";";
         log.info("业务主键sql{}", mergeSql);
         return mergeSql;
+    }
+
+    private String fieldTypeTransformKey(TableStructDTO item) {
+        log.info("字段名称-类型：{}-{}", item.fieldName, item.fieldType);
+        String fieldInfo = "";
+        if (item.fieldType.contains("date") || item.fieldType.contains("time")){
+            fieldInfo = " = DATEADD(minute, cast(left(S." + item.fieldName + ",10) as bigint)/60, '1970-1-1')";
+        }else if (!item.fieldType.equals("nvarchar")){
+            fieldInfo = " = CAST(S." + item.fieldName + " AS " + item.fieldType + ")";
+        }else{
+            fieldInfo = " = S." + item.fieldName;
+        }
+        return fieldInfo;
     }
 
     private String fieldTypeTransform(TableStructDTO item) {
@@ -1571,6 +1584,7 @@ public class BusinessAreaImpl
     }
 
     private String previewCoverCondition(TableBusinessDTO dto, DataSourceDTO dataSource) {
+        log.info("拼接条件{}", JSON.toJSONString(dto));
         //数据库时间
         Integer businessDate = 0;
 
@@ -1594,7 +1608,7 @@ public class BusinessAreaImpl
             str.append(dto.rangeDateUnit);
             str.append(",");
             str.append(dto.businessRange);
-            str.append(",GETDATE()) AND enableflag='Y';");
+            str.append(",GETDATE());");
             return str.toString();
         }
         //高级模式
@@ -1604,7 +1618,7 @@ public class BusinessAreaImpl
         str.append(dto.rangeDateUnitStandby);
         str.append(",");
         str.append(dto.businessRangeStandby);
-        str.append(",GETDATE()) AND enableflag='Y';");
+        str.append(",GETDATE());");
         log.info("预览业务时间覆盖,where条件:{}", str);
         return str.toString();
     }

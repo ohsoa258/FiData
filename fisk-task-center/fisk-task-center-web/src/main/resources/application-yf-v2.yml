@@ -1,0 +1,107 @@
+datamodeldorisconstr:
+  driver_class_name: com.mysql.jdbc.Driver
+  password: Password01!
+  url: jdbc:mysql://192.168.11.134:9030/dmp_olap?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+  username: root
+
+external-table-link: '"host" = "192.168.1.250","port" = "5432","user" = "postgres","password"
+  = "Password01!","database" = "dmp_dw"'
+
+nifi:
+  basePath: https://10.195.135.246:8443/nifi-api
+  username: fisk
+  password: fiskpassword01!
+  token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJkMjc2Mjk3N2U4YjU0YTQ0YjYyZGU2ODlmZTk0OTRjNiIsInVzZXIiOiJ7XCJpZFwiOjE4LFwidXNlckFjY291bnRcIjpcImNma1wifSIsImlkIjoiMTgifQ.SRkIbNgKrvo1TI-WSufy4mZGLst6ed0Y6Fs0QoQ8m_g
+  Enable-Authentication: 0
+  kerberos:
+    Keytab: /root/fisk/fidata/server/fisk-task-center/kafka.keytab
+    login:
+      config: /root/fisk/fidata/server/fisk-task-center/kafka-jaas.conf
+    krb5:
+      conf: /opt/fidata/java/fisk-task-center/krb5.conf
+  kerberosprincipal: kafka/admin@AUTOEXPR.COM
+
+
+  pipeline:
+    topicName: my-topic
+    waitTime: 10
+    maxTime: 10800
+    operation-interval: 2000
+    number-of-operations: 5
+    data-governance-url: http://10.195.135.246:8083
+    dispatch-email-url-prefix: http://10.178.188.31:82        # 此配置未生效
+nifi-ConcurrentTasks: 1
+nifi-FetchSize: 10000
+nifi-MaxRowsPerFlowFile: 10000
+nifi-OutputBatchSize: 1
+fiData-data-ods-source: 2
+fiData-data-dw-source: 1
+# 是否调用数据质量接口
+nifi-data-security-enable: false
+# consumeServer启动控制
+consumer-server-enable: false
+
+pgsql-datamodel:
+  driverClassName: org.postgresql.Driver
+  password: Password01!
+  url: jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified
+  username: postgres
+  ip: 192.168.1.250
+  dbName: dmp_dw
+pgsql-mdm:
+  password: Password01!
+  url: jdbc:postgresql://192.168.1.250:5432/dmp_mdm?stringtype=unspecified
+  username: postgres
+  type: PG
+
+# sftp-rsa-upload暂未使用
+sftp-rsa-upload:
+  userName: root
+  password: Password01!
+  rsaPath: null
+  host: 192.168.21.21
+  port: 22
+
+server:
+  port: 7003
+spring:
+  application:
+    name: task-center
+  datasource:
+    dynamic:
+      datasource:
+        datainputdb:
+          driver-class-name: com.mysql.jdbc.Driver
+          password: ABCabc1234
+          url: jdbc:mysql://10.195.135.247:3306/dmp_datainput_db_v2?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+          username: nifi_owne
+        taskdb:
+          driver-class-name: com.mysql.jdbc.Driver
+          password: ABCabc1234
+          url: jdbc:mysql://10.195.135.247:3306/dmp_task_db_v2?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+          username: nifi_owne
+      primary: taskdb
+      strict: false
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  kafka:
+    consumer:
+      bootstrap-servers: localhost:9092
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      session:
+        timeout:
+          ms: 600000
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      acks: 0
+      bootstrap-servers: localhost:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      retries: 3
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+  redis:
+    host: 10.195.135.248
+    password: 80405390
+    port: 6379

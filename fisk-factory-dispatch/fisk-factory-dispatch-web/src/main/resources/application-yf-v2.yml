@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: data-factory
+  datasource:
+    url: jdbc:mysql://10.195.135.247:3306/dmp_datafactory_db_v2?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: nifi_owne
+    password: ABCabc1234
+    driver-class-name: com.mysql.jdbc.Driver
+  redis:
+    host: 10.195.135.248
+    password: 80405390
+    port: 6379

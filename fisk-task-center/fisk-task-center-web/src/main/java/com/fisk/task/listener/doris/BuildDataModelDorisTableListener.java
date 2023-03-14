@@ -221,6 +221,8 @@ public class BuildDataModelDorisTableListener
                 bfd.prefixTempName = modelPublishTableDTO.prefixTempName;
                 bfd.customScriptBefore = modelPublishTableDTO.customScript;
                 bfd.customScriptAfter = modelPublishTableDTO.customScriptAfter;
+                // 设置预览SQL执行语句
+                bfd.syncStgToOdsSql = modelPublishTableDTO.execSql;
                 bfd.buildTableSql = pgdbTable2.get(0);
                 if (modelPublishTableDTO.createType == 0) {
                     //类型为物理表
