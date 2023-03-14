@@ -65,6 +65,15 @@ public class PublishTaskController {
                 data);
     }
 
+    @PostMapping("/publishBuildDeleteDataServices")
+    @ApiOperation(value = "删除表服务nifi流程")
+    public ResultEntity<Object> publishBuildDeleteDataServices(@RequestBody BuildDeleteTableServiceDTO data) {
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_DELETE_TABLE_SERVER_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.DataServiceTopicConstants.BUILD_DELETE_TABLE_SERVER_FLOW,
+                data);
+    }
+
     /**
      * 在Doris中生成stg&ods数据表
      *

@@ -384,7 +384,7 @@ public class TableFieldsImpl
 
         List<MetaDataInstanceAttributeDTO> list = appRegistration.addDataSourceMetaData(registrationPO, po);
         //解析sql
-        List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(po.driveType, sql);
+        List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(null,po.driveType, sql);
         if (CollectionUtils.isEmpty(res)) {
             return;
         }

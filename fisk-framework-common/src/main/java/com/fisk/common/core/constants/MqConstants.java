@@ -78,6 +78,8 @@ public class MqConstants {
 
             public static final String BUILD_TABLE_SERVER_FLOW = "task.build.table.server.flow";
 
+            public static final String BUILD_DELETE_TABLE_SERVER_FLOW = "task.build.delete.table.server.flow";
+
             public static final String BUILD_CUSTOMWORK_FLOW = "task.build.customwork.flow";
         }
 

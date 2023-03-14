@@ -83,7 +83,10 @@ public enum TaskTypeEnum implements BaseEnum {
 
     BUILD_EXEC_SCRIPT_TASK(18,"执行自定义脚本"),
 
-    BUILD_TABLE_SERVER_TASK(19,"表服务同步");
+    BUILD_TABLE_SERVER_TASK(19,"表服务同步"),
+
+    BUILD_DELETE_TABLE_SERVER_TASK(20,"删除表服务nifi流程")
+    ;
 
     TaskTypeEnum(int value, String name) {
         this.value = value;

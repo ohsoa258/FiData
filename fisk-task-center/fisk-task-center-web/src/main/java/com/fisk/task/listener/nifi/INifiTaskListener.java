@@ -28,6 +28,15 @@ public interface INifiTaskListener {
     ResultEnum buildDataServices(String dataInfo, Acknowledgment acke);
 
     /**
+     * 删除表服务nifi流程
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
+    ResultEnum buildDeleteDataServices(String dataInfo, Acknowledgment acke);
+
+    /**
      * 创建接入nifi流程
      *
      * @param dataInfo

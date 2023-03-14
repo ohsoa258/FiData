@@ -26,7 +26,9 @@ import com.fisk.dataservice.service.ITableService;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
+import com.fisk.task.enums.OlapTableEnum;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -175,6 +177,13 @@ public class TableServiceImpl
                 throw new FkException(ResultEnum.SAVE_DATA_ERROR);
             }
         }
+        BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
+        List<Long> ids = new ArrayList<>();
+        ids.add(id);
+        buildDeleteTableService.userId = userHelper.getLoginUserInfo().id;
+        buildDeleteTableService.ids = ids;
+        buildDeleteTableService.olapTableEnum = OlapTableEnum.DATASERVICES;
+        publishTaskClient.publishBuildDeleteDataServices(buildDeleteTableService);
         return ResultEnum.SUCCESS;
     }
 

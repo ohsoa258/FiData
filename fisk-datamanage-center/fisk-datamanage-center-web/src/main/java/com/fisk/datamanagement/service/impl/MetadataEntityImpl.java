@@ -547,7 +547,7 @@ public class MetadataEntityImpl
             }
 
             //解析sql
-            List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(dataSourceInfo.conType.getName().toLowerCase(), first1.get().sqlScript);
+            List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(null,dataSourceInfo.conType.getName().toLowerCase(), first1.get().sqlScript);
             if (CollectionUtils.isEmpty(res)) {
                 return;
             }
@@ -582,7 +582,7 @@ public class MetadataEntityImpl
                 return;
             }
             //解析sql脚本
-            List<TableMetaDataObject> tableMetaDataObjects = SqlParserUtils.sqlDriveConversionName(dataSourceInfo.conType.getName().toLowerCase(), first.get().sqlScript);
+            List<TableMetaDataObject> tableMetaDataObjects = SqlParserUtils.sqlDriveConversionName(null,dataSourceInfo.conType.getName().toLowerCase(), first.get().sqlScript);
             if (CollectionUtils.isEmpty(tableMetaDataObjects)) {
                 return;
             }
@@ -809,7 +809,7 @@ public class MetadataEntityImpl
 
         for (CustomScriptInfoDTO item : listResultEntity.data) {
             //解析sql
-            List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(driveType.toLowerCase(), item.script);
+            List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(null,driveType.toLowerCase(), item.script);
             if (CollectionUtils.isEmpty(res)) {
                 return;
             }

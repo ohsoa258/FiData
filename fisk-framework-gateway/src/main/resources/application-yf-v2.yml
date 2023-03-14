@@ -1,0 +1,5 @@
+spring:
+  redis:
+    host: 10.195.135.248
+    port: 6379
+    password: 80405390
