@@ -67,7 +67,9 @@ public class BloodCompensationImpl
         ResultEntity<List<DataAccessSourceTableDTO>> dataAccessMetaData = dataAccessClient.getDataAccessMetaData();
         List<DataAccessSourceTableDTO> collect = dataAccessMetaData.data.stream()
                 .filter(d->!("sftp").equals(d.driveType))
-                .filter(d->!("ftp").equals(d.driveType)).collect(Collectors.toList());
+                .filter(d->!("ftp").equals(d.driveType))
+                .filter(d->!StringUtils.isEmpty(d.appId))
+                .collect(Collectors.toList());
         if (dataAccessMetaData.code != ResultEnum.SUCCESS.getCode()) {
             log.error("【获取接入所有表失败】");
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
@@ -142,6 +144,7 @@ public class BloodCompensationImpl
 
         for (DataAccessSourceTableDTO accessTable : dataAccessMetaData) {
 
+
             Optional<MetaDataInstanceAttributeDTO> first = synchronizationAppRegistration
                     .data.stream().filter(e -> e.comment.equals(String.valueOf(accessTable.appId))).findFirst();
             if (!first.isPresent()) {
@@ -152,7 +155,7 @@ public class BloodCompensationImpl
                 first.get().dbList.get(0).tableList = new ArrayList<>();
             }
             //解析sql
-            List<TableMetaDataObject> res=new ArrayList<>();
+            List<TableMetaDataObject> res;
             if(("sftp").equals(accessTable.driveType)||("ftp").equals(accessTable.driveType)){
                 continue;
             }else{
