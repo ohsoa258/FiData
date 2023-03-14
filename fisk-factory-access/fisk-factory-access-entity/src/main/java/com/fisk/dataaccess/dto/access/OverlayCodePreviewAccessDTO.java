@@ -20,7 +20,7 @@ public class OverlayCodePreviewAccessDTO {
 
     public Integer id;
 
-    public TableBusinessDTO businessDTO;
+    public TableBusinessDTO tableBusiness;
 
 
 }

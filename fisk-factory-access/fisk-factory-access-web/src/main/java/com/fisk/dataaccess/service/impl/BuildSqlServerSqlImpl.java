@@ -103,7 +103,7 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
 
         // 3、业务时间拼接条件
         if (dto.syncMode == syncModeTypeEnum.TIME_INCREMENT.getValue()){
-            TableBusinessDTO tbDto = dto.businessDTO;
+            TableBusinessDTO tbDto = dto.tableBusiness;
             String whereStr = previewCoverCondition(tbDto, dataSourceDTO);
             odsInsertSql.append(" ");
             odsInsertSql.append(whereStr);
@@ -127,6 +127,8 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
         mergeSql = "MERGE INTO " + schema + "." + targetTableName + " AS T USING " + schema + "." + stgName + " AS S ON( ";
 
         // 2、拼接主键关联条件
+        // 拼接tableKey
+        String tableKey = appRegistrationPO.appAbbreviation + "_" + stgAndTableName.get(1) + "key";
         StringBuilder pkBuilder = new StringBuilder();
         String pkSql = "";
         List<String> collect = dto.modelPublishFieldDTOList.stream().filter(e -> e.isPrimarykey == 1).map(e -> e.sourceFieldName).collect(Collectors.toList());
@@ -157,6 +159,11 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
             upBuilder.append(fieldTypeTransformKey(item));
             upBuilder.append(",");
         }
+        upBuilder.append("T.fi_createtime = S.fi_createtime, ")
+                .append("T.fi_updatetime = S.fi_updatetime, ")
+                .append("T.fi_version = S.fi_version, ")
+                .append("T.fidata_batch_code = S.fidata_batch_code, ")
+                .append("T.").append(tableKey).append(" = ").append("S.").append(tableKey).append(",");
         // 去除尾部的,符号
         upSql = upBuilder.toString();
         upSql = upSql.substring(0, upSql.length() - 1);
@@ -173,6 +180,11 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
             insBuilder.append(item.sourceFieldName);
             insBuilder.append(",");
         }
+        insBuilder.append("fi_createtime, ")
+                .append("fi_updatetime, ")
+                .append("fi_version, ")
+                .append("fidata_batch_code, ")
+                .append(tableKey).append(",");
         insBuilder.append(") VALUES( ");
         for (TableFieldsDTO item : odsFieldList){
             // 类型转换
@@ -183,6 +195,11 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
             insBuilder.append(str.replace(" = ", ""));
             insBuilder.append(",");
         }
+        insBuilder.append("S.fi_createtime, ")
+                .append("S.fi_updatetime, ")
+                .append("S.fi_version, ")
+                .append("S.fidata_batch_code, ")
+                .append("S.").append(tableKey).append(",");
         insBuilder.append(")");
         // 去除尾部的,符号
         insSql = insBuilder.toString();
@@ -233,7 +250,7 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
             str.append(dto.rangeDateUnit);
             str.append(",");
             str.append(dto.businessRange);
-            str.append(",GETDATE());");
+            str.append(",GETDATE()) AND fi_enableflag='Y';");
             return str.toString();
         }
         //高级模式
@@ -243,7 +260,7 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
         str.append(dto.rangeDateUnitStandby);
         str.append(",");
         str.append(dto.businessRangeStandby);
-        str.append(",GETDATE());");
+        str.append(",GETDATE()) AND fi_enableflag='Y';");
         log.info("预览业务时间覆盖,where条件:{}", str);
         return str.toString();
     }
