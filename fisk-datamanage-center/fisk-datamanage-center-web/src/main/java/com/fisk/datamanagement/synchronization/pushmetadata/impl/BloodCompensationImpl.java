@@ -23,6 +23,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -42,6 +43,7 @@ public class BloodCompensationImpl
     @Resource
     ClassificationImpl classification;
 
+
     @Override
     public ResultEnum systemSynchronousBlood() {
 
@@ -49,8 +51,6 @@ public class BloodCompensationImpl
 
         //获取接入业务分类
         ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
-
-        log.info("********获取接入业务分类********:{}",appList);
         if (appList.code != ResultEnum.SUCCESS.getCode()) {
             log.error("获取接入应用列表失败");
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
@@ -65,7 +65,9 @@ public class BloodCompensationImpl
 
         //获取所有接入表
         ResultEntity<List<DataAccessSourceTableDTO>> dataAccessMetaData = dataAccessClient.getDataAccessMetaData();
-        log.info("********获取所有接入表********:{}",dataAccessMetaData);
+        List<DataAccessSourceTableDTO> collect = dataAccessMetaData.data.stream()
+                .filter(d->!("sftp").equals(d.driveType))
+                .filter(d->!("ftp").equals(d.driveType)).collect(Collectors.toList());
         if (dataAccessMetaData.code != ResultEnum.SUCCESS.getCode()) {
             log.error("【获取接入所有表失败】");
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
@@ -73,7 +75,7 @@ public class BloodCompensationImpl
 
         log.info("******开始同步数据接入来源表元数据******");
         //同步数据接入来源表元数据(解析接入表sql)
-        synchronousAccessSourceMetaData(dataAccessMetaData.data);
+        synchronousAccessSourceMetaData(collect);
 
         log.info("******开始同步数据接入ods表以及stg表元数据******");
         //同步数据接入ods表以及stg表元数据
@@ -150,13 +152,14 @@ public class BloodCompensationImpl
                 first.get().dbList.get(0).tableList = new ArrayList<>();
             }
             //解析sql
-            List<TableMetaDataObject> res=null;
-            if(accessTable.driveType.equals("sftp")||accessTable.driveType.equals("ftp")||StringUtils.isEmpty(accessTable.driveType)||StringUtils.isEmpty(accessTable.sqlScript)){
+            List<TableMetaDataObject> res=new ArrayList<>();
+            if(("sftp").equals(accessTable.driveType)||("ftp").equals(accessTable.driveType)){
                 continue;
             }else{
-                res = SqlParserUtils.sqlDriveConversionName(accessTable.driveType,accessTable.sqlScript);
+                log.info("accessTable日志:{}",accessTable);
+                log.error("accessTableinfo:"+accessTable.tableName+","+accessTable.id+","+accessTable.sqlScript);
+                res = SqlParserUtils.sqlDriveConversionName(accessTable.appId,accessTable.driveType,accessTable.sqlScript);
             }
-
 
             if (CollectionUtils.isEmpty(res)) {
                 continue;
