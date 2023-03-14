@@ -13,6 +13,7 @@ import com.fisk.common.service.sqlparser.model.FieldMetaDataObject;
 import com.fisk.common.service.sqlparser.model.TableInfo;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.common.service.sqlparser.model.TableTypeEnum;
+import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -282,15 +283,15 @@ public class SqlParserUtils {
      * @param sqlScript
      * @return
      */
-    public static List<TableMetaDataObject> sqlDriveConversion(String driveType, String sqlScript) {
+    public static List<TableMetaDataObject> sqlDriveConversion(Integer id , String driveType, String sqlScript) {
         DbType dbType;
-        if ("mysql".equals(driveType)) {
+        if ("mysql".equals(driveType)&&!StringUtils.isEmpty(sqlScript)) {
             dbType = DbType.mysql;
-        } else if ("oracle".equals(driveType)) {
+        } else if ("oracle".equals(driveType)&&!StringUtils.isEmpty(sqlScript)) {
             dbType = DbType.oracle;
-        } else if ("postgresql".equals(driveType)) {
+        } else if ("postgresql".equals(driveType)&&!StringUtils.isEmpty(sqlScript)) {
             dbType = DbType.postgresql;
-        } else if ("sqlserver".equals(driveType)) {
+        } else if ("sqlserver".equals(driveType)&&!StringUtils.isEmpty(sqlScript)) {
             dbType = DbType.sqlserver;
         } else {
             return new ArrayList<>();
@@ -301,6 +302,7 @@ public class SqlParserUtils {
             ISqlParser parser = SqlParserFactory.parser(ParserVersion.V1);
             res = parser.getDataTableBySql(sqlScript, dbType);
         } catch (Exception e) {
+            log.info("sql解析失败Info","id===="+id+"错误id"+dbType+"---"+sqlScript);
             log.error("【sql解析失败】,{}", e);
             throw new FkException(ResultEnum.SQL_PARSING);
         }
@@ -308,8 +310,8 @@ public class SqlParserUtils {
         return res;
     }
 
-    public static List<TableMetaDataObject> sqlDriveConversionName(String driveType, String sqlScript) {
-        List<TableMetaDataObject> tableMetaDataObjects = sqlDriveConversion(driveType, sqlScript);
+    public static List<TableMetaDataObject> sqlDriveConversionName(Integer id,String driveType, String sqlScript) {
+        List<TableMetaDataObject> tableMetaDataObjects = sqlDriveConversion(id,driveType, sqlScript);
         if (CollectionUtils.isEmpty(tableMetaDataObjects)) {
             return tableMetaDataObjects;
         }
