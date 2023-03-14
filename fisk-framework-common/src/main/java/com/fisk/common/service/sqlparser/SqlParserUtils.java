@@ -300,6 +300,9 @@ public class SqlParserUtils {
         List<TableMetaDataObject> res;
         try {
             ISqlParser parser = SqlParserFactory.parser(ParserVersion.V1);
+            if(StringUtils.isEmpty(id)){
+                return new ArrayList<>();
+            }
             res = parser.getDataTableBySql(sqlScript, dbType);
         } catch (Exception e) {
             log.info("sql解析失败Info"+id+"===错误ID===数据库类型:"+dbType+"---"+sqlScript);

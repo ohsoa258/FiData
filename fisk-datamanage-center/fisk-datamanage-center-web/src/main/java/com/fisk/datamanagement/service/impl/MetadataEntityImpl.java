@@ -541,13 +541,16 @@ public class MetadataEntityImpl
             if (odsResult.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(odsResult.data)) {
                 return;
             }
-            Optional<DataAccessSourceTableDTO> first1 = odsResult.data.stream().filter(e -> e.tableName.equals(tableName)).findFirst();
+            Optional<DataAccessSourceTableDTO> first1 = odsResult.data.stream()
+                    .filter(d->!("sftp").equals(d.driveType))
+                    .filter(d->!("ftp").equals(d.driveType))
+                    .filter(e -> e.tableName.equals(tableName)).findFirst();
             if (!first1.isPresent()) {
                 return;
             }
 
             //解析sql
-            List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(null,dataSourceInfo.conType.getName().toLowerCase(), first1.get().sqlScript);
+            List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(dataSourceInfo.id,dataSourceInfo.conType.getName().toLowerCase(), first1.get().sqlScript);
             if (CollectionUtils.isEmpty(res)) {
                 return;
             }
