@@ -302,7 +302,7 @@ public class SqlParserUtils {
             ISqlParser parser = SqlParserFactory.parser(ParserVersion.V1);
             res = parser.getDataTableBySql(sqlScript, dbType);
         } catch (Exception e) {
-            log.info("sql解析失败Info","id===="+id+"错误id"+dbType+"---"+sqlScript);
+            log.info("sql解析失败Info"+id+"===错误ID===数据库类型:"+dbType+"---"+sqlScript);
             log.error("【sql解析失败】,{}", e);
             throw new FkException(ResultEnum.SQL_PARSING);
         }
