@@ -8,7 +8,9 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
+import com.fisk.dataaccess.dto.access.OverlayCodePreviewAccessDTO;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
+import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.enums.syncModeTypeEnum;
@@ -17,6 +19,7 @@ import com.fisk.dataaccess.service.factory.BuildSqlFactory;
 import com.fisk.datamodel.dto.TableStructDTO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
+import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
@@ -43,18 +46,18 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, InitializingBean {
     @Override
-    public Object buildStgToOdsSql(DataSourceDTO dataSourceDTO, OverLoadCodeDTO dataModel, TableAccessPO tableAccessPO, AppRegistrationPO appRegistrationPO) {
-        log.info("获取ods接入参数{}", JSON.toJSONString(dataModel));
+    public Object buildStgToOdsSql(DataSourceDTO dataSourceDTO, OverlayCodePreviewAccessDTO dto, TableAccessPO tableAccessPO,
+                                   AppRegistrationPO appRegistrationPO, String targetTableName){
+        log.info("获取ods接入参数{}", JSON.toJSONString(dto));
 
-        String targetTableName = dataModel.config.processorConfig.targetTableName;
         List<String> stgAndTableName = getStgAndTableName(targetTableName, appRegistrationPO);
 
         // 获取字段
-        List<TableStructDTO> odsFieldList = getSqlServerFieldInfo(dataSourceDTO, targetTableName, appRegistrationPO);
+        List<TableFieldsDTO> odsFieldList = dto.modelPublishFieldDTOList;
 
         // 1、业务主键类型
-        if (dataModel.config.targetDsConfig.syncMode == syncModeTypeEnum.INCREMENT_MERGE.getValue()){
-            return getMergeSql(odsFieldList, dataModel, stgAndTableName, appRegistrationPO);
+        if (dto.syncMode == syncModeTypeEnum.INCREMENT_MERGE.getValue()){
+            return getMergeSql(odsFieldList, dto, stgAndTableName, appRegistrationPO, targetTableName);
         }
 
         // 2、追加、全量
@@ -67,22 +70,40 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
         StringBuilder odsInsertSql = new StringBuilder("INSERT INTO " + schema + "." + stgAndTableName.get(1) + "(");
 
         // 拼接ods需要插入哪些字段
-        for (TableStructDTO item : odsFieldList){
-            odsInsertSql.append(item.fieldName).append(",");
+        for (TableFieldsDTO item : odsFieldList){
+            if (StringUtils.isEmpty(item.sourceFieldName)){
+                continue;
+            }
+            odsInsertSql.append(item.sourceFieldName).append(",");
         }
-        odsInsertSql.append(") SELECT ");
+        // 拼接tableKey
+        String tableKey = appRegistrationPO.appAbbreviation + "_" + stgAndTableName.get(1) + "key";
+        odsInsertSql.append("fi_createtime, ")
+                .append("fi_updatetime, ")
+                .append("fi_version, ")
+                .append("fidata_batch_code, ")
+                .append(tableKey).append(",")
+                .append(") SELECT ");
 
         // 拼接stg需要查询的字段及字段转换
-        for (TableStructDTO item : odsFieldList){
+        for (TableFieldsDTO item : odsFieldList){
+            if (StringUtils.isEmpty(item.sourceFieldName)){
+                continue;
+            }
             odsInsertSql.append(fieldTypeTransform(item)).append(",");
         }
+        odsInsertSql.append("fi_createtime, ")
+                .append("fi_updatetime, ")
+                .append("fi_version, ")
+                .append("fidata_batch_code, ")
+                .append(tableKey).append(",");
 
         // 拼接stg查询字段
         odsInsertSql.append(" FROM ").append(schema).append(".").append(stgAndTableName.get(0));
 
         // 3、业务时间拼接条件
-        if (dataModel.config.targetDsConfig.syncMode == syncModeTypeEnum.TIME_INCREMENT.getValue()){
-            TableBusinessDTO tbDto = dataModel.config.businessDTO;
+        if (dto.syncMode == syncModeTypeEnum.TIME_INCREMENT.getValue()){
+            TableBusinessDTO tbDto = dto.businessDTO;
             String whereStr = previewCoverCondition(tbDto, dataSourceDTO);
             odsInsertSql.append(" ");
             odsInsertSql.append(whereStr);
@@ -94,8 +115,7 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
         return odsSql;
     }
 
-    private Object getMergeSql(List<TableStructDTO> odsFieldList, OverLoadCodeDTO dataModel, List<String> stgAndTableName, AppRegistrationPO appRegistrationPO) {
-        String targetTableName = dataModel.config.processorConfig.targetTableName;
+    private Object getMergeSql(List<TableFieldsDTO> odsFieldList, OverlayCodePreviewAccessDTO dto, List<String> stgAndTableName, AppRegistrationPO appRegistrationPO, String targetTableName) {
         String stgName = stgAndTableName.get(0);
         // 处理架构
         String schema = "dbo";
@@ -109,7 +129,7 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
         // 2、拼接主键关联条件
         StringBuilder pkBuilder = new StringBuilder();
         String pkSql = "";
-        List<String> collect = dataModel.config.modelPublishFieldDTOList.stream().filter(e -> e.isPrimaryKey == 1).map(e -> e.fieldEnName).collect(Collectors.toList());
+        List<String> collect = dto.modelPublishFieldDTOList.stream().filter(e -> e.isPrimarykey == 1).map(e -> e.sourceFieldName).collect(Collectors.toList());
         for (String key : collect){
             pkBuilder.append(" AND T.");
             pkBuilder.append(key);
@@ -127,9 +147,12 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
         // 3、拼接更新语句
         StringBuilder upBuilder = new StringBuilder(" WHEN MATCHED THEN UPDATE SET ");
         String upSql = "";
-        for (TableStructDTO item : odsFieldList){
+        for (TableFieldsDTO item : odsFieldList){
+            if (StringUtils.isEmpty(item.sourceFieldName)){
+                continue;
+            }
             upBuilder.append("T.");
-            upBuilder.append(item.fieldName);
+            upBuilder.append(item.sourceFieldName);
             // 类型转换
             upBuilder.append(fieldTypeTransformKey(item));
             upBuilder.append(",");
@@ -143,13 +166,19 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
         // 4、拼接插入语句
         StringBuilder insBuilder = new StringBuilder(" WHEN NOT MATCHED THEN INSERT (");
         String insSql = "";
-        for (TableStructDTO item : odsFieldList){
-            insBuilder.append(item.fieldName);
+        for (TableFieldsDTO item : odsFieldList){
+            if (StringUtils.isEmpty(item.sourceFieldName)){
+                continue;
+            }
+            insBuilder.append(item.sourceFieldName);
             insBuilder.append(",");
         }
         insBuilder.append(") VALUES( ");
-        for (TableStructDTO item : odsFieldList){
+        for (TableFieldsDTO item : odsFieldList){
             // 类型转换
+            if (StringUtils.isEmpty(item.sourceFieldName)){
+                continue;
+            }
             String str = fieldTypeTransformKey(item);
             insBuilder.append(str.replace(" = ", ""));
             insBuilder.append(",");
@@ -166,15 +195,15 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
         return mergeSql;
     }
 
-    private String fieldTypeTransformKey(TableStructDTO item) {
-        log.info("字段名称-类型：{}-{}", item.fieldName, item.fieldType);
+    private String fieldTypeTransformKey(TableFieldsDTO item) {
+        log.info("字段名称-类型：{}-{}", item.sourceFieldName, item.fieldType);
         String fieldInfo = "";
-        if (item.fieldType.contains("date") || item.fieldType.contains("time") || item.fieldType.contains("time")){
-            fieldInfo = " = DATEADD(minute, cast(left(S." + item.fieldName + ",10) as bigint)/60, '1970-1-1')";
-        }else if (!item.fieldType.equals("nvarchar") && !item.fieldType.equals("varchar")){
-            fieldInfo = " = CAST(S." + item.fieldName + " AS " + item.fieldType + ")";
+        if (item.fieldType.toUpperCase().contains("DATE") || item.fieldType.toUpperCase().contains("TIME")){
+            fieldInfo = " = DATEADD(minute, cast(left(S." + item.sourceFieldName + ",10) as bigint)/60, '1970-1-1')";
+        }else if (!item.fieldType.equalsIgnoreCase("nvarchar") && !item.fieldType.equalsIgnoreCase("varchar")){
+            fieldInfo = " = CAST(S." + item.sourceFieldName + " AS " + item.fieldType + ")";
         }else{
-            fieldInfo = " = S." + item.fieldName;
+            fieldInfo = " = S." + item.sourceFieldName;
         }
         return fieldInfo;
     }
@@ -219,46 +248,17 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
         return str.toString();
     }
 
-    private String fieldTypeTransform(TableStructDTO item) {
-        log.info("字段名称-类型：{}-{}", item.fieldName, item.fieldType);
+    private String fieldTypeTransform(TableFieldsDTO item) {
+        log.info("字段名称-类型：{}-{}", item.sourceFieldName, item.fieldType);
         String fieldInfo = "";
-        if (item.fieldType.contains("date") || item.fieldType.contains("time")){
-            fieldInfo = "DATEADD(minute, cast(left(" + item.fieldName + ",10) as bigint)/60, '1970-1-1')";
-        }else if (!item.fieldType.equals("nvarchar") && !item.fieldType.equals("varchar")){
-            fieldInfo = "CAST(" + item.fieldName + " AS " + item.fieldType + ")";
+        if (item.fieldType.toUpperCase().contains("DATE") || item.fieldType.toUpperCase().contains("TIME")){
+            fieldInfo = "DATEADD(minute, cast(left(" + item.sourceFieldName + ",10) as bigint)/60, '1970-1-1')";
+        }else if (!item.fieldType.toUpperCase().equals("NVARCHAR") && !item.fieldType.equals("VARCHAR")){
+            fieldInfo = "CAST(" + item.sourceFieldName + " AS " + item.fieldType + ")";
         }else{
-            fieldInfo = item.fieldName;
+            fieldInfo = item.sourceFieldName;
         }
         return fieldInfo;
-    }
-
-    private List<TableStructDTO> getSqlServerFieldInfo(DataSourceDTO data, String tableName, AppRegistrationPO appRegistrationPO){
-        if (appRegistrationPO.getWhetherSchema()){
-            tableName = appRegistrationPO.getAppAbbreviation() + "." + tableName;
-        }
-        // 获取ods表字段信息
-        String selOdsFieldSql = "SELECT name AS column_name,TYPE_NAME(system_type_id) AS column_type,ROW_NUMBER() OVER(ORDER BY system_type_id ) AS rid " +
-                "FROM sys.columns WHERE object_id = OBJECT_ID('" + tableName + "')";
-        List<TableStructDTO> list = new ArrayList<>();
-        try (Connection connection = DriverManager.getConnection(data.conStr, data.conAccount, data.conPassword);
-             Statement st = connection.createStatement();
-             ResultSet res = st.executeQuery(selOdsFieldSql)){
-            while (res.next()){
-                TableStructDTO dto = new TableStructDTO();
-                dto.setFieldName(res.getString("column_name"));
-                dto.setFieldType(res.getString("column_type"));
-                dto.setRid(res.getInt("rid"));
-                list.add(dto);
-            }
-        }catch (Exception e){
-            log.info("获取表字段数据错误");
-            e.printStackTrace();
-        }
-        if (CollectionUtils.isEmpty(list)){
-            throw new FkException(ResultEnum.DATA_NOTEXISTS, "表字段信息获取失败");
-        }
-        log.info("字段数据{}", JSON.toJSONString(list));
-        return list;
     }
 
     private List<String> getStgAndTableName(String tableName, AppRegistrationPO appRegistrationPO){

@@ -5,11 +5,11 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
+import com.fisk.dataaccess.dto.access.OverlayCodePreviewAccessDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
 import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
-import com.fisk.datamodel.dto.businessarea.OverlayCodePreviewDTO;
 
 import java.util.List;
 
@@ -118,5 +118,5 @@ public interface ITableFields extends IService<TableFieldsPO> {
      * @param dto
      * @return
      */
-    Object overlayCodePreview(OverlayCodePreviewDTO dto);
+    Object overlayCodePreview(OverlayCodePreviewAccessDTO dto);
 }

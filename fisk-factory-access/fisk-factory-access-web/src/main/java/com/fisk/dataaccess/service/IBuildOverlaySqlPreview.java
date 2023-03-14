@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.service;
 
+import com.fisk.dataaccess.dto.access.OverlayCodePreviewAccessDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
@@ -24,5 +25,6 @@ public interface IBuildOverlaySqlPreview {
      * @param appRegistrationPO
      * @return
      */
-    Object buildStgToOdsSql(DataSourceDTO dataSourceDTO, OverLoadCodeDTO dataModel, TableAccessPO tableAccessPO, AppRegistrationPO appRegistrationPO);
+    Object buildStgToOdsSql(DataSourceDTO dataSourceDTO, OverlayCodePreviewAccessDTO dto, TableAccessPO tableAccessPO,
+                               AppRegistrationPO appRegistrationPO, String targetTableName);
 }

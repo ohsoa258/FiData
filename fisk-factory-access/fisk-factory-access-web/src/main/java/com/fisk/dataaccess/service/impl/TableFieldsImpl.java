@@ -6,8 +6,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.factory.BusinessTimeEnum;
 import com.fisk.common.core.enums.flink.UploadWayEnum;
-import com.fisk.common.core.enums.task.FuncNameEnum;
-import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
@@ -30,6 +28,7 @@ import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
+import com.fisk.dataaccess.dto.access.OverlayCodePreviewAccessDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewPageDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
@@ -56,10 +55,8 @@ import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
-import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.dto.TableStructDTO;
-import com.fisk.datamodel.dto.businessarea.OverlayCodePreviewDTO;
 import com.fisk.datamodel.enums.SyncModeEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
@@ -70,7 +67,6 @@ import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
 import com.fisk.task.dto.daconfig.ProcessorConfig;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
-import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
@@ -1389,7 +1385,7 @@ public class TableFieldsImpl
     }
 
     @Override
-    public Object overlayCodePreview(OverlayCodePreviewDTO dto) {
+    public Object overlayCodePreview(OverlayCodePreviewAccessDTO dto) {
         log.info("数据接入预览SQL参数{}", JSON.toJSONString(dto));
         // 查询表数据
         TableAccessPO tableAccessPO = tableAccessMapper.selectById(dto.id);
@@ -1406,8 +1402,6 @@ public class TableFieldsImpl
         DataSourceDTO dataSourceDTO = getTargetDbInfo(appRegistrationPO.getTargetDbId());
         log.info("数据接入数据源：{}", JSON.toJSONString(dataSourceDTO));
 
-        // 处理SQL预览
-        DataAccessConfigDTO data = new DataAccessConfigDTO();
         // 处理不同架构下的表名称
         String targetTableName = "";
         if (appRegistrationPO.whetherSchema){
@@ -1416,65 +1410,13 @@ public class TableFieldsImpl
             targetTableName = "ods_" + appRegistrationPO.getAppAbbreviation() + "_" + tableAccessPO;
         }
 
-        ProcessorConfig processorConfig = new ProcessorConfig();
-        processorConfig.targetTableName = targetTableName;
-        data.processorConfig = processorConfig;
-
-        DataSourceConfig targetDsConfig = new DataSourceConfig();
-        targetDsConfig.syncMode = dto.syncMode;
-        data.targetDsConfig = targetDsConfig;
-        data.businessDTO = dto.tableBusiness == null ? new TableBusinessDTO() : dto.tableBusiness;
-        data.modelPublishFieldDTOList = dto.modelPublishFieldDTOList;
-
-        List<String> collect = dto.modelPublishFieldDTOList.stream().filter(e -> e.isPrimaryKey == 1).map(e -> e.fieldEnName).collect(Collectors.toList());
-        if (!CollectionUtils.isEmpty(collect)) {
-            data.businessKeyAppend = String.join(",", collect);
-        }
-
-        OverLoadCodeDTO dataModel = new OverLoadCodeDTO();
-        dataModel.config = data;
-
-
         // 获取预览SQL
-        return getBuildSql(dataSourceDTO, dataModel, tableAccessPO, appRegistrationPO);
+        return getBuildSql(dataSourceDTO, dto, tableAccessPO, appRegistrationPO, targetTableName);
     }
 
-    private Object getBuildSql(DataSourceDTO dataSourceDTO, OverLoadCodeDTO dataModel, TableAccessPO tableAccessPO, AppRegistrationPO appRegistrationPO){
+    private Object getBuildSql(DataSourceDTO dataSourceDTO, OverlayCodePreviewAccessDTO dto, TableAccessPO tableAccessPO, AppRegistrationPO appRegistrationPO, String targetTableName) {
         IBuildOverlaySqlPreview service = BuildSqlFactory.getService(dataSourceDTO.conType.getName().toUpperCase());
-        return service.buildStgToOdsSql(dataSourceDTO, dataModel, tableAccessPO, appRegistrationPO);
-    }
-
-    /**
-     * 根据tableName获取tableFields
-     *
-     * @param tableName tableName
-     * @param appRegistrationPO
-     * @return tableName中的表字段
-     */
-    public List<TableStructDTO> getColumnsName(DataSourceDTO data, String tableName, AppRegistrationPO appRegistrationPO) {
-        if (appRegistrationPO.getWhetherSchema()){
-            tableName = appRegistrationPO.getAppAbbreviation() + "." + tableName;
-        }
-        String selOdsFieldSql = "SELECT name AS column_name,TYPE_NAME(system_type_id) AS column_type,ROW_NUMBER() OVER(ORDER BY system_type_id ) AS rid " +
-                "FROM sys.columns WHERE object_id = OBJECT_ID('" + tableName + "')";
-        List<TableStructDTO> list = new ArrayList<>();
-        log.info("查询结构语句，{}", JSON.toJSONString(selOdsFieldSql));
-        try (Connection connection = DriverManager.getConnection(data.conStr, data.conAccount, data.conPassword);
-             Statement st = connection.createStatement();
-             ResultSet res = st.executeQuery(selOdsFieldSql)){
-            while (res.next()){
-                TableStructDTO dto = new TableStructDTO();
-                dto.setFieldName(res.getString("column_name"));
-                dto.setFieldType(res.getString("column_type"));
-                dto.setRid(res.getInt("rid"));
-                list.add(dto);
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-            log.info("获取表字段数据错误");
-        }
-        log.info("字段数据{}", JSON.toJSONString(list));
-        return list;
+        return service.buildStgToOdsSql(dataSourceDTO, dto, tableAccessPO, appRegistrationPO, targetTableName);
     }
 
     private DataSourceDTO getTargetDbInfo(Integer id){
