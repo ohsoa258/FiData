@@ -31,6 +31,9 @@ import com.fisk.dataservice.mapper.TableServiceMapper;
 import com.fisk.dataservice.service.ITableAppManageService;
 import com.fisk.dataservice.vo.tableservice.TableAppDatasourceVO;
 import com.fisk.dataservice.vo.tableservice.TableAppVO;
+import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
+import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,6 +72,9 @@ public class TableAppManageImpl
 
     @Resource
     private TableServiceMapper tableServiceMapper;
+
+    @Resource
+    private PublishTaskClient publishTaskClient;
 
     @Override
     public List<FilterFieldDTO> getFilterColumn() {
@@ -206,6 +212,31 @@ public class TableAppManageImpl
             if (i <= 0) {
                 return ResultEnum.DELETE_ERROR;
             }
+            // 查询应用下的表ID
+            QueryWrapper<AppServiceConfigPO> appServiceConfigPoQueryWrapper = new QueryWrapper<>();
+            appServiceConfigPoQueryWrapper.lambda().eq(AppServiceConfigPO::getDelFlag, 1)
+                    .eq(AppServiceConfigPO::getApiState, ApiStateTypeEnum.Enable.getValue())
+                    .eq(AppServiceConfigPO::getAppId, id)
+                    .eq(AppServiceConfigPO::getType, 2);
+            List<AppServiceConfigPO> appServiceConfigPos = appServiceConfigMapper.selectList(appServiceConfigPoQueryWrapper);
+            List<Long> tableServiceIdList = null;
+            if (CollectionUtils.isNotEmpty(appServiceConfigPos)) {
+                tableServiceIdList = appServiceConfigPos.stream().map(t -> Long.parseLong(String.valueOf(t.getServiceId()))).collect(Collectors.toList());
+                // 根据表ID查询表配置详情
+                QueryWrapper<TableServicePO> tableServicePoQueryWrapper = new QueryWrapper<>();
+                tableServicePoQueryWrapper.lambda().eq(TableServicePO::getDelFlag, 1)
+                        .in(TableServicePO::getId, tableServiceIdList);
+                List<TableServicePO> tableServicePos = tableServiceMapper.selectList(tableServicePoQueryWrapper);
+                if (CollectionUtils.isNotEmpty(tableServiceIdList)) {
+                    tableServiceIdList = tableServicePos.stream().map(t -> t.getId()).collect(Collectors.toList());
+                    BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
+                    buildDeleteTableService.ids = tableServiceIdList;
+                    buildDeleteTableService.olapTableEnum = OlapTableEnum.DATASERVICES;
+                    buildDeleteTableService.userId = userHelper.getLoginUserInfo().id;
+                    publishTaskClient.publishBuildDeleteDataServices(buildDeleteTableService);
+                }
+            }
+
             // 删除调度任务
         } catch (Exception ex) {
             log.error("【deleteRule】ex：" + ex);

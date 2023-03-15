@@ -234,6 +234,20 @@ public class KafkaConsumer {
     }
 
     /**
+     * task.build.table.server.flow
+     *
+     * @param data
+     * @param ack
+     * @return
+     */
+    @KafkaListener(topics = MqConstants.QueueConstants.DataServiceTopicConstants.BUILD_DELETE_TABLE_SERVER_FLOW, containerFactory = "batchFactory",
+            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    @MQConsumerLog
+    public ResultEntity<Object> buildDeleteDataServices(String data, Acknowledgment ack) {
+        return ResultEntityBuild.build(iNifiTaskListener.buildDeleteDataServices(data, ack));
+    }
+
+    /**
      * task.build.atlas.tablecolumn.flow
      *
      * @param data

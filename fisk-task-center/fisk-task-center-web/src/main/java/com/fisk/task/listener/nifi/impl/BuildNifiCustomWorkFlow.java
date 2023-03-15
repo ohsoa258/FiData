@@ -589,7 +589,9 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                             String Topic = TopicName;
                             ProcessorEntity processorEntity = updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, Topic, TopicTypeEnum.COMPONENT_NIFI_FLOW,
                                     tableNifiSettingPO.tableAccessId, tableNifiSettingPO.type, nifiNode.workflowDetailId);
-                            processorEntities.add(processorEntity);
+                            if (processorEntity != null) {
+                                processorEntities.add(processorEntity);
+                            }
                             commonTask = true;
                         }
 
@@ -703,8 +705,9 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                 }
                 ProcessorEntity processorEntity = updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, Topic, TopicTypeEnum.COMPONENT_NIFI_FLOW,
                         tableNifiSettingPO.tableAccessId, tableNifiSettingPO.type, nifiNode.workflowDetailId);
-                processors.add(processorEntity);
-
+                if (processorEntity != null) {
+                    processors.add(processorEntity);
+                }
             }
             //nifiSchedulingComponentId,重启调度组件,因为在调度的时候消费者topic_name还没改完
             updateProcessor(processors);
@@ -774,20 +777,27 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             tableTopic.updateTableTopicByComponentId(topicDTO);
             topicDTO.topicType = TopicTypeEnum.NO_TYPE.getValue();
             List<TableTopicDTO> tableTopicList = tableTopic.getTableTopicList(topicDTO);
-            String consumerTopicName = tableTopicList.stream().map(e -> e.topicName).collect(Collectors.joining(" , "));
+            String consumerTopicName = tableTopicList.stream().map(e -> e.topicName).collect(Collectors.joining(","));
             //------------------------------------------------------
             ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(processorId);
-            String id = processor.getId();
-            List<ProcessorEntity> processorEntities = new ArrayList<>();
-            processorEntities.add(processor);
-            componentsBuild.stopProcessor(processor.getComponent().getParentGroupId(), processorEntities);
-            processor = NifiHelper.getProcessorsApi().getProcessor(processorId);
             Map<String, String> properties = processor.getComponent().getConfig().getProperties();
-            //String topic = properties.get("topic");
-            properties.put("topic", consumerTopicName);
-            processor.getComponent().getConfig().setProperties(properties);
+            String id = processor.getId();
+            String topics = properties.get("topic");
+            topics = topics.replaceAll(" ", "");
+            String[] topicList = topics.split(",");
+            if (!Arrays.asList(topicList).contains(topicName)) {
+                List<ProcessorEntity> processorEntities = new ArrayList<>();
+                processorEntities.add(processor);
+                componentsBuild.stopProcessor(processor.getComponent().getParentGroupId(), processorEntities);
+                processor = NifiHelper.getProcessorsApi().getProcessor(processorId);
+                properties.put("topic", consumerTopicName);
+                processor.getComponent().getConfig().setProperties(properties);
+                return processor;
+            } else {
+                log.info("此topic包含于组件配置中");
+            }
             log.info("组件详情1:" + id);
-            return processor;
+            return null;
         } catch (Exception e) {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             throw new FkException(ResultEnum.TASK_PUBLISH_ERROR);

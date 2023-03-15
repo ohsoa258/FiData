@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
+import com.fisk.dataaccess.dto.access.OverlayCodePreviewAccessDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
 import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.entity.TableFieldsPO;
@@ -112,4 +113,10 @@ public interface ITableFields extends IService<TableFieldsPO> {
      */
     ResultEnum updateFile(TableFieldsDTO dto);
 
+    /**
+     * 数据接入SQL预览接口
+     * @param dto
+     * @return
+     */
+    Object overlayCodePreview(OverlayCodePreviewAccessDTO dto);
 }

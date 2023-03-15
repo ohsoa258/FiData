@@ -45,6 +45,7 @@ import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.nifi.*;
+import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
@@ -299,6 +300,30 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             }
         }
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum buildDeleteDataServices(String dataInfo, Acknowledgment acke) {
+        log.info("表服务删除nifi流程参数:{}", dataInfo);
+        try {
+            BuildDeleteTableServiceDTO buildDeleteTableService = JSON.parseObject(dataInfo, BuildDeleteTableServiceDTO.class);
+            List<Long> ids = buildDeleteTableService.ids;
+            if (!CollectionUtils.isEmpty(ids)) {
+                for (Long id : ids) {
+                    // 每次发布删除小组,如果有的话
+                    TableNifiSettingPO one = tableNifiSettingService.query().eq("type", buildDeleteTableService.olapTableEnum.getValue()).eq("table_access_id", id).one();
+                    if (Objects.nonNull(one)) {
+                        deleteGroup(one.tableComponentId);
+                    }
+                }
+            }
+            return ResultEnum.SUCCESS;
+        } catch (Exception e) {
+            log.error("表服务流程删除失败" + StackTraceHelper.getStackTraceInfo(e));
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        } finally {
+            acke.acknowledge();
+        }
     }
 
     @Override

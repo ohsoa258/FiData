@@ -401,4 +401,12 @@ public interface PublishTaskClient {
     @GetMapping("/dispatchLog/getPipelStates")
     ResultEntity<List<String>> getPipelStates(@RequestParam("pipelTraceId") String pipelTraceId);
 
+    /**
+     *
+     * @param data
+     * @return
+     */
+    @PostMapping("/publishTask/publishBuildDeleteDataServices")
+    public ResultEntity<Object> publishBuildDeleteDataServices(@RequestBody BuildDeleteTableServiceDTO data);
+
 }
