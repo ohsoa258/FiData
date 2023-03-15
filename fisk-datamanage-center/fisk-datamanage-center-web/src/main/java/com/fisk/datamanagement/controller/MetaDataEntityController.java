@@ -66,7 +66,7 @@ public class MetaDataEntityController {
 
     @ApiOperation("根据不同条件,筛选元数据对象列表")
     @PostMapping("/searchBasicEntity")
-    public ResultEntity<Object> searchBasicEntity(@Validated @RequestBody EntityFilterDTO dto) {
+    public ResultEntity<Object> searchBasicEntity(@RequestBody EntityFilterDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchBasicEntity(dto));
     }
 

@@ -2025,7 +2025,7 @@ public class AppRegistrationImpl
         table.setDescription(tableAccess.getTableDes());
         table.setComment(String.valueOf(app.getId()));
         table.setDisplayName(tableAccess.displayName);
-        table.setOwner(app.appPrincipal);
+        table.setOwner(app.createUser);
 
         // 字段
         List<MetaDataColumnAttributeDTO> columnList = tableFieldsImpl.query().eq("table_access_id", tableAccess.id)

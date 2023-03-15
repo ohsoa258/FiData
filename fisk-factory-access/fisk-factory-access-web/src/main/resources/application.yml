@@ -78,7 +78,7 @@ feign:
 
 ribbon:
   ConnectTimeout: 3000
-  ReadTimeout: 15000
+  ReadTimeout: 65000
   NIWSServerListClassName: com.netflix.niws.loadbalancer.DiscoveryEnabledNIWSServerList
   ServerListRefreshInterval: 3000
   MaxAutoRetries: 0
@@ -95,7 +95,7 @@ hystrix:
           strategy: THREAD
           thread:
             # 超时时间
-            timeoutInMilliseconds: 15500
+            timeoutInMilliseconds: 65000
             # 超时时是否应中断执行（默认true）
             interruptOnTimeout: true
       circuitBreaker:
