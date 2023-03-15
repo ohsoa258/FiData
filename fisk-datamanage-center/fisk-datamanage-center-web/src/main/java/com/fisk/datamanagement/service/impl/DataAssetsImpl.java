@@ -117,7 +117,7 @@ public class DataAssetsImpl implements IDataAssets {
             data.pageSize = dto.pageSize;
         } catch (Exception e) {
             log.error("数据资产,查询表数据失败:{}", e);
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR_INVALID, e);
         } finally {
             AbstractCommonDbHelper.closeStatement(st);
             AbstractCommonDbHelper.closeConnection(conn);

@@ -548,7 +548,6 @@ public class MetadataEntityImpl
             if (!first1.isPresent()) {
                 return;
             }
-
             //解析sql
             List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(dataSourceInfo.id,dataSourceInfo.conType.getName().toLowerCase(), first1.get().sqlScript);
             if (CollectionUtils.isEmpty(res)) {
@@ -585,7 +584,7 @@ public class MetadataEntityImpl
                 return;
             }
             //解析sql脚本
-            List<TableMetaDataObject> tableMetaDataObjects = SqlParserUtils.sqlDriveConversionName(null,dataSourceInfo.conType.getName().toLowerCase(), first.get().sqlScript);
+            List<TableMetaDataObject> tableMetaDataObjects = SqlParserUtils.sqlDriveConversionName(dataSourceInfo.id,dataSourceInfo.conType.getName().toLowerCase(), first.get().sqlScript);
             if (CollectionUtils.isEmpty(tableMetaDataObjects)) {
                 return;
             }
@@ -595,7 +594,11 @@ public class MetadataEntityImpl
                     .distinct()
                     .collect(Collectors.toList());
             //获取输入参数
-            fromEntityIdList = getTableList(tableList, odsResult.data, dbQualifiedName);
+            List<DataAccessSourceTableDTO> collect = odsResult.data.stream()
+                    .filter(d -> !("sftp").equals(d.driveType))
+                    .filter(d -> !("ftp").equals(d.driveType)).collect(Collectors.toList());
+
+            fromEntityIdList = getTableList(tableList, collect, dbQualifiedName);
             if (CollectionUtils.isEmpty(fromEntityIdList)) {
                 return;
             }

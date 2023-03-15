@@ -66,9 +66,12 @@ public enum ResultEnum {
     VISUAL_LOADDRIVER_ERROR(2002, "数据库驱动加载失败"),
     VISUAL_PARAMTER_ERROR(2003, "缺少参数"),
     VISUAL_QUERY_ERROR(2004, "查询失败"),
+
     VISUAL_IMAGE_ERROR(2005, "图片格式不正确！，请使用.jpg/.png/.bpm/.jpeg后缀的图片"),
     VISUAL_FOLDER_ERROR(2006, "压缩包格式不正确！，请使用.zip后缀的压缩包"),
     VISUAL_CREATE_ERROR(2007, "创建表失败"),
+
+    VISUAL_QUERY_ERROR_INVALID(2008,"数据无效"),
 
     /**
      * 授权中心
