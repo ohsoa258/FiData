@@ -21,7 +21,6 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.StringBuildUtils;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
-import com.fisk.common.core.utils.dbutils.utils.SqlServerUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
@@ -37,9 +36,7 @@ import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
-import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
-import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.enums.syncModeTypeEnum;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
@@ -73,7 +70,9 @@ import com.fisk.datamodel.mapper.dimension.DimensionMapper;
 import com.fisk.datamodel.mapper.fact.BusinessProcessMapper;
 import com.fisk.datamodel.mapper.fact.FactAttributeMapper;
 import com.fisk.datamodel.mapper.fact.FactMapper;
+import com.fisk.datamodel.service.IBuildOverlaySqlPreview;
 import com.fisk.datamodel.service.IBusinessArea;
+import com.fisk.datamodel.service.strategy.BuildSqlStrategy;
 import com.fisk.datamodel.service.impl.dimension.DimensionAttributeImpl;
 import com.fisk.datamodel.service.impl.dimension.DimensionFolderImpl;
 import com.fisk.datamodel.service.impl.dimension.DimensionImpl;
@@ -81,7 +80,6 @@ import com.fisk.datamodel.service.impl.fact.BusinessProcessImpl;
 import com.fisk.datamodel.service.impl.fact.FactAttributeImpl;
 import com.fisk.datamodel.service.impl.fact.FactImpl;
 import com.fisk.datamodel.service.impl.widetable.WideTableImpl;
-import com.fisk.datamodel.utils.mysql.DataSourceConfigUtil;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.system.client.UserClient;
@@ -91,6 +89,7 @@ import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.daconfig.DataSourceConfig;
 import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
 import com.fisk.task.dto.daconfig.ProcessorConfig;
+import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
@@ -104,15 +103,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StopWatch;
-import springfox.documentation.spring.web.json.Json;
 
 import javax.annotation.Resource;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Lock
@@ -1363,19 +1359,9 @@ public class BusinessAreaImpl
         DataSourceConfig targetDsConfig = new DataSourceConfig();
         targetDsConfig.syncMode = dto.syncMode;
         data.targetDsConfig = targetDsConfig;
-
         data.businessDTO = dto.tableBusiness == null ? new TableBusinessDTO() : dto.tableBusiness;
-//        data.businessDTO.otherLogic = 1;
-//        if (dto.syncMode == 4) {
-//            data.businessDTO.otherLogic = 2;
-//        }
 
         data.modelPublishFieldDTOList = dto.modelPublishFieldDTOList;
-
-        List<String> collect = dto.modelPublishFieldDTOList.stream().filter(e -> e.isPrimaryKey == 1).map(e -> e.fieldEnName).collect(Collectors.toList());
-        if (!CollectionUtils.isEmpty(collect)) {
-            data.businessKeyAppend = String.join(",", collect);
-        }
 
         BuildNifiFlowDTO buildNifiFlow = new BuildNifiFlowDTO();
         buildNifiFlow.updateSql = dto.updateSql;
@@ -1384,17 +1370,19 @@ public class BusinessAreaImpl
         OverLoadCodeDTO dataModel = new OverLoadCodeDTO();
         dataModel.buildNifiFlow = buildNifiFlow;
         dataModel.config = data;
-        dataModel.funcName = FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_OUTPUT.getName();
-        dataModel.dataSourceType = DataSourceTypeEnum.SQLSERVER;
-        dataModel.synchronousTypeEnum = SynchronousTypeEnum.PGTOPG;
+//        dataModel.funcName = FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_OUTPUT.getName();
+//        dataModel.dataSourceType = DataSourceTypeEnum.SQLSERVER;
+//        dataModel.synchronousTypeEnum = SynchronousTypeEnum.PGTOPG;
 
         // 获取ods表字段数据
-        List<TableStructDTO> odsFieldList = getColumnsName(dataSourceConfig.data.id, tableName);
-        if (CollectionUtils.isEmpty(odsFieldList)){
-            throw new FkException(ResultEnum.DATA_NOTEXISTS, "ods表字段信息查询失败");
-        }
-        return getOdsSql(odsFieldList, dataModel, dataSourceConfig.data, dto);
+        List<ModelPublishFieldDTO> odsFieldList = dto.modelPublishFieldDTOList;
+        return getBuildSql(odsFieldList, dataModel, dataSourceConfig.data, dto);
 
+    }
+
+    private Object getBuildSql(List<ModelPublishFieldDTO> odsFieldList, OverLoadCodeDTO dataModel, DataSourceDTO data, OverlayCodePreviewDTO dto) {
+        IBuildOverlaySqlPreview service = BuildSqlStrategy.getService(data.conType.getName().toUpperCase());
+        return service.buildStgToOdsSql(data, dto, dataModel);
     }
 
     /**
