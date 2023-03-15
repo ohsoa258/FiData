@@ -24,7 +24,7 @@ nifi:
     topicName: my-topic
     waitTime: 10
     maxTime: 10800
-    operation-interval: 2000
+    operation-interval: 1000
     number-of-operations: 5
     data-governance-url: http://192.168.21.13:8083
     dispatch-email-url-prefix: http://192.168.21.13:82
