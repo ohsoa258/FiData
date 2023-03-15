@@ -4,10 +4,13 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.factory.BusinessTimeEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
+import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.enums.syncModeTypeEnum;
@@ -21,8 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StopWatch;
 
-import java.sql.Connection;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -50,7 +54,7 @@ public class BuildSqlServerSqlPreviewImpl implements IBuildOverlaySqlPreview, In
         log.info("获取ods接入参数{}", JSON.toJSONString(dto));
 
         String targetTableName = dataModel.config.processorConfig.targetTableName;
-        List<String> stgAndTableName = getStgAndTableName(targetTableName);
+        List<String> stgAndTableName = getStgAndTableName(targetTableName, data);
         log.info("stgAntTableName集合{}", JSON.toJSONString(stgAndTableName));
         StringBuilder odsInsertSql = new StringBuilder("INSERT INTO " + targetTableName + "(");
 
@@ -226,7 +230,7 @@ public class BuildSqlServerSqlPreviewImpl implements IBuildOverlaySqlPreview, In
         return fieldInfo;
     }
 
-    private List<String> getStgAndTableName(String tableName){
+    private List<String> getStgAndTableName(String tableName, DataSourceDTO data){
         log.info("获取stgAndTableName参数：{}", tableName);
         String stgTableName = "";
         String odsTableName = "";
@@ -239,10 +243,14 @@ public class BuildSqlServerSqlPreviewImpl implements IBuildOverlaySqlPreview, In
             split = tableName.split("help_");
         } else if (tableName.contains("dim_")) {
             split = tableName.split("dim_");
-        } else{
+        } else if (tableName.contains("fact_")){
             split = tableName.split("fact_");
+        } else {
+            split = tableName.split("config_");
         }
-        stgTableName = "stg_" + tableName;
+        stgTableName = "temp_" + tableName;
+        // 处理temp和stg混合的情况
+
         odsTableName = tableName;
         tableKey = split[1]+"key";
         tableNames.add(stgTableName);
