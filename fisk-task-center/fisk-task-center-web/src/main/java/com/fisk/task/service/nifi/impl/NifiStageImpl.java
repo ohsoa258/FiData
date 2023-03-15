@@ -203,7 +203,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                     nifiStagePO.comment = nifiStageMessageDTO.message;
                     if (nifiStageMessageDTO.nifiStageDTO != null) {
                         NifiStageDTO nifiStageDTO = nifiStageMessageDTO.nifiStageDTO;
-                        nifiStagePO = NifiStageMapImpl.INSTANCES.dtoToPo(nifiStageDTO);
+                        nifiStagePO = NifiStageMap.INSTANCES.dtoToPo(nifiStageDTO);
                     } else {
                         ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiStageMessageDTO.groupId);
                         List<BulletinEntity> bulletins = processGroup.getBulletins();
