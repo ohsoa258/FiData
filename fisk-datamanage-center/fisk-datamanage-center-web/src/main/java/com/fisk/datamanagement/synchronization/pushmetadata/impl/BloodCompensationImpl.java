@@ -68,7 +68,6 @@ public class BloodCompensationImpl
         List<DataAccessSourceTableDTO> collect = dataAccessMetaData.data.stream()
                 .filter(d->!("sftp").equals(d.driveType))
                 .filter(d->!("ftp").equals(d.driveType))
-                .filter(d->!StringUtils.isEmpty(d.appId))
                 .collect(Collectors.toList());
         if (dataAccessMetaData.code != ResultEnum.SUCCESS.getCode()) {
             log.error("【获取接入所有表失败】");
