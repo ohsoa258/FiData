@@ -5,7 +5,7 @@ spring:
     name: datamanagement-service
   # 日志输入环境
   profiles:
-    active: dev
+    active: rj
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss

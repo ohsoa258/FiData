@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
@@ -55,6 +56,7 @@ public class DataAssetsImpl implements IDataAssets {
             if (allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
             }
+            log.debug("get datasource");
             Optional<DataSourceDTO> first = allFiDataDataSource.data
                     .stream()
                     .filter(e -> dto.dbName.equals(e.conDbname))
@@ -62,12 +64,12 @@ public class DataAssetsImpl implements IDataAssets {
             if (!first.isPresent()) {
                 throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
             }
-
+            log.debug("constr{},conip{},conport{}", first.get().conStr,first.get().conIp,first.get().conPort);
             //连接数据源
             conn = getConnection(first.get());
 
             conn.setAutoCommit(false);
-
+            log.debug("con commit");
             //拼接筛选条件
             String condition = " where 1=1 ";
             if (CollectionUtils.isNotEmpty(dto.filterQueryDTOList)) {
@@ -91,16 +93,17 @@ public class DataAssetsImpl implements IDataAssets {
                 //分页获取数据
                 sql = buildSelectSql(dto, condition, first.get().conType);
             }
-
+            log.debug("sqlstr:"+sql);
             psst = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             psst.setFetchSize(1000);
 
             ResultSet rs = psst.executeQuery();
+            log.debug("sql play success");
             // 获取列数
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();
             data.dataArray = columnDataList(rs, metaData, columnCount);
-
+            log.debug("data:"+ JSON.toJSONString(data.dataArray));
             //获取表头
             List<String[]> displayList = getTableColumnDisplay(first.get().sourceBusinessType, dto.tableName);
             if (CollectionUtils.isEmpty(displayList)) {
@@ -115,8 +118,10 @@ public class DataAssetsImpl implements IDataAssets {
             data.columnList = displayList;
             data.pageIndex = dto.pageIndex;
             data.pageSize = dto.pageSize;
+            log.debug("end");
         } catch (Exception e) {
-            log.error("数据资产,查询表数据失败:{}", e);
+
+            log.debug("数据资产,查询表数据失败:{}", e);
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR_INVALID, e);
         } finally {
             AbstractCommonDbHelper.closeStatement(st);
