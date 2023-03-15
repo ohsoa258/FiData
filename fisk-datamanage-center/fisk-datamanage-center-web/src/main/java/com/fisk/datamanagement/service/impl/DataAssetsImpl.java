@@ -105,23 +105,28 @@ public class DataAssetsImpl implements IDataAssets {
             data.dataArray = columnDataList(rs, metaData, columnCount);
             log.debug("data:"+ JSON.toJSONString(data.dataArray));
             //获取表头
+            log.debug("start get table column");
             List<String[]> displayList = getTableColumnDisplay(first.get().sourceBusinessType, dto.tableName);
+            log.debug("table column:"+JSON.toJSONString(displayList));
             if (CollectionUtils.isEmpty(displayList)) {
+                log.debug("displayList is empty");
                 throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
             }
             if (!dto.export) {
+                log.debug("choose !dto.export");
                 displayList.addAll(systemTableColumn());
+                log.debug("displayList.addAll end");
             }
-
+            log.debug("ready to close connection");
             psst.close();
-
+            log.debug("close connection success");
             data.columnList = displayList;
             data.pageIndex = dto.pageIndex;
             data.pageSize = dto.pageSize;
             log.debug("end");
         } catch (Exception e) {
-
-            log.debug("数据资产,查询表数据失败:{}", e);
+            log.debug("失败");
+            log.debug("数据资产,查询表数据失败:{}", e.getMessage());
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR_INVALID, e);
         } finally {
             AbstractCommonDbHelper.closeStatement(st);
