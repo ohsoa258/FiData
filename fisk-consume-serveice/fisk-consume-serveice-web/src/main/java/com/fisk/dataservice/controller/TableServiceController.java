@@ -41,6 +41,7 @@ public class TableServiceController {
     @Resource
     DataFactoryClient dataFactoryClient;
 
+    // 测试提交合并到日建v2分支
     @ApiOperation(value = "应用过滤字段")
     @GetMapping("/getFilterColumn")
     public ResultEntity<Object> getFilterColumn() {
