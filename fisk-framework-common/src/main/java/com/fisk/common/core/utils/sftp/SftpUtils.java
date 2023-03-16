@@ -603,17 +603,6 @@ public class SftpUtils {
             }
             sftp = connect(host, port, userName, pw, null);
         }
-        if (sftp != null) {
-            try {
-                // 解决中文乱码问题
-                Field serverVersion = sftp.getClass().getDeclaredField("server_version");
-                serverVersion.setAccessible(true);
-                serverVersion.set(sftp, 2);
-                sftp.setFilenameEncoding("GBK");
-            } catch (Exception ex) {
-                log.error("【getSftpConnect】ex：" + ex);
-            }
-        }
         return sftp;
     }
 
@@ -769,30 +758,18 @@ public class SftpUtils {
 
     public static void main(String[] args) throws IOException, SftpException {
         // 上传二进制文件测试
-        File file = new File("C:\\test\\id_rsa_npw");
-        byte[] fileBinary = new byte[(int) file.length()];
-        FileInputStream fis = new FileInputStream(file);
-        fis.read(fileBinary);
-        SftpUtils.uploadRsaFile(fileBinary.toString(), "/upload/test/", "rsa", "sftp", "password01!",
-                null, "192.168.21.21", 22);
-        fis.close();
-//        copySmbFilesToSFTP(
-//                "administrator",
-//                "fiskpwd01!",
-//                "192.168.1.32",
-//                "/DIP_Show/FiskDIP_log4netfile/EDPExceLSTG/SFTPCopy/",
-//                "%_1%", "/upload/test/",
-//                "Copy_WindowsFile.xlsx", 2, 3, 1, SftpAuthTypeEnum.USERNAME_PW_AUTH.getValue()
-//                , "sftp", "password01!", "", "192.168.21.21", 22);
-//        int code = 0;
-//        String pattern = "_2$";
-//        Pattern r = Pattern.compile(pattern);
-//        Matcher m = r.matcher("test0215_2.xlsx");
-//        if (m.find()) {
-//            System.out.println("Y");
-//        } else {
-//            System.out.println("F");
-//        }
+//        File file = new File("C:\\test\\id_rsa_npw");
+//        byte[] fileBinary = new byte[(int) file.length()];
+//        FileInputStream fis = new FileInputStream(file);
+//        fis.read(fileBinary);
+//        SftpUtils.uploadRsaFile(fileBinary.toString(), "/upload/test/", "rsa", "sftp", "password01!",
+//                null, "192.168.21.21", 22);
+//        fis.close();
+        getSftpConnect(0, "sftp", "password01!", "", "192.168.21.21", 22);
+        copyFile("192.168.21.21", 22,  "sftp", "password01!", "", 0,
+                "192.168.21.21", 22,  "sftp", "password01!", "", 0,
+                1, 3, 4, "/upload/test/",
+                "/upload/test/测试/", "测试测试.xlsx", "");
     }
 
 }
