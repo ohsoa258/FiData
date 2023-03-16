@@ -76,7 +76,7 @@ public class ModelPublishTableDTO {
     public String prefixTempName;
 
     /**
-     * 预览sql语句脚本
+     * 覆盖脚本执行SQL语句
      */
-    public String execSql;
+    public String coverScript;
 }

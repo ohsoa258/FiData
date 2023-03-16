@@ -363,7 +363,7 @@ public class DimensionFolderImpl
 
                 // 设置维度表临时表名称
                 pushDto.setPrefixTempName(item.getPrefixTempName() + "_");
-                pushDto.setExecSql(item.coverScript);
+                pushDto.setCoverScript(item.coverScript);
 
                 //获取自定义脚本
                 CustomScriptQueryDTO customScriptDto = new CustomScriptQueryDTO();

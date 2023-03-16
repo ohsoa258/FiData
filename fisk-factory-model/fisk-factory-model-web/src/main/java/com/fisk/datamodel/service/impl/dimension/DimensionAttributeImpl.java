@@ -126,7 +126,7 @@ public class DimensionAttributeImpl
         //修改发布状态
         dimensionPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
         dimensionPo.dimensionKeyScript = dto.dimensionKeyScript;
-        dimensionPo.coverScript = dto.execSql;
+        dimensionPo.coverScript = dto.coverScript;
         if (mapper.updateById(dimensionPo) == 0) {
             throw new FkException(ResultEnum.PUBLISH_FAILURE);
         }

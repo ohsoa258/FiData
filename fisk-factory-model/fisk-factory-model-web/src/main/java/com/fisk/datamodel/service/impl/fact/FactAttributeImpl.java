@@ -163,7 +163,7 @@ public class FactAttributeImpl
         //修改发布状态
         factPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
         factPo.dimensionKeyScript = dto.dimensionKeyScript;
-        factPo.coverScript = dto.execSql;
+        factPo.coverScript = dto.coverScript;
         if (factMapper.updateById(factPo) == 0) {
             throw new FkException(ResultEnum.PUBLISH_FAILURE);
         }

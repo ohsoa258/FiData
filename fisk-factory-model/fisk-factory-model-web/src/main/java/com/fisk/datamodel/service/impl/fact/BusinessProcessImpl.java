@@ -254,7 +254,7 @@ public class BusinessProcessImpl
                 DataTranDTO dtDto = new DataTranDTO();
                 dtDto.tableName = pushDto.tableName;
                 dtDto.querySql = item.sqlScript;
-                Map<String, String> converSql = publishTaskClient.converSql(dtDto).data;
+                //Map<String, String> converSql = publishTaskClient.converSql(dtDto).data;
                 ResultEntity<Map<String, String>> converMap = publishTaskClient.converSql(dtDto);
                 Map<String, String> data1 = converMap.data;
                 pushDto.queryEndTime = data1.get(SystemVariableTypeEnum.END_TIME.getValue());
@@ -278,7 +278,7 @@ public class BusinessProcessImpl
 
                 // 关联目标dw库id
                 pushDto.setTargetDbId(targetDbId);
-                pushDto.setExecSql(item.coverScript);
+                pushDto.setCoverScript(item.coverScript);
 
                 //获取自定义脚本
                 CustomScriptQueryDTO customScriptDto = new CustomScriptQueryDTO();
