@@ -15,6 +15,7 @@ spring:
 mybatis-plus:
   configuration:
     default-enum-type-handler: com.fisk.common.framework.mybatis.config.BaseEnumTypeHandler
+    map-underscore-to-camel-case: true
   global-config:
     db-config:
       id-type: auto
