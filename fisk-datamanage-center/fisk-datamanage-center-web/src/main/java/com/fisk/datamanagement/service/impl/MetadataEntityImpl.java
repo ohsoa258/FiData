@@ -538,6 +538,7 @@ public class MetadataEntityImpl
         if (dataSourceInfo.sourceBusinessType == SourceBusinessTypeEnum.ODS) {
             //同步stg与接入表血缘
             odsResult = dataAccessClient.getDataAccessMetaData();
+
             if (odsResult.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(odsResult.data)) {
                 return;
             }
@@ -554,7 +555,7 @@ public class MetadataEntityImpl
                 return;
             }
             //解析表名集合
-            log.debug("=======开始解析表名集合first======"+JSON.toJSONString(first));
+            log.debug("=======开始解析表名集合first1======"+JSON.toJSONString(first1));
             List<String> collect = res.stream().map(e -> e.name).collect(Collectors.toList());
             log.debug("=======转换后的表集合========:"+JSON.toJSONString(collect));
             String dbQualifiedNames = first1.get().appId + "_" + first1.get().appAbbreviation + "_" + first1.get().dataSourceId;
@@ -698,9 +699,12 @@ public class MetadataEntityImpl
     }
 
     public List<Long> getOdsTableList(List<String> tableNameList, String dbQualifiedName) {
-
+        log.debug("====================转换前参数tableNameList========================"+JSON.toJSONString(tableNameList));
+        log.debug("===================限定名参数dbQualifiedName================"+dbQualifiedName);
         List<String> tableQualifiedNameList = tableNameList.stream().map(e -> dbQualifiedName + "_" + e).collect(Collectors.toList());
+        log.debug("====================转换后的tableQualifiedNameList================"+JSON.toJSONString(tableQualifiedNameList));
         if (CollectionUtils.isEmpty(tableQualifiedNameList)) {
+            log.debug("==============转换后的tableQualifiedNameList为NULL=============");
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
@@ -708,9 +712,10 @@ public class MetadataEntityImpl
         queryWrapper.in("qualified_name", tableQualifiedNameList);
         List<MetadataEntityPO> poList = metadataEntityMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(poList)) {
+            log.debug("==========数据为空==========");
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-
+        log.debug("==========正常查询============="+JSON.toJSONString(poList));
         return (List) poList.stream().map(e -> e.getId()).collect(Collectors.toList());
     }
 

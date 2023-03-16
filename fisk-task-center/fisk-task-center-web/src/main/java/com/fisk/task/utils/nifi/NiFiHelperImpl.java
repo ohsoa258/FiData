@@ -1,6 +1,7 @@
 package com.fisk.task.utils.nifi;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.davis.client.ApiException;
 import com.davis.client.api.ProcessorsApi;
 import com.davis.client.model.*;
@@ -496,11 +497,11 @@ public class NiFiHelperImpl implements INiFiHelper {
         //组件属性
         Map<String, String> map = new HashMap<>(5);
         map.put("Database Connection Pooling Service", data.dbConnectionId);
-        if (!StringUtils.isEmpty(data.preSql)){
+        if (!StringUtils.isEmpty(data.preSql)) {
             map.put("sql-pre-query", data.preSql);
         }
         map.put("SQL select query", data.querySql);
-        if (!StringUtils.isEmpty(data.postSql)){
+        if (!StringUtils.isEmpty(data.postSql)) {
             map.put("sql-post-query", data.postSql);
         }
         map.put("esql-max-rows", data.MaxRowsPerFlowFile);
@@ -1531,7 +1532,11 @@ public class NiFiHelperImpl implements INiFiHelper {
                 }
                 NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
                 if (!Objects.equals(OlapTableEnum.PHYSICS, nifiRemoveDTO.olapTableEnum)) {
-                    tableNifiSettingService.removeById(nifiRemoveDTO.tableId);
+                    QueryWrapper<TableNifiSettingPO> queryWrapper = new QueryWrapper<>();
+                    queryWrapper.lambda()
+                            .eq(TableNifiSettingPO::getTableAccessId, nifiRemoveDTO.tableId)
+                            .eq(TableNifiSettingPO::getType, nifiRemoveDTO.olapTableEnum);
+                    tableNifiSettingService.remove(queryWrapper);
                 }
             }
             //删除应用
@@ -2411,7 +2416,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         //excel
         map.put("CSV Format", data.csvFormat);
         map.put("extract-sheets", data.sheetName);
-        if (StringUtils.isEmpty(data.startLine)|| data.startLine.equals("0")){
+        if (StringUtils.isEmpty(data.startLine) || data.startLine.equals("0")) {
             data.startLine = "1";
         }
         map.put("excel-extract-first-row", data.startLine);
