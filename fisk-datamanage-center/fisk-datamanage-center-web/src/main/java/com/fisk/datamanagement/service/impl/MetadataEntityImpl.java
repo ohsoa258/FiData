@@ -554,19 +554,25 @@ public class MetadataEntityImpl
                 return;
             }
             //解析表名集合
+            log.debug("=======开始解析表名集合first======"+JSON.toJSONString(first));
             List<String> collect = res.stream().map(e -> e.name).collect(Collectors.toList());
+            log.debug("=======转换后的表集合========:"+JSON.toJSONString(collect));
             String dbQualifiedNames = first1.get().appId + "_" + first1.get().appAbbreviation + "_" + first1.get().dataSourceId;
-
+            log.debug("=======appId"+first1.get().appId+"+名称"+first1.get().appAbbreviation+"+dataSourceId:"+first1.get().dataSourceId+"========");
             fromEntityIdList = getOdsTableList(collect, dbQualifiedNames);
+            log.debug("========fromEntityIdList========="+JSON.toJSONString(fromEntityIdList));
             if (CollectionUtils.isEmpty(fromEntityIdList)) {
+                log.debug("==========fromEntityIdList等于空===========");
                 return;
             }
-
+            log.debug("=======开始获取sqlScript脚本========");
             sqlScript = first1.get().sqlScript;
-
+            log.debug("========sqlScript脚本=============="+sqlScript);
             //添加stg到ods血缘
             String stgQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname + "_" + first1.get().id + stg_prefix;
+            log.debug("=========stgQualifiedName:"+stgQualifiedName+"======dataSourceInfo.conIp："+dataSourceInfo.conIp +"===first1.get().id + stg_prefix:"+first1.get().id + stg_prefix+"======");
             synchronizationStgOdsKinShip(tableGuid, sqlScript, stgQualifiedName);
+
         } else if (dataSourceInfo.sourceBusinessType == SourceBusinessTypeEnum.DW) {
             //获取ods表信息
             odsResult = dataAccessClient.getDataAccessMetaData();
