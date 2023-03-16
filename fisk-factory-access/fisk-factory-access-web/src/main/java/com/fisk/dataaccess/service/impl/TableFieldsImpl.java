@@ -47,7 +47,7 @@ import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.mapper.TableFieldsMapper;
 import com.fisk.dataaccess.service.*;
-import com.fisk.dataaccess.service.factory.BuildSqlFactory;
+import com.fisk.dataaccess.service.strategy.BuildSqlStrategy;
 import com.fisk.dataaccess.utils.files.FileTxtUtils;
 import com.fisk.dataaccess.utils.sql.DbConnectionHelper;
 import com.fisk.dataaccess.utils.sql.OracleCdcUtils;
@@ -56,15 +56,10 @@ import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
-import com.fisk.datamodel.dto.TableStructDTO;
 import com.fisk.datamodel.enums.SyncModeEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
-import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
-import com.fisk.task.dto.daconfig.DataSourceConfig;
-import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
-import com.fisk.task.dto.daconfig.ProcessorConfig;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
@@ -82,9 +77,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -1415,7 +1407,7 @@ public class TableFieldsImpl
     }
 
     private Object getBuildSql(DataSourceDTO dataSourceDTO, OverlayCodePreviewAccessDTO dto, TableAccessPO tableAccessPO, AppRegistrationPO appRegistrationPO, String targetTableName) {
-        IBuildOverlaySqlPreview service = BuildSqlFactory.getService(dataSourceDTO.conType.getName().toUpperCase());
+        IBuildOverlaySqlPreview service = BuildSqlStrategy.getService(dataSourceDTO.conType.getName().toUpperCase());
         return service.buildStgToOdsSql(dataSourceDTO, dto, tableAccessPO, appRegistrationPO, targetTableName);
     }
 

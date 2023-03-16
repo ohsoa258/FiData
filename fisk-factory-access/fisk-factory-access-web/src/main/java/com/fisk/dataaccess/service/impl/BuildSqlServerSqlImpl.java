@@ -3,8 +3,6 @@ package com.fisk.dataaccess.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.factory.BusinessTimeEnum;
-import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
@@ -15,24 +13,16 @@ import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.enums.syncModeTypeEnum;
 import com.fisk.dataaccess.service.IBuildOverlaySqlPreview;
-import com.fisk.dataaccess.service.factory.BuildSqlFactory;
-import com.fisk.datamodel.dto.TableStructDTO;
+import com.fisk.dataaccess.service.strategy.BuildSqlStrategy;
 import com.fisk.system.dto.datasource.DataSourceDTO;
-import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
-import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -56,7 +46,7 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
         List<TableFieldsDTO> odsFieldList = dto.modelPublishFieldDTOList;
 
         // 1、业务主键类型
-        if (dto.syncMode == syncModeTypeEnum.INCREMENT_MERGE.getValue()){
+        if (dto.syncMode == syncModeTypeEnum.INCREMENT_MERGE.getValue() || dto.syncMode == syncModeTypeEnum.INCREMENT_DELINSERT.getValue()){
             return getMergeSql(odsFieldList, dto, stgAndTableName, appRegistrationPO, targetTableName);
         }
 
@@ -147,26 +137,33 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
         mergeSql += pkSql;
 
         // 3、拼接更新语句
-        StringBuilder upBuilder = new StringBuilder(" WHEN MATCHED THEN UPDATE SET ");
+        StringBuilder upBuilder = new StringBuilder(" WHEN MATCHED THEN ");
         String upSql = "";
-        for (TableFieldsDTO item : odsFieldList){
-            if (StringUtils.isEmpty(item.sourceFieldName)){
-                continue;
+        if (dto.syncMode == syncModeTypeEnum.INCREMENT_MERGE.getValue()){
+            upBuilder.append("UPDATE SET ");
+            for (TableFieldsDTO item : odsFieldList){
+                if (StringUtils.isEmpty(item.sourceFieldName)){
+                    continue;
+                }
+                upBuilder.append("T.");
+                upBuilder.append(item.sourceFieldName);
+                // 类型转换
+                upBuilder.append(fieldTypeTransformKey(item));
+                upBuilder.append(",");
             }
-            upBuilder.append("T.");
-            upBuilder.append(item.sourceFieldName);
-            // 类型转换
-            upBuilder.append(fieldTypeTransformKey(item));
-            upBuilder.append(",");
+            upBuilder.append("T.fi_createtime = S.fi_createtime, ")
+                    .append("T.fi_updatetime = S.fi_updatetime, ")
+                    .append("T.fi_version = S.fi_version, ")
+                    .append("T.fidata_batch_code = S.fidata_batch_code, ")
+                    .append("T.").append(tableKey).append(" = ").append("S.").append(tableKey).append(",");
+            // 去除尾部的,符号
+            upSql = upBuilder.toString();
+            upSql = upSql.substring(0, upSql.length() - 1);
+        }else{
+            upBuilder.append("DELETE");
+            upSql = upBuilder.toString();
         }
-        upBuilder.append("T.fi_createtime = S.fi_createtime, ")
-                .append("T.fi_updatetime = S.fi_updatetime, ")
-                .append("T.fi_version = S.fi_version, ")
-                .append("T.fidata_batch_code = S.fidata_batch_code, ")
-                .append("T.").append(tableKey).append(" = ").append("S.").append(tableKey).append(",");
-        // 去除尾部的,符号
-        upSql = upBuilder.toString();
-        upSql = upSql.substring(0, upSql.length() - 1);
+
         // 组合
         mergeSql += upSql;
 
@@ -215,11 +212,22 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
     private String fieldTypeTransformKey(TableFieldsDTO item) {
         log.info("字段名称-类型：{}-{}", item.sourceFieldName, item.fieldType);
         String fieldInfo = "";
-        if (item.fieldType.toUpperCase().contains("DATE") || item.fieldType.toUpperCase().contains("TIME")){
-            fieldInfo = " = DATEADD(minute, cast(left(S." + item.sourceFieldName + ",10) as bigint)/60, '1970-1-1')";
-        }else if (!item.fieldType.equalsIgnoreCase("nvarchar") && !item.fieldType.equalsIgnoreCase("varchar")){
+        if (item.fieldType.toUpperCase().equals("DATE")){
+            fieldInfo = " = CASE WHEN cast(isnumeric(S." + item.sourceFieldName + ") as int) <= 0 THEN S." + item.sourceFieldName
+                    + " ELSE DATEADD(dd, cast(left(S." + item.sourceFieldName + ",10) as bigint), '1970-1-1') END";
+        } else if(item.fieldType.toUpperCase().equals("TIME")){
+            fieldInfo = " = CASE WHEN cast(isnumeric(" + item.sourceFieldName + ") as int) <= 0 THEN S." + item.sourceFieldName
+                    + " ELSE CONVERT(VARCHAR(8),DATEADD(ss,cast(S." + item.sourceFieldName + ", as bigint), '1970-01-01 08:00:00'),108) END";
+        } else if (item.fieldType.toUpperCase().equals("TIMESTAMP") || item.fieldType.toUpperCase().equals("DATETIME")){
+            fieldInfo = " = CASE WHEN cast(isnumeric(S." + item.sourceFieldName + ") as int) <= 0 THEN S." + item.sourceFieldName
+                    + " ELSE DATEADD(minute, cast(left(S." + item.sourceFieldName + ",10) as bigint)/60, '1970-1-1 08:00:00') END";
+        }else if (item.fieldType.equalsIgnoreCase("nvarchar") || item.fieldType.equalsIgnoreCase("varchar")){
+            fieldInfo = " = CAST(S." + item.sourceFieldName + " AS " + item.fieldType + "(" + item.fieldLength +"))";
+        }else if (item.fieldType.equalsIgnoreCase("decimal")
+                || item.fieldType.equalsIgnoreCase("numeric")
+                || item.fieldType.equalsIgnoreCase("float")){
             fieldInfo = " = CAST(S." + item.sourceFieldName + " AS " + item.fieldType + ")";
-        }else{
+        } else {
             fieldInfo = " = S." + item.sourceFieldName;
         }
         return fieldInfo;
@@ -268,11 +276,22 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
     private String fieldTypeTransform(TableFieldsDTO item) {
         log.info("字段名称-类型：{}-{}", item.sourceFieldName, item.fieldType);
         String fieldInfo = "";
-        if (item.fieldType.toUpperCase().contains("DATE") || item.fieldType.toUpperCase().contains("TIME")){
-            fieldInfo = "DATEADD(minute, cast(left(" + item.sourceFieldName + ",10) as bigint)/60, '1970-1-1')";
-        }else if (!item.fieldType.toUpperCase().equals("NVARCHAR") && !item.fieldType.equals("VARCHAR")){
+        if (item.fieldType.toUpperCase().equals("DATE")){
+            fieldInfo = "CASE WHEN cast(isnumeric(" + item.sourceFieldName + ") as int) <= 0 THEN " + item.sourceFieldName
+                    + " ELSE DATEADD(dd, cast(left(" + item.sourceFieldName + ",10) as bigint), '1970-1-1') END";
+        } else if(item.fieldType.toUpperCase().equals("TIME")){
+            fieldInfo = "CASE WHEN cast(isnumeric(" + item.sourceFieldName + ") as int) <= 0 THEN " + item.sourceFieldName
+                    + " ELSE CONVERT(VARCHAR(8),DATEADD(ss,cast(" + item.sourceFieldName + ", as bigint), '1970-01-01 08:00:00'),108) END";
+        } else if (item.fieldType.toUpperCase().equals("TIMESTAMP") || item.fieldType.toUpperCase().equals("DATETIME")){
+            fieldInfo = "CASE WHEN cast(isnumeric(" + item.sourceFieldName + ") as int) <= 0 THEN " + item.sourceFieldName
+                    + " ELSE DATEADD(minute, cast(left(" + item.sourceFieldName + ",10) as bigint)/60, '1970-1-1 08:00:00') END";
+        }else if (item.fieldType.equalsIgnoreCase("nvarchar") || item.fieldType.equalsIgnoreCase("varchar")){
+            fieldInfo = "CAST(" + item.sourceFieldName + " AS " + item.fieldType +"(" + item.fieldLength + "))";
+        }else if (item.fieldType.equalsIgnoreCase("decimal")
+                || item.fieldType.equalsIgnoreCase("numeric")
+                || item.fieldType.equalsIgnoreCase("float")){
             fieldInfo = "CAST(" + item.sourceFieldName + " AS " + item.fieldType + ")";
-        }else{
+        } else {
             fieldInfo = item.sourceFieldName;
         }
         return fieldInfo;
@@ -306,7 +325,7 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        BuildSqlFactory.register(DataSourceTypeEnum.SQLSERVER.getName().toUpperCase(), this);
+        BuildSqlStrategy.register(DataSourceTypeEnum.SQLSERVER.getName().toUpperCase(), this);
     }
 }
 

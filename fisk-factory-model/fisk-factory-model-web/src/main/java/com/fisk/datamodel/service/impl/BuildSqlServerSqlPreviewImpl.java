@@ -227,8 +227,8 @@ public class BuildSqlServerSqlPreviewImpl implements IBuildOverlaySqlPreview, In
         } else if (item.fieldType.toUpperCase().equals("TIMESTAMP") || item.fieldType.toUpperCase().equals("DATETIME")){
             fieldInfo = " = CASE WHEN cast(isnumeric(S." + item.sourceFieldName + ") as int) <= 0 THEN S." + item.sourceFieldName
                     + " ELSE DATEADD(minute, cast(left(S." + item.sourceFieldName + ",10) as bigint)/60, '1970-1-1 08:00:00') END";
-        }else if (item.fieldType.equalsIgnoreCase("nvarchar")){
-            fieldInfo = " = CAST(S." + item.sourceFieldName + " AS " + "varchar" + ")";
+        }else if (item.fieldType.equalsIgnoreCase("nvarchar") || item.fieldType.equalsIgnoreCase("varchar")){
+            fieldInfo = " = CAST(S." + item.sourceFieldName + " AS " + item.fieldType +"(" + item.fieldLength + "))";
         }else if (item.fieldType.equalsIgnoreCase("decimal")
                 || item.fieldType.equalsIgnoreCase("numeric")
                 || item.fieldType.equalsIgnoreCase("float")){

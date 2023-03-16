@@ -1,4 +1,4 @@
-package com.fisk.dataaccess.service.factory;
+package com.fisk.dataaccess.service.strategy;
 
 import com.fisk.dataaccess.service.IBuildOverlaySqlPreview;
 import org.springframework.util.Assert;
@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @Copyright: 2023 by 湖~Zero
  * @Description:
  **/
-public class BuildSqlFactory {
+public class BuildSqlStrategy {
 
     private static final Map<String, IBuildOverlaySqlPreview> SERVER_MAP = new ConcurrentHashMap<>();
 
