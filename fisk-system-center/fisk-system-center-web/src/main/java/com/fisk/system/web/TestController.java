@@ -32,7 +32,7 @@ public class TestController {
     @GetMapping("/getDataServiceToken")
     public ResponseEntity<String> getDataServiceToken() {
         long startTime = System.currentTimeMillis();
-        log.info("获取数据服务token，开始时间（毫秒）：" + startTime);
+        String result = "获取数据服务token，开始时间（毫秒）：" + startTime + "\n";
 
         /*Step 1：getToken*/
         String url = "http://172.17.1.10:7002/dataservice/apiService/getToken";
@@ -46,10 +46,10 @@ public class TestController {
                 url, getTokenParams, null);
 
         long endTime = System.currentTimeMillis();
-        log.info("获取数据服务token，结束时间（毫秒）：" + endTime);
-
-        log.info("获取数据服务token，允许总时长："+(endTime - startTime) + "ms");
-        return ResponseEntity.ok(getTokenResponse.data);
+        result += "获取数据服务token，结束时间（毫秒）：" + endTime + "\n";
+        result += "获取数据服务token，运行总时长：" + (endTime - startTime) + "ms\n";
+        result += "获取数据服务token，token值：" + getTokenResponse.data;
+        return ResponseEntity.ok(result);
     }
 
     public static <T> T sendPostWebRequest(Class<T> c, String url,
