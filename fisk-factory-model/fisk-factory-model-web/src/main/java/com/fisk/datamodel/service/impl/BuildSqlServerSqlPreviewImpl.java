@@ -61,7 +61,8 @@ public class BuildSqlServerSqlPreviewImpl implements IBuildOverlaySqlPreview, In
         // 拼接ods需要插入的字段并去除重复的系统字段
         List<ModelPublishFieldDTO> odsFieldList = dataModel.config.modelPublishFieldDTOList;
         odsFieldList = odsFieldList.stream().filter(item -> !item.sourceFieldName.equals("fi_createtime")
-                && !item.sourceFieldName.equals("fi_updatetime") && !item.sourceFieldName.equals("fidata_batch_code")).collect(Collectors.toList());
+                && !item.sourceFieldName.equals("fi_updatetime")
+                && !item.sourceFieldName.equals("fidata_batch_code")).collect(Collectors.toList());
 
         // 业务主键模式
         if (dto.syncMode == syncModeTypeEnum.INCREMENT_MERGE.getValue()){
@@ -166,7 +167,6 @@ public class BuildSqlServerSqlPreviewImpl implements IBuildOverlaySqlPreview, In
         }
         upBuilder.append("T.fi_createtime = S.fi_createtime, ")
                 .append("T.fi_updatetime = S.fi_updatetime, ")
-                .append("T.fi_version = S.fi_version, ")
                 .append("T.fidata_batch_code = S.fidata_batch_code, ")
                 .append("T.").append(tableKey).append(" = ").append("S.").append(tableKey).append(",");
         // 去除尾部的,符号
@@ -187,7 +187,6 @@ public class BuildSqlServerSqlPreviewImpl implements IBuildOverlaySqlPreview, In
         }
         insBuilder.append("fi_createtime, ")
                 .append("fi_updatetime, ")
-                .append("fi_version, ")
                 .append("fidata_batch_code, ")
                 .append(tableKey).append(",");
         insBuilder.append(") VALUES( ");
@@ -202,7 +201,6 @@ public class BuildSqlServerSqlPreviewImpl implements IBuildOverlaySqlPreview, In
         }
         insBuilder.append("S.fi_createtime, ")
                 .append("S.fi_updatetime, ")
-                .append("S.fi_version, ")
                 .append("S.fidata_batch_code, ")
                 .append("S.").append(tableKey).append(",");
         insBuilder.append(")");
@@ -220,11 +218,22 @@ public class BuildSqlServerSqlPreviewImpl implements IBuildOverlaySqlPreview, In
     private String fieldTypeTransformKey(ModelPublishFieldDTO item) {
         log.info("字段名称-类型：{}-{}", item.sourceFieldName, item.fieldType);
         String fieldInfo = "";
-        if (item.fieldType.toUpperCase().contains("DATE") || item.fieldType.toUpperCase().contains("TIME")){
-            fieldInfo = " = DATEADD(minute, cast(left(S." + item.sourceFieldName + ",10) as bigint)/60, '1970-1-1')";
-        }else if (!item.fieldType.equalsIgnoreCase("nvarchar") && !item.fieldType.equalsIgnoreCase("varchar")){
+        if (item.fieldType.toUpperCase().equals("DATE")){
+            fieldInfo = " = CASE WHEN cast(isnumeric(S." + item.sourceFieldName + ") as int) <= 0 THEN S." + item.sourceFieldName
+                    + " ELSE DATEADD(dd, cast(left(S." + item.sourceFieldName + ",10) as bigint), '1970-1-1') END";
+        } else if(item.fieldType.toUpperCase().equals("TIME")){
+            fieldInfo = " = CASE WHEN cast(isnumeric(" + item.sourceFieldName + ") as int) <= 0 THEN S." + item.sourceFieldName
+                    + " ELSE CONVERT(VARCHAR(8),DATEADD(ss,cast(S." + item.sourceFieldName + ", as bigint), '1970-01-01 08:00:00'),108) END";
+        } else if (item.fieldType.toUpperCase().equals("TIMESTAMP") || item.fieldType.toUpperCase().equals("DATETIME")){
+            fieldInfo = " = CASE WHEN cast(isnumeric(S." + item.sourceFieldName + ") as int) <= 0 THEN S." + item.sourceFieldName
+                    + " ELSE DATEADD(minute, cast(left(S." + item.sourceFieldName + ",10) as bigint)/60, '1970-1-1 08:00:00') END";
+        }else if (item.fieldType.equalsIgnoreCase("nvarchar")){
+            fieldInfo = " = CAST(S." + item.sourceFieldName + " AS " + "varchar" + ")";
+        }else if (item.fieldType.equalsIgnoreCase("decimal")
+                || item.fieldType.equalsIgnoreCase("numeric")
+                || item.fieldType.equalsIgnoreCase("float")){
             fieldInfo = " = CAST(S." + item.sourceFieldName + " AS " + item.fieldType + ")";
-        }else{
+        } else {
             fieldInfo = " = S." + item.sourceFieldName;
         }
         return fieldInfo;
@@ -263,14 +272,37 @@ public class BuildSqlServerSqlPreviewImpl implements IBuildOverlaySqlPreview, In
     private String fieldTypeTransform(ModelPublishFieldDTO item) {
         log.info("字段名称-类型：{}-{}", item.sourceFieldName, item.fieldType);
         String fieldInfo = "";
-        if (item.fieldType.toUpperCase().contains("DATE") || item.fieldType.toUpperCase().contains("TIME")){
-            fieldInfo = "DATEADD(minute, cast(left(" + item.sourceFieldName + ",10) as bigint)/60, '1970-1-1')";
-        }else if (!item.fieldType.equalsIgnoreCase("nvarchar") && !item.fieldType.equalsIgnoreCase("varchar")){
+        if (item.fieldType.toUpperCase().equals("DATE")){
+            fieldInfo = "CASE WHEN cast(isnumeric(" + item.sourceFieldName + ") as int) <= 0 THEN " + item.sourceFieldName
+                    + " ELSE DATEADD(dd, cast(left(" + item.sourceFieldName + ",10) as bigint), '1970-1-1') END";
+        } else if(item.fieldType.toUpperCase().equals("TIME")){
+            fieldInfo = "CASE WHEN cast(isnumeric(" + item.sourceFieldName + ") as int) <= 0 THEN " + item.sourceFieldName
+                    + " ELSE CONVERT(VARCHAR(8),DATEADD(ss,cast(" + item.sourceFieldName + ", as bigint), '1970-01-01 08:00:00'),108) END";
+        } else if (item.fieldType.toUpperCase().equals("TIMESTAMP") || item.fieldType.toUpperCase().equals("DATETIME")){
+            fieldInfo = "CASE WHEN cast(isnumeric(" + item.sourceFieldName + ") as int) <= 0 THEN " + item.sourceFieldName
+                    + " ELSE DATEADD(minute, cast(left(" + item.sourceFieldName + ",10) as bigint)/60, '1970-1-1 08:00:00') END";
+        }else if (item.fieldType.equalsIgnoreCase("nvarchar")){
+            fieldInfo = "CAST(" + item.sourceFieldName + " AS " + "varchar" + ")";
+        }else if (item.fieldType.equalsIgnoreCase("decimal")
+                || item.fieldType.equalsIgnoreCase("numeric")
+                || item.fieldType.equalsIgnoreCase("float")){
             fieldInfo = "CAST(" + item.sourceFieldName + " AS " + item.fieldType + ")";
-        }else{
+        } else {
             fieldInfo = item.sourceFieldName;
         }
         return fieldInfo;
+    }
+
+    public static boolean checkStringIsNumber(String str){
+        if (str == null) {
+            return false;
+        }
+        return str.matches("-?\\d+(\\.\\d+)?");
+    }
+
+    public static void main(String[] args) {
+        boolean b = checkStringIsNumber("19290909");
+        System.out.println(b);
     }
 
     private String previewCoverCondition(TableBusinessDTO dto, DataSourceDTO dataSource) {

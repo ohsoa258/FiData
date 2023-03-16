@@ -2564,36 +2564,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
         log.info("同步类型为:" + syncMode + config.targetDsConfig.syncMode);
         executsql = componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName(), buildNifiFlow);
-        //代码处理预览sql
-        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
-        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
-            DataSourceDTO dataSource = fiDataDataSource.data;
-            IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSource.conType);
-            executsql = dbCommand.getTotalSql(executsql, synchronousTypeEnum);
-            if (Objects.equals(DataSourceTypeEnum.POSTGRESQL, dataSource.conType)) {
-                //待定
-            } else if (Objects.equals(DataSourceTypeEnum.SQLSERVER, dataSource.conType)) {
-                BusinessTypeEnum businessTypeEnum = Objects.equals(SynchronousTypeEnum.TOPGODS, synchronousTypeEnum) ? BusinessTypeEnum.DATAINPUT : BusinessTypeEnum.DATAMODEL;
-                JSONArray list = postgreHelper.postgreQuery(executsql, businessTypeEnum);
-                StringBuilder sqlBuilder = new StringBuilder();
-                if (CollectionUtils.isEmpty(list)) {
-                    executsql = executsql.replaceAll(FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_OUTPUT.getName(), FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName());
-                } else {
-                    for (Object o : list) {
-                        //转成JSONObject,获取属性
-                        JSONObject jsonObject = JSON.parseObject(o.toString());
-                        sqlBuilder.append(jsonObject.get(""));
-                    }
-                    executsql = sqlBuilder.toString();
-                }
-            }
-        } else {
-            log.error("userclient无法查询到ods库的连接信息");
-            throw new FkException(ResultEnum.ERROR);
-        }
         //callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
         callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
-        callDbProcedureProcessorDTO.executsql = executsql;
+        log.info("SQL预览语句：{}", JSON.toJSONString(buildNifiFlow.syncStgToOdsSql));
+        callDbProcedureProcessorDTO.executsql = StringUtils.isNotEmpty(buildNifiFlow.syncStgToOdsSql)?buildNifiFlow.syncStgToOdsSql:executsql;
         callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
         callDbProcedureProcessorDTO.haveNextOne = true;
         callDbProcedureProcessorDTO.sqlPreQuery = buildNifiFlow.customScriptBefore;
