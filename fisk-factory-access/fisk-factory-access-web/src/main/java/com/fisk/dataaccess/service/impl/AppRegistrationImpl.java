@@ -321,7 +321,7 @@ public class AppRegistrationImpl
         data.rdbms_type = dataSource.driveType;
         data.displayName = appRegistration.appName;
         data.description = "stg";
-        data.comment = String.valueOf(appRegistration.id);
+        data.comment = String.valueOf(dataSource.id);
         //库
         List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
         MetaDataDbAttributeDTO db = new MetaDataDbAttributeDTO();

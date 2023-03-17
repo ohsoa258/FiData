@@ -145,7 +145,7 @@ public class BloodCompensationImpl
 
 
             Optional<MetaDataInstanceAttributeDTO> first = synchronizationAppRegistration
-                    .data.stream().filter(e -> e.comment.equals(String.valueOf(accessTable.appId))).findFirst();
+                    .data.stream().filter(e -> e.comment.equals(String.valueOf(accessTable.dataSourceId))).findFirst();
             if (!first.isPresent()) {
                 continue;
             }
