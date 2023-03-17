@@ -319,6 +319,7 @@ public class TableFieldsImpl
         model.publish = 0;
         model.sheet = dto.sheet;
         model.startLine = dto.startLine;
+        model.coverScript = dto.coverScript;
         // 判断where条件是否传递
         int syncType = dto.tableSyncmodeDTO.syncMode;
         log.info("syncType类型，{}", syncType);
@@ -581,6 +582,7 @@ public class TableFieldsImpl
             try {
                 TableAccessPO accessPo = tableAccessImpl.query().eq("id", accessId).one();
                 data.sheetName = accessPo.sheet;
+                data.coverScript = accessPo.coverScript;
                 List<MetaDataInstanceAttributeDTO> metaDataList = new ArrayList<>();
                 // 实时--RestfulAPI类型  or  非实时--api类型
                 //0实时

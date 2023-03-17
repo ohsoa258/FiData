@@ -126,4 +126,11 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
      * 发布历史id
      */
     public Long tableHistoryId;
+
+    /**
+     * 覆盖脚本
+     */
+    public String coverScript;
+
+
 }
