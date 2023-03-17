@@ -42,31 +42,39 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     ApiResultConfigImpl apiResultConfig;
 
     @Override
-    public DataSourceDTO getDataSourceMeta(long appId) {
+    public List<DataSourceDTO> getDataSourceMeta(long appId) {
 
-        DataSourceDTO dataSource = mapper.getDataSourceById(appId);
-
-        if ("ftp".equalsIgnoreCase(dataSource.driveType) || "RestfulAPI".equalsIgnoreCase(dataSource.driveType) || "api".equalsIgnoreCase(dataSource.driveType)) {
-            return null;
+        List<DataSourceDTO> dsList = mapper.getDataSourceListById(appId);
+        if (CollectionUtils.isEmpty(dsList)){
+            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
         }
 
-        // 查询缓存里有没有redis的数据
-        boolean flag = redisUtil.hasKey(RedisKeyBuild.buildDataSoureKey(appId));
-        if (!flag) {
-            // 将表和视图的结构存入redis
-            setDataSourceMeta(appId);
-        }
-
-        try {
-            String datasourceMetaJson = redisUtil.get(RedisKeyBuild.buildDataSoureKey(appId)).toString();
-            if (StringUtils.isNotBlank(datasourceMetaJson)) {
-                dataSource = JSON.parseObject(datasourceMetaJson, DataSourceDTO.class);
+        List<DataSourceDTO> result = new ArrayList<>();
+        for (DataSourceDTO dataSource : dsList){
+            if ("ftp".equalsIgnoreCase(dataSource.driveType) || "RestfulAPI".equalsIgnoreCase(dataSource.driveType) || "api".equalsIgnoreCase(dataSource.driveType)) {
+                return null;
             }
-        } catch (Exception e) {
-            log.error("redis中获取数据失败");
-            dataSource = null;
+
+            // 查询缓存里有没有redis的数据
+            boolean flag = redisUtil.hasKey(RedisKeyBuild.buildDataSoureKey(dataSource.id));
+            if (!flag) {
+                // 将表和视图的结构存入redis
+                setDataSourceMeta(appId);
+            }
+
+            try {
+                String datasourceMetaJson = redisUtil.get(RedisKeyBuild.buildDataSoureKey(dataSource.id)).toString();
+                if (StringUtils.isNotBlank(datasourceMetaJson)) {
+                    dataSource = JSON.parseObject(datasourceMetaJson, DataSourceDTO.class);
+                }
+            } catch (Exception e) {
+                log.error("redis中获取数据失败");
+                dataSource = null;
+            }
+            result.add(dataSource);
         }
-        return dataSource;
+
+        return result;
     }
 
     @Override
