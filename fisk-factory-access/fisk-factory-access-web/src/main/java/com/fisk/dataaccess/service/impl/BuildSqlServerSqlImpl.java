@@ -137,32 +137,26 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
         mergeSql += pkSql;
 
         // 3、拼接更新语句
-        StringBuilder upBuilder = new StringBuilder(" WHEN MATCHED THEN ");
+        StringBuilder upBuilder = new StringBuilder(" WHEN MATCHED THEN UPDATE SET ");
         String upSql = "";
-        if (dto.syncMode == syncModeTypeEnum.INCREMENT_MERGE.getValue()){
-            upBuilder.append("UPDATE SET ");
-            for (TableFieldsDTO item : odsFieldList){
-                if (StringUtils.isEmpty(item.sourceFieldName)){
-                    continue;
-                }
-                upBuilder.append("T.");
-                upBuilder.append(item.sourceFieldName);
-                // 类型转换
-                upBuilder.append(fieldTypeTransformKey(item));
-                upBuilder.append(",");
+        for (TableFieldsDTO item : odsFieldList){
+            if (StringUtils.isEmpty(item.sourceFieldName)){
+                continue;
             }
-            upBuilder.append("T.fi_createtime = S.fi_createtime, ")
-                    .append("T.fi_updatetime = S.fi_updatetime, ")
-                    .append("T.fi_version = S.fi_version, ")
-                    .append("T.fidata_batch_code = S.fidata_batch_code, ")
-                    .append("T.").append(tableKey).append(" = ").append("S.").append(tableKey).append(",");
-            // 去除尾部的,符号
-            upSql = upBuilder.toString();
-            upSql = upSql.substring(0, upSql.length() - 1);
-        }else{
-            upBuilder.append("DELETE");
-            upSql = upBuilder.toString();
+            upBuilder.append("T.");
+            upBuilder.append(item.sourceFieldName);
+            // 类型转换
+            upBuilder.append(fieldTypeTransformKey(item));
+            upBuilder.append(",");
         }
+        upBuilder.append("T.fi_createtime = S.fi_createtime, ")
+                .append("T.fi_updatetime = S.fi_updatetime, ")
+                .append("T.fi_version = S.fi_version, ")
+                .append("T.fidata_batch_code = S.fidata_batch_code, ")
+                .append("T.").append(tableKey).append(" = ").append("S.").append(tableKey).append(",");
+        // 去除尾部的,符号
+        upSql = upBuilder.toString();
+        upSql = upSql.substring(0, upSql.length() - 1);
 
         // 组合
         mergeSql += upSql;
@@ -204,6 +198,33 @@ public class BuildSqlServerSqlImpl implements IBuildOverlaySqlPreview, Initializ
         // 组合
         mergeSql += insSql;
         mergeSql += ";";
+
+        // 先删除再插入
+        if (dto.syncMode == syncModeTypeEnum.INCREMENT_DELINSERT.getValue()){
+            log.info("进入按照业务主键先删除再插入模式");
+            StringBuilder strBuilder = new StringBuilder("MERGE INTO " + schema + "." + targetTableName + " AS T USING " + schema + "." + stgName + " AS S ON( ");
+            String delMergeSql = "";
+            for (String key : collect){
+                strBuilder.append(" AND T.");
+                strBuilder.append(key);
+                strBuilder.append("= S.");
+                strBuilder.append(key);
+            }
+            strBuilder.append(") WHEN MATCHED THEN DELETE WHEN NOT MATCHED THEN ");
+            String[] splits = mergeSql.split("WHEN NOT MATCHED THEN");
+            strBuilder.append(splits[1]);
+            delMergeSql = strBuilder.toString();
+            delMergeSql = delMergeSql.replace("(  AND ", "( ");
+
+            String[] delSplits = delMergeSql.split("WHEN MATCHED THEN DELETE");
+            strBuilder = new StringBuilder();
+            strBuilder.append(delSplits[0]);
+            strBuilder.append(delSplits[1]);
+            String insertSql = strBuilder.toString();
+            delMergeSql += insertSql;
+            log.info("业务主键sql{}", delMergeSql);
+            return delMergeSql;
+        }
 
         log.info("业务主键sql{}", mergeSql);
         return mergeSql;

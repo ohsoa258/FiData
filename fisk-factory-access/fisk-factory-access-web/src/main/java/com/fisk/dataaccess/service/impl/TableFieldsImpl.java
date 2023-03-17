@@ -215,6 +215,7 @@ public class TableFieldsImpl
         }
         accessPo.sheet = dto.sheet;
         accessPo.startLine = dto.startLine;
+        accessPo.coverScript = dto.coverScript;
         // 判断where条件是否传递
         int syncType = dto.tableSyncmodeDTO.syncMode;
         log.info("syncType类型，{}", syncType);

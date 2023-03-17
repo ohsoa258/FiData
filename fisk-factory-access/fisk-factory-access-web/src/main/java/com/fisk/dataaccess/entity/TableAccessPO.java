@@ -129,4 +129,9 @@ public class TableAccessPO extends BasePO {
      */
     public String whereScript;
 
+    /**
+     * 覆盖脚本
+     */
+    public String coverScript;
+
 }

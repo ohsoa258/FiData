@@ -23,7 +23,4 @@ public class OverlayCodePreviewAccessDTO {
 
     public TableBusinessDTO tableBusiness;
 
-    @ApiModelProperty(value = "业务主键覆盖类型，1：业务主键覆盖，2：业务主键删除后再插入")
-    public Integer keyMode;
-
 }

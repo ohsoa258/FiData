@@ -135,6 +135,11 @@ public class TableAccessNonDTO extends BaseDTO {
 
     public List<TableHistoryDTO> tableHistorys;
 
+    /**
+     * 覆盖脚本
+     */
+    public String coverScript;
+
     public TableAccessNonDTO(BaseEntity entity) {
         super(entity);
     }
