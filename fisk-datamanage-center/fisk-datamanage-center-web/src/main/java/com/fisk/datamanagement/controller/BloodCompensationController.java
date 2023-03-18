@@ -39,21 +39,6 @@ public class BloodCompensationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.systemSynchronousBlood());
     }
 
-    @GetMapping("/getDataAccessMetaData")
-    public List<DataAccessSourceTableDTO> test(){
-        ResultEntity<List<DataAccessSourceTableDTO>> dataAccessMetaData = dataAccessClient.getDataAccessMetaData();
-        /*List<DataAccessSourceTableDTO> collect = dataAccessMetaData.data.stream()
-                .filter(d->!("sftp").equals(d.driveType))
-                .filter(d->!("ftp").equals(d.driveType)).collect(Collectors.toList());*/
-        log.info("dataAccessMetaDataListInfo:{}",dataAccessMetaData.data);
-        return dataAccessMetaData.data;
-    }
-    @GetMapping("/synchronizationAppRegistration")
-    public List<MetaDataInstanceAttributeDTO> test2(){
-        ResultEntity<List<MetaDataInstanceAttributeDTO>> resultEntity = dataAccessClient.synchronizationAppRegistration();
-        List<MetaDataInstanceAttributeDTO> data = resultEntity.data;
-        log.info("dataAccessMetaDataListInfo:{}",data);
-        return data;
-    }
+
 
 }
