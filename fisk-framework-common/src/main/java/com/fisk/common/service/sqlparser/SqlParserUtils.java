@@ -299,11 +299,14 @@ public class SqlParserUtils {
 
         List<TableMetaDataObject> res;
         try {
+            log.debug("=============SQL解析START=============");
+            log.debug("SQL解析："+id+"ID===数据库类型:"+dbType+"===SQL语句"+sqlScript);
             ISqlParser parser = SqlParserFactory.parser(ParserVersion.V1);
             res = parser.getDataTableBySql(sqlScript, dbType);
+            log.debug("=============SQL解析END=============");
         } catch (Exception e) {
-            log.info("sql解析失败Info"+id+"===错误ID===数据库类型:"+dbType+"---"+sqlScript);
-            log.error("【sql解析失败】,{}", e);
+            log.debug("sql解析失败==错误ID"+id+"===数据库类型:"+dbType+"==="+sqlScript);
+            log.error("【sql解析失败】");
             throw new FkException(ResultEnum.SQL_PARSING);
         }
 

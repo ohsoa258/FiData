@@ -547,7 +547,10 @@ public class MetaDataImpl implements IMetaData {
                 return;
             }
             List<SourceTableDTO> list = new ArrayList<>();
-            for (DataAccessSourceTableDTO item : result.data) {
+            List<DataAccessSourceTableDTO> collect = result.data.stream()
+                    .filter(d -> !("sftp").equals(d.driveType))
+                    .filter(d -> !("ftp").equals(d.driveType)).collect(Collectors.toList());
+            for (DataAccessSourceTableDTO item : collect) {
                 SourceTableDTO dto = MetadataMapAtlasMap.INSTANCES.dtoToDto(item);
                 list.add(dto);
             }
