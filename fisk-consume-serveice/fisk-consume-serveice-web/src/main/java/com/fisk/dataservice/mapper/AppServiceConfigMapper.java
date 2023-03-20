@@ -52,6 +52,7 @@ public interface AppServiceConfigMapper extends FKBaseMapper<AppServiceConfigPO>
             "\tLEFT JOIN tb_api_config t2 ON t1.service_id = t2.id \n" +
             "WHERE\n" +
             "\tt1.app_id = #{appId} \n" +
+            "\tAND t1.type = 1 \n" +
             "\tAND t1.del_flag = 1 \n" +
             "\tAND t2.del_flag = 1 ")
     List<AppServiceConfigPO> getSubscribeListBy(@Param("appId") int appId);

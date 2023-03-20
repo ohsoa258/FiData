@@ -193,7 +193,8 @@ public class AppRegisterManageImpl
         // 查询应用下是否存在api
         QueryWrapper<AppServiceConfigPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(AppServiceConfigPO::getAppId, id).eq(AppServiceConfigPO::getApiState, 1)
-                .eq(AppServiceConfigPO::getDelFlag, 1);
+                .eq(AppServiceConfigPO::getDelFlag, 1)
+                .eq(AppServiceConfigPO::getType, AppServiceTypeEnum.API.getValue());
         List<AppServiceConfigPO> appApiPOS = appApiMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(appApiPOS)) {
             // 该应用下没有启用的api，可以直接删除
