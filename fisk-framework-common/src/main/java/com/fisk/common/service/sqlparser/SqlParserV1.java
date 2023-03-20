@@ -4,6 +4,7 @@ import com.alibaba.druid.DbType;
 import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.statement.*;
+import com.alibaba.fastjson.JSON;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.common.service.sqlparser.model.TableTypeEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -40,8 +41,16 @@ public class SqlParserV1 implements ISqlParser {
         // 获取查询
         SQLSelectQuery query = ((SQLSelectStatement) statement).getSelect().getQuery();
         if (query instanceof SQLUnionQuery) {
-            log.info("Union All查询");
-            throw new Exception("暂时不支持Union All解析");
+            log.debug("Union All查询 START");
+            SQLUnionQuery sqlUnionQuery = (SQLUnionQuery) query;
+            log.debug("Union All查询 TABLESOURCE START");
+            SQLTableSource tableSource = sqlUnionQuery.getFirstQueryBlock().getFrom();
+            log.debug("TABLESOURCE 查寻成功"+ JSON.toJSONString(tableSource));
+            // 获取查询中，出现的所有表
+            log.debug("Union All 获取查询中，出现的所有表START");
+            SqlParserUtils.getAllTableSource(hierarchy, res, sqlUnionQuery, tableSource, null);
+            log.debug("Union All 获取查询中，出现的所有表END");
+            //throw new Exception("暂时不支持Union All解析");
         } else if (query instanceof SQLSelectQueryBlock) {
             log.info("一元查询");
             SQLSelectQueryBlock blockQuery = (SQLSelectQueryBlock) query;
