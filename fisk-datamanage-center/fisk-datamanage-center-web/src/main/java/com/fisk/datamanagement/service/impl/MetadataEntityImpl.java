@@ -26,6 +26,7 @@ import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
 import com.fisk.datamanagement.dto.lineagemaprelation.LineageMapRelationDTO;
 import com.fisk.datamanagement.dto.metadataclassificationmap.MetadataClassificationMapInfoDTO;
+import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
 import com.fisk.datamanagement.dto.metadataglossarymap.MetaDataGlossaryMapDTO;
 import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
@@ -35,6 +36,7 @@ import com.fisk.datamanagement.entity.LineageMapRelationPO;
 import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.enums.ProcessTypeEnum;
+import com.fisk.datamanagement.map.MetadataEntityMap;
 import com.fisk.datamanagement.mapper.BusinessClassificationMapper;
 import com.fisk.datamanagement.mapper.MetaDataClassificationMapMapper;
 import com.fisk.datamanagement.mapper.MetaDataGlossaryMapMapper;
@@ -106,6 +108,13 @@ public class MetadataEntityImpl
     @Resource
     DataModelClient dataModelClient;
 
+    @Override
+    public List<MetadataEntityDTO> queryFildes(Integer tableId, Integer fldeId) {
+        String metadQualifiedName=tableId+"_"+fldeId;
+        List<MetadataEntityPO> entityPOS = metadataEntityMapper.queryFildes(metadQualifiedName);
+        List<MetadataEntityDTO> metadataEntityDTOS = MetadataEntityMap.INSTANCES.toDtos(entityPOS);
+        return metadataEntityDTOS;
+    }
     @Transactional(rollbackFor = Exception.class)
     @Override
     public Integer addMetadataEntity(MetaDataBaseAttributeDTO dto, String rdbmsType, String parentEntityId) {
@@ -171,6 +180,8 @@ public class MetadataEntityImpl
         return ResultEnum.SUCCESS;
 
     }
+
+
 
 
     public List<EntityTreeDTO> getMetadataEntityTree() {

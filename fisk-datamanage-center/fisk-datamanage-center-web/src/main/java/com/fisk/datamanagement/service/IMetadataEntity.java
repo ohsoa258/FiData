@@ -2,6 +2,7 @@ package com.fisk.datamanagement.service;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataBaseAttributeDTO;
+import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
 import io.swagger.models.auth.In;
 
 import java.util.List;
@@ -39,6 +40,12 @@ public interface IMetadataEntity {
      */
     ResultEnum delMetadataEntity(List<Integer> ids);
 
-
+    /**
+     * 通过表数据接入的表ID和字段Id查出元数据的字段
+     * @param tableId
+     * @param fldeId
+     * @return
+     */
+    List<MetadataEntityDTO> queryFildes(Integer tableId, Integer fldeId);
 
 }
