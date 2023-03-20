@@ -158,8 +158,8 @@ public class BloodCompensationImpl
             if(("sftp").equals(accessTable.driveType)||("ftp").equals(accessTable.driveType)){
                 continue;
             }else{
-                log.info("accessTable日志:{}",accessTable);
-                log.error("accessTableinfo:"+accessTable.tableName+","+accessTable.id+","+accessTable.sqlScript);
+                log.debug("accessTable日志"+accessTable);
+                log.debug("accessTable信息:表名称："+accessTable.tableName+",表ID"+accessTable.id+",表脚本"+accessTable.sqlScript);
                 res = SqlParserUtils.sqlDriveConversionName(accessTable.appId,accessTable.driveType,accessTable.sqlScript);
             }
 
