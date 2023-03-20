@@ -362,7 +362,7 @@ public class AppRegistrationImpl
         data.conIp = po.host;
         data.conAccount = po.connectAccount;
         data.conPassword = po.connectPwd;
-        data.conPort = Integer.parseInt(po.port);
+        data.conPort = StringUtils.isNotEmpty(po.port) ? Integer.parseInt(po.port) : 0;
         data.name = name + "_" + po.dbName;
         data.serviceName = po.serviceName;
         data.serviceType = po.serviceType;
