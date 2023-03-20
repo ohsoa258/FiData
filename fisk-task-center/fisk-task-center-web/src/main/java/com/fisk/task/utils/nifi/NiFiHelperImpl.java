@@ -2139,23 +2139,12 @@ public class NiFiHelperImpl implements INiFiHelper {
             while (externalStructureMap.hasNext()) {
                 Map.Entry<String, String> next = externalStructureMap.next();
                 String key = next.getKey();
-                Boolean existent = false;
-                for (int i = 0; i < variables.size(); i++) {
-                    //判断有没有再保存创建
-                    VariableDTO variableDTO = variables.get(i).getVariable();
-                    String name = variableDTO.getName();
-                    if (Objects.equals(key, name)) {
-                        existent = true;
-                    }
-                }
-                if (existent) {
-                    VariableEntity variableEntity = new VariableEntity();
-                    VariableDTO variableDTO = new VariableDTO();
-                    variableDTO.setName(key);
-                    variableDTO.setValue(variable.get(key));
-                    variableEntity.setVariable(variableDTO);
-                    variableEntities.add(variableEntity);
-                }
+                VariableEntity variableEntity = new VariableEntity();
+                VariableDTO variableDTO = new VariableDTO();
+                variableDTO.setName(key);
+                variableDTO.setValue(variable.get(key));
+                variableEntity.setVariable(variableDTO);
+                variableEntities.add(variableEntity);
             }
             registryDTO.setVariables(variableEntities);
             registryDTO.setProcessGroupId(variableRegistry.getVariableRegistry().getProcessGroupId());

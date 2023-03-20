@@ -321,7 +321,7 @@ public class AppRegistrationImpl
         data.rdbms_type = dataSource.driveType;
         data.displayName = appRegistration.appName;
         data.description = "stg";
-        data.comment = String.valueOf(appRegistration.id);
+        data.comment = String.valueOf(dataSource.id);
         //库
         List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
         MetaDataDbAttributeDTO db = new MetaDataDbAttributeDTO();
@@ -572,18 +572,20 @@ public class AppRegistrationImpl
         }
 
         // 2.删除tb_app_datasource表数据
-        AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", id).one();
+        List<AppDataSourcePO> dsList = appDataSourceImpl.query().eq("app_id", id).list();
 
-        int delDataSource = appDataSourceMapper.deleteByIdWithFill(modelDataSource);
-        if (delDataSource < 0) {
-            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
-        }
-
-        // 3.删除tb_api_result_config表数据
-        if (modelDataSource.authenticationMethod != null && modelDataSource.authenticationMethod == 3) {
-            ResultEnum resultEnum = apiResultConfig.delApiResultConfig(modelDataSource.id);
-            if (resultEnum != ResultEnum.SUCCESS) {
+        for (AppDataSourcePO modelDataSource : dsList){
+            int delDataSource = appDataSourceMapper.deleteByIdWithFill(modelDataSource);
+            if (delDataSource < 0) {
                 return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+            }
+
+            // 3.删除tb_api_result_config表数据
+            if (modelDataSource.authenticationMethod != null && modelDataSource.authenticationMethod == 3) {
+                ResultEnum resultEnum = apiResultConfig.delApiResultConfig(modelDataSource.id);
+                if (resultEnum != ResultEnum.SUCCESS) {
+                    return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+                }
             }
         }
 
