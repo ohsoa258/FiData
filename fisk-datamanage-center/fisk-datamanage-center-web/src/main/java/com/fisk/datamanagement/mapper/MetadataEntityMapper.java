@@ -45,4 +45,13 @@ public interface MetadataEntityMapper extends FKBaseMapper<MetadataEntityPO> {
 
     List<EntitiesDTO> searchEntitys(@Param("query")String query, @Param("offset") Integer offset, @Param("limit") Integer limit);
 
+    /**
+     * 根据限定名查询等于列的元数据
+     * @param qualifiedName
+     * @return
+     */
+    @Select("SELECT tb2.id,tb2.`name`,tb2.display_name,tb2.type_id FROM tb_metadata_entity tb \n" +
+            "LEFT JOIN tb_metadata_entity tb2 ON tb.id = tb2.parent_id\n" +
+            "WHERE  tb2.qualified_name LIKE CONCAT('%',#{qualifiedName},'%')  AND tb2.type_id = 6")
+    List<MetadataEntityPO> queryFildes(@Param("qualifiedName")String qualifiedName);
 }
