@@ -126,8 +126,9 @@ public class DimensionImpl
             // 生成查询语句
             String selSql = "SELECT * FROM " + dto.dimensionTabName;
             model.setSqlScript(selSql);
-//            model.isPublish = PublicStatusEnum.PUBLIC_SUCCESS.getValue();
-            //生成物理表以及插入数据
+            // 时间维度表不再直接修改发布状态
+            // model.isPublish = PublicStatusEnum.PUBLIC_SUCCESS.getValue();
+            // 在ods库下生成数据源表，用于nifi发布流程后查找数据使用
             editDateDimension(dto, dto.dimensionTabName);
         }
         // 设置临时表名称
