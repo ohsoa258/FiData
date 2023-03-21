@@ -29,6 +29,9 @@ public interface IMetaData {
      */
     ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data);
 
+
+    ResultEnum addFiledAndUpdateFiled(List<MetaDataInstanceAttributeDTO> data);
+
     /**
      * 删除元数据实体
      *

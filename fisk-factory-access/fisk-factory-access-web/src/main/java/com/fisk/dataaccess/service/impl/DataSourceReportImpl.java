@@ -61,7 +61,7 @@ public class DataSourceReportImpl implements IDataSourceReport {
             }
             sourceReportDTO.setTotalaMountOfData(fildCounts);
             //计算百分比
-            sourceReportDTO.setProportionOfAccess(this.computerPercentage(sourceReportDTO.getAccessSumData(),tableAccessPOS.size()));
+            sourceReportDTO.setProportionOfAccess(computerPercentage(sourceReportDTO.getAccessSumData(),tableAccessPOS.size()));
             dataSourceReportDTOS.add(sourceReportDTO);
         }
         return dataSourceReportDTOS;
@@ -73,8 +73,7 @@ public class DataSourceReportImpl implements IDataSourceReport {
      * @param tableAccessCount  总接入表
      * @return
      */
-    public long computerPercentage(long appTableAccessCount,long tableAccessCount){
-
-        return appTableAccessCount/tableAccessCount*100;
+    public double computerPercentage(double appTableAccessCount,double tableAccessCount){
+        return (appTableAccessCount/tableAccessCount)*100d;
     }
 }
