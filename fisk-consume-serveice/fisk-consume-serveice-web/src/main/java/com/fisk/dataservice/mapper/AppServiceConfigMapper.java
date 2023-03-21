@@ -26,7 +26,7 @@ public interface AppServiceConfigMapper extends FKBaseMapper<AppServiceConfigPO>
      *
      * @return 查询结果
      */
-    @Select("SELECT id,service_id,app_id,api_state FROM tb_app_service_config WHERE app_id=#{appId} AND service_id=#{apiId} AND del_flag=1;")
+    @Select("SELECT id,service_id,app_id,api_state FROM tb_app_service_config WHERE app_id=#{appId} AND service_id=#{apiId} AND del_flag=1 and type=1;")
     AppServiceConfigPO getSubscribeBy(@Param("appId") int appId, @Param("apiId") int apiId);
 
     /**
@@ -34,7 +34,7 @@ public interface AppServiceConfigMapper extends FKBaseMapper<AppServiceConfigPO>
      *
      * @return 查询结果
      */
-    @Select("SELECT id,service_id,app_id,api_state,type FROM tb_app_service_config WHERE app_id=#{appId} AND del_flag=1;")
+    @Select("SELECT id,service_id,app_id,api_state,type FROM tb_app_service_config WHERE app_id=#{appId} AND del_flag=1 and type=1;")
     List<AppServiceConfigPO> getSubscribeListByAppId(@Param("appId") int appId);
 
     /**
@@ -52,11 +52,8 @@ public interface AppServiceConfigMapper extends FKBaseMapper<AppServiceConfigPO>
             "\tLEFT JOIN tb_api_config t2 ON t1.service_id = t2.id \n" +
             "WHERE\n" +
             "\tt1.app_id = #{appId} \n" +
+            "\tAND t1.type = 1 \n" +
             "\tAND t1.del_flag = 1 \n" +
             "\tAND t2.del_flag = 1 ")
     List<AppServiceConfigPO> getSubscribeListBy(@Param("appId") int appId);
-
-    @Update("update tb_app_service_config set api_state=#{apiState},type=#{type},service_id=#{serviceId} where id=#{id}")
-    Long updateSubscribeById(@Param("apiState") int apiState, @Param("type") int type,
-                             @Param("serviceId") int serviceId, @Param("id") Long id);
 }

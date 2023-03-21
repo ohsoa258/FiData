@@ -1,0 +1,13 @@
+dataservice:
+  api:
+    api_address: http://192.168.21.13:8091
+spring:
+  application:
+    name: apiService-service
+  datasource:
+    password: Password01!
+    url: jdbc:mysql://192.168.21.13:3306/dmp_dataservice_db_UAT?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    driver-class-name: com.mysql.jdbc.Driver
+  redis:
+    host: 192.168.21.13
