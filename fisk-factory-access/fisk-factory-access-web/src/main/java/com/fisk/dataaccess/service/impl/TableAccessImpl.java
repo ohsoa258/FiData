@@ -1619,7 +1619,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
         }
 
-        if (appDataSourceImpl.getDataSourceMeta(dto.appDataSourceId) != null) {
+        if (!CollectionUtils.isEmpty(appDataSourceImpl.getDataSourceMeta(dto.appId))) {
             //校验相同schema,不同应用是否存在表名重复问题
             verifySchemaTable(dto.appId, dto.tableName);
         }
@@ -1667,7 +1667,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEnum.SQL_EXCEPT_CLEAR;
         }
 
-        if (model != null && appDataSourceImpl.getDataSourceMeta(model.appDataSourceId) != null) {
+        if (model != null && !CollectionUtils.isEmpty(appDataSourceImpl.getDataSourceMeta(model.appId))) {
             //校验相同schema,不同应用是否存在表名重复问题
             verifySchemaTable(dto.appId, dto.tableName);
         }

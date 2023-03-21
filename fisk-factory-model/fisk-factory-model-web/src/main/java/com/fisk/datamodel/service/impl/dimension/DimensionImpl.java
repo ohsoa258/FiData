@@ -77,6 +77,9 @@ public class DimensionImpl
         extends ServiceImpl<DimensionMapper, DimensionPO>
         implements IDimension {
 
+    @Value("${fiData-data-date-dw-source}")
+    private Integer dateDwSourceId;
+
     @Resource
     DimensionMapper mapper;
     @Resource
@@ -120,16 +123,20 @@ public class DimensionImpl
         DimensionPO model = DimensionMap.INSTANCES.dtoToPo(dto);
         //判断是否为生成时间维度表
         if (dto.timeTable) {
-            model.isPublish = PublicStatusEnum.PUBLIC_SUCCESS.getValue();
-            //生成物理表以及插入数据
+            // 生成查询语句
+            String selSql = "SELECT * FROM " + dto.dimensionTabName;
+            model.setSqlScript(selSql);
+            // 时间维度表不再直接修改发布状态
+            // model.isPublish = PublicStatusEnum.PUBLIC_SUCCESS.getValue();
+            // 在ods库下生成数据源表，用于nifi发布流程后查找数据使用
             editDateDimension(dto, dto.dimensionTabName);
         }
         // 设置临时表名称
         model.setPrefixTempName(PrefixTempNameEnum.DIMENSION_TEMP_NAME.getName());
         int flat = mapper.insert(model);
-        if (flat > 0 && dto.timeTable) {
-            return addTimeTableAttribute(dto);
-        }
+//        if (flat > 0 && dto.timeTable) {
+//            return addTimeTableAttribute(dto);
+//        }
         return flat > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -143,7 +150,7 @@ public class DimensionImpl
         Connection conn = null;
         Statement stat = null;
         try {
-            conn = dataSourceConfigUtil.getConnection();
+            conn = getConnect();
             stat = conn.createStatement();
             if (!dto.dimensionTabName.equals(oldTimeTable)) {
                 //删除表
@@ -160,6 +167,7 @@ public class DimensionImpl
             int flat = stat.executeUpdate(buildTableSql(dto.dimensionTabName));
             if (flat>=0) {
                 String strSql = insertTableDataSql(dto.dimensionTabName, dto.startTime, dto.endTime);
+//                log.info("sql语句：{}", strSql);
                 stat.addBatch(strSql);
                 stat.executeBatch();
             }
@@ -170,6 +178,17 @@ public class DimensionImpl
             AbstractCommonDbHelper.closeStatement(stat);
             AbstractCommonDbHelper.closeConnection(conn);
         }
+    }
+
+    private Connection getConnect(){
+        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(dateDwSourceId);
+        if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        DataSourceDTO dwSource = dataSourceConfig.data;
+        AbstractCommonDbHelper commonDbHelper = new AbstractCommonDbHelper();
+        return commonDbHelper.connection(dwSource.conStr, dwSource.conAccount, dwSource.conPassword, dwSource.conType);
+
     }
 
     /**
