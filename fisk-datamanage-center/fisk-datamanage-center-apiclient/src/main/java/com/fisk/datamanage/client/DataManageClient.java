@@ -95,6 +95,14 @@ public interface DataManageClient {
     ResultEntity<Object> deleteMetaData(@Validated @RequestBody MetaDataDeleteAttributeDTO dto);
 
     /**
+     * 单个元数据信息消费
+     * @param dto
+     * @return
+     */
+    @PostMapping("/MetaData/addFiledAndUpdateFiled")
+    ResultEntity<Object> addFiledAndUpdateFiled(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto);
+
+    /**
      * 数据接入应用同步到业务分类
      *
      * @param dto

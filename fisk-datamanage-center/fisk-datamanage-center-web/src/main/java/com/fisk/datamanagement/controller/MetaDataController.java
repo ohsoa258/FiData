@@ -45,6 +45,13 @@ public class MetaDataController {
     public ResultEntity<Object> consumeMetaData(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto) {
         return ResultEntityBuild.build(service.consumeMetaData(dto));
     }
+    @ApiOperation("元数据字段新增或修改字段")
+    @PostMapping("/addFiledAndUpdateFiled")
+    public ResultEntity<Object> addFiledAndUpdateFiled(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto){
+        return ResultEntityBuild.build(service.addFiledAndUpdateFiled(dto));
+    }
+
+
 
     @ApiOperation("删除元数据实体")
     @DeleteMapping("/deleteMetaData")

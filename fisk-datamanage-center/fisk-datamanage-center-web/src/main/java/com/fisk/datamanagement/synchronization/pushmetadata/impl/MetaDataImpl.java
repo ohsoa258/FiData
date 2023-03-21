@@ -189,6 +189,47 @@ public class MetaDataImpl implements IMetaData {
     }
 
     @Override
+    public ResultEnum addFiledAndUpdateFiled(List<MetaDataInstanceAttributeDTO> data) {
+        log.info("开始同步元数据***********");
+        for (MetaDataInstanceAttributeDTO instance : data) {
+            String instanceGuid = metaDataInstance(instance);
+            if (StringUtils.isEmpty(instanceGuid) || CollectionUtils.isEmpty(instance.dbList)) {
+                continue;
+            }
+            for (MetaDataDbAttributeDTO db : instance.dbList) {
+                String dbGuid = metaDataDb(db, instanceGuid);
+                if (StringUtils.isEmpty(dbGuid) || CollectionUtils.isEmpty(db.tableList)) {
+                    continue;
+                }
+                for (MetaDataTableAttributeDTO table : db.tableList) {
+                    String tableName = table.name;
+                    String tableGuid = metaDataTable(table, dbGuid, db.name);
+                    //新增stg表
+                    String stgTableGuid = null;
+                    if (!stg.equals(table.getComment())) {
+                        stgTableGuid = metaDataStgTable(table, dbGuid);
+                    }
+                    if (StringUtils.isEmpty(tableGuid) || CollectionUtils.isEmpty(table.columnList)) {
+                        continue;
+                    }
+                    List<String> qualifiedNames = new ArrayList<>();
+                    for (MetaDataColumnAttributeDTO field : table.columnList) {
+                        metaDataField(field, tableGuid,instance.owner);
+                        qualifiedNames.add(field.qualifiedName);
+                        if (!stg.equals(table.getComment())) {
+                            //新增stg表字段
+                            metaDataStgField(field, stgTableGuid);
+                        }
+                    }
+                }
+            }
+        }
+        //更新Redis
+        //entityImpl.updateRedis();
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
     public void synchronousTableBusinessMetaData(BusinessMetaDataInfoDTO dto) {
         associatedBusinessMetaData(null, dto.dbName, dto.tableName);
     }
