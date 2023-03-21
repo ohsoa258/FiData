@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>fisk</artifactId>
+        <groupId>com.fisk</groupId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>fisk-api-serveice</artifactId>
+    <packaging>pom</packaging>
+    <modules>
+        <module>fisk-api-serveice-apiclient</module>
+        <module>fisk-api-serveice-web</module>
+        <module>fisk-api-serveice-entity</module>
+    </modules>
+
+    <dependencies>
+        <!-- 实体转换 -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>${org.mapstruct.version}</version>
+        </dependency>
+    </dependencies>
+
+</project>
