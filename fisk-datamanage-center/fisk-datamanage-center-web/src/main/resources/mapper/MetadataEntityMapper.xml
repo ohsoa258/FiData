@@ -4,7 +4,7 @@
 <mapper namespace="com.fisk.datamanagement.mapper.MetadataEntityMapper">
 
     <select id="selectMetadataEntity" resultType="com.fisk.datamanagement.entity.MetadataEntityPO">
-        SELECT * FROM tb_metadata_entity WHERE type_id != #{type} and (description IS NULL or description != 'stg');
+        SELECT * FROM tb_metadata_entity WHERE type_id != #{type} and (description IS NULL or description != 'stg') and del_flag=1
     </select>
 
     <!--查询抽取详情，和输入输出源-->

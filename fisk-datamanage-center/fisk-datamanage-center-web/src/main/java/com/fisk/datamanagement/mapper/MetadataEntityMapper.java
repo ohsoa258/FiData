@@ -50,7 +50,8 @@ public interface MetadataEntityMapper extends FKBaseMapper<MetadataEntityPO> {
      * @param qualifiedName
      * @return
      */
-    @Select("SELECT tb2.id,tb2.`name`,tb2.display_name,tb2.type_id FROM tb_metadata_entity tb \n" +
+    @Select("SELECT tb2.id,tb2.`name`,tb2.display_name,tb2.qualified_name,tb2.type_id,tb2.parent_id\n" +
+            "FROM tb_metadata_entity tb \n" +
             "LEFT JOIN tb_metadata_entity tb2 ON tb.id = tb2.parent_id\n" +
             "WHERE  tb2.qualified_name LIKE CONCAT('%',#{qualifiedName},'%')  AND tb2.type_id = 6")
     List<MetadataEntityPO> queryFildes(@Param("qualifiedName")String qualifiedName);

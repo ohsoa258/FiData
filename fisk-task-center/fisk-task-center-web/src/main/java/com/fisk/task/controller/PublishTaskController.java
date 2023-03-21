@@ -10,6 +10,7 @@ import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.ApiImportDataDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
+import com.fisk.task.dto.metadatafield.MetaDataFieldDTO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
@@ -21,10 +22,7 @@ import com.fisk.task.service.task.IBuildTaskService;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
@@ -303,6 +301,19 @@ public class PublishTaskController {
                 MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW,
                 dto);
     }
+
+
+    @DeleteMapping("/fieldDelete")
+    @ApiOperation(value = "元数据字段删除")
+    public ResultEntity<Object> fieldDelete(@RequestBody MetaDataFieldDTO fieldDTO) {
+        log.info("元数据字段删除");
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_ATLAS_FIELDDELETE_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.MetaDataTopicConstants.BUILD_METADATA_FIELD_FLOW,
+                fieldDTO);
+    }
+
+
 
 
 }

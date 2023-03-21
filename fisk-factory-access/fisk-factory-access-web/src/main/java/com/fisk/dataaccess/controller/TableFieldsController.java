@@ -77,10 +77,10 @@ public class TableFieldsController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addFile(dto));
     }
 
-    @DeleteMapping("/delFile/{id}")
-    @ApiOperation(value = "删除单个字段")
-    public ResultEntity<Object> delFile(@PathVariable("id") long id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delFile(id));
+    @DeleteMapping("/delFile/{id}/{tableId}/{userId}")
+    @ApiOperation(value = "删除单个字段&&元数据字段异步删除")
+    public ResultEntity<Object> delFile(@PathVariable("id") long id,@PathVariable("tableId")long tableId,@PathVariable("userId")long userId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delFile(id, tableId,userId));
     }
 
     @PutMapping("/updateFile")

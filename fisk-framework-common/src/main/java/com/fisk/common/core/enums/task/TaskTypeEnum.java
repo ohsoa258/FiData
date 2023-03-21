@@ -33,6 +33,10 @@ public enum TaskTypeEnum implements BaseEnum {
      */
     BUILD_ATLAS_ENTITYDELETE_TASK(5, "元数据删除"),
     /**
+     *
+     */
+    BUILD_ATLAS_FIELDDELETE_TASK(20, "元数据字段删除"),
+    /**
      * 数据接入 创建pg table
      */
     BUILD_DATAINPUT_PGSQL_TABLE_TASK(6, "数据接入创建pg table"),

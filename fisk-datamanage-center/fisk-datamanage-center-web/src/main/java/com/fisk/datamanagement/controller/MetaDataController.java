@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
 import com.fisk.datamanagement.service.IMetadataEntity;
 import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
 import io.swagger.annotations.ApiOperation;
@@ -28,9 +29,9 @@ public class MetaDataController {
     @Resource
     IMetadataEntity iMetadataEntity;
     @ApiOperation("根据接入表ID+字段ID查找对应元数据中的字段")
-    @PostMapping("/queryMetadaFildes/{tableId}/{fldeId}")
-    public ResultEntity<Object> queryMetadaFildes(@PathVariable("tableId")Integer tableId,@PathVariable("fldeId")Integer fldeId){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,iMetadataEntity.queryFildes(tableId,fldeId));
+    @GetMapping("/queryMetadaFildes/{tableId}/{fldeId}")
+    public List<MetadataEntityDTO> queryMetadaFildes(@PathVariable("tableId")Integer tableId, @PathVariable("fldeId")Integer fldeId){
+        return iMetadataEntity.queryFildes(tableId,fldeId);
     }
 
     @ApiOperation("元数据实时同步")
@@ -49,6 +50,12 @@ public class MetaDataController {
     @DeleteMapping("/deleteMetaData")
     public ResultEntity<Object> deleteMetaData(@Validated @RequestBody MetaDataDeleteAttributeDTO dto) {
         return ResultEntityBuild.build(service.deleteMetaData(dto));
+    }
+
+    @ApiOperation("删除元数据字段实体")
+    @RequestMapping("/fieldDelete")
+    public ResultEntity<Object> fieldDelete(@RequestParam("ids") List<Integer> ids) {
+        return ResultEntityBuild.build(iMetadataEntity.delMetadataEntity(ids));
     }
 
     @ApiOperation("test")

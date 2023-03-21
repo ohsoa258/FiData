@@ -522,4 +522,13 @@ public class KafkaConsumer {
         log.info("进入sftp复制任务");
         return ResultEntityBuild.build(buildSftpCopyListener.sftpCopyTask(dataInfo, ack));
     }
+
+    @KafkaListener(topics = MqConstants.QueueConstants.MetaDataTopicConstants.BUILD_METADATA_FIELD_FLOW, containerFactory = "batchFactory",
+            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    public ResultEntity<Object> fieldDelete(String dataInfo, Acknowledgment ack) {
+        log.info("进入删除字段");
+        return ResultEntityBuild.build(metaDataListener.fieldDelete(dataInfo, ack));
+    }
+
+
 }

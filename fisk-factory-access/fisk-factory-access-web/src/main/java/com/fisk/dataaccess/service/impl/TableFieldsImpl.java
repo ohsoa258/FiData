@@ -60,6 +60,7 @@ import com.fisk.datamodel.enums.SyncModeEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.metadatafield.MetaDataFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
@@ -71,6 +72,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import javax.annotation.Resource;
 import java.io.FileInputStream;
@@ -1344,16 +1346,23 @@ public class TableFieldsImpl
     }
 
     @Override
-    public ResultEnum delFile(long id) {
+    public ResultEnum delFile(long id,long tableId,long userId) {
         TableFieldsPO po = this.query().eq("id", id).select("id").one();
+
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         int flat = baseMapper.deleteByIdWithFill(po);
+
         if (flat == 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
-
+        //异步删除元数据字段
+        MetaDataFieldDTO metaDataFieldDTO =new MetaDataFieldDTO();
+        metaDataFieldDTO.setFieldId((int)id);
+        metaDataFieldDTO.setTableId((int)tableId);
+        metaDataFieldDTO.setUserId(userId);
+        publishTaskClient.fieldDelete(metaDataFieldDTO);
         return ResultEnum.SUCCESS;
     }
 

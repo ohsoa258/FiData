@@ -41,6 +41,7 @@ public class MqConstants {
 
             public static final String BUILD_ATLAS_ENTITYDELETE_FLOW = "task.build.atlas.entitydelete.flow";
 
+            public static final String BUILD_METADATA_FIELD_FLOW = "task.build.metadat.fielddelete.flow";
             public static final String BUILD_METADATA_FLOW = "task.build.metadata.flow";
         }
 

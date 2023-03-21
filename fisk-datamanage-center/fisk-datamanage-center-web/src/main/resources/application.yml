@@ -72,7 +72,7 @@ feign:
     enabled: true
 
 ribbon:
-  ConnectTimeout: 3000
+  ConnectTimeout: 15000
   ReadTimeout: 950000
   NIWSServerListClassName: com.netflix.niws.loadbalancer.DiscoveryEnabledNIWSServerList
   ServerListRefreshInterval: 3000
