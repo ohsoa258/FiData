@@ -41,6 +41,8 @@ public class SwaggerConfig {
     public static final String DATA_OPS = "data-ops-controller";
     public static final String SFTP = "sftp-controller";
 
+    public static final String STATEMENT = "statement-controller";
+
     @Bean
     public Docket createRestApi() {
         String basePck = FiskFactoryAccessApplication.class.getPackage().getName();
@@ -63,6 +65,7 @@ public class SwaggerConfig {
                 .tags(new Tag(SAVEPOINT_HISTORY, "检查点历史记录"))
                 .tags(new Tag(DATA_OPS, "数据运维"))
                 .tags(new Tag(SFTP, "sftp"))
+                .tags(new Tag(STATEMENT,"资产报表"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())
