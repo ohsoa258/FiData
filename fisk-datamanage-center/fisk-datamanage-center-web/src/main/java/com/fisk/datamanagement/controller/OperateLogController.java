@@ -2,6 +2,7 @@ package com.fisk.datamanagement.controller;
 
 import com.fisk.datamanagement.dto.metadataentityoperationLog.MetaDataEntityOperationLogDTO;
 import com.fisk.datamanagement.service.IMetaDataEntityOperationLog;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,7 +26,7 @@ public class OperateLogController {
      * @return
      */
     @RequestMapping("/addOperateLog")
-    public void saveLog(MetaDataEntityOperationLogDTO dto){
+    public void saveLog(@RequestBody MetaDataEntityOperationLogDTO dto){
          iMetaDataEntityOperationLog.addOperationLog(dto);
     }
 }

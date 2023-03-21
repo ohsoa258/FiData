@@ -17,4 +17,12 @@ public interface IMetaDataListener {
      */
     ResultEnum metaData(String dataInfo, Acknowledgment acknowledgment);
 
+    /**
+     * 删除元数据字段
+     * @param dataInfo
+     * @param acknowledgment
+     * @return
+     */
+    ResultEnum fieldDelete(String dataInfo, Acknowledgment acknowledgment);
+
 }

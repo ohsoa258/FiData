@@ -11,11 +11,11 @@ import com.fisk.datamanagement.dto.datamasking.DataMaskingTargetDTO;
 import com.fisk.datamanagement.dto.datamasking.SourceTableDataDTO;
 import com.fisk.datamanagement.dto.dataquality.DataQualityDTO;
 import com.fisk.datamanagement.dto.dataquality.UpperLowerBloodParameterDTO;
+import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
+import com.fisk.datamanagement.dto.metadataentityoperationLog.MetaDataEntityOperationLogDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -103,5 +103,28 @@ public interface DataManageClient {
     @PostMapping("/Classification/appSynchronousClassification")
     ResultEntity<Object> appSynchronousClassification(@Validated @RequestBody ClassificationInfoDTO dto);
 
+    /**
+     * 日志记录
+     * @param dto
+     * @return
+     */
+    @PostMapping("/OperateLog/addOperateLog")
+    ResultEntity<Object> saveLog(@RequestBody MetaDataEntityOperationLogDTO dto);
 
+    /**
+     * 根据IDS删除字段
+     * @param ids
+     * @return
+     */
+    @RequestMapping("/MetaData/fieldDelete")
+    ResultEntity<Object> fieldDelete(@RequestParam("ids") List<Integer> ids);
+
+    /**
+     * 根据数据接入表ID和字段ID
+     * @param tableId
+     * @param fldeId
+     * @return
+     */
+    @GetMapping("/MetaData/queryMetadaFildes/{tableId}/{fldeId}")
+    List<MetadataEntityDTO> queryMetadaFildes(@PathVariable("tableId")Integer tableId, @PathVariable("fldeId")Integer fldeId);
 }
