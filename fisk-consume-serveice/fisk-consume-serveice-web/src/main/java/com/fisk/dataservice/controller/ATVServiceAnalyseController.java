@@ -19,7 +19,7 @@ import javax.annotation.Resource;
  * @createTime 2023-03-22 11:17
  * @description Api && Table && View 服务数据分析 Controller
  */
-@Api(tags = {SwaggerConfig.TAG_6})
+@Api(tags = {SwaggerConfig.TAG_8})
 @RestController
 @RequestMapping("/ServiceAnalyse")
 public class ATVServiceAnalyseController {
