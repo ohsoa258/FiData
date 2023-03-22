@@ -763,12 +763,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             dto.appId = pipelApiDispatch.appId;
             dto.apiId = pipelApiDispatch.apiId;
             syncData(dto, null);
-            consumer(dto);
+            consumer(dto, pipelApiDispatch);
         } else {
             // 接入模块调用
             syncData(dto, null);
             if (dto.workflowId != null) {
-                consumer(dto);
+                consumer(dto, pipelApiDispatch);
             }
         }
         return ResultEnum.SUCCESS;
@@ -781,9 +781,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @author cfk
      * @date 2022/6/22 11:31
      */
-    public void consumer(ApiImportDataDTO dto) {
-        KafkaReceiveDTO kafkaReceive = getKafkaReceive(dto, COUNT_SQL, OlapTableEnum.PHYSICS_API, MqConstants.TopicPrefix.TOPIC_PREFIX + dto.workflowId + "." + OlapTableEnum.PHYSICS_API.getValue() + "." + dto.appId + "." + dto.apiId);
-        publishTaskClient.consumer(JSON.toJSONString(kafkaReceive));
+    public void consumer(ApiImportDataDTO dto, PipelApiDispatchDTO pipelApiDispatch) {
+        KafkaReceiveDTO kafkaReceive = getKafkaReceive(dto, COUNT_SQL, OlapTableEnum.PHYSICS_API, MqConstants.TopicPrefix.TOPIC_PREFIX + pipelApiDispatch.pipelineId + "." + OlapTableEnum.PHYSICS_API.getValue() + "." + dto.appId + "." + dto.apiId);
+        publishTaskClient.missionEndCenter(kafkaReceive);
     }
 
     public static KafkaReceiveDTO getKafkaReceive(ApiImportDataDTO dto, Integer numbers, OlapTableEnum olapTableEnum, String topic) {

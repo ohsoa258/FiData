@@ -15,6 +15,7 @@ import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
 import com.fisk.task.dto.dispatchlog.*;
 import com.fisk.task.dto.metadatafield.MetaDataFieldDTO;
+import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
@@ -358,6 +359,7 @@ public interface PublishTaskClient {
 
     /**
      * 依据pipelTraceId查询pipelId
+     *
      * @param pipelTraceId
      * @return
      */
@@ -400,6 +402,7 @@ public interface PublishTaskClient {
 
     /**
      * 依据pipelTraceId查询pipelId
+     *
      * @param pipelTraceId
      * @return
      */
@@ -407,11 +410,19 @@ public interface PublishTaskClient {
     ResultEntity<List<String>> getPipelStates(@RequestParam("pipelTraceId") String pipelTraceId);
 
     /**
-     *
      * @param data
      * @return
      */
     @PostMapping("/publishTask/publishBuildDeleteDataServices")
     public ResultEntity<Object> publishBuildDeleteDataServices(@RequestBody BuildDeleteTableServiceDTO data);
+
+    /**
+     * task.build.task.over
+     *
+     * @param dto
+     */
+    @PostMapping("/publishTask/missionEndCenter")
+    public ResultEntity<Object> missionEndCenter(@RequestBody KafkaReceiveDTO dto);
+
 
 }

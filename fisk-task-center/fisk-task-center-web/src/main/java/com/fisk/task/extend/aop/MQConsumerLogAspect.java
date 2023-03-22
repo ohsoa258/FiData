@@ -45,7 +45,7 @@ public class MQConsumerLogAspect {
         // 是否发送websocket消息通知
         boolean sendMsg = false;
 
-        int notificationType = 0;
+        int notificationType = 1;
         //invoke
         Object res = null;
         // 获取方法元数据

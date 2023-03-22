@@ -140,7 +140,7 @@ public class MissionEndCenter {
                         log.info(itselfPort.id + "拿打印条数89" + JSON.toJSONString(pipelTask));
                         Object endTime = pipelTask.get(DispatchLogEnum.taskend.getName());
                         Object count = pipelTask.get(DispatchLogEnum.taskcount.getName());
-                        taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " - 同步条数 : " + (Objects.isNull(count) ? 0 : count));
+                        taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " - 同步条数 : " + (kafkaReceive.numbers == 0 ? (Objects.isNull(count) ? 0 : count) : kafkaReceive.numbers));
                     }
                     iPipelTaskLog.savePipelTaskLog(pipelTraceId, pipelJobTraceId, nifiPortHierarchy.taskTraceId, taskMap, String.valueOf(nifiPortHierarchy.id), itselfPort.tableId, Integer.parseInt(split[4]));
                     // 先检查本级状态,判断是否应该记本级所在job的结束,或者管道结束
@@ -246,7 +246,7 @@ public class MissionEndCenter {
                             TableNifiSettingPO tableNifiSetting = iTableNifiSettingService.query().eq("table_access_id", split[5]).eq("type", split[3]).one();
                             String tableName = tableNifiSetting.tableName;
                             String dropSql = "DROP TABLE IF EXISTS temp_" + tableName;
-                             dropSql += ";DROP TABLE IF EXISTS stg_" + tableName;
+                            dropSql += ";DROP TABLE IF EXISTS stg_" + tableName;
                             iJdbcBuild.postgreBuildTable(dropSql, BusinessTypeEnum.DATAMODEL);
                         }
                         log.info("开始执行脚本");

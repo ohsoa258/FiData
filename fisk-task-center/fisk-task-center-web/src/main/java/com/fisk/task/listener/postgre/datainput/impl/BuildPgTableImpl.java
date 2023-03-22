@@ -1,5 +1,6 @@
 package com.fisk.task.listener.postgre.datainput.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.enums.task.FuncNameEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
@@ -37,6 +38,7 @@ public class BuildPgTableImpl implements IbuildTable {
         StringBuilder sqlFileds = new StringBuilder();
         StringBuilder pksql = new StringBuilder("PRIMARY KEY ( ");
         StringBuilder stgSql = new StringBuilder("CREATE TABLE fi_tableName ( ");
+        changeCase(buildPhysicalTableDTO);
         List<TableFieldsDTO> tableFieldsDTOS = buildPhysicalTableDTO.tableFieldsDTOS;
         //ods与stg类型不变,不然有的值,类型转换不来
         tableFieldsDTOS.forEach((l) -> {
@@ -50,9 +52,9 @@ public class BuildPgTableImpl implements IbuildTable {
                 sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + ",");
             } else if (l.fieldType.toUpperCase().equals("TIME")) {
                 sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + ",");
-            } else if(l.fieldType.contains("BIT")){
+            } else if (l.fieldType.contains("BIT")) {
                 sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + ",");
-            }else{
+            } else {
                 sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + "(" + l.fieldLength + "),");
             }
             stgSql.append("" + l.fieldName + " text,");
@@ -91,13 +93,38 @@ public class BuildPgTableImpl implements IbuildTable {
         return sqlList;
     }
 
+    private void changeCase(BuildPhysicalTableDTO buildPhysicalTable) {
+        buildPhysicalTable.tableName = buildPhysicalTable.tableName.toLowerCase();
+        buildPhysicalTable.appAbbreviation = buildPhysicalTable.appAbbreviation.toLowerCase();
+        buildPhysicalTable.apiTableNames = JSON.parseArray(JSON.toJSONString(buildPhysicalTable.apiTableNames), String.class);
+        buildPhysicalTable.modelPublishTableDTO.tableName = buildPhysicalTable.modelPublishTableDTO.tableName.toLowerCase();
+        buildPhysicalTable.modelPublishTableDTO.fieldList.forEach(
+                e -> {
+                    e.fieldEnName = e.fieldEnName.toLowerCase();
+                }
+        );
+        buildPhysicalTable.tableFieldsDTOS.forEach(
+                e -> {
+                    e.fieldName = e.fieldName.toLowerCase();
+                }
+        );
+    }
+
     @Override
     public String queryTableNum(BuildPhysicalTableDTO buildPhysicalTableDTO) {
-
-        String selectTable = "select count(*) from pg_class where ";
-        for (String tableName : buildPhysicalTableDTO.apiTableNames) {
-            selectTable += " relname='ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + tableName + "' or";
+        String selectTable = "select count(1) from pg_class t2,information_schema.tables t1 where t1.\"table_name\" = t2.relname and ";
+        if (buildPhysicalTableDTO.whetherSchema) {
+            selectTable += "table_schema = '" + buildPhysicalTableDTO.appAbbreviation + "' and ";
+            for (String tableName : buildPhysicalTableDTO.apiTableNames) {
+                selectTable += "( relname='" + tableName + "' or";
+            }
+        } else {
+            selectTable += "table_schema = 'public' and ";
+            for (String tableName : buildPhysicalTableDTO.apiTableNames) {
+                selectTable += "( relname='ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + tableName + "' or";
+            }
         }
+        selectTable = selectTable.substring(0, selectTable.length() - 2) + " ) ";
         return selectTable;
     }
 

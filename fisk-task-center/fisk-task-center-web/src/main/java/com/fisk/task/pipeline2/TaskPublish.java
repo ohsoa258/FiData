@@ -183,7 +183,7 @@ public class TaskPublish {
                                 apiImportData.pipelApiDispatch = JSON.toJSONString(pipelApiDispatch);
                                 apiImportData.pipelJobTraceId = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(kafkaReceiveDTO.pipelTraceId, String.valueOf(pipelApiDispatch.workflowId)).jobTraceId;
                                 kafkaReceiveDTO.pipelJobTraceId = apiImportData.pipelJobTraceId;
-                                apiImportData.pipelTaskTraceId = UUID.randomUUID().toString();
+                                apiImportData.pipelTaskTraceId = iPipelineTaskPublishCenter.getTaskHierarchy(pipelTraceId, String.valueOf(pipelApiDispatch.workflowId)).taskTraceId;
                                 kafkaReceiveDTO.pipelTaskTraceId = apiImportData.pipelTaskTraceId;
                                 apiImportData.pipelStageTraceId = UUID.randomUUID().toString();
                                 pipelineId = String.valueOf(pipelApiDispatch.pipelineId);
@@ -200,7 +200,7 @@ public class TaskPublish {
                                 HashMap<Integer, Object> taskMap = new HashMap<>();
                                 taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
                                 log.info("第四处调用保存task日志");
-                                iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelTraceId, kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.itselfPort.id), null, 0);
+                                iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelTraceId, kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.itselfPort.id), String.valueOf(pipelApiDispatch.apiId), OlapTableEnum.PHYSICS_API.getValue());
 
                             }
 

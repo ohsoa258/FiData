@@ -110,6 +110,7 @@ public class BuildDataInputPgTableListener {
                 int tableCount = 0;
                 modelPublishStatusDTO.apiId = buildPhysicalTableDTO.apiId;
                 String selectTable = dbCommand.queryTableNum(buildPhysicalTableDTO);
+                log.info("查询是否建成表语句:{}", selectTable);
                 BusinessResult businessResult = iJdbcBuild.postgreQuery(selectTable, BusinessTypeEnum.DATAINPUT);
                 if (businessResult.data != null) {
                     List<Object> countList = JSON.parseArray(businessResult.data.toString(), Object.class);

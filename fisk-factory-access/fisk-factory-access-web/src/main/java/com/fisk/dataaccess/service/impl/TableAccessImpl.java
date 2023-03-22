@@ -2206,7 +2206,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableAccessPO model = baseMapper.selectById(dto.tableId);
         if (model != null) {
             baseMapper.updatePublishStatus(dto.tableId, dto.publish, StringUtils.isNotBlank(dto.publishErrorMsg) ? dto.publishErrorMsg : "");
-            tableHistoryMapper.updateSubRunId(dto.tableHistoryId, dto.subRunId);
+            if (StringUtils.isNotEmpty(dto.subRunId)) {
+                tableHistoryMapper.updateSubRunId(dto.tableHistoryId, dto.subRunId);
+            }
+
         }
     }
 

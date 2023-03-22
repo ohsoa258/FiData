@@ -59,7 +59,7 @@ public enum TaskTypeEnum implements BaseEnum {
     /*
      * 立即同步
      * */
-    BUILD_IMMEDIATELYSTART_TASK(12,"立即同步"),
+    BUILD_IMMEDIATELYSTART_TASK(12, "立即同步"),
     /*
      * 创建宽表
      * */
@@ -67,7 +67,7 @@ public enum TaskTypeEnum implements BaseEnum {
     /*
      * 统一调度
      * */
-    BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW(12,"统一调度"),
+    BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW(12, "统一调度"),
     /**
      * 创建属性日志表
      */
@@ -85,12 +85,13 @@ public enum TaskTypeEnum implements BaseEnum {
      */
     BUILD_METADATA_FLOW(17, "元数据实时同步"),
 
-    BUILD_EXEC_SCRIPT_TASK(18,"执行自定义脚本"),
+    BUILD_EXEC_SCRIPT_TASK(18, "执行自定义脚本"),
 
-    BUILD_TABLE_SERVER_TASK(19,"表服务同步"),
+    BUILD_TABLE_SERVER_TASK(19, "表服务同步"),
 
-    BUILD_DELETE_TABLE_SERVER_TASK(20,"删除表服务nifi流程")
-    ;
+    BUILD_DELETE_TABLE_SERVER_TASK(20, "删除表服务nifi流程"),
+
+    BUILD_TASK_OVER_TASK(21, "任务结束中心");
 
     TaskTypeEnum(int value, String name) {
         this.value = value;

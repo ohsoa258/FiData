@@ -302,6 +302,21 @@ public class PublishTaskController {
                 dto);
     }
 
+    /**
+     * task.build.task.over
+     *
+     * @param dto
+     */
+    @PostMapping("/missionEndCenter")
+    @ApiOperation(value = "任务结束中心")
+    public ResultEntity<Object> missionEndCenter(@RequestBody KafkaReceiveDTO dto) {
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_TASK_OVER_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_TASK_OVER_FLOW,
+                dto);
+    }
+
+
 
     @DeleteMapping("/fieldDelete")
     @ApiOperation(value = "元数据字段删除")
