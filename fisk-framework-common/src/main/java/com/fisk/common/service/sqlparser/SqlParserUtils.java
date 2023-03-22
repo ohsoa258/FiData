@@ -302,7 +302,8 @@ public class SqlParserUtils {
             log.debug("=============SQL解析START=============");
             log.debug("SQL解析："+id+"ID===数据库类型:"+dbType+"===SQL语句"+sqlScript);
             ISqlParser parser = SqlParserFactory.parser(ParserVersion.V1);
-            res = parser.getDataTableBySql(sqlScript, dbType);
+            String tmp=sqlScript.replace("COLLATE","");
+            res = parser.getDataTableBySql(tmp.replace("SQL_Latin1_General_CP1_CI_AS",""), dbType);
             log.debug("=============SQL解析END=============");
         } catch (Exception e) {
             log.debug("sql解析失败==错误ID"+id+"===数据库类型:"+dbType+"==="+sqlScript);

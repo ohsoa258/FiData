@@ -29,6 +29,8 @@ public class SwaggerConfig {
     public static final String TAG_4 = "apiservice-controller";
     public static final String TAG_5 = "logs-controller";
 
+    public static final String TAG_6 = "serviceAnalyse-controller";
+
     @Bean
     public Docket createRestApi() {
         String basePck = FiskConsumeServeiceApplication.class.getPackage().getName();
