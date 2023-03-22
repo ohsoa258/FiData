@@ -44,7 +44,6 @@ public class ApiConfigController {
     @GetMapping("/get/{id}")
     @ApiOperation(value = "回显: 根据id查询数据")
     public ResultEntity<ApiConfigDTO> getData(@PathVariable("id") long id) {
-
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
     }
 
