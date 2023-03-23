@@ -880,8 +880,8 @@ public class DimensionImpl
             table.qualifiedName = dbQualifiedName + "_" + dataModelType + "_" + item.id;
             table.displayName = item.dimensionCnName;
             table.owner = businessAdmin;
-
             table.columnList = getDimensionAttributeMetaData(item.id, table);
+            tableList.add(table);
         }
 
         return tableList;
