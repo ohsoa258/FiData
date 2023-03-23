@@ -175,8 +175,10 @@ public class UserServiceImpl implements IUserService {
         queryWrapper.lambda()
                 .eq(UserPO::getUsername, dto.username);
         UserPO userPO = mapper.selectOne(queryWrapper);
-        if((dto.getUsername()).equals(userPO.getUsername())&&(dto.getEmail()).equals(userPO.getEmail())){
-            return ResultEnum.USERNAME_EXISTS;
+        if(userPO!=null){
+            if((dto.getUsername()).equals(userPO.getUsername())&&(dto.getEmail()).equals(userPO.getEmail())){
+                return ResultEnum.USERNAME_EXISTS;
+            }
         }
         /*if (userPO != null){
             return ResultEnum.USERNAME_EXISTS;
