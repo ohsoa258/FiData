@@ -27,8 +27,11 @@ public class SqlParserV1 implements ISqlParser {
     @Override
     public List<TableMetaDataObject> getDataTableBySql(String sql, DbType dbType) throws Exception {
         List<TableMetaDataObject> res = new ArrayList<>();
-        List<SQLStatement> sqlStatements = SQLUtils.parseStatements(sql, dbType);
-
+        String tmp=sql.replace("collate","")
+                .replace("sql_latin1_general_cp1_ci_as","")
+                .replace("COLLATE","")
+                .replace("SQL_Latin1_General_CP1_CI_AS","");
+        List<SQLStatement> sqlStatements = SQLUtils.parseStatements(tmp, dbType);
         if (sqlStatements.size() == 0) {
             throw new Exception("SQL解析失败，未获取到有效SQL代码段");
         } else if (sqlStatements.size() > 1) {
