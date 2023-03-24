@@ -53,23 +53,27 @@ public class DataAssetsImpl implements IDataAssets {
         try {
             //获取账号密码
             ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
+            log.debug("获取账号密码 END");
             if (allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
             }
-            log.debug("get datasource");
+            log.debug("get datasource START");
             Optional<DataSourceDTO> first = allFiDataDataSource.data
                     .stream()
                     .filter(e -> dto.dbName.equals(e.conDbname))
                     .findFirst();
+            log.debug("get datasource END"+JSON.toJSONString(first));
             if (!first.isPresent()) {
                 throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
             }
-            log.debug("constr{},conip{},conport{}", first.get().conStr,first.get().conIp,first.get().conPort);
+            log.debug("数据源信息constr{"+first.get().conStr+"}conip{"+first.get().conIp+"},conport{"+first.get().conPort+"},ConPWD{"+first.get().getConPassword()+"},conAccount{"+first.get().conAccount+"}");
             //连接数据源
+            log.debug("========连接数据源START========");
             conn = getConnection(first.get());
 
             conn.setAutoCommit(false);
             log.debug("con commit");
+            log.debug("========连接数据源END========");
             //拼接筛选条件
             String condition = " where 1=1 ";
             if (CollectionUtils.isNotEmpty(dto.filterQueryDTOList)) {
@@ -81,9 +85,14 @@ public class DataAssetsImpl implements IDataAssets {
                 sql = "select * from " + dto.tableName + condition;
             }else {
                 //获取总条数
+                log.debug("=====获取总条数START======");
                 String getTotalSql = "select count(*) as totalNum from " + dto.tableName+condition;
+                log.debug("=====获取总条数SQL语句======"+getTotalSql);
+                log.debug("==conn.createStatement() START==");
                 st = conn.createStatement();
+                log.debug("==conn.createStatement() END==");
                 ResultSet rSet = st.executeQuery(getTotalSql);
+                log.debug("=====获取总条数END===SQL:"+getTotalSql);
                 int rowCount = 0;
                 if (rSet.next()) {
                     rowCount = rSet.getInt("totalNum");
@@ -105,7 +114,7 @@ public class DataAssetsImpl implements IDataAssets {
             data.dataArray = columnDataList(rs, metaData, columnCount);
             log.debug("data:"+ JSON.toJSONString(data.dataArray));
             //获取表头
-            log.debug("start get table column");
+            log.debug("start get table column"+"类型："+first.get().sourceBusinessType+"表名"+dto.tableName);
             List<String[]> displayList = getTableColumnDisplay(first.get().sourceBusinessType, dto.tableName);
             log.debug("table column:"+JSON.toJSONString(displayList));
             if (CollectionUtils.isEmpty(displayList)) {
@@ -125,8 +134,8 @@ public class DataAssetsImpl implements IDataAssets {
             data.pageSize = dto.pageSize;
             log.debug("end");
         } catch (Exception e) {
-            log.debug("失败");
-            log.debug("数据资产,查询表数据失败:{}", e.getMessage());
+            log.debug("失败"+e.getStackTrace());
+            log.debug("数据资产,查询表数据失败:"+e.getMessage());
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR_INVALID, e);
         } finally {
             AbstractCommonDbHelper.closeStatement(st);
