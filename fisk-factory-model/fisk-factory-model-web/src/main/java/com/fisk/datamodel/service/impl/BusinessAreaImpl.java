@@ -1172,8 +1172,8 @@ public class BusinessAreaImpl
         MetaDataInstanceAttributeDTO instance = dimensionImpl.getDataSourceConfig(DataSourceConfigEnum.DMP_DW.getValue());
         instance.dbList.get(0).tableList = new ArrayList<>();
         for (BusinessAreaPO item : businessAreaPOList) {
-            instance.dbList.get(0).tableList.addAll(dimensionImpl.getDimensionMetaData(item.id, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_DIMENSION.getValue(), item.getBusinessAdmin()));
             instance.dbList.get(0).tableList.addAll(factImpl.getFactMetaData(item.id, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_FACT.getValue(), item.getBusinessAdmin()));
+            instance.dbList.get(0).tableList.addAll(dimensionImpl.getDimensionMetaData(item.id, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_DIMENSION.getValue(), item.getBusinessAdmin()));
         }
 
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
