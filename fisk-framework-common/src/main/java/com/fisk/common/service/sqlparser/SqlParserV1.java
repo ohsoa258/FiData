@@ -31,40 +31,37 @@ public class SqlParserV1 implements ISqlParser {
                 .replace("sql_latin1_general_cp1_ci_as","")
                 .replace("COLLATE","")
                 .replace("SQL_Latin1_General_CP1_CI_AS","");
-        List<SQLStatement> sqlStatements = SQLUtils.parseStatements(tmp, dbType);
+        List<SQLStatement> sqlStatements = SQLUtils.parseStatements(tmp, dbType).stream()
+                .filter(s -> s instanceof SQLSelectStatement)
+                .collect(Collectors.toList());
         if (sqlStatements.size() == 0) {
             throw new Exception("SQL解析失败，未获取到有效SQL代码段");
-        } else if (sqlStatements.size() > 1) {
-            throw new Exception("暂不支持多段SQL解析");
         }
-
-        // 获取SQL语句
-        SQLStatement statement = sqlStatements.get(0);
-
-        // 获取查询
-        SQLSelectQuery query = ((SQLSelectStatement) statement).getSelect().getQuery();
-        if (query instanceof SQLUnionQuery) {
-            log.debug("Union All查询 START");
-            SQLUnionQuery sqlUnionQuery = (SQLUnionQuery) query;
-            log.debug("Union All查询 TABLESOURCE START");
-            SQLTableSource tableSource = sqlUnionQuery.getFirstQueryBlock().getFrom();
-            log.debug("TABLESOURCE 查寻成功"+ JSON.toJSONString(tableSource));
-            // 获取查询中，出现的所有表
-            log.debug("Union All 获取查询中，出现的所有表START");
-            SqlParserUtils.getAllTableSource(hierarchy, res, sqlUnionQuery, tableSource, null);
-            log.debug("Union All 获取查询中，出现的所有表END");
-            //throw new Exception("暂时不支持Union All解析");
-        } else if (query instanceof SQLSelectQueryBlock) {
-            log.info("一元查询");
-            SQLSelectQueryBlock blockQuery = (SQLSelectQueryBlock) query;
-            // get table source
-            SQLTableSource tableSource = blockQuery.getFrom();
-            // 获取查询中，出现的所有表
-            SqlParserUtils.getAllTableSource(hierarchy, res, blockQuery, tableSource, null);
+        for (SQLStatement statement : sqlStatements) {
+            // 获取查询
+            SQLSelectQuery query = ((SQLSelectStatement) statement).getSelect().getQuery();
+            if (query instanceof SQLUnionQuery) {
+                log.debug("Union All查询 START");
+                SQLUnionQuery sqlUnionQuery = (SQLUnionQuery) query;
+                log.debug("Union All查询 TABLESOURCE START");
+                SQLTableSource tableSource = sqlUnionQuery.getFirstQueryBlock().getFrom();
+                log.debug("TABLESOURCE 查寻成功"+ JSON.toJSONString(tableSource));
+                // 获取查询中，出现的所有表
+                log.debug("Union All 获取查询中，出现的所有表START");
+                SqlParserUtils.getAllTableSource(hierarchy, res, sqlUnionQuery, tableSource, null);
+                log.debug("Union All 获取查询中，出现的所有表END");
+                //throw new Exception("暂时不支持Union All解析");
+            } else if (query instanceof SQLSelectQueryBlock) {
+                log.info("一元查询");
+                SQLSelectQueryBlock blockQuery = (SQLSelectQueryBlock) query;
+                // get table source
+                SQLTableSource tableSource = blockQuery.getFrom();
+                // 获取查询中，出现的所有表
+                SqlParserUtils.getAllTableSource(hierarchy, res, blockQuery, tableSource, null);
+            }
         }
         return res.stream()
                 .filter(e -> e.tableType == TableTypeEnum.Expr)
                 .collect(Collectors.toList());
     }
-
 }

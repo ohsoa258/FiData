@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author gy
@@ -146,7 +147,7 @@ public class SqlParserUtils {
                                                      String lastNodeId) {
         return TableMetaDataObject.builder()
                 .id(UUID.randomUUID().toString())
-                .name(tableInfo.name)
+                .name(tableInfo.name==null?"-1":tableInfo.name)
                 .alias(tableInfo.alias)
                 .details(details)
                 .schema(tableInfo.schema)
@@ -320,13 +321,16 @@ public class SqlParserUtils {
         if (CollectionUtils.isEmpty(tableMetaDataObjects)) {
             return tableMetaDataObjects;
         }
-        tableMetaDataObjects.stream().forEach(e -> {
+        log.debug("======tableMetaDataObjects======="+JSON.toJSONString(tableMetaDataObjects));
+        List<TableMetaDataObject> tableMetaDataObjectList = tableMetaDataObjects.stream()
+                .filter(e -> !("-1").equals(e.name)).collect(Collectors.toList());
+        tableMetaDataObjectList.forEach(e -> {
             if (!StringUtils.isEmpty(e.schema)) {
                 e.name = e.schema + "." + e.name;
             }
             e.setName(e.name.replace("[", "").replace("]", ""));
         });
-        return tableMetaDataObjects;
+        return tableMetaDataObjectList;
     }
 
 }
