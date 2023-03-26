@@ -298,4 +298,15 @@ public class GlossaryImpl
                 .map(e -> e.metadataEntityId).collect(Collectors.toList());
     }
 
+    public List<Integer> getClassificationByEntityId(Integer glossaryId) {
+
+        QueryWrapper<MetaDataGlossaryMapPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("metadata_entity_id").lambda().eq(MetaDataGlossaryMapPO::getGlossaryId, glossaryId);
+        List<MetaDataGlossaryMapPO> list = metaDataGlossaryMapMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+        return list.stream().map(e -> e.metadataEntityId).collect(Collectors.toList());
+    }
+
 }

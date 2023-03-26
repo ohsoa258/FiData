@@ -30,6 +30,7 @@ import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
 import com.fisk.datamanagement.dto.metadataglossarymap.MetaDataGlossaryMapDTO;
 import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
+import com.fisk.datamanagement.dto.search.SearchParametersDto;
 import com.fisk.datamanagement.entity.BusinessClassificationPO;
 import com.fisk.datamanagement.entity.GlossaryPO;
 import com.fisk.datamanagement.entity.LineageMapRelationPO;
@@ -1088,22 +1089,27 @@ public class MetadataEntityImpl
         SearchBusinessGlossaryEntityDTO data = new SearchBusinessGlossaryEntityDTO();
 
         List<Integer> metadataEntity = new ArrayList<>();
+        data.searchParameters=new SearchParametersDto();
+
 
         //搜索业务分类
         if (!StringUtils.isEmpty(dto.classification)) {
             BusinessClassificationPO classificationPo = classification.getInfoByName(dto.classification);
             //获取业务分类关联的实体id
-            metadataEntity = metadataClassificationMap.getMetadataEntity((int) classificationPo.id, dto.offset, dto.limit);
+            //metadataEntity = metadataClassificationMap.getMetadataEntity((int) classificationPo.id, dto.offset, dto.limit);
+            metadataEntity = metadataClassificationMap.getMetadataEntity((int) classificationPo.id);
         }
         //搜索术语
         else if (!StringUtils.isEmpty(dto.termName)) {
             String[] split = dto.termName.split("@");
             GlossaryPO infoByName = glossary.getInfoByName(split[0]);
-            metadataEntity = glossary.getClassificationByEntityId((int) infoByName.id, dto.offset, dto.limit);
+            // metadataEntity = glossary.getClassificationByEntityId((int) infoByName.id, dto.offset, dto.limit);
+            metadataEntity = glossary.getClassificationByEntityId((int) infoByName.id);
         }
         //搜索属性标签
         else if (!StringUtils.isEmpty(dto.label)) {
-            metadataEntity = metadataLabelMap.getEntityLabelIdList(dto.label, dto.offset, dto.limit);
+            // metadataEntity = metadataLabelMap.getEntityLabelIdList(dto.label, dto.offset, dto.limit);
+            metadataEntity = metadataLabelMap.getEntityLabelIdList(dto.label);
         }
         if (CollectionUtils.isEmpty(metadataEntity)) {
             return data;
@@ -1178,10 +1184,20 @@ public class MetadataEntityImpl
             entitiesDtoList.add(entitiesDto);
         }
 
+        //每页显示条数
+        data.searchParameters.setLimit(dto.limit);
+        //总条数+获取总页数
+        data.searchParameters.setTotalCount(entitiesDtoList.size());
 
-
-        data.entities = entitiesDtoList;
-
+        //data.entities = entitiesDtoList;
+        if(dto.offset<=0){
+            dto.offset=1;
+        } else if (dto.offset>=data.searchParameters.pageCount) {
+            dto.offset=data.searchParameters.pageCount;
+        }
+        data.entities =entitiesDtoList.stream()
+                .skip((dto.offset-1)*dto.limit)
+                .limit(dto.limit).collect(Collectors.toList());
         return data;
     }
 
