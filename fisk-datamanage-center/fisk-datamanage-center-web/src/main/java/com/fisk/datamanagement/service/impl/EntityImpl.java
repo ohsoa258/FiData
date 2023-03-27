@@ -77,7 +77,7 @@ public class EntityImpl implements IEntity {
      *
      * @return
      */
-    @Scheduled(cron = "0 0 1 ? * L") //每周星期天凌晨1点实行一次
+    @Scheduled(cron = "0 0 2 1 * ?") //每月的1日的凌晨2点调整任务
     public List<EntityTreeDTO> getEntityList() {
 
         List<EntityTreeDTO> metadataEntityTree = metadataEntity.getMetadataEntityTree();
