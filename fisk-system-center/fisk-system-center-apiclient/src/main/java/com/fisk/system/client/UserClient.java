@@ -2,6 +2,9 @@ package com.fisk.system.client;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.datasource.DataSourceResultDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
@@ -160,6 +163,8 @@ public interface UserClient {
     ResultEntity<Object> editData(@RequestBody DataSourceSaveDTO dto);
 
     @GetMapping("/info/getCurrentUserInfo")
-    public ResultEntity<Object> getCurrentUserInfo();
+    ResultEntity<Object> getCurrentUserInfo();
 
+    @PostMapping("/sqlFactroy/sqlCheck")
+    ResultEntity<List<TableMetaDataObject>> sqlCheck(@RequestParam("sql")String sql, @RequestParam("dbType")String dbType);
 }
