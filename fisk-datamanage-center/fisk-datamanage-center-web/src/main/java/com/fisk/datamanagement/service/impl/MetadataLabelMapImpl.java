@@ -115,5 +115,23 @@ public class MetadataLabelMapImpl
 
 
     }
+    public List<Integer> getEntityLabelIdList(String labelName) {
+        List<CategoryPO> poList = category.query().eq("category_cn_name", labelName).list();
+        if (CollectionUtils.isEmpty(poList)) {
+            return new ArrayList<>();
+        }
+        List<Long> collect = poList.stream().map(e -> e.id).collect(Collectors.toList());
+        List<LabelPO> list = label.query().select("id").in("category_id", collect).list();
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+
+        List<Long> collect1 = list.stream().map(e -> e.id).collect(Collectors.toList());
+        List<MetadataLabelMapPO> entityIds = this.query().in("label_id", collect1).list();
+
+        return entityIds.stream().map(e -> e.metadataEntityId).collect(Collectors.toList());
+
+
+    }
 
 }

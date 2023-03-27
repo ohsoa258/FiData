@@ -25,4 +25,14 @@ public class SearchParametersDto {
     public Integer offset;
 
     public Integer limit;
+
+    public Integer totalCount;
+
+    public Integer pageCount;
+
+    //获取总页数
+    public void setTotalCount(Integer totalCount){
+        this.totalCount=totalCount;
+        this.pageCount=totalCount%limit==0?totalCount/limit:totalCount/limit+1;
+    }
 }
