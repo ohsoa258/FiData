@@ -8,6 +8,8 @@ import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.service.SqlFactoryService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Required;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,7 +25,7 @@ import java.util.List;
  * @description
  */
 
-@Api(tags = {SwaggerConfig.DATASOURCE})
+@Api(tags = {SwaggerConfig.SQLFACTORY_CONTROLLER})
 @RestController
 @RequestMapping("/sqlFactroy")
 public class SqlFactoryController {
@@ -32,7 +34,7 @@ public class SqlFactoryController {
 
     @PostMapping("/sqlCheck")
     @ApiOperation("SQL语句校验接口")
-    public ResultEntity<List<TableMetaDataObject>> sqlCheck(@RequestParam("sql")String sql,@RequestParam("dbType")String dbType) {
+    public ResultEntity<List<TableMetaDataObject>> sqlCheck( @RequestParam("sql")String sql, @RequestParam("dbType")String dbType) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,sqlFactoryService.sqlCheck(sql,dbType));
     }
 }
