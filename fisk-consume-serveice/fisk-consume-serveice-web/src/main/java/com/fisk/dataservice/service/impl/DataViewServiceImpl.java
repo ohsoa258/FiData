@@ -125,7 +125,7 @@ public class DataViewServiceImpl
     public DataSourceViewDTO getDataSourceMeta(Integer viewThemeId) {
         // 校验数据源
         DataSourceDTO dataSourceDTO = verifyDataSource(dataViewThemeMapper.selectDbId(viewThemeId));
-        if (Objects.isNull(dataSourceDTO)){
+        if (Objects.isNull(dataSourceDTO)) {
             throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
         }
 
@@ -137,23 +137,23 @@ public class DataViewServiceImpl
             //将表和视图的结构存入redis
             setDataSourceMeta(viewThemeId, dataSourceDTO);
         }
-        try{
+        try {
             String datasourceMetaJson = redisUtil.get(RedisKeyBuild.buildViewThemeDataSourceKey(viewThemeId)).toString();
-            if (!StringUtils.isEmpty(datasourceMetaJson)){
+            if (!StringUtils.isEmpty(datasourceMetaJson)) {
                 dataSourceViewDTO = JSON.parseObject(datasourceMetaJson, DataSourceViewDTO.class);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("数据视图主题获取redis中数据表结构失败,", e);
         }
         return dataSourceViewDTO;
     }
 
-    private DataSourceDTO verifyDataSource(Integer targetDbId){
-        try{
+    private DataSourceDTO verifyDataSource(Integer targetDbId) {
+        try {
             log.info("开始校验数据源信息");
             // 查询数据源是否存在
             ResultEntity<List<DataSourceDTO>> dsResult = userClient.getAllFiDataDataSource();
-            if (dsResult.getCode() != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(dsResult.data)){
+            if (dsResult.getCode() != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(dsResult.data)) {
                 throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
             }
             // 过滤ods和dw数据源
@@ -164,12 +164,12 @@ public class DataViewServiceImpl
             ).collect(Collectors.toList());
             log.info("目标数据源集合,[{}]", JSON.toJSONString(targetDbList));
             DataSourceDTO dataSourceDTO = targetDbList.stream().filter(item -> item.sourceBusinessTypeValue == targetDbId).findFirst().orElse(null);
-            if (Objects.isNull(dataSourceDTO)){
+            if (Objects.isNull(dataSourceDTO)) {
                 throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
             }
             log.info("结束校验数据源信息");
             return dataSourceDTO;
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("数据分析视图调用userClient失败", e);
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
@@ -177,7 +177,7 @@ public class DataViewServiceImpl
 
     @Override
     public List<TableStructureDTO> getSourceColumnMeta(Integer viewThemeId, String tableName, Integer queryType) {
-        if (viewThemeId == 0 || StringUtils.isEmpty(tableName)){
+        if (viewThemeId == 0 || StringUtils.isEmpty(tableName)) {
             throw new FkException(ResultEnum.DA_VIEWTHEMEID_TABLENAME_ERROR);
         }
         // 查询数据源
@@ -188,7 +188,7 @@ public class DataViewServiceImpl
             Connection conn = DbConnectionHelper.connection(dsDto.conStr, dsDto.conAccount,
                     dsDto.conPassword, DataSourceTypeEnum.SQLSERVER);
             return queryType == 1 ? sqlServerPlusUtils.getViewField(conn, tableName) : null;
-        }else if (DataSourceTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(dsDto.conType.toString())){
+        } else if (DataSourceTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(dsDto.conType.toString())) {
             PgsqlUtils pgsqlUtils = new PgsqlUtils();
             Connection conn = DbConnectionHelper.connection(dsDto.conStr, dsDto.conAccount,
                     dsDto.conPassword, DataSourceTypeEnum.POSTGRESQL);
@@ -203,16 +203,16 @@ public class DataViewServiceImpl
         // 获取数据源
         // 查询targetDbId
         Integer targetDbId = dto.getTargetDbId();
-        if (Objects.isNull(targetDbId)){
+        if (Objects.isNull(targetDbId)) {
             throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
         }
         ResultEntity<List<DataSourceDTO>> result;
-        try{
+        try {
             result = userClient.getAllFiDataDataSource();
-            if (result.getCode() != ResultEnum.SUCCESS.getCode()){
+            if (result.getCode() != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("数据分析视图执行sql调用userClient失败", e);
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
@@ -287,12 +287,12 @@ public class DataViewServiceImpl
 
     @Override
     public OdsResultDTO getPreviewData(Integer viewThemeId, String tableName) {
-        if (viewThemeId == 0 || StringUtils.isEmpty(tableName)){
+        if (viewThemeId == 0 || StringUtils.isEmpty(tableName)) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
         DataViewThemePO dataViewThemePO = dataViewThemeMapper.selectById(viewThemeId);
-        if (dataViewThemePO == null){
+        if (dataViewThemePO == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         DataSourceDTO dataSourceDTO = verifyDataSource(dataViewThemePO.getTargetDbId());
@@ -317,13 +317,13 @@ public class DataViewServiceImpl
                 .eq(DataViewPO::getName, dto.getName())
                 .eq(DataViewPO::getDelFlag, DelFlagEnum.NORMAL_FLAG.getValue());
         DataViewPO dataViewPO = baseMapper.selectOne(qw);
-        if (!Objects.isNull(dataViewPO)){
+        if (!Objects.isNull(dataViewPO)) {
             throw new FkException(ResultEnum.DS_DATA_VIEW_EXIST);
         }
 
         // 未创建架构是否存在重复
         String themeName = baseMapper.selectAbbrName(dto.getTargetDbId(), dto.getName());
-        if (!StringUtils.isEmpty(themeName)){
+        if (!StringUtils.isEmpty(themeName)) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, "视图主题：" + themeName + " 下已存在该视图名称");
         }
 
@@ -338,7 +338,7 @@ public class DataViewServiceImpl
         model.setViewScript(dto.getViewScript());
         model.setViewDesc(dto.getViewDesc());
         int insert = baseMapper.insert(model);
-        if (insert <= 0){
+        if (insert <= 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
@@ -351,7 +351,7 @@ public class DataViewServiceImpl
         DataViewPO po = baseMapper.selectOne(qw2);
 
         // 存储字段信息
-        dataViewFieldsService.saveViewFields(dto, (int)po.getId(), dsDto);
+        dataViewFieldsService.saveViewFields(dto, (int) po.getId(), dsDto);
 
         // 为关联的主题角色授权视图权限
         relationGrant(model, dsDto);
@@ -367,24 +367,24 @@ public class DataViewServiceImpl
             QueryWrapper<DataViewRolePO> qw = new QueryWrapper<>();
             qw.lambda().eq(DataViewRolePO::getThemeId, model.getViewThemeId());
             DataViewRolePO rolePo = dataViewRoleMapper.selectOne(qw);
-            if (!dataViewThemePO.getWhetherSchema()){
+            if (!dataViewThemePO.getWhetherSchema()) {
                 dataViewThemePO.setThemeAbbr("dbo");
-                if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
+                if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())) {
                     dataViewThemePO.setThemeAbbr("public");
                 }
             }
             String viewName = dataViewThemePO.getThemeAbbr() + "." + model.getName();
             String sql = "grant select on " + viewName + " to " + rolePo.getRoleName();
-            if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
+            if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())) {
                 sql = "grant select on table " + viewName + " to " + rolePo.getRoleName();
             }
 
             AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
             Connection connection = null;
-            if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName())){
+            if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName())) {
                 connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
                         dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
-            }else if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
+            } else if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())) {
                 connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
                         dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.PG);
             }
@@ -400,7 +400,7 @@ public class DataViewServiceImpl
     public ResultEnum removeDataView(Integer viewId) {
         // 查询数据视图是否存在
         DataViewPO model = baseMapper.selectById(viewId);
-        if (Objects.isNull(model)){
+        if (Objects.isNull(model)) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
@@ -410,7 +410,7 @@ public class DataViewServiceImpl
         // 删除数据视图
         log.info("数据视图信息，[{}]", JSON.toJSONString(model));
         int del = baseMapper.deleteById(viewId);
-        if (del <= 0){
+        if (del <= 0) {
             throw new FkException(ResultEnum.DELETE_ERROR);
         }
 
@@ -424,23 +424,23 @@ public class DataViewServiceImpl
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum editDataView(EditDataViewDTO dto) {
         List<DataViewPO> allData = baseMapper.selectList(new QueryWrapper<>());
-        if (CollectionUtils.isEmpty(allData)){
+        if (CollectionUtils.isEmpty(allData)) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         // 获取当前视图
         DataViewPO preModel = allData.stream().filter(item -> item.getId() == dto.getViewId()).findFirst().orElse(null);
         log.info("数据视图，[{}]", JSON.toJSONString(preModel));
-        if (Objects.isNull(preModel)){
+        if (Objects.isNull(preModel)) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         List<String> nameList = allData.stream().filter(item -> item.getViewThemeId().equals(preModel.getViewThemeId())
                 && item.getId() != preModel.getId()).map(DataViewPO::getName).collect(Collectors.toList());
-        if (nameList.contains(dto.getName())){
+        if (nameList.contains(dto.getName())) {
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "当前视图主题下已存在该视图名称");
         }
         List<String> displayNameList = allData.stream().filter(item -> item.getViewThemeId().equals(preModel.getViewThemeId())
                 && item.getId() != preModel.getId()).map(DataViewPO::getDisplayName).collect(Collectors.toList());
-        if (displayNameList.contains(dto.getDisplayName())){
+        if (displayNameList.contains(dto.getDisplayName())) {
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "当前视图主题下已存在该视图显示名称");
         }
 
@@ -450,12 +450,12 @@ public class DataViewServiceImpl
 
         // 未创建架构是否存在重复
         String themeName = baseMapper.selectAbbrName(dataSourceDTO.id, dto.getName());
-        if (!StringUtils.isEmpty(themeName)){
+        if (!StringUtils.isEmpty(themeName)) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, "视图主题：" + themeName + " 下已存在该视图名称");
         }
 
         // 修改数据库中的数据视图
-        if (!dto.getName().equals(preModel.getName())){
+        if (!dto.getName().equals(preModel.getName())) {
             updateView(dto.getName(), preModel, dataSourceDTO);
         }
 
@@ -463,7 +463,7 @@ public class DataViewServiceImpl
         preModel.setName(dto.getName());
         preModel.setDisplayName(dto.getDisplayName());
         preModel.setViewDesc(dto.getViewDesc());
-        if (baseMapper.updateById(preModel) <= 0){
+        if (baseMapper.updateById(preModel) <= 0) {
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR);
         }
 
@@ -483,12 +483,12 @@ public class DataViewServiceImpl
     public ResultEnum updateDataView(UpdateDataViewDTO dto) {
         log.info("修改数据视图参数,[{}]", JSON.toJSONString(dto));
         DataViewPO model = baseMapper.selectById(dto.getViewId());
-        if (Objects.isNull(model)){
+        if (Objects.isNull(model)) {
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR);
         }
 
         model.setViewScript(dto.getViewScript());
-        if (baseMapper.updateById(model) <= 0){
+        if (baseMapper.updateById(model) <= 0) {
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR);
         }
 
@@ -506,7 +506,7 @@ public class DataViewServiceImpl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addBatchDataView(SaveBatchDataViewDTO dto) {
-        if (CollectionUtils.isEmpty(dto.getTableNameList())){
+        if (CollectionUtils.isEmpty(dto.getTableNameList())) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
@@ -516,7 +516,7 @@ public class DataViewServiceImpl
 
         // 存储数据视图
         List<String> tableNameList = dto.getTableNameList();
-        for (String tableName : tableNameList){
+        for (String tableName : tableNameList) {
             // 查询是否存在
             QueryWrapper<DataViewPO> qw = new QueryWrapper<>();
             qw.lambda().eq(DataViewPO::getViewThemeId, dto.getViewThemeId()).eq(DataViewPO::getName, tableName)
@@ -526,11 +526,11 @@ public class DataViewServiceImpl
             // 不存在当前视图则创建
             model.setViewThemeId(dto.getViewThemeId());
             String viewName = tableName;
-            if (tableName.contains(".")){
+            if (tableName.contains(".")) {
                 viewName = tableName.split("\\.")[1];
             }
             // 判断是否无架构
-            if (!dataViewThemePO.getWhetherSchema()){
+            if (!dataViewThemePO.getWhetherSchema()) {
                 viewName = "view_" + viewName;
             }
             model.setName(viewName);
@@ -539,12 +539,12 @@ public class DataViewServiceImpl
             model.setViewScript(sql);
             model.setViewDesc("");
             DataViewPO viewPo = baseMapper.selectId(dto.getViewThemeId(), viewName, DelFlagEnum.NORMAL_FLAG.getValue());
-            if (viewPo != null){
+            if (viewPo != null) {
                 baseMapper.deleteById(viewPo.getId());
             }
-            if (Objects.isNull(dataViewPO)){
+            if (Objects.isNull(dataViewPO)) {
                 int insert = baseMapper.insert(model);
-                if (insert <= 0){
+                if (insert <= 0) {
                     throw new FkException(ResultEnum.SAVE_DATA_ERROR);
                 }
             }
@@ -567,22 +567,22 @@ public class DataViewServiceImpl
         return ResultEnum.SUCCESS;
     }
 
-    private void batchCreateView(DataViewPO model, DataSourceDTO dataSourceDTO, DataViewThemePO dataViewThemePO){
+    private void batchCreateView(DataViewPO model, DataSourceDTO dataSourceDTO, DataViewThemePO dataViewThemePO) {
         // 删除历史视图
         removeBatchView(model, dataSourceDTO);
 
         // 创建新视图
         String viewName = model.getName();
-        if (model.getName().contains(".")){
+        if (model.getName().contains(".")) {
             viewName = model.getName().split("\\.")[1];
         }
         // 判断是否无架构
-        if (!dataViewThemePO.getWhetherSchema()){
+        if (!dataViewThemePO.getWhetherSchema()) {
             viewName = "view_" + viewName;
         }
-        if (!dataViewThemePO.getWhetherSchema()){
+        if (!dataViewThemePO.getWhetherSchema()) {
             dataViewThemePO.setThemeAbbr("dbo");
-            if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
+            if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())) {
                 dataViewThemePO.setThemeAbbr("public");
             }
         }
@@ -590,15 +590,15 @@ public class DataViewServiceImpl
         execSql(createViewSql, dataSourceDTO);
     }
 
-    private DataSourceDTO checkDataSource(Integer targetDbId){
+    private DataSourceDTO checkDataSource(Integer targetDbId) {
         // 校验数据源是否合法
         ResultEntity<List<DataSourceDTO>> result;
-        try{
+        try {
             result = userClient.getAllFiDataDataSource();
-            if (result.getCode() != ResultEnum.SUCCESS.getCode()){
+            if (result.getCode() != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("数据分析视图修改视图调用userClient失败", e);
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
@@ -612,10 +612,10 @@ public class DataViewServiceImpl
         return dsDto;
     }
 
-    private void updateView(String name, DataViewPO model, DataSourceDTO dataSourceDto){
+    private void updateView(String name, DataViewPO model, DataSourceDTO dataSourceDto) {
         // 获取架构名称
         DataViewThemePO dataViewThemePO = dataViewThemeMapper.selectById(model.getViewThemeId());
-        if (getView(name, dataViewThemePO, dataSourceDto)){
+        if (getView(name, dataViewThemePO, dataSourceDto)) {
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "目标库中已存在该数据视图");
         }
         // 创建新视图
@@ -629,14 +629,14 @@ public class DataViewServiceImpl
         removeView(model, dataSourceDto);
     }
 
-    private boolean getView(String name, DataViewThemePO dataViewThemePO, DataSourceDTO dataSourceDTO){
-        if (!dataViewThemePO.getWhetherSchema()){
+    private boolean getView(String name, DataViewThemePO dataViewThemePO, DataSourceDTO dataSourceDTO) {
+        if (!dataViewThemePO.getWhetherSchema()) {
             dataViewThemePO.setThemeAbbr("dbo");
-            if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
+            if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())) {
                 dataViewThemePO.setThemeAbbr("public");
             }
         }
-        String getViewSql = "SELECT * FROM " + dataViewThemePO.getThemeAbbr() + "." +  name;
+        String getViewSql = "SELECT * FROM " + dataViewThemePO.getThemeAbbr() + "." + name;
         log.info("查询视图语句,[{}]", getViewSql);
 
         AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
@@ -652,53 +652,71 @@ public class DataViewServiceImpl
         return true;
     }
 
-    private void removeBatchView(DataViewPO model, DataSourceDTO dataSourceDTO){
+    private void removeBatchView(DataViewPO model, DataSourceDTO dataSourceDTO) {
         // 获取视图主题
         DataViewThemePO dataViewThemePO = dataViewThemeMapper.selectById(model.getViewThemeId());
         String viewName = model.getName();
-        if (model.getName().contains(".")){
+        if (model.getName().contains(".")) {
             viewName = model.getName().split("\\.")[1];
         }
         // 判断是否无架构
-        if (!dataViewThemePO.getWhetherSchema()){
+        if (!dataViewThemePO.getWhetherSchema()) {
             viewName = "view_" + viewName;
         }
-        if (!dataViewThemePO.getWhetherSchema()){
+        if (!dataViewThemePO.getWhetherSchema()) {
             dataViewThemePO.setThemeAbbr("dbo");
-            if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
+            if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())) {
                 dataViewThemePO.setThemeAbbr("public");
             }
         }
-        String removeViewSql = "DROP VIEW IF EXISTS " + dataViewThemePO.getThemeAbbr() + "." + viewName;
+        // PG中此语法可预防视图不存在导致报错
+        String removeViewName = dataViewThemePO.getThemeAbbr() + "." + viewName;
+        String removeViewSql = "DROP VIEW IF EXISTS " + removeViewName;
+        // SqlService中此语法可预防视图不存在导致报错
+        if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.SQLSERVER.getName())) {
+            removeViewSql = String.format("IF OBJECT_ID('%s','V') IS NOT NULL\n" +
+                    "BEGIN\n" +
+                    "\tDROP VIEW %s\n" +
+                    "END\n", removeViewName, removeViewName);
+        }
         execSql(removeViewSql, dataSourceDTO);
         log.info("删除视图成功");
     }
 
-    private void removeView(DataViewPO model, DataSourceDTO dataSourceDTO){
+    private void removeView(DataViewPO model, DataSourceDTO dataSourceDTO) {
         // 获取视图主题
         DataViewThemePO dataViewThemePO = dataViewThemeMapper.selectById(model.getViewThemeId());
-        if (!dataViewThemePO.getWhetherSchema()){
+        if (!dataViewThemePO.getWhetherSchema()) {
             dataViewThemePO.setThemeAbbr("dbo");
-            if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
+            if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())) {
                 dataViewThemePO.setThemeAbbr("public");
             }
         }
-        String removeViewSql = "DROP VIEW IF EXISTS " + dataViewThemePO.getThemeAbbr() + "." + model.getName();
+        // PG中此语法可预防视图不存在导致报错
+        String removeViewName =  dataViewThemePO.getThemeAbbr() + "." + model.getName();
+        String removeViewSql = "DROP VIEW IF EXISTS " + removeViewName;
+        // SqlService中此语法可预防视图不存在导致报错
+        if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.SQLSERVER.getName())) {
+            removeViewSql = String.format("IF OBJECT_ID('%s','V') IS NOT NULL\n" +
+                    "BEGIN\n" +
+                    "\tDROP VIEW %s\n" +
+                    "END\n", removeViewName, removeViewName);
+        }
         execSql(removeViewSql, dataSourceDTO);
         log.info("删除视图成功");
     }
 
-    private DataViewThemePO getViewThemeInfo(long viewId){
+    private DataViewThemePO getViewThemeInfo(long viewId) {
         String themeId = baseMapper.selectThemeId(viewId);
         return dataViewThemeMapper.selectById(themeId);
     }
 
-    private void createView(DataViewPO model, DataSourceDTO dataSourceDTO){
+    private void createView(DataViewPO model, DataSourceDTO dataSourceDTO) {
         // 查询数据视图主题架构简称
         DataViewThemePO dataViewThemePO = getViewThemeInfo(model.getId());
-        if (!dataViewThemePO.getWhetherSchema()){
+        if (!dataViewThemePO.getWhetherSchema()) {
             dataViewThemePO.setThemeAbbr("dbo");
-            if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())){
+            if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())) {
                 dataViewThemePO.setThemeAbbr("public");
             }
         }
@@ -708,15 +726,15 @@ public class DataViewServiceImpl
         log.info("创建视图成功");
     }
 
-    private void execSql(String sql, DataSourceDTO dataSourceDTO){
+    private void execSql(String sql, DataSourceDTO dataSourceDTO) {
         log.info("sql执行语句,[{}]", sql);
         try {
             AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
             Connection connection = null;
-            if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName())){
+            if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName())) {
                 connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
                         dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.SQLSERVER);
-            }else if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())){
+            } else if (dataSourceDTO.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())) {
                 connection = abstractDbHelper.connection(dataSourceDTO.conStr, dataSourceDTO.conAccount,
                         dataSourceDTO.conPassword, com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum.PG);
             }
@@ -800,7 +818,7 @@ public class DataViewServiceImpl
         return data;
     }
 
-    private void setDataSourceMeta(Integer viewThemeId, DataSourceDTO dsDTO){
+    private void setDataSourceMeta(Integer viewThemeId, DataSourceDTO dsDTO) {
         log.info("数据视图主题开始设置数据表信息");
         try {
             DataSourceViewDTO dto = new DataSourceViewDTO();
@@ -822,7 +840,7 @@ public class DataViewServiceImpl
                 dataSource.viewDtoList = sqlServerPlusUtils.loadViewDetails(DbConnectionHelper.connection(po.connectStr, po.connectAccount,
                         po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER));
                 */
-            }else if (DataSourceTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(dsDTO.conType.toString())) {
+            } else if (DataSourceTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(dsDTO.conType.toString())) {
                 PgsqlUtils pgsqlUtils = new PgsqlUtils();
                 // 表结构
                 dto.tableDtoList = pgsqlUtils.getTableNameAndColumnsPlusView(DbConnectionHelper.connection(dsDTO.conStr, dsDTO.conAccount,
