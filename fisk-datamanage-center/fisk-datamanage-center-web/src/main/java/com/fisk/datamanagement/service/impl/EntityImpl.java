@@ -20,12 +20,14 @@ import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -60,12 +62,12 @@ public class EntityImpl implements IEntity {
     @Override
     public List<EntityTreeDTO> getEntityTreeList() {
         List<EntityTreeDTO> list;
-        /*Boolean exist = redisTemplate.hasKey(metaDataEntity);
+        Boolean exist = redisTemplate.hasKey(metaDataEntity);
         if (exist) {
             String treeList = redisTemplate.opsForValue().get(metaDataEntity).toString();
             list = JSONObject.parseArray(treeList, EntityTreeDTO.class);
             return list;
-        }*/
+        }
         list = getEntityList();
         return list;
     }
@@ -75,11 +77,12 @@ public class EntityImpl implements IEntity {
      *
      * @return
      */
+    @Scheduled(cron = "0 0 1 ? * L") //每周星期天凌晨1点实行一次
     public List<EntityTreeDTO> getEntityList() {
 
         List<EntityTreeDTO> metadataEntityTree = metadataEntity.getMetadataEntityTree();
         String jsonString = JSONObject.toJSONString(metadataEntityTree);
-        redisTemplate.opsForValue().set(metaDataEntity, jsonString);
+        redisTemplate.opsForValue().set(metaDataEntity, jsonString,720l, TimeUnit.MINUTES);
         return metadataEntityTree;
     }
 
