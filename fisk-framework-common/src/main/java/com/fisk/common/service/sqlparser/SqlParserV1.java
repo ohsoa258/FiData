@@ -30,7 +30,9 @@ public class SqlParserV1 implements ISqlParser {
         String tmp=sql.replace("collate","")
                 .replace("sql_latin1_general_cp1_ci_as","")
                 .replace("COLLATE","")
-                .replace("SQL_Latin1_General_CP1_CI_AS","");
+                .replace("SQL_Latin1_General_CP1_CI_AS","")
+                .replace("chinese_prc_ci_as","")
+                .replace("Chinese_PRC_CI_AS","");
         List<SQLStatement> sqlStatements = SQLUtils.parseStatements(tmp, dbType).stream()
                 .filter(s -> s instanceof SQLSelectStatement)
                 .collect(Collectors.toList());
