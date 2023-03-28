@@ -248,8 +248,7 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
         if (CollectionUtils.isEmpty(tableIdList)) {
             return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL, null);
         }
-        String tableIds = Joiner.on(",").join(tableIdList);
-        dto.setTableIds(tableIds);
+        dto.setTableIdList(tableIdList);
         if (dto.getCurrent() == 0) {
             dto.setCurrent(1);
         }

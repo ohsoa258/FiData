@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * @author dick
@@ -21,10 +22,10 @@ public class DataServiceTableLogQueryDTO {
     public int tableType;
 
     /**
-     * 表ID，逗号分割
+     * 表ID集合
      */
-    @ApiModelProperty(value = "表ID，逗号分割")
-    public String tableIds;
+    @ApiModelProperty(value = "表ID集合")
+    public List<Long> tableIdList;
 
     /**
      * 表信息集合
