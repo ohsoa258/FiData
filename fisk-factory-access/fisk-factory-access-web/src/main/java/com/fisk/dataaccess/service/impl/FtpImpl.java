@@ -93,9 +93,9 @@ public class FtpImpl implements IFtp {
             // 获取excel内容
             case XLS_FILE:
             case XLSX_FILE:
-                return ExcelUtils.readExcelFromInputStream(inputStream, excelParam.get(2));
+                return ExcelUtils.readExcelFromInputStream(inputStream, excelParam.get(2),query.startRow);
             case CSV_FILE:
-                return ExcelUtils.readCsvFromInputStream(inputStream, excelParam.get(3));
+                return ExcelUtils.readCsvFromInputStream(inputStream, excelParam.get(3),query.startRow);
             default:
                 return null;
         }

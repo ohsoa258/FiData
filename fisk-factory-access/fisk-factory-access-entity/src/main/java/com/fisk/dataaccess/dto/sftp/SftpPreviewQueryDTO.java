@@ -15,4 +15,7 @@ public class SftpPreviewQueryDTO {
     @ApiModelProperty(value = "完整文件路径", required = true)
     public String fileFullName;
 
+    @ApiModelProperty(value = "预览的起始行", required = true)
+    public Integer startRow;
+
 }

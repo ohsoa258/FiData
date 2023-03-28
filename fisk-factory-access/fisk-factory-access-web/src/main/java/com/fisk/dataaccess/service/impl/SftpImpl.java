@@ -81,9 +81,9 @@ public class SftpImpl implements ISftp {
                 // 获取excel内容
                 case XLS_FILE:
                 case XLSX_FILE:
-                    return ExcelUtils.readExcelFromInputStream(inputStream, excelParam.get(2));
+                    return ExcelUtils.readExcelFromInputStream(inputStream, excelParam.get(2),dto.startRow);
                 case CSV_FILE:
-                    return ExcelUtils.readCsvFromInputStream(inputStream, excelParam.get(3));
+                    return ExcelUtils.readCsvFromInputStream(inputStream, excelParam.get(3),dto.startRow);
                 default:
                     throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
             }
