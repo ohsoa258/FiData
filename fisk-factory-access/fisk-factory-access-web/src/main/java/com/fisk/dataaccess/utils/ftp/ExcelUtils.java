@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -228,7 +229,7 @@ public class ExcelUtils {
      * @params ext 文件后缀名
      * @return java.util.List<com.fisk.dataaccess.dto.ftp.ExcelDTO>
      */
-    public static List<ExcelDTO> readExcelFromInputStream(InputStream inputStream, String ext) {
+    public static List<ExcelDTO> readExcelFromInputStream(InputStream inputStream, String ext,Integer startRow) {
         List<ExcelDTO> listDto = null;
         try {
             Workbook workbook = readFromInputStream(inputStream, ext);
@@ -244,11 +245,11 @@ public class ExcelUtils {
                 // 读取Excel内容，返回list，每一行存放一个list
                 List<List<Object>> lists = readExcelContentList(workbook, i);
                 ExcelDTO excelDTO = new ExcelDTO();
-                // excel预览内容
-                excelDTO.excelContent = lists;
+                // excel预览内容 根据用户定义的起始行预览
+                excelDTO.excelContent = lists.stream().skip(startRow).collect(Collectors.toList());
                 // excel字段列表
                 if (!CollectionUtils.isEmpty(lists)) {
-                    excelDTO.excelField = lists.get(0);
+                    excelDTO.excelField = excelDTO.excelContent.get(0);
                 }
                 // sheet名称
                 excelDTO.sheetName = workbook.getSheetName(i);
@@ -269,7 +270,7 @@ public class ExcelUtils {
      * @params inputStream
      * @params ext
      */
-    public static List<ExcelDTO> readCsvFromInputStream(InputStream inputStream, String filename) {
+    public static List<ExcelDTO> readCsvFromInputStream(InputStream inputStream, String filename,Integer startRow) {
         List<ExcelDTO> listDto = null;
         try {
             listDto = new ArrayList<>();
@@ -277,11 +278,11 @@ public class ExcelUtils {
             List<List<Object>> lists = readCsvContentList(inputStream);
             ExcelDTO excelDTO = new ExcelDTO();
             // csv内容
-            excelDTO.excelContent = lists;
+            excelDTO.excelContent = lists.stream().skip(startRow).collect(Collectors.toList());
             // csv没有多sheet页,本方法中莫瑞诺指定文件名为sheet名
             excelDTO.sheetName = filename;
             // 字段列表
-            excelDTO.excelField = lists.get(0);
+            excelDTO.excelField = excelDTO.excelContent.get(0);
             listDto.add(excelDTO);
         } catch (Exception e) {
             throw new FkException(ResultEnum.READ_CSV_CONTENT_ERROR);

@@ -23,6 +23,9 @@ public class OdsQueryDTO {
     public Integer dataSourceId;
     @ApiModelProperty(value = "SQL脚本or预览的文本全路径", required = true)
     public String querySql;
+    @ApiModelProperty(value = "预览的起始行", required = true)
+    public Integer startRow;
+
     @ApiModelProperty(value = "当前物理表名称", required = true)
     public String tableName;
     @ApiModelProperty(value = "ftp文件后缀名类型", required = true)

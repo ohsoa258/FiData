@@ -370,7 +370,7 @@ public class FtpUtils {
         // 获取excel内容
         InputStream inputStream = getInputStreamByName(ftpClient, "/Windows/二级/", "tb_app_registration.csv");
 ////        List<ExcelDTO> xlsx = ExcelUtils.readExcelFromInputStream(inputStream, ".xlsx");
-        List<ExcelDTO> xlsx = ExcelUtils.readCsvFromInputStream(inputStream, "tb_app_registration");
+        List<ExcelDTO> xlsx = ExcelUtils.readCsvFromInputStream(inputStream, "tb_app_registration",null);
         System.out.println("*************************************");
         System.out.println("文件流对象: ");
         System.out.println(xlsx);
