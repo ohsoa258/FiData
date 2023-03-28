@@ -76,14 +76,14 @@ public class SftpImpl implements ISftp {
             InputStream inputStream = SftpUtils.getSftpFileInputStream(sftp, dto.fileFullName);
 
             FtpFileTypeEnum fileTypeEnum = FtpFileTypeEnum.getValue(dataSourcePo.fileSuffix);
-
+            Integer startRow=dto.startRow==null?0:dto.startRow;
             switch (fileTypeEnum) {
                 // 获取excel内容
                 case XLS_FILE:
                 case XLSX_FILE:
-                    return ExcelUtils.readExcelFromInputStream(inputStream, excelParam.get(2),dto.startRow);
+                    return ExcelUtils.readExcelFromInputStream(inputStream, excelParam.get(2),startRow);
                 case CSV_FILE:
-                    return ExcelUtils.readCsvFromInputStream(inputStream, excelParam.get(3),dto.startRow);
+                    return ExcelUtils.readCsvFromInputStream(inputStream, excelParam.get(3),startRow);
                 default:
                     throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
             }
