@@ -14,11 +14,6 @@ import lombok.Data;
  */
 @Data
 public class BusinessFilterDTO {
-    /**
-     * 模板id
-     */
-    @ApiModelProperty(value = "模板id")
-    public int templateId;
 
     /**
      * 数据源表主键id
@@ -31,7 +26,6 @@ public class BusinessFilterDTO {
      */
     @ApiModelProperty(value = "数据源类型")
     public SourceTypeEnum sourceTypeEnum;
-
 
     /**
      * 规则名称
@@ -58,12 +52,6 @@ public class BusinessFilterDTO {
     public int tableBusinessType;
 
     /**
-     * 生成规则（清洗脚本）
-     */
-    @ApiModelProperty(value = "生成规则（清洗脚本）")
-    public String createRule;
-
-    /**
      * 规则执行顺序
      */
     @ApiModelProperty(value = "规则执行顺序")
@@ -74,6 +62,18 @@ public class BusinessFilterDTO {
      */
     @ApiModelProperty(value = "规则状态")
     public RuleStateEnum ruleState;
+
+    /**
+     * 规则描述
+     */
+    @ApiModelProperty(value = "规则描述")
+    public String ruleDescribe;
+
+    /**
+     * 清洗场景：1 同步前 2 同步中 3 同步后
+     */
+    @ApiModelProperty(value = "清洗场景：1 同步前 2 同步中 3 同步后")
+    public int filterScene;
 
     /**
      * API信息

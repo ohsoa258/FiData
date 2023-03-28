@@ -58,6 +58,16 @@ public class BusinessFilterPO extends BasePO
      * 规则状态
      */
     public int ruleState;
+
+    /**
+     * 规则描述
+     */
+    public String ruleDescribe;
+
+    /**
+     * 清洗场景：1 同步前 2 同步中 3 同步后
+     */
+    public int filterScene;
 }
 
 

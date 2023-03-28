@@ -22,12 +22,6 @@ public class BusinessFilterVO {
     public int id;
 
     /**
-     * 模板id
-     */
-    @ApiModelProperty(value = "模板id")
-    public int templateId;
-
-    /**
      * 数据质量数据源表主键ID
      */
     @ApiModelProperty(value = "数据质量数据源表主键ID")
@@ -82,12 +76,6 @@ public class BusinessFilterVO {
     public int tableBusinessType;
 
     /**
-     * 生成规则（清洗脚本）
-     */
-    @ApiModelProperty(value = "生成规则（清洗脚本）")
-    public String createRule;
-
-    /**
      * 规则执行顺序
      */
     @ApiModelProperty(value = "规则执行顺序")
@@ -100,42 +88,6 @@ public class BusinessFilterVO {
     public RuleStateEnum ruleState;
 
     /**
-     * 模板应用场景
-     */
-    @ApiModelProperty(value = "模板应用场景")
-    public TemplateSceneEnum templateScene;
-
-    /**
-     * 模板应用场景名称
-     */
-    @ApiModelProperty(value = "模板应用场景名称")
-    public String templateSceneName;
-
-    /**
-     * 应用场景描述
-     */
-    @ApiModelProperty(value = "应用场景描述")
-    public String sceneDesc;
-
-    /**
-     * 模板名称
-     */
-    @ApiModelProperty(value = "模板名称")
-    public String templateName;
-
-    /**
-     * 模板类型
-     */
-    @ApiModelProperty(value = "模板类型")
-    public TemplateTypeEnum templateType;
-
-    /**
-     * 模板描述
-     */
-    @ApiModelProperty(value = "模板描述")
-    public String templateDesc;
-
-    /**
      * 创建时间
      */
     @ApiModelProperty(value = "创建时间")
@@ -146,6 +98,18 @@ public class BusinessFilterVO {
      */
     @ApiModelProperty(value = "创建人")
     public String createUser;
+
+    /**
+     * 规则描述
+     */
+    @ApiModelProperty(value = "规则描述")
+    public String ruleDescribe;
+
+    /**
+     * 清洗场景：1 同步前 2 同步中 3 同步后
+     */
+    @ApiModelProperty(value = "清洗场景：1 同步前 2 同步中 3 同步后")
+    public int filterScene;
 
     /**
      * API信息
