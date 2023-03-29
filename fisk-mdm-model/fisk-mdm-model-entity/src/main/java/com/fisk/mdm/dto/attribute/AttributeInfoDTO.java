@@ -3,6 +3,7 @@ package com.fisk.mdm.dto.attribute;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fisk.common.core.baseObject.vo.BaseUserInfoVO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
+import com.fisk.mdm.enums.DataRuleEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -78,7 +79,10 @@ public class AttributeInfoDTO extends BaseUserInfoVO {
      * 展示宽度
      */
     private Integer displayWidth;
-
+    /**
+     * 数据规则 0 四舍五入 1 截取
+     */
+    private Integer dataRule;
     /**
      * 表单框提示内容
      */

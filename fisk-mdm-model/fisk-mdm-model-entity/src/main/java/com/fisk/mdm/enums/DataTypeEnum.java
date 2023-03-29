@@ -68,7 +68,9 @@ public enum DataTypeEnum implements BaseEnum {
     FILE(6,"文件"),
     POI(7,"POI"),
 
-    TEXTAREA(13,"文本域");
+    TEXTAREA(13,"文本域"),
+    IMAGE(14,"图片");
+
     DataTypeEnum(int value, String name) {
         this.name = name;
         this.value = value;

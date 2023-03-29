@@ -1,5 +1,6 @@
 package com.fisk.mdm.dto.attribute;
 
+import com.fisk.mdm.enums.DataRuleEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
@@ -75,6 +76,12 @@ public class AttributeDTO {
      */
     @ApiModelProperty(value = "展示宽度")
     private Integer displayWidth;
+    /**
+     * 数据规则
+    */
+    @ApiModelProperty(value = "数据规则")
+    @NotNull()
+    private Integer dataRule;
 
     /**
      * 表单框提示内容
