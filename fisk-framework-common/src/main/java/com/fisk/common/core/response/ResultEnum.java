@@ -334,6 +334,8 @@ public enum ResultEnum {
     NOT_SUPPORT(13003, "暂不支持该类型数据查询"),
     DATA_SOURCE_CONFIG(13004, "获取元数据配置文件失败"),
 
+
+
     /**
      * 数据运维
      */
@@ -397,7 +399,13 @@ public enum ResultEnum {
     MAC_DECRYPT_FAIL(160001,"Mac地址与当前计算机Mac不匹配"),
     LICENCE_EXPIRED(160002,"licence已过期"),
     CUSTOMER_ALREADY_EXISTS(160003,"客户已存在"),
-    CUSTOMER_NOT_EXISTS(160004,"客户不存在");
+    CUSTOMER_NOT_EXISTS(160004,"客户不存在"),
+
+
+    /**
+     * 数据库类型 dmp_ods
+     */
+    TYPE_OF_DATABASE_DMP_ODS(17001,"dmp_ods");
 
     ResultEnum(int code, String msg) {
         this.code = code;
