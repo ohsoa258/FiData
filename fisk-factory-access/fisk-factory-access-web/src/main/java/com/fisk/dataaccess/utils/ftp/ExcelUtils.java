@@ -95,7 +95,9 @@ public class ExcelUtils {
                 // 获取行数
                 int getRow = 0;
                 short lastCellNum = 130;
-                for (int i = 0; i <= sheet.getPhysicalNumberOfRows(); i++) {
+                //解决最大行数一直变的问题,拿第一次得到的行数
+                int physicalNumberOfRows = sheet.getPhysicalNumberOfRows();
+                for (int i = 0; i <= physicalNumberOfRows; i++) {
                     if (getRow < startRow) {
                         getRow++;
                         continue;
