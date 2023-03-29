@@ -143,7 +143,7 @@ public class DataSynchronizationUtils {
                         str.append("SELECT fidata_id FROM " + mdmTableName1);
                         str.append(" WHERE " + data.getColumnName() + " = '" + item.get(key)  +"'");
                         // 查询域字段数据
-                        List<MdmDTO> ids = execQueryResultList(str.toString(), connection, MdmDTO.class);
+                        List<MdmDTO> ids = execQueryResultList(str.toString(), connection, MdmDTO.class,false);
 
                         if (CollectionUtils.isNotEmpty(ids)){
                             item.put(key,ids.get(0).getFidata_id());
@@ -152,7 +152,12 @@ public class DataSynchronizationUtils {
                 }
             });
         });
-
+        //统一关闭
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
         // 处理需要插入和更新的数据(关键点)
         List<Map<String, Object>> dateList = this.dataProcessing(mdmResultList, resultList, attributeList);
@@ -330,7 +335,14 @@ public class DataSynchronizationUtils {
             data.put("fidata_create_user", userHelper.getLoginUserInfo().id);
             String insertSql = buildSqlCommand.buildInsertSingleData(data, logTableName);
             log.info("添加日志数据,sql:", insertSql);
-            AbstractDbHelper.executeSqlReturnKey(insertSql, connection);
+            //无奈之举，为了解决上面connection被关闭的问题
+            Connection connection2 = dbHelper.connection(connectionStr, acc, pwd, type);
+            AbstractDbHelper.executeSqlReturnKey(insertSql, connection2);
+            try {
+                connection2.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 

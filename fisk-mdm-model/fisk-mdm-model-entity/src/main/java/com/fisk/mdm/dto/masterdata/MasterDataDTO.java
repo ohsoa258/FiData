@@ -2,6 +2,7 @@ package com.fisk.mdm.dto.masterdata;
 
 import lombok.Data;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -10,6 +11,6 @@ import java.util.Map;
 @Data
 public class MasterDataDTO extends MasterDataBaseDTO {
 
-    private Map<String, Object> members;
+    private List<Map<String, Object>> members;
 
 }

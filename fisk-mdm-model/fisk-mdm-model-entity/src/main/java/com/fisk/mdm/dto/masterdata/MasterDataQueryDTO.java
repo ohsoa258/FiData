@@ -36,7 +36,7 @@ public class MasterDataQueryDTO extends MasterDataBaseDTO {
      */
     private Integer viewId;
 
-    private Integer isValidity;
+    private Integer validity;
     /**
      * 自定义筛选条件
      */
