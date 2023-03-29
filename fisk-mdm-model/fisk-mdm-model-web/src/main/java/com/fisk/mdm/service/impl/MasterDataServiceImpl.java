@@ -35,7 +35,9 @@ import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.mapper.ModelMapper;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.IMasterDataService;
+import com.fisk.mdm.utils.mdmBEBuild.IVaildityDataRule;
 import com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils;
+import com.fisk.mdm.utils.mdmBEBuild.VaildityFactoryHelper;
 import com.fisk.mdm.utlis.DataSynchronizationUtils;
 import com.fisk.mdm.utlis.MasterDataFormatVerifyUtils;
 import com.fisk.mdm.vo.attribute.AttributeColumnVO;
@@ -61,6 +63,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
@@ -74,6 +77,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
 /**
  * 主数据服务impl
  *
@@ -129,7 +133,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
             "fidata_create_time," +
             "fidata_create_user," +
             "fidata_update_time," +
-            "fidata_update_user";
+            "fidata_update_user," +
+            "fidata_del_flag" ;
 
     @Override
     public List<ModelDropDownVO> getModelEntityVersionStruct() {
@@ -382,15 +387,25 @@ public class MasterDataServiceImpl implements IMasterDataService {
         }
         //准备主数据集合
         List<Map<String, Object>> data;
+
         //查询字段
         String businessColumnName = StringUtils.join(newColumnList.stream()
                 .map(e -> e.getName()).collect(Collectors.toList()), ",");
         try {
-            //拼接筛选条件
-            String conditions = " and fidata_version_id=" + dto.getVersionId() + " ";
+            String conditions = "";
+            //拼接筛选条件  0失效 1有效 2全部
+            if (dto.getValidity().getValue() == 0 || dto.getValidity().getValue() ==1)
+            {
+                 conditions = " and fidata_version_id=" + dto.getVersionId() + " and fidata_del_flag= " +dto.getValidity().getValue()+" ";
+            }
+            else
+            {
+                 conditions = " and fidata_version_id=" + dto.getVersionId() +" ";
+            }
             if (!CollectionUtils.isEmpty(dto.getFilterQuery())) {
                 conditions = getOperatorCondition(dto.getFilterQuery());
             }
+
             //获取总条数
             int rowCount = 0;
             IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
@@ -410,6 +425,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             dataPageDTO.setTableName(tableName);
             dataPageDTO.setExport(dto.getExport());
             dataPageDTO.setConditions(conditions);
+            dataPageDTO.setValidity(dto.getValidity().getValue());
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             String sql = sqlBuilder.buildMasterDataPage(dataPageDTO);
             //执行sql，获得结果集
@@ -678,7 +694,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 .filter(e -> !e.getDataType().equals(DataTypeEnum.FILE.getName()))
                 .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(list)) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         BathUploadMemberListVO listVo = new BathUploadMemberListVO();
         BathUploadMemberVO result = new BathUploadMemberVO();
@@ -711,7 +727,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         int rowNum;
         //列数
         int columnNum;
-        Sheet sheet;
+            Sheet sheet;
         try {
             //创建工作簿
             Workbook workbook;
@@ -735,14 +751,17 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     continue;
                 }
                 Optional<AttributeInfoDTO> data = list.stream().filter(e -> cell.getStringCellValue().equals(e.getDisplayName())).findFirst();
+
                 if (!data.isPresent()) {
                     throw new FkException(ResultEnum.EXIST_INVALID_COLUMN);
                 }
+
+
                 attributePoList.add(data.get());
             }
-            if (list.size() != columnNum - 1) {
-                throw new FkException(ResultEnum.CHECK_TEMPLATE_IMPORT_FAILURE);
-            }
+//            if (list.size() != columnNum - 1) {
+//                throw new FkException(ResultEnum.CHECK_TEMPLATE_IMPORT_FAILURE);
+//            }
         } catch (Exception e) {
             log.error("导入模板错误:", e);
             throw new FkException(ResultEnum.CHECK_TEMPLATE_IMPORT_FAILURE);
@@ -789,6 +808,17 @@ public class MasterDataServiceImpl implements IMasterDataService {
                                         && StringUtils.isEmpty(jsonObj.get("fidata_new_code").toString())) {
                                     jsonObj.put("code", buildCodeCommand.createCode());
                                 }
+
+                                String spilt = null;
+                                List<AttributeInfoDTO> ruleAttribute =
+                                        attributePoList.stream().filter(e -> e.getDataRule() != null).collect(Collectors.toList());
+                                for ( AttributeInfoDTO item:ruleAttribute)
+                                {
+                                    //截取小数点
+                                    IVaildityDataRule vaildityDataRule = VaildityFactoryHelper.VaildityDataRule(item.getDataRule());
+                                    spilt = vaildityDataRule.VailditySpiltDataRule(jsonObj.get(item.getName()),item.getDataTypeDecimalLength());
+                                    jsonObj.put(item.getName(),spilt);
+                                }
                                 //上传逻辑：1 修改 2 新增
                                 if (codeList.contains(jsonObj.get("code"))) {
                                     jsonObj.put("fidata_syncy_type", SyncTypeStatusEnum.UPDATE.getValue());
@@ -803,6 +833,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
                                 jsonObj.put("fidata_update_time", CommonMethods.getFormatDate(date));
                                 jsonObj.put("fidata_update_user", userId);
                                 jsonObj.put("fidata_error_msg", errorMsg);
+
+
                                 //0：上传成功（数据进入stg表） 1：提交成功（数据进入mdm表） 2：提交失败（数据进入mdm表失败）
                                 if (StringUtils.isEmpty(errorMsg)) {
                                     jsonObj.put("fidata_status", SyncStatusTypeEnum.UPLOADED_SUCCESSFULLY.getValue());
@@ -923,6 +955,15 @@ public class MasterDataServiceImpl implements IMasterDataService {
             int flat = stat.executeUpdate(updateSql);
             //验证code是否重复
             verifyRepeatCode(tableName, dto.getData().get("fidata_batch_code").toString());
+            //获取已发布的属性
+            List<AttributeInfoDTO> list = attributeService.listPublishedAttribute(dto.getEntityId());
+            List<AttributeInfoDTO> ruleAttribute =
+                    list.stream().filter(e -> e.getDataRule() != null).collect(Collectors.toList());
+            for (AttributeInfoDTO item:ruleAttribute) {
+                //截取小数点
+                IVaildityDataRule vaildityDataRule = VaildityFactoryHelper.VaildityDataRule(item.getDataRule());
+                vaildityDataRule.VailditySpiltDataRule(dto.getData().get(item.getName()),item.getDataTypeDecimalLength());
+            }
             //关闭连接
             AbstractDbHelper.closeStatement(stat);
             AbstractDbHelper.rollbackConnection(conn);

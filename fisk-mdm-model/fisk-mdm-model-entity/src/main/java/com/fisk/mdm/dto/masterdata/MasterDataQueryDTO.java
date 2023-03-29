@@ -1,6 +1,7 @@
 package com.fisk.mdm.dto.masterdata;
 
 import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
+import com.fisk.mdm.enums.ValidityEnum;
 import lombok.Data;
 
 import java.util.List;
@@ -36,9 +37,12 @@ public class MasterDataQueryDTO extends MasterDataBaseDTO {
      */
     private Integer viewId;
 
+    private ValidityEnum validity;
     /**
      * 自定义筛选条件
      */
     private List<FilterQueryDTO> filterQuery;
+
+
 
 }
