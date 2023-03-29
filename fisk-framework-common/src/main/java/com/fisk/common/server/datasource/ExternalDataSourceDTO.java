@@ -12,4 +12,6 @@ public class ExternalDataSourceDTO {
 
     public String name;
 
+    public String dbType;
+
 }
