@@ -87,7 +87,7 @@ public class ExcelUtils {
      * @params wb 工作簿对象
      * @params index sheet页
      */
-    private static List<List<Object>> readExcelContentList(Workbook wb, int index) {
+    private static List<List<Object>> readExcelContentList(Workbook wb, int index,int startRow) {
         if (wb != null) {
             try {
                 List<List<Object>> content = new ArrayList<>();
@@ -97,7 +97,11 @@ public class ExcelUtils {
                 int getRow = 0;
                 short lastCellNum = 0;
                 for (Row row : sheet) {
-                    if (getRow == 0) {
+                    if(getRow<startRow){
+                        getRow++;
+                        continue;
+                    }
+                    if (getRow == 0||getRow!=0) {
                         lastCellNum = row.getLastCellNum();
                     }
                     if (getRow == 11) {
@@ -243,10 +247,10 @@ public class ExcelUtils {
             List<ExcelDTO> finalListDto = listDto;
             IntStream.range(0, numberOfSheets).forEachOrdered(i -> {
                 // 读取Excel内容，返回list，每一行存放一个list
-                List<List<Object>> lists = readExcelContentList(workbook, i);
+                List<List<Object>> lists = readExcelContentList(workbook, i,startRow);
                 ExcelDTO excelDTO = new ExcelDTO();
                 // excel预览内容 根据用户定义的起始行预览
-                excelDTO.excelContent = lists.stream().skip(startRow).collect(Collectors.toList());
+                excelDTO.excelContent = lists;
                 // excel字段列表
                 if (!CollectionUtils.isEmpty(lists)) {
                     excelDTO.excelField = excelDTO.excelContent.get(0);
