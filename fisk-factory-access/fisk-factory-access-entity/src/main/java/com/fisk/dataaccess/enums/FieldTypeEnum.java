@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.enums;
 
 import com.fisk.common.core.enums.BaseEnum;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author Lock
@@ -49,7 +50,7 @@ public enum FieldTypeEnum implements BaseEnum {
         FieldTypeEnum[] fieldTypeEnums = values();
         for (FieldTypeEnum fieldTypeEnum : fieldTypeEnums) {
             String queryName = fieldTypeEnum.name;
-            if (queryName.equals(name)) {
+            if (StringUtils.contains(name, queryName)) {
                 return fieldTypeEnum;
             }
         }

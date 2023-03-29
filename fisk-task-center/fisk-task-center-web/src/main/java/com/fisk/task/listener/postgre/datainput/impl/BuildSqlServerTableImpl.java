@@ -314,6 +314,10 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         return sql;
     }
 
+    @Override
+    public void fieldFormatModification(DataAccessConfigDTO dto) {
+        log.info("sqlserver字段暂且不用处理");
+    }
 
     @Override
     public List<String> getStgAndTableName(String tableName) {
