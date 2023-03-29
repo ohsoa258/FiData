@@ -154,6 +154,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
     @Value("${spring.open-metadata}")
     private Boolean openMetadata;
+    @Resource
+    PgsqlUtils pgsqlUtils;
 
     @Override
     public ApiConfigDTO getData(long id) {
@@ -489,6 +491,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             }
             // 防止\未被解析
             String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
+            log.info("stg表数据用完即删");
+            pushDataStgToOds(dto.apiCode, 0);
             // 将数据同步到pgsql
             String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
             ResultEntity<Object> result = pushPgSql(null, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId);
@@ -498,8 +502,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // stg同步到ods(联调task)
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
                 ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
-                log.info("stg表数据用完即删");
-                pushDataStgToOds(dto.apiCode, 0);
                 msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
             }
 
@@ -582,6 +584,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             }
             // 防止\未被解析
             String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
+            log.info("根据配置删除stg和ods表数据");
+            pushDataStgToOds(dto.apiCode, 0);
             // 将数据同步到pgsql
             String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
             ResultEntity<Object> result = pushPgSql(importDataDto, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId);
@@ -591,8 +595,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // stg同步到ods(联调task)
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
                 ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
-                log.info("stg表数据用完即删");
-                pushDataStgToOds(dto.apiCode, 0);
                 msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
             }
 
@@ -1281,7 +1283,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             return ResultEntityBuild.build(ResultEnum.DATA_QUALITY_FEIGN_ERROR);
         }
         System.out.println("开始执行sql");
-        PgsqlUtils pgsqlUtils = new PgsqlUtils();
+
         // stg_abbreviationName_tableName
         ResultEntity<Object> excuteResult;
         try {
@@ -1403,7 +1405,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             if (result.code == ResultEnum.SUCCESS.getCode()) {
                 List<String> sqlList = JSON.parseObject(JSON.toJSONString(result.data), List.class);
                 if (!CollectionUtils.isEmpty(sqlList)) {
-                    PgsqlUtils pgsqlUtils = new PgsqlUtils();
+
                     resultEnum = pgsqlUtils.stgToOds(sqlList, flag, targetDbId);
                 }
             }

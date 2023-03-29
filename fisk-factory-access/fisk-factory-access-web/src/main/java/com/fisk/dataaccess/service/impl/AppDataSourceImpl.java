@@ -40,6 +40,8 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     RedisUtil redisUtil;
     @Resource
     ApiResultConfigImpl apiResultConfig;
+    @Resource
+    PgsqlUtils pgsqlUtils;
 
     @Override
     public List<DataSourceDTO> getDataSourceMeta(long appId) {
@@ -107,7 +109,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 // 视图结构
                 dataSource.viewDtoList = sqlServerPlusUtils.loadViewDetails(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER));
             } else if (DataSourceTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(dataSource.driveType)) {
-                PgsqlUtils pgsqlUtils = new PgsqlUtils();
+
                 // 表结构
                 dataSource.tableDtoList = pgsqlUtils.getTableNameAndColumnsPlus(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL));
                 //视图结构
@@ -150,7 +152,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             Connection conn = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
             return sqlServerPlusUtils.getViewField(conn, dto.name);
         } else if (DataSourceTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(dataSource.driveType)) {
-            PgsqlUtils pgsqlUtils = new PgsqlUtils();
+
             Connection conn = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL);
             return dto.queryType == 1 ? pgsqlUtils.getTableColumnName(conn, dto.name) : null;
         }

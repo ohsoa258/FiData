@@ -157,6 +157,8 @@ public class AppRegistrationImpl
 
     @Value("${spring.open-metadata}")
     private Boolean openMetadata;
+    @Resource
+    PgsqlUtils pgsqlUtils;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -934,7 +936,7 @@ public class AppRegistrationImpl
                     break;
                 case POSTGRESQL:
                     url = "jdbc:postgresql://" + dto.host + ":" + dto.port + "/postgres";
-                    PgsqlUtils pgsqlUtils = new PgsqlUtils();
+
                     conn = DbConnectionHelper.connection(url, dto.connectAccount, dto.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL);
                     allDatabases.addAll(pgsqlUtils.getPgDatabases(conn));
                     break;
