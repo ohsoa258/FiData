@@ -12,10 +12,10 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
+import com.fisk.dataservice.dto.tablefields.TableFieldDTO;
 import com.fisk.dataservice.dto.tableservice.*;
 import com.fisk.dataservice.entity.AppServiceConfigPO;
 import com.fisk.dataservice.entity.TableServicePO;
-import com.fisk.dataservice.entity.TableSyncModePO;
 import com.fisk.dataservice.enums.ApiStateTypeEnum;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
 import com.fisk.dataservice.map.DataSourceConMap;
@@ -49,11 +49,13 @@ public class TableServiceImpl
 
     @Resource
     TableFieldImpl tableField;
+
     @Resource
     TableSyncModeImpl tableSyncMode;
 
     @Resource
     UserClient client;
+
     @Resource
     private UserHelper userHelper;
 
@@ -120,7 +122,7 @@ public class TableServiceImpl
         updateTableService(dto.tableService);
 
         //表字段
-        tableField.tableServiceSaveConfig((int) dto.tableService.id, dto.tableFieldList);
+        tableField.tableServiceSaveConfig((int) dto.tableService.id, 0, dto.tableFieldList);
 
         //覆盖方式
         dto.tableSyncMode.typeTableId = (int) dto.tableService.id;
@@ -146,7 +148,7 @@ public class TableServiceImpl
         }
         TableServiceSaveDTO data = new TableServiceSaveDTO();
         data.tableService = TableServiceMap.INSTANCES.poToDto(po);
-        data.tableFieldList = tableField.getTableServiceField(id);
+        data.tableFieldList = tableField.getTableServiceField(id, 0);
         data.tableSyncMode = tableSyncMode.getTableServiceSyncMode(id);
         return data;
     }
@@ -163,7 +165,7 @@ public class TableServiceImpl
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
-        tableField.delTableServiceField((int) id);
+        tableField.delTableServiceField((int) id, 0);
 
         tableSyncMode.delTableServiceSyncMode(id, AppServiceTypeEnum.TABLE.getValue());
 
@@ -223,6 +225,31 @@ public class TableServiceImpl
         TableServiceSaveDTO data = getTableServiceById(id);
 
         return buildParameter(data);
+    }
+
+    @Override
+    public ResultEnum addTableServiceField(TableFieldDTO dto) {
+        if (dto == null) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
+        List<TableFieldDTO> dtoList = new ArrayList<>();
+        dtoList.add(dto);
+        return tableField.addTableServiceField(0, dtoList);
+    }
+
+    @Override
+    public ResultEnum editTableServiceField(TableFieldDTO dto) {
+        if (dto == null) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
+        List<TableFieldDTO> dtoList = new ArrayList<>();
+        dtoList.add(dto);
+        return tableField.tableServiceSaveConfig(0, dto.getId(), dtoList);
+    }
+
+    @Override
+    public ResultEnum deleteTableServiceField(long tableFieldId) {
+        return tableField.delTableServiceField(0, tableFieldId);
     }
 
     /**
