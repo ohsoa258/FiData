@@ -1834,7 +1834,7 @@ public class AppRegistrationImpl
             ExternalDataSourceDTO data = new ExternalDataSourceDTO();
             data.id = item.id;
             data.name = item.name;
-            data.dbType=item.conType.getName();
+            data.dbType=item.conType.getName().toLowerCase();
             list.add(data);
         }
         return list;
