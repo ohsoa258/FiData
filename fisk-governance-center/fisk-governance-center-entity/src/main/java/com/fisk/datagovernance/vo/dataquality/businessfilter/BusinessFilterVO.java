@@ -1,11 +1,8 @@
 package com.fisk.datagovernance.vo.dataquality.businessfilter;
 
 import com.fisk.datagovernance.enums.dataquality.*;
-import com.fisk.datagovernance.vo.dataquality.businessfilter.apifilter.BusinessFilterQueryApiVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-
-import java.time.LocalDateTime;
 
 /**
  * @author dick
@@ -34,9 +31,9 @@ public class BusinessFilterVO {
     public int fiDataSourceId;
 
     /**
-     * 数据源类型
+     * 数据源类型 1:FiData 2:custom
      */
-    @ApiModelProperty(value = "数据源类型")
+    @ApiModelProperty(value = "数据源类型 1:FiData 2:custom")
     public SourceTypeEnum sourceTypeEnum;
 
     /**
@@ -46,9 +43,10 @@ public class BusinessFilterVO {
     public String ruleName;
 
     /**
-     * 表名称/表Id
+     * custom模式下是表名称
+     * FiData类型下是表Id
      */
-    @ApiModelProperty(value = "表名称/表Id")
+    @ApiModelProperty(value = "custom模式下是表名称/FiData类型下是表Id")
     public String tableUnique;
 
     /**
@@ -88,18 +86,6 @@ public class BusinessFilterVO {
     public RuleStateEnum ruleState;
 
     /**
-     * 创建时间
-     */
-    @ApiModelProperty(value = "创建时间")
-    public LocalDateTime createTime;
-
-    /**
-     * 创建人
-     */
-    @ApiModelProperty(value = "创建人")
-    public String createUser;
-
-    /**
      * 规则描述
      */
     @ApiModelProperty(value = "规则描述")
@@ -112,8 +98,8 @@ public class BusinessFilterVO {
     public int filterScene;
 
     /**
-     * API信息
+     * 触发场景：1 调度任务 2 质量报告 3 暂无
      */
-    @ApiModelProperty(value = "API信息")
-    public BusinessFilterQueryApiVO apiInfo;
+    @ApiModelProperty(value = "触发场景：1 调度任务 2 质量报告 3 暂无")
+    public int triggerScene;
 }

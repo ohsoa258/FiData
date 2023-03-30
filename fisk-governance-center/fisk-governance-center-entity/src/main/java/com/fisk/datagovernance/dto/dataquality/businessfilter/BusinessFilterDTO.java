@@ -1,6 +1,5 @@
 package com.fisk.datagovernance.dto.dataquality.businessfilter;
 
-import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterSaveDTO;
 import com.fisk.datagovernance.enums.dataquality.RuleStateEnum;
 import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
@@ -16,15 +15,15 @@ import lombok.Data;
 public class BusinessFilterDTO {
 
     /**
-     * 数据源表主键id
+     * 数据质量数据源表主键ID
      */
-    @ApiModelProperty(value = "数据源表主键id")
+    @ApiModelProperty(value = "数据质量数据源表主键ID")
     public int datasourceId;
 
     /**
-     * 数据源类型
+     * 数据源类型 1:FiData 2:custom
      */
-    @ApiModelProperty(value = "数据源类型")
+    @ApiModelProperty(value = "数据源类型 1:FiData 2:custom")
     public SourceTypeEnum sourceTypeEnum;
 
     /**
@@ -34,9 +33,10 @@ public class BusinessFilterDTO {
     public String ruleName;
 
     /**
-     * 表名称/表Id
+     * custom模式下是表名称
+     * FiData类型下是表Id
      */
-    @ApiModelProperty(value = "表名称/表Id")
+    @ApiModelProperty(value = "custom模式下是表名称/FiData类型下是表Id")
     public String tableUnique;
 
     /**
@@ -76,8 +76,8 @@ public class BusinessFilterDTO {
     public int filterScene;
 
     /**
-     * API信息
+     * 触发场景：1 调度任务 2 质量报告 3 暂无
      */
-    @ApiModelProperty(value = "API信息")
-    public BusinessFilterSaveDTO apiInfo;
+    @ApiModelProperty(value = "触发场景：1 调度任务 2 质量报告 3 暂无")
+    public int triggerScene;
 }

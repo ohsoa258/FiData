@@ -7,6 +7,7 @@ import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterEditDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterQueryDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterSortDto;
+import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterSaveDTO;
 import com.fisk.datagovernance.entity.dataquality.BusinessFilterPO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO;
 
@@ -51,19 +52,19 @@ public interface IBusinessFilterManageService extends IService<BusinessFilterPO>
     ResultEnum deleteData(int id);
 
     /**
-     * 修改组件执行顺序
+     * 修改清洗规则执行顺序
      *
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum editModuleExecSort(List<BusinessFilterSortDto> dto);
+    ResultEnum editFilterRuleSort(List<BusinessFilterSortDto> dto);
 
     /**
      * API清洗,调用授权API获取Token
      *
      * @return 执行结果
      */
-    ResultEntity<String> collAuthApi(BusinessFilterDTO dto);
+    ResultEntity<String> collAuthApi(BusinessFilterSaveDTO dto);
 
     /**
      * API清洗，调用API清洗数据
@@ -71,5 +72,5 @@ public interface IBusinessFilterManageService extends IService<BusinessFilterPO>
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum collApi(BusinessFilterDTO dto);
+    ResultEnum collApi(BusinessFilterSaveDTO dto);
 }

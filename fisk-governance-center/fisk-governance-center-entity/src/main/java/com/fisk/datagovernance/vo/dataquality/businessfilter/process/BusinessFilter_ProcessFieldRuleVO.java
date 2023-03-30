@@ -1,10 +1,10 @@
-package com.fisk.datagovernance.dto.dataquality.businessfilter.process;
+package com.fisk.datagovernance.vo.dataquality.businessfilter.process;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 @Data
-public class BusinessFilter_ProcessFieldRuleDTO {
+public class BusinessFilter_ProcessFieldRuleVO {
     /**
      * tb_bizfilter_rule表主键ID
      */

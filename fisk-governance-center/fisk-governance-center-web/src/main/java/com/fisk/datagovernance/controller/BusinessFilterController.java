@@ -8,6 +8,7 @@ import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterEditDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterQueryDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterSortDto;
+import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterSaveDTO;
 import com.fisk.datagovernance.service.dataquality.IBusinessFilterManageService;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.apifilter.TestVO;
@@ -31,45 +32,47 @@ public class BusinessFilterController {
     @Resource
     private IBusinessFilterManageService service;
 
-    @ApiOperation("查询全部清洗规则")
+    @ApiOperation("清洗规则，查询全部清洗规则")
     @PostMapping("/getAllRule")
     public ResultEntity<List<BusinessFilterVO>> getAllRule(@RequestBody BusinessFilterQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllRule(dto));
     }
 
-    @ApiOperation("添加业务清洗模板组件")
+    @ApiOperation("清洗规则，添加业务清洗规则")
     @PostMapping("/add")
     public ResultEntity<Object> addData(@RequestBody BusinessFilterDTO dto) {
         return ResultEntityBuild.build(service.addData(dto));
     }
 
-    @ApiOperation("编辑业务清洗模板组件")
+    @ApiOperation("清洗规则，编辑业务清洗规则")
     @PutMapping("/edit")
     public ResultEntity<Object> editData(@RequestBody BusinessFilterEditDTO dto) {
         return ResultEntityBuild.build(service.editData(dto));
     }
 
-    @ApiOperation("删除业务清洗模板组件")
+    @ApiOperation("清洗规则，删除业务清洗规则")
     @DeleteMapping("/delete/{id}")
     public ResultEntity<Object> deleteData(@PathVariable("id") int id) {
         return ResultEntityBuild.build(service.deleteData(id));
     }
 
-    @ApiOperation("修改业务清洗模板组件执行顺序")
+    @ApiOperation("清洗规则，修改业务清洗规则执行顺序")
     @PutMapping("/editModuleExecSort")
-    public ResultEntity<Object> editModuleExecSort(@RequestBody List<BusinessFilterSortDto> dto) {
-        return ResultEntityBuild.build(service.editModuleExecSort(dto));
+    public ResultEntity<Object> editFilterRuleSort(@RequestBody List<BusinessFilterSortDto> dto) {
+        return ResultEntityBuild.build(service.editFilterRuleSort(dto));
     }
+
+
 
     @ApiOperation("API清洗，调用授权API获取Token")
     @PostMapping("/collAuthApi")
-    public ResultEntity<String> collAuthApi(@RequestBody BusinessFilterDTO dto) {
+    public ResultEntity<String> collAuthApi(@RequestBody BusinessFilterSaveDTO dto) {
         return service.collAuthApi(dto);
     }
 
     @ApiOperation("API清洗，调用API清洗数据")
     @PostMapping("/collApi")
-    public ResultEntity<Object> collApi(@RequestBody BusinessFilterDTO dto) {
+    public ResultEntity<Object> collApi(@RequestBody BusinessFilterSaveDTO dto) {
         return ResultEntityBuild.build(service.collApi(dto));
     }
 

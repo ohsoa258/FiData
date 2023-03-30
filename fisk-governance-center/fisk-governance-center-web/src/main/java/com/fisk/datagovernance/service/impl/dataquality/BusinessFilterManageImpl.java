@@ -8,8 +8,6 @@ import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.core.user.UserHelper;
-import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
@@ -17,26 +15,22 @@ import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterEditDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterQueryDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterSortDto;
+import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterSaveDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFieldDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.QueryTableRuleDTO;
 import com.fisk.datagovernance.entity.dataquality.BusinessFilterPO;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
-import com.fisk.datagovernance.entity.dataquality.TemplatePO;
 import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
-import com.fisk.datagovernance.enums.dataquality.TemplateTypeEnum;
 import com.fisk.datagovernance.map.dataquality.BusinessFilterMap;
 import com.fisk.datagovernance.mapper.dataquality.BusinessFilterMapper;
 import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
-import com.fisk.datagovernance.mapper.dataquality.TemplateMapper;
 import com.fisk.datagovernance.service.dataquality.IBusinessFilterManageService;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO;
-import com.fisk.datagovernance.vo.dataquality.businessfilter.apifilter.BusinessFilterQueryApiVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -69,13 +63,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     private ExternalInterfaceImpl externalInterfaceImpl;
 
     @Resource
-    private TemplateMapper templateMapper;
-
-    @Resource
     private BusinessFilterApiManageImpl businessFilterApiManageImpl;
-
-    @Resource
-    private UserHelper userHelper;
 
     @Override
     public List<BusinessFilterVO> getAllRule(BusinessFilterQueryDTO query) {
@@ -159,7 +147,6 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             // 第六步：表信息填充
             if (CollectionUtils.isNotEmpty(tableFields)) {
                 for (BusinessFilterVO ruleDto : filterRule) {
-                    ruleDto.setTemplateSceneName(ruleDto.getTemplateScene().getName());
                     FiDataMetaDataTreeDTO f_table = null;
                     if (ruleDto.getSourceTypeEnum() == SourceTypeEnum.FiData) {
                         FiDataMetaDataDTO fiDataMetaDataDTO = tableFields.stream().filter(t -> t.getDataSourceId() == ruleDto.getFiDataSourceId()).findFirst().orElse(null);
@@ -176,83 +163,46 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
                     }
                 }
             }
-            // 第七步：设置表扩展信息（api清洗规则）
-            filterRule = getAllExtends(filterRule);
-            // 第八步：排序设置
+            // 第七步：排序设置
             filterRule = filterRule.stream().sorted(
                     // 1.先按照表名称排正序
                     Comparator.comparing(BusinessFilterVO::getTableAlias, Comparator.naturalOrder())
-                            // 2.再按照规则类型排正序
-                            .thenComparing(BusinessFilterVO::getTemplateScene, Comparator.naturalOrder())
+                            // 2.再按照调度类型排正序
+                            .thenComparing(BusinessFilterVO::getTriggerScene, Comparator.naturalOrder())
                             // 3.再按照执行顺序排正序
                             .thenComparing(BusinessFilterVO::getRuleSort, Comparator.naturalOrder())
             ).collect(Collectors.toList());
         } catch (Exception ex) {
-            log.error("【getAllRule】清洗规则列表异常：" + ex);
+            log.error("[businessFilter]-[getAllRule]-ex：" + ex);
             throw new FkException(ResultEnum.ERROR, ex);
         }
         return filterRule;
-    }
-
-    private List<BusinessFilterVO> getAllExtends(List<BusinessFilterVO> source) {
-        List<BusinessFilterVO> result = source;
-        List<BusinessFilterQueryApiVO> apiListByRuleIds = null;
-        List<BusinessFilterVO> apiRules = source.stream().filter(t -> t.getTemplateType() == TemplateTypeEnum.API_FILTER_TEMPLATE).collect(Collectors.toList());
-        if (CollectionUtils.isNotEmpty(apiRules)) {
-            List<Integer> apiRuleIds = apiRules.stream().map(BusinessFilterVO::getId).collect(Collectors.toList());
-            apiListByRuleIds = businessFilterApiManageImpl.getApiListByRuleIds(apiRuleIds);
-        }
-        if (CollectionUtils.isNotEmpty(apiListByRuleIds)) {
-            for (int i = 0; i < source.size(); i++) {
-                BusinessFilterVO businessFilterVO = source.get(i);
-                BusinessFilterQueryApiVO apiVO = apiListByRuleIds.stream().filter(t -> t.getRuleId() == businessFilterVO.getId()).findFirst().orElse(null);
-                if (apiVO != null) {
-                    businessFilterVO.setApiInfo(apiVO);
-                }
-            }
-        }
-        return result;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(BusinessFilterDTO dto) {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
+        if (dto == null) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
         try {
-            if (dto.sourceTypeEnum == SourceTypeEnum.FiData) {
-                int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.sourceTypeEnum, dto.datasourceId);
-                if (idByDataSourceId == 0) {
+            //第一步：查询数据质量数据源表主键id
+            if (dto.getSourceTypeEnum() == SourceTypeEnum.FiData) {
+                int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.getSourceTypeEnum(), dto.getDatasourceId());
+                if (idByDataSourceId == 0)
                     return ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS;
-                }
-                dto.datasourceId = idByDataSourceId;
-            }
-            //第一步：验证模板是否存在
-            TemplatePO templatePO = templateMapper.selectById(dto.templateId);
-            if (templatePO == null) {
-                return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
+                dto.setDatasourceId(idByDataSourceId);
             }
             //第二步：转换DTO对象为PO对象
             BusinessFilterPO businessFilterPO = BusinessFilterMap.INSTANCES.dtoToPo(dto);
-            if (businessFilterPO == null) {
+            if (businessFilterPO == null)
                 return ResultEnum.SAVE_DATA_ERROR;
-            }
-            //第三步：保存业务清洗信息
-            UserInfo loginUserInfo = userHelper.getLoginUserInfo();
-            businessFilterPO.setCreateTime(LocalDateTime.now());
-            businessFilterPO.setCreateUser(String.valueOf(loginUserInfo.getId()));
-            int i = baseMapper.insertOne(businessFilterPO);
-            if (i <= 0) {
+            //第三步：保存业务清洗规则信息
+            int i = baseMapper.insert(businessFilterPO);
+            if (i <= 0)
                 return ResultEnum.SAVE_DATA_ERROR;
-            }
-            //第四步：保存业务清洗API信息
-            if (templatePO.getTemplateType() == TemplateTypeEnum.API_FILTER_TEMPLATE.getValue() &&
-                    dto.getApiInfo() != null) {
-                resultEnum = businessFilterApiManageImpl.saveApiInfo("add", Math.toIntExact(businessFilterPO.getId()), dto.getApiInfo());
-                if (resultEnum != ResultEnum.SUCCESS) {
-                    return resultEnum;
-                }
-            }
-            //第五步：调用元数据接口获取最新的规则信息
+            //第四步：调用元数据接口同步最新的规则信息
             externalInterfaceImpl.synchronousTableBusinessMetaData(dto.getDatasourceId(), dto.getSourceTypeEnum(), dto.getTableBusinessType(), dto.getTableUnique());
         } catch (Exception ex) {
             log.error("[businessFilter]-[addData]-ex:" + ex);
@@ -265,35 +215,23 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum editData(BusinessFilterEditDTO dto) {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
+        if (dto == null) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
         try {
-            //第一步：验证模板是否存在
-            TemplatePO templatePO = templateMapper.selectById(dto.templateId);
-            if (templatePO == null) {
-                return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
-            }
+            //第一步：查询修改的数据是否存在
             BusinessFilterPO businessFilterPO = baseMapper.selectById(dto.id);
-            if (businessFilterPO == null) {
+            if (businessFilterPO == null)
                 return ResultEnum.DATA_NOTEXISTS;
-            }
             //第二步：转换DTO对象为PO对象
             businessFilterPO = BusinessFilterMap.INSTANCES.dtoToPo_Edit(dto);
-            if (businessFilterPO == null) {
+            if (businessFilterPO == null)
                 return ResultEnum.SAVE_DATA_ERROR;
-            }
             //第三步：保存业务清洗信息
             int i = baseMapper.updateById(businessFilterPO);
-            if (i <= 0) {
+            if (i <= 0)
                 return ResultEnum.SAVE_DATA_ERROR;
-            }
-            //第四步：保存业务清洗API信息
-            if (templatePO.getTemplateType() == TemplateTypeEnum.API_FILTER_TEMPLATE.getValue() &&
-                    dto.getApiInfo() != null) {
-                resultEnum = businessFilterApiManageImpl.saveApiInfo("edit", Math.toIntExact(businessFilterPO.getId()), dto.getApiInfo());
-                if (resultEnum != ResultEnum.SUCCESS) {
-                    return resultEnum;
-                }
-            }
-            //第五步：调用元数据接口获取最新的规则信息
+            //第四步：调用元数据接口同步最新的规则信息
             externalInterfaceImpl.synchronousTableBusinessMetaData(dto.getDatasourceId(), dto.getSourceTypeEnum(), dto.getTableBusinessType(), dto.getTableUnique());
         } catch (Exception ex) {
             log.error("[businessFilter]-[editData]-ex:" + ex);
@@ -305,19 +243,19 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum deleteData(int id) {
+        if (id == 0) {
+            return ResultEnum.PARAMTER_ERROR;
+        }
         try {
             BusinessFilterPO businessFilterPO = baseMapper.selectById(id);
-            if (businessFilterPO == null) {
-                return ResultEnum.DATA_NOTEXISTS;
-            }
-            // 调用元数据接口获取最新的规则信息
+            if (businessFilterPO == null)
+                return ResultEnum.SUCCESS;
+            // 调用元数据接口同步最新的规则信息
             DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(businessFilterPO.getDatasourceId());
             if (dataSourceConPO != null) {
                 SourceTypeEnum sourceTypeEnum = SourceTypeEnum.getEnum(dataSourceConPO.getDatasourceType());
                 externalInterfaceImpl.synchronousTableBusinessMetaData(businessFilterPO.getDatasourceId(), sourceTypeEnum, businessFilterPO.getTableBusinessType(), businessFilterPO.getTableUnique());
             }
-            // 删除API清洗模板扩展规则
-            businessFilterApiManageImpl.deleteApiInfo(id);
             return baseMapper.deleteByIdWithFill(businessFilterPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.DELETE_ERROR;
         } catch (Exception ex) {
             log.error("[businessFilter]-[deleteData]-ex:" + ex);
@@ -327,17 +265,16 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultEnum editModuleExecSort(List<BusinessFilterSortDto> dto) {
+    public ResultEnum editFilterRuleSort(List<BusinessFilterSortDto> dto) {
         if (CollectionUtils.isEmpty(dto)) {
-            return ResultEnum.DATA_QUALITY_REQUESTSORT_ERROR;
+            return ResultEnum.PARAMTER_NOTNULL;
         }
         List<Integer> collect = dto.stream().map(BusinessFilterSortDto::getId).distinct().collect(Collectors.toList());
         QueryWrapper<BusinessFilterPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(BusinessFilterPO::getDelFlag, 1).in(BusinessFilterPO::getId, collect);
         List<BusinessFilterPO> businessFilterPOS = businessFilterMapper.selectList(queryWrapper);
-        if (CollectionUtils.isEmpty(businessFilterPOS)) {
+        if (CollectionUtils.isEmpty(businessFilterPOS))
             return ResultEnum.DATA_NOTEXISTS;
-        }
         businessFilterPOS.forEach(e -> {
             Optional<BusinessFilterSortDto> first = dto.stream().filter(item -> item.getId() == e.getId()).findFirst();
             if (first.isPresent()) {
@@ -352,12 +289,12 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     }
 
     @Override
-    public ResultEntity<String> collAuthApi(BusinessFilterDTO dto) {
+    public ResultEntity<String> collAuthApi(BusinessFilterSaveDTO dto) {
         return businessFilterApiManageImpl.collAuthApi(dto);
     }
 
     @Override
-    public ResultEnum collApi(BusinessFilterDTO dto) {
+    public ResultEnum collApi(BusinessFilterSaveDTO dto) {
         return businessFilterApiManageImpl.collApi(dto);
     }
 }

@@ -1,0 +1,45 @@
+package com.fisk.datagovernance.vo.dataquality.businessfilter.process;
+
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+public class BusinessFilter_ProcessExpressVO {
+    /**
+     * tb_bizfilter_rule表主键ID
+     */
+    @ApiModelProperty(value = "tb_bizfilter_rule表主键ID")
+    public int ruleId;
+
+    /**
+     * tb_bizfilter_process_task表task_code
+     */
+    @ApiModelProperty(value = "tb_bizfilter_process_task表task_code")
+    public String taskCode;
+
+    /**
+     * 表达式规则
+     */
+    @ApiModelProperty(value = "表达式规则")
+    public List<BusinessFilter_ProcessFieldRuleVO> expressRuleList;
+
+    /**
+     * 表达式规则之间逻辑关系
+     */
+    @ApiModelProperty(value = "表达式规则之间逻辑关系")
+    public String expressRuleRelation;
+
+    /**
+     * 表达式预览文本
+     */
+    @ApiModelProperty(value = "表达式预览文本")
+    public String expressPreviewText;
+
+    /**
+     * 自定义描述
+     */
+    @ApiModelProperty(value = "自定义描述")
+    public String customDescribe;
+}

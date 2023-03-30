@@ -207,16 +207,16 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
     }
 
     @Override
-    public ResultEntity<String> collAuthApi(BusinessFilterDTO dto) {
+    public ResultEntity<String> collAuthApi(BusinessFilterSaveDTO dto) {
         String token = "";
         if (dto == null) {
             return ResultEntityBuild.buildData(ResultEnum.PARAMTER_NOTNULL, token);
         }
         try {
-            BusinessFilterApiConfigDTO apiConfig = dto.getApiInfo().getApiConfig();
-            List<BusinessFilterApiParamDTO> apiParmConfig = dto.getApiInfo().getApiParamConfig().stream().filter(t -> t.getApiParamType() == 1).collect(Collectors.toList());
-            List<BusinessFilterApiResultDTO> apiResultConfigList = dto.getApiInfo().getApiResultConfig().stream().filter(t -> t.getResultParamType() == 1).collect(Collectors.toList());
-            if (apiConfig == null || CollectionUtils.isEmpty(apiParmConfig) || CollectionUtils.isEmpty(apiResultConfigList)) {
+            BusinessFilterApiConfigDTO apiConfig = dto.getApiConfig();
+            List<BusinessFilterApiParamDTO> apiParamConfig = dto.getApiParamConfig().stream().filter(t -> t.getApiParamType() == 1).collect(Collectors.toList());
+            List<BusinessFilterApiResultDTO> apiResultConfigList = dto.getApiResultConfig().stream().filter(t -> t.getResultParamType() == 1).collect(Collectors.toList());
+            if (apiConfig == null || CollectionUtils.isEmpty(apiParamConfig) || CollectionUtils.isEmpty(apiResultConfigList)) {
                 return ResultEntityBuild.buildData(ResultEnum.PARAMTER_NOTNULL, token);
             }
             apiResultConfigList = saveApiRecursionResult(apiResultConfigList);
@@ -241,12 +241,12 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
                 JSONObject rawDataParams = new JSONObject();
                 Map<String, String> formDataParams = new IdentityHashMap<>();
                 if (apiConfig.getApiAuthBodyType().equals("raw")) {
-                    apiParmConfig.forEach(t -> {
+                    apiParamConfig.forEach(t -> {
                         rawDataParams.put(t.getApiParamKey(), t.getApiParamValue());
                     });
                     apiHttpRequestDto.setJsonObject(rawDataParams);
                 } else if (apiConfig.getApiAuthBodyType().equals("form-data")) {
-                    apiParmConfig.forEach(t -> {
+                    apiParamConfig.forEach(t -> {
                         formDataParams.put(t.getApiParamKey(), t.getApiParamValue());
                     });
                     apiHttpRequestDto.setFormDataParams(formDataParams);
@@ -272,14 +272,14 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
     }
 
     @Override
-    public ResultEnum collApi(BusinessFilterDTO dto) {
-        if (dto == null || dto.getApiInfo() == null) {
+    public ResultEnum collApi(BusinessFilterSaveDTO dto) {
+        if (dto == null ) {
             return ResultEnum.PARAMTER_ERROR;
         }
         try {
-            BusinessFilterApiConfigDTO apiConfig = dto.getApiInfo().getApiConfig();
-            List<BusinessFilterApiParamDTO> apiParamConfig = dto.getApiInfo().getApiParamConfig().stream().filter(t -> t.getApiParamType() == 2).collect(Collectors.toList());
-            List<BusinessFilterApiResultDTO> apiResultConfig = dto.getApiInfo().getApiResultConfig().stream().filter(t -> t.getResultParamType() == 2).collect(Collectors.toList());
+            BusinessFilterApiConfigDTO apiConfig = dto.getApiConfig();
+            List<BusinessFilterApiParamDTO> apiParamConfig = dto.getApiParamConfig().stream().filter(t -> t.getApiParamType() == 2).collect(Collectors.toList());
+            List<BusinessFilterApiResultDTO> apiResultConfig = dto.getApiResultConfig().stream().filter(t -> t.getResultParamType() == 2).collect(Collectors.toList());
             if (apiConfig == null || CollectionUtils.isEmpty(apiParamConfig) || CollectionUtils.isEmpty(apiResultConfig)) {
                 return ResultEnum.PARAMTER_ERROR;
             }
