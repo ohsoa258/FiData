@@ -5,12 +5,6 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-/**
- * @author dick
- * @version 1.0
- * @description TDDD
- * @date 2022/10/9 14:54
- */
 @Data
 public class BusinessFilterApiAuthVO {
     /**

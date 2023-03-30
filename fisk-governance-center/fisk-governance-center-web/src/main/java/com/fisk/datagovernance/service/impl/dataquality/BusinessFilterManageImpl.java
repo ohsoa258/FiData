@@ -26,6 +26,7 @@ import com.fisk.datagovernance.map.dataquality.BusinessFilterMap;
 import com.fisk.datagovernance.mapper.dataquality.BusinessFilterMapper;
 import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
 import com.fisk.datagovernance.service.dataquality.IBusinessFilterManageService;
+import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterResultVO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.process.BusinessFilter_ProcessAssemblyVO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.process.BusinessFilter_ProcessTaskVO;
@@ -308,6 +309,11 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
 
     @Override
     public ResultEnum editProcess(BusinessFilter_ProcessTaskDTO dto) {
+        return null;
+    }
+
+    @Override
+    public ResultEntity<List<BusinessFilterResultVO>> collProcess(long ruleId) {
         return null;
     }
 

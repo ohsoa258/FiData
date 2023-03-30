@@ -11,6 +11,7 @@ import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterSort
 import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterSaveDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.process.BusinessFilter_ProcessTaskDTO;
 import com.fisk.datagovernance.service.dataquality.IBusinessFilterManageService;
+import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterResultVO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.apifilter.TestVO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.process.BusinessFilter_ProcessAssemblyVO;
@@ -87,6 +88,12 @@ public class BusinessFilterController {
     @PutMapping("/editProcess")
     public ResultEntity<Object> editProcess(@RequestBody BusinessFilter_ProcessTaskDTO dto){
         return ResultEntityBuild.build(service.editProcess(dto));
+    }
+
+    @ApiOperation("清洗流程，执行清洗流程")
+    @PostMapping("/collProcess")
+    public ResultEntity<List<BusinessFilterResultVO>> collProcess(@RequestParam("ruleId") long ruleId){
+        return service.collProcess(ruleId);
     }
 
     @ApiOperation("API清洗，调用授权API获取Token")

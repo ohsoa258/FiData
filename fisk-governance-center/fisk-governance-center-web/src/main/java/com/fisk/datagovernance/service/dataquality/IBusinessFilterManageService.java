@@ -10,6 +10,7 @@ import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterSort
 import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterSaveDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.process.BusinessFilter_ProcessTaskDTO;
 import com.fisk.datagovernance.entity.dataquality.BusinessFilterPO;
+import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterResultVO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.process.BusinessFilter_ProcessAssemblyVO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.process.BusinessFilter_ProcessTaskVO;
@@ -92,6 +93,14 @@ public interface IBusinessFilterManageService extends IService<BusinessFilterPO>
      * @return 执行结果
      */
     ResultEnum editProcess(BusinessFilter_ProcessTaskDTO dto);
+
+    /**
+     * 调用工作区流程
+     *
+     * @param ruleId
+     * @return 执行结果
+     */
+    ResultEntity<List<BusinessFilterResultVO>> collProcess(long ruleId);
 
     /**
      * API清洗,调用授权API获取Token
