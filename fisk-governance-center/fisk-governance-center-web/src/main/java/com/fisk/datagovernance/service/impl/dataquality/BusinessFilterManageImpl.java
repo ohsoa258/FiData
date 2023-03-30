@@ -7,6 +7,7 @@ import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
@@ -68,6 +69,24 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
 
     @Resource
     private BusinessFilterApiManageImpl businessFilterApiManageImpl;
+
+    @Resource
+    private BusinessFilter_ProcessAssemblyManageImpl processAssemblyManageImpl;
+
+    @Resource
+    private BusinessFilter_ProcessExpressManageImpl processExpressManageImpl;
+
+    @Resource
+    private BusinessFilter_ProcessFieldAssignManageImpl processFieldAssignManageImpl;
+
+    @Resource
+    private BusinessFilter_ProcessFieldRuleManageImpl processFieldRuleManageImpl;
+
+    @Resource
+    private BusinessFilter_ProcessTaskManageImpl processTaskManageImpl;
+
+    @Resource
+    private BusinessFilter_ProcessTriggerManageImpl processTriggerManageImpl;
 
     @Override
     public List<BusinessFilterVO> getAllRule(BusinessFilterQueryDTO query) {
@@ -210,7 +229,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             externalInterfaceImpl.synchronousTableBusinessMetaData(dto.getDatasourceId(), dto.getSourceTypeEnum(), dto.getTableBusinessType(), dto.getTableUnique());
         } catch (Exception ex) {
             log.error("[businessFilter]-[addData]-ex:" + ex);
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR, ex);
+            throw new FkException(ResultEnum.ERROR, ex);
         }
         return resultEnum;
     }
@@ -239,7 +258,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             externalInterfaceImpl.synchronousTableBusinessMetaData(dto.getDatasourceId(), dto.getSourceTypeEnum(), dto.getTableBusinessType(), dto.getTableUnique());
         } catch (Exception ex) {
             log.error("[businessFilter]-[editData]-ex:" + ex);
-            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, ex);
+            throw new FkException(ResultEnum.ERROR, ex);
         }
         return resultEnum;
     }
@@ -263,7 +282,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             return baseMapper.deleteByIdWithFill(businessFilterPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.DELETE_ERROR;
         } catch (Exception ex) {
             log.error("[businessFilter]-[deleteData]-ex:" + ex);
-            throw new FkException(ResultEnum.DELETE_ERROR, ex);
+            throw new FkException(ResultEnum.ERROR, ex);
         }
     }
 
@@ -293,27 +312,65 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     }
 
     @Override
-    public ResultEntity<List<BusinessFilter_ProcessAssemblyVO>> getProcessAssembly() {
-        return null;
+    public List<BusinessFilter_ProcessAssemblyVO> getProcessAssembly() {
+        return processAssemblyManageImpl.getVOList();
     }
 
     @Override
     public ResultEntity<List<BusinessFilter_ProcessTaskVO>> getProcessDetail(long ruleId) {
+        List<BusinessFilter_ProcessTaskVO> processTaskList = new ArrayList<>();
+        if (ruleId == 0) {
+            return ResultEntityBuild.buildData(ResultEnum.PARAMTER_NOTNULL, processTaskList);
+        }
+        try {
+            // 第一步：查询清洗规则信息
+            BusinessFilterPO businessFilterPO = baseMapper.selectById(ruleId);
+            if (businessFilterPO == null)
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_THE_CLEANING_RULE_DOES_NOT_EXIST, processTaskList);
+            // 第二步：查询工作区-流程信息
+
+            // 第三步：查询工作区-条件表达式
+            // 第四步：查询工作区-字段赋值
+            // 第五步：查询工作区-字段规则
+            // 第六步：查询工作区-调度配置
+            // 第七步：组装数据-将工作区的信息组装到清洗规则中
+
+        } catch (Exception ex) {
+            log.error("[businessFilter]-[getProcessDetail]-ex:" + ex);
+            throw new FkException(ResultEnum.ERROR, ex);
+        }
         return null;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum addProcess(BusinessFilter_ProcessTaskDTO dto) {
+        try {
+        } catch (Exception ex) {
+            log.error("[businessFilter]-[addProcess]-ex:" + ex);
+            throw new FkException(ResultEnum.ERROR, ex);
+        }
         return null;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum editProcess(BusinessFilter_ProcessTaskDTO dto) {
+        try {
+        } catch (Exception ex) {
+            log.error("[businessFilter]-[editProcess]-ex:" + ex);
+            throw new FkException(ResultEnum.ERROR, ex);
+        }
         return null;
     }
 
     @Override
     public ResultEntity<List<BusinessFilterResultVO>> collProcess(long ruleId) {
+        try {
+        } catch (Exception ex) {
+            log.error("[businessFilter]-[collProcess]-ex:" + ex);
+            throw new FkException(ResultEnum.ERROR, ex);
+        }
         return null;
     }
 

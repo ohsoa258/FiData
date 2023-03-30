@@ -68,31 +68,31 @@ public class BusinessFilterController {
 
     @ApiOperation("清洗流程，查询工作区组件")
     @GetMapping("/getProcessAssembly")
-    public ResultEntity<List<BusinessFilter_ProcessAssemblyVO>> getProcessAssembly(){
-        return service.getProcessAssembly();
+    public ResultEntity<List<BusinessFilter_ProcessAssemblyVO>> getProcessAssembly() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getProcessAssembly());
     }
 
     @ApiOperation("清洗流程，查询工作区流程")
     @GetMapping("/getProcessDetail/{ruleId}")
-    public ResultEntity<List<BusinessFilter_ProcessTaskVO>> getProcessDetail(@PathVariable("ruleId") long ruleId){
+    public ResultEntity<List<BusinessFilter_ProcessTaskVO>> getProcessDetail(@PathVariable("ruleId") long ruleId) {
         return service.getProcessDetail(ruleId);
     }
 
     @ApiOperation("清洗流程，新增工作区流程")
     @PostMapping("/addProcess")
-    public ResultEntity<Object> addProcess(@RequestBody BusinessFilter_ProcessTaskDTO dto){
+    public ResultEntity<Object> addProcess(@RequestBody BusinessFilter_ProcessTaskDTO dto) {
         return ResultEntityBuild.build(service.addProcess(dto));
     }
 
     @ApiOperation("清洗流程，编辑工作区流程")
     @PutMapping("/editProcess")
-    public ResultEntity<Object> editProcess(@RequestBody BusinessFilter_ProcessTaskDTO dto){
+    public ResultEntity<Object> editProcess(@RequestBody BusinessFilter_ProcessTaskDTO dto) {
         return ResultEntityBuild.build(service.editProcess(dto));
     }
 
     @ApiOperation("清洗流程，执行清洗流程")
     @PostMapping("/collProcess")
-    public ResultEntity<List<BusinessFilterResultVO>> collProcess(@RequestParam("ruleId") long ruleId){
+    public ResultEntity<List<BusinessFilterResultVO>> collProcess(@RequestParam("ruleId") long ruleId) {
         return service.collProcess(ruleId);
     }
 
@@ -110,8 +110,8 @@ public class BusinessFilterController {
 
     @ApiOperation("API清洗，获取测试数据")
     @PostMapping("/getCollApiTestData")
-    public Object getCollApiTestData(@RequestBody TestVO dto){
-        TestVO testVO=new TestVO();
+    public Object getCollApiTestData(@RequestBody TestVO dto) {
+        TestVO testVO = new TestVO();
         testVO.setId(dto.getId());
         testVO.setSource("AAD");
         return testVO;

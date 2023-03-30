@@ -68,7 +68,7 @@ public interface IBusinessFilterManageService extends IService<BusinessFilterPO>
      *
      * @return 执行结果
      */
-    ResultEntity<List<BusinessFilter_ProcessAssemblyVO>> getProcessAssembly();
+    List<BusinessFilter_ProcessAssemblyVO> getProcessAssembly();
 
     /**
      * 查询工作区流程

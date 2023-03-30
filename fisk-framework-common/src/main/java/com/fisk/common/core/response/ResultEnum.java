@@ -305,6 +305,7 @@ public enum ResultEnum {
     DATA_QUALITY_BUSINESS_API_FILTER_EXEC_ERROR(11022, "业务API清洗方法执行异常"),
     DATA_QUALITY_NOTICE_CONFIG_ISNULL(11023, "质量报告通知配置为空"),
     DATA_QUALITY_NOTICE_RECIPIENT_ISNULL(11024, "质量报告接收人为空"),
+    DATA_QUALITY_THE_CLEANING_RULE_DOES_NOT_EXIST(11025, "业务清洗规则不存在"),
 
     /**
      * 数据安全
