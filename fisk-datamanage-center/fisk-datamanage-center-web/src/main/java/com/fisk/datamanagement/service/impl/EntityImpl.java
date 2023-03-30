@@ -77,12 +77,10 @@ public class EntityImpl implements IEntity {
      *
      * @return
      */
-    @Scheduled(cron = "0 0 2 1 * ?") //每月的1日的凌晨2点调整任务
     public List<EntityTreeDTO> getEntityList() {
-
         List<EntityTreeDTO> metadataEntityTree = metadataEntity.getMetadataEntityTree();
         String jsonString = JSONObject.toJSONString(metadataEntityTree);
-        redisTemplate.opsForValue().set(metaDataEntity, jsonString,720l, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(metaDataEntity, jsonString);
         return metadataEntityTree;
     }
 
