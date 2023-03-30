@@ -30,8 +30,6 @@ public class BloodCompensationController {
 
     @Resource
     IBloodCompensation service;
-    @Resource
-    DataAccessClient dataAccessClient;
 
     @ApiOperation("同步元数据")
     @GetMapping("/systemSynchronousBlood")
