@@ -13,9 +13,9 @@ public class BusinessFilter_ProcessTaskPO extends BasePO {
     public int ruleId;
 
     /**
-     * tb_bizfilter_process_assembly表主键ID
+     * tb_bizfilter_process_assembly表组件标识
      */
-    public int assemblyId;
+    public int assemblyCode;
 
     /**
      * 任务code

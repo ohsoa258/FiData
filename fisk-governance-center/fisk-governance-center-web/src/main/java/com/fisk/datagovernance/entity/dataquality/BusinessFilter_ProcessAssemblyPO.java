@@ -8,6 +8,11 @@ import lombok.Data;
 @TableName("tb_bizfilter_process_assembly")
 public class BusinessFilter_ProcessAssemblyPO extends BasePO {
     /**
+     * 组件标识
+     */
+    public int assemblyCode;
+
+    /**
      * 组件名称
      */
     public String assemblyName;

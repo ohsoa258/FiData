@@ -10,6 +10,7 @@ import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterQuer
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterSortDto;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterSaveDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.process.BusinessFilter_ProcessTaskDTO;
+import com.fisk.datagovernance.dto.dataquality.businessfilter.process.BusinessFilter_SaveProcessDTO;
 import com.fisk.datagovernance.service.dataquality.IBusinessFilterManageService;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterResultVO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO;
@@ -80,13 +81,13 @@ public class BusinessFilterController {
 
     @ApiOperation("清洗流程，新增工作区流程")
     @PostMapping("/addProcess")
-    public ResultEntity<Object> addProcess(@RequestBody BusinessFilter_ProcessTaskDTO dto) {
+    public ResultEntity<Object> addProcess(@RequestBody BusinessFilter_SaveProcessDTO dto) {
         return ResultEntityBuild.build(service.addProcess(dto));
     }
 
     @ApiOperation("清洗流程，编辑工作区流程")
     @PutMapping("/editProcess")
-    public ResultEntity<Object> editProcess(@RequestBody BusinessFilter_ProcessTaskDTO dto) {
+    public ResultEntity<Object> editProcess(@RequestBody BusinessFilter_SaveProcessDTO dto) {
         return ResultEntityBuild.build(service.editProcess(dto));
     }
 

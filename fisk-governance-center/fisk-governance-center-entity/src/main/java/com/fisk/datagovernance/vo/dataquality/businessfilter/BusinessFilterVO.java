@@ -15,7 +15,7 @@ public class BusinessFilterVO {
     /**
      * id
      */
-    @ApiModelProperty(value = "id")
+    @ApiModelProperty(value = "主键id")
     public int id;
 
     /**

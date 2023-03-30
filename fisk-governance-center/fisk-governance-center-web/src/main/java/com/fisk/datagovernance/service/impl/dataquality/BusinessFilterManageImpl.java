@@ -18,6 +18,7 @@ import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterQuer
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterSortDto;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterSaveDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.process.BusinessFilter_ProcessTaskDTO;
+import com.fisk.datagovernance.dto.dataquality.businessfilter.process.BusinessFilter_SaveProcessDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFieldDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.QueryTableRuleDTO;
 import com.fisk.datagovernance.entity.dataquality.BusinessFilterPO;
@@ -29,8 +30,8 @@ import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
 import com.fisk.datagovernance.service.dataquality.IBusinessFilterManageService;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterResultVO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO;
-import com.fisk.datagovernance.vo.dataquality.businessfilter.process.BusinessFilter_ProcessAssemblyVO;
-import com.fisk.datagovernance.vo.dataquality.businessfilter.process.BusinessFilter_ProcessTaskVO;
+import com.fisk.datagovernance.vo.dataquality.businessfilter.process.*;
+import com.fisk.dataservice.enums.ProcessAssemblyTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -87,6 +88,9 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
 
     @Resource
     private BusinessFilter_ProcessTriggerManageImpl processTriggerManageImpl;
+
+    @Resource
+    private BusinessFilter_ProcessSqlScriptManageImpl processSqlScriptManageImpl;
 
     @Override
     public List<BusinessFilterVO> getAllRule(BusinessFilterQueryDTO query) {
@@ -328,24 +332,73 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             if (businessFilterPO == null)
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_THE_CLEANING_RULE_DOES_NOT_EXIST, processTaskList);
             // 第二步：查询工作区-流程信息
-
+            List<BusinessFilter_ProcessTaskVO> processTaskVOList = processTaskManageImpl.getVOList(ruleId);
+            if (CollectionUtils.isEmpty(processTaskVOList))
+                return ResultEntityBuild.buildData(ResultEnum.SUCCESS, processTaskList);
             // 第三步：查询工作区-条件表达式
+            List<BusinessFilter_ProcessExpressVO> processExpressVOList = processExpressManageImpl.getVOList(ruleId);
             // 第四步：查询工作区-字段赋值
+            List<BusinessFilter_ProcessFieldAssignVO> processFieldAssignVOList = processFieldAssignManageImpl.getVOList(ruleId);
             // 第五步：查询工作区-字段规则
+            List<BusinessFilter_ProcessFieldRuleVO> processFieldRuleVOList = processFieldRuleManageImpl.getVOList(ruleId);
             // 第六步：查询工作区-调度配置
-            // 第七步：组装数据-将工作区的信息组装到清洗规则中
+            List<BusinessFilter_ProcessTriggerVO> processTriggerVOList = processTriggerManageImpl.getVOList(ruleId);
+            // 第七步：查询工作区-SQL脚本
+            List<BusinessFilter_ProcessSqlScriptVO> processSqlScriptVOList = processSqlScriptManageImpl.getVOList(ruleId);
 
+            // 第八步：组装数据-将工作区的信息组装到流程中
+            for (BusinessFilter_ProcessTaskVO processTaskVO : processTaskVOList) {
+                ProcessAssemblyTypeEnum processAssemblyTypeEnum = ProcessAssemblyTypeEnum.getEnum(processTaskVO.getAssemblyCode());
+                if (processAssemblyTypeEnum == ProcessAssemblyTypeEnum.NONE)
+                    throw new FkException(ResultEnum.ERROR, "清洗组件缺失");
+
+                List<BusinessFilter_ProcessFieldRuleVO> filter_processFieldRuleVOList = null;
+                switch (processAssemblyTypeEnum) {
+                    case TRIGGER:
+                        BusinessFilter_ProcessTriggerVO filter_processTriggerVO = processTriggerVOList.stream().filter(t -> t.getTaskCode().equals(processTaskVO.getTaskCode())).findFirst().orElse(null);
+                        if (filter_processTriggerVO != null) {
+                            processTaskVO.setProcessTriggerInfo(filter_processTriggerVO);
+                        }
+                        break;
+                    case CONDITIONAL_EXPRESS:
+                        BusinessFilter_ProcessExpressVO filter_processExpressVO = processExpressVOList.stream().filter(t -> t.getTaskCode().equals(processTaskVO.getTaskCode())).findFirst().orElse(null);
+                        if (filter_processExpressVO != null) {
+                            filter_processFieldRuleVOList = processFieldRuleVOList.stream().filter(t -> t.getTaskCode().equals(processTaskVO.getTaskCode()) && t.getBusinessId() == filter_processExpressVO.getId()).collect(Collectors.toList());
+                            filter_processExpressVO.setExpressRuleList(filter_processFieldRuleVOList);
+                            processTaskVO.setProcessExpressInfo(filter_processExpressVO);
+                        }
+                        break;
+                    case SQL_SCRIPT:
+                        BusinessFilter_ProcessSqlScriptVO filter_processSqlScriptVO = processSqlScriptVOList.stream().filter(t -> t.getTaskCode().equals(processTaskVO.getTaskCode())).findFirst().orElse(null);
+                        if (filter_processSqlScriptVO != null) {
+                            processTaskVO.setProcessSqlScriptInfo(filter_processSqlScriptVO);
+                        }
+                        break;
+                    case OPENAPI:
+                        break;
+                    case FIELD_ASSIGNMENT:
+                        BusinessFilter_ProcessFieldAssignVO filter_processFieldAssignVO = processFieldAssignVOList.stream().filter(t -> t.getTaskCode().equals(processTaskVO.getTaskCode())).findFirst().orElse(null);
+                        if (filter_processFieldAssignVO != null) {
+                            filter_processFieldRuleVOList = processFieldRuleVOList.stream().filter(t -> t.getTaskCode().equals(processTaskVO.getTaskCode()) && t.getBusinessId() == filter_processFieldAssignVO.getId()).collect(Collectors.toList());
+                            filter_processFieldAssignVO.setFieldRuleList(filter_processFieldRuleVOList);
+                            processTaskVO.setProcessFieldAssignInfo(filter_processFieldAssignVO);
+                        }
+                        break;
+                }
+                processTaskList.add(processTaskVO);
+            }
         } catch (Exception ex) {
             log.error("[businessFilter]-[getProcessDetail]-ex:" + ex);
             throw new FkException(ResultEnum.ERROR, ex);
         }
-        return null;
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, processTaskList);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultEnum addProcess(BusinessFilter_ProcessTaskDTO dto) {
+    public ResultEnum addProcess(BusinessFilter_SaveProcessDTO dto) {
         try {
+
         } catch (Exception ex) {
             log.error("[businessFilter]-[addProcess]-ex:" + ex);
             throw new FkException(ResultEnum.ERROR, ex);
@@ -355,7 +408,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultEnum editProcess(BusinessFilter_ProcessTaskDTO dto) {
+    public ResultEnum editProcess(BusinessFilter_SaveProcessDTO dto) {
         try {
         } catch (Exception ex) {
             log.error("[businessFilter]-[editProcess]-ex:" + ex);

@@ -6,6 +6,12 @@ import lombok.Data;
 @Data
 public class BusinessFilter_ProcessFieldRuleDTO {
     /**
+     * 主键id
+     */
+    @ApiModelProperty(value = "主键id")
+    public int id;
+
+    /**
      * tb_bizfilter_rule表主键ID
      */
     @ApiModelProperty(value = "tb_bizfilter_rule表主键ID")

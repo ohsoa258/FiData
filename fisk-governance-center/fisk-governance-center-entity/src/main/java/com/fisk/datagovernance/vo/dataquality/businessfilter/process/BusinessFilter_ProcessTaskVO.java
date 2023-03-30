@@ -6,16 +6,22 @@ import lombok.Data;
 @Data
 public class BusinessFilter_ProcessTaskVO {
     /**
+     * 主键id
+     */
+    @ApiModelProperty(value = "主键id")
+    public int id;
+
+    /**
      * tb_bizfilter_rule表主键ID
      */
     @ApiModelProperty(value = "tb_bizfilter_rule表主键ID")
     public int ruleId;
 
     /**
-     * tb_bizfilter_process_assembly表主键ID
+     * tb_bizfilter_process_assembly表组件Code
      */
-    @ApiModelProperty(value = "tb_bizfilter_process_assembly表主键ID")
-    public int assemblyId;
+    @ApiModelProperty(value = "tb_bizfilter_process_assembly表组件Code")
+    public int assemblyCode;
 
     /**
      * 任务code
@@ -70,6 +76,12 @@ public class BusinessFilter_ProcessTaskVO {
      */
     @ApiModelProperty(value = "表达式规则信息")
     public BusinessFilter_ProcessExpressVO processExpressInfo;
+
+    /**
+     * SQL脚本信息
+     */
+    @ApiModelProperty(value = "SQL脚本信息")
+    public BusinessFilter_ProcessSqlScriptVO processSqlScriptInfo;
 
     /**
      * 字段赋值规则信息

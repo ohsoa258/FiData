@@ -3,10 +3,8 @@ package com.fisk.datagovernance.vo.dataquality.businessfilter.process;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
-public class BusinessFilter_ProcessFieldAssignVO {
+public class BusinessFilter_ProcessSqlScriptVO {
     /**
      * 主键id
      */
@@ -26,22 +24,10 @@ public class BusinessFilter_ProcessFieldAssignVO {
     public String taskCode;
 
     /**
-     * 字段赋值规则
+     * sql脚本
      */
-    @ApiModelProperty(value = "字段赋值规则")
-    public List<BusinessFilter_ProcessFieldRuleVO> fieldRuleList;
-
-    /**
-     * 字段赋值规则之间逻辑关系
-     */
-    @ApiModelProperty(value = "字段赋值规则之间逻辑关系")
-    public String fieldAssignRuleRelation;
-
-    /**
-     * 字段赋值预览文本
-     */
-    @ApiModelProperty(value = "字段赋值预览文本")
-    public String fieldAssignPreviewText;
+    @ApiModelProperty(value = "sql脚本")
+    public String sqlScript;
 
     /**
      * 自定义描述

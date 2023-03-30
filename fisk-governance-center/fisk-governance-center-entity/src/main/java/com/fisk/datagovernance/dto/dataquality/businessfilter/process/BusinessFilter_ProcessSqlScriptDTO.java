@@ -1,12 +1,10 @@
-package com.fisk.datagovernance.vo.dataquality.businessfilter.process;
+package com.fisk.datagovernance.dto.dataquality.businessfilter.process;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
-public class BusinessFilter_ProcessExpressVO {
+public class BusinessFilter_ProcessSqlScriptDTO {
     /**
      * 主键id
      */
@@ -26,22 +24,10 @@ public class BusinessFilter_ProcessExpressVO {
     public String taskCode;
 
     /**
-     * 表达式规则
+     * sql脚本
      */
-    @ApiModelProperty(value = "表达式规则")
-    public List<BusinessFilter_ProcessFieldRuleVO> expressRuleList;
-
-    /**
-     * 表达式规则之间逻辑关系
-     */
-    @ApiModelProperty(value = "表达式规则之间逻辑关系")
-    public String expressRuleRelation;
-
-    /**
-     * 表达式预览文本
-     */
-    @ApiModelProperty(value = "表达式预览文本")
-    public String expressPreviewText;
+    @ApiModelProperty(value = "sql脚本")
+    public String sqlScript;
 
     /**
      * 自定义描述

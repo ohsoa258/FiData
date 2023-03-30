@@ -9,6 +9,7 @@ import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterQuer
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterSortDto;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterSaveDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.process.BusinessFilter_ProcessTaskDTO;
+import com.fisk.datagovernance.dto.dataquality.businessfilter.process.BusinessFilter_SaveProcessDTO;
 import com.fisk.datagovernance.entity.dataquality.BusinessFilterPO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterResultVO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO;
@@ -84,7 +85,7 @@ public interface IBusinessFilterManageService extends IService<BusinessFilterPO>
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum addProcess(BusinessFilter_ProcessTaskDTO dto);
+    ResultEnum addProcess(BusinessFilter_SaveProcessDTO dto);
 
     /**
      * 修改工作区流程
@@ -92,7 +93,7 @@ public interface IBusinessFilterManageService extends IService<BusinessFilterPO>
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum editProcess(BusinessFilter_ProcessTaskDTO dto);
+    ResultEnum editProcess(BusinessFilter_SaveProcessDTO dto);
 
     /**
      * 调用工作区流程

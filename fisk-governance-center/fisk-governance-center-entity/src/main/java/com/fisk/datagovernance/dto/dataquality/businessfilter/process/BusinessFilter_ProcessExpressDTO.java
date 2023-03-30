@@ -8,6 +8,12 @@ import java.util.List;
 @Data
 public class BusinessFilter_ProcessExpressDTO {
     /**
+     * 主键id
+     */
+    @ApiModelProperty(value = "主键id")
+    public int id;
+
+    /**
      * tb_bizfilter_rule表主键ID
      */
     @ApiModelProperty(value = "tb_bizfilter_rule表主键ID")

@@ -6,6 +6,18 @@ import lombok.Data;
 @Data
 public class BusinessFilter_ProcessAssemblyVO {
     /**
+     * 主键id
+     */
+    @ApiModelProperty(value = "主键id")
+    public int id;
+
+    /**
+     * 组件标识
+     */
+    @ApiModelProperty(value = "组件标识")
+    public int assemblyCode;
+
+    /**
      * 组件名称
      */
     @ApiModelProperty(value = "组件名称")

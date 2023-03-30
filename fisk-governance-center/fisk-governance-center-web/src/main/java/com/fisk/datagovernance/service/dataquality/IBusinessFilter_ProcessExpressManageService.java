@@ -7,8 +7,7 @@ import com.fisk.datagovernance.vo.dataquality.businessfilter.process.BusinessFil
 
 import java.util.List;
 
-public interface IBusinessFilter_ProcessExpressManageService extends IService<BusinessFilter_ProcessExpressPO>
-{
+public interface IBusinessFilter_ProcessExpressManageService extends IService<BusinessFilter_ProcessExpressPO> {
     List<BusinessFilter_ProcessExpressPO> getPOList(long ruleId);
 
     List<BusinessFilter_ProcessExpressVO> getVOList(long ruleId);
