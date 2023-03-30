@@ -43,7 +43,7 @@ public class MetaDataController {
     @ApiOperation("添加元数据实体")
     @PostMapping("/consumeMetaData")
     public ResultEntity<Object> consumeMetaData(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto) {
-        return ResultEntityBuild.build(service.consumeMetaData(dto));
+        return ResultEntityBuild.build(service.consumeMetaData(dto,dto.get(0).currUserName));
     }
     @ApiOperation("元数据字段新增或修改字段")
     @PostMapping("/addFiledAndUpdateFiled")

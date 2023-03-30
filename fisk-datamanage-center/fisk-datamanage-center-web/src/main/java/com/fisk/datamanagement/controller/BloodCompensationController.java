@@ -13,6 +13,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
@@ -33,8 +34,8 @@ public class BloodCompensationController {
 
     @ApiOperation("同步元数据")
     @GetMapping("/systemSynchronousBlood")
-    public ResultEntity<Object> systemSynchronousBlood() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.systemSynchronousBlood());
+    public ResultEntity<Object> systemSynchronousBlood(@RequestParam("currUserName") String currUserName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.systemSynchronousBlood(currUserName));
     }
 
 

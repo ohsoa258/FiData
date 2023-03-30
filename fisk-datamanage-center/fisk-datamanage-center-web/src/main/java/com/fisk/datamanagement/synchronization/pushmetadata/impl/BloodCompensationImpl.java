@@ -45,7 +45,7 @@ public class BloodCompensationImpl
 
 
     @Override
-    public ResultEnum systemSynchronousBlood() {
+    public ResultEnum systemSynchronousBlood(String currUserName) {
 
         log.info("********开始同步数据接入********");
 
@@ -76,11 +76,11 @@ public class BloodCompensationImpl
 
         log.info("******开始同步数据接入来源表元数据******");
         //同步数据接入来源表元数据(解析接入表sql)
-        synchronousAccessSourceMetaData(collect);
+        synchronousAccessSourceMetaData(collect,currUserName);
 
         log.info("******开始同步数据接入ods表以及stg表元数据******");
         //同步数据接入ods表以及stg表元数据
-        synchronousAccessTableSourceMetaData();
+        synchronousAccessTableSourceMetaData(currUserName);
 
         log.info("********开始同步数据建模********");
 
@@ -98,7 +98,7 @@ public class BloodCompensationImpl
         synchronousClassification(businessAreaList.data, 2);
 
         log.info("********开始同步建模业务分类********");
-        synchronousDataModelTableSourceMetaData();
+        synchronousDataModelTableSourceMetaData(currUserName);
 
         return ResultEnum.SUCCESS;
     }
@@ -129,7 +129,7 @@ public class BloodCompensationImpl
      *
      * @return
      */
-    public void synchronousAccessSourceMetaData(List<DataAccessSourceTableDTO> dataAccessMetaData) {
+    public void synchronousAccessSourceMetaData(List<DataAccessSourceTableDTO> dataAccessMetaData,String currUserName) {
         //获取接入所有应用
         ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAppRegistration = dataAccessClient.synchronizationAppRegistration();
         if (synchronizationAppRegistration.code != ResultEnum.SUCCESS.getCode()) {
@@ -153,6 +153,7 @@ public class BloodCompensationImpl
             if (CollectionUtils.isEmpty(first.get().dbList.get(0).tableList)) {
                 first.get().dbList.get(0).tableList = new ArrayList<>();
             }
+
             //解析sql
             List<TableMetaDataObject> res;
             if(("sftp").equals(accessTable.driveType)||("ftp").equals(accessTable.driveType)){
@@ -177,28 +178,27 @@ public class BloodCompensationImpl
                 table.setComment("stg");
                 tableList.add(table);
             }
-
             first.get().dbList.get(0).tableList.addAll(tableList);
         }
 
-        metaData.consumeMetaData(synchronizationAppRegistration.data);
+        metaData.consumeMetaData(synchronizationAppRegistration.data,currUserName);
 
     }
 
-    public void synchronousAccessTableSourceMetaData() {
+    public void synchronousAccessTableSourceMetaData(String currUserName) {
         ResultEntity<List<MetaDataInstanceAttributeDTO>> accessTable = dataAccessClient.synchronizationAccessTable();
         if (accessTable.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
-        metaData.consumeMetaData(accessTable.data);
+        metaData.consumeMetaData(accessTable.data,currUserName);
     }
 
-    public void synchronousDataModelTableSourceMetaData() {
+    public void synchronousDataModelTableSourceMetaData(String currUserName) {
         ResultEntity<List<MetaDataInstanceAttributeDTO>> dataModelMetaData = dataModelClient.getDataModelMetaData();
         if (dataModelMetaData.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
-        metaData.consumeMetaData(dataModelMetaData.data);
+        metaData.consumeMetaData(dataModelMetaData.data,currUserName);
     }
 
 }
