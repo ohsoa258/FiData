@@ -116,4 +116,12 @@ public interface ITableService {
      * @return
      */
     ResultEnum deleteTableServiceField(long tableFieldId);
+
+    /**
+     * 数据库同步服务-新增同步按钮,手动同步表服务
+     *
+     * @param tableId
+     * @return
+     */
+    ResultEnum editTableServiceSync(long tableId);
 }

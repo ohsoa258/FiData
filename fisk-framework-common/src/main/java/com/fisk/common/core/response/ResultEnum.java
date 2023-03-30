@@ -59,9 +59,11 @@ public enum ResultEnum {
     SYSTEM_LOGO_ERROR(1033, "系统logo获取出错"),
     DATA_SOURCE_NAME_ALREADY_EXISTS(1034, "数据源名称已存在"),
 
+
     SQL_PARAMETER_NOTNULL(1035, "sql参数不能为空"),
 
     SQL_Not_SUPPORTED_YET_DBTYPE(1036, "暂不支持该数据库类型"),
+    TABLE_NOT_PUBLISHED(1037,"该表未发布"),
 
     /**
      * 报表可视化服务，错误码从2000开始

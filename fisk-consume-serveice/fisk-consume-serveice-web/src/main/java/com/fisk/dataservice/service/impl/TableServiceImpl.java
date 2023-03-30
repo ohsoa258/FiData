@@ -1,10 +1,12 @@
 package com.fisk.dataservice.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -26,20 +28,27 @@ import com.fisk.dataservice.service.ITableService;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 import com.fisk.task.enums.OlapTableEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author JianWenYang
  */
 @Service
+@Slf4j
 public class TableServiceImpl
         extends ServiceImpl<TableServiceMapper, TableServicePO>
         implements ITableService {
@@ -250,6 +259,60 @@ public class TableServiceImpl
     @Override
     public ResultEnum deleteTableServiceField(long tableFieldId) {
         return tableField.delTableServiceField(0, tableFieldId);
+    }
+
+    @Override
+    public ResultEnum editTableServiceSync(long tableId) {
+        TableServicePO tableServicePO = mapper.selectById(tableId);
+        //判断表状态是否已发布
+        if (tableServicePO.getPublish() != 1) {
+            log.info("手动同步失败，原因：表未发布");
+            return ResultEnum.TABLE_NOT_PUBLISHED;
+        }
+        //拼接所需的topic
+        String topic = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.DATASERVICES.getValue() + ".0." + tableId;
+        //获取当前时间并格式化
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String dateTime = formatter.format(LocalDateTime.now());
+        //剔除uuid生成字符串里面的"-"符号
+        String pipeTaskTraceId = UUID.randomUUID().toString().replace("-", "");
+        String fidata_batch_code = UUID.randomUUID().toString().replace("-", "");
+        String pipelStageTraceId = UUID.randomUUID().toString().replace("-", "");
+
+        //配置远程调用接口中需要的参数 KafkaReceiveDTO
+        KafkaReceiveDTO kafkaReceiveDTO = getKafkaReceive(topic, dateTime, pipeTaskTraceId, fidata_batch_code,
+                pipelStageTraceId, true, 1);
+        log.info(JSON.toJSONString(kafkaReceiveDTO));
+
+        //参数配置完毕，远程调用接口，发送参数，执行同步
+        publishTaskClient.universalPublish(kafkaReceiveDTO);
+        return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 静态内部类，用于远程调用方法的参数，↑
+     *
+     * @param topic
+     * @param start_time
+     * @param pipeTaskTraceId
+     * @param fidata_batch_code
+     * @param pipelStageTraceId
+     * @param ifTaskStart
+     * @param topicType
+     * @return
+     */
+    public static KafkaReceiveDTO getKafkaReceive(String topic, String start_time, String pipeTaskTraceId,
+                                                  String fidata_batch_code, String pipelStageTraceId,
+                                                  Boolean ifTaskStart, Integer topicType) {
+        return KafkaReceiveDTO.builder()
+                .topic(topic)
+                .start_time(start_time)
+                .pipelTaskTraceId(pipeTaskTraceId)
+                .fidata_batch_code(fidata_batch_code)
+                .pipelStageTraceId(pipelStageTraceId)
+                .ifTaskStart(ifTaskStart)
+                .tableType(topicType)
+                .build();
     }
 
     /**

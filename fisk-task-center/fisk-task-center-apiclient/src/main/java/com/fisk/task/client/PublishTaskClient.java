@@ -425,4 +425,12 @@ public interface PublishTaskClient {
     public ResultEntity<Object> missionEndCenter(@RequestBody KafkaReceiveDTO dto);
 
 
+    /**
+     * 数据库同步服务，手动同步按钮
+     * @param dto
+     * @return
+     */
+    @PostMapping("/publishTask/universalPublish")
+    public ResultEntity<Object> universalPublish(@RequestBody KafkaReceiveDTO dto);
+
 }
