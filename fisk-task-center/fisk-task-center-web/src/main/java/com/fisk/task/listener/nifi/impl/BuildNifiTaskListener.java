@@ -948,6 +948,15 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         data.sourceDsConfig = sourceDsConfig;
         data.processorConfig = processorConfig;
         data.ftpConfig = ftpConfig;
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
+        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+            DataSourceDTO dataSource = fiDataDataSource.data;
+            IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSource.conType);
+            dbCommand.fieldFormatModification(data);
+        } else {
+            log.error("userclient无法查询到ods库的连接信息");
+            throw new FkException(ResultEnum.ERROR);
+        }
         return data;
     }
 
@@ -2567,7 +2576,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
         callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
         log.info("SQL预览语句：{}", JSON.toJSONString(buildNifiFlow.syncStgToOdsSql));
-        callDbProcedureProcessorDTO.executsql = StringUtils.isNotEmpty(buildNifiFlow.syncStgToOdsSql)?buildNifiFlow.syncStgToOdsSql:executsql;
+        callDbProcedureProcessorDTO.executsql = StringUtils.isNotEmpty(buildNifiFlow.syncStgToOdsSql) ? buildNifiFlow.syncStgToOdsSql : executsql;
         callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
         callDbProcedureProcessorDTO.haveNextOne = true;
         callDbProcedureProcessorDTO.sqlPreQuery = buildNifiFlow.customScriptBefore;

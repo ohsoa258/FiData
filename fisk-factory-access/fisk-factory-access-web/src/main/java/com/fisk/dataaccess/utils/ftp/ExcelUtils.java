@@ -7,7 +7,9 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
 import com.monitorjbl.xlsx.StreamingReader;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -17,6 +19,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static com.fisk.common.core.constants.ExcelConstants.EXCEL2003_SUFFIX_NAME;
 
 /**
  * @author Lock
@@ -60,18 +64,13 @@ public class ExcelUtils {
      */
     private static Workbook readFromInputStream(InputStream inputStream, String ext) {
         try {
-            Workbook wk = StreamingReader.builder()
-                    .rowCacheSize(100)  //缓存到内存中的行数，默认是10
-                    .bufferSize(4096)  //读取资源时，缓存到内存的字节大小，默认是1024
-                    .open(inputStream);
-            return wk;
-            /*if (EXCEL2003_SUFFIX_NAME.equals(ext)) {
+            if (EXCEL2003_SUFFIX_NAME.equals(ext)) {
                 // Excel 2003
                 return new HSSFWorkbook(inputStream);
             } else {
                 // Excel 2007
                 return new XSSFWorkbook(inputStream);
-            }*/
+            }
         } catch (Exception e) {
             log.error("从流中读取excel文件失败，【readFromInputStream】方法报错，", e);
         }
@@ -87,7 +86,7 @@ public class ExcelUtils {
      * @params wb 工作簿对象
      * @params index sheet页
      */
-    private static List<List<Object>> readExcelContentList(Workbook wb, int index,int startRow) {
+    private static List<List<Object>> readExcelContentList(Workbook wb, int index, int startRow) {
         if (wb != null) {
             try {
                 List<List<Object>> content = new ArrayList<>();
@@ -95,21 +94,27 @@ public class ExcelUtils {
                 Sheet sheet = wb.getSheetAt(index);
                 // 获取行数
                 int getRow = 0;
-                short lastCellNum = 0;
-                for (Row row : sheet) {
-                    if(getRow<startRow){
+                short lastCellNum = 130;
+                //解决最大行数一直变的问题,拿第一次得到的行数
+                int physicalNumberOfRows = sheet.getPhysicalNumberOfRows();
+                for (int i = 0; i <= physicalNumberOfRows; i++) {
+                    if (getRow < startRow) {
                         getRow++;
                         continue;
                     }
-                    if (getRow == 0||getRow!=0) {
-                        lastCellNum = row.getLastCellNum();
+                    Row row = sheet.getRow(i);
+                    if (row != null) {
+                        lastCellNum = row.getLastCellNum() > lastCellNum ? row.getLastCellNum() : lastCellNum;
+                    } else {
+                        row = sheet.createRow(i);
                     }
                     if (getRow == 11) {
                         break;
                     }
                     List<Object> col = new ArrayList<>();
                     for (int j = 0; j < lastCellNum; j++) {
-                        Object obj = getCellFormatValue(row.getCell(j));
+                        //System.out.println("坐标:"+i+","+j);
+                        Object obj = getCellFormatValue(Objects.nonNull(row.getCell(j)) ? row.getCell(j) : row.createCell(j));
                         obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
                         col.add(obj);
                     }
@@ -120,7 +125,6 @@ public class ExcelUtils {
                 return content;
             } catch (Exception e) {
                 log.error("", e);
-
             }
         }
         return null;

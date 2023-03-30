@@ -125,7 +125,7 @@ public class BuildPgTableImpl implements IbuildTable {
             }
         }
         selectTable = selectTable.substring(0, selectTable.length() - 2) + " ) ";
-        return selectTable;
+        return selectTable.toLowerCase();
     }
 
 
@@ -241,7 +241,7 @@ public class BuildPgTableImpl implements IbuildTable {
             }
         }
         log.info("函数语句:" + sql);
-        return sql;
+        return sql.toLowerCase();
     }
 
     @Override
@@ -301,6 +301,22 @@ public class BuildPgTableImpl implements IbuildTable {
         return sql;
     }
 
+    @Override
+    public void fieldFormatModification(DataAccessConfigDTO data) {
+        data.businessKeyAppend = StringUtils.isNotEmpty(data.businessKeyAppend) ? data.businessKeyAppend.toLowerCase() : null;
+        if (data.processorConfig != null && StringUtils.isNotEmpty(data.processorConfig.targetTableName)) {
+            data.processorConfig.targetTableName = data.processorConfig.targetTableName.toLowerCase();
+        }
+        if (data.targetDsConfig != null && StringUtils.isNotEmpty(data.targetDsConfig.targetTableName)) {
+            data.targetDsConfig.targetTableName = data.targetDsConfig.targetTableName.toLowerCase();
+        }
+        assert data.targetDsConfig != null;
+        data.targetDsConfig.tableFieldsList.forEach(
+                e -> {
+                    e.fieldName = e.fieldName.toLowerCase();
+                }
+        );
+    }
     @Override
     public List<String> getStgAndTableName(String tableName) {
         return TableNameGenerateUtils.getStgAndTableName(tableName);

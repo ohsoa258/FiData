@@ -85,5 +85,10 @@ public interface IbuildTable {
      */
     String getTotalSql(String sql,SynchronousTypeEnum synchronousTypeEnum);
 
+    /**
+     * 修改字段格式
+     * @param dto
+     */
+    void fieldFormatModification(DataAccessConfigDTO dto);
 
 }
