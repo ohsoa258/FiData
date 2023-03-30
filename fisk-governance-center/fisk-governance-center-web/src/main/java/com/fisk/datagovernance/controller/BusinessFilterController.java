@@ -9,9 +9,12 @@ import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterEdit
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterQueryDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterSortDto;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterSaveDTO;
+import com.fisk.datagovernance.dto.dataquality.businessfilter.process.BusinessFilter_ProcessTaskDTO;
 import com.fisk.datagovernance.service.dataquality.IBusinessFilterManageService;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.apifilter.TestVO;
+import com.fisk.datagovernance.vo.dataquality.businessfilter.process.BusinessFilter_ProcessAssemblyVO;
+import com.fisk.datagovernance.vo.dataquality.businessfilter.process.BusinessFilter_ProcessTaskVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
@@ -57,12 +60,34 @@ public class BusinessFilterController {
     }
 
     @ApiOperation("清洗规则，修改业务清洗规则执行顺序")
-    @PutMapping("/editModuleExecSort")
+    @PutMapping("/editFilterRuleSort")
     public ResultEntity<Object> editFilterRuleSort(@RequestBody List<BusinessFilterSortDto> dto) {
         return ResultEntityBuild.build(service.editFilterRuleSort(dto));
     }
 
+    @ApiOperation("清洗流程，查询工作区组件")
+    @GetMapping("/getProcessAssembly")
+    public ResultEntity<List<BusinessFilter_ProcessAssemblyVO>> getProcessAssembly(){
+        return service.getProcessAssembly();
+    }
 
+    @ApiOperation("清洗流程，查询工作区流程")
+    @GetMapping("/getProcessDetail/{ruleId}")
+    public ResultEntity<List<BusinessFilter_ProcessTaskVO>> getProcessDetail(@PathVariable("ruleId") long ruleId){
+        return service.getProcessDetail(ruleId);
+    }
+
+    @ApiOperation("清洗流程，新增工作区流程")
+    @PostMapping("/addProcess")
+    public ResultEntity<Object> addProcess(@RequestBody BusinessFilter_ProcessTaskDTO dto){
+        return ResultEntityBuild.build(service.addProcess(dto));
+    }
+
+    @ApiOperation("清洗流程，编辑工作区流程")
+    @PutMapping("/editProcess")
+    public ResultEntity<Object> editProcess(@RequestBody BusinessFilter_ProcessTaskDTO dto){
+        return ResultEntityBuild.build(service.editProcess(dto));
+    }
 
     @ApiOperation("API清洗，调用授权API获取Token")
     @PostMapping("/collAuthApi")

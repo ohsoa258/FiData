@@ -16,6 +16,7 @@ import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterEdit
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterQueryDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterSortDto;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterSaveDTO;
+import com.fisk.datagovernance.dto.dataquality.businessfilter.process.BusinessFilter_ProcessTaskDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFieldDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.QueryTableRuleDTO;
 import com.fisk.datagovernance.entity.dataquality.BusinessFilterPO;
@@ -26,6 +27,8 @@ import com.fisk.datagovernance.mapper.dataquality.BusinessFilterMapper;
 import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
 import com.fisk.datagovernance.service.dataquality.IBusinessFilterManageService;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO;
+import com.fisk.datagovernance.vo.dataquality.businessfilter.process.BusinessFilter_ProcessAssemblyVO;
+import com.fisk.datagovernance.vo.dataquality.businessfilter.process.BusinessFilter_ProcessTaskVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -286,6 +289,26 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
         });
         boolean b = businessFilterManageImpl.updateBatchById(businessFilterPOS);
         return b ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public ResultEntity<List<BusinessFilter_ProcessAssemblyVO>> getProcessAssembly() {
+        return null;
+    }
+
+    @Override
+    public ResultEntity<List<BusinessFilter_ProcessTaskVO>> getProcessDetail(long ruleId) {
+        return null;
+    }
+
+    @Override
+    public ResultEnum addProcess(BusinessFilter_ProcessTaskDTO dto) {
+        return null;
+    }
+
+    @Override
+    public ResultEnum editProcess(BusinessFilter_ProcessTaskDTO dto) {
+        return null;
     }
 
     @Override

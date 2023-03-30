@@ -22,4 +22,10 @@ public class BusinessFilter_ProcessAssemblyVO {
      */
     @ApiModelProperty(value = "组件ICON")
     public String assemblyIcon;
+
+    /**
+     * 组件状态：1 启用 2 禁用
+     */
+    @ApiModelProperty(value = "组件状态：1 启用 2 禁用")
+    public int assemblyState;
 }

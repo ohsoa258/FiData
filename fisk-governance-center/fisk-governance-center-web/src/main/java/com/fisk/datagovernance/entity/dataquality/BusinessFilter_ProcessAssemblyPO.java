@@ -21,4 +21,9 @@ public class BusinessFilter_ProcessAssemblyPO extends BasePO {
      * 组件ICON
      */
     public String assemblyIcon;
+
+    /**
+     * 组件状态：1 启用 2 禁用
+     */
+    public int assemblyState;
 }
