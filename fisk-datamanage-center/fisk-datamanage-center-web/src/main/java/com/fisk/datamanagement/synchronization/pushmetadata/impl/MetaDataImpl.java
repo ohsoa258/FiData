@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
+import com.fisk.common.core.enums.metadataentitylog.MetaDataeLogEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -662,7 +663,7 @@ public class MetaDataImpl implements IMetaData {
         MetaDataEntityOperationLogDTO operationLogDTO = new MetaDataEntityOperationLogDTO();
         Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
         if (metadataEntity == null) {
-            operationLogDTO.setOperationType("新增");
+            operationLogDTO.setOperationType(MetaDataeLogEnum.INSERT_OPERATION.getName());
             operationLogDTO.setBeforeChange("");
             operationLogDTO.setAfterChange(dto.getName());
             operationLogDTO.setCreateTime(LocalDateTime.now());
@@ -673,7 +674,7 @@ public class MetaDataImpl implements IMetaData {
         }
         MetadataEntityPO entityPO = this.metadataEntity.query().eq("id", metadataEntity).one();
         if(!entityPO.getName().equals(dto.getName())){
-            operationLogDTO.setOperationType("修改");
+            operationLogDTO.setOperationType(MetaDataeLogEnum.UPDATE_OPERATION.getName());
             operationLogDTO.setBeforeChange(entityPO.getName());
             operationLogDTO.setAfterChange(dto.getName());
             operationLogDTO.setCreateTime(LocalDateTime.now());

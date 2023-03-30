@@ -398,7 +398,7 @@ public class TableFieldsImpl
         list.get(0).dbList.get(0).tableList = tableList;
 
         log.info("构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
-        dataManageClient.addFiledAndUpdateFiled(list);
+        dataManageClient.consumeMetaData(list);
 
         /*//修改元数据
         ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
