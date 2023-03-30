@@ -247,7 +247,7 @@ public class TableFieldsImpl
         }
 
         // 发布
-        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, dto.appDataSourceId, dto.tableHistorys);
+        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, dto.appDataSourceId, dto.tableHistorys,null);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -351,7 +351,7 @@ public class TableFieldsImpl
 
         // 发布
         publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null,
-                false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, model.appDataSourceId, dto.tableHistorys);
+                false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, model.appDataSourceId, dto.tableHistorys,null);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
@@ -509,7 +509,8 @@ public class TableFieldsImpl
                          String versionSql,
                          TableSyncmodeDTO syncMode,
                          Integer appDataSourceId,
-                         List<TableHistoryDTO> dto) {
+                         List<TableHistoryDTO> dto,
+                         String currUserName) {
         AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("id", appDataSourceId).one();
         if (dataSourcePo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -601,7 +602,7 @@ public class TableFieldsImpl
                     // 创建表流程
                     publishTaskClient.publishBuildPhysicsTableTask(data);
                     // 构建元数据实时同步数据对象
-                    metaDataList = buildMetaDataInstanceAttribute(registration, accessId, 1);
+                    metaDataList = buildMetaDataInstanceAttribute(registration, accessId, 1,currUserName);
                 } else if (registration.appType == 1) {
                     if (DataSourceTypeEnum.FTP.getName().equals(dataSourcePo.driveType) || data.sftpFlow) {
                         data.excelFlow = true;
@@ -613,7 +614,7 @@ public class TableFieldsImpl
                     //log.info(JSON.toJSONString(data));
                     //publishTaskClient.publishBuildAtlasTableTask(data);
                     //构建元数据实时同步数据对象
-                    metaDataList = buildMetaDataInstanceAttribute(registration, accessId, 2);
+                    metaDataList = buildMetaDataInstanceAttribute(registration, accessId, 2,currUserName);
                 }if (openMetadata) { //
                     //同步元数据
                     consumeMetaData(metaDataList);
@@ -730,7 +731,7 @@ public class TableFieldsImpl
      * @author Lock
      * @date 2022/7/5 16:51
      */
-    public List<MetaDataInstanceAttributeDTO> buildMetaDataInstanceAttribute(AppRegistrationPO app, long accessId, int flag) {
+    public List<MetaDataInstanceAttributeDTO> buildMetaDataInstanceAttribute(AppRegistrationPO app, long accessId, int flag,String currUserName) {
 
         int apiType = 1;
         int tableType = 2;
@@ -761,6 +762,7 @@ public class TableFieldsImpl
         instance.setComment(app.getAppDes());
         instance.setOwner(app.createUser);
         instance.setDisplayName(hostname);
+        instance.setCurrUserName(currUserName);
 
         // 库
         List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
@@ -1324,7 +1326,8 @@ public class TableFieldsImpl
                     versionSql,
                     TableSyncModeMap.INSTANCES.poToDto(tableSyncmodePo),
                     accessPo.appDataSourceId,
-                    dto.tableHistorys);
+                    dto.tableHistorys,
+                    dto.currUserName);
         }
         return ResultEnum.SUCCESS;
     }

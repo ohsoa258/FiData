@@ -14,6 +14,7 @@ public class BatchPublishDTO {
 
     public boolean openTransmission;
 
+    public String currUserName;
     public List<TableHistoryDTO> tableHistorys;
 
 }
