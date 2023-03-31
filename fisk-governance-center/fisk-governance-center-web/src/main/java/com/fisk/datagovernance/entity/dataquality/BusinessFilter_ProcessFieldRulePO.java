@@ -18,11 +18,11 @@ public class BusinessFilter_ProcessFieldRulePO extends BasePO {
     public String taskCode;
 
     /**
-     * tb_bizfilter_process_express表主键ID
+     * tb_bizfilter_process_express表数据标识
      * 或者
-     * tb_bizfilter_process_field_assign表主键ID
+     * tb_bizfilter_process_field_assign表数据标识
      */
-    public int businessId;
+    public String fkDataCode;
 
     /**
      * 随机名称

@@ -22,6 +22,14 @@ public interface BusinessFilter_ProcessExpressMap {
     List<BusinessFilter_ProcessExpressPO> dtoListToPoList(List<BusinessFilter_ProcessExpressDTO> dto);
 
     /**
+     * dto => po
+     *
+     * @param dto source
+     * @return target
+     */
+    BusinessFilter_ProcessExpressPO dtoToPo(BusinessFilter_ProcessExpressDTO dto);
+
+    /**
      * po => vo
      *
      * @param po source

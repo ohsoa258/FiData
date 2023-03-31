@@ -18,6 +18,11 @@ public class BusinessFilter_ProcessFieldAssignPO extends BasePO {
     public String taskCode;
 
     /**
+     * 数据标识
+     */
+    public String dataCode;
+
+    /**
      * 字段赋值规则json
      */
     public String fieldAssignRuleJson;

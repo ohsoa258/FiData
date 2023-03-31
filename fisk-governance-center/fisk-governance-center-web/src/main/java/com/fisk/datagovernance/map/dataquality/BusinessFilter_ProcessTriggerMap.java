@@ -22,6 +22,14 @@ public interface BusinessFilter_ProcessTriggerMap {
     List<BusinessFilter_ProcessTriggerPO> dtoListToPoList(List<BusinessFilter_ProcessTriggerDTO> dto);
 
     /**
+     * dto => po
+     *
+     * @param dto source
+     * @return target
+     */
+    BusinessFilter_ProcessTriggerPO dtoToPo(BusinessFilter_ProcessTriggerDTO dto);
+
+    /**
      * po => vo
      *
      * @param po source

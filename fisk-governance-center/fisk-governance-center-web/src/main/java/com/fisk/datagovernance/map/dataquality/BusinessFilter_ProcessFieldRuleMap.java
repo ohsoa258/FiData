@@ -22,6 +22,14 @@ public interface BusinessFilter_ProcessFieldRuleMap {
     List<BusinessFilter_ProcessFieldRulePO> dtoListToPoList(List<BusinessFilter_ProcessFieldRuleDTO> dto);
 
     /**
+     * dto => po
+     *
+     * @param dto source
+     * @return target
+     */
+    BusinessFilter_ProcessFieldRulePO dtoToPo(BusinessFilter_ProcessFieldRuleDTO dto);
+
+    /**
      * po => vo
      *
      * @param po source

@@ -22,6 +22,14 @@ public interface BusinessFilter_ProcessTaskMap {
     List<BusinessFilter_ProcessTaskPO> dtoListToPoList(List<BusinessFilter_ProcessTaskDTO> dto);
 
     /**
+     * dto => po
+     *
+     * @param dto source
+     * @return target
+     */
+    BusinessFilter_ProcessTaskPO dtoToPo(BusinessFilter_ProcessTaskDTO dto);
+
+    /**
      * po => vo
      *
      * @param po source

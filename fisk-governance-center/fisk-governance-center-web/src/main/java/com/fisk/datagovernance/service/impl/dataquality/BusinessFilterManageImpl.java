@@ -2,7 +2,9 @@ package com.fisk.datagovernance.service.impl.dataquality;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
@@ -21,8 +23,7 @@ import com.fisk.datagovernance.dto.dataquality.businessfilter.process.BusinessFi
 import com.fisk.datagovernance.dto.dataquality.businessfilter.process.BusinessFilter_SaveProcessDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFieldDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.QueryTableRuleDTO;
-import com.fisk.datagovernance.entity.dataquality.BusinessFilterPO;
-import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
+import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import com.fisk.datagovernance.map.dataquality.BusinessFilterMap;
 import com.fisk.datagovernance.mapper.dataquality.BusinessFilterMapper;
@@ -277,7 +278,21 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             BusinessFilterPO businessFilterPO = baseMapper.selectById(id);
             if (businessFilterPO == null)
                 return ResultEnum.SUCCESS;
-            // 调用元数据接口同步最新的规则信息
+            // 第一步：删除清洗规则下的工作区流程信息
+            List<BusinessFilter_ProcessTaskPO> processTaskPOList = processTaskManageImpl.getPOList(id);
+            List<BusinessFilter_ProcessTriggerPO> processTriggerPOList = processTriggerManageImpl.getPOList(id);
+            List<BusinessFilter_ProcessExpressPO> processExpressPOList = processExpressManageImpl.getPOList(id);
+            List<BusinessFilter_ProcessFieldAssignPO> processFieldAssignPOList = processFieldAssignManageImpl.getPOList(id);
+            List<BusinessFilter_ProcessFieldRulePO> processFieldRulePOList = processFieldRuleManageImpl.getPOList(id);
+            List<BusinessFilter_ProcessSqlScriptPO> processSqlScriptPOList = processSqlScriptManageImpl.getPOList(id);
+            removePOList(processTaskPOList, processTaskManageImpl);
+            removePOList(processTriggerPOList, processTriggerManageImpl);
+            removePOList(processExpressPOList, processExpressManageImpl);
+            removePOList(processFieldAssignPOList, processFieldAssignManageImpl);
+            removePOList(processFieldRulePOList, processFieldRuleManageImpl);
+            removePOList(processSqlScriptPOList, processSqlScriptManageImpl);
+
+            // 第二步：调用元数据接口同步最新的规则信息
             DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(businessFilterPO.getDatasourceId());
             if (dataSourceConPO != null) {
                 SourceTypeEnum sourceTypeEnum = SourceTypeEnum.getEnum(dataSourceConPO.getDatasourceType());
@@ -363,7 +378,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
                     case CONDITIONAL_EXPRESS:
                         BusinessFilter_ProcessExpressVO filter_processExpressVO = processExpressVOList.stream().filter(t -> t.getTaskCode().equals(processTaskVO.getTaskCode())).findFirst().orElse(null);
                         if (filter_processExpressVO != null) {
-                            filter_processFieldRuleVOList = processFieldRuleVOList.stream().filter(t -> t.getTaskCode().equals(processTaskVO.getTaskCode()) && t.getBusinessId() == filter_processExpressVO.getId()).collect(Collectors.toList());
+                            filter_processFieldRuleVOList = processFieldRuleVOList.stream().filter(t -> t.getTaskCode().equals(processTaskVO.getTaskCode()) && t.getFkDataCode().equals(filter_processExpressVO.getDataCode())).collect(Collectors.toList());
                             filter_processExpressVO.setExpressRuleList(filter_processFieldRuleVOList);
                             processTaskVO.setProcessExpressInfo(filter_processExpressVO);
                         }
@@ -379,7 +394,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
                     case FIELD_ASSIGNMENT:
                         BusinessFilter_ProcessFieldAssignVO filter_processFieldAssignVO = processFieldAssignVOList.stream().filter(t -> t.getTaskCode().equals(processTaskVO.getTaskCode())).findFirst().orElse(null);
                         if (filter_processFieldAssignVO != null) {
-                            filter_processFieldRuleVOList = processFieldRuleVOList.stream().filter(t -> t.getTaskCode().equals(processTaskVO.getTaskCode()) && t.getBusinessId() == filter_processFieldAssignVO.getId()).collect(Collectors.toList());
+                            filter_processFieldRuleVOList = processFieldRuleVOList.stream().filter(t -> t.getTaskCode().equals(processTaskVO.getTaskCode()) && t.getFkDataCode().equals(filter_processFieldAssignVO.getDataCode())).collect(Collectors.toList());
                             filter_processFieldAssignVO.setFieldRuleList(filter_processFieldRuleVOList);
                             processTaskVO.setProcessFieldAssignInfo(filter_processFieldAssignVO);
                         }
@@ -397,8 +412,18 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addProcess(BusinessFilter_SaveProcessDTO dto) {
+        if (dto == null || CollectionUtils.isEmpty(dto.getProcessTaskList())) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
         try {
+            // 第一步：查询清洗规则信息
+            BusinessFilterPO businessFilterPO = baseMapper.selectById(dto.getRuleId());
+            if (businessFilterPO == null)
+                return ResultEnum.DATA_QUALITY_THE_CLEANING_RULE_DOES_NOT_EXIST;
+            // 第二步：dto转换为po
+            dto.getProcessTaskList().forEach(t -> {
 
+            });
         } catch (Exception ex) {
             log.error("[businessFilter]-[addProcess]-ex:" + ex);
             throw new FkException(ResultEnum.ERROR, ex);
@@ -435,5 +460,12 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     @Override
     public ResultEnum collApi(BusinessFilterSaveDTO dto) {
         return businessFilterApiManageImpl.collApi(dto);
+    }
+
+    private void removePOList(List<? extends BasePO> poList, IService<? extends BasePO> service) {
+        if (CollectionUtils.isNotEmpty(poList)) {
+            List<Long> removeIdList = poList.stream().map(BasePO::getId).collect(Collectors.toList());
+            service.removeByIds(removeIdList);
+        }
     }
 }

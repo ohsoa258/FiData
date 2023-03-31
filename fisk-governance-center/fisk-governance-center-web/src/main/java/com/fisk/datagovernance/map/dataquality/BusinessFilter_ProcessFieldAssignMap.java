@@ -22,6 +22,14 @@ public interface BusinessFilter_ProcessFieldAssignMap {
     List<BusinessFilter_ProcessFieldAssignPO> dtoListToPoList(List<BusinessFilter_ProcessFieldAssignDTO> dto);
 
     /**
+     * dto => po
+     *
+     * @param dto source
+     * @return target
+     */
+    BusinessFilter_ProcessFieldAssignPO dtoToPo(BusinessFilter_ProcessFieldAssignDTO dto);
+
+    /**
      * po => vo
      *
      * @param po source

@@ -14,6 +14,12 @@ public class BusinessFilter_ProcessExpressVO {
     public int id;
 
     /**
+     * 数据标识
+     */
+    @ApiModelProperty(value = "数据标识")
+    public String dataCode;
+
+    /**
      * tb_bizfilter_rule表主键ID
      */
     @ApiModelProperty(value = "tb_bizfilter_rule表主键ID")

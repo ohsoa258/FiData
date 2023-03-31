@@ -22,6 +22,14 @@ public interface BusinessFilter_ProcessSqlScriptMap {
     List<BusinessFilter_ProcessSqlScriptPO> dtoListToPoList(List<BusinessFilter_ProcessSqlScriptDTO> dto);
 
     /**
+     * dto => po
+     *
+     * @param dto source
+     * @return target
+     */
+    BusinessFilter_ProcessSqlScriptPO dtoToPo(BusinessFilter_ProcessSqlScriptDTO dto);
+
+    /**
      * po => vo
      *
      * @param po source

@@ -24,14 +24,14 @@ public class BusinessFilter_ProcessFieldRuleDTO {
     public String taskCode;
 
     /**
-     * tb_bizfilter_process_express表主键ID
+     * tb_bizfilter_process_express表数据标识
      * 或者
-     * tb_bizfilter_process_field_assign表主键ID
+     * tb_bizfilter_process_field_assign表数据标识
      */
-    @ApiModelProperty(value = "tb_bizfilter_process_express表主键ID\n" +
+    @ApiModelProperty(value = "tb_bizfilter_process_express表数据标识\n" +
             "或者\n" +
-            "tb_bizfilter_process_field_assign表主键ID")
-    public int businessId;
+            "tb_bizfilter_process_field_assign表数据标识")
+    public String fkDataCode;
 
     /**
      * 随机名称
