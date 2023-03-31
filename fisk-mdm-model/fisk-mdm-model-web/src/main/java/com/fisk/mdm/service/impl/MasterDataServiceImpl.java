@@ -415,7 +415,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             dataPageDTO.setTableName(tableName);
             dataPageDTO.setExport(dto.getExport());
             dataPageDTO.setConditions(conditions);
-            dataPageDTO.setIsValidity(dto.getValidity());
+            dataPageDTO.setValidity(dto.getValidity());
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             String sql = sqlBuilder.buildMasterDataPage(dataPageDTO);
             //执行sql，获得结果集
