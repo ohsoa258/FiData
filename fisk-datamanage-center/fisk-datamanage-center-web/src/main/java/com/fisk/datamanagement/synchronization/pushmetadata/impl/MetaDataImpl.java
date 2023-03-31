@@ -145,7 +145,7 @@ public class MetaDataImpl implements IMetaData {
     }
 
     @Override
-    public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data) {
+    public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data,String currUserName) {
         log.info("开始同步元数据***********");
         for (MetaDataInstanceAttributeDTO instance : data) {
             String instanceGuid = metaDataInstance(instance);
@@ -170,7 +170,7 @@ public class MetaDataImpl implements IMetaData {
                     }
                     List<String> qualifiedNames = new ArrayList<>();
                     for (MetaDataColumnAttributeDTO field : table.columnList) {
-                        metaDataField(field, tableGuid,instance.owner);
+                        metaDataField(field, tableGuid,("").equals(currUserName)||currUserName==null?instance.currUserName:currUserName);
                         qualifiedNames.add(field.qualifiedName);
                         if (!stg.equals(table.getComment())) {
                             //新增stg表字段

@@ -56,7 +56,7 @@ public class DataLoggingServiceImpl implements DataLoggingService {
     //每天凌晨12点执行一次
     @Scheduled(cron = "0 0 12 * * ?")
     public void SetTotalNumberOfRecords(){
-        redisUtil.set(DataLoggingEnum.TOTAL_NUMBER_OF_RECORDS.getName(),getDataTableRows());
+        redisUtil.set(DataLoggingEnum.TOTAL_NUMBER_OF_RECORDS.getName(),getDataODSTableRows());
     }
 
     //在SQLserver中获取ods库的总行数
