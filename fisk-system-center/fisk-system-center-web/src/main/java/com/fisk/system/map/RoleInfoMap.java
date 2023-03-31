@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import com.fisk.system.dto.roleinfo.RolePowerDTO;
 import com.fisk.system.entity.RoleInfoPO;
+import com.fisk.system.vo.roleinfo.RoleInfoVo;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
@@ -33,6 +34,14 @@ public interface RoleInfoMap {
      * @return target
      */
     RoleInfoDTO poToDto(RoleInfoPO po);
+
+    /**
+     * dtoList => poList
+     *
+     * @param poList
+     * @return target
+     */
+    List<RoleInfoDTO> poListToDtoList(List<RoleInfoPO> poList);
     /**
      * list<po> => list<dto>
      *
