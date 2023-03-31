@@ -2047,7 +2047,14 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         } else {
             executeSQLRecordDTO.FetchSize = FetchSize;
         }
-
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
+        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+            DataSourceDTO dataSource = fiDataDataSource.data;
+            IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSource.conType);
+            executeSQLRecordDTO.esqlAutoCommit = dbCommand.getEsqlAutoCommit();
+        } else {
+            log.error("userclient无法查询到ods库的连接信息");
+        }
 
         executeSQLRecordDTO.outputBatchSize = OutputBatchSize;
         //executeSQLRecordDTO.databaseConnectionPoolingService=config.sourceDsConfig.componentId;

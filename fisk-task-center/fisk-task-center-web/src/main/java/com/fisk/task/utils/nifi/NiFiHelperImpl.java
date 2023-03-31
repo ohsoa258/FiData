@@ -899,6 +899,9 @@ public class NiFiHelperImpl implements INiFiHelper {
         map.put("esql-fetch-size", executeSQLRecordDTO.FetchSize);
         map.put("SQL select query", executeSQLRecordDTO.sqlSelectQuery);
         map.put("dbf-user-logical-types", "true");
+        if (StringUtils.isNotEmpty(executeSQLRecordDTO.esqlAutoCommit)) {
+            map.put("esql-auto-commit", executeSQLRecordDTO.esqlAutoCommit);
+        }
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setAutoTerminatedRelationships(autoRes);

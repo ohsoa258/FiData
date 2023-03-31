@@ -317,6 +317,12 @@ public class BuildPgTableImpl implements IbuildTable {
                 }
         );
     }
+
+    @Override
+    public String getEsqlAutoCommit() {
+        return "false";
+    }
+
     @Override
     public List<String> getStgAndTableName(String tableName) {
         return TableNameGenerateUtils.getStgAndTableName(tableName);
