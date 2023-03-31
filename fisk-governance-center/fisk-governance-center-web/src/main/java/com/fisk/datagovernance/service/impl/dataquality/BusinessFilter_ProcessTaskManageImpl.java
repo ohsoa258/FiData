@@ -9,9 +9,11 @@ import com.fisk.datagovernance.map.dataquality.BusinessFilter_ProcessTaskMap;
 import com.fisk.datagovernance.mapper.dataquality.BusinessFilter_ProcessTaskMapper;
 import com.fisk.datagovernance.service.dataquality.IBusinessFilter_ProcessTaskManageService;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.process.BusinessFilter_ProcessTaskVO;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class BusinessFilter_ProcessTaskManageImpl
         extends ServiceImpl<BusinessFilter_ProcessTaskMapper, BusinessFilter_ProcessTaskPO>
         implements IBusinessFilter_ProcessTaskManageService {

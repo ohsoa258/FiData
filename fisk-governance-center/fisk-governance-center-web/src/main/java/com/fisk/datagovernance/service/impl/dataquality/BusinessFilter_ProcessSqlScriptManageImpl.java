@@ -8,9 +8,11 @@ import com.fisk.datagovernance.map.dataquality.BusinessFilter_ProcessSqlScriptMa
 import com.fisk.datagovernance.mapper.dataquality.BusinessFilter_ProcessSqlScriptMapper;
 import com.fisk.datagovernance.service.dataquality.IBusinessFilter_ProcessSqlScriptManageService;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.process.BusinessFilter_ProcessSqlScriptVO;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class BusinessFilter_ProcessSqlScriptManageImpl
         extends ServiceImpl<BusinessFilter_ProcessSqlScriptMapper, BusinessFilter_ProcessSqlScriptPO>
         implements IBusinessFilter_ProcessSqlScriptManageService {

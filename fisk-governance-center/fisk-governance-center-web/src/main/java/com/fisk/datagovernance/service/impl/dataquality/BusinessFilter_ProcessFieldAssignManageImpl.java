@@ -9,9 +9,11 @@ import com.fisk.datagovernance.map.dataquality.BusinessFilter_ProcessFieldAssign
 import com.fisk.datagovernance.mapper.dataquality.BusinessFilter_ProcessFieldAssignMapper;
 import com.fisk.datagovernance.service.dataquality.IBusinessFilter_ProcessFieldAssignManageService;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.process.BusinessFilter_ProcessFieldAssignVO;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class BusinessFilter_ProcessFieldAssignManageImpl
         extends ServiceImpl<BusinessFilter_ProcessFieldAssignMapper, BusinessFilter_ProcessFieldAssignPO>
         implements IBusinessFilter_ProcessFieldAssignManageService {

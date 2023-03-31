@@ -9,9 +9,11 @@ import com.fisk.datagovernance.map.dataquality.BusinessFilter_ProcessFieldRuleMa
 import com.fisk.datagovernance.mapper.dataquality.BusinessFilter_ProcessFieldRuleMapper;
 import com.fisk.datagovernance.service.dataquality.IBusinessFilter_ProcessFieldRuleManageService;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.process.BusinessFilter_ProcessFieldRuleVO;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class BusinessFilter_ProcessFieldRuleManageImpl
         extends ServiceImpl<BusinessFilter_ProcessFieldRuleMapper, BusinessFilter_ProcessFieldRulePO>
         implements IBusinessFilter_ProcessFieldRuleManageService {

@@ -9,9 +9,11 @@ import com.fisk.datagovernance.map.dataquality.BusinessFilter_ProcessTriggerMap;
 import com.fisk.datagovernance.mapper.dataquality.BusinessFilter_ProcessTriggerMapper;
 import com.fisk.datagovernance.service.dataquality.IBusinessFilter_ProcessTriggerManageService;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.process.BusinessFilter_ProcessTriggerVO;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class BusinessFilter_ProcessTriggerManageImpl
         extends ServiceImpl<BusinessFilter_ProcessTriggerMapper, BusinessFilter_ProcessTriggerPO>
         implements IBusinessFilter_ProcessTriggerManageService {

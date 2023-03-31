@@ -9,9 +9,11 @@ import com.fisk.datagovernance.map.dataquality.BusinessFilter_ProcessExpressMap;
 import com.fisk.datagovernance.mapper.dataquality.BusinessFilter_ProcessExpressMapper;
 import com.fisk.datagovernance.service.dataquality.IBusinessFilter_ProcessExpressManageService;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.process.BusinessFilter_ProcessExpressVO;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class BusinessFilter_ProcessExpressManageImpl
         extends ServiceImpl<BusinessFilter_ProcessExpressMapper, BusinessFilter_ProcessExpressPO>
         implements IBusinessFilter_ProcessExpressManageService {
