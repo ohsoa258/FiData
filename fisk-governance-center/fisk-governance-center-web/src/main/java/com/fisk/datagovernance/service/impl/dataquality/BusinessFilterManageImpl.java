@@ -11,6 +11,7 @@ import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.CronUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
@@ -25,7 +26,7 @@ import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFieldDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.QueryTableRuleDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
-import com.fisk.datagovernance.map.dataquality.BusinessFilterMap;
+import com.fisk.datagovernance.map.dataquality.*;
 import com.fisk.datagovernance.mapper.dataquality.BusinessFilterMapper;
 import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
 import com.fisk.datagovernance.service.dataquality.IBusinessFilterManageService;
@@ -34,14 +35,13 @@ import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.process.*;
 import com.fisk.dataservice.enums.ProcessAssemblyTypeEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -270,39 +270,33 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultEnum deleteData(int id) {
-        if (id == 0) {
+    public ResultEnum deleteData(int ruleId) {
+        if (ruleId == 0) {
             return ResultEnum.PARAMTER_ERROR;
         }
         try {
-            BusinessFilterPO businessFilterPO = baseMapper.selectById(id);
+            BusinessFilterPO businessFilterPO = baseMapper.selectById(ruleId);
             if (businessFilterPO == null)
                 return ResultEnum.SUCCESS;
-            // 第一步：删除清洗规则下的工作区流程信息
-            List<BusinessFilter_ProcessTaskPO> processTaskPOList = processTaskManageImpl.getPOList(id);
-            List<BusinessFilter_ProcessTriggerPO> processTriggerPOList = processTriggerManageImpl.getPOList(id);
-            List<BusinessFilter_ProcessExpressPO> processExpressPOList = processExpressManageImpl.getPOList(id);
-            List<BusinessFilter_ProcessFieldAssignPO> processFieldAssignPOList = processFieldAssignManageImpl.getPOList(id);
-            List<BusinessFilter_ProcessFieldRulePO> processFieldRulePOList = processFieldRuleManageImpl.getPOList(id);
-            List<BusinessFilter_ProcessSqlScriptPO> processSqlScriptPOList = processSqlScriptManageImpl.getPOList(id);
-            removePOList(processTaskPOList, processTaskManageImpl);
-            removePOList(processTriggerPOList, processTriggerManageImpl);
-            removePOList(processExpressPOList, processExpressManageImpl);
-            removePOList(processFieldAssignPOList, processFieldAssignManageImpl);
-            removePOList(processFieldRulePOList, processFieldRuleManageImpl);
-            removePOList(processSqlScriptPOList, processSqlScriptManageImpl);
-
-            // 第二步：调用元数据接口同步最新的规则信息
+            // 第一步：删除清洗规则
+            if (baseMapper.deleteByIdWithFill(businessFilterPO) <= 0)
+                return ResultEnum.DELETE_ERROR;
+            // 第二步：删除清洗规则下的工作区流程信息
+            if (!deleteProcess(ruleId))
+                return ResultEnum.DELETE_ERROR;
+            // 第三步：调用元数据接口同步最新的规则信息
             DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(businessFilterPO.getDatasourceId());
-            if (dataSourceConPO != null) {
-                SourceTypeEnum sourceTypeEnum = SourceTypeEnum.getEnum(dataSourceConPO.getDatasourceType());
-                externalInterfaceImpl.synchronousTableBusinessMetaData(businessFilterPO.getDatasourceId(), sourceTypeEnum, businessFilterPO.getTableBusinessType(), businessFilterPO.getTableUnique());
+            if (dataSourceConPO != null)
+                externalInterfaceImpl.synchronousTableBusinessMetaData(businessFilterPO.getDatasourceId(), SourceTypeEnum.getEnum(dataSourceConPO.getDatasourceType()), businessFilterPO.getTableBusinessType(), businessFilterPO.getTableUnique());
+            // 第四步：禁用调度任务（rule维度）
+            if (businessFilterPO.getTriggerScene() == 1) {
+
             }
-            return baseMapper.deleteByIdWithFill(businessFilterPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.DELETE_ERROR;
         } catch (Exception ex) {
             log.error("[businessFilter]-[deleteData]-ex:" + ex);
             throw new FkException(ResultEnum.ERROR, ex);
         }
+        return ResultEnum.SUCCESS;
     }
 
     @Override
@@ -372,6 +366,18 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
                     case TRIGGER:
                         BusinessFilter_ProcessTriggerVO filter_processTriggerVO = processTriggerVOList.stream().filter(t -> t.getTaskCode().equals(processTaskVO.getTaskCode())).findFirst().orElse(null);
                         if (filter_processTriggerVO != null) {
+                            if (filter_processTriggerVO.getTriggerScene() == 1 && StringUtils.isNotEmpty(filter_processTriggerVO.getTriggerValue())) {
+                                String nextExecutionTime = "";
+                                if (filter_processTriggerVO.getTriggerType() == "TIMER DRIVEN") {
+                                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                                    Calendar nowTime = Calendar.getInstance();
+                                    nowTime.add(Calendar.SECOND, Integer.parseInt(filter_processTriggerVO.getTriggerValue()));
+                                    nextExecutionTime = sdf.format(nowTime.getTime());
+                                } else if (filter_processTriggerVO.getTriggerType() == "CRON DRIVEN") {
+                                    nextExecutionTime = CronUtils.getCronExpress(filter_processTriggerVO.getTriggerValue());
+                                }
+                                filter_processTriggerVO.setNextExecutionTime(nextExecutionTime);
+                            }
                             processTaskVO.setProcessTriggerInfo(filter_processTriggerVO);
                         }
                         break;
@@ -410,41 +416,148 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public ResultEnum addProcess(BusinessFilter_SaveProcessDTO dto) {
-        if (dto == null || CollectionUtils.isEmpty(dto.getProcessTaskList())) {
-            return ResultEnum.PARAMTER_NOTNULL;
-        }
-        try {
-            // 第一步：查询清洗规则信息
-            BusinessFilterPO businessFilterPO = baseMapper.selectById(dto.getRuleId());
-            if (businessFilterPO == null)
-                return ResultEnum.DATA_QUALITY_THE_CLEANING_RULE_DOES_NOT_EXIST;
-            // 第二步：dto转换为po
-            dto.getProcessTaskList().forEach(t -> {
-
-            });
-        } catch (Exception ex) {
-            log.error("[businessFilter]-[addProcess]-ex:" + ex);
-            throw new FkException(ResultEnum.ERROR, ex);
-        }
-        return null;
+    public String getProcessTaskCode() {
+        return UUID.randomUUID().toString().replace("-", "");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultEnum editProcess(BusinessFilter_SaveProcessDTO dto) {
+    public ResultEnum saveProcess(BusinessFilter_SaveProcessDTO dto) {
+        if (dto == null || dto.getRuleId() == 0 || CollectionUtils.isEmpty(dto.getProcessTaskList())) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
+        boolean isSavePass = false;
+        int ruleId = dto.getRuleId();
+
         try {
+            // 第一步：查询清洗规则信息
+            BusinessFilterPO businessFilterPO = baseMapper.selectById(ruleId);
+            if (businessFilterPO == null)
+                return ResultEnum.DATA_QUALITY_THE_CLEANING_RULE_DOES_NOT_EXIST;
+            // 第二步：dto转换为po
+            BusinessFilter_ProcessTriggerPO processTriggerPO = null;
+            List<BusinessFilter_ProcessTaskPO> processTaskPOList = new ArrayList<>();
+            List<BusinessFilter_ProcessExpressPO> processExpressPOList = new ArrayList<>();
+            List<BusinessFilter_ProcessFieldAssignPO> processFieldAssignPOList = new ArrayList<>();
+            List<BusinessFilter_ProcessFieldRulePO> processFieldRulePOList = new ArrayList<>();
+            List<BusinessFilter_ProcessSqlScriptPO> processSqlScriptPOList = new ArrayList<>();
+            for (BusinessFilter_ProcessTaskDTO processTaskDTO : dto.getProcessTaskList()) {
+                ProcessAssemblyTypeEnum processAssemblyTypeEnum = ProcessAssemblyTypeEnum.getEnum(processTaskDTO.getAssemblyCode());
+                if (processAssemblyTypeEnum == ProcessAssemblyTypeEnum.NONE)
+                    throw new FkException(ResultEnum.ERROR, "清洗组件缺失");
+
+                String taskCode = processTaskDTO.getTaskCode();
+                List<BusinessFilter_ProcessFieldRulePO> filter_processFieldRulePOList = null;
+                BusinessFilter_ProcessTaskPO processTaskPO = BusinessFilter_ProcessTaskMap.INSTANCES.dtoToPo(processTaskDTO);
+                processTaskPO.setRuleId(ruleId);
+                switch (processAssemblyTypeEnum) {
+                    case TRIGGER:
+                        processTriggerPO = BusinessFilter_ProcessTriggerMap.INSTANCES.dtoToPo(processTaskDTO.getProcessTriggerInfo());
+                        if (processTriggerPO != null) {
+                            processTriggerPO.setRuleId(ruleId);
+                            processTriggerPO.setTaskCode(taskCode);
+                            processTaskPO.setCustomDescribe(processTriggerPO.getCustomDescribe());
+                        }
+                        break;
+                    case CONDITIONAL_EXPRESS:
+                        BusinessFilter_ProcessExpressPO processExpressPO = BusinessFilter_ProcessExpressMap.INSTANCES.dtoToPo(processTaskDTO.getProcessExpressInfo());
+                        if (processExpressPO != null) {
+                            processExpressPO.setRuleId(ruleId);
+                            processExpressPO.setTaskCode(taskCode);
+                            processExpressPO.setDataCode(getProcessTaskCode());
+                            processTaskPO.setCustomDescribe(processExpressPO.getCustomDescribe());
+                            processExpressPOList.add(processExpressPO);
+                            filter_processFieldRulePOList = BusinessFilter_ProcessFieldRuleMap.INSTANCES.dtoListToPoList(processTaskDTO.getProcessExpressInfo().getExpressRuleList());
+                            if (CollectionUtils.isNotEmpty(filter_processFieldRulePOList)) {
+                                filter_processFieldRulePOList.forEach(processFieldRulePO -> {
+                                    processFieldRulePO.setRuleId(ruleId);
+                                    processFieldRulePO.setTaskCode(taskCode);
+                                    processFieldRulePO.setFkDataCode(processExpressPO.getDataCode());
+                                });
+                                processFieldRulePOList.addAll(filter_processFieldRulePOList);
+                            }
+                        }
+                        break;
+                    case SQL_SCRIPT:
+                        BusinessFilter_ProcessSqlScriptPO processSqlScriptPO = BusinessFilter_ProcessSqlScriptMap.INSTANCES.dtoToPo(processTaskDTO.getProcessSqlScriptInfo());
+                        if (processSqlScriptPO != null) {
+                            processSqlScriptPO.setRuleId(ruleId);
+                            processSqlScriptPO.setTaskCode(taskCode);
+                            processSqlScriptPOList.add(processSqlScriptPO);
+                        }
+                        break;
+                    case OPENAPI:
+                        break;
+                    case FIELD_ASSIGNMENT:
+                        BusinessFilter_ProcessFieldAssignPO processFieldAssignPO = BusinessFilter_ProcessFieldAssignMap.INSTANCES.dtoToPo(processTaskDTO.getProcessFieldAssignInfo());
+                        if (processFieldAssignPO != null) {
+                            processFieldAssignPO.setRuleId(ruleId);
+                            processFieldAssignPO.setTaskCode(taskCode);
+                            processFieldAssignPO.setDataCode(getProcessTaskCode());
+                            processTaskPO.setCustomDescribe(processFieldAssignPO.getCustomDescribe());
+                            processFieldAssignPOList.add(processFieldAssignPO);
+                            filter_processFieldRulePOList = BusinessFilter_ProcessFieldRuleMap.INSTANCES.dtoListToPoList(processTaskDTO.getProcessExpressInfo().getExpressRuleList());
+                            if (CollectionUtils.isNotEmpty(filter_processFieldRulePOList)) {
+                                filter_processFieldRulePOList.forEach(processFieldRulePO -> {
+                                    processFieldRulePO.setRuleId(ruleId);
+                                    processFieldRulePO.setTaskCode(taskCode);
+                                    processFieldRulePO.setFkDataCode(processFieldAssignPO.getDataCode());
+                                });
+                                processFieldRulePOList.addAll(filter_processFieldRulePOList);
+                            }
+                        }
+                        break;
+                }
+                processTaskPOList.add(processTaskPO);
+            }
+            if (processTriggerPO == null)
+                return ResultEnum.DATA_QUALITY_PLEASE_CONFIGURE_TRIGGER;
+            // 第三步：根据ruleId删除工作区流程配置
+            if (!deleteProcess(ruleId))
+                return ResultEnum.SAVE_DATA_ERROR;
+            // 第四步：保存工作区流程配置到数据库
+            isSavePass = processTriggerManageImpl.save(processTriggerPO);
+            if (CollectionUtils.isNotEmpty(processTaskPOList))
+                isSavePass = processTaskManageImpl.saveBatch(processTaskPOList);
+            if (CollectionUtils.isNotEmpty(processExpressPOList))
+                isSavePass = processExpressManageImpl.saveBatch(processExpressPOList);
+            if (CollectionUtils.isNotEmpty(processFieldAssignPOList))
+                isSavePass = processFieldAssignManageImpl.saveBatch(processFieldAssignPOList);
+            if (CollectionUtils.isNotEmpty(processFieldRulePOList))
+                isSavePass = processFieldRuleManageImpl.saveBatch(processFieldRulePOList);
+            if (CollectionUtils.isNotEmpty(processSqlScriptPOList))
+                isSavePass = processSqlScriptManageImpl.saveBatch(processSqlScriptPOList);
+            // 第五步：清洗规则回写设置调度信息
+            businessFilterPO.setTriggerScene(processTriggerPO.getTriggerScene());
+            isSavePass = baseMapper.updateById(businessFilterPO) > 0;
+            // 第六步：创建/更新调度任务（rule维度）
+            if (processTriggerPO.getTriggerScene() == 1 && StringUtils.isNotEmpty(processTriggerPO.getTriggerValue())) {
+
+            } else {
+                // 删除调度任务（rule维度）
+
+            }
         } catch (Exception ex) {
-            log.error("[businessFilter]-[editProcess]-ex:" + ex);
+            log.error("[businessFilter]-[saveProcess]-ex:" + ex);
             throw new FkException(ResultEnum.ERROR, ex);
         }
-        return null;
+        return isSavePass ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
     public ResultEntity<List<BusinessFilterResultVO>> collProcess(long ruleId) {
+        List<BusinessFilterResultVO> filterResultList = new ArrayList<>();
+        if (ruleId == 0) {
+            return ResultEntityBuild.buildData(ResultEnum.PARAMTER_NOTNULL, filterResultList);
+        }
         try {
+            // 第一步：查询清洗规则信息
+            BusinessFilterPO businessFilterPO = baseMapper.selectById(ruleId);
+            if (businessFilterPO == null)
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_THE_CLEANING_RULE_DOES_NOT_EXIST, filterResultList);
+            // 第二步：查询清洗规则工作区流程信息
+            // 第三步：工作区流程递归获取清洗SQL
+
         } catch (Exception ex) {
             log.error("[businessFilter]-[collProcess]-ex:" + ex);
             throw new FkException(ResultEnum.ERROR, ex);
@@ -462,10 +575,28 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
         return businessFilterApiManageImpl.collApi(dto);
     }
 
-    private void removePOList(List<? extends BasePO> poList, IService<? extends BasePO> service) {
+    private boolean deleteProcess(int ruleId) {
+        boolean isDeletePass = true;
+        List<BusinessFilter_ProcessTaskPO> processTaskPOList = processTaskManageImpl.getPOList(ruleId);
+        List<BusinessFilter_ProcessTriggerPO> processTriggerPOList = processTriggerManageImpl.getPOList(ruleId);
+        List<BusinessFilter_ProcessExpressPO> processExpressPOList = processExpressManageImpl.getPOList(ruleId);
+        List<BusinessFilter_ProcessFieldAssignPO> processFieldAssignPOList = processFieldAssignManageImpl.getPOList(ruleId);
+        List<BusinessFilter_ProcessFieldRulePO> processFieldRulePOList = processFieldRuleManageImpl.getPOList(ruleId);
+        List<BusinessFilter_ProcessSqlScriptPO> processSqlScriptPOList = processSqlScriptManageImpl.getPOList(ruleId);
+        isDeletePass = removePOList(processTaskPOList, processTaskManageImpl);
+        isDeletePass = removePOList(processTriggerPOList, processTriggerManageImpl);
+        isDeletePass = removePOList(processExpressPOList, processExpressManageImpl);
+        isDeletePass = removePOList(processFieldAssignPOList, processFieldAssignManageImpl);
+        isDeletePass = removePOList(processFieldRulePOList, processFieldRuleManageImpl);
+        isDeletePass = removePOList(processSqlScriptPOList, processSqlScriptManageImpl);
+        return isDeletePass;
+    }
+
+    private boolean removePOList(List<? extends BasePO> poList, IService<? extends BasePO> service) {
         if (CollectionUtils.isNotEmpty(poList)) {
             List<Long> removeIdList = poList.stream().map(BasePO::getId).collect(Collectors.toList());
-            service.removeByIds(removeIdList);
+            return service.removeByIds(removeIdList);
         }
+        return true;
     }
 }

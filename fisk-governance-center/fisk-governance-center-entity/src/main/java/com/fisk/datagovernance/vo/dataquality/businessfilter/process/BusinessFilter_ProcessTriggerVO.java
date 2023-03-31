@@ -46,4 +46,10 @@ public class BusinessFilter_ProcessTriggerVO {
      */
     @ApiModelProperty(value = "自定义描述")
     public String customDescribe;
+
+    /**
+     * 下次执行时间
+     */
+    @ApiModelProperty(value = "下次执行时间")
+    public String nextExecutionTime;
 }

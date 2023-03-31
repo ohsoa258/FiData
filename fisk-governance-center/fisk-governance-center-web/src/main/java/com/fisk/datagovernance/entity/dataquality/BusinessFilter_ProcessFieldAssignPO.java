@@ -23,11 +23,6 @@ public class BusinessFilter_ProcessFieldAssignPO extends BasePO {
     public String dataCode;
 
     /**
-     * 字段赋值规则json
-     */
-    public String fieldAssignRuleJson;
-
-    /**
      * 字段赋值规则之间逻辑关系
      */
     public String fieldAssignRuleRelation;

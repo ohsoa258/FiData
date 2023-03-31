@@ -23,11 +23,6 @@ public class BusinessFilter_ProcessExpressPO extends BasePO {
     public String dataCode;
 
     /**
-     * 表达式规则json
-     */
-    public String expressRuleJson;
-
-    /**
      * 表达式规则之间逻辑关系
      */
     public String expressRuleRelation;

@@ -80,20 +80,12 @@ public interface IBusinessFilterManageService extends IService<BusinessFilterPO>
     ResultEntity<List<BusinessFilter_ProcessTaskVO>> getProcessDetail(long ruleId);
 
     /**
-     * 新增工作区流程
+     * 保存工作区流程
      *
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum addProcess(BusinessFilter_SaveProcessDTO dto);
-
-    /**
-     * 修改工作区流程
-     *
-     * @param dto dto
-     * @return 执行结果
-     */
-    ResultEnum editProcess(BusinessFilter_SaveProcessDTO dto);
+    ResultEnum saveProcess(BusinessFilter_SaveProcessDTO dto);
 
     /**
      * 调用工作区流程
@@ -102,6 +94,13 @@ public interface IBusinessFilterManageService extends IService<BusinessFilterPO>
      * @return 执行结果
      */
     ResultEntity<List<BusinessFilterResultVO>> collProcess(long ruleId);
+
+    /**
+     * 获取工作区的task的code
+     *
+     * @return 执行结果
+     */
+    String getProcessTaskCode();
 
     /**
      * API清洗,调用授权API获取Token

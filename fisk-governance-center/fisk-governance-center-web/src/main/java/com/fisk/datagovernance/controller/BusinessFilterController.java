@@ -73,22 +73,22 @@ public class BusinessFilterController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getProcessAssembly());
     }
 
+    @ApiOperation("清洗流程，强随机获取工作区taskCode")
+    @GetMapping("/getProcessTaskCode")
+    public ResultEntity<List<BusinessFilter_ProcessTaskVO>> getProcessTaskCode() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getProcessTaskCode());
+    }
+
     @ApiOperation("清洗流程，查询工作区流程")
     @GetMapping("/getProcessDetail/{ruleId}")
     public ResultEntity<List<BusinessFilter_ProcessTaskVO>> getProcessDetail(@PathVariable("ruleId") long ruleId) {
         return service.getProcessDetail(ruleId);
     }
 
-    @ApiOperation("清洗流程，新增工作区流程")
-    @PostMapping("/addProcess")
-    public ResultEntity<Object> addProcess(@RequestBody BusinessFilter_SaveProcessDTO dto) {
-        return ResultEntityBuild.build(service.addProcess(dto));
-    }
-
-    @ApiOperation("清洗流程，编辑工作区流程")
-    @PutMapping("/editProcess")
-    public ResultEntity<Object> editProcess(@RequestBody BusinessFilter_SaveProcessDTO dto) {
-        return ResultEntityBuild.build(service.editProcess(dto));
+    @ApiOperation("清洗流程，保存工作区流程")
+    @PostMapping("/saveProcess")
+    public ResultEntity<Object> saveProcess(@RequestBody BusinessFilter_SaveProcessDTO dto) {
+        return ResultEntityBuild.build(service.saveProcess(dto));
     }
 
     @ApiOperation("清洗流程，执行清洗流程")
