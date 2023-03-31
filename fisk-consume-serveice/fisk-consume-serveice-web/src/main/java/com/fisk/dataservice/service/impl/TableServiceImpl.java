@@ -279,7 +279,7 @@ public class TableServiceImpl
     }
 
     /**
-     * 静态内部类，用于远程调用方法的参数，↑
+     * 用于远程调用方法的参数，↑
      *
      * @return
      */
@@ -300,7 +300,7 @@ public class TableServiceImpl
                 .fidata_batch_code(fidata_batch_code)
                 .pipelStageTraceId(pipelStageTraceId)
                 .ifTaskStart(true)
-                .tableType(1)
+                .topicType(1)
                 .build();
     }
 

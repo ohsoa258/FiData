@@ -1,5 +1,6 @@
 package com.fisk.datamodel.service.impl.dimension;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
@@ -42,6 +43,7 @@ import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +58,7 @@ import java.util.stream.Collectors;
  * @author JianWenYang
  */
 @Service
+@Slf4j
 public class DimensionFolderImpl
         extends ServiceImpl<DimensionFolderMapper, DimensionFolderPO>
         implements IDimensionFolder {
@@ -402,6 +405,7 @@ public class DimensionFolderImpl
             }
             data.dimensionList = dimensionList;
             //发送消息
+            log.info(JSON.toJSONString(data));
             publishTaskClient.publishBuildAtlasDorisTableTask(data);
         } catch (Exception ex) {
             log.error("batchPublishDimensionFolder ex:", ex);
