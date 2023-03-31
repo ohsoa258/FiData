@@ -10,7 +10,6 @@
             t1.table_unique,
             t1.table_type,
             t1.table_business_type,
-            t1.create_rule,
             t1.rule_sort,
             t1.rule_state,
             t1.rule_describe,

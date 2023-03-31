@@ -40,4 +40,10 @@ public class BusinessFilter_ProcessAssemblyDTO {
      */
     @ApiModelProperty(value = "组件状态：1 启用 2 禁用")
     public int assemblyState;
+
+    /**
+     * 组件顺序
+     */
+    @ApiModelProperty(value = "组件顺序")
+    public int assemblySort;
 }

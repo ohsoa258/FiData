@@ -8,7 +8,7 @@ public enum ProcessAssemblyTypeEnum implements BaseEnum {
     TRIGGER(1000, "触发器"),
     CONDITIONAL_EXPRESS(2000, "条件表达式"),
     SQL_SCRIPT(3000, "SQL脚本"),
-    OPENAPI(4000, "SQL脚本"),
+    OPEN_API(4000, "SQL脚本"),
     FIELD_ASSIGNMENT(5000, "字段赋值");
 
     ProcessAssemblyTypeEnum(int value, String name) {

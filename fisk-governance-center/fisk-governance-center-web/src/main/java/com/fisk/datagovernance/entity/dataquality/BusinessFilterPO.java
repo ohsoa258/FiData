@@ -40,11 +40,6 @@ public class BusinessFilterPO extends BasePO
     public int tableBusinessType;
 
     /**
-     * 生成规则（清洗脚本）
-     */
-    public String createRule;
-
-    /**
      * 规则执行顺序
      */
     public int ruleSort;

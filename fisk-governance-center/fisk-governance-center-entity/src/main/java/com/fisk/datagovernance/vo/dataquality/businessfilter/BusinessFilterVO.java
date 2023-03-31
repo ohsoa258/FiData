@@ -102,4 +102,10 @@ public class BusinessFilterVO {
      */
     @ApiModelProperty(value = "触发场景：1 调度任务 2 质量报告 3 暂无")
     public int triggerScene;
+
+    /**
+     * 序号
+     */
+    @ApiModelProperty(value = "序号")
+    public int orderNumber;
 }

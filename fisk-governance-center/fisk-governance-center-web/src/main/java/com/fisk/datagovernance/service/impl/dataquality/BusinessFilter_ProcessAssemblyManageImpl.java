@@ -21,7 +21,8 @@ public class BusinessFilter_ProcessAssemblyManageImpl
     public List<BusinessFilter_ProcessAssemblyPO> getPOList() {
         QueryWrapper<BusinessFilter_ProcessAssemblyPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(BusinessFilter_ProcessAssemblyPO::getDelFlag, 1);
+                .eq(BusinessFilter_ProcessAssemblyPO::getDelFlag, 1)
+                .orderByAsc(BusinessFilter_ProcessAssemblyPO::getAssemblySort);
         return baseMapper.selectList(queryWrapper);
     }
 

@@ -200,6 +200,11 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
                             // 3.再按照执行顺序排正序
                             .thenComparing(BusinessFilterVO::getRuleSort, Comparator.naturalOrder())
             ).collect(Collectors.toList());
+            int orderNumber = 0;
+            for (BusinessFilterVO businessFilterVO : filterRule) {
+                orderNumber += 1;
+                businessFilterVO.setOrderNumber(orderNumber);
+            }
         } catch (Exception ex) {
             log.error("[businessFilter]-[getAllRule]-ex：" + ex);
             throw new FkException(ResultEnum.ERROR, ex);
@@ -395,7 +400,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
                             processTaskVO.setProcessSqlScriptInfo(filter_processSqlScriptVO);
                         }
                         break;
-                    case OPENAPI:
+                    case OPEN_API:
                         break;
                     case FIELD_ASSIGNMENT:
                         BusinessFilter_ProcessFieldAssignVO filter_processFieldAssignVO = processFieldAssignVOList.stream().filter(t -> t.getTaskCode().equals(processTaskVO.getTaskCode())).findFirst().orElse(null);
@@ -486,7 +491,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
                             processSqlScriptPOList.add(processSqlScriptPO);
                         }
                         break;
-                    case OPENAPI:
+                    case OPEN_API:
                         break;
                     case FIELD_ASSIGNMENT:
                         BusinessFilter_ProcessFieldAssignPO processFieldAssignPO = BusinessFilter_ProcessFieldAssignMap.INSTANCES.dtoToPo(processTaskDTO.getProcessFieldAssignInfo());
