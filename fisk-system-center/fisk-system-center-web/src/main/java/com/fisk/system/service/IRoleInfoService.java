@@ -8,6 +8,7 @@ import com.fisk.system.dto.QueryDTO;
 import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import com.fisk.system.dto.roleinfo.RoleInfoQueryDTO;
 import com.fisk.system.dto.roleinfo.RolePowerDTO;
+import com.fisk.system.vo.roleinfo.RoleInfoVo;
 
 import java.util.List;
 
@@ -48,6 +49,14 @@ public interface IRoleInfoService{
     RoleInfoDTO getRoleById(int id);
 
     /**
+     * 根据ids获取角色详情
+     *
+     * @param ids ids
+     * @return 保存结果
+     */
+    List<RoleInfoDTO> getRoleByIds(List<Integer> ids);
+
+    /**
      * 角色编辑
      *
      * @param dto dto
@@ -69,4 +78,9 @@ public interface IRoleInfoService{
      */
     List<FilterFieldDTO> getRoleInfoColumn();
 
+    /**
+     * 获取所有角色及角色下用户信息
+     * @return
+     */
+    List<RoleInfoVo> getTreeRols();
 }

@@ -200,4 +200,74 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
     }
+
+    public ApprovalStateEnum intToApprovalStateEnum(Integer approvalState) {
+        if (approvalState == null){
+            return null;
+        }
+        switch (approvalState){
+            case 0:
+                return ApprovalStateEnum.CLOSE;
+            case 1:
+                return ApprovalStateEnum.OPEN;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
+
+    public AutoapproalRuleEnum intToAutoapproalRuleEnum(Integer autoapproalRule) {
+        if (autoapproalRule == null){
+            return null;
+        }
+        switch (autoapproalRule){
+            case 1:
+                return AutoapproalRuleEnum.ONLY_ONE_RULE;
+            case 2:
+                return AutoapproalRuleEnum.CONTINUOUS_APPROVAL_RULE;
+            case 3:
+                return AutoapproalRuleEnum.ALL_APPROVAL_RULE;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
+
+    public ExceptionApprovalEnum intToExceptionApprovalEnum(Integer exceptionApproval) {
+        if (exceptionApproval == null){
+            return null;
+        }
+        switch (exceptionApproval){
+            case 1:
+                return ExceptionApprovalEnum.EXCEPTION_APPROVAL_ENUM;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
+
+    public ProcessNodeTypeEnum intToProcessNodeTypeEnum(Integer processNodeType) {
+        if (processNodeType == null){
+            return null;
+        }
+        switch (processNodeType){
+            case 1:
+                return ProcessNodeTypeEnum.NODE_TYPE1_ENUM;
+            case 2:
+                return ProcessNodeTypeEnum.NODE_TYPE2_ENUM;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
+    public ProcessPersonTypeEnum intToProcessPersonTypeEnum(Integer processPersonType) {
+        if (processPersonType == null){
+            return null;
+        }
+        switch (processPersonType){
+            case 1:
+                return ProcessPersonTypeEnum.PERSON_TYPE1_ENUM;
+            case 2:
+                return ProcessPersonTypeEnum.PERSON_TYPE2_ENUM;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
+
 }

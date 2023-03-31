@@ -6,6 +6,7 @@ import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.dto.userinfo.UserDropDTO;
 import com.fisk.system.dto.userinfo.UserPowerDTO;
 import com.fisk.system.entity.UserPO;
+import com.fisk.system.vo.roleinfo.UserInfoVo;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;

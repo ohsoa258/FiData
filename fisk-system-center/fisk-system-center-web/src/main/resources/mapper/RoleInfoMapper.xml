@@ -16,5 +16,32 @@
             ${query.where}
         </if>
     </select>
-    
+    <resultMap id="TreeRols" type="com.fisk.system.vo.roleinfo.RoleInfoVo">
+        <result property="id" column="id"/>
+        <result property="roleName" column="role_name"/>
+        <collection property="userInfoVos" ofType="com.fisk.system.vo.roleinfo.UserInfoVo">
+            <result property="rowid" column="rowid"/>
+            <result property="id" column="urid"/>
+            <result property="username" column="username"/>
+        </collection>
+    </resultMap>
+    <select id="getTreeRols" resultMap="TreeRols">
+        SELECT
+        @rowNum := @rowNum + 1 AS rowid,
+        r.id AS rid,
+        r.role_name,
+        u.id AS urid,
+        u.username
+        FROM
+        tb_role_info r
+        LEFT JOIN tb_role_user_assignment ru ON r.id = ru.role_id
+        LEFT JOIN tb_user_info u ON ru.user_id = u.id
+       ,(
+        SELECT
+        @rowNum := 0
+        ) b
+        WHERE
+        r.del_flag = 1
+        AND u.del_flag = 1
+    </select>
 </mapper>
