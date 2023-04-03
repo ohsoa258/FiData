@@ -75,8 +75,8 @@ public class BusinessFilterController {
 
     @ApiOperation("清洗流程，强随机获取工作区taskCode")
     @GetMapping("/getProcessTaskCode")
-    public ResultEntity<List<BusinessFilter_ProcessTaskVO>> getProcessTaskCode() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getProcessTaskCode());
+    public ResultEntity<String> getProcessTaskCode() {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.getProcessTaskCode());
     }
 
     @ApiOperation("清洗流程，查询工作区流程")

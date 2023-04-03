@@ -57,13 +57,13 @@ public class BusinessFilter_ProcessTaskVO {
      * x轴坐标
      */
     @ApiModelProperty(value = "x轴坐标")
-    public String xAxle;
+    public String coordinateX;
 
     /**
      * y轴坐标
      */
     @ApiModelProperty(value = "y轴坐标")
-    public String yAxle;
+    public String coordinateY;
 
     /**
      * 触发器规则信息

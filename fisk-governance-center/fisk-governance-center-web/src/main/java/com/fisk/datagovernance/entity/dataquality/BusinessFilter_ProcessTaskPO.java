@@ -45,10 +45,10 @@ public class BusinessFilter_ProcessTaskPO extends BasePO {
     /**
      * x轴坐标
      */
-    public String xAxle;
+    public String coordinateX;
 
     /**
      * y轴坐标
      */
-    public String yAxle;
+    public String coordinateY;
 }
