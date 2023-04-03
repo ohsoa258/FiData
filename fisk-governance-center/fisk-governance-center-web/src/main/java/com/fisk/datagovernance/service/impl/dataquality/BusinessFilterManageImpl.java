@@ -373,12 +373,12 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
                         if (filter_processTriggerVO != null) {
                             if (filter_processTriggerVO.getTriggerScene() == 1 && StringUtils.isNotEmpty(filter_processTriggerVO.getTriggerValue())) {
                                 String nextExecutionTime = "";
-                                if (filter_processTriggerVO.getTriggerType() == "TIMER DRIVEN") {
+                                if (filter_processTriggerVO.getTriggerType().equals("TIMER DRIVEN")) {
                                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                                     Calendar nowTime = Calendar.getInstance();
                                     nowTime.add(Calendar.SECOND, Integer.parseInt(filter_processTriggerVO.getTriggerValue()));
                                     nextExecutionTime = sdf.format(nowTime.getTime());
-                                } else if (filter_processTriggerVO.getTriggerType() == "CRON DRIVEN") {
+                                } else if (filter_processTriggerVO.getTriggerType().equals("CRON DRIVEN")) {
                                     nextExecutionTime = CronUtils.getCronExpress(filter_processTriggerVO.getTriggerValue());
                                 }
                                 filter_processTriggerVO.setNextExecutionTime(nextExecutionTime);
@@ -488,6 +488,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
                         if (processSqlScriptPO != null) {
                             processSqlScriptPO.setRuleId(ruleId);
                             processSqlScriptPO.setTaskCode(taskCode);
+                            processTaskPO.setCustomDescribe(processSqlScriptPO.getCustomDescribe());
                             processSqlScriptPOList.add(processSqlScriptPO);
                         }
                         break;
@@ -501,7 +502,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
                             processFieldAssignPO.setDataCode(getProcessTaskCode());
                             processTaskPO.setCustomDescribe(processFieldAssignPO.getCustomDescribe());
                             processFieldAssignPOList.add(processFieldAssignPO);
-                            filter_processFieldRulePOList = BusinessFilter_ProcessFieldRuleMap.INSTANCES.dtoListToPoList(processTaskDTO.getProcessExpressInfo().getExpressRuleList());
+                            filter_processFieldRulePOList = BusinessFilter_ProcessFieldRuleMap.INSTANCES.dtoListToPoList(processTaskDTO.getProcessFieldAssignInfo().getFieldRuleList());
                             if (CollectionUtils.isNotEmpty(filter_processFieldRulePOList)) {
                                 filter_processFieldRulePOList.forEach(processFieldRulePO -> {
                                     processFieldRulePO.setRuleId(ruleId);
