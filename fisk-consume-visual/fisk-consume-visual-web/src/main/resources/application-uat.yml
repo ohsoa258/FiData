@@ -33,7 +33,7 @@ spring:
   application:
     name: chartvisual-service
   datasource:
-    url: jdbc:mysql://192.168.21.13:3306/dmp_chartvisual_db_UAT?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+    url: jdbc:mysql://192.168.21.13:3306/FiData_chartvisual_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
     username: root
     password: Password01!
     driver-class-name: com.mysql.jdbc.Driver

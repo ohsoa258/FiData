@@ -2,7 +2,7 @@ spring:
   application:
     name: licenseRegistry-service
   datasource:
-    url: jdbc:mysql://192.168.21.13:3306/dmp_license_db_UAT?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://192.168.21.13:3306/FiData_license_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: Password01!
     driver-class-name: com.mysql.jdbc.Driver
