@@ -14,6 +14,7 @@
             t1.rule_state,
             t1.rule_describe,
             t1.filter_scene,
+            t1.trigger_scene,
             t2.datasource_id AS fiDataSourceId,
             t2.datasource_type AS sourceTypeEnum
         FROM
@@ -35,6 +36,7 @@
             t1.rule_state,
             t1.rule_describe,
             t1.filter_scene,
+            t1.trigger_scene,
             t2.datasource_id AS fiDataSourceId,
             t2.datasource_type AS sourceTypeEnum
         FROM

@@ -224,7 +224,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                                     if (dataCheckPO != null) {
                                         rule.setRuleName(dataCheckPO.getRuleName());
                                         rule.setRuleStateName(dataCheckPO.getRuleState() == 1 ? "启用" : "禁用");
-                                        rule.setRuleTypeName(TemplateSceneEnum.DATACHECK_QUALITYREPORT.getName());
+                                        rule.setRuleTypeName("校验规则（同步后）");
                                         rule.setTableUnique(dataCheckPO.getTableUnique());
                                         rule.setTableBusinessType(dataCheckPO.getTableBusinessType());
                                         rule.setTableTypeName(dataCheckPO.getTableType() == 1 ? "TABLE" : dataCheckPO.getTableType() == 2 ? "VIEW" : "");
@@ -235,7 +235,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                                     if (businessFilterPO != null) {
                                         rule.setRuleName(businessFilterPO.getRuleName());
                                         rule.setRuleStateName(businessFilterPO.getRuleState() == 1 ? "启用" : "禁用");
-                                        rule.setRuleTypeName(TemplateSceneEnum.BUSINESSFILTER_FILTERREPORT.getName());
+                                        rule.setRuleTypeName("清洗规则（同步后）");
                                         rule.setTableUnique(businessFilterPO.getTableUnique());
                                         rule.setTableBusinessType(businessFilterPO.getTableBusinessType());
                                         rule.setTableTypeName(businessFilterPO.getTableType() == 1 ? "TABLE" : businessFilterPO.getTableType() == 2 ? "VIEW" : "");
