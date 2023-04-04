@@ -71,12 +71,12 @@ spring:
         datainputdb:
           driver-class-name: com.mysql.jdbc.Driver
           password: Password01!
-          url: jdbc:mysql://192.168.21.13:3306/dmp_datainput_db_UAT?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+          url: jdbc:mysql://192.168.21.13:3306/FiData_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
           username: root
         taskdb:
           driver-class-name: com.mysql.jdbc.Driver
           password: Password01!
-          url: jdbc:mysql://192.168.21.13:3306/dmp_task_db_UAT?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+          url: jdbc:mysql://192.168.21.13:3306/FiData_task_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
           username: root
       primary: taskdb
       strict: false
