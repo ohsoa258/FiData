@@ -33,6 +33,11 @@ public class BusinessFilter_ProcessFieldAssignPO extends BasePO {
     public String fieldAssignPreviewText;
 
     /**
+     * 字段赋值SQL
+     */
+    public String fieldAssignSql;
+
+    /**
      * 自定义描述
      */
     public String customDescribe;

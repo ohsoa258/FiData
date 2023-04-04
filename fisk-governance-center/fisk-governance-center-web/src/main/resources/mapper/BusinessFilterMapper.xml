@@ -23,4 +23,26 @@
             t1.del_flag = 1
           AND t2.del_flag = 1
     </select>
+    <select id="getRule" resultType="com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO">
+        SELECT
+            t1.id,
+            t1.datasource_id,
+            t1.rule_name,
+            t1.table_unique,
+            t1.table_type,
+            t1.table_business_type,
+            t1.rule_sort,
+            t1.rule_state,
+            t1.rule_describe,
+            t1.filter_scene,
+            t2.datasource_id AS fiDataSourceId,
+            t2.datasource_type AS sourceTypeEnum
+        FROM
+            tb_bizfilter_rule t1
+                LEFT JOIN tb_datasource_config t2 ON t1.datasource_id = t2.id
+        WHERE
+            t1.del_flag = 1
+          AND t2.del_flag = 1
+          AND t1.id=#{ruleId}
+    </select>
 </mapper>

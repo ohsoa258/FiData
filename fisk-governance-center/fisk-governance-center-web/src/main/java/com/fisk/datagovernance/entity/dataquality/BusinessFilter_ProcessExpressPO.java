@@ -33,6 +33,11 @@ public class BusinessFilter_ProcessExpressPO extends BasePO {
     public String expressPreviewText;
 
     /**
+     * 表达式SQL
+     */
+    public String expressSql;
+
+    /**
      * 自定义描述
      */
     public String customDescribe;

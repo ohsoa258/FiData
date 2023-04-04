@@ -1,4 +1,4 @@
-package com.fisk.datagovernance.vo.dataquality.businessfilter;
+package com.fisk.datagovernance.vo.dataquality.businessfilter.filterresult;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

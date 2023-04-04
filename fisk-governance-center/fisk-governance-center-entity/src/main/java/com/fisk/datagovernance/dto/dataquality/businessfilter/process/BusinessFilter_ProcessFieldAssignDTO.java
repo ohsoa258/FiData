@@ -50,6 +50,12 @@ public class BusinessFilter_ProcessFieldAssignDTO {
     public String fieldAssignPreviewText;
 
     /**
+     * 字段赋值SQL
+     */
+    @ApiModelProperty(value = "字段赋值SQL")
+    public String fieldAssignSql;
+
+    /**
      * 自定义描述
      */
     @ApiModelProperty(value = "自定义描述")

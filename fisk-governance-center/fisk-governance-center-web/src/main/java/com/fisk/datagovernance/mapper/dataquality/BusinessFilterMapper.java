@@ -6,6 +6,7 @@ import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -23,6 +24,13 @@ public interface BusinessFilterMapper extends FKBaseMapper<BusinessFilterPO> {
      * @return 查询结果
      */
     List<BusinessFilterVO> getAllRule();
+
+    /**
+     * 查询清洗规则
+     *
+     * @return 查询结果
+     */
+    BusinessFilterVO getRuleById(@Param("ruleId") long ruleId);
 
     /**
      * 新增一条数据并返回生成的主键id

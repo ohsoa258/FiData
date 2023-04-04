@@ -1,4 +1,4 @@
-package com.fisk.dataservice.enums;
+package com.fisk.datagovernance.enums.dataquality;
 
 import com.fisk.common.core.enums.BaseEnum;
 

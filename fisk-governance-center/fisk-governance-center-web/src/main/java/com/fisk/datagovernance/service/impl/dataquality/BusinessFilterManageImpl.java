@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.entity.BasePO;
+import com.fisk.common.core.constants.DataQualityConstants;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
@@ -30,10 +31,11 @@ import com.fisk.datagovernance.map.dataquality.*;
 import com.fisk.datagovernance.mapper.dataquality.BusinessFilterMapper;
 import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
 import com.fisk.datagovernance.service.dataquality.IBusinessFilterManageService;
-import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterResultVO;
+import com.fisk.datagovernance.vo.dataquality.businessfilter.filterresult.BusinessFilterProcessVO;
+import com.fisk.datagovernance.vo.dataquality.businessfilter.filterresult.BusinessFilterResultVO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO;
 import com.fisk.datagovernance.vo.dataquality.businessfilter.process.*;
-import com.fisk.dataservice.enums.ProcessAssemblyTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.ProcessAssemblyTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
@@ -517,7 +519,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
                 processTaskPOList.add(processTaskPO);
             }
             if (processTriggerPO == null)
-                return ResultEnum.DATA_QUALITY_PLEASE_CONFIGURE_TRIGGER;
+                return ResultEnum.DATA_QUALITY_NO_CONFIGURE_TRIGGER;
             // 第三步：根据ruleId删除工作区流程配置
             if (!deleteProcess(ruleId))
                 return ResultEnum.SAVE_DATA_ERROR;
@@ -558,11 +560,36 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
         }
         try {
             // 第一步：查询清洗规则信息
-            BusinessFilterPO businessFilterPO = baseMapper.selectById(ruleId);
-            if (businessFilterPO == null)
+            BusinessFilterVO businessFilterVO = baseMapper.getRuleById(ruleId);
+            if (businessFilterVO == null)
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_THE_CLEANING_RULE_DOES_NOT_EXIST, filterResultList);
-            // 第二步：查询清洗规则工作区流程信息
-            // 第三步：工作区流程递归获取清洗SQL
+            String tableName = getTableName(businessFilterVO);
+            if (StringUtils.isEmpty(tableName))
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TO_OBTAIN_TABLE_INFORMATION, filterResultList);
+            // 第二步：查询工作区-流程信息
+            List<BusinessFilter_ProcessTaskPO> processTaskPOList = processTaskManageImpl.getPOList(ruleId);
+            if (CollectionUtils.isEmpty(processTaskPOList))
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NO_WORKSPACE_CONFIGURED, filterResultList);
+            processTaskPOList = processTaskPOList.stream().filter(t -> t.getTaskState() == 1 && StringUtils.isNotEmpty(t.getParentTaskCode())).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(processTaskPOList))
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NO_WORKSPACE_CONFIGURED, filterResultList);
+            BusinessFilter_ProcessTaskPO processTriggerPO = processTaskPOList.stream().filter(t -> t.getParentTaskCode().equals(DataQualityConstants.TRIGGER_PARENT_TASK_CODE)).findFirst().orElse(null);
+            if (processTriggerPO == null)
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NO_CONFIGURE_TRIGGER, filterResultList);
+            String trigger_TaskCode = processTriggerPO.getTaskCode();
+
+            // 第三步：查询工作区-条件表达式
+            List<BusinessFilter_ProcessExpressPO> processExpressPOList = processExpressManageImpl.getPOList(ruleId);
+            // 第四步：查询工作区-字段赋值
+            List<BusinessFilter_ProcessFieldAssignPO> processFieldAssignPOList = processFieldAssignManageImpl.getPOList(ruleId);
+            // 第五步：查询工作区-字段规则
+            List<BusinessFilter_ProcessFieldRulePO> processFieldRulePOList = processFieldRuleManageImpl.getPOList(ruleId);
+            // 第六步：查询工作区-调度配置
+            List<BusinessFilter_ProcessTriggerPO> processTriggerPOList = processTriggerManageImpl.getPOList(ruleId);
+            // 第七步：查询工作区-SQL脚本
+            List<BusinessFilter_ProcessSqlScriptPO> processSqlScriptPOList = processSqlScriptManageImpl.getPOList(ruleId);
+
+            // 第八步：递归工作区流程信息获取清洗语句
 
         } catch (Exception ex) {
             log.error("[businessFilter]-[collProcess]-ex:" + ex);
@@ -579,6 +606,58 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     @Override
     public ResultEnum collApi(BusinessFilterSaveDTO dto) {
         return businessFilterApiManageImpl.collApi(dto);
+    }
+
+    private List<BusinessFilterProcessVO> getBusinessFilterProcess(String parentTaskCode, String tableName,
+                                                                   List<BusinessFilter_ProcessTaskPO> processTaskPOList,
+                                                                   List<BusinessFilter_ProcessExpressPO> processExpressPOList,
+                                                                   List<BusinessFilter_ProcessFieldAssignPO> processFieldAssignPOList,
+                                                                   List<BusinessFilter_ProcessFieldRulePO> processFieldRulePOList,
+                                                                   List<BusinessFilter_ProcessSqlScriptPO> processSqlScriptPOList,
+                                                                   List<BusinessFilterProcessVO> businessFilterProcessVOList) {
+
+        List<BusinessFilter_ProcessTaskPO> filter_processTaskPOList = processTaskPOList.stream().filter(t -> t.getParentTaskCode().equals(parentTaskCode)).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(filter_processTaskPOList))
+            return businessFilterProcessVOList;
+
+        for (BusinessFilter_ProcessTaskPO processTaskPO : filter_processTaskPOList) {
+            ProcessAssemblyTypeEnum processAssemblyTypeEnum = ProcessAssemblyTypeEnum.getEnum(processTaskPO.getAssemblyCode());
+            if (processAssemblyTypeEnum == ProcessAssemblyTypeEnum.NONE)
+                throw new FkException(ResultEnum.ERROR, "清洗组件缺失");
+            BusinessFilterProcessVO businessFilterProcessVO = new BusinessFilterProcessVO();
+            switch (processAssemblyTypeEnum) {
+                case CONDITIONAL_EXPRESS:
+                    getBusinessFilterProcess(processTaskPO.getTaskCode(), tableName, processTaskPOList, processExpressPOList, processFieldAssignPOList, processFieldRulePOList, processSqlScriptPOList, businessFilterProcessVOList);
+                    break;
+                case SQL_SCRIPT:
+                    break;
+                case OPEN_API:
+                    break;
+                case FIELD_ASSIGNMENT:
+
+                    break;
+            }
+        }
+        return businessFilterProcessVOList;
+    }
+
+    private String getTableName(BusinessFilterVO businessFilterVO) {
+        List<DataTableFieldDTO> filterFiDataTables = new ArrayList<>();
+        DataTableFieldDTO dto = new DataTableFieldDTO();
+        dto.setId(businessFilterVO.getTableUnique());
+        dto.setDataSourceConfigEnum(DataSourceConfigEnum.getEnum(businessFilterVO.getFiDataSourceId()));
+        dto.setTableBusinessTypeEnum(TableBusinessTypeEnum.getEnum(businessFilterVO.getTableBusinessType()));
+        filterFiDataTables.add(dto);
+        List<FiDataMetaDataDTO> tableFields = dataSourceConManageImpl.getTableFieldName(filterFiDataTables);
+        FiDataMetaDataDTO fiDataMetaDataDTO = tableFields.stream().filter(t -> t.getDataSourceId() == businessFilterVO.getFiDataSourceId()).findFirst().orElse(null);
+        FiDataMetaDataTreeDTO f_table = null;
+        if (fiDataMetaDataDTO != null && CollectionUtils.isNotEmpty(fiDataMetaDataDTO.getChildren())) {
+            f_table = fiDataMetaDataDTO.getChildren().stream().filter(t -> t.getId().equals(businessFilterVO.getTableUnique())).findFirst().orElse(null);
+        }
+        if (f_table != null) {
+            return f_table.getLabel();
+        }
+        return "";
     }
 
     private boolean deleteProcess(int ruleId) {

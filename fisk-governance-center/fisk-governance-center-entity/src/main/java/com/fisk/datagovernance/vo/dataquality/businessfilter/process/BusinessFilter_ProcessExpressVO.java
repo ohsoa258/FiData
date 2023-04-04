@@ -50,6 +50,12 @@ public class BusinessFilter_ProcessExpressVO {
     public String expressPreviewText;
 
     /**
+     * 表达式SQL
+     */
+    @ApiModelProperty(value = "表达式SQL")
+    public String expressSql;
+
+    /**
      * 自定义描述
      */
     @ApiModelProperty(value = "自定义描述")
