@@ -11,12 +11,6 @@ import com.fisk.datagovernance.vo.dataquality.businessfilter.apifilter.BusinessF
 
 import java.util.List;
 
-/**
- * @author dick
- * @version 1.0
- * @description TDDD
- * @date 2022/10/8 17:03
- */
 public interface IBusinessFilterApiManageService extends IService<BusinessFilterApiConfigPO> {
     /**
      * 根据清洗规则ID查询API清洗规则
@@ -44,12 +38,12 @@ public interface IBusinessFilterApiManageService extends IService<BusinessFilter
      *
      * @return
      */
-    ResultEntity<String> collAuthApi(BusinessFilterDTO dto);
+    ResultEntity<String> collAuthApi(BusinessFilterSaveDTO dto);
 
     /**
      * 调用API，更新业务数据
      *
      * @return
      */
-    ResultEnum collApi(BusinessFilterDTO dto);
+    ResultEnum collApi(BusinessFilterSaveDTO dto);
 }
