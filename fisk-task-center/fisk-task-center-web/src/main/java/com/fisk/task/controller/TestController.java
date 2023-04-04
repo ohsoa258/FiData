@@ -7,6 +7,7 @@ import com.davis.client.ApiException;
 import com.davis.client.model.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
@@ -40,9 +41,12 @@ import com.fisk.task.service.nifi.ITableNifiSettingService;
 import com.fisk.task.service.task.ITBETLIncremental;
 import com.fisk.task.utils.*;
 import com.fisk.task.utils.nifi.INiFiHelper;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -969,6 +973,12 @@ public class TestController {
         System.out.println(cfk1);
 
 
+    }
+
+    @ApiOperation("测试msg")
+    @PostMapping("/myTest")
+    public void testMsg(@RequestBody String datainfo) {
+        buildDataModelDorisTableListener.msg(datainfo,null);
     }
 
 

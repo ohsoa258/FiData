@@ -1,6 +1,7 @@
 package com.fisk.datamodel.service.impl.dimension;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
@@ -288,6 +289,9 @@ public class DimensionFolderImpl
             getDwDbType(targetDbId);
 
             //获取维度文件夹下所有维度
+//            LambdaQueryWrapper<DimensionPO> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+//            lambdaQueryWrapper.in(DimensionPO::getId,dto.dimensionIds);
+//            dimensionMapper.selectList(lambdaQueryWrapper);
             QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
             queryWrapper.in("id", dto.dimensionIds);
             List<DimensionPO> dimensionPoList = dimensionMapper.selectList(queryWrapper);
