@@ -9,6 +9,7 @@ import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDT
 import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
 import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
+import com.fisk.consumeserveice.client.ConsumeServeiceClient;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.datamanagement.service.impl.ClassificationImpl;
@@ -37,6 +38,8 @@ public class BloodCompensationImpl
     DataAccessClient dataAccessClient;
     @Resource
     DataModelClient dataModelClient;
+    @Resource
+    ConsumeServeiceClient serveiceClient;
 
     @Resource
     MetaDataImpl metaData;
@@ -104,6 +107,35 @@ public class BloodCompensationImpl
     }
 
     /**
+     * 同步接入数据服务的应用和表
+     * @param currUserName
+     * @return
+     */
+    @Override
+    public ResultEnum synchronousBloodDataServer(String currUserName) {
+        log.info("******************开始数据服务应用接入******************");
+        //获取接入应用
+        ResultEntity<List<AppBusinessInfoDTO>> apiTableViewAppList = serveiceClient.getApiTableViewService();
+
+        if (apiTableViewAppList.code != ResultEnum.SUCCESS.getCode()) {
+            log.error("获取接入应用列表失败");
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        //同步数据接入业务分类
+        if (CollectionUtils.isEmpty(apiTableViewAppList.data)) {
+            return ResultEnum.SUCCESS;
+        }
+        log.info("******开始同步接入业务分类******");
+        synchronousClassification(apiTableViewAppList.data, null);
+
+        log.info("******************获取API数据服务接入表******************");
+
+
+
+        return null;
+    }
+
+    /**
      * 同步业务分类
      *
      * @param dtoList
@@ -113,7 +145,7 @@ public class BloodCompensationImpl
             ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
             classificationInfoDto.setName(item.name);
             classificationInfoDto.setDescription(item.appDes);
-            classificationInfoDto.setSourceType(sourceType);
+            classificationInfoDto.setSourceType(sourceType==null?item.sourceType:sourceType);
             classificationInfoDto.setDelete(false);
             try {
                 classification.appSynchronousClassification(classificationInfoDto);

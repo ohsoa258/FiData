@@ -16,6 +16,7 @@ import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
 import com.fisk.datamanagement.entity.*;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
+import com.fisk.datamanagement.enums.ClassificationTypeEnum;
 import com.fisk.datamanagement.map.ClassificationMap;
 import com.fisk.datamanagement.mapper.*;
 import com.fisk.datamanagement.service.IClassification;
@@ -376,10 +377,24 @@ public class ClassificationImpl
         masterData.description = dto.description;
 
         List<String> analysisModelSuperType = new ArrayList<>();
-        if (dto.sourceType == 1) {
-            analysisModelSuperType.add("业务数据");
-        } else {
-            analysisModelSuperType.add("分析数据");
+        switch (dto.sourceType) {
+            case 1:
+                analysisModelSuperType.add(ClassificationTypeEnum.DATA_ACCESS.getName());
+                break;
+            case 2:
+                analysisModelSuperType.add(ClassificationTypeEnum.ANALYZE_DATA.getName());
+                break;
+            case 3:
+                analysisModelSuperType.add(ClassificationTypeEnum.API_GATEWAY_SERVICE.getName());
+                break;
+            case 4:
+                analysisModelSuperType.add(ClassificationTypeEnum.DATABASE_SYNCHRONIZATION_SERVICE.getName());
+                break;
+            case 5:
+                analysisModelSuperType.add(ClassificationTypeEnum.VIEW_ANALYZE_SERVICE.getName());
+                break;
+            default:
+                break;
         }
         masterData.superTypes = analysisModelSuperType;
 

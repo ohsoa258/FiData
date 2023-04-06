@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
-
+import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
@@ -20,7 +20,34 @@ import java.util.List;
 @Mapper
 public interface AppServiceConfigMapper extends FKBaseMapper<AppServiceConfigPO> {
     Page<AppApiSubVO> getSubscribeAll(Page<AppApiSubVO> page, @Param("query") AppApiSubQueryDTO query);
-
+    /**
+     * 根据应用ID获取该应用下表的数据源
+     * @param apiId
+     * @return
+     */
+    @Select("            SELECT\n" +
+            "            t1.id,\n" +
+            "            t1.app_id,\n" +
+            "            t1.service_id,\n" +
+            "            t1.api_state,\n" +
+            "            t1.type,\n" +
+            "            t2.api_code,\n" +
+            "            t2.api_name as ServiceName,\n" +
+            "            t2.api_desc as ServiceDesc,\n" +
+            "            1 as displayName,\n" +
+            "            t2.datasource_id as dataSourceId,\n" +
+            "            t1.create_time AS create_time,\n" +
+            "            t2.create_time AS t2create_time,\n" +
+            "            t3.create_time AS t3create_time\n" +
+            "            FROM tb_app_service_config t1\n" +
+            "            LEFT JOIN tb_api_config t2 ON t1.service_id=t2.id\n" +
+            "            LEFT JOIN tb_app_config t3 ON t1.app_id=t3.id\n" +
+            "            WHERE t1.del_flag=1\n" +
+            "            AND t2.del_flag=1\n" +
+            "            AND t3.del_flag=1\n" +
+            "            AND t1.type=1\n" +
+            "            AND t3.id= #{apiId}")
+    List<AppApiSubVO>  getAppByIdApiService( @Param("apiId")long apiId);
     /**
      * 根据应用id和apiId查询单条订阅记录
      *
