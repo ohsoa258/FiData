@@ -14,4 +14,12 @@ public interface IBloodCompensation {
      */
     ResultEnum systemSynchronousBlood(String currUserName);
 
+
+    /**
+     * 系统同步血缘
+     *
+     * @return
+     */
+    ResultEnum synchronousBloodDataServer(String currUserName);
+
 }

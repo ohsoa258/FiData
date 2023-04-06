@@ -38,6 +38,16 @@ public class BloodCompensationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.systemSynchronousBlood(currUserName));
     }
 
+    /**
+     * 同步数据服务接入的应用以及表
+     * @param currUserName
+     * @return
+     */
+    @GetMapping("/synchronousBloodDataServer")
+    public ResultEntity<Object> synchronousBloodDataServer(@RequestParam("currUserName") String currUserName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.synchronousBloodDataServer(currUserName));
+    }
+
 
 
 }
