@@ -22,8 +22,6 @@ import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.service.IAppDataSource;
 import com.fisk.dataaccess.utils.sql.*;
 import com.fisk.system.client.UserClient;
-import com.fisk.system.entity.DataSourcePO;
-import com.fisk.system.map.DataSourceMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
