@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
@@ -20,6 +21,10 @@ import com.fisk.dataaccess.map.AppDataSourceMap;
 import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.service.IAppDataSource;
 import com.fisk.dataaccess.utils.sql.*;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.entity.DataSourcePO;
+import com.fisk.system.map.DataSourceMap;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -32,6 +37,7 @@ import java.util.Objects;
  * @author Lock
  */
 @Service
+@Slf4j
 public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataSourcePO> implements IAppDataSource {
 
     @Resource
@@ -43,16 +49,19 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     @Resource
     PgsqlUtils pgsqlUtils;
 
+    @Resource
+    private UserClient userClient;
+
     @Override
     public List<DataSourceDTO> getDataSourceMeta(long appId) {
 
         List<DataSourceDTO> dsList = mapper.getDataSourceListById(appId);
-        if (CollectionUtils.isEmpty(dsList)){
+        if (CollectionUtils.isEmpty(dsList)) {
             throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
         }
 
         List<DataSourceDTO> result = new ArrayList<>();
-        for (DataSourceDTO dataSource : dsList){
+        for (DataSourceDTO dataSource : dsList) {
             if ("ftp".equalsIgnoreCase(dataSource.driveType) || "RestfulAPI".equalsIgnoreCase(dataSource.driveType) || "api".equalsIgnoreCase(dataSource.driveType)) {
                 return null;
             }
@@ -206,6 +215,104 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             data.add(dto);
         }
 
+        return data;
+    }
+
+    @Override
+    public List<com.fisk.system.dto.datasource.DataSourceDTO> getOutDataSourcesByTypeId(String driverType) {
+        //远程调用接口，获取外部数据源信息
+        ResultEntity<List<com.fisk.system.dto.datasource.DataSourceDTO>> allExternalDataSource = userClient.getAllExternalDataSource();
+        //判断获取是否成功
+        if (allExternalDataSource.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        //获取筛选前外部数据源集合
+        List<com.fisk.system.dto.datasource.DataSourceDTO> data = allExternalDataSource.getData();
+        //新建集合--预装载筛选后的外部数据源
+        ArrayList<com.fisk.system.dto.datasource.DataSourceDTO> dataSourceDTOS = new ArrayList<>();
+        //调用封装的方法
+        List<com.fisk.system.dto.datasource.DataSourceDTO> result = checkConType(data, dataSourceDTOS, driverType);
+
+        //判断筛选后的集合是否有内容
+        if (CollectionUtils.isEmpty(result)) {
+            log.info("平台配置的外部数据源中没有" + driverType + "类型的数据库！");
+        }
+        //数据库密码不显示
+        result.forEach(dataSourceDTO -> {
+            dataSourceDTO.setConPassword("********");
+        });
+        return result;
+    }
+
+    /**
+     * 方法封装：根据数据源类型筛选所需的外部数据源
+     *
+     * @param data           筛选前的外部数据源集合
+     * @param dataSourceDTOS 预装载筛选后的外部数据源
+     * @param driverType     数据源类型
+     * @return
+     */
+    public static List<com.fisk.system.dto.datasource.DataSourceDTO> checkConType(List<com.fisk.system.dto.datasource.DataSourceDTO> data,
+                                                                                  List<com.fisk.system.dto.datasource.DataSourceDTO> dataSourceDTOS,
+                                                                                  String driverType) {
+        if (driverType.equalsIgnoreCase(DataSourceTypeEnum.MYSQL.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 0 && dataSourceDTO.conPort != 0) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 1) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.FTP.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 10) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 6) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.RestfulAPI.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 0 && dataSourceDTO.conPort == 0) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.API.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 9) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 4) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.SFTP.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 11) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
+        }
+        return dataSourceDTOS;
+    }
+
+    @Override
+    public ResultEntity<com.fisk.system.dto.datasource.DataSourceDTO> getOutSourceById(Integer id) {
+        ResultEntity<com.fisk.system.dto.datasource.DataSourceDTO> data = userClient.getById(id);
+        if (data.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
         return data;
     }
 

@@ -167,4 +167,21 @@ public interface UserClient {
 
     @PostMapping("/sqlFactroy/sqlCheck")
     ResultEntity<List<TableMetaDataObject>> sqlCheck(@RequestParam("sql")String sql, @RequestParam("dbType")String dbType);
+
+    /**
+     * 获取单条数据源连接信息
+     *
+     * @param datasourceId
+     * @return
+     */
+    @GetMapping("/datasource/getById/{datasourceId}")
+    ResultEntity<DataSourceDTO> getById(@RequestParam("datasourceId") int datasourceId);
+
+    /**
+     * 获取所有平台配置的外部数据源，连带关联获取接入源的id
+     *
+     * @return
+     */
+    @GetMapping("/getOutSideSources")
+    ResultEntity<Object> getOutSideSources();
 }

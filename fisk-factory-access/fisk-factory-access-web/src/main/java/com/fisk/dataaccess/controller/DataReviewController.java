@@ -37,7 +37,7 @@ public class DataReviewController {
     }
 
     @GetMapping("/mainPageCheck")
-    @ApiOperation(value = "数据接入首页增量，追加，全量，业务覆盖统计与展示")
+    @ApiOperation(value = "数据接入首页追加，全量，业务主键，业务时间覆盖的统计与展示")
     public ResultEntity<SyncTableCountVO> mainPageCheck(Long appid) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableSyncmode.mainPageCheck(appid));
     }

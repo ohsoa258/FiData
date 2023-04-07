@@ -67,9 +67,8 @@ public class TableSyncmodeImpl extends ServiceImpl<TableSyncmodeMapper, TableSyn
         int fullCoverCount = 0;
         //业务覆盖 3
         int businessKeyCoverCount = 0;
-        //增量 4
+        //业务时间 4
         int businessTimeCoverCount = 0;
-
 
         for (TableSyncmodeDTO t : tableSyncmodeDTOList) {
             if (t.getSyncMode() == syncModeTypeEnum.FULL_VOLUME.getValue()) {
