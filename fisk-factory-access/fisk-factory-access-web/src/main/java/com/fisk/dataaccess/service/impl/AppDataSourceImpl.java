@@ -308,6 +308,9 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     @Override
     public ResultEntity<com.fisk.system.dto.datasource.DataSourceDTO> getOutSourceById(Integer id) {
         ResultEntity<com.fisk.system.dto.datasource.DataSourceDTO> data = userClient.getById(id);
+        //数据库密码不显示
+        com.fisk.system.dto.datasource.DataSourceDTO dto = data.getData();
+        dto.setConPassword("********");
         if (data.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
