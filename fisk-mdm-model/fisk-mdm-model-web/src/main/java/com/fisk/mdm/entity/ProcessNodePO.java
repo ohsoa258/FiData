@@ -17,19 +17,19 @@ public class ProcessNodePO extends BasePO {
     /**
      * 节点名称
      */
-    public String name;
+    private String name;
 
     /**
      * 流程ID
      */
-    public int processId;
+    private int processId;
 
     /**
      * 节点下标
      */
-    public int levels;
+    private int levels;
     /**
      * 设置类型
      */
-    public ProcessNodeTypeEnum settype;
+    private ProcessNodeTypeEnum settype;
 }

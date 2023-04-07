@@ -15,20 +15,20 @@ import lombok.NoArgsConstructor;
 public class ProcessPersonVO {
 
     @ApiModelProperty(value = "主键")
-    public int id;
+    private Integer id;
 
     @ApiModelProperty(value = "流程节点ID")
-    public int rocessNodeId;
+    private Integer rocessNodeId;
 
     @ApiModelProperty(value = "审批人类型,(角色,用户)")
-    public int type;
+    private Integer type;
 
     @ApiModelProperty(value = "审批人类型名称,(角色,用户)")
-    public String typeName;
+    private String typeName;
 
     @ApiModelProperty(value = "用户ID或角色ID")
-    public int urid;
+    private Integer urid;
 
     @ApiModelProperty(value = "用户名称或角色名称")
-    public String urName;
+    private String urName;
 }

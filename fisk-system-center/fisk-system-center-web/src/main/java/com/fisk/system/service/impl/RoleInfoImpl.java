@@ -20,7 +20,6 @@ import com.fisk.system.entity.RoleInfoPO;
 import com.fisk.system.map.RoleInfoMap;
 import com.fisk.system.mapper.RoleInfoMapper;
 import com.fisk.system.service.IRoleInfoService;
-import com.fisk.system.service.IUserService;
 import com.fisk.system.vo.roleinfo.RoleInfoVo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -166,5 +165,14 @@ public class RoleInfoImpl implements IRoleInfoService{
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         return treeRols;
+    }
+
+    @Override
+    public List<RoleInfoDTO> getRolebyUserId(int userId) {
+        List<RoleInfoDTO> roleInfoDTOList = mapper.getRolebyUserId(userId);
+        if (roleInfoDTOList == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return roleInfoDTOList;
     }
 }

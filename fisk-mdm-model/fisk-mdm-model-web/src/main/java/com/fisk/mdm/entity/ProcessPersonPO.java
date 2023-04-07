@@ -17,15 +17,15 @@ public class ProcessPersonPO extends BasePO {
     /**
      * 流程节点ID
      */
-    public int rocessNodeId;
+    private int rocessNodeId;
 
     /**
      * 审批人类型,(角色,用户)
      */
-    public ProcessPersonTypeEnum type;
+    private ProcessPersonTypeEnum type;
 
     /**
      * 用户ID或角色ID
      */
-    public int urid;
+    private int urid;
 }

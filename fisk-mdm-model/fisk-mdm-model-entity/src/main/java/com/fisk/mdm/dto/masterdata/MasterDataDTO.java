@@ -11,6 +11,8 @@ import java.util.Map;
 @Data
 public class MasterDataDTO extends MasterDataBaseDTO {
 
+    private String description;
+
     private List<Map<String, Object>> members;
 
 }

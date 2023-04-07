@@ -11,6 +11,7 @@ import com.fisk.system.dto.userinfo.UserDropDTO;
 import com.fisk.system.dto.userinfo.UserGroupQueryDTO;
 import com.fisk.system.dto.userinfo.UserPowerDTO;
 import com.fisk.system.vo.emailserver.EmailServerVO;
+import com.fisk.system.vo.roleinfo.RoleInfoVo;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
@@ -118,4 +119,18 @@ public interface UserClient {
      */
     @PostMapping("/role/getRoles")
     ResultEntity<List<RoleInfoDTO>> getRoles(@RequestBody List<Integer> ids);
+
+    /**
+     * 根据用户id获取用户角色信息
+     * @return
+     */
+    @GetMapping("/role/getRolebyUserId/{userId}")
+    ResultEntity<List<RoleInfoDTO>> getRolebyUserId(@RequestParam("userId") int userId);
+
+    /**
+     * 获取所有角色及角色下用户列表
+     * @return
+     */
+    @GetMapping("/role/getTreeRols")
+    public ResultEntity<List<RoleInfoVo>> getTreeRols();
 }

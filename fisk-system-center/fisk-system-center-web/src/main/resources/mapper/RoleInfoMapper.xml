@@ -17,7 +17,7 @@
         </if>
     </select>
     <resultMap id="TreeRols" type="com.fisk.system.vo.roleinfo.RoleInfoVo">
-        <result property="id" column="id"/>
+        <result property="id" column="rid"/>
         <result property="roleName" column="role_name"/>
         <collection property="userInfoVos" ofType="com.fisk.system.vo.roleinfo.UserInfoVo">
             <result property="rowid" column="rowid"/>
@@ -34,7 +34,7 @@
         u.username
         FROM
         tb_role_info r
-        LEFT JOIN tb_role_user_assignment ru ON r.id = ru.role_id
+        LEFT JOIN tb_role_user_assignment ru ON r.id = ru.role_id  and ru.del_flag = 1
         LEFT JOIN tb_user_info u ON ru.user_id = u.id
        ,(
         SELECT
@@ -42,6 +42,16 @@
         ) b
         WHERE
         r.del_flag = 1
-        AND u.del_flag = 1
+        and u.valid = 1
+    </select>
+    <select id="getRolebyUserId" resultType="com.fisk.system.dto.roleinfo.RoleInfoDTO">
+        select a.id,
+               a.role_name as roleName,
+               a.role_desc as roleDesc,
+               a.create_time as createUser,
+               a.create_time as createTime
+        from tb_role_info a
+                 left join tb_role_user_assignment b on a.id = b.user_id
+        where b.user_id = #{userId} and a.del_flag = 1 and b.del_flag = 1
     </select>
 </mapper>

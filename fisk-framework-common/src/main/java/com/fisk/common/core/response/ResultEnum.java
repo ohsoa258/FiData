@@ -329,6 +329,10 @@ public enum ResultEnum {
     FILE_IO_EXCEPTION(151033, "IO流异常"),
     FACT_ATTRIBUTE_FAILD(151034, "事实属性表更新失败!"),
     FORM_NO_VALID_DATA(151035, "表格暂无有效数据"),
+    SAVE_PROCESS_NODE_ERROR(151036,"流程节点小于2个"),
+    PROCESS_PERSON_NOT_NULL(151037,"节点人员不能为空"),
+    VERIFY_PROCESS_APPLY_ERROR(151038,"流程校验失败"),
+    SAVE_PROCESS_APPLY_ERROR(151039,"流程工单添加失败"),
 
     /**
      * licence

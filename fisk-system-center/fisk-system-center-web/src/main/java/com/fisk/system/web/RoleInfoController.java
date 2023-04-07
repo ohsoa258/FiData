@@ -7,6 +7,7 @@ import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import com.fisk.system.dto.roleinfo.RoleInfoQueryDTO;
 import com.fisk.system.service.IRoleInfoService;
+import com.fisk.system.vo.roleinfo.RoleInfoVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -71,7 +72,13 @@ public class RoleInfoController {
 
     @GetMapping("/getTreeRols")
     @ApiOperation("获取所有角色及角色下用户列表")
-    public ResultEntity<Object> getTreeRols() {
+    public ResultEntity<List<RoleInfoVo>> getTreeRols() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTreeRols());
+    }
+
+    @ApiOperation("获取用户下角色信息")
+    @GetMapping("/getRolebyUserId/{userId}")
+    public ResultEntity<List<RoleInfoDTO>> getRolebyUserId(@RequestParam("userId")int userId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getRolebyUserId(userId));
     }
 }

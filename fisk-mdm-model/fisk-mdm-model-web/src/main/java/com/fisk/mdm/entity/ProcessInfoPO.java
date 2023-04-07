@@ -19,20 +19,20 @@ public class ProcessInfoPO extends BasePO {
     /**
      * 实体ID
      */
-    public int entityId;
+    private int entityId;
 
     /**
      * 异常处理
      */
-    public ExceptionApprovalEnum exceptionhandling;
+    private ExceptionApprovalEnum exceptionhandling;
 
     /**
      * 自动审批
      */
-    public AutoapproalRuleEnum autoapproal;
+    private AutoapproalRuleEnum autoapproal;
 
     /**
      * 是否启用
      */
-    public ApprovalStateEnum enable;
+    private ApprovalStateEnum enable;
 }

@@ -17,25 +17,25 @@ public class ProcessInfoDTO {
     /**
      * 实体ID
      */
-    public int entityId;
+    private Integer entityId;
 
     /**
      * 异常处理
      */
-    public int exceptionhandling;
+    private Integer exceptionhandling;
 
     /**
      * 自动审批
      */
-    public int autoapproal;
+    private Integer autoapproal;
 
     /**
      * 是否启用
      */
-    public int enable;
+    private Integer enable;
 
     /**
      * 流程节点
      */
-    public List<ProcessNodeDTO> processNodes;
+    private List<ProcessNodeDTO> processNodes;
 }

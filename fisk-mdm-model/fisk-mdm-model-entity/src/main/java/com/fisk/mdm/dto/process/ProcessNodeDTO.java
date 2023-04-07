@@ -16,15 +16,15 @@ public class ProcessNodeDTO {
     /**
      * 节点名称
      */
-    public String name;
+    private String name;
     /**
      * 节点下标
      */
-    public int levels;
+    private Integer levels;
     /**
      * 设置类型
      */
-    public int settype;
+    private Integer settype;
 
-    public List<ProcessPersonDTO> personList;
+    private List<ProcessPersonDTO> personList;
 }

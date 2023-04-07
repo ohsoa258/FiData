@@ -2,7 +2,6 @@ package com.fisk.mdm.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.mdm.entity.ProcessNodePO;
-import com.fisk.mdm.vo.process.ProcessNodeVO;
 
 import java.util.List;
 
@@ -13,7 +12,9 @@ import java.util.List;
 public interface IProcessNodeService extends IService<ProcessNodePO> {
     /**
      * 根据流程id获取流程节点
+     *
      * @param processInfoId
+     * @return
      */
-    List<ProcessNodeVO> getProcessNode(Integer processInfoId);
+    List<ProcessNodePO> getProcessNodes(Integer processInfoId);
 }

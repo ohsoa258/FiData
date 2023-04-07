@@ -83,4 +83,11 @@ public interface IRoleInfoService{
      * @return
      */
     List<RoleInfoVo> getTreeRols();
+
+    /**
+     * 根据用户id获取用户的角色信息
+     *
+     * @return
+     */
+    List<RoleInfoDTO> getRolebyUserId(int userId);
 }

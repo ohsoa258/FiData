@@ -1,8 +1,10 @@
 package com.fisk.mdm.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.fisk.mdm.dto.process.ProcessInfoDTO;
 import com.fisk.mdm.entity.ProcessInfoPO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * @Author: wangjian

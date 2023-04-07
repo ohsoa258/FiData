@@ -270,4 +270,20 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
         }
     }
 
+    public ApprovalApplyStateEnum intToApprovalApplyStateEnum(Integer state) {
+        if (state == null){
+            return null;
+        }
+        switch (state){
+            case 1:
+                return ApprovalApplyStateEnum.IN_PROGRESS;
+            case 2:
+                return ApprovalApplyStateEnum.APPROVE;
+            case 3:
+                return ApprovalApplyStateEnum.REFUSED;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
+
 }

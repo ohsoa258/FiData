@@ -38,4 +38,11 @@ public interface RoleInfoMapper extends FKBaseMapper<RoleInfoPO> {
      * @return 查询结果
      */
     List<RoleInfoVo> getTreeRols();
+
+    /**
+     * 根据用户id获取用户的角色信息
+     *
+     * @return 查询结果
+     */
+    List<RoleInfoDTO> getRolebyUserId(@Param("userId")int userId);
 }

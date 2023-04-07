@@ -16,20 +16,20 @@ import java.util.List;
 public class ProcessInfoVO {
 
     @ApiModelProperty(value = "主键")
-    public int id;
+    private Integer id;
 
     @ApiModelProperty(value = "实体ID")
-    public int entityId;
+    private Integer entityId;
 
     @ApiModelProperty(value = "异常处理")
-    public int exceptionhandling;
+    private Integer exceptionhandling;
 
     @ApiModelProperty(value = "自动审批")
-    public int autoapproal;
+    private Integer autoapproal;
 
     @ApiModelProperty(value = "是否启用")
-    public int enable;
+    private Integer enable;
 
     @ApiModelProperty(value = "流程节点")
-    public List<ProcessNodeVO> processNodes;
+    private List<ProcessNodeVO> processNodes;
 }

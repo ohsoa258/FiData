@@ -15,10 +15,10 @@ public class ProcessPersonDTO {
     /**
      * 审批人类型,(1角色,2用户)
      */
-    public int type;
+    private Integer type;
 
     /**
      * 用户ID或角色ID
      */
-    public int urid;
+    private Integer urid;
 }

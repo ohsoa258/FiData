@@ -17,20 +17,20 @@ import java.util.List;
 public class ProcessNodeVO {
 
     @ApiModelProperty(value = "主键")
-    public int id;
+    private Integer id;
 
     @ApiModelProperty(value = "节点名称")
-    public String name;
+    private String name;
 
     @ApiModelProperty(value = "节点下标")
-    public int levels;
+    private Integer levels;
 
     @ApiModelProperty(value = "设置类型")
-    public int settype;
+    private Integer settype;
 
     @ApiModelProperty(value = "类型名称")
-    public String typeName;
+    private String typeName;
 
     @ApiModelProperty(value = "人员列表")
-    public List<ProcessPersonVO> personList;
+    private List<ProcessPersonVO> personList;
 }
