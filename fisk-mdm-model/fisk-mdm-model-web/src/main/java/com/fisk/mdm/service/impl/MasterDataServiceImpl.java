@@ -1030,11 +1030,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
         }catch (FkException e){
             return ResultEnum.VERIFY_PROCESS_APPLY_ERROR;
         }
+        //todo 添加审批工单和写入数据到stg应该是同一事务内 暂时没有处理
         int flat = templateDataSubmitStg(members, tableName, batchNumber, dto.getVersionId(),
                 userId, ImportTypeEnum.MANUALLY_ENTER, delete);
         if (flat == 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }else if(flag){
+            //添加工单
             processService.addProcessApply(dto,batchNumber,eventTypeEnum);
             return ResultEnum.SUCCESS;
         }

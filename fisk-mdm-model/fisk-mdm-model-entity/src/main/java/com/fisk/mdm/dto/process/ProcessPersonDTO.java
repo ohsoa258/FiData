@@ -1,5 +1,6 @@
 package com.fisk.mdm.dto.process;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,13 +13,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ProcessPersonDTO {
 
-    /**
-     * 审批人类型,(1角色,2用户)
-     */
-    private Integer type;
+    @ApiModelProperty(value = "审批人类型,(1角色,2用户)")
+    public int type;
 
-    /**
-     * 用户ID或角色ID
-     */
-    private Integer urid;
+    @ApiModelProperty(value = "用户ID或角色ID")
+    public int urid;
 }

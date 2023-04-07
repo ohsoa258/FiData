@@ -1,5 +1,6 @@
 package com.fisk.mdm.dto.process;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,28 +15,18 @@ import java.util.List;
 @NoArgsConstructor
 public class ProcessInfoDTO {
 
-    /**
-     * 实体ID
-     */
-    private Integer entityId;
+    @ApiModelProperty(value = "实体ID")
+    public int entityId;
 
-    /**
-     * 异常处理
-     */
-    private Integer exceptionhandling;
+    @ApiModelProperty(value = "异常处理")
+    public int exceptionhandling;
 
-    /**
-     * 自动审批
-     */
-    private Integer autoapproal;
+    @ApiModelProperty(value = "自动审批")
+    public int autoapproal;
 
-    /**
-     * 是否启用
-     */
-    private Integer enable;
+    @ApiModelProperty(value = "是否启用")
+    public int enable;
 
-    /**
-     * 流程节点
-     */
-    private List<ProcessNodeDTO> processNodes;
+    @ApiModelProperty(value = "流程节点")
+    public List<ProcessNodeDTO> processNodes;
 }

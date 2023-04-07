@@ -236,11 +236,19 @@ public class ProcessServiceImpl implements ProcessService {
                 }
                 //判断是否可以走流程
                 return uContains || rContains;
+            }else {
+                return true;
             }
         }
         return false;
     }
-
+    /**
+     * 添加工单
+     * @param dto
+     * @param batchNumber
+     * @param eventTypeEnum
+     * @return
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addProcessApply(MasterDataDTO dto, String batchNumber, EventTypeEnum eventTypeEnum) throws FkException {
@@ -248,7 +256,7 @@ public class ProcessServiceImpl implements ProcessService {
         int userId = loginUserInfo.id.intValue();
         ProcessInfoPO processInfo = processInfoService.getProcessInfo(dto.getEntityId());
         List<ProcessNodePO> processNodes = processNodeService.getProcessNodes((int) processInfo.getId());
-        ProcessNodePO processNodePo = processNodes.get(0);
+        ProcessNodePO processNodePo = processNodes.get(1);
         ProcessApplyPO processApplyPo = new ProcessApplyPO();
         processApplyPo.setApplicant(String.valueOf(userId));
         processApplyPo.setApproverNode((int) processNodePo.getId());
@@ -259,11 +267,14 @@ public class ProcessServiceImpl implements ProcessService {
         processApplyPo.setOpreationstate(1);
         processApplyPo.setFidataBatchCode(batchNumber);
         processApplyService.save(processApplyPo);
-        ProcessNodePO processNode = processNodes.get(1);
-        List<ProcessPersonPO> processPersons = processPersonService.getProcessPersons((int) processNode.getId());
+        List<ProcessPersonPO> processPersons = processPersonService.getProcessPersons((int) processNodePo.getId());
+        //通知节点用户进行审批
         return sendEmailToProcessNode(loginUserInfo,getUserIds(processPersons));
     }
-
+    /**
+     * 获取我的待审核流程
+     * @return
+     */
     @Override
     public List<ProcessApplyVO> getMyProcessApply() {
         LambdaQueryWrapper<ProcessApplyPO> poLambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -273,18 +284,34 @@ public class ProcessServiceImpl implements ProcessService {
         return ProcessApplyMap.INSTANCES.poListToVoList(processApplyPos);
     }
 
+    /**
+     * 获取待处理审批列表
+     * @param dto
+     * @return
+     */
     @Override
     public Page<PendingApprovalVO> getPendingApproval(PendingApprovalDTO dto) {
         return processApplyService.getPendingApproval(dto);
     }
 
+    /**
+     * 获取已处理审批列表
+     * @param dto
+     * @return
+     */
     @Override
     public Page<PendingApprovalVO> getOverApproval(PendingApprovalDTO dto) {
         return processApplyService.getOverApproval(dto);
     }
 
+    /**
+     * 审批
+     * @param dto
+     * @return
+     */
     @Override
     public ResultEnum approval(ApprovalDTO dto) {
+        //数据校验
         if (dto.getProcessApplyId() == null) {
             return ResultEnum.PARAMTER_ERROR;
         }
@@ -307,12 +334,16 @@ public class ProcessServiceImpl implements ProcessService {
         }
         Map<Integer, List<ProcessPersonPO>> processPersonMap =
                 processPersons.stream().collect(Collectors.groupingBy(ProcessPersonPO::getRocessNodeId));
+        //判断自动审批规则
         switch (processInfo.getAutoapproal()) {
             case ONLY_ONE_RULE:
+                //仅首个节点需审批，其余自动同意
                 return saveNoteByOnlyOne(dto, processApplyPo, processNodes, processPersonMap);
             case CONTINUOUS_APPROVAL_RULE:
+                //仅连续审批时自动同意
                 return saveNoteByContinuous(dto, processApplyPo, processNodes, processPersonMap);
             case ALL_APPROVAL_RULE:
+                //每个节点都需要审批
                 return saveNoteByAll(dto, processApplyPo, processNodes, processPersonMap);
             default:
                 return ResultEnum.ERROR;
@@ -353,7 +384,9 @@ public class ProcessServiceImpl implements ProcessService {
         UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         List<ProcessPersonPO> processPersonPos = processPersonMap.get((int) processApplyPo.getApproverNode());
         List<Long> userIds = getUserIds(processPersonPos);
+        //校验当前用户是否可以审批
         if (userIds.contains((long)loginUserInfo.id)) {
+            //当前用户第一次保存审批节点
             ProcessApplyNotesPO processApplyNotesPo = new ProcessApplyNotesPO();
             processApplyNotesPo.setState(dto.getFlag());
             processApplyNotesPo.setRemark(dto.getDescription());
@@ -362,20 +395,26 @@ public class ProcessServiceImpl implements ProcessService {
             processApplyNotesService.save(processApplyNotesPo);
             Map<Integer, ProcessNodePO> processNodeMap = processNodes.stream().collect(Collectors.toMap(i -> (int) i.getId(), i -> i));
             ProcessNodePO processNodePO = processNodes.get(processNodes.size() - 1);
+            //审核通过
             if (dto.getFlag() == 1) {
+                //判断是否是最后一个节点
                 if (processApplyPo.getApproverNode() == processNodePO.getId()) {
                     processApplyPo.setState(ApprovalApplyStateEnum.APPROVE);
                     processApplyService.updateById(processApplyPo);
+                    //发送通过邮箱
                     return sendEmailToResult((int) processApplyPo.getId(), ApprovalApplyStateEnum.APPROVE);
                 } else {
                     ProcessNodePO processNodePo = processNodeMap.get(processApplyPo.getApproverNode());
                     int i = processNodePo.getLevels() + 1;
                     ProcessNodePO processNodePoNext = processNodes.get(i);
+                    //递归处理仅需首次审批
                     return saveOnlyOneApply(processNodePoNext, processApplyPo, loginUserInfo, processNodes, processPersonMap);
                 }
+            //审核拒绝
             } else if (dto.getFlag() == 2) {
                 processApplyPo.setState(ApprovalApplyStateEnum.REFUSED);
                 processApplyService.updateById(processApplyPo);
+                //发送拒绝邮件通知
                 return sendEmailToResult((int) processApplyPo.getId(), ApprovalApplyStateEnum.REFUSED);
             } else {
                 return ResultEnum.PARAMTER_ERROR;
@@ -393,7 +432,9 @@ public class ProcessServiceImpl implements ProcessService {
         UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         List<ProcessPersonPO> processPersonPos = processPersonMap.get((int) processApplyPo.getApproverNode());
         List<Long> userIds = getUserIds(processPersonPos);
+        //校验当前用户是否支持审批
         if (userIds.contains((long)loginUserInfo.id)) {
+            //第一次保存审批节点信息
             ProcessApplyNotesPO processApplyNotesPo = new ProcessApplyNotesPO();
             processApplyNotesPo.setState(dto.getFlag());
             processApplyNotesPo.setRemark(dto.getDescription());
@@ -401,25 +442,31 @@ public class ProcessServiceImpl implements ProcessService {
             processApplyNotesPo.setProcessnodeId(processApplyPo.getApproverNode());
             processApplyNotesService.save(processApplyNotesPo);
             Map<Integer, ProcessNodePO> processNodeMap = processNodes.stream().collect(Collectors.toMap(i -> (int) i.getId(), i -> i));
+            //获取最后一个节点
             ProcessNodePO processNodePO = processNodes.get(processNodes.size() - 1);
+            //通过
             if (dto.getFlag() == 1) {
                 if (processApplyPo.getApproverNode() == processNodePO.getId()) {
                     processApplyPo.setState(ApprovalApplyStateEnum.APPROVE);
                     processApplyService.updateById(processApplyPo);
+                    //最后一个节点发送通过邮箱
                     return sendEmailToResult((int) processApplyPo.getId(), ApprovalApplyStateEnum.APPROVE);
                 } else {
                     ProcessNodePO processNodePo = processNodeMap.get(processApplyPo.getApproverNode());
                     int i = processNodePo.getLevels() + 1;
                     ProcessNodePO processNodePoNext = processNodes.get(i);
                     try {
+                        //递归处理自动同意
                         return saveApply(processNodePoNext, processApplyPo, loginUserInfo, processNodes, processPersonMap);
                     } catch (Exception e) {
                         return ResultEnum.ERROR;
                     }
                 }
+            //拒绝
             } else if (dto.getFlag() == 2) {
                 processApplyPo.setState(ApprovalApplyStateEnum.REFUSED);
                 processApplyService.updateById(processApplyPo);
+                //发送拒绝邮箱
                 return sendEmailToResult((int) processApplyPo.getId(), ApprovalApplyStateEnum.REFUSED);
             } else {
                 return ResultEnum.PARAMTER_ERROR;
@@ -437,7 +484,9 @@ public class ProcessServiceImpl implements ProcessService {
         UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         List<ProcessPersonPO> processPersonPos = processPersonMap.get((int) processApplyPo.getApproverNode());
         List<Long> userIds = getUserIds(processPersonPos);
+        //校验是否可以审批
         if (userIds.contains((long)loginUserInfo.id)) {
+            //保存
             ProcessApplyNotesPO processApplyNotesPo = new ProcessApplyNotesPO();
             processApplyNotesPo.setState(dto.getFlag());
             processApplyNotesPo.setRemark(dto.getDescription());
@@ -450,6 +499,7 @@ public class ProcessServiceImpl implements ProcessService {
                 if (processApplyPo.getApproverNode() == processNodePo.getId()) {
                     processApplyPo.setState(ApprovalApplyStateEnum.APPROVE);
                     processApplyService.updateById(processApplyPo);
+                    //所有节点都需要审批无需特殊处理
                     return sendEmailToResult((int) processApplyPo.getId(), ApprovalApplyStateEnum.APPROVE);
                 } else {
                     ProcessNodePO processNodePO1 = processNodeMap.get(processApplyPo.getApproverNode());
@@ -458,11 +508,13 @@ public class ProcessServiceImpl implements ProcessService {
                     processApplyPo.setState(ApprovalApplyStateEnum.IN_PROGRESS);
                     processApplyPo.setApproverNode((int) processNodeP02.getId());
                     processApplyService.updateById(processApplyPo);
+                    //发送节点通知邮箱
                     return sendEmailToProcessNode(loginUserInfo,userIds);
                 }
             } else if (dto.getFlag() == 2) {
                 processApplyPo.setState(ApprovalApplyStateEnum.REFUSED);
                 processApplyService.updateById(processApplyPo);
+                //发送拒绝邮箱
                 return sendEmailToResult((int) processApplyPo.getId(), ApprovalApplyStateEnum.REFUSED);
             } else {
                 return ResultEnum.PARAMTER_ERROR;
@@ -475,6 +527,7 @@ public class ProcessServiceImpl implements ProcessService {
     private ResultEnum sendEmailToResult(int processApplyId, ApprovalApplyStateEnum stateEnum) {
         try {
             String emailAddress = null;
+            //获取需要通知的人员邮箱
             ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(Arrays.asList((long) userHelper.getLoginUserInfo().id));
             if (userListByIds.code == ResultEnum.SUCCESS.getCode()) {
                 List<UserDTO> data = userListByIds.getData();
@@ -544,20 +597,25 @@ public class ProcessServiceImpl implements ProcessService {
                                 Map<Integer, List<ProcessPersonPO>> processPersonMap) {
         List<ProcessPersonPO> processPersonPos = processPersonMap.get((int) processNode.getId());
         List<Long> userIds = getUserIds(processPersonPos);
+        //节点改变重新校验
         if (userIds.contains((long)loginUserInfo.id)) {
+            //保存
             ProcessApplyNotesPO processApplyNotesPo = new ProcessApplyNotesPO();
             processApplyNotesPo.setState(1);
             processApplyNotesPo.setRemark("auto");
             processApplyNotesPo.setProcessapplyId(processNode.getProcessId());
             processApplyNotesPo.setProcessnodeId((int) processNode.getId());
             processApplyNotesService.save(processApplyNotesPo);
+            //判断是否最后一个节点
             if (processNode.getLevels() + 1 < processNodes.size()) {
                 ProcessNodePO processNodePo = processNodes.get(processNode.getLevels() + 1);
+                //当前节点支持审批继续递归处理下一个节点
                 return saveApply(processNodePo, processApplyPo, loginUserInfo, processNodes, processPersonMap);
             } else {
                 processApplyPo.setApproverNode((int) processNode.getId());
                 processApplyPo.setState(ApprovalApplyStateEnum.APPROVE);
                 processApplyService.updateById(processApplyPo);
+                //最后一个节点发送同意通知
                 return sendEmailToResult((int) processApplyPo.getId(), ApprovalApplyStateEnum.APPROVE);
             }
         } else {
@@ -565,6 +623,7 @@ public class ProcessServiceImpl implements ProcessService {
             processApplyPo.setState(ApprovalApplyStateEnum.IN_PROGRESS);
             processApplyPo.setApproverNode((int) processNodePo.getId());
             processApplyService.updateById(processApplyPo);
+            //当前用户不能审批则发送通知节点用户邮箱
             return sendEmailToProcessNode(loginUserInfo, userIds);
         }
     }
@@ -590,39 +649,58 @@ public class ProcessServiceImpl implements ProcessService {
         List<ProcessApplyNotesPO> list = processApplyNotesService.list(poLambdaQueryWrapper);
         List<Integer> applyNoteUser = list.stream().map(i -> Integer.valueOf(i.getCreateUser())).collect(Collectors.toList());
         List<ProcessPersonPO> processPersonPos = processPersonMap.get(processNode.getLevels());
+        //因为节点换了所以需要重新校验是否在审批人员内
         List<Long> userIds = getUserIds(processPersonPos);
         for (Long userId : userIds) {
+            //判断当前节点内审核人员之前是否审核过
             flag = applyNoteUser.contains(userId.intValue());
             break;
         }
         if (flag) {
+            //支持审批
             ProcessApplyNotesPO processApplyNotesPo = new ProcessApplyNotesPO();
             processApplyNotesPo.setState(1);
             processApplyNotesPo.setRemark("auto");
             processApplyNotesPo.setProcessapplyId(processNode.getProcessId());
             processApplyNotesPo.setProcessnodeId((int) processNode.getId());
             processApplyNotesService.save(processApplyNotesPo);
+            //是否最后一个节点
             if (processNode.getLevels() + 1 < processNodes.size()) {
                 ProcessNodePO processNodePo = processNodes.get(processNode.getLevels() + 1);
+                //递归
                 return saveOnlyOneApply(processNodePo, processApplyPo, loginUserInfo, processNodes, processPersonMap);
             } else {
+                //最后一个节点发送通过通知
                 processApplyPo.setApproverNode((int) processNode.getId());
                 processApplyPo.setState(ApprovalApplyStateEnum.APPROVE);
                 processApplyService.updateById(processApplyPo);
                 return sendEmailToResult((int) processApplyPo.getId(), ApprovalApplyStateEnum.APPROVE);
             }
         } else {
+            //当前节点无需自动审批通知当前节点人员进行审批
+            processApplyPo.setApproverNode((int) processNode.getId());
+            processApplyPo.setState(ApprovalApplyStateEnum.IN_PROGRESS);
+            processApplyService.updateById(processApplyPo);
             return sendEmailToProcessNode(loginUserInfo, userIds);
         }
     }
 
+    /**
+     * 获取审批流程节点下所有成员
+     * @param processPersons
+     * @return
+     * @throws FkException
+     */
     public List<Long> getUserIds(List<ProcessPersonPO> processPersons) throws FkException{
+        //获取节点下角色Id
         List<Integer> roleIds = processPersons.stream()
                 .filter(i -> i.getType().getValue() == ProcessPersonTypeEnum.PERSON_TYPE1_ENUM.getValue())
                 .map(ProcessPersonPO::getUrid).collect(Collectors.toList());
+        //获取节点下用户Id
         List<Long> userIds = processPersons.stream()
                 .filter(i -> i.getType().getValue() == ProcessPersonTypeEnum.PERSON_TYPE2_ENUM.getValue())
                 .map(i -> (long) i.getUrid()).collect(Collectors.toList());
+        //获取所有角色下成员
         ResultEntity<List<RoleInfoVo>> treeRols = userClient.getTreeRols();
         List<RoleInfoVo> data = treeRols.getData();
         if (treeRols.code == ResultEnum.SUCCESS.getCode() && data != null) {

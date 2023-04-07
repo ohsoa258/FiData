@@ -1,5 +1,6 @@
 package com.fisk.mdm.dto.process;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,18 +14,16 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 public class ProcessNodeDTO {
-    /**
-     * 节点名称
-     */
+
+    @ApiModelProperty(value = "节点名称")
     private String name;
-    /**
-     * 节点下标
-     */
+
+    @ApiModelProperty(value = "节点下标")
     private Integer levels;
-    /**
-     * 设置类型
-     */
+
+    @ApiModelProperty(value = "设置类型")
     private Integer settype;
 
+    @ApiModelProperty(value = "节点人员")
     private List<ProcessPersonDTO> personList;
 }

@@ -58,9 +58,24 @@ public interface ProcessService {
      */
     List<ProcessApplyVO> getMyProcessApply();
 
+    /**
+     * 获取待处理审批列表
+     * @param dto
+     * @return
+     */
     Page<PendingApprovalVO> getPendingApproval(PendingApprovalDTO dto);
 
+    /**
+     * 获取已处理审批列表
+     * @param dto
+     * @return
+     */
     Page<PendingApprovalVO> getOverApproval(PendingApprovalDTO dto);
 
+    /**
+     * 审批
+     * @param dto
+     * @return
+     */
     ResultEnum approval(ApprovalDTO dto);
 }
