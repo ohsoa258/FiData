@@ -227,7 +227,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         //获取筛选前外部数据源集合
         List<com.fisk.system.dto.datasource.DataSourceDTO> data = allExternalDataSource.getData();
         //新建集合--预装载筛选后的外部数据源
-        ArrayList<com.fisk.system.dto.datasource.DataSourceDTO> dataSourceDTOS = new ArrayList<>();
+        List<com.fisk.system.dto.datasource.DataSourceDTO> dataSourceDTOS = new ArrayList<>();
         //调用封装的方法
         List<com.fisk.system.dto.datasource.DataSourceDTO> result = checkConType(data, dataSourceDTOS, driverType);
 
