@@ -153,7 +153,9 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
         //获取mdm表最新code
         String mdmTableName = TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId());
         IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
-        String sql = sqlBuilder.buildQueryData(mdmTableName, " and fidata_id =" + dto.getMembers().get("fidata_mdm_fidata_id"));
+        for (Map<String,Object> dtoItem: dto.getMembers()){
+
+        String sql = sqlBuilder.buildQueryData(mdmTableName, " and fidata_id =" + dtoItem.get("fidata_mdm_fidata_id"));
         log.info("日志回滚,查询mdm最新code,sql:", sql);
         List<Map<String, Object>> resultMaps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
         if (CollectionUtils.isEmpty(resultMaps) || resultMaps.size() > 1) {
@@ -164,11 +166,11 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
         //mdm最新code值
         String codeLatest = resultMaps.get(0).get(entityCodeName).toString();
         //当前code
-        String code = dto.getMembers().get("code").toString();
+        String code = dtoItem.get("code").toString();
         //不相等,则要修改的code为new_code
         if (!codeLatest.equals(code)) {
-            dto.getMembers().put("fidata_new_code", code);
-            dto.getMembers().put("code", codeLatest);
+            dtoItem.put("fidata_new_code", code);
+            dtoItem.put("code", codeLatest);
         }
         //域字段数据
         EntityInfoVO attributeList = entityService.getFilterAttributeById(dto.getEntityId());
@@ -182,7 +184,7 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
         if (!CollectionUtils.isEmpty(domainList)) {
             //域字段,fidata_id值,转code值
             for (AttributeInfoDTO item : domainList) {
-                if (dto.getMembers().get(item.getName()) == null) {
+                if (dtoItem.get(item.getName()) == null) {
                     continue;
                 }
                 //获取域字段mdm表名
@@ -192,7 +194,7 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
                 }
                 String domainMdmTableName = TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), domainAttribute.data.getEntityId());
                 String domainSql = sqlBuilder.buildQueryData(domainMdmTableName,
-                        " and fidata_id =" + dto.getMembers().get(item.getName()));
+                        " and fidata_id =" + dtoItem.get(item.getName()));
                 log.info("查询域字段数据,sql:", domainSql);
                 //查询域字段mdm表数据
                 List<Map<String, Object>> result = AbstractDbHelper.execQueryResultMaps(domainSql, getConnection());
@@ -200,10 +202,11 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
                     return ResultEnum.DATA_NOTEXISTS;
                 }
                 //域字段id替换code
-                dto.getMembers().put(item.getName(), result.get(0).get(domainAttribute.data.getColumnName()));
+                dtoItem.put(item.getName(), result.get(0).get(domainAttribute.data.getColumnName()));
             }
         }
         dto.getMembers().remove("fidata_mdm_fidata_id");
+        }
         return masterDataService.OperateMasterData(dto, EventTypeEnum.ROLLBACK);
     }
 

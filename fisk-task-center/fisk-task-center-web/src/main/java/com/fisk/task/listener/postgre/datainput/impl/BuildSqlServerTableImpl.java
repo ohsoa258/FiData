@@ -58,9 +58,9 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                 sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
             } else if (l.fieldType.contains("TIMESTAMP") || StringUtils.equals(l.fieldType.toUpperCase(), "DATETIME")) {
                 sqlFileds.append("[" + l.fieldName + "] datetime ");
-            } else if(l.fieldType.contains("BIT")){
+            } else if (l.fieldType.contains("BIT")) {
                 sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
-            }else{
+            } else {
                 sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + "(" + l.fieldLength + ") ");
             }
             // 修改stg表,字段类型
@@ -317,6 +317,11 @@ public class BuildSqlServerTableImpl implements IbuildTable {
     @Override
     public void fieldFormatModification(DataAccessConfigDTO dto) {
         log.info("sqlserver字段暂且不用处理");
+    }
+
+    @Override
+    public String getEsqlAutoCommit() {
+        return "true";
     }
 
     @Override

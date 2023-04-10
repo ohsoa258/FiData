@@ -90,7 +90,8 @@ public class GlobalSearchImpl implements IGlobalSearch {
         //filter过滤
         classificationList.classificationDefs = classificationList.classificationDefs
                 .stream()
-                .filter(e -> e.name.contains(keyword)).collect(Collectors.toList());
+                .filter(e -> e.name.contains(keyword.toLowerCase())||e.name.contains(keyword.toUpperCase()))
+                .collect(Collectors.toList());
         return classificationList;
     }
 
@@ -103,7 +104,9 @@ public class GlobalSearchImpl implements IGlobalSearch {
             if (CollectionUtils.isEmpty(item.terms)) {
                 continue;
             }
-            List<GlossaryTermAttributeDTO> filterTerms = item.terms.stream().filter(e -> e.displayText.contains(keyword)).collect(Collectors.toList());
+            List<GlossaryTermAttributeDTO> filterTerms = item.terms.stream()
+                    .filter(e -> e.displayText.contains(keyword.toLowerCase())||e.displayText.contains(keyword.toUpperCase()))
+                    .collect(Collectors.toList());
             //过滤是否存在术语
             if (CollectionUtils.isEmpty(filterTerms)) {
                 continue;

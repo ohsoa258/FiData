@@ -1,5 +1,6 @@
 package com.fisk.mdm.dto.codeRule;
 
+import com.fisk.common.service.mdmBEOperate.dto.CodeRuleDTO;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;

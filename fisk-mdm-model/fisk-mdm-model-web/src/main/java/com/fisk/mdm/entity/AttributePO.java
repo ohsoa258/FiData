@@ -85,7 +85,10 @@ public class AttributePO extends BasePO {
      * 展示宽度
      */
     private Integer displayWidth;
-
+    /**
+     * 数据规则
+     */
+    private DataRuleEnum dataRule;
     /**
      * 表单框提示内容
      */

@@ -34,6 +34,8 @@ public class SwaggerConfig {
     public static final String TAG_9 = "MasterDataLog-Controller";
     public static final String TAG_10 = "AttributeLog-Controller";
     public static final String TAG_11 = "CodeRule-Controller";
+    public static final String TAG_12="MatchingRules-Controller";
+    public static final String TAG_13="Process-Controller";
 
     @Bean
     public Docket createRestApi() {
@@ -51,6 +53,8 @@ public class SwaggerConfig {
                 .tags(new Tag(TAG_9, "主数据维护日志"))
                 .tags(new Tag(TAG_10, "属性日志管理API"))
                 .tags(new Tag(TAG_11, "自动创建编码管理API"))
+                .tags(new Tag(TAG_12,"匹配规则管理API"))
+                .tags(new Tag(TAG_13,"流程定义API"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

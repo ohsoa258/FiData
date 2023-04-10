@@ -68,6 +68,10 @@ public class KafkaReceiveDTO extends MQBaseDTO {
      */
     public String sftpFileCopyTaskIds;
     /**
+     *powerbi数据集刷新任务
+     */
+    public String powerBiDataSetRefreshTaskIds;
+    /**
      * 失败信息
      */
     public String message;

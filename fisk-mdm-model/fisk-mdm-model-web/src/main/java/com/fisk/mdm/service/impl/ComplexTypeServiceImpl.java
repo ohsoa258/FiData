@@ -180,7 +180,7 @@ public class ComplexTypeServiceImpl implements IComplexType {
                 geography.setLat(resultMaps.get(0).get("lat").toString());
                 geography.setLng(resultMaps.get(0).get("lng").toString());
                 geography.setMap_type(Integer.valueOf(resultMaps.get(0).get("map_type").toString()).intValue());
-                data = geography;
+                  data = geography;
                 break;
             default:
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);

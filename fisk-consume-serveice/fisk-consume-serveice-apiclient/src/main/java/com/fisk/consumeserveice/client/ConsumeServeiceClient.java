@@ -1,6 +1,8 @@
 package com.fisk.consumeserveice.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataservice.dto.tableservice.TableServicePublishStatusDTO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 import io.swagger.annotations.ApiOperation;
@@ -46,5 +48,19 @@ public interface ConsumeServeiceClient {
     @ApiOperation("根据表服务id构建发布数据")
     @GetMapping("/tableService/getBuildTableServiceById/{id}")
     ResultEntity<BuildTableServiceDTO> getBuildTableServiceById(@PathVariable("id") long id);
+
+    /**
+     * 获取API服务&Table服务&View服务的所有应用
+     * @return
+     */
+    @GetMapping("/apiTableViewService/getApiTableViewService")
+    ResultEntity<List<AppBusinessInfoDTO>> getApiTableViewService();
+
+    /**
+     * 元数据同步API服务应用信息
+     * @return
+     */
+    @GetMapping("/apiTableViewService/synchronizationAPIAppRegistration")
+    ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAPIAppRegistration();
 
 }

@@ -16,10 +16,7 @@ import com.fisk.task.listener.doris.BuildDorisTaskListener;
 import com.fisk.task.listener.governance.BuildGovernanceReportListener;
 import com.fisk.task.listener.mdm.BuildModelListener;
 import com.fisk.task.listener.metadata.IMetaDataListener;
-import com.fisk.task.listener.nifi.IExecScriptListener;
-import com.fisk.task.listener.nifi.INifiTaskListener;
-import com.fisk.task.listener.nifi.INonRealTimeListener;
-import com.fisk.task.listener.nifi.ITriggerScheduling;
+import com.fisk.task.listener.nifi.*;
 import com.fisk.task.listener.nifi.impl.BuildNifiCustomWorkFlow;
 import com.fisk.task.listener.nifi.impl.BuildSftpCopyListener;
 import com.fisk.task.listener.olap.BuildModelTaskListener;
@@ -119,6 +116,8 @@ public class KafkaConsumer {
     TaskPublish taskPublish;
     @Resource
     BuildSftpCopyListener buildSftpCopyListener;
+    @Resource
+    IpowerBiListener ipowerBiListener;
 
 
     @Bean
@@ -528,6 +527,18 @@ public class KafkaConsumer {
     public ResultEntity<Object> fieldDelete(String dataInfo, Acknowledgment ack) {
         log.info("进入删除字段");
         return ResultEntityBuild.build(metaDataListener.fieldDelete(dataInfo, ack));
+    }
+
+    /**
+     * powerbi刷新数据集
+     * @param data
+     * @param acke
+     * @return
+     */
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_POWERBI_DATA_SET_REFRESH_FLOW, containerFactory = "batchFactory",
+            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    public ResultEntity<Object> powerBiTask(String data, Acknowledgment acke) {
+        return ResultEntityBuild.build(ipowerBiListener.powerBiTask(data, acke));
     }
 
 

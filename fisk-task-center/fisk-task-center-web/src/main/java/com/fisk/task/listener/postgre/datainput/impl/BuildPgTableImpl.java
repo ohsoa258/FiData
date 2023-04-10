@@ -77,10 +77,10 @@ public class BuildPgTableImpl implements IbuildTable {
         String stg_sql1 = "";
         String stg_sql2 = "";
         if (buildPhysicalTableDTO.whetherSchema) {
-            stg_sql1 = sql.toString().replace("fi_tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName);
-            stg_sql2 = stgSql.toString().replace("fi_tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName);
-            stg_sql2 = "DROP TABLE IF EXISTS " + "stg_" + buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName + ";" + stg_sql2 +
-                    "create index " + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "enableflagsy on stg_" + buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName + " (fi_enableflag);";
+            stg_sql1 = sql.toString().replace("fi_tableName", buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName);
+            stg_sql2 = stgSql.toString().replace("fi_tableName", buildPhysicalTableDTO.appAbbreviation + ".stg_" + buildPhysicalTableDTO.tableName);
+            stg_sql2 = "DROP TABLE IF EXISTS " + buildPhysicalTableDTO.appAbbreviation + ".stg_" + buildPhysicalTableDTO.tableName + ";" + stg_sql2 +
+                    "create index " + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "enableflagsy on " + buildPhysicalTableDTO.appAbbreviation + ".stg_" + buildPhysicalTableDTO.tableName + " (fi_enableflag);";
         } else {
             stg_sql1 = sql.toString().replace("fi_tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
             stg_sql2 = stgSql.toString().replace("fi_tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
@@ -317,6 +317,12 @@ public class BuildPgTableImpl implements IbuildTable {
                 }
         );
     }
+
+    @Override
+    public String getEsqlAutoCommit() {
+        return "false";
+    }
+
     @Override
     public List<String> getStgAndTableName(String tableName) {
         return TableNameGenerateUtils.getStgAndTableName(tableName);

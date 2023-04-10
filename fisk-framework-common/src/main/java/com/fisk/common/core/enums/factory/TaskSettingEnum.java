@@ -75,7 +75,31 @@ public enum TaskSettingEnum implements BaseEnum {
     /**
      * sftp任务配置-数据源-文件匹配通配符
      */
-    sftp_source_file_match_wildcard(18, "sftp任务配置-数据源-文件匹配通配符", "sftpSourceFileMatchWildcard");
+    sftp_source_file_match_wildcard(18, "sftp任务配置-数据源-文件匹配通配符", "sftpSourceFileMatchWildcard"),
+
+    //powerbi_data_set_refresh_get_token_url(19,"POWERBI数据集刷新-获取token--url","powerbiDataSetRefreshGetTokenUrl"),
+
+    //powerbi_data_set_refresh_get_resource_uri(20,"POWERBI数据集刷新-刷新-url","powerbiDataSetRefreshGetResourceUrl"),
+    /**
+     * POWERBI数据集刷新-刷新-国内外 1:国内,2国外
+     */
+    powerbi_data_set_refresh_type(21, "POWERBI数据集刷新-刷新-type", "powerbiDataSetRefreshType"),
+    /**
+     * POWERBI数据集刷新-刷新-账号
+     */
+    powerbi_data_set_refresh_name(22, "POWERBI数据集刷新-刷新-账号", "powerbiDataSetRefreshName"),
+    /**
+     * POWERBI数据集刷新-刷新-密码
+     */
+    powerbi_data_set_refresh_pwd(23, "POWERBI数据集刷新-刷新-密码", "powerbiDataSetRefreshPwd"),
+    /**
+     * POWERBI数据集刷新-刷新-client_id
+     */
+    powerbi_data_set_refresh_client_id(24, "POWERBI数据集刷新-刷新-client_id", "powerbiDataSetRefreshClientId"),
+    /**
+     * POWERBI数据集刷新-刷新-数据集id
+     */
+    powerbi_data_set_refresh_data_set_id(25, "POWERBI数据集刷新-刷新-数据集id", "powerbiDataSetRefreshDataSetId");
 
     private final String name;
 
@@ -110,6 +134,8 @@ public enum TaskSettingEnum implements BaseEnum {
         return name;
     }
 
-    public String getAttributeName(){return attributeName;}
+    public String getAttributeName() {
+        return attributeName;
+    }
 
 }

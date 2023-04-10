@@ -221,7 +221,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
         List<NifiCustomWorkflowDetailDTO> collect =
                 dto.list.stream().filter(e -> (e.componentType.equals(ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName()) ||
-                        e.componentType.equals(ChannelDataEnum.SFTP_FILE_COPY_TASK.getName())) && e.pid == 0).collect(Collectors.toList());
+                        e.componentType.equals(ChannelDataEnum.SFTP_FILE_COPY_TASK.getName()) ||
+                        e.componentType.equals(ChannelDataEnum.POWERBI_DATA_SET_REFRESH_TASK.getName())) && e.pid == 0).collect(Collectors.toList());
         String workflowId = "";
         if (CollectionUtils.isNotEmpty(collect)) {
             for (NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetail : collect) {
@@ -238,6 +239,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             nifiCustomWorkflowDetail.componentType = ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName();
             mapper.deleteByType(nifiCustomWorkflowDetail);
             nifiCustomWorkflowDetail.componentType = ChannelDataEnum.SFTP_FILE_COPY_TASK.getName();
+            mapper.deleteByType(nifiCustomWorkflowDetail);
+            nifiCustomWorkflowDetail.componentType = ChannelDataEnum.POWERBI_DATA_SET_REFRESH_TASK.getName();
             mapper.deleteByType(nifiCustomWorkflowDetail);
         }
     }
@@ -409,6 +412,13 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                             topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
                             publishTaskClient.updateTableTopicByComponentId(topicDTO);
                         }
+                        if (Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.POWERBI_DATA_SET_REFRESH_TASK.getName()) && !Objects.equals(nifiCustomWorkflowDetailPo.pid, 0)) {
+                            topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
+                            topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue() + ".0." + nifiCustomWorkflowDetailPo.id;
+                            topicDTO.tableType = OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue();
+                            topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
+                            publishTaskClient.updateTableTopicByComponentId(topicDTO);
+                        }
                     }
                 }
 //                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO = this.query().eq("pid", po.id).orderByAsc("table_order").list().get(0);
@@ -563,6 +573,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 return DataClassifyEnum.CUSTOMWORKCUSTOMIZESCRIPT;
             case SFTP_FILE_COPY_TASK:
                 return DataClassifyEnum.SFTPFILECOPYTASK;
+            case POWERBI_DATA_SET_REFRESH_TASK:
+                return DataClassifyEnum.POWERBIDATASETREFRESHTASK;
             case DW_TASK:
             case OLAP_TASK:
 
@@ -617,6 +629,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 return OlapTableEnum.WIDETABLE;
             case SFTP_FILE_COPY_TASK:
                 return OlapTableEnum.SFTPFILECOPYTASK;
+            case POWERBI_DATA_SET_REFRESH_TASK:
+                return OlapTableEnum.POWERBIDATASETREFRESHTASK;
 
             default:
                 break;

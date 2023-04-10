@@ -3,8 +3,8 @@ package com.fisk.mdm.utlis;
 import com.fisk.common.core.mapstruct.EnumTypeConversionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.mdmBEOperate.dto.RuleTypeEnum;
 import com.fisk.mdm.enums.*;
-import org.apache.xmlbeans.impl.xb.xsdschema.Public;
 import org.springframework.stereotype.Component;
 
 /**
@@ -77,7 +77,7 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
      * 数据类型枚举转换
      */
 
-    public DataTypeEnum intToDataTypeEnum(Integer value){
+    public  DataTypeEnum intToDataTypeEnum(Integer value){
         if (value == null){
             return null;
         }
@@ -109,6 +109,10 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
                 return DataTypeEnum.TIME;
             case 12:
                 return DataTypeEnum.TIMESTAMP;
+            case 13:
+                return DataTypeEnum.TEXTAREA;
+            case 14:
+                return DataTypeEnum.IMAGE;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
@@ -179,4 +183,107 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
 
         return RuleTypeEnum.values()[value];
     }
+
+    public DataRuleEnum intToDataRuleEnum(Integer dataRule) {
+        if (dataRule == null){
+            return null;
+        }
+
+        switch (dataRule){
+            case 0:
+                return DataRuleEnum.Round;
+            case 1:
+                return DataRuleEnum.Split;
+            case 2:
+                return  DataRuleEnum.Default;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
+
+    public ApprovalStateEnum intToApprovalStateEnum(Integer approvalState) {
+        if (approvalState == null){
+            return null;
+        }
+        switch (approvalState){
+            case 0:
+                return ApprovalStateEnum.CLOSE;
+            case 1:
+                return ApprovalStateEnum.OPEN;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
+
+    public AutoapproalRuleEnum intToAutoapproalRuleEnum(Integer autoapproalRule) {
+        if (autoapproalRule == null){
+            return null;
+        }
+        switch (autoapproalRule){
+            case 1:
+                return AutoapproalRuleEnum.ONLY_ONE_RULE;
+            case 2:
+                return AutoapproalRuleEnum.CONTINUOUS_APPROVAL_RULE;
+            case 3:
+                return AutoapproalRuleEnum.ALL_APPROVAL_RULE;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
+
+    public ExceptionApprovalEnum intToExceptionApprovalEnum(Integer exceptionApproval) {
+        if (exceptionApproval == null){
+            return null;
+        }
+        switch (exceptionApproval){
+            case 1:
+                return ExceptionApprovalEnum.EXCEPTION_APPROVAL_ENUM;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
+
+    public ProcessNodeTypeEnum intToProcessNodeTypeEnum(Integer processNodeType) {
+        if (processNodeType == null){
+            return null;
+        }
+        switch (processNodeType){
+            case 1:
+                return ProcessNodeTypeEnum.NODE_TYPE1_ENUM;
+            case 2:
+                return ProcessNodeTypeEnum.NODE_TYPE2_ENUM;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
+    public ProcessPersonTypeEnum intToProcessPersonTypeEnum(Integer processPersonType) {
+        if (processPersonType == null){
+            return null;
+        }
+        switch (processPersonType){
+            case 1:
+                return ProcessPersonTypeEnum.PERSON_TYPE1_ENUM;
+            case 2:
+                return ProcessPersonTypeEnum.PERSON_TYPE2_ENUM;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
+
+    public ApprovalApplyStateEnum intToApprovalApplyStateEnum(Integer state) {
+        if (state == null){
+            return null;
+        }
+        switch (state){
+            case 1:
+                return ApprovalApplyStateEnum.IN_PROGRESS;
+            case 2:
+                return ApprovalApplyStateEnum.APPROVE;
+            case 3:
+                return ApprovalApplyStateEnum.REFUSED;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
+
 }

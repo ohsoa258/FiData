@@ -21,6 +21,7 @@ import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
 import com.fisk.common.service.pageFilter.dto.OperatorVO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
+import com.fisk.common.service.mdmBEOperate.dto.CodeRuleDTO;
 import com.fisk.mdm.dto.masterdata.*;
 import com.fisk.mdm.dto.stgbatch.StgBatchDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupDetailsDTO;
@@ -33,13 +34,13 @@ import com.fisk.mdm.map.ModelMap;
 import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.mapper.ModelMapper;
-import com.fisk.mdm.service.EntityService;
-import com.fisk.mdm.service.IMasterDataService;
+import com.fisk.mdm.service.*;
 import com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils;
 import com.fisk.mdm.utlis.DataSynchronizationUtils;
 import com.fisk.mdm.utlis.MasterDataFormatVerifyUtils;
 import com.fisk.mdm.vo.attribute.AttributeColumnVO;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupDropDownVO;
+import com.fisk.mdm.vo.codeRule.CodeRuleVO;
 import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberListVO;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
@@ -100,6 +101,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
     AttributeGroupServiceImpl attributeGroupService;
     @Resource
     ViwGroupServiceImpl viwGroupService;
+    @Resource
+    CodeRuleService  codeRuleService;
 
     @Resource
     AttributeMapper attributeMapper;
@@ -111,6 +114,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
     UserHelper userHelper;
     @Resource
     UserClient client;
+    @Resource
+    ProcessService processService;
 
     @Value("${pgsql-mdm.type}")
     private DataSourceTypeEnum type;
@@ -387,7 +392,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 .map(e -> e.getName()).collect(Collectors.toList()), ",");
         try {
             //拼接筛选条件
-            String conditions = " and fidata_version_id=" + dto.getVersionId() + " ";
+            String conditions = " and fidata_version_id=" + dto.getVersionId() + " and fidata_del_flag= " +dto.getValidity()+" ";
             if (!CollectionUtils.isEmpty(dto.getFilterQuery())) {
                 conditions = getOperatorCondition(dto.getFilterQuery());
             }
@@ -410,6 +415,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             dataPageDTO.setTableName(tableName);
             dataPageDTO.setExport(dto.getExport());
             dataPageDTO.setConditions(conditions);
+            dataPageDTO.setValidity(dto.getValidity());
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             String sql = sqlBuilder.buildMasterDataPage(dataPageDTO);
             //执行sql，获得结果集
@@ -542,9 +548,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
     public int templateDataSubmitStg(List<Map<String, Object>> members, String tableName,
                                      String batchCode, int versionId, long userId,
                                      ImportTypeEnum importTypeEnum, boolean delete) {
-        try {
-            Connection conn = getConnection();
-            Statement stat = conn.createStatement();
+        Connection conn = null;
+        Statement stat = null;
+        try{
+            conn = getConnection();
+            stat = conn.createStatement();
+            conn.getAutoCommit();
+            conn.setAutoCommit(false);
             InsertImportDataDTO dto = new InsertImportDataDTO();
             dto.setBatchCode(batchCode);
             dto.setImportType(importTypeEnum.getValue());
@@ -559,13 +569,17 @@ public class MasterDataServiceImpl implements IMasterDataService {
             ////log.info("模板批量添加sql:", sql);
             stat.addBatch(sql);
             int[] flatCount = stat.executeBatch();
-            //关闭连接
-            AbstractDbHelper.closeStatement(stat);
-            AbstractDbHelper.rollbackConnection(conn);
+            conn.commit();
             return flatCount[0];
         } catch (SQLException e) {
             log.error("模板批量导入失败:", e);
+            //关闭连接
+            AbstractDbHelper.rollbackConnection(conn);
             throw new FkException(ResultEnum.DATA_SUBMIT_ERROR, e);
+        }finally {
+            //关闭连接
+            AbstractDbHelper.closeStatement(stat);
+            AbstractDbHelper.closeConnection(conn);
         }
 
     }
@@ -702,6 +716,12 @@ public class MasterDataServiceImpl implements IMasterDataService {
         //成功条数、错误条数
         AtomicInteger successCount = new AtomicInteger(0);
         AtomicInteger errorCount = new AtomicInteger(0);
+        //获取code编码规则
+        List<CodeRuleVO> codeRuleVOS= codeRuleService.getDataByEntityId(dto.getEntityId());
+        List<CodeRuleDTO> codeRuleDTO=null;
+        if (codeRuleVOS.isEmpty()){
+            codeRuleDTO= codeRuleVOS.get(0).getGroupDetailsList();
+        }
         //code生成规则
         IBuildCodeCommand buildCodeCommand = BuildCodeHelper.getCodeCommand();
         //用户id
@@ -740,9 +760,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 }
                 attributePoList.add(data.get());
             }
-            if (list.size() != columnNum - 1) {
-                throw new FkException(ResultEnum.CHECK_TEMPLATE_IMPORT_FAILURE);
-            }
+//            if (list.size() != columnNum - 1) {
+//                throw new FkException(ResultEnum.CHECK_TEMPLATE_IMPORT_FAILURE);
+//            }
         } catch (Exception e) {
             log.error("导入模板错误:", e);
             throw new FkException(ResultEnum.CHECK_TEMPLATE_IMPORT_FAILURE);
@@ -960,47 +980,65 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (entityPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        Map<String, Object> mapData = new HashMap<>();
-        mapData.putAll(dto.getMembers());
+
         String tableName = TableNameGenerateUtils.generateStgTableName(dto.getModelId(), dto.getEntityId());
-        Date date = new Date();
-        if (eventTypeEnum == EventTypeEnum.SAVE) {
-            //校验code
-            ImportDataVerifyDTO verifyResult = MasterDataFormatVerifyUtils.verifyCode(mapData);
-            if (!verifyResult.getSuccess()) {
-                throw new FkException(ResultEnum.SAVE_DATA_ERROR, verifyResult.getErrorMsg());
-            }
-            mapData.put("fidata_status", SyncStatusTypeEnum.UPLOADED_SUCCESSFULLY.getValue());
-            mapData.put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
-            mapData.put("fidata_create_time", CommonMethods.getFormatDate(date));
-            mapData.put("fidata_create_user", userHelper.getLoginUserInfo().id);
-            if (StringUtils.isEmpty(mapData.get("code") == null ? "" : mapData.get("code").toString())) {
-                //code生成规则
-                IBuildCodeCommand buildCodeCommand = BuildCodeHelper.getCodeCommand();
-                String code = buildCodeCommand.createCode();
-                mapData.put("code", code);
-                dto.getMembers().put("code", code);
-            } else {
-                //获取code列名
-                String columnName = getEntityCodeName(dto.getEntityId());
-                //code是否验证已存在
-                List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), columnName, dto.getVersionId());
-                if (codeList.contains(mapData.get("code"))) {
-                    throw new FkException(ResultEnum.CODE_EXIST);
+        List<Map<String, Object>> members = new ArrayList<>();
+        List<Map<String, Object>> mapDatasDto=dto.getMembers();
+        Long userId = userHelper.getLoginUserInfo().id;
+        for(Map<String, Object> mapDataItem: mapDatasDto){
+            Map<String, Object> mapData = new HashMap<>();
+            mapData.putAll(mapDataItem);
+            Date date = new Date();
+            if (eventTypeEnum == EventTypeEnum.SAVE) {
+                //校验code
+                ImportDataVerifyDTO verifyResult = MasterDataFormatVerifyUtils.verifyCode(mapData);
+                if (!verifyResult.getSuccess()) {
+                    throw new FkException(ResultEnum.SAVE_DATA_ERROR, verifyResult.getErrorMsg());
+                }
+                mapData.put("fidata_status", SyncStatusTypeEnum.UPLOADED_SUCCESSFULLY.getValue());
+                mapData.put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
+                mapData.put("fidata_create_time", CommonMethods.getFormatDate(date));
+                mapData.put("fidata_create_user", userId);
+                if (StringUtils.isEmpty(mapData.get("code") == null ? "" : mapData.get("code").toString())) {
+                    //code生成规则
+                    IBuildCodeCommand buildCodeCommand = BuildCodeHelper.getCodeCommand();
+                    String code = buildCodeCommand.createCode();
+                    mapData.put("code", code);
+                    mapDataItem.put("code", code);
+                } else {
+                    //获取code列名
+                    String columnName = getEntityCodeName(dto.getEntityId());
+                    //code是否验证已存在
+                    List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), columnName, dto.getVersionId());
+                    if (codeList.contains(mapData.get("code"))) {
+                        throw new FkException(ResultEnum.CODE_EXIST);
+                    }
                 }
             }
+            mapData.put("fidata_update_time", CommonMethods.getFormatDate(date));
+            mapData.put("fidata_update_user", userId);
+            //生成批次号
+
+            members.add(mapData);
         }
-        mapData.put("fidata_update_time", CommonMethods.getFormatDate(date));
-        mapData.put("fidata_update_user", userHelper.getLoginUserInfo().id);
-        //生成批次号
         String batchNumber = UUID.randomUUID().toString();
-        List<Map<String, Object>> members = new ArrayList<>();
-        members.add(mapData);
         boolean delete = eventTypeEnum == EventTypeEnum.DELETE ? true : false;
+        //如果配置流程则走流程
+        boolean flag = false;
+        try {
+            flag = processService.verifyProcessApply(dto.getEntityId());
+        }catch (FkException e){
+            return ResultEnum.VERIFY_PROCESS_APPLY_ERROR;
+        }
+        //todo 添加审批工单和写入数据到stg应该是同一事务内 暂时没有处理
         int flat = templateDataSubmitStg(members, tableName, batchNumber, dto.getVersionId(),
-                userHelper.getLoginUserInfo().id, ImportTypeEnum.MANUALLY_ENTER, delete);
+                userId, ImportTypeEnum.MANUALLY_ENTER, delete);
         if (flat == 0) {
             return ResultEnum.SAVE_DATA_ERROR;
+        }else if(flag){
+            //添加工单
+            processService.addProcessApply(dto,batchNumber,eventTypeEnum);
+            return ResultEnum.SUCCESS;
         }
         ResultEnum resultEnum = dataSynchronizationUtils.stgDataSynchronize(dto.getEntityId(), batchNumber);
         if (resultEnum.getCode() != ResultEnum.DATA_SYNCHRONIZATION_SUCCESS.getCode()) {

@@ -70,7 +70,12 @@ public enum ChannelDataEnum implements BaseEnum {
     /**
      * SFTP文件复制
      */
-    SFTP_FILE_COPY_TASK(14,"SFTP文件复制")
+    SFTP_FILE_COPY_TASK(14,"SFTP文件复制"),
+    /**
+     * powerbi数据集刷新任务
+     */
+    POWERBI_DATA_SET_REFRESH_TASK(15,"POWERBI数据集刷新任务")
+
     ;
 
     ChannelDataEnum(int value, String name) {
@@ -160,6 +165,7 @@ public enum ChannelDataEnum implements BaseEnum {
         list.add(ChannelDataEnum.OLAP_WIDETABLE_TASK.getName());
         list.add(ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName());
         list.add(ChannelDataEnum.SFTP_FILE_COPY_TASK.getName());
+        list.add(ChannelDataEnum.POWERBI_DATA_SET_REFRESH_TASK.getName());
         return list;
     }
 }

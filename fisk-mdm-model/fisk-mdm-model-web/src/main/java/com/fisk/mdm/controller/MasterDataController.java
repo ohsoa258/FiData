@@ -45,6 +45,7 @@ public class MasterDataController {
 
     @ApiOperation("分页查询实体数据")
     @PostMapping("/list")
+    @ControllerAOPConfig(printParams = false)
     public ResultEntity<ResultObjectVO> getAll(@Validated @RequestBody MasterDataQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMasterDataPage(dto, response));
     }

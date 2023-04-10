@@ -27,3 +27,6 @@ fk:
 
 # 数据建模目标dw库id
 fiData-data-dw-source: 1
+
+# 数据建模日期维度表临时表ods库id
+fiData-data-date-dw-source: 2
