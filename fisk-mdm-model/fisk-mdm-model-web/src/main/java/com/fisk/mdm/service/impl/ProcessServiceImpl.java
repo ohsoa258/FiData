@@ -619,12 +619,19 @@ public class ProcessServiceImpl implements ProcessService {
                 return sendEmailToResult((int) processApplyPo.getId(), ApprovalApplyStateEnum.APPROVE);
             }
         } else {
-            ProcessNodePO processNodePo = processNodes.get(processNode.getLevels() + 1);
-            processApplyPo.setState(ApprovalApplyStateEnum.IN_PROGRESS);
-            processApplyPo.setApproverNode((int) processNodePo.getId());
-            processApplyService.updateById(processApplyPo);
-            //当前用户不能审批则发送通知节点用户邮箱
-            return sendEmailToProcessNode(loginUserInfo, userIds);
+            if (processNode.getLevels() + 1 < processNodes.size()) {
+                ProcessNodePO processNodePo = processNodes.get(processNode.getLevels() + 1);
+                processApplyPo.setState(ApprovalApplyStateEnum.IN_PROGRESS);
+                processApplyPo.setApproverNode((int) processNodePo.getId());
+                processApplyService.updateById(processApplyPo);
+                //当前用户不能审批则发送通知节点用户邮箱
+                return sendEmailToProcessNode(loginUserInfo, userIds);
+            }else {
+                processApplyPo.setState(ApprovalApplyStateEnum.APPROVE);
+                processApplyPo.setApproverNode((int)processNode.getId());
+                processApplyService.updateById(processApplyPo);
+                return sendEmailToResult((int) processApplyPo.getId(), ApprovalApplyStateEnum.APPROVE);
+            }
         }
     }
 
