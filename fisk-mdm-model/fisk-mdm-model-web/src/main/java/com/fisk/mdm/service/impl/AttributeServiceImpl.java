@@ -120,7 +120,6 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
                 attributePo.getDataType() != DataTypeEnum.FLOAT){
             attributePo.setDataTypeLength(null);
         }
-
         //若数据类型为“域字段”类型，维护“域字段id”字段
         if(attributePo.getDataType() == DataTypeEnum.DOMAIN){
             //判断用户是否填入域字段关联id
@@ -155,6 +154,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         //添加数据
         attributePo.setStatus(AttributeStatusEnum.INSERT);
         attributePo.setSyncStatus(AttributeSyncStatusEnum.NOT_PUBLISH);
+
         if (baseMapper.insert(attributePo) <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }

@@ -4,8 +4,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import com.fisk.system.dto.datasource.DataSourceResultDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.system.dto.userinfo.UserDTO;
@@ -13,6 +16,8 @@ import com.fisk.system.dto.userinfo.UserDropDTO;
 import com.fisk.system.dto.userinfo.UserGroupQueryDTO;
 import com.fisk.system.dto.userinfo.UserPowerDTO;
 import com.fisk.system.vo.emailserver.EmailServerVO;
+import com.fisk.system.vo.roleinfo.RoleInfoVo;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
@@ -114,6 +119,26 @@ public interface UserClient {
     @GetMapping("/emailserver/getById/{id}")
     ResultEntity<EmailServerVO> getEmailServerById(@RequestParam("id") int id);
 
+    /**
+     * 根据ids获取角色列表详情
+     * @return
+     */
+    @PostMapping("/role/getRoles")
+    ResultEntity<List<RoleInfoDTO>> getRoles(@RequestBody List<Integer> ids);
+
+    /**
+     * 根据用户id获取用户角色信息
+     * @return
+     */
+    @GetMapping("/role/getRolebyUserId/{userId}")
+    ResultEntity<List<RoleInfoDTO>> getRolebyUserId(@RequestParam("userId") int userId);
+
+    /**
+     * 获取所有角色及角色下用户列表
+     * @return
+     */
+    @GetMapping("/role/getTreeRols")
+    public ResultEntity<List<RoleInfoVo>> getTreeRols();
     /**
      * 菜单列表
      * @return
