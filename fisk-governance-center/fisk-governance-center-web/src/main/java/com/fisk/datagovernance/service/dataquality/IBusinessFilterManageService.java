@@ -3,6 +3,7 @@ package com.fisk.datagovernance.service.dataquality;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.Dto.cron.NextCronTimeDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterEditDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterQueryDTO;
@@ -115,4 +116,12 @@ public interface IBusinessFilterManageService extends IService<BusinessFilterPO>
      * @return 执行结果
      */
     ResultEnum collApi(BusinessFilterSaveDTO dto);
+
+    /**
+     * 解析cron表达式执行频率
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    List<String> getNextCronExeTime(NextCronTimeDTO dto);
 }

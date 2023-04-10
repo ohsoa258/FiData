@@ -13,6 +13,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.CronUtils;
+import com.fisk.common.core.utils.Dto.cron.NextCronTimeDTO;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
@@ -606,6 +607,11 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     @Override
     public ResultEnum collApi(BusinessFilterSaveDTO dto) {
         return businessFilterApiManageImpl.collApi(dto);
+    }
+
+    @Override
+    public List<String> getNextCronExeTime(NextCronTimeDTO dto) {
+        return CronUtils.nextCronExeTime(dto);
     }
 
     private List<BusinessFilterProcessVO> getBusinessFilterProcess(String parentTaskCode, String tableName,

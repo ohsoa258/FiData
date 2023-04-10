@@ -3,6 +3,7 @@ package com.fisk.datagovernance.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.Dto.cron.NextCronTimeDTO;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterEditDTO;
@@ -106,6 +107,12 @@ public class BusinessFilterController {
     @PostMapping("/collApi")
     public ResultEntity<Object> collApi(@RequestBody BusinessFilterSaveDTO dto) {
         return ResultEntityBuild.build(service.collApi(dto));
+    }
+
+    @ApiOperation("解析cron表达式执行频率")
+    @PostMapping("/getNextCronExeTime")
+    public ResultEntity<Object> getNextCronExeTime(@RequestBody NextCronTimeDTO dto) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.getNextCronExeTime(dto));
     }
 
     @ApiOperation("API清洗，获取测试数据")
