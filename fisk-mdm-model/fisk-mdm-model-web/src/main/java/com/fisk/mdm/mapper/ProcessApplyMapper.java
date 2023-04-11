@@ -5,8 +5,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.mdm.dto.process.PendingApprovalDTO;
 import com.fisk.mdm.entity.ProcessApplyPO;
 import com.fisk.mdm.vo.process.PendingApprovalVO;
+import com.fisk.mdm.vo.process.ProcessApplyVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * @Author: wangjian
@@ -14,7 +17,8 @@ import org.apache.ibatis.annotations.Param;
  */
 @Mapper
 public interface ProcessApplyMapper extends BaseMapper<ProcessApplyPO> {
-    Page<PendingApprovalVO> getPendingApproval(Page<PendingApprovalVO> page,@Param("userId")long userId,@Param("query")PendingApprovalDTO dto);
 
+    Page<ProcessApplyVO> getMyProcessApply(Page<PendingApprovalVO> page,@Param("userId")long userId,@Param("query")PendingApprovalDTO dto);
+    Page<PendingApprovalVO> getPendingApproval(Page<PendingApprovalVO> page, @Param("userId")long userId,@Param("roleIds") List<Long> roleIds,@Param("query")PendingApprovalDTO dto);
     Page<PendingApprovalVO> getOverApproval(Page<PendingApprovalVO> page,@Param("userId")long userId,@Param("query")PendingApprovalDTO dto);
 }

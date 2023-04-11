@@ -51,7 +51,7 @@
                a.create_time as createUser,
                a.create_time as createTime
         from tb_role_info a
-                 left join tb_role_user_assignment b on a.id = b.user_id
+                 left join tb_role_user_assignment b on a.id = b.role_id
         where b.user_id = #{userId} and a.del_flag = 1 and b.del_flag = 1
     </select>
 </mapper>

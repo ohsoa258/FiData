@@ -1,7 +1,6 @@
 package com.fisk.mdm.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.mdm.enums.ApprovalNodeStateEnum;
 import lombok.Data;
 
@@ -12,7 +11,7 @@ import lombok.Data;
  */
 @Data
 @TableName("tb_process_apply_notes")
-public class ProcessApplyNotesPO extends BasePO {
+public class ProcessApplyNotesPO extends ProcessPO {
 
     /**
      * 流程工单ID
@@ -27,7 +26,7 @@ public class ProcessApplyNotesPO extends BasePO {
     /**
      * 审批状态
      */
-    private int state;
+    private ApprovalNodeStateEnum state;
 
     /**
      * 审批描述

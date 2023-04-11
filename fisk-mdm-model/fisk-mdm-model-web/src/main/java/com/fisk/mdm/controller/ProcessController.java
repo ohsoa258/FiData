@@ -9,6 +9,7 @@ import com.fisk.mdm.dto.process.ApprovalDTO;
 import com.fisk.mdm.dto.process.PendingApprovalDTO;
 import com.fisk.mdm.dto.process.ProcessInfoDTO;
 import com.fisk.mdm.service.ProcessService;
+import com.fisk.mdm.vo.process.ApprovalDetailVO;
 import com.fisk.mdm.vo.process.PendingApprovalVO;
 import com.fisk.mdm.vo.process.ProcessApplyVO;
 import com.fisk.mdm.vo.process.ProcessInfoVO;
@@ -47,15 +48,15 @@ public class ProcessController {
     @ApiOperation("校验是否需要走流程")
     @GetMapping("/verifyProcessApply")
     @ResponseBody
-    public ResultEntity<Boolean> verifyProcessApply(Integer entityId) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,processService.verifyProcessApply(entityId));
+    public ResultEntity<ResultEnum> verifyProcessApply(Integer entityId) {
+        return ResultEntityBuild.build(processService.verifyProcessApply(entityId));
     }
 
     @ApiOperation("获取我的申请")
-    @GetMapping("/getMyProcessApply")
+    @PostMapping("/getMyProcessApply")
     @ResponseBody
-    public ResultEntity<List<ProcessApplyVO>> getMyProcessApply() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,processService.getMyProcessApply());
+    public ResultEntity<Page<ProcessApplyVO>> getMyProcessApply(@RequestBody PendingApprovalDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,processService.getMyProcessApply(dto));
     }
 
     @ApiOperation("获取待处理审批列表")
@@ -70,6 +71,13 @@ public class ProcessController {
     @ResponseBody
     public ResultEntity<Page<PendingApprovalVO>> getOverApproval(@RequestBody PendingApprovalDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,processService.getOverApproval(dto));
+    }
+
+    @ApiOperation("获取审批流程详情")
+    @PostMapping("/getApprovalDetail")
+    @ResponseBody
+    public ResultEntity<ApprovalDetailVO> getApprovalDetail(Integer applyId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,processService.getApprovalDetail(applyId));
     }
 
     @ApiOperation("审批")

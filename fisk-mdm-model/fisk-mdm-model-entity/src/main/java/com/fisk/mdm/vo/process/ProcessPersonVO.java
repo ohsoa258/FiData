@@ -1,6 +1,4 @@
 package com.fisk.mdm.vo.process;
-
-import com.fisk.mdm.enums.ProcessPersonTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
