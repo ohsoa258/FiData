@@ -1,6 +1,7 @@
 package com.fisk.task.listener.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.davis.client.ApiException;
 import com.davis.client.model.*;
@@ -556,6 +557,10 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     String powerBiDataSetRefreshTaskIds = "";
                     List<PipelApiDispatchDTO> pipelApiDispatchs = new ArrayList<>();
                     PipelApiDispatchDTO pipelApiDispatch = new PipelApiDispatchDTO();
+                    QueryWrapper<TableTopicPO> wrapper = new QueryWrapper<>();
+                    wrapper.lambda().eq(TableTopicPO::getTopicType, TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue())
+                            .eq(TableTopicPO::getTopicName, TopicName);
+                    tableTopic.remove(wrapper);
                     for (BuildNifiCustomWorkFlowDTO buildNifiCustomWorkFlowDTO : outputDucts) {
                         if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.CUSTOMWORKCUSTOMIZESCRIPT)) {
                             scriptTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId + ",";
