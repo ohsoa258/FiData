@@ -24,6 +24,7 @@ import com.fisk.mdm.enums.ProcessPersonTypeEnum;
 import com.fisk.mdm.map.ProcessInfoMap;
 import com.fisk.mdm.map.ProcessNodeMap;
 import com.fisk.mdm.map.ProcessPersonMap;
+import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.service.*;
 import com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils;
 import com.fisk.mdm.utlis.DataSynchronizationUtils;
@@ -35,10 +36,13 @@ import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.vo.emailserver.EmailServerVO;
 import com.fisk.system.vo.roleinfo.RoleInfoVo;
 import com.fisk.system.vo.roleinfo.UserInfoVo;
+import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.task.BuildBatchApprovalDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
@@ -69,6 +73,8 @@ public class ProcessServiceImpl implements ProcessService {
     @Resource
     private IProcessApplyNotesService processApplyNotesService;
     @Resource
+    private PublishTaskClient publishTaskClient;
+    @Resource
     private UserClient userClient;
     @Resource
     private UserHelper userHelper;
@@ -78,6 +84,8 @@ public class ProcessServiceImpl implements ProcessService {
     private DataSynchronizationUtils dataSynchronizationUtils;
     @Resource
     private IModelService modelService;
+    @Resource
+    EntityMapper entityMapper;
     @Value("${pgsql-mdm.type}")
     private DataSourceTypeEnum type;
     @Value("${pgsql-mdm.url}")
@@ -219,8 +227,8 @@ public class ProcessServiceImpl implements ProcessService {
             LambdaQueryWrapper<ProcessApplyPO> poLambdaQueryWrapper = new LambdaQueryWrapper<>();
             poLambdaQueryWrapper.eq(ProcessApplyPO::getProcessId, processInfo.getId())
                     .eq(ProcessApplyPO::getOpreationstate, ApprovalApplyStateEnum.IN_PROGRESS);
-            ProcessApplyPO applyPo = processApplyService.getOne(poLambdaQueryWrapper);
-            if (applyPo != null) {
+            List<ProcessApplyPO> applyPo = processApplyService.list(poLambdaQueryWrapper);
+            if (!CollectionUtils.isEmpty(applyPo)) {
                 return ResultEnum.PROCESS_APPLY_EXIST;
             }
             //获取申请人流程节点
@@ -266,11 +274,6 @@ public class ProcessServiceImpl implements ProcessService {
 
     /**
      * 添加工单
-     *
-     * @param dto
-     * @param batchNumber
-     * @param eventTypeEnum
-     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -297,8 +300,6 @@ public class ProcessServiceImpl implements ProcessService {
 
     /**
      * 获取我的待审核流程
-     *
-     * @return
      */
     @Override
     public Page<ProcessApplyVO> getMyProcessApply(PendingApprovalDTO dto) {
@@ -307,9 +308,6 @@ public class ProcessServiceImpl implements ProcessService {
 
     /**
      * 获取待处理审批列表
-     *
-     * @param dto
-     * @return
      */
     @Override
     public Page<PendingApprovalVO> getPendingApproval(PendingApprovalDTO dto) {
@@ -318,9 +316,6 @@ public class ProcessServiceImpl implements ProcessService {
 
     /**
      * 获取已处理审批列表
-     *
-     * @param dto
-     * @return
      */
     @Override
     public Page<PendingApprovalVO> getOverApproval(PendingApprovalDTO dto) {
@@ -347,11 +342,11 @@ public class ProcessServiceImpl implements ProcessService {
                     .filter(i -> i.getLevels() > index).collect(Collectors.toList());
             if (pos.size() == 0) {
                 Map<Integer, String> userMap = getUserMap(userIds);
-                for (ProcessApplyNotesPO processApplyNotesPO : list) {
+                for (ProcessApplyNotesPO processApplyNotesPo : list) {
                     PersonVO personVO = new PersonVO();
-                    personVO.setApproval(userMap.get(Integer.valueOf(processApplyNotesPO.getCreateUser())));
-                    personVO.setDescription(processApplyNotesPO.getRemark());
-                    personVO.setState(processApplyNotesPO.getState().getName());
+                    personVO.setApproval(userMap.get(Integer.valueOf(processApplyNotesPo.getCreateUser())));
+                    personVO.setDescription(processApplyNotesPo.getRemark());
+                    personVO.setState(processApplyNotesPo.getState().getName());
                     persons.add(personVO);
                 }
                 applicant = userMap.get(Integer.valueOf(processApplyPo.getApplicant()));
@@ -434,9 +429,6 @@ public class ProcessServiceImpl implements ProcessService {
 
     /**
      * 审批
-     *
-     * @param dto
-     * @return
      */
     @Override
     public ResultEnum approval(ApprovalDTO dto) {
@@ -476,6 +468,46 @@ public class ProcessServiceImpl implements ProcessService {
                 return saveNoteByAll(dto, processInfo, processApplyPo, processNodes, processPersonMap);
             default:
                 return ResultEnum.ERROR;
+        }
+    }
+
+    @Override
+    public ResultEnum batchApproval(BatchApprovalDTO dto) {
+        if(CollectionUtils.isEmpty(dto.getProcessApplyIds()) || dto.getFlag() == null){
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        List<com.fisk.task.dto.model.ApprovalDTO> data = new ArrayList<>(dto.getProcessApplyIds().size());
+        for (Integer processApplyId : dto.getProcessApplyIds()) {
+            com.fisk.task.dto.model.ApprovalDTO approvalDTO = new com.fisk.task.dto.model.ApprovalDTO();
+            approvalDTO.setDescription(dto.getDescription());
+            approvalDTO.setFlag(dto.getFlag());
+            approvalDTO.setProcessApplyId(processApplyId);
+            data.add(approvalDTO);
+        }
+        BuildBatchApprovalDTO batchApprovalDTO = new BuildBatchApprovalDTO();
+        batchApprovalDTO.setData(data);
+        batchApprovalDTO.setUserId(userHelper.getLoginUserInfo().getId());
+        if (publishTaskClient.createBatchApproval(batchApprovalDTO).getCode() != ResultEnum.SUCCESS.getCode()) {
+            return ResultEnum.DATA_SUBMIT_ERROR;
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum rollbackApproval(Integer applyId) {
+        LambdaQueryWrapper<ProcessApplyNotesPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ProcessApplyNotesPO::getProcessapplyId,applyId);
+        List<ProcessApplyNotesPO> processApplyNotesPos = processApplyNotesService.list(queryWrapper);
+        if(processApplyNotesPos.size()>0){
+            return ResultEnum.PROCESS_NOT_ROLLBACK;
+        }else {
+            LambdaQueryWrapper<ProcessApplyPO> delQueryWrapper = new LambdaQueryWrapper<>();
+            delQueryWrapper.eq(ProcessApplyPO::getId,applyId);
+            int delete = processApplyService.getBaseMapper().delete(delQueryWrapper);
+            if (delete>0){
+                return ResultEnum.SUCCESS;
+            }
+            return ResultEnum.ERROR;
         }
     }
 
@@ -564,9 +596,8 @@ public class ProcessServiceImpl implements ProcessService {
 
     public Connection getConnection() {
         AbstractDbHelper dbHelper = new AbstractDbHelper();
-        Connection connection = dbHelper.connection(url, username,
+        return dbHelper.connection(url, username,
                 password, type);
-        return connection;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -690,7 +721,7 @@ public class ProcessServiceImpl implements ProcessService {
         try {
             String emailAddress = null;
             //获取需要通知的人员邮箱
-            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(Arrays.asList((long) userHelper.getLoginUserInfo().id));
+            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(Collections.singletonList((long) userHelper.getLoginUserInfo().id));
             if (userListByIds.code == ResultEnum.SUCCESS.getCode()) {
                 List<UserDTO> data = userListByIds.getData();
                 emailAddress = data.get(0).getEmail();
@@ -802,13 +833,6 @@ public class ProcessServiceImpl implements ProcessService {
 
     /**
      * 只有首个节点需审批
-     *
-     * @param processNode
-     * @param processApplyPo
-     * @param loginUserInfo
-     * @param processNodes
-     * @param processPersonMap
-     * @return
      */
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum saveOnlyOneApply(ProcessNodePO processNode,
@@ -862,10 +886,6 @@ public class ProcessServiceImpl implements ProcessService {
 
     /**
      * 获取审批流程节点下所有成员
-     *
-     * @param processPersons
-     * @return
-     * @throws FkException
      */
     public List<Long> getUserIds(List<ProcessPersonPO> processPersons) throws FkException {
         //获取节点下角色Id
@@ -923,10 +943,17 @@ public class ProcessServiceImpl implements ProcessService {
 
     private void dataSynchronization(ProcessInfoPO processInfo, ProcessApplyPO processApplyPo) throws FkException {
         ResultEnum resultEnum = dataSynchronizationUtils.stgDataSynchronize(processInfo.getEntityId(), processApplyPo.getFidataBatchCode());
-        LambdaQueryWrapper<ModelPO> poLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        poLambdaQueryWrapper.eq(ModelPO::getId, processInfo.getEntityId());
-        ModelPO model = modelService.getOne(poLambdaQueryWrapper);
-        String tableName = TableNameGenerateUtils.generateStgTableName((int) model.getId(), processInfo.getEntityId());
+        EntityPO entityPO = entityMapper.selectById(processInfo.getEntityId());
+        if (entityPO == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        LambdaQueryWrapper<ModelPO> modelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        modelLambdaQueryWrapper.eq(ModelPO::getId, entityPO.getModelId());
+        ModelPO modelPO = modelService.getOne(modelLambdaQueryWrapper);
+        if (modelPO == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        String tableName = TableNameGenerateUtils.generateStgTableName(modelPO.getName(),entityPO.getName());
         if (resultEnum.getCode() != ResultEnum.DATA_SYNCHRONIZATION_SUCCESS.getCode()) {
             //where条件
             String queryConditions = " and fidata_batch_code ='" + processApplyPo.getFidataBatchCode() + "'";

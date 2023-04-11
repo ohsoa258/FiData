@@ -8,9 +8,11 @@ import com.fisk.mdm.dto.attribute.AttributeDomainDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeStatusDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
+import com.fisk.mdm.dto.process.ApprovalDTO;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.vo.entity.EntityVO;
+import com.fisk.mdm.vo.model.ModelInfoVO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +32,20 @@ public interface MdmClient {
      */
     @GetMapping("/entity/getAttributeById")
     ResultEntity<EntityInfoVO> getAttributeById(@RequestParam("id") Integer id,@RequestParam("name") String name);
+
+    /**
+     * 根据实体id获取属性
+     * @param id
+     * @return
+     */
+    @GetMapping("/model/getEntityById")
+    ResultEntity<ModelInfoVO> getEntityById(@RequestParam("id") Integer id);
+
+    /**
+     * 审批
+     */
+    @PostMapping("/model/approval")
+    public ResultEntity<ResultEnum> approval(@RequestBody ApprovalDTO dto);
 
     /**
      * 根据id查询查询属性

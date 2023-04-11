@@ -27,7 +27,7 @@
     </resultMap>
     <select id="getTreeRols" resultMap="TreeRols">
         SELECT
-        @rowNum := @rowNum + 1 AS rowid,
+        CONCAT(r.id,u.id) AS rowid,
         r.id AS rid,
         r.role_name,
         u.id AS urid,
@@ -36,10 +36,6 @@
         tb_role_info r
         LEFT JOIN tb_role_user_assignment ru ON r.id = ru.role_id  and ru.del_flag = 1
         LEFT JOIN tb_user_info u ON ru.user_id = u.id
-       ,(
-        SELECT
-        @rowNum := 0
-        ) b
         WHERE
         r.del_flag = 1
         and u.valid = 1

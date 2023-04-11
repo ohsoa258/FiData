@@ -60,6 +60,8 @@ public class MqConstants {
 
         public static final String BUILD_MDM_ENTITY_DATA = "task.build.mdm.entity";
 
+        public static final String BUILD_MDM_APPROVAL_DATA = "task.build.mdm.approval";
+
         public static final String BUILD_ACCESS_API_FLOW = "build.access.api.flow";
 
         public static final String BUILD_NIFI_PIPELINE_TOPICNAME_FLOW = "nifi.pipeline.topicName";

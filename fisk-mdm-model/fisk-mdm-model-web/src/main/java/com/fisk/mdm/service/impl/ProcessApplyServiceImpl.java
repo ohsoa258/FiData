@@ -14,7 +14,6 @@ import com.fisk.mdm.vo.process.PendingApprovalVO;
 import com.fisk.mdm.vo.process.ProcessApplyVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.roleinfo.RoleInfoDTO;
-import com.fisk.system.dto.userinfo.UserDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

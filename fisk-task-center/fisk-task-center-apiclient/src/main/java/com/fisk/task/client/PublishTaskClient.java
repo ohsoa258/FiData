@@ -361,4 +361,13 @@ public interface PublishTaskClient {
     @PostMapping("/dispatchLog/getPipelLogVos")
     public ResultEntity<List<PipelLogVO>> getPipelLogVos(@RequestBody PipelLogVO pipelLog);
 
+
+    /**
+     * 创建任务批量审批
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/publishTask/createBatchApproval")
+    public ResultEntity<Object> createBatchApproval(@RequestBody BuildBatchApprovalDTO dto);
 }

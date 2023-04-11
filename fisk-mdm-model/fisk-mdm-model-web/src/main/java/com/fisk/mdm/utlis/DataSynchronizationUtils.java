@@ -1,10 +1,12 @@
 package com.fisk.mdm.utlis;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.common.service.mdmBEBuild.BuildFactoryHelper;
 import com.fisk.common.service.mdmBEBuild.CommonMethods;
@@ -12,10 +14,13 @@ import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.common.service.mdmBEBuild.dto.DataSourceConDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.stgbatch.MdmDTO;
+import com.fisk.mdm.entity.EntityPO;
+import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.enums.SyncStatusTypeEnum;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EntityService;
+import com.fisk.mdm.service.IModelService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +60,8 @@ public class DataSynchronizationUtils {
     @Resource
     EntityService entityService;
     @Resource
+    IModelService modelService;
+    @Resource
     AttributeService attributeService;
     @Resource
     UserHelper userHelper;
@@ -74,12 +81,17 @@ public class DataSynchronizationUtils {
         EntityInfoVO entityInfoVo = entityService.getFilterAttributeById(entityId);
         List<AttributeInfoDTO> attributeList = entityInfoVo.getAttributeList();
         String mdmTableName = entityInfoVo.getTableName();
-
+        LambdaQueryWrapper<ModelPO> modelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        modelLambdaQueryWrapper.eq(ModelPO::getId, entityInfoVo.getModelId());
+        ModelPO modelPO = modelService.getOne(modelLambdaQueryWrapper);
+        if (modelPO == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
         // 获取stg表名
-        String stgTableName = generateStgTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
+        String stgTableName = generateStgTableName(modelPO.getName(), entityInfoVo.getName());
 
         //获取log表名
-        String logTableName = generateLogTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
+        String logTableName = generateLogTableName(modelPO.getName(), entityInfoVo.getName());
 
         // 2.查询需要同步的数据
         String sql = "SELECT * FROM " + stgTableName + " WHERE fidata_batch_code = '" + batchCode + "'";
@@ -137,7 +149,7 @@ public class DataSynchronizationUtils {
                         AttributeVO data = attributeService.getById(e.getDomainId()).getData();
 
                         // 域字段的表名称
-                        String mdmTableName1 = generateMdmTableName(data.getModelId(), data.getEntityId());
+                        String mdmTableName1 = generateMdmTableName(modelPO.getName(), entityInfoVo.getName());
 
                         StringBuilder str = new StringBuilder();
                         str.append("SELECT fidata_id FROM " + mdmTableName1);

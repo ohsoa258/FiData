@@ -336,6 +336,7 @@ public enum ResultEnum {
     VERIFY_APPROVAL(151040,"应走流程"),
     VERIFY_NOT_APPROVAL(151041,"不需要走流程"),
     PROCESS_APPLY_EXIST(151042,"当前实体正在审批"),
+    PROCESS_NOT_ROLLBACK(151043,"当前流程不可回滚"),
 
     /**
      * licence

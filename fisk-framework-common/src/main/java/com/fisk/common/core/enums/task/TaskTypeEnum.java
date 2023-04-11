@@ -79,7 +79,11 @@ public enum TaskTypeEnum implements BaseEnum {
     /**
      * 元数据实时同步
      */
-    BUILD_METADATA_FLOW(17, "元数据实时同步");
+    BUILD_METADATA_FLOW(17, "元数据实时同步"),
+    /**
+     * 流程批量审批
+     */
+    BATCH_APPROVAL_TASK(17, "流程批量审批");
 
     TaskTypeEnum(int value, String name) {
         this.value = value;

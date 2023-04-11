@@ -31,7 +31,7 @@
     <select id="getPendingApproval" resultType="com.fisk.mdm.vo.process.PendingApprovalVO">
         SELECT
         a.id as apply_id,
-        b.process_id,
+        a.process_id,
         a.applicant,
         a.description,
         a.operation_type,
@@ -41,6 +41,7 @@
         (
         SELECT
         a.id,
+        a.process_id,
         a.applicant,
         a.description,
         a.operation_type,
@@ -81,6 +82,7 @@
     <select id="getOverApproval" resultType="com.fisk.mdm.vo.process.PendingApprovalVO">
         SELECT
         a.id as apply_id,
+        a.process_id,
         a.applicant,
         a.description,
         a.operation_type,
@@ -90,6 +92,7 @@
         (
         SELECT
         a.id,
+        a.process_id,
         a.applicant,
         a.description,
         a.operation_type,
@@ -102,8 +105,7 @@
         ) a
         LEFT JOIN tb_process_apply_notes b ON a.id = b.processapply_id
         WHERE
-        b.del_flag = 1 and b.create_user = #{userId}
-        GROUP BY a.id
+        b.create_user = #{userId}
         <if test=" query.keyword !=null and query.keyword.length()>0 ">
             and (
             a.applicant like concat('%', #{query.keyword}, '%') or

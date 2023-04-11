@@ -3,6 +3,7 @@ package com.fisk.mdm.entity;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.mdm.enums.ApprovalApplyStateEnum;
 import com.fisk.mdm.enums.ApprovalNodeStateEnum;
 import com.fisk.mdm.enums.EventTypeEnum;
@@ -17,7 +18,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @TableName("tb_process_apply")
-public class ProcessApplyPO extends ProcessPO {
+public class ProcessApplyPO extends BasePO {
 
     /**
      * 描述

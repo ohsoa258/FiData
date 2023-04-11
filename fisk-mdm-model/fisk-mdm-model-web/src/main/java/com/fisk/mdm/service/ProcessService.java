@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.mdm.dto.masterdata.MasterDataDTO;
 import com.fisk.mdm.dto.process.ApprovalDTO;
+import com.fisk.mdm.dto.process.BatchApprovalDTO;
 import com.fisk.mdm.dto.process.PendingApprovalDTO;
 import com.fisk.mdm.dto.process.ProcessInfoDTO;
 import com.fisk.mdm.enums.EventTypeEnum;
@@ -86,4 +87,18 @@ public interface ProcessService {
      * @return
      */
     ResultEnum approval(ApprovalDTO dto);
+
+    /**
+     * 批量审批
+     * @param dto
+     * @return
+     */
+    ResultEnum batchApproval(BatchApprovalDTO dto);
+
+    /**
+     * 撤回审批
+     * @param applyId
+     * @return
+     */
+    ResultEnum rollbackApproval(Integer applyId);
 }

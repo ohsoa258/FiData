@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.process.ApprovalDTO;
+import com.fisk.mdm.dto.process.BatchApprovalDTO;
 import com.fisk.mdm.dto.process.PendingApprovalDTO;
 import com.fisk.mdm.dto.process.ProcessInfoDTO;
 import com.fisk.mdm.service.ProcessService;
@@ -18,7 +19,6 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * @Author: wangjian
@@ -85,5 +85,18 @@ public class ProcessController {
     @ResponseBody
     public ResultEntity<ResultEnum> approval(@RequestBody ApprovalDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,processService.approval(dto));
+    }
+    @ApiOperation("批量审批")
+    @PostMapping("/batchApproval")
+    @ResponseBody
+    public ResultEntity<ResultEnum> batchApproval(@RequestBody BatchApprovalDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,processService.batchApproval(dto));
+    }
+
+    @ApiOperation("撤回审批")
+    @PostMapping("/rollbackApproval")
+    @ResponseBody
+    public ResultEntity<ResultEnum> rollbackApproval(@RequestBody Integer applyId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,processService.rollbackApproval(applyId));
     }
 }
