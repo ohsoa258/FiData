@@ -1,7 +1,6 @@
 package com.fisk.mdm.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.mdm.enums.ProcessNodeTypeEnum;
 import lombok.Data;
 
@@ -12,7 +11,7 @@ import lombok.Data;
  */
 @Data
 @TableName("tb_process_node")
-public class ProcessNodePO extends BasePO {
+public class ProcessNodePO extends ProcessPO {
 
     /**
      * 节点名称

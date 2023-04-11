@@ -1,6 +1,7 @@
 package com.fisk.mdm.enums;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.fisk.common.core.enums.BaseEnum;
 
 /**
@@ -16,6 +17,7 @@ public enum ApprovalStateEnum implements BaseEnum {
     OPEN(1,"开启");
     @EnumValue
     private final int value;
+    @JsonValue
     private final String name;
 
     ApprovalStateEnum(int value, String name) {

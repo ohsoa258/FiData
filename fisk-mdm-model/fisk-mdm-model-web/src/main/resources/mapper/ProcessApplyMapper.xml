@@ -2,36 +2,65 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.fisk.mdm.mapper.ProcessApplyMapper">
+
+    <select id="getMyProcessApply" resultType="com.fisk.mdm.vo.process.ProcessApplyVO">
+        SELECT
+        a.id,
+        a.applicant,
+        a.state,
+        a.description,
+        a.operation_type,
+        a.application_time
+        FROM tb_process_apply a
+        WHERE a.applicant = #{userId}
+        and a.del_flag = 1
+        <if test=" query.keyword !=null and query.keyword.length()>0 ">
+            a.description like concat('%', #{query.keyword}, '%')
+        </if>
+        <if test="query.operationType != null and query.operationType != ''">
+            and a.operation_type = #{query.operationType}
+        </if>
+        <if test="query.startTime != null">
+            and a.application_time &gt; #{query.startTime}
+        </if>
+        <if test="query.endTime != null">
+            and a.application_time &lt; #{query.endTime}
+        </if>
+    </select>
+
     <select id="getPendingApproval" resultType="com.fisk.mdm.vo.process.PendingApprovalVO">
         SELECT
-            a.id as apply_id,
-            b.process_id,
-            a.applicant,
-            a.description,
-            a.operation_type,
-            a.application_time,
-            a.approver_node
+        a.id as apply_id,
+        b.process_id,
+        a.applicant,
+        a.description,
+        a.operation_type,
+        a.application_time,
+        a.approver_node
         FROM
-            (
-                SELECT
-                    a.id,
-                    a.applicant,
-                    a.description,
-                    a.operation_type,
-                    a.application_time,
-                    a.approver_node
-                FROM
-                    tb_process_apply a
-                WHERE
-                    a.del_flag = 1
-            ) a
-                LEFT JOIN tb_process_node b ON a.approver_node = b.id
-                AND b.del_flag = 1
-                LEFT JOIN tb_process_person c ON b.id = c.rocess_node_id
-                AND c.del_flag = 1
-                AND c.type = 2
+        (
+        SELECT
+        a.id,
+        a.applicant,
+        a.description,
+        a.operation_type,
+        a.application_time,
+        a.approver_node
+        FROM
+        tb_process_apply a
         WHERE
-            c.urid = #{userId}
+        a.del_flag = 1
+        ) a
+        LEFT JOIN tb_process_node b ON a.approver_node = b.id
+        LEFT JOIN tb_process_person c ON b.id = c.rocess_node_id
+        WHERE
+        a.operation_type = 3
+        and (c.type = 2 and c.urid = #{userId})
+        or (c.type = 1 and
+        <foreach collection="roleIds" item="item" separator=" or " open="(" close=")">
+            c.urid = #{item}
+        </foreach>
+               )
         <if test=" query.keyword !=null and query.keyword.length()>0 ">
             and (
             a.applicant like concat('%', #{query.keyword}, '%') or

@@ -1,7 +1,6 @@
 package com.fisk.mdm.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.mdm.enums.ApprovalStateEnum;
 import com.fisk.mdm.enums.AutoapproalRuleEnum;
 import com.fisk.mdm.enums.ExceptionApprovalEnum;
@@ -14,7 +13,7 @@ import lombok.Data;
  */
 @Data
 @TableName("tb_process_info")
-public class ProcessInfoPO extends BasePO {
+public class ProcessInfoPO extends ProcessPO {
 
     /**
      * 实体ID

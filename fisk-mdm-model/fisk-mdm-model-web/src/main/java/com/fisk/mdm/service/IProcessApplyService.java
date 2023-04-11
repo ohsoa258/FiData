@@ -14,6 +14,7 @@ import java.util.List;
  * @Date: 2023-04-04
  */
 public interface IProcessApplyService extends IService<ProcessApplyPO> {
+    Page<ProcessApplyVO> getMyProcessApply(PendingApprovalDTO dto);
     Page<PendingApprovalVO> getPendingApproval(PendingApprovalDTO dto);
     Page<PendingApprovalVO> getOverApproval(PendingApprovalDTO dto);
 }

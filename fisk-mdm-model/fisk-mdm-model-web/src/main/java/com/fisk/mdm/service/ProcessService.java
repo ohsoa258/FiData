@@ -8,11 +8,10 @@ import com.fisk.mdm.dto.process.ApprovalDTO;
 import com.fisk.mdm.dto.process.PendingApprovalDTO;
 import com.fisk.mdm.dto.process.ProcessInfoDTO;
 import com.fisk.mdm.enums.EventTypeEnum;
+import com.fisk.mdm.vo.process.ApprovalDetailVO;
 import com.fisk.mdm.vo.process.PendingApprovalVO;
 import com.fisk.mdm.vo.process.ProcessApplyVO;
 import com.fisk.mdm.vo.process.ProcessInfoVO;
-
-import java.util.List;
 
 /**
  * @Author: wangjian
@@ -37,11 +36,12 @@ public interface ProcessService {
 
     /**
      * 校验是否走流程
+     *
      * @param entityId
      * @return
      * @throws FkException
      */
-    boolean verifyProcessApply(Integer entityId) throws FkException;
+    ResultEnum verifyProcessApply(Integer entityId) throws FkException;
 
     /**
      * 添加工单
@@ -54,9 +54,10 @@ public interface ProcessService {
 
     /**
      * 获取我的待审核流程
+     *
      * @return
      */
-    List<ProcessApplyVO> getMyProcessApply();
+    Page<ProcessApplyVO> getMyProcessApply(PendingApprovalDTO dto);
 
     /**
      * 获取待处理审批列表
@@ -71,6 +72,13 @@ public interface ProcessService {
      * @return
      */
     Page<PendingApprovalVO> getOverApproval(PendingApprovalDTO dto);
+
+    /**
+     * 获取审批流程详情
+     * @param applyId
+     * @return
+     */
+    ApprovalDetailVO getApprovalDetail(Integer applyId);
 
     /**
      * 审批

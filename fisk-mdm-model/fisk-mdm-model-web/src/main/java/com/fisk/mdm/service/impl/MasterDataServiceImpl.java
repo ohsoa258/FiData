@@ -1024,9 +1024,21 @@ public class MasterDataServiceImpl implements IMasterDataService {
         String batchNumber = UUID.randomUUID().toString();
         boolean delete = eventTypeEnum == EventTypeEnum.DELETE ? true : false;
         //如果配置流程则走流程
-        boolean flag = false;
+        boolean flag;
         try {
-            flag = processService.verifyProcessApply(dto.getEntityId());
+            ResultEnum resultEnum = processService.verifyProcessApply(dto.getEntityId());
+            switch (resultEnum){
+                case VERIFY_APPROVAL:
+                    flag = true;
+                    break;
+                case VERIFY_NOT_APPROVAL:
+                    flag = false;
+                    break;
+                case PROCESS_APPLY_EXIST:
+                    return ResultEnum.PROCESS_APPLY_EXIST;
+                default:
+                    return ResultEnum.VERIFY_PROCESS_APPLY_ERROR;
+            }
         }catch (FkException e){
             return ResultEnum.VERIFY_PROCESS_APPLY_ERROR;
         }

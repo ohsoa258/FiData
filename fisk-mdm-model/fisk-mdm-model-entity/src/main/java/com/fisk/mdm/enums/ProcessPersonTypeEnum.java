@@ -1,6 +1,7 @@
 package com.fisk.mdm.enums;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.fisk.common.core.enums.BaseEnum;
 
 /**
@@ -17,6 +18,7 @@ public enum ProcessPersonTypeEnum implements BaseEnum {
     PERSON_TYPE2_ENUM(2,"用户");
     @EnumValue
     private final int value;
+    @JsonValue
     private final String name;
 
     ProcessPersonTypeEnum(int value, String name) {
