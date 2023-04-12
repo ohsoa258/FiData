@@ -11,6 +11,7 @@ import com.fisk.common.core.utils.Dto.sftp.SftpExcelTreeDTO;
 import com.fisk.common.core.utils.FileBinaryUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.jcraft.jsch.*;
+import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbFile;
 import jcifs.smb.SmbFileInputStream;
 import lombok.extern.slf4j.Slf4j;
@@ -665,8 +666,10 @@ public class SftpUtils {
 
             // 第一步：读取Windows共享目录下的文件
             String wildcard = getWildcard(wildcardText);
-            String remoteUrl = String.format("smb://%s:%s@%s%s", smbUserName, smbPassWord, smbIp, smbPath);
-            SmbFile remoteFile = new SmbFile(remoteUrl);
+            String remoteUrl = String.format("smb://%s%s", smbIp, smbPath);
+            log.info("读取Windows共享目录下的文件-remoteUrl：" + remoteUrl);
+            NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication(null, smbUserName, smbPassWord);
+            SmbFile remoteFile = new SmbFile(remoteUrl, auth);
             remoteFile.connect();
             if (remoteFile.exists()) {
                 SmbFile[] smbFiles = remoteFile.listFiles();
@@ -766,8 +769,8 @@ public class SftpUtils {
 //                null, "192.168.21.21", 22);
 //        fis.close();
         getSftpConnect(0, "sftp", "password01!", "", "192.168.21.21", 22);
-        copyFile("192.168.21.21", 22,  "sftp", "password01!", "", 0,
-                "192.168.21.21", 22,  "sftp", "password01!", "", 0,
+        copyFile("192.168.21.21", 22, "sftp", "password01!", "", 0,
+                "192.168.21.21", 22, "sftp", "password01!", "", 0,
                 1, 3, 4, "/upload/test/",
                 "/upload/test/测试/", "测试测试.xlsx", "");
     }
