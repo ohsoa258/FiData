@@ -27,16 +27,16 @@ public class GenerateCondition {
             switch (queryType)
             {
                 case GREATER_THAN:
-                    str.append(" and " +model.columnName+" > '"+model.columnValue+"' ");
+                    str.append(" and " +model.columnName+" > N'"+model.columnValue+"' ");
                     break;
                 case LESS_THAN:
-                    str.append(" and " +model.columnName+" < '" +model.columnValue+"' ");
+                    str.append(" and " +model.columnName+" < N'" +model.columnValue+"' ");
                     break;
                 case EQUAL:
-                    str.append(" and " +model.columnName+" = '"+model.columnValue+"' ");
+                    str.append(" and " +model.columnName+" = N'"+model.columnValue+"' ");
                     break;
                 case CONTAINS:
-                    str.append(" and " +model.columnName+" like concat('%'," + "'" + model.columnValue+"'" + ", '%') " );
+                    str.append(" and " +model.columnName+" like concat('%'," + "N'" + model.columnValue+"'" + ", '%') " );
                     break;
                 default:
                     break;
