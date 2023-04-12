@@ -79,11 +79,11 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
     @Resource
     private ApiFilterConditionMapper apiFilterConditionMapper;
 
-//    @Resource
-//    private LogsManageImpl logsManageImpl;
-
     @Resource
-    private LogsMapper logsMapper;
+    private LogsManageImpl logsManageImpl;
+
+//    @Resource
+//    private LogsMapper logsMapper;
 
     @Resource
     private UserHelper userHelper;
@@ -288,7 +288,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             }
             try {
                 log.info("开始记录数据服务调用日志");
-                logsMapper.insert(logPO);
+                logsManageImpl.saveLog(logPO);
             } catch (Exception exs) {
                 log.error("数据服务调用日志保存异常：" + exs);
             }
