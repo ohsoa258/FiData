@@ -34,6 +34,7 @@ import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IApiServiceManageService;
 import com.fisk.dataservice.vo.apiservice.ResponseVO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -54,6 +55,7 @@ import java.util.stream.Collectors;
  * @author dick
  */
 @Service
+@Slf4j
 public class ApiServiceManageImpl implements IApiServiceManageService {
 
     @Resource
@@ -163,6 +165,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_API_EXISTS, responseVO);
             } else {
                 logPO.setApiId(Math.toIntExact(apiInfo.getId()));
+                logPO.setCreateUser(appInfo.getAppAccount());
             }
 
             // 第四步：验证当前请求的API是否具备访问权限
@@ -280,8 +283,12 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                     logPO.setLogInfo(resultEnum.getMsg());
                 }
             }
-            logPO.setCreateUser("system");
-            logsManageImpl.saveLog(logPO);
+            try {
+                log.info("开始记录数据服务调用日志");
+                logsManageImpl.saveLog(logPO);
+            } catch (Exception exs) {
+                log.error("数据服务调用日志保存异常：" + exs);
+            }
         }
         return ResultEntityBuild.buildData(resultEnum, responseVO);
     }
