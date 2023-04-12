@@ -88,10 +88,10 @@ public class DataSynchronizationUtils {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         // 获取stg表名
-        String stgTableName = generateStgTableName(modelPO.getName(), entityInfoVo.getName());
+        String stgTableName = "\""+generateStgTableName(modelPO.getName(), entityInfoVo.getName())+"\"";
 
         //获取log表名
-        String logTableName = generateLogTableName(modelPO.getName(), entityInfoVo.getName());
+        String logTableName = "\""+generateLogTableName(modelPO.getName(), entityInfoVo.getName())+"\"";
 
         // 2.查询需要同步的数据
         String sql = "SELECT * FROM " + stgTableName + " WHERE fidata_batch_code = '" + batchCode + "'";
@@ -149,7 +149,7 @@ public class DataSynchronizationUtils {
                         AttributeVO data = attributeService.getById(e.getDomainId()).getData();
 
                         // 域字段的表名称
-                        String mdmTableName1 = generateMdmTableName(modelPO.getName(), entityInfoVo.getName());
+                        String mdmTableName1 = "\""+generateMdmTableName(modelPO.getName(), entityInfoVo.getName())+"\"";
 
                         StringBuilder str = new StringBuilder();
                         str.append("SELECT fidata_id FROM " + mdmTableName1);

@@ -112,7 +112,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         StringBuilder str = new StringBuilder();
         str.append("select " + dto.getColumnNames());
         str.append(" from ");
-        str.append("\"" + dto.getTableName() + "\"");
+        str.append("" + dto.getTableName() + "");
         str.append("where fidata_version_id = " + dto.getVersionId());
         if (!StringUtils.isEmpty(dto.getConditions())) {
             str.append(dto.getConditions());
@@ -157,7 +157,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String buildQueryCount(String tableName, String queryConditions) {
         StringBuilder str = new StringBuilder();
         str.append("SELECT COUNT(*) AS totalNum FROM ");
-        str.append("\"" + tableName + "\"");
+        str.append("" + tableName + "");
         str.append(" WHERE 1=1 ");
         if (!StringUtils.isEmpty(queryConditions)) {
             str.append(queryConditions);

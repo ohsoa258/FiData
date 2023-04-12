@@ -129,7 +129,7 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
         if (modelPO == null){
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        String tableName = TableNameGenerateUtils.generateLogTableName(modelPO.getName(), entityVO.getName());
+        String tableName = "\""+TableNameGenerateUtils.generateLogTableName(modelPO.getName(), entityVO.getName())+"\"";
         //条件
         String conditions = " and fidata_version_id='" + dto.getVersionId() + "' and fidata_mdm_fidata_id='" + dto.getFiDataId() + "'";
         //获取总条数
@@ -178,7 +178,7 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         //获取mdm表最新code
-        String mdmTableName = TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), entityVO.getName());
+        String mdmTableName = "\""+TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), entityVO.getName())+"\"";
         IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
         for (Map<String,Object> dtoItem: dto.getMembers()){
 
@@ -219,7 +219,7 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
                 if (domainAttribute.code != ResultEnum.SUCCESS.getCode()) {
                     return ResultEnum.DATA_NOTEXISTS;
                 }
-                String domainMdmTableName = TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), domainAttribute.data.getName());
+                String domainMdmTableName = "\""+TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), domainAttribute.data.getName())+"\"";
                 String domainSql = sqlBuilder.buildQueryData(domainMdmTableName,
                         " and fidata_id =" + dtoItem.get(item.getName()));
                 log.info("查询域字段数据,sql:", domainSql);

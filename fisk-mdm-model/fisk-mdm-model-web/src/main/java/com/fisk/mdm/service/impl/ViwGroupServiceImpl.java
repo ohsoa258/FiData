@@ -402,12 +402,15 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         if (viwGroupVo == null){
             return ResultEnum.DATA_NOTEXISTS;
         }
-
+        EntityPO entityPO = entityMapper.selectById(viwGroupVo.getEntityId());
+        if (entityPO == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
         Connection connection = null;
         String sql = null;
         try {
             // 1.拼接自定义视图Sql
-            sql = this.buildCreateCustomViw(viwGroupVo);
+            sql = this.buildCreateCustomViw(viwGroupVo,entityPO);
 
             // 2.连接对象
             AbstractDbHelper dbHelper = new AbstractDbHelper();
@@ -420,7 +423,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             // 回写自定义视图表名
             ViwGroupPO groupPo = new ViwGroupPO();
             groupPo.setId(id);
-            groupPo.setColumnName(TableNameGenerateUtils.generateCustomizeViwTableName(viwGroupVo.getEntityId(),viwGroupVo.getId()));
+            groupPo.setColumnName(TableNameGenerateUtils.generateCustomizeViwTableName(entityPO.getName(),viwGroupVo.getName()));
             viwGroupMapper.updateById(groupPo);
         }catch (SQLException ex){
             log.error("【创建自定义视图Sql】:" + sql + "【创建自定义视图失败,异常信息】:" + ex);
@@ -474,10 +477,11 @@ public class ViwGroupServiceImpl implements ViwGroupService {
      * @param viwGroupVo
      * @return
      */
-    public String buildCreateCustomViw(ViwGroupVO viwGroupVo) {
+    public String buildCreateCustomViw(ViwGroupVO viwGroupVo,EntityPO entityPO) {
+
         StringBuilder str = new StringBuilder();
         str.append("CREATE VIEW " + PUBLIC + ".");
-        str.append(TableNameGenerateUtils.generateCustomizeViwTableName(viwGroupVo.getEntityId(),viwGroupVo.getId()));
+        str.append(TableNameGenerateUtils.generateCustomizeViwTableName(entityPO.getName(),viwGroupVo.getName()));
         str.append(" AS ").append("SELECT ");
 
         // 获取主实体下的属性

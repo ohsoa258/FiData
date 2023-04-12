@@ -34,25 +34,26 @@ public class TableNameGenerateUtils {
 
     /**
      * 视图表
-     * @param modelId
-     * @param entityId
+     *
+     * @param modelName
+     * @param entityName
      * @return
      */
-    public static String generateViwTableName(Integer modelId, Integer entityId) {
+    public static String generateViwTableName(String modelName, String entityName) {
         StringBuilder str = new StringBuilder();
-        str.append("viw_" + modelId + "_" + entityId);
+        str.append("viw_" + modelName + "_" + entityName);
         return str.toString();
     }
 
     /**
      * 自定义视图表
-     * @param entityId
-     * @param viewId
+     * @param entityName
+     * @param viewName
      * @return
      */
-    public static String generateCustomizeViwTableName(Integer entityId,Integer viewId) {
+    public static String generateCustomizeViwTableName(String entityName, String viewName) {
         StringBuilder str = new StringBuilder();
-        str.append("viw_" + entityId + "_" + viewId);
+        str.append("viw_" + entityName + "_" + viewName);
         return str.toString();
     }
 

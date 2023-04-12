@@ -953,7 +953,7 @@ public class ProcessServiceImpl implements ProcessService {
         if (modelPO == null){
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        String tableName = TableNameGenerateUtils.generateStgTableName(modelPO.getName(),entityPO.getName());
+        String tableName = "\""+TableNameGenerateUtils.generateStgTableName(modelPO.getName(),entityPO.getName())+"\"";
         if (resultEnum.getCode() != ResultEnum.DATA_SYNCHRONIZATION_SUCCESS.getCode()) {
             //where条件
             String queryConditions = " and fidata_batch_code ='" + processApplyPo.getFidataBatchCode() + "'";
