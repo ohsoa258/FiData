@@ -8,6 +8,7 @@ import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 /**
  * @author Lock
@@ -30,4 +31,22 @@ public interface NifiCustomWorkflowMapper extends FKBaseMapper<NifiCustomWorkflo
      */
     @Select("select count(1) from tb_nifi_custom_workflow where to_days(create_time) = to_days(now()) and `status` = #{status};")
     int getNum(@Param("status") int status);
+
+    /**
+     * 查询数据调度中的总应用个数
+     *
+     * @param delFlag 是否删除标志
+     * @return 个数
+     */
+    @Select("select count(id) from tb_nifi_custom_workflow where del_flag = #{delFlag} ")
+    Integer getDataDispatchNum(@Param("delFlag") int delFlag);
+
+    /**
+     * 更新管道工作状态
+     * @param nifiCustomWorkflowId
+     * @param workStatus
+     * @return 影响行数
+     */
+    @Update("update tb_nifi_custom_workflow set work_status = #{workStatus} where workflow_id = #{nifiCustomWorkflowId}")
+    Integer updateWorkStatus(@Param("nifiCustomWorkflowId") String nifiCustomWorkflowId, @Param("workStatus") Integer workStatus);
 }

@@ -5,24 +5,24 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamanagement.dto.dataassets.DataAssetsParameterDTO;
 import com.fisk.datamanagement.dto.dataassets.DataAssetsResultDTO;
 import com.fisk.datamanagement.service.IDataAssets;
+import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -36,38 +36,44 @@ public class DataAssetsImpl implements IDataAssets {
 
     @Resource
     GenerateCondition generateCondition;
-    @Resource
-    EntityImpl entity;
 
     @Resource
     UserClient userClient;
+    @Resource
+    DataAccessClient dataAccessClient;
+    @Resource
+    DataModelClient dataModelClient;
 
     @Override
     public DataAssetsResultDTO getDataAssetsTableList(DataAssetsParameterDTO dto) {
         DataAssetsResultDTO data = new DataAssetsResultDTO();
         Connection conn = null;
         Statement st = null;
+        PreparedStatement psst = null;
         try {
-            //获取实例配置信息
-            JSONObject instanceEntity = this.entity.getEntity(dto.instanceGuid);
-            JSONObject entity = JSON.parseObject(instanceEntity.getString("entity"));
-            JSONObject attributes = JSON.parseObject(entity.getString("attributes"));
-            String hostname = attributes.getString("hostname");
             //获取账号密码
             ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
+            log.debug("获取账号密码 END");
             if (allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
             }
+            log.debug("get datasource START");
             Optional<DataSourceDTO> first = allFiDataDataSource.data
                     .stream()
-                    .filter(e -> dto.dbName.equals(e.conDbname) && hostname.equals(e.conIp))
+                    .filter(e -> dto.dbName.equals(e.conDbname))
                     .findFirst();
+            log.debug("get datasource END"+JSON.toJSONString(first));
             if (!first.isPresent()) {
                 throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
             }
+            log.debug("数据源信息constr{"+first.get().conStr+"}conip{"+first.get().conIp+"},conport{"+first.get().conPort+"},ConPWD{"+first.get().getConPassword()+"},conAccount{"+first.get().conAccount+"}");
             //连接数据源
+            log.debug("========连接数据源START========");
             conn = getConnection(first.get());
-            st = conn.createStatement();
+
+            conn.setAutoCommit(false);
+            log.debug("con commit");
+            log.debug("========连接数据源END========");
             //拼接筛选条件
             String condition = " where 1=1 ";
             if (CollectionUtils.isNotEmpty(dto.filterQueryDTOList)) {
@@ -79,33 +85,58 @@ public class DataAssetsImpl implements IDataAssets {
                 sql = "select * from " + dto.tableName + condition;
             }else {
                 //获取总条数
+                log.debug("=====获取总条数START======");
                 String getTotalSql = "select count(*) as totalNum from " + dto.tableName+condition;
+                log.debug("=====获取总条数SQL语句======"+getTotalSql);
+                log.debug("==conn.createStatement() START==");
+                st = conn.createStatement();
+                log.debug("==conn.createStatement() END==");
                 ResultSet rSet = st.executeQuery(getTotalSql);
+                log.debug("=====获取总条数END===SQL:"+getTotalSql);
                 int rowCount = 0;
                 if (rSet.next()) {
                     rowCount = rSet.getInt("totalNum");
                 }
                 rSet.close();
-                data.total=rowCount;
+                data.total = rowCount;
                 //分页获取数据
                 sql = buildSelectSql(dto, condition, first.get().conType);
             }
-            ResultSet rs = st.executeQuery(sql);
+            log.debug("sqlstr:"+sql);
+            psst = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            psst.setFetchSize(1000);
+
+            ResultSet rs = psst.executeQuery();
+            log.debug("sql play success");
             // 获取列数
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();
-            data.dataArray=columnDataList(rs,metaData,columnCount);
-            //获取列名
-            List<String> columnList=new ArrayList<>();
-            for (int i = 1; i <= columnCount; i++) {
-                columnList.add(metaData.getColumnLabel(i));
+            data.dataArray = columnDataList(rs, metaData, columnCount);
+            log.debug("data:"+ JSON.toJSONString(data.dataArray));
+            //获取表头
+            log.debug("start get table column"+"类型："+first.get().sourceBusinessType+"表名"+dto.tableName);
+            List<String[]> displayList = getTableColumnDisplay(first.get().sourceBusinessType, dto.tableName);
+            log.debug("table column:"+JSON.toJSONString(displayList));
+            if (CollectionUtils.isEmpty(displayList)) {
+                log.debug("displayList is empty");
+                throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
             }
-            data.columnList = columnList;
+            if (!dto.export) {
+                log.debug("choose !dto.export");
+                displayList.addAll(systemTableColumn());
+                log.debug("displayList.addAll end");
+            }
+            log.debug("ready to close connection");
+            psst.close();
+            log.debug("close connection success");
+            data.columnList = displayList;
             data.pageIndex = dto.pageIndex;
             data.pageSize = dto.pageSize;
+            log.debug("end");
         } catch (Exception e) {
-            log.error("数据资产,查询表数据失败:{}", e);
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e);
+            log.debug("失败"+e.getStackTrace());
+            log.debug("数据资产,查询表数据失败:"+e.getMessage());
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR_INVALID, e);
         } finally {
             AbstractCommonDbHelper.closeStatement(st);
             AbstractCommonDbHelper.closeConnection(conn);
@@ -114,13 +145,64 @@ public class DataAssetsImpl implements IDataAssets {
     }
 
     /**
+     * 获取表字段显示名称和英文名称
+     *
+     * @param sourceBusinessType
+     * @param tableName
+     * @return
+     */
+    public List<String[]> getTableColumnDisplay(SourceBusinessTypeEnum sourceBusinessType, String tableName) {
+        switch (sourceBusinessType) {
+            case ODS:
+                return dataAccessClient.getTableColumnDisplay(tableName).data;
+            case DW:
+                return dataModelClient.getTableColumnDisplay(tableName).data;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
+
+    /**
+     * 系统表字段
+     *
+     * @return
+     */
+    public List<String[]> systemTableColumn() {
+        List<String[]> list = new ArrayList<>();
+
+        String[] version = new String[2];
+        version[0] = "fi_version";
+        version[1] = "系统版本号";
+
+        String[] createTime = new String[2];
+        createTime[0] = "fi_createtime";
+        createTime[1] = "系统创建时间";
+
+        String[] updateTime = new String[2];
+        updateTime[0] = "fi_updatetime";
+        updateTime[1] = "系统更新时间";
+
+        String[] batchCode = new String[2];
+        batchCode[0] = "fidata_batch_code";
+        batchCode[1] = "系统批次号";
+
+
+        list.add(version);
+        list.add(createTime);
+        list.add(updateTime);
+        list.add(batchCode);
+        return list;
+    }
+
+    /**
      * 获取行数据
+     *
      * @param rs
      * @param metaData
      * @param columnCount
      * @return
      */
-    public JSONArray columnDataList(ResultSet rs,ResultSetMetaData metaData,int columnCount){
+    public JSONArray columnDataList(ResultSet rs, ResultSetMetaData metaData, int columnCount) {
         try {
             // json数组
             JSONArray array = new JSONArray();
@@ -139,6 +221,7 @@ public class DataAssetsImpl implements IDataAssets {
         }
         catch (Exception e)
         {
+            log.error("元数据获取行数据失败：{}", e);
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,e);
         }
     }

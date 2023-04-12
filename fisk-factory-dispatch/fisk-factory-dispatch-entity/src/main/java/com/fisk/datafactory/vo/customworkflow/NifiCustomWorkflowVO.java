@@ -58,4 +58,6 @@ public class NifiCustomWorkflowVO {
 
     @ApiModelProperty(value = "管道内绑定表的组件id集合")
     public List<Long> componentIds;
+
+    public int workStatus;
 }

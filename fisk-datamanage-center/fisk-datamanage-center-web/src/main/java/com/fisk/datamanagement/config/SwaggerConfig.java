@@ -32,9 +32,10 @@ public class SwaggerConfig {
     public static final String DATA_ASSETS = "data_assets-controller";
     public static final String DATA_QUALITY = "data-quality-controller";
     public static final String DATA_MASKING = "data-masking-controller";
-    public static final String SYNCHRONIZATION_DATA = "synchronization-data-controller";
+    public static final String SYNCHRONIZATION_DATA = "blood-compensation-controller";
     public static final String PROCESS = "process-controller";
     public static final String GLOBAL_SEARCH = "globalSearch-controller";
+    public static final String DATA_LOGGING = "dataLogging-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -55,9 +56,10 @@ public class SwaggerConfig {
                 .tags(new Tag(DATA_ASSETS, "数据资产"))
                 .tags(new Tag(DATA_QUALITY, "数据质量"))
                 .tags(new Tag(DATA_MASKING, "数据脱敏"))
-                .tags(new Tag(SYNCHRONIZATION_DATA, "同步元数据"))
+                .tags(new Tag(SYNCHRONIZATION_DATA, "手动同步元数据"))
                 .tags(new Tag(PROCESS, "元数据血缘连线处理"))
                 .tags(new Tag(GLOBAL_SEARCH, "全局搜索"))
+                .tags(new Tag(DATA_LOGGING, "数据报表记录数"))
                 .securityContexts(securityContexts());
     }
 

@@ -1,9 +1,16 @@
 package com.fisk.task.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
 import com.fisk.task.listener.nifi.INifiCustomWorkFlow;
@@ -11,10 +18,14 @@ import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author cfk
@@ -29,6 +40,8 @@ public class NifiController {
     TableNifiSettingServiceImpl tableNifiSettingService;
     @Resource
     INifiCustomWorkFlow iNifiCustomWorkFlow;
+    @Resource
+    UserClient userClient;
 
     @PostMapping("/modifyScheduling")
     public ResultEntity<Object> modifyScheduling(@RequestParam("groupId") String groupId, @RequestParam("ProcessorId") String ProcessorId, @RequestParam("schedulingStrategy") String schedulingStrategy, @RequestParam("schedulingPeriod") String schedulingPeriod) {
@@ -68,5 +81,78 @@ public class NifiController {
         return ResultEntityBuild.build(iNifiCustomWorkFlow.suspendCustomWorkNifiFlow(nifiCustomWorkflowId, ifFire));
     }
 
+    /**
+     * 添加系统数据源时调用设置nifi参数
+     * @param dto
+     */
+    @PostMapping("/add")
+    public ResultEntity<Object> addDataSetParams(@RequestBody DataSourceSaveDTO dto){
+        // 添加系统数据源
+        ResultEntity<Object> resultEntity;
+        try{
+            resultEntity = userClient.addData(dto);
+        }catch (Exception e){
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+        if (resultEntity.getCode() != ResultEnum.SUCCESS.getCode()){
+            log.error("system服务添加数据源失败，[{}]", resultEntity.getMsg());
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+        }
+        Integer id = (Integer) resultEntity.getData();
+        log.info("开始向nifi中添加参数，数据源[{}],[{}]", id, dto);
+        Map<String, String> map = new HashMap<>();
+        map.put(ComponentIdTypeEnum.DB_URL.getName() + id, dto.getConStr());
+        map.put(ComponentIdTypeEnum.DB_USERNAME.getName() + id, dto.getConAccount());
+        map.put(ComponentIdTypeEnum.DB_PASSWORD.getName() + id, dto.getConPassword());
+        iNiFiHelper.buildNifiGlobalVariable(map);
+        log.info("结束向nifi中添加参数");
+        return resultEntity;
+    }
 
+    /**
+     * 修改系统数据源时调用设置nifi参数
+     * @param dto
+     * @return
+     */
+    @PutMapping("/edit")
+    public ResultEntity<Object> editDataSetParams(@RequestBody DataSourceSaveDTO dto) {
+        // 修改数据源
+        ResultEntity<Object> resultEntity;
+        ResultEntity<DataSourceDTO> modelResult;
+        try{
+            // 获取系统数据源历史数据
+            modelResult = userClient.getFiDataDataSourceById(dto.id);
+            if (modelResult.getCode() != ResultEnum.SUCCESS.getCode() || modelResult.getData() == null){
+                log.error("task模块调用system服务查询数据源失败，[{}]", modelResult.getMsg());
+                return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+            }
+            resultEntity = userClient.editData(dto);
+            if (resultEntity.getCode() != ResultEnum.SUCCESS.getCode()){
+                log.error("system服务修改数据源失败，[{}]", resultEntity.getMsg());
+                return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+            }
+        }catch (Exception e){
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+
+        // 查询修改后的连接信息
+        DataSourceDTO model = modelResult.getData();
+        log.info("历史数据源：【{}】", JSON.toJSONString(model));
+        Map<String, String> map = new HashMap<>();
+        if (!StringUtils.isEmpty(dto.getConStr()) && !model.getConStr().equals(dto.getConStr())){
+            map.put(ComponentIdTypeEnum.DB_URL.getName() + model.getId(), dto.getConStr());
+        }
+        if (!StringUtils.isEmpty(dto.getConAccount()) && !model.getConAccount().equals(dto.getConAccount())){
+            map.put(ComponentIdTypeEnum.DB_USERNAME.getName() + model.getId(), dto.getConAccount());
+        }
+        if (!StringUtils.isEmpty(dto.getConPassword()) && !model.getConPassword().equals(dto.getConPassword())){
+            map.put(ComponentIdTypeEnum.DB_PASSWORD.getName() + model.getId(), dto.getConPassword());
+        }
+        if (!map.isEmpty()){
+            log.info("开始更新nifi变量数据：【{}】", JSON.toJSONString(map));
+            iNiFiHelper.updateNifiGlobalVariable(map);
+            log.info("更新nifi变量结束");
+        }
+        return resultEntity;
+    }
 }

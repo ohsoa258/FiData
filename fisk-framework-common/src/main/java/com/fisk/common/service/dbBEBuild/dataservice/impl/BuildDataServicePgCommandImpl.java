@@ -15,7 +15,7 @@ import java.util.Map;
 public class BuildDataServicePgCommandImpl implements IBuildDataServiceSqlCommand {
 
     @Override
-    public String buildPagingSql(String tableName,String fields, String orderBy, Integer pageIndex, Integer pageSize) {
+    public String buildPagingSql(String tableName, String fields, String orderBy, Integer pageIndex, Integer pageSize) {
         StringBuilder str = new StringBuilder();
         str.append("SELECT ");
         str.append(fields);
@@ -29,7 +29,7 @@ public class BuildDataServicePgCommandImpl implements IBuildDataServiceSqlComman
     }
 
     @Override
-    public String buildPagingSql(String tableName,List<String> fields, String orderBy, Integer pageIndex, Integer pageSize) {
+    public String buildPagingSql(String tableName, List<String> fields, String orderBy, Integer pageIndex, Integer pageSize) {
         StringBuilder str = new StringBuilder();
         str.append("SELECT ");
         str.append(Joiner.on(",").join(fields));
@@ -55,7 +55,7 @@ public class BuildDataServicePgCommandImpl implements IBuildDataServiceSqlComman
     }
 
     @Override
-    public  String buildQuerySql(String tableName, String fields, String queryConditions) {
+    public String buildQuerySql(String tableName, String fields, String queryConditions) {
         StringBuilder str = new StringBuilder();
         str.append(" SELECT ");
         if (StringUtils.isNotEmpty(fields)) {
@@ -98,20 +98,41 @@ public class BuildDataServicePgCommandImpl implements IBuildDataServiceSqlComman
     }
 
     @Override
-    public String buildUseExistTableFiled(String dbName, String tableName) {
-       String sql = String.format("SELECT c.relname as originalTableName,a.attname as originalFieldName,col_description(a.attrelid,a.attnum) as originalFieldDesc,'' AS originalFramework \n" +
-                "FROM pg_class as c,pg_attribute as a inner join pg_type on pg_type.oid = a.atttypid\n" +
-                "where c.relname in  (SELECT tablename FROM pg_tables ) and a.attrelid = c.oid and a.attnum>0\n" +
-                "and c.relname ='%s'", tableName);
-       return sql;
+    public String buildUseExistTableFiled(String tableFramework, String tableRelName) {
+        String sql = String.format("SELECT TABLE_NAME AS\n" +
+                "\ttableName,\n" +
+                "\tCOLUMN_NAME AS fieldName,\n" +
+                "\t(\n" +
+                "\tSELECT\n" +
+                "\t\tpg_catalog.col_description ( C.oid, sc.ordinal_position :: INT ) \n" +
+                "\tFROM\n" +
+                "\t\tpg_catalog.pg_class C \n" +
+                "\tWHERE\n" +
+                "\t\tC.oid = ( SELECT ( '\"' || sc.TABLE_NAME || '\"' ) :: REGCLASS :: OID ) \n" +
+                "\t\tAND C.relname = sc.TABLE_NAME \n" +
+                "\t) AS fieldDesc \n" +
+                "FROM\n" +
+                "\tinformation_schema.COLUMNS sc \n" +
+                "WHERE\n" +
+                "\tTABLE_NAME = '%s' ", tableRelName);
+        if (StringUtils.isNotEmpty(tableFramework)) {
+            sql += String.format(" AND table_schema = '%s'", tableFramework);
+        }
+        return sql;
     }
 
     @Override
-    public String buildUseExistAllTableFiled(String dbName) {
-        String  sql = "SELECT c.relname as originalTableName,a.attname as originalFieldName,col_description(a.attrelid,a.attnum) as originalFieldDesc,'' AS originalFramework \n" +
-                "FROM pg_class as c,pg_attribute as a inner join pg_type on pg_type.oid = a.atttypid\n" +
-                "where c.relname in  (SELECT tablename FROM pg_tables ) and a.attrelid = c.oid and a.attnum>0";
-        return  sql;
+    public String buildSchemaConStr(String schema, String conStr) {
+        if (StringUtils.isEmpty(schema)) {
+            return conStr;
+        }
+        String str;
+        if (conStr.contains("?")) {
+            str = conStr + "&currentSchema=" + schema;
+        } else {
+            str = conStr + "?currentSchema=" + schema;
+        }
+        return str;
     }
 
     /**

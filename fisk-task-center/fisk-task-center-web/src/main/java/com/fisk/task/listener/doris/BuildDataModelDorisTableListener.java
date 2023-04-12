@@ -129,7 +129,15 @@ public class BuildDataModelDorisTableListener
         try {
             ModelPublishDataDTO inpData = JSON.parseObject(dataInfo, ModelPublishDataDTO.class);
             List<ModelPublishTableDTO> dimensionList = inpData.dimensionList;
-
+            ResultEntity<DataSourceDTO> DataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+            DataSourceTypeEnum conType = null;
+            if (DataSource.code == ResultEnum.SUCCESS.getCode()) {
+                DataSourceDTO dataSource = DataSource.data;
+                conType = dataSource.conType;
+            } else {
+                log.error("userclient无法查询到ods库的连接信息");
+                throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+            }
             for (ModelPublishTableDTO modelPublishTableDTO : dimensionList) {
                 id = Math.toIntExact(modelPublishTableDTO.tableId);
                 tableType = modelPublishTableDTO.createType;
@@ -138,7 +146,7 @@ public class BuildDataModelDorisTableListener
                 DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
                 Calendar calendar = Calendar.getInstance();
                 String version = df.format(calendar.getTime());
-                ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO, version, DataSourceTypeEnum.POSTGRESQL);
+                ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO, version, conType);
                 if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
                     taskPgTableStructureMapper.updatevalidVersion(version);
                     throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
@@ -208,6 +216,14 @@ public class BuildDataModelDorisTableListener
                 bfd.appName = inpData.businessAreaName;
                 bfd.openTransmission = inpData.openTransmission;
                 bfd.updateSql = modelPublishTableDTO.factUpdateSql;
+                bfd.dataSourceDbId = modelPublishTableDTO.dataSourceDbId;
+                bfd.targetDbId = modelPublishTableDTO.targetDbId;
+                bfd.prefixTempName = modelPublishTableDTO.prefixTempName;
+                bfd.customScriptBefore = modelPublishTableDTO.customScript;
+                bfd.customScriptAfter = modelPublishTableDTO.customScriptAfter;
+                // 设置预览SQL执行语句
+                bfd.syncStgToOdsSql = modelPublishTableDTO.coverScript;
+                bfd.buildTableSql = pgdbTable2.get(0);
                 if (modelPublishTableDTO.createType == 0) {
                     //类型为物理表
                     bfd.type = OlapTableEnum.DIMENSION;
@@ -215,6 +231,8 @@ public class BuildDataModelDorisTableListener
                     //类型为物理表
                     bfd.type = OlapTableEnum.FACT;
                 }
+                bfd.maxRowsPerFlowFile = modelPublishTableDTO.maxRowsPerFlowFile;
+                bfd.fetchSize = modelPublishTableDTO.fetchSize;
                 log.info("nifi传入参数：" + JSON.toJSONString(bfd));
                 TableNifiSettingPO one = tableNifiSettingService.query().eq("app_id", bfd.appId).eq("table_access_id", bfd.id).eq("type", bfd.type.getValue()).one();
                 TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
@@ -509,7 +527,6 @@ public class BuildDataModelDorisTableListener
             } catch (ApiException e) {
                 log.error("组查询失败" + e);
             }
-            data.setId(appNifiSettingPO.targetDbPoolComponentId);
 
         } else {
             //创建应用组
@@ -674,7 +691,7 @@ public class BuildDataModelDorisTableListener
         if (appNifiSettingPO1 != null) {
             appNifiSettingPO = appNifiSettingPO1;
         }
-        appNifiSettingPO.targetDbPoolComponentId = controllerServiceEntity.getId();
+
         appNifiSettingPO.appId = String.valueOf(ModelPublishDataDTO.businessAreaId);
         appNifiSettingPO.type = dataClassifyEnum.getValue();
         //做判断,是否新增

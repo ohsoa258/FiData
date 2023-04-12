@@ -19,7 +19,14 @@ public enum DataClassifyEnum  implements BaseEnum {
     CUSTOMWORKDATAACCESS(5,"管道服务-数据接入"),
     CUSTOMWORKSTRUCTURE(6,"结构层级"),
     //scheduling component
-    CUSTOMWORKSCHEDULINGCOMPONENT(7,"管道服务-调度组件");
+    CUSTOMWORKSCHEDULINGCOMPONENT(7,"管道服务-调度组件"),
+    //自定义脚本任务
+    CUSTOMWORKCUSTOMIZESCRIPT(12,"自定义脚本任务"),
+    //sftp_file_copy_task
+    SFTPFILECOPYTASK(14,"SFTP文件复制"),
+    DATASERVICES(15,"数据服务"),
+    POWERBIDATASETREFRESHTASK(16,"POWERBI数据集刷新任务")
+    ;
 
     private final String name;
     private final int value;

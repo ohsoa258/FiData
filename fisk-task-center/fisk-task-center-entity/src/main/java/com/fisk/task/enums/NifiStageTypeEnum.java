@@ -11,7 +11,10 @@ public enum NifiStageTypeEnum implements BaseEnum {
     NOT_RUN(1, "未运行"),
     RUNNING(2, "正在运行"),
     SUCCESSFUL_RUNNING(3, "运行成功"),
-    RUN_FAILED(4, "运行失败");
+    RUN_FAILED(4, "运行失败"),
+    PASS(9,"跳过运行"),
+    FORBIDDEN(10,"禁止运行")
+    ;
 
 
     NifiStageTypeEnum(int value, String name) {

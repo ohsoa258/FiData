@@ -1,8 +1,11 @@
 package com.fisk.common.core.utils.email.method;
 
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.utils.email.dto.MailSenderDTO;
 import com.fisk.common.core.utils.email.dto.MailServeiceDTO;
+import com.google.common.base.Joiner;
 import com.sun.mail.util.MailSSLSocketFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 
 import javax.activation.DataHandler;
@@ -10,9 +13,9 @@ import javax.activation.FileDataSource;
 import javax.mail.*;
 import javax.mail.internet.*;
 import java.io.File;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Properties;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author dick
@@ -20,6 +23,7 @@ import java.util.Properties;
  * @description 发邮件
  * @date 2022/3/29 17:05
  */
+@Slf4j
 public class MailSenderUtils {
 
     public static void send(MailServeiceDTO serveiceDTO, MailSenderDTO senderDTO) throws Exception {
@@ -47,26 +51,34 @@ public class MailSenderUtils {
             props.put("mail.smtp.port", smtpPort);
             props.put("mail.smtp.timeout", "25000");
             props.put("mail.smtp.starttls.enable", "true");
-//            props.setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-//            props.setProperty("mail.smtp.socketFactory.fallback", "false");
-//            props.setProperty("mail.smtp.socketFactory.port", smtpPort);
+            // props.setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+            // props.setProperty("mail.smtp.socketFactory.fallback", "false");
+            // props.setProperty("mail.smtp.socketFactory.port", smtpPort);
 
             // 配置ssl加密工厂
-//            MailSSLSocketFactory sf = new MailSSLSocketFactory();
-//            sf.setTrustAllHosts(true);
-//            props.put("mail.smtp.ssl.enable", "true");
-//            props.put("mail.smtp.ssl.socketFactory", sf);
+            // MailSSLSocketFactory sf = new MailSSLSocketFactory();
+            // sf.setTrustAllHosts(true);
+            // props.put("mail.smtp.ssl.enable", "true");
+            // props.put("mail.smtp.ssl.socketFactory", sf);
         }
-        Session session = Session.getInstance(props,
-                new Authenticator() {
-                    @Override
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        //匿名只能访问函数内容的final类型的变量，可以访问外部类的成员变量
-                        return new PasswordAuthentication(serveiceDTO.getUser(), serveiceDTO.getPassword());
-                    }
+        Session session = null;
+        if (StringUtils.isEmpty(serveiceDTO.getUser()) &&
+                StringUtils.isEmpty(serveiceDTO.getPassword())) {
+            log.info("匿名发布");
+            session = Session.getInstance(props);
+        } else {
+            log.info("非匿名发布");
+            session = Session.getInstance(props,
+                    new Authenticator() {
+                        @Override
+                        protected PasswordAuthentication getPasswordAuthentication() {
+                            //匿名只能访问函数内容的final类型的变量，可以访问外部类的成员变量
+                            return new PasswordAuthentication(serveiceDTO.getUser(), serveiceDTO.getPassword());
+                        }
 
-                }
-        );
+                    }
+            );
+        }
         session.setDebug(serveiceDTO.openDebug);
         //构建邮件详情
         Message mimeMessage = createMimeMessage(session, senderDTO);
@@ -79,20 +91,42 @@ public class MailSenderUtils {
         // 1. 创建邮件对象
         Message mimeMessage = new MimeMessage(session);
         // 2. 发件人
-        mimeMessage.setFrom(new InternetAddress(senderDTO.getUser(),"fiskColud@fisksoft.com")); //senderDTO.getUser()
+        mimeMessage.setFrom(new InternetAddress(senderDTO.getUser(), "fiskColud@fisksoft.com")); //senderDTO.getUser()
         // 3. 收件人
-        mimeMessage.setRecipients(MimeMessage.RecipientType.TO, InternetAddress.parse(senderDTO.getToAddress()));
+        if (senderDTO.getToAddress() != null && senderDTO.getToAddress() != "") {
+            String to = senderDTO.getToAddress()
+                    .replace(";", ",")
+                    .replace("；", ",")
+                    .replace("，", ",");
+            List<String> toList = Arrays.stream(to.split(",")).distinct().collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(toList)) {
+                String param = Joiner.on(",").join(toList);
+                mimeMessage.setRecipients(MimeMessage.RecipientType.TO, InternetAddress.parse(param));
+            }
+        }
         // 4. 抄送人
         if (senderDTO.getToCc() != null && senderDTO.getToCc() != "") {
             String cc = senderDTO.getToCc()
                     .replace(";", ",")
                     .replace("；", ",")
                     .replace("，", ",");
-            mimeMessage.setRecipients(MimeMessage.RecipientType.CC, InternetAddress.parse(cc));
+            List<String> ccList = Arrays.stream(cc.split(",")).distinct().collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(ccList)) {
+                String param = Joiner.on(",").join(ccList);
+                mimeMessage.setRecipients(MimeMessage.RecipientType.CC, InternetAddress.parse(param));
+            }
         }
         // 5. 密抄
         if (senderDTO.getToBcc() != null && senderDTO.getToBcc() != "") {
-            mimeMessage.setRecipients(MimeMessage.RecipientType.BCC, InternetAddress.parse(senderDTO.getToBcc()));
+            String bcc = senderDTO.getToBcc()
+                    .replace(";", ",")
+                    .replace("；", ",")
+                    .replace("，", ",");
+            List<String> bccList = Arrays.stream(bcc.split(",")).distinct().collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(bccList)) {
+                String param = Joiner.on(",").join(bccList);
+                mimeMessage.setRecipients(MimeMessage.RecipientType.BCC, InternetAddress.parse(param));
+            }
         }
         // 6. 邮件主题
         mimeMessage.setSubject(senderDTO.getSubject());

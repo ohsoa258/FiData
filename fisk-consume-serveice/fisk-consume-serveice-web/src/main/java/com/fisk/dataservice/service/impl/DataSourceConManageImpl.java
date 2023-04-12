@@ -9,7 +9,6 @@ import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
-import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -17,8 +16,6 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
-import com.fisk.common.service.dbBEBuild.dataservice.BuildDataServiceHelper;
-import com.fisk.common.service.dbBEBuild.dataservice.IBuildDataServiceSqlCommand;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
@@ -34,7 +31,6 @@ import com.fisk.dataservice.enums.SourceTypeEnum;
 import com.fisk.dataservice.map.DataSourceConMap;
 import com.fisk.dataservice.mapper.DataSourceConMapper;
 import com.fisk.dataservice.service.IDataSourceConManageService;
-import com.fisk.dataservice.vo.api.FieldInfoVO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.dataservice.vo.datasource.DataSourceVO;
 import com.fisk.mdm.client.MdmClient;
@@ -384,18 +380,17 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             switch (dataSourceTypeEnum) {
                 case MYSQL:
                     // 表结构
-                    tableNameAndColumns = mysqlConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DriverTypeEnum.MYSQL);
+                    tableNameAndColumns = mysqlConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.MYSQL);
                     break;
                 case SQLSERVER:
                     // 表结构
-                    tableNameAndColumns = sqlServerPlusUtils.getTableNameAndColumnsPlus(conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                    tableNameAndColumns = sqlServerPlusUtils.getTableNameAndColumnsPlus(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.SQLSERVER);
                     break;
                 case POSTGRESQL:
                     // 表结构
-                    tableNameAndColumns = postgresConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DriverTypeEnum.POSTGRESQL);
+                    tableNameAndColumns = postgresConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.POSTGRESQL);
                     break;
             }
-            List<FieldInfoVO> tableFieldList = getTableFieldList(connection, conPo);
             connection.close();
 
             if (CollectionUtils.isNotEmpty(tableNameAndColumns)) {
@@ -405,8 +400,10 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     FiDataMetaDataTreeDTO fiDataMetaDataTree_Table = new FiDataMetaDataTreeDTO();
                     fiDataMetaDataTree_Table.setId(uuid_TableId);
                     fiDataMetaDataTree_Table.setParentId(uuid_TableFOLDERId);
-                    fiDataMetaDataTree_Table.setLabel(table.tableName);
-                    fiDataMetaDataTree_Table.setLabelAlias(table.tableName);
+                    fiDataMetaDataTree_Table.setLabel(table.tableFullName);
+                    fiDataMetaDataTree_Table.setLabelAlias(table.tableFullName);
+                    fiDataMetaDataTree_Table.setLabelFramework(table.tableFramework);
+                    fiDataMetaDataTree_Table.setLabelRelName(table.tableName);
                     fiDataMetaDataTree_Table.setSourceId(Math.toIntExact(conPo.id));
                     fiDataMetaDataTree_Table.setSourceType(SourceTypeEnum.custom.getValue());
                     fiDataMetaDataTree_Table.setLevelType(LevelTypeEnum.TABLE);
@@ -429,18 +426,12 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                             fiDataMetaDataTree_Field.setLabelType(field.fieldType);
                             fiDataMetaDataTree_Field.setLabelLength(String.valueOf(field.fieldLength));
                             fiDataMetaDataTree_Field.setLabelDesc(field.fieldDes);
-                            fiDataMetaDataTree_Field.setParentName(table.tableName);
-                            fiDataMetaDataTree_Field.setParentNameAlias(table.tableName);
+                            fiDataMetaDataTree_Field.setParentName(table.tableFullName);
+                            fiDataMetaDataTree_Field.setParentNameAlias(table.tableFullName);
+                            fiDataMetaDataTree_Field.setParentLabelFramework(table.tableFramework);
+                            fiDataMetaDataTree_Field.setParentLabelRelName(table.tableName);
                             fiDataMetaDataTree_Field.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                             fiDataMetaDataTree_Field.setPublishState("1");
-                            if (CollectionUtils.isNotEmpty(tableFieldList)) {
-                                FieldInfoVO fieldInfoVO = tableFieldList.stream()
-                                        .filter(item -> item.originalTableName.equals(table.getTableName()) && item.originalFieldName.equals(field.getFieldName()))
-                                        .findFirst().orElse(null);
-                                if (fieldInfoVO != null) {
-                                    fiDataMetaDataTree_Field.setLabelDesc(fieldInfoVO.originalFieldDesc);
-                                }
-                            }
                             fiDataMetaDataTree_Table_Children.add(fiDataMetaDataTree_Field);
                         }
                     }
@@ -472,15 +463,15 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             switch (DataSourceTypeEnum.values()[conPo.conType]) {
                 case MYSQL:
                     // 表结构
-                    viewNameAndColumns = mysqlConUtils.loadViewDetails(DriverTypeEnum.MYSQL, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                    viewNameAndColumns = mysqlConUtils.loadViewDetails(DataSourceTypeEnum.MYSQL, conPo.conStr, conPo.conAccount, conPo.conPassword);
                     break;
                 case SQLSERVER:
                     // 表结构
-                    viewNameAndColumns = sqlServerPlusUtils.loadViewDetails(DriverTypeEnum.SQLSERVER, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                    viewNameAndColumns = sqlServerPlusUtils.loadViewDetails(DataSourceTypeEnum.SQLSERVER, conPo.conStr, conPo.conAccount, conPo.conPassword);
                     break;
                 case POSTGRESQL:
                     // 表结构
-                    viewNameAndColumns = postgresConUtils.loadViewDetails(DriverTypeEnum.POSTGRESQL, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                    viewNameAndColumns = postgresConUtils.loadViewDetails(DataSourceTypeEnum.POSTGRESQL, conPo.conStr, conPo.conAccount, conPo.conPassword);
                     break;
             }
 
@@ -493,6 +484,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     fiDataMetaDataTree_View.setParentId(uuid_ViewFOLDERId);
                     fiDataMetaDataTree_View.setLabel(view.viewName);
                     fiDataMetaDataTree_View.setLabelAlias(view.viewName);
+                    fiDataMetaDataTree_View.setLabelRelName(view.viewRelName);
+                    fiDataMetaDataTree_View.setLabelFramework(view.viewFramework);
                     fiDataMetaDataTree_View.setSourceId(Math.toIntExact(conPo.id));
                     fiDataMetaDataTree_View.setSourceType(SourceTypeEnum.custom.getValue());
                     fiDataMetaDataTree_View.setLevelType(LevelTypeEnum.VIEW);
@@ -517,6 +510,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                             fiDataMetaDataTree_Field.setLabelDesc(field.fieldDes);
                             fiDataMetaDataTree_Field.setParentName(view.viewName);
                             fiDataMetaDataTree_Field.setParentNameAlias(view.viewName);
+                            fiDataMetaDataTree_Field.setParentLabelRelName(view.viewRelName);
+                            fiDataMetaDataTree_Field.setParentLabelFramework(view.viewFramework);
                             fiDataMetaDataTree_Field.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
                             fiDataMetaDataTree_Field.setPublishState("1");
                             fiDataMetaDataTree_View_Children.add(fiDataMetaDataTree_Field);
@@ -609,45 +604,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         } catch (Exception e) {
             throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR);
         }
-    }
-
-    /**
-     * @return java.util.List<com.fisk.dataservice.vo.api.FieldInfoVO>
-     * @description 查询表字段信息，此处获取表字段描述信息
-     * @author dick
-     * @date 2022/7/21 11:56
-     * @version v1.0
-     * @params conn
-     * @params dataSource
-     */
-    private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConPO dataSource) {
-        List<FieldInfoVO> fieldlist = new ArrayList<>();
-        String sql = "";
-        DataSourceTypeEnum value = DataSourceTypeEnum.values()[dataSource.getConType()];
-        IBuildDataServiceSqlCommand dbCommand = BuildDataServiceHelper.getDBCommand(value);
-        sql = dbCommand.buildUseExistAllTableFiled(dataSource.getConDbname());
-        if (sql == null || sql.isEmpty())
-            return fieldlist;
-        try {
-            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                FieldInfoVO fieldInfoVO = new FieldInfoVO();
-                fieldInfoVO.originalTableName = resultSet.getString("originalTableName");
-                fieldInfoVO.originalFieldName = resultSet.getString("originalFieldName");
-                fieldInfoVO.originalFieldDesc = resultSet.getString("originalFieldDesc");
-                fieldInfoVO.originalFramework = resultSet.getString("originalFramework");
-                if (StringUtils.isNotEmpty(fieldInfoVO.originalTableName) && StringUtils.isNotEmpty(fieldInfoVO.originalFieldName)
-                        && StringUtils.isNotEmpty(fieldInfoVO.originalFieldDesc)) {
-                    //if (fieldInfoVO.originalFramework != null && fieldInfoVO.originalFramework.length() > 0)
-                    //fieldInfoVO.originalTableName = fieldInfoVO.originalFramework + "." + fieldInfoVO.originalTableName;
-                    fieldlist.add(fieldInfoVO);
-                }
-            }
-        } catch (Exception ex) {
-            throw new FkException(ResultEnum.ERROR, ":" + ex.getMessage());
-        }
-        return fieldlist;
     }
 
     /**

@@ -7,9 +7,7 @@ import com.fisk.common.core.utils.Dto.cron.NextCronTimeDTO;
 import com.fisk.common.server.datasource.ExternalDataSourceDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.*;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
@@ -84,6 +82,9 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
      */
     ResultEnum deleteDataList(WorkflowTaskGroupDTO dto);
 
+
+
+
     /**
      * 根据不同的类型,获取不同tree
      *
@@ -122,5 +123,16 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
      * @return
      */
     List<String> getNextCronExeTime(NextCronTimeDTO dto);
+
+
+    List<DispatchJobHierarchyDTO> getJobList(QueryJobHierarchyDTO dto);
+
+    /**
+     * 开启或禁用一个或几个任务组或任务
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum forbiddenTask(List<ForbiddenTaskDTO> dto);
 
 }

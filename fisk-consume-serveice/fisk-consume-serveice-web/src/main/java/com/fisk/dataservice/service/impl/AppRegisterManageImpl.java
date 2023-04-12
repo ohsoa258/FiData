@@ -21,6 +21,7 @@ import com.fisk.dataservice.dto.api.doc.*;
 import com.fisk.dataservice.dto.app.*;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.ApiStateTypeEnum;
+import com.fisk.dataservice.enums.AppServiceTypeEnum;
 import com.fisk.dataservice.map.ApiBuiltinParmMap;
 import com.fisk.dataservice.map.ApiParmMap;
 import com.fisk.dataservice.map.AppApiMap;
@@ -39,6 +40,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -55,7 +57,9 @@ import static com.fisk.common.core.constants.ApiConstants.*;
  */
 @Service
 @Slf4j
-public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppConfigPO> implements IAppRegisterManageService {
+public class AppRegisterManageImpl
+        extends ServiceImpl<AppRegisterMapper, AppConfigPO>
+        implements IAppRegisterManageService {
 
     @Resource
     private GetMetadata getMetadata;
@@ -64,7 +68,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
     private GenerateCondition generateCondition;
 
     @Resource
-    private AppApiMapper appApiMapper;
+    private AppServiceConfigMapper appApiMapper;
 
     @Resource
     private ApiRegisterMapper apiRegisterMapper;
@@ -187,10 +191,11 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
             return ResultEnum.DS_APP_EXISTS;
         }
         // 查询应用下是否存在api
-        QueryWrapper<AppApiPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(AppApiPO::getAppId, id).eq(AppApiPO::getApiState, 1)
-                .eq(AppApiPO::getDelFlag, 1);
-        List<AppApiPO> appApiPOS = appApiMapper.selectList(queryWrapper);
+        QueryWrapper<AppServiceConfigPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(AppServiceConfigPO::getAppId, id).eq(AppServiceConfigPO::getApiState, 1)
+                .eq(AppServiceConfigPO::getDelFlag, 1)
+                .eq(AppServiceConfigPO::getType, AppServiceTypeEnum.API.getValue());
+        List<AppServiceConfigPO> appApiPOS = appApiMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(appApiPOS)) {
             // 该应用下没有启用的api，可以直接删除
             return baseMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -214,23 +219,26 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                 List<AppApiSubDTO> collect = saveDTO.dto.stream().filter(item -> item.apiState == ApiStateTypeEnum.Disable.getValue()).collect(Collectors.toList());
                 if (CollectionUtils.isNotEmpty(collect)) {
                     List<Integer> collect1 = collect.stream().map(AppApiSubDTO::getApiId).collect(Collectors.toList());
-                    QueryWrapper<AppApiPO> queryWrapper = new QueryWrapper<>();
+                    QueryWrapper<AppServiceConfigPO> queryWrapper = new QueryWrapper<>();
                     queryWrapper.lambda().
-                            in(AppApiPO::getApiId, collect1)
-                            .eq(AppApiPO::getAppId, collect.get(0).appId)
-                            .eq(AppApiPO::getApiState, ApiStateTypeEnum.Enable.getValue())
-                            .eq(AppApiPO::getDelFlag, 1);
-                    List<AppApiPO> appApiPOS = appApiMapper.selectList(queryWrapper);
+                            in(AppServiceConfigPO::getServiceId, collect1)
+                            .eq(AppServiceConfigPO::getType, AppServiceTypeEnum.API)
+                            .eq(AppServiceConfigPO::getAppId, collect.get(0).appId)
+                            .eq(AppServiceConfigPO::getApiState, ApiStateTypeEnum.Enable.getValue())
+                            .eq(AppServiceConfigPO::getDelFlag, 1);
+                    List<AppServiceConfigPO> appApiPOS = appApiMapper.selectList(queryWrapper);
                     if (CollectionUtils.isNotEmpty(appApiPOS))
                         return ResultEnum.DS_APP_SUBAPI_ENABLE;
                 }
             }
             for (AppApiSubDTO dto : saveDTO.dto) {
                 // 根据应用id和APIID查询是否存在订阅记录
-                QueryWrapper<AppApiPO> queryWrapper = new QueryWrapper<>();
-                queryWrapper.lambda().eq(AppApiPO::getAppId, dto.appId).eq(AppApiPO::getApiId, dto.apiId)
-                        .eq(AppApiPO::getDelFlag, 1);
-                AppApiPO data = appApiMapper.selectOne(queryWrapper);
+                QueryWrapper<AppServiceConfigPO> queryWrapper = new QueryWrapper<>();
+                queryWrapper.lambda().eq(AppServiceConfigPO::getAppId, dto.appId)
+                        .eq(AppServiceConfigPO::getServiceId, dto.apiId)
+                        .eq(AppServiceConfigPO::getType, AppServiceTypeEnum.API.getValue())
+                        .eq(AppServiceConfigPO::getDelFlag, 1);
+                AppServiceConfigPO data = appApiMapper.selectOne(queryWrapper);
                 if (data != null) {
                     if (saveDTO.saveType == 1) {
                         // 存在&取消订阅，删除该订阅记录
@@ -240,7 +248,10 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                     } else if (saveDTO.saveType == 2) {
                         // 存在则修改状态
                         data.setApiState(data.apiState = dto.apiState);
+                        data.setType(AppServiceTypeEnum.API.getValue());
+                        data.setServiceId(dto.apiId);
                         appApiMapper.updateById(data);
+//                        appApiMapper.updateSubscribeById(data.getApiState(), data.getType(), data.getServiceId(), data.getId());
                     }
                 } else {
                     // 未勾选状态，不做任何操作
@@ -248,7 +259,9 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                             && dto.apiState == ApiStateTypeEnum.Disable.getValue())
                         continue;
                     // 不存在则新增
-                    AppApiPO model = AppApiMap.INSTANCES.dtoToPo(dto);
+                    AppServiceConfigPO model = AppApiMap.INSTANCES.dtoToPo(dto);
+                    model.type = AppServiceTypeEnum.API.getValue();
+                    model.serviceId = dto.apiId;
                     appApiMapper.insert(model);
                 }
             }
@@ -276,15 +289,19 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 //        try {
         // 第一步：检验请求参数
         if (dto == null)
-            return ResultEnum.ERROR;
+            return ResultEnum.PARAMTER_NOTNULL;
+        AppConfigPO appConfigPO = baseMapper.selectById(dto.appId);
+        if (appConfigPO == null) {
+            return ResultEnum.DS_APP_EXISTS;
+        }
 //        List<AppApiSubDTO> collect = dto.appApiDto.stream().filter(item -> item.apiState == ApiStateTypeEnum.Enable.getValue()).collect(Collectors.toList());
 //        if (CollectionUtils.isEmpty(collect))
 //            return ResultEnum.DS_APPAPIDOC_DISABLE;
 //        dto.appApiDto = collect;
-        List<AppApiPO> subscribeListByAppId = appApiMapper.getSubscribeListBy(dto.appId);
+        List<AppServiceConfigPO> subscribeListByAppId = appApiMapper.getSubscribeListBy(dto.appId);
         if (CollectionUtils.isEmpty(subscribeListByAppId))
             return ResultEnum.DS_APPAPIDOC_EXISTS;
-        List<Integer> apiIdList = subscribeListByAppId.stream().filter(item -> item.apiState == ApiStateTypeEnum.Enable.getValue()).map(AppApiPO::getApiId).collect(Collectors.toList());
+        List<Integer> apiIdList = subscribeListByAppId.stream().filter(item -> item.apiState == ApiStateTypeEnum.Enable.getValue()).map(AppServiceConfigPO::getServiceId).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(apiIdList))
             return ResultEnum.DS_APPAPIDOC_DISABLE;
         // 第二步：查询需要生成的API接口，在第一步查询时已验证API有效性
@@ -329,7 +346,13 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 //        } else {
 //            return ResultEntityBuild.buildData(ResultEnum.DS_APPAPIDOC_ERROR, saveFilePath);
 //        }
+
         String fileName = "APIServiceDoc" + v + ".pdf";
+//        try {
+//            fileName = new String(appConfigPO.getAppName().getBytes("UTF-8"), "ISO-8859-1") + ".pdf";
+//        } catch (UnsupportedEncodingException e) {
+//            log.error("生成API文档时，字符编码异常：" + e);
+//        }
         OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl",
                 templatePath, fileName, "接口文档", docDTO, response);
         try {
@@ -422,15 +445,15 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
     /**
      * 生成API文档DTO
      *
-     * @param apiList         API信息
-     * @param parmList        API参数信息
-     * @param builtinParmList API内置参数信息
-     * @param fieldList       API字段信息
+     * @param apiList           API信息
+     * @param paramsList        API参数信息
+     * @param builtinParamsList API内置参数信息
+     * @param fieldList         API字段信息
      * @return
      */
     private ApiDocDTO createDocDTO(List<ApiConfigPO> apiList,
-                                   List<ParmConfigPO> parmList,
-                                   List<BuiltinParmPO> builtinParmList,
+                                   List<ParmConfigPO> paramsList,
+                                   List<BuiltinParmPO> builtinParamsList,
                                    List<FieldConfigPO> fieldList) {
         ApiDocDTO apiDocDTO = new ApiDocDTO();
         // API文档基础信息
@@ -438,9 +461,9 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
         // log.info("createDocDTO jsonInfo："+jsonResult);
         apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
         // API文档代码示例 c#
-        apiDocDTO.apiCodeExamples_net=DATASERVICE_APICODEEXAMPLES_NET.replace("{api_prd_address}", api_address);
+        apiDocDTO.apiCodeExamples_net = DATASERVICE_APICODEEXAMPLES_NET.replace("{api_prd_address}", api_address);
         // API文档代码示例 java
-        apiDocDTO.apiCodeExamples_java=DATASERVICE_APICODEEXAMPLES_JAVA.replace("{api_prd_address}", api_address);
+        apiDocDTO.apiCodeExamples_java = DATASERVICE_APICODEEXAMPLES_JAVA.replace("{api_prd_address}", api_address);
 
         apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
                 "&nbsp;&nbsp; \"appAccount\": \"xxx\",\n" +
@@ -451,6 +474,10 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                 "&nbsp;&nbsp; \"data\": \"xxx\", --%s\n" +
                 "&nbsp;&nbsp; \"msg\": \"xxx\"\n" +
                 "}", "2.4.9");
+        // 特殊处理获取token接口的请求参数
+        apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestDTOS_Fixed = apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestDTOS;
+        apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestDTOS = new ArrayList<>();
+
         BigDecimal catalogueIndex = new BigDecimal("2.4");
         List<ApiBasicInfoDTO> apiBasicInfoDTOS = new ArrayList<>();
         for (int i = 0; i < apiList.size(); i++) {
@@ -480,25 +507,59 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 
             /* 设置API请求参数 start */
             List<ApiRequestDTO> apiRequestDTOS = new ArrayList<>();
+            List<ApiRequestDTO> apiRequestDTOS_fixed = new ArrayList<>();
             final int[] trReqIndex = {1};
+            final int[] trReqIndex_fixed = {1};
 
             // 请求参数新增api标识
             ApiRequestDTO requestDTO = new ApiRequestDTO();
-            requestDTO.parmName = "apiCode";
-            requestDTO.isRequired = "是";
-            requestDTO.parmType = "String"; //String特指这个类型，string适用于引用对象
-            requestDTO.parmDesc = String.format("API标识(parmList中忽略): %s (真实数据)", apiConfigPO.getApiCode());
-            requestDTO.trStyle = trReqIndex[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
-            apiRequestDTOS.add(requestDTO);
-            trReqIndex[0]++;
+            requestDTO.setParmName("apiCode");
+            requestDTO.setIsRequired("是");
+            requestDTO.setParmType("String"); //String特指这个类型，string适用于引用对象
+            requestDTO.setParmDesc(String.format("API标识：%s (真实数据)", apiConfigPO.getApiCode()));
+            requestDTO.setTrStyle(trReqIndex_fixed[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff");
+            apiRequestDTOS_fixed.add(requestDTO);
+            trReqIndex_fixed[0]++;
 
-            if (CollectionUtils.isNotEmpty(parmList)) {
-                List<ParmConfigPO> collect = parmList.stream().filter(item -> item.apiId == apiConfigPO.id).collect(Collectors.toList());
+            // 请求参数新增parmList参数说明
+            requestDTO = new ApiRequestDTO();
+            requestDTO.setParmName("parmList");
+            requestDTO.setIsRequired("否");
+            requestDTO.setParmType("HashMap");
+            requestDTO.setParmDesc("API参数列表，详情见parmList参数说明，默认为null");
+            requestDTO.setTrStyle(trReqIndex_fixed[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff");
+            apiRequestDTOS_fixed.add(requestDTO);
+            trReqIndex_fixed[0]++;
+
+            // 请求参数新增分页参数说明
+            requestDTO = new ApiRequestDTO();
+            requestDTO.setParmName("current");
+            requestDTO.setIsRequired("否");
+            requestDTO.setParmType("Integer"); //String特指这个类型，string适用于引用对象
+            requestDTO.setParmDesc("页码，第1页开始，默认为null");
+            requestDTO.setTrStyle(trReqIndex_fixed[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff");
+            apiRequestDTOS_fixed.add(requestDTO);
+            trReqIndex_fixed[0]++;
+
+            // 请求参数新增分页参数说明
+            requestDTO = new ApiRequestDTO();
+            requestDTO.setParmName("size");
+            requestDTO.setIsRequired("否");
+            requestDTO.setParmType("Integer"); //String特指这个类型，string适用于引用对象
+            requestDTO.setParmDesc("页数，建议每页500条，默认为null");
+            requestDTO.setTrStyle(trReqIndex_fixed[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff");
+            apiRequestDTOS_fixed.add(requestDTO);
+            trReqIndex_fixed[0]++;
+
+            apiBasicInfoDTO.apiRequestDTOS_Fixed = apiRequestDTOS_fixed;
+
+            if (CollectionUtils.isNotEmpty(paramsList)) {
+                List<ParmConfigPO> collect = paramsList.stream().filter(item -> item.apiId == apiConfigPO.id).collect(Collectors.toList());
                 if (CollectionUtils.isNotEmpty(collect)) {
                     collect.forEach(e -> {
-                        Optional<BuiltinParmPO> builtinParmOptional = builtinParmList.stream().filter(item -> item.getParmId() == e.id).findFirst();
+                        Optional<BuiltinParmPO> builtinParamsOptional = builtinParamsList.stream().filter(item -> item.getParmId() == e.id).findFirst();
                         // 不是内置参数，在文档中体现
-                        if (!builtinParmOptional.isPresent()) {
+                        if (!builtinParamsOptional.isPresent()) {
                             ApiRequestDTO apiRequestDTO = new ApiRequestDTO();
                             apiRequestDTO.parmName = e.parmName;
                             apiRequestDTO.isRequired = "是";
@@ -539,6 +600,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                     });
                 }
             }
+            apiBasicInfoDTO.apiResponseHeaderDesc = "返回参数（dataArray）说明";
             apiBasicInfoDTO.apiResponseDTOS = apiResponseDTOS;
             apiBasicInfoDTO.apiResponseExamples = String.format("{\n" +
                     " &nbsp;&nbsp;\"code\":200,\n" +
@@ -551,7 +613,6 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                     " &nbsp;&nbsp;},\n" +
                     " &nbsp;&nbsp;\"msg\":\"xxx\"\n" +
                     "}", addIndex + ".9");
-            ;
             /* 设置API返回参数 end */
 
             /* 设置API目录 start */

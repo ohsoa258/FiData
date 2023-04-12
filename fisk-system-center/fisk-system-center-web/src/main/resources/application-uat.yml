@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://192.168.21.13:3306/dmp_system_db_UAT?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://192.168.21.13:3306/FiData_system_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: Password01!
   redis:
@@ -14,3 +14,4 @@ mdmAuthorize:
 # 图片上传
 file:
   uploadurl: /opt/0226/soft/nginx/app/file/dmp/images
+  logoUrl: /opt/0226/soft/nginx/app/file/systemlogo/images

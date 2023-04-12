@@ -13,6 +13,7 @@ import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -90,6 +91,6 @@ public class BuildDataInputDeletePgTableListener {
         } finally {
             acke.acknowledge();
         }
-
     }
+
 }

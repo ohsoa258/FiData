@@ -1,6 +1,7 @@
 package com.fisk.common.core.utils;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.utils.Dto.SqlParmDto;
 import com.fisk.common.core.utils.Dto.SqlWhereDto;
 import com.google.common.base.Joiner;
@@ -62,13 +63,17 @@ public class SqlParmUtils {
      * @param symbol 符号
      * @return String
      */
-    public static String SqlParm(List<SqlParmDto> list, String repSql, String symbol) {
+    public static String SqlParams(List<SqlParmDto> list, String repSql, String symbol, DataSourceTypeEnum dataSourceType) {
         String sql = repSql;
         if (CollectionUtils.isEmpty(list) || sql == null || sql.isEmpty())
             return sql;
+        String flag = "";
+        if (dataSourceType == DataSourceTypeEnum.MYSQL || dataSourceType == DataSourceTypeEnum.SQLSERVER) {
+            flag = "N";
+        }
         for (SqlParmDto item : list) {
             String targetKey = String.format("%s%s", symbol, item.parmName);
-            String replacement = StringUtils.isEmpty(item.parmValue) ? "NULL" : "'" + item.parmValue + "'";
+            String replacement = StringUtils.isEmpty(item.parmValue) ? "NULL" : flag + "'" + item.parmValue + "'";
             sql = sql.replace(targetKey, replacement);
         }
         return sql;
@@ -82,7 +87,7 @@ public class SqlParmUtils {
      * @version v1.0
      * @params list
      */
-    public static <T> String parseListToParmStr(List<T> list) {
+    public static <T> String parseListToParamStr(List<T> list) {
         String result = null;
         if (CollectionUtils.isNotEmpty(list)) {
             result = Joiner.on(",").join(list);
@@ -98,7 +103,7 @@ public class SqlParmUtils {
      * @version v1.0
      * @params string
      */
-    public static String getInParm(List<String> list) {
+    public static String getInParam(List<String> list) {
         list = list.stream().distinct().collect(Collectors.toList());
         StringBuilder sb = new StringBuilder();
         sb.append("(");

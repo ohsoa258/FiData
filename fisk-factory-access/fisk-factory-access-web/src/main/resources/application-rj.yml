@@ -49,3 +49,7 @@ flink-api-config:
   port: 8081
   savepoints: /jobs/:jobid/savepoints
   savepoint-status: /jobs/:jobid/savepoints/:triggerid
+
+sftp:
+  file-path: D:\Fidata\upload\
+  nifi-file-path: /root/nifi-upoad/

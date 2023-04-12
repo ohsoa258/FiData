@@ -6,14 +6,17 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
+import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowUpdateDTO;
 import com.fisk.datafactory.service.INifiCustomWorkflow;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.validation.Valid;
 
 /**
  * @author Lock
@@ -67,7 +70,7 @@ public class NifiCustomWorkflowController {
 
     @ApiOperation("修改管道发布状态")
     @PutMapping("/updatePublishStatus")
-    public void updatePublishStatus(@RequestBody NifiCustomWorkflowDTO dto){
+    public void updatePublishStatus(@RequestBody NifiCustomWorkflowDTO dto) {
         service.updatePublishStatus(dto);
     }
 
@@ -77,4 +80,24 @@ public class NifiCustomWorkflowController {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableListById(id));
     }
+
+    @PutMapping("/updateWorkStatus")
+    @ApiOperation("暂停/恢复管道运行")
+    public ResultEntity<Object> updateWorkStatus(@Validated @RequestBody NifiCustomWorkflowUpdateDTO dto){
+        return service.updateWorkStatus(dto.getNifiCustomWorkflowId(), dto.getIfFire());
+    }
+
+    @GetMapping("/getNifiCustomWorkFlowDrop")
+    @ApiOperation(value = "获取所有管道")
+    public ResultEntity<Object> getNifiCustomWorkFlowDrop() {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getNifiCustomWorkFlowDrop());
+    }
+
+    @GetMapping("/getNifiCustomWorkFlowPartInfo")
+    @ApiOperation(value = "依据pipelTraceId获取管道部分字段信息")
+    public ResultEntity<Object> getNifiCustomWorkFlowPartInfo(@RequestParam("pipelTraceId") String pipelTraceId){
+        return service.getNifiCustomWorkFlowPartInfo(pipelTraceId);
+    }
+
 }

@@ -78,8 +78,14 @@ public class FactController {
 
     @ApiOperation("修改事实发布状态")
     @PutMapping("/updateFactPublishStatus")
-    public void updateFactPublishStatus(@RequestBody ModelPublishStatusDTO dto){
+    public void updateFactPublishStatus(@RequestBody ModelPublishStatusDTO dto) {
         service.updateFactPublishStatus(dto);
+    }
+
+    @ApiOperation("获取发布成功所有事实表")
+    @GetMapping("/getPublishSuccessFactTable/{businessId}")
+    public ResultEntity<Object> getPublishSuccessFactTable(@PathVariable("businessId") int businessId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getPublishSuccessFactTable(businessId));
     }
 
 }

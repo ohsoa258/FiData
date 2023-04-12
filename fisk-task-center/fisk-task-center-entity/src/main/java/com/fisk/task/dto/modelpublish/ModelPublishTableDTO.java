@@ -41,4 +41,42 @@ public class ModelPublishTableDTO {
 
     @ApiModelProperty(value = "事实表-维度键的更新sql集合")
     public String factUpdateSql;
+
+    /**
+     * 单个数据流文件加载最大数据行
+     */
+    public int maxRowsPerFlowFile;
+    /**
+     * 单次从结果集中提取的最大数据行
+     */
+    public int fetchSize;
+    /**
+     * 自定义脚本
+     */
+    public String customScript;
+
+    /**
+     * 自定义脚本最后执行
+     */
+    public String customScriptAfter;
+
+    /**
+     * 目标源id
+     */
+    public Integer targetDbId;
+
+    /**
+     * 来源id
+     */
+    public Integer dataSourceDbId;
+
+    /**
+     * 临时表名称
+     */
+    public String prefixTempName;
+
+    /**
+     * 覆盖脚本执行SQL语句
+     */
+    public String coverScript;
 }

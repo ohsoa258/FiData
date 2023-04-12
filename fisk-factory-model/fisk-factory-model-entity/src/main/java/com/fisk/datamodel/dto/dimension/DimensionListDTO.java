@@ -21,6 +21,10 @@ public class DimensionListDTO {
      */
     public String dimensionTabName;
     /**
+     * 维度临时表名称
+     */
+    public String prefixTempName;
+    /**
      * 发布状态：0: 未发布  1: 发布成功  2: 发布失败  3: 正在发布
      */
     public int isPublish;

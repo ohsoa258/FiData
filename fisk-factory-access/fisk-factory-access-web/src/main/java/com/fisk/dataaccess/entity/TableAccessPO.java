@@ -8,13 +8,15 @@ import com.fisk.dataaccess.enums.ScanStartupModeEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.io.Serializable;
+
 /**
  * @author Lock
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("tb_table_access")
-public class TableAccessPO extends BasePO {
+public class TableAccessPO extends BasePO implements Serializable {
 
     @TableId(value = "id", type = IdType.AUTO)
     public long id;
@@ -70,6 +72,11 @@ public class TableAccessPO extends BasePO {
     public String sheet;
 
     /**
+     * excel sheet数据开始读取行数
+     */
+    public Integer startLine;
+
+    /**
      * 发布错误信息
      */
     public String publishErrorMsg;
@@ -113,5 +120,20 @@ public class TableAccessPO extends BasePO {
      * stg数据保留天数
      */
     public String keepNumber;
+
+    /**
+     * 应用数据源id
+     */
+    public Integer appDataSourceId;
+
+    /**
+     * 业务时间覆盖的where条件
+     */
+    public String whereScript;
+
+    /**
+     * 覆盖脚本
+     */
+    public String coverScript;
 
 }

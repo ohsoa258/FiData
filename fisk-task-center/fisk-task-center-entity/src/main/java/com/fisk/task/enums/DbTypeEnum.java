@@ -8,7 +8,9 @@ import com.fisk.common.core.enums.BaseEnum;
  * Description:
  */
 public enum DbTypeEnum implements BaseEnum {
-
+    /**
+     * sqlserver
+     */
     sqlserver(0, "sqlserver"),
     mysql(1, "mysql"),
     postgresql(2, "postgresql"),
@@ -22,7 +24,8 @@ public enum DbTypeEnum implements BaseEnum {
      * 非实时api
      */
     api(6, "api"),
-    oracle_cdc(8, "oracle-cdc");
+    oracle_cdc(8, "oracle-cdc"),
+    sftp(9, "sftp");
 
     DbTypeEnum(int value, String name) {
         this.value = value;

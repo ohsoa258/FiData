@@ -12,8 +12,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class BusinessFilterEditDTO extends BusinessFilterDTO {
     /**
-     * id
+     * 主键id
      */
-    @ApiModelProperty(value = "id")
+    @ApiModelProperty(value = "主键id")
     public int id;
 }

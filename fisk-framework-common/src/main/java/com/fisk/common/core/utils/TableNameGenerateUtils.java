@@ -1,9 +1,11 @@
 package com.fisk.common.core.utils;
 
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author JianWenYang
@@ -52,6 +54,45 @@ public class TableNameGenerateUtils {
             str.append(stg);
         } else {
             str.append(stg);
+            str.append(appAbbreviation);
+            str.append("_");
+        }
+        str.append(tableName);
+        return str.toString();
+    }
+
+    /**
+     * 生成ods架构名
+     *
+     * @param appAbbreviation 应用简称
+     * @param whetherSchema   是否是架构名
+     * @return
+     */
+    public static String buildOdsSchemaName(String appAbbreviation, Boolean whetherSchema) {
+        StringBuilder str = new StringBuilder();
+        if (whetherSchema) {
+            str.append(appAbbreviation);
+            //str.append(".");
+        }
+//        else {
+//            str.append(ods);
+//            str.append(appAbbreviation);
+//            str.append("_");
+//        }
+        return str.toString();
+    }
+
+    /**
+     * 生成ods表名称，不带架构名
+     *
+     * @param appAbbreviation 应用简称
+     * @param whetherSchema   是否是架构名
+     * @return
+     */
+    public static String buildOdsTableRelName(String tableName, String appAbbreviation, Boolean whetherSchema) {
+        StringBuilder str = new StringBuilder();
+        if (!whetherSchema) {
+            str.append(ods);
             str.append(appAbbreviation);
             str.append("_");
         }
@@ -111,14 +152,18 @@ public class TableNameGenerateUtils {
      * @param tableName
      * @return
      */
-    public static List<String> getSchemaAndTableName(String tableName) {
+    public static List<String> getSchemaAndTableName(String tableName, DataSourceTypeEnum type) {
         List<String> list = new ArrayList<>();
         if (tableName.contains(".")) {
             String[] split = tableName.split("\\.");
             list.add(split[0]);
             list.add(split[1]);
         } else {
-            list.add("dbo");
+            if (Objects.equals(type, DataSourceTypeEnum.POSTGRESQL)) {
+                list.add("public");
+            } else if (Objects.equals(type, DataSourceTypeEnum.SQLSERVER)) {
+                list.add("dbo");
+            }
             list.add(tableName);
         }
         return list;

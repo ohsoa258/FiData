@@ -43,6 +43,13 @@ public enum ComponentIdTypeEnum implements BaseEnum {
     DORIS_OLAP_DB_POOL_USERNAME(17,"DORIS_OLAP_DB_POOL_USERNAME"),
     DORIS_OLAP_DB_POOL_URL(18,"DORIS_OLAP_DB_POOL_URL"),
 
+    /**
+     * 加载所有数据源配置变量key
+     */
+    DB_USERNAME(19, "DATASOURCE_USERNAME_"),
+    DB_PASSWORD(20, "DATASOURCE_PASSWORD_"),
+    DB_URL(21, "DATASOURCE_URL_"),
+
     /*
     * 日常流程生成组Dailynififlow
     * */
@@ -54,6 +61,10 @@ public enum ComponentIdTypeEnum implements BaseEnum {
     PIPELINE_NIFI_FLOW_GROUP_ID(6,"pipelineNifiFlowGroupId"),
 
     TRIGGERSCHEDULING_NIFI_FLOW_GROUP_ID(19,"triggerSchedulingNifiFlowGroupId"),
+    /**
+     * 表服务组
+     */
+    TABLE_SERVICE_NIFI_FLOW_GROUP_ID(22,"tableServiceNifiFlowGroupId"),
 
     KAFKA_BROKERS(20,"KAFKA_BROKERS"),
 

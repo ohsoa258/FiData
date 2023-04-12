@@ -5,12 +5,6 @@ import lombok.Data;
 
 import java.util.List;
 
-/**
- * @author dick
- * @version 1.0
- * @description TDDD
- * @date 2022/10/8 16:53
- */
 @Data
 public class BusinessFilterQueryApiVO {
     /**

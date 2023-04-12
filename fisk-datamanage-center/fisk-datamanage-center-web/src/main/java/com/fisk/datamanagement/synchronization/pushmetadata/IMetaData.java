@@ -27,7 +27,10 @@ public interface IMetaData {
      * @param data
      * @return
      */
-    ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data);
+    ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data,String currUserName);
+
+
+    ResultEnum addFiledAndUpdateFiled(List<MetaDataInstanceAttributeDTO> data);
 
     /**
      * 删除元数据实体
@@ -43,5 +46,7 @@ public interface IMetaData {
      * @param dto
      */
     void synchronousTableBusinessMetaData(BusinessMetaDataInfoDTO dto);
+
+    void test();
 
 }

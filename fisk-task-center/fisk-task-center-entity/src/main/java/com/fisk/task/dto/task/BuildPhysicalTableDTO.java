@@ -62,6 +62,11 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
      * 是否是表格同步
      */
     public boolean excelFlow;
+
+    /**
+     * 是否是sftp
+     */
+    public boolean sftpFlow;
     /**
      * 是否是schema结构
      */
@@ -78,5 +83,54 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
      * 获取版本的语句
      */
     public String generateVersionSql;
+    /**
+     * 单个数据流文件加载最大数据行
+     */
+    public int maxRowsPerFlowFile;
+    /**
+     * 单次从结果集中提取的最大数据行
+     */
+    public int fetchSize;
+
+    /**
+     * sheet名
+     */
+    public String sheetName;
+
+    /**
+     * 数据来源id
+     */
+    public Integer dataSourceDbId;
+
+    /**
+     * 目标数据源id
+     */
+    public Integer targetDbId;
+
+    /**
+     * 执行删除ods的sql语句
+     */
+    public String whereScript;
+
+    /**
+     * 从stg加载数据同步到ods的sql语句
+     */
+    public String syncStgToOdsSql;
+
+    /**
+     * 临时表(建模temp_tablename)建表语句
+     */
+    public String buildTableSql;
+
+    /**
+     * 发布历史id
+     */
+    public Long tableHistoryId;
+
+    /**
+     * 覆盖脚本
+     */
+    public String coverScript;
+
 
 }

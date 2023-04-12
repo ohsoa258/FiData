@@ -28,7 +28,7 @@ public class SwaggerConfig {
     public static final String DATA_CHECK_CONTROLLER = "data-check-controller";
     public static final String DATASOURCE_CONTROLLER = "datasource-controller";
     public static final String LIFECYCLE_CONTROLLER = "lifecycle-controller";
-    public static final String NOTICE_CONTROLLER = "notice-controller";
+    public static final String QUALITY_REPORT_CONTROLLER = "quality_report-controller";
     public static final String TEMPLATE_CONTROLLER = "template-controller";
     public static final String DATA0PSLOG_CONTROLLER = "data_ops_log-controller";
     public static final String DATA_QUALITY_CLIENT_CONTROLLER = "data-quality-client-controller";
@@ -38,6 +38,7 @@ public class SwaggerConfig {
     public static final String USER_GROUP_INFO = "user-group-info-controller";
     public static final String USER_GROUP_ASSIGNMENT = "user-group-assignment-controller";
     public static final String COLUMN_SECURITY_CONFIG = "column-security-config-controller\n";
+    public static final String INTELLIGENT_DISCOVERY = "intelligent-discovery-controller";
 
 
     @Bean
@@ -46,14 +47,15 @@ public class SwaggerConfig {
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
                 .tags(new Tag(TEST, "测试"))
-                .tags(new Tag(BUSINESS_FILTER_CONTROLLER, "业务清洗API"))
-                .tags(new Tag(DATA_CHECK_CONTROLLER, "数据校验API"))
+                .tags(new Tag(BUSINESS_FILTER_CONTROLLER, "清洗规则API"))
+                .tags(new Tag(DATA_CHECK_CONTROLLER, "校验规则API"))
                 .tags(new Tag(DATASOURCE_CONTROLLER, "数据源API"))
-                .tags(new Tag(LIFECYCLE_CONTROLLER, "生命周期API"))
-                .tags(new Tag(NOTICE_CONTROLLER, "告警通知API"))
+                .tags(new Tag(LIFECYCLE_CONTROLLER, "回收规则API"))
+                .tags(new Tag(QUALITY_REPORT_CONTROLLER, "质量报告API"))
                 .tags(new Tag(TEMPLATE_CONTROLLER, "模板配置API"))
                 .tags(new Tag(DATA0PSLOG_CONTROLLER, "数据运维日志API"))
                 .tags(new Tag(DATA_QUALITY_CLIENT_CONTROLLER, "数据质量服务接口API"))
+                .tags(new Tag(INTELLIGENT_DISCOVERY, "数据安全-智能发现API"))
                 .tags(new Tag(TABLE_SECURITY_CONFIG_CONTROLLER, "表级安全API"))
                 .tags(new Tag(DATA_MASKING_CONFIG_CONTROLLER, "数据脱敏API"))
                 .tags(new Tag(ROW_SECURITY_CONFIG_CONTROLLER, "行级安全API"))

@@ -1,6 +1,5 @@
 package com.fisk.dataservice.vo.apiservice;
 
-import com.alibaba.fastjson.JSONArray;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.List;

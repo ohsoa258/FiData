@@ -21,5 +21,7 @@ public class PipelLogVO extends BasePO {
     public String typeName;
     @ApiModelProperty(value = "调度的管道名称")
     public String pipelName;
+    @ApiModelProperty(value = "天数范围")
+    public int lookday;
 
 }

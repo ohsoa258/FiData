@@ -100,7 +100,7 @@ public class DataAccessScheduleImpl implements SchedulingConfigurer {
                     .eq("drive_type", DataSourceTypeEnum.ORACLE.getName())
                     .list();
             if (CollectionUtils.isNotEmpty(dataSourcePoList)) {
-                dataSourcePoList.forEach(e -> dataSourceImpl.setDataSourceMeta(e.appId));
+                dataSourcePoList.forEach(e -> dataSourceImpl.setDataSourceMeta(e.id));
             }
         } catch (Exception e) {
             throw new FkException(ResultEnum.LOAD_DATASOURCE_META, e);

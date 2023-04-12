@@ -28,6 +28,10 @@ public class SwaggerConfig {
     public static final String TAG_3 = "apiregister-controller";
     public static final String TAG_4 = "apiservice-controller";
     public static final String TAG_5 = "logs-controller";
+    public static final String TAG_6 = "dataAnalysisView-controller";
+    public static final String TAG_7 = "tableservice-controller";
+    public static final String TAG_8 = "serviceAnalyse-controller";
+    public static final String TAG_9 = "apiTableViewService-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -39,6 +43,10 @@ public class SwaggerConfig {
                 .tags(new Tag(TAG_3,"API接口"))
                 .tags(new Tag(TAG_4,"API服务接口"))
                 .tags(new Tag(TAG_5,"数据服务日志"))
+                .tags(new Tag(TAG_8,"服务数据分析"))
+                .tags(new Tag(TAG_6,"视图服务接口"))
+                .tags(new Tag(TAG_7,"表服务接口"))
+                .tags(new Tag(TAG_9,"数据服务元数据调用"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())
@@ -76,7 +84,7 @@ public class SwaggerConfig {
 
         return new ApiInfoBuilder()
                 .title("菲斯科  白泽项目  接口文档")
-                .description("Create by Lock")
+                .description("Create by Dick")
                 .version("1.0.0测试版")
                 .build();
     }

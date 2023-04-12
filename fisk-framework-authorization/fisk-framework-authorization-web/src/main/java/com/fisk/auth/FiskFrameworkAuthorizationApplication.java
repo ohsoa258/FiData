@@ -20,6 +20,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.common.core.user",
         "com.fisk.common.framework.advice",
         "com.fisk.common.framework.redis",
+        "com.fisk.common.framework.feign",
+        "com.fisk.common.framework.hystrix",
         "com.fisk.common.framework.jwt",
         "com.fisk.common.framework.config",
         "com.fisk.common.framework.properties",

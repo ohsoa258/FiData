@@ -1,6 +1,5 @@
 package com.fisk.datagovernance.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -15,6 +14,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author dick
@@ -29,10 +29,10 @@ public class LifecycleController {
     @Resource
     private ILifecycleManageService service;
 
-    @ApiOperation("分页查询生命周期模板组件")
-    @PostMapping("/page")
-    public ResultEntity<Page<LifecycleVO>> getAll(@RequestBody LifecycleQueryDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAll(dto));
+    @ApiOperation("查询全部回收规则")
+    @PostMapping("/getAllRule")
+    public ResultEntity<List<LifecycleVO>> getAllRule(@RequestBody LifecycleQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllRule(dto));
     }
 
     @ApiOperation("添加生命周期模板组件")

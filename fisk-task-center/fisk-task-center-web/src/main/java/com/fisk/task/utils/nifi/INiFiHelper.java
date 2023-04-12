@@ -11,6 +11,7 @@ import com.fisk.task.dto.nifi.FunnelDTO;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.TableNifiSettingDTO;
+import com.fisk.task.dto.task.UpdateControllerServiceConfigDTO;
 import com.fisk.task.vo.ProcessGroupsVO;
 
 import java.util.List;
@@ -472,6 +473,12 @@ public interface INiFiHelper {
     void buildNifiGlobalVariable(Map<String, String> variable);
 
     /**
+     * 修改nifi全局变量
+     * @param variable
+     */
+    void updateNifiGlobalVariable(Map<String, String> variable);
+
+    /**
      * getSqlForPgOds
      *
      * @param config 配置信息
@@ -570,5 +577,17 @@ public interface INiFiHelper {
      */
     public List<ProcessorEntity> stopProcessor(String groupId, ProcessorEntity processorEntity);
 
+    /**
+     * 创建sftp组件
+     * @param data
+     * @return
+     */
+    public BusinessResult<ProcessorEntity> buildFetchSFTPProcess(BuildFetchSFTPProcessorDTO data);
+
+    /**
+     * 修改控制器服务配置信息
+     * @param dto 修改参数
+     */
+    BusinessResult<String> UpdateDbControllerServiceConfig(UpdateControllerServiceConfigDTO dto);
 
 }

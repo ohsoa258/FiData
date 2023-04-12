@@ -24,4 +24,9 @@ public class TableHistoryPO extends BasePO {
      * 发布备注
      */
     public String  remark;
+
+    /**
+     *关联发布日志标识
+     */
+    public String subRunId;
 }

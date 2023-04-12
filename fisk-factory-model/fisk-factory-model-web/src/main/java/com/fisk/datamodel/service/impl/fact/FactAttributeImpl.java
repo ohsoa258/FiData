@@ -17,6 +17,7 @@ import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.FieldNameDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
+import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSelectDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.fact.FactAttributeDetailDTO;
@@ -31,6 +32,7 @@ import com.fisk.datamodel.entity.dimension.DimensionPO;
 import com.fisk.datamodel.entity.fact.BusinessProcessPO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
 import com.fisk.datamodel.entity.fact.FactPO;
+import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.enums.SyncModeEnum;
 import com.fisk.datamodel.enums.TableHistoryTypeEnum;
@@ -45,7 +47,9 @@ import com.fisk.datamodel.mapper.fact.BusinessProcessMapper;
 import com.fisk.datamodel.mapper.fact.FactAttributeMapper;
 import com.fisk.datamodel.mapper.fact.FactMapper;
 import com.fisk.datamodel.service.IFactAttribute;
+import com.fisk.datamodel.service.impl.CustomScriptImpl;
 import com.fisk.datamodel.service.impl.SyncModeImpl;
+import com.fisk.datamodel.service.impl.SystemVariablesImpl;
 import com.fisk.datamodel.service.impl.TableBusinessImpl;
 import com.fisk.datamodel.service.impl.widetable.WideTableImpl;
 import com.fisk.datamodel.utils.mysql.DataSourceConfigUtil;
@@ -90,6 +94,10 @@ public class FactAttributeImpl
     DataAccessClient dataAccessClient;
     @Resource
     DataSourceConfigUtil dataSourceConfigUtil;
+    @Resource
+    CustomScriptImpl customScript;
+    @Resource
+    SystemVariablesImpl systemVariables;
 
     @Override
     public List<FactAttributeListDTO> getFactAttributeList(int factId) {
@@ -100,14 +108,20 @@ public class FactAttributeImpl
     @Override
     public ResultEnum addFactAttribute(FactAttributeAddDTO dto) {
         //判断是否存在
-        FactPO factPo=factMapper.selectById(dto.factId);
+        FactPO factPo = factMapper.selectById(dto.factId);
         if (factPo == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+
+        //系统变量
+        if (!org.springframework.util.CollectionUtils.isEmpty(dto.deltaTimes)) {
+            systemVariables.addSystemVariables(dto.factId, dto.deltaTimes, CreateTypeEnum.CREATE_FACT.getValue());
+        }
+
         //添加增量配置
         SyncModePO syncModePo = SyncModeMap.INSTANCES.dtoToPo(dto.syncModeDTO);
         boolean syncMode = this.syncMode.saveOrUpdate(syncModePo);
-        boolean tableBusiness=true;
+        boolean tableBusiness = true;
         if (dto.syncModeDTO.syncMode == SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
             QueryWrapper<SyncModePO> syncModePoQueryWrapper = new QueryWrapper<>();
             syncModePoQueryWrapper.lambda().eq(SyncModePO::getSyncTableId, dto.syncModeDTO.syncTableId)
@@ -122,8 +136,12 @@ public class FactAttributeImpl
         if (!syncMode || !tableBusiness) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
+
+        //自定义脚本
+        customScript.addOrUpdateCustomScript(dto.customScriptList);
+
         //删除维度字段属性
-        List<Integer> ids=(List)dto.list.stream().filter(e->e.id!=0)
+        List<Integer> ids = (List) dto.list.stream().filter(e -> e.id != 0)
                 .map(FactAttributeDTO::getId)
                 .collect(Collectors.toList());
         if (ids != null && ids.size() > 0) {
@@ -138,24 +156,27 @@ public class FactAttributeImpl
         }
         // TODO 添加事实字段(新增了config_details字段,用于存维度key的json连线配置信息)
         List<FactAttributePO> poList = FactAttributeMap.INSTANCES.addDtoToPoList(dto.list);
-        poList.stream().map(e->e.factId=dto.factId).collect(Collectors.toList());
+        poList.stream().map(e -> e.factId = dto.factId).collect(Collectors.toList());
         if (!this.saveOrUpdateBatch(poList)) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        //修改发布状态
+        factPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
+        factPo.dimensionKeyScript = dto.dimensionKeyScript;
+        factPo.coverScript = dto.coverScript;
+        if (factMapper.updateById(factPo) == 0) {
+            throw new FkException(ResultEnum.PUBLISH_FAILURE);
         }
         //是否发布
         if (dto.isPublish) {
             BusinessProcessPublishQueryDTO queryDTO = new BusinessProcessPublishQueryDTO();
             List<Integer> dimensionIds = new ArrayList<>();
             dimensionIds.add(dto.factId);
-            //修改发布状态
-            factPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
-            if (factMapper.updateById(factPo) == 0) {
-                throw new FkException(ResultEnum.PUBLISH_FAILURE);
-            }
+
             queryDTO.factIds = dimensionIds;
             queryDTO.businessAreaId = factPo.businessId;
-            queryDTO.remark=dto.remark;
-            queryDTO.syncMode=dto.syncModeDTO.syncMode;
+            queryDTO.remark = dto.remark;
+            queryDTO.syncMode = dto.syncModeDTO.syncMode;
             queryDTO.openTransmission=dto.openTransmission;
             return businessProcess.batchPublishBusinessProcess(queryDTO);
         }
@@ -193,6 +214,11 @@ public class FactAttributeImpl
         po.factFieldLength=dto.factFieldLength;
         po.factFieldEnName=dto.factFieldEnName;
         po.factFieldType=dto.factFieldType;
+
+        //系统变量
+        if (!org.springframework.util.CollectionUtils.isEmpty(dto.deltaTimes)) {
+            systemVariables.addSystemVariables(dto.id, dto.deltaTimes, CreateTypeEnum.CREATE_FACT.getValue());
+        }
         return mapper.updateById(po)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -258,7 +284,8 @@ public class FactAttributeImpl
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         data.sqlScript = po.sqlScript;
-        data.appId = po.appId;
+        data.dataSourceId = po.dataSourceId;
+        data.dimensionKeyScript = po.dimensionKeyScript;
         QueryWrapper<FactAttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(FactAttributePO::getFactId, factId);
         List<FactAttributePO> list = mapper.selectList(queryWrapper);
@@ -271,17 +298,28 @@ public class FactAttributeImpl
         if (syncModePo == null) {
             return data;
         }
-        data.syncModeDTO=SyncModeMap.INSTANCES.poToDto(syncModePo);
-        if (syncModePo.syncMode != SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
-            return data;
+        data.syncModeDTO = SyncModeMap.INSTANCES.poToDto(syncModePo);
+        if (syncModePo.syncMode == SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
+            QueryWrapper<TableBusinessPO> tableBusinessPoQueryWrapper = new QueryWrapper<>();
+            tableBusinessPoQueryWrapper.lambda().eq(TableBusinessPO::getSyncId, syncModePo.id);
+            TableBusinessPO tableBusinessPo = tableBusiness.getOne(tableBusinessPoQueryWrapper);
+            if (tableBusinessPo == null) {
+                return data;
+            }
+            data.syncModeDTO.syncTableBusinessDTO = TableBusinessMap.INSTANCES.poToDto(tableBusinessPo);
         }
-        QueryWrapper<TableBusinessPO> tableBusinessPoQueryWrapper=new QueryWrapper<>();
-        tableBusinessPoQueryWrapper.lambda().eq(TableBusinessPO::getSyncId,syncModePo.id);
-        TableBusinessPO tableBusinessPo=tableBusiness.getOne(tableBusinessPoQueryWrapper);
-        if (tableBusinessPo == null) {
-            return data;
-        }
-        data.syncModeDTO.syncTableBusinessDTO=TableBusinessMap.INSTANCES.poToDto(tableBusinessPo);
+        //自定义脚本
+        CustomScriptQueryDTO queryDto = new CustomScriptQueryDTO();
+        queryDto.tableId = factId;
+        queryDto.type = 2;
+        queryDto.execType = 1;
+        data.customScriptList = customScript.listCustomScript(queryDto);
+
+        queryDto.execType = 2;
+        data.customScriptList.addAll(customScript.listCustomScript(queryDto));
+        data.execSql = po.coverScript;
+
+        data.deltaTimes = systemVariables.getSystemVariable(factId, CreateTypeEnum.CREATE_FACT.getValue());
         return data;
     }
 
@@ -361,7 +399,7 @@ public class FactAttributeImpl
         queryWrapper1.lambda()
                 .eq(DimensionPO::getBusinessId, id)
                 .eq(DimensionPO::getShare, false)
-                .eq(DimensionPO::getIsPublish,1)
+                .eq(DimensionPO::getIsPublish, 1)
                 .select(DimensionPO::getId, DimensionPO::getDimensionTabName, DimensionPO::getShare);
         List<DimensionPO> dimensionPoList = dimensionMapper.selectList(queryWrapper1);
 
@@ -519,37 +557,45 @@ public class FactAttributeImpl
                 .filter(e -> StringUtils.isNotBlank(e.configDetails))
                 .collect(Collectors.toMap(FactAttributePO::getFactFieldEnName, FactAttributePO::getConfigDetails));
 
-        StringBuilder str = new StringBuilder();
-        if (!CollectionUtils.isEmpty(configDetailsMap)) {
-
-
-            for (Map.Entry<String, String> entry : configDetailsMap.entrySet()) {
-
-                // 当前维度key关联关系
-                WideTableFieldConfigDTO dto = JSON.parseObject(entry.getValue(), WideTableFieldConfigDTO.class);
-                List<TableSourceRelationsDTO> relations = dto.relations;
-                if (!CollectionUtils.isEmpty(relations)) {
-                    // 先做单连线
-                    TableSourceRelationsDTO relationsDto = relations.get(0);
-                    str.append("update ").append(relationsDto.sourceTable)
-                            .append(" set ")
-                            .append(" = ")
-                            .append(relationsDto.targetTable).append(".").append(entry.getKey())
-                            .append(" from ")
-                            .append(relationsDto.targetTable)
-                            .append(" where ")
-                            .append(relationsDto.sourceTable).append(".").append(relationsDto.sourceColumn)
-                            .append(" = ")
-                            .append(relationsDto.targetTable).append(".").append(relationsDto.targetColumn)
-                            .append(";");
-                }
-            }
-        }
-
-        if (StringUtils.isNotBlank(str.toString())) {
-            return str.toString();
-        } else {
+        if (CollectionUtils.isEmpty(configDetailsMap)) {
             return null;
         }
+
+        return buildUpdateSql(configDetailsMap);
     }
+
+    public String buildUpdateSql(Map<String, String> configDetailsMap) {
+
+        StringBuilder str = new StringBuilder();
+
+        for (Map.Entry<String, String> entry : configDetailsMap.entrySet()) {
+
+            // 当前维度key关联关系
+            List<TableSourceRelationsDTO> dto = JSON.parseArray(entry.getValue(), TableSourceRelationsDTO.class);
+            List<TableSourceRelationsDTO> relations = dto;
+            if (CollectionUtils.isEmpty(relations)) {
+                continue;
+            }
+            // 先做单连线
+            TableSourceRelationsDTO relationsDto = relations.get(0);
+            str.append("update ");
+            str.append(relationsDto.sourceTable);
+            str.append(" set ");
+            str.append(" = ");
+            str.append(relationsDto.targetTable).append(".").append(entry.getKey());
+            str.append(" from ");
+            str.append(relationsDto.targetTable);
+            str.append(" where ");
+            str.append(relationsDto.sourceTable).append(".").append(relationsDto.sourceColumn);
+            str.append(" = ");
+            str.append(relationsDto.targetTable).append(".").append(relationsDto.targetColumn);
+            str.append(";");
+        }
+
+        if (StringUtils.isEmpty(str.toString())) {
+            return null;
+        }
+        return str.toString();
+    }
+
 }

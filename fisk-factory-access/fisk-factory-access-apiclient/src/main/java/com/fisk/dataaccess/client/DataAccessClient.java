@@ -7,13 +7,16 @@ import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.dto.access.NifiAccessDTO;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.app.AppDriveTypeDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
+import com.fisk.dataaccess.dto.app.AppRegistrationInfoDTO;
 import com.fisk.dataaccess.dto.app.LogMessageFilterVO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.dataaccess.dto.dataops.TableInfoDTO;
 import com.fisk.dataaccess.dto.ftp.CopyFtpFileDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
@@ -341,4 +344,52 @@ public interface DataAccessClient {
     @PostMapping("/tableFields/delTableVersion")
     @ApiOperation(value = "删除表版本")
     ResultEntity<Object> delVersionData(@Validated @RequestBody TableVersionDTO dto);
+
+    /**
+     * 根据表名获取接入表信息
+     *
+     * @param tableName
+     * @return
+     */
+    @ApiOperation("根据表名获取接入表信息")
+    @PostMapping("/DataOps/getTableInfo")
+    ResultEntity<TableInfoDTO> getTableInfo(@Validated @RequestBody String tableName);
+
+    /**
+     * 根据表名字段显示名称
+     *
+     * @param tableName
+     * @return
+     */
+    @ApiOperation("根据表名字段显示名称")
+    @PostMapping("/DataOps/getTableColumnDisplay")
+    ResultEntity<List<String[]>> getTableColumnDisplay(@Validated @RequestBody String tableName);
+
+    /**
+     * 元数据同步应用信息
+     *
+     * @return
+     */
+    @GetMapping("/appRegistration/synchronizationAppRegistration")
+    @ApiOperation(value = "元数据同步应用信息")
+    ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAppRegistration();
+
+    /**
+     * 元数据同步所有接入表
+     *
+     * @return
+     */
+    @GetMapping("/appRegistration/synchronizationAccessTable")
+    @ApiOperation(value = "元数据同步所有接入表")
+    ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAccessTable();
+
+    /**
+     * 依据应用id集合批量查询目标源id集合
+     *
+     * @param appIds
+     * @return
+     */
+    @PostMapping("/appRegistration/getBatchTargetDbIdByAppIds")
+    @ApiOperation(value = "依据应用id集合查询目标源id集合")
+    ResultEntity<List<AppRegistrationInfoDTO>> getBatchTargetDbIdByAppIds(@RequestBody List<Integer> appIds);
 }

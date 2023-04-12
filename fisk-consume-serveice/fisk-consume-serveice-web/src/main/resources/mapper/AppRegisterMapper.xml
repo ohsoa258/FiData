@@ -2,6 +2,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.fisk.dataservice.mapper.AppRegisterMapper">
+    <cache eviction="LRU" flushInterval="100000" readOnly="true" size="256"/>
     <select id="filter" resultType="com.fisk.dataservice.vo.app.AppRegisterVO">
         select id,
         app_name,

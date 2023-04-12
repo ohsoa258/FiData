@@ -9,6 +9,8 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * @author dick
  * @version 1.0
@@ -18,18 +20,11 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface DataCheckMapper extends FKBaseMapper<DataCheckPO> {
     /**
-     * 查询数据校验分页列表
+     * 查询数据校验列表
      *
-     * @param page    分页信息
-     * @param keyword where条件
-     * @param tableUnique 表名称/id
      * @return 查询结果
      */
-    Page<DataCheckVO> getAll(Page<DataCheckVO> page,
-                             @Param("datasourceId") int datasourceId,
-                             @Param("tableUnique") String tableUnique,
-                             @Param("tableBusinessType") int tableBusinessType,
-                             @Param("keyword") String keyword);
+    List<DataCheckVO> getAllRule();
 
     /**
      * 新增一条数据并返回生成的主键id

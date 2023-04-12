@@ -9,10 +9,14 @@ import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
 import com.fisk.datamanagement.dto.entity.EntityDTO;
 import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
 import com.fisk.datamanagement.dto.entity.EntityTypeDTO;
+import com.fisk.datamanagement.dto.lineagemaprelation.LineageMapRelationDTO;
+import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
 import com.fisk.datamanagement.dto.process.*;
+import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.entity.MetadataMapAtlasPO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
+import com.fisk.datamanagement.mapper.MetadataEntityMapper;
 import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
 import com.fisk.datamanagement.service.IProcess;
 import com.fisk.datamanagement.synchronization.pushmetadata.impl.MetaDataImpl;
@@ -27,6 +31,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -41,6 +46,11 @@ public class ProcessImpl implements IProcess {
     MetaDataImpl metaData;
     @Resource
     MetadataMapAtlasMapper metadataMapAtlasMapper;
+
+    @Resource
+    MetadataEntityMapper metadataEntityMapper;
+
+
     @Resource
     EntityImpl entityImpl;
 
@@ -52,7 +62,7 @@ public class ProcessImpl implements IProcess {
     @Override
     public ProcessDTO getProcess(String processGuid) {
         ProcessDTO dto = new ProcessDTO();
-        ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + processGuid);
+        /*ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + processGuid);
         if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS) {
             return dto;
         }
@@ -84,8 +94,46 @@ public class ProcessImpl implements IProcess {
                     .stream()
                     .filter(e -> !delInputGuidList.contains(e.guid)).collect(Collectors.toList());
 
+        }*/
+
+        //根据ID查询抽取详情以及上游来源id集合+下游id集合
+        MetadataEntityDTO metadataEntityPO = metadataEntityMapper.getProcess(processGuid);
+        if(metadataEntityPO!=null){
+            //数据传输
+            ProcessEntityDTO processEntityDTO = new ProcessEntityDTO();
+
+            //抽取详情封装
+            ProcessAttributesDTO processAttributesDTO = new ProcessAttributesDTO();
+
+            processAttributesDTO.name=metadataEntityPO.name;
+            processAttributesDTO.description=metadataEntityPO.description;
+
+            //定义接收单个来源id和输出源id
+            ProcessAttributesPutDTO input=null;
+            ProcessAttributesPutDTO out=null;
+
+            //定义接收来源和输出来源id集合
+            List<ProcessAttributesPutDTO> inputs=new ArrayList<>();
+            List<ProcessAttributesPutDTO> outputs=new ArrayList<>();
+
+            for ( LineageMapRelationDTO relationDTO : metadataEntityPO.getRelationDTOList()) {
+                //使用时创建
+                input=new ProcessAttributesPutDTO();
+                out=new ProcessAttributesPutDTO();
+                input.guid=relationDTO.getFromEntityId().toString();
+                inputs.add(input);
+                out.guid=relationDTO.getToEntityId().toString();
+                outputs.add(out);
+            }
+            //输入源去重保存
+            processAttributesDTO.setInputs(inputs.stream().distinct().collect(Collectors.toList()));
+            //输出源去重保存
+            processAttributesDTO.setOutputs(outputs.stream().distinct().collect(Collectors.toList()));
+            processEntityDTO.attributes=processAttributesDTO;
+
+            dto.entity=processEntityDTO;
         }
-        //获取process输出血缘
+
         return dto;
     }
 
@@ -99,14 +147,14 @@ public class ProcessImpl implements IProcess {
         }
         //解析数据
         JSONObject jsonObj = JSON.parseObject(getDetail.data);
-        JSONObject entityObject= JSON.parseObject(jsonObj.getString("entity"));
-        JSONObject relationShip=JSON.parseObject(entityObject.getString("relationshipAttributes"));
-        JSONArray relationShipAttribute=JSON.parseArray(relationShip.getString("outputFromProcesses"));
+        JSONObject entityObject = JSON.parseObject(jsonObj.getString("entity"));
+        JSONObject relationShip = JSON.parseObject(entityObject.getString("relationshipAttributes"));
+        JSONArray relationShipAttribute = JSON.parseArray(relationShip.getString("outputFromProcesses"));
         //条数为0,则添加process
-        if (relationShipAttribute.size() == 0) {
-            return process(dto);
-        }
-        return ResultEnum.SUCCESS;
+        //if (relationShipAttribute.size() == 0) {
+        return process(dto);
+        //}
+        //return ResultEnum.SUCCESS;
     }
 
     public ResultEnum process(AddProcessDTO dto)
@@ -118,9 +166,9 @@ public class ProcessImpl implements IProcess {
         EntityAttributesDTO attributesDTO=new EntityAttributesDTO();
         attributesDTO.comment=dto.processName;
         attributesDTO.description=dto.description;
-        attributesDTO.owner="root";
-        attributesDTO.qualifiedName="";
-        attributesDTO.contact_info=dto.contactInfo;
+        attributesDTO.owner = "root";
+        attributesDTO.qualifiedName = UUID.randomUUID().toString();
+        attributesDTO.contact_info = dto.contactInfo;
         attributesDTO.name=dto.processName;
         //输入参数
         attributesDTO.inputs=dto.inputList;

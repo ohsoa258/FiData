@@ -24,16 +24,22 @@ nifi:
 
   pipeline:
     topicName: my-topic
-    waitTime: 30
-    operation-interval: 2000
+    waitTime: 10
+    maxTime: 10800
+    operation-interval: 1000
     number-of-operations: 5
     data-governance-url: http://10.178.188.31:8083
+    dispatch-email-url-prefix: http://10.178.188.31:82        # 此配置未生效
 nifi-ConcurrentTasks: 1
 nifi-FetchSize: 10000
 nifi-MaxRowsPerFlowFile: 10000
 nifi-OutputBatchSize: 1
 fiData-data-ods-source: 2
 fiData-data-dw-source: 1
+# 是否调用数据质量接口
+nifi-data-security-enable: false
+# consumeServer启动控制
+consumer-server-enable: false
 
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
@@ -47,6 +53,15 @@ pgsql-mdm:
   url: jdbc:postgresql://192.168.1.250:5432/dmp_mdm?stringtype=unspecified
   username: postgres
   type: PG
+
+# sftp-rsa-upload暂未使用
+sftp-rsa-upload:
+  userName: root
+  password: Password01!
+  rsaPath: null
+  host: 192.168.21.21
+  port: 22
+
 server:
   port: 7003
 spring:
@@ -77,7 +92,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       session:
         timeout:
-          ms: 300000
+          ms: 600000
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
       acks: 0

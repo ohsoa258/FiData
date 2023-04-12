@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.label.LabelDTO;
 import com.fisk.datamanagement.dto.label.LabelDataDTO;
+import com.fisk.datamanagement.dto.label.LabelInfoDTO;
 import com.fisk.datamanagement.dto.label.LabelQueryDTO;
 
 import java.util.List;
@@ -50,8 +51,9 @@ public interface ILabel {
 
     /**
      * atlas获取标签列表
+     *
      * @return
      */
-    List<String> atlasGetLabel();
+    List<LabelInfoDTO> atlasGetLabel();
 
 }

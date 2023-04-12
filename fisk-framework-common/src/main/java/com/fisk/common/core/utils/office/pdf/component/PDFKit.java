@@ -120,7 +120,7 @@ public class PDFKit {
         document.open();
         try {
             XMLWorkerHelper.getInstance().parseXHtml(writer, document,
-                    new ByteArrayInputStream(htmlString.getBytes()),
+                    new ByteArrayInputStream(htmlString.getBytes("UTF-8")),
                     XMLWorkerHelper.class.getResourceAsStream("/default.css"),
                     Charset.forName("UTF-8"), new XMLWorkerFontProvider(fontPath));
         } catch (IOException e) {

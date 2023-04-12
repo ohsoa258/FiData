@@ -44,7 +44,6 @@ public class ApiConfigController {
     @GetMapping("/get/{id}")
     @ApiOperation(value = "回显: 根据id查询数据")
     public ResultEntity<ApiConfigDTO> getData(@PathVariable("id") long id) {
-
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
     }
 
@@ -143,7 +142,14 @@ public class ApiConfigController {
 
     @PostMapping("/getHttpRequestResult")
     @ApiOperation(value = "获取http请求返回的结果")
-    public String getHttpRequestResult(@RequestBody ApiHttpRequestDTO dto){
+    public String getHttpRequestResult(@RequestBody ApiHttpRequestDTO dto) {
         return service.getHttpRequestResult(dto);
     }
+
+    @GetMapping("/getApiTableColumnList/{apiId}")
+    @ApiOperation(value = "根据apiId获取表字段集合")
+    public ResultEntity<List<ApiColumnInfoDTO>> getApiTableColumnList(@PathVariable("apiId") Integer apiId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableColumnInfoByApi(apiId));
+    }
+
 }

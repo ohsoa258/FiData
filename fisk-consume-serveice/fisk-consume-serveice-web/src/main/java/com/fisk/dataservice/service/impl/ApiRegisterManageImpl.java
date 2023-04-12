@@ -8,7 +8,6 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
-import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -19,18 +18,21 @@ import com.fisk.common.core.utils.SqlParmUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.dataservice.BuildDataServiceHelper;
 import com.fisk.common.service.dbBEBuild.dataservice.IBuildDataServiceSqlCommand;
-import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
-import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.dataservice.dto.api.*;
+import com.fisk.dataservice.dto.appserviceconfig.AppTableServiceConfigDTO;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.ApiTypeEnum;
+import com.fisk.dataservice.enums.AppServiceTypeEnum;
 import com.fisk.dataservice.map.*;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IApiRegisterManageService;
 import com.fisk.dataservice.vo.api.*;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
+import com.fisk.dataservice.vo.fileservice.FileServiceVO;
+import com.fisk.dataservice.vo.tableservice.TableServiceVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +49,7 @@ import java.util.stream.Collectors;
  * @author dick
  */
 @Service
+@Slf4j
 public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiConfigPO> implements IApiRegisterManageService {
 
     @Resource
@@ -74,7 +77,16 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     private ApiParmManageImpl apiParmManageImpl;
 
     @Resource
-    private AppApiMapper appApiMapper;
+    private TableSyncModeImpl tableSyncModeImpl;
+
+    @Resource
+    private AppServiceConfigMapper appServiceConfigMapper;
+
+    @Resource
+    private TableServiceMapper tableServiceMapper;
+
+    @Resource
+    private FileServiceMapper fileServiceMapper;
 
     @Resource
     UserHelper userHelper;
@@ -109,16 +121,18 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     @Override
     public PageDTO<ApiSubVO> getApiSubAll(ApiSubQueryDTO dto) {
         PageDTO<ApiSubVO> pageDTO = new PageDTO<>();
+
         List<ApiSubVO> apiSubVOS = new ArrayList<>();
         List<ApiConfigPO> apiConfigPOS = baseMapper.getList(dto.keyword);
         if (CollectionUtils.isNotEmpty(apiConfigPOS)) {
             apiSubVOS = ApiRegisterMap.INSTANCES.poToApiSubVO(apiConfigPOS);
-            List<AppApiPO> subscribeListByAppId = appApiMapper.getSubscribeListByAppId(dto.appId);
+            List<AppServiceConfigPO> subscribeListByAppId = appServiceConfigMapper.getSubscribeListByAppId(dto.appId);
             if (CollectionUtils.isNotEmpty(subscribeListByAppId)) {
                 apiSubVOS.forEach(e -> {
                     subscribeListByAppId
                             .stream()
-                            .filter(item -> item.getApiId() == e.id)
+                            .filter(item -> item.getServiceId() == e.id
+                                    && item.getType() == AppServiceTypeEnum.API.getValue())
                             .findFirst()
                             .ifPresent(user -> e.apiSubState = 1);
                 });
@@ -146,6 +160,191 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         pageDTO.setItems(apiSubVOS);
         return pageDTO;
     }
+
+    @Override
+    public PageDTO<TableServiceVO> getTableServiceSubAll(ApiSubQueryDTO dto) {
+        QueryWrapper<TableServicePO> tableServicePOQueryWrapper = new QueryWrapper<>();
+        tableServicePOQueryWrapper.orderByDesc("create_time");
+        if (!StringUtils.isEmpty(dto.keyword)) {
+            tableServicePOQueryWrapper
+                    .like("table_name", dto.keyword)
+                    .or()
+                    .like("display_name", dto.keyword);
+        }
+        List<TableServicePO> poList = tableServiceMapper.selectList(tableServicePOQueryWrapper);
+        if (CollectionUtils.isEmpty(poList)) {
+            return new PageDTO<>();
+        }
+
+        List<TableServiceVO> list = new ArrayList<>();
+
+        PageDTO<TableServiceVO> pageDTO = new PageDTO<>();
+
+        //获取已订阅的数据
+        QueryWrapper<AppServiceConfigPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("service_id")
+                .lambda()
+                .eq(AppServiceConfigPO::getType, AppServiceTypeEnum.TABLE.getValue());
+        List<AppServiceConfigPO> subscribePo = appServiceConfigMapper.selectList(queryWrapper);
+        if (!CollectionUtils.isEmpty(subscribePo)) {
+            List<Long> subscribeList = subscribePo.stream().map(e -> Long.valueOf(e.serviceId)).collect(Collectors.toList());
+            List<TableServicePO> collect = poList
+                    .stream()
+                    .filter(e -> subscribeList.contains(e.id))
+                    .sorted(Comparator.comparing(TableServicePO::getCreateTime))
+                    .collect(Collectors.toList());
+
+            list.addAll(TableServiceMap.INSTANCES.poListToVoList(collect));
+            list.stream().map(e -> e.tableServiceSubState = 1).collect(Collectors.toList());
+
+            //反转
+            Collections.reverse(list);
+
+            //未订阅的数据
+            List<TableServicePO> collect1 = poList
+                    .stream()
+                    .filter(e -> !subscribeList.contains(e.id))
+                    .sorted(Comparator.comparing(TableServicePO::getCreateTime))
+                    .collect(Collectors.toList());
+            List<TableServiceVO> list1 = TableServiceMap.INSTANCES.poListToVoList(collect1);
+            list1.stream().map(e -> e.tableServiceSubState = 0).collect(Collectors.toList());
+
+            //反转
+            Collections.reverse(list1);
+
+            list.addAll(list1);
+
+        } else {
+            list = TableServiceMap.INSTANCES.poListToVoList(poList);
+            list.stream().map(e -> e.tableServiceSubState = 0).collect(Collectors.toList());
+        }
+
+        pageDTO.setTotal(Long.valueOf(list.size()));
+        pageDTO.setItems(list.stream().skip((dto.current - 1) * dto.size).limit(dto.size).collect(Collectors.toList()));
+
+        return pageDTO;
+    }
+
+    @Override
+    public PageDTO<FileServiceVO> getFileServiceSubAll(ApiSubQueryDTO dto) {
+
+        PageDTO<FileServiceVO> pageDTO = new PageDTO<>();
+
+        QueryWrapper<FileServicePO> fileServicePOQueryWrapper = new QueryWrapper<>();
+        fileServicePOQueryWrapper.orderByDesc("create_time");
+        if (!StringUtils.isEmpty(dto.keyword)) {
+            fileServicePOQueryWrapper
+                    .like("table_name", dto.keyword)
+                    .or()
+                    .like("display_name", dto.keyword);
+        }
+        List<FileServicePO> poList = fileServiceMapper.selectList(fileServicePOQueryWrapper);
+        if (CollectionUtils.isEmpty(poList)) {
+            pageDTO.setItems(new ArrayList<>());
+            return pageDTO;
+        }
+
+        List<FileServiceVO> list = new ArrayList<>();
+
+        //获取已订阅的数据
+        QueryWrapper<AppServiceConfigPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("service_id")
+                .lambda()
+                .eq(AppServiceConfigPO::getType, AppServiceTypeEnum.FILE.getValue());
+        List<AppServiceConfigPO> subscribePo = appServiceConfigMapper.selectList(queryWrapper);
+        if (!CollectionUtils.isEmpty(subscribePo)) {
+            List<Long> subscribeList = subscribePo.stream().map(e -> Long.valueOf(e.serviceId)).collect(Collectors.toList());
+            List<FileServicePO> collect = poList
+                    .stream()
+                    .filter(e -> subscribeList.contains(e.id))
+                    .sorted(Comparator.comparing(FileServicePO::getCreateTime))
+                    .collect(Collectors.toList());
+
+            list.addAll(FileServiceMap.INSTANCES.poListToVoList(collect));
+            list.stream().map(e -> e.fileServiceSubState = 1).collect(Collectors.toList());
+
+            //反转
+            Collections.reverse(list);
+
+            //未订阅的数据
+            List<FileServicePO> collect1 = poList
+                    .stream()
+                    .filter(e -> !subscribeList.contains(e.id))
+                    .sorted(Comparator.comparing(FileServicePO::getCreateTime))
+                    .collect(Collectors.toList());
+            List<FileServiceVO> list1 = FileServiceMap.INSTANCES.poListToVoList(collect1);
+            list1.stream().map(e -> e.fileServiceSubState = 0).collect(Collectors.toList());
+
+            //反转
+            Collections.reverse(list1);
+
+            list.addAll(list1);
+
+        } else {
+            list = FileServiceMap.INSTANCES.poListToVoList(poList);
+            list.stream().map(e -> e.fileServiceSubState = 0).collect(Collectors.toList());
+        }
+
+        pageDTO.setTotal(Long.valueOf(list.size()));
+        pageDTO.setItems(list.stream().skip((dto.current - 1) * dto.size).limit(dto.size).collect(Collectors.toList()));
+
+        return pageDTO;
+    }
+
+    @Override
+    public ResultEnum appTableServiceConfig(List<AppTableServiceConfigDTO> dtoList) {
+        if (CollectionUtils.isEmpty(dtoList)) {
+            return ResultEnum.SUCCESS;
+        }
+
+        delAppServiceConfig(dtoList.get(0).appId, AppServiceTypeEnum.TABLE.getValue());
+
+        List<AppServiceConfigPO> poList = new ArrayList<>();
+
+        for (AppTableServiceConfigDTO item : dtoList) {
+            AppServiceConfigPO po = new AppServiceConfigPO();
+            po.type = AppServiceTypeEnum.TABLE.getValue();
+            po.serviceId = item.serviceId;
+            po.appId = item.appId;
+
+            poList.add(po);
+        }
+
+        batchAddAppServiceConfig(poList);
+
+        return ResultEnum.SUCCESS;
+    }
+
+    public ResultEnum delAppServiceConfig(Integer appId, Integer type) {
+        QueryWrapper<AppServiceConfigPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(AppServiceConfigPO::getAppId, appId)
+                .eq(AppServiceConfigPO::getType, type);
+
+        List<AppServiceConfigPO> poList = appServiceConfigMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(poList)) {
+            return ResultEnum.SUCCESS;
+        }
+
+        int flat = appServiceConfigMapper.delete(queryWrapper);
+        if (flat == 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        return ResultEnum.SUCCESS;
+
+    }
+
+    public ResultEnum batchAddAppServiceConfig(List<AppServiceConfigPO> poList) {
+        for (AppServiceConfigPO po : poList) {
+            int flat = appServiceConfigMapper.insert(po);
+            if (flat == 0) {
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            }
+        }
+        return ResultEnum.SUCCESS;
+    }
+
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -202,6 +401,12 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             isInsert = apiParmManageImpl.saveBatch(parmConfigPOS);
             if (!isInsert)
                 return ResultEnum.SAVE_DATA_ERROR;
+        }
+
+        //第五步：保存调度(创建现有api类型才有调度)
+        if (dto.apiDTO != null && dto.apiDTO.createApiType == 2) {
+            dto.syncModeDTO.typeTableId = apiId;
+            return tableSyncModeImpl.addApiTableSyncMode(dto.syncModeDTO);
         }
 
         return ResultEnum.SUCCESS;
@@ -355,12 +560,17 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         ApiPreviewVO apiPreviewVO = new ApiPreviewVO();
         String sql = dto.apiDTO.getCreateSql();
 
+        // 查询数据源信息
+        DataSourceConVO dataSourceConVO = dataSourceConManageImpl.getAllDataSource().stream().filter(t -> t.getId() == dto.apiDTO.getDatasourceId()).findFirst().orElse(null);
+        if (dataSourceConVO == null)
+            return apiPreviewVO;
+
         // 第一步：拼接过滤条件
         if (dto.apiDTO.getApiType() == ApiTypeEnum.SQL.getValue()) {
             sql = String.format("SELECT %s FROM %s WHERE 1=1 ", sql, dto.apiDTO.getTableName());
             if (CollectionUtils.isNotEmpty(dto.whereDTO)) {
-                List<SqlWhereDto> sqlWhereDtos = ApiFilterConditionMap.INSTANCES.listDtoToSqlWhereDto(dto.whereDTO);
-                String s = SqlParmUtils.SqlWhere(sqlWhereDtos);
+                List<SqlWhereDto> sqlWhereList = ApiFilterConditionMap.INSTANCES.listDtoToSqlWhereDto(dto.whereDTO);
+                String s = SqlParmUtils.SqlWhere(sqlWhereList);
                 if (s != null && s.length() > 0)
                     sql += s;
             }
@@ -368,16 +578,11 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
 
         // 第二步：拼接参数条件
         if (CollectionUtils.isNotEmpty(dto.parmDTO)) {
-            List<SqlParmDto> sqlParmDtos = ApiParmMap.INSTANCES.listDtoToSqlParmDto(dto.parmDTO);
-            String s = SqlParmUtils.SqlParm(sqlParmDtos, sql, "@");
+            List<SqlParmDto> sqlParamsDto = ApiParmMap.INSTANCES.listDtoToSqlParmDto(dto.parmDTO);
+            String s = SqlParmUtils.SqlParams(sqlParamsDto, sql, "@",dataSourceConVO.getConType());
             if (s != null && s.length() > 0)
                 sql = s;
         }
-
-        // 第三步：查询数据源信息
-        DataSourceConVO dataSourceConVO = dataSourceConManageImpl.getAllDataSource().stream().filter(t -> t.getId() == dto.apiDTO.getDatasourceId()).findFirst().orElse(null);
-        if (dataSourceConVO == null)
-            return apiPreviewVO;
 
         // 第四步：如果是编辑，查询上次配置的字段信息，如果描述信息不为空，使用该描述。如果为空使用系统查询出来的描述信息
         List<FieldConfigPO> fieldConfigPOS = null;
@@ -389,9 +594,14 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             fieldConfigPOS = apiFieldMapper.selectList(fieldConfigPOQueryWrapper);
         }
 
+        Connection conn = null;
+        Statement st = null;
         try {
-            Statement st = null;
-            Connection conn = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
+            IBuildDataServiceSqlCommand dbCommand = BuildDataServiceHelper.getDBCommand(dataSourceConVO.getConType());
+            String conStr = dbCommand.buildSchemaConStr(dto.apiDTO.getTableFramework(), dataSourceConVO.getConStr());
+            log.info("【preview】连接字符串sql语句：" + conStr);
+            log.info("【preview】查询sql语句：" + sql);
+            conn = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), conStr, dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
             /*
                 以流的形式 TYPE_FORWARD_ONLY: 只可向前滚动查询 CONCUR_READ_ONLY: 指定不可以更新 ResultSet
                 如果PreparedStatement对象初始化时resultSetType参数设置为TYPE_FORWARD_ONLY，
@@ -405,10 +615,23 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             assert st != null;
             ResultSet rs = st.executeQuery(sql);
             //获取数据集
-            apiPreviewVO = resultSetToJsonArray(conn, dataSourceConVO, rs, dto, fieldConfigPOS);
+            apiPreviewVO = resultSetToJsonArray(conn, dbCommand, rs, dto, fieldConfigPOS);
             rs.close();
         } catch (Exception e) {
+            log.error("【preview】系统异常：" + e);
             throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR, e.getMessage());
+        } finally {
+            try {
+                if (st != null) {
+                    st.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception ex) {
+                log.error("【preview】数据库关闭异常：" + ex);
+                throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR, ex.getMessage());
+            }
         }
         return apiPreviewVO;
     }
@@ -416,13 +639,13 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     /**
      * 预览结果转Json数组
      *
-     * @param conn       数据库连接
-     * @param dataSource 数据库信息
-     * @param rs         查询结果
-     * @param pvDTO      预览请求参数
+     * @param conn      数据库连接
+     * @param dbCommand 数据库sql
+     * @param rs        查询结果
+     * @param pvDTO     预览请求参数
      * @return target
      */
-    private static ApiPreviewVO resultSetToJsonArray(Connection conn, DataSourceConVO dataSource,
+    private static ApiPreviewVO resultSetToJsonArray(Connection conn, IBuildDataServiceSqlCommand dbCommand,
                                                      ResultSet rs, ApiPreviewDTO pvDTO, List<FieldConfigPO> fieldConfigPOS)
             throws SQLException, JSONException {
         ApiPreviewVO data = new ApiPreviewVO();
@@ -448,11 +671,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         // 获取描述信息
         List<FieldInfoVO> tableFieldList = null;
         if (pvDTO.apiDTO.getApiType() == ApiTypeEnum.SQL.getValue()
-                && pvDTO.apiDTO.getTableName() != null
-                && pvDTO.apiDTO.getTableName().length() > 0) {
-            List<String> tableNames = new ArrayList<>();
-            tableNames.add(pvDTO.apiDTO.getTableName());
-            tableFieldList = getTableFieldList(conn, dataSource, tableNames);
+                && StringUtils.isNotEmpty(pvDTO.apiDTO.getTableRelName())) {
+            tableFieldList = getTableFieldList(conn, dbCommand, pvDTO.apiDTO.getTableFramework(), pvDTO.apiDTO.getTableRelName());
         }
 
         //获取列名、描述
@@ -471,9 +691,6 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                 fieldConfigVO.fieldType = "INT".toLowerCase();
             }
 
-            // 转换表字段类型
-//            List<String> list = transformField(fieldConfigVO.fieldType);
-//            fieldConfigVO.fieldType = list.get(0);
             fieldConfigVO.fieldType = fieldConfigVO.fieldType.toLowerCase();
             // 读取不到类型，默认字符串类型
             if (fieldConfigVO.fieldType == null ||
@@ -483,9 +700,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             // 获取表字段描述
             if (CollectionUtils.isNotEmpty(tableFieldList)) {
                 FieldInfoVO fieldInfoVO = tableFieldList.stream().
-                        filter(item -> item.originalFieldName.equals(fieldConfigVO.fieldName)).findFirst().orElse(null);
+                        filter(item -> item.fieldName.equals(fieldConfigVO.fieldName)).findFirst().orElse(null);
                 if (fieldInfoVO != null) {
-                    fieldConfigVO.fieldDesc = fieldInfoVO.originalFieldDesc;
+                    fieldConfigVO.fieldDesc = fieldInfoVO.fieldDesc;
                 }
             }
             if (CollectionUtils.isNotEmpty(fieldConfigPOS)) {
@@ -504,44 +721,38 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     /**
      * 查询表字段信息
      *
-     * @param conn       连接
-     * @param dataSource 数据源信息
-     * @param tableNames 查询的表
+     * @param conn           连接
+     * @param dbCommand      数据库sql
+     * @param tableFramework 表架构名
+     * @param tableRelName   表名称，不带架构名
      * @return statement
      */
-    private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConVO dataSource, List<String> tableNames) throws SQLException {
-        List<FieldInfoVO> fieldlist = new ArrayList<>();
-        if (CollectionUtils.isEmpty(tableNames))
-            return fieldlist;
-        IBuildDataServiceSqlCommand dbCommand = BuildDataServiceHelper.getDBCommand(dataSource.getConType());
-        String sql = dbCommand.buildUseExistTableFiled(dataSource.conDbname, tableNames.get(0));
+    private static List<FieldInfoVO> getTableFieldList(Connection conn, IBuildDataServiceSqlCommand dbCommand,
+                                                       String tableFramework, String tableRelName) {
+        List<FieldInfoVO> fieldList = new ArrayList<>();
+        if (StringUtils.isEmpty(tableRelName))
+            return fieldList;
+        String sql = dbCommand.buildUseExistTableFiled(tableFramework, tableRelName);
+        log.info("【getTableFieldList】查询字段sql语句：" + sql);
         if (sql == null || sql.isEmpty())
-            return fieldlist;
+            return fieldList;
         try {
-            //String instr = "(\'" + String.join("\',\'", tableNames) + "\')";
             PreparedStatement preparedStatement = conn.prepareStatement(sql);
-            //preparedStatement.setString(1, instr);
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
                 FieldInfoVO fieldInfoVO = new FieldInfoVO();
-                fieldInfoVO.originalTableName = resultSet.getString("originalTableName");
-                fieldInfoVO.originalFieldName = resultSet.getString("originalFieldName");
-                fieldInfoVO.originalFieldDesc = resultSet.getString("originalFieldDesc");
-                fieldInfoVO.originalFramework = resultSet.getString("originalFramework");
-                if (fieldInfoVO.originalTableName != null
-                        && fieldInfoVO.originalTableName.length() > 0
-                        && fieldInfoVO.originalFieldName != null
-                        && fieldInfoVO.originalFieldName.length() > 0
-                        && fieldInfoVO.originalFieldDesc != null
-                        && fieldInfoVO.originalFieldDesc.length() > 0) {
-                    if (fieldInfoVO.originalFramework != null && fieldInfoVO.originalFramework.length() > 0)
-                        fieldInfoVO.originalTableName = fieldInfoVO.originalFramework + "." + fieldInfoVO.originalTableName;
-                    fieldlist.add(fieldInfoVO);
+                fieldInfoVO.tableName = resultSet.getString("tableName");
+                fieldInfoVO.fieldName = resultSet.getString("fieldName");
+                fieldInfoVO.fieldDesc = resultSet.getString("fieldDesc");
+                if (StringUtils.isNotEmpty(fieldInfoVO.tableName) && StringUtils.isNotEmpty(fieldInfoVO.fieldName)
+                        && StringUtils.isNotEmpty(fieldInfoVO.fieldDesc)) {
+                    fieldList.add(fieldInfoVO);
                 }
             }
         } catch (Exception ex) {
+            log.error("【getTableFieldList】系统异常：" + ex);
             throw new FkException(ResultEnum.ERROR, ":" + ex.getMessage());
         }
-        return fieldlist;
+        return fieldList;
     }
 }

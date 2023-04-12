@@ -5,7 +5,9 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
@@ -136,4 +138,41 @@ public class BusinessAreaController {
     public ResultEntity<List<AppBusinessInfoDTO>> getBusinessAreaList() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessAreaList());
     }
+
+    @GetMapping("/getPublishSuccessTab/{businessId}")
+    @ApiOperation(value = "获取业务域下发布成功表")
+    public ResultEntity<Object> getPublishSuccessTab(@PathVariable("businessId") int businessId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getPublishSuccessTab(businessId));
+    }
+
+    @GetMapping("/getDataModelMetaData")
+    @ApiOperation(value = "获取数据建模所有元数据")
+    public ResultEntity<List<MetaDataInstanceAttributeDTO>> getDataModelMetaData() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataModelMetaData());
+    }
+
+    @PostMapping("/buildDimensionKeyScript")
+    @ApiOperation(value = "维度或者事实构建维度key脚本预览")
+    public ResultEntity<Object> buildDimensionKeyScript(@RequestBody List<TableSourceRelationsDTO> dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.buildDimensionKeyScript(dto));
+    }
+
+    @GetMapping("/dataTypeList/{businessId}")
+    @ApiOperation(value = "获取建模数据类型")
+    public ResultEntity<Object> dataTypeList(@PathVariable("businessId") int businessId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dataTypeList(businessId));
+    }
+
+    @PostMapping("/overlayCodePreview")
+    @ApiOperation(value = "覆盖方式预览代码")
+    public ResultEntity<Object> overlayCodePreview(@RequestBody OverlayCodePreviewDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.overlayCodePreview(dto));
+    }
+
+//    @PostMapping("/overlayCodePreview")
+//    @ApiOperation(value = "覆盖方式预览代码2")
+//    public ResultEntity<Object> overlayCodePreviewTest(@RequestBody OverlayCodePreviewDTO dto) {
+//        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.overlayCodePreviewTest(dto));
+//    }
+
 }

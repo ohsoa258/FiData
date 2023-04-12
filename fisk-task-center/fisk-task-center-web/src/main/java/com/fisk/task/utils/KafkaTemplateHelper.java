@@ -1,5 +1,8 @@
 package com.fisk.task.utils;
 
+import com.alibaba.fastjson.JSON;
+import com.fisk.common.framework.mdc.MDCHelper;
+import com.fisk.task.dto.MQBaseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -10,6 +13,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * @author gy
+ */
 @Slf4j
 @Service
 public class KafkaTemplateHelper {
@@ -34,17 +40,26 @@ public class KafkaTemplateHelper {
      * @param message producer发送的数据
      */
     public void sendMessageAsync(String topic, String message) {
-        kafkaTemplate.send(topic, message).addCallback(new ListenableFutureCallback() {
-            @Override
-            public void onFailure(Throwable throwable) {
-                System.out.println("failure");
-            }
+        try {
+            MQBaseDTO data = JSON.parseObject(message, MQBaseDTO.class);
+            data.traceId = MDCHelper.getTraceId();
+        } catch (Exception ex) {
+            log.error("解析Kafka消息失败，参数无法反序列化成MQBaseDTO对象", ex);
+        }
+        kafkaTemplate
+                .send(topic, message)
+                .addCallback(
+                        new ListenableFutureCallback() {
+                            @Override
+                            public void onFailure(Throwable throwable) {
+                                log.info("failure");
+                            }
 
-            @Override
-            public void onSuccess(Object o) {
-                System.out.println("success");
-            }
-        });
+                            @Override
+                            public void onSuccess(Object o) {
+                                log.info("success");
+                            }
+                        });
     }
 
 }

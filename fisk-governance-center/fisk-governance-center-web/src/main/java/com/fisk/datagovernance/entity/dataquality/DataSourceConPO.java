@@ -37,12 +37,12 @@ public class DataSourceConPO extends BasePO
     public int conPort;
 
     /**
-     * FiData数据源id
+     * 平台数据源id
      */
     public int datasourceId;
 
     /**
-     * 数据源类型 1、FiData 2、自定义
+     * 平台数据源类型 1、FiData（平台数据源） 2、自定义（外部数据源）
      */
     public int datasourceType;
 

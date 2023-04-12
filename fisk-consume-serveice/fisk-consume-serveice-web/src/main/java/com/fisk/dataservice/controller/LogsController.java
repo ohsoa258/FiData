@@ -5,9 +5,11 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.config.SwaggerConfig;
+import com.fisk.dataservice.dto.logs.LogQueryBasicsDTO;
 import com.fisk.dataservice.dto.logs.LogQueryDTO;
 import com.fisk.dataservice.service.ILogsManageService;
 import com.fisk.dataservice.vo.logs.ApiLogVO;
+import com.fisk.dataservice.vo.logs.TableServiceLogVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,4 +39,9 @@ public class LogsController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.pageFilter(dto));
     }
 
+    @ApiOperation(value = "表服务日志")
+    @PostMapping("/pageTableServiceLog")
+    public ResultEntity<TableServiceLogVO> pageTableServiceLog(@RequestBody LogQueryBasicsDTO dto) {
+        return service.pageTableServiceLog(dto);
+    }
 }

@@ -40,7 +40,7 @@ public class AppDataSourceDTO extends BaseDTO {
     @ApiModelProperty(value = "数据库", required = true)
     public String dbName;
 
-    @ApiModelProperty(value = "连接字符串", required = true)
+    @ApiModelProperty(value = "连接字符串(sftp秘钥地址)", required = true)
     public String connectStr;
 
     @ApiModelProperty(value = "jwt类型下,JWT账号key")
@@ -88,7 +88,7 @@ public class AppDataSourceDTO extends BaseDTO {
     @ApiModelProperty(value = "服务名(只有oracle有服务名)", required = true)
     public String serviceName;
 
-    @ApiModelProperty(value = "oracle服务类型：0:服务名、1:SID", required = true)
+    @ApiModelProperty(value = "服务类型：oracle,0:服务名、1:SID sftp,0:用户名、1:RSA", required = true)
     public Integer serviceType;
 
     @ApiModelProperty(value = "oracle连接模式，0:非CDB、1:CDB/PDB", required = true)

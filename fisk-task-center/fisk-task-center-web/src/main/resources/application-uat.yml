@@ -8,9 +8,9 @@ external-table-link: '"host" = "192.168.21.13","port" = "5432","user" = "postgre
   = "PgPassword01!","database" = "dmp_dw_UAT"'
 
 nifi:
-  username: fisk
-  password: fiskpassword01!
-  basePath: http://192.168.21.13:8080/nifi-api
+  username: fiskadmin
+  password: Password0101!
+  basePath: https://192.168.21.13:8443/nifi-api
   token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiI5YjNkMjY3NjExNDc0NWU2ODg3MDlkODkzNmUzYmQ4MiIsInVzZXIiOiJ7XCJpZFwiOjE5LFwidXNlckFjY291bnRcIjpcInRhc2vkuJPnlKh0b2tlblwifSIsImlkIjoiMTkifQ.d5g6oMU3a_XsjpOouZu1R1YlVO_E_ZjwUUJROR1XbRo
   Enable-Authentication: 0
   kerberos:
@@ -22,16 +22,22 @@ nifi:
   kerberosprincipal: kafka/admin@AUTOEXPR.COM
   pipeline:
     topicName: my-topic
-    waitTime: 30
-    operation-interval: 2000
+    waitTime: 10
+    maxTime: 10800
+    operation-interval: 1000
     number-of-operations: 5
     data-governance-url: http://192.168.21.13:8083
+    dispatch-email-url-prefix: http://192.168.21.13:82
 nifi-ConcurrentTasks: 3
 nifi-FetchSize: 30000
 nifi-MaxRowsPerFlowFile: 10000
 nifi-OutputBatchSize: 1
 fiData-data-ods-source: 2
 fiData-data-dw-source: 1
+# 是否调用数据质量接口
+nifi-data-security-enable: true
+# consumeServer启动控制
+consumer-server-enable: true
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
   password: PgPassword01!
@@ -45,6 +51,15 @@ pgsql-mdm:
   url: jdbc:postgresql://192.168.21.13:5432/dmp_mdm_UAT?stringtype=unspecified
   username: postgres
   type: PG
+
+# sftp-rsa-upload暂未使用
+sftp-rsa-upload:
+  userName: root
+  password: Password01!
+  rsaPath: null
+  host: 192.168.21.21
+  port: 22
+
 server:
   port: 8099
 spring:
@@ -56,12 +71,12 @@ spring:
         datainputdb:
           driver-class-name: com.mysql.jdbc.Driver
           password: Password01!
-          url: jdbc:mysql://192.168.21.13:3306/dmp_datainput_db_UAT?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+          url: jdbc:mysql://192.168.21.13:3306/FiData_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
           username: root
         taskdb:
           driver-class-name: com.mysql.jdbc.Driver
           password: Password01!
-          url: jdbc:mysql://192.168.21.13:3306/dmp_task_db_UAT?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+          url: jdbc:mysql://192.168.21.13:3306/FiData_task_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
           username: root
       primary: taskdb
       strict: false
@@ -75,7 +90,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       session:
         timeout:
-          ms: 300000
+          ms: 600000
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
       acks: all

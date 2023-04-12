@@ -59,6 +59,10 @@ public class TbTableAccessDTO {
      * sheet页
      */
     public String sheet;
+    /**
+     * excel开始读取数据的行数
+     */
+    public Integer startLine;
 
     @ApiModelProperty(value = "发布错误信息", required = true)
     public String publishErrorMsg;
@@ -107,6 +111,11 @@ public class TbTableAccessDTO {
      * 同步方式
      */
     public Integer syncMode;
+
+    /**
+     * 系统数据源id
+     */
+    public Integer appDataSourceId;
 
 
 }

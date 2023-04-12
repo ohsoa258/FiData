@@ -8,10 +8,10 @@ external-table-link: '"host" = "192.168.21.21","port" = "5432","user" = "postgre
   = "postgres123","database" = "dmp_dw"'
 
 nifi:
-  username: fisk
-  password: fiskpassword01!
-  basePath: http://192.168.21.21:8081/nifi-api
-  token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJkMjc2Mjk3N2U4YjU0YTQ0YjYyZGU2ODlmZTk0OTRjNiIsInVzZXIiOiJ7XCJpZFwiOjE4LFwidXNlckFjY291bnRcIjpcImNma1wifSIsImlkIjoiMTgifQ.SRkIbNgKrvo1TI-WSufy4mZGLst6ed0Y6Fs0QoQ8m_g
+  username: fiskadmin
+  password: Password0101!
+  basePath: https://192.168.21.21:8023/nifi-api
+  token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiI2NjU3MDI5YjQxMTc0NzdhOGMwMDExY2NmMzg2ZmYzZSIsInVzZXIiOiJ7XCJpZFwiOjE5LFwidXNlckFjY291bnRcIjpcIm5pZmnmjqXlj6N0b2tlblwifSIsImlkIjoiMTkifQ.UrYWOvRq6IqQ5pep6uCTYlE-kG_5zc7Yl6VgeYupPeU
   Enable-Authentication: 0
   kerberos:
     Keytab: /opt/fidata/java/fisk-task-center/kafka.keytab
@@ -22,16 +22,22 @@ nifi:
   kerberosprincipal: kafka/admin@AUTOEXPR.COM
   pipeline:
     topicName: my-topic
-    waitTime: 30
-    operation-interval: 2000
+    waitTime: 10
+    maxTime: 10800
+    operation-interval: 1000
     number-of-operations: 5
     data-governance-url: http://192.168.21.21:8083
+    dispatch-email-url-prefix: http://192.168.21.21:82
 nifi-ConcurrentTasks: 3
 nifi-FetchSize: 30000
 nifi-MaxRowsPerFlowFile: 10000
 nifi-OutputBatchSize: 1
 fiData-data-ods-source: 2
 fiData-data-dw-source: 1
+# 是否调用数据质量接口
+nifi-data-security-enable: true
+# consumeServer启动控制
+consumer-server-enable: true
 pgsql-datamodel:
   driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
   password: Password01!
@@ -44,6 +50,14 @@ pgsql-mdm:
   url: jdbc:postgresql://192.168.21.21:5432/dmp_mdm?stringtype=unspecified
   username: postgres
   type: PG
+
+sftp-rsa-upload:
+  userName: root
+  password: Password01!
+  rsaPath: null
+  host: 192.168.21.21
+  port: 22
+
 server:
   port: 8099
 spring:
@@ -69,19 +83,22 @@ spring:
     time-zone: GMT+8
   kafka:
     consumer:
-      bootstrap-servers: 192.168.21.21:9092
+      bootstrap-servers: localhost:9092
       enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       session:
         timeout:
-          ms: 300000
+          ms: 600000
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
       acks: all
-      bootstrap-servers: 192.168.21.21:9092
+      bootstrap-servers: localhost:9092
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       retries: 3
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
   redis:
     host: 192.168.21.21
     password: test123456
+mybatis-plus:
+  configuration:
+    cache-enabled: true

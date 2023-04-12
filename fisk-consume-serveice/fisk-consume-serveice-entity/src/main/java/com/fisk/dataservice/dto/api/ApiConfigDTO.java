@@ -32,11 +32,23 @@ public class ApiConfigDTO
     public String apiDesc;
 
     /**
-     * 表名
+     * 表名，带架构名
      */
-    @ApiModelProperty(value = "表名")
+    @ApiModelProperty(value = "表名，带架构名")
     @Length(min = 0, max = 50, message = "长度最多255")
     public String tableName;
+
+    /**
+     * 表架构名
+     */
+    @ApiModelProperty(value = "表架构名")
+    public String tableFramework;
+
+    /**
+     * 表名，不带架构名
+     */
+    @ApiModelProperty(value = "表名，不带架构名")
+    public String tableRelName;
 
     /**
      * 表别名
@@ -82,4 +94,17 @@ public class ApiConfigDTO
      */
     @ApiModelProperty(value = "数据源id")
     public int datasourceId;
+
+    /**
+     * 创建api类型
+     */
+    @ApiModelProperty(value = "创建api类型：1 创建新api 2 使用现有api")
+    public Integer createApiType = 0;
+
+    /**
+     * 现有api地址
+     */
+    @ApiModelProperty(value = "现有api地址")
+    public String apiAddress;
+
 }

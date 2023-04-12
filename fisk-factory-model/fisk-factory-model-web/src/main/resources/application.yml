@@ -3,6 +3,7 @@ server:
 spring:
   application:
     name: datamodel-service
+  open-metadata: false
   # 日志输入环境
   profiles:
     active: dev
@@ -34,11 +35,6 @@ fk:
     crypt:
       secret: ${random.uuid}
       strength: 6
-
-# dmp_olap的宽表文件夹guid
-fidata:
-  wide-table:
-    guid: 9bf0e48e-aef8-44c1-9871-0cb4d0560dd6
 
 # 数据建模定时任务配置
 data-model-job:

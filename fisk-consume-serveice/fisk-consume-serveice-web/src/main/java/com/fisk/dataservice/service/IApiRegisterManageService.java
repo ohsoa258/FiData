@@ -6,8 +6,11 @@ import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.dto.api.*;
+import com.fisk.dataservice.dto.appserviceconfig.AppTableServiceConfigDTO;
 import com.fisk.dataservice.entity.ApiConfigPO;
 import com.fisk.dataservice.vo.api.*;
+import com.fisk.dataservice.vo.fileservice.FileServiceVO;
+import com.fisk.dataservice.vo.tableservice.TableServiceVO;
 
 import java.util.List;
 
@@ -87,4 +90,29 @@ public interface IApiRegisterManageService extends IService<ApiConfigPO> {
      * @return 预览结果
      */
     ApiPreviewVO preview(ApiPreviewDTO dto);
+
+    /**
+     * 分页获取订阅表服务
+     *
+     * @param dto
+     * @return
+     */
+    PageDTO<TableServiceVO> getTableServiceSubAll(ApiSubQueryDTO dto);
+
+    /**
+     * 分页获取订阅文件服务
+     *
+     * @param dto
+     * @return
+     */
+    PageDTO<FileServiceVO> getFileServiceSubAll(ApiSubQueryDTO dto);
+
+    /**
+     * 表服务引入配置
+     *
+     * @param dtoList
+     * @return
+     */
+    ResultEnum appTableServiceConfig(List<AppTableServiceConfigDTO> dtoList);
+
 }

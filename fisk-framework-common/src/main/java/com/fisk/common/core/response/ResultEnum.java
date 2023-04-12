@@ -28,7 +28,7 @@ public enum ResultEnum {
     DATA_NOTEXISTS(1003, "数据不存在"),
     ENUM_TYPE_ERROR(1004, "错误的枚举类型"),
     UPDATE_DATA_ERROR(1005, "数据更新失败"),
-    NAME_EXISTS(1006, "名称已存在"),
+    NAME_EXISTS(1006, "用户账号不能重复"),
     PARAMTER_ERROR(1007, "请求参数有误"),
     DATA_EXISTS(1008, "数据已存在"),
     REMOTE_SERVICE_CALLFAILED(1009, "远程服务调用失败"),
@@ -50,6 +50,20 @@ public enum ResultEnum {
     CRON_ERROR(1024, "cron格式错误"),
     DRUID_SQL_ERROR(1025, "druid解析sql失败"),
     DRUID_ERROR(1026, "druid异常"),
+    UPLOAD_ERROR(1027, "文件上传失败"),
+    SQL_PARSING(1028, "sql解析失败"),
+    COPY_ERROR(1029, "拷贝失败"),
+    USERNAME_EXISTS(1030, "用户名不能重复"),
+    SYSTEM_TITLE_NULL(1031, "系统名称不能为空"),
+    SYSTEM_LOGO_NULL(1032, "系统logo文件不能为空"),
+    SYSTEM_LOGO_ERROR(1033, "系统logo获取出错"),
+    DATA_SOURCE_NAME_ALREADY_EXISTS(1034, "数据源名称已存在"),
+
+
+    SQL_PARAMETER_NOTNULL(1035, "sql参数不能为空"),
+
+    SQL_Not_SUPPORTED_YET_DBTYPE(1036, "暂不支持该数据库类型"),
+    TABLE_NOT_PUBLISHED(1037,"该表未发布"),
 
     /**
      * 报表可视化服务，错误码从2000开始
@@ -58,9 +72,12 @@ public enum ResultEnum {
     VISUAL_LOADDRIVER_ERROR(2002, "数据库驱动加载失败"),
     VISUAL_PARAMTER_ERROR(2003, "缺少参数"),
     VISUAL_QUERY_ERROR(2004, "查询失败"),
+
     VISUAL_IMAGE_ERROR(2005, "图片格式不正确！，请使用.jpg/.png/.bpm/.jpeg后缀的图片"),
     VISUAL_FOLDER_ERROR(2006, "压缩包格式不正确！，请使用.zip后缀的压缩包"),
     VISUAL_CREATE_ERROR(2007, "创建表失败"),
+
+    VISUAL_QUERY_ERROR_INVALID(2008,"数据无效"),
 
     /**
      * 授权中心
@@ -146,6 +163,26 @@ public enum ResultEnum {
     CREATE_JOB_ERROR(5061, "创建Flink任务失败"),
     SCHEMA_TABLE_REPEAT(5062, "其他应用下已存在该表名"),
     SYSTEM_VARIABLES_ERROR(5063, "系统变量异常"),
+    VERSION_PARAMS_SPLIT_ERROR(5064, "参数分割异常"),
+    VERSION_TABLE_TYPE_ERROR(5065, "暂不支持的表类型"),
+    VERSION_TABLE_NOT_EXISTS(5066, "表配置不存在"),
+    VERSION_APP_NOT_EXISTS(5067, "应用配置不存在"),
+    VERSION_TABLE_SYNC_NOT_EXISTS(5068, "表同步方式配置不存在"),
+    VERSION_TABLE_SYNC_NOT_ALL(5069, "仅支持全量模式下设置版本"),
+    VERSION_SAVE_DAY_ERROR(5070, "版本保留天数为0"),
+    VERSION_CUSTOM_SQL_IS_NULL(5071, "版本自定义语句为空"),
+    VERSION_CUSTOM_SQL_RESULT_IS_NULL(5072, "版本自定义语句查询结果为空"),
+    VERSION_NOT_OPEN_SAVE_RULE(5073, "未启用版本保留规则"),
+    DATAACCESS_GETSCHEMA_ERROR(5074, "获取schema失败"),
+    DATAACCESS_GETTABLEANDFIELD_ERROR(5075, "获取表和字段信息失败"),
+    SFTP_CONNECTION_ERROR(5075, "SFTP服务器连接登录失败，请检查连接参数是否正确，或者网络是否通畅"),
+    SFTP_PREVIEW_ERROR(5076, "SFTP预览文件失败"),
+    SFTP_FILE_INDEX_ERROR(5077, "SFTP文件索引错误"),
+    SFTP_FILE_IS_NULL(5078, "SFTP文件不存在"),
+    SFTP_FILE_COPY_FAIL(5079, "SFTP文件复制失败"),
+    SFTP_RSA_IS_NULL(5080, "SFTP密钥文件路径不能为空"),
+    SFTP_ACCOUNT_IS_NULL(5081, "SFTP账号密码不能为空"),
+    SFTP_DIR_PATH_ERROR(5082, "SFTP目录格式错误"),
 
 
     /**
@@ -204,6 +241,8 @@ public enum ResultEnum {
     CUSTOMWORKFLOWDETAIL_NOT_EXISTS(9007, "当前管道下不存在组件,请检查参数"),
     FLOW_TABLE_NOT_EXISTS(9008, "当前管道下不存在组件,请检查参数"),
     COMPONENT_NOT_EXISTS(9009, "当前组件不存在请检查参数"),
+    DISPATCHEMAIL_NOT_EXISTS(9010,"当前管道邮件参数为空"),
+    UPDATE_WORK_STATUS_ERROR(9011, "管道工作状态更新失败"),
 
     /**
      * 数据服务
@@ -231,7 +270,19 @@ public enum ResultEnum {
     DS_APP_SUBAPI_ENABLE(10020, "取消勾选的API含已启用的API，请先禁用"),
     DS_APISERVICE_API_APPINFO_EXISTS(10021, "应用账号/密码错误，请核对"),
     DS_DATASOURCE_READ_ERROR(10022, "数据源信息读取失败"),
-    DS_DATASOURCE_EXISTS(11023, "数据源已存在"),
+    DS_DATASOURCE_EXISTS(10023, "数据源已存在"),
+    DS_VIEW_THEME_EXISTS(10024, "视图主题已经存在"),
+    DS_VIEW_THEME_ABBR_VALID(10025, "视图主题简称无效"),
+    DS_VIEW_THEME_ACCOUNT_SAVE(10026, "视图主题关联账号保存失败"),
+    DS_VIEW_THEME_ACCOUNT_ERROR(10027, "视图主题关联账号名称和密码不能为空"),
+    DS_VIEW_THEME_NAME_EXIST(10028, "视图主题名称已存在"),
+    DS_VIEW_THEME_ACCOUNT_EXIST(10029, "当前视图主题下存在重复的关联账号名称"),
+    DA_VIEWTHEMEID_TABLENAME_ERROR(10030, "视图主题id或表名不能为空"),
+    DA_VIEWTHEME_UPDATE_ACCOUNT_ERROR(10031, "更新视图主题关联账号时添加账号失败"),
+    DS_DATA_VIEW_EXIST(10032, "当前视图主题下已存在该视图名称"),
+    DS_DATA_STATUS_HAS_CHANGED(10033, "数据状态已变更，请刷新页面后再试"),
+    DS_DATA_SOURCE_REFRESH_FAILED(10034,"数据源刷新失败"),
+    DS_DATA_SOURCE_APPLIED(10035,"数据源已应用，请先删除该数据源下的表服务"),
 
     /**
      * 数据质量
@@ -258,6 +309,12 @@ public enum ResultEnum {
     DATA_QUALITY_UPDATE_PRIMARY_KEY_ISNOTSET(11020, "未设置更新主键"),
     DATA_QUALITY_BUSINESS_API_AUTH_FILTER_EXEC_ERROR(11021, "业务API清洗授权方法执行异常"),
     DATA_QUALITY_BUSINESS_API_FILTER_EXEC_ERROR(11022, "业务API清洗方法执行异常"),
+    DATA_QUALITY_NOTICE_CONFIG_ISNULL(11023, "质量报告通知配置为空"),
+    DATA_QUALITY_NOTICE_RECIPIENT_ISNULL(11024, "质量报告接收人为空"),
+    DATA_QUALITY_THE_CLEANING_RULE_DOES_NOT_EXIST(11025, "业务清洗规则不存在"),
+    DATA_QUALITY_NO_CONFIGURE_TRIGGER(11026, "未配置触发器"),
+    DATA_QUALITY_NO_WORKSPACE_CONFIGURED(11027, "未配置工作区"),
+    DATA_QUALITY_TO_OBTAIN_TABLE_INFORMATION(11028, "未获取到表信息"),
 
     /**
      * 数据安全
@@ -265,7 +322,15 @@ public enum ResultEnum {
     FIELD_NAME_IS_SELECTED(12001, "当前字段已被设置,请重新选择"),
     ROW_SECURITYNAME_EXISTS(12002, "当前权限名称已存在"),
     USERGROUP_PERMISSION_ONLY(12003, "用户(组)已设置过权限,不允许设置两种,请检查参数"),
-    CAN_NOT_DELETE_NAME_OR_CODE(12003,"无法删除“name”或“code”"),
+    CAN_NOT_DELETE_NAME_OR_CODE(12004,"无法删除“name”或“code”"),
+    INTELLIGENT_DISCOVERY_RULE_NAME_ALREADY_EXISTS(12005,"智能发现规则名称已存在"),
+    INTELLIGENT_DISCOVERY_CONFIGURATION_DOES_NOT_EXIST(12006,"智能发现配置不存在"),
+    INTELLIGENT_DISCOVERY_SCAN_CONFIGURATION_DOES_NOT_EXIST(12007,"智能发现扫描配置不存在"),
+    INTELLIGENT_DISCOVERY_NO_RISK_FIELDS_FOUND(12008,"智能发现未发现风险信息"),
+    THE_MAIL_SERVER_DOES_NOT_EXIST(12009,"邮件服务器不存在"),
+    SMART_DISCOVERY_REPORT_FAILED_TO_GENERATE_ATTACHMENT(12010,"智能发现报告生成失败"),
+    FILE_DOES_NOT_EXIST(12011,"文件不存在"),
+    SMART_DISCOVERY_IS_DISABLED(12012,"智能发现已禁用"),
 
     /**
      * 元数据
@@ -274,6 +339,8 @@ public enum ResultEnum {
     NO_CONTENT(13002, "没有内容"),
     NOT_SUPPORT(13003, "暂不支持该类型数据查询"),
     DATA_SOURCE_CONFIG(13004, "获取元数据配置文件失败"),
+
+
 
     /**
      * 数据运维
@@ -290,6 +357,7 @@ public enum ResultEnum {
     PG_METADATA_READREDIS_EXISTS(14010,"redis中未找到pg元数据对应的key"),
     PG_METADATA_SETREDIS_ERROR(14011,"redis写入pg元数据信息异常"),
     PG_METADATA_GETREDIS_ERROR(14012,"redis读取pg元数据信息异常"),
+    TABLE_DATA_SYNC_FAIL(14013,"数据同步失败"),
 
     /**
      * mdm
@@ -341,7 +409,17 @@ public enum ResultEnum {
     /**
      * licence
      */
-    LICENCE_DECRYPT_FAIL(160000,"licence解析异常");
+    LICENCE_DECRYPT_FAIL(160000,"licence解析异常"),
+    MAC_DECRYPT_FAIL(160001,"Mac地址与当前计算机Mac不匹配"),
+    LICENCE_EXPIRED(160002,"licence已过期"),
+    CUSTOMER_ALREADY_EXISTS(160003,"客户已存在"),
+    CUSTOMER_NOT_EXISTS(160004,"客户不存在"),
+
+
+    /**
+     * 数据库类型 dmp_ods
+     */
+    TYPE_OF_DATABASE_DMP_ODS(17001,"dmp_ods");
 
     ResultEnum(int code, String msg) {
         this.code = code;

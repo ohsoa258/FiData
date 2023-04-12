@@ -1,7 +1,7 @@
 package com.fisk.task.service.nifi;
 
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
-import com.fisk.task.dto.nifi.NifiStageMessageDTO;
+import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.entity.NifiStagePO;
 import org.springframework.kafka.support.Acknowledgment;
@@ -28,6 +28,14 @@ public interface INifiStage {
      * @return NifiStagePO
      */
     NifiStagePO saveNifiStage(String nifiStagePO, Acknowledgment acke);
+
+    /**
+     * 建模覆盖方式代码预览
+     *
+     * @param dto
+     * @return
+     */
+    Object overlayCodePreview(OverLoadCodeDTO dto);
 
 
 }

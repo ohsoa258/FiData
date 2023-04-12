@@ -2,9 +2,10 @@ package com.fisk.system.client;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
-import com.fisk.common.core.response.ResultEntityBuild;
-import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.datasource.DataSourceResultDTO;
+import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.dto.userinfo.UserDropDTO;
@@ -133,4 +134,66 @@ public interface UserClient {
      */
     @GetMapping("/role/getTreeRols")
     public ResultEntity<List<RoleInfoVo>> getTreeRols();
+    /**
+     * 菜单列表
+     * @return
+     */
+    @GetMapping("/ServiceRegistry/getList")
+    ResultEntity<Object> getMenuList();
+
+    /**
+     * 获取用户列表
+     * @return
+     */
+    @GetMapping("/info/getAllUserList")
+    ResultEntity<List<UserDTO>> getAllUserList();
+
+    /**
+     * 获取菜单列表
+     *
+     * @return
+     */
+    @GetMapping("/auth/getAllMenuList")
+    ResultEntity<Object> getAllMenuList();
+
+    /**
+     * 同步数据接入数据源
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/datasource/insertDataSourceByAccess")
+    @ApiOperation("同步数据接入数据源")
+    ResultEntity<DataSourceResultDTO> insertDataSourceByAccess(@RequestBody DataSourceSaveDTO dto);
+
+    /**
+     * 添加系统数据源，设置nifi启动参数
+     * @param dto
+     * @return
+     */
+    @PostMapping("/datasource/add")
+    ResultEntity<Object> addData(@RequestBody DataSourceSaveDTO dto);
+
+    /**
+     * 修改系统数据源，设置nifi启动参数
+     * @param dto
+     * @return
+     */
+    @PutMapping("/datasource/edit")
+    ResultEntity<Object> editData(@RequestBody DataSourceSaveDTO dto);
+
+    @GetMapping("/info/getCurrentUserInfo")
+    ResultEntity<Object> getCurrentUserInfo();
+
+    @PostMapping("/sqlFactroy/sqlCheck")
+    ResultEntity<List<TableMetaDataObject>> sqlCheck(@RequestParam("sql")String sql, @RequestParam("dbType")String dbType);
+
+    /**
+     * 获取单条数据源连接信息
+     *
+     * @param datasourceId
+     * @return
+     */
+    @GetMapping("/datasource/getById/{datasourceId}")
+    ResultEntity<DataSourceDTO> getById(@RequestParam("datasourceId") int datasourceId);
 }

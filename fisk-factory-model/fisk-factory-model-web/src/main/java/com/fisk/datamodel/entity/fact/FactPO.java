@@ -47,6 +47,22 @@ public class FactPO extends BasePO {
     /**
      * 数据接入应用id
      */
-    public int appId;
+    // public int appId;
 
+    /**
+     * 数据建模数据来源库id
+     */
+    public Integer dataSourceId;
+    /**
+     * 临时表名称前缀
+     */
+    public String prefixTempName;
+    /**
+     * 维度key数据同步脚本
+     */
+    public String dimensionKeyScript;
+    /**
+     * 覆盖方式预览脚本
+     */
+    public String coverScript;
 }

@@ -6,6 +6,7 @@ import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -18,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.sql.*;
@@ -105,12 +107,14 @@ public class TaskPgTableStructureHelper
                 po.fieldId = String.valueOf(item.fieldId);
                 po.fieldName = item.fieldEnName;
                 po.fieldType = item.fieldType;
-                po.primaryKey = item.isPrimaryKey == 0 ? false : true;
-                if ("VARCHAR".equals(item.fieldType)) {
+                po.primaryKey = item.isPrimaryKey != 0;
+                //默认为1
+                po.validVersion = 1;
+                if (item.fieldType.contains("VARCHAR")) {
                     po.fieldType = item.fieldType + "(" + item.fieldLength + ")";
                 }
                 if ("FLOAT".equals(item.fieldType)) {
-                    po.fieldType = item.fieldType + "(18,9)";
+                    po.fieldType = item.fieldType;
                 }
                 poList.add(po);
                 if (item.associateDimensionId != 0 && item.associateDimensionFieldId != 0) {
@@ -122,6 +126,8 @@ public class TaskPgTableStructureHelper
                     po2.fieldId = String.valueOf(item.associateDimensionId);
                     po2.fieldName = (item.associateDimensionName.substring(4) + "key");
                     po2.fieldType = "VARCHAR(255)";
+                    //默认为1
+                    po2.validVersion = 1;
                     poList.add(po2);
                 }
             }
@@ -136,7 +142,7 @@ public class TaskPgTableStructureHelper
             return updatePgTableStructure(sql, version, dto.createType);
         } catch (Exception ex) {
             log.error("saveTableStructure:" + ex);
-            return ResultEnum.SAVE_DATA_ERROR;
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, StackTraceHelper.getStackTraceInfo(ex));
         }
     }
 
@@ -230,25 +236,27 @@ public class TaskPgTableStructureHelper
         String pgsqlDwUsername = "";
         String pgsqlDwPassword = "";
         String pgsqlDwDriverClass = "";
+        DataSourceTypeEnum type = null;
+        DataSourceDTO odsData = new DataSourceDTO();
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
-            DataSourceDTO data = fiDataDataSource.data;
-            pgsqlOdsUrl = data.conStr;
-            pgsqlOdsUsername = data.conAccount;
-            pgsqlOdsPassword = data.conPassword;
-            pgsqlOdsDriverClass = data.conType.getDriverName();
+            odsData = fiDataDataSource.data;
+            pgsqlOdsUrl = odsData.conStr;
+            pgsqlOdsUsername = odsData.conAccount;
+            pgsqlOdsPassword = odsData.conPassword;
+            pgsqlOdsDriverClass = odsData.conType.getDriverName();
         } else {
             log.error("userclient无法查询到ods库的连接信息");
             return ResultEnum.ERROR;
         }
-
+        DataSourceDTO dwData = new DataSourceDTO();
         ResultEntity<DataSourceDTO> fiDataDataDwSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
         if (fiDataDataDwSource.code == ResultEnum.SUCCESS.getCode()) {
-            DataSourceDTO data = fiDataDataDwSource.data;
-            pgsqlDwUrl = data.conStr;
-            pgsqlDwUsername = data.conAccount;
-            pgsqlDwPassword = data.conPassword;
-            pgsqlDwDriverClass = data.conType.getDriverName();
+            dwData = fiDataDataDwSource.data;
+            pgsqlDwUrl = dwData.conStr;
+            pgsqlDwUsername = dwData.conAccount;
+            pgsqlDwPassword = dwData.conPassword;
+            pgsqlDwDriverClass = dwData.conType.getDriverName();
         } else {
             log.error("userclient无法查询到dw库的连接信息");
             return ResultEnum.ERROR;
@@ -260,18 +268,24 @@ public class TaskPgTableStructureHelper
             Class.forName(pgsqlOdsDriverClass);
             // 数据接入
             conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlOdsPassword);
+            type = odsData.conType;
         } else {
             Class.forName(pgsqlDwDriverClass);
             // 数据建模
             conn = DriverManager.getConnection(pgsqlDwUrl, pgsqlDwUsername, pgsqlDwPassword);
+            type = dwData.conType;
         }
         try {
             //检查版本
-            ResultEnum resultEnum = checkVersion(version, conn);
+            ResultEnum resultEnum = checkVersion(version, conn, type);
             if (resultEnum == ResultEnum.TASK_TABLE_NOT_EXIST) {
                 return resultEnum;
             }
             log.info("执行存储过程返回修改语句:" + sql);
+            if (!StringUtils.isEmpty(sql) && sql.contains("DECLARE")) {
+                sql = subSql(sql);
+            }
+
             //修改表结构
             if (sql != null && sql.length() > 0) {
                 st = conn.createStatement();
@@ -281,13 +295,28 @@ public class TaskPgTableStructureHelper
             return ResultEnum.SUCCESS;
         } catch (SQLException e) {
             log.error("updatePgTableStructure:" + StackTraceHelper.getStackTraceInfo(e));
-            return ResultEnum.SQL_ERROR;
+            throw new FkException(ResultEnum.SQL_ERROR, StackTraceHelper.getStackTraceInfo(e));
         } finally {
             if (st != null) {
                 st.close();
             }
             conn.close();
         }
+    }
+
+    /**
+     * 包含DECLARE时，切分sql进行重组
+     *
+     * @param sql
+     * @return
+     */
+    private String subSql(String sql) {
+        String[] ds = sql.split("DECLARE");
+        String[] d = ds[1].split("EXEC \\( @primary_key \\);");
+        if (d.length > 1) {
+            return " DECLARE " + d[0] + " EXEC ( @primary_key ); " + ds[0] + d[1];
+        }
+        return " DECLARE " + d[0] + " EXEC ( @primary_key ); " + ds[0];
     }
 
     /**
@@ -298,7 +327,7 @@ public class TaskPgTableStructureHelper
      * @return
      * @throws Exception
      */
-    public ResultEnum checkVersion(String version, Connection conn) throws Exception {
+    public ResultEnum checkVersion(String version, Connection conn, DataSourceTypeEnum type) throws Exception {
         try {
             QueryWrapper<TaskPgTableStructurePO> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda().eq(TaskPgTableStructurePO::getVersion, version);
@@ -314,8 +343,9 @@ public class TaskPgTableStructureHelper
                 if (!CollectionUtils.isEmpty(taskPgTableStructurePOList1)) {
                     //判断表是否存在
                     DatabaseMetaData metaData = conn.getMetaData();
-                    List<String> schemaAndTableName = TableNameGenerateUtils.getSchemaAndTableName(taskPgTableStructurePOList1.get(0).tableName);
+                    List<String> schemaAndTableName = TableNameGenerateUtils.getSchemaAndTableName(taskPgTableStructurePOList1.get(0).tableName, type);
                     ResultSet set = metaData.getTables(null, schemaAndTableName.get(0), schemaAndTableName.get(1), null);
+                    log.info(String.valueOf(set.getRow()));
                     if (set.next()) {
                         return ResultEnum.SUCCESS;
                     }
@@ -351,5 +381,6 @@ public class TaskPgTableStructureHelper
             conn.close();
         }
     }
+
 
 }

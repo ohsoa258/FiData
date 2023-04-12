@@ -100,7 +100,7 @@ public class PgsqlUtils {
                 tablePyhName.tableName = tablename;
                 list.add(tablePyhName);
             }
-            for (TablePyhNameDTO tablePyhName : list) {
+            /*for (TablePyhNameDTO tablePyhName : list) {
                 resultSet = stmt.executeQuery("select a.attname as fieldname, col_description(a.attrelid,a.attnum) as comment,format_type(a.atttypid,a.atttypmod) as type, a.attnotnull as notnull\n" +
                         "from pg_class as c,pg_attribute as a\n" +
                         "where c.relname = '" + tablePyhName.tableName + "' and a.attrelid = c.oid and a.attnum > 0;");
@@ -112,7 +112,7 @@ public class PgsqlUtils {
                     tableStructures.add(tableStructure);
                 }
                 tablePyhName.fields = tableStructures;
-            }
+            }*/
         } catch (SQLException e) {
             log.error("【getTableNameAndColumnsPlus】获取表名及表字段失败, ex", e);
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
@@ -121,6 +121,39 @@ public class PgsqlUtils {
             AbstractCommonDbHelper.closeConnection(conn);
         }
         return list;
+    }
+
+    /**
+     * 获取表字段信息
+     *
+     * @param conn
+     * @param tableName
+     * @return
+     */
+    public List<TableStructureDTO> getTableColumnName(Connection conn, String tableName) {
+        Statement st = null;
+        ResultSet rs = null;
+        try {
+            st = conn.createStatement();
+            rs = st.executeQuery("select a.attname as fieldname, col_description(a.attrelid,a.attnum) as comment,format_type(a.atttypid,a.atttypmod) as type, a.attnotnull as notnull\n" +
+                    "from pg_class as c,pg_attribute as a\n" +
+                    "where c.relname = '" + tableName + "' and a.attrelid = c.oid and a.attnum > 0;");
+            List<TableStructureDTO> tableStructures = new ArrayList<>();
+            while (rs.next()) {
+                TableStructureDTO tableStructure = new TableStructureDTO();
+                String fieldname = rs.getString("fieldname");
+                tableStructure.fieldName = fieldname;
+                tableStructures.add(tableStructure);
+            }
+            return tableStructures;
+        } catch (SQLException e) {
+            log.error("【pg数据库获取表字段信息失败:】,{}", e);
+        } finally {
+            AbstractCommonDbHelper.closeResultSet(rs);
+            AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeConnection(conn);
+        }
+        return null;
     }
 
     /**
@@ -238,7 +271,7 @@ public class PgsqlUtils {
             // 提交要执行的批处理，防止 JDBC 执行事务处理
             con.commit();
         } catch (SQLException e) {
-            log.error("批量执行SQL异常: {}", e.getMessage());
+            log.error(String.format("批量执行SQL异常: %s", e.getMessage()), e);
             // 执行sql异常,重置记录的条数
             countSql = 0;
             ApiSqlResultDTO apiSqlResultDto = new ApiSqlResultDTO();
@@ -351,7 +384,7 @@ public class PgsqlUtils {
             // 提交要执行的批处理，防止 JDBC 执行事务处理
             con.commit();
         } catch (SQLException e) {
-            log.error("批量执行SQL异常: {}", e.getMessage());
+            log.error(String.format("批量执行SQL异常: %s", e.getMessage()), e);
             // 执行sql异常,重置记录的条数
             countSql = 0;
             ApiSqlResultDTO apiSqlResultDto = new ApiSqlResultDTO();

@@ -11,19 +11,19 @@ import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
+import com.fisk.dataaccess.dto.app.AppRegistrationInfoDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.impl.TableAccessImpl;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
-import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
@@ -39,6 +39,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -59,8 +60,6 @@ public class AppRegistrationController {
     private TableAccessImpl tableAccessImpl;
     @Resource
     private PublishTaskClient publishTaskClient;
-    @Resource
-    private DataManageClient dataManageClient;
 
     @PostMapping("/add")
     @ApiOperation(value = "添加")
@@ -154,13 +153,6 @@ public class AppRegistrationController {
             log.info("task删除应用{}", task);
         }
 
-        // 删除元数据
-        if (CollectionUtils.isNotEmpty(nifiVO.qualifiedNames)) {
-            MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
-            metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.getQualifiedNames());
-            dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
-        }
-
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
 
@@ -230,10 +222,17 @@ public class AppRegistrationController {
         return service.getRepeatAppAbbreviation(appAbbreviation, whetherSchema);
     }
 
+    @ApiIgnore
     @ApiOperation(value = "获取所有应用以及表、字段数据")
     @GetMapping("/getDataAppRegistrationMeta")
     public ResultEntity<Object> getDataAppRegistrationMeta() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.getDataAppRegistrationMeta());
+    }
+
+    @ApiOperation(value = "获取不同ods数据源对应的应用以及表、字段数据")
+    @GetMapping("/getAllDataAppRegistrationMeta")
+    public ResultEntity<Object> getAllDataAppRegistrationMeta() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.getAllDataAppRegistrationMeta());
     }
 
     @ApiOperation(value = "根据sql语句,获取字段列表(数据建模)")
@@ -327,4 +326,21 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dataTypeList(appId));
     }
 
+    @GetMapping("/synchronizationAppRegistration")
+    @ApiOperation(value = "元数据同步应用信息")
+    public ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAppRegistration() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.synchronizationAppRegistration());
+    }
+
+    @GetMapping("/synchronizationAccessTable")
+    @ApiOperation(value = "元数据同步所有接入表")
+    public ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAccessTable() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.synchronizationAccessTable());
+    }
+
+    @PostMapping("/getBatchTargetDbIdByAppIds")
+    @ApiOperation(value = "依据应用id集合查询目标源id集合")
+    public ResultEntity<List<AppRegistrationInfoDTO>> getBatchTargetDbIdByAppIds(@RequestBody List<Integer> appIds){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBatchTargetDbIdByAppIds(appIds));
+    }
 }

@@ -31,7 +31,7 @@
     <select id="getPendingApproval" resultType="com.fisk.mdm.vo.process.PendingApprovalVO">
         SELECT
         a.id as apply_id,
-        a.process_id,
+        b.process_id,
         a.applicant,
         a.description,
         a.operation_type,
@@ -41,7 +41,6 @@
         (
         SELECT
         a.id,
-        a.process_id,
         a.applicant,
         a.description,
         a.operation_type,

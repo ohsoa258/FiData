@@ -5,11 +5,10 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
-import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
-import com.fisk.dataaccess.dto.table.TableBusinessDTO;
-import com.fisk.dataaccess.dto.table.TableFieldsDTO;
-import com.fisk.dataaccess.dto.table.TableVersionDTO;
+import com.fisk.dataaccess.dto.access.OverlayCodePreviewAccessDTO;
+import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.service.ITableFields;
+import com.fisk.datamodel.dto.businessarea.OverlayCodePreviewDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -65,4 +64,35 @@ public class TableFieldsController {
     public ResultEntity<Object> delVersionData(@Validated @RequestBody TableVersionDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delVersionData(dto.getKeyStr()));
     }
+
+    @PostMapping("/batchPublish")
+    @ApiOperation(value = "批量发布")
+    public ResultEntity<Object> batchPublish(@Validated @RequestBody BatchPublishDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.batchPublish(dto));
+    }
+
+    @PostMapping("/addFile")
+    @ApiOperation(value = "新增单个字段")
+    public ResultEntity<Object> addFile(@Validated @RequestBody TableFieldsDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addFile(dto));
+    }
+
+    @DeleteMapping("/delFile/{id}/{tableId}/{userId}")
+    @ApiOperation(value = "删除单个字段&&元数据字段异步删除")
+    public ResultEntity<Object> delFile(@PathVariable("id") long id,@PathVariable("tableId")long tableId,@PathVariable("userId")long userId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delFile(id, tableId,userId));
+    }
+
+    @PutMapping("/updateFile")
+    @ApiOperation(value = "编辑单个字段")
+    public ResultEntity<Object> updateFile(@Validated @RequestBody TableFieldsDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.updateFile(dto));
+    }
+
+    @PostMapping("/overlayCodePreview")
+    @ApiOperation(value = "覆盖方式预览代码")
+    public ResultEntity<Object> overlayCodePreviewTest(@RequestBody OverlayCodePreviewAccessDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.overlayCodePreview(dto));
+    }
+
 }

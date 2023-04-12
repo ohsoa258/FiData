@@ -1,9 +1,9 @@
 package com.fisk.datafactory.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.datafactory.dto.customworkflow.DispatchEmailDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.*;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.dto.tasknifi.*;
@@ -58,7 +58,7 @@ public interface DataFactoryClient {
      */
     @PostMapping("/dataFactory/getNIfiPortHierarchy")
     @ApiOperation(value = "获取管道层级关系")
-    ResultEntity<NifiPortsHierarchyDTO> getNifiPortHierarchy(@Validated @RequestBody NifiGetPortHierarchyDTO dto);
+    ResultEntity<TaskHierarchyDTO> getNifiPortHierarchy(@Validated @RequestBody NifiGetPortHierarchyDTO dto);
 
     /**
      * 根据管道主键id查询管道内第一批任务
@@ -148,5 +148,41 @@ public interface DataFactoryClient {
      */
     @GetMapping("/nifiCustomWorkflowDetail/get/{id}")
     @ApiOperation(value = "查询单个管道组件")
-    ResultEntity<NifiCustomWorkflowDetailDTO> getData(@PathVariable("id") long id);
+    public ResultEntity<NifiCustomWorkflowDetailDTO> getData(@PathVariable("id") Long id);
+
+    @ApiOperation("查询job结构与运行状态")
+    @PostMapping("/nifiCustomWorkflowDetail/getJobList")
+    public ResultEntity<List<DispatchJobHierarchyDTO>> getJobList(@RequestBody QueryJobHierarchyDTO dto);
+
+
+    /**
+     * 调用邮件服务器发邮件的方法
+     *
+     * @param dispatchEmail
+     * @return
+     */
+    @PostMapping("/DispatchEmail/pipelineSendEmails")
+    @ApiOperation(value = "管道异常发邮件")
+    public ResultEntity<Object> pipelineSendEmails(@RequestBody DispatchEmailDTO dispatchEmail);
+
+
+    /**
+     * 获取所有管道
+     *
+     * @return
+     */
+    @GetMapping("/nifiCustomWorkflow/getNifiCustomWorkFlowDrop")
+    @ApiOperation(value = "获取所有管道")
+    ResultEntity<Object> getNifiCustomWorkFlowDrop();
+
+
+    /**
+     * 依据taskId获取当前任务下的所有配置列表信息
+     *
+     * @param taskId 任务id
+     * @return
+     */
+    @GetMapping("/taskSetting/getTaskSettingsByTaskId/{taskId}")
+    @ApiOperation(value = "根据任务id查询当前任务下的配置信息列表")
+    public List<TaskSettingDTO> getTaskSettingsByTaskId(@PathVariable("taskId") long taskId);
 }

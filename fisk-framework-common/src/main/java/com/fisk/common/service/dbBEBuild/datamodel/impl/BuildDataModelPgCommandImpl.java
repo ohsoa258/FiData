@@ -104,7 +104,9 @@ public class BuildDataModelPgCommandImpl implements IBuildDataModelSqlCommand {
         str.append("EnglishMonthName varchar(10) not null,");
         str.append("MonthNumberOfYear int2 not null,");
         str.append("CalendarQuarter int2 not null,");
-        str.append("CalendarYear int2 not null)");
+        str.append("CalendarYear int2 not null,");
+        str.append("FullDateKey date not null,");
+        str.append("Is_WeekDay int2 not null)");
 
         return str.toString();
     }

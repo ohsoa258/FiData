@@ -1,9 +1,7 @@
 package com.fisk.datagovernance.dto.dataquality.datacheck;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFieldDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -16,44 +14,35 @@ import lombok.Data;
 @Data
 public class DataCheckQueryDTO {
     /**
-     * 搜索条件
+     * 数据源表主键id，查询表/视图时必填
      */
-    @ApiModelProperty(value = "搜索条件")
-    public String keyword;
-
-    /**
-     * 数据源表主键id
-     */
-    @ApiModelProperty(value = "数据源表主键id")
+    @ApiModelProperty(value = "数据源表主键id，选中表/视图节点必填")
     public int datasourceId;
 
     /**
      * 数据源类型
      */
-    @ApiModelProperty(value = "数据源类型")
+    @ApiModelProperty(value = "数据源类型，选中节点必填")
     public SourceTypeEnum sourceTypeEnum;
 
     /**
-     * 表名称/表Id
+     * 选中的标识
+     * 自定义：表名称
+     * FiData：表ID
+     * 树节点：NodeId
      */
-    @ApiModelProperty(value = "表名称/表Id")
-    public String tableUnique;
+    @ApiModelProperty(value = "选中的标识，选中节点必填")
+    public String uniqueId;
 
     /**
-     * 表字段信息
+     * 节点类型，选中后节点类型必填
      */
-    @ApiModelProperty(value = "表字段信息")
-    public DataTableFieldDTO tableField;
+    @ApiModelProperty(value = "节点类型，选中节点必填")
+    public LevelTypeEnum levelType;
 
     /**
      * 表业务类型 1：事实表、2：维度表、3、指标表  4、宽表
      */
-    @ApiModelProperty(value = "表业务类型 1：事实表、2：维度表、3、指标表  4、宽表")
+    @ApiModelProperty(value = "表业务类型，选中表/视图节点必填")
     public int tableBusinessType;
-
-    /**
-     * 分页对象
-     */
-    @ApiModelProperty(value = "分页对象")
-    public Page<DataCheckVO> page;
 }

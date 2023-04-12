@@ -7,6 +7,7 @@ import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.app.AppNameDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
@@ -21,6 +22,7 @@ import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
@@ -35,6 +37,7 @@ import com.fisk.task.enums.OlapTableEnum;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -60,6 +63,11 @@ public class PhysicalTableController {
     private PublishTaskClient publishTaskClient;
     @Resource
     private DataFactoryClient dataFactoryClient;
+    @Resource
+    DataManageClient dataManageClient;
+
+    @Value("${spring.open-metadata}")
+    private Boolean openMetadata;
 
     /**
      * 根据是否为实时,查询应用名称集合
@@ -249,12 +257,20 @@ public class PhysicalTableController {
         list.add(deleteTableDetailDto);
         dataFactoryClient.editByDeleteTable(list);
 
-        // 删除元数据
-       /* MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
-        metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.qualifiedNames);
-        dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);*/
+        if (openMetadata) {
+            // 删除元数据
+            MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
+            metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.qualifiedNames);
+            metaDataDeleteAttributeDto.setClassifications(nifiVO.classifications);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
+                }
+            }).start();
+        }
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,result);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
 
     @PostMapping("/pageFilter")

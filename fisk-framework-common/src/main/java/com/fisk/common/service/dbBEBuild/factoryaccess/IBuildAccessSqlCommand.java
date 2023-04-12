@@ -91,5 +91,13 @@ public interface IBuildAccessSqlCommand {
      */
     JSONObject dataTypeList();
 
-
+    /**
+     * @return java.lang.String
+     * @description 获取版本删除语句（不含条件）
+     * @author dick
+     * @date 2022/11/2 18:49
+     * @version v1.0
+     * @params
+     */
+    String buildVersionDeleteSql(String tableName);
 }

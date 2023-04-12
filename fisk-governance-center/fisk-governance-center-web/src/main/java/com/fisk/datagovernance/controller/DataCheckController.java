@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * @author dick
  * @version 1.0
- * @description 数据校验
+ * @description 校验规则
  * @date 2022/3/22 16:17
  */
 @Api(tags = {SwaggerConfig.DATA_CHECK_CONTROLLER})
@@ -31,10 +31,10 @@ public class DataCheckController {
     @Resource
     private IDataCheckManageService service;
 
-    @ApiOperation("分页查询数据校验模板组件")
-    @PostMapping("/page")
-    public ResultEntity<Page<DataCheckVO>> getAll(@RequestBody DataCheckQueryDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAll(dto));
+    @ApiOperation("查询全部校验规则")
+    @PostMapping("/getAllRule")
+    public ResultEntity<List<DataCheckVO>> getAllRule(@RequestBody DataCheckQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllRule(dto));
     }
 
     @ApiOperation("添加数据校验模板组件")

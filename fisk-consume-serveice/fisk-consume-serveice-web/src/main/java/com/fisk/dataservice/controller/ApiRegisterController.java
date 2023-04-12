@@ -7,8 +7,11 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.api.*;
+import com.fisk.dataservice.dto.appserviceconfig.AppTableServiceConfigDTO;
 import com.fisk.dataservice.service.IApiRegisterManageService;
 import com.fisk.dataservice.vo.api.*;
+import com.fisk.dataservice.vo.fileservice.FileServiceVO;
+import com.fisk.dataservice.vo.tableservice.TableServiceVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +43,18 @@ public class ApiRegisterController {
     @PostMapping("/getApiSubAll")
     public ResultEntity<PageDTO<ApiSubVO>> getApiSubAll(@RequestBody ApiSubQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getApiSubAll(dto));
+    }
+
+    @ApiOperation("分页查询所有表服务订阅")
+    @PostMapping("/getTableServiceSubAll")
+    public ResultEntity<PageDTO<TableServiceVO>> getTableServiceSubAll(@RequestBody ApiSubQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableServiceSubAll(dto));
+    }
+
+    @ApiOperation("分页查询所有文件订阅")
+    @PostMapping("/getFileServiceSubAll")
+    public ResultEntity<PageDTO<FileServiceVO>> getFileServiceSubAll(@RequestBody ApiSubQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFileServiceSubAll(dto));
     }
 
     @ApiOperation("添加api")
@@ -81,6 +96,13 @@ public class ApiRegisterController {
     @ApiOperation("预览")
     @PostMapping("/preview")
     public ResultEntity<ApiPreviewVO> preview(@RequestBody ApiPreviewDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.preview(dto));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.preview(dto));
     }
+
+    @ApiOperation("保存应用引入表服务配置")
+    @PostMapping("/appTableServiceConfig")
+    public ResultEntity<Object> appTableServiceConfig(@RequestBody List<AppTableServiceConfigDTO> dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.appTableServiceConfig(dto));
+    }
+
 }

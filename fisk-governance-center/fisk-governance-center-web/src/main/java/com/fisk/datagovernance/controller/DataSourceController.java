@@ -1,6 +1,6 @@
 package com.fisk.datagovernance.controller;
 
-import com.fisk.common.core.baseObject.dto.PageDTO;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -8,6 +8,7 @@ import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
 import com.fisk.datagovernance.dto.dataops.GetDataOpsFieldSourceDTO;
+import com.fisk.datagovernance.dto.dataops.TableDataSyncDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.service.dataops.IDataOpsDataSourceManageService;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
@@ -42,7 +43,7 @@ public class DataSourceController {
 
     @PostMapping("/page")
     @ApiOperation("数据质量，获取所有数据源配置信息")
-    public ResultEntity<PageDTO<DataSourceConVO>> page(@RequestBody DataSourceConQuery query) {
+    public ResultEntity<Page<DataSourceConVO>> page(@RequestBody DataSourceConQuery query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.page(query));
     }
 
@@ -73,23 +74,29 @@ public class DataSourceController {
     @GetMapping("/getFiDataConfigMetaData")
     @ApiOperation("数据质量，获取FiData配置表元数据信息")
     public ResultEntity<FiDataMetaDataTreeDTO> getFiDataConfigMetaData() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataConfigMetaData());
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataConfigMetaData(true));
     }
 
     @GetMapping("/getCustomizeMetaData")
     @ApiOperation("数据质量，获取自定义数据源表元数据信息")
     public ResultEntity<FiDataMetaDataTreeDTO> getCustomizeMetaData() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCustomizeMetaData());
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCustomizeMetaData(true));
+    }
+
+    @PostMapping("/reloadDataSource")
+    @ApiOperation("数据质量，刷新数据源元数据信息")
+    public ResultEntity<Object> reloadDataSource(@RequestParam("id") int id) {
+        return ResultEntityBuild.build(service.reloadDataSource(id));
     }
 
     @PostMapping("/getDataOpsTableSource")
-    @ApiOperation("数据运维，获取数据运维数据源中的 实例、库、表信息")
+    @ApiOperation("数据运维，获取数据运维数据源中的实例、库、表信息")
     public ResultEntity<List<DataOpsSourceVO>> getDataOpsTableSource() {
         return dataOpsDataSourceManageService.getDataOpsTableSource();
     }
 
     @PostMapping("/getDataOpsFieldSource")
-    @ApiOperation("获取数据运维数据源中的 字段信息")
+    @ApiOperation("数据运维，获取数据运维数据源中的字段信息")
     public ResultEntity<List<DataOpsTableFieldVO>> getDataOpsFieldSource(@RequestBody GetDataOpsFieldSourceDTO dto) {
         return dataOpsDataSourceManageService.getDataOpsFieldSource(dto);
     }
@@ -104,6 +111,12 @@ public class DataSourceController {
     @ApiOperation("数据运维，执行sql")
     public ResultEntity<ExecuteResultVO> executeDataOpsSql(@Validated @RequestBody ExecuteDataOpsSqlDTO dto) {
         return dataOpsDataSourceManageService.executeDataOpsSql(dto);
+    }
+
+    @PostMapping("/tableDataSync")
+    @ApiOperation("数据运维，表数据同步")
+    public ResultEntity<Object> tableDataSync(@Validated @RequestBody TableDataSyncDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataOpsDataSourceManageService.tableDataSync(dto));
     }
 
 }

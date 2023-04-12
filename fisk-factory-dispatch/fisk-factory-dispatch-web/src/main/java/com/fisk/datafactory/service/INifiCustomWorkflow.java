@@ -2,8 +2,10 @@ package com.fisk.datafactory.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkFlowDropDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowNumDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
@@ -85,4 +87,34 @@ public interface INifiCustomWorkflow extends IService<NifiCustomWorkflowPO> {
      * @return list
      */
     List<String> getTableListById(Long id);
+
+    /**
+     * 获取所有管道
+     *
+     * @return
+     */
+    List<NifiCustomWorkFlowDropDTO> getNifiCustomWorkFlowDrop();
+
+
+    /**
+     * 获取数据调度中的应用总数
+     *
+     * @return Integer
+     */
+    Integer getDataDispatchNum();
+
+    /**
+     * 暂停/恢复管道工作状态
+     * @param nifiCustomWorkflowId
+     * @param ifFire
+     * @return
+     */
+    ResultEntity<Object> updateWorkStatus(String nifiCustomWorkflowId, boolean ifFire);
+
+    /**
+     * 依据pipelTraceId获取管道部分字段信息
+     * @param pipelTraceId
+     * @return
+     */
+    ResultEntity<Object> getNifiCustomWorkFlowPartInfo(String pipelTraceId);
 }

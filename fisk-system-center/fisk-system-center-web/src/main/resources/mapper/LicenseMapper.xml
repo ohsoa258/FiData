@@ -1,0 +1,35 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.system.mapper.LicenseMapper">
+
+    <select id="getAll" resultType="com.fisk.system.vo.license.LicenceVO">
+        SELECT
+        licence.id,
+        customer_code AS customerCode,
+        customer_name AS customerName,
+        customer_license AS customerLicense,
+        machine_key AS machineKey,
+        services_scope AS servicesScope,
+        authorization_date AS authorizationDate,
+        expiration_date AS expirationDate,
+        CASE
+
+        WHEN expiration_date >= DATE_FORMAT( NOW(), '%Y/%m/%d' ) THEN
+        '未到期' ELSE '已到期'
+        END AS licenseState,
+        licence.create_time AS createTime,
+        uInfo.username AS createUser
+        FROM
+        tb_system_licence licence
+        LEFT JOIN tb_user_info uInfo ON licence.create_user = uInfo.id
+        WHERE
+        licence.del_flag = 1
+        <if test="keyWord !=null and keyWord.length()>0 ">
+            AND (customer_code LIKE concat('%', #{keyWord}, '%')
+            OR customer_name LIKE concat('%', #{keyWord}, '%'))
+        </if>
+        ORDER BY licence.create_time DESC
+    </select>
+
+</mapper>

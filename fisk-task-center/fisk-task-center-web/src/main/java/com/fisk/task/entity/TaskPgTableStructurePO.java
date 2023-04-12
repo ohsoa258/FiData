@@ -51,5 +51,9 @@ public class TaskPgTableStructurePO extends BasePO {
      * 是否为业务主键
      */
     public boolean primaryKey;
+    /**
+     * 有效版本
+     */
+    public int validVersion;
 
 }

@@ -12,7 +12,6 @@ import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
-import com.fisk.task.entity.TaskDwDimPO;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.postgre.datainput.IbuildTable;
 import com.fisk.task.mapper.TaskDwDimMapper;
@@ -22,7 +21,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -48,18 +46,27 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         //ods与stg类型不变,不然有的值,类型转换不来
         tableFieldsDTOS.forEach((l) -> {
             if (l.fieldType.contains("FLOAT")) {
-                sqlFileds.append("" + l.fieldName + " " + " numeric(18,9) ");
+                sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
             } else if (l.fieldType.contains("INT")) {
-                sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + " ");
+                sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
             } else if (l.fieldType.contains("TEXT")) {
-                sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + " ");
-            } else if (l.fieldType.contains("TIMESTAMP")) {
-                sqlFileds.append("" + l.fieldName + " datetime ");
+                sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
+                stgSql.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + ",");
+            } else if (l.fieldType.toUpperCase().equals("DATE")) {
+                sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
+            } else if (l.fieldType.toUpperCase().equals("TIME")) {
+                sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
+            } else if (l.fieldType.contains("TIMESTAMP") || StringUtils.equals(l.fieldType.toUpperCase(), "DATETIME")) {
+                sqlFileds.append("[" + l.fieldName + "] datetime ");
+            } else if (l.fieldType.contains("BIT")) {
+                sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
             } else {
-                sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + "(" + l.fieldLength + ") ");
+                sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + "(" + l.fieldLength + ") ");
             }
-            //todo 修改stg表,字段类型
-            stgSql.append("" + l.fieldName + " nvarchar(4000),");
+            // 修改stg表,字段类型
+            if (!l.fieldType.contains("TEXT")) {
+                stgSql.append("[" + l.fieldName + "] nvarchar(4000),");
+            }
             if (l.isPrimarykey == 1) {
                 pksql.append("" + l.fieldName + ",");
                 sqlFileds.append("not null ,");
@@ -68,10 +75,10 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             }
 
         });
-        stgSql.append("fi_createtime varchar(50) DEFAULT (format(GETDATE(),'yyyy-MM-dd HH:mm:ss') ),fi_updatetime varchar(50),fi_enableflag varchar(50)," +
+        stgSql.append("fi_createtime varchar(50) DEFAULT (format(GETDATE(),'yyyy-MM-dd HH:mm:ss') ),fi_updatetime varchar(50),fi_version varchar(50),fi_enableflag varchar(50)," +
                 "fi_error_message varchar(250),fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3'," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT (newid())");
 
-        sqlFileds.append("fi_createtime varchar(50) DEFAULT (format(GETDATE(),'yyyy-MM-dd HH:mm:ss')),fi_updatetime varchar(50),fidata_batch_code varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT (newid())");
+        sqlFileds.append("fi_createtime varchar(50) DEFAULT (format(GETDATE(),'yyyy-MM-dd HH:mm:ss')),fi_updatetime varchar(50),fi_version varchar(50),fidata_batch_code varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT (newid())");
         String havePk = pksql.toString();
         sqlFileds.append(")");
         stgSql.append(");");
@@ -97,6 +104,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         if (StringUtils.isNotEmpty(havePk)) {
             // stg_sql1 += ";alter table " + odsTableName + " add constraint " + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "_pkey primary key(" + havePk.substring(0, havePk.length() - 1) + ")";
         }
+        stg_sql1 = "if not exists (select * from sysobjects where id = object_id('" + odsTableName + "') and OBJECTPROPERTY(id, 'IsUserTable') = 1) " + stg_sql1;
         sqlList.add(stg_sql1);
         sqlList.add(stg_sql2);
         return sqlList;
@@ -105,7 +113,6 @@ public class BuildSqlServerTableImpl implements IbuildTable {
     @Override
     public String queryTableNum(BuildPhysicalTableDTO buildPhysicalTableDTO) {
         String selectTable = "";
-        selectTable = selectTable.substring(0, selectTable.length() - 2);
         if (buildPhysicalTableDTO.whetherSchema) {
             //select * from sys.schemas ss left join sys.tables st on ss.schema_id=st.schema_id where ss.name ='dbo' and st.name='stg_dim_ghs3'
             selectTable = "select count(*) from sys.tables st left join sys.schemas ss on ss.schema_id=st.schema_id where ss.name = '"
@@ -141,21 +148,26 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         }
         sql = sql.replaceFirst("call public." + funcName + "\\(", "exec [dbo]." + funcName);
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
-            if (targetTableName.startsWith("dim_")) {
-                tableKey = targetTableName.substring(4) + "key";
-            } else if (targetTableName.startsWith("fact_")) {
-                tableKey = targetTableName.substring(5) + "key";
-            }
+            tableKey = targetTableName.substring(targetTableName.indexOf("_") + 1) + "key";
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
-                sql += "stg_" + targetTableName + "'";
+                sql += buildNifiFlow.prefixTempName + targetTableName + "'";
                 sql += ",'" + targetTableName + "'";
+                //同步方式
+                String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
+                if (Objects.nonNull(buildNifiFlow) && StringUtils.isNotEmpty(buildNifiFlow.generateVersionSql)) {
+                    sql += ",'" + syncModeTypeEnum.FULL_VOLUME_VERSION.getName() + "'";
+                } else {
+                    sql += ",'" + syncMode + "'";
+                }
             } else {
                 sql += "${fragment.index}','''";
                 String fieldList = config.modelPublishFieldDTOList.stream().filter(Objects::nonNull)
                         .filter(e -> e.fieldEnName != null && !Objects.equals("", e.fieldEnName))
                         .map(t -> t.fieldEnName).collect(Collectors.joining("'''',''''"));
-                sql += fieldList + "''','" + tableKey + "','stg_" + targetTableName + "'";
+                sql += fieldList + "''','" + tableKey + "','" + buildNifiFlow.prefixTempName + targetTableName + "'";
                 sql += ",'" + config.processorConfig.targetTableName + "'";
+                String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
+                sql += ",'" + syncMode + "'";
             }
         } else {
 
@@ -163,6 +175,13 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
                 sql += stgAndTableName.get(0) + "'";
                 sql += ",'" + stgAndTableName.get(1) + "'";
+                //同步方式
+                String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
+                if (Objects.nonNull(buildNifiFlow) && StringUtils.isNotEmpty(buildNifiFlow.generateVersionSql)) {
+                    sql += ",'" + syncModeTypeEnum.FULL_VOLUME_VERSION.getName() + "'";
+                } else {
+                    sql += ",'" + syncMode + "'";
+                }
             } else {
                 //sql +="${fragment.index}','${fidata_batch_code}','";
                 sql += "${fragment.index}','''";
@@ -171,11 +190,11 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                         .map(t -> t.fieldName).collect(Collectors.joining("'''',''''"));
                 sql += fieldList + "''','" + tableKey + "','" + stgAndTableName.get(0) + "'";
                 sql += ",'" + stgAndTableName.get(1) + "'";
+                String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
+                sql += ",'" + syncMode + "'";
             }
         }
-        //同步方式
-        String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
-        sql += ",'" + syncMode + "'";
+
         //主键
         sql += config.businessKeyAppend == null ? ",''" : ",'" + config.businessKeyAppend + "'";
         if (business == null) {
@@ -237,7 +256,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
     }
 
     @Override
-    public String queryNumbersField(BuildNifiFlowDTO dto, DataAccessConfigDTO config) {
+    public String queryNumbersField(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId) {
         //convert(varchar(100),getdate(),120)
         List<String> stgAndTableName = getStgAndTableName(config.processorConfig.targetTableName);
         if (config.processorConfig.targetTableName.contains("\\.")) {
@@ -251,11 +270,11 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
                 querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,convert(varchar(100),getdate(),120) as end_time," +
                         "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + stgAndTableName.get(1) + " where fidata_batch_code='${pipelTraceId:isEmpty():ifElse(${pipelTaskTraceId},${pipelTraceId})}'";
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + stgAndTableName.get(1) + " with (nolock) where  fidata_batch_code='${pipelTraceId:isEmpty():ifElse(${pipelTaskTraceId},${pipelTraceId})}'";
             } else {
-                querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
+                querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,convert(varchar(100),getdate(),120) as end_time," +
                         "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName + " where fidata_batch_code='${fidata_batch_code}'";
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName + " with (nolock) where fidata_batch_code='${fidata_batch_code}'";
             }
 
         }
@@ -263,6 +282,47 @@ public class BuildSqlServerTableImpl implements IbuildTable {
 
     }
 
+    @Override
+    public String queryNumbersFieldForTableServer(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId) {
+        //convert(varchar(100),getdate(),120)
+
+
+        String querySql = "";
+        if (Objects.equals(dto.type, OlapTableEnum.WIDETABLE) || Objects.equals(dto.type, OlapTableEnum.KPI)) {
+            querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,now() as end_time," +
+                    "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
+                    "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
+        } else {
+            if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
+                querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,convert(varchar(100),getdate(),120) as end_time," +
+                        "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
+            } else {
+                querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,convert(varchar(100),getdate(),120) as end_time," +
+                        "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
+            }
+
+        }
+        return querySql;
+
+    }
+
+    @Override
+    public String getTotalSql(String sql, SynchronousTypeEnum synchronousTypeEnum) {
+        sql = sql.replaceAll(FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName(), FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_OUTPUT.getName());
+        return sql;
+    }
+
+    @Override
+    public void fieldFormatModification(DataAccessConfigDTO dto) {
+        log.info("sqlserver字段暂且不用处理");
+    }
+
+    @Override
+    public String getEsqlAutoCommit() {
+        return "true";
+    }
 
     @Override
     public List<String> getStgAndTableName(String tableName) {
@@ -276,46 +336,46 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         List<ModelPublishFieldDTO> fieldList = modelPublishTableDTO.fieldList;
         String tableName = modelPublishTableDTO.tableName;
         String tablePk = "";
-        if (modelPublishTableDTO.createType == 0) {
-            tablePk = "\"" + tableName.substring(4) + "key\"";
-        } else {
-            tablePk = "\"" + tableName.substring(5) + "key\"";
-        }
-
-        StringBuilder sql = new StringBuilder();
+        // 前缀问题
+        tablePk = "[" + tableName.substring(tableName.indexOf("_") + 1) + "key]";
         StringBuilder pksql = new StringBuilder("PRIMARY KEY ( ");
-        sql.append("CREATE TABLE " + modelPublishTableDTO.tableName + " ( " + tablePk + " varchar(50), ");
         StringBuilder sqlFileds = new StringBuilder();
-        StringBuilder sqlFileds1 = new StringBuilder();
         StringBuilder stgSqlFileds = new StringBuilder();
         log.info("pg_dw建表字段信息:" + fieldList);
         fieldList.forEach((l) -> {
-            if (l.fieldType.contains("INT") || l.fieldType.contains("TEXT")) {
-                sqlFileds.append("\"" + l.fieldEnName + "\" " + l.fieldType.toLowerCase() + ",");
-                stgSqlFileds.append("\"" + l.fieldEnName + "\" varchar(4000),");
-            } else if (l.fieldType.toLowerCase().contains("numeric") || l.fieldType.toLowerCase().contains("float")) {
-                sqlFileds.append("\"" + l.fieldEnName + "\" numeric(18,9) ,");
-                stgSqlFileds.append("\"" + l.fieldEnName + "\" varchar(4000),");
-            } else if (l.fieldType.contains("TIMESTAMP")) {
-                sqlFileds.append("" + l.fieldEnName + " datetime ,");
-                stgSqlFileds.append("\"" + l.fieldEnName + "\" varchar(4000),");
+            if (l.fieldType.contains("FLOAT")) {
+                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.contains("INT")) {
+                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.contains("TEXT")) {
+                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(", ");
+                stgSqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(",");
+            } else if (l.fieldType.toUpperCase().equals("DATE")) {
+                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.toUpperCase().equals("TIME")) {
+                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.contains("TIMESTAMP") || StringUtils.equals(l.fieldType.toUpperCase(), "DATETIME")) {
+                sqlFileds.append("[").append(l.fieldEnName).append("] datetime, ");
             } else {
-                sqlFileds.append("\"" + l.fieldEnName + "\" " + l.fieldType.toLowerCase() + "(" + l.fieldLength + ") ,");
-                stgSqlFileds.append("\"" + l.fieldEnName + "\" varchar(4000),");
+                sqlFileds.append("[").append(l.fieldEnName).append("] ").append(l.fieldType.toLowerCase()).append("(").append(l.fieldLength).append("), ");
+            }
+            // 修改stg表,字段类型
+            if (!l.fieldType.contains("TEXT")) {
+                stgSqlFileds.append("[" + l.fieldEnName + "] nvarchar(4000),");
             }
             if (l.isPrimaryKey == 1) {
-                pksql.append("" + l.fieldEnName + " ,");
+                pksql.append("").append(l.fieldEnName).append(" ,");
             }
 
         });
 
-        String sql1 = sql.toString();
+        String sql1 = "CREATE TABLE " + modelPublishTableDTO.tableName + " ( " + tablePk + " BIGINT, ";
         //String associatedKey = associatedConditions(fieldList);
         String associatedKey = "";
         String sql2 = sqlFileds.toString() + associatedKey;
         sql2 += "fi_createtime varchar(50),fi_updatetime varchar(50)";
         sql2 += ",fidata_batch_code varchar(50)";
-        String sql3 = sqlFileds1.toString();
+        String sql3 = "";
         if (Objects.equals("", sql3)) {
             sql1 += sql2;
         } else {
@@ -329,8 +389,8 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         //创建表
         log.info("pg_dw建表语句" + sql1);
         //String stgTable = sql1.replaceFirst(tableName, "stg_" + tableName);
-        String stgTable = "DROP TABLE IF EXISTS stg_" + tableName + "; CREATE TABLE stg_" + tableName + " (" + tablePk + " varchar(50) NOT NULL DEFAULT(newid())," + stgSqlFileds.toString() + associatedKey + "fi_createtime varchar(50) DEFAULT(format(GETDATE(),'yyyy-MM-dd HH:mm:ss')),fi_updatetime varchar(50),fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3');";
-        stgTable += "create index " + tableName + "enableflagsy on stg_" + tableName + " (fi_enableflag);";
+        String stgTable = "DROP TABLE IF EXISTS " + modelPublishTableDTO.prefixTempName + tableName + "; CREATE TABLE " + modelPublishTableDTO.prefixTempName + tableName + " (" + tablePk + " BIGINT IDENTITY(1,1) NOT NULL ," + stgSqlFileds.toString() + associatedKey + "fi_createtime varchar(50) DEFAULT(format(GETDATE(),'yyyy-MM-dd HH:mm:ss')),fi_updatetime varchar(50),fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3');";
+        //stgTable += "create index " + tableName + "enableflagsy on stg_" + tableName + " (fi_enableflag);";
         sqlList.add(stgTable);
         sqlList.add(sql1);
         return sqlList;

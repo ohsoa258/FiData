@@ -1,6 +1,7 @@
 package com.fisk.datamodel.dto.dimensionattribute;
 
-import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
+import com.fisk.datamodel.dto.customscript.CustomScriptDTO;
 import com.fisk.datamodel.dto.syncmode.SyncModeDTO;
 import com.fisk.task.dto.MQBaseDTO;
 import lombok.Data;
@@ -24,6 +25,14 @@ public class DimensionAttributeAddDTO extends MQBaseDTO {
     public String businessAreaName;
     public int createType;
     /**
+     * 维度key数据同步脚本
+     */
+    public String dimensionKeyScript;
+    /**
+     * 覆盖脚本
+     */
+    public String coverScript;
+    /**
      * 发布备注
      */
     public String remark;
@@ -34,4 +43,13 @@ public class DimensionAttributeAddDTO extends MQBaseDTO {
      * 是否同步
      */
     public boolean openTransmission;
+    /**
+     * 自定义脚本集合
+     */
+    public List<CustomScriptDTO> customScriptList;
+
+    /**
+     * 接入的增量时间参数
+     */
+    public List<DeltaTimeDTO> deltaTimes;
 }

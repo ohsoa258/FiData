@@ -32,4 +32,16 @@ public enum DriverTypeEnum implements BaseEnum {
     public String getName() {
         return name;
     }
+
+    public static DriverTypeEnum getValue(String value) {
+        DriverTypeEnum[] typeEnums = values();
+        for (DriverTypeEnum carTypeEnum : typeEnums) {
+            String queryValue = carTypeEnum.getName();
+            if (queryValue.equals(value)) {
+                return carTypeEnum;
+            }
+        }
+        return DriverTypeEnum.SQLSERVER;
+    }
+
 }

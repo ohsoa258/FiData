@@ -1,6 +1,7 @@
 package com.fisk.common.core.utils;
 
 
+
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 
@@ -75,7 +76,7 @@ public class LicenseEnCryptUtils {
         //初始化 cipher。使用解密模式.
         cipher.init(Cipher.DECRYPT_MODE, secretKey, parameterSpec);
         //将 Base64 编码的内容解码成字节数组(因为加密的时候，对密文使用了 Base64编码，所以这里需要先解码)
-        byte[] content = new BASE64Decoder().decodeBuffer(base64Encode);
+        byte[] content =  new BASE64Decoder().decodeBuffer(base64Encode);
         //执行解密操作。返回解密后的字节数组，此时可以使用 String(byte bytes[]) 转成源字符串.
         byte[] decrypted = cipher.doFinal(content);
         return new String(decrypted);

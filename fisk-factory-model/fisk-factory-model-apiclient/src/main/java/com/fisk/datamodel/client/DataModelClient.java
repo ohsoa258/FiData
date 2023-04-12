@@ -14,6 +14,7 @@ import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
@@ -21,6 +22,10 @@ import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaQueryTableDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaTableDetailDTO;
+import com.fisk.datamodel.dto.customscript.CustomScriptInfoDTO;
+import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
+import com.fisk.datamodel.dto.dataops.DataModelTableInfoDTO;
+import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -47,15 +52,6 @@ public interface DataModelClient {
      */
     @GetMapping("/attribute/getDimensionEntity")
     ResultEntity<Object> getDimensionEntity(@RequestParam("id") int id);
-
-    /**
-     * 获取维度表元数据列表以及字段--用于Doris
-     *
-     * @param businessAreaId
-     * @return 执行结果
-     */
-    /*@GetMapping("/attribute/getDimensionListEntity")
-    ResultEntity<Object> getDimensionListEntity(@RequestParam("businessAreaId") int businessAreaId);*/
 
     /**
      * 获取事实表元数据字段
@@ -307,5 +303,52 @@ public interface DataModelClient {
     @ApiOperation(value = "获取业务域下拉列表")
     ResultEntity<List<AppBusinessInfoDTO>> getBusinessAreaList();
 
+    /**
+     * 根据维度名称获取维度文件夹详情
+     *
+     * @param tableName
+     * @return
+     */
+    @PostMapping("/dimensionFolder/getDimensionFolderByTableName")
+    ResultEntity<DimensionFolderDTO> getDimensionFolderByTableName(@Validated @RequestBody String tableName);
+
+    /**
+     * 根据表名获取接入表信息
+     *
+     * @param tableName
+     * @return
+     */
+    @ApiOperation("根据表名获取接入表信息")
+    @GetMapping("/DataOps/getTableInfo/{tableName}")
+    ResultEntity<DataModelTableInfoDTO> getTableInfo(@PathVariable("tableName") String tableName);
+
+    /**
+     * 根据表名获取接入表信息
+     *
+     * @param tableName
+     * @return
+     */
+    @ApiOperation("根据表名获取接入表信息")
+    @GetMapping("/DataOps/getTableColumnDisplay")
+    ResultEntity<List<String[]>> getTableColumnDisplay(@RequestParam("tableName") String tableName);
+
+    /**
+     * 自定义脚本列表
+     *
+     * @param dto
+     * @return
+     */
+    @ApiOperation("自定义脚本列表")
+    @PostMapping("/CustomScript/listCustomScript")
+    ResultEntity<List<CustomScriptInfoDTO>> listCustomScript(@RequestBody CustomScriptQueryDTO dto);
+
+    /**
+     * 获取数据建模所有元数据
+     *
+     * @return
+     */
+    @GetMapping("/business/getDataModelMetaData")
+    @ApiOperation(value = "获取数据建模所有元数据")
+    ResultEntity<List<MetaDataInstanceAttributeDTO>> getDataModelMetaData();
 
 }

@@ -2,7 +2,7 @@ package com.fisk.license.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
-import com.fisk.license.dto.LicenceDTO;
+import com.fisk.license.dto.AuthorizeLicenceDTO;
 import com.fisk.license.dto.VerifyLicenceDTO;
 import com.fisk.license.entity.LicencePO;
 import com.fisk.license.vo.LicenceVO;
@@ -21,7 +21,17 @@ public interface ILicenseService extends IService<LicencePO> {
     VerifyLicenceVO verifyCompanyLicenceByUrl(VerifyLicenceDTO dto);
 
     /**
-     * 生成许可证
+     * 设置许可证
      */
-    ResultEntity<LicenceVO> createCompanyLicence(LicenceDTO dto);
+    ResultEntity<String> setCompanyLicence(AuthorizeLicenceDTO dto);
+
+    /**
+     * 查询许可证
+     */
+    ResultEntity<LicenceVO> getCompanyLicence();
+
+    /**
+     * 获取计算机Mac地址
+     */
+    ResultEntity<String> getMacAddress();
 }

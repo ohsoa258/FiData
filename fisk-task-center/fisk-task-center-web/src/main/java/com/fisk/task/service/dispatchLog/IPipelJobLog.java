@@ -3,6 +3,7 @@ package com.fisk.task.service.dispatchLog;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
+import com.fisk.task.dto.dispatchlog.PipelJobMergeLogVO;
 import com.fisk.task.entity.PipelJobLogPO;
 
 import java.util.List;
@@ -51,7 +52,7 @@ public interface IPipelJobLog extends IService<PipelJobLogPO> {
      * @param pipelJobLogs pipelJobLogs
      * @return
      */
-    List<PipelJobLogVO> getPipelJobLogVos(List<PipelJobLogVO> pipelJobLogs);
+    List<PipelJobMergeLogVO> getPipelJobLogVos(List<PipelJobLogVO> pipelJobLogs);
     /**
      * 获取日志
      *

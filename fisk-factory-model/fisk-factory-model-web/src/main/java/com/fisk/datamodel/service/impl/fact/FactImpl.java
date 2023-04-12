@@ -9,8 +9,13 @@ import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
+import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.metadata.dto.metadata.*;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
@@ -21,17 +26,18 @@ import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.fact.*;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
 import com.fisk.datamodel.entity.fact.FactPO;
-import com.fisk.datamodel.enums.DataModelTableTypeEnum;
-import com.fisk.datamodel.enums.FactAttributeEnum;
-import com.fisk.datamodel.enums.PublicStatusEnum;
+import com.fisk.datamodel.enums.*;
 import com.fisk.datamodel.map.fact.FactAttributeMap;
 import com.fisk.datamodel.map.fact.FactMap;
 import com.fisk.datamodel.mapper.fact.FactAttributeMapper;
 import com.fisk.datamodel.mapper.fact.FactMapper;
 import com.fisk.datamodel.service.IFact;
 import com.fisk.datamodel.service.impl.AtomicIndicatorsImpl;
+import com.fisk.datamodel.service.impl.BusinessAreaImpl;
+import com.fisk.datamodel.service.impl.SystemVariablesImpl;
 import com.fisk.datamodel.service.impl.dimension.DimensionImpl;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
@@ -41,12 +47,15 @@ import com.fisk.task.dto.pgsql.TableListDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -63,6 +72,8 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     @Resource
     FactAttributeImpl factAttributeImpl;
     @Resource
+    BusinessAreaImpl businessAreaImpl;
+    @Resource
     AtomicIndicatorsImpl atomicIndicatorsImpl;
     @Resource
     PublishTaskClient publishTaskClient;
@@ -74,6 +85,11 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     DimensionImpl dimensionImpl;
     @Resource
     DataManageClient dataManageClient;
+    @Resource
+    SystemVariablesImpl systemVariables;
+
+    @Value("${spring.open-metadata}")
+    private Boolean openMetadata;
 
     @Override
     public ResultEnum addFact(FactDTO dto) {
@@ -83,22 +99,27 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         if (po != null) {
             return ResultEnum.FACT_EXIST;
         }
-        FactPO model= FactMap.INSTANCES.dtoToPo(dto);
-        return mapper.insert(model)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        FactPO model = FactMap.INSTANCES.dtoToPo(dto);
+        model.setPrefixTempName(PrefixTempNameEnum.DIMENSION_TEMP_NAME.getName());
+        return mapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
     public ResultEnum deleteFact(int id)
     {
         try {
-            FactPO po=mapper.selectById(id);
+            FactPO po = mapper.selectById(id);
             if (po == null) {
                 return ResultEnum.DATA_NOTEXISTS;
             }
+            BusinessAreaPO businessArea = businessAreaImpl.getById(po.businessId);
+            if (businessArea == null) {
+                return ResultEnum.DATA_NOTEXISTS;
+            }
             //删除事实字段表
-            QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
-            queryWrapper.select("id").lambda().eq(FactAttributePO::getFactId,id);
-            List<Integer> factAttributeIds=(List)attributeMapper.selectObjs(queryWrapper);
+            QueryWrapper<FactAttributePO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.select("id").lambda().eq(FactAttributePO::getFactId, id);
+            List<Integer> factAttributeIds = (List) attributeMapper.selectObjs(queryWrapper);
             if (!CollectionUtils.isEmpty(factAttributeIds)) {
                 ResultEnum resultEnum = factAttributeImpl.deleteFactAttribute(factAttributeIds);
                 if (ResultEnum.SUCCESS != resultEnum) {
@@ -142,8 +163,12 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
                 if (dataSourceConfigOlap != null && !CollectionUtils.isEmpty(dataSourceConfigOlap.dbList)) {
                     delQualifiedName.add(dataSourceConfigOlap.dbList.get(0).qualifiedName + "_" + DataModelTableTypeEnum.DORIS_FACT.getValue() + "_" + id);
                 }
-                deleteDto.qualifiedNames = delQualifiedName;
-                dataManageClient.deleteMetaData(deleteDto);
+
+                if (openMetadata) {
+                    deleteDto.qualifiedNames = delQualifiedName;
+                    deleteDto.classifications = businessArea.getBusinessName();
+                    dataManageClient.deleteMetaData(deleteDto);
+                }
             }
 
             return flat > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -198,25 +223,42 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     @Override
     public FactDTO getFact(int id)
     {
-        return FactMap.INSTANCES.poToDto(mapper.selectById(id));
+        FactDTO factDTO = FactMap.INSTANCES.poToDto(mapper.selectById(id));
+        if (factDTO != null){
+            factDTO.deltaTimes = systemVariables.getSystemVariable(id, CreateTypeEnum.CREATE_FACT.getValue());
+        }
+        return factDTO;
     }
 
     @Override
     public ResultEnum updateFact(FactDTO dto)
     {
         FactPO po=mapper.selectById(dto.id);
-        if (po==null)
-        {
+        if (po == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
+        QueryWrapper<FactPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(FactPO::getFactTabName, dto.factTabName);
-        FactPO model=mapper.selectOne(queryWrapper);
-        if (model !=null && model.id !=dto.id)
-        {
+        FactPO model = mapper.selectOne(queryWrapper);
+        if (model != null && model.id != dto.id) {
             return ResultEnum.DATA_EXISTS;
         }
-        return mapper.updateById(FactMap.INSTANCES.dtoToPo(dto))>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+
+        po.factTableCnName = dto.factTableCnName;
+        po.factTableDesc = dto.factTableDesc;
+        po.factTabName = dto.factTabName;
+        po.businessProcessId = dto.businessProcessId;
+
+        //修改元数据方法
+        if (po.isPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue()) {
+            ModelPublishStatusDTO publishStatusDTO = new ModelPublishStatusDTO();
+            publishStatusDTO.id = dto.id;
+            publishStatusDTO.status = po.isPublish;
+            publishStatusDTO.type = DataSourceConfigEnum.DMP_DW.getValue();
+            updateFactPublishStatus(publishStatusDTO);
+        }
+
+        return mapper.updateById(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -260,7 +302,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             return ResultEnum.DATA_NOTEXISTS;
         }
         model.sqlScript = dto.sqlScript;
-        model.appId = dto.appId;
+        model.dataSourceId = dto.dataSourceId;
         return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -271,6 +313,12 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             log.info("数据建模元数据实时同步失败,事实表不存在!");
             return;
         }
+
+        BusinessAreaPO businessAreaPO = businessAreaImpl.query().eq("id", fact.businessId).one();
+        if (businessAreaPO == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
         //0:DW发布状态
         int dataSourceId;
         int dataModelType;
@@ -303,6 +351,18 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         table.name = fact.factTabName;
         table.comment = String.valueOf(fact.businessId);
         table.qualifiedName = data.dbList.get(0).qualifiedName + "_" + dataModelType + "_" + fact.id;
+        table.displayName = fact.factTableCnName;
+
+        table.owner = businessAreaPO.getBusinessAdmin();
+
+        //所属人
+        /*List<Long> ids = new ArrayList<>();
+        ids.add(Long.parseLong(fact.createUser));
+        ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(ids);
+        if (userListByIds.code == ResultEnum.SUCCESS.getCode()) {
+            table.owner = userListByIds.data.get(0).getUsername();
+        }*/
+
         //字段
         List<MetaDataColumnAttributeDTO> columnList = setFactField(dto, table);
         if (CollectionUtils.isEmpty(columnList)) {
@@ -313,16 +373,59 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         tableList.add(table);
         data.dbList.get(0).tableList = tableList;
         list.add(data);
-        try {
-            MetaDataAttributeDTO metaDataAttribute = new MetaDataAttributeDTO();
-            metaDataAttribute.instanceList = list;
-            metaDataAttribute.userId = Long.parseLong(fact.createUser);
-            // 更新元数据内容
-            log.info("事实/指标表构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
-            dataManageClient.metaData(metaDataAttribute);
-        } catch (Exception e) {
-            log.error("【dataManageClient.MetaData()】方法报错,ex", e);
+
+        if (openMetadata) {
+            //修改元数据
+            ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+            cachedThreadPool.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        // 更新元数据内容
+                        log.info("维度表构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+                        dataManageClient.consumeMetaData(list);
+                    } catch (Exception e) {
+                        log.error("【dataManageClient.MetaData()】方法报错,ex", e);
+                    }
+                }
+            });
         }
+
+    }
+
+    @Override
+    public List<TableNameDTO> getPublishSuccessFactTable(Integer businessId) {
+        List<FactPO> list = this.query()
+                .select("fact_tab_name", "business_id", "id")
+                .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
+                .eq("business_id", businessId)
+                .list();
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+
+        List<TableNameDTO> data = new ArrayList<>();
+        for (FactPO po : list) {
+            TableNameDTO dto = new TableNameDTO();
+            dto.tableName = po.factTabName;
+
+            FactAttributeDetailDTO factAttributeDataList = factAttributeImpl.getFactAttributeDataList((int) po.id);
+            if (CollectionUtils.isEmpty(factAttributeDataList.attributeDTO)) {
+                continue;
+            }
+            List<TableColumnDTO> columnList = new ArrayList<>();
+            for (FactAttributeDTO item : factAttributeDataList.attributeDTO) {
+                TableColumnDTO column = new TableColumnDTO();
+                column.fieldName = item.factFieldEnName;
+                columnList.add(column);
+            }
+
+            dto.columnList = columnList;
+
+            data.add(dto);
+        }
+
+        return data;
     }
 
     /**
@@ -347,6 +450,8 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
                 column.description = field.factFieldDes;
                 String fieldTypeLength = field.factFieldLength == 0 ? "" : "(" + field.factFieldLength + ")";
                 column.dataType = field.factFieldType + fieldTypeLength;
+                column.displayName = field.factFieldCnName;
+                column.owner = table.owner;
                 columnList.add(column);
             }
         }
@@ -373,8 +478,63 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
                     column.dataType = "BIGINT";
                     column.comment = field.aggregationLogic;
                 }
+                column.owner = table.owner;
                 columnList.add(column);
             }
+        }
+        return columnList;
+    }
+
+    public List<MetaDataTableAttributeDTO> getFactMetaData(long businessId,
+                                                           String dbQualifiedName,
+                                                           Integer dataModelType,
+                                                           String businessAdmin) {
+        List<FactPO> factPOList = this.query()
+                .eq("business_id", businessId)
+                .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
+                .list();
+        if (CollectionUtils.isEmpty(factPOList)) {
+            return new ArrayList<>();
+        }
+
+        List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
+
+        for (FactPO fact : factPOList) {
+
+            MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+            table.contact_info = "";
+            table.description = fact.factTableDesc;
+            table.name = fact.factTabName;
+            table.comment = String.valueOf(fact.businessId);
+            table.qualifiedName = dbQualifiedName + "_" + dataModelType + "_" + fact.id;
+            table.displayName = fact.factTableCnName;
+            table.owner = businessAdmin;
+
+            //字段
+            table.columnList = getFactAttributeMetaData(fact.id, table);
+
+            tableList.add(table);
+        }
+
+        return tableList;
+    }
+
+    public List<MetaDataColumnAttributeDTO> getFactAttributeMetaData(long factId, MetaDataTableAttributeDTO table) {
+        FactAttributeDetailDTO factAttributeDataList = factAttributeImpl.getFactAttributeDataList((int) factId);
+        if (factAttributeDataList == null || factAttributeDataList.attributeDTO.size() == 0) {
+            return new ArrayList<>();
+        }
+        List<MetaDataColumnAttributeDTO> columnList = new ArrayList<>();
+        for (FactAttributeDTO field : factAttributeDataList.attributeDTO) {
+            MetaDataColumnAttributeDTO column = new MetaDataColumnAttributeDTO();
+            column.name = field.factFieldEnName;
+            column.qualifiedName = table.qualifiedName + "_" + field.id;
+            column.description = field.factFieldDes;
+            String fieldTypeLength = field.factFieldLength == 0 ? "" : "(" + field.factFieldLength + ")";
+            column.dataType = field.factFieldType + fieldTypeLength;
+            column.displayName = field.factFieldCnName;
+            column.owner = table.owner;
+            columnList.add(column);
         }
         return columnList;
     }

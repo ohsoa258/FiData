@@ -18,31 +18,36 @@ import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.flinkupload.FlinkFactoryHelper;
 import com.fisk.common.service.flinkupload.IFlinkJobUpload;
-import com.fisk.common.service.metadata.dto.metadata.*;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDbAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.common.service.sqlparser.SqlParserUtils;
+import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
+import com.fisk.dataaccess.dto.access.OverlayCodePreviewAccessDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewPageDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
 import com.fisk.dataaccess.dto.flink.FlinkConfigDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.dto.savepointhistory.SavepointHistoryDTO;
-import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
-import com.fisk.dataaccess.dto.table.TableBusinessDTO;
-import com.fisk.dataaccess.dto.table.TableFieldsDTO;
-import com.fisk.dataaccess.dto.table.TableSyncmodeDTO;
+import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.map.FlinkParameterMap;
 import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
+import com.fisk.dataaccess.map.TableSyncModeMap;
+import com.fisk.dataaccess.mapper.AppDataSourceMapper;
+import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.mapper.TableFieldsMapper;
-import com.fisk.dataaccess.service.IAppRegistration;
-import com.fisk.dataaccess.service.ITableAccess;
-import com.fisk.dataaccess.service.ITableFields;
+import com.fisk.dataaccess.service.*;
+import com.fisk.dataaccess.service.strategy.BuildSqlStrategy;
 import com.fisk.dataaccess.utils.files.FileTxtUtils;
 import com.fisk.dataaccess.utils.sql.DbConnectionHelper;
 import com.fisk.dataaccess.utils.sql.OracleCdcUtils;
@@ -51,20 +56,23 @@ import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.datamodel.enums.SyncModeEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.metadatafield.MetaDataFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
-import com.fisk.task.enums.OlapTableEnum;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import javax.annotation.Resource;
 import java.io.FileInputStream;
@@ -76,12 +84,17 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL;
+
 /**
  * @author Lock
  */
 @Service
 @Slf4j
-public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsPO> implements ITableFields {
+public class TableFieldsImpl
+        extends ServiceImpl<TableFieldsMapper, TableFieldsPO>
+        implements ITableFields {
+
     @Resource
     private GenerateCondition generateCondition;
     @Resource
@@ -90,6 +103,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     private TableAccessImpl tableAccessImpl;
     @Resource
     private TableAccessMapper tableAccessMapper;
+    @Resource
+    private AppRegistrationMapper appRegistrationMapper;
+    @Resource
+    private AppDataSourceMapper appDataSourceMapper;
     @Resource
     private IAppRegistration iAppRegistration;
     @Resource
@@ -120,8 +137,17 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     @Resource
     FlinkConfigDTO flinkConfig;
 
+    @Value("${spring.open-metadata}")
+    private Boolean openMetadata;
+
+
     @Resource
     private RedisTemplate redisTemplate;
+    @Resource
+    ITableHistory iTableHistory;
+
+    private static Integer fetchSize = 10000;
+    private static Integer maxRowsPerFlowFile = 10000;
 
     @Override
     public Page<DataReviewVO> listData(DataReviewQueryDTO query) {
@@ -131,7 +157,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         DataReviewPageDTO data = new DataReviewPageDTO();
         data.page = query.page;
         data.where = querySql.toString();
-
         return baseMapper.filter(query.page, data);
     }
 
@@ -190,7 +215,22 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         if (accessPo == null) {
             return ResultEnum.TABLE_NOT_EXIST;
         }
-
+        accessPo.sheet = dto.sheet;
+        accessPo.startLine = dto.startLine;
+        accessPo.coverScript = dto.coverScript;
+        // 判断where条件是否传递
+        int syncType = dto.tableSyncmodeDTO.syncMode;
+        log.info("syncType类型，{}", syncType);
+        if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
+            // 获取脚本
+            String whereScript = (String) previewCoverCondition(dto.businessDTO);
+            log.info("where条件数据{}", whereScript);
+            if (!whereScript.contains("WHERE")) {
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR, "获取业务时间覆盖where条件失败");
+            }
+            accessPo.whereScript = whereScript;
+        }
+        log.info("业务时间覆盖where条件语句, {}", accessPo.whereScript);
         tableAccessImpl.updateById(accessPo);
 
         //系统变量
@@ -201,8 +241,13 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         // 版本语句
         String versionSql = getVersionSql(syncmodePo);
 
+        if (openMetadata) {
+            //新增元数据信息
+            odsMetaDataInfo(dto.appDataSourceId, dto.sqlScript);
+        }
+
         // 发布
-        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql);
+        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, dto.appDataSourceId, dto.tableHistorys,null);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -274,6 +319,24 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
         // 修改发布状态
         model.publish = 0;
+        model.sheet = dto.sheet;
+        model.startLine = dto.startLine;
+        model.coverScript = dto.coverScript;
+        // 判断where条件是否传递
+        int syncType = dto.tableSyncmodeDTO.syncMode;
+        log.info("syncType类型，{}", syncType);
+        if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
+            // 获取脚本
+            String whereScript = (String) previewCoverCondition(dto.businessDTO);
+            log.info("where条件数据{}", whereScript);
+            if (!whereScript.contains("WHERE")) {
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR, "获取业务时间覆盖where条件失败");
+            }
+            model.whereScript = whereScript;
+        } else {
+            model.whereScript = "";
+        }
+        log.info("业务时间覆盖where条件语句, {}", model.whereScript);
         tableAccessImpl.updateById(model);
 
         //系统变量
@@ -281,10 +344,78 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             systemVariables.addSystemVariables(dto.id, dto.deltaTimes);
         }
 
+        if (openMetadata) {
+            //新增元数据信息
+            odsMetaDataInfo(model.appDataSourceId, dto.sqlScript);
+        }
+
         // 发布
-        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql);
+        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null,
+                false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, model.appDataSourceId, dto.tableHistorys,null);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+    }
+
+    /**
+     * 新增ods元数据信息
+     *
+     * @param appId
+     * @param sql
+     */
+    public void odsMetaDataInfo(long appId, String sql) {
+
+        if (StringUtils.isEmpty(sql)) {
+            return;
+        }
+
+        AppDataSourcePO po = appDataSourceMapper.selectById(appId);
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        AppRegistrationPO registrationPO = appRegistrationMapper.selectById(po.appId);
+        if (registrationPO == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        List<MetaDataInstanceAttributeDTO> list = appRegistration.addDataSourceMetaData(registrationPO, po);
+        //解析sql
+        List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(null,po.driveType, sql);
+        if (CollectionUtils.isEmpty(res)) {
+            return;
+        }
+
+        List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
+        for (TableMetaDataObject item : res) {
+            MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+            table.setQualifiedName(list.get(0).dbList.get(0).qualifiedName + "_" + item.name);
+            table.setName(item.name);
+            table.setComment(String.valueOf(appId));
+            table.setDisplayName(item.name);
+            table.setDescription("stg");
+            tableList.add(table);
+        }
+        //list.get(0).description = "stg";
+        list.get(0).dbList.get(0).tableList = tableList;
+
+        log.info("构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+        dataManageClient.consumeMetaData(list);
+
+        /*//修改元数据
+        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+        cachedThreadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // 更新元数据内容
+                    log.info("维度表构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(list));
+                    dataManageClient.consumeMetaData(list);
+                } catch (Exception e) {
+                    log.error("【dataManageClient.MetaData()】方法报错,ex", e);
+                }
+            }
+        });*/
+
     }
 
     @Override
@@ -375,14 +506,34 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                          CdcJobScriptDTO cdcDto,
                          boolean useExistTable,
                          List<DeltaTimeDTO> deltaTimes,
-                         String versionSql) {
-        AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("app_id", appId).one();
+                         String versionSql,
+                         TableSyncmodeDTO syncMode,
+                         Integer appDataSourceId,
+                         List<TableHistoryDTO> dto,
+                         String currUserName) {
+        AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("id", appDataSourceId).one();
         if (dataSourcePo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
+        AppRegistrationPO appRegistrationPo = appRegistration.query().eq("id", appId).one();
+        if (appRegistrationPo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        Long tableHistoryId = 0L;
+        if (!CollectionUtils.isEmpty(dto)) {
+            log.info("开始记录发布日志");
+            for (TableHistoryDTO tableHistory : dto) {
+                if (tableHistory.tableId.longValue() == accessId) {
+                    log.info("记录发布日志的表id:{}", accessId);
+                    List<TableHistoryDTO> list = new ArrayList<>();
+                    list.add(tableHistory);
+                    tableHistoryId = iTableHistory.addTableHistory(list);
+                }
+            }
+        }
         if (success && flag == 1 && !useExistTable) {
             UserInfo userInfo = userHelper.getLoginUserInfo();
-            ResultEntity<BuildPhysicalTableDTO> result = tableAccessImpl.getBuildPhysicalTableDTO(accessId, appId);
+            ResultEntity<BuildPhysicalTableDTO> result = tableAccessImpl.getBuildPhysicalTableDTO(accessId, appDataSourceId);
             BuildPhysicalTableDTO data = result.data;
             data.appId = String.valueOf(appId);
             data.dbId = String.valueOf(accessId);
@@ -390,18 +541,52 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.openTransmission = openTransmission;
             data.deltaTimes = deltaTimes;
 
+            //来源和目标数据源id
+            data.dataSourceDbId = dataSourcePo.systemDataSourceId;
+            data.targetDbId = appRegistrationPo.targetDbId;
+
+            // 拼接删除ods的sql
+            String tbName = TableNameGenerateUtils.buildOdsTableName(data.tableName, appRegistrationPo.appAbbreviation, appRegistrationPo.whetherSchema);
+
+            // pg库则将表名转换为小写
+            boolean typeFlag = getTargetDbType(data.targetDbId);
+            if (typeFlag) {
+                data.tableName = data.tableName.toLowerCase();
+                // 将字段集合转换为小写
+                List<TableFieldsDTO> tableFieldsDTOList = data.tableFieldsDTOS;
+                data.tableFieldsDTOS = tableFieldsDTOList.stream().map(item -> {
+                    item.fieldName = item.fieldName.toLowerCase();
+                    return item;
+                }).collect(Collectors.toList());
+                tbName = tbName.toLowerCase();
+            }
+            int syncType = syncMode.syncMode;
+            log.info("syncType类型，{}，判断拼接删除ods的sql", syncType);
+            if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
+                data.whereScript = "DELETE FROM " + tbName + " " + data.whereScript;
+                log.info("删除ods表的sql，{}", data.whereScript);
+            }
+
             // 版本号入库、调用存储存储过程  
             List<TableFieldsPO> list = this.query().eq("table_access_id", accessId).list();
             AppRegistrationPO registration = iAppRegistration.getById(appId);
 
             //拼接ods表名
             String odsTableName = TableNameGenerateUtils.buildOdsTableName(tableName, registration.appAbbreviation, registration.whetherSchema);
+
             data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
             data.whetherSchema = registration.whetherSchema;
             data.generateVersionSql = versionSql;
-
+            data.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile == null ? maxRowsPerFlowFile : syncMode.maxRowsPerFlowFile;
+            data.fetchSize = syncMode.fetchSize == null ? fetchSize : syncMode.fetchSize;
+            data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType);
+            data.tableHistoryId = tableHistoryId;
             // 执行发布
             try {
+                TableAccessPO accessPo = tableAccessImpl.query().eq("id", accessId).one();
+                data.sheetName = accessPo.sheet;
+                data.coverScript = accessPo.coverScript;
+                List<MetaDataInstanceAttributeDTO> metaDataList = new ArrayList<>();
                 // 实时--RestfulAPI类型  or  非实时--api类型
                 //0实时
                 if ((registration.appType == 0
@@ -409,7 +594,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         || (registration.appType == 1
                         && DataSourceTypeEnum.API.getName().equals(dataSourcePo.driveType))) {
                     // 传入apiId和api下所有表
-                    TableAccessPO accessPo = tableAccessImpl.query().eq("id", accessId).one();
                     List<TableAccessPO> tablePoList = tableAccessImpl.query().eq("api_id", accessPo.apiId).list();
                     // api下所有表
                     data.apiTableNames = tablePoList.stream().map(e -> e.tableName).collect(Collectors.toList());
@@ -418,9 +602,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     // 创建表流程
                     publishTaskClient.publishBuildPhysicsTableTask(data);
                     // 构建元数据实时同步数据对象
-                    //buildMetaDataInstanceAttribute(registration, accessId, 1);
+                    metaDataList = buildMetaDataInstanceAttribute(registration, accessId, 1,currUserName);
                 } else if (registration.appType == 1) {
-                    if (DataSourceTypeEnum.FTP.getName().equals(dataSourcePo.driveType)) {
+                    if (DataSourceTypeEnum.FTP.getName().equals(dataSourcePo.driveType) || data.sftpFlow) {
                         data.excelFlow = true;
                     }
                     // 非实时物理表发布
@@ -429,10 +613,12 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     // 生成nifi流程
                     //log.info(JSON.toJSONString(data));
                     //publishTaskClient.publishBuildAtlasTableTask(data);
-                    // 构建元数据实时同步数据对象
-                    //buildMetaDataInstanceAttribute(registration, accessId, 2);
+                    //构建元数据实时同步数据对象
+                    metaDataList = buildMetaDataInstanceAttribute(registration, accessId, 2,currUserName);
+                }if (openMetadata) { //
+                    //同步元数据
+                    consumeMetaData(metaDataList);
                 }
-
 
             } catch (Exception e) {
                 log.info("发布失败", e);
@@ -445,6 +631,16 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         if (dataSourcePo.driveType.equalsIgnoreCase("ORACLE-CDC")) {
             cdcScriptUploadFlink(cdcDto, accessId);
         }
+    }
+
+    private boolean getTargetDbType(Integer dbId) {
+        ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(dbId);
+        if (result.code == ResultEnum.SUCCESS.getCode()) {
+            DataSourceDTO dataSource = result.getData();
+            log.info("数据源连接类型，{}, 枚举中PG类型，{}", dataSource.getConType().getValue(), POSTGRESQL.getValue());
+            return POSTGRESQL.getValue() == dataSource.getConType().getValue();
+        }
+        return false;
     }
 
     /**
@@ -535,7 +731,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      * @author Lock
      * @date 2022/7/5 16:51
      */
-    private void buildMetaDataInstanceAttribute(AppRegistrationPO app, long accessId, int flag) {
+    public List<MetaDataInstanceAttributeDTO> buildMetaDataInstanceAttribute(AppRegistrationPO app, long accessId, int flag,String currUserName) {
 
         int apiType = 1;
         int tableType = 2;
@@ -565,6 +761,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         instance.setDescription(app.getAppDes());
         instance.setComment(app.getAppDes());
         instance.setOwner(app.createUser);
+        instance.setDisplayName(hostname);
+        instance.setCurrUserName(currUserName);
 
         // 库
         List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
@@ -575,23 +773,34 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         db.setDescription(app.getAppDes());
         db.setComment(app.getAppDes());
         db.setOwner(app.createUser);
+        db.setDisplayName(dbName);
 
         TableAccessPO tableAccess = tableAccessImpl.query().eq("id", accessId).one();
         if (tableAccess == null) {
-            return;
+            return new ArrayList<>();
         }
+        List<Long> userIds = new ArrayList<>();
+        // 表
+        List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
         if (flag == tableType) {
-            // 表
-            List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
             MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
             table.setQualifiedName(hostname + "_" + dbName + "_" + tableAccess.getId());
             table.setName(TableNameGenerateUtils.buildOdsTableName(tableAccess.getTableName(),
                     app.appAbbreviation,
                     app.whetherSchema));
             table.setContact_info(app.getAppPrincipal());
-            table.setOwner(tableAccess.createUser);
             table.setDescription(tableAccess.getTableDes());
             table.setComment(String.valueOf(app.getId()));
+            table.setDisplayName(tableAccess.displayName);
+            table.setOwner(app.createUser);
+
+            //所属人
+            /*userIds.add(Long.parseLong(tableAccess.createUser));
+            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
+            if (userListByIds.code == ResultEnum.SUCCESS.getCode()) {
+                table.setOwner(userListByIds.data.get(0).getUsername());
+            }*/
+
 
             // 字段
             List<MetaDataColumnAttributeDTO> columnList = this.query().eq("table_access_id", tableAccess.id).list()
@@ -603,19 +812,21 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         field.setName(e.getFieldName());
                         field.setContact_info(app.getAppPrincipal());
                         field.setDescription(e.getFieldDes());
-                        field.setComment(e.getFieldDes());
-                        field.setDataType("VARCHAR".equalsIgnoreCase(e.fieldType) ? e.fieldType + "(" + e.fieldLength + ")" : e.fieldType);
+                        field.setComment(e.getDisplayName());
+                        field.setDataType(e.fieldType);
+                        field.setDisplayName(e.displayName);
+                        field.setOwner(table.owner);
                         return field;
                     }).collect(Collectors.toList());
 
             table.setColumnList(columnList);
-            tableList.add(table);
+            tableList.add(0, table);
+
             db.setTableList(tableList);
             dbList.add(db);
             instance.setDbList(dbList);
         } else if (flag == apiType) {
-
-            List<MetaDataTableAttributeDTO> tableList = tableAccessImpl.query().eq("api_id", tableAccess.apiId).list()
+            tableList = tableAccessImpl.query().eq("api_id", tableAccess.apiId).list()
                     .stream().filter(Objects::nonNull)
                     .map(tb -> {
                         // 表
@@ -627,7 +838,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         table.setContact_info(app.getAppPrincipal());
                         table.setDescription(tb.getTableDes());
                         table.setComment(String.valueOf(app.getId()));
-
+                        table.setOwner(app.appPrincipal);
+                        //userIds.add(tb.id);
                         // 字段
                         List<MetaDataColumnAttributeDTO> columnList = this.query()
                                 .eq("table_access_id", tb.id)
@@ -640,14 +852,26 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                                     field.setName(e.getFieldName());
                                     field.setContact_info(app.getAppPrincipal());
                                     field.setDescription(e.getFieldDes());
-                                    field.setComment(e.getFieldDes());
-                                    field.setDataType("VARCHAR".equalsIgnoreCase(e.fieldType) ? e.fieldType + "(" + e.fieldLength + ")" : e.fieldType);
+                                    field.setComment(e.getDisplayName());
+                                    field.setDataType(e.fieldType);
+                                    field.setDisplayName(e.displayName);
+                                    field.setOwner(table.owner);
                                     return field;
                                 }).collect(Collectors.toList());
 
                         table.setColumnList(columnList);
                         return table;
                     }).collect(Collectors.toList());
+            /*ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
+            if (userListByIds.code == ResultEnum.SUCCESS.getCode()) {
+                tableList.stream().forEach(e -> {
+                    Optional<UserDTO> first = userListByIds.data.stream().filter(p -> p.id == Long.parseLong(e.owner)).findFirst();
+                    if (first.isPresent()) {
+                        e.setOwner(first.get().getUsername());
+                        e.columnList.stream().map(p -> p.owner = e.owner).collect(Collectors.toList());
+                    }
+                });
+            }*/
             db.setTableList(tableList);
             dbList.add(db);
             instance.setDbList(dbList);
@@ -655,16 +879,30 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
         list.add(instance);
 
-        try {
-            MetaDataAttributeDTO data = new MetaDataAttributeDTO();
-            data.instanceList = list;
-            data.userId = userHelper.getLoginUserInfo().id;
-            // 更新元数据内容
-            log.info("构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
-            dataManageClient.metaData(data);
-        } catch (Exception e) {
-            log.error("【dataManageClient.MetaData()】方法报错,ex", e);
-        }
+        return list;
+    }
+
+    /**
+     * 调用元数据
+     *
+     * @param list
+     */
+    public void consumeMetaData(List<MetaDataInstanceAttributeDTO> list) {
+        log.info("构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
+        dataManageClient.consumeMetaData(list);
+        /*ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+        cachedThreadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    log.info("构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
+                    dataManageClient.consumeMetaData(list);
+                } catch (Exception e) {
+                    // 不同场景下，元数据可能不会部署，在这里只做日志记录，不影响正常流程
+                    log.error("远程调用失败，方法名：【dataManageClient:appSynchronousClassification】");
+                }
+            }
+        });*/
     }
 
     /**
@@ -685,7 +923,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             fieldDTO.fieldId = po.id;
             fieldDTO.fieldEnName = po.fieldName;
             fieldDTO.fieldType = po.fieldType;
-            fieldDTO.fieldLength = Math.toIntExact(po.fieldLength);
+            fieldDTO.fieldLength = po.fieldLength == null ? 0 : Math.toIntExact(po.fieldLength);
             fieldDTO.isPrimaryKey = po.isPrimarykey;
             fieldDTO.fieldPrecision = po.fieldPrecision;
             fieldList.add(fieldDTO);
@@ -708,6 +946,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      */
     public String getVersionSql(TableSyncmodePO tableSyncmodeDto) {
         String versionSql = "";
+        Connection conn = null;
+        AbstractCommonDbHelper dbHelper = null;
         try {
             if (tableSyncmodeDto == null || tableSyncmodeDto.getId() == 0) {
                 log.info("【getVersionSql】参数为空异常");
@@ -747,11 +987,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceDTO.getConType());
             if (!tableSyncmodeDto.getVersionUnit().equals(tableSyncmodePO.getVersionUnit())) {
                 log.info("【getVersionSql】配置发生变更，清空表数据");
-                Connection conn = DbConnectionHelper.connection(dataSourceDTO.getConStr(), dataSourceDTO.getConAccount(), dataSourceDTO.getConPassword(), dataSourceDTO.getConType());
+                conn = DbConnectionHelper.connection(dataSourceDTO.getConStr(), dataSourceDTO.getConAccount(), dataSourceDTO.getConPassword(), dataSourceDTO.getConType());
                 // 检查表是否存在
-                AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
+                dbHelper = new AbstractCommonDbHelper();
                 String existTableSql = dbCommand.buildExistTableSql(tableName);
-                List<Map<String, Object>> maps = dbHelper.execQueryResultMaps(existTableSql, conn);
+                List<Map<String, Object>> maps = dbHelper.batchExecQueryResultMaps_noClose(existTableSql, conn);
                 boolean isExists = !maps.get(0).get("isExists").toString().equals("0");
                 if (isExists) {
                     String sql = String.format("TRUNCATE TABLE %s", tableName);
@@ -760,7 +1000,12 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             }
             versionSql = dbCommand.buildVersionSql(tableSyncmodeDto.getVersionUnit(), tableSyncmodeDto.getVersionCustomRule());
         } catch (Exception ex) {
+            versionSql = "";
             log.error("【getVersionSql】触发异常：" + ex);
+        } finally {
+            if (conn != null) {
+                dbHelper.closeConnection(conn);
+            }
         }
         log.info("【getVersionSql】versionSql：" + versionSql);
         return versionSql;
@@ -780,43 +1025,43 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         ResultEnum resultEnum = ResultEnum.SUCCESS;
         Connection conn = null;
         AbstractCommonDbHelper dbHelper = null;
+        String deleteSql = "";
         try {
             if (StringUtils.isEmpty(keyStr)) {
-                log.info("【delVersionData】参数为空异常");
                 return ResultEnum.PARAMTER_ERROR;
             }
             log.info("【delVersionData】请求参数：" + keyStr);
             String[] keyList = keyStr.split("\\.");
             if (keyList == null || keyList.length == 0) {
-                log.info("【delVersionData】参数分割异常");
-                return ResultEnum.PARAMTER_ERROR;
+                return ResultEnum.VERSION_PARAMS_SPLIT_ERROR;
             }
             // tb_table_access id
             String tableId = keyList[keyList.length - 1];
             // 应用id
             String appId = keyList[keyList.length - 2];
             // 表类型 属于接入还是建模
-            String tableType = keyList[keyList.length - 3];
+//            String tableType = keyList[keyList.length - 3];
             // 表名称
             String tableName = "";
             // 数据源ID dmp_ods
             int targetDbId = 0;
 
-            OlapTableEnum tableTypeEnum = OlapTableEnum.getNameByValue(Integer.parseInt(tableType));
-            if (StringUtils.isEmpty(tableId) || (tableTypeEnum != OlapTableEnum.PHYSICS && tableTypeEnum != OlapTableEnum.PHYSICS_API && tableTypeEnum != OlapTableEnum.PHYSICS_RESTAPI)) {
-                log.info("【checkVersionData】参数值验证不通过");
-                return ResultEnum.PARAMTER_ERROR;
-            }
+//            OlapTableEnum tableTypeEnum = OlapTableEnum.getNameByValue(Integer.parseInt(tableType));
+//            if (StringUtils.isEmpty(tableId) ||
+//                    (tableTypeEnum != OlapTableEnum.PHYSICS
+//                            && tableTypeEnum != OlapTableEnum.PHYSICS_API
+//                            && tableTypeEnum != OlapTableEnum.PHYSICS_RESTAPI)) {
+//                return ResultEnum.VERSION_TABLE_TYPE_ERROR;
+//            }
+
             TableAccessPO tableAccessPO = tableAccessImpl.getById(tableId);
             if (tableAccessPO == null || StringUtils.isEmpty(tableAccessPO.getTableName())) {
-                log.info("【delVersionData】tableAccess配置不存在");
-                return ResultEnum.DATA_NOTEXISTS;
+                return ResultEnum.VERSION_TABLE_NOT_EXISTS;
             }
             appId = StringUtils.isEmpty(appId) ? String.valueOf(tableAccessPO.getAppId()) : appId;
             AppRegistrationPO appRegistrationPO = iAppRegistration.getById(appId);
             if (appRegistrationPO == null) {
-                log.info("【delVersionData】appRegistration配置不存在");
-                return ResultEnum.DATA_NOTEXISTS;
+                return ResultEnum.VERSION_APP_NOT_EXISTS;
             }
             tableName = TableNameGenerateUtils.buildOdsTableName(tableAccessPO.getTableName(), appRegistrationPO.getAppAbbreviation(), appRegistrationPO.getWhetherSchema());
             targetDbId = appRegistrationPO.getTargetDbId();
@@ -824,201 +1069,213 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             log.info("【delVersionData】数据源ID：" + targetDbId);
 
             TableSyncmodePO tableSyncmodePO = tableAccessImpl.getTableSyncmode(Long.parseLong(tableId));
-            if (tableSyncmodePO == null || tableSyncmodePO.getRetainTime() == 0) {
-                log.info("【delVersionData】tableSyncmode配置不存在");
-                return ResultEnum.DATA_NOTEXISTS;
+            if (tableSyncmodePO == null) {
+                return ResultEnum.VERSION_TABLE_SYNC_NOT_EXISTS;
             }
-            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(targetDbId);
-            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode() || dataSourceConfig.getData() == null) {
-                log.info("【delVersionData】DataSource配置不存在");
-                return ResultEnum.DATA_NOTEXISTS;
+            if (tableSyncmodePO.getSyncMode() != 1) {
+                return ResultEnum.VERSION_TABLE_SYNC_NOT_ALL;
             }
 
+            ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(targetDbId);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode() || dataSourceConfig.getData() == null) {
+                return ResultEnum.DATA_SOURCE_ERROR;
+            }
             DataSourceDTO dataSourceDTO = dataSourceConfig.getData();
             conn = DbConnectionHelper.connection(dataSourceDTO.getConStr(), dataSourceDTO.getConAccount(), dataSourceDTO.getConPassword(), dataSourceDTO.getConType());
             dbHelper = new AbstractCommonDbHelper();
             IBuildAccessSqlCommand dbCommand = BuildFactoryAccessHelper.getDBCommand(dataSourceDTO.getConType());
 
-            String retainUnit = tableSyncmodePO.getRetainUnit();
-            int retainTime = tableSyncmodePO.getRetainTime();
-            String versionUnit = tableSyncmodePO.getVersionUnit();
-            String versionCustomRule = tableSyncmodePO.getVersionCustomRule();
-
-            // 日期操作函数
-            Calendar calendar = Calendar.getInstance();
-            String sql = String.format("DELETE FROM %s WHERE fi_version NOT IN", tableName);
-            List<String> sqlConditions = new ArrayList<>();
-            int i = 1;
-
-            // 如果版本规则是按照自定义模式生成的，则需要根据保留规则和版本规则生成条件语句
-            if (versionUnit.equals("自定义")) {
-                log.info("【delVersionData】自定义模式");
-                if (StringUtils.isNotEmpty(versionCustomRule)) {
-                    log.info("【delVersionData】自定义模式下自定义规则配置为空");
-                    return ResultEnum.DATA_NOTEXISTS;
-                }
-                versionCustomRule = String.format("SELECT (%s) AS fi_version", versionCustomRule);
-                log.info("【delVersionData】自定义模式下自定义规则：" + versionCustomRule);
-                List<Map<String, Object>> data = dbHelper.batchExecQueryResultMaps_noClose(versionCustomRule, conn);
-                Object versionObj = data.get(0).get("fi_version");
-                if (versionObj == null || versionObj == "") {
-                    log.info("【delVersionData】自定义模式下自定义规则查询结果为空");
-                    return ResultEnum.DATA_NOTEXISTS;
-                }
-                if (retainUnit.equals("年")) {
-                    // 2022、2023、2024
-                    int year = Integer.parseInt(versionObj.toString());
-                    while (i < retainTime) {
-                        sqlConditions.add(String.format("'%s'", year - i));
-                        i++;
-                    }
-                } else if (retainUnit.equals("季")) {
-                    // 2022/Q01、2022/Q02、2022/Q03、2022/Q04
-                    String[] split = versionObj.toString().split("/");
-                    String yearStr = split[0];
-                    String quarterStr = split[1];
-                    String dateStr = "";
-                    if (quarterStr.equals("Q01")) {
-                        dateStr = yearStr + "-01-01";
-                    } else if (quarterStr.equals("Q02")) {
-                        dateStr = yearStr + "-04-01";
-                    } else if (quarterStr.equals("Q03")) {
-                        dateStr = yearStr + "-07-01";
-                    } else if (quarterStr.equals("Q04")) {
-                        dateStr = yearStr + "-10-01";
-                    }
-                    String str = "yyyy-MM-dd";
-                    SimpleDateFormat format = new SimpleDateFormat(str);
-                    Date date = format.parse(dateStr);
-                    calendar.setTime(date);
-                    while (i < retainTime) {
-                        calendar.add(Calendar.MONTH, -3);
-                        int month = calendar.get(Calendar.MONTH);
-                        int year = calendar.get(Calendar.YEAR);
-                        int quarter = month % 3 == 0 ? month / 3 : month / 3 + 1;
-                        sqlConditions.add(String.format("'%s/Q0%s'", year, quarter));
-                        i++;
-                    }
-                } else if (retainUnit.equals("月")) {
-                    String str = "yyyy/MM";
-                    SimpleDateFormat format = new SimpleDateFormat(str);
-                    Date date = format.parse(versionObj.toString());
-                    calendar.setTime(date);
-                    while (i < retainTime) {
-                        calendar.add(Calendar.MONTH, -1);
-                        int year = calendar.get(Calendar.YEAR);
-                        int month = calendar.get(Calendar.MONTH);
-                        sqlConditions.add(String.format("'%s/%s'", year, month));
-                        i++;
-                    }
-                } else if (retainUnit.equals("周")) {
-                    // 2022/11/01
-                    String str = "yyyy/MM/dd";
-                    SimpleDateFormat format = new SimpleDateFormat(str);
-                    Date date = format.parse(versionObj.toString());
-                    calendar.setTime(date);
-                    // pg和sqlserver获取周时不一样，因此要通过数据库查询
-                    while (i < retainTime) {
-                        calendar.add(Calendar.DATE, -7);
-                        // 查询该时间是当年的第几周
-                        int year = calendar.get(Calendar.YEAR);
-                        int month = calendar.get(Calendar.MONTH) + 1;
-                        int day = calendar.get(Calendar.DAY_OF_MONTH);
-                        String dataStr = year + "/" + month + "/" + day;
-                        String versionSql = dbCommand.buildWeekSql(dataStr);
-                        List<Map<String, Object>> weekData = dbHelper.batchExecQueryResultMaps_noClose(versionSql, conn);
-                        int weekValue = Integer.parseInt(weekData.get(0).get("WeekValue").toString());
-                        sqlConditions.add(String.format("'%s/W%s'", year, weekValue));
-                        i++;
-                    }
-                } else if (retainUnit.equals("日")) {
-                    // 2022/11/01
-                    String str = "yyyy/MM/dd";
-                    SimpleDateFormat format = new SimpleDateFormat(str);
-                    Date date = format.parse(versionObj.toString());
-                    calendar.setTime(date);
-                    while (i < retainTime) {
-                        calendar.add(Calendar.DATE, -1);
-                        SimpleDateFormat s = new SimpleDateFormat("yyyy/MM/dd");
-                        String curDate = s.format(calendar.getTime());
-                        sqlConditions.add(String.format("'%s'", curDate));
-                        i++;
-                    }
-                }
+            if (tableSyncmodePO.getRetainHistoryData() != 1) {
+                log.info("【delVersionData】未启用版本设置，不加版本条件直接全量删除");
+                deleteSql = String.format("TRUNCATE TABLE %s", tableName);
             } else {
-                log.info("【delVersionData】系统模式");
-                if (retainUnit.equals("年")) {
-                    int year = calendar.get(Calendar.YEAR);
-                    while (i < retainTime) {
-                        sqlConditions.add(String.format("'%s'", year - i));
-                        i++;
+                log.info("【delVersionData】启用版本设置，加版本条件删除");
+                if (tableSyncmodePO.getRetainTime() == 0) {
+                    return ResultEnum.VERSION_SAVE_DAY_ERROR;
+                }
+                String retainUnit = tableSyncmodePO.getRetainUnit();
+                int retainTime = tableSyncmodePO.getRetainTime();
+                String versionUnit = tableSyncmodePO.getVersionUnit();
+                String versionCustomRule = tableSyncmodePO.getVersionCustomRule();
+
+                // 日期操作函数
+                Calendar calendar = Calendar.getInstance();
+                deleteSql = dbCommand.buildVersionDeleteSql(tableName);
+                List<String> sqlConditions = new ArrayList<>();
+                int i = 1;
+                // 因为版本保留需要含当月，所以当仅保留一个月时，i要等于0
+                if (retainTime == 1) {
+                    i = 0;
+                }
+
+                // 如果版本规则是按照自定义模式生成的，则需要根据保留规则和版本规则生成条件语句
+                if (versionUnit.equals("自定义")) {
+                    log.info("【delVersionData】自定义模式");
+                    if (StringUtils.isEmpty(versionCustomRule)) {
+                        return ResultEnum.VERSION_CUSTOM_SQL_IS_NULL;
                     }
-                } else if (retainUnit.equals("季")) {
-                    int month = calendar.get(Calendar.MONTH) + 1;
-                    int currentQuarter = month % 3 == 0 ? month / 3 : month / 3 + 1;
-                    if (currentQuarter == 1) {
-                        calendar.set(Calendar.MONTH, 0);
-                    } else if (currentQuarter == 2) {
-                        calendar.set(Calendar.MONTH, 3);
-                    } else if (currentQuarter == 3) {
-                        calendar.set(Calendar.MONTH, 6);
-                    } else {
-                        calendar.set(Calendar.MONTH, 9);
+                    versionCustomRule = String.format("SELECT (%s) AS fi_version", versionCustomRule);
+                    log.info("【delVersionData】自定义模式下自定义规则：" + versionCustomRule);
+                    List<Map<String, Object>> data = dbHelper.batchExecQueryResultMaps_noClose(versionCustomRule, conn);
+                    Object versionObj = data.get(0).get("fi_version");
+                    if (versionObj == null || versionObj == "") {
+                        return ResultEnum.VERSION_CUSTOM_SQL_RESULT_IS_NULL;
                     }
-                    while (i < retainTime) {
-                        calendar.add(Calendar.MONTH, -3);
-                        month = calendar.get(Calendar.MONTH) + 1;
+                    if (retainUnit.equals("年")) {
+                        // 2022、2023、2024
+                        int year = Integer.parseInt(versionObj.toString());
+                        while (i < retainTime) {
+                            sqlConditions.add(String.format("'%s'", year - i));
+                            i++;
+                        }
+                    } else if (retainUnit.equals("季")) {
+                        // 2022/Q01、2022/Q02、2022/Q03、2022/Q04
+                        String[] split = versionObj.toString().split("/");
+                        String yearStr = split[0];
+                        String quarterStr = split[1];
+                        String dateStr = "";
+                        if (quarterStr.equals("Q01")) {
+                            dateStr = yearStr + "-01-01";
+                        } else if (quarterStr.equals("Q02")) {
+                            dateStr = yearStr + "-04-01";
+                        } else if (quarterStr.equals("Q03")) {
+                            dateStr = yearStr + "-07-01";
+                        } else if (quarterStr.equals("Q04")) {
+                            dateStr = yearStr + "-10-01";
+                        }
+                        String str = "yyyy-MM-dd";
+                        SimpleDateFormat format = new SimpleDateFormat(str);
+                        Date date = format.parse(dateStr);
+                        calendar.setTime(date);
+                        while (i < retainTime) {
+                            calendar.add(Calendar.MONTH, -3);
+                            // 注意：java取时间函数的月份时要+1，否则取的是上个月
+                            int month = calendar.get(Calendar.MONTH) + 1;
+                            int year = calendar.get(Calendar.YEAR);
+                            int quarter = month % 3 == 0 ? month / 3 : month / 3 + 1;
+                            sqlConditions.add(String.format("'%s/Q0%s'", year, quarter));
+                            i++;
+                        }
+                    } else if (retainUnit.equals("月")) {
+                        //2022/1、2022/2
+                        String str = "yyyy/MM";
+                        SimpleDateFormat format = new SimpleDateFormat(str);
+                        Date date = format.parse(versionObj.toString());
+                        calendar.setTime(date);
+                        while (i < retainTime) {
+                            calendar.add(Calendar.MONTH, -1);
+                            int year = calendar.get(Calendar.YEAR);
+                            int month = calendar.get(Calendar.MONTH) + 1;
+                            sqlConditions.add(String.format("'%s/%s'", year, month));
+                            i++;
+                        }
+                    } else if (retainUnit.equals("周")) {
+                        // 2022/11/01
+                        String str = "yyyy/MM/dd";
+                        SimpleDateFormat format = new SimpleDateFormat(str);
+                        Date date = format.parse(versionObj.toString());
+                        calendar.setTime(date);
+                        // pg和sqlserver获取周时不一样，因此要通过数据库查询
+                        while (i < retainTime) {
+                            calendar.add(Calendar.DATE, -7);
+                            // 查询该时间是当年的第几周
+                            int year = calendar.get(Calendar.YEAR);
+                            int month = calendar.get(Calendar.MONTH) + 1;
+                            int day = calendar.get(Calendar.DAY_OF_MONTH);
+                            String dataStr = year + "/" + month + "/" + day;
+                            String versionSql = dbCommand.buildWeekSql(dataStr);
+                            List<Map<String, Object>> weekData = dbHelper.batchExecQueryResultMaps_noClose(versionSql, conn);
+                            int weekValue = Integer.parseInt(weekData.get(0).get("WeekValue").toString());
+                            sqlConditions.add(String.format("'%s/W%s'", year, weekValue));
+                            i++;
+                        }
+                    } else if (retainUnit.equals("日")) {
+                        // 2022/11/01
+                        String str = "yyyy/MM/dd";
+                        SimpleDateFormat format = new SimpleDateFormat(str);
+                        Date date = format.parse(versionObj.toString());
+                        calendar.setTime(date);
+                        while (i < retainTime) {
+                            calendar.add(Calendar.DATE, -1);
+                            SimpleDateFormat s = new SimpleDateFormat("yyyy/MM/dd");
+                            String curDate = s.format(calendar.getTime());
+                            sqlConditions.add(String.format("'%s'", curDate));
+                            i++;
+                        }
+                    }
+                } else {
+                    log.info("【delVersionData】系统模式");
+                    if (retainUnit.equals("年")) {
                         int year = calendar.get(Calendar.YEAR);
-                        int quarter = month % 3 == 0 ? month / 3 : month / 3 + 1;
-                        sqlConditions.add(String.format("'%s/Q0%s'", year, quarter));
-                        i++;
-                    }
-                } else if (retainUnit.equals("月")) {
-                    while (i < retainTime) {
-                        calendar.add(Calendar.MONTH, -1);
-                        int year = calendar.get(Calendar.YEAR);
+                        while (i < retainTime) {
+                            sqlConditions.add(String.format("'%s'", year - i));
+                            i++;
+                        }
+                    } else if (retainUnit.equals("季")) {
                         int month = calendar.get(Calendar.MONTH) + 1;
-                        sqlConditions.add(String.format("'%s/%s'", year, month));
-                        i++;
-                    }
-                } else if (retainUnit.equals("周")) {
-                    // pg和sqlserver获取周时不一样，因此要通过数据库查询
-                    while (i < retainTime) {
-                        calendar.add(Calendar.DATE, -7);
-                        // 查询该时间是当年的第几周
-                        int year = calendar.get(Calendar.YEAR);
-                        int month = calendar.get(Calendar.MONTH) + 1;
-                        int day = calendar.get(Calendar.DAY_OF_MONTH);
-                        String dataStr = year + "/" + month + "/" + day;
-                        String versionSql = dbCommand.buildWeekSql(dataStr);
-                        List<Map<String, Object>> data = dbHelper.batchExecQueryResultMaps_noClose(versionSql, conn);
-                        int weekValue = Integer.parseInt(data.get(0).get("WeekValue").toString());
-                        sqlConditions.add(String.format("'%s/W%s'", year, weekValue));
-                        i++;
-                    }
-                } else if (retainUnit.equals("日")) {
-                    while (i < retainTime) {
-                        calendar.add(Calendar.DATE, -1);
-                        SimpleDateFormat s = new SimpleDateFormat("yyyy/MM/dd");
-                        String curDate = s.format(calendar.getTime());
-                        sqlConditions.add(String.format("'%s'", curDate));
-                        i++;
+                        int currentQuarter = month % 3 == 0 ? month / 3 : month / 3 + 1;
+                        if (currentQuarter == 1) {
+                            calendar.set(Calendar.MONTH, 0);
+                        } else if (currentQuarter == 2) {
+                            calendar.set(Calendar.MONTH, 3);
+                        } else if (currentQuarter == 3) {
+                            calendar.set(Calendar.MONTH, 6);
+                        } else {
+                            calendar.set(Calendar.MONTH, 9);
+                        }
+                        while (i < retainTime) {
+                            calendar.add(Calendar.MONTH, -3);
+                            month = calendar.get(Calendar.MONTH) + 1;
+                            int year = calendar.get(Calendar.YEAR);
+                            int quarter = month % 3 == 0 ? month / 3 : month / 3 + 1;
+                            sqlConditions.add(String.format("'%s/Q0%s'", year, quarter));
+                            i++;
+                        }
+                    } else if (retainUnit.equals("月")) {
+                        while (i < retainTime) {
+                            calendar.add(Calendar.MONTH, -1);
+                            int year = calendar.get(Calendar.YEAR);
+                            int month = calendar.get(Calendar.MONTH) + 1;
+                            sqlConditions.add(String.format("'%s/%s'", year, month));
+                            i++;
+                        }
+                    } else if (retainUnit.equals("周")) {
+                        // pg和sqlserver获取周时不一样，因此要通过数据库查询
+                        while (i < retainTime) {
+                            calendar.add(Calendar.DATE, -7);
+                            // 查询该时间是当年的第几周
+                            int year = calendar.get(Calendar.YEAR);
+                            int month = calendar.get(Calendar.MONTH) + 1;
+                            int day = calendar.get(Calendar.DAY_OF_MONTH);
+                            String dataStr = year + "/" + month + "/" + day;
+                            String versionSql = dbCommand.buildWeekSql(dataStr);
+                            List<Map<String, Object>> data = dbHelper.batchExecQueryResultMaps_noClose(versionSql, conn);
+                            int weekValue = Integer.parseInt(data.get(0).get("WeekValue").toString());
+                            sqlConditions.add(String.format("'%s/W%s'", year, weekValue));
+                            i++;
+                        }
+                    } else if (retainUnit.equals("日")) {
+                        while (i < retainTime) {
+                            calendar.add(Calendar.DATE, -1);
+                            SimpleDateFormat s = new SimpleDateFormat("yyyy/MM/dd");
+                            String curDate = s.format(calendar.getTime());
+                            sqlConditions.add(String.format("'%s'", curDate));
+                            i++;
+                        }
                     }
                 }
+                if (CollectionUtils.isEmpty(sqlConditions)) {
+                    return ResultEnum.SQL_ERROR;
+                }
+                String sqlConditionStr = Joiner.on(",").join(sqlConditions);
+                deleteSql += String.format("(%s)", sqlConditionStr);
             }
-            if (CollectionUtils.isEmpty(sqlConditions)) {
-                log.info("【delVersionData】条件语句为空，删除终止");
-                return ResultEnum.SQL_ERROR;
-            }
-            String sqlConditionStr = Joiner.on(",").join(sqlConditions);
-            sql += String.format("(%s)", sqlConditionStr);
-            log.info("【delVersionData】删除语句：" + sql);
-
+            log.info("【delVersionData】删除语句：" + deleteSql);
             String existTableSql = dbCommand.buildExistTableSql(tableName);
             List<Map<String, Object>> maps = dbHelper.batchExecQueryResultMaps_noClose(existTableSql, conn);
             boolean isExists = !maps.get(0).get("isExists").toString().equals("0");
             if (isExists) {
-                dbHelper.executeSql(sql, conn);
+                dbHelper.executeSql(deleteSql, conn);
             } else {
                 log.info("【delVersionData】删除的表不存在，表名称：" + tableName);
             }
@@ -1032,4 +1289,158 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
         return resultEnum;
     }
+
+    @Override
+    public List<FieldNameDTO> getTableFileInfo(long tableAccessId) {
+        List<TableFieldsPO> list = this.query().eq("table_access_id", tableAccessId).list();
+        return TableFieldsMap.INSTANCES.poListToDtoFileList(list);
+    }
+
+    @Override
+    public ResultEnum batchPublish(BatchPublishDTO dto) {
+        for (Long id : dto.ids) {
+            TableAccessPO accessPo = tableAccessImpl.query().eq("id", id).one();
+            if (accessPo == null) {
+                log.error("【物理表为空】,id={}", id);
+                continue;
+            }
+
+            TableSyncmodePO tableSyncmodePo = syncmodeImpl.query().eq("id", id).one();
+            if (tableSyncmodePo == null) {
+                log.error("【物理表同步配置为空】,id={}", id);
+                continue;
+            }
+            String versionSql = getVersionSql(tableSyncmodePo);
+
+            List<DeltaTimeDTO> systemVariable = systemVariables.getSystemVariable(id);
+
+            publish(true,
+                    accessPo.appId,
+                    accessPo.id,
+                    accessPo.tableName,
+                    1,
+                    dto.openTransmission,
+                    null,
+                    false,
+                    systemVariable,
+                    versionSql,
+                    TableSyncModeMap.INSTANCES.poToDto(tableSyncmodePo),
+                    accessPo.appDataSourceId,
+                    dto.tableHistorys,
+                    dto.currUserName);
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum addFile(TableFieldsDTO dto) {
+        TableFieldsPO po = this.query().eq("table_access_id", dto.tableAccessId)
+                .eq("field_name", dto.fieldName).one();
+        if (po != null) {
+            throw new FkException(ResultEnum.DATA_EXISTS);
+        }
+
+        boolean flat = this.save(TableFieldsMap.INSTANCES.dtoToPo(dto));
+        if (!flat) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum delFile(long id,long tableId,long userId) {
+        TableFieldsPO po = this.query().eq("id", id).select("id").one();
+
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        int flat = baseMapper.deleteByIdWithFill(po);
+
+        if (flat == 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        //异步删除元数据字段
+        MetaDataFieldDTO metaDataFieldDTO =new MetaDataFieldDTO();
+        metaDataFieldDTO.setFieldId((int)id);
+        metaDataFieldDTO.setTableId((int)tableId);
+        metaDataFieldDTO.setUserId(userId);
+        publishTaskClient.fieldDelete(metaDataFieldDTO);
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum updateFile(TableFieldsDTO dto) {
+        TableFieldsPO po = this.query().eq("id", dto.id).one();
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        po.fieldName = dto.fieldName;
+        po.fieldLength = dto.fieldLength;
+        po.fieldType = dto.fieldType;
+        po.fieldDes = dto.fieldDes;
+        po.displayName = dto.displayName;
+        po.fieldPrecision = dto.fieldPrecision;
+
+        int flat = baseMapper.updateById(po);
+        if (flat == 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public Object overlayCodePreview(OverlayCodePreviewAccessDTO dto) {
+        log.info("数据接入预览SQL参数{}", JSON.toJSONString(dto));
+        // 查询表数据
+        TableAccessPO tableAccessPO = tableAccessMapper.selectById(dto.id);
+        if (Objects.isNull(tableAccessPO)){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS, "预览SQL失败，表信息不存在");
+        }
+        log.info("数据接入表数据：{}", JSON.toJSONString(tableAccessPO));
+
+        // 查询应用及数据源信息
+        AppRegistrationPO appRegistrationPO = appRegistrationMapper.selectById(tableAccessPO.appId);
+        if (Objects.isNull(appRegistrationPO)){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS, "预览SQL失败，应用不存在");
+        }
+        DataSourceDTO dataSourceDTO = getTargetDbInfo(appRegistrationPO.getTargetDbId());
+        log.info("数据接入数据源：{}", JSON.toJSONString(dataSourceDTO));
+
+        // 处理不同架构下的表名称
+        String targetTableName = "";
+        if (appRegistrationPO.whetherSchema){
+            targetTableName = tableAccessPO.tableName;
+        }else {
+            targetTableName = "ods_" + appRegistrationPO.getAppAbbreviation() + "_" + tableAccessPO;
+        }
+
+        // 获取预览SQL
+        return getBuildSql(dataSourceDTO, dto, tableAccessPO, appRegistrationPO, targetTableName);
+    }
+
+    private Object getBuildSql(DataSourceDTO dataSourceDTO, OverlayCodePreviewAccessDTO dto, TableAccessPO tableAccessPO, AppRegistrationPO appRegistrationPO, String targetTableName) {
+        IBuildOverlaySqlPreview service = BuildSqlStrategy.getService(dataSourceDTO.conType.getName().toUpperCase());
+        return service.buildStgToOdsSql(dataSourceDTO, dto, tableAccessPO, appRegistrationPO, targetTableName);
+    }
+
+    private DataSourceDTO getTargetDbInfo(Integer id){
+        ResultEntity<DataSourceDTO> dataSourceConfig = null;
+        try{
+            dataSourceConfig = userClient.getFiDataDataSourceById(id);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+            }
+            if (Objects.isNull(dataSourceConfig.data)){
+                throw new FkException(ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS);
+            }
+        }catch (Exception e){
+            log.error("调用userClient服务获取数据源失败,", e);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+        return dataSourceConfig.data;
+    }
+
 }

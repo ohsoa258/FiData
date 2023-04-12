@@ -74,4 +74,29 @@
         );
     </insert>
 
+    <select id="getTableInfo" resultType="com.fisk.datamodel.dto.dataops.DataModelQueryDTO">
+        SELECT * FROM (SELECT
+	    business_id,
+	    id,
+	    dimension_tab_name AS ods_table_name,
+	    Concat(prefix_temp_name,'_',dimension_tab_name) AS stg_table_name,
+	    1 AS table_type
+        FROM
+	    tb_dimension where del_flag=1
+
+        UNION ALL
+
+        SELECT
+	    business_id,
+	    id,
+	    fact_tab_name AS ods_table_name,
+	    Concat(prefix_temp_name,'_',fact_tab_name) AS stg_table_name,
+	    2 AS table_type
+        FROM
+	    tb_fact where del_flag=1
+	    ) AS tab
+	    WHERE
+	    ods_table_name = #{tableName} OR stg_table_name = #{tableName}
+    </select>
+
 </mapper>

@@ -1,13 +1,15 @@
 package com.fisk.dataaccess.utils.ftp;
 
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.csvreader.CsvReader;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
 import com.monitorjbl.xlsx.StreamingReader;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -15,7 +17,10 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static com.fisk.common.core.constants.ExcelConstants.EXCEL2003_SUFFIX_NAME;
 
 /**
  * @author Lock
@@ -59,18 +64,13 @@ public class ExcelUtils {
      */
     private static Workbook readFromInputStream(InputStream inputStream, String ext) {
         try {
-            Workbook wk = StreamingReader.builder()
-                    .rowCacheSize(100)  //缓存到内存中的行数，默认是10
-                    .bufferSize(4096)  //读取资源时，缓存到内存的字节大小，默认是1024
-                    .open(inputStream);
-            return wk;
-            /*if (EXCEL2003_SUFFIX_NAME.equals(ext)) {
+            if (EXCEL2003_SUFFIX_NAME.equals(ext)) {
                 // Excel 2003
                 return new HSSFWorkbook(inputStream);
             } else {
                 // Excel 2007
                 return new XSSFWorkbook(inputStream);
-            }*/
+            }
         } catch (Exception e) {
             log.error("从流中读取excel文件失败，【readFromInputStream】方法报错，", e);
         }
@@ -78,83 +78,70 @@ public class ExcelUtils {
     }
 
     /**
+     * @return java.util.List<java.util.List < java.lang.String>>
      * @description 读取Excel内容，返回list，每一行存放一个list
      * @author Lock
      * @date 2021/12/28 10:19
      * @version v1.0
      * @params wb 工作簿对象
      * @params index sheet页
-     * @return java.util.List<java.util.List < java.lang.String>>
      */
-    private static List<List<String>> readExcelContentList(Workbook wb, int index) {
+    private static List<List<Object>> readExcelContentList(Workbook wb, int index, int startRow) {
         if (wb != null) {
             try {
-                List<List<String>> content = new ArrayList<>();
+                List<List<Object>> content = new ArrayList<>();
                 SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
                 Sheet sheet = wb.getSheetAt(index);
                 // 获取行数
                 int getRow = 0;
-                short lastCellNum = 0;
-                for (Row row : sheet) {
-                    if (getRow == 0) {
-                        lastCellNum = row.getLastCellNum();
+                short lastCellNum = 130;
+                //解决最大行数一直变的问题,拿第一次得到的行数
+                int physicalNumberOfRows = sheet.getPhysicalNumberOfRows();
+                for (int i = 0; i <= physicalNumberOfRows; i++) {
+                    if (getRow < startRow) {
+                        getRow++;
+                        continue;
+                    }
+                    Row row = sheet.getRow(i);
+                    if (row != null) {
+                        lastCellNum = row.getLastCellNum() > lastCellNum ? row.getLastCellNum() : lastCellNum;
+                    } else {
+                        row = sheet.createRow(i);
                     }
                     if (getRow == 11) {
                         break;
                     }
-                    List<String> col = new ArrayList<>();
+                    List<Object> col = new ArrayList<>();
                     for (int j = 0; j < lastCellNum; j++) {
-                        Object obj = getCellFormatValue(row.getCell(j));
+                        //System.out.println("坐标:"+i+","+j);
+                        Object obj = getCellFormatValue(Objects.nonNull(row.getCell(j)) ? row.getCell(j) : row.createCell(j));
                         obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
-                        col.add((String) obj);
+                        col.add(obj);
                     }
-                    long count = col.stream().filter(StringUtils::isNoneBlank).count();
+                    long count = col.stream().count();
                     Optional.of(col).filter(x -> count > 0).ifPresent(content::add);
                     getRow++;
                 }
-                /*// excel行对象，0：第一行对象
-                Row row = sheet.getRow(0);
-                // 获取当前行的列数
-                int colNum = row.getPhysicalNumberOfCells();
-                // for循环 0: 从表头开始读取  1: 从正文开始读取
-                // 正文内容应该从第二行开始, 第一行为表头的标题
-                // 默认只读取前十条
-                int tenLines = Math.min(rowNum, 10);
-                for (int ri = 0; ri <= tenLines; ri++) {
-                    row = sheet.getRow(ri);
-                    int ci = 0;
-                    List<String> col = new ArrayList<>();
-                    while (ci < colNum) {
-                        Object obj = getCellFormatValue(row.getCell(ci++));
-                        obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
-                        col.add((String) obj);
-                    }
-                    // 如果行是纯空白字符串，将被过滤
-                    // 但有空列，而不是全部空白，将不会破坏行信息，而不会被过滤。
-                    long count = col.stream().filter(StringUtils::isNoneBlank).count();
-                    Optional.of(col).filter(x -> count > 0).ifPresent(content::add);
-                }*/
                 return content;
             } catch (Exception e) {
                 log.error("", e);
-
             }
         }
         return null;
     }
 
     /**
+     * @return java.util.List<java.util.List < java.lang.String>>
      * @description 读取csv内容，返回list，每一行存放一个list
      * @author Lock
      * @date 2022/1/5 11:18
      * @version v1.0
      * @params wb
      * @params index
-     * @return java.util.List<java.util.List < java.lang.String>>
      */
-    private static List<List<String>> readCsvContentList(InputStream inputStream) {
+    private static List<List<Object>> readCsvContentList(InputStream inputStream) {
         // 默认只查询十行
-        List<List<String>> content = new ArrayList<>();
+        List<List<Object>> content = new ArrayList<>();
         CsvReader csvReader = new CsvReader(inputStream, Charset.forName("GBK"));
         try {
             while (csvReader.readRecord()) {
@@ -181,20 +168,48 @@ public class ExcelUtils {
     private static Object getCellFormatValue(Cell cell) {
         Object cellvalue = "";
         if (cell != null) {
-            // 判断当前Cell的Type
             switch (cell.getCellType()) {
-                case NUMERIC:
-                case FORMULA:
-                    // 判断当前的cell为Date, 取时间类型；数字则转字符串
-                    cellvalue = DateUtil.isCellDateFormatted(cell) ? cell.getDateCellValue() : String.valueOf(cell.getNumericCellValue());
-                    break;
-                // 如果当前Cell的Type为STRING
                 case STRING:
-                    cellvalue = cell.getRichStringCellValue().getString();
+                    cellvalue = cell.getStringCellValue();
                     break;
+                case NUMERIC:
+                    if (DateUtil.isCellDateFormatted(cell)) {
+                        cellvalue = cell.getDateCellValue();
+                    } else {
+                        cellvalue = cell.getNumericCellValue();
+                    }
+                    break;
+                case BOOLEAN:
+                    cellvalue = cell.getBooleanCellValue();
+                    break;
+                case FORMULA:
+                    switch (cell.getCachedFormulaResultType()) {
+                        case STRING:
+                            cellvalue = cell.getStringCellValue();
+                            break;
+                        case NUMERIC:
+                            if (DateUtil.isCellDateFormatted(cell)) {
+                                cellvalue = cell.getDateCellValue();
+                            } else {
+                                cellvalue = cell.getNumericCellValue();
+                            }
+                            break;
+                        case BOOLEAN:
+                            cellvalue = cell.getBooleanCellValue();
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case BLANK:
+                    break;
+                case ERROR:
+                    break;
+                // 处理其他类型的值
                 default:
                     break;
             }
+
         }
         return cellvalue;
     }
@@ -207,11 +222,11 @@ public class ExcelUtils {
      * @params filePath Excel文件路径
      * @return java.util.List<java.util.List < java.lang.String>>
      */
-    public static List<List<String>> readExcel(String filePath) {
+    /*public static List<List<String>> readExcel(String filePath) {
         Workbook wb = read(filePath);
         // 默认获取第一个sheet页
         return readExcelContentList(wb, 0);
-    }
+    }*/
 
     /**
      * @description 读取excel内容
@@ -222,7 +237,7 @@ public class ExcelUtils {
      * @params ext 文件后缀名
      * @return java.util.List<com.fisk.dataaccess.dto.ftp.ExcelDTO>
      */
-    public static List<ExcelDTO> readExcelFromInputStream(InputStream inputStream, String ext) {
+    public static List<ExcelDTO> readExcelFromInputStream(InputStream inputStream, String ext,Integer startRow) {
         List<ExcelDTO> listDto = null;
         try {
             Workbook workbook = readFromInputStream(inputStream, ext);
@@ -236,12 +251,14 @@ public class ExcelUtils {
             List<ExcelDTO> finalListDto = listDto;
             IntStream.range(0, numberOfSheets).forEachOrdered(i -> {
                 // 读取Excel内容，返回list，每一行存放一个list
-                List<List<String>> lists = readExcelContentList(workbook, i);
+                List<List<Object>> lists = readExcelContentList(workbook, i,startRow);
                 ExcelDTO excelDTO = new ExcelDTO();
-                // excel预览内容
+                // excel预览内容 根据用户定义的起始行预览
                 excelDTO.excelContent = lists;
                 // excel字段列表
-                excelDTO.excelField = lists.get(0);
+                if (!CollectionUtils.isEmpty(lists)) {
+                    excelDTO.excelField = excelDTO.excelContent.get(0);
+                }
                 // sheet名称
                 excelDTO.sheetName = workbook.getSheetName(i);
                 finalListDto.add(excelDTO);
@@ -261,19 +278,19 @@ public class ExcelUtils {
      * @params inputStream
      * @params ext
      */
-    public static List<ExcelDTO> readCsvFromInputStream(InputStream inputStream, String filename) {
+    public static List<ExcelDTO> readCsvFromInputStream(InputStream inputStream, String filename,Integer startRow) {
         List<ExcelDTO> listDto = null;
         try {
             listDto = new ArrayList<>();
             // 读取csv内容，返回list，每一行存放一个list
-            List<List<String>> lists = readCsvContentList(inputStream);
+            List<List<Object>> lists = readCsvContentList(inputStream);
             ExcelDTO excelDTO = new ExcelDTO();
             // csv内容
-            excelDTO.excelContent = lists;
+            excelDTO.excelContent = lists.stream().skip(startRow).collect(Collectors.toList());
             // csv没有多sheet页,本方法中莫瑞诺指定文件名为sheet名
             excelDTO.sheetName = filename;
             // 字段列表
-            excelDTO.excelField = lists.get(0);
+            excelDTO.excelField = excelDTO.excelContent.get(0);
             listDto.add(excelDTO);
         } catch (Exception e) {
             throw new FkException(ResultEnum.READ_CSV_CONTENT_ERROR);

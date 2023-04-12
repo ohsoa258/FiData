@@ -2,44 +2,49 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.fisk.datagovernance.mapper.dataquality.BusinessFilterMapper">
-    <select id="getAll" resultType="com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO">
+    <select id="getAllRule" resultType="com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO">
         SELECT
-        t1.id,
-        t1.template_id,
-        t1.datasource_id,
-        t1.rule_name,
-        t1.table_unique,
-        t1.table_type,
-        t1.table_business_type,
-        t1.create_rule,
-        t1.rule_sort,
-        t1.rule_state,
-        t2.module_type,
-        t2.module_name,
-        t2.template_scene,
-        t2.scene_name,
-        t2.scene_desc,
-        t2.template_type,
-        t2.template_name,
-        t2.template_desc,
-        t1.create_time,
-        t1.create_user,
-        t3.datasource_type AS sourceTypeEnum
+            t1.id,
+            t1.datasource_id,
+            t1.rule_name,
+            t1.table_unique,
+            t1.table_type,
+            t1.table_business_type,
+            t1.rule_sort,
+            t1.rule_state,
+            t1.rule_describe,
+            t1.filter_scene,
+            t1.trigger_scene,
+            t2.datasource_id AS fiDataSourceId,
+            t2.datasource_type AS sourceTypeEnum
         FROM
-        tb_bizfilter_rule t1
-        LEFT JOIN tb_template_config t2 ON t1.template_id = t2.id
-        LEFT JOIN tb_datasource_config t3 ON t1.datasource_id = t3.id
+            tb_bizfilter_rule t1
+                LEFT JOIN tb_datasource_config t2 ON t1.datasource_id = t2.id
         WHERE
-        t1.del_flag = 1
-        AND t2.del_flag = 1
-        AND t3.del_flag = 1
-        AND t3.id = #{datasourceId}
-        AND table_unique = #{tableUnique,jdbcType=VARCHAR}
-        <if test="tableBusinessType != 0 ">
-            AND table_business_type = #{tableBusinessType}
-        </if>
-        <if test="keyword != null and keyword != '' ">
-            AND rule_name LIKE concat('%', #{keyword}, '%')
-        </if>
+            t1.del_flag = 1
+          AND t2.del_flag = 1
+    </select>
+    <select id="getRule" resultType="com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO">
+        SELECT
+            t1.id,
+            t1.datasource_id,
+            t1.rule_name,
+            t1.table_unique,
+            t1.table_type,
+            t1.table_business_type,
+            t1.rule_sort,
+            t1.rule_state,
+            t1.rule_describe,
+            t1.filter_scene,
+            t1.trigger_scene,
+            t2.datasource_id AS fiDataSourceId,
+            t2.datasource_type AS sourceTypeEnum
+        FROM
+            tb_bizfilter_rule t1
+                LEFT JOIN tb_datasource_config t2 ON t1.datasource_id = t2.id
+        WHERE
+            t1.del_flag = 1
+          AND t2.del_flag = 1
+          AND t1.id=#{ruleId}
     </select>
 </mapper>

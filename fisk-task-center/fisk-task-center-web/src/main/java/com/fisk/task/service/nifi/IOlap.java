@@ -55,7 +55,7 @@ public interface IOlap {
      * @param tableAccessId   tableAccessId
      * @return
      */
-    NifiGetPortHierarchyDTO getNifiGetPortHierarchy(String pipelineId,int type,String tableName,int tableAccessId);
+    NifiGetPortHierarchyDTO getNifiGetPortHierarchy(String pipelineId,Integer type,String tableName,Integer tableAccessId);
 
 
 }

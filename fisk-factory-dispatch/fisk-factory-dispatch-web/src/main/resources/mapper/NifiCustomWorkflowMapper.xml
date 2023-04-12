@@ -13,7 +13,8 @@
         list_edge,
         `status`,
         create_time,
-        update_time
+        update_time,
+        work_status
         FROM
         tb_nifi_custom_workflow
         WHERE

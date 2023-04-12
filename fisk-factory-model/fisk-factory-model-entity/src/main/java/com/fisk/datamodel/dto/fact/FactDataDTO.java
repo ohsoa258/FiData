@@ -18,6 +18,10 @@ public class FactDataDTO {
      */
     public String factTabName;
     /**
+     * 事实表显示名称
+     */
+    public String factTableCnName;
+    /**
      * 发布状态：0: 未发布  1: 发布成功  2: 发布失败  3: 正在发布
      */
     public int isPublish;
@@ -25,6 +29,10 @@ public class FactDataDTO {
      * Doris发布状态 0: 未发布  1: 发布成功  2: 发布失败  3: 正在发布
      */
     public int dorisPublish;
+    /**
+     * 临时表名称前缀
+     */
+    public String prefixTempName;
     /**
      * 事实表下字段列表
      */

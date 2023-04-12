@@ -7,13 +7,15 @@ import com.fisk.common.core.baseObject.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.io.Serializable;
+
 /**
  * @author Lock
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("tb_table_syncmode")
-public class TableSyncmodePO extends BaseEntity {
+public class TableSyncmodePO extends BaseEntity implements Serializable {
 
     /**
      * 注入的是tb_table_access表的id
@@ -75,4 +77,15 @@ public class TableSyncmodePO extends BaseEntity {
      * 版本自定义规则
      */
     public String versionCustomRule;
+
+    /**
+     * 单个数据流文件加载最大数据行
+     */
+    public Integer maxRowsPerFlowFile;
+
+    /**
+     * 单词从结果集中提取的最大数据行
+     */
+    public Integer fetchSize;
+
 }

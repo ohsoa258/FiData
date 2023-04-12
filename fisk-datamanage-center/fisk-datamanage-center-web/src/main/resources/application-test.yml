@@ -45,7 +45,7 @@ atlas:
     terms: /api/atlas/v2/glossary/terms
     category: /api/atlas/v2/glossary/category
   request:
-    url: http://192.168.1.250:21000
+    url: http://192.168.11.160:21000
 
 #元数据对象配置
 fidata:
@@ -63,26 +63,3 @@ fidata:
 #血缘同步
 scheduling:
   enabled: false
-
-#feign接口超时配置
-#feign:
-#  client:
-#    config:
-#      default:
-#        connectTimeout: 10000
-#        readTimeout: 12000
-#
-#ribbon:
-#  eager-load:
-#    enabled: true
-#    clients: datamodel-service,dataaccess-service
-#
-#  hystrix:
-#    command:
-#    default:
-#      isolation:
-#        thread:
-#          timeoutInMilliseconds: 30000
-#      execution:
-#        timeout:
-#          enabled: true

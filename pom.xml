@@ -23,6 +23,7 @@
         <module>fisk-governance-center</module>
         <module>fisk-mdm-model</module>
         <module>fisk-license-registry</module>
+        <module>fisk-api-serveice</module>
     </modules>
 
 

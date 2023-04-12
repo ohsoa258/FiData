@@ -1,8 +1,10 @@
 package com.fisk.datagovernance.service.dataops;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
 import com.fisk.datagovernance.dto.dataops.GetDataOpsFieldSourceDTO;
+import com.fisk.datagovernance.dto.dataops.TableDataSyncDTO;
 import com.fisk.datagovernance.vo.dataops.DataOpsSourceVO;
 import com.fisk.datagovernance.vo.dataops.DataOpsTableFieldVO;
 import com.fisk.datagovernance.vo.dataops.ExecuteResultVO;
@@ -39,7 +41,14 @@ public interface IDataOpsDataSourceManageService {
     ResultEntity<ExecuteResultVO> executeDataOpsSql(ExecuteDataOpsSqlDTO dto);
 
     /**
-     * pg数据库信息同步到redis
+     * 同步表数据
+     *
+     * @return 查询结果
+     */
+    ResultEnum tableDataSync(TableDataSyncDTO dto);
+
+    /**
+     * 数据库信息同步到redis
      *
      * @return 查询结果
      */

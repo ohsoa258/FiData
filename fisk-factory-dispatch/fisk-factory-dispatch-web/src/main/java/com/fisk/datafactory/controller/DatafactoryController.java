@@ -5,7 +5,7 @@ import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
-import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
+import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.PipeDagDTO;
 import com.fisk.datafactory.service.IDataFactory;
 import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
@@ -41,7 +41,7 @@ public class DatafactoryController {
 
     @PostMapping("/getNIfiPortHierarchy")
     @ApiOperation(value = "获取管道层级关系")
-    public ResultEntity<NifiPortsHierarchyDTO> getNifiPortHierarchy(@Validated @RequestBody NifiGetPortHierarchyDTO dto) {
+    public ResultEntity<TaskHierarchyDTO> getNifiPortHierarchy(@Validated @RequestBody NifiGetPortHierarchyDTO dto) {
 
         return service.getNifiPortHierarchy(dto);
     }

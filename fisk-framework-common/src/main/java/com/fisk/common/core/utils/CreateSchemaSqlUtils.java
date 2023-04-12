@@ -29,7 +29,9 @@ public class CreateSchemaSqlUtils {
                 break;
             case POSTGRESQL:
                 str.append("CREATE SCHEMA IF NOT EXISTS ");
+                str.append("\"");
                 str.append(schemaName);
+                str.append("\"");
                 break;
             default:
                 throw new FkException(ResultEnum.SCHEMA_ERROR);

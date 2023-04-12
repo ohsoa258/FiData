@@ -68,5 +68,22 @@ public class DimensionPO extends BasePO {
     /**
      * 数据接入应用id
      */
-    public Integer appId;
+    // public Integer appId;
+
+    /**
+     * 数据接入数据来源库id
+     */
+    public Integer dataSourceId;
+    /**
+     * 临时表名称
+     */
+    public String prefixTempName;
+    /**
+     * 维度key数据同步脚本
+     */
+    public String dimensionKeyScript;
+    /**
+     * 覆盖方式预览脚本
+     */
+    public String coverScript;
 }

@@ -16,6 +16,8 @@ import java.util.List;
 public class EntityAttributesDTO {
     @ApiModelProperty(value = "限定名")
     public String qualifiedName;
+    @ApiModelProperty(value = "显示名称")
+    public String displayName;
     @ApiModelProperty(value = "创建实例：数据库类型")
     public String rdbms_type;
     @ApiModelProperty(value = "名称")

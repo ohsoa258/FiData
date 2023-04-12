@@ -5,7 +5,7 @@ import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
-import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
+import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.PipeDagDTO;
 import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
 import com.fisk.task.dto.dispatchlog.PipelLogVO;
@@ -35,7 +35,7 @@ public interface IDataFactory {
      * @param dto dto
      * @return 查询结果
      */
-    ResultEntity<NifiPortsHierarchyDTO> getNifiPortHierarchy(NifiGetPortHierarchyDTO dto);
+    ResultEntity<TaskHierarchyDTO> getNifiPortHierarchy(NifiGetPortHierarchyDTO dto);
 
     /**
      * 根据管道主键id查询管道内第一批任务

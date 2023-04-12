@@ -64,5 +64,9 @@ public class DimensionAttributePO extends BasePO {
      * 是否维度表字段
      */
     public Boolean isDimDateField;
+    /**
+     * 配置详情(维度key的json配置详情)
+     */
+    public String configDetails;
 
 }

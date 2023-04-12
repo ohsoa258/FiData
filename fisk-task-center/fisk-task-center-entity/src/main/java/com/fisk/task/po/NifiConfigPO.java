@@ -14,5 +14,6 @@ import lombok.EqualsAndHashCode;
 public class NifiConfigPO extends BasePO {
     public String componentKey;
     public String componentId;
+    public String datasourceConfigId;
 
 }

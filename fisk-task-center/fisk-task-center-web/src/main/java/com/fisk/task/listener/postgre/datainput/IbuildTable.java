@@ -52,7 +52,7 @@ public interface IbuildTable {
      *
      * @return String
      */
-    String queryNumbersField(BuildNifiFlowDTO dto, DataAccessConfigDTO config);
+    String queryNumbersField(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId);
 
     /**
      * tableName 一般是简称_表名,或简称.表名,如果是.要从中间切开,简称.stg_表名.或者stg_简称_表名
@@ -69,5 +69,36 @@ public interface IbuildTable {
      */
     List<String> buildDwStgAndOdsTable(ModelPublishTableDTO modelPublishTableDTO);
 
+    /**
+     * 查询同步数据数量
+     *
+     * @param dto
+     * @param config
+     * @param groupId
+     * @return
+     */
+    public String queryNumbersFieldForTableServer(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId);
+
+    /**
+     * 输出返回语句
+     *
+     * @param sql
+     * @return
+     */
+    String getTotalSql(String sql, SynchronousTypeEnum synchronousTypeEnum);
+
+    /**
+     * 修改字段格式
+     *
+     * @param dto
+     */
+    void fieldFormatModification(DataAccessConfigDTO dto);
+
+    /**
+     * 是否自动提交
+     *
+     * @return
+     */
+    String getEsqlAutoCommit();
 
 }

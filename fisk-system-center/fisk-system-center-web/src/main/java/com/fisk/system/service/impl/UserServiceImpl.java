@@ -106,13 +106,21 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public ResultEnum register(UserDTO dto) {
-        //1.判断用户名是否已存在
+        //1.判断用户账号是否已存在
         QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(UserPO::getUserAccount, dto.userAccount);
         UserPO data = mapper.selectOne(queryWrapper);
         if (data != null) {
             return ResultEnum.NAME_EXISTS;
+        }
+        // 判断用户名是否已存在
+        queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(UserPO::getUsername, dto.username);
+        UserPO userPO = mapper.selectOne(queryWrapper);
+        if (userPO != null){
+            return ResultEnum.USERNAME_EXISTS;
         }
         // 2.对密码进行加密
         dto.password = passwordEncoder.encode(dto.getPassword());
@@ -162,6 +170,19 @@ public class UserServiceImpl implements IUserService {
         if (data != null && data.id != dto.id) {
             return ResultEnum.NAME_EXISTS;
         }
+        // 判断用户名是否重复
+        queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(UserPO::getUsername, dto.username);
+        UserPO userPO = mapper.selectOne(queryWrapper);
+        if(userPO!=null){
+            if((dto.getUsername()).equals(userPO.getUsername())&&(dto.getEmail()).equals(userPO.getEmail())){
+                return ResultEnum.USERNAME_EXISTS;
+            }
+        }
+        /*if (userPO != null){
+            return ResultEnum.USERNAME_EXISTS;
+        }*/
         model.email = dto.email;
         model.username = dto.username;
         return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -330,6 +351,7 @@ public class UserServiceImpl implements IUserService {
         dto.id = model.id;
         dto.userAccount = model.userAccount;
         dto.userName = model.username;
+        dto.email = model.email;
         return dto;
     }
 
@@ -381,11 +403,16 @@ public class UserServiceImpl implements IUserService {
     public ResultEntity<List<UserDTO>> getUserListByIds(List<Long> ids) {
         List<UserDTO> userDtos = new ArrayList<>();
         if (CollectionUtils.isEmpty(ids)) {
-
             return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS, userDtos);
         }
         userDtos = mapper.getUserListByIds(ids);
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, userDtos);
+    }
+
+    @Override
+    public ResultEntity<List<UserDTO>> getAllUserList() {
+        List<UserDTO> userList = mapper.getUserListByIds(null);
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, userList);
     }
 
     @Override
@@ -427,12 +454,15 @@ public class UserServiceImpl implements IUserService {
             //解析返回数据
             String result = EntityUtils.toString(entity, "UTF-8");
             JSONObject jsonObject = JSONObject.parseObject(result);
-            if (jsonObject.containsKey("code") && (Integer) jsonObject.get("code") == 200) {
+            String msg = "";
+            if ((Integer) jsonObject.get("code") == 200) {
                 jsonObject = JSON.parseObject(jsonObject.getString("data"));
                 token = jsonObject.getString("token");
+            } else {
+                msg = jsonObject.getString("msg");
             }
             if (StringUtils.isEmpty(token)) {
-                throw new FkException(ResultEnum.GET_JWT_TOKEN_ERROR);
+                throw new FkException(ResultEnum.GET_JWT_TOKEN_ERROR, msg);
             }
         } catch (IOException | ParseException e) {
             throw new FkException(ResultEnum.SEND_POST_REQUEST_ERROR);

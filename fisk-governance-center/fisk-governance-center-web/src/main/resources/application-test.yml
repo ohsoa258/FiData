@@ -5,6 +5,9 @@ dataops:
   schedule: 0 30 0 * * ?
   # 是否启用
   enabled: true
+dataquality:
+  # 数据库元数据对应 redis key
+  metadataentity_key: DataQuality_MetaDataEntityKey
 spring:
   application:
     name: datagovernance-service
@@ -15,7 +18,7 @@ spring:
     driver-class-name: com.mysql.jdbc.Driver
   redis:
     host: 192.168.11.130
-# pg数据源配置
+# 数据源配置
 database:
   dw_id: 1
   ods_id: 2

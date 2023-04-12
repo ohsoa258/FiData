@@ -37,23 +37,23 @@ public class MysqlConUtils {
             list = new ArrayList<>();
 
             for (String tableName : tableNames) {
-                ResultSet rs = null;
+                /*ResultSet rs = null;
                 try {
-                    rs = st.executeQuery("select * from `" + tableName + "` LIMIT 0,10;");
+                    rs = st.executeQuery("select * from `" + tableName + "` LIMIT 0,1;");
                 } catch (SQLException e) {
                     log.error("【getTableNameAndColumns】获取表名报错, ex", e);
                     continue;
-                }
+                }*/
 
-                List<TableStructureDTO> colNames = getColNames(rs);
+                //List<TableStructureDTO> colNames = getColNames(rs);
 
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(tableName);
-                tablePyhNameDTO.setFields(colNames);
+                //tablePyhNameDTO.setFields(colNames);
 
                 list.add(tablePyhNameDTO);
 
-                rs.close();
+                //rs.close();
             }
         } catch (SQLException e) {
             log.error("【getTableNameAndColumns】获取表名报错, ex", e);
@@ -87,7 +87,7 @@ public class MysqlConUtils {
 
             for (String viewName : viewNameList) {
                 DataBaseViewDTO dto = new DataBaseViewDTO();
-                ResultSet resultSql = null;
+                /*ResultSet resultSql = null;
                 try {
                     resultSql = st.executeQuery("select * from `" + viewName + "`;");
 
@@ -103,7 +103,7 @@ public class MysqlConUtils {
                 } finally {
                     // 关闭当前结果集
                     AbstractCommonDbHelper.closeResultSet(resultSql);
-                }
+                }*/
                 list.add(dto);
             }
 
@@ -169,11 +169,17 @@ public class MysqlConUtils {
     /**
      * 获取表中所有字段名称
      *
-     * @param rs rs
+     * @param conn
+     * @param tableName
+     * @return
      */
-    private List<TableStructureDTO> getColNames(ResultSet rs) {
+    public List<TableStructureDTO> getColNames(Connection conn, String tableName) {
         List<TableStructureDTO> colNameList = null;
+        Statement st = null;
+        ResultSet rs = null;
         try {
+            st = conn.createStatement();
+            rs = st.executeQuery("select * from `" + tableName + "` LIMIT 0,1;");
             ResultSetMetaData metaData = rs.getMetaData();
             int count = metaData.getColumnCount();
 
@@ -189,9 +195,12 @@ public class MysqlConUtils {
                 tableStructureDTO.fieldLength = metaData.getColumnDisplaySize(i);
                 colNameList.add(tableStructureDTO);
             }
-            rs.close();
         } catch (SQLException e) {
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeResultSet(rs);
+            AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeConnection(conn);
         }
         return colNameList;
     }

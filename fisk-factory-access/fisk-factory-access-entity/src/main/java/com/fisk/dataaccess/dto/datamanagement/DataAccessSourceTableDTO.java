@@ -23,6 +23,16 @@ public class DataAccessSourceTableDTO {
     @ApiModelProperty(value = "物理表描述")
     public String tableDes;
 
+    public Integer appId;
+
+    public Integer dataSourceId;
+
+    public String appAbbreviation;
+
+    public String sqlScript;
+
+    public String driveType;
+
     /**
      * 表字段集合
      */

@@ -24,6 +24,8 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = FkTaskApplication.class)
 @RunWith(SpringRunner.class)
@@ -232,6 +234,14 @@ public class NifiBuildTest {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Test
+    public void setNifiVariable(){
+        Map<String, String> map = new HashMap<>();
+        map.put("test_variable1", "test6");
+        map.put("test_variable2", "test2");
+        service.buildNifiGlobalVariable(map);
     }
 
 }

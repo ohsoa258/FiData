@@ -11,14 +11,17 @@ import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
+import com.fisk.dataaccess.dto.app.AppRegistrationInfoDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
+import com.fisk.dataaccess.vo.datafactory.SyncTableCountVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
@@ -284,4 +287,32 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      */
     JSONObject dataTypeList(Integer appId);
 
+    /**
+     * 元数据同步所有应用
+     *
+     * @return
+     */
+    List<MetaDataInstanceAttributeDTO> synchronizationAppRegistration();
+
+    /**
+     * 元数据同步所有接入表
+     *
+     * @return
+     */
+    List<MetaDataInstanceAttributeDTO> synchronizationAccessTable();
+
+    /**
+     * 依据应用id集合查询应用对应的目标源id集合
+     *
+     * @param appIds 应用id集合
+     * @return
+     */
+    List<AppRegistrationInfoDTO> getBatchTargetDbIdByAppIds(List<Integer> appIds);
+
+    /**
+     * 获取数据接入不同同步类型下的表个数
+     * @return
+     * @param appId
+     */
+    SyncTableCountVO getSyncTableCount(Integer appId);
 }

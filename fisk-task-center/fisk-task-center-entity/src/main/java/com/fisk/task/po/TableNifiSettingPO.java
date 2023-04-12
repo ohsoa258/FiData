@@ -70,7 +70,12 @@ public class TableNifiSettingPO extends BasePO {
     public String queryEndTimeProcessorId;
     public String convertEndTimeToJsonProcessorId;
     public String setEndTimeProcessorId;
-    public String replaceTextForFtpProcessId;
+    //--------------------------------------------
+    public String replaceTextForFtpProcessorId;
     public String invokeHttpForFtpProcessorId;
-
+    public String queryVersionProcessorId;
+    public String convertVersionToJsonProcessorId;
+    public String setVersionProcessorId;
+    public String replaceTextForVersionProcessorId;
+    public String invokeHttpForVersionProcessorId;
 }

@@ -40,7 +40,9 @@ public class SwaggerConfig {
     public static final String TABLE_HISTORY="table-history--controller";
     public static final String DATA_MANAGEMENT="data-management-controller";
     public static final String TABLE_BUSINESS="table-business-controller";
-    public static final String WIDE_TABLE="wide-table-controller";
+    public static final String WIDE_TABLE = "wide-table-controller";
+    public static final String DATA_OPS = "data-ops-controller";
+    public static final String CUSTOM_SCRIPT = "custom-script-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -60,16 +62,18 @@ public class SwaggerConfig {
                 .tags(new Tag(BUSINESS_AREA,"业务域"))
                 .tags(new Tag(DATASOURCE_AREA,"计算数据源"))
                 .tags(new Tag(ATOMIC_INDICATOR,"数仓建模–指标"))
-                .tags(new Tag(DERIVED_INDICATOR,"数仓建模–派生指标"))
-                .tags(new Tag(BUSINES_LIMITE,"数据建模-业务限定"))
-                .tags(new Tag(TAG_4,"数据源"))
-                .tags(new Tag(FACT_SYNC_MODE,"事实表同步方式"))
-                .tags(new Tag(DIMENSION_FOLDER,"维度文件夹"))
-                .tags(new Tag(DATAFACTORY,"数据工厂-管道组件表id"))
-                .tags(new Tag(TABLE_HISTORY,"表发布历史"))
-                .tags(new Tag(DATA_MANAGEMENT,"数据治理"))
-                .tags(new Tag(TABLE_BUSINESS,"表增量配置"))
-                .tags(new Tag(WIDE_TABLE,"宽表"))
+                .tags(new Tag(DERIVED_INDICATOR, "数仓建模–派生指标"))
+                .tags(new Tag(BUSINES_LIMITE, "数据建模-业务限定"))
+                .tags(new Tag(TAG_4, "数据源"))
+                .tags(new Tag(FACT_SYNC_MODE, "事实表同步方式"))
+                .tags(new Tag(DIMENSION_FOLDER, "维度文件夹"))
+                .tags(new Tag(DATAFACTORY, "数据工厂-管道组件表id"))
+                .tags(new Tag(TABLE_HISTORY, "表发布历史"))
+                .tags(new Tag(DATA_MANAGEMENT, "数据治理"))
+                .tags(new Tag(TABLE_BUSINESS, "表增量配置"))
+                .tags(new Tag(WIDE_TABLE, "宽表"))
+                .tags(new Tag(DATA_OPS, "数据运维"))
+                .tags(new Tag(CUSTOM_SCRIPT, "自定义脚本"))
                 .securityContexts(securityContexts());
     }
 

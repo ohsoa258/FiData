@@ -142,4 +142,14 @@ public class AppDataSourcePO extends BasePO {
      */
     public String domainName;
 
+    /**
+     * 文件二进制字符串
+     */
+    public String fileBinary;
+
+    /**
+     * 系统数据源配置id
+     */
+    public Integer systemDataSourceId = 0;
+
 }

@@ -8,7 +8,7 @@ import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.app.DbConnectionDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
-import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
+import com.fisk.common.core.utils.Dto.sftp.ExcelTreeDTO;
 import com.fisk.dataaccess.dto.ftp.FtpPathDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
@@ -88,14 +88,14 @@ public class FtpImpl implements IFtp {
 
         // 获取文件输入流
         InputStream inputStream = getInputStreamByName(ftpClient, excelParam.get(0), excelParam.get(1));
-
+        Integer startRow=query.startRow==null?0:query.startRow;
         switch (query.fileTypeEnum) {
             // 获取excel内容
             case XLS_FILE:
             case XLSX_FILE:
-                return ExcelUtils.readExcelFromInputStream(inputStream, excelParam.get(2));
+                return ExcelUtils.readExcelFromInputStream(inputStream, excelParam.get(2),startRow);
             case CSV_FILE:
-                return ExcelUtils.readCsvFromInputStream(inputStream, excelParam.get(3));
+                return ExcelUtils.readCsvFromInputStream(inputStream, excelParam.get(3),startRow);
             default:
                 return null;
         }

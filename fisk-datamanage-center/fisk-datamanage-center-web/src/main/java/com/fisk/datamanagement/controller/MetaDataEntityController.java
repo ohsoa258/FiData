@@ -5,11 +5,13 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.config.SwaggerConfig;
-import com.fisk.datamanagement.dto.entity.EntityAssociatedLabelDTO;
 import com.fisk.datamanagement.dto.entity.EntityAssociatedMetaDataDTO;
 import com.fisk.datamanagement.dto.entity.EntityDTO;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
+import com.fisk.datamanagement.dto.metadatalabelmap.MetadataLabelMapParameter;
+import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.service.IEntity;
+import com.fisk.datamanagement.service.IMetaDataEntityOperationLog;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -27,6 +29,10 @@ public class MetaDataEntityController {
 
     @Resource
     IEntity service;
+
+    @Resource
+    private IMetaDataEntityOperationLog iMetaDataEntityOperationLog;
+
 
     @ApiOperation("获取atlas元数据对象树形列表")
     @GetMapping("/getEntityList")
@@ -60,19 +66,19 @@ public class MetaDataEntityController {
 
     @ApiOperation("根据不同条件,筛选元数据对象列表")
     @PostMapping("/searchBasicEntity")
-    public ResultEntity<Object> searchBasicEntity(@Validated @RequestBody EntityFilterDTO dto) {
+    public ResultEntity<Object> searchBasicEntity(@RequestBody EntityFilterDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchBasicEntity(dto));
     }
 
     @ApiOperation("根据guid获取实体审计列表")
     @GetMapping("/getAuditsList/{guid}")
-    public ResultEntity<Object> getAuditsList(@PathVariable("guid") String guid) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAuditsList(guid));
+    public ResultEntity<Object> getAuditsList(@PathVariable("guid") Integer guid) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, iMetaDataEntityOperationLog.selectLogList(guid, EntityTypeEnum.RDBMS_TABLE.getValue()));
     }
 
     @ApiOperation("实体添加标签")
     @PostMapping("/entityAssociatedLabel")
-    public ResultEntity<Object> entityAssociatedLabel(@Validated @RequestBody EntityAssociatedLabelDTO dto) {
+    public ResultEntity<Object> entityAssociatedLabel(@Validated @RequestBody MetadataLabelMapParameter dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.entityAssociatedLabel(dto));
     }
 

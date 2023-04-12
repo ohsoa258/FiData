@@ -1,6 +1,7 @@
 package com.fisk.task.listener.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.davis.client.ApiException;
 import com.davis.client.model.*;
@@ -44,6 +45,7 @@ import com.fisk.task.utils.nifi.INiFiHelper;
 import com.fisk.task.utils.nifi.NiFiHelperImpl;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
@@ -550,23 +552,64 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     boolean commonTask = false;
                     boolean fapi = false;
                     String queryApiSql = "";
+                    String scriptTaskIds = "";
+                    String sftpFileCopyTaskIds = "";
+                    String powerBiDataSetRefreshTaskIds = "";
                     List<PipelApiDispatchDTO> pipelApiDispatchs = new ArrayList<>();
                     PipelApiDispatchDTO pipelApiDispatch = new PipelApiDispatchDTO();
+                    QueryWrapper<TableTopicPO> wrapper = new QueryWrapper<>();
+                    wrapper.lambda().eq(TableTopicPO::getTopicType, TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue())
+                            .eq(TableTopicPO::getTopicName, TopicName);
+                    tableTopic.remove(wrapper);
                     for (BuildNifiCustomWorkFlowDTO buildNifiCustomWorkFlowDTO : outputDucts) {
-                        if (!Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.DATAACCESS_API)) {
-                            TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(buildNifiCustomWorkFlowDTO);
-                            String Topic = TopicName;
-                            ProcessorEntity processorEntity = updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, Topic, TopicTypeEnum.COMPONENT_NIFI_FLOW,
-                                    tableNifiSettingPO.tableAccessId, tableNifiSettingPO.type, nifiNode.workflowDetailId);
-                            processorEntities.add(processorEntity);
+                        if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.CUSTOMWORKCUSTOMIZESCRIPT)) {
+                            scriptTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId + ",";
                             commonTask = true;
-                        } else {
+                            //更新topic_name并使用
+                            TableTopicDTO topicDTO = new TableTopicDTO();
+                            topicDTO.tableType = OlapTableEnum.CUSTOMIZESCRIPT.getValue();
+                            topicDTO.tableId = 0;
+                            topicDTO.componentId = Math.toIntExact(buildNifiCustomWorkFlowDTO.workflowDetailId);
+                            topicDTO.topicName = TopicName;
+                            topicDTO.topicType = TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue();
+                            tableTopic.updateTableTopicByComponentId(topicDTO);
+                        } else if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.SFTPFILECOPYTASK)) {
+                            TableTopicDTO topicDTO = new TableTopicDTO();
+                            topicDTO.tableType = OlapTableEnum.SFTPFILECOPYTASK.getValue();
+                            topicDTO.tableId = 0;
+                            topicDTO.componentId = Math.toIntExact(buildNifiCustomWorkFlowDTO.workflowDetailId);
+                            topicDTO.topicName = TopicName;
+                            topicDTO.topicType = TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue();
+                            tableTopic.updateTableTopicByComponentId(topicDTO);
+                            sftpFileCopyTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId + ",";
+                            commonTask = true;
+                        } else if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.POWERBIDATASETREFRESHTASK)) {
+                            //power刷新任务id
+                            TableTopicDTO topicDTO = new TableTopicDTO();
+                            topicDTO.tableType = OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue();
+                            topicDTO.tableId = 0;
+                            topicDTO.componentId = Math.toIntExact(buildNifiCustomWorkFlowDTO.workflowDetailId);
+                            topicDTO.topicName = TopicName;
+                            topicDTO.topicType = TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue();
+                            tableTopic.updateTableTopicByComponentId(topicDTO);
+                            powerBiDataSetRefreshTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId + ",";
+                            commonTask = true;
+                        } else if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.DATAACCESS_API)) {
                             fapi = true;
                             pipelApiDispatch.workflowId = String.valueOf(buildNifiCustomWorkFlowDTO.workflowDetailId);
                             pipelApiDispatch.appId = buildNifiCustomWorkFlowDTO.appId;
                             pipelApiDispatch.apiId = Long.parseLong(buildNifiCustomWorkFlowDTO.tableId);
                             pipelApiDispatch.pipelineId = nifiCustomWorkList.pipelineId;
                             pipelApiDispatchs.add(pipelApiDispatch);
+                        } else {
+                            TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(buildNifiCustomWorkFlowDTO);
+                            String Topic = TopicName;
+                            ProcessorEntity processorEntity = updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, Topic, TopicTypeEnum.COMPONENT_NIFI_FLOW,
+                                    tableNifiSettingPO.tableAccessId, tableNifiSettingPO.type, nifiNode.workflowDetailId);
+                            if (processorEntity != null) {
+                                processorEntities.add(processorEntity);
+                            }
+                            commonTask = true;
                         }
 
                     }
@@ -578,13 +621,23 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     querySqlDto.groupId = groupStructure;
                     //调度类别
                     TopicTypeEnum pipelineNifiFlow = TopicTypeEnum.PIPELINE_NIFI_FLOW;
-
+                    querySqlDto.querySql = "select 1 as num ";
                     if (pipelApiDispatchs.size() == 0) {
-                        querySqlDto.querySql = "select '" + TopicName + "' as topic, '${uuid}' as pipelTraceId, '" + pipelineNifiFlow.getValue() + "' as topicType from tb_etl_Incremental limit 1";
+                        querySqlDto.querySql += " ,'" + TopicName + "' as topic, '${uuid}' as pipelTraceId, '" + pipelineNifiFlow.getValue() + "' as topicType ";
                     } else {
                         //加管道批次
-                        querySqlDto.querySql = "select '" + JSON.toJSONString(pipelApiDispatchs) + "' as pipelApiDispatch ,'" + MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW + "' as topic, '${uuid}' as pipelTraceId, '" + pipelineNifiFlow.getValue() + "' as topicType  from tb_etl_Incremental limit 1";
+                        querySqlDto.querySql += " ,'" + JSON.toJSONString(pipelApiDispatchs) + "' as pipelApiDispatch ,'" + TopicName + "' as topic, '${uuid}' as pipelTraceId, '" + pipelineNifiFlow.getValue() + "' as topicType  ";
                     }
+                    if (StringUtils.isNotEmpty(scriptTaskIds)) {
+                        querySqlDto.querySql += " ,'" + scriptTaskIds.substring(0, scriptTaskIds.length() - 1) + "' as scriptTaskIds ";
+                    }
+                    if (StringUtils.isNotEmpty(sftpFileCopyTaskIds)) {
+                        querySqlDto.querySql += " ,'" + sftpFileCopyTaskIds.substring(0, sftpFileCopyTaskIds.length() - 1) + "' as sftpFileCopyTaskIds ";
+                    }
+                    if (StringUtils.isNotEmpty(powerBiDataSetRefreshTaskIds)) {
+                        querySqlDto.querySql += " ,'" + powerBiDataSetRefreshTaskIds.substring(0, powerBiDataSetRefreshTaskIds.length() - 1) + "' as powerBiDataSetRefreshTaskIds ";
+                    }
+                    querySqlDto.querySql += " from tb_etl_Incremental limit 1";
 
                     //配置库
                     NifiConfigPO nifiConfigPO = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID.getName()).one();
@@ -627,7 +680,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                         buildPublishKafkaProcessorDTO.details = "PublishKafka";
                         buildPublishKafkaProcessorDTO.UseTransactions = "false";
                         buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
-                        buildPublishKafkaProcessorDTO.TopicName = pipelineTopicName;
+                        buildPublishKafkaProcessorDTO.TopicName = MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW;
                         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
                         componentsBuild.buildConnectProcessors(groupStructure, toJsonRes.data.getId(), processorEntityBusinessResult.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
                     }
@@ -640,7 +693,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                         buildPublishKafkaProcessorDTO.details = "PublishKafka";
                         buildPublishKafkaProcessorDTO.UseTransactions = "false";
                         buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
-                        buildPublishKafkaProcessorDTO.TopicName = pipelineTopicName;
+                        buildPublishKafkaProcessorDTO.TopicName = MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW;
                         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
                         componentsBuild.buildConnectProcessors(groupStructure, toJsonRes.data.getId(), processorEntityBusinessResult.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
 
@@ -653,7 +706,10 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
 
                 if (Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSTRUCTURE) ||
                         Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSCHEDULINGCOMPONENT) ||
-                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.DATAACCESS_API)) {
+                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.DATAACCESS_API) ||
+                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKCUSTOMIZESCRIPT) ||
+                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.POWERBIDATASETREFRESHTASK) ||
+                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.SFTPFILECOPYTASK)) {
                     continue;
                 }
                 String Topic = TopicName;
@@ -670,8 +726,9 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                 }
                 ProcessorEntity processorEntity = updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, Topic, TopicTypeEnum.COMPONENT_NIFI_FLOW,
                         tableNifiSettingPO.tableAccessId, tableNifiSettingPO.type, nifiNode.workflowDetailId);
-                processors.add(processorEntity);
-
+                if (processorEntity != null) {
+                    processors.add(processorEntity);
+                }
             }
             //nifiSchedulingComponentId,重启调度组件,因为在调度的时候消费者topic_name还没改完
             updateProcessor(processors);
@@ -686,6 +743,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             log.error("组id:" + groupStructure + "停止失败" + StackTraceHelper.getStackTraceInfo(e));
             nifiCustomWorkflowDTO.status = PipelineStatuTypeEnum.failure_publish.getValue();
             dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
+            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR);
         }
     }
 
@@ -740,20 +798,27 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             tableTopic.updateTableTopicByComponentId(topicDTO);
             topicDTO.topicType = TopicTypeEnum.NO_TYPE.getValue();
             List<TableTopicDTO> tableTopicList = tableTopic.getTableTopicList(topicDTO);
-            String consumerTopicName = tableTopicList.stream().map(e -> e.topicName).collect(Collectors.joining(" , "));
+            String consumerTopicName = tableTopicList.stream().map(e -> e.topicName).collect(Collectors.joining(","));
             //------------------------------------------------------
             ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(processorId);
-            String id = processor.getId();
-            List<ProcessorEntity> processorEntities = new ArrayList<>();
-            processorEntities.add(processor);
-            componentsBuild.stopProcessor(processor.getComponent().getParentGroupId(), processorEntities);
-            processor = NifiHelper.getProcessorsApi().getProcessor(processorId);
             Map<String, String> properties = processor.getComponent().getConfig().getProperties();
-            //String topic = properties.get("topic");
-            properties.put("topic", consumerTopicName);
-            processor.getComponent().getConfig().setProperties(properties);
+            String id = processor.getId();
+            String topics = properties.get("topic");
+            topics = topics.replaceAll(" ", "");
+            String[] topicList = topics.split(",");
+            if (!Arrays.asList(topicList).contains(topicName)) {
+                List<ProcessorEntity> processorEntities = new ArrayList<>();
+                processorEntities.add(processor);
+                componentsBuild.stopProcessor(processor.getComponent().getParentGroupId(), processorEntities);
+                processor = NifiHelper.getProcessorsApi().getProcessor(processorId);
+                properties.put("topic", consumerTopicName);
+                processor.getComponent().getConfig().setProperties(properties);
+                return processor;
+            } else {
+                log.info("此topic包含于组件配置中");
+            }
             log.info("组件详情1:" + id);
-            return processor;
+            return null;
         } catch (Exception e) {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             throw new FkException(ResultEnum.TASK_PUBLISH_ERROR);
@@ -780,9 +845,16 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     }
                     //否定出去
                     while ((!Objects.equals(processor.getComponent().getState(), ProcessorDTO.StateEnum.STOPPED) && i < Integer.parseInt(numberOfOperations)) || terminatedThreadCount > 0);
-                    NifiHelper.getProcessorsApi().terminateProcessor(processorEntity.getId());
-                    //--------------------------------------------------------------------------------
                     String id = processorEntity.getId();
+                    log.info("组件详情2:" + id);
+                    try {
+                        NifiHelper.getProcessorsApi().terminateProcessor(id);
+                    } catch (Exception e) {
+                        log.error("这个沙雕组处理失败,下一个");
+                    }
+
+                    //--------------------------------------------------------------------------------
+
                     NifiHelper.getProcessorsApi().updateProcessor(id, processorEntity);
                     i = 0;
                     do {
@@ -791,16 +863,16 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                         Thread.sleep(50);
                     }
                     while (!Objects.equals(processor.getComponent().getConfig().getProperties(), processorEntity.getComponent().getConfig().getProperties()) && i < 3);
-                    log.info("组件详情2:" + id);
-                    processorEntity = NifiHelper.getProcessorsApi().getProcessor(id);
                     log.info("组件详情3:" + id);
-                    componentsBuild.enabledProcessor(processorEntity.getId(), processorEntity);
+                    processorEntity = NifiHelper.getProcessorsApi().getProcessor(id);
                     log.info("组件详情4:" + id);
+                    componentsBuild.enabledProcessor(processorEntity.getId(), processorEntity);
+                    log.info("组件详情5:" + id);
                 }
             }
         } catch (Exception e) {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
-            throw new FkException(ResultEnum.TASK_PUBLISH_ERROR);
+            //throw new FkException(ResultEnum.TASK_PUBLISH_ERROR);
         }
 
     }

@@ -22,17 +22,22 @@ nifi:
   kerberosprincipal: kafka/admin@AUTOEXPR.COM
   pipeline:
     topicName: my-topic
-    waitTime: 30
-    operation-interval: 2000
+    waitTime: 10
+    maxTime: 10800
+    operation-interval: 1000
     number-of-operations: 5
     data-governance-url: http://192.168.11.130:8083
+    dispatch-email-url-prefix: http://192.168.11.130:82
 nifi-ConcurrentTasks: 3
 nifi-FetchSize: 30000
 nifi-MaxRowsPerFlowFile: 10000
 nifi-OutputBatchSize: 1
 fiData-data-ods-source: 2
 fiData-data-dw-source: 1
-
+# 是否调用数据质量接口
+nifi-data-security-enable: true
+# consumeServer启动控制
+consumer-server-enable: true
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
   password: Password01!
@@ -45,6 +50,14 @@ pgsql-mdm:
   url: jdbc:postgresql://192.168.1.250:5432/dmp_mdm?stringtype=unspecified
   username: postgres
   type: PG
+# sftp-rsa-upload暂未使用
+sftp-rsa-upload:
+  userName: root
+  password: Password01!
+  rsaPath: null
+  host: 192.168.21.21
+  port: 22
+
 server:
   port: 8099
 spring:
@@ -75,7 +88,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       session:
         timeout:
-          ms: 300000
+          ms: 600000
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
       acks: all

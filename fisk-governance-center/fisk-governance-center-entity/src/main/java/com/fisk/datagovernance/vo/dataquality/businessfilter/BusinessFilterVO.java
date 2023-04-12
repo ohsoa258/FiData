@@ -1,11 +1,8 @@
 package com.fisk.datagovernance.vo.dataquality.businessfilter;
 
 import com.fisk.datagovernance.enums.dataquality.*;
-import com.fisk.datagovernance.vo.dataquality.businessfilter.apifilter.BusinessFilterQueryApiVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-
-import java.time.LocalDateTime;
 
 /**
  * @author dick
@@ -18,25 +15,25 @@ public class BusinessFilterVO {
     /**
      * id
      */
-    @ApiModelProperty(value = "id")
+    @ApiModelProperty(value = "主键id")
     public int id;
 
     /**
-     * 模板id
+     * 数据质量数据源表主键ID
      */
-    @ApiModelProperty(value = "模板id")
-    public int templateId;
-
-    /**
-     * 数据源表主键id
-     */
-    @ApiModelProperty(value = "数据源表主键id")
+    @ApiModelProperty(value = "数据质量数据源表主键ID")
     public int datasourceId;
 
     /**
-     * 数据源类型
+     * FiData系统数据源表主键ID
      */
-    @ApiModelProperty(value = "数据源类型")
+    @ApiModelProperty(value = "FiData系统数据源表主键ID")
+    public int fiDataSourceId;
+
+    /**
+     * 数据源类型 1:FiData 2:custom
+     */
+    @ApiModelProperty(value = "数据源类型 1:FiData 2:custom")
     public SourceTypeEnum sourceTypeEnum;
 
     /**
@@ -46,10 +43,23 @@ public class BusinessFilterVO {
     public String ruleName;
 
     /**
-     * 表名称/表Id
+     * custom模式下是表名称
+     * FiData类型下是表Id
      */
-    @ApiModelProperty(value = "表名称/表Id")
+    @ApiModelProperty(value = "custom模式下是表名称/FiData类型下是表Id")
     public String tableUnique;
+
+    /**
+     * 表名称
+     */
+    @ApiModelProperty(value = "表名称")
+    public String tableName;
+
+    /**
+     * 表别名
+     */
+    @ApiModelProperty(value = "表别名")
+    public String tableAlias;
 
     /**
      * 表类型 1：表  2：视图
@@ -64,12 +74,6 @@ public class BusinessFilterVO {
     public int tableBusinessType;
 
     /**
-     * 生成规则（清洗脚本）
-     */
-    @ApiModelProperty(value = "生成规则（清洗脚本）")
-    public String createRule;
-
-    /**
      * 规则执行顺序
      */
     @ApiModelProperty(value = "规则执行顺序")
@@ -82,50 +86,26 @@ public class BusinessFilterVO {
     public RuleStateEnum ruleState;
 
     /**
-     * 模板应用场景
+     * 规则描述
      */
-    @ApiModelProperty(value = "模板应用场景")
-    public TemplateSceneEnum templateScene;
+    @ApiModelProperty(value = "规则描述")
+    public String ruleDescribe;
 
     /**
-     * 应用场景描述
+     * 清洗场景：1 同步前 2 同步中 3 同步后
      */
-    @ApiModelProperty(value = "应用场景描述")
-    public String sceneDesc;
+    @ApiModelProperty(value = "清洗场景：1 同步前 2 同步中 3 同步后")
+    public int filterScene;
 
     /**
-     * 模板名称
+     * 触发场景：1 调度任务 2 质量报告 3 暂无
      */
-    @ApiModelProperty(value = "模板名称")
-    public String templateName;
+    @ApiModelProperty(value = "触发场景：1 调度任务 2 质量报告 3 暂无")
+    public int triggerScene;
 
     /**
-     * 模板类型
+     * 序号
      */
-    @ApiModelProperty(value = "模板类型")
-    public TemplateTypeEnum templateType;
-
-    /**
-     * 模板描述
-     */
-    @ApiModelProperty(value = "模板描述")
-    public String templateDesc;
-
-    /**
-     * 创建时间
-     */
-    @ApiModelProperty(value = "创建时间")
-    public LocalDateTime createTime;
-
-    /**
-     * 创建人
-     */
-    @ApiModelProperty(value = "创建人")
-    public String createUser;
-
-    /**
-     * API信息
-     */
-    @ApiModelProperty(value = "API信息")
-    public BusinessFilterQueryApiVO apiInfo;
+    @ApiModelProperty(value = "序号")
+    public int orderNumber;
 }

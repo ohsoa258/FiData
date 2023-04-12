@@ -76,10 +76,16 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("字符串型", "VARCHAR2");
         jsonObject.put("整型", "INT");
+        jsonObject.put("日期类型", "DATE");
         jsonObject.put("时间戳类型", "TIMESTAMP");
         jsonObject.put("浮点型", "NUMBER");
         jsonObject.put("文本型", "CLOB");
         return jsonObject;
+    }
+
+    @Override
+    public String buildVersionDeleteSql(String tableName) {
+        return null;
     }
 
     /**
@@ -106,9 +112,11 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = SqlServerTypeEnum.FLOAT.getName();
                 break;
             case CLOB:
-                data[0] = SqlServerTypeEnum.TEXT.getName();
+                data[0] = SqlServerTypeEnum.NTEXT.getName();
                 break;
             case DATE:
+                data[0] = SqlServerTypeEnum.DATE.getName();
+                break;
             case TIMESTAMP:
             case TIMESTAMPWITHLOCALTIMEZONE:
             case TIMESTAMPWITHTIMEZONE:
@@ -150,6 +158,8 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = PgTypeEnum.TEXT.getName();
                 break;
             case DATE:
+                data[0] = PgTypeEnum.DATE.getName();
+                break;
             case TIMESTAMP:
             case TIMESTAMPWITHLOCALTIMEZONE:
             case TIMESTAMPWITHTIMEZONE:
@@ -188,6 +198,8 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = OracleTypeEnum.CLOB.getName();
                 break;
             case DATE:
+                data[0] = OracleTypeEnum.DATE.getName();
+                break;
             case TIMESTAMP:
             case TIMESTAMPWITHLOCALTIMEZONE:
             case TIMESTAMPWITHTIMEZONE:
@@ -226,6 +238,8 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = MySqlTypeEnum.TEXT.getName();
                 break;
             case DATE:
+                data[0] = MySqlTypeEnum.DATE.getName();
+                break;
             case TIMESTAMP:
             case TIMESTAMPWITHLOCALTIMEZONE:
             case TIMESTAMPWITHTIMEZONE:

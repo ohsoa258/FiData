@@ -4,15 +4,18 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.dataaccess.dto.datafactory.TableIdAndNameDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.dataaccess.dto.dataops.TableQueryDTO;
 import com.fisk.dataaccess.dto.table.TableAccessPageDTO;
 import com.fisk.dataaccess.dto.table.TableNameDTO;
 import com.fisk.dataaccess.dto.table.TableNameTreeDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessQueryDTO;
+import com.fisk.dataaccess.entity.SyncTableCountPO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.TableNameVO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
+import com.fisk.datafactory.enums.DelFlagEnum;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -137,9 +140,16 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
      *
      * @return
      */
-    @Select("SELECT a.id,CONCAT('ods','_',b.app_abbreviation,'_',a.table_name) as tableName,a.table_des from tb_table_access a \n" +
-            "join tb_app_registration b on a.app_id=b.id\n" +
-            "where a.del_flag=1 and a.publish=1")
+    @Select("SELECT a.id,a.app_id,a.sql_script,c.app_abbreviation,b.drive_type,b.id as data_source_id," +
+            "CASE c.whether_schema " +
+            "WHEN 0 THEN " +
+            "CONCAT( 'ods', '_', c.app_abbreviation, '_', a.table_name ) " +
+            "ELSE concat( c.app_abbreviation, '.', a.table_name ) END AS tableName," +
+            "a.table_des from tb_table_access a \n" +
+            "join tb_app_datasource b on a.app_data_source_id = b.id \n" +
+            "join tb_app_registration c on c.id = b.app_id\n" +
+            "where a.del_flag=1 ")
+    //and a.publish=1
     List<DataAccessSourceTableDTO> listTableMetaData();
 
     /**
@@ -182,4 +192,15 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
      */
     Page<TbTableAccessDTO> getTableAccessListData(Page<TbTableAccessDTO> page, @Param("query") TbTableAccessQueryDTO query);
 
+    /**
+     * 数据运维根据表名获取表信息
+     *
+     * @param tableName
+     * @return
+     */
+    TableQueryDTO getTableInfo(@Param("tableName") String tableName);
+
+    @Select("select s.sync_mode as syncMode, count(1) as count from tb_table_access as a right join tb_table_syncmode as s on a.id = s.id " +
+            "where a.del_flag = #{flag} and a.app_id = #{appId} group by s.sync_mode")
+    List<SyncTableCountPO> getSyncTableCount(@Param("appId") Integer appId, @Param("flag") int flag);
 }

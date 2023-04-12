@@ -2,7 +2,8 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.fisk.task.mapper.PipelTaskLogMapper">
-
+    <!-- 这个cache 是关键 -->
+    <cache eviction="LRU" flushInterval="100000" readOnly="true" size="256"/>
     <select id="getByTaskId" resultType="com.fisk.task.dto.dispatchlog.PipelTaskLogVO">
         select * from tb_pipel_task_log where task_id=#{taskId}
         <if test="jobTraceId != null and jobTraceId != '' ">
@@ -10,6 +11,83 @@
         </if>
         order by create_time desc
 
+    </select>
+
+    <select id="getDataServiceTableLogs" resultType="com.fisk.task.dto.dispatchlog.DataServiceTableLogVO">
+        SELECT
+        *
+        FROM
+        (
+        SELECT
+        t1.table_id as tableId,
+        t1.task_trace_id AS taskTraceId,
+        t1.start_time AS startTime,
+        CASE
+
+        WHEN t2.msg IS NULL
+        OR t2.msg = '' THEN
+        '' ELSE t1.end_time
+        END AS endTime,
+        CASE
+
+        WHEN t2.msg IS NULL
+        OR t2.msg = '' THEN
+        '暂无同步结束记录'
+        WHEN t1.start_time != t1.end_time
+        AND t2.msg IS NOT NULL
+        AND t2.msg != '' THEN
+        t2.msg ELSE t2.msg
+        END AS msg
+        FROM
+        (
+        SELECT
+        table_id,
+        task_trace_id,
+        MIN( create_time ) AS start_time,
+        MAX( create_time ) AS end_time
+        FROM
+        tb_pipel_task_log
+        WHERE
+        table_type = #{query.tableType}
+        <if test="query.tableIdList != null and query.tableIdList.size()!=0 ">
+            and table_id in
+            <foreach collection="query.tableIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY
+        table_id,
+        task_trace_id
+        ORDER BY
+        table_id ASC,
+        start_time DESC
+        ) t1
+        LEFT JOIN (
+        SELECT
+        table_id,
+        task_trace_id,
+        create_time,
+        msg
+        FROM
+        tb_pipel_task_log t2
+        WHERE
+        type = 8
+        AND table_type = #{query.tableType}
+        <if test="query.tableIdList != null and query.tableIdList.size()!=0 ">
+            and table_id in
+            <foreach collection="query.tableIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY
+        table_id,
+        task_trace_id,
+        create_time,
+        msg
+        ) t2 ON t1.table_id = t2.table_id
+        AND t1.task_trace_id = t2.task_trace_id
+        AND t1.end_time = t2.create_time
+        ) result
     </select>
 
 </mapper>

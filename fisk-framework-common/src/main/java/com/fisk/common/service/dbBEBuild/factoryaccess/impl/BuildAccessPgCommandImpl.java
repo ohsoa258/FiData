@@ -150,10 +150,18 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
         jsonObject.put("字符串型", "VARCHAR");
         jsonObject.put("整型", "INT4");
         jsonObject.put("大整型", "INT8");
+        jsonObject.put("日期类型", "DATE");
+        jsonObject.put("时间类型", "TIME");
         jsonObject.put("时间戳类型", "TIMESTAMP");
         jsonObject.put("浮点型", "FLOAT4");
         jsonObject.put("文本型", "TEXT");
         return jsonObject;
+    }
+
+    @Override
+    public String buildVersionDeleteSql(String tableName) {
+        String sql = String.format("DELETE FROM %s WHERE COALESCE(fi_version,'') NOT IN ", tableName);
+        return sql;
     }
 
     /**
@@ -170,23 +178,27 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
             case INT2:
             case INT4:
             case BIT:
-            case FLOAT4:
-            case FLOAT8:
                 data[0] = SqlServerTypeEnum.INT.getName();
                 break;
             case INT8:
                 data[0] = SqlServerTypeEnum.BIGINT.getName();
                 break;
             case NUMERIC:
+            case FLOAT4:
+            case FLOAT8:
             case DECIMAL:
                 data[0] = SqlServerTypeEnum.FLOAT.getName();
                 break;
             case TEXT:
-                data[0] = SqlServerTypeEnum.TEXT.getName();
+                data[0] = SqlServerTypeEnum.NTEXT.getName();
                 break;
             case DATE:
-            case TIMESTAMP:
+                data[0] = SqlServerTypeEnum.DATE.getName();
+                break;
             case TIME:
+                data[0] = SqlServerTypeEnum.TIME.getName();
+                break;
+            case TIMESTAMP:
             case TIMESTAMPtz:
                 data[0] = SqlServerTypeEnum.TIMESTAMP.getName();
                 break;
@@ -223,7 +235,11 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = PgTypeEnum.TEXT.getName();
                 break;
             case DATE:
+                data[0] = PgTypeEnum.DATE.getName();
+                break;
             case TIME:
+                data[0] = PgTypeEnum.TIME.getName();
+                break;
             case TIMESTAMP:
             case TIMESTAMPtz:
                 data[0] = PgTypeEnum.TIMESTAMP.getName();
@@ -265,6 +281,8 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = OracleTypeEnum.CLOB.getName();
                 break;
             case DATE:
+                data[0] = OracleTypeEnum.DATE.getName();
+                break;
             case TIMESTAMP:
             case TIME:
             case TIMESTAMPtz:
@@ -302,7 +320,11 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
                 data[0] = MySqlTypeEnum.FLOAT.getName();
                 break;
             case TIME:
+                data[0] = MySqlTypeEnum.TIME.getName();
+                break;
             case DATE:
+                data[0] = MySqlTypeEnum.DATE.getName();
+                break;
             case TIMESTAMP:
             case TIMESTAMPtz:
                 data[0] = MySqlTypeEnum.TIMESTAMP.getName();

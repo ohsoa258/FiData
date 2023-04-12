@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author cfk
@@ -93,4 +94,16 @@ public class PipelStageLogImpl extends ServiceImpl<PipelStateLogMapper, PipelSta
         }
         return null;
     }
+
+    @Override
+    public List<String> getPipelStates(String taskPipelineId) {
+        List<PipelStageLogPO> pipelStageLogs = this.query().eq("task_trace_id", taskPipelineId).list();
+        if (CollectionUtils.isNotEmpty(pipelStageLogs)) {
+            List<String> msg = pipelStageLogs.stream().map(d -> d.msg).collect(Collectors.toList());
+            return msg;
+        }
+        return new ArrayList<>();
+    }
+
+
 }

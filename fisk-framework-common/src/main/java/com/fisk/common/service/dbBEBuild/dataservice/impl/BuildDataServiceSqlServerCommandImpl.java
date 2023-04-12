@@ -102,12 +102,11 @@ public class BuildDataServiceSqlServerCommandImpl implements IBuildDataServiceSq
     }
 
     @Override
-    public String buildUseExistTableFiled(String dbName, String tableName) {
+    public String buildUseExistTableFiled(String tableFramework, String tableRelName) {
         String sql = String.format("SELECT\n" +
-                "\td.name AS originalTableName,\n" +
-                "\ta.name AS originalFieldName,\n" +
-                "\tisnull( g.[value], '' ) AS originalFieldDesc,\n" +
-                "\tschema_name( tb.schema_id ) AS originalFramework \n" +
+                "\td.name AS tableName,\n" +
+                "\ta.name AS fieldName,\n" +
+                "\tisnull( g.[value], '' ) AS fieldDesc \n" +
                 "FROM\n" +
                 "\tsyscolumns a\n" +
                 "\tLEFT JOIN systypes b ON a.xusertype= b.xusertype\n" +
@@ -119,31 +118,23 @@ public class BuildDataServiceSqlServerCommandImpl implements IBuildDataServiceSq
                 "\tLEFT JOIN sys.extended_properties g ON a.id= g.major_id \n" +
                 "\tAND a.colid= g.minor_id\n" +
                 "\tLEFT JOIN sys.extended_properties f ON d.id= f.major_id \n" +
-                "\tAND f.minor_id= 0\n" +
-                "\tWHERE d.name = '%s'", tableName);
+                "\tAND f.minor_id= 0 \n" +
+                "WHERE\n" +
+                "\td.name = '%s'", tableRelName);
+        if (StringUtils.isNotEmpty(tableFramework)) {
+            sql += String.format(" AND schema_name( tb.schema_id ) = '%s' ", tableFramework);
+        }
         return sql;
     }
 
     @Override
-    public String buildUseExistAllTableFiled(String dbName) {
-        String sql = "SELECT\n" +
-                "\td.name AS originalTableName,\n" +
-                "\ta.name AS originalFieldName,\n" +
-                "\tisnull( g.[value], '' ) AS originalFieldDesc,\n" +
-                "\tschema_name(tb.schema_id) AS originalFramework\n" +
-                "FROM\n" +
-                "\tsyscolumns a\n" +
-                "\tLEFT JOIN systypes b ON a.xusertype= b.xusertype\n" +
-                "\tINNER JOIN sysobjects d ON a.id= d.id \n" +
-                "\tAND d.xtype= 'U' \n" +
-                "\tAND d.name<> 'dtproperties'\n" +
-                "\tLEFT JOIN  sys.tables tb ON tb.name=d.name\n" +
-                "\tLEFT JOIN syscomments e ON a.cdefault= e.id\n" +
-                "\tLEFT JOIN sys.extended_properties g ON a.id= g.major_id \n" +
-                "\tAND a.colid= g.minor_id\n" +
-                "\tLEFT JOIN sys.extended_properties f ON d.id= f.major_id \n" +
-                "\tAND f.minor_id= 0";
-        return sql;
+    public String buildSchemaConStr(String schema, String conStr) {
+        // JDBC 版本在 9.4 以后用currentSchema，之前用searchpath
+        if (StringUtils.isEmpty(schema)) {
+            return conStr;
+        }
+        String str = conStr + ";searchpath=" + schema;
+        return str;
     }
 
     /**

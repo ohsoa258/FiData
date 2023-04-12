@@ -4,7 +4,10 @@ package com.fisk.common.framework.mdc;
 import com.fisk.common.core.constants.TraceConstant;
 import org.slf4j.MDC;
 
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 /**
  * @author gy
@@ -50,6 +53,11 @@ public class MDCHelper {
         return spanId;
     }
 
+    public static String setPipelTraceId(String pipelTraceId) {
+        MDC.put(TraceConstant.PIPEL_TRACE_ID, pipelTraceId);
+        return pipelTraceId;
+    }
+
     public static String getSpanId() {
         return MDC.get(TraceConstant.SPAN_ID);
     }
@@ -60,6 +68,10 @@ public class MDCHelper {
 
     public static void removeLogType() {
         MDC.remove(TraceConstant.APP_LOG_TYPE);
+    }
+
+    public static void removePipelTraceId() {
+        MDC.remove(TraceConstant.PIPEL_TRACE_ID);
     }
 
     public static void removeTraceId() {
@@ -73,4 +85,40 @@ public class MDCHelper {
     public static void clear() {
         MDC.clear();
     }
+
+    public static Map<String, String> getContext() {
+        return MDC.getCopyOfContextMap();
+    }
+
+    public static void setContext(Map<String, String> contextMap) {
+        MDC.setContextMap(contextMap);
+    }
+
+    public static <T> Callable<T> wrap(final Callable<T> callable, final Map<String, String> context) {
+        return () -> {
+            // 清除历史信息
+            MDCHelper.clear();
+            // 添加主线程的MDC
+            if (Objects.nonNull(context)) {
+                MDCHelper.setContext(context);
+            }
+            T res = callable.call();
+            MDCHelper.clear();
+            return res;
+        };
+    }
+
+    public static Runnable wrap(final Runnable runnable, final Map<String, String> context) {
+        return () -> {
+            // 清除历史信息
+            MDCHelper.clear();
+            // 添加主线程的MDC
+            if (Objects.nonNull(context)) {
+                MDCHelper.setContext(context);
+            }
+            runnable.run();
+            MDCHelper.clear();
+        };
+    }
+
 }

@@ -5,12 +5,14 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
+import com.fisk.dataaccess.dto.access.OverlayCodePreviewAccessDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
-import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
-import com.fisk.dataaccess.dto.table.TableBusinessDTO;
-import com.fisk.dataaccess.dto.table.TableFieldsDTO;
+import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import java.util.List;
 
 /**
  * @author Lock
@@ -72,4 +74,50 @@ public interface ITableFields extends IService<TableFieldsPO> {
      */
     Object previewCoverCondition(TableBusinessDTO dto);
 
+    /**
+     * 获取表字段信息列表
+     *
+     * @param tableAccessId
+     * @return
+     */
+    List<FieldNameDTO> getTableFileInfo(long tableAccessId);
+
+    /**
+     * 批量发布
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum batchPublish(BatchPublishDTO dto);
+
+    /**
+     * 新增字段
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum addFile(TableFieldsDTO dto);
+
+    /**
+     * 删除字段
+     *
+     * @param id
+     * @return
+     */
+    ResultEnum delFile(long id,long tableId,long userId);
+
+    /**
+     * 编辑字段
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum updateFile(TableFieldsDTO dto);
+
+    /**
+     * 数据接入SQL预览接口
+     * @param dto
+     * @return
+     */
+    Object overlayCodePreview(OverlayCodePreviewAccessDTO dto);
 }

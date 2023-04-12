@@ -1,10 +1,14 @@
 package com.fisk.datamodel.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
@@ -158,4 +162,49 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      */
     List<AppBusinessInfoDTO> getBusinessAreaList();
 
+    /**
+     * 获取当前业务域下所有发布成功表
+     *
+     * @param businessId
+     * @return
+     */
+    List<TableNameDTO> getPublishSuccessTab(Integer businessId);
+
+    /**
+     * 获取数据建模元数据
+     *
+     * @return
+     */
+    List<MetaDataInstanceAttributeDTO> getDataModelMetaData();
+
+    /**
+     * 构建维度key脚本
+     *
+     * @param dto
+     * @return
+     */
+    Object buildDimensionKeyScript(List<TableSourceRelationsDTO> dto);
+
+    /**
+     * 获取数据类型
+     *
+     * @param businessId
+     * @return
+     */
+    JSONObject dataTypeList(Integer businessId);
+
+    /**
+     * 建模覆盖方式代码预览
+     *
+     * @param dto
+     * @return
+     */
+    Object overlayCodePreview(OverlayCodePreviewDTO dto);
+
+    /**
+     * 建模覆盖方式代码预览
+     * @param dto
+     * @return
+     */
+    Object overlayCodePreviewTest(OverlayCodePreviewDTO dto);
 }

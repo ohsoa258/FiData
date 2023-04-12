@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.system.dto.AssignmentDTO;
 import com.fisk.system.dto.IconDTO;
 import com.fisk.system.dto.LoginServiceDTO;
@@ -32,8 +33,8 @@ import java.util.stream.Collectors;
 @Service
 public class RoleServiceAssignmentImpl
         extends ServiceImpl<RoleServiceAssignmentMapper, RoleServiceAssignmentPO>
-        implements IRoleServiceAssignmentService
-{
+        implements IRoleServiceAssignmentService {
+
     @Resource
     RoleServiceAssignmentMapper serviceMapper;
     @Resource
@@ -43,11 +44,13 @@ public class RoleServiceAssignmentImpl
     @Resource
     UserHelper userHelper;
 
+    @Resource
+    ServiceRegistryImpl serviceRegistry;
+
     @Override
-    public List<RoleServiceAssignmentDTO> getRoleServiceList(int roleId)
-    {
+    public List<RoleServiceAssignmentDTO> getRoleServiceList(int roleId) {
         QueryWrapper<RoleServiceAssignmentPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(RoleServiceAssignmentPO::getRoleId,roleId);
+        queryWrapper.lambda().eq(RoleServiceAssignmentPO::getRoleId, roleId);
         return RoleServiceAssignmentMap.INSTANCES.poToDto(serviceMapper.selectList(queryWrapper));
     }
 
@@ -81,75 +84,136 @@ public class RoleServiceAssignmentImpl
     }
 
     @Override
-    public List<LoginServiceDTO> getServiceList()
-    {
-        List<LoginServiceDTO> dtoList = new ArrayList<>();
+    public List<LoginServiceDTO> getServiceList() {
+
         /*获取登录信息*/
         UserInfo userInfo = userHelper.getLoginUserInfo();
-        if (userInfo==null)
-        {
-            return dtoList;
+        if (userInfo == null) {
+            throw new FkException(ResultEnum.USER_NON_EXISTENT);
         }
+
         /*查询当前用户下所有角色*/
         QueryWrapper<RoleUserAssignmentPO> roleData = new QueryWrapper<>();
-        roleData.select("role_id").lambda().eq(RoleUserAssignmentPO::getUserId,userInfo.id);
-        List<Object> idList = roleUserMapper.selectObjs(roleData).stream().distinct().collect(Collectors.toList());
-        if (idList==null || idList.size()==0) {
-            return dtoList;
+        roleData.select("role_id").lambda().eq(RoleUserAssignmentPO::getUserId, userInfo.id);
+        List<Object> idList = roleUserMapper
+                .selectObjs(roleData)
+                .stream()
+                .distinct()
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(idList)) {
+            return new ArrayList<>();
         }
+
         /*查询角色下所有服务*/
         QueryWrapper<RoleServiceAssignmentPO> serviceData = new QueryWrapper<>();
-        serviceData.in("role_id",idList.toArray()).select("service_id");
-        List<Object> serviceIds = serviceMapper.selectObjs(serviceData).stream().distinct().collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(serviceIds))
-        {
-            return dtoList;
+        serviceData.in("role_id", idList.toArray()).select("service_id");
+        List<Object> serviceIds = serviceMapper
+                .selectObjs(serviceData)
+                .stream()
+                .distinct()
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(serviceIds)) {
+            return new ArrayList<>();
         }
 
         /*根据服务id集合获取服务列表*/
         QueryWrapper<ServiceRegistryPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("id",serviceIds.toArray());
+        queryWrapper.in("id", serviceIds.toArray());
         List<ServiceRegistryPO> list = serviceRegistryMapper.selectList(queryWrapper);
-        if (CollectionUtils.isEmpty(list))
-        {
-            return dtoList;
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
         }
-        /*查询所有父节点*/
-        String code="1";
-        List<ServiceRegistryPO> listParent=list.stream().sorted(Comparator.comparing(ServiceRegistryPO::getSequenceNo)).filter(e->code.equals(e.getParentServeCode()))
+
+        List<Long> collect = list.stream().map(e -> e.getId()).collect(Collectors.toList());
+
+
+        return buildMenu(collect);
+    }
+
+    @Override
+    public List<LoginServiceDTO> getAllMenuList() {
+        /*根据服务id集合获取服务列表*/
+        QueryWrapper<ServiceRegistryPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(ServiceRegistryPO::getDelFlag, 1);
+        List<ServiceRegistryPO> list = serviceRegistryMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+        List<Long> collect = list.stream().map(e -> e.getId()).collect(Collectors.toList());
+        return buildMenu(collect);
+    }
+
+    public List<LoginServiceDTO> buildMenu(List<Long> collect) {
+        QueryWrapper<ServiceRegistryPO> queryWrapper = new QueryWrapper<>();
+        List<ServiceRegistryPO> list = serviceRegistryMapper.selectList(queryWrapper);
+        //查询所有父节点,并根据序号排序
+        String code = "1";
+        List<ServiceRegistryPO> listParent = list.stream()
+                .sorted(Comparator.comparing(ServiceRegistryPO::getSequenceNo))
+                .filter(e -> code.equals(e.getParentServeCode()))
                 .collect(Collectors.toList());
-        for (ServiceRegistryPO po : listParent) {
-            LoginServiceDTO dto=new LoginServiceDTO();
-            dto.name=po.serveUrl;
-            dto.path="/"+po.serveUrl;
-            dto.component="Layout";
-            IconDTO icon=new IconDTO();
-            icon.title=po.serveCnName;
-            icon.noCache=false;
-            icon.icon=po.icon;
-            dto.meta=icon;
-            List<LoginServiceDTO> data=new ArrayList<>();
-            List<ServiceRegistryPO> listChild=list.stream().sorted(Comparator.comparing(ServiceRegistryPO::getSequenceNo)).filter(e->po.getServeCode().equals(e.getParentServeCode())).collect(Collectors.toList());
-            /*查询所有子节点*/
-            for (ServiceRegistryPO item : listChild)
-            {
-                LoginServiceDTO obj=new LoginServiceDTO();
-                obj.name=item.serveUrl;
-                obj.path=item.serveUrl;
-                obj.component=item.serveUrl;
-                IconDTO iconChildren=new IconDTO();
-                iconChildren.title=item.serveCnName;
-                iconChildren.noCache=false;
-                iconChildren.icon=item.icon;
-                obj.meta=iconChildren;
-                List<LoginServiceDTO> child=new ArrayList<>();
-                obj.children=child;
-                data.add(obj);
-            }
-            dto.setChildren(data);
-            dtoList.add(dto);
+        if (CollectionUtils.isEmpty(listParent)) {
+            return new ArrayList<>();
         }
-        return dtoList;
+        List<LoginServiceDTO> data = new ArrayList<>();
+        for (ServiceRegistryPO po : listParent) {
+            LoginServiceDTO dto = new LoginServiceDTO();
+
+            dto.id=po.id;
+            dto.name = po.serveUrl;
+            dto.component = "Layout";
+            dto.serveCode = po.getServeCode();
+            IconDTO icon = new IconDTO();
+            icon.title = po.serveCnName;
+            icon.noCache = false;
+            icon.icon = po.icon;
+            dto.meta = icon;
+            dto.description = po.description;
+            dto.sequenceNo = po.sequenceNo;
+
+            if (collect.contains(po.id)) {
+                dto.authority = true;
+            }
+            dto.path = "/" + po.serveUrl;
+            dto.children = new ArrayList<>();
+            dto.children.add(buildChildTree(dto, list, collect));
+            data.add(dto);
+        }
+
+        return data;
+    }
+
+    public LoginServiceDTO buildChildTree(LoginServiceDTO pNode,
+                                          List<ServiceRegistryPO> poList,
+                                          List<Long> collect) {
+        List<LoginServiceDTO> list = new ArrayList<>();
+        for (ServiceRegistryPO item : poList) {
+            if (item.getParentServeCode().equals(pNode.getServeCode())) {
+
+                LoginServiceDTO obj = new LoginServiceDTO();
+                obj.id= item.id;
+                obj.name = item.serveUrl;
+                obj.component = item.serveUrl;
+                IconDTO iconChildren = new IconDTO();
+                iconChildren.title = item.serveCnName;
+                iconChildren.noCache = false;
+                iconChildren.icon = item.icon;
+                obj.meta = iconChildren;
+                obj.serveCode = item.getServeCode();
+                obj.description = item.description;
+                obj.sequenceNo = item.sequenceNo;
+                obj.path = "/" + item.serveUrl;
+                if (collect.contains(item.id)) {
+                    obj.authority = true;
+                }
+
+                List<LoginServiceDTO> child = new ArrayList<>();
+                obj.children = child;
+                list.add(buildChildTree(obj, poList, collect));
+            }
+        }
+        pNode.children = list;
+        return pNode;
     }
 
 

@@ -1,10 +1,8 @@
 package com.fisk.task.controller;
 
 import com.fisk.common.core.response.ResultEntity;
-import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
-import com.fisk.task.dto.dispatchlog.PipelLogVO;
-import com.fisk.task.dto.dispatchlog.PipelStageLogVO;
-import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
+import com.fisk.task.dto.dispatchlog.*;
+import com.fisk.task.dto.query.DataServiceTableLogQueryDTO;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
 import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelStageLog;
@@ -38,9 +36,22 @@ public class DispatchLogController {
      * @return 执行结果
      */
     @PostMapping("/getPipelLogVos")
-    public ResultEntity<List<PipelLogVO>> getPipelLogVos(@RequestBody PipelLogVO pipelLog) {
-        ResultEntity<List<PipelLogVO>> objectResultEntity = new ResultEntity<>();
+    public ResultEntity<List<PipelMergeLog>> getPipelLogVos(@RequestBody PipelLogVO pipelLog) {
+        ResultEntity<List<PipelMergeLog>> objectResultEntity = new ResultEntity<>();
         objectResultEntity.data = iPipelLog.getPipelLogVos(pipelLog);
+        objectResultEntity.code = 0;
+        return objectResultEntity;
+    }
+
+    /**
+     * getLogStatisticsForChart
+     * @param pipelLog
+     * @return
+     */
+    @PostMapping("/getLogStatisticsForChart")
+    public ResultEntity<LogStatisticsForChartVO> getLogStatisticsForChart(@RequestBody PipelLogVO pipelLog){
+        ResultEntity<LogStatisticsForChartVO> objectResultEntity = new ResultEntity<>();
+        objectResultEntity.data = iPipelLog.getLogStatisticsForChart(pipelLog);
         objectResultEntity.code = 0;
         return objectResultEntity;
     }
@@ -52,8 +63,8 @@ public class DispatchLogController {
      * @return 执行结果
      */
     @PostMapping("/getPipelJobLogVos")
-    public ResultEntity<List<PipelJobLogVO>> getPipelJobLogVos(@RequestBody List<PipelJobLogVO> pipelJobLogs) {
-        ResultEntity<List<PipelJobLogVO>> objectResultEntity = new ResultEntity<>();
+    public ResultEntity<List<PipelJobMergeLogVO>> getPipelJobLogVos(@RequestBody List<PipelJobLogVO> pipelJobLogs) {
+        ResultEntity<List<PipelJobMergeLogVO>> objectResultEntity = new ResultEntity<>();
         objectResultEntity.data = iPipelJobLog.getPipelJobLogVos(pipelJobLogs);
         objectResultEntity.code = 0;
         return objectResultEntity;
@@ -66,8 +77,8 @@ public class DispatchLogController {
      * @return 执行结果
      */
     @PostMapping("/getPipelTaskLogVos")
-    public ResultEntity<List<PipelTaskLogVO>> getPipelTaskLogVos(@RequestBody List<PipelTaskLogVO> pipelTaskLogs) {
-        ResultEntity<List<PipelTaskLogVO>> objectResultEntity = new ResultEntity<>();
+    public ResultEntity<List<PipelTaskMergeLogVO>> getPipelTaskLogVos(@RequestBody List<PipelTaskLogVO> pipelTaskLogs) {
+        ResultEntity<List<PipelTaskMergeLogVO>> objectResultEntity = new ResultEntity<>();
         objectResultEntity.data = iPipelTaskLog.getPipelTaskLogVos(pipelTaskLogs);
         objectResultEntity.code = 0;
         return objectResultEntity;
@@ -86,4 +97,42 @@ public class DispatchLogController {
         objectResultEntity.code = 0;
         return objectResultEntity;
     }
+
+    /**
+     * 依据pipelTraceId查询pipelId
+     * @param pipelTraceId
+     * @return
+     */
+    @GetMapping("/getPipelIdByPipelTraceId")
+    public ResultEntity<String> getPipelIdByPipelTraceId(@RequestParam("pipelTraceId") String pipelTraceId){
+        return iPipelLog.getPipelIdByTraceId(pipelTraceId);
+    }
+
+    /**
+     * 获取数据服务表服务同步日志
+     *
+     * @param dto
+     * @return 执行结果
+     */
+    @PostMapping("/getDataServiceTableLogVos")
+    public ResultEntity<DataServiceTableLogQueryVO> getDataServiceTableLogVos(@RequestBody DataServiceTableLogQueryDTO dto) {
+        return iPipelTaskLog.getDataServiceTableLogVos(dto);
+    }
+
+    /**
+     * 依据pipelTraceId查询pipelId
+     * @param pipelTraceId
+     * @return
+     */
+    @GetMapping("/getPipelStates")
+    public ResultEntity<List<String>> getPipelStates(@RequestParam("pipelTraceId") String pipelTraceId){
+        ResultEntity<List<String>> objectResultEntity = new ResultEntity<>();
+        objectResultEntity.data = iPipelStageLog.getPipelStates(pipelTraceId);
+        objectResultEntity.code = 0;
+        return objectResultEntity;
+    }
+
+
+
+
 }

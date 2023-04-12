@@ -37,4 +37,6 @@ public class NifiCustomWorkflowDTO {
     public String listEdge;
     @ApiModelProperty(value = "状态：已发布（1）、未发布（0）、发布失败（2）、正在发布（3）", required = true)
     public int status;
+
+    public int workStatus;
 }

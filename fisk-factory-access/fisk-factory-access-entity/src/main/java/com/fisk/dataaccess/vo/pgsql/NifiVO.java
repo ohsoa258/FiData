@@ -41,4 +41,9 @@ public class NifiVO {
      * 元数据限定名
      */
     public List<String> qualifiedNames;
+
+    /**
+     * atlas业务名称(应用名称_应用简称)
+     */
+    public String classifications;
 }

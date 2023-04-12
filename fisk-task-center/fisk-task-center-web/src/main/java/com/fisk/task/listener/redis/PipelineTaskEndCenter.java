@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.framework.mdc.MDCHelper;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.client.DataAccessClient;
@@ -12,15 +13,18 @@ import com.fisk.dataaccess.dto.api.PipelApiDispatchDTO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
-import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
+import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
+import com.fisk.task.dto.task.ExecScriptDTO;
 import com.fisk.task.entity.PipelJobLogPO;
 import com.fisk.task.entity.PipelTaskLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
+import com.fisk.task.listener.nifi.IExecScriptListener;
 import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
 import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
@@ -64,6 +68,8 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
     IPipelineTaskPublishCenter iPipelineTaskPublishCenter;
     @Resource
     ITableNifiSettingService iTableNifiSettingService;
+    @Resource
+    PublishTaskController publishTaskController;
 
 
     public PipelineTaskEndCenter(RedisMessageListenerContainer listenerContainer) {
@@ -78,7 +84,8 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
      */
     @Override
     public void onMessage(Message message, byte[] pattern) {
-        // 用户做自己的业务处理即可,注意message.toString()可以获取失效的key
+        log.info("此处已作废");
+      /*  // 用户做自己的业务处理即可,注意message.toString()可以获取失效的key
         String expiredKey = message.toString();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         log.info("即将调用的节点:" + expiredKey);
@@ -101,13 +108,22 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                 boolean ifEndJob = false;
                 //查找本次需要结束的任务
                 NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(split[3], Integer.valueOf(split[4]), null, Integer.valueOf(split[6]));
-                NifiPortsHierarchyDTO data =
+                if (Objects.equals(split1[4], OlapTableEnum.CUSTOMIZESCRIPT.getValue())) {
+                    //没有表id就把任务id扔进去
+                    nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(split[6]);
+                }
+                TaskHierarchyDTO data =
                         iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchy, pipelTraceId);
                 NifiCustomWorkflowDetailDTO itselfPort = data.itselfPort;
                 JobName = itselfPort.componentsName;
-                List<NifiCustomWorkflowDetailDTO> inportList = data.inportList;
-                for (NifiCustomWorkflowDetailDTO dto : inportList) {
+                List<Long> inportList = data.inportList;
+                for (Long inportId : inportList) {
                     //上一级的信息
+                    NifiGetPortHierarchyDTO nextHierarchy = new NifiGetPortHierarchyDTO();
+                    nextHierarchy.nifiCustomWorkflowDetailId = inportId;
+                    nextHierarchy.workflowId = split[3];
+                    TaskHierarchyDTO taskUp = iPipelineTaskPublishCenter.getNifiPortHierarchy(nextHierarchy, pipelTraceId);
+                    NifiCustomWorkflowDetailDTO dto = taskUp.itselfPort;
                     PipelJobLogPO byPipelTraceId = iPipelJobLog.getByPipelTraceId(pipelTraceId, dto.pid);
                     PipelTaskLogPO byPipelJobTraceId = iPipelTaskLog.getByPipelJobTraceId(byPipelTraceId.jobTraceId, dto.id);
                     String pipelTaskTraceId = byPipelJobTraceId.taskTraceId;
@@ -123,7 +139,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                     ChannelDataEnum value = ChannelDataEnum.getValue(dto.componentType);
                     OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(value.getValue());
                     log.info("第五处调用保存task日志,记录上一个task结束" + byPipelJobTraceId.taskTraceId);
-                    iPipelTaskLog.savePipelTaskLog(byPipelJobTraceId.jobTraceId, byPipelJobTraceId.taskTraceId, taskMap, byPipelJobTraceId.taskId, dto.tableId, olapTableEnum.getValue());
+                    iPipelTaskLog.savePipelTaskLog(pipelTraceId, byPipelJobTraceId.jobTraceId, byPipelJobTraceId.taskTraceId, taskMap, byPipelJobTraceId.taskId, dto.tableId, olapTableEnum.getValue());
                     if (!Objects.equals(itselfPort.pid, dto.pid)) {
                         //说明这个组结束了
                         //2.记录上一个job结束
@@ -149,14 +165,14 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                     //thisTaskMap.put(DispatchLogEnum.taskstate.getValue(), JobName + "-" + itselfPort.tableOrder + " " + NifiStageTypeEnum.RUNNING.getName());
                     thisTaskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
                     log.info("第六处调用保存task日志这个task开始" + thisPipelTaskTraceId);
-                    iPipelTaskLog.savePipelTaskLog(thisPipelJobTraceId, thisPipelTaskTraceId, thisTaskMap, String.valueOf(itselfPort.id), split[6], Integer.parseInt(split[4]));
+                    iPipelTaskLog.savePipelTaskLog(pipelTraceId, thisPipelJobTraceId, thisPipelTaskTraceId, thisTaskMap, String.valueOf(itselfPort.id), split[6], Integer.parseInt(split[4]));
                 } else {
                     //4.记录这个task开始
                     Map<Integer, Object> thisTaskMap = new HashMap<>();
                     //thisTaskMap.put(DispatchLogEnum.taskstate.getValue(), JobName + "-" + itselfPort.tableOrder + " " + NifiStageTypeEnum.RUNNING.getName());
                     thisTaskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
                     log.info("第七处调用保存task日志,记录这个task开始" + thisPipelTaskTraceId);
-                    iPipelTaskLog.savePipelTaskLog(upPipelJobTraceId, thisPipelTaskTraceId, thisTaskMap, String.valueOf(itselfPort.id), split[6], Integer.parseInt(split[4]));
+                    iPipelTaskLog.savePipelTaskLog(pipelTraceId, upPipelJobTraceId, thisPipelTaskTraceId, thisTaskMap, String.valueOf(itselfPort.id), split[6], Integer.parseInt(split[4]));
                     thisPipelJobTraceId = upPipelJobTraceId;
                 }
                 //此时,expiredKey就是即将要调用的节点,需要发消息topic_name就是expiredKey
@@ -179,6 +195,13 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                     pipelApiDispatchDTO.pipelineId = data.pipelineId;
                     apiImportDataDTO.pipelApiDispatch = JSON.toJSONString(pipelApiDispatchDTO);
                     dataAccessClient.importData(apiImportDataDTO);
+                } else if (Objects.equals(type, OlapTableEnum.CUSTOMIZESCRIPT.getValue())) {
+                    ExecScriptDTO execScript = new ExecScriptDTO();
+                    execScript.pipelJobTraceId = thisPipelJobTraceId;
+                    execScript.pipelTaskTraceId = thisPipelTaskTraceId;
+                    execScript.pipelTraceId = pipelTraceId;
+                    execScript.taskId = split[6];
+                    publishTaskController.BuildExecScript(execScript);
                 } else {
                     KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
                     kafkaReceiveDTO.pipelTraceId = pipelTraceId;
@@ -215,7 +238,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                         Object count = pipelTask.get(DispatchLogEnum.taskcount.getName());
                         taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " - 同步条数 : " + (Objects.isNull(count) ? 0 : count));
                         log.info("第八处调用保存task日志");
-                        iPipelTaskLog.savePipelTaskLog(byPipelJobTraceId.jobTraceId, byPipelJobTraceId.taskTraceId, taskMap, byPipelJobTraceId.taskId, null, 0);
+                        iPipelTaskLog.savePipelTaskLog(pipelTraceId, byPipelJobTraceId.jobTraceId, byPipelJobTraceId.taskTraceId, taskMap, byPipelJobTraceId.taskId, null, 0);
                         //记录job结束
                         Map<Integer, Object> upJobMap = new HashMap<>();
                         //upJobMap.put(DispatchLogEnum.jobstate.getValue(), JobName + NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName());
@@ -233,6 +256,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                     iPipelJobLog.savePipelLog(pipelTraceId, PipelMap, pipelId);
                     iPipelLog.savePipelLog(pipelTraceId, PipelMap, pipelId);
                 }
+                MDCHelper.removePipelTraceId();
             } else if (expiredKey.startsWith("nowExec")) {
                 //手动调度记录结束
                 String[] split = expiredKey.split(",");
@@ -246,7 +270,7 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
                 Object count = pipelTask.get(DispatchLogEnum.taskcount.getName());
                 taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " : 同步条数 : " + (Objects.isNull(count) ? 0 : count));
                 log.info("第九处调用保存task日志");
-                iPipelTaskLog.savePipelTaskLog(null, taskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
+                iPipelTaskLog.savePipelTaskLog(null,null, taskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
             }
         } catch (Exception e) {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
@@ -258,6 +282,6 @@ public class PipelineTaskEndCenter extends KeyExpirationEventMessageListener {
             dto.pipleName = pipelName;
             dto.JobName = JobName;
             iPipelJobLog.exceptionHandlingLog(dto);
-        }
+        }*/
     }
 }
