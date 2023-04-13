@@ -235,9 +235,9 @@
 
         <!-- windows共享目录读取 start -->
         <dependency>
-            <groupId>org.samba.jcifs</groupId>
+            <groupId>jcifs</groupId>
             <artifactId>jcifs</artifactId>
-            <version>1.3.3</version>
+            <version>1.3.17</version>
         </dependency>
         <!-- windows共享目录读取 end -->
 
