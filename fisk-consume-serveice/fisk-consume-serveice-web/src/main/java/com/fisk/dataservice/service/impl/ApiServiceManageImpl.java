@@ -258,7 +258,6 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 array.add(jsonObj);
             }
             rs.close();
-            List<Object> collect = array;
             if (dto.current != null && dto.size != null) {
                 int rowsCount = array.stream().toArray().length;
                 responseVO.current = dto.current;
@@ -266,10 +265,13 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 responseVO.total = rowsCount;
                 responseVO.page = (int) Math.ceil(1.0 * rowsCount / dto.size);
                 dto.current = dto.current - 1;
-                collect = array.stream().skip((dto.current - 1 + 1) * dto.size).limit(dto.size).collect(Collectors.toList());
+                responseVO.dataArray = array.stream().skip((dto.current - 1 + 1) * dto.size).limit(dto.size).collect(Collectors.toList());
+            } else {
+                responseVO.dataArray = array;
             }
-            responseVO.dataArray = collect;
-            logPO.setLogResponseInfo(String.valueOf(collect.stream().count()));
+            // 数组类型资源释放，将其设置为null
+            array = null;
+            logPO.setLogResponseInfo(String.valueOf(responseVO.dataArray.stream().count()));
             logPO.setBusinessState("成功");
         } catch (Exception e) {
             logPO.setLogLevel(LogLevelTypeEnum.ERROR.getName());
@@ -292,6 +294,8 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             } catch (Exception exs) {
                 log.error("数据服务调用日志保存异常：" + exs);
             }
+            // 通知gc进行资源释放
+            System.gc();
         }
         return ResultEntityBuild.buildData(resultEnum, responseVO);
     }
