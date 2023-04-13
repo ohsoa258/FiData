@@ -554,13 +554,21 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                     if (dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData) {
                         sourceTypeName = "FiData";
                         FiDataMetaDataDTO fiDataMetaDataDTO = finalFiDataMetaDataList.stream().filter(p -> p.getDataSourceId() == dataSourceConVO.getDatasourceId()).findFirst().orElse(null);
-                        FiDataMetaDataTreeDTO fiDataMetaDataTree_Table = fiDataMetaDataDTO.getChildren().stream().filter(o -> o.getId().equals(t.getTableUnique()) && o.getLabelBusinessType() == t.getTableBusinessType()).findFirst().orElse(null);
-                        tableName = fiDataMetaDataTree_Table.getLabel();
-                        tableAliasName = fiDataMetaDataTree_Table.getLabelAlias();
+                        if (fiDataMetaDataDTO != null) {
+                            FiDataMetaDataTreeDTO fiDataMetaDataTree_Table = fiDataMetaDataDTO.getChildren().stream().filter(o -> o.getId().equals(t.getTableUnique()) && o.getLabelBusinessType() == t.getTableBusinessType()).findFirst().orElse(null);
+                            if (fiDataMetaDataTree_Table != null) {
+                                tableName = fiDataMetaDataTree_Table.getLabel();
+                                tableAliasName = fiDataMetaDataTree_Table.getLabelAlias();
+                            }
+                        }
                     } else {
                         sourceTypeName = "Customize";
                         tableName = t.getTableUnique();
                         tableAliasName = t.getTableUnique();
+                    }
+
+                    if (StringUtils.isEmpty(tableName)){
+                        return;
                     }
 
                     QualityReportExt_RuleVO cRule = new QualityReportExt_RuleVO();
@@ -763,7 +771,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
 
     @Override
     public List<String> getNextCronExeTime(String cron) {
-        NextCronTimeDTO dto=new NextCronTimeDTO();
+        NextCronTimeDTO dto = new NextCronTimeDTO();
         dto.setCronExpression(cron);
         dto.setNumber(3);
         return CronUtils.nextCronExeTime(dto);
