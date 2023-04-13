@@ -63,7 +63,7 @@ public class SftpUtils {
         Channel channel = null;
         try {
             session = jSch.getSession(userName, hostName, port);
-            if (!StringUtils.isEmpty(secretKeyPath)) {
+            if (StringUtils.isEmpty(password)) {
                 jSch.addIdentity(secretKeyPath);
             } else {
                 session.setPassword(password);
