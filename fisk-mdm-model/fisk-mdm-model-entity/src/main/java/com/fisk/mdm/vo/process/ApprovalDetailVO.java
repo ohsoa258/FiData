@@ -14,8 +14,12 @@ import java.util.List;
  */
 @Data
 public class ApprovalDetailVO {
+    @ApiModelProperty(value = "流程工单ID")
+    private Integer applyId;
     @ApiModelProperty(value = "描述")
     private String description;
+    @ApiModelProperty(value = "审批编号")
+    private Integer applyCode;
     @ApiModelProperty(value = "申请人")
     private String applicant;
     @ApiModelProperty(value = "操作类型")

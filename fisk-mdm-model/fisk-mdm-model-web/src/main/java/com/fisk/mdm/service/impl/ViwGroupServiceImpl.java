@@ -481,7 +481,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
 
         StringBuilder str = new StringBuilder();
         str.append("CREATE VIEW " + PUBLIC + ".");
-        str.append(TableNameGenerateUtils.generateCustomizeViwTableName(entityPO.getName(),viwGroupVo.getName()));
+        str.append("\""+TableNameGenerateUtils.generateCustomizeViwTableName(entityPO.getName(),viwGroupVo.getName())+"\"");
         str.append(" AS ").append("SELECT ");
 
         // 获取主实体下的属性

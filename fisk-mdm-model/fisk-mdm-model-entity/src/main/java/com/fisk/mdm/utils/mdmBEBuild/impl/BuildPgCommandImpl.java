@@ -27,7 +27,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         int pk = (int)(Math.random()*8999)+1000+1;
 
         StringBuilder str = new StringBuilder();
-        str.append("CREATE TABLE public." + tableName).append("(");
+        str.append("CREATE TABLE public.\"" + tableName+"\"").append("(");
         str.append("id serial NOT NULL,");
         str.append("constraint pk_" + tableName + "_id_" + pk + " primary key(id),");
         str.append("model_id int4 NULL,");
@@ -51,7 +51,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String buildStgTable(EntityInfoVO entityInfoVo,String tableName) {
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE " + PUBLIC + ".");
-        str.append(tableName).append("(");
+        str.append("\""+tableName+"\"").append("(");
 
         // 拼接Stg表基础字段
         str.append(this.splicingStgTable(tableName));
@@ -93,7 +93,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String buildLogTable(EntityInfoVO entityInfoVo, String tableName,String code) {
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE " + PUBLIC + ".");
-        str.append(tableName).append("(");
+        str.append("\""+tableName+"\"").append("(");
 
         // 拼接日志表基础字段
         str.append(this.splicingLogTable(tableName));
@@ -166,7 +166,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
 
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE " + PUBLIC + ".");
-        str.append(tableName).append("(");
+        str.append("\""+tableName+"\"").append("(");
 
         // 拼接mdm表基础字段拼接
         str.append(this.splicingMdmTable(tableName,code));
@@ -176,7 +176,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
                 .map(e -> {
 
                     String str1 = null;
-                    String name = "column_" + entityInfoVo.getId() + "_" + e.getId();
+                    String name = "column_" + e.getName();
 
                     // 判断是否必填
                     String required = null;
@@ -238,8 +238,8 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     @Override
     public String modifyFieldType(String tableName, String filedName, String type) {
         StringBuilder str = new StringBuilder();
-        str.append("ALTER TABLE " + PUBLIC + "." + tableName);
-        str.append(" alter column " + filedName);
+        str.append("ALTER TABLE " + PUBLIC + ".\"" + tableName+"\"");
+        str.append(" alter column \"" + filedName +"\"");
         str.append(" type " + type + " using " + filedName + "::" + type);
         return str.toString();
     }
@@ -247,8 +247,8 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     @Override
     public String modifyFieldLength(String tableName, String filedName, String type) {
         StringBuilder str = new StringBuilder();
-        str.append("ALTER TABLE " + PUBLIC + "." + tableName);
-        str.append(" alter column " + filedName);
+        str.append("ALTER TABLE " + PUBLIC + ".\"" + tableName+"\"");
+        str.append(" alter column \"" + filedName + "\"");
         str.append(" type " + type);
         return str.toString();
     }
@@ -256,14 +256,14 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     @Override
     public String dropTable(String tableName) {
         StringBuilder str = new StringBuilder();
-        str.append("DROP TABLE ").append(PUBLIC + ".").append(tableName);
+        str.append("DROP TABLE ").append(PUBLIC + ".").append("\""+tableName+"\"");
         return str.toString();
     }
 
     @Override
     public String dropViw(String viwName) {
         StringBuilder str = new StringBuilder();
-        str.append("DROP VIEW ").append(PUBLIC + ".").append(viwName);
+        str.append("DROP VIEW ").append(PUBLIC + ".").append("\""+viwName+"\"");
         return str.toString();
     }
 
@@ -271,8 +271,8 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String addColumn(String tableName, String filedName, String filedType) {
         StringBuilder str = new StringBuilder();
         str.append("ALTER TABLE ");
-        str.append(PUBLIC + "." + tableName);
-        str.append(" ADD COLUMN " + filedName + " " + filedType);
+        str.append(PUBLIC + ".\"" + tableName+"\"");
+        str.append(" ADD COLUMN \"" + filedName + "\" " + filedType);
         return str.toString();
     }
 
@@ -280,8 +280,8 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String notNullable(String tableName, String filedName) {
         StringBuilder str = new StringBuilder();
         str.append("ALTER TABLE ");
-        str.append(PUBLIC + "." + tableName);
-        str.append(" ALTER " + filedName + "  set not null ");
+        str.append(PUBLIC + ".\"" + tableName+"\"");
+        str.append(" ALTER \"" + filedName + "\"  set not null ");
         return str.toString();
     }
 
@@ -289,8 +289,8 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String nullable(String tableName, String filedName) {
         StringBuilder str = new StringBuilder();
         str.append("ALTER TABLE ");
-        str.append(PUBLIC + "." + tableName);
-        str.append(" ALTER " + filedName + "  drop not null ");
+        str.append(PUBLIC + ".\"" + tableName+"\"");
+        str.append(" ALTER \"" + filedName + "\"  drop not null ");
         return str.toString();
     }
 
@@ -298,15 +298,15 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String deleteFiled(String tableName, String filedName) {
         StringBuilder str = new StringBuilder();
         str.append("ALTER TABLE ");
-        str.append(PUBLIC + "." + tableName);
-        str.append(" drop column if exists ").append(filedName);
+        str.append(PUBLIC + ".\"" + tableName+"\"");
+        str.append(" drop column if exists ").append("\""+filedName+"\"");
         return str.toString();
     }
 
     @Override
     public String queryData(String tableName) {
         StringBuilder str = new StringBuilder();
-        str.append("SELECT * FROM " + PUBLIC + "." + tableName + " LIMIT 1 ");
+        str.append("SELECT * FROM " + PUBLIC + ".\"" + tableName + "\" LIMIT 1 ");
         return str.toString();
     }
 
@@ -343,7 +343,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         }
 
         StringBuilder str = new StringBuilder();
-        str.append("DELETE FROM ").append(tableName);
+        str.append("DELETE FROM ").append("\""+tableName+"\"");
         str.append(" WHERE ");
         str.append(deleteFiled + " IN(");
         str.append(attributeId).append(")");

@@ -5,7 +5,8 @@
 
     <select id="getMyProcessApply" resultType="com.fisk.mdm.vo.process.ProcessApplyVO">
         SELECT
-        a.id,
+        a.id as apply_id,
+        a.apply_code,
         a.applicant,
         a.state,
         a.description,
@@ -31,6 +32,7 @@
     <select id="getPendingApproval" resultType="com.fisk.mdm.vo.process.PendingApprovalVO">
         SELECT
         a.id as apply_id,
+        a.apply_code,
         b.process_id,
         a.applicant,
         a.description,
@@ -41,6 +43,7 @@
         (
         SELECT
         a.id,
+        a.apply_code,
         a.applicant,
         a.description,
         a.operation_type,
@@ -81,6 +84,7 @@
     <select id="getOverApproval" resultType="com.fisk.mdm.vo.process.PendingApprovalVO">
         SELECT
         a.id as apply_id,
+        a.apply_code,
         a.process_id,
         a.applicant,
         a.description,
@@ -91,6 +95,7 @@
         (
         SELECT
         a.id,
+        a.apply_code,
         a.process_id,
         a.applicant,
         a.description,

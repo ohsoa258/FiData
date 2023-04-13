@@ -14,6 +14,8 @@ import com.fisk.mdm.vo.process.PendingApprovalVO;
 import com.fisk.mdm.vo.process.ProcessApplyVO;
 import com.fisk.mdm.vo.process.ProcessInfoVO;
 
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * @Author: wangjian
  * @Date: 2023-03-30
@@ -101,4 +103,11 @@ public interface ProcessService {
      * @return
      */
     ResultEnum rollbackApproval(Integer applyId);
+
+    /**
+     * 下载当前流程记录
+     * @param applyId
+     * @param response
+     */
+    void downloadApprovalApply(Integer applyId, HttpServletResponse response);
 }

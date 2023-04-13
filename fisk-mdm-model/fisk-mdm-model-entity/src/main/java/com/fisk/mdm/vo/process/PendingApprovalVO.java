@@ -14,7 +14,9 @@ import java.time.LocalDateTime;
 public class PendingApprovalVO {
     @ApiModelProperty(value = "流程工单ID")
     private Integer applyId;
-    @ApiModelProperty(value = "流程实体ID")
+    @ApiModelProperty(value = "审批编号")
+    private Integer applyCode;
+    @ApiModelProperty(value = "流程ID")
     private Integer processId;
     @ApiModelProperty(value = "描述")
     private String description;

@@ -19,6 +19,7 @@ import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.entity.TBETLlogPO;
 import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
+import com.fisk.task.listener.mdm.BuildModelListener;
 import com.fisk.task.listener.nifi.IExecScriptListener;
 import com.fisk.task.listener.nifi.INifiTaskListener;
 import com.fisk.task.listener.nifi.INonRealTimeListener;
@@ -76,6 +77,8 @@ public class TestController {
     BuildNifiCustomWorkFlow buildNifiCustomWorkFlow;
     @Resource
     BuildDataModelDorisTableListener buildDataModelDorisTableListener;
+    @Resource
+    BuildModelListener buildModelListener;
     @Resource
     INifiStage iNifiStage;
     @Resource
@@ -981,6 +984,10 @@ public class TestController {
         buildDataModelDorisTableListener.msg(datainfo,null);
     }
 
-
+    @ApiOperation("测试mqm")
+    @PostMapping("/mqmTest")
+    public void mqmTest(@RequestBody String datainfo) {
+        buildModelListener.backgroundCreateTasks(datainfo,null);
+    }
 
 }

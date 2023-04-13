@@ -3,6 +3,7 @@ package com.fisk.mdm.vo.process;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fisk.mdm.enums.ApprovalApplyStateEnum;
 import com.fisk.mdm.enums.EventTypeEnum;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -13,7 +14,8 @@ import java.time.LocalDateTime;
  */
 @Data
 public class ProcessApplyVO {
-    private Integer id;
+    private Integer applyId;
+    private Integer applyCode;
     private String description;
     private ApprovalApplyStateEnum state;
     private EventTypeEnum operationType;

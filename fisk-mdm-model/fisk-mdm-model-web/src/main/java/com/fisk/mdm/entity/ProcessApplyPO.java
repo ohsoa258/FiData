@@ -31,6 +31,11 @@ public class ProcessApplyPO extends BasePO {
     private int processId;
 
     /**
+     * 审批编号
+     */
+    private String approvalCode;
+
+    /**
      * 申请人
      */
     private String applicant;
@@ -38,7 +43,6 @@ public class ProcessApplyPO extends BasePO {
     /**
      * 申请时间
      */
-    @TableField(value = "application_time", fill = FieldFill.INSERT)
     private LocalDateTime applicationTime;
 
     /**
