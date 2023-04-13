@@ -78,18 +78,18 @@ public class ProcessController {
     @ApiOperation("审批")
     @PostMapping("/approval")
     public ResultEntity<ResultEnum> approval(@RequestBody ApprovalDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,processService.approval(dto));
+        return ResultEntityBuild.build(processService.approval(dto));
     }
     @ApiOperation("批量审批")
     @PostMapping("/batchApproval")
     public ResultEntity<ResultEnum> batchApproval(@RequestBody BatchApprovalDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,processService.batchApproval(dto));
+        return ResultEntityBuild.build(processService.batchApproval(dto));
     }
 
     @ApiOperation("撤回审批")
     @GetMapping("/rollbackApproval")
     public ResultEntity<ResultEnum> rollbackApproval( Integer applyId) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,processService.rollbackApproval(applyId));
+        return ResultEntityBuild.build(processService.rollbackApproval(applyId));
     }
 
     @ApiOperation("下载报告记录")

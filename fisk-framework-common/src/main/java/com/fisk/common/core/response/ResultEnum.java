@@ -405,6 +405,7 @@ public enum ResultEnum {
     VERIFY_NOT_APPROVAL(151041,"不需要走流程"),
     PROCESS_APPLY_EXIST(151042,"当前实体正在审批"),
     PROCESS_NOT_ROLLBACK(151043,"当前流程不可回滚"),
+    EMAIL_NOT_SEND(151044,"email发送失败"),
 
     /**
      * licence

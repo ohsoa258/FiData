@@ -304,7 +304,12 @@ public class ProcessServiceImpl implements ProcessService {
         processApplyService.save(processApplyPo);
         List<ProcessPersonPO> processPersons = processPersonService.getProcessPersons((int) processNodePo.getId());
         //通知节点用户进行审批
-        return sendEmailToProcessNode(processApplyPo,loginUserInfo, getUserIds(processPersons));
+        try {
+            sendEmailToProcessNode(processApplyPo,loginUserInfo, getUserIds(processPersons));
+        }catch (FkException e){
+            return ResultEnum.EMAIL_NOT_SEND;
+        }
+        return ResultEnum.SUCCESS;
     }
 
     /**
@@ -575,7 +580,7 @@ public class ProcessServiceImpl implements ProcessService {
             ;
             processApplyNotesPo.setState(typeConversionUtils.intToApprovalNodeStateEnum(dto.getFlag()));
             processApplyNotesPo.setRemark(dto.getDescription());
-            processApplyNotesPo.setProcessapplyId(processApplyPo.getProcessId());
+            processApplyNotesPo.setProcessapplyId((int)processApplyPo.getId());
             processApplyNotesPo.setProcessnodeId(processApplyPo.getApproverNode());
             processApplyNotesService.save(processApplyNotesPo);
             Map<Integer, ProcessNodePO> processNodeMap = processNodes.stream().collect(Collectors.toMap(i -> (int) i.getId(), i -> i));
@@ -593,7 +598,11 @@ public class ProcessServiceImpl implements ProcessService {
                     processApplyPo.setOpreationstate(ApprovalApplyStateEnum.APPROVE);
                     processApplyService.updateById(processApplyPo);
                     //发送通过邮箱
-                    return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.APPROVE);
+                    try {
+                        return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.APPROVE);
+                    }catch (FkException e){
+                        return ResultEnum.EMAIL_NOT_SEND;
+                    }
                 } else {
                     ProcessNodePO processNodePo = processNodeMap.get(processApplyPo.getApproverNode());
                     int i = processNodePo.getLevels() + 1;
@@ -607,7 +616,11 @@ public class ProcessServiceImpl implements ProcessService {
                 processApplyPo.setOpreationstate(ApprovalApplyStateEnum.REFUSED);
                 processApplyService.updateById(processApplyPo);
                 //发送拒绝邮件通知
-                return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.REFUSED);
+                try {
+                    return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.REFUSED);
+                }catch (FkException e){
+                    return ResultEnum.EMAIL_NOT_SEND;
+                }
             } else {
                 return ResultEnum.PARAMTER_ERROR;
             }
@@ -637,7 +650,7 @@ public class ProcessServiceImpl implements ProcessService {
             ProcessApplyNotesPO processApplyNotesPo = new ProcessApplyNotesPO();
             processApplyNotesPo.setState(typeConversionUtils.intToApprovalNodeStateEnum(dto.getFlag()));
             processApplyNotesPo.setRemark(dto.getDescription());
-            processApplyNotesPo.setProcessapplyId(processApplyPo.getProcessId());
+            processApplyNotesPo.setProcessapplyId((int)processApplyPo.getId());
             processApplyNotesPo.setProcessnodeId(processApplyPo.getApproverNode());
             processApplyNotesService.save(processApplyNotesPo);
             Map<Integer, ProcessNodePO> processNodeMap = processNodes.stream().collect(Collectors.toMap(i -> (int) i.getId(), i -> i));
@@ -655,7 +668,11 @@ public class ProcessServiceImpl implements ProcessService {
                     processApplyPo.setOpreationstate(ApprovalApplyStateEnum.APPROVE);
                     processApplyService.updateById(processApplyPo);
                     //最后一个节点发送通过邮箱
-                    return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.APPROVE);
+                    try {
+                        return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.APPROVE);
+                    }catch (FkException e){
+                        return ResultEnum.EMAIL_NOT_SEND;
+                    }
                 } else {
                     ProcessNodePO processNodePo = processNodeMap.get(processApplyPo.getApproverNode());
                     int i = processNodePo.getLevels() + 1;
@@ -673,7 +690,11 @@ public class ProcessServiceImpl implements ProcessService {
                 processApplyPo.setOpreationstate(ApprovalApplyStateEnum.APPROVE);
                 processApplyService.updateById(processApplyPo);
                 //发送拒绝邮箱
-                return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.REFUSED);
+                try {
+                    return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.REFUSED);
+                }catch (FkException e){
+                    return ResultEnum.EMAIL_NOT_SEND;
+                }
             } else {
                 return ResultEnum.PARAMTER_ERROR;
             }
@@ -697,7 +718,7 @@ public class ProcessServiceImpl implements ProcessService {
             ProcessApplyNotesPO processApplyNotesPo = new ProcessApplyNotesPO();
             processApplyNotesPo.setState(typeConversionUtils.intToApprovalNodeStateEnum(dto.getFlag()));
             processApplyNotesPo.setRemark(dto.getDescription());
-            processApplyNotesPo.setProcessapplyId(processApplyPo.getProcessId());
+            processApplyNotesPo.setProcessapplyId((int)processApplyPo.getId());
             processApplyNotesPo.setProcessnodeId(processApplyPo.getApproverNode());
             processApplyNotesService.save(processApplyNotesPo);
             Map<Integer, ProcessNodePO> processNodeMap = processNodes.stream().collect(Collectors.toMap(i -> (int) i.getId(), i -> i));
@@ -713,7 +734,11 @@ public class ProcessServiceImpl implements ProcessService {
                     processApplyPo.setOpreationstate(ApprovalApplyStateEnum.APPROVE);
                     processApplyService.updateById(processApplyPo);
                     //所有节点都需要审批无需特殊处理
-                    return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.APPROVE);
+                    try {
+                        return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.APPROVE);
+                    }catch (FkException e){
+                        return ResultEnum.EMAIL_NOT_SEND;
+                    }
                 } else {
                     ProcessNodePO processNodePO1 = processNodeMap.get(processApplyPo.getApproverNode());
                     int i = processNodePO1.getLevels() + 1;
@@ -723,14 +748,23 @@ public class ProcessServiceImpl implements ProcessService {
                     processApplyPo.setApproverNode((int) processNodeP02.getId());
                     processApplyService.updateById(processApplyPo);
                     //发送节点通知邮箱
-                    return sendEmailToProcessNode(processApplyPo,loginUserInfo, userIds);
+
+                    try {
+                        return sendEmailToProcessNode(processApplyPo,loginUserInfo, userIds);
+                    }catch (FkException e){
+                        return ResultEnum.EMAIL_NOT_SEND;
+                    }
                 }
             } else if (dto.getFlag() == 2) {
                 processApplyPo.setState(ApprovalNodeStateEnum.REFUSED);
                 processApplyPo.setOpreationstate(ApprovalApplyStateEnum.REFUSED);
                 processApplyService.updateById(processApplyPo);
                 //发送拒绝邮箱
-                return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.REFUSED);
+                try {
+                    return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.REFUSED);
+                }catch (FkException e){
+                    return ResultEnum.EMAIL_NOT_SEND;
+                }
             } else {
                 return ResultEnum.PARAMTER_ERROR;
             }
@@ -819,7 +853,7 @@ public class ProcessServiceImpl implements ProcessService {
             ProcessApplyNotesPO processApplyNotesPo = new ProcessApplyNotesPO();
             processApplyNotesPo.setState(ApprovalNodeStateEnum.APPROVE);
             processApplyNotesPo.setRemark("auto");
-            processApplyNotesPo.setProcessapplyId(processNode.getProcessId());
+            processApplyNotesPo.setProcessapplyId((int)processApplyPo.getId());
             processApplyNotesPo.setProcessnodeId((int) processNode.getId());
             processApplyNotesService.save(processApplyNotesPo);
             //判断是否最后一个节点
@@ -848,13 +882,21 @@ public class ProcessServiceImpl implements ProcessService {
                 processApplyPo.setApproverNode((int) processNodePo.getId());
                 processApplyService.updateById(processApplyPo);
                 //当前用户不能审批则发送通知节点用户邮箱
-                return sendEmailToProcessNode(processApplyPo,loginUserInfo, userIds);
+                try {
+                    return sendEmailToProcessNode(processApplyPo,loginUserInfo, userIds);
+                }catch (FkException e){
+                    return ResultEnum.EMAIL_NOT_SEND;
+                }
             } else {
                 processApplyPo.setState(ApprovalNodeStateEnum.APPROVE);
                 processApplyPo.setOpreationstate(ApprovalApplyStateEnum.APPROVE);
                 processApplyPo.setApproverNode((int) processNode.getId());
                 processApplyService.updateById(processApplyPo);
-                return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.APPROVE);
+                try {
+                    return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.APPROVE);
+                }catch (FkException e){
+                    return ResultEnum.EMAIL_NOT_SEND;
+                }
             }
         }
     }
@@ -887,7 +929,7 @@ public class ProcessServiceImpl implements ProcessService {
             ProcessApplyNotesPO processApplyNotesPo = new ProcessApplyNotesPO();
             processApplyNotesPo.setState(ApprovalNodeStateEnum.APPROVE);
             processApplyNotesPo.setRemark("auto");
-            processApplyNotesPo.setProcessapplyId(processNode.getProcessId());
+            processApplyNotesPo.setProcessapplyId((int)processApplyPo.getId());
             processApplyNotesPo.setProcessnodeId((int) processNode.getId());
             processApplyNotesService.save(processApplyNotesPo);
             //是否最后一个节点
@@ -906,7 +948,11 @@ public class ProcessServiceImpl implements ProcessService {
                 processApplyPo.setState(ApprovalNodeStateEnum.APPROVE);
                 processApplyPo.setOpreationstate(ApprovalApplyStateEnum.APPROVE);
                 processApplyService.updateById(processApplyPo);
-                return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.APPROVE);
+                try {
+                    return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.APPROVE);
+                }catch (FkException e){
+                    return ResultEnum.EMAIL_NOT_SEND;
+                }
             }
         } else {
             //当前节点无需自动审批通知当前节点人员进行审批
@@ -914,7 +960,11 @@ public class ProcessServiceImpl implements ProcessService {
             processApplyPo.setState(ApprovalNodeStateEnum.IN_PROGRESS);
             processApplyPo.setOpreationstate(ApprovalApplyStateEnum.IN_PROGRESS);
             processApplyService.updateById(processApplyPo);
-            return sendEmailToProcessNode(processApplyPo,loginUserInfo, userIds);
+            try {
+                return sendEmailToProcessNode(processApplyPo,loginUserInfo, userIds);
+            }catch (FkException e){
+                return ResultEnum.EMAIL_NOT_SEND;
+            }
         }
     }
 

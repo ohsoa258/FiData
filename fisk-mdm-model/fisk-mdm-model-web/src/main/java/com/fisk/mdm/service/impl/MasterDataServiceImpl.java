@@ -1101,8 +1101,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             return ResultEnum.SAVE_DATA_ERROR;
         }else if(flag){
             //添加工单
-            processService.addProcessApply(dto,batchNumber,eventTypeEnum);
-            return ResultEnum.SUCCESS;
+            return processService.addProcessApply(dto,batchNumber,eventTypeEnum);
         }
         ResultEnum resultEnum = dataSynchronizationUtils.stgDataSynchronize(dto.getEntityId(), batchNumber);
         if (resultEnum.getCode() != ResultEnum.DATA_SYNCHRONIZATION_SUCCESS.getCode()) {

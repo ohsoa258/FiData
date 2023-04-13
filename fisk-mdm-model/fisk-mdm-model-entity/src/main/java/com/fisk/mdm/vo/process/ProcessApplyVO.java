@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Data
 public class ProcessApplyVO {
     private Integer applyId;
-    private Integer applyCode;
+    private String approvalCode;
     private String description;
     private ApprovalApplyStateEnum state;
     private EventTypeEnum operationType;

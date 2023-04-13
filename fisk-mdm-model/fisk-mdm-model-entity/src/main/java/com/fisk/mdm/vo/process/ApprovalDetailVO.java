@@ -19,7 +19,7 @@ public class ApprovalDetailVO {
     @ApiModelProperty(value = "描述")
     private String description;
     @ApiModelProperty(value = "审批编号")
-    private Integer applyCode;
+    private String approvalCode;
     @ApiModelProperty(value = "申请人")
     private String applicant;
     @ApiModelProperty(value = "操作类型")

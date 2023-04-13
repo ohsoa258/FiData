@@ -236,7 +236,7 @@ public class DataSynchronizationUtils {
 
         // 获取唯一键
         String columnName = codeAssociationCondition.get(0).getColumnName();
-        str.append(" ON CONFLICT ( " + columnName + "," + MARK + "version_id" + ") DO UPDATE ");
+        str.append(" ON CONFLICT ( \"" + columnName + "\"," + MARK + "version_id" + ") DO UPDATE ");
         str.append(" SET ");
         str.append(MARK + "new_code = " + "excluded." + MARK + "new_code").append(",");
         str.append(MARK + "version_id = " + "excluded." + MARK + "version_id").append(",");
@@ -245,7 +245,7 @@ public class DataSynchronizationUtils {
         str.append(MARK + "update_time = " + "excluded." + MARK + "update_time").append(",");
         str.append(MARK + "update_user = " + "excluded." + MARK + "update_user").append(",");
 
-        String code1 = columnName + " = " + "excluded." + MARK + "new_code" + ",";
+        String code1 = "\"" + columnName + "\" = " + "excluded." + MARK + "new_code" + ",";
 
         // 业务字段
         String collect1 = attributeList.stream().filter(e -> e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName())
