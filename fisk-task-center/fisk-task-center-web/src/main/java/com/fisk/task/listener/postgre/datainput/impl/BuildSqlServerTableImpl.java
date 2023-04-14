@@ -244,7 +244,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             }
         }
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS) || Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
-            sql = sql.replaceFirst("\\)", "");
+            sql = sql.substring(0,sql.length() - 1);
         }
         log.info("函数语句:" + sql);
         return sql;
