@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
  * @Date: 2023-04-06
  */
 @Data
-public class PendingApprovalVO {
+public class EndingApprovalVO {
     @ApiModelProperty(value = "流程工单ID")
     private Integer applyId;
     @ApiModelProperty(value = "审批编号")
@@ -26,6 +26,11 @@ public class PendingApprovalVO {
     private String applicantName;
     @ApiModelProperty(value = "操作类型")
     private String operationType;
+    @ApiModelProperty(value = "审批状态")
+    private String state;
+    @ApiModelProperty(value = "审批时间")
+    @JsonFormat(shape =JsonFormat.Shape.STRING,pattern ="yyyy-MM-dd HH:mm:ss",timezone ="GMT+8")
+    private LocalDateTime approvalTime;
     @ApiModelProperty(value = "申请时间")
     @JsonFormat(shape =JsonFormat.Shape.STRING,pattern ="yyyy-MM-dd HH:mm:ss",timezone ="GMT+8")
     private LocalDateTime applicationTime;

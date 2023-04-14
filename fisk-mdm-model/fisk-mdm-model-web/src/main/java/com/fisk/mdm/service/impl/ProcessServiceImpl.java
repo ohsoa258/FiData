@@ -47,10 +47,14 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.rollbackConnection;
 
 /**
  * @Author: wangjian
@@ -229,13 +233,6 @@ public class ProcessServiceImpl implements ProcessService {
         ProcessInfoPO processInfo = processInfoService.getProcessInfo(entityId);
         if (processInfo != null) {
             List<ProcessNodePO> processNodes = processNodeService.getProcessNodes((int) processInfo.getId());
-            LambdaQueryWrapper<ProcessApplyPO> poLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            poLambdaQueryWrapper.eq(ProcessApplyPO::getProcessId, processInfo.getId())
-                    .eq(ProcessApplyPO::getOpreationstate, ApprovalApplyStateEnum.IN_PROGRESS);
-            List<ProcessApplyPO> applyPo = processApplyService.list(poLambdaQueryWrapper);
-            if (!CollectionUtils.isEmpty(applyPo)) {
-                return ResultEnum.PROCESS_APPLY_EXIST;
-            }
             //获取申请人流程节点
             ProcessNodePO processNodePo = processNodes.get(0);
             //获取申请人流程节点人员
@@ -282,12 +279,13 @@ public class ProcessServiceImpl implements ProcessService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultEnum addProcessApply(MasterDataDTO dto, String batchNumber, EventTypeEnum eventTypeEnum) throws FkException {
+    public ResultEnum addProcessApply(Integer entityId,String description, String batchNumber, EventTypeEnum eventTypeEnum) throws FkException {
         UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         int userId = loginUserInfo.id.intValue();
-        ProcessInfoPO processInfo = processInfoService.getProcessInfo(dto.getEntityId());
+        ProcessInfoPO processInfo = processInfoService.getProcessInfo(entityId);
         List<ProcessNodePO> processNodes = processNodeService.getProcessNodes((int) processInfo.getId());
         ProcessNodePO processNodePo = processNodes.get(1);
+        List<ProcessPersonPO> processPersons = processPersonService.getProcessPersons((int) processNodePo.getId());
         ProcessApplyPO processApplyPo = new ProcessApplyPO();
         processApplyPo.setApplicant(String.valueOf(userId));
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSSS");
@@ -295,14 +293,13 @@ public class ProcessServiceImpl implements ProcessService {
         processApplyPo.setApprovalCode(number);
         processApplyPo.setApplicationTime(LocalDateTime.now());
         processApplyPo.setApproverNode((int) processNodePo.getId());
-        processApplyPo.setDescription(dto.getDescription());
+        processApplyPo.setDescription(description);
         processApplyPo.setProcessId((int) processInfo.getId());
         processApplyPo.setState(ApprovalNodeStateEnum.IN_PROGRESS);
         processApplyPo.setOperationType(eventTypeEnum);
         processApplyPo.setOpreationstate(ApprovalApplyStateEnum.IN_PROGRESS);
         processApplyPo.setFidataBatchCode(batchNumber);
         processApplyService.save(processApplyPo);
-        List<ProcessPersonPO> processPersons = processPersonService.getProcessPersons((int) processNodePo.getId());
         //通知节点用户进行审批
         try {
             sendEmailToProcessNode(processApplyPo,loginUserInfo, getUserIds(processPersons));
@@ -332,7 +329,7 @@ public class ProcessServiceImpl implements ProcessService {
      * 获取已处理审批列表
      */
     @Override
-    public Page<PendingApprovalVO> getOverApproval(PendingApprovalDTO dto) {
+    public Page<EndingApprovalVO> getOverApproval(PendingApprovalDTO dto) {
         return processApplyService.getOverApproval(dto);
     }
 

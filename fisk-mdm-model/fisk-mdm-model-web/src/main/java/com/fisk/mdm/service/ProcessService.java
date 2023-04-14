@@ -9,10 +9,7 @@ import com.fisk.mdm.dto.process.BatchApprovalDTO;
 import com.fisk.mdm.dto.process.PendingApprovalDTO;
 import com.fisk.mdm.dto.process.ProcessInfoDTO;
 import com.fisk.mdm.enums.EventTypeEnum;
-import com.fisk.mdm.vo.process.ApprovalDetailVO;
-import com.fisk.mdm.vo.process.PendingApprovalVO;
-import com.fisk.mdm.vo.process.ProcessApplyVO;
-import com.fisk.mdm.vo.process.ProcessInfoVO;
+import com.fisk.mdm.vo.process.*;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -48,12 +45,12 @@ public interface ProcessService {
 
     /**
      * 添加工单
-     * @param dto
+     * @param entityId
      * @param batchNumber
      * @param eventTypeEnum
      * @return
      */
-    ResultEnum addProcessApply(MasterDataDTO dto, String batchNumber, EventTypeEnum eventTypeEnum);
+    ResultEnum addProcessApply(Integer entityId,String description, String batchNumber, EventTypeEnum eventTypeEnum);
 
     /**
      * 获取我的待审核流程
@@ -74,7 +71,7 @@ public interface ProcessService {
      * @param dto
      * @return
      */
-    Page<PendingApprovalVO> getOverApproval(PendingApprovalDTO dto);
+    Page<EndingApprovalVO> getOverApproval(PendingApprovalDTO dto);
 
     /**
      * 获取审批流程详情

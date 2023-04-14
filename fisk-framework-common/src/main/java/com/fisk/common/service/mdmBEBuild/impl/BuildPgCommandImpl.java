@@ -200,7 +200,15 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append(" where fidata_version_id=" + versionId);
         return str.toString();
     }
-
+    @Override
+    public String buildQueryCodeAndLock(String tableName, String code, Integer versionId) {
+        StringBuilder str = new StringBuilder();
+        str.append("select \"" + code + "\" as code,");
+        str.append("\"fidata_lock_tag\" as lock ");
+        str.append(" from \"" + tableName +"\"");
+        str.append(" where fidata_version_id=" + versionId);
+        return str.toString();
+    }
     @Override
     public List<OperatorVO> getOperatorList() {
         List<OperatorVO> data;

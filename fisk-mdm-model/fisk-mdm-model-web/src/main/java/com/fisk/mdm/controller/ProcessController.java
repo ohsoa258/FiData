@@ -11,10 +11,7 @@ import com.fisk.mdm.dto.process.BatchApprovalDTO;
 import com.fisk.mdm.dto.process.PendingApprovalDTO;
 import com.fisk.mdm.dto.process.ProcessInfoDTO;
 import com.fisk.mdm.service.ProcessService;
-import com.fisk.mdm.vo.process.ApprovalDetailVO;
-import com.fisk.mdm.vo.process.PendingApprovalVO;
-import com.fisk.mdm.vo.process.ProcessApplyVO;
-import com.fisk.mdm.vo.process.ProcessInfoVO;
+import com.fisk.mdm.vo.process.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
@@ -65,7 +62,7 @@ public class ProcessController {
 
     @ApiOperation("获取已处理审批列表")
     @PostMapping("/getOverApproval")
-    public ResultEntity<Page<PendingApprovalVO>> getOverApproval(@RequestBody PendingApprovalDTO dto) {
+    public ResultEntity<Page<EndingApprovalVO>> getOverApproval(@RequestBody PendingApprovalDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,processService.getOverApproval(dto));
     }
 

@@ -67,7 +67,7 @@
         <if test=" query.keyword !=null and query.keyword.length()>0 ">
             and (
             a.applicant like concat('%', #{query.keyword}, '%') or
-            a.description like concat('%', #{query.keyword}, '%') or
+            a.description like concat('%', #{query.keyword}, '%') )
         </if>
         <if test="query.operationType != null and query.operationType != ''">
             and a.operation_type = #{query.operationType}
@@ -81,7 +81,7 @@
         GROUP BY a.id
     </select>
 
-    <select id="getOverApproval" resultType="com.fisk.mdm.vo.process.PendingApprovalVO">
+    <select id="getOverApproval" resultType="com.fisk.mdm.vo.process.EndingApprovalVO">
         SELECT
         a.id as apply_id,
         a.approval_code,
@@ -89,6 +89,8 @@
         a.applicant,
         a.description,
         a.operation_type,
+        b.state,
+        b.create_time as approval_time,
         a.application_time,
         a.approver_node
         FROM
@@ -113,7 +115,7 @@
         <if test=" query.keyword !=null and query.keyword.length()>0 ">
             and (
             a.applicant like concat('%', #{query.keyword}, '%') or
-            a.description like concat('%', #{query.keyword}, '%') or
+            a.description like concat('%', #{query.keyword}, '%') )
         </if>
         <if test="query.operationType != null and query.operationType != ''">
             and a.operation_type = #{query.operationType}
@@ -124,6 +126,5 @@
         <if test="query.endTime != null">
             and a.application_time &lt; #{query.endTime}
         </if>
-        GROUP BY a.id
     </select>
 </mapper>

@@ -69,6 +69,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.OutputStream;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
@@ -76,6 +77,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.rollbackConnection;
+
 /**
  * 主数据服务impl
  *
@@ -710,6 +714,23 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (!file.getOriginalFilename().contains(".xlsx")) {
             throw new FkException(ResultEnum.FILE_NAME_ERROR);
         }
+        //如果配置流程则走流程
+        boolean flag;
+        try {
+            ResultEnum resultEnum = processService.verifyProcessApply(dto.getEntityId());
+            switch (resultEnum){
+                case VERIFY_APPROVAL:
+                    flag = true;
+                    break;
+                case VERIFY_NOT_APPROVAL:
+                    flag = false;
+                    break;
+                default:
+                    throw new FkException(ResultEnum.VERIFY_PROCESS_APPLY_ERROR);
+            }
+        }catch (FkException e){
+            throw new FkException(ResultEnum.VERIFY_PROCESS_APPLY_ERROR);
+        }
         EntityPO po = entityMapper.selectById(dto.getEntityId());
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -741,7 +762,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
             throw new FkException(ResultEnum.CODE_NOT_EXIST);
         }
         //获取mdm表code数据列表
-        List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), po.getName()), codeColumn.get().getColumnName(), dto.getVersionId());
+        Map<String, String> codeMap = getCodeAndLockList(TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), po.getName()), codeColumn.get().getColumnName(), dto.getVersionId());
+        if (codeMap.size()>0){
+            List<Object> collect = codeMap.values().stream().filter(i -> i != null).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(collect)){
+                throw new FkException(ResultEnum.PROCESS_APPLY_EXIST);
+            }
+        }
         String batchNumber = UUID.randomUUID().toString();
         //解析Excel数据集合
         CopyOnWriteArrayList<Map<String, Object>> objectArrayList = new CopyOnWriteArrayList<>();
@@ -795,6 +822,10 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 }
                 attributePoList.add(data.get());
             }
+            if(flag) {
+                //添加工单
+                processService.addProcessApply(dto.getEntityId(), null, batchNumber, EventTypeEnum.IMPORT);
+            }
 //            if (list.size() != columnNum - 1) {
 //                throw new FkException(ResultEnum.CHECK_TEMPLATE_IMPORT_FAILURE);
 //            }
@@ -845,7 +876,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                                     jsonObj.put("code", buildCodeCommand.createCode());
                                 }
                                 //上传逻辑：1 修改 2 新增
-                                if (codeList.contains(jsonObj.get("code"))) {
+                                if (codeMap.containsKey(jsonObj.get("code"))) {
                                     jsonObj.put("fidata_syncy_type", SyncTypeStatusEnum.UPDATE.getValue());
                                     updateCount.incrementAndGet();
                                 } else {
@@ -889,6 +920,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
             throw new FkException(ResultEnum.FORM_NO_VALID_DATA);
         }
         int flatCount = templateDataSubmitStg(objectArrayList, tableName, batchNumber, dto.getVersionId(), userId, ImportTypeEnum.EXCEL_IMPORT, false);
+        if (flatCount == 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
         //添加批次
         setStgBatch(batchNumber, dto.getEntityId(), dto.getVersionId(), result.getCount(), result.getCount() - flatCount, addCount.get(), updateCount.get(), flatCount > 0 ? 0 : 1);
         //校验重复code
@@ -973,11 +1007,15 @@ public class MasterDataServiceImpl implements IMasterDataService {
             }
             int versionId = Integer.parseInt(dto.getData().get("fidata_version_id").toString());
             //获取mdm表code数据列表
-            List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), entityPO.getName()), attributePO.getColumnName(), versionId);
+            Map<String, String> codeMap = getCodeAndLockList(TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), entityPO.getName()), attributePO.getColumnName(), versionId);
             //判断上传逻辑
             dto.getData().put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
-            if (codeList.contains(dto.getData().get("code"))) {
-                dto.getData().put("fidata_syncy_type", SyncTypeStatusEnum.UPDATE.getValue());
+            if (codeMap.containsKey(dto.getData().get("code"))) {
+                if (codeMap.get(dto.getData().get("code")) == null){
+                    dto.getData().put("fidata_syncy_type", SyncTypeStatusEnum.UPDATE.getValue());
+                }else {
+                    throw new FkException(ResultEnum.PROCESS_APPLY_EXIST);
+                }
             }
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             //生成update语句
@@ -1061,8 +1099,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     //获取code列名
                     String columnName = getEntityCodeName(dto.getEntityId());
                     //code是否验证已存在
-                    List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), entityPO.getName()), columnName, dto.getVersionId());
-                    if (codeList.contains(mapData.get("code"))) {
+                    Map<String, String> codeList = getCodeAndLockList(TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), entityPO.getName()), columnName, dto.getVersionId());
+                    if (codeList.containsKey(mapData.get("code"))) {
                         throw new FkException(ResultEnum.CODE_EXIST);
                     }
                 }
@@ -1086,22 +1124,52 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 case VERIFY_NOT_APPROVAL:
                     flag = false;
                     break;
-                case PROCESS_APPLY_EXIST:
-                    return ResultEnum.PROCESS_APPLY_EXIST;
                 default:
-                    return ResultEnum.VERIFY_PROCESS_APPLY_ERROR;
+                    throw new FkException(ResultEnum.VERIFY_PROCESS_APPLY_ERROR);
             }
         }catch (FkException e){
-            return ResultEnum.VERIFY_PROCESS_APPLY_ERROR;
+            throw new FkException(ResultEnum.VERIFY_PROCESS_APPLY_ERROR);
+        }
+
+        if (eventTypeEnum != EventTypeEnum.SAVE){
+            String mdmTableName = TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), entityPO.getName());
+            StringBuilder queryConditions = new StringBuilder();
+            queryConditions.append(" and fidata_id ='")
+                    .append(dto.getFidataId())
+                    .append("'");
+            IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
+            String sql = buildSqlCommand.buildQueryData(mdmTableName, queryConditions.toString());
+            Connection connection = getConnection();
+            List<Map<String, Object>> maps = AbstractDbHelper.execQueryResultMaps(sql, connection);
+            if(!org.springframework.util.CollectionUtils.isEmpty(maps)){
+                throw new FkException(ResultEnum.PROCESS_APPLY_EXIST);
+            }else {
+                StringBuilder update = new StringBuilder();
+                update.append("update \"")
+                        .append(mdmTableName)
+                        .append("\" set fidata_lock_tag = 1 where fidata_id ='")
+                        .append(dto.getFidataId()).append("'");
+                PreparedStatement statement = null;
+                try {
+                    statement = connection.prepareStatement(update.toString());
+                    statement.execute();
+                } catch (SQLException ex) {
+                    // 回滚事务
+                    rollbackConnection(connection);
+                    // 记录日志
+                    log.error(ResultEnum.FACT_ATTRIBUTE_FAILD.getMsg() + "【SQL:】" + sql + "【原因:】" + ex.getMessage());
+                    throw new FkException(ResultEnum.FACT_ATTRIBUTE_FAILD);
+                }
+            }
         }
         //todo 添加审批工单和写入数据到stg应该是同一事务内 暂时没有处理
         int flat = templateDataSubmitStg(members, tableName, batchNumber, dto.getVersionId(),
                 userId, ImportTypeEnum.MANUALLY_ENTER, delete);
         if (flat == 0) {
-            return ResultEnum.SAVE_DATA_ERROR;
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }else if(flag){
             //添加工单
-            return processService.addProcessApply(dto,batchNumber,eventTypeEnum);
+            return processService.addProcessApply(dto.getEntityId(),dto.getDescription(),batchNumber,eventTypeEnum);
         }
         ResultEnum resultEnum = dataSynchronizationUtils.stgDataSynchronize(dto.getEntityId(), batchNumber);
         if (resultEnum.getCode() != ResultEnum.DATA_SYNCHRONIZATION_SUCCESS.getCode()) {
@@ -1251,5 +1319,29 @@ public class MasterDataServiceImpl implements IMasterDataService {
         }
         return codeList;
     }
+
+
+    /**
+     * 获取表指定列名数据
+     *
+     * @param tableName
+     * @return
+     */
+    public Map<String, String> getCodeAndLockList(String tableName, String codeColumnName, int versionId) {
+        Map<String, String> maps = new HashMap<>();
+        try {
+            IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
+            //查询code列sql
+            String sql = buildSqlCommand.buildQueryCodeAndLock(tableName, codeColumnName, versionId);
+            List<Map<String, Object>> list = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
+            for (Map<String, Object> stringObjectMap : list) {
+                maps.put((String)stringObjectMap.get("code"),(String)stringObjectMap.get("lock"));
+            }
+        } catch (Exception e) {
+            log.error("getCodeAndLockList:", e);
+        }
+        return maps;
+    }
+
 
 }
