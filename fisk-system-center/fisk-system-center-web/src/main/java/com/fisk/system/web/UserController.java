@@ -143,4 +143,10 @@ public class UserController {
     public ResultEntity<List<UserDTO>> getAllUserList() {
         return service.getAllUserList();
     }
+
+    @GetMapping("/getUserIdByUserName/{userName}")
+    @ApiOperation("根据用户姓名模糊查询用户id")
+    public ResultEntity<List<Integer>> getUserIdByUserName(@RequestParam("userName") String userName){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getUserIdByUserName(userName));
+    }
 }

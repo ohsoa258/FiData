@@ -37,5 +37,9 @@
             </foreach>
         </if>
     </select>
-
+    <select id="getUserIdByUserName" resultType="Integer">
+        select a.id
+        from tb_user_info a
+        where a.del_flag = 1 and a.username like concat('%', #{userName}, '%')
+    </select>
 </mapper>

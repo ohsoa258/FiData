@@ -781,7 +781,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         //获取code编码规则
         List<CodeRuleVO> codeRuleVOS= codeRuleService.getDataByEntityId(dto.getEntityId());
         List<CodeRuleDTO> codeRuleDTO=null;
-        if (codeRuleVOS.isEmpty()){
+        if (CollectionUtils.isEmpty(codeRuleVOS)){
             codeRuleDTO= codeRuleVOS.get(0).getGroupDetailsList();
         }
         //code生成规则

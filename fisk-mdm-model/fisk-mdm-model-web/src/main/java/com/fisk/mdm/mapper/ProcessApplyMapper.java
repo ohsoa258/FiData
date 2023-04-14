@@ -20,6 +20,13 @@ import java.util.List;
 public interface ProcessApplyMapper extends BaseMapper<ProcessApplyPO> {
 
     Page<ProcessApplyVO> getMyProcessApply(Page<PendingApprovalVO> page,@Param("userId")long userId,@Param("query")PendingApprovalDTO dto);
-    Page<PendingApprovalVO> getPendingApproval(Page<PendingApprovalVO> page, @Param("userId")long userId,@Param("roleIds") List<Long> roleIds,@Param("query")PendingApprovalDTO dto);
-    Page<EndingApprovalVO> getOverApproval(Page<PendingApprovalVO> page, @Param("userId")long userId, @Param("query")PendingApprovalDTO dto);
+    Page<PendingApprovalVO> getPendingApproval(Page<PendingApprovalVO> page,
+                                               @Param("userId")long userId,
+                                               @Param("queryUserId")List<Integer> queryUserId,
+                                               @Param("roleIds") List<Long> roleIds,
+                                               @Param("query")PendingApprovalDTO dto);
+    Page<EndingApprovalVO> getOverApproval(Page<PendingApprovalVO> page,
+                                           @Param("userId")long userId,
+                                           @Param("queryUserId")List<Integer> queryUserId,
+                                           @Param("query")PendingApprovalDTO dto);
 }

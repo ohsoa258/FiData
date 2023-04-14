@@ -469,4 +469,13 @@ public class UserServiceImpl implements IUserService {
         }
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, token);
     }
+
+    @Override
+    public List<Integer> getUserIdByUserName(String userName) {
+        List<Integer> userId = mapper.getUserIdByUserName(userName);
+        if (userId == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return userId;
+    }
 }

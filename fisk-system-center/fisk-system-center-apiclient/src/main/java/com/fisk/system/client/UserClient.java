@@ -129,6 +129,13 @@ public interface UserClient {
     ResultEntity<List<RoleInfoDTO>> getRolebyUserId(@RequestParam("userId") int userId);
 
     /**
+     * 根据用户姓名模糊查询用户id
+     * @return
+     */
+    @GetMapping("/info/getUserIdByUserName/{userName}")
+    public ResultEntity<List<Integer>> getUserIdByUserName(@RequestParam("userName") String userName);
+
+    /**
      * 获取所有角色及角色下用户列表
      * @return
      */

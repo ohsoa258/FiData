@@ -358,10 +358,14 @@ public class ProcessServiceImpl implements ProcessService {
                     personVO.setApproval(userMap.get(Integer.valueOf(processApplyNotesPo.getCreateUser())));
                     personVO.setDescription(processApplyNotesPo.getRemark());
                     personVO.setState(processApplyNotesPo.getState().getName());
+                    ProcessNodePO processNodePO = pos.get(index);
+                    personVO.setLevels(processNodePO.getLevels());
+                    personVO.setProcessNodeName(processNodePO.getName());
                     persons.add(personVO);
                 }
                 applicant = userMap.get(Integer.valueOf(processApplyPo.getApplicant()));
             } else {
+                Map<Integer, ProcessNodePO> collect = pos.stream().collect(Collectors.toMap(i -> (int)i.getId(), i -> i));
                 List<Integer> nodeIds = pos.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
                 List<ProcessPersonPO> processPersons = processPersonService.getProcessPersons(nodeIds);
                 Map<Integer, List<ProcessPersonPO>> personMap = processPersons.stream()
@@ -383,6 +387,9 @@ public class ProcessServiceImpl implements ProcessService {
                     personVO.setApproval(userMap.get(Integer.valueOf(processApplyNotesPO.getCreateUser())));
                     personVO.setDescription(processApplyNotesPO.getRemark());
                     personVO.setState(processApplyNotesPO.getState().getName());
+                    ProcessNodePO processNodePO = collect.get(processApplyNotesPO.getProcessnodeId());
+                    personVO.setLevels(processNodePO.getLevels());
+                    personVO.setProcessNodeName(processNodePO.getName());
                     persons.add(personVO);
                 }
                 applicant = getApprovalName(processApplyPo, persons, processNodes, personMap, userMap, roleMap);
@@ -432,6 +439,8 @@ public class ProcessServiceImpl implements ProcessService {
             }).collect(Collectors.joining(","));
             personVO.setApproval(name);
             personVO.setState(ApprovalNodeStateEnum.IN_PROGRESS.getName());
+            personVO.setLevels(processNode.getLevels());
+            personVO.setProcessNodeName(processNode.getName());
             persons.add(personVO);
         }
         applicant = userMap.get(Integer.valueOf(processApplyPo.getApplicant()));
@@ -913,7 +922,7 @@ public class ProcessServiceImpl implements ProcessService {
         poLambdaQueryWrapper.eq(ProcessApplyNotesPO::getProcessapplyId, processApplyPo.getId());
         List<ProcessApplyNotesPO> list = processApplyNotesService.list(poLambdaQueryWrapper);
         List<Integer> applyNoteUser = list.stream().map(i -> Integer.valueOf(i.getCreateUser())).collect(Collectors.toList());
-        List<ProcessPersonPO> processPersonPos = processPersonMap.get(processNode.getLevels());
+        List<ProcessPersonPO> processPersonPos = processPersonMap.get((int)processNode.getId());
         //因为节点换了所以需要重新校验是否在审批人员内
         List<Long> userIds = getUserIds(processPersonPos);
         for (Long userId : userIds) {
