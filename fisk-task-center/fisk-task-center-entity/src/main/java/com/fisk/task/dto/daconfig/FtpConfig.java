@@ -60,5 +60,10 @@ public class FtpConfig {
      */
     public String fileBinary;
 
+    /**
+     * 是否是sftp
+     */
+    public boolean whetherSftpl;
+
 
 }
