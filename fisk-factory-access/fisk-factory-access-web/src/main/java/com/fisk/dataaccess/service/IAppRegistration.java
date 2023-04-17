@@ -17,7 +17,6 @@ import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
-import com.fisk.dataaccess.dto.app.AppRegistrationInfoDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
@@ -315,4 +314,15 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @param appId
      */
     SyncTableCountVO getSyncTableCount(Integer appId);
+
+    /**
+     * 通过appid获取特定数据源驱动类型
+     * 若当前app存在的数据源已经包含mysql,sqlserver,oracle,pg数据库类型，那么就不能再使用除这四种数据库类型外的其他数据源
+     * 意味着只返回mysql,sqlserver,oracle,pg
+     * 若当前app存在的数据源已经包含RestfulApi,Api,Sftp,Ftp这四种非数据库类型的其中一种，那么当前app就只能使用这一种数据源
+     * 意味着只返回RestfulApi,Api,Sftp,Ftp这四种中已被选取的那一种
+     * @param appid
+     * @return
+     */
+    List<AppDriveTypeDTO> getDriveTypeByAppId(Long appid);
 }

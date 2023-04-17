@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class AppDataSourceDTO extends BaseDTO {
+    public class AppDataSourceDTO extends BaseDTO {
 
     public Long id;
 
@@ -102,6 +102,9 @@ public class AppDataSourceDTO extends BaseDTO {
 
     @ApiModelProperty(value = "jwt类型下，配置返回的json串类型", required = true)
     public List<ApiResultConfigDTO> apiResultConfigDtoList;
+
+    @ApiModelProperty(value = "系统数据源配置id", required = true)
+    public Integer systemDataSourceId;
 
     public AppDataSourceDTO(BaseEntity entity) {
         super(entity);

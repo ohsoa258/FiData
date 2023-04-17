@@ -168,6 +168,12 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDriveType());
     }
 
+    @GetMapping("/getDriveTypeByAppId/{appId}")
+    @ApiOperation(value = "通过appid获取特定数据源驱动类型")
+    public ResultEntity<List<AppDriveTypeDTO>> getDriveTypeByAppId(@PathVariable("appId")Long appid) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDriveTypeByAppId(appid));
+    }
+
     @PostMapping("/pageFilter")
     @ApiOperation(value = "筛选器")
     public ResultEntity<Page<AppRegistrationVO>> listData(@RequestBody AppRegistrationQueryDTO query) {

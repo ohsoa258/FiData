@@ -2,7 +2,6 @@ package com.fisk.dataaccess.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.core.constants.MqConstants;
 import com.fisk.dataaccess.dto.table.TableSyncmodeDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.entity.TableSyncmodePO;
@@ -12,19 +11,13 @@ import com.fisk.dataaccess.mapper.TableSyncmodeMapper;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.service.ITableSyncmode;
 import com.fisk.dataaccess.vo.datafactory.SyncTableCountVO;
-import com.fisk.datamodel.enums.SyncModeEnum;
-import com.fisk.task.dto.kafka.KafkaReceiveDTO;
-import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * @author Lock
@@ -49,7 +42,7 @@ public class TableSyncmodeImpl extends ServiceImpl<TableSyncmodeMapper, TableSyn
             return getSyncTableCountVO(0, 0, 0, 0, 0);
         }
         //取出集合内的表id
-        ArrayList<Long> tabbleIds = new ArrayList<>();
+        List<Long> tabbleIds = new ArrayList<>();
         for (TableAccessPO tableAccessPO: tableAccessPOIdList) {
             tabbleIds.add(tableAccessPO.getId());
         }

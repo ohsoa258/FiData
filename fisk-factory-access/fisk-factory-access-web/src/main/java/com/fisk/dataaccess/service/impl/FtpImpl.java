@@ -61,7 +61,7 @@ public class FtpImpl implements IFtp {
     public ResultEntity<Object> connectFtp(DbConnectionDTO dto) {
         FTPClient ftpClient = null;
         try {
-            if (DataSourceTypeEnum.FTP.getName().equals(dto.driveType)) {
+            if (DataSourceTypeEnum.FTP.getName().equalsIgnoreCase(dto.driveType)) {
                 ftpClient = FtpUtils.connectFtpServer(dto.host, Integer.parseInt(dto.port), dto.connectAccount, dto.connectPwd, "utf-8");
                 return ResultEntityBuild.build(ResultEnum.SUCCESS);
             }

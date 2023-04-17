@@ -5,13 +5,15 @@ import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.io.Serializable;
+
 /**
  * @author Lock
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("tb_app_datasource")
-public class AppDataSourcePO extends BasePO {
+public class AppDataSourcePO extends BasePO implements Serializable {
     /**
      * tb_app_registration表id
      */
