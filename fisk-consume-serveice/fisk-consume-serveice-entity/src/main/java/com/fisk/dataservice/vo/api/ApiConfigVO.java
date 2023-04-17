@@ -92,6 +92,12 @@ public class ApiConfigVO {
     public String createSql;
 
     /**
+     * sql语句，查询总条数
+     */
+    @ApiModelProperty(value = "sql语句，查询总条数")
+    public String createCountSql;
+
+    /**
      * 创建时间
      */
     @ApiModelProperty(value = "创建时间")

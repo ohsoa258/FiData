@@ -1,6 +1,7 @@
 package com.fisk.dataservice.vo.apiservice;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 import java.util.List;
 
@@ -10,6 +11,7 @@ import java.util.List;
  * @description 数据集
  * @date 2022/1/18 11:15
  */
+@Data
 public class ResponseVO {
     /**
      * 当前页，起始页为第一页

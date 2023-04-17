@@ -31,6 +31,20 @@ public class BuildDataServiceSqlServerCommandImpl implements IBuildDataServiceSq
     }
 
     @Override
+    public String buildPagingSql(String tableName, String fields, String orderBy, Integer pageIndex, Integer pageSize, String where) {
+        StringBuilder str = new StringBuilder();
+        int page = (pageIndex - 1) * pageSize + 1;
+        str.append("SELECT\n" +
+                "\t" + fields + " \n" +
+                "FROM\n" +
+                "\t( 　　　　 SELECT *, ROW_NUMBER ( ) OVER ( ORDER BY " + orderBy + " ) AS fi_RowId FROM " + tableName + " WHERE 1=1 " + where + "　 ) AS b \n" +
+                "WHERE\n" +
+                "\tfi_RowId BETWEEN " + page + " \n" +
+                "\tAND " + pageIndex * pageSize + "");
+        return str.toString();
+    }
+
+    @Override
     public String buildPagingSql(String tableName, List<String> fields, String orderBy, Integer pageIndex, Integer pageSize) {
         StringBuilder str = new StringBuilder();
         str.append("SELECT ");

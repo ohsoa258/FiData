@@ -25,6 +25,13 @@ public class BuildDataServiceMysqlCommandImpl implements IBuildDataServiceSqlCom
     }
 
     @Override
+    public String buildPagingSql(String tableName, String fields, String orderBy, Integer pageIndex, Integer pageSize,String where) {
+        StringBuilder str = new StringBuilder();
+
+        return str.toString();
+    }
+
+    @Override
     public String buildQueryCountSql(String tableName, String queryConditions) {
         return null;
     }

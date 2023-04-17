@@ -29,6 +29,25 @@ public class BuildDataServicePgCommandImpl implements IBuildDataServiceSqlComman
     }
 
     @Override
+    public String buildPagingSql(String tableName, String fields, String orderBy, Integer pageIndex, Integer pageSize, String where) {
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT ");
+        str.append(fields);
+        str.append(" FROM ");
+        str.append(tableName);
+        if (StringUtils.isNotEmpty(where)) {
+            str.append(" WHERE 1=1 " + where);
+        }
+        if (StringUtils.isNotEmpty(orderBy)) {
+            str.append(" ORDER BY " + orderBy);
+        }
+//        str.append(" LIMIT " + pageSize + " OFFSET " + pageIndex);
+        // OFFSET 从0开始
+        str.append(String.format(" LIMIT %s OFFSET %s ", pageSize, (pageIndex - 1) * pageSize));
+        return str.toString();
+    }
+
+    @Override
     public String buildPagingSql(String tableName, List<String> fields, String orderBy, Integer pageIndex, Integer pageSize) {
         StringBuilder str = new StringBuilder();
         str.append("SELECT ");

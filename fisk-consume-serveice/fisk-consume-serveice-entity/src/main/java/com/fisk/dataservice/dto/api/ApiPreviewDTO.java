@@ -1,6 +1,7 @@
 package com.fisk.dataservice.dto.api;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
  * @description api预览
  * @date 2022/1/16 12:49
  */
+@Data
 public class ApiPreviewDTO {
     /**
      * apiId
