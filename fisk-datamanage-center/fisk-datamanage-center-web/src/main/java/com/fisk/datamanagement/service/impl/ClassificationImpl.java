@@ -360,6 +360,9 @@ public class ClassificationImpl
         return ResultEnum.SUCCESS;
     }
 
+/**
+ * 同步业务分类
+* */
     @Override
     public ResultEnum appSynchronousClassification(ClassificationInfoDTO dto) {
         log.info("开始同步业务， 参数:{}", JSON.toJSONString(dto));
@@ -367,15 +370,12 @@ public class ClassificationImpl
         if (dto.delete) {
             return deleteClassification(dto.name);
         }
-
         ClassificationDefsDTO data = new ClassificationDefsDTO();
         List<ClassificationDefContentDTO> list = new ArrayList<>();
-
         //同步主数据业务分类
         ClassificationDefContentDTO masterData = new ClassificationDefContentDTO();
         masterData.name = dto.name;
         masterData.description = dto.description;
-
         List<String> analysisModelSuperType = new ArrayList<>();
         switch (dto.sourceType) {
             case 1:

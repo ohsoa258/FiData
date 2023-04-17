@@ -50,7 +50,7 @@ public class DataAssetsController {
     public ResultEntity<Object> getDataAssetsList(@Validated @RequestBody DataAssetsParameterDTO dto) {
         DataAssetsResultDTO result = service.getDataAssetsTableList(dto);
         if (dto.export) {
-            exportTable(result, dto.tableName);
+            exportTable(result, dto);
             return ResultEntityBuild.build(ResultEnum.SUCCESS);
         }
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
@@ -66,24 +66,28 @@ public class DataAssetsController {
      * 导出Excel数据优化
      *
      * @param result
-     * @param tableName
+     * @param dto
      */
-    public void exportTable(DataAssetsResultDTO result, String tableName) {
+    public void exportTable(DataAssetsResultDTO result, DataAssetsParameterDTO dto) {
+
         SXSSFWorkbook workbook = new SXSSFWorkbook();
-        Sheet sheet = workbook.createSheet(tableName);
+        //从接口获取是否要显示名称；
+        int columnNameIndex= dto.columnName.equalsIgnoreCase("displayname") ?1:0;
+
+        Sheet sheet = workbook.createSheet(dto.tableName);
         SXSSFRow row1 = (SXSSFRow) sheet.createRow(0);
         for (int i = 0; i < result.columnList.size(); i++) {
-            row1.createCell(i).setCellValue(result.columnList.get(i)[0]);
+            row1.createCell(i).setCellValue(result.columnList.get(i)[columnNameIndex]);
         }
 
         //记录额外创建的sheet数量
         Integer index = 0;
         for (int i = 0; i < result.dataArray.size(); i++) {
             if ((i + 1) % max_row == 0) {
-                sheet = workbook.createSheet(tableName + index);
+                sheet = workbook.createSheet(dto.tableName + index);
                 row1 = (SXSSFRow) sheet.createRow(0);
                 for (int j = 0; j < result.columnList.size(); j++) {
-                    row1.createCell(j).setCellValue(result.columnList.get(j)[0]);
+                    row1.createCell(j).setCellValue(result.columnList.get(j)[columnNameIndex]);
                 }
                 index++;
             }
@@ -104,7 +108,7 @@ public class DataAssetsController {
             //输出Excel文件
             OutputStream output = response.getOutputStream();
             response.reset();
-            response.setHeader("Content-disposition", "attachment; filename=" + tableName + ".xlsx");
+            response.setHeader("Content-disposition", "attachment; filename=" + dto.tableName + ".xlsx");
             response.setContentType("application/x-xls");
             workbook.write(output);
             output.close();

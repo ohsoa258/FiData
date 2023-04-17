@@ -49,21 +49,19 @@ public class BloodCompensationImpl
 
     @Override
     public ResultEnum systemSynchronousBlood(String currUserName) {
-
+       //一.同步数据接入系统数据
         log.info("********开始同步数据接入********");
-
-        //获取接入业务分类
+        //1.获取接入系统
         ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
         if (appList.code != ResultEnum.SUCCESS.getCode()) {
             log.error("获取接入应用列表失败");
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
-
-        //同步数据接入业务分类
+        //2.同步数据接入系统名称
         if (CollectionUtils.isEmpty(appList.data)) {
             return ResultEnum.SUCCESS;
         }
-        log.info("******开始同步接入业务分类******");
+        log.info("******开始同步接入系统名称******");
         synchronousClassification(appList.data, 1);
 
         //获取所有接入表
@@ -136,11 +134,11 @@ public class BloodCompensationImpl
     }
 
     /**
-     * 同步业务分类
+     * 同步数据接入系统
      *
-     * @param dtoList
+     * @param dtoList：接入系统集合
      */
-    public void synchronousClassification(List<AppBusinessInfoDTO> dtoList, Integer sourceType) {
+    private void synchronousClassification(List<AppBusinessInfoDTO> dtoList, Integer sourceType) {
         for (AppBusinessInfoDTO item : dtoList) {
             ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
             classificationInfoDto.setName(item.name);
