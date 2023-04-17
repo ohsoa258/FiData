@@ -70,4 +70,11 @@ public interface IAppDataSource extends IService<AppDataSourcePO> {
      * @return
      */
     ResultEntity<com.fisk.system.dto.datasource.DataSourceDTO> getOutSourceById(Integer Id);
+
+    /**
+     * 获取指定app下的非重复驱动类型
+     * @param id
+     * @return
+     */
+    List<AppDataSourcePO> getDataSourceDrivesTypeByAppId(Long id);
 }

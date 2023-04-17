@@ -56,13 +56,13 @@ public class DataSourceController {
 
     @ApiOperation(value = "根据数据源类型获取平台配置模块的外部数据源")
     @GetMapping("/getOutSources/{driverType}")
-    public ResultEntity<Object> getOutSourcesFromSystemConfigByTypeId(@PathVariable("driverType") String driverType){
+    public ResultEntity<Object> getOutSourcesFromSystemConfigByTypeId(@PathVariable("driverType") String driverType) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getOutDataSourcesByTypeId(driverType));
     }
 
     @ApiOperation(value = "根据数据源id获取单个平台配置模块的外部数据源详情")
     @GetMapping("/getOutSource/{driverId}")
-    public ResultEntity<DataSourceDTO> getOutSourceFromSystemConfigById(@PathVariable("driverId") Integer id){
+    public ResultEntity<DataSourceDTO> getOutSourceFromSystemConfigById(@PathVariable("driverId") Integer id) {
         return service.getOutSourceById(id);
     }
 

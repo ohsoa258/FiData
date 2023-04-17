@@ -1,6 +1,8 @@
 package com.fisk.system.service;
 
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
+import com.fisk.system.dto.SqlCheckDTO;
+
 import java.util.List;
 
 /**
@@ -13,9 +15,9 @@ import java.util.List;
 public interface SqlFactoryService {
     /**
      * SQL语句校验
-     * @param sql
-     * @param dbType
+     *
+     * @param sqlCheckDTO
      * @return
      */
-    List<TableMetaDataObject> sqlCheck(String sql,String dbType);
+    List<TableMetaDataObject> sqlCheck(SqlCheckDTO sqlCheckDTO);
 }

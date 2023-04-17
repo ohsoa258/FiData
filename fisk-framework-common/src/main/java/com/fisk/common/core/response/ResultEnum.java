@@ -183,6 +183,7 @@ public enum ResultEnum {
     SFTP_RSA_IS_NULL(5080, "SFTP密钥文件路径不能为空"),
     SFTP_ACCOUNT_IS_NULL(5081, "SFTP账号密码不能为空"),
     SFTP_DIR_PATH_ERROR(5082, "SFTP目录格式错误"),
+    DATASOURCE_TYPE_ERROR(5083,"已选择的数据源类型冲突"),
 
 
     /**

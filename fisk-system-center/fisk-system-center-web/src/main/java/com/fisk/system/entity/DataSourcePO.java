@@ -100,4 +100,75 @@ public class DataSourcePO extends BasePO
      * 负责人
      */
     public String principal;
+
+    /**
+     * 文件后缀名(1:csv 2:xls&xlsx)
+     */
+    public int fileSuffix;
+
+    /**
+     * 文件二进制字符串（注：当sftp使用RSA时，将转换的RSA公钥放到这里）
+     */
+    public String fileBinary;
+
+    /**
+     * ftp选取的CDB/PDB名称
+     */
+    public String pdbName;
+
+    /**
+     * api选择OAuth 1.0: Signature Method
+     */
+    public String signatureMethod;
+
+    /**
+     * api选择OAuth 1.0: Consumer Key
+     */
+    public String consumerKey;
+
+    /**
+     * api选择OAuth 1.0: Consumer Secret
+     */
+    public String consumerSecret;
+
+    /**
+     * api选择OAuth 1.0: Access Token
+     */
+    public String accessToken;
+
+    /**
+     * api选择OAuth 1.0: Token Secret
+     */
+    public String tokenSecret;
+
+    /**
+     * api选择JWT：JWT账号key，对应页面上的userAccount
+     */
+    public String accountKey;
+
+    /**
+     * api选择JWT：JWT密码key，对应页面上的password
+     */
+    public String pwdKey;
+
+    /**
+     * api选择JWT：JWT返回token过期时间(分钟)，对应页面上的授权过期时间
+     */
+    public int expirationTime;
+
+    /**
+     * api选择Bearer Token：Bearer Token验证方式的Token
+     */
+    public String token;
+
+    /**
+     * api选择的身份验证方式:
+     * 0: 空
+     * 1: OAuth 1.0
+     * 2: OAuth 2.0
+     * 3: JWT
+     * 4: Bearer Token
+     * 5:无需身份验证
+     */
+    public int authenticationMethod;
 }
