@@ -65,4 +65,10 @@ public class EmailServerController {
     public ResultEntity<EmailServerVO> getEmailServerById(@RequestParam("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getEmailServerById(id));
     }
+
+    @ApiOperation("获取默认邮件服务器信息")
+    @GetMapping("/getDefaultEmailServer")
+    public ResultEntity<EmailServerVO> getDefaultEmailServer() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDefaultEmailServer());
+    }
 }

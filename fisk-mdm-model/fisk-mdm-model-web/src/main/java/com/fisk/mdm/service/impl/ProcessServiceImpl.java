@@ -16,10 +16,7 @@ import com.fisk.common.service.mdmBEBuild.BuildFactoryHelper;
 import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.mdm.dto.process.*;
 import com.fisk.mdm.entity.*;
-import com.fisk.mdm.enums.ApprovalApplyStateEnum;
-import com.fisk.mdm.enums.ApprovalNodeStateEnum;
-import com.fisk.mdm.enums.EventTypeEnum;
-import com.fisk.mdm.enums.ProcessPersonTypeEnum;
+import com.fisk.mdm.enums.*;
 import com.fisk.mdm.map.ProcessInfoMap;
 import com.fisk.mdm.map.ProcessNodeMap;
 import com.fisk.mdm.map.ProcessPersonMap;
@@ -226,6 +223,9 @@ public class ProcessServiceImpl implements ProcessService {
     public ResultEnum verifyProcessApply(Integer entityId) throws FkException {
         int userId = userHelper.getLoginUserInfo().id.intValue();
         ProcessInfoPO processInfo = processInfoService.getProcessInfo(entityId);
+        if (processInfo.getEnable() == ApprovalStateEnum.CLOSE){
+            return ResultEnum.VERIFY_NOT_APPROVAL;
+        }
         if (processInfo != null) {
             List<ProcessNodePO> processNodes = processNodeService.getProcessNodes((int) processInfo.getId());
             //获取申请人流程节点
@@ -533,7 +533,7 @@ public class ProcessServiceImpl implements ProcessService {
         if (applyPo == null){
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        ProcessInfoPO processInfo = processInfoService.getProcessInfo(applyPo.getProcessId());
+        ProcessInfoPO processInfo = processInfoService.getById(applyPo.getProcessId());
         if (processInfo == null){
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
@@ -542,15 +542,15 @@ public class ProcessServiceImpl implements ProcessService {
 
     public void sendEmail(MailSenderDTO mailSenderDTO) throws FkException {
         //第一步：查询邮件服务器设置
-        ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(27);
+        ResultEntity<EmailServerVO> emailServerById = userClient.getDefaultEmailServer();
         if (emailServerById == null || emailServerById.getCode() != ResultEnum.SUCCESS.getCode() ||
                 emailServerById.getData() == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         EmailServerVO emailServerVO = emailServerById.getData();
         MailServeiceDTO mailServeiceDTO = new MailServeiceDTO();
-        mailServeiceDTO.setOpenAuth(true);
-        mailServeiceDTO.setOpenDebug(true);
+        mailServeiceDTO.setOpenAuth(false);
+        mailServeiceDTO.setOpenDebug(false);
         mailServeiceDTO.setHost(emailServerVO.getEmailServer());
         mailServeiceDTO.setProtocol(emailServerVO.getEmailServerType().getName());
         mailServeiceDTO.setUser(emailServerVO.getEmailServerAccount());
@@ -577,6 +577,9 @@ public class ProcessServiceImpl implements ProcessService {
         List<Long> userIds = getUserIds(processPersonPos);
         //校验当前用户是否可以审批
         if (userIds.contains((long) loginUserInfo.id)) {
+            if (processApplyPo.getOpreationstate() != ApprovalApplyStateEnum.IN_PROGRESS){
+                return ResultEnum.PROCESS_APPLY_OVER;
+            }
             //当前用户第一次保存审批节点
             ProcessApplyNotesPO processApplyNotesPo = new ProcessApplyNotesPO();
             ;
@@ -649,6 +652,9 @@ public class ProcessServiceImpl implements ProcessService {
         List<Long> userIds = getUserIds(processPersonPos);
         //校验当前用户是否支持审批
         if (userIds.contains((long) loginUserInfo.id)) {
+            if (processApplyPo.getOpreationstate() != ApprovalApplyStateEnum.IN_PROGRESS){
+                return ResultEnum.PROCESS_APPLY_OVER;
+            }
             //第一次保存审批节点信息
             ProcessApplyNotesPO processApplyNotesPo = new ProcessApplyNotesPO();
             processApplyNotesPo.setState(typeConversionUtils.intToApprovalNodeStateEnum(dto.getFlag()));
@@ -730,6 +736,9 @@ public class ProcessServiceImpl implements ProcessService {
         //校验是否可以审批
         if (userIds.contains(loginUserInfo.id)) {
             //保存
+            if (processApplyPo.getOpreationstate() != ApprovalApplyStateEnum.IN_PROGRESS){
+                return ResultEnum.PROCESS_APPLY_OVER;
+            }
             ProcessApplyNotesPO processApplyNotesPo = new ProcessApplyNotesPO();
             processApplyNotesPo.setState(typeConversionUtils.intToApprovalNodeStateEnum(dto.getFlag()));
             processApplyNotesPo.setRemark(dto.getDescription());

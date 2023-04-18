@@ -403,12 +403,14 @@ public enum ResultEnum {
     SAVE_PROCESS_NODE_ERROR(151036,"流程节点小于2个"),
     PROCESS_PERSON_NOT_NULL(151037,"节点人员不能为空"),
     VERIFY_PROCESS_APPLY_ERROR(151038,"流程校验异常"),
+
     SAVE_PROCESS_APPLY_ERROR(151039,"流程工单添加失败"),
     VERIFY_APPROVAL(151040,"应走流程"),
     VERIFY_NOT_APPROVAL(151041,"不需要走流程"),
     PROCESS_APPLY_EXIST(151042,"当前实体正在审批"),
     PROCESS_NOT_ROLLBACK(151043,"当前流程不可回滚"),
     EMAIL_NOT_SEND(151044,"email发送失败"),
+    PROCESS_APPLY_OVER(151045,"流程审批已结束,请勿重复审批!"),
 
     /**
      * licence

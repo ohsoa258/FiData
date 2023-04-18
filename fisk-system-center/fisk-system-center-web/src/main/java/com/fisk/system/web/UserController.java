@@ -152,7 +152,7 @@ public class UserController {
 
     @GetMapping("/verifyPageByUserId")
     @ApiOperation("根据用户id和页面url查询是否有此页面权限")
-    ResultEntity<Boolean> verifyPageByUserId(@RequestParam("userId") int userId,@RequestParam("pageUrl")String pageUrl) {
+    public ResultEntity<Boolean> verifyPageByUserId(@RequestParam("userId") int userId,@RequestParam("pageUrl")String pageUrl) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.verifyPageByUserId(userId,pageUrl));
     }
 

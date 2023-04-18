@@ -204,6 +204,19 @@ public interface UserClient {
     @GetMapping("/datasource/getById/{datasourceId}")
     ResultEntity<DataSourceDTO> getById(@RequestParam("datasourceId") int datasourceId);
 
+    /**
+     * 根据用户id和页面url查询是否有此页面权限
+     * @param userId
+     * @param pageUrl
+     * @return
+     */
     @GetMapping("/info/verifyPageByUserId")
     ResultEntity<Boolean> verifyPageByUserId(@RequestParam("userId") int userId,@RequestParam("pageUrl")String pageUrl);
+
+    /**
+     * 获取默认邮件服务器信息
+     * @return
+     */
+    @GetMapping("/emailserver/getDefaultEmailServer")
+    ResultEntity<EmailServerVO> getDefaultEmailServer();
 }

@@ -101,4 +101,13 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
         }
         return byId;
     }
+
+    @Override
+    public EmailServerVO getDefaultEmailServer() {
+        EmailServerVO emailServerVO = baseMapper.getDefaultEmailServer();
+        if (emailServerVO != null) {
+            emailServerVO.setEmailServerType(EmailServerTypeEnum.getEnum(emailServerVO.getEmailServerTypeValue()));
+        }
+        return emailServerVO;
+    }
 }
