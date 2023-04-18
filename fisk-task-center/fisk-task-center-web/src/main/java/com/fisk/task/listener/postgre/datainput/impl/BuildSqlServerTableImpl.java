@@ -369,7 +369,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
 
         });
 
-        String sql1 = "CREATE TABLE " + modelPublishTableDTO.tableName + " ( " + tablePk + " BIGINT, ";
+        String sql1 = "CREATE TABLE " + modelPublishTableDTO.tableName + " ( " + tablePk + " BIGINT IDENTITY(1,1) NOT NULL, ";
         //String associatedKey = associatedConditions(fieldList);
         String associatedKey = "";
         String sql2 = sqlFileds.toString() + associatedKey;
