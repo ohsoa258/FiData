@@ -63,7 +63,7 @@
         api.api_desc,
         api.api_type,
         api.datasource_id,
-        api.create_sql
+        api.create_sql,
         api.create_count_sql
         FROM
         tb_api_config api
