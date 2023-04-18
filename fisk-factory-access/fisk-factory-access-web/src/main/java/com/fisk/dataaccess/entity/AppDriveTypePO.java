@@ -6,13 +6,15 @@ import com.fisk.common.core.baseObject.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.io.Serializable;
+
 /**
  * @author Lock
  */
 @Data
 @TableName("tb_app_drivetype")
 @EqualsAndHashCode(callSuper = true)
-public class AppDriveTypePO extends BaseEntity {
+public class AppDriveTypePO extends BaseEntity implements Serializable {
 
     /**
      * 主键

@@ -5,14 +5,13 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.system.config.SwaggerConfig;
+import com.fisk.system.dto.SqlCheckDTO;
 import com.fisk.system.service.SqlFactoryService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Required;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
@@ -34,7 +33,7 @@ public class SqlFactoryController {
 
     @PostMapping("/sqlCheck")
     @ApiOperation("SQL语句校验接口")
-    public ResultEntity<List<TableMetaDataObject>> sqlCheck( @RequestParam("sql")String sql, @RequestParam("dbType")String dbType) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,sqlFactoryService.sqlCheck(sql,dbType));
+    public ResultEntity<List<TableMetaDataObject>> sqlCheck(@RequestBody SqlCheckDTO sqlCheckDTO) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, sqlFactoryService.sqlCheck(sqlCheckDTO));
     }
 }

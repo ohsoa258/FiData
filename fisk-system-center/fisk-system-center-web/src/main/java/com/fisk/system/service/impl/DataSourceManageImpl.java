@@ -10,12 +10,18 @@ import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.core.utils.FileBinaryUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
+import com.fisk.dataaccess.dto.app.DbConnectionDTO;
 import com.fisk.system.dto.GetConfigDTO;
 import com.fisk.system.dto.datasource.*;
 import com.fisk.system.entity.DataSourcePO;
@@ -52,6 +58,12 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
 
     @Resource
     private GenerateCondition generateCondition;
+
+    @Resource
+    private DataAccessClient dataAccessClient;
+
+    @Resource
+    UserHelper userHelper;
 
     @Override
     public List<DataSourceDTO> getSystemDataSource() {
@@ -152,7 +164,12 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         if (data != null) {
             return ResultEnum.DATA_SOURCE_NAME_ALREADY_EXISTS;
         }
+        //mapStruct:sftp密钥已忽略
         DataSourceMap.INSTANCES.dtoToPo(dto, model);
+        //sftp秘钥方式,存储二进制数据 (如果涉及到sftp公钥更换文件)
+        if (dto.fileBinary != null && DataSourceTypeEnum.SFTP.getName().equals(dto.conType.getName())) {
+            model.fileBinary = fileToBinaryStr(dto.fileBinary);
+        }
         return baseMapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
@@ -170,6 +187,10 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
 
     @Override
     public ResultEntity<Object> insertDataSource(DataSourceSaveDTO dto) {
+        //获取当前登陆人
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        String username = userInfo.getUsername();
+
         QueryWrapper<DataSourcePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DataSourcePO::getName, dto.name)
                 .eq(DataSourcePO::getSourceType, dto.sourceType)
@@ -179,10 +200,17 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
             return ResultEntityBuild.build(ResultEnum.DATA_SOURCE_NAME_ALREADY_EXISTS);
         }
         model = new DataSourcePO();
+        model.createUser = username;
+        //mapStruct:sftp RSA密钥属性 fileBinary 已忽略,不参与转换
         DataSourceMap.INSTANCES.dtoToPo(dto, model);
+        //sftp秘钥方式,存储二进制数据(如果sftp选择RSA公钥方式添加的话，才会将文件转为二进制字符串)
+        if (dto.fileBinary != null && DataSourceTypeEnum.SFTP.getName().equals(dto.conType.getName())) {
+            //密钥路径手动转换
+            model.fileBinary = fileToBinaryStr(dto.fileBinary);
+        }
         int flag = baseMapper.insert(model);
         DataSourcePO newPo = null;
-        if (flag > 0){
+        if (flag > 0) {
             // 查询数据源
             queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda().eq(DataSourcePO::getName, dto.name)
@@ -223,6 +251,22 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                     log.info("ORACLE驱动加载完毕");
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
+                case FTP:
+                case SFTP:
+                    //为了测试ftp和sftp连接，先将DataSourceSaveDTO对象转为DbConnectionDTO对象
+                    DbConnectionDTO dbConnectionDTO = saveDtoToConDto(dto);
+                    ResultEntity<Object> entity = dataAccessClient.connectFtp(dbConnectionDTO);
+                    return checkFtpAndSftpCon(entity, dto.conType);
+                case API:
+                    if (dto.authenticationMethod == 3) {
+                        AppDataSourceDTO appDataSourceDTO = saveDtoToSourceDto(dto);
+                        ResultEntity<Object> apiToken = dataAccessClient.getApiToken(appDataSourceDTO);
+                        if (apiToken != null) {
+                            return ResultEnum.SUCCESS;
+                        } else {
+                            return ResultEnum.API_NOT_EXIST;
+                        }
+                    }
                 default:
                     return ResultEnum.DS_DATASOURCE_CON_WARN;
             }
@@ -240,6 +284,69 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
             } catch (SQLException e) {
                 throw new FkException(ResultEnum.DATASOURCE_CONNECTCLOSEERROR);
             }
+        }
+    }
+
+    /**
+     * 将文件转为二进制字符串
+     *
+     * @param filePath
+     * @return
+     */
+    public String fileToBinaryStr(String filePath) {
+        return FileBinaryUtils.fileToBinStr(filePath);
+    }
+
+    /**
+     * 将DataSourceSaveDTO对象转为DbConnectionDTO对象
+     *
+     * @param saveDTO
+     * @return
+     */
+    public DbConnectionDTO saveDtoToConDto(DataSourceSaveDTO saveDTO) {
+        DbConnectionDTO conDto = new DbConnectionDTO();
+        conDto.connectAccount = saveDTO.conAccount;
+        conDto.connectPwd = saveDTO.conPassword;
+        conDto.connectStr = saveDTO.conStr;
+        conDto.driveType = saveDTO.conType.getName();
+        conDto.port = String.valueOf(saveDTO.conPort);
+        conDto.host = saveDTO.conIp;
+        return conDto;
+    }
+
+    /**
+     * 将DataSourceSaveDTO对象转为AppDataSourceDTO对象
+     *
+     * @param saveDTO
+     * @return
+     */
+    public AppDataSourceDTO saveDtoToSourceDto(DataSourceSaveDTO saveDTO) {
+        AppDataSourceDTO sourceDTO = new AppDataSourceDTO();
+        sourceDTO.apiResultConfigDtoList = saveDTO.apiResultConfigDtoList;
+        sourceDTO.connectStr = saveDTO.conStr;
+        sourceDTO.accountKey = saveDTO.accountKey;
+        sourceDTO.pwdKey = saveDTO.pwdKey;
+        sourceDTO.connectAccount = saveDTO.conAccount;
+        sourceDTO.connectPwd = saveDTO.conPassword;
+        sourceDTO.id = Long.valueOf(saveDTO.id);
+        sourceDTO.expirationTime = saveDTO.expirationTime;
+        return sourceDTO;
+    }
+
+    /**
+     * 检查dataAccessClient.connectFtp()方法返回的数据，决定要响应的数值
+     *
+     * @param data
+     * @param typeEnum
+     * @return
+     */
+    public ResultEnum checkFtpAndSftpCon(ResultEntity<Object> data, DataSourceTypeEnum typeEnum) {
+        if (data == null) {
+            return ResultEnum.SUCCESS;
+        } else if (typeEnum.getValue() == DataSourceTypeEnum.SFTP.getValue()) {
+            return ResultEnum.SFTP_CONNECTION_ERROR;
+        } else {
+            return ResultEnum.FTP_CONNECTION_ERROR;
         }
     }
 
@@ -304,7 +411,6 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     }
 
     /**
-     *
      * @param isShowPwd
      * @param t
      * @return
@@ -331,6 +437,19 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         dataSourceDTO.setSourceBusinessTypeValue(t.getSourceBusinessType());
         dataSourceDTO.setPurpose(t.getPurpose());
         dataSourceDTO.setPrincipal(t.getPrincipal());
+        dataSourceDTO.setFileSuffix(t.getFileSuffix());
+        dataSourceDTO.setFileBinary(t.getFileBinary());
+        dataSourceDTO.setPdbName(t.getPdbName());
+        dataSourceDTO.setSignatureMethod(t.getSignatureMethod());
+        dataSourceDTO.setConsumerKey(t.getConsumerKey());
+        dataSourceDTO.setConsumerSecret(t.getConsumerSecret());
+        dataSourceDTO.setAccessToken(t.getAccessToken());
+        dataSourceDTO.setTokenSecret(t.getTokenSecret());
+        dataSourceDTO.setAccountKey(t.getAccountKey());
+        dataSourceDTO.setPwdKey(t.getPwdKey());
+        dataSourceDTO.setExpirationTime(t.getExpirationTime());
+        dataSourceDTO.setToken(t.getToken());
+        dataSourceDTO.setAuthenticationMethod(t.getAuthenticationMethod());
         if (isShowPwd) {
             dataSourceDTO.setConPassword(t.getConPassword());
         }

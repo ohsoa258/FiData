@@ -121,11 +121,11 @@ public class DataAssetsImpl implements IDataAssets {
                 log.debug("displayList is empty");
                 throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
             }
-            if (!dto.export) {
+           // if (!dto.export) {
                 log.debug("choose !dto.export");
                 displayList.addAll(systemTableColumn());
                 log.debug("displayList.addAll end");
-            }
+          //  }
             log.debug("ready to close connection");
             psst.close();
             log.debug("close connection success");

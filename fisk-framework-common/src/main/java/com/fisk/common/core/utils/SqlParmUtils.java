@@ -80,6 +80,23 @@ public class SqlParmUtils {
     }
 
     /**
+     * 拼接sql请求参数条件
+     *
+     * @param list   参数集合
+     * @param symbol 符号
+     * @return String
+     */
+    public static String SqlParams(List<SqlParmDto> list, String symbol) {
+        String sql = "";
+        if (CollectionUtils.isEmpty(list))
+            return sql;
+        for (SqlParmDto item : list) {
+            sql += String.format(" AND %s = %s", item.parmName, symbol + item.parmName);
+        }
+        return sql;
+    }
+
+    /**
      * @return java.lang.String
      * @description 分割字符串为in查询
      * @author dick

@@ -20,7 +20,6 @@ public class ApiConfigDTO
      */
     @ApiModelProperty(value = "api名称")
     @NotNull()
-    @Length(min = 0, max = 50, message = "长度最多50")
     public String apiName;
 
     /**
@@ -28,14 +27,12 @@ public class ApiConfigDTO
      */
     @ApiModelProperty(value = "api描述")
     @NotNull()
-    @Length(min = 0, max = 255, message = "长度最多255")
     public String apiDesc;
 
     /**
      * 表名，带架构名
      */
     @ApiModelProperty(value = "表名，带架构名")
-    @Length(min = 0, max = 50, message = "长度最多255")
     public String tableName;
 
     /**
@@ -54,7 +51,6 @@ public class ApiConfigDTO
      * 表别名
      */
     @ApiModelProperty(value = "表别名")
-    @Length(min = 0, max = 50, message = "长度最多255")
     public String tableNameAlias;
 
     /**
@@ -79,9 +75,13 @@ public class ApiConfigDTO
      * sql语句
      */
     @ApiModelProperty(value = "sql语句")
-    @NotNull()
-    @Length(min = 0, max = 5000, message = "长度最多5000")
     public String createSql;
+
+    /**
+     * sql语句，查询总条数
+     */
+    @ApiModelProperty(value = "sql语句，查询总条数")
+    public String createCountSql;
     
     /**
      * api类型 1 sql、2 自定义sql

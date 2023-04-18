@@ -70,6 +70,11 @@ public class ApiConfigPO extends BasePO
     public String createSql;
 
     /**
+     * sql语句，查询总条数
+     */
+    public String createCountSql;
+
+    /**
      * api地址
      */
     public String apiAddress;

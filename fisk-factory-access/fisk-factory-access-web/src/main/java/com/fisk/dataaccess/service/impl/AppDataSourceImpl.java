@@ -230,15 +230,35 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         List<com.fisk.system.dto.datasource.DataSourceDTO> dataSourceDTOS = new ArrayList<>();
         //调用封装的方法
         List<com.fisk.system.dto.datasource.DataSourceDTO> result = checkConType(data, dataSourceDTOS, driverType);
-
         //判断筛选后的集合是否有内容
         if (CollectionUtils.isEmpty(result)) {
             log.info("平台配置的外部数据源中没有" + driverType + "类型的数据库！");
         }
-        //数据库密码不显示
-        result.forEach(dataSourceDTO -> {
-            dataSourceDTO.setConPassword("********");
-        });
+        //数据库密码不显示    目前需要显示，因为数据接入在引用平台配置的外部数据源时，仍然需要测试连接这一动作，
+//        result.forEach(dataSourceDTO -> {
+//            dataSourceDTO.setConPassword("********");
+//        });
+
+//        //目前这个操作交由前端过滤  如果想要重用下述代码，将当前方法入参多入一个appId 当前应用id即可
+//        //不允许app重复选取同个数据源
+//        LambdaQueryWrapper<AppDataSourcePO> wrapper = new LambdaQueryWrapper<>();
+//        wrapper.eq(AppDataSourcePO::getAppId, appid);
+//        //获取到当前应用已经拥有的所有数据源
+//        List<AppDataSourcePO> appDataSourcePOS = list(wrapper);
+//        if (CollectionUtils.isEmpty(appDataSourcePOS)) {
+//            log.info("当前app下无数据源，可以继续选择");
+//        } else {
+//            log.info("当前app下已经有数据源，筛选ing.....");
+//            //新建集合预装载当前应用下的数据源id集合
+//            List<Integer> sourceIds = new ArrayList<>();
+//            //遍历当前应用下的数据源集合
+//            appDataSourcePOS.forEach(e -> {
+//                //将数据源id插入到我们预先准备的集合中
+//                sourceIds.add(e.systemDataSourceId);
+//            });
+//            //从筛选后的外部数据源集合中再次筛选，过滤掉当前应用已经拥有的数据源
+//            return result.stream().filter(e -> !sourceIds.contains(e.id)).collect(Collectors.toList());
+//        }
         return result;
     }
 
@@ -315,6 +335,29 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
         return data;
+    }
+
+    /**
+     * 获取指定app下的非重复驱动类型
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    public List<AppDataSourcePO> getDataSourceDrivesTypeByAppId(Long id) {
+//        代码层面去重
+//        LambdaQueryWrapper<AppDataSourcePO> wrapper = new LambdaQueryWrapper<>();
+//        wrapper.eq(AppDataSourcePO::getAppId, id);
+//        List<AppDataSourcePO> list = list(wrapper);
+//        // 根据 driveType驱动类型 进行去重
+//        return list.stream()
+//                .collect(Collectors.collectingAndThen(
+//                        Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(AppDataSourcePO::getDriveType))),
+//                        ArrayList::new));
+        //sql去重查询
+        QueryWrapper<AppDataSourcePO> wrapper = new QueryWrapper<>();
+        wrapper.select("Distinct drive_type").lambda().eq(AppDataSourcePO::getAppId, id);
+        return list(wrapper);
     }
 
     public AppDataSourceDTO getDataSourceByAppId(long appId) {

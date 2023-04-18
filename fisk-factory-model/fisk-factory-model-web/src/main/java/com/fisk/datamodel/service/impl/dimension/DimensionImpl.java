@@ -19,6 +19,7 @@ import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.datamodel.dto.DimensionIfEndDTO;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimension.DimensionDateAttributeDTO;
 import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
@@ -112,6 +113,7 @@ public class DimensionImpl
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum addDimension(DimensionDTO dto) {
+        //检测当前要插入的维度表是否已存在于数据库中
         QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(DimensionPO::getDimensionTabName, dto.dimensionTabName);
@@ -119,15 +121,65 @@ public class DimensionImpl
         if (po != null) {
             return ResultEnum.DIMENSION_EXIST;
         }
+
+        //为要插入的维度表设置发布状态
         dto.isPublish = PublicStatusEnum.UN_PUBLIC.getValue();
+
+        //dtp --> po
         DimensionPO model = DimensionMap.INSTANCES.dtoToPo(dto);
+
+        String startTime = dto.startTime.replace("-", "");
+        String endTime = dto.endTime.replace("-", "");
+
         //判断是否为生成时间维度表
         if (dto.timeTable) {
             // 生成查询语句
-            String selSql = "SELECT * FROM " + dto.dimensionTabName;
+            String selSql = "DECLARE @StartDate DATETIME = '" + startTime + "';\n" +
+                    "\n" +
+                    "DECLARE @EndDate DATETIME = '" + endTime + "';\n" +
+                    "\n" +
+                    "\n" +
+                    "\n" +
+                    "WITH DateList AS (\n" +
+                    "\n" +
+                    "  SELECT TOP (DATEDIFF(DAY, @StartDate, @EndDate) + 1)\n" +
+                    "\n" +
+                    "    [Date] = DATEADD(DAY, ROW_NUMBER() OVER(ORDER BY a.object_id) - 1, @StartDate)\n" +
+                    "\n" +
+                    "  FROM sys.all_objects a\n" +
+                    "\n" +
+                    "  CROSS JOIN sys.all_objects b\n" +
+                    "\n" +
+                    ")\n" +
+                    "\n" +
+                    "SELECT\n" +
+                    "\n" +
+                    "  [Date] as FullDateAlternateKey,\n" +
+                    "\n" +
+                    "  DATEPART(WEEKDAY, [Date]) as DayNumberOfWeek,\n" +
+                    "\n" +
+                    "  DATENAME(WEEKDAY, [Date]) COLLATE SQL_Latin1_General_CP1_CS_AS as EnglishDayNameOfWeek,\n" +
+                    "\n" +
+                    "  DAY([Date]) as DayNumberOfMonth,\n" +
+                    "\n" +
+                    "  DATEPART(DAYOFYEAR, [Date]) as DayNumberOfYear,\n" +
+                    "\n" +
+                    "  DATEPART(WEEK, [Date]) as WeekNumberOfYear,\n" +
+                    "\n" +
+                    "  DATENAME(MONTH, [Date]) as EnglishMonthName,\n" +
+                    "\n" +
+                    "  DATEPART(MONTH, [Date]) as MonthNumberOfYear,\n" +
+                    "\n" +
+                    "  DATEPART(QUARTER, [Date]) as CalendarQuarter,\n" +
+                    "\n" +
+                    "  YEAR([Date]) as CalendarYear\n" +
+                    "\n" +
+                    "FROM DateList";
             model.setSqlScript(selSql);
+
             // 时间维度表不再直接修改发布状态
             // model.isPublish = PublicStatusEnum.PUBLIC_SUCCESS.getValue();
+
             // 在ods库下生成数据源表，用于nifi发布流程后查找数据使用
             editDateDimension(dto, dto.dimensionTabName);
         }
@@ -159,17 +211,31 @@ public class DimensionImpl
                     throw new FkException(ResultEnum.DELETE_ERROR);
                 }
             }
-            //获取数据库表名
+            //获取数据库表名   sqlServer   dmp_ods库是否有重复的表名
             ResultSet rs = conn.getMetaData().getTables(null, null, dto.dimensionTabName, null);
-            if( rs.next() ){
+            //如果表名重复，抛出表已存在异常
+            if (rs.next()) {
                 throw new FkException(ResultEnum.TABLE_IS_EXIST);
             }
+
+            //执行建表语句
             int flat = stat.executeUpdate(buildTableSql(dto.dimensionTabName));
-            if (flat>=0) {
-                String strSql = insertTableDataSql(dto.dimensionTabName, dto.startTime, dto.endTime);
+            //如果成功建表
+            if (flat >= 0) {
+                int ifEnd = 701;
+                boolean ifGo = true;
+                String startTime = dto.startTime;
+                while (ifGo) {
+                    DimensionIfEndDTO strsql = insertTableDataSql(dto.dimensionTabName, startTime, dto.endTime, ifEnd);
 //                log.info("sql语句：{}", strSql);
-                stat.addBatch(strSql);
-                stat.executeBatch();
+                    ifEnd = strsql.ifGoOn;
+                    stat.addBatch(strsql.result);
+                    stat.executeBatch();
+                    startTime = strsql.goOnTime;
+                    if (strsql.ifGoOn == 0) {
+                        ifGo = false;
+                    }
+                }
             }
         } catch (Exception e) {
             log.error("editDateDimension ex:", e);
@@ -180,7 +246,7 @@ public class DimensionImpl
         }
     }
 
-    private Connection getConnect(){
+    private Connection getConnect() {
         ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(dateDwSourceId);
         if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
@@ -198,7 +264,9 @@ public class DimensionImpl
      * @return
      */
     public String buildTableSql(String dimensionTabName) {
+        //获取ods数据源配置信息   主要是连接类型
         DataSourceDTO dwSource = dataSourceConfigUtil.getDwSource();
+        //通过连接类型，决定使用oracle或sqlServer还是mysql的创表语句实现类
         IBuildDataModelSqlCommand command = BuildDataModelHelper.getDBCommand(dwSource.conType);
         return command.buildTimeDimensionCreateTable(dimensionTabName);
     }
@@ -211,35 +279,53 @@ public class DimensionImpl
      * @param endTime
      * @return
      */
-    public String insertTableDataSql(String tableName, String startTime, String endTime) {
+    public DimensionIfEndDTO insertTableDataSql(String tableName, String startTime, String endTime, Integer ifEnd) {
         StringBuilder str = new StringBuilder();
+        //使用默认时区和语言环境获得一个日历
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd");
         Date date;
         try {
+            //将页面传过来的开始日期转换为yyyy-MM-dd的格式
             date = sdf.parse(startTime);
         } catch (ParseException e) {
             log.error("insertTableDataSql ex:", e);
-            return "";
+            return null;
         }
+        //将页面传过来的开始时间作为此日历的时间
         calendar.setTime(date);
-        // 设置每一周的第一天是哪一天
+        // 设置每一周的第一天是哪一天 即周一作为每一周的第一天
         calendar.setFirstDayOfWeek(Calendar.MONDAY);
-        calendar.add(Calendar.DAY_OF_YEAR,-1);
-        boolean flat=true;
+        //日期减1
+        calendar.add(Calendar.DAY_OF_YEAR, -1);
+        boolean flat = true;
         String[] monthName = {"January", "February",
                 "March", "April", "May", "June", "July",
                 "August", "September", "October", "November",
                 "December"};
-        int i=0;
-        str.append("insert into "+tableName);
+        int i = 0;
+        String goOnTime = "";
+        //预拼接插入语句
+        str.append("insert into " + tableName);
         while (flat) {
+            //日期加1
             calendar.add(Calendar.DAY_OF_YEAR, 1);
+            //获取此日历当前时间值的Date对象
             Date dt1 = calendar.getTime();
+            //将dt1转为yyyy-MM-dd的格式
             String reStr = sdf.format(dt1);
-            if (endTime.equals(reStr)) {
-                flat = false;
+            goOnTime = reStr;
+            //此判断用于退出循环:退出条件，如果当前要插入的时间和结束日期一致，就认为插入完毕，不再进行循环--插入数据的操作
+            if (endTime.equals(reStr) || ifEnd % 700 == 0) {
+                if (endTime.equals(reStr)) {
+                    flat = false;
+                    ifEnd = -1;
+                } else {
+                    flat = false;
+                    ifEnd = 700;
+                }
+
             }
             //获取星期几
             int dayNumberOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
@@ -248,21 +334,22 @@ public class DimensionImpl
                 dayNumberOfWeek = 7;
             }
             //获取星期名称
-            String englishDayNameOfWeek=getEnglishDayNameOfWeek(dayNumberOfWeek);
+            String englishDayNameOfWeek = getEnglishDayNameOfWeek(dayNumberOfWeek);
             //几号
-            int dayNumberOfMonth=calendar.get(Calendar.DAY_OF_MONTH);
+            int dayNumberOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
             //一年中第几天
-            int dayNumberOfYear=calendar.get(Calendar.DAY_OF_YEAR);
+            int dayNumberOfYear = calendar.get(Calendar.DAY_OF_YEAR);
             //第几周
-            int weekNumberOfYear=calendar.get(Calendar.WEEK_OF_YEAR);
+            int weekNumberOfYear = calendar.get(Calendar.WEEK_OF_YEAR);
             //月份名称
-            String englishMonthName= monthName[calendar.get(Calendar.MONTH)];;
+            String englishMonthName = monthName[calendar.get(Calendar.MONTH)];
+            ;
             //第几月
-            int monthNumberOfYear=calendar.get(Calendar.MONTH) + 1;
+            int monthNumberOfYear = calendar.get(Calendar.MONTH) + 1;
             //季度
-            int calendarQuarter=getCurrentMonth(calendar.get(Calendar.MONTH) + 1);
+            int calendarQuarter = getCurrentMonth(calendar.get(Calendar.MONTH) + 1);
             //季度年
-            int calendarYear=calendar.get(Calendar.YEAR);
+            int calendarYear = calendar.get(Calendar.YEAR);
             //FullDateDay
             String fullDateStr = sdf2.format(dt1);
             // 是否是工作日
@@ -282,53 +369,59 @@ public class DimensionImpl
                         + weekDay + ")"
                 );
             } else {
-                str.append(",('"+reStr+"',"
-                        +dayNumberOfWeek+",'"
-                        +englishDayNameOfWeek+"',"
-                        +dayNumberOfMonth+","
-                        +dayNumberOfYear+","
-                        +weekNumberOfYear+",'"
-                        +englishMonthName+"',"
-                        +monthNumberOfYear+","
-                        +calendarQuarter+","
-                        +calendarYear+",'"
-                        +fullDateStr+"',"
-                        +weekDay+")"
+                str.append(",('" + reStr + "',"
+                        + dayNumberOfWeek + ",'"
+                        + englishDayNameOfWeek + "',"
+                        + dayNumberOfMonth + ","
+                        + dayNumberOfYear + ","
+                        + weekNumberOfYear + ",'"
+                        + englishMonthName + "',"
+                        + monthNumberOfYear + ","
+                        + calendarQuarter + ","
+                        + calendarYear + ",'"
+                        + fullDateStr + "',"
+                        + weekDay + ")"
                 );
             }
-            i+=1;
+            i += 1;
+            ifEnd += 1;
         }
-        return str.toString();
+        DimensionIfEndDTO endDTO = new DimensionIfEndDTO();
+        endDTO.ifGoOn = ifEnd;
+        endDTO.result = String.valueOf(str);
+        endDTO.setGoOnTime(goOnTime);
+        return endDTO;
     }
 
     /**
      * 获取星期名称
+     *
      * @param dayNumberOfWeek
      * @return
      */
     public String getEnglishDayNameOfWeek(int dayNumberOfWeek) {
-        String name="";
+        String name = "";
         switch (dayNumberOfWeek) {
             case 1:
-                name="Monday";
+                name = "Monday";
                 break;
             case 2:
-                name="Tuesday";
+                name = "Tuesday";
                 break;
             case 3:
-                name="Wednesday";
+                name = "Wednesday";
                 break;
             case 4:
-                name="Thursday";
+                name = "Thursday";
                 break;
             case 5:
-                name="Friday";
+                name = "Friday";
                 break;
             case 6:
-                name="Saturday";
+                name = "Saturday";
                 break;
             case 7:
-                name="Sunday";
+                name = "Sunday";
             default:
                 break;
         }
@@ -337,6 +430,7 @@ public class DimensionImpl
 
     /**
      * 获取季度
+     *
      * @param currentMonth
      * @return
      */
@@ -379,7 +473,7 @@ public class DimensionImpl
                 columnDataTypeList = new String[]{"DATE", "INT", "VARCHAR", "INT", "INT", "INT", "VARCHAR", "INT", "INT", "INT", "DATE", "INT"};
                 break;
             case POSTGRESQL:
-                columnDataTypeList = new String[]{"DATE", "INT2", "VARCHAR", "INT2", "INT2", "INT2", "VARCHAR", "INT2", "INT2", "INT2",  "DATE", "INT2"};
+                columnDataTypeList = new String[]{"DATE", "INT2", "VARCHAR", "INT2", "INT2", "INT2", "VARCHAR", "INT2", "INT2", "INT2", "DATE", "INT2"};
                 break;
             case DORIS:
                 break;
@@ -471,14 +565,14 @@ public class DimensionImpl
             //判断维度表是否与事实表有关联
             QueryWrapper<FactAttributePO> queryWrapper1 = new QueryWrapper<>();
             queryWrapper1.lambda().eq(FactAttributePO::getAssociateDimensionId, id);
-            List<FactAttributePO> factAttributePoList=factAttributeMapper.selectList(queryWrapper1);
+            List<FactAttributePO> factAttributePoList = factAttributeMapper.selectList(queryWrapper1);
             if (!CollectionUtils.isEmpty(factAttributePoList)) {
                 return ResultEnum.TABLE_ASSOCIATED;
             }
             //删除维度字段数据
-            QueryWrapper<DimensionAttributePO> attributePoQueryWrapper=new QueryWrapper<>();
-            attributePoQueryWrapper.select("id").lambda().eq(DimensionAttributePO::getDimensionId,id);
-            List<Integer> dimensionAttributeIds=(List)dimensionAttributeMapper.selectObjs(attributePoQueryWrapper);
+            QueryWrapper<DimensionAttributePO> attributePoQueryWrapper = new QueryWrapper<>();
+            attributePoQueryWrapper.select("id").lambda().eq(DimensionAttributePO::getDimensionId, id);
+            List<Integer> dimensionAttributeIds = (List) dimensionAttributeMapper.selectObjs(attributePoQueryWrapper);
             if (!CollectionUtils.isEmpty(dimensionAttributeIds)) {
                 ResultEnum resultEnum = dimensionAttributeImpl.deleteDimensionAttribute(dimensionAttributeIds);
                 if (ResultEnum.SUCCESS != resultEnum) {
@@ -536,45 +630,47 @@ public class DimensionImpl
 
     /**
      * 拼接niFi删除流程
+     *
      * @param businessAreaId
      * @param dimensionId
      * @return
      */
-    public DataModelVO niFiDelProcess(int businessAreaId,int dimensionId) {
-        DataModelVO vo=new DataModelVO();
-        vo.businessId= String.valueOf(businessAreaId);
-        vo.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
-        vo.delBusiness=false;
-        DataModelTableVO tableVO=new DataModelTableVO();
-        tableVO.type= OlapTableEnum.DIMENSION;
-        List<Long> ids=new ArrayList<>();
+    public DataModelVO niFiDelProcess(int businessAreaId, int dimensionId) {
+        DataModelVO vo = new DataModelVO();
+        vo.businessId = String.valueOf(businessAreaId);
+        vo.dataClassifyEnum = DataClassifyEnum.DATAMODELING;
+        vo.delBusiness = false;
+        DataModelTableVO tableVO = new DataModelTableVO();
+        tableVO.type = OlapTableEnum.DIMENSION;
+        List<Long> ids = new ArrayList<>();
         ids.add(Long.valueOf(dimensionId));
-        tableVO.ids=ids;
-        vo.dimensionIdList=tableVO;
+        tableVO.ids = ids;
+        vo.dimensionIdList = tableVO;
         return vo;
     }
 
     /**
      * 拼接删除DW/Doris表
+     *
      * @param dimensionName
      * @return
      */
     public PgsqlDelTableDTO delDwDorisTable(String dimensionName) {
-        PgsqlDelTableDTO dto=new PgsqlDelTableDTO();
-        dto.businessTypeEnum= BusinessTypeEnum.DATAMODEL;
-        dto.delApp=false;
-        List<TableListDTO> tableList=new ArrayList<>();
-        TableListDTO table=new TableListDTO();
-        table.tableName=dimensionName;
+        PgsqlDelTableDTO dto = new PgsqlDelTableDTO();
+        dto.businessTypeEnum = BusinessTypeEnum.DATAMODEL;
+        dto.delApp = false;
+        List<TableListDTO> tableList = new ArrayList<>();
+        TableListDTO table = new TableListDTO();
+        table.tableName = dimensionName;
         tableList.add(table);
-        dto.tableList=tableList;
-        dto.userId=userHelper.getLoginUserInfo().id;
+        dto.tableList = tableList;
+        dto.userId = userHelper.getLoginUserInfo().id;
         return dto;
     }
 
     @Override
     public DimensionDTO getDimension(int id) {
-        DimensionPO po=mapper.selectById(id);
+        DimensionPO po = mapper.selectById(id);
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
@@ -595,13 +691,13 @@ public class DimensionImpl
     }
 
     @Override
-    public List<DimensionMetaDTO>getDimensionNameList(DimensionQueryDTO dto) {
-        QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.orderByDesc("create_time").lambda().eq(DimensionPO::getBusinessId,dto.businessAreaId);
+    public List<DimensionMetaDTO> getDimensionNameList(DimensionQueryDTO dto) {
+        QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderByDesc("create_time").lambda().eq(DimensionPO::getBusinessId, dto.businessAreaId);
         if (dto.dimensionId != 0) {
             queryWrapper.lambda().ne(DimensionPO::getId, dto.dimensionId);
         }
-        List<DimensionPO> list=mapper.selectList(queryWrapper);
+        List<DimensionPO> list = mapper.selectList(queryWrapper);
         return DimensionMap.INSTANCES.poToListNameDto(list);
     }
 
@@ -636,45 +732,45 @@ public class DimensionImpl
             }
         }
 
-        DimensionPO dimensionPo=mapper.selectById(dto.dimensionId);
+        DimensionPO dimensionPo = mapper.selectById(dto.dimensionId);
         if (dimensionPo == null) {
             return ResultEnum.SUCCESS;
         }
-        DimensionAttributePO dimensionAttributePo=dimensionAttributeMapper.selectById(dto.dimensionAttributeId);
+        DimensionAttributePO dimensionAttributePo = dimensionAttributeMapper.selectById(dto.dimensionAttributeId);
         if (dimensionAttributePo == null) {
             return ResultEnum.SUCCESS;
         }
-        dimensionPo.isDimDateTbl=true;
+        dimensionPo.isDimDateTbl = true;
         if (mapper.updateById(dimensionPo) == 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
-        dimensionAttributePo.isDimDateField=true;
-        return dimensionAttributeMapper.updateById(dimensionAttributePo)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        dimensionAttributePo.isDimDateField = true;
+        return dimensionAttributeMapper.updateById(dimensionAttributePo) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
     public DimensionDateAttributeDTO getDimensionDateAttribute(int businessId) {
-        DimensionDateAttributeDTO data=new DimensionDateAttributeDTO();
+        DimensionDateAttributeDTO data = new DimensionDateAttributeDTO();
         //查询设置时间维度表
-        QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
+        QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(DimensionPO::getBusinessId,businessId)
-                .eq(DimensionPO::getIsDimDateTbl,true);
-        List<DimensionPO> dimensionPoList=mapper.selectList(queryWrapper);
+                .eq(DimensionPO::getBusinessId, businessId)
+                .eq(DimensionPO::getIsDimDateTbl, true);
+        List<DimensionPO> dimensionPoList = mapper.selectList(queryWrapper);
         if (dimensionPoList == null || dimensionPoList.size() == 0) {
             return data;
         }
-        data.dimensionId=dimensionPoList.get(0).id;
+        data.dimensionId = dimensionPoList.get(0).id;
         //查询设置时间维度表字段
-        QueryWrapper<DimensionAttributePO> queryWrapper1=new QueryWrapper<>();
+        QueryWrapper<DimensionAttributePO> queryWrapper1 = new QueryWrapper<>();
         queryWrapper1.lambda()
-                .eq(DimensionAttributePO::getDimensionId,data.dimensionId)
-                .eq(DimensionAttributePO::getIsDimDateField,true);
-        List<DimensionAttributePO> dimensionAttributePoList=dimensionAttributeMapper.selectList(queryWrapper1);
+                .eq(DimensionAttributePO::getDimensionId, data.dimensionId)
+                .eq(DimensionAttributePO::getIsDimDateField, true);
+        List<DimensionAttributePO> dimensionAttributePoList = dimensionAttributeMapper.selectList(queryWrapper1);
         if (dimensionAttributePoList == null || dimensionAttributePoList.size() == 0) {
             return data;
         }
-        data.dimensionAttributeId=dimensionAttributePoList.get(0).id;
+        data.dimensionAttributeId = dimensionAttributePoList.get(0).id;
         return data;
     }
 

@@ -13,6 +13,7 @@
         tb_parm_config
         WHERE
         del_flag = 1
+        AND parm_name NOT IN ('current','size')
         <if test="null != apiIds and apiIds.size > 0">
             AND api_id IN
             <foreach item="item" index="index" collection="apiIds" open="(" separator="," close=")">

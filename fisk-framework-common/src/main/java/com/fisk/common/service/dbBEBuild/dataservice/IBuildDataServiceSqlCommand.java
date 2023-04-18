@@ -86,4 +86,6 @@ public interface IBuildDataServiceSqlCommand {
      * @return sql
      */
     String buildSchemaConStr(String schema, String conStr);
+
+    String buildPagingSql(String tableName, String fields, String orderBy, Integer pageIndex, Integer pageSize,String where);
 }

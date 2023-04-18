@@ -15,6 +15,7 @@
         table_type,
         table_business_type,
         create_sql,
+        create_count_sql,
         api.create_time,
         api.create_user
         -- userinfo.user_account as create_user
@@ -24,7 +25,8 @@
         where api.del_flag=1
         <if test="query.keyword !=null and query.keyword.length()>0 ">
             and (api_name like concat('%', #{query.keyword}, '%')
-            or api_desc like concat('%', #{query.keyword}, '%'))
+            or api_desc like concat('%', #{query.keyword}, '%')
+            or api_code like concat('%', #{query.keyword}, '%'))
         </if>
     </select>
     <select id="getList" resultType="com.fisk.dataservice.entity.ApiConfigPO">
@@ -39,6 +41,7 @@
         table_type,
         table_business_type,
         create_sql,
+        create_count_sql,
         api.create_time,
         -- userinfo.user_account AS create_user
         create_user
@@ -63,6 +66,7 @@
         api.api_type,
         api.datasource_id,
         api.create_sql
+        api.create_count_sql,
         FROM
         tb_api_config api
         LEFT JOIN tb_app_service_config appapi ON api.id = appapi.service_id

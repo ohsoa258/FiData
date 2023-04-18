@@ -183,6 +183,7 @@ public enum ResultEnum {
     SFTP_RSA_IS_NULL(5080, "SFTP密钥文件路径不能为空"),
     SFTP_ACCOUNT_IS_NULL(5081, "SFTP账号密码不能为空"),
     SFTP_DIR_PATH_ERROR(5082, "SFTP目录格式错误"),
+    DATASOURCE_TYPE_ERROR(5083,"已选择的数据源类型冲突"),
 
 
     /**
@@ -283,6 +284,8 @@ public enum ResultEnum {
     DS_DATA_STATUS_HAS_CHANGED(10033, "数据状态已变更，请刷新页面后再试"),
     DS_DATA_SOURCE_REFRESH_FAILED(10034,"数据源刷新失败"),
     DS_DATA_SOURCE_APPLIED(10035,"数据源已应用，请先删除该数据源下的表服务"),
+    DS_DATA_PAGING_PARAMETERS_NOT_SET(10036,"未设置分页参数"),
+    API_NOT_CONFIGURED_FOR_OUTPUT_CONFIGURATION(10037, "API未配置输出配置，请检查输出配置（SQL）"),
 
     /**
      * 数据质量
