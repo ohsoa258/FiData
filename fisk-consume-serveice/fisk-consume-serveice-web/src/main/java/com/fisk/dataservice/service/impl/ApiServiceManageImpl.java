@@ -173,9 +173,6 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             if (StringUtils.isEmpty(apiInfo.getCreateSql())) {
                 return ResultEntityBuild.buildData(ResultEnum.API_NOT_CONFIGURED_FOR_OUTPUT_CONFIGURATION, responseVO);
             }
-//            if (StringUtils.isEmpty(apiInfo.getCreateCountSql())) {
-//                apiInfo.setCreateCountSql(apiInfo.getCreateSql());
-//            }
 
             // 第五步：验证当前请求的API是否具备访问权限
             AppServiceConfigPO subscribeBy = appApiMapper.getSubscribeBy(Math.toIntExact(appInfo.id), Math.toIntExact(apiInfo.id));
@@ -197,24 +194,20 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             }
 
             // 第七步：获取请求参数中的分页信息
-            Integer current = null;
-            Integer size = null;
-//            if (CollectionUtils.isNotEmpty(dto.getParmList())) {
-//                page = RegexUtils.isNumeric(dto.getParmList().get("fi_Page"));
-//                size = RegexUtils.isNumeric(dto.getParmList().get("fi_Size"));
-//            }
+            Integer current = dto.getCurrent();
+            Integer size = dto.getSize();
             if (current == null && size == null) {
-                current = dto.getCurrent();
-                size = dto.getSize();
-            }
-            if (current == null || current == 0 || size == null || size == 0) {
                 // 未设置分页参数，默认查询第一页，查询数字的最大值
                 current = 1;
-                size = 0;//Integer.MAX_VALUE;
-                //return ResultEntityBuild.buildData(ResultEnum.DS_DATA_PAGING_PARAMETERS_NOT_SET, responseVO);
+                size = Integer.MAX_VALUE;
             }
             log.info("数据服务【getData】分页参数【current】：" + current);
             log.info("数据服务【getData】分页参数【size】：" + size);
+            if (current == null || current <= 0) {
+                return ResultEntityBuild.buildData(ResultEnum.DS_DATA_PAGE_SHOULD_BE_GREATER_THAN_0, responseVO);
+            } else if (size == null || size <= 0) {
+                return ResultEntityBuild.buildData(ResultEnum.DS_DATA_SIZE_SHOULD_BE_GREATER_THAN_0, responseVO);
+            }
 
             // 第八步：查询参数信息，如果参数设置为内置参数，则以内置参数为准，反之则以传递的参数为准，如果没设置内置参数&参数列表中未传递，默认为空//则读取后台配置的参数值
             List<ParmConfigPO> paramList = apiParmMapper.getListByApiId(Math.toIntExact(apiInfo.getId()));
@@ -313,10 +306,12 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 countRs.close();
             }
 
-            responseVO.setCurrent(current);
-            responseVO.setSize(size);
+            if (dto.getCurrent() != null && dto.getSize() != null) {
+                responseVO.setCurrent(current);
+                responseVO.setSize(size);
+                responseVO.setPage((int) Math.ceil(1.0 * totalCount / size));
+            }
             responseVO.setTotal(totalCount);
-            responseVO.setPage((int) Math.ceil(1.0 * totalCount / size));
             responseVO.setDataArray(dataArray);
             // 数组类型资源释放，将其设置为null
             dataArray = null;
