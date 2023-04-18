@@ -196,14 +196,44 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_DATASOURCE_EXISTS, responseVO);
             }
 
-            // 第七步：查询参数信息，如果参数设置为内置参数，则以内置参数为准，反之则以传递的参数为准，如果没设置内置参数&参数列表中未传递，默认为空//则读取后台配置的参数值
+            // 第七步：获取请求参数中的分页信息
+            Integer current = null;
+            Integer size = null;
+//            if (CollectionUtils.isNotEmpty(dto.getParmList())) {
+//                page = RegexUtils.isNumeric(dto.getParmList().get("fi_Page"));
+//                size = RegexUtils.isNumeric(dto.getParmList().get("fi_Size"));
+//            }
+            if (current == null && size == null) {
+                current = dto.getCurrent();
+                size = dto.getSize();
+            }
+            if (current == null || current == 0 || size == null || size == 0) {
+                // 未设置分页参数，默认查询第一页，查询数字的最大值
+                current = 1;
+                size = 0;//Integer.MAX_VALUE;
+                //return ResultEntityBuild.buildData(ResultEnum.DS_DATA_PAGING_PARAMETERS_NOT_SET, responseVO);
+            }
+            log.info("数据服务【getData】分页参数【current】：" + current);
+            log.info("数据服务【getData】分页参数【size】：" + size);
+
+            // 第八步：查询参数信息，如果参数设置为内置参数，则以内置参数为准，反之则以传递的参数为准，如果没设置内置参数&参数列表中未传递，默认为空//则读取后台配置的参数值
             List<ParmConfigPO> paramList = apiParmMapper.getListByApiId(Math.toIntExact(apiInfo.getId()));
             if (CollectionUtils.isNotEmpty(paramList)) {
-                if (!CollectionUtils.isNotEmpty(dto.parmList)) {
+                if (!CollectionUtils.isNotEmpty(dto.getParmList())) {
                     dto.parmList = new HashMap<>();
                 }
+
+                if (apiInfo.getApiType() == ApiTypeEnum.SQL.getValue()) {
+                    // 移除分页参数
+                    paramList = paramList.stream().filter(t -> !t.getParmName().equals("current") && !t.getParmName().equals("size")).collect(Collectors.toList());
+                } else if (apiInfo.getApiType() == ApiTypeEnum.CUSTOM_SQL.getValue()) {
+                    // 追加分页参数到请求参数，用于赋值给PO中的分页参数
+                    dto.parmList.put("current", current);
+                    dto.parmList.put("size", size);
+                }
+
                 paramList.forEach(e -> {
-                    Map.Entry<String, Object> stringObjectEntry = dto.parmList.entrySet().stream().filter(item -> item.getKey().equals(e.getParmName())).findFirst().orElse(null);
+                    Map.Entry<String, Object> stringObjectEntry = dto.getParmList().entrySet().stream().filter(item -> item.getKey().equals(e.getParmName())).findFirst().orElse(null);
                     if (stringObjectEntry != null) {
                         e.setParmValue(String.valueOf(stringObjectEntry.getValue()));
                     } else {
@@ -225,36 +255,11 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 }
             }
 
-            // 第八步：获取请求参数中的分页信息
-            Integer current = null;
-            Integer size = null;
-//            if (CollectionUtils.isNotEmpty(dto.getParmList())) {
-//                page = RegexUtils.isNumeric(dto.getParmList().get("fi_Page"));
-//                size = RegexUtils.isNumeric(dto.getParmList().get("fi_Size"));
-//            }
-            if (current == null && size == null) {
-                current = dto.getCurrent();
-                size = dto.getSize();
-            }
-            if (current == null || current == 0 || size == null || size == 0) {
-                // 未设置分页参数，默认查询第一页，查询数字的最大值
-                current = 1;
-                size = Integer.MAX_VALUE;
-                //return ResultEntityBuild.buildData(ResultEnum.DS_DATA_PAGING_PARAMETERS_NOT_SET, responseVO);
-            }
-            log.info("数据服务【getData】分页参数【current】：" + current);
-            log.info("数据服务【getData】分页参数【size】：" + size);
-
             // 第九步：拼接最终执行的SQL
             String sql = "";
             String countSql = "";
             IBuildDataServiceSqlCommand dbCommand = BuildDataServiceHelper.getDBCommand(dataSourceConVO.getConType());
             if (apiInfo.getApiType() == ApiTypeEnum.SQL.getValue()) {
-//                 移除请求参数中的分页条件
-//                if (CollectionUtils.isNotEmpty(dto.getParmList())) {
-//                    dto.getParmList().remove("fi_Page");
-//                    dto.getParmList().remove("fi_Size");
-//                }
                 // 获取分页条件
                 String fields = apiInfo.getCreateSql();
                 String orderBy = fields.split(",")[0];
@@ -298,7 +303,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             rs.close();
 
             int totalCount = 0;
-            if (StringUtils.isNotEmpty(countSql)){
+            if (StringUtils.isNotEmpty(countSql)) {
                 ResultSet countRs = st.executeQuery(countSql);
                 if (countRs.next()) {
                     Object count = countRs.getObject(1);
