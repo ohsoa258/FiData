@@ -43,11 +43,9 @@
         create_sql,
         create_count_sql,
         api.create_time,
-        -- userinfo.user_account AS create_user
         create_user
         FROM
         tb_api_config AS api
-        -- LEFT JOIN dmp_system_db.tb_user_info AS userinfo ON api.create_user = userinfo.id
         WHERE
         api.del_flag = 1
         <if test="keyword !=null and keyword.length()>0 ">
@@ -66,7 +64,7 @@
         api.api_type,
         api.datasource_id,
         api.create_sql
-        api.create_count_sql,
+        api.create_count_sql
         FROM
         tb_api_config api
         LEFT JOIN tb_app_service_config appapi ON api.id = appapi.service_id
