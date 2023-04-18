@@ -139,7 +139,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
             "fidata_create_time," +
             "fidata_create_user," +
             "fidata_update_time," +
-            "fidata_update_user";
+            "fidata_update_user," +
+            "fidata_lock_tag";
 
     @Override
     public List<ModelDropDownVO> getModelEntityVersionStruct() {
@@ -764,7 +765,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         //获取mdm表code数据列表
         Map<String, String> codeMap = getCodeAndLockList(TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), po.getName()), codeColumn.get().getColumnName(), dto.getVersionId());
         if (codeMap.size()>0){
-            List<Object> collect = codeMap.values().stream().filter(i -> i != null).collect(Collectors.toList());
+            List<Object> collect = codeMap.values().stream().filter(Objects::nonNull).collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(collect)){
                 throw new FkException(ResultEnum.PROCESS_APPLY_EXIST);
             }
@@ -1136,7 +1137,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             StringBuilder queryConditions = new StringBuilder();
             queryConditions.append(" and fidata_id ='")
                     .append(dto.getFidataId())
-                    .append("'");
+                    .append("' and fidata_lock_tag ='1'");
             IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
             String sql = buildSqlCommand.buildQueryData(mdmTableName, queryConditions.toString());
             Connection connection = getConnection();
@@ -1151,18 +1152,20 @@ public class MasterDataServiceImpl implements IMasterDataService {
                         .append(dto.getFidataId()).append("'");
                 PreparedStatement statement = null;
                 try {
-                    statement = connection.prepareStatement(update.toString());
+                    statement = getConnection().prepareStatement(update.toString());
                     statement.execute();
                 } catch (SQLException ex) {
                     // 回滚事务
                     rollbackConnection(connection);
                     // 记录日志
-                    log.error(ResultEnum.FACT_ATTRIBUTE_FAILD.getMsg() + "【SQL:】" + sql + "【原因:】" + ex.getMessage());
+                    log.error(ResultEnum.FACT_ATTRIBUTE_FAILD.getMsg() + "【SQL:】" + update + "【原因:】" + ex.getMessage());
                     throw new FkException(ResultEnum.FACT_ATTRIBUTE_FAILD);
+                }finally {
+                    AbstractDbHelper.closeConnection(connection);
+                    AbstractDbHelper.closeStatement(statement);
                 }
             }
         }
-        //todo 添加审批工单和写入数据到stg应该是同一事务内 暂时没有处理
         int flat = templateDataSubmitStg(members, tableName, batchNumber, dto.getVersionId(),
                 userId, ImportTypeEnum.MANUALLY_ENTER, delete);
         if (flat == 0) {

@@ -14,7 +14,6 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.common.service.mdmBEBuild.BuildFactoryHelper;
 import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
-import com.fisk.mdm.dto.masterdata.MasterDataDTO;
 import com.fisk.mdm.dto.process.*;
 import com.fisk.mdm.entity.*;
 import com.fisk.mdm.enums.ApprovalApplyStateEnum;
@@ -39,6 +38,7 @@ import com.fisk.system.vo.roleinfo.UserInfoVo;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.BuildBatchApprovalDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,15 +47,10 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.rollbackConnection;
-
 /**
  * @Author: wangjian
  * @Date: 2023-03-30
@@ -313,7 +308,7 @@ public class ProcessServiceImpl implements ProcessService {
      * 获取我的待审核流程
      */
     @Override
-    public Page<ProcessApplyVO> getMyProcessApply(PendingApprovalDTO dto) {
+    public Page<ProcessApplyVO> getMyProcessApply(ProcessApplyDTO dto) {
         return processApplyService.getMyProcessApply(dto);
     }
 
@@ -326,10 +321,17 @@ public class ProcessServiceImpl implements ProcessService {
     }
 
     /**
+     * 获取所有审批列表
+     */
+    @Override
+    public Page<AllApprovalVO> getAllApproval(AllApprovalDTO dto) {
+        return processApplyService.getAllApproval(dto);
+    }
+    /**
      * 获取已处理审批列表
      */
     @Override
-    public Page<EndingApprovalVO> getOverApproval(PendingApprovalDTO dto) {
+    public Page<EndingApprovalVO> getOverApproval(EndingApprovalDTO dto) {
         return processApplyService.getOverApproval(dto);
     }
 
@@ -343,30 +345,17 @@ public class ProcessServiceImpl implements ProcessService {
         List<ProcessApplyNotesPO> list = processApplyNotesService.list(notesWrapper);
         List<ProcessNodePO> processNodes = processNodeService.getProcessNodes(processApplyPo.getProcessId())
                 .stream().sorted(Comparator.comparing(ProcessNodePO::getLevels)).collect(Collectors.toList());
+        List<ProcessNodePO> posNode = processNodes.stream().filter(i -> i.getLevels() > 0).collect(Collectors.toList());
         List<Long> userIds = new ArrayList<>();
         userIds.add(Long.parseLong(processApplyPo.getApplicant()));
         String applicant = null;
         if (list.size() > 0) {
             userIds = list.stream().map(i -> Long.parseLong(i.getCreateUser())).collect(Collectors.toList());
-            int index = list.size() - 1;
-            List<ProcessNodePO> pos = processNodes.stream()
-                    .filter(i -> i.getLevels() > index).collect(Collectors.toList());
-            if (pos.size() == 0) {
-                Map<Integer, String> userMap = getUserMap(userIds);
-                for (ProcessApplyNotesPO processApplyNotesPo : list) {
-                    PersonVO personVO = new PersonVO();
-                    personVO.setApproval(userMap.get(Integer.valueOf(processApplyNotesPo.getCreateUser())));
-                    personVO.setDescription(processApplyNotesPo.getRemark());
-                    personVO.setState(processApplyNotesPo.getState().getName());
-                    ProcessNodePO processNodePO = pos.get(index);
-                    personVO.setLevels(processNodePO.getLevels());
-                    personVO.setProcessNodeName(processNodePO.getName());
-                    persons.add(personVO);
-                }
-                applicant = userMap.get(Integer.valueOf(processApplyPo.getApplicant()));
+            if (posNode.size() == 0) {
+               throw new FkException(ResultEnum.SAVE_PROCESS_NODE_ERROR);
             } else {
-                Map<Integer, ProcessNodePO> collect = pos.stream().collect(Collectors.toMap(i -> (int)i.getId(), i -> i));
-                List<Integer> nodeIds = pos.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
+                Map<Integer, ProcessNodePO> posNodeMap = posNode.stream().collect(Collectors.toMap(i -> (int)i.getId(), i -> i));
+                List<Integer> nodeIds = posNode.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
                 List<ProcessPersonPO> processPersons = processPersonService.getProcessPersons(nodeIds);
                 Map<Integer, List<ProcessPersonPO>> personMap = processPersons.stream()
                         .collect(Collectors.groupingBy(ProcessPersonPO::getRocessNodeId));
@@ -387,15 +376,17 @@ public class ProcessServiceImpl implements ProcessService {
                     personVO.setApproval(userMap.get(Integer.valueOf(processApplyNotesPO.getCreateUser())));
                     personVO.setDescription(processApplyNotesPO.getRemark());
                     personVO.setState(processApplyNotesPO.getState().getName());
-                    ProcessNodePO processNodePO = collect.get(processApplyNotesPO.getProcessnodeId());
+                    ProcessNodePO processNodePO = posNodeMap.get(processApplyNotesPO.getProcessnodeId());
                     personVO.setLevels(processNodePO.getLevels());
                     personVO.setProcessNodeName(processNodePO.getName());
                     persons.add(personVO);
+                    posNodeMap.remove(processApplyNotesPO.getProcessnodeId());
                 }
-                applicant = getApprovalName(processApplyPo, persons, processNodes, personMap, userMap, roleMap);
+                posNode = new ArrayList<>(posNodeMap.values());
+                applicant = getApprovalName(processApplyPo, persons, posNode, personMap, userMap, roleMap);
             }
         } else {
-            List<Integer> nodeIds = processNodes.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
+            List<Integer> nodeIds = posNode.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
             List<ProcessPersonPO> processPersons = processPersonService.getProcessPersons(nodeIds);
             Map<Integer, List<ProcessPersonPO>> personMap = processPersons.stream()
                     .collect(Collectors.groupingBy(ProcessPersonPO::getRocessNodeId));
@@ -411,9 +402,11 @@ public class ProcessServiceImpl implements ProcessService {
             //远程调用接口获取角色及用户信息
             Map<Integer, String> userMap = getUserMap(userIds);
             Map<Integer, String> roleMap = getRoleMap(roleIds);
-            applicant = getApprovalName(processApplyPo, persons, processNodes, personMap, userMap, roleMap);
+            applicant = getApprovalName(processApplyPo, persons, posNode, personMap, userMap, roleMap);
         }
         ApprovalDetailVO approvalDetailVO = new ApprovalDetailVO();
+        approvalDetailVO.setApplyId((int)processApplyPo.getId());
+        approvalDetailVO.setApprovalCode(processApplyPo.getApprovalCode());
         approvalDetailVO.setApplicant(applicant);
         approvalDetailVO.setDescription(processApplyPo.getDescription());
         approvalDetailVO.setOperationType(processApplyPo.getOperationType().getName());
@@ -475,6 +468,9 @@ public class ProcessServiceImpl implements ProcessService {
         }
         Map<Integer, List<ProcessPersonPO>> processPersonMap =
                 processPersons.stream().collect(Collectors.groupingBy(ProcessPersonPO::getRocessNodeId));
+        if (dto.getAdminMark()){
+            return saveNoteByAll(dto, processInfo, processApplyPo, processNodes, processPersonMap);
+        }
         //判断自动审批规则
         switch (processInfo.getAutoapproal()) {
             case ONLY_ONE_RULE:
@@ -614,7 +610,8 @@ public class ProcessServiceImpl implements ProcessService {
                     int i = processNodePo.getLevels() + 1;
                     ProcessNodePO processNodePoNext = processNodes.get(i);
                     //递归处理仅需首次审批
-                    return saveOnlyOneApply(processInfo,processNodePoNext, processApplyPo, loginUserInfo, processNodes, processPersonMap);
+                    ProcessServiceImpl processService = (ProcessServiceImpl) AopContext.currentProxy();
+                    return processService.saveOnlyOneApply(processInfo,processNodePoNext, processApplyPo, loginUserInfo, processNodes, processPersonMap);
                 }
                 //审核拒绝
             } else if (dto.getFlag() == 2) {
@@ -685,7 +682,8 @@ public class ProcessServiceImpl implements ProcessService {
                     ProcessNodePO processNodePoNext = processNodes.get(i);
                     try {
                         //递归处理自动同意
-                        return saveApply(processInfo,processNodePoNext, processApplyPo, loginUserInfo, processNodes, processPersonMap);
+                        ProcessServiceImpl processService = (ProcessServiceImpl) AopContext.currentProxy();
+                        return processService.saveApply(processInfo,processNodePoNext, processApplyPo, loginUserInfo, processNodes, processPersonMap);
                     } catch (Exception e) {
                         return ResultEnum.ERROR;
                     }
@@ -718,8 +716,19 @@ public class ProcessServiceImpl implements ProcessService {
         UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         List<ProcessPersonPO> processPersonPos = processPersonMap.get((int) processApplyPo.getApproverNode());
         List<Long> userIds = getUserIds(processPersonPos);
+        if (dto.getAdminMark()){
+            ResultEntity<Boolean> processQuery = userClient.verifyPageByUserId(loginUserInfo.id.intValue(), "processQuery");
+            if (processQuery.code == ResultEnum.SUCCESS.getCode() && processQuery.getData() != null) {
+                if (!processQuery.getData()){
+                    return ResultEnum.ACCOUNT_CANNOT_OPERATION_API;
+                }
+            } else {
+                log.error("远程调用失败，错误code: " + processQuery.getCode() + ",错误信息: " + processQuery.getMsg());
+                throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+            }
+        }
         //校验是否可以审批
-        if (userIds.contains((long) loginUserInfo.id)) {
+        if (userIds.contains(loginUserInfo.id)) {
             //保存
             ProcessApplyNotesPO processApplyNotesPo = new ProcessApplyNotesPO();
             processApplyNotesPo.setState(typeConversionUtils.intToApprovalNodeStateEnum(dto.getFlag()));

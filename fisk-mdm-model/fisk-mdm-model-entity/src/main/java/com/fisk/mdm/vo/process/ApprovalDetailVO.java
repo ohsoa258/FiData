@@ -14,19 +14,26 @@ import java.util.List;
  */
 @Data
 public class ApprovalDetailVO {
+
     @ApiModelProperty(value = "流程工单ID")
     private Integer applyId;
+
     @ApiModelProperty(value = "描述")
     private String description;
+
     @ApiModelProperty(value = "审批编号")
     private String approvalCode;
+
     @ApiModelProperty(value = "申请人")
     private String applicant;
+
     @ApiModelProperty(value = "操作类型")
     private String operationType;
+
     @ApiModelProperty(value = "申请时间")
     @JsonFormat(shape =JsonFormat.Shape.STRING,pattern ="yyyy-MM-dd HH:mm:ss",timezone ="GMT+8")
     private LocalDateTime applicationTime;
+
     @ApiModelProperty(value = "节点")
     private List<PersonVO> persons;
 }

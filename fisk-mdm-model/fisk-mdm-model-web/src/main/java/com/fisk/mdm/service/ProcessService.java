@@ -3,11 +3,7 @@ package com.fisk.mdm.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.mdm.dto.masterdata.MasterDataDTO;
-import com.fisk.mdm.dto.process.ApprovalDTO;
-import com.fisk.mdm.dto.process.BatchApprovalDTO;
-import com.fisk.mdm.dto.process.PendingApprovalDTO;
-import com.fisk.mdm.dto.process.ProcessInfoDTO;
+import com.fisk.mdm.dto.process.*;
 import com.fisk.mdm.enums.EventTypeEnum;
 import com.fisk.mdm.vo.process.*;
 
@@ -57,7 +53,7 @@ public interface ProcessService {
      *
      * @return
      */
-    Page<ProcessApplyVO> getMyProcessApply(PendingApprovalDTO dto);
+    Page<ProcessApplyVO> getMyProcessApply(ProcessApplyDTO dto);
 
     /**
      * 获取待处理审批列表
@@ -65,13 +61,19 @@ public interface ProcessService {
      * @return
      */
     Page<PendingApprovalVO> getPendingApproval(PendingApprovalDTO dto);
+    /**
+     * 获取所有审批列表
+     * @param dto
+     * @return
+     */
+    Page<AllApprovalVO> getAllApproval(AllApprovalDTO dto);
 
     /**
      * 获取已处理审批列表
      * @param dto
      * @return
      */
-    Page<EndingApprovalVO> getOverApproval(PendingApprovalDTO dto);
+    Page<EndingApprovalVO> getOverApproval(EndingApprovalDTO dto);
 
     /**
      * 获取审批流程详情

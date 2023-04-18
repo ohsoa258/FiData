@@ -12,7 +12,7 @@ import java.util.List;
  * @date 2022/04/28
  */
 @Data
-public class AttributeColumnVO implements Serializable {
+public class  AttributeColumnVO implements Serializable {
 
     /**
      * 实体id

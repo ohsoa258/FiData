@@ -42,4 +42,16 @@
         from tb_user_info a
         where a.del_flag = 1 and a.username like concat('%', #{userName}, '%')
     </select>
+    <select id="verifyPageByUserId" resultType="Integer">
+        SELECT
+            count( 1 )
+        FROM
+            ( SELECT a.role_id FROM tb_role_user_assignment a WHERE a.user_id = #{userId} AND a.del_flag = 1 ) AS a
+                LEFT JOIN tb_role_service_assignment b ON a.role_id = b.role_id
+                AND b.del_flag = 1
+                LEFT JOIN tb_service_registry c ON b.service_id = c.id
+        WHERE
+            c.serve_url = #{pageUrl}
+          AND c.del_flag = 1
+    </select>
 </mapper>

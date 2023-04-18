@@ -478,4 +478,9 @@ public class UserServiceImpl implements IUserService {
         }
         return userId;
     }
+    @Override
+    public Boolean verifyPageByUserId(int userId,String pageUrl) {
+        int count = mapper.verifyPageByUserId(userId, pageUrl);
+        return count > 0;
+    }
 }

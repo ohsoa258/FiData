@@ -203,4 +203,7 @@ public interface UserClient {
      */
     @GetMapping("/datasource/getById/{datasourceId}")
     ResultEntity<DataSourceDTO> getById(@RequestParam("datasourceId") int datasourceId);
+
+    @GetMapping("/info/verifyPageByUserId")
+    ResultEntity<Boolean> verifyPageByUserId(@RequestParam("userId") int userId,@RequestParam("pageUrl")String pageUrl);
 }

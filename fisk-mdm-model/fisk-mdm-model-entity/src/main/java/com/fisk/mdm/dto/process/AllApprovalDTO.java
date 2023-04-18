@@ -2,7 +2,7 @@ package com.fisk.mdm.dto.process;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fisk.mdm.vo.process.PendingApprovalVO;
+import com.fisk.mdm.vo.process.AllApprovalVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,13 +17,13 @@ import java.time.LocalDateTime;
  */
 @Data
 @NoArgsConstructor
-public class PendingApprovalDTO {
+public class AllApprovalDTO {
 
     @ApiModelProperty(value = "申请人/描述")
     private String keyword;
 
-    @ApiModelProperty(value = "操作类型")
-    private String operationType;
+    @ApiModelProperty(value = "工单状态")
+    private String opreationstate;
 
     @ApiModelProperty(value = "开始时间")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -36,5 +36,5 @@ public class PendingApprovalDTO {
     private LocalDateTime endTime;
 
     @ApiModelProperty(value = "返回view")
-    private Page<PendingApprovalVO> page;
+    private Page<AllApprovalVO> page;
 }

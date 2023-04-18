@@ -6,10 +6,14 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.mdm.dto.process.AllApprovalDTO;
+import com.fisk.mdm.dto.process.EndingApprovalDTO;
 import com.fisk.mdm.dto.process.PendingApprovalDTO;
+import com.fisk.mdm.dto.process.ProcessApplyDTO;
 import com.fisk.mdm.entity.ProcessApplyPO;
 import com.fisk.mdm.mapper.ProcessApplyMapper;
 import com.fisk.mdm.service.IProcessApplyService;
+import com.fisk.mdm.vo.process.AllApprovalVO;
 import com.fisk.mdm.vo.process.EndingApprovalVO;
 import com.fisk.mdm.vo.process.PendingApprovalVO;
 import com.fisk.mdm.vo.process.ProcessApplyVO;
@@ -40,7 +44,7 @@ public class ProcessApplyServiceImpl extends ServiceImpl<ProcessApplyMapper, Pro
     UserClient userClient;
 
     @Override
-    public Page<ProcessApplyVO> getMyProcessApply(PendingApprovalDTO dto) {
+    public Page<ProcessApplyVO> getMyProcessApply(ProcessApplyDTO dto) {
         return baseMapper.getMyProcessApply(dto.getPage(),userHelper.getLoginUserInfo().id,dto);
     }
 
@@ -90,7 +94,53 @@ public class ProcessApplyServiceImpl extends ServiceImpl<ProcessApplyMapper, Pro
     }
 
     @Override
-    public Page<EndingApprovalVO> getOverApproval(PendingApprovalDTO dto) {
+    public Page<AllApprovalVO> getAllApproval(AllApprovalDTO dto) {
+
+        Long id = userHelper.getLoginUserInfo().id;
+        ResultEntity<List<RoleInfoDTO>> res = userClient.getRolebyUserId(id.intValue());
+        List<Integer> queryUserId = new ArrayList<>();
+        if (!StringUtils.isEmpty(dto.getKeyword())){
+            ResultEntity<List<Integer>> userIdByUserName = userClient.getUserIdByUserName(dto.getKeyword());
+            if (userIdByUserName.code == ResultEnum.SUCCESS.getCode()) {
+                queryUserId = userIdByUserName.getData();
+            }else {
+                log.error("远程调用失败，错误code: " + userIdByUserName.getCode() + ",错误信息: " + userIdByUserName.getMsg());
+                throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+            }
+        }
+        if (res.code == ResultEnum.SUCCESS.getCode()) {
+            List<Long> roleIds = res.getData().stream().map(RoleInfoDTO::getId).collect(Collectors.toList());
+            Page<AllApprovalVO> allApproval = baseMapper.getAllApproval(dto.getPage(),id,queryUserId,roleIds,dto);
+            List<AllApprovalVO> allApprovalVOList = allApproval.getRecords();
+            if (CollectionUtils.isEmpty(allApprovalVOList)){
+                return allApproval;
+            }
+            List<Long> userId = allApprovalVOList.stream().map(i->Long.parseLong(i.getApplicant())).collect(Collectors.toList());
+            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userId);
+            if (userListByIds.code == ResultEnum.SUCCESS.getCode()) {
+                List<UserDTO> data = userListByIds.getData();
+                Map<Long, UserDTO> userMap = data.stream().collect(Collectors.toMap(UserDTO::getId, i -> i));
+                List<AllApprovalVO> list = allApprovalVOList.stream().map(i -> {
+                    UserDTO userDTO = userMap.get(Long.parseLong(i.getApplicant()));
+                    if (userDTO != null) {
+                        i.setApplicantName(userDTO.getUsername());
+                    }
+                    return i;
+                }).collect(Collectors.toList());
+                allApproval.setRecords(list);
+                return allApproval;
+            } else {
+                log.error("远程调用失败，错误code: " + res.getCode() + ",错误信息: " + res.getMsg());
+                throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+            }
+        } else {
+            log.error("远程调用失败，错误code: " + res.getCode() + ",错误信息: " + res.getMsg());
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+    }
+
+    @Override
+    public Page<EndingApprovalVO> getOverApproval(EndingApprovalDTO dto) {
         Long id = userHelper.getLoginUserInfo().id;
         List<Integer> queryUserId = new ArrayList<>();
         if (!StringUtils.isEmpty(dto.getKeyword())) {

@@ -16,10 +16,10 @@
         WHERE a.applicant = #{userId}
         and a.del_flag = 1
         <if test=" query.keyword !=null and query.keyword.length()>0 ">
-            a.description like concat('%', #{query.keyword}, '%')
+            and a.description like concat('%', #{query.keyword}, '%')
         </if>
-        <if test="query.operationType != null and query.operationType != ''">
-            and a.operation_type = #{query.operationType}
+        <if test="query.state != null and query.state != ''">
+            and a.state = #{query.state}
         </if>
         <if test="query.startTime != null">
             and a.application_time &gt; #{query.startTime}
@@ -121,8 +121,41 @@
             </foreach>
             a.description like concat('%', #{query.keyword}, '%') )
         </if>
-        <if test="query.operationType != null and query.operationType != ''">
-            and a.operation_type = #{query.operationType}
+        <if test="query.state != null and query.state != ''">
+            and b.state = #{query.state}
+        </if>
+        <if test="query.startTime != null">
+            and a.application_time &gt; #{query.startTime}
+        </if>
+        <if test="query.endTime != null">
+            and a.application_time &lt; #{query.endTime}
+        </if>
+    </select>
+
+    <select id="getAllApproval" resultType="com.fisk.mdm.vo.process.AllApprovalVO">
+        SELECT
+        a.id as apply_id,
+        a.approval_code,
+        a.process_id,
+        a.applicant,
+        a.description,
+        a.operation_type,
+        a.opreationstate,
+        a.application_time,
+        a.approver_node
+        FROM
+        tb_process_apply a
+        WHERE
+        a.del_flag = 1
+        <if test=" query.keyword !=null and query.keyword.length()>0 ">
+            and (
+            <foreach collection="queryUserId" item="item" separator="," open="a.applicant in (" close=") or">
+                #{item}
+            </foreach>
+            a.description like concat('%', #{query.keyword}, '%') )
+        </if>
+        <if test="query.opreationstate != null and query.opreationstate != ''">
+            and a.opreationstate = #{query.opreationstate}
         </if>
         <if test="query.startTime != null">
             and a.application_time &gt; #{query.startTime}

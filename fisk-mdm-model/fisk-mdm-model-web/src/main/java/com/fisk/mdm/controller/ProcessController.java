@@ -6,10 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.mdm.config.SwaggerConfig;
-import com.fisk.mdm.dto.process.ApprovalDTO;
-import com.fisk.mdm.dto.process.BatchApprovalDTO;
-import com.fisk.mdm.dto.process.PendingApprovalDTO;
-import com.fisk.mdm.dto.process.ProcessInfoDTO;
+import com.fisk.mdm.dto.process.*;
 import com.fisk.mdm.service.ProcessService;
 import com.fisk.mdm.vo.process.*;
 import io.swagger.annotations.Api;
@@ -50,7 +47,7 @@ public class ProcessController {
 
     @ApiOperation("获取我的申请")
     @PostMapping("/getMyProcessApply")
-    public ResultEntity<Page<ProcessApplyVO>> getMyProcessApply(@RequestBody PendingApprovalDTO dto) {
+    public ResultEntity<Page<ProcessApplyVO>> getMyProcessApply(@RequestBody ProcessApplyDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,processService.getMyProcessApply(dto));
     }
 
@@ -60,9 +57,15 @@ public class ProcessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,processService.getPendingApproval(dto));
     }
 
+    @ApiOperation("获取所有审批列表")
+    @PostMapping("/getAllApproval")
+    public ResultEntity<Page<AllApprovalVO>> getAllApproval(@RequestBody AllApprovalDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,processService.getAllApproval(dto));
+    }
+
     @ApiOperation("获取已处理审批列表")
     @PostMapping("/getOverApproval")
-    public ResultEntity<Page<EndingApprovalVO>> getOverApproval(@RequestBody PendingApprovalDTO dto) {
+    public ResultEntity<Page<EndingApprovalVO>> getOverApproval(@RequestBody EndingApprovalDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,processService.getOverApproval(dto));
     }
 
