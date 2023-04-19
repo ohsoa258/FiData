@@ -1,6 +1,8 @@
 package com.fisk.dataaccess.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
@@ -399,6 +401,16 @@ public interface DataAccessClient {
     @ApiOperation("测试ftp数据源连接")
     @PostMapping("/ftp/connectFtp")
     ResultEntity<Object> connectFtp(@RequestBody DbConnectionDTO dto);
+
+    /**
+     * 测试sftp数据源连接
+     *
+     * @param dto
+     * @return
+     */
+    @ApiOperation("测试sftp数据源连接")
+    @PostMapping("/Sftp/connectFtp")
+    ResultEntity<Object> connectSftp(@RequestBody DbConnectionDTO dto);
 
     /**
      * api选择jwt验证方式,测试获取token

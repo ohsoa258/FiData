@@ -187,9 +187,9 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
 
     @Override
     public ResultEntity<Object> insertDataSource(DataSourceSaveDTO dto) {
-        //获取当前登陆人
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-        String username = userInfo.getUsername();
+        //获取当前登陆人  取缔
+//        UserInfo userInfo = userHelper.getLoginUserInfo();
+//        String username = userInfo.getUsername();
 
         QueryWrapper<DataSourcePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DataSourcePO::getName, dto.name)
@@ -200,7 +200,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
             return ResultEntityBuild.build(ResultEnum.DATA_SOURCE_NAME_ALREADY_EXISTS);
         }
         model = new DataSourcePO();
-        model.createUser = username;
+//        model.createUser = username;
         //mapStruct:sftp RSA密钥属性 fileBinary 已忽略,不参与转换
         DataSourceMap.INSTANCES.dtoToPo(dto, model);
         //sftp秘钥方式,存储二进制数据(如果sftp选择RSA公钥方式添加的话，才会将文件转为二进制字符串)
@@ -252,11 +252,23 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
                 case FTP:
+                    //为了测试ftp连接，先将DataSourceSaveDTO对象转为DbConnectionDTO对象
+                    DbConnectionDTO ftpDTO = saveDtoToConDto(dto);
+                    ResultEntity<Object> connectFtp = dataAccessClient.connectFtp(ftpDTO);
+                    if (connectFtp.getCode() == ResultEnum.SUCCESS.getCode()){
+                        return ResultEnum.SUCCESS;
+                    }else {
+                        return ResultEnum.FTP_CONNECTION_ERROR;
+                    }
                 case SFTP:
-                    //为了测试ftp和sftp连接，先将DataSourceSaveDTO对象转为DbConnectionDTO对象
-                    DbConnectionDTO dbConnectionDTO = saveDtoToConDto(dto);
-                    ResultEntity<Object> entity = dataAccessClient.connectFtp(dbConnectionDTO);
-                    return checkFtpAndSftpCon(entity, dto.conType);
+                    //为了测试sftp连接，先将DataSourceSaveDTO对象转为DbConnectionDTO对象
+                    DbConnectionDTO sftpDTO = saveDtoToConDto(dto);
+                    ResultEntity<Object> connectSftp = dataAccessClient.connectSftp(sftpDTO);
+                    if (connectSftp.getCode() == ResultEnum.SUCCESS.getCode()){
+                        return ResultEnum.SUCCESS;
+                    }else {
+                        return ResultEnum.SFTP_CONNECTION_ERROR;
+                    }
                 case API:
                     if (dto.authenticationMethod == 3) {
                         AppDataSourceDTO appDataSourceDTO = saveDtoToSourceDto(dto);
@@ -331,23 +343,6 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         sourceDTO.id = Long.valueOf(saveDTO.id);
         sourceDTO.expirationTime = saveDTO.expirationTime;
         return sourceDTO;
-    }
-
-    /**
-     * 检查dataAccessClient.connectFtp()方法返回的数据，决定要响应的数值
-     *
-     * @param data
-     * @param typeEnum
-     * @return
-     */
-    public ResultEnum checkFtpAndSftpCon(ResultEntity<Object> data, DataSourceTypeEnum typeEnum) {
-        if (data == null) {
-            return ResultEnum.SUCCESS;
-        } else if (typeEnum.getValue() == DataSourceTypeEnum.SFTP.getValue()) {
-            return ResultEnum.SFTP_CONNECTION_ERROR;
-        } else {
-            return ResultEnum.FTP_CONNECTION_ERROR;
-        }
     }
 
     @Override
