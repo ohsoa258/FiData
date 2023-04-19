@@ -401,6 +401,16 @@ public interface DataAccessClient {
     ResultEntity<Object> connectFtp(@RequestBody DbConnectionDTO dto);
 
     /**
+     * 测试sftp数据源连接
+     *
+     * @param dto
+     * @return
+     */
+    @ApiOperation("测试sftp数据源连接")
+    @PostMapping("/Sftp/connectFtp")
+    ResultEntity<Object> connectSftp(@RequestBody DbConnectionDTO dto);
+
+    /**
      * api选择jwt验证方式,测试获取token
      *
      * @param dto
