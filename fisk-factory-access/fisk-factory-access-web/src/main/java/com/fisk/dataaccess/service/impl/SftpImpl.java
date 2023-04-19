@@ -48,10 +48,13 @@ public class SftpImpl implements ISftp {
 
     @Override
     public SftpExcelTreeDTO getFile(FtpPathDTO dto) {
+        //查询应用id对应的应用
         AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("app_id", dto.appId).one();
+        //若为空，抛出异常
         if (dataSourcePo == null) {
             throw new FkException(ResultEnum.FTP_CONNECTION_INVALID);
         }
+        //根据应用，连接sftp
         ChannelSftp sftp = getChannelSftp(dataSourcePo);
 
         SftpUtils utils = new SftpUtils();
@@ -130,6 +133,7 @@ public class SftpImpl implements ISftp {
      * @return
      */
     public ChannelSftp getChannelSftp(AppDataSourcePO dataSourcePo) {
+        //如果是oracle选择服务名的方式
         if (dataSourcePo.serviceType == 0) {
             dataSourcePo.connectStr = null;
         }

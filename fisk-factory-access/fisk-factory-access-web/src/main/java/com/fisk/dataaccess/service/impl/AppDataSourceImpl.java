@@ -222,7 +222,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         ResultEntity<List<com.fisk.system.dto.datasource.DataSourceDTO>> allExternalDataSource = userClient.getAllExternalDataSource();
         //判断获取是否成功
         if (allExternalDataSource.code != ResultEnum.SUCCESS.getCode()) {
-            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
         //获取筛选前外部数据源集合
         List<com.fisk.system.dto.datasource.DataSourceDTO> data = allExternalDataSource.getData();

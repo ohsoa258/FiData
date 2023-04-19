@@ -65,6 +65,9 @@ public enum ResultEnum {
     SQL_Not_SUPPORTED_YET_DBTYPE(1036, "暂不支持该数据库类型"),
     TABLE_NOT_PUBLISHED(1037,"该表未发布"),
 
+    LOG_NOT_EXISTS(1038,"当前选择的服务类型在当前日期没有日志"),
+    SERVICE_NOT_EXISTS(1039,"当前所选的服务不存在"),
+
     /**
      * 报表可视化服务，错误码从2000开始
      */
