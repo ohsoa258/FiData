@@ -224,10 +224,10 @@ public class ProcessServiceImpl implements ProcessService {
     public ResultEnum verifyProcessApply(Integer entityId) throws FkException {
         int userId = userHelper.getLoginUserInfo().id.intValue();
         ProcessInfoPO processInfo = processInfoService.getProcessInfo(entityId);
-        if (processInfo.getEnable() == ApprovalStateEnum.CLOSE){
-            return ResultEnum.VERIFY_NOT_APPROVAL;
-        }
         if (processInfo != null) {
+            if (processInfo.getEnable() == ApprovalStateEnum.CLOSE){
+                return ResultEnum.VERIFY_NOT_APPROVAL;
+            }
             List<ProcessNodePO> processNodes = processNodeService.getProcessNodes((int) processInfo.getId());
             //获取申请人流程节点
             ProcessNodePO processNodePo = processNodes.get(0);
@@ -824,7 +824,7 @@ public class ProcessServiceImpl implements ProcessService {
                     message = "你申请的流程" + applyCode + "被拒绝";
                     break;
                 default:
-                    return ResultEnum.ERROR;
+                    return ResultEnum.EMAIL_NOT_SEND;
             }
             MailSenderDTO mailSenderDTO = new MailSenderDTO();
             mailSenderDTO.setSubject("审批流程");
@@ -836,7 +836,7 @@ public class ProcessServiceImpl implements ProcessService {
             sendEmail(mailSenderDTO);
             return ResultEnum.SUCCESS;
         } catch (FkException e) {
-            return ResultEnum.ERROR;
+            throw new FkException(ResultEnum.ERROR, e.getMessage());
         }
     }
 
