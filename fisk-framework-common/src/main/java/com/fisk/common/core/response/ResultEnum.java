@@ -65,6 +65,9 @@ public enum ResultEnum {
     SQL_Not_SUPPORTED_YET_DBTYPE(1036, "暂不支持该数据库类型"),
     TABLE_NOT_PUBLISHED(1037,"该表未发布"),
 
+    LOG_NOT_EXISTS(1038,"当前选择的服务类型在当前日期没有日志"),
+    SERVICE_NOT_EXISTS(1039,"当前所选的服务不存在"),
+
     /**
      * 报表可视化服务，错误码从2000开始
      */
@@ -286,6 +289,8 @@ public enum ResultEnum {
     DS_DATA_SOURCE_APPLIED(10035,"数据源已应用，请先删除该数据源下的表服务"),
     DS_DATA_PAGING_PARAMETERS_NOT_SET(10036,"未设置分页参数"),
     API_NOT_CONFIGURED_FOR_OUTPUT_CONFIGURATION(10037, "API未配置输出配置，请检查输出配置（SQL）"),
+    DS_DATA_PAGE_SHOULD_BE_GREATER_THAN_0(10038,"页码（current）应为大于0的正整数"),
+    DS_DATA_SIZE_SHOULD_BE_GREATER_THAN_0(10039,"页数（size）应为大于0的正整数"),
 
     /**
      * 数据质量

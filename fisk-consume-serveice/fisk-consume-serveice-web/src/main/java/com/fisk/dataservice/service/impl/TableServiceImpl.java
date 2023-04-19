@@ -274,7 +274,10 @@ public class TableServiceImpl
         log.info(JSON.toJSONString(kafkaReceiveDTO));
 
         //参数配置完毕，远程调用接口，发送参数，执行同步
-        publishTaskClient.universalPublish(kafkaReceiveDTO);
+        ResultEntity<Object> resultEntity = publishTaskClient.universalPublish(kafkaReceiveDTO);
+        if (resultEntity.getCode() != ResultEnum.SUCCESS.getCode()){
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
         return ResultEnum.SUCCESS;
     }
 
