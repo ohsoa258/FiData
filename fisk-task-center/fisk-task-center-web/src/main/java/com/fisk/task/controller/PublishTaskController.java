@@ -328,7 +328,7 @@ public class PublishTaskController {
         log.info("创建任务批量审批");
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BATCH_APPROVAL_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_MDM_APPROVAL_DATA,
+                MqConstants.QueueConstants.MdmTopicConstants.BUILD_MDM_APPROVAL_DATA,
                 dto);
     }
 

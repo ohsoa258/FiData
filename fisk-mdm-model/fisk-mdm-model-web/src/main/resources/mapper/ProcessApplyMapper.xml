@@ -58,7 +58,7 @@
         LEFT JOIN tb_process_node b ON a.approver_node = b.id
         LEFT JOIN tb_process_person c ON b.id = c.rocess_node_id
         WHERE
-        a.opreationstate = 3
+        (a.opreationstate = 3 or a.opreationstate = 0)
         and ((c.type = 2 and c.urid = #{userId})
         or (c.type = 1 and
         <foreach collection="roleIds" item="item" separator=" or " open="(" close=")">

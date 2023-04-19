@@ -1,6 +1,7 @@
 package com.fisk.mdm.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -107,13 +108,13 @@ public class ProcessServiceImpl implements ProcessService {
             processInfoService.deleteProcessInfo(dto.getEntityId());
             List<Integer> processNodeIds = processNodePos.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
             //逻辑删除流程节点信息
-            LambdaQueryWrapper<ProcessNodePO> processNodePoLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            processNodePoLambdaQueryWrapper.eq(ProcessNodePO::getDelFlag, 1).eq(ProcessNodePO::getProcessId, processInfo.getId());
-            processNodeService.getBaseMapper().delete(processNodePoLambdaQueryWrapper);
+            LambdaUpdateWrapper<ProcessNodePO> poLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            poLambdaUpdateWrapper.set(ProcessNodePO::getDelFlag, 0).eq(ProcessNodePO::getProcessId, processInfo.getId());
+            processNodeService.update(poLambdaUpdateWrapper);
             //逻辑删除流程节点角色或用户信息
-            LambdaQueryWrapper<ProcessPersonPO> personPoLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            personPoLambdaQueryWrapper.eq(ProcessPersonPO::getDelFlag, 1).in(ProcessPersonPO::getRocessNodeId, processNodeIds);
-            processPersonService.getBaseMapper().delete(personPoLambdaQueryWrapper);
+            LambdaUpdateWrapper<ProcessPersonPO> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            lambdaUpdateWrapper.set(ProcessPersonPO::getDelFlag, 0).in(ProcessPersonPO::getRocessNodeId, processNodeIds);
+            processPersonService.update(lambdaUpdateWrapper);
         }
         //保存流程信息
         ProcessInfoPO processInfoPo = ProcessInfoMap.INSTANCES.dtoToPo(dto);
@@ -292,7 +293,7 @@ public class ProcessServiceImpl implements ProcessService {
         processApplyPo.setProcessId((int) processInfo.getId());
         processApplyPo.setState(ApprovalNodeStateEnum.IN_PROGRESS);
         processApplyPo.setOperationType(eventTypeEnum);
-        processApplyPo.setOpreationstate(ApprovalApplyStateEnum.IN_PROGRESS);
+        processApplyPo.setOpreationstate(ApprovalApplyStateEnum.NOT_APPROVAL);
         processApplyPo.setFidataBatchCode(batchNumber);
         processApplyService.save(processApplyPo);
         //通知节点用户进行审批
@@ -374,7 +375,8 @@ public class ProcessServiceImpl implements ProcessService {
                 for (ProcessApplyNotesPO processApplyNotesPO : list) {
                     PersonVO personVO = new PersonVO();
                     personVO.setApproval(userMap.get(Integer.valueOf(processApplyNotesPO.getCreateUser())));
-                    personVO.setDescription(processApplyNotesPO.getRemark());
+                    String remark = processApplyNotesPO.getRemark();
+                    personVO.setDescription(remark==null?"":remark);
                     personVO.setState(processApplyNotesPO.getState().getName());
                     ProcessNodePO processNodePO = posNodeMap.get(processApplyNotesPO.getProcessnodeId());
                     personVO.setLevels(processNodePO.getLevels());
@@ -408,7 +410,8 @@ public class ProcessServiceImpl implements ProcessService {
         approvalDetailVO.setApplyId((int)processApplyPo.getId());
         approvalDetailVO.setApprovalCode(processApplyPo.getApprovalCode());
         approvalDetailVO.setApplicant(applicant);
-        approvalDetailVO.setDescription(processApplyPo.getDescription());
+        String description = processApplyPo.getDescription();
+        approvalDetailVO.setDescription(description == null?"":description);
         approvalDetailVO.setOperationType(processApplyPo.getOperationType().getName());
         approvalDetailVO.setApplicationTime(processApplyPo.getApplicationTime());
         approvalDetailVO.setPersons(persons);
@@ -434,6 +437,7 @@ public class ProcessServiceImpl implements ProcessService {
             personVO.setState(ApprovalNodeStateEnum.IN_PROGRESS.getName());
             personVO.setLevels(processNode.getLevels());
             personVO.setProcessNodeName(processNode.getName());
+            personVO.setDescription("");
             persons.add(personVO);
         }
         applicant = userMap.get(Integer.valueOf(processApplyPo.getApplicant()));
@@ -577,12 +581,12 @@ public class ProcessServiceImpl implements ProcessService {
         List<Long> userIds = getUserIds(processPersonPos);
         //校验当前用户是否可以审批
         if (userIds.contains((long) loginUserInfo.id)) {
-            if (processApplyPo.getOpreationstate() != ApprovalApplyStateEnum.IN_PROGRESS){
+            if (processApplyPo.getOpreationstate() != ApprovalApplyStateEnum.IN_PROGRESS &&
+                    processApplyPo.getOpreationstate() != ApprovalApplyStateEnum.NOT_APPROVAL){
                 return ResultEnum.PROCESS_APPLY_OVER;
             }
             //当前用户第一次保存审批节点
             ProcessApplyNotesPO processApplyNotesPo = new ProcessApplyNotesPO();
-            ;
             processApplyNotesPo.setState(typeConversionUtils.intToApprovalNodeStateEnum(dto.getFlag()));
             processApplyNotesPo.setRemark(dto.getDescription());
             processApplyNotesPo.setProcessapplyId((int)processApplyPo.getId());
@@ -652,7 +656,8 @@ public class ProcessServiceImpl implements ProcessService {
         List<Long> userIds = getUserIds(processPersonPos);
         //校验当前用户是否支持审批
         if (userIds.contains((long) loginUserInfo.id)) {
-            if (processApplyPo.getOpreationstate() != ApprovalApplyStateEnum.IN_PROGRESS){
+            if (processApplyPo.getOpreationstate() != ApprovalApplyStateEnum.IN_PROGRESS &&
+                    processApplyPo.getOpreationstate() != ApprovalApplyStateEnum.NOT_APPROVAL){
                 return ResultEnum.PROCESS_APPLY_OVER;
             }
             //第一次保存审批节点信息
@@ -736,7 +741,8 @@ public class ProcessServiceImpl implements ProcessService {
         //校验是否可以审批
         if (userIds.contains(loginUserInfo.id)) {
             //保存
-            if (processApplyPo.getOpreationstate() != ApprovalApplyStateEnum.IN_PROGRESS){
+            if (processApplyPo.getOpreationstate() != ApprovalApplyStateEnum.IN_PROGRESS &&
+                    processApplyPo.getOpreationstate() != ApprovalApplyStateEnum.NOT_APPROVAL){
                 return ResultEnum.PROCESS_APPLY_OVER;
             }
             ProcessApplyNotesPO processApplyNotesPo = new ProcessApplyNotesPO();

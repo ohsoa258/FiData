@@ -67,7 +67,7 @@ public class MqConstants {
         }
 
         public static final class MdmTopicConstants{
-
+            public static final String BUILD_MDM_APPROVAL_DATA = "task.build.mdm.approval";
             public static final String BUILD_MDM_MODEL_DATA = "task.build.mdm.model";
 
             public static final String BUILD_MDM_ENTITY_DATA = "task.build.mdm.entity";
@@ -114,8 +114,6 @@ public class MqConstants {
         }
 
         public static final String TASK_PUBLIC_CENTER_TOPIC_NAME = "my-topic";
-
-        public static final String BUILD_MDM_APPROVAL_DATA = "task.build.mdm.approval";
 
         public static final String BUILD_ACCESS_API_FLOW = "build.access.api.flow";
 
