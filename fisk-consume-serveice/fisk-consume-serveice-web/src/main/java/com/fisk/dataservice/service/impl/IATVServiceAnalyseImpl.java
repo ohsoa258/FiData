@@ -5,12 +5,12 @@ import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IATVServiceAnalyseService;
-import com.fisk.dataservice.service.ITableService;
+import com.fisk.dataservice.vo.atvserviceanalyse.AtvYasCallApiAnalyseVO;
+import com.fisk.dataservice.vo.atvserviceanalyse.AtvTopCallApiAnalyseVO;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author zjy
@@ -45,8 +45,6 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
     @Resource
     private AppServiceConfigMapper serviceConfigMapper; // 服务应用中间表
 
-
-
     @Override
     public ATVServiceAnalyseDTO getServiceAnalyse() {
         /**
@@ -60,7 +58,7 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
 
         List<AppServiceConfigPO> serviceConfigPOS = serviceConfigMapper.selectList(null);
 
-        long apiServiceCount=0;
+        long apiServiceCount = 0;
 
         /**
          * api服务
@@ -79,8 +77,8 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
                 apiServiceCount += serviceConfigPOS.stream()
                         .filter(e -> e.getAppId() == appConfigPO.getId())
                         .filter(e -> e.getType() == AppServiceTypeEnum.API.getValue())
-                        .filter(e->e.getServiceId()==configPO.id)
-                        .filter(e->e.getServiceId()!=0).count();
+                        .filter(e -> e.getServiceId() == configPO.id)
+                        .filter(e -> e.getServiceId() != 0).count();
             }
         }
 
@@ -98,8 +96,8 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
                 apiServiceCount += serviceConfigPOS.stream()
                         .filter(e -> e.getAppId() == tableAppPO.getId())
                         .filter(e -> e.getType() == AppServiceTypeEnum.TABLE.getValue())
-                        .filter(e->e.getServiceId()==tableServicePO.id)
-                        .filter(e->e.getServiceId()!=0).count();
+                        .filter(e -> e.getServiceId() == tableServicePO.id)
+                        .filter(e -> e.getServiceId() != 0).count();
             }
         }
 
@@ -113,7 +111,7 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
         List<ViewPO> viewPOS = viewMapper.selectList(null);
         for (ViewThemePO viewThemePO : viewThemePOS) {
             apiServiceCount += viewPOS.stream()
-                    .filter(v->v.getViewThemeId()==viewThemePO.id)
+                    .filter(v -> v.getViewThemeId() == viewThemePO.id)
                     .count();
         }
 
@@ -122,4 +120,13 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
         return analyseDTO;
     }
 
+    @Override
+    public List<AtvYasCallApiAnalyseVO> getAtvYasCallApiAnalyse() {
+        return logsMapper.getAtvYasCallApiAnalyse();
+    }
+
+    @Override
+    public List<AtvTopCallApiAnalyseVO> getAtvTopCallApiAnalyse() {
+        return logsMapper.getAtvTopCallApiAnalyse();
+    }
 }
