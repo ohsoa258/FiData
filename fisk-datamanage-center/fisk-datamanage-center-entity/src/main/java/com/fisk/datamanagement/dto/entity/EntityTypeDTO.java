@@ -19,6 +19,7 @@ public class EntityTypeDTO {
      */
     public String typeName;
 
+    @ApiModelProperty(value = "属性")
     public EntityAttributesDTO attributes;
 
 }

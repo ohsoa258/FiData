@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.dto.chartvisual;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -11,5 +12,6 @@ import java.util.List;
 @Data
 public class IndicatorFeignDTO {
 
+    @ApiModelProperty(value = "指示列表")
     List<IndicatorDTO> indicatorList;
 }

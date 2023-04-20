@@ -19,6 +19,7 @@ public class TableServicePageQueryDTO {
     @ApiModelProperty(value = "表应用ID")
     public Integer tableAppId;
 
+    @ApiModelProperty(value = "页")
     public Page<TableServicePageDataDTO> page;
 
 }

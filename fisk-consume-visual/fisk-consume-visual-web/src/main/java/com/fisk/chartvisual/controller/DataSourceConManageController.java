@@ -2,6 +2,7 @@ package com.fisk.chartvisual.controller;
 
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.chartvisual.config.SwaggerConfig;
 import com.fisk.chartvisual.dto.datasource.DataSourceConDTO;
 import com.fisk.chartvisual.dto.datasource.DataSourceConEditDTO;
 import com.fisk.chartvisual.dto.datasource.DataSourceConQuery;
@@ -12,6 +13,7 @@ import com.fisk.chartvisual.vo.DataSourceConVO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,8 @@ import java.util.List;
  *
  * @author gy
  */
+
+@Api(tags = {SwaggerConfig.TAG_5})
 @RestController
 @RequestMapping("/dscon")
 public class DataSourceConManageController {

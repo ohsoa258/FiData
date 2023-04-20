@@ -1,10 +1,12 @@
 package com.fisk.chartvisual.controller;
 
+import com.fisk.chartvisual.config.SwaggerConfig;
 import com.fisk.chartvisual.dto.components.*;
 import com.fisk.chartvisual.service.ComponentsService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,8 @@ import java.util.List;
  * @author WangYan
  * @date 2022/2/9 15:17
  */
+
+@Api(tags = {SwaggerConfig.TAG_3})
 @RestController
 @RequestMapping("/component")
 public class ComponentsController {

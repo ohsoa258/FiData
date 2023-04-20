@@ -22,7 +22,7 @@ import javax.annotation.Resource;
  * @author WangYan
  * @date 2022/2/21 11:27
  */
-@Api(tags = {SwaggerConfig.TAG_1})
+@Api(tags = {SwaggerConfig.TAG_6})
 @RestController
 @RequestMapping("/diagram")
 @Slf4j

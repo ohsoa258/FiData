@@ -23,15 +23,24 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    public static final String TAG_1 = "datasource-controller";
-    public static final String TAG_2 = "appregister-controller";
-    public static final String TAG_3 = "apiregister-controller";
-    public static final String TAG_4 = "apiservice-controller";
-    public static final String TAG_5 = "logs-controller";
-    public static final String TAG_6 = "dataAnalysisView-controller";
-    public static final String TAG_7 = "tableservice-controller";
-    public static final String TAG_8 = "serviceAnalyse-controller";
-    public static final String TAG_9 = "apiTableViewService-controller";
+//    public static final String TAG_1 = "datasource-controller";
+//    public static final String TAG_2 = "appregister-controller";
+//    public static final String TAG_3 = "apiregister-controller";
+//    public static final String TAG_4 = "apiservice-controller";
+//    public static final String TAG_5 = "logs-controller";
+//    public static final String TAG_6 = "dataAnalysisView-controller";
+//    public static final String TAG_7 = "tableservice-controller";
+//    public static final String TAG_8 = "serviceAnalyse-controller";
+//    public static final String TAG_9 = "apiTableViewService-controller";
+public static final String TAG_1 = "数据源接口";
+    public static final String TAG_2 = "应用接口";
+    public static final String TAG_3 = "API接口";
+    public static final String TAG_4 = "API服务接口";
+    public static final String TAG_5 = "数据服务日志";
+    public static final String TAG_6 = "视图服务接口";
+    public static final String TAG_7 = "表服务接口";
+    public static final String TAG_8 = "服务数据分析";
+    public static final String TAG_9 = "数据服务元数据调用";
 
     @Bean
     public Docket createRestApi() {

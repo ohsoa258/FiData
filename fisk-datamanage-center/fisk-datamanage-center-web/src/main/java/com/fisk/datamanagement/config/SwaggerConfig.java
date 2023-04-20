@@ -22,20 +22,35 @@ import java.util.List;
 @Configuration
 @EnableSwagger2
 public class SwaggerConfig {
+//
+//    public static final String LABEL_CATEGORY = "label-category-controller";
+//    public static final String LABEL = "label-controller";
+//    public static final String META_DATA_ENTITY = "metadata-entity-controller";
+//    public static final String CLASSIFICATION = "classification-controller";
+//    public static final String GLOSSARY = "glossary-controller";
+//    public static final String BUSINESS_META_DATA = "业务元数据接口";
+//    public static final String DATA_ASSETS = "data_assets-controller";
+//    public static final String DATA_QUALITY = "data-quality-controller";
+//    public static final String DATA_MASKING = "data-masking-controller";
+//    public static final String SYNCHRONIZATION_DATA = "血缘补偿同步接口";
+//    public static final String PROCESS = "process-controller";
+//    public static final String GLOBAL_SEARCH = "globalSearch-controller";
+//    public static final String DATA_LOGGING = "dataLogging-controller";
 
-    public static final String LABEL_CATEGORY = "label-category-controller";
-    public static final String LABEL = "label-controller";
-    public static final String META_DATA_ENTITY = "metadata-entity-controller";
-    public static final String CLASSIFICATION = "classification-controller";
-    public static final String GLOSSARY = "glossary-controller";
+
+    public static final String LABEL_CATEGORY = "标签类目";
+    public static final String LABEL = "标签管理";
+    public static final String META_DATA_ENTITY = "元数据对象";
+    public static final String CLASSIFICATION = "业务分类";
+    public static final String GLOSSARY = "术语库";
     public static final String BUSINESS_META_DATA = "业务元数据接口";
-    public static final String DATA_ASSETS = "data_assets-controller";
-    public static final String DATA_QUALITY = "data-quality-controller";
-    public static final String DATA_MASKING = "data-masking-controller";
+    public static final String DATA_ASSETS = "数据资产";
+    public static final String DATA_QUALITY = "数据质量";
+    public static final String DATA_MASKING = "数据脱敏";
     public static final String SYNCHRONIZATION_DATA = "血缘补偿同步接口";
-    public static final String PROCESS = "process-controller";
-    public static final String GLOBAL_SEARCH = "globalSearch-controller";
-    public static final String DATA_LOGGING = "dataLogging-controller";
+    public static final String PROCESS = "元数据血缘连线处理";
+    public static final String GLOBAL_SEARCH = "全局搜索";
+    public static final String DATA_LOGGING = "数据报表记录数";
 
     @Bean
     public Docket createRestApi() {

@@ -3,6 +3,7 @@ package com.fisk.datamanagement.dto.metadatamapatlas;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.dto.BaseDTO;
 import com.fisk.common.core.baseObject.entity.BasePO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -17,7 +18,9 @@ import lombok.EqualsAndHashCode;
 @Data
 public class MetaDataClassificationMapDTO extends BaseDTO {
 
+    @ApiModelProperty(value = "元数据实体ID")
     public Integer metaDataEntityId;
 
+    @ApiModelProperty(value = "业务分类ID")
     public Integer businessClassificationId;
 }
