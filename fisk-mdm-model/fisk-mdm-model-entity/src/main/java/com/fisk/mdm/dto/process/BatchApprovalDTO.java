@@ -23,4 +23,7 @@ public class BatchApprovalDTO {
 
     @ApiModelProperty(value = "1通过/2拒绝")
     private Integer flag;
+
+    @ApiModelProperty(value = "true管理员/false不是管理员")
+    private Boolean adminMark;
 }

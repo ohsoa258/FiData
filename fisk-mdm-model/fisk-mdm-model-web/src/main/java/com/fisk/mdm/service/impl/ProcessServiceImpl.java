@@ -3,6 +3,7 @@ package com.fisk.mdm.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.core.constants.SystemConstants;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -41,8 +42,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
@@ -502,14 +506,36 @@ public class ProcessServiceImpl implements ProcessService {
             approvalDTO.setDescription(dto.getDescription());
             approvalDTO.setFlag(dto.getFlag());
             approvalDTO.setProcessApplyId(processApplyId);
+            approvalDTO.setAdminMark(dto.getAdminMark());
             data.add(approvalDTO);
         }
         BuildBatchApprovalDTO batchApprovalDTO = new BuildBatchApprovalDTO();
         batchApprovalDTO.setData(data);
         batchApprovalDTO.setUserId(userHelper.getLoginUserInfo().getId());
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes != null) {
+            HttpServletRequest request = attributes.getRequest();
+            //添加token
+            batchApprovalDTO.setToken(request.getHeader(SystemConstants.HTTP_HEADER_AUTH));
+        }
         if (publishTaskClient.createBatchApproval(batchApprovalDTO).getCode() != ResultEnum.SUCCESS.getCode()) {
             return ResultEnum.DATA_SUBMIT_ERROR;
         }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum executeApproval(List<ApprovalDTO> dtos) {
+        int errorNum = 0;
+        for (ApprovalDTO dto : dtos) {
+            ResultEnum approval = approval(dto);
+            if (approval.getCode() != ResultEnum.SUCCESS.getCode() ||
+                    approval.getCode() != ResultEnum.EMAIL_NOT_SEND.getCode()) {
+                log.error(approval.getMsg());
+                errorNum++;
+            }
+        }
+        log.info("执行结束，共执行批量审批【{}条】,成功【{}条】,失败【{}条】", dtos.size(), dtos.size() - errorNum, errorNum);
         return ResultEnum.SUCCESS;
     }
 

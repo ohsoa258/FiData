@@ -14,5 +14,6 @@ import java.util.List;
 @Data
 public class BuildBatchApprovalDTO extends MQBaseDTO {
 
+    public String token;
     public List<ApprovalDTO> data;
 }

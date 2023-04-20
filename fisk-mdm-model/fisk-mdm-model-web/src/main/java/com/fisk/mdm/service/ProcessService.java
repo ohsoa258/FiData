@@ -8,6 +8,7 @@ import com.fisk.mdm.enums.EventTypeEnum;
 import com.fisk.mdm.vo.process.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  * @Author: wangjian
@@ -90,11 +91,18 @@ public interface ProcessService {
     ResultEnum approval(ApprovalDTO dto);
 
     /**
-     * 批量审批
+     * 提交批量审批
      * @param dto
      * @return
      */
     ResultEnum batchApproval(BatchApprovalDTO dto);
+
+    /**
+     * 执行批量审批
+     * @param dtos
+     * @return
+     */
+    ResultEnum executeApproval(List<ApprovalDTO> dtos);
 
     /**
      * 撤回审批

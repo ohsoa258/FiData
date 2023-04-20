@@ -1,6 +1,7 @@
 package com.fisk.mdm.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.core.constants.SystemConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  * @Author: wangjian
@@ -80,10 +82,15 @@ public class ProcessController {
     public ResultEntity<ResultEnum> approval(@RequestBody ApprovalDTO dto) {
         return ResultEntityBuild.build(processService.approval(dto));
     }
-    @ApiOperation("批量审批")
+    @ApiOperation("提交批量审批任务")
     @PostMapping("/batchApproval")
     public ResultEntity<ResultEnum> batchApproval(@RequestBody BatchApprovalDTO dto) {
         return ResultEntityBuild.build(processService.batchApproval(dto));
+    }
+    @ApiOperation("执行批量审批任务")
+    @PostMapping("/executeApproval")
+    public ResultEntity<ResultEnum> executeApproval(@RequestBody List<ApprovalDTO> dataDto) {
+        return ResultEntityBuild.build(processService.executeApproval(dataDto));
     }
 
     @ApiOperation("撤回审批")

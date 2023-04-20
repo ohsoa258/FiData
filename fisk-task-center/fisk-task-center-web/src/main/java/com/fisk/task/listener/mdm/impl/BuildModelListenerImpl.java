@@ -15,6 +15,7 @@ import com.fisk.mdm.dto.attribute.AttributeFactDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeStatusDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
+import com.fisk.mdm.dto.process.ApprovalDTO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.vo.attribute.AttributeVO;
@@ -140,20 +141,24 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
     @Override
     public ResultEnum buildBatchApproval(String dataInfo, Acknowledgment acke) {
-        BuildBatchApprovalDTO batchApprovalDTO = JSON.parseObject(dataInfo, BuildBatchApprovalDTO.class);
-        List<com.fisk.task.dto.model.ApprovalDTO> data = batchApprovalDTO.getData();
-        int errorNum = 0;
-        for (com.fisk.task.dto.model.ApprovalDTO dataDto : data) {
-            com.fisk.mdm.dto.process.ApprovalDTO approvalDTO = new com.fisk.mdm.dto.process.ApprovalDTO();
-            BeanUtils.copyProperties(dataDto,approvalDTO);
-            ResultEntity<ResultEnum> approval = mdmClient.approval(approvalDTO);
+        try {
+            BuildBatchApprovalDTO batchApprovalDTO = JSON.parseObject(dataInfo, BuildBatchApprovalDTO.class);
+            List<ApprovalDTO> data = batchApprovalDTO.getData().stream().map(i->{
+                ApprovalDTO approvalDTO = new ApprovalDTO();
+                BeanUtils.copyProperties(i,approvalDTO);
+                return approvalDTO;
+            }).collect(Collectors.toList());
+            ResultEntity<ResultEnum> approval = mdmClient.executeApproval(data,batchApprovalDTO.getToken());
             if (approval.getCode() != ResultEnum.SUCCESS.getCode()) {
                 log.error(approval.getMsg());
-                errorNum++;
             }
+            return ResultEnum.SUCCESS;
+        }catch (Exception e){
+            log.error("错误信息",e.getMessage());
+            return ResultEnum.ERROR;
+        }finally {
+             acke.acknowledge();
         }
-        log.info("执行结束，共执行批量审批【{}条】,成功【{}条】,失败【{}条】", data.size(),data.size()-errorNum, errorNum);
-        return ResultEnum.SUCCESS;
     }
 
     /**

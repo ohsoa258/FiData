@@ -1,5 +1,6 @@
 package com.fisk.mdm.client;
 
+import com.fisk.common.core.constants.SystemConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
@@ -44,8 +45,14 @@ public interface MdmClient {
     /**
      * 审批
      */
-    @PostMapping("/model/approval")
+    @PostMapping("/process/approval")
     public ResultEntity<ResultEnum> approval(@RequestBody ApprovalDTO dto);
+
+    /**
+     * 审批
+     */
+    @PostMapping("/process/executeApproval")
+    ResultEntity<ResultEnum> executeApproval(@RequestBody List<ApprovalDTO> dataDto,@RequestHeader(name = SystemConstants.HTTP_HEADER_AUTH) String token);
 
     /**
      * 根据id查询查询属性
