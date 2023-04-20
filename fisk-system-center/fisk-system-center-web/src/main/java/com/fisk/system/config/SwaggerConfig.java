@@ -36,6 +36,7 @@ public class SwaggerConfig {
     public static final String LICENSE_CONTROLLER = "license-controller";
     public static final String SQLFACTORY_CONTROLLER = "sqlFactory-controller";
     public static final String SYSTEM_VERSION_CONTROLLER = "system-version-controller";
+    public static final String SYSTEM_LOG_CONTROLLER = "system-log-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -59,6 +60,7 @@ public class SwaggerConfig {
                 .tags(new Tag(LICENSE_CONTROLLER, "license许可证管理"))
                 .tags(new Tag(SQLFACTORY_CONTROLLER, "SQL语句校验处理"))
                 .tags(new Tag(SYSTEM_VERSION_CONTROLLER,"平台版本信息管理"))
+                .tags(new Tag(SYSTEM_LOG_CONTROLLER,"平台服务日志管理"))
                 .securitySchemes(apiKey())
                 .securityContexts(securityContexts());
 

@@ -8,6 +8,7 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.synchronization.pushmetadata.IBloodCompensation;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -34,20 +35,11 @@ public class BloodCompensationController {
 
     @ApiOperation("同步元数据")
     @GetMapping("/systemSynchronousBlood")
-    public ResultEntity<Object> systemSynchronousBlood(@RequestParam("currUserName") String currUserName) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.systemSynchronousBlood(currUserName));
+    public ResultEntity<Object> systemSynchronousBlood(
+            @RequestParam("执行账号") String currUserName,
+            @RequestParam("是否要初始化1代表需要初始化，0代表不需要初始化") int initialization) {
+        boolean  initia= initialization >= 1;
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.systemSynchronousBlood(currUserName, initia));
     }
-
-    /**
-     * 同步数据服务接入的应用以及表
-     * @param currUserName
-     * @return
-     */
-    @GetMapping("/synchronousBloodDataServer")
-    public ResultEntity<Object> synchronousBloodDataServer(@RequestParam("currUserName") String currUserName) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.synchronousBloodDataServer(currUserName));
-    }
-
-
 
 }

@@ -28,11 +28,11 @@ public class SwaggerConfig {
     public static final String META_DATA_ENTITY = "metadata-entity-controller";
     public static final String CLASSIFICATION = "classification-controller";
     public static final String GLOSSARY = "glossary-controller";
-    public static final String BUSINESS_META_DATA = "business-meta-data-controller";
+    public static final String BUSINESS_META_DATA = "业务元数据接口";
     public static final String DATA_ASSETS = "data_assets-controller";
     public static final String DATA_QUALITY = "data-quality-controller";
     public static final String DATA_MASKING = "data-masking-controller";
-    public static final String SYNCHRONIZATION_DATA = "blood-compensation-controller";
+    public static final String SYNCHRONIZATION_DATA = "血缘补偿同步接口";
     public static final String PROCESS = "process-controller";
     public static final String GLOBAL_SEARCH = "globalSearch-controller";
     public static final String DATA_LOGGING = "dataLogging-controller";

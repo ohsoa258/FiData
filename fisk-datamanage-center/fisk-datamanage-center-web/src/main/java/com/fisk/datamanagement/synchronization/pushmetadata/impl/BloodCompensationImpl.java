@@ -12,6 +12,7 @@ import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.consumeserveice.client.ConsumeServeiceClient;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.datamanagement.enums.ClassificationTypeEnum;
 import com.fisk.datamanagement.service.impl.ClassificationImpl;
 import com.fisk.datamanagement.synchronization.pushmetadata.IBloodCompensation;
 import com.fisk.datamodel.client.DataModelClient;
@@ -33,37 +34,116 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BloodCompensationImpl
         implements IBloodCompensation {
-
+    //region  装配Bean
     @Resource
     DataAccessClient dataAccessClient;
     @Resource
     DataModelClient dataModelClient;
     @Resource
     ConsumeServeiceClient serveiceClient;
-
     @Resource
     MetaDataImpl metaData;
     @Resource
     ClassificationImpl classification;
-
-
+//endregion
+    /**
+     * 血缘补偿
+     * @param currUserName  执行账号
+     * @param initialization   是否是初始化
+     * @return ResultEnum
+     */
     @Override
-    public ResultEnum systemSynchronousBlood(String currUserName) {
-       //一.同步数据接入系统数据
-        log.info("********开始同步数据接入********");
-        //1.获取接入系统
+    public ResultEnum systemSynchronousBlood(String currUserName,boolean initialization) {
+        if(initialization)
+        {
+            //清空系统血缘
+            TruncateBlood();
+        }
+        log.info("******一.开始补偿数据接入相关元数据信息******");
+        log.info("******1.开始同步数据接入系统名称到业务分类******");
         ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
+        synchronousClassification(appList,ClassificationTypeEnum.DATA_ACCESS);
+        log.info("******2.开始同步数据接入来源表元数据******");
+        //同步数据接入来源表元数据(解析接入表sql)
+        synchronousAccessSourceMetaData(currUserName);
+        log.info("******3.开始同步数据接入ods表以及stg表元数据******");
+        //同步数据接入ods表以及stg表元数据
+        synchronousAccessTableSourceMetaData(currUserName);
+
+        log.info("*******二.开始同步数据建模相关元数据信息********");
+        log.info("*******1.开始同步数据建模的业务分类********");
+        ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
+        synchronousClassification(businessAreaList,ClassificationTypeEnum.ANALYZE_DATA);
+        log.info("********2.开始同步建模业务分类元数据********");
+        synchronousDataModelTableSourceMetaData(currUserName);
+
+        log.info("*******三.开始同步API网关服务相关元数据信息********");
+        log.info("********1.开始API网关服务的应用接入的业务分类******************");
+        ResultEntity<List<AppBusinessInfoDTO>> apiTableViewAppList = serveiceClient.getApiTableViewService();
+        synchronousClassification(apiTableViewAppList, ClassificationTypeEnum.API_GATEWAY_SERVICE);
+        log.info("********2.开始API网关服务的元数据******************");
+        synchronousAPIServiceMetaData(currUserName);
+        return ResultEnum.SUCCESS;
+    }
+    //region 内置实现方法
+    /**
+     * 同步API网关服务的元数据信息
+     * @param currUserName 当前执行账号
+     */
+    private void synchronousAPIServiceMetaData(String currUserName) {
+        //待补充
+    }
+    /**
+     * 清空系统血缘
+     */
+    private void TruncateBlood() {
+        //待补充
+        //1.清空元数据对象实体表：tb_metadata_entity
+        //2.清空元数据对象技术属性表：tb_metadata_attribute
+        //3.清空元数据实体血缘关系映射表：tb_lineage_map_relation
+        //4.清空元数据对象与业务元数据属性映射表：tb_metadata_business_metadata_map
+        //5.清空业务分类表：tb_business_classification
+        //6.清空业务分类-分类属性表：tb_classification
+        //7.清空元数据对象所属业务分类映射表：tb_metadata_classification_map
+        //8.清空元数据实体分类属性表：tb_metadata_entity_classification_attribute
+        //9.清空元数据标签映射表：tb_metadata_label_map
+        //10.清空元数据术语与实体映射表：tb_metadata_glossary_map
+        //11.元数据实体操作日志表：tb_metadata_entity_operation_log
+
+    }
+    /**
+     *同步到业务分类的公共方法
+     * @param appList 接入业务系统
+     * @param classificationTypeEnum  建模类型
+     */
+    private void synchronousClassification(ResultEntity<List<AppBusinessInfoDTO>> appList,ClassificationTypeEnum classificationTypeEnum){
         if (appList.code != ResultEnum.SUCCESS.getCode()) {
-            log.error("获取接入应用列表失败");
+            log.error("【获取"+classificationTypeEnum.getName()+"的业务分类数据失败】");
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
-        //2.同步数据接入系统名称
+        log.info("********开始同步"+classificationTypeEnum.getName()+"的业务分类********");
         if (CollectionUtils.isEmpty(appList.data)) {
-            return ResultEnum.SUCCESS;
+            log.error("【未获取到"+classificationTypeEnum.getName()+"数据】");
         }
-        log.info("******开始同步接入系统名称******");
-        synchronousClassification(appList.data, 1);
-
+        for (AppBusinessInfoDTO item : appList.data) {
+            ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
+            classificationInfoDto.setName(item.name);
+            classificationInfoDto.setDescription(item.appDes);
+            classificationInfoDto.setSourceType(classificationTypeEnum.getValue());
+            classificationInfoDto.setDelete(false);
+            try {
+                classification.appSynchronousClassification(classificationInfoDto);
+            } catch (Exception e) {
+                log.error("【同步业务分类失败】,分类名称:{}", item.name);
+                continue;
+            }
+        }
+    }
+    /**
+     * 同步数据接入来源表元数据
+     * @param currUserName 当前执行账号
+     */
+    private void synchronousAccessSourceMetaData(String currUserName) {
         //获取所有接入表
         ResultEntity<List<DataAccessSourceTableDTO>> dataAccessMetaData = dataAccessClient.getDataAccessMetaData();
         List<DataAccessSourceTableDTO> collect = dataAccessMetaData.data.stream()
@@ -74,92 +154,6 @@ public class BloodCompensationImpl
             log.error("【获取接入所有表失败】");
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
-
-        log.info("******开始同步数据接入来源表元数据******");
-        //同步数据接入来源表元数据(解析接入表sql)
-        synchronousAccessSourceMetaData(collect,currUserName);
-
-        log.info("******开始同步数据接入ods表以及stg表元数据******");
-        //同步数据接入ods表以及stg表元数据
-        synchronousAccessTableSourceMetaData(currUserName);
-
-        log.info("********开始同步数据建模********");
-
-        ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
-        log.info("********开始同步数据建模********:{}",businessAreaList);
-        if (businessAreaList.code != ResultEnum.SUCCESS.getCode()) {
-            log.error("【获取建模业务域数据失败】");
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
-        }
-
-        log.info("********开始同步建模业务分类********");
-        if (CollectionUtils.isEmpty(businessAreaList.data)) {
-            return ResultEnum.SUCCESS;
-        }
-        synchronousClassification(businessAreaList.data, 2);
-
-        log.info("********开始同步建模业务分类********");
-        synchronousDataModelTableSourceMetaData(currUserName);
-
-        return ResultEnum.SUCCESS;
-    }
-
-    /**
-     * 同步接入数据服务的应用和表
-     * @param currUserName
-     * @return
-     */
-    @Override
-    public ResultEnum synchronousBloodDataServer(String currUserName) {
-        log.info("******************开始数据服务应用接入******************");
-        //获取接入应用
-        ResultEntity<List<AppBusinessInfoDTO>> apiTableViewAppList = serveiceClient.getApiTableViewService();
-
-        if (apiTableViewAppList.code != ResultEnum.SUCCESS.getCode()) {
-            log.error("获取接入应用列表失败");
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
-        }
-        //同步数据接入业务分类
-        if (CollectionUtils.isEmpty(apiTableViewAppList.data)) {
-            return ResultEnum.SUCCESS;
-        }
-        log.info("******开始同步接入业务分类******");
-        synchronousClassification(apiTableViewAppList.data, null);
-
-        log.info("******************获取API数据服务接入表******************");
-
-
-
-        return null;
-    }
-
-    /**
-     * 同步数据接入系统
-     *
-     * @param dtoList：接入系统集合
-     */
-    private void synchronousClassification(List<AppBusinessInfoDTO> dtoList, Integer sourceType) {
-        for (AppBusinessInfoDTO item : dtoList) {
-            ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
-            classificationInfoDto.setName(item.name);
-            classificationInfoDto.setDescription(item.appDes);
-            classificationInfoDto.setSourceType(sourceType==null?item.sourceType:sourceType);
-            classificationInfoDto.setDelete(false);
-            try {
-                classification.appSynchronousClassification(classificationInfoDto);
-            } catch (Exception e) {
-                log.error("【血缘补偿,同步业务分类失败】,分类名称:{}", item.name);
-                continue;
-            }
-        }
-    }
-
-    /**
-     * 同步接入来源表元数据
-     *
-     * @return
-     */
-    public void synchronousAccessSourceMetaData(List<DataAccessSourceTableDTO> dataAccessMetaData,String currUserName) {
         //获取接入所有应用
         ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAppRegistration = dataAccessClient.synchronizationAppRegistration();
         if (synchronizationAppRegistration.code != ResultEnum.SUCCESS.getCode()) {
@@ -167,11 +161,11 @@ public class BloodCompensationImpl
         }
 
         if (CollectionUtils.isEmpty(synchronizationAppRegistration.data)
-                || CollectionUtils.isEmpty(dataAccessMetaData)) {
+                || CollectionUtils.isEmpty(collect)) {
             return;
         }
 
-        for (DataAccessSourceTableDTO accessTable : dataAccessMetaData) {
+        for (DataAccessSourceTableDTO accessTable : collect) {
 
 
             Optional<MetaDataInstanceAttributeDTO> first = synchronizationAppRegistration
@@ -214,15 +208,21 @@ public class BloodCompensationImpl
         metaData.consumeMetaData(synchronizationAppRegistration.data,currUserName);
 
     }
-
-    public void synchronousAccessTableSourceMetaData(String currUserName) {
+    /**
+     * 同步数据接入STG到ODS的元数据
+     * @param currUserName  当前执行账号
+     */
+    private void synchronousAccessTableSourceMetaData(String currUserName) {
         ResultEntity<List<MetaDataInstanceAttributeDTO>> accessTable = dataAccessClient.synchronizationAccessTable();
         if (accessTable.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
         metaData.consumeMetaData(accessTable.data,currUserName);
     }
-
+    /**
+     * 同步数仓建模的元数据
+     * @param currUserName 当前执行账号
+     */
     public void synchronousDataModelTableSourceMetaData(String currUserName) {
         ResultEntity<List<MetaDataInstanceAttributeDTO>> dataModelMetaData = dataModelClient.getDataModelMetaData();
         if (dataModelMetaData.code != ResultEnum.SUCCESS.getCode()) {
@@ -230,5 +230,5 @@ public class BloodCompensationImpl
         }
         metaData.consumeMetaData(dataModelMetaData.data,currUserName);
     }
-
+    //endregion
 }

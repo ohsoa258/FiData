@@ -49,11 +49,11 @@ public class SftpUtils {
     /**
      * sftp连接
      *
-     * @param hostName
-     * @param port
-     * @param userName
-     * @param password
-     * @param secretKeyPath
+     * @param hostName host
+     * @param port port
+     * @param userName connect_account
+     * @param password connect_pwd
+     * @param secretKeyPath connect_str
      * @return
      */
     public static ChannelSftp connect(String hostName, Integer port, String userName, String password, String secretKeyPath) {
