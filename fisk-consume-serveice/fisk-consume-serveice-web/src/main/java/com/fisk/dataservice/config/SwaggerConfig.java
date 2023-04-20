@@ -39,7 +39,7 @@ public static final String TAG_1 = "数据源接口";
     public static final String TAG_5 = "数据服务日志";
     public static final String TAG_6 = "视图服务接口";
     public static final String TAG_7 = "表服务接口";
-    public static final String TAG_8 = "服务数据分析";
+    public static final String TAG_8 = "数据分析服务";
     public static final String TAG_9 = "数据服务元数据调用";
 
     @Bean
