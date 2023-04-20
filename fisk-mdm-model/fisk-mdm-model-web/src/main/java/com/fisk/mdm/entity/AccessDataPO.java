@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 
@@ -12,8 +13,7 @@ import java.io.Serializable;
  */
 @TableName("tb_access_data")
 @Data
-public class AccessDataPO extends BasePO implements Serializable{
-	private static final long serialVersionUID = 1L;
+public class AccessDataPO extends BasePO {
 
 	@ApiModelProperty(value = "模型id")
 	private Integer modelId;
@@ -27,7 +27,7 @@ public class AccessDataPO extends BasePO implements Serializable{
 	@ApiModelProperty(value = "抽取脚本")
 	private String extractionSql;
 
-	@ApiModelProperty(value = "数据接入类型 1：全量 2：增量 3：追加 ")
+	@ApiModelProperty(value = "1：追加、2：全量、3：业务主键覆盖、4：业务时间覆盖； ")
 	private Integer accessType;
 
 	@ApiModelProperty(value = "加载脚本")

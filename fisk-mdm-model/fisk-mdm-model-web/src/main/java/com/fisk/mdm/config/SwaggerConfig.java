@@ -36,6 +36,7 @@ public class SwaggerConfig {
     public static final String TAG_11 = "CodeRule-Controller";
     public static final String TAG_12="MatchingRules-Controller";
     public static final String TAG_13="Process-Controller";
+    public static final String TAG_14="Access-Controller";
 
     @Bean
     public Docket createRestApi() {

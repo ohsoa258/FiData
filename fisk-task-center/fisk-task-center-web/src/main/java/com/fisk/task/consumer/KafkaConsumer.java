@@ -463,7 +463,7 @@ public class KafkaConsumer {
      * @return
      */
     @MQConsumerLog
-    @KafkaListener(topics = MqConstants.QueueConstants.MdmTopicConstants.BUILD_MDM_ENTITY_DATA, containerFactory = "batchFactory",
+    @KafkaListener(topics = MqConstants.QueueConstants.MdmTopicConstants.BUILD_MDM_APPROVAL_DATA, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     public ResultEntity<Object> createBatchApproval(String dataInfo, Acknowledgment acke) {
         return ResultEntityBuild.build(buildModelListener.buildBatchApproval(dataInfo, acke));
@@ -478,7 +478,7 @@ public class KafkaConsumer {
      * @return
      */
     @MQConsumerLog
-    @KafkaListener(topics = MqConstants.QueueConstants.MdmTopicConstants.BUILD_MDM_APPROVAL_DATA, containerFactory = "batchFactory",
+    @KafkaListener(topics = MqConstants.QueueConstants.MdmTopicConstants.BUILD_MDM_ENTITY_DATA, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     public ResultEntity<Object> buildEntityListener(String dataInfo, Acknowledgment acke) {
         return ResultEntityBuild.build(buildModelListener.backgroundCreateTasks(dataInfo, acke));
