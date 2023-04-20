@@ -27,5 +27,5 @@ public class AtvYasCallApiAnalyseVO {
      * 调用次数
      */
     @ApiModelProperty(value = "调用次数")
-    public int totalCount;
+    public Integer totalCount;
 }

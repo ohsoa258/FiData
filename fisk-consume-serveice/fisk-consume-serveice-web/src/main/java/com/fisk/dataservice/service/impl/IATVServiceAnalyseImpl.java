@@ -1,12 +1,23 @@
 package com.fisk.dataservice.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.dataservice.dto.apiservice.TokenDTO;
 import com.fisk.dataservice.dto.serviceanalyse.ATVServiceAnalyseDTO;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
+import com.fisk.dataservice.enums.LogLevelTypeEnum;
+import com.fisk.dataservice.enums.LogTypeEnum;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IATVServiceAnalyseService;
+import com.fisk.dataservice.util.HttpUtils;
+import com.fisk.dataservice.vo.atvserviceanalyse.AtvCallApiFuSingAnalyseVO;
 import com.fisk.dataservice.vo.atvserviceanalyse.AtvYasCallApiAnalyseVO;
 import com.fisk.dataservice.vo.atvserviceanalyse.AtvTopCallApiAnalyseVO;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -19,6 +30,7 @@ import java.util.List;
  * @description
  */
 @Service
+@Slf4j
 public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
 
     @Resource
@@ -44,6 +56,9 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
 
     @Resource
     private AppServiceConfigMapper serviceConfigMapper; // 服务应用中间表
+
+    @Value("${dataservice.scan.api_address}")
+    private String scanApiAddress;
 
     @Override
     public ATVServiceAnalyseDTO getServiceAnalyse() {
@@ -121,6 +136,11 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
     }
 
     @Override
+    public AtvCallApiFuSingAnalyseVO getAtvCallApiFuSingAnalyse() {
+        return logsMapper.getAtvCallApiFuSingAnalyse();
+    }
+
+    @Override
     public List<AtvYasCallApiAnalyseVO> getAtvYasCallApiAnalyse() {
         return logsMapper.getAtvYasCallApiAnalyse();
     }
@@ -128,5 +148,37 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
     @Override
     public List<AtvTopCallApiAnalyseVO> getAtvTopCallApiAnalyse() {
         return logsMapper.getAtvTopCallApiAnalyse();
+    }
+
+    @Async
+    @Override
+    public boolean scanDataServiceApiIsFuSing() {
+        LogPO logPO = new LogPO();
+        logPO.setLogLevel(LogLevelTypeEnum.DEBUG.getName());
+        logPO.setLogType(LogTypeEnum.SCAN_API.getValue());
+        try {
+            String url = scanApiAddress + "/dataservice/apiService/getToken";
+            TokenDTO tokenDTO = new TokenDTO();
+            tokenDTO.setAppAccount("fiData_DataService_ScanTest_Account");
+            tokenDTO.setAppPassword("fiData_DataService_ScanTest_Password");
+            String getTokenParams = JSONObject.toJSONString(tokenDTO);
+            ResultEntity result = HttpUtils.sendPostWebRequest(ResultEntity.class,
+                    url, getTokenParams, null);
+            if (result != null && result.getCode() == ResultEnum.DS_APISERVICE_API_APPINFO_EXISTS.getCode()) {
+                logPO.setBusinessState("成功");
+            } else {
+                logPO.setBusinessState("失败");
+            }
+        } catch (Exception ex) {
+            logPO.setBusinessState("失败");
+            log.error("定时扫描数据服务API是否熔断，扫描异常：" + ex);
+        } finally {
+            try {
+                logsMapper.insert(logPO);
+            } catch (Exception se) {
+                log.error("定时扫描数据服务API是否熔断，日志保存异常：" + se);
+            }
+        }
+        return true;
     }
 }

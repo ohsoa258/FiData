@@ -1,6 +1,7 @@
 package com.fisk.dataservice.dto.apiservice;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
@@ -11,6 +12,7 @@ import javax.validation.constraints.NotNull;
  * @description token DTO
  * @date 2022/1/6 14:51
  */
+@Data
 public class TokenDTO {
     /**
      * 应用账号

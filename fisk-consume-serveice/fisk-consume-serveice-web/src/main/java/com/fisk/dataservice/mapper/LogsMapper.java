@@ -3,6 +3,7 @@ package com.fisk.dataservice.mapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.dataservice.entity.LogPO;
+import com.fisk.dataservice.vo.atvserviceanalyse.AtvCallApiFuSingAnalyseVO;
 import com.fisk.dataservice.vo.atvserviceanalyse.AtvYasCallApiAnalyseVO;
 import com.fisk.dataservice.vo.atvserviceanalyse.AtvTopCallApiAnalyseVO;
 import com.fisk.dataservice.vo.logs.ApiLogVO;
@@ -31,6 +32,42 @@ public interface LogsMapper extends FKBaseMapper<LogPO> {
     Page<ApiLogVO> filter(Page<ApiLogVO> page, @Param("apiId") Integer apiId, @Param("appId") Integer appId, @Param("keyword") String keyword);
 
     /**
+     * 统计数据服务API熔断情况
+     *
+     * @return 查询结果
+     */
+    @Select("SELECT\n" +
+            "\tbusiness_state AS lastScanResult,\n" +
+            "\tcreate_time AS lastScanDateTime,(\n" +
+            "\tSELECT\n" +
+            "\t\tcount(*) \n" +
+            "\tFROM\n" +
+            "\t\ttb_logs \n" +
+            "\tWHERE\n" +
+            "\t\tdel_flag = 1 \n" +
+            "\t\tAND log_type = 200 \n" +
+            "\t\tAND business_state = '成功' \n" +
+            "\t\t) AS scanSuccessCount,(\n" +
+            "\tSELECT\n" +
+            "\t\tcount(*) \n" +
+            "\tFROM\n" +
+            "\t\ttb_logs \n" +
+            "\tWHERE\n" +
+            "\t\tdel_flag = 1 \n" +
+            "\t\tAND log_type = 200 \n" +
+            "\t\tAND business_state = '失败' \n" +
+            "\t) AS scanFailCount \n" +
+            "FROM\n" +
+            "\ttb_logs \n" +
+            "WHERE\n" +
+            "\tdel_flag = 1 \n" +
+            "\tAND log_type = 200 \n" +
+            "ORDER BY\n" +
+            "\tcreate_time DESC \n" +
+            "\tLIMIT 0,1")
+    AtvCallApiFuSingAnalyseVO getAtvCallApiFuSingAnalyse();
+
+    /**
      * 统计昨天和今天API在各个时间节点的调用情况
      *
      * @return 查询结果
@@ -43,6 +80,7 @@ public interface LogsMapper extends FKBaseMapper<LogPO> {
             "\ttb_logs \n" +
             "WHERE\n" +
             "\tdel_flag = 1 \n" +
+            "\tAND log_type = 100 \n" +
             "\tAND create_time >= CURDATE() - INTERVAL 1 DAY \n" +
             "\tAND create_time < CURDATE() + INTERVAL 1 DAY \n" +
             "GROUP BY\n" +
@@ -68,6 +106,7 @@ public interface LogsMapper extends FKBaseMapper<LogPO> {
             "WHERE\n" +
             "\tlog.del_flag = 1 \n" +
             "\tAND api.del_flag = 1 \n" +
+            "\tAND log.log_type = 100 \n" +
             "\tAND log.create_time >= CURDATE() \n" +
             "\tAND log.create_time < CURDATE() + INTERVAL 1 DAY \n" +
             "GROUP BY\n" +
