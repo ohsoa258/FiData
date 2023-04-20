@@ -238,7 +238,12 @@ public class ClassificationImpl
         }
     }
 
+
     @Override
+    /**
+     *向数据库中添加业务元数据
+     * @param  item   传输的业务元数据对象
+     */
     public ResultEnum addClassification(ClassificationDefsDTO dto)
     {
         List<ClassificationDefContentDTO> classificationDefList = dto.getClassificationDefs();
@@ -246,7 +251,6 @@ public class ClassificationImpl
             if (StringUtils.isEmpty(item.name)){
                 throw new FkException(ResultEnum.ERROR, "业务分类名称不能为空");
             }
-
             // 查询数据
             QueryWrapper<BusinessClassificationPO> qw = new QueryWrapper<>();
             qw.eq("name", item.name).eq("del_flag", 1);
@@ -254,19 +258,16 @@ public class ClassificationImpl
             if (bcPO != null){
                 throw new FkException(ResultEnum.ERROR, "业务分类名称已经存在");
             }
-
             // 添加数据
             BusinessClassificationPO model = new BusinessClassificationPO();
             model.setName(item.name);
             model.setDescription(item.description);
-
             // 设置父级id
             if (!CollectionUtils.isEmpty(item.superTypes)){
                 model.setPid(Integer.valueOf(businessClassificationMapper.selectParentId(item.superTypes.get(0))));
             }else {
                 model.setPid(null);
             }
-
             // 设置创建者信息
             //model.setCreateUser(userHelper.getLoginUserInfo().id.toString());
             int flag = businessClassificationMapper.insert(model);
@@ -361,43 +362,30 @@ public class ClassificationImpl
     }
 
 /**
- * 同步业务分类
+ * 同步业务分类数据，公共方法，各层都会用到
+ * @param dto  将业务分类
 * */
     @Override
     public ResultEnum appSynchronousClassification(ClassificationInfoDTO dto) {
         log.info("开始同步业务， 参数:{}", JSON.toJSONString(dto));
         //是否删除
         if (dto.delete) {
-            return deleteClassification(dto.name);
-        }
+           deleteClassification(dto.name);
+      }
         ClassificationDefsDTO data = new ClassificationDefsDTO();
         List<ClassificationDefContentDTO> list = new ArrayList<>();
         //同步主数据业务分类
         ClassificationDefContentDTO masterData = new ClassificationDefContentDTO();
         masterData.name = dto.name;
         masterData.description = dto.description;
+        //获取业务分类的上级
         List<String> analysisModelSuperType = new ArrayList<>();
-        switch (dto.sourceType) {
-            case 1:
-                analysisModelSuperType.add(ClassificationTypeEnum.DATA_ACCESS.getName());
-                break;
-            case 2:
-                analysisModelSuperType.add(ClassificationTypeEnum.ANALYZE_DATA.getName());
-                break;
-            case 3:
-                analysisModelSuperType.add(ClassificationTypeEnum.API_GATEWAY_SERVICE.getName());
-                break;
-            case 4:
-                analysisModelSuperType.add(ClassificationTypeEnum.DATABASE_SYNCHRONIZATION_SERVICE.getName());
-                break;
-            case 5:
-                analysisModelSuperType.add(ClassificationTypeEnum.VIEW_ANALYZE_SERVICE.getName());
-                break;
-            default:
-                break;
-        }
+            for (ClassificationTypeEnum e : ClassificationTypeEnum.values()) {
+                if (e.getValue() == dto.sourceType) {
+                    analysisModelSuperType.add( e.getName());
+                }
+            }
         masterData.superTypes = analysisModelSuperType;
-
         list.add(masterData);
 
         data.classificationDefs = list;

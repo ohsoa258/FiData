@@ -2,10 +2,7 @@ package com.fisk.datamanagement.mapper;
 
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datamanagement.entity.BusinessClassificationPO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -30,4 +27,7 @@ public interface BusinessClassificationMapper extends FKBaseMapper<BusinessClass
 
     @Select("select `name` from tb_business_classification where id != #{guid} and del_flag = #{flag}")
     List<String> selectNameList(@Param("guid") String guid, @Param("flag") int flag);
+
+    @Delete("truncate TABLE tb_business_classification")
+    int truncateTable();
 }
