@@ -24,18 +24,5 @@ public class AtvCallApiFuSingAnalyseVO {
      * 上次扫描时间
      */
     @ApiModelProperty(value = "上次扫描时间")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    public LocalDateTime lastScanDateTime;
-
-    /**
-     * 扫描失败总次数
-     */
-    @ApiModelProperty(value = "扫描失败总次数")
-    public Integer scanFailCount;
-
-    /**
-     * 扫描成功总次数
-     */
-    @ApiModelProperty(value = "扫描成功总次数")
-    public Integer scanSuccessCount;
+    public String lastScanDateTime;
 }

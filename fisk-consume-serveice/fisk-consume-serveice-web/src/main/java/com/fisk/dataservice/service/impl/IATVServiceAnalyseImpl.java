@@ -1,8 +1,11 @@
 package com.fisk.dataservice.service.impl;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.DateTimeUtils;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.dataservice.dto.apiservice.TokenDTO;
 import com.fisk.dataservice.dto.serviceanalyse.ATVServiceAnalyseDTO;
 import com.fisk.dataservice.entity.*;
@@ -16,7 +19,9 @@ import com.fisk.dataservice.vo.atvserviceanalyse.AtvCallApiFuSingAnalyseVO;
 import com.fisk.dataservice.vo.atvserviceanalyse.AtvYasCallApiAnalyseVO;
 import com.fisk.dataservice.vo.atvserviceanalyse.AtvTopCallApiAnalyseVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -56,6 +61,9 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
 
     @Resource
     private AppServiceConfigMapper serviceConfigMapper; // 服务应用中间表
+
+    @Resource
+    private RedisTemplate redisTemplate;
 
     @Value("${dataservice.scan.api_address}")
     private String scanApiAddress;
@@ -137,7 +145,17 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
 
     @Override
     public AtvCallApiFuSingAnalyseVO getAtvCallApiFuSingAnalyse() {
-        return logsMapper.getAtvCallApiFuSingAnalyse();
+        AtvCallApiFuSingAnalyseVO atvCallApiFuSingAnalyseVO = new AtvCallApiFuSingAnalyseVO();
+        String redisKey = "fiData_DataService_ApiScanResult_Key";
+        boolean flag = redisTemplate.hasKey(redisKey);
+        if (!flag) {
+            scanDataServiceApiIsFuSing();
+        }
+        String json = redisTemplate.opsForValue().get(redisKey).toString();
+        if (StringUtils.isNotEmpty(json)) {
+            atvCallApiFuSingAnalyseVO = JSONObject.parseObject(json, AtvCallApiFuSingAnalyseVO.class);
+        }
+        return atvCallApiFuSingAnalyseVO;
     }
 
     @Override
@@ -153,9 +171,8 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
     @Async
     @Override
     public boolean scanDataServiceApiIsFuSing() {
-        LogPO logPO = new LogPO();
-        logPO.setLogLevel(LogLevelTypeEnum.DEBUG.getName());
-        logPO.setLogType(LogTypeEnum.SCAN_API.getValue());
+        AtvCallApiFuSingAnalyseVO atvCallApiFuSingAnalyseVO = new AtvCallApiFuSingAnalyseVO();
+        atvCallApiFuSingAnalyseVO.setLastScanDateTime(DateTimeUtils.getNow());
         try {
             String url = scanApiAddress + "/dataservice/apiService/getToken";
             TokenDTO tokenDTO = new TokenDTO();
@@ -165,18 +182,20 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
             ResultEntity result = HttpUtils.sendPostWebRequest(ResultEntity.class,
                     url, getTokenParams, null);
             if (result != null && result.getCode() == ResultEnum.DS_APISERVICE_API_APPINFO_EXISTS.getCode()) {
-                logPO.setBusinessState("成功");
+                atvCallApiFuSingAnalyseVO.setLastScanResult("成功");
             } else {
-                logPO.setBusinessState("失败");
+                atvCallApiFuSingAnalyseVO.setLastScanResult("失败");
             }
         } catch (Exception ex) {
-            logPO.setBusinessState("失败");
+            atvCallApiFuSingAnalyseVO.setLastScanResult("失败");
             log.error("定时扫描数据服务API是否熔断，扫描异常：" + ex);
         } finally {
             try {
-                logsMapper.insert(logPO);
+                String json = JSONObject.toJSON(atvCallApiFuSingAnalyseVO).toString();
+                String redisKey = "fiData_DataService_ApiScanResult_Key";
+                redisTemplate.opsForValue().set(redisKey, json);
             } catch (Exception se) {
-                log.error("定时扫描数据服务API是否熔断，日志保存异常：" + se);
+                log.error("定时扫描数据服务API是否熔断，redis写入异常：" + se);
             }
         }
         return true;

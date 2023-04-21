@@ -32,49 +32,13 @@ public interface LogsMapper extends FKBaseMapper<LogPO> {
     Page<ApiLogVO> filter(Page<ApiLogVO> page, @Param("apiId") Integer apiId, @Param("appId") Integer appId, @Param("keyword") String keyword);
 
     /**
-     * 统计数据服务API熔断情况
-     *
-     * @return 查询结果
-     */
-    @Select("SELECT\n" +
-            "\tbusiness_state AS lastScanResult,\n" +
-            "\tcreate_time AS lastScanDateTime,(\n" +
-            "\tSELECT\n" +
-            "\t\tcount(*) \n" +
-            "\tFROM\n" +
-            "\t\ttb_logs \n" +
-            "\tWHERE\n" +
-            "\t\tdel_flag = 1 \n" +
-            "\t\tAND log_type = 200 \n" +
-            "\t\tAND business_state = '成功' \n" +
-            "\t\t) AS scanSuccessCount,(\n" +
-            "\tSELECT\n" +
-            "\t\tcount(*) \n" +
-            "\tFROM\n" +
-            "\t\ttb_logs \n" +
-            "\tWHERE\n" +
-            "\t\tdel_flag = 1 \n" +
-            "\t\tAND log_type = 200 \n" +
-            "\t\tAND business_state = '失败' \n" +
-            "\t) AS scanFailCount \n" +
-            "FROM\n" +
-            "\ttb_logs \n" +
-            "WHERE\n" +
-            "\tdel_flag = 1 \n" +
-            "\tAND log_type = 200 \n" +
-            "ORDER BY\n" +
-            "\tcreate_time DESC \n" +
-            "\tLIMIT 0,1")
-    AtvCallApiFuSingAnalyseVO getAtvCallApiFuSingAnalyse();
-
-    /**
      * 统计昨天和今天API在各个时间节点的调用情况
      *
      * @return 查询结果
      */
     @Select("SELECT\n" +
             "\tDATE_FORMAT( create_time, '%Y-%m-%d' ) AS dateSlot,\n" +
-            "\tDATE_FORMAT( create_time, '%Y-%m-%d %H:00:00' ) AS timeSlot,\n" +
+            "\tDATE_FORMAT( create_time, '%H:00' ) AS timeSlot,\n" +
             "\tCOUNT(*) AS totalCount \n" +
             "FROM\n" +
             "\ttb_logs \n" +
@@ -87,7 +51,7 @@ public interface LogsMapper extends FKBaseMapper<LogPO> {
             "\tdateSlot,\n" +
             "\ttimeSlot \n" +
             "ORDER BY\n" +
-            "\ttimeSlot;")
+            "\tdateSlot,timeSlot ASC;")
     List<AtvYasCallApiAnalyseVO> getAtvYasCallApiAnalyse();
 
     /**
