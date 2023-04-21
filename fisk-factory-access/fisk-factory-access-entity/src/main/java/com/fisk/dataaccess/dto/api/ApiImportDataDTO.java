@@ -34,18 +34,22 @@ public class ApiImportDataDTO {
     /*
      * job批次号
      * */
+    @ApiModelProperty(value = "job批次号")
     public String pipelJobTraceId;
 
     /*
      * task批次号
      * */
+    @ApiModelProperty(value = "task批次号")
     public String pipelTaskTraceId;
 
     /*
      * stage批次号
      * */
+    @ApiModelProperty(value = "stage批次号")
     public String pipelStageTraceId;
 
+    @ApiModelProperty(value = "userId")
     public long userId;
 
 

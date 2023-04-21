@@ -38,5 +38,6 @@ public class OdsQueryDTO {
     /*
      * 接入的增量时间参数
      */
+    @ApiModelProperty(value = "接入的增量时间参数")
     public List<DeltaTimeDTO> deltaTimes;
 }

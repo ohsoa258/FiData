@@ -51,6 +51,9 @@ public class SwaggerConfig {
     public static final String PROCESS = "元数据血缘连线处理";
     public static final String GLOBAL_SEARCH = "全局搜索";
     public static final String DATA_LOGGING = "数据报表记录数";
+    public static final String OperateLog = "操作日志";
+    public static final String MetaData = "元数据";
+    public static final String MetadataAttribute = "元数据属性";
 
     @Bean
     public Docket createRestApi() {
@@ -75,6 +78,9 @@ public class SwaggerConfig {
                 .tags(new Tag(PROCESS, "元数据血缘连线处理"))
                 .tags(new Tag(GLOBAL_SEARCH, "全局搜索"))
                 .tags(new Tag(DATA_LOGGING, "数据报表记录数"))
+                .tags(new Tag(OperateLog, "操作日志"))
+                .tags(new Tag(MetaData, "元数据"))
+                .tags(new Tag(MetadataAttribute, "元数据属性"))
                 .securityContexts(securityContexts());
     }
 

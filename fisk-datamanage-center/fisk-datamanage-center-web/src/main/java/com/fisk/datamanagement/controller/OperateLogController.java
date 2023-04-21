@@ -1,7 +1,9 @@
 package com.fisk.datamanagement.controller;
 
+import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.metadataentityoperationLog.MetaDataEntityOperationLogDTO;
 import com.fisk.datamanagement.service.IMetaDataEntityOperationLog;
+import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,6 +16,7 @@ import javax.annotation.Resource;
  * @createTime 2023-03-09 11:48
  * @description 操作日志
  */
+@Api(tags = {SwaggerConfig.OperateLog})
 @RestController
 @RequestMapping("/OperateLog")
 public class OperateLogController {

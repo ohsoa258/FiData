@@ -23,6 +23,27 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
+//    public static final String FACT_ATTRIBUTE = "fact-attribute-controller";
+//    public static final String FACT="fact-controller";
+//    public static final String DIMENSION ="dimension-controller";
+//    public static final String DIMENSION_ATTRIBUTE ="dimension-attribute-controller";
+//    public static final String BUSINESS_PROCESS ="business-process-controller";
+//    public static final String BUSINESS_AREA ="business-area-controller";
+//    public static final String DATASOURCE_AREA ="data-source-area-controller";
+//    public static final String ATOMIC_INDICATOR ="atomic-indicators-controller";
+//    public static final String DERIVED_INDICATOR="derived-indicators-controller";
+//    public static final String BUSINES_LIMITE ="busines-limited-controller";
+//    public static final String TAG_4 = "data-domain-controller";
+//    public static final String FACT_SYNC_MODE="factsyncmode--controller";
+//    public static final String DIMENSION_FOLDER="dimension-folder-controller";
+//    public static final String DATAFACTORY="datafactory--controller";
+//    public static final String TABLE_HISTORY="table-history--controller";
+//    public static final String DATA_MANAGEMENT="data-management-controller";
+//    public static final String TABLE_BUSINESS="table-business-controller";
+//    public static final String WIDE_TABLE = "wide-table-controller";
+//    public static final String DATA_OPS = "data-ops-controller";
+//    public static final String CUSTOM_SCRIPT = "custom-script-controller";
+
     public static final String FACT_ATTRIBUTE = "fact-attribute-controller";
     public static final String FACT="fact-controller";
     public static final String DIMENSION ="dimension-controller";

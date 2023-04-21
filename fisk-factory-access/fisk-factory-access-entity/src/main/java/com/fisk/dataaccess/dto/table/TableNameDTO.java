@@ -26,6 +26,7 @@ public class TableNameDTO {
     /**
      * 表字段
      */
+    @ApiModelProperty(value = "表字段")
     public List<FieldNameDTO> field;
 
 }

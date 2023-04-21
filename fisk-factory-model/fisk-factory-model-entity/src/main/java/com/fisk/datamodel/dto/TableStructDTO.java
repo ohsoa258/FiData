@@ -1,5 +1,6 @@
 package com.fisk.datamodel.dto;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -12,9 +13,12 @@ import lombok.Data;
 @Data
 public class TableStructDTO {
 
+    @ApiModelProperty(value = "字段名")
     public String fieldName;
 
+    @ApiModelProperty(value = "字段类型")
     public String fieldType;
 
+    @ApiModelProperty(value = "摆脱")
     public Integer rid;
 }

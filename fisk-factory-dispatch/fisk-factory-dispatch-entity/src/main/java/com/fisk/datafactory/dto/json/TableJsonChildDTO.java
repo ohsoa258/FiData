@@ -1,5 +1,6 @@
 package com.fisk.datafactory.dto.json;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -11,8 +12,10 @@ import lombok.Data;
 @Data
 public class TableJsonChildDTO {
 
+    @ApiModelProperty(value = "表id")
     public long tableId;
 
+    @ApiModelProperty(value = "表名称")
     public String tableName;
 
 

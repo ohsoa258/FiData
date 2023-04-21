@@ -6,9 +6,11 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
 import com.fisk.datamanagement.service.IMetadataEntity;
 import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,8 @@ import java.util.List;
 /**
  * @author JianWenYang
  */
+
+@Api(tags = {SwaggerConfig.MetaData})
 @RestController
 @RequestMapping("/MetaData")
 public class MetaDataController {

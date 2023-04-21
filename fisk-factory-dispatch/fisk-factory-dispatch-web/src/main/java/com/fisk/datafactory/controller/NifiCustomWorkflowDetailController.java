@@ -5,12 +5,14 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.Dto.cron.NextCronTimeDTO;
+import com.fisk.datafactory.config.SwaggerConfig;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.*;
 import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -23,6 +25,7 @@ import java.util.Map;
 /**
  * @author Lock
  */
+@Api(tags = {SwaggerConfig.NIFI_CUSTOM_WORKFLOW_DETAIL})
 @RestController
 @RequestMapping("/nifiCustomWorkflowDetail")
 @Slf4j

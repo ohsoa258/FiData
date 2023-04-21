@@ -105,26 +105,31 @@ public class TableAccessNonDTO extends BaseDTO {
     /**
      * 表字段对象
      */
+    @ApiModelProperty(value = "表字段对象")
     public List<TableFieldsDTO> list;
 
     /**
      * 业务时间对象
      */
+    @ApiModelProperty(value = "业务时间对象")
     public TableBusinessDTO businessDTO;
 
     /**
      * 同步方式对象
      */
+    @ApiModelProperty(value = "同步方式对象")
     public TableSyncmodeDTO tableSyncmodeDTO;
 
     /*
      * 接入的增量时间参数
      */
+    @ApiModelProperty(value = "接入的增量时间参数")
     public List<DeltaTimeDTO> deltaTimes;
 
     /**
      * 0: 保存;   1: 保存&发布
      */
+    @ApiModelProperty(value = "0: 保存;   1: 保存&发布")
     public int flag;
 
     @ApiModelProperty(value = "发布时,是否立即同步数据", required = true)
@@ -133,11 +138,13 @@ public class TableAccessNonDTO extends BaseDTO {
     @ApiModelProperty(value = "业务时间覆盖，需要传递拼接的sql条件", required = false)
     public String whereScript;
 
+    @ApiModelProperty(value = "表历史")
     public List<TableHistoryDTO> tableHistorys;
 
     /**
      * 覆盖脚本
      */
+    @ApiModelProperty(value = "覆盖脚本")
     public String coverScript;
 
     public TableAccessNonDTO(BaseEntity entity) {

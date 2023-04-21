@@ -13,16 +13,19 @@ import java.util.List;
 @Data
 public class WideTableFieldConfigDTO {
 
+    @ApiModelProperty(value = "页面大小")
     public int pageSize;
 
     /**
      * 所有表信息: entity.get(0)一定是主表
      */
+    @ApiModelProperty(value = "所有表信息: entity.get(0)一定是主表")
     public List<TableSourceTableConfigDTO> entity;
 
     /**
      * 连线关系
      */
+    @ApiModelProperty(value = "连线关系")
     public List<TableSourceRelationsDTO> relations;
 
     @ApiModelProperty(value = "当前操作的事实表名", required = true)

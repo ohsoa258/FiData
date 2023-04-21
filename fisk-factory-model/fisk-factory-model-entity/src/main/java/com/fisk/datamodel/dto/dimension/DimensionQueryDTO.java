@@ -1,5 +1,6 @@
 package com.fisk.datamodel.dto.dimension;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -7,6 +8,8 @@ import lombok.Data;
  */
 @Data
 public class DimensionQueryDTO {
+    @ApiModelProperty(value = "业务区域Id")
     public int businessAreaId;
+    @ApiModelProperty(value = "维度Id")
     public int dimensionId;
 }

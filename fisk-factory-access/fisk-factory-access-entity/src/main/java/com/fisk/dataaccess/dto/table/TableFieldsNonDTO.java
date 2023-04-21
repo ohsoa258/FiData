@@ -25,30 +25,36 @@ public class TableFieldsNonDTO extends BaseDTO {
     /**
      * table_access（id）
      */
+    @ApiModelProperty(value = "目标表ID")
     public long tableAccessId;
     /**
      * 源字段
      */
+    @ApiModelProperty(value = "字段资源名称")
     public String sourceFieldName;
 
     /**
      * 字段名称
      */
+    @ApiModelProperty(value = "字段名称")
     public String fieldName;
 
     /**
      * 字段描述
      */
+    @ApiModelProperty(value = "字段描述")
     public String fieldDes;
 
     /**
      * 字段类型
      */
+    @ApiModelProperty(value = "字段类型")
     public String fieldType;
 
     /**
      * 字段长度
      */
+    @ApiModelProperty(value = "字段长度")
     public long fieldLength;
 
     @ApiModelProperty(value = "字段推送规则")
@@ -60,16 +66,19 @@ public class TableFieldsNonDTO extends BaseDTO {
     /**
      * 1是主键，0非主键
      */
+    @ApiModelProperty(value = "1是主键，0非主键")
     public int isPrimarykey;
 
     /**
      * 1是业务时间，0非业务时间
      */
+    @ApiModelProperty(value = "1是业务时间，0非业务时间")
     public int isBusinesstime;
 
     /**
      * 1是时间戳，0非时间戳
      */
+    @ApiModelProperty(value = "1是时间戳，0非时间戳")
     public long isRealtime;
 
     public TableFieldsNonDTO(BaseEntity entity) {

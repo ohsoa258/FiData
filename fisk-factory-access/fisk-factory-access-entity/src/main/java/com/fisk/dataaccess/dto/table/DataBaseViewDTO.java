@@ -23,5 +23,6 @@ public class DataBaseViewDTO {
     /**
      * 视图字段
      */
+    @ApiModelProperty(value = "视图字段")
     public List<TableStructureDTO> fields;
 }

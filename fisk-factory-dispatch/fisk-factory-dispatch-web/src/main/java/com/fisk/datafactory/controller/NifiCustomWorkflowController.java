@@ -4,12 +4,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datafactory.config.SwaggerConfig;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowUpdateDTO;
 import com.fisk.datafactory.service.INifiCustomWorkflow;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -21,6 +23,7 @@ import javax.validation.Valid;
 /**
  * @author Lock
  */
+@Api(tags = {SwaggerConfig.NIFI_CUSTOM_WORKFLOW})
 @RestController
 @RequestMapping("/nifiCustomWorkflow")
 @Slf4j

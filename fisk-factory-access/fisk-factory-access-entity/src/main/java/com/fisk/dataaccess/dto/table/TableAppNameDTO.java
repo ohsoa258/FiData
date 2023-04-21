@@ -2,6 +2,7 @@ package com.fisk.dataaccess.dto.table;
 
 import com.fisk.common.core.baseObject.dto.BaseDTO;
 import com.fisk.common.core.baseObject.entity.BaseEntity;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = false)
 public class TableAppNameDTO extends BaseDTO {
 
+    @ApiModelProperty(value = "应用名称")
     public String appName;
 
     public TableAppNameDTO(BaseEntity entity) {

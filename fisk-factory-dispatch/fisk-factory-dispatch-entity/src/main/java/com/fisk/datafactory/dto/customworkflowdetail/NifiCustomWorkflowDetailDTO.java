@@ -11,8 +11,11 @@ import java.util.Map;
 @Data
 public class NifiCustomWorkflowDetailDTO {
 
+    @ApiModelProperty(value = "id")
     public long id;
+    @ApiModelProperty(value = "pid")
     public Long pid;
+    @ApiModelProperty(value = "管道id")
     public String workflowId;
     @ApiModelProperty(value = "管道名称")
     public String workflowName;
@@ -26,7 +29,9 @@ public class NifiCustomWorkflowDetailDTO {
     public String tableId;
     @ApiModelProperty(value = "组件绑定的表的顺序")
     public Integer tableOrder;
+    @ApiModelProperty(value = "应用名称")
     public String appName;
+    @ApiModelProperty(value = "表名称")
     public String tableName;
     /**
      * 常规: 名称
@@ -41,21 +46,33 @@ public class NifiCustomWorkflowDetailDTO {
     /**
      * 常规: 描述
      */
+    @ApiModelProperty(value = "组件详细信息")
     public String componentDesc;
+
+    @ApiModelProperty(value = "组件X")
     public Double componentX;
+
+    @ApiModelProperty(value = "组件Y")
     public Double componentY;
     /**
      * 元数据对象
      */
+    @ApiModelProperty(value = "元数据项目")
     public String metadataObj;
+    @ApiModelProperty(value = "计划表")
     public Integer schedule;
+    @ApiModelProperty(value = "脚本")
     public String script;
+    @ApiModelProperty(value = "输入")
     public String inport;
+    @ApiModelProperty(value = "输出")
     public String outport;
+    @ApiModelProperty(value = "标记")
     public Boolean flag;
     /**
      * 是否禁用,true不禁用,false 禁用
      */
+    @ApiModelProperty(value = "是否禁用,true不禁用,false 禁用")
     public Boolean forbidden;
 
     @ApiModelProperty(value = "外部数据源id", required = true)

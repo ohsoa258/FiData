@@ -18,15 +18,18 @@ public class DataAccessTreeDTO {
     /**
      * id
      */
+    @ApiModelProperty(value = "id")
     public long id;
     /**
      * 应用名称
      */
+    @ApiModelProperty(value = "应用名称")
     public String appName;
 
     /**
      * 应用注册下的物理表
      */
+    @ApiModelProperty(value = "应用注册下的物理表")
     public List<TableNameTreeDTO> list;
 
     /**
