@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.dto.process;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -7,5 +8,8 @@ import lombok.Data;
  */
 @Data
 public class ProcessUniqueAttributesDTO {
+
+    @ApiModelProperty(value = "限定名称")
     public String qualifiedName;
+
 }

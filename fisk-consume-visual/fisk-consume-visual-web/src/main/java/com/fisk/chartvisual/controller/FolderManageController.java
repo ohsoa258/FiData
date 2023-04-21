@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.controller;
 
+import com.fisk.chartvisual.config.SwaggerConfig;
 import com.fisk.chartvisual.dto.folder.FolderDTO;
 import com.fisk.chartvisual.dto.folder.FolderEditDTO;
 import com.fisk.chartvisual.service.IFolderManageService;
@@ -7,6 +8,7 @@ import com.fisk.chartvisual.vo.FolderVO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,8 @@ import java.util.List;
  *
  * @author gy
  */
+
+@Api(tags = {SwaggerConfig.TAG_8})
 @RestController
 @RequestMapping("/folder")
 public class FolderManageController {

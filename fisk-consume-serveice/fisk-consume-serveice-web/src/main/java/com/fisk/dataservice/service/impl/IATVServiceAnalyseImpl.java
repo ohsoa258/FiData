@@ -1,16 +1,32 @@
 package com.fisk.dataservice.service.impl;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.DateTimeUtils;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
+import com.fisk.dataservice.dto.apiservice.TokenDTO;
 import com.fisk.dataservice.dto.serviceanalyse.ATVServiceAnalyseDTO;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
+import com.fisk.dataservice.enums.LogLevelTypeEnum;
+import com.fisk.dataservice.enums.LogTypeEnum;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IATVServiceAnalyseService;
-import com.fisk.dataservice.service.ITableService;
+import com.fisk.dataservice.util.HttpUtils;
+import com.fisk.dataservice.vo.atvserviceanalyse.AtvCallApiFuSingAnalyseVO;
+import com.fisk.dataservice.vo.atvserviceanalyse.AtvYasCallApiAnalyseVO;
+import com.fisk.dataservice.vo.atvserviceanalyse.AtvTopCallApiAnalyseVO;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author zjy
@@ -19,6 +35,7 @@ import java.util.stream.Collectors;
  * @description
  */
 @Service
+@Slf4j
 public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
 
     @Resource
@@ -45,7 +62,11 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
     @Resource
     private AppServiceConfigMapper serviceConfigMapper; // 服务应用中间表
 
+    @Resource
+    private RedisTemplate redisTemplate;
 
+    @Value("${dataservice.scan.api_address}")
+    private String scanApiAddress;
 
     @Override
     public ATVServiceAnalyseDTO getServiceAnalyse() {
@@ -60,7 +81,7 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
 
         List<AppServiceConfigPO> serviceConfigPOS = serviceConfigMapper.selectList(null);
 
-        long apiServiceCount=0;
+        long apiServiceCount = 0;
 
         /**
          * api服务
@@ -79,8 +100,8 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
                 apiServiceCount += serviceConfigPOS.stream()
                         .filter(e -> e.getAppId() == appConfigPO.getId())
                         .filter(e -> e.getType() == AppServiceTypeEnum.API.getValue())
-                        .filter(e->e.getServiceId()==configPO.id)
-                        .filter(e->e.getServiceId()!=0).count();
+                        .filter(e -> e.getServiceId() == configPO.id)
+                        .filter(e -> e.getServiceId() != 0).count();
             }
         }
 
@@ -98,8 +119,8 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
                 apiServiceCount += serviceConfigPOS.stream()
                         .filter(e -> e.getAppId() == tableAppPO.getId())
                         .filter(e -> e.getType() == AppServiceTypeEnum.TABLE.getValue())
-                        .filter(e->e.getServiceId()==tableServicePO.id)
-                        .filter(e->e.getServiceId()!=0).count();
+                        .filter(e -> e.getServiceId() == tableServicePO.id)
+                        .filter(e -> e.getServiceId() != 0).count();
             }
         }
 
@@ -113,7 +134,7 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
         List<ViewPO> viewPOS = viewMapper.selectList(null);
         for (ViewThemePO viewThemePO : viewThemePOS) {
             apiServiceCount += viewPOS.stream()
-                    .filter(v->v.getViewThemeId()==viewThemePO.id)
+                    .filter(v -> v.getViewThemeId() == viewThemePO.id)
                     .count();
         }
 
@@ -122,4 +143,61 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
         return analyseDTO;
     }
 
+    @Override
+    public AtvCallApiFuSingAnalyseVO getAtvCallApiFuSingAnalyse() {
+        AtvCallApiFuSingAnalyseVO atvCallApiFuSingAnalyseVO = new AtvCallApiFuSingAnalyseVO();
+        String redisKey = "fiData_DataService_ApiScanResult_Key";
+        boolean flag = redisTemplate.hasKey(redisKey);
+        if (!flag) {
+            scanDataServiceApiIsFuSing();
+        }
+        String json = redisTemplate.opsForValue().get(redisKey).toString();
+        if (StringUtils.isNotEmpty(json)) {
+            atvCallApiFuSingAnalyseVO = JSONObject.parseObject(json, AtvCallApiFuSingAnalyseVO.class);
+        }
+        return atvCallApiFuSingAnalyseVO;
+    }
+
+    @Override
+    public List<AtvYasCallApiAnalyseVO> getAtvYasCallApiAnalyse() {
+        return logsMapper.getAtvYasCallApiAnalyse();
+    }
+
+    @Override
+    public List<AtvTopCallApiAnalyseVO> getAtvTopCallApiAnalyse() {
+        return logsMapper.getAtvTopCallApiAnalyse();
+    }
+
+    @Async
+    @Override
+    public boolean scanDataServiceApiIsFuSing() {
+        AtvCallApiFuSingAnalyseVO atvCallApiFuSingAnalyseVO = new AtvCallApiFuSingAnalyseVO();
+        atvCallApiFuSingAnalyseVO.setLastScanDateTime(DateTimeUtils.getNow());
+        try {
+            String url = scanApiAddress + "/dataservice/apiService/getToken";
+            TokenDTO tokenDTO = new TokenDTO();
+            tokenDTO.setAppAccount("fiData_DataService_ScanTest_Account");
+            tokenDTO.setAppPassword("fiData_DataService_ScanTest_Password");
+            String getTokenParams = JSONObject.toJSONString(tokenDTO);
+            ResultEntity result = HttpUtils.sendPostWebRequest(ResultEntity.class,
+                    url, getTokenParams, null);
+            if (result != null && result.getCode() == ResultEnum.DS_APISERVICE_API_APPINFO_EXISTS.getCode()) {
+                atvCallApiFuSingAnalyseVO.setLastScanResult("成功");
+            } else {
+                atvCallApiFuSingAnalyseVO.setLastScanResult("失败");
+            }
+        } catch (Exception ex) {
+            atvCallApiFuSingAnalyseVO.setLastScanResult("失败");
+            log.error("定时扫描数据服务API是否熔断，扫描异常：" + ex);
+        } finally {
+            try {
+                String json = JSONObject.toJSON(atvCallApiFuSingAnalyseVO).toString();
+                String redisKey = "fiData_DataService_ApiScanResult_Key";
+                redisTemplate.opsForValue().set(redisKey, json);
+            } catch (Exception se) {
+                log.error("定时扫描数据服务API是否熔断，redis写入异常：" + se);
+            }
+        }
+        return true;
+    }
 }

@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.controller;
 
+import com.fisk.chartvisual.config.SwaggerConfig;
 import com.fisk.chartvisual.dto.chartvisual.ObtainTableDataDTO;
 import com.fisk.chartvisual.dto.chartvisual.TableInfoDTO;
 import com.fisk.chartvisual.dto.dstable.*;
@@ -7,6 +8,7 @@ import com.fisk.chartvisual.service.DsTableService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,8 @@ import java.util.Map;
  * @author WangYan
  * @date 2022/3/4 11:23
  */
+
+@Api(tags = {SwaggerConfig.TAG_7})
 @RequestMapping("/ds")
 @RestController
 public class DsTableController {

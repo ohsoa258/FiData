@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.dto.datamasking;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -13,11 +14,13 @@ public class DataMaskingSourceDTO {
     /**
      * 数据源id
      */
+    @ApiModelProperty(value = "数据源id")
     public String datasourceId;
 
     /**
      * 表id
      */
+    @ApiModelProperty(value = "表id")
     public String tableId;
 
 }

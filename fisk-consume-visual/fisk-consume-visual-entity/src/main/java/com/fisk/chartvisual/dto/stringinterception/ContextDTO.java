@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.dto.stringinterception;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -10,7 +11,10 @@ import lombok.Data;
 @Data
 public class ContextDTO {
 
+    @ApiModelProperty(value = "acceptCanvasConfigInfo")
     private AcceptCanvasConfigInfo acceptCanvasConfigInfo;
+
+    @ApiModelProperty(value = "curSelectDataSourceType")
     private CurSelectDataSourceType curSelectDataSourceType;
     public void setAcceptCanvasConfigInfo(AcceptCanvasConfigInfo acceptCanvasConfigInfo) {
         this.acceptCanvasConfigInfo = acceptCanvasConfigInfo;

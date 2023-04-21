@@ -12,6 +12,10 @@ dataservice:
     schedule: 0 30 0 * * ?
     # 是否启用
     enabled: true
+  scan:
+    schedule: 0/30 * * * * ?
+    enabled: true
+    api_address: http://192.168.11.130:8083
 spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver

@@ -1,10 +1,12 @@
 package com.fisk.chartvisual.controller;
 
+import com.fisk.chartvisual.config.SwaggerConfig;
 import com.fisk.chartvisual.dto.contentsplit.ChinaMapDTO;
 import com.fisk.chartvisual.service.ChinaMapService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +17,8 @@ import java.util.List;
  * @author WangYan
  * @date 2021/10/28 17:16
  */
+
+@Api(tags = {SwaggerConfig.TAG_2})
 @RestController
 @RequestMapping("/map")
 public class ChinaMapController {

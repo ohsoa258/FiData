@@ -12,6 +12,7 @@ import javax.validation.constraints.NotNull;
 @Data
 public class ObtainTableDataDTO {
 
+
     @NotNull
     @ApiModelProperty(value = "数据源id",required = true)
     private Integer id;

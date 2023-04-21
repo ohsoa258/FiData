@@ -1,5 +1,6 @@
 package com.fisk.dataservice.dto.serviceanalyse;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,6 +17,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode
 public class ATVServiceAnalyseDTO {
+
+    @ApiModelProperty(value = "服务总个数")
     private long serviceNumber; //服务总个数
+
+    @ApiModelProperty(value = "服务总次数")
     private long serviceCount; //服务总次数
 }

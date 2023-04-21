@@ -1,6 +1,7 @@
 package com.fisk.chartvisual.dto.datasource;
 
 import com.fisk.chartvisual.enums.StorageEngineTypeEnum;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -10,6 +11,9 @@ import lombok.Data;
 @Data
 public class DataSourceDTO {
 
+    @ApiModelProperty(value = "id")
     private Integer id;
+
+    @ApiModelProperty(value = "类型")
     private StorageEngineTypeEnum type;
 }
