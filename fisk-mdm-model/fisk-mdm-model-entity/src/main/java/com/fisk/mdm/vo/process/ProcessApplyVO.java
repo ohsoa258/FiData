@@ -22,8 +22,8 @@ public class ProcessApplyVO {
     @ApiModelProperty(value = "描述")
     private String description;
 
-    @ApiModelProperty(value = "当前节点审批状态")
-    private String state;
+    @ApiModelProperty(value = "当前工单状态")
+    private String opreationstate;
 
     @ApiModelProperty(value = "操作类型")
     private String operationType;

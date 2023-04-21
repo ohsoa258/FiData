@@ -547,10 +547,11 @@ public class ProcessServiceImpl implements ProcessService {
         if(processApplyNotesPos.size()>0){
             return ResultEnum.PROCESS_NOT_ROLLBACK;
         }else {
-            LambdaQueryWrapper<ProcessApplyPO> delQueryWrapper = new LambdaQueryWrapper<>();
-            delQueryWrapper.eq(ProcessApplyPO::getId,applyId);
-            int delete = processApplyService.getBaseMapper().delete(delQueryWrapper);
-            if (delete>0){
+            LambdaUpdateWrapper<ProcessApplyPO> updateWrapper = new LambdaUpdateWrapper<>();
+            updateWrapper.set(ProcessApplyPO::getOpreationstate,4)
+                    .eq(ProcessApplyPO::getId,applyId);
+            boolean update = processApplyService.update(updateWrapper);
+            if (update){
                 return ResultEnum.SUCCESS;
             }
             return ResultEnum.ERROR;

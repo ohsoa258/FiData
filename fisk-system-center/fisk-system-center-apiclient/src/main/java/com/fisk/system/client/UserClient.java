@@ -133,14 +133,14 @@ public interface UserClient {
      * @return
      */
     @GetMapping("/info/getUserIdByUserName/{userName}")
-    public ResultEntity<List<Integer>> getUserIdByUserName(@RequestParam("userName") String userName);
+    ResultEntity<List<Integer>> getUserIdByUserName(@RequestParam("userName") String userName);
 
     /**
      * 获取所有角色及角色下用户列表
      * @return
      */
     @GetMapping("/role/getTreeRols")
-    public ResultEntity<List<RoleInfoVo>> getTreeRols();
+    ResultEntity<List<RoleInfoVo>> getTreeRols();
     /**
      * 菜单列表
      * @return
