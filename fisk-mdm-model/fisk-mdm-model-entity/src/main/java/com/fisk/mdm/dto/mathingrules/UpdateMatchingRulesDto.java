@@ -1,5 +1,6 @@
 package com.fisk.mdm.dto.mathingrules;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -7,5 +8,6 @@ import lombok.Data;
  */
 @Data
 public class UpdateMatchingRulesDto extends MatchingRulesDto{
+    @ApiModelProperty(value = "id")
     public long id;
 }

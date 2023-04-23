@@ -23,20 +23,36 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
+//    public static final String DATAVIEW = "dataview-controller";
+//    public static final String PERMISSION = "permission-controller";
+//    public static final String ROLE_INFO = "role-info-controller";
+//    public static final String SERVICE_REGISTRY = "service-registry-controller";
+//    public static final String USER = "user-controller";
+//    public static final String SYSTEM = "system-controller";
+//    public static final String KEYWORD = "keywords-controller";
+//    public static final String UPLOAD = "upload-controller";
+//    public static final String DATASOURCE = "datasource-controller";
+//    public static final String EMAIL_SERVER_CONTROLLER = "email-server-controller";
+//    public static final String LICENSE_CONTROLLER = "license-controller";
+//    public static final String SQLFACTORY_CONTROLLER = "sqlFactory-controller";
+//    public static final String SYSTEM_VERSION_CONTROLLER = "system-version-controller";
+//    public static final String SYSTEM_LOG_CONTROLLER = "system-log-controller";
+
     public static final String DATAVIEW = "dataview-controller";
-    public static final String PERMISSION = "permission-controller";
-    public static final String ROLE_INFO = "role-info-controller";
-    public static final String SERVICE_REGISTRY = "service-registry-controller";
-    public static final String USER = "user-controller";
-    public static final String SYSTEM = "system-controller";
-    public static final String KEYWORD = "keywords-controller";
-    public static final String UPLOAD = "upload-controller";
-    public static final String DATASOURCE = "datasource-controller";
-    public static final String EMAIL_SERVER_CONTROLLER = "email-server-controller";
-    public static final String LICENSE_CONTROLLER = "license-controller";
-    public static final String SQLFACTORY_CONTROLLER = "sqlFactory-controller";
-    public static final String SYSTEM_VERSION_CONTROLLER = "system-version-controller";
-    public static final String SYSTEM_LOG_CONTROLLER = "system-log-controller";
+    public static final String PERMISSION = "权限管理";
+    public static final String ROLE_INFO = "角色管理";
+    public static final String SERVICE_REGISTRY = "服务注册";
+    public static final String USER = "用户中心服务";
+    public static final String SYSTEM = "系统Logo信息服务";
+    public static final String KEYWORD = "SQL关键字管理";
+    public static final String UPLOAD = "上传管理";
+    public static final String DATASOURCE = "数据源管理";
+    public static final String EMAIL_SERVER_CONTROLLER = "邮件服务器API";
+    public static final String LICENSE_CONTROLLER = "license许可证管理";
+    public static final String SQLFACTORY_CONTROLLER = "SQL语句校验处理";
+    public static final String SYSTEM_VERSION_CONTROLLER = "平台版本信息管理";
+    public static final String SYSTEM_LOG_CONTROLLER = "平台服务日志管理";
+    public static final String Tset = "测试";
 
     @Bean
     public Docket createRestApi() {
@@ -61,6 +77,7 @@ public class SwaggerConfig {
                 .tags(new Tag(SQLFACTORY_CONTROLLER, "SQL语句校验处理"))
                 .tags(new Tag(SYSTEM_VERSION_CONTROLLER,"平台版本信息管理"))
                 .tags(new Tag(SYSTEM_LOG_CONTROLLER,"平台服务日志管理"))
+                .tags(new Tag(Tset,"平台服务日志管理"))
                 .securitySchemes(apiKey())
                 .securityContexts(securityContexts());
 

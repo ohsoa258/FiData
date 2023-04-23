@@ -1,5 +1,6 @@
 package com.fisk.mdm.dto.masterdata;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -9,8 +10,10 @@ import lombok.Data;
 @Data
 public class ImportDataSubmitDTO {
 
+    @ApiModelProperty(value = "键")
     private String key;
 
+    @ApiModelProperty(value = "实体Id")
     private Integer entityId;
 
 }

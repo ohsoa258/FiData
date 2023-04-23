@@ -1,6 +1,7 @@
 package com.fisk.mdm.dto.viwGroup;
 
 import com.fisk.mdm.dto.entity.EntityQueryDTO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -13,6 +14,8 @@ import java.util.List;
 @Data
 public class ViwGroupQueryRelationDTO {
 
+    @ApiModelProperty(value = "关系列表")
     private List<EntityQueryDTO> relationList;
+    @ApiModelProperty(value = "核对数组")
     private List<ViwGroupCheckDTO> checkedArr;
 }
