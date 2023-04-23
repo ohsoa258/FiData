@@ -22,8 +22,8 @@ public class ProcessApplyDTO {
     @ApiModelProperty(value = "申请人/描述")
     private String keyword;
 
-    @ApiModelProperty(value = "审批状态")
-    private String state;
+    @ApiModelProperty(value = "工单状态")
+    private String opreationstate;
 
     @ApiModelProperty(value = "开始时间")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")

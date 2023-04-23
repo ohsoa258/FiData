@@ -14,7 +14,6 @@ import com.fisk.common.service.mdmBEBuild.dto.MasterDataPageDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.masterdata.MasterDataDTO;
 import com.fisk.mdm.dto.masterdatalog.MasterDataLogQueryDTO;
-import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.enums.EventTypeEnum;

@@ -580,8 +580,8 @@ public class ProcessServiceImpl implements ProcessService {
         }
         EmailServerVO emailServerVO = emailServerById.getData();
         MailServeiceDTO mailServeiceDTO = new MailServeiceDTO();
-        mailServeiceDTO.setOpenAuth(false);
-        mailServeiceDTO.setOpenDebug(false);
+        mailServeiceDTO.setOpenAuth(true);
+        mailServeiceDTO.setOpenDebug(true);
         mailServeiceDTO.setHost(emailServerVO.getEmailServer());
         mailServeiceDTO.setProtocol(emailServerVO.getEmailServerType().getName());
         mailServeiceDTO.setUser(emailServerVO.getEmailServerAccount());
