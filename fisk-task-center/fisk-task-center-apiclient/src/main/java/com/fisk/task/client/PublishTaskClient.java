@@ -433,4 +433,13 @@ public interface PublishTaskClient {
     @PostMapping("/publishTask/universalPublish")
     public ResultEntity<Object> universalPublish(@RequestBody KafkaReceiveDTO dto);
 
+
+    /**
+     * 创建任务批量审批
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/publishTask/createBatchApproval")
+    public ResultEntity<Object> createBatchApproval(@RequestBody BuildBatchApprovalDTO dto);
 }

@@ -158,6 +158,11 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
+    public String buildQueryCodeAndLock(String tableName, String code, Integer versionId) {
+        return null;
+    }
+
+    @Override
     public List<OperatorVO> getOperatorList() {
         return null;
     }

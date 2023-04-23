@@ -28,7 +28,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     @Override
     public String buildAttributeLogTable(String tableName) {
         StringBuilder str = new StringBuilder();
-        str.append("CREATE TABLE public." + tableName).append("(");
+        str.append("CREATE TABLE public.\"" + tableName+"\"").append("(");
         str.append("ID int4 NOT NULL,");
         str.append("model_id int4 NULL,");
         str.append("entity_id int4 NULL,");
@@ -48,7 +48,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String buildInsertImportData(InsertImportDataDTO dto) {
         int delFlat = dto.getDelete() ? 0 : 1;
         StringBuilder str = new StringBuilder();
-        str.append("insert into " + dto.getTableName());
+        str.append("insert into \"" + dto.getTableName()+"\"");
         str.append("(" + CommonMethods.getColumnNameAndValue(dto.getMembers().get(0), ImportDataEnum.COLUMN_NAME.getValue()));
         str.append(",fidata_import_type,fidata_batch_code,fidata_version_id,");
         str.append("fidata_del_flag");
@@ -71,7 +71,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String buildImportDataPage(ImportDataPageDTO dto) {
         int offset = (dto.getPageIndex() - 1) * dto.getPageSize();
         StringBuilder str = new StringBuilder();
-        str.append("select * from " + dto.getTableName());
+        str.append("select * from \"" + dto.getTableName()+"\"");
         str.append(" where 1=1 ");
         if (!StringUtils.isEmpty(dto.getBatchCode())) {
             str.append(" and fidata_batch_code='" + dto.getBatchCode() + "'");
@@ -89,7 +89,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     @Override
     public String buildUpdateImportData(Map<String, Object> jsonObject, String tableName) {
         StringBuilder str = new StringBuilder();
-        str.append("update " + tableName);
+        str.append("update \"" + tableName+"\"");
         str.append(" set fidata_import_type=" + jsonObject.get("fidata_import_type"));
         jsonObject.remove("fidata_import_type");
         Iterator iter = jsonObject.entrySet().iterator();
@@ -110,7 +110,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         //计算偏移量
         int offset = (dto.getPageIndex() - 1) * dto.getPageSize();
         StringBuilder str = new StringBuilder();
-        str.append("select " + dto.getColumnNames());
+        str.append("select" + dto.getColumnNames());
         str.append(" from ");
         str.append("\"" + dto.getTableName() + "\"");
         str.append("where fidata_version_id = " + dto.getVersionId());
@@ -128,17 +128,17 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String buildVerifyRepeatCode(String tableName, String batchCode) {
         StringBuilder str = new StringBuilder();
         //更改重复的code上传状态和错误描述
-        str.append("update " + tableName);
+        str.append("update \"" + tableName + "\"");
         str.append(" set fidata_status=3,fidata_error_msg='" + "编码重复" + "'");
         str.append(" where fidata_batch_code='" + batchCode + "' and code in");
-        str.append("(select code from " + tableName);
+        str.append("(select code from \"" + tableName+"\"");
         str.append(" where fidata_batch_code='" + batchCode + "'");
         str.append("and code <>'' and code is not null GROUP BY code HAVING count(*)>1);");
         //更改没有重复code上传状态和错误描述
-        str.append("update " + tableName);
+        str.append("update \"" + tableName + "\"");
         str.append(" set fidata_status=0,fidata_error_msg=null");
         str.append(" where fidata_batch_code='" + batchCode + "' and code in");
-        str.append("(select code from " + tableName);
+        str.append("(select code from \"" + tableName + "\"");
         str.append(" where fidata_batch_code='" + batchCode + "'");
         str.append("and code <>'' and code is not null and fidata_error_msg='编码重复' GROUP BY code HAVING count(*)=1)");
         return str.toString();
@@ -148,7 +148,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String buildQueryOneColumn(String tableName, String selectColumnName, int versionId) {
         StringBuilder str = new StringBuilder();
         str.append("select distinct ");
-        str.append(selectColumnName + " as columns from " + tableName);
+        str.append("\""+selectColumnName + "\" as columns from \"" + tableName+"\"");
         str.append(" where fidata_version_id=" + versionId);
         return str.toString();
     }
@@ -175,7 +175,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append(",sum( case fidata_status when 3 then 1 else 0 end) as errorCount");
         str.append(",sum( case fidata_syncy_type when 1 then 1 else 0 end) as updateCount");
         str.append(",sum( case fidata_syncy_type when 2 then 1 else 0 end) as addCount");
-        str.append(" from " + tableName);
+        str.append(" from \"" + tableName+"\"");
         if (!StringUtils.isEmpty(queryConditions)) {
             str.append(" where 1=1 " + queryConditions);
         }
@@ -186,7 +186,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String buildQueryData(String tableName, String queryConditions) {
         StringBuilder str = new StringBuilder();
         str.append(" select *");
-        str.append(" from " + tableName);
+        str.append(" from \"" + tableName + "\"");
         str.append(" where 1=1 " + queryConditions);
         return str.toString();
     }
@@ -194,13 +194,21 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     @Override
     public String buildQueryCodeAndName(String tableName, String code, String name, Integer versionId) {
         StringBuilder str = new StringBuilder();
-        str.append("select " + code + " as code,");
-        str.append(name + " as name ");
-        str.append(" from " + tableName);
+        str.append("select \"" + code + "\" as code,");
+        str.append("\"" + name + "\" as name ");
+        str.append(" from \"" + tableName +"\"");
         str.append(" where fidata_version_id=" + versionId);
         return str.toString();
     }
-
+    @Override
+    public String buildQueryCodeAndLock(String tableName, String code, Integer versionId) {
+        StringBuilder str = new StringBuilder();
+        str.append("select \"" + code + "\" as code,");
+        str.append("\"fidata_lock_tag\" as lock ");
+        str.append(" from \"" + tableName +"\"");
+        str.append(" where fidata_version_id=" + versionId);
+        return str.toString();
+    }
     @Override
     public List<OperatorVO> getOperatorList() {
         List<OperatorVO> data;
@@ -316,7 +324,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     @Override
     public String buildInsertSingleData(Map<String, Object> data, String tableName) {
         StringBuilder str = new StringBuilder();
-        str.append("insert into " + tableName);
+        str.append("insert into \"" + tableName+"\"");
         str.append("(");
         List<String> columnList = new ArrayList<>();
         List<String> valueList = new ArrayList<>();

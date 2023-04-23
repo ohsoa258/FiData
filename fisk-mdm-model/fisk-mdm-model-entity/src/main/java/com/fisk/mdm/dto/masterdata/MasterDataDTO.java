@@ -12,6 +12,7 @@ import java.util.Map;
 public class MasterDataDTO extends MasterDataBaseDTO {
 
     private String description;
+    private String fidataId;
 
     private List<Map<String, Object>> members;
 

@@ -17,8 +17,8 @@ public enum EventTypeEnum implements BaseEnum {
     UPDATE(1, "修改"),
 
     DELETE(2, "删除"),
-
-    ROLLBACK(3, "回滚");
+    ROLLBACK(3, "回滚"),
+    IMPORT(4, "导入");
 
     EventTypeEnum(int value, String name) {
         this.name = name;

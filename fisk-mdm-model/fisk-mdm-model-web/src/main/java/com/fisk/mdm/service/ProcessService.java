@@ -3,15 +3,12 @@ package com.fisk.mdm.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.mdm.dto.masterdata.MasterDataDTO;
-import com.fisk.mdm.dto.process.ApprovalDTO;
-import com.fisk.mdm.dto.process.PendingApprovalDTO;
-import com.fisk.mdm.dto.process.ProcessInfoDTO;
+import com.fisk.mdm.dto.process.*;
 import com.fisk.mdm.enums.EventTypeEnum;
-import com.fisk.mdm.vo.process.ApprovalDetailVO;
-import com.fisk.mdm.vo.process.PendingApprovalVO;
-import com.fisk.mdm.vo.process.ProcessApplyVO;
-import com.fisk.mdm.vo.process.ProcessInfoVO;
+import com.fisk.mdm.vo.process.*;
+
+import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  * @Author: wangjian
@@ -45,19 +42,19 @@ public interface ProcessService {
 
     /**
      * 添加工单
-     * @param dto
+     * @param entityId
      * @param batchNumber
      * @param eventTypeEnum
      * @return
      */
-    ResultEnum addProcessApply(MasterDataDTO dto, String batchNumber, EventTypeEnum eventTypeEnum);
+    ResultEnum addProcessApply(Integer entityId,String description, String batchNumber, EventTypeEnum eventTypeEnum);
 
     /**
      * 获取我的待审核流程
      *
      * @return
      */
-    Page<ProcessApplyVO> getMyProcessApply(PendingApprovalDTO dto);
+    Page<ProcessApplyVO> getMyProcessApply(ProcessApplyDTO dto);
 
     /**
      * 获取待处理审批列表
@@ -65,13 +62,19 @@ public interface ProcessService {
      * @return
      */
     Page<PendingApprovalVO> getPendingApproval(PendingApprovalDTO dto);
+    /**
+     * 获取所有审批列表
+     * @param dto
+     * @return
+     */
+    Page<AllApprovalVO> getAllApproval(AllApprovalDTO dto);
 
     /**
      * 获取已处理审批列表
      * @param dto
      * @return
      */
-    Page<PendingApprovalVO> getOverApproval(PendingApprovalDTO dto);
+    Page<EndingApprovalVO> getOverApproval(EndingApprovalDTO dto);
 
     /**
      * 获取审批流程详情
@@ -86,4 +89,32 @@ public interface ProcessService {
      * @return
      */
     ResultEnum approval(ApprovalDTO dto);
+
+    /**
+     * 提交批量审批
+     * @param dto
+     * @return
+     */
+    ResultEnum batchApproval(BatchApprovalDTO dto);
+
+    /**
+     * 执行批量审批
+     * @param dtos
+     * @return
+     */
+    ResultEnum executeApproval(List<ApprovalDTO> dtos);
+
+    /**
+     * 撤回审批
+     * @param applyId
+     * @return
+     */
+    ResultEnum rollbackApproval(Integer applyId);
+
+    /**
+     * 下载当前流程记录
+     * @param applyId
+     * @param response
+     */
+    void downloadApprovalApply(Integer applyId, HttpServletResponse response);
 }

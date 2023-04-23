@@ -115,6 +115,11 @@ public interface IBuildSqlCommand {
     String buildQueryCodeAndName(String tableName, String code, String name, Integer versionId);
 
     /**
+     * 查询mdm表code和lock数据
+     */
+    String buildQueryCodeAndLock(String tableName, String code,Integer versionId);
+
+    /**
      * 获取主数据列表筛选条件运算符
      *
      * @return

@@ -143,4 +143,17 @@ public class UserController {
     public ResultEntity<List<UserDTO>> getAllUserList() {
         return service.getAllUserList();
     }
+
+    @GetMapping("/getUserIdByUserName/{userName}")
+    @ApiOperation("根据用户姓名模糊查询用户id")
+    public ResultEntity<List<Integer>> getUserIdByUserName(@RequestParam("userName") String userName){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getUserIdByUserName(userName));
+    }
+
+    @GetMapping("/verifyPageByUserId")
+    @ApiOperation("根据用户id和页面url查询是否有此页面权限")
+    public ResultEntity<Boolean> verifyPageByUserId(@RequestParam("userId") int userId,@RequestParam("pageUrl")String pageUrl) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.verifyPageByUserId(userId,pageUrl));
+    }
+
 }

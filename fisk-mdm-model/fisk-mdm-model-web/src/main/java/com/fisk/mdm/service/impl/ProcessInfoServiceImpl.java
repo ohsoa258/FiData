@@ -1,6 +1,7 @@
 package com.fisk.mdm.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.entity.ProcessInfoPO;
@@ -26,10 +27,10 @@ public class ProcessInfoServiceImpl extends ServiceImpl<ProcessInfoMapper, Proce
 
     @Override
     public ResultEnum deleteProcessInfo(Integer entityId) {
-        LambdaQueryWrapper<ProcessInfoPO> poLambdaQueryWrapper=new LambdaQueryWrapper<>();
-        poLambdaQueryWrapper.eq(ProcessInfoPO::getDelFlag,1)
+        LambdaUpdateWrapper<ProcessInfoPO> poLambdaQueryWrapper=new LambdaUpdateWrapper<>();
+        poLambdaQueryWrapper.set(ProcessInfoPO::getDelFlag,0)
                 .eq(ProcessInfoPO::getEntityId,entityId);
-        baseMapper.delete(poLambdaQueryWrapper);
+        this.update(poLambdaQueryWrapper);
         return ResultEnum.SUCCESS;
     }
 }

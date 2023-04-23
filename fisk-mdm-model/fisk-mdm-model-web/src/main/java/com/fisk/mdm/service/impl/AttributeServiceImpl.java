@@ -1,7 +1,9 @@
 package com.fisk.mdm.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.BeanUtils;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -510,6 +512,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
      * @param entityId
      * @return
      */
+    @Override
     public List<AttributeInfoDTO> listPublishedAttribute(int entityId) {
         QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.orderByAsc("sort_wieght").lambda().eq(AttributePO::getEntityId, entityId)

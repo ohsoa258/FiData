@@ -25,7 +25,8 @@ public interface ProcessApplyMap {
      * @return
      */
     @Mappings({
-            @Mapping(source = "state.value" ,target = "state"),
+            @Mapping(source = "opreationstate.value", target = "opreationstate"),
+            @Mapping(target = "applyId", source = "id")
     })
     ProcessApplyVO poToVo(ProcessApplyPO po);
 

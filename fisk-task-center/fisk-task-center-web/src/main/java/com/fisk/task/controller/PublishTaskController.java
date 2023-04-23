@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author gy
@@ -316,6 +317,20 @@ public class PublishTaskController {
                 dto);
     }
 
+    /**
+     * 创建任务批量审批
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/createBatchApproval")
+    public ResultEntity<Object> createBatchApproval(@RequestBody BuildBatchApprovalDTO dto){
+        log.info("创建任务批量审批");
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BATCH_APPROVAL_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.MdmTopicConstants.BUILD_MDM_APPROVAL_DATA,
+                dto);
+    }
 
 
     @DeleteMapping("/fieldDelete")

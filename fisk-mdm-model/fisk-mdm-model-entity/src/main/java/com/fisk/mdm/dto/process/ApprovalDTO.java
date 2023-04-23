@@ -18,6 +18,9 @@ public class ApprovalDTO {
     @ApiModelProperty(value = "描述")
     private String description;
 
+    @ApiModelProperty(value = "true管理员/false不是管理员")
+    private Boolean adminMark;
+
     @ApiModelProperty(value = "1通过/2拒绝")
     private Integer flag;
 }

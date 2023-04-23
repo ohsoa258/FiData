@@ -5,9 +5,10 @@
 
     <select id="getMyProcessApply" resultType="com.fisk.mdm.vo.process.ProcessApplyVO">
         SELECT
-        a.id,
+        a.id as apply_id,
+        a.approval_code,
         a.applicant,
-        a.state,
+        a.opreationstate,
         a.description,
         a.operation_type,
         a.application_time
@@ -15,10 +16,10 @@
         WHERE a.applicant = #{userId}
         and a.del_flag = 1
         <if test=" query.keyword !=null and query.keyword.length()>0 ">
-            a.description like concat('%', #{query.keyword}, '%')
+            and a.description like concat('%', #{query.keyword}, '%')
         </if>
-        <if test="query.operationType != null and query.operationType != ''">
-            and a.operation_type = #{query.operationType}
+        <if test="query.opreationstate != null and query.opreationstate != ''">
+            and a.opreationstate = #{query.opreationstate}
         </if>
         <if test="query.startTime != null">
             and a.application_time &gt; #{query.startTime}
@@ -31,6 +32,7 @@
     <select id="getPendingApproval" resultType="com.fisk.mdm.vo.process.PendingApprovalVO">
         SELECT
         a.id as apply_id,
+        a.approval_code,
         b.process_id,
         a.applicant,
         a.description,
@@ -41,9 +43,11 @@
         (
         SELECT
         a.id,
+        a.approval_code,
         a.applicant,
         a.description,
         a.operation_type,
+        a.opreationstate,
         a.application_time,
         a.approver_node
         FROM
@@ -54,17 +58,19 @@
         LEFT JOIN tb_process_node b ON a.approver_node = b.id
         LEFT JOIN tb_process_person c ON b.id = c.rocess_node_id
         WHERE
-        a.operation_type = 3
-        and (c.type = 2 and c.urid = #{userId})
+        (a.opreationstate = 3 or a.opreationstate = 0)
+        and ((c.type = 2 and c.urid = #{userId})
         or (c.type = 1 and
         <foreach collection="roleIds" item="item" separator=" or " open="(" close=")">
             c.urid = #{item}
         </foreach>
-               )
+               ))
         <if test=" query.keyword !=null and query.keyword.length()>0 ">
             and (
-            a.applicant like concat('%', #{query.keyword}, '%') or
-            a.description like concat('%', #{query.keyword}, '%') or
+            <foreach collection="queryUserId" item="item" separator="," open="a.applicant in (" close=") or">
+                #{item}
+            </foreach>
+            a.description like concat('%', #{query.keyword}, '%') )
         </if>
         <if test="query.operationType != null and query.operationType != ''">
             and a.operation_type = #{query.operationType}
@@ -78,18 +84,24 @@
         GROUP BY a.id
     </select>
 
-    <select id="getOverApproval" resultType="com.fisk.mdm.vo.process.PendingApprovalVO">
+    <select id="getOverApproval" resultType="com.fisk.mdm.vo.process.EndingApprovalVO">
         SELECT
         a.id as apply_id,
+        a.approval_code,
+        a.process_id,
         a.applicant,
         a.description,
         a.operation_type,
+        b.state,
+        b.create_time as approval_time,
         a.application_time,
         a.approver_node
         FROM
         (
         SELECT
         a.id,
+        a.approval_code,
+        a.process_id,
         a.applicant,
         a.description,
         a.operation_type,
@@ -102,14 +114,16 @@
         ) a
         LEFT JOIN tb_process_apply_notes b ON a.id = b.processapply_id
         WHERE
-        b.del_flag = 1 and b.create_user = #{userId}
+        b.create_user = #{userId}
         <if test=" query.keyword !=null and query.keyword.length()>0 ">
             and (
-            a.applicant like concat('%', #{query.keyword}, '%') or
-            a.description like concat('%', #{query.keyword}, '%') or
+            <foreach collection="queryUserId" item="item" separator="," open="a.applicant in (" close=") or">
+                #{item}
+            </foreach>
+            a.description like concat('%', #{query.keyword}, '%') )
         </if>
-        <if test="query.operationType != null and query.operationType != ''">
-            and a.operation_type = #{query.operationType}
+        <if test="query.state != null and query.state != ''">
+            and b.state = #{query.state}
         </if>
         <if test="query.startTime != null">
             and a.application_time &gt; #{query.startTime}
@@ -117,6 +131,38 @@
         <if test="query.endTime != null">
             and a.application_time &lt; #{query.endTime}
         </if>
-        GROUP BY a.id
+    </select>
+
+    <select id="getAllApproval" resultType="com.fisk.mdm.vo.process.AllApprovalVO">
+        SELECT
+        a.id as apply_id,
+        a.approval_code,
+        a.process_id,
+        a.applicant,
+        a.description,
+        a.operation_type,
+        a.opreationstate,
+        a.application_time,
+        a.approver_node
+        FROM
+        tb_process_apply a
+        WHERE
+        a.del_flag = 1
+        <if test=" query.keyword !=null and query.keyword.length()>0 ">
+            and (
+            <foreach collection="queryUserId" item="item" separator="," open="a.applicant in (" close=") or">
+                #{item}
+            </foreach>
+            a.description like concat('%', #{query.keyword}, '%') )
+        </if>
+        <if test="query.opreationstate != null and query.opreationstate != ''">
+            and a.opreationstate = #{query.opreationstate}
+        </if>
+        <if test="query.startTime != null">
+            and a.application_time &gt; #{query.startTime}
+        </if>
+        <if test="query.endTime != null">
+            and a.application_time &lt; #{query.endTime}
+        </if>
     </select>
 </mapper>
