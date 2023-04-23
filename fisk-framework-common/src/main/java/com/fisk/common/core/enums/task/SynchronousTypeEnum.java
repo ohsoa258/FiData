@@ -5,9 +5,9 @@ import com.fisk.common.core.enums.BaseEnum;
 
 public enum SynchronousTypeEnum implements BaseEnum {
 
-    TOPGODS(0,"toPgOds"),
-    PGTOPG(1,"pgToPg"),
-    PGTODORIS(2,"PgToDoris"),
+    TOPGODS(0,"toPgOds"), //TODOS
+    PGTOPG(1,"pgToPg"),   //ODSTODW
+    PGTODORIS(2,"PgToDoris"), //DWTOOLAP
     /**
      * 推给第三方库
      */
