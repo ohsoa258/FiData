@@ -675,8 +675,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                     kafkaRkeceiveDTO.pipelStageTraceId = UUID.randomUUID().toString();
                     kafkaRkeceiveDTO.ifTaskStart = true;
                     kafkaRkeceiveDTO.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
-                    //pc.universalPublish(kafkaRkeceiveDTO);
-                    kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaRkeceiveDTO));
+                    kafkaRkeceiveDTO.traceId = dto.traceId;
+                    pc.taskPublish(kafkaRkeceiveDTO);
+                    //kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaRkeceiveDTO));
                 }
                 if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
                     modelPublishStatusDTO.subRunId = subRunId;

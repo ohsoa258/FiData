@@ -14,4 +14,8 @@ public class MQBaseDTO {
     public Long logId;
     public String traceId;
     public String spanId;
+    /**
+     * 报错信息
+     */
+    public String msg;
 }

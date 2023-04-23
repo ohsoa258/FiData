@@ -112,6 +112,8 @@ public class MQConsumerLogAspect {
                     model.taskStatus = TaskStatusEnum.PROCESSING;
                     model.taskSendOk = true;
                     model.traceId = traceId;
+                    model.msg = data.msg;
+                    model.createUser = String.valueOf(data.userId);
                     mapper.updateById(model);
                 }
                 if (sendMsg && Objects.nonNull(data) && Objects.nonNull(data.userId)) {
@@ -129,6 +131,11 @@ public class MQConsumerLogAspect {
                 boolean isSuccess = false;
                 try {
                     res = joinPoint.proceed();
+                    String ret = JSON.toJSONString(res);
+                    if (!StringUtils.isEmpty(ret)) {
+                        data.msg = ret.length() < 2000 ? ret : ret.substring(2000);
+                    }
+                    log.info("方法返回值res值:{}", JSON.toJSONString(res));
                     isSuccess = true;
                 } catch (Exception ex) {
                     log.error("消费者处理报错，", ex);
@@ -140,6 +147,8 @@ public class MQConsumerLogAspect {
                 if (model != null) {
                     model.taskStatus = statusEnum;
                     model.traceId = traceId;
+                    model.msg = data.msg;
+                    model.createUser = String.valueOf(data.userId);
                     mapper.updateById(model);
                 }
 

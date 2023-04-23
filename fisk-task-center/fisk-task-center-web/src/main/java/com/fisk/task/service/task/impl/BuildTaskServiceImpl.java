@@ -40,6 +40,7 @@ public class BuildTaskServiceImpl extends ServiceImpl<TaskLogMapper, TaskLogPO> 
         this.save(model);
 
         data.logId = model.id;
+        data.traceId = model.traceId;
 
         try {
             //rabbitTemplate.convertAndSend(exchange, queue, JSON.toJSONString(data));
