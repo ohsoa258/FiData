@@ -5,7 +5,9 @@ import com.fisk.chartvisual.dto.chartvisual.IndicatorFeignDTO;
 import com.fisk.chartvisual.dto.chartvisual.TableDataDTO;
 import com.fisk.chartvisual.enums.DataDoFieldTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.service.ITableName;
+import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -14,6 +16,7 @@ import java.util.List;
 /**
  * @author Lock
  */
+@Api(tags = { SwaggerConfig.TableName})
 @RestController
 @RequestMapping("/tableName")
 public class TableNameController {

@@ -23,23 +23,41 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    public static final String TEST = "test-controller";
-    public static final String BUSINESS_FILTER_CONTROLLER = "business-filter-controller";
-    public static final String DATA_CHECK_CONTROLLER = "data-check-controller";
-    public static final String DATASOURCE_CONTROLLER = "datasource-controller";
-    public static final String LIFECYCLE_CONTROLLER = "lifecycle-controller";
-    public static final String QUALITY_REPORT_CONTROLLER = "quality_report-controller";
-    public static final String TEMPLATE_CONTROLLER = "template-controller";
-    public static final String DATA0PSLOG_CONTROLLER = "data_ops_log-controller";
-    public static final String DATA_QUALITY_CLIENT_CONTROLLER = "data-quality-client-controller";
-    public static final String TABLE_SECURITY_CONFIG_CONTROLLER = "table-security-config-controller";
-    public static final String DATA_MASKING_CONFIG_CONTROLLER = "data_masking_config_controller";
-    public static final String ROW_SECURITY_CONFIG_CONTROLLER = "row_security_config_controller";
-    public static final String USER_GROUP_INFO = "user-group-info-controller";
-    public static final String USER_GROUP_ASSIGNMENT = "user-group-assignment-controller";
-    public static final String COLUMN_SECURITY_CONFIG = "column-security-config-controller\n";
-    public static final String INTELLIGENT_DISCOVERY = "intelligent-discovery-controller";
+//    public static final String TEST = "test-controller";
+//    public static final String BUSINESS_FILTER_CONTROLLER = "business-filter-controller";
+//    public static final String DATA_CHECK_CONTROLLER = "data-check-controller";
+//    public static final String DATASOURCE_CONTROLLER = "datasource-controller";
+//    public static final String LIFECYCLE_CONTROLLER = "lifecycle-controller";
+//    public static final String QUALITY_REPORT_CONTROLLER = "quality_report-controller";
+//    public static final String TEMPLATE_CONTROLLER = "template-controller";
+//    public static final String DATA0PSLOG_CONTROLLER = "data_ops_log-controller";
+//    public static final String DATA_QUALITY_CLIENT_CONTROLLER = "data-quality-client-controller";
+//    public static final String TABLE_SECURITY_CONFIG_CONTROLLER = "table-security-config-controller";
+//    public static final String DATA_MASKING_CONFIG_CONTROLLER = "data_masking_config_controller";
+//    public static final String ROW_SECURITY_CONFIG_CONTROLLER = "row_security_config_controller";
+//    public static final String USER_GROUP_INFO = "user-group-info-controller";
+//    public static final String USER_GROUP_ASSIGNMENT = "user-group-assignment-controller";
+//    public static final String COLUMN_SECURITY_CONFIG = "column-security-config-controller";
+//    public static final String INTELLIGENT_DISCOVERY = "intelligent-discovery-controller";
+    public static final String TEST = "测试";
+    public static final String BUSINESS_FILTER_CONTROLLER = "清洗规则API";
+    public static final String DATA_CHECK_CONTROLLER = "校验规则API";
+    public static final String DATASOURCE_CONTROLLER = "数据源API";
+    public static final String LIFECYCLE_CONTROLLER = "回收规则API";
+    public static final String QUALITY_REPORT_CONTROLLER = "质量报告API";
+    public static final String TEMPLATE_CONTROLLER = "模板配置API";
+    public static final String DATA0PSLOG_CONTROLLER = "数据运维日志API";
+    public static final String DATA_QUALITY_CLIENT_CONTROLLER = "数据质量服务接口API";
+    public static final String TABLE_SECURITY_CONFIG_CONTROLLER = "表级安全API";
+    public static final String DATA_MASKING_CONFIG_CONTROLLER = "数据脱敏API";
+    public static final String ROW_SECURITY_CONFIG_CONTROLLER = "行级安全API";
+    public static final String USER_GROUP_INFO = "用户组";
+    public static final String USER_GROUP_ASSIGNMENT = "用户组用户";
+    public static final String COLUMN_SECURITY_CONFIG = "列级安全";
+    public static final String INTELLIGENT_DISCOVERY = "数据安全-智能发现API";
 
+    public static final String COLUMN_User_Assignment = "列用户分配";
+    public static final String Row_User_Assignment = "行用户分配";
 
     @Bean
     public Docket createRestApi() {
@@ -62,7 +80,8 @@ public class SwaggerConfig {
                 .tags(new Tag(USER_GROUP_INFO, "用户组"))
                 .tags(new Tag(USER_GROUP_ASSIGNMENT, "用户组用户"))
                 .tags(new Tag(COLUMN_SECURITY_CONFIG, "列级安全"))
-
+                .tags(new Tag(COLUMN_User_Assignment, "列用户分配"))
+                .tags(new Tag(Row_User_Assignment, "行用户分配"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

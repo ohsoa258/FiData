@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.dto.datasecurity.usergroupinfo;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -17,16 +18,19 @@ public class UserGroupInfoDTO {
     /**
      *
      */
+    @ApiModelProperty(value = "ID")
     public long id;
 
     /**
      * 用户组名称
      */
+    @ApiModelProperty(value = "用户组名称")
     public String userGroupName;
 
     /**
      * 用户组描述
      */
+    @ApiModelProperty(value = "用户组描述")
     public String userGroupDesc;
 
 }

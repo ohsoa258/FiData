@@ -4,6 +4,7 @@ import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.auth.service.UserAuthService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
+import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,11 +15,14 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
+import com.fisk.auth.config.SwaggerConfig;
+
 /**
  * @author Lock
  * <p>
  * 对外提供登录服务
  */
+@Api(tags = {SwaggerConfig.UserAuth})
 @RestController
 @RequestMapping("/user")
 @Slf4j
