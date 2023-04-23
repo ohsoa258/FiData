@@ -8,7 +8,7 @@
         t1.*
         FROM
         tb_task_log t1
-        INNER JOIN ( SELECT trace_id, MAX( create_time ) AS max_create_time FROM tb_task_log WHERE del_flag = 1 AND create_user = 60 GROUP BY trace_id ) t2 ON t1.trace_id = t2.trace_id
+        INNER JOIN ( SELECT trace_id, MIN( create_time ) AS max_create_time FROM tb_task_log WHERE del_flag = 1 AND create_user = #{query.userId} GROUP BY trace_id ) t2 ON t1.trace_id = t2.trace_id
         AND t1.create_time = t2.max_create_time
         WHERE
         t1.del_flag = 1

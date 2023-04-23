@@ -96,6 +96,9 @@ public class MQConsumerLogAspect {
                             taskQueue = model.taskQueue;
                         }
                         log.info("此次调度队列: {},此次队列参数: {}", taskQueue, JSON.toJSONString(args[0]));
+                    } else {
+                        log.info("不是代码发的消息,无需记结束,因为连开始都没有");
+                        return null;
                     }
                     // 设置TraceID
                     if (!StringUtils.isEmpty(data.traceId)) {

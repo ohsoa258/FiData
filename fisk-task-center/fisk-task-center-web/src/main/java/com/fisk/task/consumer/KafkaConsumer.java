@@ -200,6 +200,7 @@ public class KafkaConsumer {
      */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    @MQConsumerLog
     public void taskPublish(String message, Acknowledgment ack) {
         taskPublish.taskPublish(message, ack);
     }
