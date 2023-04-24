@@ -38,13 +38,14 @@ import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
+ * 业务分类服务实现类
  */
 @Service
 @Slf4j
 public class ClassificationImpl
         extends ServiceImpl<BusinessClassificationMapper, BusinessClassificationPO>
         implements IClassification {
-
+//region  引入
     @Resource
     BusinessClassificationMapper businessClassificationMapper;
     @Resource
@@ -63,6 +64,8 @@ public class ClassificationImpl
 
     @Resource
     AtlasClient atlasClient;
+
+    //endregion
 
     @Value("${atlas.searchBasic}")
     private String searchBasic;
@@ -264,7 +267,10 @@ public class ClassificationImpl
             model.setDescription(item.description);
             // 设置父级id
             if (!CollectionUtils.isEmpty(item.superTypes)){
-                model.setPid(Integer.valueOf(businessClassificationMapper.selectParentId(item.superTypes.get(0))));
+
+               String s= businessClassificationMapper.selectParentId(item.superTypes.get(0));
+               s= s == null ?"0":s;
+                model.setPid(Integer.valueOf(s));
             }else {
                 model.setPid(null);
             }
@@ -580,6 +586,10 @@ public class ClassificationImpl
         }
         return po;
     }
+
+
+
+
 
 
 }

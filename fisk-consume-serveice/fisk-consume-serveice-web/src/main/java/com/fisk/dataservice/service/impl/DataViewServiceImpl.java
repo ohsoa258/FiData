@@ -529,10 +529,11 @@ public class DataViewServiceImpl
             if (tableName.contains(".")) {
                 viewName = tableName.split("\\.")[1];
             }
+            viewName = "view_" + viewName;
             // 判断是否无架构
-            if (!dataViewThemePO.getWhetherSchema()) {
-                viewName = "view_" + viewName;
-            }
+//            if (!dataViewThemePO.getWhetherSchema()) {
+//                viewName = "view_" + viewName;
+//            }
             model.setName(viewName);
             model.setDisplayName(viewName);
             String sql = "select * from " + tableName;
@@ -577,9 +578,9 @@ public class DataViewServiceImpl
             viewName = model.getName().split("\\.")[1];
         }
         // 判断是否无架构
-        if (!dataViewThemePO.getWhetherSchema()) {
-            viewName = "view_" + viewName;
-        }
+//        if (!dataViewThemePO.getWhetherSchema()) {
+//            viewName = "view_" + viewName;
+//        }
         if (!dataViewThemePO.getWhetherSchema()) {
             dataViewThemePO.setThemeAbbr("dbo");
             if (dataSourceDTO.conType.getName().contains(DataSourceTypeEnum.POSTGRESQL.getName())) {

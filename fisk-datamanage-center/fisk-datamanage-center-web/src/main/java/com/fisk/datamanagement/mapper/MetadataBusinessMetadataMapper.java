@@ -3,6 +3,7 @@ package com.fisk.datamanagement.mapper;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datamanagement.dto.metadatabusinessmetadatamap.MetadataBusinessInfoDTO;
 import com.fisk.datamanagement.entity.MetadataBusinessMetadataMapPO;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -38,4 +39,6 @@ public interface MetadataBusinessMetadataMapper extends FKBaseMapper<MetadataBus
     List<MetadataBusinessInfoDTO> selectMetadataBusiness(@Param("entityId") Integer entityId);
 
 
+    @Delete("truncate TABLE tb_metadata_business_metadata_map")
+    int truncateTable();
 }

@@ -4,6 +4,7 @@ import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
 import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.entity.MetadataEntityPO;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -55,4 +56,8 @@ public interface MetadataEntityMapper extends FKBaseMapper<MetadataEntityPO> {
             "LEFT JOIN tb_metadata_entity tb2 ON tb.id = tb2.parent_id\n" +
             "WHERE  tb2.qualified_name LIKE CONCAT('%',#{qualifiedName},'%')  AND tb2.type_id = 6")
     List<MetadataEntityPO> queryFildes(@Param("qualifiedName")String qualifiedName);
+
+
+    @Delete("truncate TABLE tb_metadata_entity")
+    int truncateTable();
 }
