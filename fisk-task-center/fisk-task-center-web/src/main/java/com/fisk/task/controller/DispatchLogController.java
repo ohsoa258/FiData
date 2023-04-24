@@ -8,6 +8,7 @@ import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelStageLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,6 +40,7 @@ public class DispatchLogController {
      * @param pipelLog pipelLog
      * @return 执行结果
      */
+    @ApiOperation("获取管道日志")
     @PostMapping("/getPipelLogVos")
     public ResultEntity<List<PipelMergeLog>> getPipelLogVos(@RequestBody PipelLogVO pipelLog) {
         ResultEntity<List<PipelMergeLog>> objectResultEntity = new ResultEntity<>();

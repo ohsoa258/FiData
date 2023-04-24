@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,6 +35,7 @@ public class ClientController {
     private IAuthenticatePushDataListService pushDataListService;
 
     @GetMapping("/key")
+    @ApiOperation(value = "获取秘钥")
     public ResponseEntity<String> getSecretKey(
             @RequestParam("clientId") String clientId,
             @RequestParam("secret") String secret) {
@@ -47,21 +49,25 @@ public class ClientController {
 //    }
 
     @GetMapping("/pathIsExists")
+    @ApiOperation(value = "路径是否存在")
     public ResultEntity<Boolean> pathIsExists(String path) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.pathIsExists(path));
     }
 
     @GetMapping("/pushDataPathIsExists")
+    @ApiOperation(value = "推送数据路径是否存在")
     public ResultEntity<Boolean> pushDataPathIsExists(String path) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, pushDataListService.pushDataPathIsExists(path));
     }
 
     @GetMapping("/refreshWhiteList")
+    @ApiOperation(value = "刷新白名单")
     public ResultEntity<Object> refreshWhiteList() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.loadDataToRedis(null));
     }
 
     @GetMapping("/refreshPushDataList")
+    @ApiOperation(value = "刷新推送数据列表")
     public ResultEntity<Object> refreshPushDataList() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, pushDataListService.loadPushDataListToRedis(null));
     }
