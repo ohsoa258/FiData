@@ -1,5 +1,6 @@
 package com.fisk.mdm.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.constants.MdmConstants;
@@ -68,6 +69,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.OutputStream;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
@@ -75,6 +77,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.rollbackConnection;
+
 /**
  * 主数据服务impl
  *
@@ -134,7 +139,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
             "fidata_create_time," +
             "fidata_create_user," +
             "fidata_update_time," +
-            "fidata_update_user";
+            "fidata_update_user," +
+            "fidata_lock_tag";
 
     @Override
     public List<ModelDropDownVO> getModelEntityVersionStruct() {
@@ -229,8 +235,14 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (entityVo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
+        LambdaQueryWrapper<ModelPO> modelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        modelLambdaQueryWrapper.eq(ModelPO::getId, entityVo.getModelId());
+        ModelPO modelPO = modelMapper.selectOne(modelLambdaQueryWrapper);
+        if (modelPO == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
         //获得主数据表名
-        String tableName = TableNameGenerateUtils.generateViwTableName(entityVo.getModelId(), dto.getEntityId());
+        String tableName = TableNameGenerateUtils.generateViwTableName(modelPO.getName(),entityVo.getName());
         //查询该实体下已发布的属性
         List<AttributeInfoDTO> attributeInfos = attributeService.listPublishedAttribute(dto.getEntityId());
         if (attributeInfos.isEmpty()) {
@@ -338,8 +350,14 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (entityVo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
+        LambdaQueryWrapper<ModelPO> modelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        modelLambdaQueryWrapper.eq(ModelPO::getId, entityVo.getModelId());
+        ModelPO modelPO = modelMapper.selectOne(modelLambdaQueryWrapper);
+        if (modelPO == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
         //获得主数据表名
-        String tableName = TableNameGenerateUtils.generateViwTableName(entityVo.getModelId(), dto.getEntityId());
+        String tableName = TableNameGenerateUtils.generateViwTableName(modelPO.getName(), entityVo.getName());
         //查询该实体下发布的属性
         List<AttributeInfoDTO> attributeInfos = attributeService.listPublishedAttribute(dto.getEntityId());
         if (attributeInfos.isEmpty()) {
@@ -389,10 +407,14 @@ public class MasterDataServiceImpl implements IMasterDataService {
         List<Map<String, Object>> data;
         //查询字段
         String businessColumnName = StringUtils.join(newColumnList.stream()
-                .map(e -> e.getName()).collect(Collectors.toList()), ",");
+                .map(e -> "\""+e.getName()+"\"").collect(Collectors.toList()), ",");
         try {
-            //拼接筛选条件
-            String conditions = " and fidata_version_id=" + dto.getVersionId() + " and fidata_del_flag= " +dto.getValidity()+" ";
+            String conditions = null;
+            if(dto.getValidity() == null || dto.getValidity() == 2){
+                conditions = " and fidata_version_id=" + dto.getVersionId() + "";
+            }else{
+                conditions = " and fidata_version_id=" + dto.getVersionId() + " and fidata_del_flag= " +dto.getValidity()+" ";
+            }
             if (!CollectionUtils.isEmpty(dto.getFilterQuery())) {
                 conditions = getOperatorCondition(dto.getFilterQuery());
             }
@@ -591,7 +613,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (entityPO == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        String tableName = TableNameGenerateUtils.generateStgTableName(entityPO.getModelId(), dto.getEntityId());
+        LambdaQueryWrapper<ModelPO> modelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        modelLambdaQueryWrapper.eq(ModelPO::getId, entityPO.getModelId());
+        ModelPO modelPO = modelMapper.selectOne(modelLambdaQueryWrapper);
+        if (modelPO == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        String tableName = TableNameGenerateUtils.generateStgTableName(modelPO.getName(), entityPO.getName());
         //where条件
         String queryConditions = " and fidata_batch_code ='" + dto.getKey() + "' and fidata_status=" + SyncStatusTypeEnum.UPLOADED_FAILED.getValue();
         IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
@@ -614,6 +642,12 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (entityPO == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
+        LambdaQueryWrapper<ModelPO> modelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        modelLambdaQueryWrapper.eq(ModelPO::getId, entityPO.getModelId());
+        ModelPO modelPO = modelMapper.selectOne(modelLambdaQueryWrapper);
+        if (modelPO == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
         BathUploadMemberVO vo = new BathUploadMemberVO();
         vo.setEntityName(entityPO.getDisplayName());
         vo.setEntityId(dto.getEntityId());
@@ -626,7 +660,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         try {
-            String tableName = TableNameGenerateUtils.generateStgTableName(entityPO.getModelId(), dto.getEntityId());
+            String tableName = TableNameGenerateUtils.generateStgTableName(modelPO.getName(), entityPO.getName());
             //获取总条数、新增条数、编辑条数、成功条数、失败条数
             StringBuilder conditions = new StringBuilder();
             conditions.append(" and fidata_batch_code='" + dto.getKey() + "'");
@@ -655,7 +689,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             pageDataDTO.setBatchCode(dto.getKey());
             pageDataDTO.setStatus(dto.getStatus());
             pageDataDTO.setSyncType(dto.getSyncType());
-            pageDataDTO.setTableName(TableNameGenerateUtils.generateStgTableName(entityPO.getModelId(), dto.getEntityId()));
+            pageDataDTO.setTableName(TableNameGenerateUtils.generateStgTableName(modelPO.getName(), entityPO.getName()));
             //调用生成分页语句方法
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             String sql = sqlBuilder.buildImportDataPage(pageDataDTO);
@@ -681,8 +715,31 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (!file.getOriginalFilename().contains(".xlsx")) {
             throw new FkException(ResultEnum.FILE_NAME_ERROR);
         }
+        //如果配置流程则走流程
+        boolean flag;
+        try {
+            ResultEnum resultEnum = processService.verifyProcessApply(dto.getEntityId());
+            switch (resultEnum){
+                case VERIFY_APPROVAL:
+                    flag = true;
+                    break;
+                case VERIFY_NOT_APPROVAL:
+                    flag = false;
+                    break;
+                default:
+                    throw new FkException(ResultEnum.VERIFY_PROCESS_APPLY_ERROR);
+            }
+        }catch (FkException e){
+            throw new FkException(ResultEnum.VERIFY_PROCESS_APPLY_ERROR);
+        }
         EntityPO po = entityMapper.selectById(dto.getEntityId());
         if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        LambdaQueryWrapper<ModelPO> modelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        modelLambdaQueryWrapper.eq(ModelPO::getId, po.getModelId());
+        ModelPO modelPO = modelMapper.selectOne(modelLambdaQueryWrapper);
+        if (modelPO == null){
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         //获取已发布的属性
@@ -699,14 +756,20 @@ public class MasterDataServiceImpl implements IMasterDataService {
         result.setVersionId(dto.getVersionId());
         result.setEntityId(dto.getEntityId());
         result.setEntityName(po.getDisplayName());
-        String tableName = TableNameGenerateUtils.generateStgTableName(dto.getModelId(), dto.getEntityId());
+        String tableName = TableNameGenerateUtils.generateStgTableName(modelPO.getName(),po.getName());
         //获取mdm表code列名
         Optional<AttributeInfoDTO> codeColumn = list.stream().filter(e -> e.getName().equals(MdmTypeEnum.CODE.getName())).findFirst();
         if (!codeColumn.isPresent()) {
             throw new FkException(ResultEnum.CODE_NOT_EXIST);
         }
         //获取mdm表code数据列表
-        List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), codeColumn.get().getColumnName(), dto.getVersionId());
+        Map<String, String> codeMap = getCodeAndLockList(TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), po.getName()), codeColumn.get().getColumnName(), dto.getVersionId());
+        if (codeMap.size()>0){
+            List<Object> collect = codeMap.values().stream().filter(Objects::nonNull).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(collect)){
+                throw new FkException(ResultEnum.PROCESS_APPLY_EXIST);
+            }
+        }
         String batchNumber = UUID.randomUUID().toString();
         //解析Excel数据集合
         CopyOnWriteArrayList<Map<String, Object>> objectArrayList = new CopyOnWriteArrayList<>();
@@ -719,7 +782,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         //获取code编码规则
         List<CodeRuleVO> codeRuleVOS= codeRuleService.getDataByEntityId(dto.getEntityId());
         List<CodeRuleDTO> codeRuleDTO=null;
-        if (codeRuleVOS.isEmpty()){
+        if (CollectionUtils.isEmpty(codeRuleVOS)){
             codeRuleDTO= codeRuleVOS.get(0).getGroupDetailsList();
         }
         //code生成规则
@@ -759,6 +822,10 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     throw new FkException(ResultEnum.EXIST_INVALID_COLUMN);
                 }
                 attributePoList.add(data.get());
+            }
+            if(flag) {
+                //添加工单
+                processService.addProcessApply(dto.getEntityId(), null, batchNumber, EventTypeEnum.IMPORT);
             }
 //            if (list.size() != columnNum - 1) {
 //                throw new FkException(ResultEnum.CHECK_TEMPLATE_IMPORT_FAILURE);
@@ -810,7 +877,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                                     jsonObj.put("code", buildCodeCommand.createCode());
                                 }
                                 //上传逻辑：1 修改 2 新增
-                                if (codeList.contains(jsonObj.get("code"))) {
+                                if (codeMap.containsKey(jsonObj.get("code"))) {
                                     jsonObj.put("fidata_syncy_type", SyncTypeStatusEnum.UPDATE.getValue());
                                     updateCount.incrementAndGet();
                                 } else {
@@ -854,6 +921,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
             throw new FkException(ResultEnum.FORM_NO_VALID_DATA);
         }
         int flatCount = templateDataSubmitStg(objectArrayList, tableName, batchNumber, dto.getVersionId(), userId, ImportTypeEnum.EXCEL_IMPORT, false);
+        if (flatCount == 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
         //添加批次
         setStgBatch(batchNumber, dto.getEntityId(), dto.getVersionId(), result.getCount(), result.getCount() - flatCount, addCount.get(), updateCount.get(), flatCount > 0 ? 0 : 1);
         //校验重复code
@@ -880,6 +950,12 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (entityPo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
+        LambdaQueryWrapper<ModelPO> modelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        modelLambdaQueryWrapper.eq(ModelPO::getId, entityPo.getModelId());
+        ModelPO modelPO = modelMapper.selectOne(modelLambdaQueryWrapper);
+        if (modelPO == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
         //查询该实体下发布的属性
         List<AttributeInfoDTO> attributeInfos = attributeService.listPublishedAttribute(dto.getEntityId());
         if (attributeInfos.isEmpty()) {
@@ -890,7 +966,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (!codeColumn.isPresent() || !nameColumn.isPresent()) {
             throw new FkException(ResultEnum.EXIST_INVALID_COLUMN);
         }
-        String tableName = TableNameGenerateUtils.generateMdmTableName(entityPo.getModelId(), dto.getEntityId());
+        String tableName = TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), entityPo.getName());
         IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
         //生成查询语句
         String selectSql = sqlBuilder.buildQueryCodeAndName(tableName, codeColumn.get().getColumnName(), nameColumn.get().getColumnName(), dto.getVersionId());
@@ -904,7 +980,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
             if (entityPO == null) {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
-            String tableName = TableNameGenerateUtils.generateStgTableName(entityPO.getModelId(), dto.getEntityId());
+            LambdaQueryWrapper<ModelPO> modelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            modelLambdaQueryWrapper.eq(ModelPO::getId, entityPO.getModelId());
+            ModelPO modelPO = modelMapper.selectOne(modelLambdaQueryWrapper);
+            if (modelPO == null){
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+            String tableName = TableNameGenerateUtils.generateStgTableName(modelPO.getName(),entityPO.getName());
             //验证code
             ImportDataVerifyDTO verifyDTO = MasterDataFormatVerifyUtils.verifyCode(dto.getData());
             dto.getData().put("fidata_status", SyncStatusTypeEnum.UPLOADED_FAILED.getValue());
@@ -926,11 +1008,15 @@ public class MasterDataServiceImpl implements IMasterDataService {
             }
             int versionId = Integer.parseInt(dto.getData().get("fidata_version_id").toString());
             //获取mdm表code数据列表
-            List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(entityPO.getModelId(), dto.getEntityId()), attributePO.getColumnName(), versionId);
+            Map<String, String> codeMap = getCodeAndLockList(TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), entityPO.getName()), attributePO.getColumnName(), versionId);
             //判断上传逻辑
             dto.getData().put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
-            if (codeList.contains(dto.getData().get("code"))) {
-                dto.getData().put("fidata_syncy_type", SyncTypeStatusEnum.UPDATE.getValue());
+            if (codeMap.containsKey(dto.getData().get("code"))) {
+                if (codeMap.get(dto.getData().get("code")) == null){
+                    dto.getData().put("fidata_syncy_type", SyncTypeStatusEnum.UPDATE.getValue());
+                }else {
+                    throw new FkException(ResultEnum.PROCESS_APPLY_EXIST);
+                }
             }
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             //生成update语句
@@ -980,8 +1066,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (entityPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-
-        String tableName = TableNameGenerateUtils.generateStgTableName(dto.getModelId(), dto.getEntityId());
+        LambdaQueryWrapper<ModelPO> modelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        modelLambdaQueryWrapper.eq(ModelPO::getId, entityPO.getModelId());
+        ModelPO modelPO = modelMapper.selectOne(modelLambdaQueryWrapper);
+        if (modelPO == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        String tableName = TableNameGenerateUtils.generateStgTableName(modelPO.getName(),entityPO.getName());
         List<Map<String, Object>> members = new ArrayList<>();
         List<Map<String, Object>> mapDatasDto=dto.getMembers();
         Long userId = userHelper.getLoginUserInfo().id;
@@ -1009,8 +1100,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     //获取code列名
                     String columnName = getEntityCodeName(dto.getEntityId());
                     //code是否验证已存在
-                    List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), columnName, dto.getVersionId());
-                    if (codeList.contains(mapData.get("code"))) {
+                    Map<String, String> codeList = getCodeAndLockList(TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), entityPO.getName()), columnName, dto.getVersionId());
+                    if (codeList.containsKey(mapData.get("code"))) {
                         throw new FkException(ResultEnum.CODE_EXIST);
                     }
                 }
@@ -1034,23 +1125,54 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 case VERIFY_NOT_APPROVAL:
                     flag = false;
                     break;
-                case PROCESS_APPLY_EXIST:
-                    return ResultEnum.PROCESS_APPLY_EXIST;
                 default:
-                    return ResultEnum.VERIFY_PROCESS_APPLY_ERROR;
+                    throw new FkException(ResultEnum.VERIFY_PROCESS_APPLY_ERROR);
             }
         }catch (FkException e){
-            return ResultEnum.VERIFY_PROCESS_APPLY_ERROR;
+            throw new FkException(ResultEnum.VERIFY_PROCESS_APPLY_ERROR);
         }
-        //todo 添加审批工单和写入数据到stg应该是同一事务内 暂时没有处理
+
+        if (eventTypeEnum != EventTypeEnum.SAVE){
+            String mdmTableName = TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), entityPO.getName());
+            StringBuilder queryConditions = new StringBuilder();
+            queryConditions.append(" and fidata_id ='")
+                    .append(dto.getFidataId())
+                    .append("' and fidata_lock_tag ='1'");
+            IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
+            String sql = buildSqlCommand.buildQueryData(mdmTableName, queryConditions.toString());
+            Connection connection = getConnection();
+            List<Map<String, Object>> maps = AbstractDbHelper.execQueryResultMaps(sql, connection);
+            if(!org.springframework.util.CollectionUtils.isEmpty(maps)){
+                throw new FkException(ResultEnum.PROCESS_APPLY_EXIST);
+            }else {
+                StringBuilder update = new StringBuilder();
+                update.append("update \"")
+                        .append(mdmTableName)
+                        .append("\" set fidata_lock_tag = 1 where fidata_id ='")
+                        .append(dto.getFidataId()).append("'");
+                PreparedStatement statement = null;
+                try {
+                    statement = getConnection().prepareStatement(update.toString());
+                    statement.execute();
+                } catch (SQLException ex) {
+                    // 回滚事务
+                    rollbackConnection(connection);
+                    // 记录日志
+                    log.error(ResultEnum.FACT_ATTRIBUTE_FAILD.getMsg() + "【SQL:】" + update + "【原因:】" + ex.getMessage());
+                    throw new FkException(ResultEnum.FACT_ATTRIBUTE_FAILD);
+                }finally {
+                    AbstractDbHelper.closeConnection(connection);
+                    AbstractDbHelper.closeStatement(statement);
+                }
+            }
+        }
         int flat = templateDataSubmitStg(members, tableName, batchNumber, dto.getVersionId(),
                 userId, ImportTypeEnum.MANUALLY_ENTER, delete);
         if (flat == 0) {
-            return ResultEnum.SAVE_DATA_ERROR;
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }else if(flag){
             //添加工单
-            processService.addProcessApply(dto,batchNumber,eventTypeEnum);
-            return ResultEnum.SUCCESS;
+            return processService.addProcessApply(dto.getEntityId(),dto.getDescription(),batchNumber,eventTypeEnum);
         }
         ResultEnum resultEnum = dataSynchronizationUtils.stgDataSynchronize(dto.getEntityId(), batchNumber);
         if (resultEnum.getCode() != ResultEnum.DATA_SYNCHRONIZATION_SUCCESS.getCode()) {
@@ -1200,5 +1322,29 @@ public class MasterDataServiceImpl implements IMasterDataService {
         }
         return codeList;
     }
+
+
+    /**
+     * 获取表指定列名数据
+     *
+     * @param tableName
+     * @return
+     */
+    public Map<String, String> getCodeAndLockList(String tableName, String codeColumnName, int versionId) {
+        Map<String, String> maps = new HashMap<>();
+        try {
+            IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
+            //查询code列sql
+            String sql = buildSqlCommand.buildQueryCodeAndLock(tableName, codeColumnName, versionId);
+            List<Map<String, Object>> list = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
+            for (Map<String, Object> stringObjectMap : list) {
+                maps.put((String)stringObjectMap.get("code"),(String)stringObjectMap.get("lock"));
+            }
+        } catch (Exception e) {
+            log.error("getCodeAndLockList:", e);
+        }
+        return maps;
+    }
+
 
 }

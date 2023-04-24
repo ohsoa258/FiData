@@ -19,10 +19,7 @@ import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.entity.TBETLlogPO;
 import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
-import com.fisk.task.listener.nifi.IExecScriptListener;
-import com.fisk.task.listener.nifi.INifiTaskListener;
-import com.fisk.task.listener.nifi.INonRealTimeListener;
-import com.fisk.task.listener.nifi.ITriggerScheduling;
+import com.fisk.task.listener.nifi.*;
 import com.fisk.task.listener.nifi.impl.BuildNifiCustomWorkFlow;
 import com.fisk.task.listener.olap.BuildModelTaskListener;
 import com.fisk.task.listener.olap.BuildWideTableTaskListener;
@@ -973,12 +970,6 @@ public class TestController {
         System.out.println(cfk1);
 
 
-    }
-
-    @ApiOperation("测试msg")
-    @PostMapping("/myTest")
-    public void testMsg(@RequestBody String datainfo) {
-        buildDataModelDorisTableListener.msg(datainfo,null);
     }
 
 

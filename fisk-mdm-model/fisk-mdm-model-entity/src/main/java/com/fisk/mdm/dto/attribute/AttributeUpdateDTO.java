@@ -38,6 +38,7 @@ public class AttributeUpdateDTO {
     private String desc;
 
 
+    @ApiModelProperty(value = "列名称")
     private String columnName;
 
     /**
@@ -135,6 +136,7 @@ public class AttributeUpdateDTO {
     /**
      * 数据域id（相当于外键）
      */
+    @ApiModelProperty(value = "数据域id（相当于外键）")
     private Integer domainId;
 
     @ApiModelProperty(value = "属性组id")

@@ -5,6 +5,7 @@ import com.fisk.common.core.enums.task.TaskTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
+import com.fisk.task.config.SwaggerConfig;
 import com.fisk.task.dto.task.UnifiedControlDTO;
 import com.fisk.task.entity.OlapPO;
 import com.fisk.task.listener.olap.BuildModelTaskListener;
@@ -12,6 +13,7 @@ import com.fisk.task.listener.olap.BuildWideTableTaskListener;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.task.IBuildKfkTaskService;
 import com.fisk.task.service.task.IBuildTaskService;
+import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +22,7 @@ import javax.annotation.Resource;
 /**
  * @author JinXingWang
  */
+@Api(tags = {SwaggerConfig.OlapTask})
 @Slf4j
 @RestController
 @RequestMapping("/olapTask")

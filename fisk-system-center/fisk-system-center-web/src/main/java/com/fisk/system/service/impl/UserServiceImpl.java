@@ -469,4 +469,18 @@ public class UserServiceImpl implements IUserService {
         }
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, token);
     }
+
+    @Override
+    public List<Integer> getUserIdByUserName(String userName) {
+        List<Integer> userId = mapper.getUserIdByUserName(userName);
+        if (userId == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return userId;
+    }
+    @Override
+    public Boolean verifyPageByUserId(int userId,String pageUrl) {
+        int count = mapper.verifyPageByUserId(userId, pageUrl);
+        return count > 0;
+    }
 }

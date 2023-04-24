@@ -17,6 +17,7 @@ public class AttributeDTO {
     /**
      * id
      */
+    @ApiModelProperty(value = "id")
     private Integer id;
 
     @ApiModelProperty(value = "实体id")
@@ -44,6 +45,7 @@ public class AttributeDTO {
     private String desc;
 
 
+    @ApiModelProperty(value = "列名")
     private String columnName;
 
     /**
@@ -147,11 +149,13 @@ public class AttributeDTO {
     /**
      * 地图类型：0高德地图，1百度地图
      */
+    @ApiModelProperty(value = "地图类型：0高德地图，1百度地图")
     private Integer mapType;
 
     /**
      * 数据域id（相当于外键）
      */
+    @ApiModelProperty(value = "数据域id（相当于外键）")
     private Integer domainId;
 
     @ApiModelProperty(value = "属性组id")

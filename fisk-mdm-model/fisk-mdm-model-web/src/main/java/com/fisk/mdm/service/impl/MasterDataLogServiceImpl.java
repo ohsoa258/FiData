@@ -1,5 +1,6 @@
 package com.fisk.mdm.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -13,14 +14,17 @@ import com.fisk.common.service.mdmBEBuild.dto.MasterDataPageDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.masterdata.MasterDataDTO;
 import com.fisk.mdm.dto.masterdatalog.MasterDataLogQueryDTO;
+import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.enums.EventTypeEnum;
 import com.fisk.mdm.map.AttributeMap;
 import com.fisk.mdm.service.IMasterDataLog;
+import com.fisk.mdm.service.IModelService;
 import com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils;
 import com.fisk.mdm.vo.attribute.AttributeColumnVO;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
+import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.masterdatalog.MasterDataLogPageVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
@@ -51,6 +55,8 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
     MasterDataServiceImpl masterDataService;
     @Resource
     EntityServiceImpl entityService;
+    @Resource
+    IModelService modelService;
     @Resource
     UserClient client;
 
@@ -112,7 +118,17 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
         attributeColumn.setDisplayName("mdm表id");
         attributeColumnVoList.add(1, attributeColumn);
         data.setAttributes(attributeColumnVoList);
-        String tableName = TableNameGenerateUtils.generateLogTableName(dto.getModelId(), dto.getEntityId());
+        EntityVO entityVO = entityService.getDataById(dto.getEntityId());
+        if (entityVO == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        LambdaQueryWrapper<ModelPO> modelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        modelLambdaQueryWrapper.eq(ModelPO::getId, entityVO.getModelId());
+        ModelPO modelPO = modelService.getOne(modelLambdaQueryWrapper);
+        if (modelPO == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        String tableName = TableNameGenerateUtils.generateLogTableName(modelPO.getName(), entityVO.getName());
         //条件
         String conditions = " and fidata_version_id='" + dto.getVersionId() + "' and fidata_mdm_fidata_id='" + dto.getFiDataId() + "'";
         //获取总条数
@@ -127,7 +143,7 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
         data.setTotal(rowCount);
         //查询字段
         String businessColumnName = StringUtils.join(attributeColumnVoList.stream()
-                .map(e -> e.getName()).collect(Collectors.toList()), ",");
+                .map(e -> "\""+e.getName()+"\"").collect(Collectors.toList()), ",");
         //获取分页sql
         MasterDataPageDTO dataPageDTO = new MasterDataPageDTO();
         dataPageDTO.setColumnNames(businessColumnName += systemColumnName);
@@ -150,8 +166,18 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
 
     @Override
     public ResultEnum rollBackMasterData(MasterDataDTO dto) {
+        EntityVO entityVO = entityService.getDataById(dto.getEntityId());
+        if (entityVO == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        LambdaQueryWrapper<ModelPO> modelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        modelLambdaQueryWrapper.eq(ModelPO::getId, entityVO.getModelId());
+        ModelPO modelPO = modelService.getOne(modelLambdaQueryWrapper);
+        if (modelPO == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
         //获取mdm表最新code
-        String mdmTableName = TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId());
+        String mdmTableName = TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), entityVO.getName());
         IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
         for (Map<String,Object> dtoItem: dto.getMembers()){
 
@@ -192,7 +218,7 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
                 if (domainAttribute.code != ResultEnum.SUCCESS.getCode()) {
                     return ResultEnum.DATA_NOTEXISTS;
                 }
-                String domainMdmTableName = TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), domainAttribute.data.getEntityId());
+                String domainMdmTableName = TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), domainAttribute.data.getName());
                 String domainSql = sqlBuilder.buildQueryData(domainMdmTableName,
                         " and fidata_id =" + dtoItem.get(item.getName()));
                 log.info("查询域字段数据,sql:", domainSql);
@@ -205,7 +231,7 @@ public class MasterDataLogServiceImpl implements IMasterDataLog {
                 dtoItem.put(item.getName(), result.get(0).get(domainAttribute.data.getColumnName()));
             }
         }
-        dto.getMembers().remove("fidata_mdm_fidata_id");
+        dto.getMembers().get(0).remove("fidata_mdm_fidata_id");
         }
         return masterDataService.OperateMasterData(dto, EventTypeEnum.ROLLBACK);
     }

@@ -3,6 +3,7 @@ package com.fisk.mdm.entity;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.mdm.enums.ApprovalApplyStateEnum;
 import com.fisk.mdm.enums.ApprovalNodeStateEnum;
 import com.fisk.mdm.enums.EventTypeEnum;
@@ -17,7 +18,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @TableName("tb_process_apply")
-public class ProcessApplyPO extends ProcessPO {
+public class ProcessApplyPO extends BasePO {
 
     /**
      * 描述
@@ -30,6 +31,11 @@ public class ProcessApplyPO extends ProcessPO {
     private int processId;
 
     /**
+     * 审批编号
+     */
+    private String approvalCode;
+
+    /**
      * 申请人
      */
     private String applicant;
@@ -37,7 +43,6 @@ public class ProcessApplyPO extends ProcessPO {
     /**
      * 申请时间
      */
-    @TableField(value = "application_time", fill = FieldFill.INSERT)
     private LocalDateTime applicationTime;
 
     /**

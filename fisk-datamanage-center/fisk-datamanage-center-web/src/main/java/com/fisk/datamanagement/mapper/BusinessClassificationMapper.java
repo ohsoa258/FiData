@@ -30,4 +30,7 @@ public interface BusinessClassificationMapper extends FKBaseMapper<BusinessClass
 
     @Delete("truncate TABLE tb_business_classification")
     int truncateTable();
+
+
+
 }

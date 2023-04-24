@@ -1,10 +1,13 @@
 package com.fisk.mdm.utlis;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.common.service.mdmBEBuild.BuildFactoryHelper;
 import com.fisk.common.service.mdmBEBuild.CommonMethods;
@@ -12,18 +15,27 @@ import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.common.service.mdmBEBuild.dto.DataSourceConDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.stgbatch.MdmDTO;
+import com.fisk.mdm.entity.EntityPO;
+import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.enums.SyncStatusTypeEnum;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EntityService;
+import com.fisk.mdm.service.IModelService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
+import com.fisk.mdm.vo.masterdata.ExportResultVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.JDBCType;
 import java.sql.PreparedStatement;
@@ -55,6 +67,8 @@ public class DataSynchronizationUtils {
     @Resource
     EntityService entityService;
     @Resource
+    IModelService modelService;
+    @Resource
     AttributeService attributeService;
     @Resource
     UserHelper userHelper;
@@ -74,15 +88,20 @@ public class DataSynchronizationUtils {
         EntityInfoVO entityInfoVo = entityService.getFilterAttributeById(entityId);
         List<AttributeInfoDTO> attributeList = entityInfoVo.getAttributeList();
         String mdmTableName = entityInfoVo.getTableName();
-
+        LambdaQueryWrapper<ModelPO> modelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        modelLambdaQueryWrapper.eq(ModelPO::getId, entityInfoVo.getModelId());
+        ModelPO modelPO = modelService.getOne(modelLambdaQueryWrapper);
+        if (modelPO == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
         // 获取stg表名
-        String stgTableName = generateStgTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
+        String stgTableName = generateStgTableName(modelPO.getName(), entityInfoVo.getName());
 
         //获取log表名
-        String logTableName = generateLogTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
+        String logTableName = generateLogTableName(modelPO.getName(), entityInfoVo.getName());
 
         // 2.查询需要同步的数据
-        String sql = "SELECT * FROM " + stgTableName + " WHERE fidata_batch_code = '" + batchCode + "'";
+        String sql = "SELECT * FROM \"" + stgTableName + "\" WHERE fidata_batch_code = '" + batchCode + "'";
 
         DataSourceConDTO dto = new DataSourceConDTO();
         dto.setConStr(connectionStr);
@@ -103,12 +122,12 @@ public class DataSynchronizationUtils {
 
         List<String> codeColumnName = attributeList.stream().filter(e -> e.getName().equals("code"))
                 .map(e -> {
-                    return e.getColumnName();
+                    return "\""+e.getColumnName()+"\"";
                 }).collect(Collectors.toList());
 
         String columnName = attributeList.stream().filter(Objects::nonNull)
                 .map(e -> {
-                    return e.getColumnName() + " AS " + e.getName();
+                    return "\"" + e.getColumnName() + "\" AS " + e.getName();
                 }).collect(Collectors.joining(","));
 
         String codes = resultList.stream().filter(Objects::nonNull).map(e -> {
@@ -117,7 +136,7 @@ public class DataSynchronizationUtils {
             return code1;
         }).collect(Collectors.joining(","));
 
-        stringBuilder.append("SELECT fidata_id, " + columnName + "  FROM " + mdmTableName);
+        stringBuilder.append("SELECT fidata_id," + columnName + " FROM \"" + mdmTableName+"\"");
         stringBuilder.append(" WHERE " + codeColumnName.get(0));
         ////stringBuilder.append(" WHERE fidata_del_flag = 1 AND " + codeColumnName.get(0));
         stringBuilder.append(" IN(" + codes + ")");
@@ -137,11 +156,11 @@ public class DataSynchronizationUtils {
                         AttributeVO data = attributeService.getById(e.getDomainId()).getData();
 
                         // 域字段的表名称
-                        String mdmTableName1 = generateMdmTableName(data.getModelId(), data.getEntityId());
+                        String mdmTableName1 = generateMdmTableName(modelPO.getName(), entityInfoVo.getName());
 
                         StringBuilder str = new StringBuilder();
-                        str.append("SELECT fidata_id FROM " + mdmTableName1);
-                        str.append(" WHERE " + data.getColumnName() + " = '" + item.get(key)  +"'");
+                        str.append("SELECT fidata_id FROM \"" + mdmTableName1 + "\"");
+                        str.append(" WHERE \"" + data.getColumnName() + "\" = '" + item.get(key)  +"'");
                         // 查询域字段数据
                         List<MdmDTO> ids = execQueryResultList(str.toString(), connection, MdmDTO.class,false);
 
@@ -179,7 +198,7 @@ public class DataSynchronizationUtils {
                 dto.conPassword, dto.conType);
 
         StringBuilder str = new StringBuilder();
-        str.append("INSERT INTO " + mdmTableName);
+        str.append("INSERT INTO \"" + mdmTableName+"\"");
         str.append("(");
         // 系统字段
         str.append(MARK + "new_code").append(",");
@@ -196,7 +215,7 @@ public class DataSynchronizationUtils {
         String businessFields = attributeList.stream().filter(e -> e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName()))
                 .map(e -> {
                     StringBuilder str1 = new StringBuilder();
-                    str1.append(e.getColumnName());
+                    str1.append("\""+e.getColumnName()+"\"");
                     return str1;
                 }).collect(Collectors.joining(","));
 
@@ -217,7 +236,7 @@ public class DataSynchronizationUtils {
 
         // 获取唯一键
         String columnName = codeAssociationCondition.get(0).getColumnName();
-        str.append(" ON CONFLICT ( " + columnName + "," + MARK + "version_id" + ") DO UPDATE ");
+        str.append(" ON CONFLICT ( \"" + columnName + "\"," + MARK + "version_id" + ") DO UPDATE ");
         str.append(" SET ");
         str.append(MARK + "new_code = " + "excluded." + MARK + "new_code").append(",");
         str.append(MARK + "version_id = " + "excluded." + MARK + "version_id").append(",");
@@ -226,15 +245,15 @@ public class DataSynchronizationUtils {
         str.append(MARK + "update_time = " + "excluded." + MARK + "update_time").append(",");
         str.append(MARK + "update_user = " + "excluded." + MARK + "update_user").append(",");
 
-        String code1 = columnName + " = " + "excluded." + MARK + "new_code" + ",";
+        String code1 = "\"" + columnName + "\" = " + "excluded." + MARK + "new_code" + ",";
 
         // 业务字段
         String collect1 = attributeList.stream().filter(e -> e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName())
                 && !e.getName().equals("code"))
                 .map(e -> {
                     StringBuilder str1 = new StringBuilder();
-                    str1.append(e.getColumnName() + " = ");
-                    str1.append("excluded." + e.getColumnName());
+                    str1.append("\""+e.getColumnName() + "\" = ");
+                    str1.append("excluded.\"" + e.getColumnName()+"\"");
                     return str1;
                 }).collect(Collectors.joining(","));
         str.append(code1);
@@ -379,7 +398,7 @@ public class DataSynchronizationUtils {
     public void errorMessageProcess(String stgTableName,String errorMessage,String batchCode
                       ,Connection connection){
         StringBuilder str = new StringBuilder();
-        str.append("UPDATE " + stgTableName);
+        str.append("UPDATE \"" + stgTableName + "\"");
         str.append(" SET fidata_error_msg = '" + errorMessage).append("'");
         str.append(" WHERE fidata_batch_code ='" + batchCode + "'");
 
@@ -443,7 +462,7 @@ public class DataSynchronizationUtils {
      */
     public void callbackSuccessStatus(String stgTableName,String batchCode,Connection connection){
         StringBuilder str = new StringBuilder();
-        str.append("UPDATE " + stgTableName);
+        str.append("UPDATE \"" + stgTableName + "\"");
         str.append(" SET fidata_status = '" + SyncStatusTypeEnum.SUBMITTED_SUCCESSFULLY.getValue()).append("'");
         str.append(",fidata_error_msg = null");
         str.append(" WHERE fidata_batch_code ='" + batchCode + "'");
@@ -466,7 +485,7 @@ public class DataSynchronizationUtils {
      */
     public void callbackFailedStatus(String stgTableName,String batchCode,Connection connection){
         StringBuilder str = new StringBuilder();
-        str.append("UPDATE " + stgTableName);
+        str.append("UPDATE \"" + stgTableName + "\"");
         str.append(" SET fidata_status = '" + SyncStatusTypeEnum.SUBMISSION_FAILED.getValue()).append("'");
         str.append(" WHERE fidata_batch_code ='" + batchCode + "'");
         //str.append(" AND fidata_del_flag = 1 ");
@@ -585,5 +604,87 @@ public class DataSynchronizationUtils {
         });
 
         return dateList;
+    }
+
+    public void downloadStgData(Integer entityId, String batchCode,HttpServletResponse response) {
+        EntityInfoVO entityInfoVo = entityService.getFilterAttributeById(entityId);
+        List<AttributeInfoDTO> attributeList = entityInfoVo.getAttributeList();
+        LambdaQueryWrapper<ModelPO> modelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        modelLambdaQueryWrapper.eq(ModelPO::getId, entityInfoVo.getModelId());
+        ModelPO modelPO = modelService.getOne(modelLambdaQueryWrapper);
+        if (modelPO == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        String businessColumnName = StringUtils.join(attributeList.stream()
+                .map(e -> "\""+e.getName()+"\"").collect(Collectors.toList()), ",");
+        // 获取stg表名
+        String stgTableName = generateStgTableName(modelPO.getName(), entityInfoVo.getName());
+        StringBuilder sql = new StringBuilder();
+        sql.append("select").append(businessColumnName).append(" from ");
+        sql.append("\"").append(stgTableName).append("\" WHERE fidata_batch_code = '").append(batchCode).append("'");
+
+        DataSourceConDTO dto = new DataSourceConDTO();
+        dto.setConStr(connectionStr);
+        dto.setConAccount(acc);
+        dto.setConPassword(pwd);
+        dto.setConType(type);
+
+        // 连接对象
+        AbstractDbHelper dbHelper = new AbstractDbHelper();
+        Connection connection = dbHelper.connection(dto.conStr, dto.conAccount,
+                dto.conPassword,dto.conType);
+
+        List<Map<String, Object>> resultList = execQueryResultList(sql.toString(), dto);
+        ExportResultVO vo = new ExportResultVO();
+        List<String> nameList = attributeList.stream().map(AttributeInfoDTO::getName).collect(Collectors.toList());
+        List<String> nameDisplayList = attributeList.stream().map(AttributeInfoDTO::getDisplayName).collect(Collectors.toList());
+        vo.setHeaderList(nameList);
+        vo.setDataArray(resultList);
+        vo.setHeaderDisplayList(nameDisplayList);
+        vo.setFileName(stgTableName);
+        exportExcel(vo, response);
+    }
+
+    /**
+     * 导出Excel
+     *
+     * @param vo
+     * @param response
+     * @return
+     */
+    public ResultEnum exportExcel(ExportResultVO vo, HttpServletResponse response) {
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        XSSFSheet sheet = workbook.createSheet("sheet1");
+        XSSFRow row1 = sheet.createRow(0);
+        if (CollectionUtils.isEmpty(vo.getHeaderDisplayList())) {
+            ResultEntityBuild.build(ResultEnum.CODE_NOT_EXIST);
+        }
+        //添加表头
+        for (int i = 0; i < vo.getHeaderDisplayList().size(); i++) {
+            row1.createCell(i).setCellValue(vo.getHeaderDisplayList().get(i));
+        }
+        if (!CollectionUtils.isEmpty(vo.getDataArray())) {
+            for (int i = 0; i < vo.getDataArray().size(); i++) {
+                XSSFRow row = sheet.createRow(i + 1);
+                Map<String, Object> jsonObject = vo.getDataArray().get(i);
+                for (int j = 0; j < vo.getHeaderList().size(); j++) {
+                    row.createCell(j).setCellValue(jsonObject.get(vo.getHeaderList().get(j)) == null ? "" : jsonObject.get(vo.getHeaderList().get(j)).toString());
+                }
+            }
+        }
+        //将文件存到指定位置
+        try {
+            //输出Excel文件
+            OutputStream output = response.getOutputStream();
+            response.reset();
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.addHeader("Content-Disposition", "attachment;filename="+ vo.getFileName() + ".xlsx");
+            workbook.write(output);
+            output.close();
+        } catch (Exception e) {
+            log.error("export excel error:", e);
+            throw new FkException(ResultEnum.SQL_ANALYSIS);
+        }
+        return ResultEnum.SUCCESS;
     }
 }

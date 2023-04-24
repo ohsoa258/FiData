@@ -1,5 +1,6 @@
 package com.fisk.mdm.client;
 
+import com.fisk.common.core.constants.SystemConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
@@ -8,9 +9,11 @@ import com.fisk.mdm.dto.attribute.AttributeDomainDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeStatusDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
+import com.fisk.mdm.dto.process.ApprovalDTO;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.vo.entity.EntityVO;
+import com.fisk.mdm.vo.model.ModelInfoVO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +33,26 @@ public interface MdmClient {
      */
     @GetMapping("/entity/getAttributeById")
     ResultEntity<EntityInfoVO> getAttributeById(@RequestParam("id") Integer id,@RequestParam("name") String name);
+
+    /**
+     * 根据实体id获取属性
+     * @param id
+     * @return
+     */
+    @GetMapping("/model/getEntityById")
+    ResultEntity<ModelInfoVO> getEntityById(@RequestParam("id") Integer id);
+
+    /**
+     * 审批
+     */
+    @PostMapping("/process/approval")
+    public ResultEntity<ResultEnum> approval(@RequestBody ApprovalDTO dto);
+
+    /**
+     * 审批
+     */
+    @PostMapping("/process/executeApproval")
+    ResultEntity<ResultEnum> executeApproval(@RequestBody List<ApprovalDTO> dataDto,@RequestHeader(name = SystemConstants.HTTP_HEADER_AUTH) String token);
 
     /**
      * 根据id查询查询属性

@@ -18,18 +18,23 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 public class PendingApprovalDTO {
+
     @ApiModelProperty(value = "申请人/描述")
     private String keyword;
+
     @ApiModelProperty(value = "操作类型")
     private String operationType;
+
     @ApiModelProperty(value = "开始时间")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(shape =JsonFormat.Shape.STRING,pattern ="yyyy-MM-dd HH:mm:ss",timezone ="GMT+8")
     private LocalDateTime startTime;
+
     @ApiModelProperty(value = "结束时间")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(shape =JsonFormat.Shape.STRING,pattern ="yyyy-MM-dd HH:mm:ss",timezone ="GMT+8")
     private LocalDateTime endTime;
+
     @ApiModelProperty(value = "返回view")
     private Page<PendingApprovalVO> page;
 }

@@ -60,4 +60,22 @@
             del_flag = 1
           AND `id` = #{id}
     </select>
+    <select id="getDefaultEmailServer" resultType="com.fisk.system.vo.emailserver.EmailServerVO">
+        SELECT
+            id,
+            `name`,
+            email_server,
+            email_server_port,
+            email_server_account,
+            email_server_pwd,
+            email_server_type AS emailServerTypeValue,
+            enable_ssl,
+            create_time,
+            create_user
+        FROM
+            tb_emailserver_config
+        WHERE
+            del_flag = 1
+            LIMIT 1
+    </select>
 </mapper>

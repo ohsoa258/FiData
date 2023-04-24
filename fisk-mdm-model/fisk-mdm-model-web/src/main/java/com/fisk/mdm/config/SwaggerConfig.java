@@ -23,19 +23,34 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    public static final String TAG_1 = "Entity-Controller";
-    public static final String TAG_2 = "Model-Controller";
-    public static final String TAG_3 = "Attribute-Controller";
-    public static final String TAG_4 = "ModelVersion-Controller";
-    public static final String TAG_5 = "MasterData-Controller";
-    public static final String TAG_6 = "AttributeGroup-Controller";
-    public static final String TAG_7 = "ViwGroup-Controller";
-    public static final String TAG_8 = "ComplexType-Controller";
-    public static final String TAG_9 = "MasterDataLog-Controller";
-    public static final String TAG_10 = "AttributeLog-Controller";
-    public static final String TAG_11 = "CodeRule-Controller";
-    public static final String TAG_12="MatchingRules-Controller";
-    public static final String TAG_13="Process-Controller";
+//    public static final String TAG_1 = "Entity-Controller";
+//    public static final String TAG_2 = "Model-Controller";
+//    public static final String TAG_3 = "Attribute-Controller";
+//    public static final String TAG_4 = "ModelVersion-Controller";
+//    public static final String TAG_5 = "MasterData-Controller";
+//    public static final String TAG_6 = "AttributeGroup-Controller";
+//    public static final String TAG_7 = "ViwGroup-Controller";
+//    public static final String TAG_8 = "ComplexType-Controller";
+//    public static final String TAG_9 = "MasterDataLog-Controller";
+//    public static final String TAG_10 = "AttributeLog-Controller";
+//    public static final String TAG_11 = "CodeRule-Controller";
+//    public static final String TAG_12="MatchingRules-Controller";
+//    public static final String TAG_13="Process-Controller";
+
+    public static final String TAG_1 = "实体管理API";
+    public static final String TAG_2 = "模型管理API";
+    public static final String TAG_3 = "属性管理API";
+    public static final String TAG_4 = "模型版本管理API";
+    public static final String TAG_5 = "主数据管理API";
+    public static final String TAG_6 = "属性组管理API";
+    public static final String TAG_7 = "自定义视图管理API";
+    public static final String TAG_8 = "复杂数据类型";
+    public static final String TAG_9 = "主数据维护日志";
+    public static final String TAG_10 = "属性日志管理API";
+    public static final String TAG_11 = "自动创建编码管理API";
+    public static final String TAG_12="匹配规则管理API";
+    public static final String TAG_13="流程定义API";
+    public static final String TAG_14="Access-Controller";
 
     @Bean
     public Docket createRestApi() {

@@ -62,4 +62,10 @@ public interface IEmailServerManageService extends IService<EmailServerPO> {
      * @return
      */
     EmailServerVO getEmailServerById(int id);
+    /**
+     * 获取默认邮件服务器信息
+     *
+     * @return
+     */
+    EmailServerVO getDefaultEmailServer();
 }

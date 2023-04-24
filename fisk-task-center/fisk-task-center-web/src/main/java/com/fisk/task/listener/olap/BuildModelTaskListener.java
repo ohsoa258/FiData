@@ -85,6 +85,7 @@ public class BuildModelTaskListener {
                 buildNifiFlowDTO.tableName = olapPO.tableName;
                 buildNifiFlowDTO.selectSql = olapPO.selectDataSql;
                 buildNifiFlowDTO.openTransmission = true;
+                buildNifiFlowDTO.traceId = data.traceId;
                 pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
                 //1是维度
                 if (tableType == 1) {

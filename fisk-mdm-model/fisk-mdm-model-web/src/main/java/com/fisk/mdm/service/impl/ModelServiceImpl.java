@@ -428,7 +428,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                 .map(item -> {
 
                                     // 视图层级
-                                    String viwName = TableNameGenerateUtils.generateViwTableName((int) e.getId(), item.getId());
+                                    String viwName = TableNameGenerateUtils.generateViwTableName(e.getName(),item.getName());
                                     String entityUuid = String.valueOf(item.getId());
                                     FiDataMetaDataTreeDTO entityDto = new FiDataMetaDataTreeDTO();
                                     entityDto.setId(entityUuid);

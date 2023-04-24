@@ -11,6 +11,7 @@ import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
+import com.fisk.task.config.SwaggerConfig;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
@@ -19,6 +20,7 @@ import com.fisk.task.listener.nifi.ISftpDataUploadListener;
 import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.utils.nifi.INiFiHelper;
+import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +34,7 @@ import java.util.Objects;
 /**
  * @author cfk
  */
+@Api(tags = {SwaggerConfig.Nifi})
 @RestController
 @RequestMapping("/nifi")
 @Slf4j

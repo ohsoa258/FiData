@@ -7,8 +7,11 @@ import com.fisk.task.service.dispatchLog.IPipelJobLog;
 import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelStageLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
+import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import com.fisk.task.config.SwaggerConfig;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -16,6 +19,7 @@ import java.util.List;
 /**
  * @author cfk
  */
+@Api(tags = {SwaggerConfig.DispatchLog})
 @RestController
 @RequestMapping("/dispatchLog")
 @Slf4j
