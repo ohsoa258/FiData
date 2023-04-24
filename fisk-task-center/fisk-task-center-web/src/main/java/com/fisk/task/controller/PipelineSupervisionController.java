@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
+import com.fisk.task.config.SwaggerConfig;
 import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
@@ -14,6 +15,7 @@ import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
 import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.service.nifi.IPipelineTableLog;
 import com.fisk.task.service.pipeline.ITableTopicService;
+import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +25,7 @@ import java.util.List;
 /**
  * @author cfk
  */
+@Api(tags = {SwaggerConfig.PipelineTask})
 @Slf4j
 @RestController
 @RequestMapping("/pipeline")

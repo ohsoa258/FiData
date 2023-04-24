@@ -38,7 +38,7 @@ public class SwaggerConfig {
 //    public static final String SYSTEM_VERSION_CONTROLLER = "system-version-controller";
 //    public static final String SYSTEM_LOG_CONTROLLER = "system-log-controller";
 
-    public static final String DATAVIEW = "dataview-controller";
+    public static final String DATAVIEW = "视图过滤";
     public static final String PERMISSION = "权限管理";
     public static final String ROLE_INFO = "角色管理";
     public static final String SERVICE_REGISTRY = "服务注册";
