@@ -12,7 +12,9 @@ import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.consumeserveice.client.ConsumeServeiceClient;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.datamanagement.entity.BusinessClassificationPO;
 import com.fisk.datamanagement.enums.ClassificationTypeEnum;
+import com.fisk.datamanagement.mapper.*;
 import com.fisk.datamanagement.service.impl.ClassificationImpl;
 import com.fisk.datamanagement.synchronization.pushmetadata.IBloodCompensation;
 import com.fisk.datamodel.client.DataModelClient;
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
+ * 元数据同步血缘补充服务实现
  */
 @Service
 @Slf4j
@@ -45,6 +48,29 @@ public class BloodCompensationImpl
     MetaDataImpl metaData;
     @Resource
     ClassificationImpl classification;
+    @Resource
+    BusinessClassificationMapper businessClassificationMapper;
+    @Resource
+    MetadataEntityMapper  metadataEntityMapper;
+    @Resource
+    MetadataAttributeMapper metadataAttributeMapper;
+    @Resource
+    LineageMapRelationMapper lineageMapRelationMapper;
+    @Resource
+    MetadataBusinessMetadataMapper metadataBusinessMetadataMapper;
+    @Resource
+    ClassificationMapper classificationMapper;
+    @Resource
+    MetaDataClassificationMapMapper metaDataClassificationMapMapper;
+    @Resource
+    MetadataEntityClassificationAttributeMapper  metadataEntityClassificationAttributeMapper;
+    @Resource
+    MetadataLabelMapper  metadataLabelMapper;
+    @Resource
+    MetaDataGlossaryMapMapper  metaDataGlossaryMapMapper;
+    @Resource
+    MetaDataEntityOperationLogMapper metaDataEntityOperationLogMapper;
+
 //endregion
     /**
      * 血缘补偿
@@ -93,24 +119,56 @@ public class BloodCompensationImpl
     private void synchronousAPIServiceMetaData(String currUserName) {
         //待补充
     }
+    //region 初始化血缘方法
     /**
      * 清空系统血缘
      */
     private void TruncateBlood() {
-        //待补充
         //1.清空元数据对象实体表：tb_metadata_entity
+        metadataEntityMapper.truncateTable();
         //2.清空元数据对象技术属性表：tb_metadata_attribute
+        metadataAttributeMapper.truncateTable();
         //3.清空元数据实体血缘关系映射表：tb_lineage_map_relation
+        lineageMapRelationMapper.truncateTable();
         //4.清空元数据对象与业务元数据属性映射表：tb_metadata_business_metadata_map
+        metadataBusinessMetadataMapper.truncateTable();
         //5.清空业务分类表：tb_business_classification
-        //6.清空业务分类-分类属性表：tb_classification
-        //7.清空元数据对象所属业务分类映射表：tb_metadata_classification_map
-        //8.清空元数据实体分类属性表：tb_metadata_entity_classification_attribute
-        //9.清空元数据标签映射表：tb_metadata_label_map
-        //10.清空元数据术语与实体映射表：tb_metadata_glossary_map
-        //11.元数据实体操作日志表：tb_metadata_entity_operation_log
+        businessClassificationMapper.truncateTable();
+        //插入默认业务分类根节点：
+        InsertRootBusinessClassification(ClassificationTypeEnum.DATA_ACCESS);
+        InsertRootBusinessClassification(ClassificationTypeEnum.ANALYZE_DATA);
+        InsertRootBusinessClassification(ClassificationTypeEnum.API_GATEWAY_SERVICE);
+        InsertRootBusinessClassification(ClassificationTypeEnum.DATABASE_SYNCHRONIZATION_SERVICE);
+        InsertRootBusinessClassification(ClassificationTypeEnum.VIEW_ANALYZE_SERVICE);
 
+        //6.清空业务分类-分类属性表：tb_classification
+        classificationMapper.truncateTable();
+        //7.清空元数据对象所属业务分类映射表：tb_metadata_classification_map
+        metaDataClassificationMapMapper.truncateTable();
+        //8.清空元数据实体分类属性表：tb_metadata_entity_classification_attribute
+        metadataEntityClassificationAttributeMapper.truncateTable();
+        //9.清空元数据标签映射表：tb_metadata_label_map
+        metadataLabelMapper.truncateTable();
+        //10.清空元数据术语与实体映射表：tb_metadata_glossary_map
+        metaDataGlossaryMapMapper.truncateTable();
+        //11.元数据实体操作日志表：tb_metadata_entity_operation_log
+        metaDataEntityOperationLogMapper.truncateTable();
     }
+
+    /**
+     *初始化插入根节点
+     *
+     * @param item 枚举根节点
+     */
+    private void InsertRootBusinessClassification(ClassificationTypeEnum item) {
+        BusinessClassificationPO POData=new BusinessClassificationPO();
+        POData.name=item.getName();
+        POData.id=item.getValue();
+        POData.description=item.getDescription();
+        businessClassificationMapper.insert(POData);
+    }
+//endregion
+
     /**
      *同步到业务分类的公共方法
      * @param appList 接入业务系统
@@ -140,7 +198,7 @@ public class BloodCompensationImpl
         }
     }
     /**
-     * 同步数据接入来源表元数据
+     * 同步数据接入来源表元数据和数据血缘
      * @param currUserName 当前执行账号
      */
     private void synchronousAccessSourceMetaData(String currUserName) {
@@ -154,32 +212,29 @@ public class BloodCompensationImpl
             log.error("【获取接入所有表失败】");
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
-        //获取接入所有应用
+        //获取所有接入的元数据对象。
         ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAppRegistration = dataAccessClient.synchronizationAppRegistration();
         if (synchronizationAppRegistration.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
-
         if (CollectionUtils.isEmpty(synchronizationAppRegistration.data)
                 || CollectionUtils.isEmpty(collect)) {
-            return;
+            log.error("【获取接入所有应用失败】");
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
 
         for (DataAccessSourceTableDTO accessTable : collect) {
-
-
             Optional<MetaDataInstanceAttributeDTO> first = synchronizationAppRegistration
                     .data.stream().filter(e -> e.comment.equals(String.valueOf(accessTable.dataSourceId))).findFirst();
             if (!first.isPresent()) {
                 continue;
             }
-
             if (CollectionUtils.isEmpty(first.get().dbList.get(0).tableList)) {
                 first.get().dbList.get(0).tableList = new ArrayList<>();
             }
-
             //解析sql
             List<TableMetaDataObject> res;
+            //解析SQL过滤掉SFTP，FTP，
             if(("sftp").equals(accessTable.driveType)||("ftp").equals(accessTable.driveType)){
                 continue;
             }else{
@@ -187,7 +242,6 @@ public class BloodCompensationImpl
                 log.debug("accessTable信息:表名称："+accessTable.tableName+",表ID"+accessTable.id+",表脚本"+accessTable.sqlScript);
                 res = SqlParserUtils.sqlDriveConversionName(accessTable.appId,accessTable.driveType,accessTable.sqlScript);
             }
-
             if (CollectionUtils.isEmpty(res)) {
                 continue;
             }

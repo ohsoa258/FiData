@@ -47,6 +47,5 @@ public interface IMetaData {
      */
     void synchronousTableBusinessMetaData(BusinessMetaDataInfoDTO dto);
 
-    void test();
 
 }

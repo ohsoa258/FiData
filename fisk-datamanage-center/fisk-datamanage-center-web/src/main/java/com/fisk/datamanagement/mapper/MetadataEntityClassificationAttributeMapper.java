@@ -3,6 +3,7 @@ package com.fisk.datamanagement.mapper;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datamanagement.dto.MetadataEntityClassificationAttributeMapDTO;
 import com.fisk.datamanagement.entity.MetadataEntityClassificationAttributePO;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
@@ -49,5 +50,7 @@ public interface MetadataEntityClassificationAttributeMapper
     List<MetadataEntityClassificationAttributeMapDTO> selectClassificationAttributes(@Param("metadataEntityId") Integer metadataEntityId,
                                                                                      @Param("classificationId") Integer classificationId);
 
+    @Delete("truncate TABLE tb_metadata_entity_classification_attribute")
+    int truncateTable();
 
 }
