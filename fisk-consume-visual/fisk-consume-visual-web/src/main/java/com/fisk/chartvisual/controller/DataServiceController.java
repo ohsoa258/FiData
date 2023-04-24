@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.controller;
 
+import com.fisk.chartvisual.config.SwaggerConfig;
 import com.fisk.chartvisual.dto.chartvisual.ChartQueryObject;
 import com.fisk.chartvisual.dto.chartvisual.ChartQueryObjectSsas;
 import com.fisk.chartvisual.dto.chartvisual.SlicerQueryObject;
@@ -12,6 +13,7 @@ import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -27,6 +29,8 @@ import java.util.Map;
  *
  * @author gy
  */
+
+@Api(tags = {SwaggerConfig.TAG_4})
 @RestController
 @RequestMapping("/data")
 @Slf4j

@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.dto.classification;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -9,5 +10,7 @@ import java.util.List;
  */
 @Data
 public class ClassificationDefsDTO {
+
+    @ApiModelProperty(value = "classificationDefs")
     public List<ClassificationDefContentDTO> classificationDefs;
 }

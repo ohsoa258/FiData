@@ -20,4 +20,5 @@ public class TaskLogPO extends BasePO {
     public boolean taskSendOk;
     public String taskData;
     public String traceId;
+    public String msg;
 }

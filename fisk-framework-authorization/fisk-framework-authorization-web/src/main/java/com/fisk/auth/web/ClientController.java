@@ -6,11 +6,14 @@ import com.fisk.auth.service.IAuthenticateWhiteListService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import io.swagger.annotations.Api;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fisk.auth.config.SwaggerConfig;
 
 import javax.annotation.Resource;
 
@@ -18,6 +21,7 @@ import javax.annotation.Resource;
  * @author Lock
  * @date 2021/5/17 15:04
  */
+@Api(tags = {SwaggerConfig.Client})
 @RestController
 @RequestMapping("/client")
 public class ClientController {

@@ -17,22 +17,27 @@ public class ApiTableExtendDTO {
     @ApiModelProperty(value = "api下的表")
     public String tableName;
 
+    @ApiModelProperty(value = "pid")
     public Boolean pid;
 
+    @ApiModelProperty(value = "父表名称")
     public String fatherTableName;
 
     /**
      * 表字段集合
      */
+    @ApiModelProperty(value = "表字段集合")
     public List<TableFieldsDTO> list;
 
     /**
      * 预留待使用
      */
+    @ApiModelProperty(value = "预留待使用")
     public List<JsonSchema> jsonSchemaList;
 
     /**
      * 子级表名
      */
+    @ApiModelProperty(value = "子级表名")
     public List<ApiTableExtendDTO> childTable;
 }

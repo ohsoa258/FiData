@@ -8,10 +8,13 @@ import com.fisk.auth.vo.ClientRegisterVO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import com.fisk.auth.config.SwaggerConfig;
 
 import java.util.List;
 
@@ -22,6 +25,8 @@ import java.util.List;
  * @date 2022-03-04 16:46:24
  * @description 客户端注册功能只有添加和删除
  */
+
+@Api(tags = {SwaggerConfig.ClientRegister})
 @RestController
 @RequestMapping("/clientRegister")
 public class ClientRegisterController {

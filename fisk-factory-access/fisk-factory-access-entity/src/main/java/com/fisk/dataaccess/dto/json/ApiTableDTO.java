@@ -23,6 +23,7 @@ public class ApiTableDTO {
     /**
      * 表字段集合
      */
+    @ApiModelProperty(value = "表字段集合")
     public List<TableFieldsDTO> list;
 
     @ApiModelProperty(value = "子级表名")

@@ -15,6 +15,7 @@ public class TableJsonTargetDTO {
     @ApiModelProperty(value = "当前任务名称")
     public String taskName;
 
+    @ApiModelProperty(value = "dto")
     public TableJsonChildDTO dto;
 
 }

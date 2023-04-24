@@ -3,8 +3,10 @@ package com.fisk.datafactory.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datafactory.config.SwaggerConfig;
 import com.fisk.datafactory.dto.taskdatasourceconfig.TaskDataSourceConfigDTO;
 import com.fisk.datafactory.service.ITaskDataSourceConfig;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +15,7 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
+@Api(tags = {SwaggerConfig.TaskDataSourceConfig})
 @RestController
 @RequestMapping("/TaskDataSourceConfig")
 public class TaskDataSourceConfigController {

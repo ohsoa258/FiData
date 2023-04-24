@@ -1,6 +1,7 @@
 package com.fisk.datafactory.controller;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.datafactory.config.SwaggerConfig;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
@@ -12,6 +13,7 @@ import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
 import com.fisk.task.dto.dispatchlog.PipelLogVO;
 import com.fisk.task.dto.dispatchlog.PipelStageLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,7 @@ import java.util.List;
  * @description 对外提供的feign接口API
  * @date 2022/1/11 11:51
  */
+@Api(tags = {SwaggerConfig.DataFactory})
 @RestController
 @RequestMapping("/dataFactory")
 public class DatafactoryController {

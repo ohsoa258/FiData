@@ -3,7 +3,9 @@ package com.fisk.datamodel.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.service.IBusinessArea;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +17,8 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
+
+@Api(tags = {SwaggerConfig.SystemWebIndex})
 @RestController
 @RequestMapping("/systemWebIndex")
 @Slf4j

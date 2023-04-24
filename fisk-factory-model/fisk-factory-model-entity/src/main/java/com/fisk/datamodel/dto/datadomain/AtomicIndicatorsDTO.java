@@ -1,5 +1,6 @@
 package com.fisk.datamodel.dto.datadomain;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -10,12 +11,15 @@ import lombok.Data;
 @Data
 public class AtomicIndicatorsDTO {
 
+    @ApiModelProperty(value = "指示器Id")
     public Long indicatorsId;
 
+    @ApiModelProperty(value = "指示器名称")
     public String indicatorsName;
 
     /**
      * 是否维度 0 否  1 是维度
      */
+    @ApiModelProperty(value = "是否维度 0 否  1 是维度")
     public int dimension;
 }

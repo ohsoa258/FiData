@@ -146,7 +146,6 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         } else {
             sql += "call public." + funcName + "('','";
         }
-        sql = sql.replaceFirst("call public." + funcName + "\\(", "exec [dbo]." + funcName);
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
             tableKey = targetTableName.substring(targetTableName.indexOf("_") + 1) + "key";
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {

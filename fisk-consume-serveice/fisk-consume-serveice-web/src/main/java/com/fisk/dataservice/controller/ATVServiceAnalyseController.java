@@ -31,4 +31,28 @@ public class ATVServiceAnalyseController {
     public ResultEntity<Object> getServiceanalysis() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, analyseService.getServiceAnalyse());
     }
+
+    @ApiOperation(value = "统计数据服务API熔断情况")
+    @GetMapping("/getAtvCallApiFuSingAnalyse")
+    public ResultEntity<Object> getAtvCallApiFuSingAnalyse() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, analyseService.getAtvCallApiFuSingAnalyse());
+    }
+
+    @ApiOperation(value = "统计数据服务API昨天和今天调用情况")
+    @GetMapping("/getAtvYasCallApiAnalyse")
+    public ResultEntity<Object> getAtvYasCallApiAnalyse() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, analyseService.getAtvYasCallApiAnalyse());
+    }
+
+    @ApiOperation(value = "统计数据服务API今天调用情况前20条")
+    @GetMapping("/getAtvTopCallApiAnalyse")
+    public ResultEntity<Object> getAtvTopCallApiAnalyse() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, analyseService.getAtvTopCallApiAnalyse());
+    }
+
+    @ApiOperation(value = "扫描数据服务API是否熔断")
+    @GetMapping("/scanDataServiceApiIsFuSing")
+    public ResultEntity<Object> scanDataServiceApiIsFuSing() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, analyseService.scanDataServiceApiIsFuSing());
+    }
 }

@@ -22,26 +22,49 @@ import java.util.List;
 @Configuration
 @EnableSwagger2
 public class SwaggerConfig {
+//
+//    public static final String TAG_1 = "app-registration-controller";
+//    public static final String TAG_2 = "physical-table-controller";
+//    public static final String TAG_3 = "data-access-controller";
+//    public static final String TAG_4 = "data-review-controller";
+//    public static final String TAG_5 = "table-fields-controller";
+//    public static final String TAG_6 = "table-access-controller";
+//    public static final String TAG_7 = "datasource-controller";
+//    public static final String TAG_8 = "systemWebIndex-controller";
+//    public static final String FTP = "ftp-controller";
+//    public static final String TABLE_HISTORY = "table-history-controller";
+//    public static final String API_CONFIG = "api-config-controller";
+//    public static final String API_PARAMETER = "api-parameter-controller";
+//    public static final String DATA_TARGET = "data-target-controller";
+//    public static final String DATA_TARGET_APP = "data-target-app-controller";
+//    public static final String SAVEPOINT_HISTORY = "savepoint-history-controller";
+//    public static final String DATA_OPS = "data-ops-controller";
+//    public static final String SFTP = "sftp-controller";
+//
+//    public static final String STATEMENT = "statement-controller";
 
-    public static final String TAG_1 = "app-registration-controller";
-    public static final String TAG_2 = "physical-table-controller";
-    public static final String TAG_3 = "data-access-controller";
-    public static final String TAG_4 = "data-review-controller";
-    public static final String TAG_5 = "table-fields-controller";
-    public static final String TAG_6 = "table-access-controller";
-    public static final String TAG_7 = "datasource-controller";
-    public static final String TAG_8 = "systemWebIndex-controller";
-    public static final String FTP = "ftp-controller";
-    public static final String TABLE_HISTORY = "table-history-controller";
-    public static final String API_CONFIG = "api-config-controller";
-    public static final String API_PARAMETER = "api-parameter-controller";
-    public static final String DATA_TARGET = "data-target-controller";
-    public static final String DATA_TARGET_APP = "data-target-app-controller";
-    public static final String SAVEPOINT_HISTORY = "savepoint-history-controller";
-    public static final String DATA_OPS = "data-ops-controller";
-    public static final String SFTP = "sftp-controller";
 
-    public static final String STATEMENT = "statement-controller";
+    public static final String TAG_1 = "应用注册";
+    public static final String TAG_2 = "物理表";
+    public static final String TAG_3 = "应用注册树";
+    public static final String TAG_4 = "数据查看";
+    public static final String TAG_5 = "表字段";
+    public static final String TAG_6 = "物理表单表CRUD";
+    public static final String TAG_7 = "数据源";
+    public static final String TAG_8 = "首页API";
+    public static final String FTP = "FTP数据源";
+    public static final String TABLE_HISTORY = "表发布历史";
+    public static final String API_CONFIG = "api配置";
+    public static final String API_PARAMETER = "非实时api请求参数";
+    public static final String DATA_TARGET = "数据目标";
+    public static final String DATA_TARGET_APP = "数据目标应用";
+    public static final String SAVEPOINT_HISTORY = "检查点历史记录";
+    public static final String DATA_OPS = "数据运维";
+    public static final String SFTP = "sftp";
+
+    public static final String STATEMENT = "资产报表";
+
+
 
     @Bean
     public Docket createRestApi() {

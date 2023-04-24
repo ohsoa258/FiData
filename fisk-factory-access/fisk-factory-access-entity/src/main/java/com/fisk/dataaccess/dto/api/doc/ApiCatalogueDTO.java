@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.dto.api.doc;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -16,15 +17,18 @@ public class ApiCatalogueDTO {
      * 二级
      * 三级
      */
+    @ApiModelProperty(value = "目录等级 一级 二级 三级")
     public int grade;
 
     /**
      * 目录序号
      */
+    @ApiModelProperty(value = "目录序号")
     public String catalogueIndex;
 
     /**
      * 目录名称
      */
+    @ApiModelProperty(value = "目录名称")
     public  String catalogueName;
 }

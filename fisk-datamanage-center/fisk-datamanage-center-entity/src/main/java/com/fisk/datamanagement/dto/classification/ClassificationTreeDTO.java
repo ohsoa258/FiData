@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.dto.classification;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -10,8 +11,10 @@ import java.util.List;
 @Data
 public class ClassificationTreeDTO {
 
+    @ApiModelProperty(value = "guid")
     public String guid;
 
+    @ApiModelProperty(value = "名称")
     public String name;
 
     public List<ClassificationTreeDTO> child;

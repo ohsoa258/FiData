@@ -7,10 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.ApiKey;
-import springfox.documentation.service.AuthorizationScope;
-import springfox.documentation.service.SecurityReference;
+import springfox.documentation.service.*;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spi.service.contexts.SecurityContext;
 import springfox.documentation.spring.web.plugins.Docket;
@@ -26,6 +23,16 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
+    public static final String DispatchLog = "调度日志";
+    public static final String MessageLog = "消息日志";
+    public static final String Nifi = "Nifi";
+    public static final String OlapTask = "Olap任务";
+    public static final String PipelineTask = "管道任务";
+    public static final String PublishTask = "发布任务";
+    public static final String TableTopic = "表主题";
+    public static final String TaskLog = "任务日志";
+    public static final String TBETLIncremental = "TBETL增量";
+
     @Bean
     public Docket createRestApi() {
         String basePck = FkTaskApplication.class.getPackage().getName();
@@ -35,6 +42,15 @@ public class SwaggerConfig {
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())
                 .build()
+                .tags(new Tag(DispatchLog,"调度日志"))
+                .tags(new Tag(MessageLog,"消息日志"))
+                .tags(new Tag(Nifi,"Nifi"))
+                .tags(new Tag(OlapTask,"Olap任务"))
+                .tags(new Tag(PipelineTask,"管道任务"))
+                .tags(new Tag(PublishTask,"发布任务"))
+                .tags(new Tag(TableTopic,"表主题"))
+                .tags(new Tag(TaskLog,"任务日志"))
+                .tags(new Tag(TBETLIncremental,"TBETL增量"))
                 .securitySchemes(apiKey())
                 .securityContexts(securityContexts());
 

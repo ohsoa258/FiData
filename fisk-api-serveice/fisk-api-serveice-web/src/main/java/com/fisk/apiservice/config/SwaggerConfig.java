@@ -20,8 +20,11 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    public static final String AUTH_CONTROLLER = "authservice-controller";
-    public static final String DATASERVICE_CONTROLLER = "dataservice-controller";
+//    public static final String AUTH_CONTROLLER = "authservice-controller";
+//    public static final String DATASERVICE_CONTROLLER = "dataservice-controller";
+
+    public static final String AUTH_CONTROLLER = "API授权";
+    public static final String DATASERVICE_CONTROLLER = "数据服务模块对外API";
 
     @Bean
     public Docket createRestApi() {

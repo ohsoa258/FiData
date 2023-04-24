@@ -21,8 +21,10 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = false)
     public class AppDataSourceDTO extends BaseDTO {
 
+    @ApiModelProperty(value = "id")
     public Long id;
 
+    @ApiModelProperty(value = "appId")
     public Long appId;
 
     @ApiModelProperty(value = "驱动类型", required = true)

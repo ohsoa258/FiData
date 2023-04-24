@@ -1,5 +1,6 @@
 package com.fisk.mdm.dto.attributelog;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -13,10 +14,12 @@ public class AttributeRollbackDTO {
     /**
      * 日志表id
      */
+    @ApiModelProperty(value = "日志表id")
     private Integer id;
 
     /**
      * 属性id
      */
+    @ApiModelProperty(value = "属性id")
     private Integer attributeId;
 }

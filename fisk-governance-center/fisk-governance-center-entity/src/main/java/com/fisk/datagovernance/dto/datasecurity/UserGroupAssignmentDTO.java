@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.dto.datasecurity;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -17,16 +18,19 @@ public class UserGroupAssignmentDTO {
     /**
      *
      */
+    @ApiModelProperty(value = "id")
     public long id;
 
     /**
      * 用户组id
      */
+    @ApiModelProperty(value = "用户组id")
     public long userGroupId;
 
     /**
      * 用户id
      */
+    @ApiModelProperty(value = "用户id")
     public long userId;
 
 }

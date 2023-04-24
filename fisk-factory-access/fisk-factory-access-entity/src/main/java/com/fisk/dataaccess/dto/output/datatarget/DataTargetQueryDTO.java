@@ -19,10 +19,12 @@ public class DataTargetQueryDTO {
     /**
      * 数据过滤
      */
+    @ApiModelProperty(value = "数据过滤")
     public List<FilterQueryDTO> queryDTOList;
     /**
      * 分页查询数据
      */
+    @ApiModelProperty(value = "分页查询数据")
     public Page<DataTargetPageResultDTO> page;
 
 }

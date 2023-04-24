@@ -1,5 +1,6 @@
 package com.fisk.dataservice.dto.api.doc;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -13,20 +14,24 @@ public class ApiResponseCodeDTO {
     /**
      * 代码code
      */
+    @ApiModelProperty(value = "代码code")
     public String code;
 
     /**
      * 类型
      */
+    @ApiModelProperty(value = "类型")
     public String type;
 
     /**
      * 描述
      */
+    @ApiModelProperty(value = "描述")
     public String desc;
 
     /**
      * 行样式
      */
+    @ApiModelProperty(value = "行样式")
     public String trStyle;
 }

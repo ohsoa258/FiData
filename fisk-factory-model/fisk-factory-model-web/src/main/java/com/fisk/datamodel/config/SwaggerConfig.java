@@ -23,26 +23,51 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    public static final String FACT_ATTRIBUTE = "fact-attribute-controller";
-    public static final String FACT="fact-controller";
-    public static final String DIMENSION ="dimension-controller";
-    public static final String DIMENSION_ATTRIBUTE ="dimension-attribute-controller";
-    public static final String BUSINESS_PROCESS ="business-process-controller";
-    public static final String BUSINESS_AREA ="business-area-controller";
-    public static final String DATASOURCE_AREA ="data-source-area-controller";
-    public static final String ATOMIC_INDICATOR ="atomic-indicators-controller";
-    public static final String DERIVED_INDICATOR="derived-indicators-controller";
-    public static final String BUSINES_LIMITE ="busines-limited-controller";
-    public static final String TAG_4 = "data-domain-controller";
-    public static final String FACT_SYNC_MODE="factsyncmode--controller";
-    public static final String DIMENSION_FOLDER="dimension-folder-controller";
-    public static final String DATAFACTORY="datafactory--controller";
-    public static final String TABLE_HISTORY="table-history--controller";
-    public static final String DATA_MANAGEMENT="data-management-controller";
-    public static final String TABLE_BUSINESS="table-business-controller";
-    public static final String WIDE_TABLE = "wide-table-controller";
-    public static final String DATA_OPS = "data-ops-controller";
-    public static final String CUSTOM_SCRIPT = "custom-script-controller";
+//    public static final String FACT_ATTRIBUTE = "fact-attribute-controller";
+//    public static final String FACT="fact-controller";
+//    public static final String DIMENSION ="dimension-controller";
+//    public static final String DIMENSION_ATTRIBUTE ="dimension-attribute-controller";
+//    public static final String BUSINESS_PROCESS ="business-process-controller";
+//    public static final String BUSINESS_AREA ="business-area-controller";
+//    public static final String DATASOURCE_AREA ="data-source-area-controller";
+//    public static final String ATOMIC_INDICATOR ="atomic-indicators-controller";
+//    public static final String DERIVED_INDICATOR="derived-indicators-controller";
+//    public static final String BUSINES_LIMITE ="busines-limited-controller";
+//    public static final String TAG_4 = "data-domain-controller";
+//    public static final String FACT_SYNC_MODE="factsyncmode--controller";
+//    public static final String DIMENSION_FOLDER="dimension-folder-controller";
+//    public static final String DATAFACTORY="datafactory--controller";
+//    public static final String TABLE_HISTORY="table-history--controller";
+//    public static final String DATA_MANAGEMENT="data-management-controller";
+//    public static final String TABLE_BUSINESS="table-business-controller";
+//    public static final String WIDE_TABLE = "wide-table-controller";
+//    public static final String DATA_OPS = "data-ops-controller";
+//    public static final String CUSTOM_SCRIPT = "custom-script-controller";
+
+    public static final String FACT_ATTRIBUTE = "数仓建模-事实字段";
+    public static final String FACT="数仓建模-事实表";
+    public static final String DIMENSION ="数仓建模--维度";
+    public static final String DIMENSION_ATTRIBUTE ="数仓建模–维度字段";
+    public static final String BUSINESS_PROCESS ="业务过程";
+    public static final String BUSINESS_AREA ="业务域";
+    public static final String DATASOURCE_AREA ="计算数据源";
+    public static final String ATOMIC_INDICATOR ="数仓建模–指标";
+    public static final String DERIVED_INDICATOR="数仓建模–派生指标";
+    public static final String BUSINES_LIMITE ="数据建模-业务限定";
+    public static final String TAG_4 = "数据源";
+    public static final String FACT_SYNC_MODE="事实表同步方式";
+    public static final String DIMENSION_FOLDER="维度文件夹";
+    public static final String DATAFACTORY="数据工厂-管道组件表id";
+    public static final String TABLE_HISTORY="表发布历史";
+    public static final String DATA_MANAGEMENT="数据治理";
+    public static final String TABLE_BUSINESS="表增量配置";
+    public static final String WIDE_TABLE = "宽表";
+    public static final String DATA_OPS = "数据运维";
+    public static final String CUSTOM_SCRIPT = "自定义脚本";
+    public static final String DataService = "数据服务";
+    public static final String SystemWebIndex = "系统页索引";
+
+    public static final String TableName = "表名";
 
     @Bean
     public Docket createRestApi() {
@@ -74,6 +99,9 @@ public class SwaggerConfig {
                 .tags(new Tag(WIDE_TABLE, "宽表"))
                 .tags(new Tag(DATA_OPS, "数据运维"))
                 .tags(new Tag(CUSTOM_SCRIPT, "自定义脚本"))
+                .tags(new Tag(DataService, "数据服务"))
+                .tags(new Tag(SystemWebIndex, "系统页索引"))
+                .tags(new Tag(TableName, "表名"))
                 .securityContexts(securityContexts());
     }
 

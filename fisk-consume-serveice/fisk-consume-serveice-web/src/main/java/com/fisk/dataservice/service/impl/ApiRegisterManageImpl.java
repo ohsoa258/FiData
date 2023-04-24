@@ -460,6 +460,11 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
          * 2、修改参数
          * 3、新增参数
          * */
+        if (CollectionUtils.isNotEmpty(dto.parmDTO)){
+            dto.parmDTO.forEach(t->{
+                t.setApiId(apiId);
+            });
+        }
         QueryWrapper<ParmConfigPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(ParmConfigPO::getApiId, apiId).eq(ParmConfigPO::getDelFlag, 1);
         List<ParmConfigPO> parmConfigPOS = apiParmMapper.selectList(queryWrapper);

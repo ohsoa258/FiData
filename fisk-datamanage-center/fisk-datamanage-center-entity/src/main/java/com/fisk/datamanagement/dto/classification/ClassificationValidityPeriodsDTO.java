@@ -9,8 +9,10 @@ import lombok.Data;
 @Data
 public class ClassificationValidityPeriodsDTO {
 
+    @ApiModelProperty(value = "开始时间")
     public String startTime;
 
+    @ApiModelProperty(value = "结束时间")
     public String endTime;
     @ApiModelProperty(value = "时区")
     public String timeZone;

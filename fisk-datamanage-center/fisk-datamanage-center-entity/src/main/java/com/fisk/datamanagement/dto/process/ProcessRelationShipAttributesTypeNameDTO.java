@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.dto.process;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -7,5 +8,6 @@ import lombok.Data;
  */
 @Data
 public class ProcessRelationShipAttributesTypeNameDTO {
+    @ApiModelProperty(value = "属性名称")
     public String typeName;
 }

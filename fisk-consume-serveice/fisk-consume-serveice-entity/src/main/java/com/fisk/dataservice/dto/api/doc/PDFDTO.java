@@ -1,5 +1,7 @@
 package com.fisk.dataservice.dto.api.doc;
 
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * @author dick
  * @version 1.0
@@ -8,5 +10,6 @@ package com.fisk.dataservice.dto.api.doc;
  */
 public class PDFDTO {
 
+    @ApiModelProperty(value = "目录")
     public  String mulu;
 }

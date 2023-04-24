@@ -5,6 +5,7 @@ import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.TaskTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
+import com.fisk.task.config.SwaggerConfig;
 import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.ApiImportDataDTO;
@@ -19,6 +20,7 @@ import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.service.task.IBuildKfkTaskService;
 import com.fisk.task.service.task.IBuildTaskService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +32,7 @@ import java.util.List;
 /**
  * @author gy
  */
+@Api(tags = {SwaggerConfig.PublishTask})
 @RestController
 @RequestMapping("/publishTask")
 @Slf4j
@@ -49,7 +52,7 @@ public class PublishTaskController {
     @PostMapping("/nifiFlow")
     @ApiOperation(value = "创建同步数据nifi流程")
     public ResultEntity<Object> publishBuildNifiFlowTask(@RequestBody BuildNifiFlowDTO data) {
-        return iBuildKfkTaskService.publishTask("数据湖表:" + data.tableName + "的结构及数据流任务",
+        return iBuildKfkTaskService.publishTask("数据湖表:" + data.tableName + "的数据流任务",
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.NifiTopicConstants.BUILD_NIFI_FLOW,
                 data);
@@ -132,7 +135,7 @@ public class PublishTaskController {
     @ApiOperation(value = "在ods库中生成数据表")
     public ResultEntity<Object> publishBuildPhysicsTableTask(@RequestBody BuildPhysicalTableDTO ArDto) {
         log.info("进入建表" + ArDto.tableName);
-        return iBuildKfkTaskService.publishTask("数据湖表:" + ArDto.tableName + ",的结构及数据流任务",
+        return iBuildKfkTaskService.publishTask("数据湖表:" + ArDto.tableName + ",的结构",
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.DataInputTopicConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW,
                 ArDto);
@@ -343,7 +346,15 @@ public class PublishTaskController {
                 fieldDTO);
     }
 
-
+    @DeleteMapping("/taskPublish")
+    @ApiOperation(value = "元数据字段删除")
+    public ResultEntity<Object> taskPublish(@RequestBody KafkaReceiveDTO kafkaReceive) {
+        log.info("元数据字段删除");
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_IMMEDIATELYSTART_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW,
+                kafkaReceive);
+    }
 
 
 }

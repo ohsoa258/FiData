@@ -50,6 +50,7 @@ public class ApiConfigDTO {
     /**
      * api下的物理表
      */
+    @ApiModelProperty(value = "api下的物理表")
     public List<TableAccessNonDTO> list;
 
     @ApiModelProperty(value = "当前api的json格式")

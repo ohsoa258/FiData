@@ -1,5 +1,6 @@
 package com.fisk.mdm.dto.codeRule;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -13,10 +14,12 @@ public class CodeRuleDeleteDTO {
     /**
      * 规则组id
      */
+    @ApiModelProperty(value = "规则组id")
     private Integer groupId;
 
     /**
      * 规则id
      */
+    @ApiModelProperty(value = "规则id")
     private Integer id;
 }

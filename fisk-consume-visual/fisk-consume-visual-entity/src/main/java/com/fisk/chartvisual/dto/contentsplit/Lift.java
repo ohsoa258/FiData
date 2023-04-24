@@ -1,6 +1,7 @@
 package com.fisk.chartvisual.dto.contentsplit;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModelProperty;
 
 import java.util.List;
 
@@ -9,13 +10,22 @@ import java.util.List;
  * @date 2021/11/17 16:27
  */
 public class Lift {
+
+    @ApiModelProperty(value = "id")
     private int id;
+    @ApiModelProperty(value = "表名")
     @JsonProperty("tableName")
     private String tablename;
+
+    @ApiModelProperty(value = "myscreen")
     @JsonProperty("myScreen")
     private List<String> myscreen;
+
+    @ApiModelProperty(value = "列名")
     @JsonProperty("columnName")
     private List<Columnname> columnname;
+
+    @ApiModelProperty(value = "表键")
     @JsonProperty("tableKey")
     private int tablekey;
     private String temp;

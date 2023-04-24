@@ -5,7 +5,9 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.accessAndTask.DataTranDTO;
 import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
+import com.fisk.task.config.SwaggerConfig;
 import com.fisk.task.service.task.ITBETLIncremental;
+import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +19,7 @@ import java.util.Map;
  *
  * @author cfk
  */
+@Api(tags = {SwaggerConfig.TBETLIncremental})
 @Slf4j
 @RestController
 @RequestMapping("/TBETLIncremental")

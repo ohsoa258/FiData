@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.dto.datalogging;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,6 +17,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DataLoggingDTO {
+
+    @ApiModelProperty(value = "总记录数")
     private Integer totalNumberOfRecords; //总记录数
+
+    @ApiModelProperty(value = "日增量")
     private Integer dailyGain; //日增量
 }
