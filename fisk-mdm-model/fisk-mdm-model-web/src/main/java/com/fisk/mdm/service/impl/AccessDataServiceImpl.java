@@ -55,9 +55,11 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
             AccessDataPO accessDataPo = new AccessDataPO();
             accessDataPo.setModelId(moudleId);
             accessDataPo.setEntityId(entityId);
-            mapper.insert(accessDataPo);
+            this.save(accessDataPo);
+            data.accessId = (int)accessDataPo.getId();
             return data;
         }
+        data.accessId = (int)accessPo.getId();
         //获取sql脚本
         data.sqlScript = accessPo.getExtractionSql();
         data.dataSourceId = accessPo.getSouceSystemId();

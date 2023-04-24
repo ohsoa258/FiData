@@ -12,6 +12,8 @@ public class AccessAttributeListDTO {
     /**
      * sql脚本
      */
+    public Integer accessId;
+
     public String sqlScript;
 
     public List<AccessAttributeDTO> attributeDTOList;
@@ -21,8 +23,6 @@ public class AccessAttributeListDTO {
     public SyncModeDTO syncModeDTO;
 
     public Integer dataSourceId;
-
-    public String accessKeyScript;
 
     public List<CustomScriptInfoDTO> customScriptList;
     /*
