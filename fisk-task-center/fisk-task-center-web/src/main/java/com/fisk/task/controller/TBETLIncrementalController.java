@@ -8,6 +8,7 @@ import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.task.config.SwaggerConfig;
 import com.fisk.task.service.task.ITBETLIncremental;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +34,7 @@ public class TBETLIncrementalController {
      *
      * @return 返回值
      */
+    @ApiOperation(value = "拼接sql替换时间")
     @PostMapping("/converSql")
     public ResultEntity<Map<String, String>> converSql(@RequestBody DataTranDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,itbetlIncremental.converSql(dto.tableName, dto.querySql, dto.driveType, dto.deltaTimes));

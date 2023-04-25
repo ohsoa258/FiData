@@ -67,4 +67,7 @@ public class FactAttributeDTO {
 
     @ApiModelProperty(value = "配置详情(事实key的json配置详情)")
     public String configDetails;
+
+    @ApiModelProperty(value = "是否是业务覆盖表示字段 1：是  0：不是")
+    public int isBusinessKey;
 }

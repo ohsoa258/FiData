@@ -37,5 +37,4 @@ public interface INifiStage {
      */
     Object overlayCodePreview(OverLoadCodeDTO dto);
 
-
 }

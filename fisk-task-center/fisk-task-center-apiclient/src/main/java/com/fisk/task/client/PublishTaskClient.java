@@ -15,8 +15,8 @@ import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
 import com.fisk.task.dto.dispatchlog.*;
-import com.fisk.task.dto.metadatafield.MetaDataFieldDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
+import com.fisk.task.dto.metadatafield.MetaDataFieldDTO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
@@ -26,7 +26,6 @@ import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.DataServiceTableLogQueryDTO;
 import com.fisk.task.dto.task.*;
 import com.fisk.task.po.TableNifiSettingPO;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -301,7 +300,7 @@ public interface PublishTaskClient {
      * @return
      */
     @PostMapping("/pipeline/saveNifiStage")
-    public void saveNifiStage(@RequestParam String data);
+    void saveNifiStage(@RequestParam String data);
 
     /**
      * 删除nifi管道
@@ -309,7 +308,7 @@ public interface PublishTaskClient {
      * @return
      */
     @PostMapping("/nifi/deleteCustomWorkNifiFlow")
-    public void deleteCustomWorkNifiFlow(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO);
+    void deleteCustomWorkNifiFlow(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO);
 
     /**
      * 接入日志完善
@@ -317,7 +316,7 @@ public interface PublishTaskClient {
      * @return
      */
     @PostMapping("/pipeline/getPipelineTableLog")
-    public ResultEntity<List<PipelineTableLogVO>> getPipelineTableLog(@RequestParam("data") String data, @RequestParam("pipelineTableQuery") String pipelineTableQuery);
+    ResultEntity<List<PipelineTableLogVO>> getPipelineTableLog(@RequestParam("data") String data, @RequestParam("pipelineTableQuery") String pipelineTableQuery);
 
     /**
      * 管道job日志
@@ -325,7 +324,7 @@ public interface PublishTaskClient {
      * @return
      */
     @PostMapping("/dispatchLog/getPipelJobLogVos")
-    public ResultEntity<List<PipelJobLogVO>> getPipelJobLogVos(@RequestBody List<PipelJobLogVO> pipelJobLogs);
+    ResultEntity<List<PipelJobLogVO>> getPipelJobLogVos(@RequestBody List<PipelJobLogVO> pipelJobLogs);
 
     /**
      * 任务日志
@@ -333,7 +332,7 @@ public interface PublishTaskClient {
      * @return
      */
     @PostMapping("/dispatchLog/getPipelTaskLogVos")
-    public ResultEntity<List<PipelTaskLogVO>> getPipelTaskLogVos(@RequestBody List<PipelTaskLogVO> pipelTaskLogs);
+    ResultEntity<List<PipelTaskLogVO>> getPipelTaskLogVos(@RequestBody List<PipelTaskLogVO> pipelTaskLogs);
 
     /**
      * 阶段日志
@@ -341,7 +340,7 @@ public interface PublishTaskClient {
      * @return
      */
     @PostMapping("/dispatchLog/getPipelStageLogVos")
-    public ResultEntity<List<PipelStageLogVO>> getPipelStageLogVos(@RequestParam String taskId);
+    ResultEntity<List<PipelStageLogVO>> getPipelStageLogVos(@RequestParam String taskId);
 
     /**
      * 暂停管道
@@ -349,7 +348,7 @@ public interface PublishTaskClient {
      * @return
      */
     @PostMapping("/nifi/suspendCustomWorkNifiFlow")
-    public ResultEntity<Object> suspendCustomWorkNifiFlow(@RequestParam("nifiCustomWorkflowId") String nifiCustomWorkflowId, @RequestParam("ifFire") boolean ifFire);
+    ResultEntity<Object> suspendCustomWorkNifiFlow(@RequestParam("nifiCustomWorkflowId") String nifiCustomWorkflowId, @RequestParam("ifFire") boolean ifFire);
 
     /**
      * 元数据实时同步
@@ -366,7 +365,7 @@ public interface PublishTaskClient {
      * @return 执行结果
      */
     @PostMapping("/dispatchLog/getPipelLogVos")
-    public ResultEntity<List<PipelLogVO>> getPipelLogVos(@RequestBody PipelLogVO pipelLog);
+    ResultEntity<List<PipelLogVO>> getPipelLogVos(@RequestBody PipelLogVO pipelLog);
 
     /**
      * 依据pipelTraceId查询pipelId
@@ -375,7 +374,7 @@ public interface PublishTaskClient {
      * @return
      */
     @GetMapping("/dispatchLog/getPipelIdByPipelTraceId")
-    public ResultEntity<String> getPipelIdByPipelTraceId(@RequestParam("pipelTraceId") String pipelTraceId);
+    ResultEntity<String> getPipelIdByPipelTraceId(@RequestParam("pipelTraceId") String pipelTraceId);
 
     /**
      * 获取数据服务表服务同步日志
@@ -425,7 +424,7 @@ public interface PublishTaskClient {
      * @return
      */
     @PostMapping("/publishTask/publishBuildDeleteDataServices")
-    public ResultEntity<Object> publishBuildDeleteDataServices(@RequestBody BuildDeleteTableServiceDTO data);
+    ResultEntity<Object> publishBuildDeleteDataServices(@RequestBody BuildDeleteTableServiceDTO data);
 
     /**
      * task.build.task.over
@@ -433,7 +432,7 @@ public interface PublishTaskClient {
      * @param dto
      */
     @PostMapping("/publishTask/missionEndCenter")
-    public ResultEntity<Object> missionEndCenter(@RequestBody KafkaReceiveDTO dto);
+    ResultEntity<Object> missionEndCenter(@RequestBody KafkaReceiveDTO dto);
 
 
     /**
@@ -442,7 +441,7 @@ public interface PublishTaskClient {
      * @return
      */
     @PostMapping("/publishTask/universalPublish")
-    public ResultEntity<Object> universalPublish(@RequestBody KafkaReceiveDTO dto);
+    ResultEntity<Object> universalPublish(@RequestBody KafkaReceiveDTO dto);
 
 
     /**

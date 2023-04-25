@@ -2,7 +2,6 @@ package com.fisk.datamanagement.controller;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
-import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
@@ -69,10 +68,5 @@ public class MetaDataController {
         return ResultEntityBuild.build(iMetadataEntity.delMetadataEntity(ids));
     }
 
-    @ApiOperation("test")
-    @PostMapping("/test")
-    public void test() {
-        service.test();
-    }
 
 }

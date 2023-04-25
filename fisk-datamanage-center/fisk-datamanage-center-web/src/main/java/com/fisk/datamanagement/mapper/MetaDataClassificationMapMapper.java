@@ -3,6 +3,7 @@ package com.fisk.datamanagement.mapper;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datamanagement.dto.metadataclassificationmap.MetadataClassificationMapInfoDTO;
 import com.fisk.datamanagement.entity.MetadataClassificationMapPO;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -52,4 +53,6 @@ public interface MetaDataClassificationMapMapper extends FKBaseMapper<MetadataCl
             "\tAND b.pid IS NOT NULL\n")
     List<MetadataClassificationMapInfoDTO> getMetaDataClassificationMap(@Param("entityId") Integer entityId);
 
+    @Delete("truncate TABLE tb_classification")
+    int truncateTable();
 }

@@ -3,6 +3,7 @@ package com.fisk.datamanagement.mapper;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datamanagement.dto.metadataglossarymap.MetaDataGlossaryMapDTO;
 import com.fisk.datamanagement.entity.MetaDataGlossaryMapPO;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -38,5 +39,8 @@ public interface MetaDataGlossaryMapMapper extends FKBaseMapper<MetaDataGlossary
             "WHERE\n" +
             "\ta.metadata_entity_id = #{entityId} and a.del_flag = 1 and b.del_flag = 1")
     List<MetaDataGlossaryMapDTO> getEntityGlossary(@Param("entityId") Integer entityId);
+
+    @Delete("truncate TABLE tb_metadata_glossary_map ")
+    int truncateTable();
 
 }

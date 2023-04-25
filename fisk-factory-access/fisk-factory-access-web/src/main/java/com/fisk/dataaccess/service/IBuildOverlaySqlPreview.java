@@ -20,7 +20,6 @@ public interface IBuildOverlaySqlPreview {
     /**
      * 构建数据接入预览SQL语句
      * @param dataSourceDTO
-     * @param dataModel
      * @param tableAccessPO
      * @param appRegistrationPO
      * @return
