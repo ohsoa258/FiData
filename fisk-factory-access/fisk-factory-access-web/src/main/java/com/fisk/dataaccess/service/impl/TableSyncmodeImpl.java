@@ -64,13 +64,18 @@ public class TableSyncmodeImpl extends ServiceImpl<TableSyncmodeMapper, TableSyn
         int businessTimeCoverCount = 0;
 
         for (TableSyncmodeDTO t : tableSyncmodeDTOList) {
+            //这里不要关心枚举类型的对错，关心数值即可
             if (t.getSyncMode() == syncModeTypeEnum.FULL_VOLUME.getValue()) {
+                //追加
                 appendCoverCount++;
             } else if (t.getSyncMode() == syncModeTypeEnum.ADD.getValue()) {
+                //全量
                 fullCoverCount++;
-            } else if (t.getSyncMode() == syncModeTypeEnum.INCREMENT_MERGE.getValue()) {
+            } else if (t.getSyncMode() == syncModeTypeEnum.INCREMENT_MERGE.getValue() || t.getSyncMode() == syncModeTypeEnum.INCREMENT_DELINSERT.getValue()) {
+                //业务主键覆盖
                 businessKeyCoverCount++;
             } else if (t.getSyncMode() == syncModeTypeEnum.TIME_INCREMENT.getValue()) {
+                //业务时间覆盖
                 businessTimeCoverCount++;
             }
         }

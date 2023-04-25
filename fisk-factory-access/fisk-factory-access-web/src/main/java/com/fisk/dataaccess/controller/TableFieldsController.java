@@ -8,7 +8,6 @@ import com.fisk.dataaccess.dto.access.OperateTableDTO;
 import com.fisk.dataaccess.dto.access.OverlayCodePreviewAccessDTO;
 import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.service.ITableFields;
-import com.fisk.datamodel.dto.businessarea.OverlayCodePreviewDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -88,11 +87,17 @@ public class TableFieldsController {
     public ResultEntity<Object> updateFile(@Validated @RequestBody TableFieldsDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.updateFile(dto));
     }
+//
+//    @PostMapping("/overlayCodePreview")
+//    @ApiOperation(value = "覆盖方式预览代码")
+//    public ResultEntity<Object> overlayCodePreviewTest(@RequestBody OverlayCodePreviewAccessDTO dto) {
+//        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.overlayCodePreview(dto));
+//    }
 
     @PostMapping("/overlayCodePreview")
     @ApiOperation(value = "覆盖方式预览代码")
-    public ResultEntity<Object> overlayCodePreviewTest(@RequestBody OverlayCodePreviewAccessDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.overlayCodePreview(dto));
+    public ResultEntity<Object> overlayCodePreview(@RequestBody OverlayCodePreviewAccessDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.accessOverlayCodePreview(dto));
     }
 
 }
