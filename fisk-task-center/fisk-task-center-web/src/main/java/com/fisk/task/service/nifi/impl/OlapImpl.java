@@ -363,6 +363,12 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
             case CUSTOMIZESCRIPT:
                 nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK;
                 break;
+            case SFTPFILECOPYTASK:
+                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.SFTP_FILE_COPY_TASK;
+                break;
+            case POWERBIDATASETREFRESHTASK:
+                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.POWERBI_DATA_SET_REFRESH_TASK;
+                break;
             default:
                 break;
         }
