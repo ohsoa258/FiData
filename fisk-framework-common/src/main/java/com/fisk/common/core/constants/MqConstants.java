@@ -72,6 +72,8 @@ public class MqConstants {
 
             public static final String BUILD_MDM_ENTITY_DATA = "task.build.mdm.entity";
 
+            public static final String MDM_PUBLISH_TASK = "task.build.mdm.flow";
+
             public static final String BUILD_DATAMODEL_DORIS_TABLE = "task.build.datamodel.doris.table.flow";
         }
 

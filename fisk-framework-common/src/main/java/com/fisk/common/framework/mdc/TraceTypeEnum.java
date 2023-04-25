@@ -34,7 +34,9 @@ public enum TraceTypeEnum implements BaseEnum {
     DATAINPUT_PG_TABLE_BUILD(3005,"DataInputBuildPGTable"),
     DATAINPUT_PG_STGTOODS_BUILD(3006,"DataInputBuildPGStgToOds"),
     OLAP_CREATEMODEL_BUILD(3007,"OlapCreateModel"),
-    DATAINPUT_PG_TABLE_DELETE(3008,"DataInputDeletePGTable");
+    DATAINPUT_PG_TABLE_DELETE(3008,"DataInputDeletePGTable"),
+
+    BUILD_MDM_PUBLISH_TASK(3009,"MdmAccessETLBuild");
     TraceTypeEnum(int value, String name) {
         this.value = value;
         this.name = name;

@@ -5,6 +5,7 @@ import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.TaskTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
+import com.fisk.mdm.dto.accessmodel.AccessPublishDataDTO;
 import com.fisk.task.config.SwaggerConfig;
 import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
@@ -27,7 +28,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * @author gy
@@ -217,6 +217,21 @@ public class PublishTaskController {
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.MdmTopicConstants.BUILD_DATAMODEL_DORIS_TABLE,
                 modelPublishDataDTO);
+    }
+
+    /**
+     * mdmETL发布
+     *
+     * @param accessPublishDataDTO
+     * @return
+     */
+    @PostMapping("/mdmTableTask")
+    @ApiOperation(value = "mdmETL发布")
+    public ResultEntity<Object> publishBuildMdmAccessETLTask(@RequestBody AccessPublishDataDTO accessPublishDataDTO) {
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.MDM_PUBLISH_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.MdmTopicConstants.MDM_PUBLISH_TASK,
+                accessPublishDataDTO);
     }
 
     /**

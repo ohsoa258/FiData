@@ -10,6 +10,7 @@ import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.task.dto.task.BuildTableNifiSettingDTO;
 import com.fisk.task.dto.task.TableNifiSettingDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
+import com.fisk.task.listener.access.BuildMdmAccessETLListener;
 import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.listener.doris.BuildDorisTaskListener;
@@ -78,6 +79,8 @@ public class KafkaConsumer {
     BuildAtlasTableAndColumnTaskListener buildAtlasTableAndColumnTaskListener;
     @Resource
     BuildDataModelDorisTableListener buildDataModelDorisTableListener;
+    @Resource
+    BuildMdmAccessETLListener buildMdmAccessETLListener;
     @Resource
     BuildDorisTaskListener buildDorisTaskListener;
     @Resource
@@ -273,6 +276,20 @@ public class KafkaConsumer {
     @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD, notificationType = 2)
     public ResultEntity<Object> buildDataModelDorisTableListener(String dataInfo, Acknowledgment acke) {
         return ResultEntityBuild.build(buildDataModelDorisTableListener.msg(dataInfo, acke));
+    }
+
+    /**
+     * task.build.datamodel.doris.table.flow
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
+    @KafkaListener(topics = MqConstants.QueueConstants.MdmTopicConstants.MDM_PUBLISH_TASK, containerFactory = "batchFactory",
+            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    @MQConsumerLog(type = TraceTypeEnum.BUILD_MDM_PUBLISH_TASK, notificationType = 2)
+    public ResultEntity<Object> buildMdmAccessETLListener(String dataInfo, Acknowledgment acke) {
+        return ResultEntityBuild.build(buildMdmAccessETLListener.msg(dataInfo, acke));
     }
 
     /**

@@ -1,32 +1,51 @@
 package com.fisk.mdm.service.impl;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.accessAndTask.DataTranDTO;
+import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
+import com.fisk.mdm.dto.accessmodel.AccessPublishDataDTO;
+import com.fisk.mdm.entity.*;
+import com.fisk.mdm.enums.PublicStatusEnum;
 import com.fisk.mdm.enums.SyncModeEnum;
 import com.fisk.mdm.dto.access.*;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
-import com.fisk.mdm.entity.AccessDataPO;
-import com.fisk.mdm.entity.AccessTransformationPO;
-import com.fisk.mdm.entity.SyncModePO;
 import com.fisk.mdm.map.AccessTransformationMap;
 import com.fisk.mdm.map.SyncModeMap;
 import com.fisk.mdm.mapper.AccessDataMapper;
+import com.fisk.mdm.mapper.EntityMapper;
+import com.fisk.mdm.mapper.ModelMapper;
 import com.fisk.mdm.service.*;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.accessmodel.AccessMdmPublishFieldDTO;
+import com.fisk.task.dto.accessmodel.AccessMdmPublishTableDTO;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service("accessDataService")
+@Slf4j
 public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessDataPO> implements AccessDataService {
 
+    @Value("${fiData-data-ods-source}")
+    private Integer targetDbId;
     @Resource
     AccessDataMapper mapper;
 
@@ -44,6 +63,21 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
 
     @Resource
     CustomScriptImpl customScript;
+
+    @Resource
+    private AccessDataServiceImpl accessDataService;
+
+    @Resource
+    ModelMapper modelMapper;
+
+    @Resource
+    EntityMapper entityMapper;
+    @Resource
+    PublishTaskClient publishTaskClient;
+    @Resource
+    UserClient userClient;
+
+    private DataSourceTypeEnum dataSourceTypeEnum;
     @Override
     public AccessAttributeListDTO getAccessAttributeList(Integer moudleId, Integer entityId) {
         AccessAttributeListDTO data = new AccessAttributeListDTO();
@@ -169,7 +203,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
                 }
             }
         }
-        //添加或修改维度字段
+        //添加或修改字段
         List<AccessTransformationPO> poList = AccessTransformationMap.INSTANCES.dtoListToPoList(dto.list);
         poList.stream().map(e -> {
             e.setAccessId(dto.accessId);
@@ -179,6 +213,118 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         if (!result) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
-        return result ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        //修改发布状态
+        accessDataPO.isPublish = PublicStatusEnum.UN_PUBLIC.getValue();
+        if (mapper.updateById(accessDataPO) == 0) {
+            throw new FkException(ResultEnum.PUBLISH_FAILURE);
+        }
+        //是否发布
+        if (dto.isPublish) {
+            accessDataService.assembleModel(dto,accessDataPO);
+
+        }
+        return ResultEnum.SUCCESS;
+    }
+    @Transactional(rollbackFor = Exception.class)
+    public ResultEnum assembleModel(AccessAttributeAddDTO dto,AccessDataPO accessPo) {
+        try {
+            ModelPO modelPo = modelMapper.selectById((long)accessPo.getModelId());
+            if (modelPo == null) {
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+            AccessPublishDataDTO data = new AccessPublishDataDTO();
+            data.setModelId(modelPo.getId());
+            data.setModelName(modelPo.getName());
+            data.setOpenTransmission(dto.openTransmission);
+
+            //表详情
+            AccessMdmPublishTableDTO accessMdmPublishTableDTO = new AccessMdmPublishTableDTO();
+            accessMdmPublishTableDTO.coverScript =accessPo.getLoadingSql();
+            accessPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
+            if (accessDataService.updateById(accessPo)) {
+                throw new FkException(ResultEnum.PUBLISH_FAILURE);
+            }
+            //拼接数据
+//            accessMdmPublishTableDTO.tableId = Integer.parseInt(String.valueOf(item.id));
+//            accessMdmPublishTableDTO.tableName = convertName(item.dimensionTabName);
+            accessMdmPublishTableDTO.createType = 4;
+            DataTranDTO dtDto = new DataTranDTO();
+            dtDto.tableName = accessMdmPublishTableDTO.tableName;
+            dtDto.querySql = accessPo.getExtractionSql();
+            ResultEntity<Map<String, String>> converMap = publishTaskClient.converSql(dtDto);
+            Map<String, String> data1 = converMap.data;
+            accessMdmPublishTableDTO.queryEndTime = data1.get(SystemVariableTypeEnum.END_TIME.getValue());
+            accessMdmPublishTableDTO.sqlScript = data1.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
+            accessMdmPublishTableDTO.queryStartTime = data1.get(SystemVariableTypeEnum.START_TIME.getValue());
+            accessMdmPublishTableDTO.setDataSourceDbId(accessPo.getSouceSystemId());
+
+            // 设置目标库id
+            accessMdmPublishTableDTO.setTargetDbId(targetDbId);
+            //获取自定义脚本
+            CustomScriptQueryDTO customScriptDto = new CustomScriptQueryDTO();
+            customScriptDto.type = 1;
+            customScriptDto.tableId = Integer.parseInt(String.valueOf(accessPo.id));
+            customScriptDto.execType = 1;
+            String beforeCustomScript = customScript.getBatchScript(customScriptDto);
+            if (!StringUtils.isEmpty(beforeCustomScript)) {
+                accessMdmPublishTableDTO.customScript = beforeCustomScript;
+            }
+            customScriptDto.execType = 2;
+
+            //自定义脚本
+            String batchScript = customScript.getBatchScript(customScriptDto);
+            if (!StringUtils.isEmpty(batchScript)) {
+                accessMdmPublishTableDTO.customScriptAfter = batchScript;
+            }
+            //获取表增量配置信息
+            List<SyncModePO> syncModePoList=syncMode.list();
+            //获取维度表同步方式
+            Optional<SyncModePO> first = syncModePoList.stream().filter(e -> e.syncTableId == accessPo.id).findFirst();
+            if (first.isPresent()) {
+                accessMdmPublishTableDTO.synMode = first.get().syncMode;
+                accessMdmPublishTableDTO.maxRowsPerFlowFile = first.get().maxRowsPerFlowFile;
+                accessMdmPublishTableDTO.fetchSize = first.get().fetchSize;
+            } else {
+                accessMdmPublishTableDTO.synMode = dto.syncModeDTO.syncMode;
+            }
+            //获取表字段详情
+            QueryWrapper<AccessTransformationPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(AccessTransformationPO::getAccessId, accessPo.getId());
+            List<AccessTransformationPO> list = transformationService.list(queryWrapper);
+            List<AttributeInfoDTO> attributeInfoDTOS = attributeService.listPublishedAttribute(accessPo.getEntityId());
+            if (!CollectionUtils.isEmpty(attributeInfoDTOS)){
+                Map<Integer, AttributeInfoDTO> attributeInfoDTOMap = attributeInfoDTOS.stream()
+                        .collect(Collectors.toMap(AttributeInfoDTO::getId, i -> i));
+                List<AccessMdmPublishFieldDTO> attributes = new ArrayList<>();
+                if (!CollectionUtils.isEmpty(list)){
+                    attributes = list.stream().map(i -> {
+                        AttributeInfoDTO attributeInfoDTO = attributeInfoDTOMap.get(i.getAttributeId());
+                        AccessMdmPublishFieldDTO accessMdmPublishFieldDTO = new AccessMdmPublishFieldDTO();
+                        accessMdmPublishFieldDTO.setEntityId(accessPo.getEntityId());
+                        accessMdmPublishFieldDTO.setIsPrimaryKey(i.getBusinessKey());
+                        accessMdmPublishFieldDTO.setFieldName(attributeInfoDTO.getName());
+                        accessMdmPublishFieldDTO.setSourceFieldName(i.getSourceFieldName());
+                        return accessMdmPublishFieldDTO;
+                    }).collect(Collectors.toList());
+                }
+                accessMdmPublishTableDTO.setFieldList(attributes);
+                //发送消息
+                log.info(JSON.toJSONString(data));
+                publishTaskClient.publishBuildMdmTableTask(data);
+            }
+        }catch (Exception ex){
+            log.error("batchPublishDimensionFolder ex:", ex);
+            throw new FkException(ResultEnum.PUBLISH_FAILURE);
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+
+    public void getDwDbType(Integer dbId) {
+        ResultEntity<DataSourceDTO> fiDataDataSourceById = userClient.getFiDataDataSourceById(dbId);
+        if (fiDataDataSourceById.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        dataSourceTypeEnum = fiDataDataSourceById.data.conType;
     }
 }

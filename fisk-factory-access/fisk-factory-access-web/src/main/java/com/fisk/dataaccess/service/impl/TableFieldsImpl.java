@@ -497,7 +497,7 @@ public class TableFieldsImpl
      * @param tableName 物理表tableName
      * @param flag      0: 保存;  1: 发布
      */
-    private void publish(boolean success,
+    private void  publish(boolean success,
                          long appId,
                          long accessId,
                          String tableName,

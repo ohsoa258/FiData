@@ -23,6 +23,8 @@ public class AccessDataPO extends BasePO {
 
 	@ApiModelProperty(value = "源系统")
 	private Integer souceSystemId;
+	@ApiModelProperty(value = "发布状态：0: 未发布  1: 发布成功  2: 发布失败  3: 正在发布")
+	public int isPublish;
 
 	@ApiModelProperty(value = "抽取脚本")
 	private String extractionSql;
