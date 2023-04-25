@@ -72,6 +72,7 @@ public class BuildWideTableTaskListener {
             buildNifiFlowDTO.selectSql = insertSql;
             buildNifiFlowDTO.openTransmission = true;
             buildNifiFlowDTO.traceId = wideTableFieldConfig.traceId;
+            buildNifiFlowDTO.popout = true;
             pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
             return ResultEnum.SUCCESS;
         } catch (Exception e) {

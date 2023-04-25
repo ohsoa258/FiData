@@ -25,4 +25,9 @@ public class MQBaseDTO {
      */
     @ApiModelProperty(value = "报错信息")
     public String msg;
+    /**
+     * 是否要弹框,但是到底是怎么弹,是切面注解决定的
+     */
+    @ApiModelProperty(value = "是否要后置弹框")
+    public boolean popout;
 }

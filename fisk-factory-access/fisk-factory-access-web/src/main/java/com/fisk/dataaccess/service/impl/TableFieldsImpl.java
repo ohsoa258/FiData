@@ -614,6 +614,7 @@ public class TableFieldsImpl
                     }
                     // 非实时物理表发布
                     // 创建表流程
+                    data.popout = true;
                     publishTaskClient.publishBuildPhysicsTableTask(data);
                     // 生成nifi流程
                     //log.info(JSON.toJSONString(data));
