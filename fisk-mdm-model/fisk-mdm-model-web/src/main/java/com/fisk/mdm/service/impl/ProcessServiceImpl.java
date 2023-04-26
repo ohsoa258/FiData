@@ -304,6 +304,7 @@ public class ProcessServiceImpl implements ProcessService {
         try {
             sendEmailToProcessNode(processApplyPo,loginUserInfo, getUserIds(processPersons));
         }catch (FkException e){
+            log.error("错误信息",e);
             return ResultEnum.EMAIL_NOT_SEND;
         }
         return ResultEnum.SUCCESS;
@@ -637,6 +638,7 @@ public class ProcessServiceImpl implements ProcessService {
                     try {
                         return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.APPROVE);
                     }catch (FkException e){
+                        log.error("错误信息",e);
                         return ResultEnum.EMAIL_NOT_SEND;
                     }
                 } else {
@@ -656,6 +658,7 @@ public class ProcessServiceImpl implements ProcessService {
                 try {
                     return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.REFUSED);
                 }catch (FkException e){
+                    log.error("错误信息",e);
                     return ResultEnum.EMAIL_NOT_SEND;
                 }
             } else {
@@ -712,6 +715,7 @@ public class ProcessServiceImpl implements ProcessService {
                     try {
                         return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.APPROVE);
                     }catch (FkException e){
+                        log.error("错误信息",e);
                         return ResultEnum.EMAIL_NOT_SEND;
                     }
                 } else {
@@ -735,6 +739,7 @@ public class ProcessServiceImpl implements ProcessService {
                 try {
                     return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.REFUSED);
                 }catch (FkException e){
+                    log.error("错误信息",e);
                     return ResultEnum.EMAIL_NOT_SEND;
                 }
             } else {
@@ -794,6 +799,7 @@ public class ProcessServiceImpl implements ProcessService {
                     try {
                         return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.APPROVE);
                     }catch (FkException e){
+                        log.error("错误信息",e);
                         return ResultEnum.EMAIL_NOT_SEND;
                     }
                 } else {
@@ -809,6 +815,7 @@ public class ProcessServiceImpl implements ProcessService {
                     try {
                         return sendEmailToProcessNode(processApplyPo,loginUserInfo, userIds);
                     }catch (FkException e){
+                        log.error("错误信息",e);
                         return ResultEnum.EMAIL_NOT_SEND;
                     }
                 }
@@ -820,6 +827,7 @@ public class ProcessServiceImpl implements ProcessService {
                 try {
                     return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.REFUSED);
                 }catch (FkException e){
+                    log.error("错误信息",e);
                     return ResultEnum.EMAIL_NOT_SEND;
                 }
             } else {
@@ -942,6 +950,7 @@ public class ProcessServiceImpl implements ProcessService {
                 try {
                     return sendEmailToProcessNode(processApplyPo,loginUserInfo, userIds);
                 }catch (FkException e){
+                    log.error("错误信息",e);
                     return ResultEnum.EMAIL_NOT_SEND;
                 }
             } else {
@@ -952,6 +961,7 @@ public class ProcessServiceImpl implements ProcessService {
                 try {
                     return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.APPROVE);
                 }catch (FkException e){
+                    log.error("错误信息",e);
                     return ResultEnum.EMAIL_NOT_SEND;
                 }
             }
@@ -1008,6 +1018,7 @@ public class ProcessServiceImpl implements ProcessService {
                 try {
                     return sendEmailToResult(processApplyPo.getApprovalCode(), ApprovalApplyStateEnum.APPROVE);
                 }catch (FkException e){
+                    log.error("错误信息",e);
                     return ResultEnum.EMAIL_NOT_SEND;
                 }
             }
@@ -1020,6 +1031,7 @@ public class ProcessServiceImpl implements ProcessService {
             try {
                 return sendEmailToProcessNode(processApplyPo,loginUserInfo, userIds);
             }catch (FkException e){
+                log.error("错误信息",e);
                 return ResultEnum.EMAIL_NOT_SEND;
             }
         }

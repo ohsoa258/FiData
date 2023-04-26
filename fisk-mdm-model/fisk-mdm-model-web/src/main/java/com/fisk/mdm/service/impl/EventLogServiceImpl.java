@@ -39,7 +39,7 @@ public class EventLogServiceImpl implements EventLogService {
 
             res = logMapper.insert(logPo);
         }catch (Exception ex){
-            log.info("保存事件日志报错,错误信息:" + ex.getMessage());
+            log.info("保存事件日志报错,错误信息:",ex);
         }
         return res <= 0 ? ResultEnum.SAVE_DATA_ERROR : ResultEnum.SUCCESS;
     }

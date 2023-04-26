@@ -730,7 +730,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     throw new FkException(ResultEnum.VERIFY_PROCESS_APPLY_ERROR);
             }
         }catch (FkException e){
-            throw new FkException(ResultEnum.VERIFY_PROCESS_APPLY_ERROR);
+            throw new FkException(ResultEnum.VERIFY_PROCESS_APPLY_ERROR,e.getMessage());
         }
         EntityPO po = entityMapper.selectById(dto.getEntityId());
         if (po == null) {
@@ -1129,7 +1129,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     throw new FkException(ResultEnum.VERIFY_PROCESS_APPLY_ERROR);
             }
         }catch (FkException e){
-            throw new FkException(ResultEnum.VERIFY_PROCESS_APPLY_ERROR);
+            throw new FkException(ResultEnum.VERIFY_PROCESS_APPLY_ERROR,e.getMessage());
         }
 
         if (eventTypeEnum != EventTypeEnum.SAVE){
