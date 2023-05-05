@@ -164,5 +164,11 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
     @ApiModelProperty(value = "覆盖脚本")
     public String coverScript;
 
+    /**
+     * 当Keep_number 配置天数后，这里保存删除stg表的数据的脚本语句
+     * 默认：5 day
+     */
+    @ApiModelProperty(value = "当Keep_number 配置天数后，这里保存删除stg表的数据的脚本语句")
+    public String deleteStgScript;
 
 }

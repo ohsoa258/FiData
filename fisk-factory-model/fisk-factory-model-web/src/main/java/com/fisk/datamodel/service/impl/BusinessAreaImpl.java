@@ -1188,19 +1188,23 @@ public class BusinessAreaImpl
         StringBuilder str = new StringBuilder();
 
         for (TableSourceRelationsDTO item : dto) {
-            str.append("update ");
+            str.append("update ")
+                    .append("temp_");
             str.append(item.sourceTable);
-            str.append(" set ");
+            str.append(" set ")
+                    .append("temp_");
             str.append(item.sourceTable).append(".").append(StringBuildUtils.dimensionKeyName(item.targetTable));
             str.append(" = ");
             str.append(item.targetTable).append(".").append(StringBuildUtils.dimensionKeyName(item.targetTable));
-            str.append(" from ");
+            str.append(" from ")
+                    .append("temp_");
             str.append(item.sourceTable);
             if (!StringUtils.isEmpty(item.joinType)) {
                 str.append(" ").append(item.joinType);
                 str.append(" ").append(item.targetTable);
             }
-            str.append(" on ");
+            str.append(" on ")
+                    .append("temp_");;
             str.append(item.sourceTable).append(".").append(item.sourceColumn);
             str.append(" = ");
             str.append(item.targetTable).append(".").append(item.targetColumn);
@@ -1240,7 +1244,6 @@ public class BusinessAreaImpl
      */
     @Override
     public Object overlayCodePreview(OverlayCodePreviewDTO dto) {
-
         //表名
         String tableName;
         //临时表名称前缀
@@ -1287,8 +1290,8 @@ public class BusinessAreaImpl
 
         data.modelPublishFieldDTOList = dto.modelPublishFieldDTOList;
 
-        //e.isPrimaryKey 改为 e.isBusinessKey,因页面传参改变  2023-04-24李世纪修改
-        List<String> collect = dto.modelPublishFieldDTOList.stream().filter(e -> e.isBusinessKey == 1).map(e -> e.fieldEnName).collect(Collectors.toList());
+        //e.isPrimaryKey 主键
+        List<String> collect = dto.modelPublishFieldDTOList.stream().filter(e -> e.isPrimaryKey == 1).map(e -> e.fieldEnName).collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(collect)) {
             data.businessKeyAppend = String.join(",", collect);
         }
@@ -1301,6 +1304,7 @@ public class BusinessAreaImpl
         dataModel.buildNifiFlow = buildNifiFlow;
         dataModel.config = data;
         dataModel.funcName = FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_OUTPUT.getName();
+        //固定连接类型：sqlServer
         dataModel.dataSourceType = DataSourceTypeEnum.SQLSERVER;
         dataModel.synchronousTypeEnum = SynchronousTypeEnum.PGTOPG;
 
