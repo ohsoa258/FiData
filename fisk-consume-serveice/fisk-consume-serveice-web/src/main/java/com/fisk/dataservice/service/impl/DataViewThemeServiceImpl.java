@@ -302,7 +302,7 @@ public class DataViewThemeServiceImpl
             abstractDbHelper.executeSql(roleSql, connection);
             log.info("数据分析视图服务sql执行结束,[{}]", roleSql);
         }catch (Exception e){
-            log.error("执行sql失败", e.getMessage());
+            log.error("执行sql失败",e);
         }
     }
 
@@ -336,7 +336,7 @@ public class DataViewThemeServiceImpl
             }
         }catch (Exception e){
             log.error("数据分析视图调用userClient失败", e);
-            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED,e.getMessage());
         }
 
         List<DataSourceDTO> dsList = result.getData();
@@ -596,7 +596,7 @@ public class DataViewThemeServiceImpl
             return dataSourceDTO;
         }catch (Exception e){
             log.error("数据分析视图调用userClient失败", e);
-            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED,e.getMessage());
         }
     }
 
@@ -668,7 +668,7 @@ public class DataViewThemeServiceImpl
             }
         }catch (Exception e){
             log.error("数据分析视图服务创建视图调用userClient失败,", e);
-            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED,e.getMessage());
         }
 
         AbstractCommonDbHelper helper = new AbstractCommonDbHelper();

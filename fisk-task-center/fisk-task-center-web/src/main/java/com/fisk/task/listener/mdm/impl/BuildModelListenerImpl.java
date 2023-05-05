@@ -154,7 +154,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             }
             return ResultEnum.SUCCESS;
         }catch (Exception e){
-            log.error("错误信息",e.getMessage());
+            log.error("错误信息",e);
             return ResultEnum.ERROR;
         }finally {
              acke.acknowledge();
@@ -210,6 +210,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             });
         }catch (Exception ex){
             // a.回滚事务
+            log.error("错误信息",ex);
             rollbackConnection(connection);
         }
     }
@@ -250,7 +251,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 记录日志
             log.error(ResultEnum.FACT_ATTRIBUTE_FAILD.getMsg() + "【SQL:】" + sql + "【原因:】" + ex.getMessage());
 
-            throw new FkException(ResultEnum.FACT_ATTRIBUTE_FAILD);
+            throw new FkException(ResultEnum.FACT_ATTRIBUTE_FAILD,ex.getMessage());
         }
     }
 
@@ -299,7 +300,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 回写失败属性信息
             this.exceptionAttributeProcess(noSubmitAttributeList, ResultEnum.CREATE_STG_TABLE.getMsg()
                     + "【执行SQL】" + sql + "【原因】:" + ex.getMessage());
-            throw new FkException(ResultEnum.CREATE_STG_TABLE);
+            throw new FkException(ResultEnum.CREATE_STG_TABLE,ex.getMessage());
         }
     }
 

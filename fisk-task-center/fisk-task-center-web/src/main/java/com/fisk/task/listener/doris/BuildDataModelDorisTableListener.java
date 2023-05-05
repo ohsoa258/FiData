@@ -246,6 +246,9 @@ public class BuildDataModelDorisTableListener
                 tableNifiSettingPO.type = bfd.type.getValue();
                 tableNifiSettingPO.syncMode = 1;
                 tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
+                if (bfd.openTransmission) {
+                    bfd.popout = true;
+                }
                 pc.publishBuildNifiFlowTask(bfd);
                 log.info("执行完成");
                 //0维度表

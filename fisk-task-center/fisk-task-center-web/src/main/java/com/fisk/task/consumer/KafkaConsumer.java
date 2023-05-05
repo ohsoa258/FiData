@@ -205,7 +205,7 @@ public class KafkaConsumer {
      */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
-    @MQConsumerLog
+    @MQConsumerLog(notificationType = 3)
     public void taskPublish(String message, Acknowledgment ack) {
         taskPublish.taskPublish(message, ack);
     }
@@ -219,7 +219,7 @@ public class KafkaConsumer {
      */
     @KafkaListener(topics = MqConstants.QueueConstants.NifiTopicConstants.BUILD_NIFI_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
-    @MQConsumerLog
+    @MQConsumerLog(notificationType = 3)
     public ResultEntity<Object> buildNifiTaskListener(String data, Acknowledgment ack) {
         return ResultEntityBuild.build(iNifiTaskListener.msg(data, ack));
     }

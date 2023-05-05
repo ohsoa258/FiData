@@ -351,7 +351,7 @@ public class PublishTaskController {
      * @return
      */
     @PostMapping("/createBatchApproval")
-    public ResultEntity<Object> createBatchApproval(@RequestBody BuildBatchApprovalDTO dto){
+    public ResultEntity<Object> createBatchApproval(@RequestBody BuildBatchApprovalDTO dto) {
         log.info("创建任务批量审批");
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BATCH_APPROVAL_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
@@ -371,9 +371,9 @@ public class PublishTaskController {
     }
 
     @DeleteMapping("/taskPublish")
-    @ApiOperation(value = "元数据字段删除")
+    @ApiOperation(value = "立即同步")
     public ResultEntity<Object> taskPublish(@RequestBody KafkaReceiveDTO kafkaReceive) {
-        log.info("元数据字段删除");
+        log.info("立即同步");
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_IMMEDIATELYSTART_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW,

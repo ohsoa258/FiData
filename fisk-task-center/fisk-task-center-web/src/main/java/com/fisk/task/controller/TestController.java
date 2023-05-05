@@ -155,6 +155,7 @@ public class TestController {
             ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor("018517b8-87c8-1425-aecf-c04511b906e8");
             System.out.println("nifi" + JSON.toJSONString(processor));
         }catch (ApiException e){
+            log.error("错误信息",e);
             e.printStackTrace();
         }
     }
@@ -240,7 +241,7 @@ public class TestController {
         try {
             taskPgTableStructureHelper.updatePgTableStructure("alter1 table ods_asdmdm_tb_072701 add fffls varchar(200);",null,3);
         }catch (Exception e){
-
+            log.error("错误信息",e);
         }
 
     }

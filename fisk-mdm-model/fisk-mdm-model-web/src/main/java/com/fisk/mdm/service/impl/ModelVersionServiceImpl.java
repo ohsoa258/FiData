@@ -296,7 +296,7 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
             statement.execute();
         }catch (SQLException ex){
             log.error("【版本复制数据Sql】:" + sql + "【版本复制数据失败,异常信息】:" + ex);
-            throw new FkException(ResultEnum.DATA_REPLICATION_FAILED);
+            throw new FkException(ResultEnum.DATA_REPLICATION_FAILED,ex.getMessage());
         }
     }
 
