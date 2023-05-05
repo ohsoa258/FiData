@@ -128,11 +128,10 @@ public class DimensionImpl
         //dtp --> po
         DimensionPO model = DimensionMap.INSTANCES.dtoToPo(dto);
 
-        String startTime = dto.startTime.replace("-", "");
-        String endTime = dto.endTime.replace("-", "");
-
         //判断是否为生成时间维度表
         if (dto.timeTable) {
+            String startTime = dto.startTime.replace("-", "");
+            String endTime = dto.endTime.replace("-", "");
             // 生成查询语句
             String selSql = "DECLARE @StartDate DATETIME = '" + startTime + "';\n" +
                     "\n" +
@@ -176,12 +175,17 @@ public class DimensionImpl
                     "\n" +
                     "FROM DateList";
             model.setSqlScript(selSql);
+            //标识此表为时间表
+            model.setIsDimDateTbl(true);
 
-            // 时间维度表不再直接修改发布状态
-            // model.isPublish = PublicStatusEnum.PUBLIC_SUCCESS.getValue();
+//             时间维度表不再直接修改发布状态
+//             model.isPublish = PublicStatusEnum.PUBLIC_SUCCESS.getValue();
 
+            //2023-05-04 李世纪注释，目前日期维度表和普通表走相同流程，不再通过JDBC直接建表和插入数据
             // 在ods库下生成数据源表，用于nifi发布流程后查找数据使用
-            editDateDimension(dto, dto.dimensionTabName);
+//            editDateDimension(dto, dto.dimensionTabName);
+        }else {
+            model.setIsDimDateTbl(false);
         }
         // 设置临时表名称
         model.setPrefixTempName(PrefixTempNameEnum.DIMENSION_TEMP_NAME.getName());
@@ -343,7 +347,6 @@ public class DimensionImpl
             int weekNumberOfYear = calendar.get(Calendar.WEEK_OF_YEAR);
             //月份名称
             String englishMonthName = monthName[calendar.get(Calendar.MONTH)];
-            ;
             //第几月
             int monthNumberOfYear = calendar.get(Calendar.MONTH) + 1;
             //季度
