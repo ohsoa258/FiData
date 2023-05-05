@@ -49,10 +49,10 @@ public class BuildWideTableTaskListener {
         modelPublishStatusDTO.status = PublicStatusEnum.PUBLIC_SUCCESS.getValue();
         log.info("宽表建表数据:" + dataInfo);
         try {
-            WideTableFieldConfigTaskDTO wideTableFieldConfigDTO = JSON.parseObject(dataInfo, WideTableFieldConfigTaskDTO.class);
-            tbetlIncremental.addEtlIncremental(wideTableFieldConfigDTO.name);
-            modelPublishStatusDTO.id = wideTableFieldConfigDTO.id;
-            String createTableSql = buildWideTableSql(wideTableFieldConfigDTO);
+            WideTableFieldConfigTaskDTO wideTableFieldConfig = JSON.parseObject(dataInfo, WideTableFieldConfigTaskDTO.class);
+            tbetlIncremental.addEtlIncremental(wideTableFieldConfig.name);
+            modelPublishStatusDTO.id = wideTableFieldConfig.id;
+            String createTableSql = buildWideTableSql(wideTableFieldConfig);
             log.info("宽表建表语句:" + createTableSql);
             BusinessResult businessResult = doris.dorisBuildTable(createTableSql);
             if (!businessResult.success) {
@@ -60,17 +60,19 @@ public class BuildWideTableTaskListener {
             }
             BuildNifiFlowDTO buildNifiFlowDTO = new BuildNifiFlowDTO();
             log.info("nifi配置结束,开始创建nifi流程");
-            buildNifiFlowDTO.userId = wideTableFieldConfigDTO.userId;
-            buildNifiFlowDTO.appId = (long) wideTableFieldConfigDTO.businessId;
-            buildNifiFlowDTO.id = (long) wideTableFieldConfigDTO.id;
+            buildNifiFlowDTO.userId = wideTableFieldConfig.userId;
+            buildNifiFlowDTO.appId = (long) wideTableFieldConfig.businessId;
+            buildNifiFlowDTO.id = (long) wideTableFieldConfig.id;
             buildNifiFlowDTO.type = OlapTableEnum.WIDETABLE;
             buildNifiFlowDTO.dataClassifyEnum = DataClassifyEnum.DATAMODELWIDETABLE;
             buildNifiFlowDTO.synchronousTypeEnum = SynchronousTypeEnum.PGTODORIS;
-            buildNifiFlowDTO.tableName = wideTableFieldConfigDTO.name;
-            String insertSql = insertWideSql(wideTableFieldConfigDTO);
+            buildNifiFlowDTO.tableName = wideTableFieldConfig.name;
+            String insertSql = insertWideSql(wideTableFieldConfig);
             log.info("宽表插入语句:" + insertSql);
             buildNifiFlowDTO.selectSql = insertSql;
             buildNifiFlowDTO.openTransmission = true;
+            buildNifiFlowDTO.traceId = wideTableFieldConfig.traceId;
+            buildNifiFlowDTO.popout = true;
             pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
             return ResultEnum.SUCCESS;
         } catch (Exception e) {

@@ -4,8 +4,10 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
+import com.fisk.datafactory.config.SwaggerConfig;
 import com.fisk.datafactory.dto.customworkflowdetail.TaskSettingDTO;
 import com.fisk.datafactory.service.ITaskSetting;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,6 +18,7 @@ import java.util.List;
 /**
  * @author SongJianJian
  */
+@Api(tags = {SwaggerConfig.TaskSetting})
 @RestController
 @RequestMapping("/taskSetting")
 public class TaskSettingController {

@@ -30,4 +30,19 @@ public interface UserMapper extends FKBaseMapper<UserPO> {
      * @return 用户列表
      */
     List<UserDTO> getUserListByIds(@Param("ids") List<Long> ids);
+
+
+    /**
+     * 根据用户姓名模糊查询用户id
+     * @param userName
+     * @return
+     */
+    List<Integer> getUserIdByUserName(@Param("userName")String userName);
+    /**
+     * 根据用户id和页面url查询是否有此页面权限
+     * @param userId
+     * @param pageUrl
+     * @return
+     */
+    int verifyPageByUserId(@Param("userId")int userId,@Param("pageUrl")String pageUrl);
 }

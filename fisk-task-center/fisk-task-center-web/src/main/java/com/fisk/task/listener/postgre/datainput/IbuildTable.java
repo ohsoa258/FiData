@@ -71,6 +71,7 @@ public interface IbuildTable {
 
     /**
      * 查询同步数据数量
+     *
      * @param dto
      * @param config
      * @param groupId
@@ -80,10 +81,24 @@ public interface IbuildTable {
 
     /**
      * 输出返回语句
+     *
      * @param sql
      * @return
      */
-    String getTotalSql(String sql,SynchronousTypeEnum synchronousTypeEnum);
+    String getTotalSql(String sql, SynchronousTypeEnum synchronousTypeEnum);
 
+    /**
+     * 修改字段格式
+     *
+     * @param dto
+     */
+    void fieldFormatModification(DataAccessConfigDTO dto);
+
+    /**
+     * 是否自动提交
+     *
+     * @return
+     */
+    String getEsqlAutoCommit();
 
 }

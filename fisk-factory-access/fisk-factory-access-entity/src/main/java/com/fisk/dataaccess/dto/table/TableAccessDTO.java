@@ -91,31 +91,37 @@ public class TableAccessDTO extends BaseDTO {
     /**
      * oracle-cdc任务脚本
      */
+    @ApiModelProperty(value = "oracle-cdc任务脚本")
     public CdcJobScriptDTO cdcJobScript;
 
     /**
      * oracle-cdc管道名称
      */
+    @ApiModelProperty(value = "oracle-cdc管道名称")
     public String pipelineName;
 
     /**
      * oracle-cdc检查点时间
      */
+    @ApiModelProperty(value = "oracle-cdc检查点时间")
     public Integer checkPointInterval;
 
     /**
      * oracle-cdc检查点时间单位
      */
+    @ApiModelProperty(value = "oracle-cdc检查点时间单位")
     public String checkPointUnit;
 
     /**
      * 0:从最开始读 1:从最新的读
      */
+    @ApiModelProperty(value = "0:从最开始读 1:从最新的读")
     public ScanStartupModeEnum scanStartupMode = ScanStartupModeEnum.STARTING_POSITION;
 
     /**
      * 是否使用已存在表
      */
+    @ApiModelProperty(value = "是否使用已存在表")
     public boolean useExistTable = false;
 
     @ApiModelProperty(value = "stg数据保留天数", required = true)
@@ -127,11 +133,13 @@ public class TableAccessDTO extends BaseDTO {
     /**
      * 表字段对象
      */
+    @ApiModelProperty(value = "表字段对象")
     public List<TableFieldsDTO> list;
 
     /**
      * 同步频率
      */
+    @ApiModelProperty(value = "同步频率")
     public TableSyncmodeDTO tableSyncmodeDTO;
 
     public TableAccessDTO(BaseEntity entity) {

@@ -12,10 +12,12 @@ public class TableNameTreeDTO {
     /**
      * id
      */
+    @ApiModelProperty(value = "id")
     public long id;
     /**
      * 父id
      */
+    @ApiModelProperty(value = "pid")
     public long pid;
 
     /**

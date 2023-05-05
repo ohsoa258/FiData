@@ -10,7 +10,6 @@ import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
 import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
@@ -119,5 +118,5 @@ public interface ITableFields extends IService<TableFieldsPO> {
      * @param dto
      * @return
      */
-    Object overlayCodePreview(OverlayCodePreviewAccessDTO dto);
+    Object accessOverlayCodePreview(OverlayCodePreviewAccessDTO dto);
 }

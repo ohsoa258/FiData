@@ -47,3 +47,4 @@ ocr:
 file:
   uploadUrl: /root/nginx/app/file/mdm/
   echoPath: /file/mdm/
+approval: http://192.168.11.130:82/#/

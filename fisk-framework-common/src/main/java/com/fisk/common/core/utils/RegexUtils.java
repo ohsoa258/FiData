@@ -160,4 +160,21 @@ public class RegexUtils {
         }
         return list.stream().anyMatch(str::equalsIgnoreCase);
     }
+
+    /**
+     * @return int
+     * @description 判断是否是正整数，不是则返回null
+     * @author dick
+     * @date 2023/4/14 14:19
+     * @version v1.0
+     * @params s
+     */
+    public static Integer isNumeric(Object s) {
+        if (s != null && !"".equals(s.toString().trim()) && s.toString().matches("^[0-9]*$")) {
+            return Integer.parseInt(s.toString());
+        } else {
+            return null;
+        }
+    }
+
 }

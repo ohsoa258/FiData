@@ -2,6 +2,7 @@ package com.fisk.datamodel.dto.businessarea;
 
 import com.fisk.common.core.baseObject.dto.BaseDTO;
 import com.fisk.common.core.baseObject.entity.BaseEntity;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -22,26 +23,31 @@ public class BusinessAreaDTO extends BaseDTO {
     /**
      * 主键
      */
+    @ApiModelProperty(value = "主键")
     public long id;
 
     /**
      * 业务域名称
      */
+    @ApiModelProperty(value = "业务域名称")
     public String businessName;
 
     /**
      * 业务域描述
      */
+    @ApiModelProperty(value = "业务域描述")
     public String businessDes;
 
     /**
      * 业务需求管理员
      */
+    @ApiModelProperty(value = "业务需求管理员")
     public String businessAdmin;
 
     /**
      * 应用负责人邮箱
      */
+    @ApiModelProperty(value = "应用负责人邮箱")
     public String businessEmail;
 
 

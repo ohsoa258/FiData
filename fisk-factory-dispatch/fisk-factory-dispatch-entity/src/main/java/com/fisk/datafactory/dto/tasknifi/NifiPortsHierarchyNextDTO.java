@@ -17,11 +17,12 @@ public class NifiPortsHierarchyNextDTO {
     /**
      * NifiCustomWorkflowDetailDTO
      */
-    @ApiModelProperty(value = "当前组件属性")
+    @ApiModelProperty(value = "NifiCustomWorkflowDetailDTO")
     public Long itselfPort;
 
     /**
      * 上一级组件集合
      */
+    @ApiModelProperty(value = "上一级组件集合")
     public List<Long> upPortList;
 }

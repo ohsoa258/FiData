@@ -1,5 +1,6 @@
 package com.fisk.datamodel.dto.datadomain;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -11,8 +12,12 @@ import java.util.List;
  */
 @Data
 public class AreaBusinessDTO {
+    @ApiModelProperty(value = "业务Id")
     public Long businessId;
+    @ApiModelProperty(value = "业务名称")
     public String businessName;
+    @ApiModelProperty(value = "维度列表")
     public List<DimensionDTO> dimensionList;
+    @ApiModelProperty(value = "业务进程列表")
     public List<BusinessProcessDTO> businessProcessList;
 }

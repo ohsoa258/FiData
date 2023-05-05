@@ -68,6 +68,7 @@ public class DataTargetAddDTO {
     /**
      * 请求参数配置
      */
+    @ApiModelProperty(value = "请求参数配置")
     public List<ApiOutputParameterDTO> parameters;
 
 }

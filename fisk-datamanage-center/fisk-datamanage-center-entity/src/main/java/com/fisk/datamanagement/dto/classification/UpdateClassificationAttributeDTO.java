@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.dto.classification;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
@@ -14,12 +15,15 @@ import javax.validation.constraints.NotEmpty;
 @Data
 public class UpdateClassificationAttributeDTO {
 
+    @ApiModelProperty(value = "guid")
     @NotEmpty(message = "属性id不能为空")
     public String guid;
 
+    @ApiModelProperty(value = "名称")
     @NotEmpty(message = "属性名称不能为空")
     public String name;
 
+    @ApiModelProperty(value = "类型名称")
     @NotEmpty(message = "属性类别名称不能为空")
     public String typeName;
 }

@@ -134,10 +134,10 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                     continue;
                 }
 
-                    List<TaskSettingPO> poList = iTaskSetting.query().eq("task_id", e.id).list();
-                    if(CollectionUtils.isNotEmpty(poList)){
-                        e.taskSetting = poList.stream().collect(Collectors.toMap(TaskSettingPO::getSettingKey, TaskSettingPO::getValue, (k1, k2) -> k1));
-                    }
+                List<TaskSettingPO> poList = iTaskSetting.query().eq("task_id", e.id).list();
+                if (CollectionUtils.isNotEmpty(poList)) {
+                    e.taskSetting = poList.stream().collect(Collectors.toMap(TaskSettingPO::getSettingKey, TaskSettingPO::getValue, (k1, k2) -> k1));
+                }
 
 
                 switch (channelDataEnum) {
@@ -172,16 +172,16 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                 }
             }
         }
-        if(CollectionUtils.isNotEmpty(vo.list)){
+        if (CollectionUtils.isNotEmpty(vo.list)) {
             List<NifiCustomWorkflowDetailDTO> collect = vo.list.stream().filter(e -> !
                     ((e.componentType.equals(ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName())
-                            || e.componentType.equals(ChannelDataEnum.SFTP_FILE_COPY_TASK.getName())) &&
+                            || e.componentType.equals(ChannelDataEnum.SFTP_FILE_COPY_TASK.getName())
+                            || e.componentType.equals(ChannelDataEnum.POWERBI_DATA_SET_REFRESH_TASK.getName())) &&
                             e.pid != 0)).collect(Collectors.toList());
             vo.list = collect;
         }
         return vo;
     }
-
 
 
     /**
@@ -435,21 +435,21 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         String workFlowId = mapper.selectById(nifiCustomWorkflowId).workflowId;
         // 暂停/恢复管道工作运行状态
         ResultEntity<Object> result = null;
-        try{
+        try {
             result = publishTaskClient.suspendCustomWorkNifiFlow(workFlowId, ifFire);
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
-        if (result.getCode() == ResultEnum.ERROR.getCode()){
+        if (result.getCode() == ResultEnum.ERROR.getCode()) {
             log.error("task服务修改状态失败，[{}]", result.getMsg());
             return ResultEntityBuild.build(ResultEnum.UPDATE_WORK_STATUS_ERROR);
         }
 
         // 更新库中管道工作状态记录
         Integer workStatus = null;
-        if (ifFire){
+        if (ifFire) {
             workStatus = NifiWorkStatusEnum.RUNNING_STATUS.getValue();
-        }else{
+        } else {
             workStatus = NifiWorkStatusEnum.SUSPEND_STATUS.getValue();
         }
         Integer flag = mapper.updateWorkStatus(workFlowId, workStatus);
@@ -469,17 +469,17 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
 
     @Override
     public ResultEntity<Object> getNifiCustomWorkFlowPartInfo(String pipelTraceId) {
-        if (StringUtils.isEmpty(pipelTraceId)){
+        if (StringUtils.isEmpty(pipelTraceId)) {
             return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
         }
         ResultEntity<String> taskResult = null;
-        try{
+        try {
             // 调用task模块获取pipel_id
             taskResult = publishTaskClient.getPipelIdByPipelTraceId(pipelTraceId);
-            if (taskResult == null){
+            if (taskResult == null) {
                 return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
 

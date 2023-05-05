@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.controller;
 
+import com.fisk.chartvisual.config.SwaggerConfig;
 import com.fisk.chartvisual.dto.datasource.DataSourceDTO;
 import com.fisk.chartvisual.service.VisualizationService;
 import com.fisk.chartvisual.vo.ChartQueryObjectVO;
@@ -8,6 +9,7 @@ import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -22,6 +24,9 @@ import java.util.List;
  * @date 2022/1/10 16:26
  * 可视化 2.0
  */
+
+
+@Api(tags = {SwaggerConfig.TAG_10})
 @RestController
 @RequestMapping("/visual")
 @Slf4j

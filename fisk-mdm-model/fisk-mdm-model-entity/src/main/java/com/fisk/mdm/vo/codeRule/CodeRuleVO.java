@@ -2,7 +2,7 @@ package com.fisk.mdm.vo.codeRule;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fisk.common.core.baseObject.vo.BaseUserInfoVO;
-import com.fisk.mdm.dto.codeRule.CodeRuleDTO;
+import com.fisk.common.service.mdmBEOperate.dto.CodeRuleDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 

@@ -59,9 +59,14 @@ public enum ResultEnum {
     SYSTEM_LOGO_ERROR(1033, "系统logo获取出错"),
     DATA_SOURCE_NAME_ALREADY_EXISTS(1034, "数据源名称已存在"),
 
+
     SQL_PARAMETER_NOTNULL(1035, "sql参数不能为空"),
 
     SQL_Not_SUPPORTED_YET_DBTYPE(1036, "暂不支持该数据库类型"),
+    TABLE_NOT_PUBLISHED(1037,"该表未发布"),
+
+    LOG_NOT_EXISTS(1038,"当前选择的服务类型在当前日期没有日志"),
+    SERVICE_NOT_EXISTS(1039,"当前所选的服务不存在"),
 
     /**
      * 报表可视化服务，错误码从2000开始
@@ -181,6 +186,7 @@ public enum ResultEnum {
     SFTP_RSA_IS_NULL(5080, "SFTP密钥文件路径不能为空"),
     SFTP_ACCOUNT_IS_NULL(5081, "SFTP账号密码不能为空"),
     SFTP_DIR_PATH_ERROR(5082, "SFTP目录格式错误"),
+    DATASOURCE_TYPE_ERROR(5083,"已选择的数据源类型冲突"),
 
 
     /**
@@ -281,6 +287,10 @@ public enum ResultEnum {
     DS_DATA_STATUS_HAS_CHANGED(10033, "数据状态已变更，请刷新页面后再试"),
     DS_DATA_SOURCE_REFRESH_FAILED(10034,"数据源刷新失败"),
     DS_DATA_SOURCE_APPLIED(10035,"数据源已应用，请先删除该数据源下的表服务"),
+    DS_DATA_PAGING_PARAMETERS_NOT_SET(10036,"未设置分页参数"),
+    API_NOT_CONFIGURED_FOR_OUTPUT_CONFIGURATION(10037, "API未配置输出配置，请检查输出配置（SQL）"),
+    DS_DATA_PAGE_SHOULD_BE_GREATER_THAN_0(10038,"页码（current）应为大于0的正整数"),
+    DS_DATA_SIZE_SHOULD_BE_GREATER_THAN_0(10039,"页数（size）应为大于0的正整数"),
 
     /**
      * 数据质量
@@ -309,6 +319,10 @@ public enum ResultEnum {
     DATA_QUALITY_BUSINESS_API_FILTER_EXEC_ERROR(11022, "业务API清洗方法执行异常"),
     DATA_QUALITY_NOTICE_CONFIG_ISNULL(11023, "质量报告通知配置为空"),
     DATA_QUALITY_NOTICE_RECIPIENT_ISNULL(11024, "质量报告接收人为空"),
+    DATA_QUALITY_THE_CLEANING_RULE_DOES_NOT_EXIST(11025, "业务清洗规则不存在"),
+    DATA_QUALITY_NO_CONFIGURE_TRIGGER(11026, "未配置触发器"),
+    DATA_QUALITY_NO_WORKSPACE_CONFIGURED(11027, "未配置工作区"),
+    DATA_QUALITY_TO_OBTAIN_TABLE_INFORMATION(11028, "未获取到表信息"),
 
     /**
      * 数据安全
@@ -391,6 +405,17 @@ public enum ResultEnum {
     FILE_IO_EXCEPTION(151033, "IO流异常"),
     FACT_ATTRIBUTE_FAILD(151034, "事实属性表更新失败!"),
     FORM_NO_VALID_DATA(151035, "表格暂无有效数据"),
+    SAVE_PROCESS_NODE_ERROR(151036,"流程节点小于2个"),
+    PROCESS_PERSON_NOT_NULL(151037,"节点人员不能为空"),
+    VERIFY_PROCESS_APPLY_ERROR(151038,"流程校验异常"),
+
+    SAVE_PROCESS_APPLY_ERROR(151039,"流程工单添加失败"),
+    VERIFY_APPROVAL(151040,"应走流程"),
+    VERIFY_NOT_APPROVAL(151041,"不需要走流程"),
+    PROCESS_APPLY_EXIST(151042,"当前实体正在审批"),
+    PROCESS_NOT_ROLLBACK(151043,"当前流程不可回滚"),
+    EMAIL_NOT_SEND(151044,"email发送失败"),
+    PROCESS_APPLY_OVER(151045,"流程审批已结束,请勿重复审批!"),
 
     /**
      * licence

@@ -224,7 +224,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                                     if (dataCheckPO != null) {
                                         rule.setRuleName(dataCheckPO.getRuleName());
                                         rule.setRuleStateName(dataCheckPO.getRuleState() == 1 ? "启用" : "禁用");
-                                        rule.setRuleTypeName(TemplateSceneEnum.DATACHECK_QUALITYREPORT.getName());
+                                        rule.setRuleTypeName("校验规则（同步后）");
                                         rule.setTableUnique(dataCheckPO.getTableUnique());
                                         rule.setTableBusinessType(dataCheckPO.getTableBusinessType());
                                         rule.setTableTypeName(dataCheckPO.getTableType() == 1 ? "TABLE" : dataCheckPO.getTableType() == 2 ? "VIEW" : "");
@@ -235,7 +235,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                                     if (businessFilterPO != null) {
                                         rule.setRuleName(businessFilterPO.getRuleName());
                                         rule.setRuleStateName(businessFilterPO.getRuleState() == 1 ? "启用" : "禁用");
-                                        rule.setRuleTypeName(TemplateSceneEnum.BUSINESSFILTER_FILTERREPORT.getName());
+                                        rule.setRuleTypeName("清洗规则（同步后）");
                                         rule.setTableUnique(businessFilterPO.getTableUnique());
                                         rule.setTableBusinessType(businessFilterPO.getTableBusinessType());
                                         rule.setTableTypeName(businessFilterPO.getTableType() == 1 ? "TABLE" : businessFilterPO.getTableType() == 2 ? "VIEW" : "");
@@ -514,25 +514,23 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
             }
 
             // 查询报告模板生成的数据清洗报告规则
-            templateIdList = templatePOS.stream().filter(t -> t.getModuleType() == ModuleTypeEnum.BIZCHECK_MODULE.getValue()).map(TemplatePO::getId).collect(Collectors.toList());
-            QueryWrapper<BusinessFilterPO> businessFilterPOQueryWrapper = new QueryWrapper<>();
-            businessFilterPOQueryWrapper.lambda().eq(BusinessFilterPO::getDelFlag, 1)
-                    .eq(BusinessFilterPO::getRuleState, RuleStateEnum.Enable.getValue())
-                    .in(BusinessFilterPO::getTemplateId, templateIdList);
-            List<BusinessFilterPO> businessFilterPOList = businessFilterMapper.selectList(businessFilterPOQueryWrapper);
-            if (CollectionUtils.isNotEmpty(businessFilterPOList)) {
-                businessFilterPOList.forEach(t -> {
-                    DataSourceConVO dataSourceConVO = allDataSource.stream().filter(s -> s.getId() == t.getDatasourceId()).findFirst().orElse(null);
-                    DataTableFieldDTO dataTableFieldDTO = filterFiDataTableParams.stream().filter(l -> l.getId().equals(t.getTableUnique()) && l.getTableBusinessTypeEnum().getValue() == t.getTableBusinessType()).findFirst().orElse(null);
-                    if (dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData && dataTableFieldDTO == null) {
-                        DataTableFieldDTO dto = new DataTableFieldDTO();
-                        dto.setId(t.getTableUnique());
-                        dto.setDataSourceConfigEnum(DataSourceConfigEnum.getEnum(dataSourceConVO.getDatasourceId()));
-                        dto.setTableBusinessTypeEnum(TableBusinessTypeEnum.getEnum(t.getTableBusinessType()));
-                        filterFiDataTableParams.add(dto);
-                    }
-                });
-            }
+//            QueryWrapper<BusinessFilterPO> businessFilterPOQueryWrapper = new QueryWrapper<>();
+//            businessFilterPOQueryWrapper.lambda().eq(BusinessFilterPO::getDelFlag, 1)
+//                    .eq(BusinessFilterPO::getRuleState, RuleStateEnum.Enable.getValue());
+//            List<BusinessFilterPO> businessFilterPOList = businessFilterMapper.selectList(businessFilterPOQueryWrapper);
+//            if (CollectionUtils.isNotEmpty(businessFilterPOList)) {
+//                businessFilterPOList.forEach(t -> {
+//                    DataSourceConVO dataSourceConVO = allDataSource.stream().filter(s -> s.getId() == t.getDatasourceId()).findFirst().orElse(null);
+//                    DataTableFieldDTO dataTableFieldDTO = filterFiDataTableParams.stream().filter(l -> l.getId().equals(t.getTableUnique()) && l.getTableBusinessTypeEnum().getValue() == t.getTableBusinessType()).findFirst().orElse(null);
+//                    if (dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData && dataTableFieldDTO == null) {
+//                        DataTableFieldDTO dto = new DataTableFieldDTO();
+//                        dto.setId(t.getTableUnique());
+//                        dto.setDataSourceConfigEnum(DataSourceConfigEnum.getEnum(dataSourceConVO.getDatasourceId()));
+//                        dto.setTableBusinessTypeEnum(TableBusinessTypeEnum.getEnum(t.getTableBusinessType()));
+//                        filterFiDataTableParams.add(dto);
+//                    }
+//                });
+//            }
 
             // 查询表名称
             List<FiDataMetaDataDTO> fiDataMetaDataList = null;
@@ -556,13 +554,21 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                     if (dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData) {
                         sourceTypeName = "FiData";
                         FiDataMetaDataDTO fiDataMetaDataDTO = finalFiDataMetaDataList.stream().filter(p -> p.getDataSourceId() == dataSourceConVO.getDatasourceId()).findFirst().orElse(null);
-                        FiDataMetaDataTreeDTO fiDataMetaDataTree_Table = fiDataMetaDataDTO.getChildren().stream().filter(o -> o.getId().equals(t.getTableUnique()) && o.getLabelBusinessType() == t.getTableBusinessType()).findFirst().orElse(null);
-                        tableName = fiDataMetaDataTree_Table.getLabel();
-                        tableAliasName = fiDataMetaDataTree_Table.getLabelAlias();
+                        if (fiDataMetaDataDTO != null) {
+                            FiDataMetaDataTreeDTO fiDataMetaDataTree_Table = fiDataMetaDataDTO.getChildren().stream().filter(o -> o.getId().equals(t.getTableUnique()) && o.getLabelBusinessType() == t.getTableBusinessType()).findFirst().orElse(null);
+                            if (fiDataMetaDataTree_Table != null) {
+                                tableName = fiDataMetaDataTree_Table.getLabel();
+                                tableAliasName = fiDataMetaDataTree_Table.getLabelAlias();
+                            }
+                        }
                     } else {
                         sourceTypeName = "Customize";
                         tableName = t.getTableUnique();
                         tableAliasName = t.getTableUnique();
+                    }
+
+                    if (StringUtils.isEmpty(tableName)){
+                        return;
                     }
 
                     QualityReportExt_RuleVO cRule = new QualityReportExt_RuleVO();
@@ -581,47 +587,47 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                 });
             }
 
-            if (CollectionUtils.isNotEmpty(businessFilterPOList)) {
-                List<FiDataMetaDataDTO> finalFiDataMetaDataList = fiDataMetaDataList;
-                businessFilterPOList.forEach(t -> {
-                    String sourceTypeName = "";
-                    String ip = "";
-                    String dbName = "";
-                    String tableName = "";
-                    String tableAliasName = "";
-                    String tableTypeName = t.tableType == 1 ? "TABLE" : t.tableType == 2 ? "VIEW" : "";
-                    ;
-                    DataSourceConVO dataSourceConVO = allDataSource.stream().filter(s -> s.getId() == t.getDatasourceId()).findFirst().orElse(null);
-
-                    ip = dataSourceConVO.getConIp();
-                    dbName = dataSourceConVO.getConDbname();
-                    if (dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData) {
-                        sourceTypeName = "FiData";
-                        FiDataMetaDataDTO fiDataMetaDataDTO = finalFiDataMetaDataList.stream().filter(p -> p.getDataSourceId() == dataSourceConVO.getDatasourceId()).findFirst().orElse(null);
-                        FiDataMetaDataTreeDTO fiDataMetaDataTree_Table = fiDataMetaDataDTO.getChildren().stream().filter(o -> o.getId().equals(t.getTableUnique()) && o.getLabelBusinessType() == t.getTableBusinessType()).findFirst().orElse(null);
-                        tableName = fiDataMetaDataTree_Table.getLabel();
-                        tableAliasName = fiDataMetaDataTree_Table.getLabelAlias();
-                    } else {
-                        sourceTypeName = "Customize";
-                        tableName = t.getTableUnique();
-                        tableAliasName = t.getTableUnique();
-                    }
-
-                    QualityReportExt_RuleVO bRule = new QualityReportExt_RuleVO();
-                    bRule.setId(t.getId());
-                    bRule.setName(t.getRuleName());
-                    bRule.setTypeName(TemplateSceneEnum.DATACHECK_QUALITYREPORT.getName());
-                    bRule.setStateName(t.getRuleState() == 1 ? "启用" : "禁用");
-                    bRule.setSort(t.getRuleSort());
-                    bRule.setIp(ip);
-                    bRule.setDbName(dbName);
-                    bRule.setSourceTypeName(sourceTypeName);
-                    bRule.setTableName(tableName);
-                    bRule.setTableAliasName(tableAliasName);
-                    bRule.setTableTypeName(tableTypeName);
-                    bRules.add(bRule);
-                });
-            }
+//            if (CollectionUtils.isNotEmpty(businessFilterPOList)) {
+//                List<FiDataMetaDataDTO> finalFiDataMetaDataList = fiDataMetaDataList;
+//                businessFilterPOList.forEach(t -> {
+//                    String sourceTypeName = "";
+//                    String ip = "";
+//                    String dbName = "";
+//                    String tableName = "";
+//                    String tableAliasName = "";
+//                    String tableTypeName = t.tableType == 1 ? "TABLE" : t.tableType == 2 ? "VIEW" : "";
+//                    ;
+//                    DataSourceConVO dataSourceConVO = allDataSource.stream().filter(s -> s.getId() == t.getDatasourceId()).findFirst().orElse(null);
+//
+//                    ip = dataSourceConVO.getConIp();
+//                    dbName = dataSourceConVO.getConDbname();
+//                    if (dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData) {
+//                        sourceTypeName = "FiData";
+//                        FiDataMetaDataDTO fiDataMetaDataDTO = finalFiDataMetaDataList.stream().filter(p -> p.getDataSourceId() == dataSourceConVO.getDatasourceId()).findFirst().orElse(null);
+//                        FiDataMetaDataTreeDTO fiDataMetaDataTree_Table = fiDataMetaDataDTO.getChildren().stream().filter(o -> o.getId().equals(t.getTableUnique()) && o.getLabelBusinessType() == t.getTableBusinessType()).findFirst().orElse(null);
+//                        tableName = fiDataMetaDataTree_Table.getLabel();
+//                        tableAliasName = fiDataMetaDataTree_Table.getLabelAlias();
+//                    } else {
+//                        sourceTypeName = "Customize";
+//                        tableName = t.getTableUnique();
+//                        tableAliasName = t.getTableUnique();
+//                    }
+//
+//                    QualityReportExt_RuleVO bRule = new QualityReportExt_RuleVO();
+//                    bRule.setId(t.getId());
+//                    bRule.setName(t.getRuleName());
+//                    bRule.setTypeName(TemplateSceneEnum.DATACHECK_QUALITYREPORT.getName());
+//                    bRule.setStateName(t.getRuleState() == 1 ? "启用" : "禁用");
+//                    bRule.setSort(t.getRuleSort());
+//                    bRule.setIp(ip);
+//                    bRule.setDbName(dbName);
+//                    bRule.setSourceTypeName(sourceTypeName);
+//                    bRule.setTableName(tableName);
+//                    bRule.setTableAliasName(tableAliasName);
+//                    bRule.setTableTypeName(tableTypeName);
+//                    bRules.add(bRule);
+//                });
+//            }
         }
 
         // 第三步：查询邮件服务配置
@@ -765,7 +771,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
 
     @Override
     public List<String> getNextCronExeTime(String cron) {
-        NextCronTimeDTO dto=new NextCronTimeDTO();
+        NextCronTimeDTO dto = new NextCronTimeDTO();
         dto.setCronExpression(cron);
         dto.setNumber(3);
         return CronUtils.nextCronExeTime(dto);

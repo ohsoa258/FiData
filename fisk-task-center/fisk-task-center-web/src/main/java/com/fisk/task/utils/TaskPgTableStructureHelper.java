@@ -345,6 +345,7 @@ public class TaskPgTableStructureHelper
                     DatabaseMetaData metaData = conn.getMetaData();
                     List<String> schemaAndTableName = TableNameGenerateUtils.getSchemaAndTableName(taskPgTableStructurePOList1.get(0).tableName, type);
                     ResultSet set = metaData.getTables(null, schemaAndTableName.get(0), schemaAndTableName.get(1), null);
+                    log.info(String.valueOf(set.getRow()));
                     if (set.next()) {
                         return ResultEnum.SUCCESS;
                     }

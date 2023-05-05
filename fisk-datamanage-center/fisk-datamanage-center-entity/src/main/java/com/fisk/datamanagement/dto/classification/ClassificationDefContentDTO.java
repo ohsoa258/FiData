@@ -35,5 +35,6 @@ public class ClassificationDefContentDTO {
     @ApiModelProperty(value = "业务分类上级(添加时可选参数)")
     public List<String> superTypes;
 
+    @ApiModelProperty(value = "attributeDefs")
     public List<ClassificationAttributeDefsDTO> attributeDefs;
 }

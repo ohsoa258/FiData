@@ -1,5 +1,6 @@
 package com.fisk.task.dto.datagovernance;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -10,7 +11,10 @@ import lombok.Data;
  */
 @Data
 public class ReportDTO {
+
+    @ApiModelProperty(value = "id")
     public int id;
 
+    @ApiModelProperty(value = "用户id")
     public Long userId;
 }

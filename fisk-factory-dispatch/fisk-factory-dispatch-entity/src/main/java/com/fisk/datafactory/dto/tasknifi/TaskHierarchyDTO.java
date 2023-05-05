@@ -53,19 +53,23 @@ public class TaskHierarchyDTO {
     /**
      * 本节点特殊参数
      */
+    @ApiModelProperty(value = "本节点特殊参数")
     public Map<String, String> specialParaMap;
 
     /**
      * task运行状态,包括 未运行,运行成功,运行失败
      */
+    @ApiModelProperty(value = "task运行状态,包括 未运行,运行成功,运行失败")
     public DispatchLogEnum taskStatus;
     /**
      * job处理状态.true 已处理. false 未处理
      */
+    @ApiModelProperty(value = "job处理状态.true 已处理. false 未处理")
     public boolean taskProcessed;
     /**
      * 创建的时候就定义好的,在redis里面的traceid
      */
+    @ApiModelProperty(value = "创建的时候就定义好的,在redis里面的traceid")
     public String taskTraceId;
 
 

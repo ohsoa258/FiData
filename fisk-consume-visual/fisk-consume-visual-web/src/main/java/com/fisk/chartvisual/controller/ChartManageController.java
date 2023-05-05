@@ -1,6 +1,7 @@
 package com.fisk.chartvisual.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.chartvisual.config.SwaggerConfig;
 import com.fisk.chartvisual.dto.chartvisual.ChartPropertyDTO;
 import com.fisk.chartvisual.dto.chartvisual.ChartPropertyEditDTO;
 import com.fisk.chartvisual.dto.chartvisual.ReleaseChart;
@@ -11,6 +12,7 @@ import com.fisk.chartvisual.dto.chartvisual.ChartQueryDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -23,6 +25,7 @@ import javax.annotation.Resource;
  * 可视化接口已经过期,请使用可视化 2.0 版本
  * @author gy
  */
+@Api(tags = {SwaggerConfig.TAG_1})
 @Deprecated
 @RestController
 @RequestMapping("/chart")

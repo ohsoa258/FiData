@@ -2,13 +2,14 @@ package com.fisk.datamanagement.controller;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
-import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
 import com.fisk.datamanagement.service.IMetadataEntity;
 import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,8 @@ import java.util.List;
 /**
  * @author JianWenYang
  */
+
+@Api(tags = {SwaggerConfig.MetaData})
 @RestController
 @RequestMapping("/MetaData")
 public class MetaDataController {
@@ -43,7 +46,7 @@ public class MetaDataController {
     @ApiOperation("添加元数据实体")
     @PostMapping("/consumeMetaData")
     public ResultEntity<Object> consumeMetaData(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto) {
-        return ResultEntityBuild.build(service.consumeMetaData(dto));
+        return ResultEntityBuild.build(service.consumeMetaData(dto,dto.get(0).currUserName));
     }
     @ApiOperation("元数据字段新增或修改字段")
     @PostMapping("/addFiledAndUpdateFiled")
@@ -65,10 +68,5 @@ public class MetaDataController {
         return ResultEntityBuild.build(iMetadataEntity.delMetadataEntity(ids));
     }
 
-    @ApiOperation("test")
-    @PostMapping("/test")
-    public void test() {
-        service.test();
-    }
 
 }

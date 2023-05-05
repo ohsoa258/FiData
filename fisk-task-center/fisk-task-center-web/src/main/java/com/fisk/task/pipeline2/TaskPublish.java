@@ -18,6 +18,7 @@ import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.ExecScriptDTO;
+import com.fisk.task.dto.task.PowerBiDataSetRefreshDTO;
 import com.fisk.task.dto.task.SftpCopyDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.entity.PipelTaskLogPO;
@@ -125,9 +126,10 @@ public class TaskPublish {
                             String[] split = topic.topicName.split("\\.");
                             NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, Integer.parseInt(split[4]), null, Integer.valueOf(split[6]));
                             if (Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue()) ||
-                                    Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue())) {
+                                    Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue()) ||
+                                    Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue())) {
                                 //没有表id就把任务id扔进去
-                                String ids = kafkaReceiveDTO.sftpFileCopyTaskIds + "," + kafkaReceiveDTO.scriptTaskIds;
+                                String ids = kafkaReceiveDTO.sftpFileCopyTaskIds + "," + kafkaReceiveDTO.scriptTaskIds + "," + kafkaReceiveDTO.powerBiDataSetRefreshTaskIds;
                                 String[] id = ids.split(",");
                                 boolean next = false;
                                 for (String taskId : id) {
@@ -155,6 +157,9 @@ public class TaskPublish {
                             } else if (Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue())) {
                                 //sftp复制任务
                                 sendSftpFileCopyTask(kafkaReceiveDTO, pipelineId, split[4], split[6]);
+                            } else if (Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue())) {
+                                // power任务
+                                sendPowerBiDataSetRefreshTask(kafkaReceiveDTO, pipelineId, split[4], split[6]);
                             } else {
                                 log.info("发送的topic2:{},内容:{}", topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
                                 kafkaTemplateHelper.sendMessageAsync(topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
@@ -223,14 +228,16 @@ public class TaskPublish {
                     } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue())) {
                         String tableId = "";
                         if (!Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue()) &&
-                                !Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue())) {
+                                !Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue()) &&
+                                !Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue())) {
                             //没有表id就把任务id扔进去
                             tableId = split1[6];
                         }
                         //请求接口得到对象,条件--管道名称,表名称,表类别,表id,topic_name(加表名table_name)
                         NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, Integer.parseInt(split1[4]), null, Integer.parseInt(StringUtils.isEmpty(tableId) ? "0" : tableId));
                         if (Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue()) ||
-                                Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue())) {
+                                Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue()) ||
+                                Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue())) {
                             //没有表id就把任务id扔进去
                             nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(split1[6]);
                         }
@@ -353,6 +360,12 @@ public class TaskPublish {
                 SftpCopyDTO sftpCopy = getSftpCopy(pipelTraceId, jobTraceId, taskHierarchy.taskTraceId, split[6], null);
                 log.info("执行脚本任务发送卡夫卡请求参数:{}", JSON.toJSONString(sftpCopy));
                 kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_SFTP_FILE_COPY_FLOW, JSON.toJSONString(sftpCopy));
+            } else if (Objects.equals(type, OlapTableEnum.POWERBIDATASETREFRESHTASK)) {
+                // 发送power刷新数据集任务
+                PowerBiDataSetRefreshDTO powerBiDataSetRefresh = getPowerBiDataSetRefresh(pipelTraceId, jobTraceId, taskHierarchy.taskTraceId, split[6], null);
+                log.info("执行POWERBI数据集刷新任务发送卡夫卡请求参数:{}", JSON.toJSONString(powerBiDataSetRefresh));
+                kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_POWERBI_DATA_SET_REFRESH_FLOW, JSON.toJSONString(powerBiDataSetRefresh));
+
             } else {
                 KafkaReceiveDTO kafkaReceive = getKafkaReceive(pipelTraceId, jobTraceId, taskHierarchy.taskTraceId, simpleDateFormat.format(new Date()), TopicTypeEnum.COMPONENT_NIFI_FLOW, topic);
                 log.info("发送卡夫卡请求参数:{},内容:{}", topic, JSON.toJSONString(kafkaReceive));
@@ -466,6 +479,59 @@ public class TaskPublish {
     }
 
     /**
+     * 发送脚本任务
+     *
+     * @param kafkaReceiveDTO
+     * @param pipelineId
+     * @param taskType
+     */
+    public void sendPowerBiDataSetRefreshTask(KafkaReceiveDTO kafkaReceiveDTO, String pipelineId, String taskType, String task) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        if (!StringUtils.isEmpty(kafkaReceiveDTO.powerBiDataSetRefreshTaskIds)) {
+            PowerBiDataSetRefreshDTO execScript = new PowerBiDataSetRefreshDTO();
+            String[] scriptTaskId = kafkaReceiveDTO.powerBiDataSetRefreshTaskIds.split(",");
+            //实例化一个set集合
+            HashSet<String> set = new HashSet<>();
+            //遍历数组并存入集合,如果元素已存在则不会重复存入
+            for (int i = 0; i < scriptTaskId.length; i++) {
+                set.add(scriptTaskId[i]);
+            }
+            //返回Set集合的数组形式
+            scriptTaskId = (String[]) (set.toArray(new String[set.size()]));
+            execScript.pipelTraceId = kafkaReceiveDTO.pipelTraceId;
+            for (String taskId : scriptTaskId) {
+                if (!Objects.equals(task, taskId)) {
+                    continue;
+                }
+                execScript.pipelJobTraceId = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(kafkaReceiveDTO.pipelTraceId, String.valueOf(taskId)).jobTraceId;
+                execScript.pipelTaskTraceId = iPipelineTaskPublishCenter.getTaskHierarchy(kafkaReceiveDTO.pipelTraceId, String.valueOf(taskId)).taskTraceId;
+                execScript.taskId = taskId;
+                log.info("发送的POWERBI数据集刷新topic:{},内容:{}", MqConstants.QueueConstants.BUILD_POWERBI_DATA_SET_REFRESH_FLOW, JSON.toJSONString(execScript));
+                kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_POWERBI_DATA_SET_REFRESH_FLOW, JSON.toJSONString(execScript));
+                //job开始日志
+                Map<Integer, Object> jobMap = new HashMap<>();
+                NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue(), null, 0);
+                if (Objects.equals(Integer.parseInt(taskType), OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue())) {
+                    //没有表id就把任务id扔进去
+                    nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(taskId);
+                }
+
+                TaskHierarchyDTO nifiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchy, kafkaReceiveDTO.pipelTraceId);
+                //任务依赖的组件
+                jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, pipelineId, execScript.pipelJobTraceId, String.valueOf(nifiPortHierarchy.itselfPort.pid));
+                //task日志
+                HashMap<Integer, Object> taskMap = new HashMap<>();
+                taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                //taskMap.put(DispatchLogEnum.taskstate.getValue(), jobName + "-" + nifiPortHierarchy.itselfPort.tableOrder + " " + NifiStageTypeEnum.RUNNING.getName());
+                log.info("sendPowerBiDataSetRefreshTask调用保存task日志");
+                iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelTraceId, execScript.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.itselfPort.id), null, OlapTableEnum.SFTPFILECOPYTASK.getValue());
+
+            }
+        }
+    }
+
+    /**
      * @param pipelTraceId
      * @param jobTraceId
      * @param pipelTaskTraceId
@@ -493,6 +559,20 @@ public class TaskPublish {
                                           String taskId,
                                           String pipelStageTraceId) {
         return SftpCopyDTO.builder()
+                .pipelJobTraceId(pipelJobTraceId)
+                .pipelStageTraceId(pipelStageTraceId)
+                .pipelTaskTraceId(pipelTaskTraceId)
+                .pipelTraceId(pipelTraceId)
+                .taskId(taskId)
+                .build();
+    }
+
+    public static PowerBiDataSetRefreshDTO getPowerBiDataSetRefresh(String pipelTraceId,
+                                                                    String pipelJobTraceId,
+                                                                    String pipelTaskTraceId,
+                                                                    String taskId,
+                                                                    String pipelStageTraceId) {
+        return PowerBiDataSetRefreshDTO.builder()
                 .pipelJobTraceId(pipelJobTraceId)
                 .pipelStageTraceId(pipelStageTraceId)
                 .pipelTaskTraceId(pipelTaskTraceId)

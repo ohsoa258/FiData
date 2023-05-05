@@ -50,6 +50,8 @@ public class AppRegistrationPO extends BasePO {
 
     /**
      * 是否将应用简称作为schema使用
+     * 否：0  false
+     * 是：1  true
      */
     public Boolean whetherSchema;
 

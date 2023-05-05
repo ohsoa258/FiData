@@ -20,6 +20,7 @@ import com.fisk.system.entity.RoleInfoPO;
 import com.fisk.system.map.RoleInfoMap;
 import com.fisk.system.mapper.RoleInfoMapper;
 import com.fisk.system.service.IRoleInfoService;
+import com.fisk.system.vo.roleinfo.RoleInfoVo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -92,6 +93,15 @@ public class RoleInfoImpl implements IRoleInfoService{
     }
 
     @Override
+    public List<RoleInfoDTO> getRoleByIds(List<Integer> ids) {
+        List<RoleInfoDTO> dtoList =RoleInfoMap.INSTANCES.poListToDtoList(mapper.selectBatchIds(ids));
+        if (dtoList == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return dtoList;
+    }
+
+    @Override
     public ResultEnum updateRole(RoleInfoDTO dto)
     {
         /*判断是否存在*/
@@ -148,4 +158,21 @@ public class RoleInfoImpl implements IRoleInfoService{
         return list;
     }
 
+    @Override
+    public List<RoleInfoVo> getTreeRols() {
+        List<RoleInfoVo> treeRols = mapper.getTreeRols();
+        if (treeRols == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return treeRols;
+    }
+
+    @Override
+    public List<RoleInfoDTO> getRolebyUserId(int userId) {
+        List<RoleInfoDTO> roleInfoDTOList = mapper.getRolebyUserId(userId);
+        if (roleInfoDTOList == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return roleInfoDTOList;
+    }
 }

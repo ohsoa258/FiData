@@ -23,13 +23,27 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    public static final String TASK_SCHEDULE = "task-schedule-controller";
-    public static final String NIFI_CUSTOM_WORKFLOW = "nifi-custom-workflow-controller";
-    public static final String NIFI_COMPONENT = "nifi-component-controller";
-    public static final String NIFI_CUSTOM_WORKFLOW_DETAIL = "nifi-custom-workflow-detail-controller";
-    public static final String NIFI_PORT = "nifi-port-controller";
-    public static final String SYSTEM_WEB_INDEX = "SystemWebIndex-controller";
-    public static final String PIPELINE_PROCESS_MONITOR = "Pipeline-Process-Monitor-Controller";
+//    public static final String TASK_SCHEDULE = "task-schedule-controller";
+//    public static final String NIFI_CUSTOM_WORKFLOW = "nifi-custom-workflow-controller";
+//    public static final String NIFI_COMPONENT = "nifi-component-controller";
+//    public static final String NIFI_CUSTOM_WORKFLOW_DETAIL = "nifi-custom-workflow-detail-controller";
+//    public static final String NIFI_PORT = "nifi-port-controller";
+//    public static final String SYSTEM_WEB_INDEX = "SystemWebIndex-controller";
+//    public static final String PIPELINE_PROCESS_MONITOR = "Pipeline-Process-Monitor-Controller";
+
+    public static final String TASK_SCHEDULE = "调度中心";
+    public static final String NIFI_CUSTOM_WORKFLOW = "NIFI数据管道";
+    public static final String NIFI_COMPONENT = "可视化视图-组件列表";
+    public static final String NIFI_CUSTOM_WORKFLOW_DETAIL = "NIFI数据管道详情";
+    public static final String NIFI_PORT = "提供nifi参数";
+    public static final String SYSTEM_WEB_INDEX = "首页API";
+    public static final String PIPELINE_PROCESS_MONITOR = "管道流程监控";
+
+    public static final String DataFactory = "数据工厂";
+    public static final String DispatchEmail = "映射邮件";
+    public static final String TaskDataSourceConfig = "任务数据源配置";
+    public static final String TaskSetting = "任务设置";
+
 
     @Bean
     public Docket createRestApi() {
@@ -43,6 +57,10 @@ public class SwaggerConfig {
                 .tags(new Tag(NIFI_PORT, "提供nifi参数"))
                 .tags(new Tag(SYSTEM_WEB_INDEX, "首页API"))
                 .tags(new Tag(PIPELINE_PROCESS_MONITOR, "管道流程监控"))
+                .tags(new Tag(DataFactory, "数据工厂"))
+                .tags(new Tag(DispatchEmail, "映射邮件"))
+                .tags(new Tag(TaskDataSourceConfig, "任务数据源配置"))
+                .tags(new Tag(TaskSetting, "任务设置"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

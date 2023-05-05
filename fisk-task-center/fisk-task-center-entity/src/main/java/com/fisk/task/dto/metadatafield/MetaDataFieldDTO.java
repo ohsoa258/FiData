@@ -1,6 +1,7 @@
 package com.fisk.task.dto.metadatafield;
 
 import com.fisk.task.dto.MQBaseDTO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MetaDataFieldDTO extends MQBaseDTO {
+    @ApiModelProperty(value = "表Id")
     private Integer tableId;
+    @ApiModelProperty(value = "字段Id")
     private Integer fieldId;
 }

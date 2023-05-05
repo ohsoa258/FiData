@@ -40,7 +40,6 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -311,16 +310,16 @@ public class AppRegisterManageImpl
 //            return ResultEnum.DS_API_EXISTS;
 
         // 第三步：查询API接口的请求参数
-        List<Long> parmIdList = null;
-        List<ParmConfigPO> parmList = apiParmMapper.getListByApiIds(apiIdList);
-        if (CollectionUtils.isNotEmpty(parmList)) {
-            parmIdList = parmList.stream().map(ParmConfigPO::getId).collect(Collectors.toList());
+        List<Long> paramIdList = null;
+        List<ParmConfigPO> paramList = apiParmMapper.getListByApiIds(apiIdList);
+        if (CollectionUtils.isNotEmpty(paramList)) {
+            paramIdList = paramList.stream().map(ParmConfigPO::getId).collect(Collectors.toList());
         }
 
         // 第四步：查询应用API内置参数
-        List<BuiltinParmPO> builtinParmList = null;
-        if (parmIdList != null && parmIdList.size() > 0)
-            builtinParmList = apiBuiltinParmMapper.getListByWhere(dto.appId, apiIdList, parmIdList);
+        List<BuiltinParmPO> builtinParamList = null;
+        if (paramIdList != null && paramIdList.size() > 0)
+            builtinParamList = apiBuiltinParmMapper.getListByWhere(dto.appId, apiIdList, paramIdList);
 
         // 第五步：查询API接口的返回参数
         List<FieldConfigPO> fieldList = apiFieldMapper.getListByApiIds(apiIdList);
@@ -328,7 +327,7 @@ public class AppRegisterManageImpl
             return ResultEnum.DS_API_FIELD_EXISTS;
 
         // 第六步：API信息转换为文档实体
-        final ApiDocDTO docDTO = createDocDTO(apiList, parmList, builtinParmList, fieldList);
+        final ApiDocDTO docDTO = createDocDTO(apiList, paramList, builtinParamList, fieldList);
 
         // 第七步：生成pdf，返回文件名称
         PDFHeaderFooter headerFooter = new PDFHeaderFooter();
@@ -399,7 +398,8 @@ public class AppRegisterManageImpl
                 .eq(ParmConfigPO::getDelFlag, 1);
         List<ParmConfigPO> selectList = apiParmMapper.selectList(query);
         if (CollectionUtils.isNotEmpty(selectList)) {
-            // 查询已设置内置参数的parm
+            // selectList = selectList.stream().filter(t -> !t.getParmName().equals("current") && !t.getParmName().equals("size")).collect(Collectors.toList());
+            // 查询已设置内置参数
             QueryWrapper<BuiltinParmPO> builtinParmQuery = new QueryWrapper<>();
             builtinParmQuery.lambda()
                     .eq(BuiltinParmPO::getApiId, dto.apiId)

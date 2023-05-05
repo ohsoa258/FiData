@@ -23,7 +23,9 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    public static final String LICENSE_CONTROLLER = "license-controller";
+//    public static final String LICENSE_CONTROLLER = "license-controller";
+
+    public static final String LICENSE_CONTROLLER = "许可证";
 
     @Bean
     public Docket createRestApi() {

@@ -67,7 +67,7 @@ public class MqConstants {
         }
 
         public static final class MdmTopicConstants{
-
+            public static final String BUILD_MDM_APPROVAL_DATA = "task.build.mdm.approval";
             public static final String BUILD_MDM_MODEL_DATA = "task.build.mdm.model";
 
             public static final String BUILD_MDM_ENTITY_DATA = "task.build.mdm.entity";
@@ -123,7 +123,10 @@ public class MqConstants {
          * build.sftpfile.copy.flow
          */
         public static final String BUILD_SFTP_FILE_COPY_FLOW = "build.sftpFile.copy";
-
+        /**
+         *powerbi刷新数据集任务
+         */
+        public static final String BUILD_POWERBI_DATA_SET_REFRESH_FLOW = "build.powerbi.data.set.refresh.flow";
         /**
          * task.build.task.over
          */

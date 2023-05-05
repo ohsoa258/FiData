@@ -148,6 +148,12 @@ public class BuildAtlasTableAndColumnTaskListener
                 //发布历史id
                 bfd.tableHistoryId = buildPhysicalTableDTO.tableHistoryId;
                 log.info("nifi传入参数：" + JSON.toJSONString(bfd));
+                //统一traceid,让流程串起来,原来traceid各自步骤的traceid是各自的,未了让流程能串起来,所以改成一样的,
+                // 当然可以再加个父级traceid进去,各自步骤还是各自的,但这样就要加字段存,为了实现这么个功能改表不值得
+                bfd.traceId = buildPhysicalTableDTO.traceId;
+                if (bfd.openTransmission) {
+                    bfd.popout = true;
+                }
                 pc.publishBuildNifiFlowTask(bfd);
                 log.info("执行完成");
             }

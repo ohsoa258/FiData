@@ -15,11 +15,6 @@ import lombok.Data;
 public class BusinessFilterPO extends BasePO
 {
     /**
-     * 模板id
-     */
-    public int templateId;
-
-    /**
      * 数据源表主键id
      */
     public int datasourceId;
@@ -45,11 +40,6 @@ public class BusinessFilterPO extends BasePO
     public int tableBusinessType;
 
     /**
-     * 生成规则（清洗脚本）
-     */
-    public String createRule;
-
-    /**
      * 规则执行顺序
      */
     public int ruleSort;
@@ -58,6 +48,21 @@ public class BusinessFilterPO extends BasePO
      * 规则状态
      */
     public int ruleState;
+
+    /**
+     * 规则描述
+     */
+    public String ruleDescribe;
+
+    /**
+     * 清洗场景：1 同步前 2 同步中 3 同步后
+     */
+    public int filterScene;
+
+    /**
+     * 触发场景：1 调度任务 2 质量报告 3 暂无
+     */
+    public int triggerScene;
 }
 
 

@@ -59,6 +59,7 @@ public class DatamaskingConfigController {
      * 修改
      */
     @PutMapping("/edit")
+    @ApiOperation(value = "修改")
     public ResultEntity<Object> editData(@RequestBody DatamaskingConfigDTO dto) {
 
         return ResultEntityBuild.build(service.editData(dto));

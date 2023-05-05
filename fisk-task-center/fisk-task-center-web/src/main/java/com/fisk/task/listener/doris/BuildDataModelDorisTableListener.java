@@ -233,6 +233,7 @@ public class BuildDataModelDorisTableListener
                 }
                 bfd.maxRowsPerFlowFile = modelPublishTableDTO.maxRowsPerFlowFile;
                 bfd.fetchSize = modelPublishTableDTO.fetchSize;
+                bfd.traceId = inpData.traceId;
                 log.info("nifi传入参数：" + JSON.toJSONString(bfd));
                 TableNifiSettingPO one = tableNifiSettingService.query().eq("app_id", bfd.appId).eq("table_access_id", bfd.id).eq("type", bfd.type.getValue()).one();
                 TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
@@ -246,6 +247,9 @@ public class BuildDataModelDorisTableListener
                 tableNifiSettingPO.type = bfd.type.getValue();
                 tableNifiSettingPO.syncMode = 1;
                 tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
+                if (bfd.openTransmission) {
+                    bfd.popout = true;
+                }
                 pc.publishBuildNifiFlowTask(bfd);
                 log.info("执行完成");
                 //0维度表

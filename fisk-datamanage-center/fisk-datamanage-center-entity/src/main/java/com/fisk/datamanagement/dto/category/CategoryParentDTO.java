@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.dto.category;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -7,6 +8,10 @@ import lombok.Data;
  */
 @Data
 public class CategoryParentDTO {
+
+    @ApiModelProperty(value = "类guid")
     public String categoryGuid;
+
+    @ApiModelProperty(value = "关联guid")
     public String relationGuid;
 }

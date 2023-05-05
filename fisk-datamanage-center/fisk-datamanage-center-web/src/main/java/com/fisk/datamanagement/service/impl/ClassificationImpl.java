@@ -16,6 +16,7 @@ import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
 import com.fisk.datamanagement.entity.*;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
+import com.fisk.datamanagement.enums.ClassificationTypeEnum;
 import com.fisk.datamanagement.map.ClassificationMap;
 import com.fisk.datamanagement.mapper.*;
 import com.fisk.datamanagement.service.IClassification;
@@ -37,13 +38,14 @@ import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
+ * 业务分类服务实现类
  */
 @Service
 @Slf4j
 public class ClassificationImpl
         extends ServiceImpl<BusinessClassificationMapper, BusinessClassificationPO>
         implements IClassification {
-
+//region  引入
     @Resource
     BusinessClassificationMapper businessClassificationMapper;
     @Resource
@@ -62,6 +64,8 @@ public class ClassificationImpl
 
     @Resource
     AtlasClient atlasClient;
+
+    //endregion
 
     @Value("${atlas.searchBasic}")
     private String searchBasic;
@@ -237,7 +241,12 @@ public class ClassificationImpl
         }
     }
 
+
     @Override
+    /**
+     *向数据库中添加业务元数据
+     * @param  item   传输的业务元数据对象
+     */
     public ResultEnum addClassification(ClassificationDefsDTO dto)
     {
         List<ClassificationDefContentDTO> classificationDefList = dto.getClassificationDefs();
@@ -245,7 +254,6 @@ public class ClassificationImpl
             if (StringUtils.isEmpty(item.name)){
                 throw new FkException(ResultEnum.ERROR, "业务分类名称不能为空");
             }
-
             // 查询数据
             QueryWrapper<BusinessClassificationPO> qw = new QueryWrapper<>();
             qw.eq("name", item.name).eq("del_flag", 1);
@@ -253,19 +261,19 @@ public class ClassificationImpl
             if (bcPO != null){
                 throw new FkException(ResultEnum.ERROR, "业务分类名称已经存在");
             }
-
             // 添加数据
             BusinessClassificationPO model = new BusinessClassificationPO();
             model.setName(item.name);
             model.setDescription(item.description);
-
             // 设置父级id
             if (!CollectionUtils.isEmpty(item.superTypes)){
-                model.setPid(Integer.valueOf(businessClassificationMapper.selectParentId(item.superTypes.get(0))));
+
+               String s= businessClassificationMapper.selectParentId(item.superTypes.get(0));
+               s= s == null ?"0":s;
+                model.setPid(Integer.valueOf(s));
             }else {
                 model.setPid(null);
             }
-
             // 设置创建者信息
             //model.setCreateUser(userHelper.getLoginUserInfo().id.toString());
             int flag = businessClassificationMapper.insert(model);
@@ -359,30 +367,31 @@ public class ClassificationImpl
         return ResultEnum.SUCCESS;
     }
 
+/**
+ * 同步业务分类数据，公共方法，各层都会用到
+ * @param dto  将业务分类
+* */
     @Override
     public ResultEnum appSynchronousClassification(ClassificationInfoDTO dto) {
         log.info("开始同步业务， 参数:{}", JSON.toJSONString(dto));
         //是否删除
         if (dto.delete) {
-            return deleteClassification(dto.name);
-        }
-
+           deleteClassification(dto.name);
+      }
         ClassificationDefsDTO data = new ClassificationDefsDTO();
         List<ClassificationDefContentDTO> list = new ArrayList<>();
-
         //同步主数据业务分类
         ClassificationDefContentDTO masterData = new ClassificationDefContentDTO();
         masterData.name = dto.name;
         masterData.description = dto.description;
-
+        //获取业务分类的上级
         List<String> analysisModelSuperType = new ArrayList<>();
-        if (dto.sourceType == 1) {
-            analysisModelSuperType.add("业务数据");
-        } else {
-            analysisModelSuperType.add("分析数据");
-        }
+            for (ClassificationTypeEnum e : ClassificationTypeEnum.values()) {
+                if (e.getValue() == dto.sourceType) {
+                    analysisModelSuperType.add( e.getName());
+                }
+            }
         masterData.superTypes = analysisModelSuperType;
-
         list.add(masterData);
 
         data.classificationDefs = list;
@@ -577,6 +586,10 @@ public class ClassificationImpl
         }
         return po;
     }
+
+
+
+
 
 
 }

@@ -361,14 +361,14 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     dataTableFieldDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.getEnum(dataCheckPO.getTableBusinessType()));
                     dtoList.add(dataTableFieldDTO);
                 }
-                List<FiDataMetaDataDTO> fiDataMetaDatas = dataSourceConManageImpl.getTableFieldName(dtoList);
-                if (CollectionUtils.isEmpty(fiDataMetaDatas)) {
+                List<FiDataMetaDataDTO> fiDataMetaDataDTOList = dataSourceConManageImpl.getTableFieldName(dtoList);
+                if (CollectionUtils.isEmpty(fiDataMetaDataDTOList)) {
                     return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_REDIS_NOTEXISTSTABLEFIELD, null);
                 }
-                if (fiDataMetaDatas.get(0) == null || CollectionUtils.isEmpty(fiDataMetaDatas.get(0).getChildren())) {
+                if (fiDataMetaDataDTOList.get(0) == null || CollectionUtils.isEmpty(fiDataMetaDataDTOList.get(0).getChildren())) {
                     return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_REDIS_NOTEXISTSTABLEFIELD, null);
                 }
-                fiDataMetaDataDTO = fiDataMetaDatas.get(0);
+                fiDataMetaDataDTO = fiDataMetaDataDTOList.get(0);
             }
 
             // 第六步：循环规则，解析数据，验证数据是否合规

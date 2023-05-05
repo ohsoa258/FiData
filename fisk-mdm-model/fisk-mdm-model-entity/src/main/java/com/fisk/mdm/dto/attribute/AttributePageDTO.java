@@ -20,6 +20,7 @@ public class AttributePageDTO {
     /**
      * id
      */
+    @ApiModelProperty(value = "id")
     private Integer id;
 
     @ApiModelProperty(value = "实体id")
@@ -48,6 +49,7 @@ public class AttributePageDTO {
     private String desc;
 
 
+    @ApiModelProperty(value = "列名称")
     private String columnName;
 
     /**

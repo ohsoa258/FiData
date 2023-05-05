@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.datasource.DataSourceInfoDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
@@ -53,4 +54,27 @@ public interface IAppDataSource extends IService<AppDataSourcePO> {
      * @return
      */
     List<DataSourceInfoDTO> getDataSourcesByAppId(Integer appId);
+
+    /**
+     * 根据数据源类型获取平台配置模块的外部数据源
+     *
+     * @param driverType
+     * @return
+     */
+    List<com.fisk.system.dto.datasource.DataSourceDTO> getOutDataSourcesByTypeId(String driverType);
+
+    /**
+     * 根据数据源id获取单个平台配置模块的外部数据源详情
+     *
+     * @param Id
+     * @return
+     */
+    ResultEntity<com.fisk.system.dto.datasource.DataSourceDTO> getOutSourceById(Integer Id);
+
+    /**
+     * 获取指定app下的非重复驱动类型
+     * @param id
+     * @return
+     */
+    List<AppDataSourcePO> getDataSourceDrivesTypeByAppId(Long id);
 }

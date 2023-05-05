@@ -2,6 +2,7 @@ package com.fisk.task.listener.metadata.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.fisk.common.core.enums.metadataentitylog.MetaDataeLogEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanage.client.DataManageClient;
@@ -70,7 +71,7 @@ public class BuildMetaDataListener implements IMetaDataListener {
             logDTO.setCreateTime(LocalDateTime.now());
             logDTO.setBeforeChange(resultEntity.stream().findFirst().get().getName());
             logDTO.setAfterChange("");
-            logDTO.setOperationType("删除");
+            logDTO.setOperationType(MetaDataeLogEnum.DELETE_OPERATION.getName());
             dataManageClient.saveLog(logDTO);
         } catch (Exception e) {
             log.error("元数据字段删除失败 ex：+"+e);

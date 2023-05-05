@@ -8,6 +8,7 @@ import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.datasource.DataSourceColumnQueryDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceQueryDTO;
+import com.fisk.dataservice.dto.tablefields.TableFieldDTO;
 import com.fisk.dataservice.dto.tableservice.*;
 import com.fisk.dataservice.service.IDataSourceConfig;
 import com.fisk.dataservice.service.ITableAppManageService;
@@ -172,6 +173,30 @@ public class TableServiceController {
     @GetMapping("/getBuildTableServiceById/{id}")
     public ResultEntity<BuildTableServiceDTO> getBuildTableServiceById(@PathVariable("id") long id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBuildTableServiceById(id));
+    }
+
+    @ApiOperation("新增表服务字段")
+    @PostMapping("/addTableServiceField")
+    public ResultEntity<Object> addTableServiceField(@RequestBody TableFieldDTO dto) {
+        return ResultEntityBuild.build(service.addTableServiceField(dto));
+    }
+
+    @ApiOperation("修改表服务字段")
+    @PutMapping("/editTableServiceField")
+    public ResultEntity<Object> editTableServiceField(@RequestBody TableFieldDTO dto) {
+        return ResultEntityBuild.build(service.editTableServiceField(dto));
+    }
+
+    @ApiOperation("删除表服务字段")
+    @DeleteMapping("/deleteTableServiceField/{fieldId}")
+    public ResultEntity<Object> deleteTableServiceField(@PathVariable("fieldId") int fieldId) {
+        return ResultEntityBuild.build(service.deleteTableServiceField(fieldId));
+    }
+
+    @ApiOperation("数据库同步服务-新增同步按钮,手动同步表服务")
+    @PostMapping("/editTableServiceSync/{id}")
+    public ResultEntity<Object> editTableServiceSync(@PathVariable("id") long id) {
+        return ResultEntityBuild.build(service.editTableServiceSync(id));
     }
 
 }

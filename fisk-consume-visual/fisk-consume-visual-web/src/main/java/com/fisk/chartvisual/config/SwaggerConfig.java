@@ -23,14 +23,36 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    public static final String TAG_1 = "DiagramManage-Controller";
+    public static final String TAG_1 = "图表管理1.0";
+    public static final String TAG_2 = "中国地图";
+    public static final String TAG_3 = "组件";
+    public static final String TAG_4 = "数据服务";
+
+    public static final String TAG_5 = "数据源管理";
+
+    public static final String TAG_6 = "可视化2.0图标管理";
+    public static final String TAG_7 = "数据集表";
+    public static final String TAG_8 = "文件夹管理";
+    public static final String TAG_9 = "系统页索引";
+    public static final String TAG_10 = "可视化";
+
+
 
     @Bean
     public Docket createRestApi() {
         String basePck = FkChartVisualApplication.class.getPackage().getName();
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
-                .tags(new Tag(TAG_1,"可视化2.0图标管理"))
+                .tags(new Tag(TAG_1,"图表管理1.0"))
+                .tags(new Tag(TAG_2,"中国地图"))
+                .tags(new Tag(TAG_3,"组件"))
+                .tags(new Tag(TAG_4,"数据服务"))
+                .tags(new Tag(TAG_5,"数据源管理"))
+                .tags(new Tag(TAG_6,"可视化2.0图标管理"))
+                .tags(new Tag(TAG_7,"数据集表"))
+                .tags(new Tag(TAG_8,"文件夹管理"))
+                .tags(new Tag(TAG_9,"系统页索引"))
+                .tags(new Tag(TAG_10,"可视化"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

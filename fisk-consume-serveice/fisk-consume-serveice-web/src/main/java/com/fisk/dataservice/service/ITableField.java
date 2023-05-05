@@ -17,22 +17,24 @@ public interface ITableField {
      * @param fieldDTOList
      * @return
      */
-    ResultEnum addTableServiceField(Integer tableServiceId, List<TableFieldDTO> fieldDTOList);
+    ResultEnum addTableServiceField(long tableServiceId, List<TableFieldDTO> fieldDTOList);
 
     /**
      * 删除表服务字段数据
      *
      * @param tableServiceId
+     * @param tableFieldId
      * @return
      */
-    ResultEnum delTableServiceField(Integer tableServiceId);
+    ResultEnum delTableServiceField(long tableServiceId,long tableFieldId);
 
     /**
      * 获取表服务字段
      *
      * @param tableServiceId
+     * @param tableFieldId
      * @return
      */
-    List<TableFieldDTO> getTableServiceField(long tableServiceId);
+    List<TableFieldDTO> getTableServiceField(long tableServiceId,long tableFieldId);
 
 }

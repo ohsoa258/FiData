@@ -131,17 +131,17 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         }
 
         // 清洗规则
-        QueryWrapper<BusinessFilterPO> businessFilterPOQueryWrapper = new QueryWrapper<>();
-        businessFilterPOQueryWrapper.lambda().eq(BusinessFilterPO::getDelFlag, 1)
-                .eq(BusinessFilterPO::getDatasourceId, dataSourceId)
-                .eq(BusinessFilterPO::getTableUnique, tableUnique)
-                .eq(BusinessFilterPO::getTableBusinessType, tableBusinessType)
-                .eq(BusinessFilterPO::getRuleState, 1);
-        List<BusinessFilterPO> businessFilterPOS = businessFilterMapper.selectList(businessFilterPOQueryWrapper);
-        if (CollectionUtils.isNotEmpty(businessFilterPOS)) {
-            List<Long> ruleIds = businessFilterPOS.stream().map(BusinessFilterPO::getId).collect(Collectors.toList());
-            ruleIdList.addAll(ruleIds);
-        }
+//        QueryWrapper<BusinessFilterPO> businessFilterPOQueryWrapper = new QueryWrapper<>();
+//        businessFilterPOQueryWrapper.lambda().eq(BusinessFilterPO::getDelFlag, 1)
+//                .eq(BusinessFilterPO::getDatasourceId, dataSourceId)
+//                .eq(BusinessFilterPO::getTableUnique, tableUnique)
+//                .eq(BusinessFilterPO::getTableBusinessType, tableBusinessType)
+//                .eq(BusinessFilterPO::getRuleState, 1);
+//        List<BusinessFilterPO> businessFilterPOS = businessFilterMapper.selectList(businessFilterPOQueryWrapper);
+//        if (CollectionUtils.isNotEmpty(businessFilterPOS)) {
+//            List<Long> ruleIds = businessFilterPOS.stream().map(BusinessFilterPO::getId).collect(Collectors.toList());
+//            ruleIdList.addAll(ruleIds);
+//        }
 
         // 生命周期
         QueryWrapper<LifecyclePO> lifecyclePOQueryWrapper = new QueryWrapper<>();
@@ -437,21 +437,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         }
 
         // 循环业务清洗规则
-        for (BusinessFilterPO businessFilterPO : businessFilterPOS) {
-            // 查询该清洗规则对应的模板
-            templatePO = templatePOS.stream().filter(t -> t.getId() == businessFilterPO.getTemplateId()).findFirst().orElse(null);
-            if (templatePO != null) {
-                TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
-                switch (templateType) {
-                    case API_FILTER_TEMPLATE:
-                        break;
-                    case SYNC_FILTER_TEMPLATE:
-                        break;
-                    case FILTER_REPORT_TEMPLATE:
-                        break;
-                }
-            }
-        }
+//        for (BusinessFilterPO businessFilterPO : businessFilterPOS) {
+//
+//        }
 
         // 循环生命周期规则
         for (LifecyclePO lifecyclePO : lifecyclePOS) {

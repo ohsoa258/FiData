@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
+import com.fisk.common.core.enums.metadataentitylog.MetaDataeLogEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -71,11 +72,13 @@ import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
+ * 元数据实体同步服务类
  */
 @Service
 @Slf4j
 public class MetaDataImpl implements IMetaData {
 
+    //region  引入
     @Resource
     AtlasClient atlasClient;
     @Resource
@@ -101,32 +104,24 @@ public class MetaDataImpl implements IMetaData {
     DataModelClient dataModelClient;
     @Resource
     DataGovernanceClient dataQualityClient;
-
-
-
     @Resource
     MetadataEntityImpl metadataEntity;
-
-
     @Resource
     private IMetaDataEntityOperationLog operationLog;
-
-
-
-
+    //endregion
+    //region 常量
     @Value("${atlas.entity}")
     private String entity;
     @Value("${atlas.entityByGuid}")
     private String entityByGuid;
     @Value("${atlas.relationship}")
     private String relationship;
-
     private static final String stg_prefix = "_stg";
     private static final String stg_suffix = "stg_";
     private static final String stg = "stg";
     private static final String dim_prefix = "dim_";
     private static final String ods_suffix = "ods_";
-
+//endregion
     @Override
     public ResultEnum metaData(MetaDataAttributeDTO data) {
         try {
@@ -143,8 +138,15 @@ public class MetaDataImpl implements IMetaData {
         }
     }
 
+
+    //region 元数据实体同步具体实现
+    /**
+     * 同步元数据对象，主方法
+     * @param data  元数据对象实体集合
+     * @param currUserName 当前账号
+     */
     @Override
-    public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data) {
+    public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data,String currUserName) {
         log.info("开始同步元数据***********");
         for (MetaDataInstanceAttributeDTO instance : data) {
             String instanceGuid = metaDataInstance(instance);
@@ -169,7 +171,7 @@ public class MetaDataImpl implements IMetaData {
                     }
                     List<String> qualifiedNames = new ArrayList<>();
                     for (MetaDataColumnAttributeDTO field : table.columnList) {
-                        metaDataField(field, tableGuid,instance.owner);
+                        metaDataField(field, tableGuid,("").equals(currUserName)||currUserName==null?instance.currUserName:currUserName);
                         qualifiedNames.add(field.qualifiedName);
                         if (!stg.equals(table.getComment())) {
                             //新增stg表字段
@@ -188,55 +190,228 @@ public class MetaDataImpl implements IMetaData {
         return ResultEnum.SUCCESS;
     }
 
-    @Override
-    public ResultEnum addFiledAndUpdateFiled(List<MetaDataInstanceAttributeDTO> data) {
-        log.info("开始同步元数据***********");
-        for (MetaDataInstanceAttributeDTO instance : data) {
-            String instanceGuid = metaDataInstance(instance);
-            if (StringUtils.isEmpty(instanceGuid) || CollectionUtils.isEmpty(instance.dbList)) {
-                continue;
-            }
-            for (MetaDataDbAttributeDTO db : instance.dbList) {
-                String dbGuid = metaDataDb(db, instanceGuid);
-                if (StringUtils.isEmpty(dbGuid) || CollectionUtils.isEmpty(db.tableList)) {
-                    continue;
-                }
-                for (MetaDataTableAttributeDTO table : db.tableList) {
-                    String tableName = table.name;
-                    String tableGuid = metaDataTable(table, dbGuid, db.name);
-                    //新增stg表
-                    String stgTableGuid = null;
-                    if (!stg.equals(table.getComment())) {
-                        stgTableGuid = metaDataStgTable(table, dbGuid);
-                    }
-                    if (StringUtils.isEmpty(tableGuid) || CollectionUtils.isEmpty(table.columnList)) {
-                        continue;
-                    }
-                    List<String> qualifiedNames = new ArrayList<>();
-                    for (MetaDataColumnAttributeDTO field : table.columnList) {
-                        metaDataField(field, tableGuid,instance.owner);
-                        qualifiedNames.add(field.qualifiedName);
-                        if (!stg.equals(table.getComment())) {
-                            //新增stg表字段
-                            metaDataStgField(field, stgTableGuid);
-                        }
-                    }
-                }
-            }
+    /**
+     * 元数据对象：数据库实例 新增/修改
+     *
+     * @param dto
+     * @return
+     */
+    private String metaDataInstance(MetaDataInstanceAttributeDTO dto) {
+        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
+        if (metadataEntity == null) {
+            return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_INSTANCE.getName(), "-1").toString();
         }
-        //更新Redis
-        //entityImpl.updateRedis();
-        return ResultEnum.SUCCESS;
+        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_INSTANCE.getName()).toString();
+    }
+    /**
+     * 元数据对参观：数据库 新增/修改
+     *
+     * @param dto
+     * @param parentEntityId
+     * @return
+     */
+    private String metaDataDb(MetaDataDbAttributeDTO dto, String parentEntityId) {
+        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
+        if (metadataEntity == null) {
+            return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_DB.getName(), parentEntityId).toString();
+        }
+
+        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_DB.getName()).toString();
+
     }
 
-    @Override
-    public void synchronousTableBusinessMetaData(BusinessMetaDataInfoDTO dto) {
-        associatedBusinessMetaData(null, dto.dbName, dto.tableName);
+    /**
+     * 元数据对参观：数据表 新增/修改 表新增/修改
+     *
+     * @param dto
+     * @param parentEntityId
+     * @return
+     */
+    private String metaDataTable(MetaDataTableAttributeDTO dto, String parentEntityId, String dbName) {
+
+        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
+        if (metadataEntity == null) {
+            metadataEntity = this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_TABLE.getName(), parentEntityId);
+        } else {
+            metadataEntity = this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_TABLE.getName());
+        }
+
+        if (!"stg".equals(dto.description)) {
+            //同步业务分类
+            associatedClassification(metadataEntity.toString(), dto.name, dbName, dto.comment);
+            //同步业务元数据
+            associatedBusinessMetaData(metadataEntity.toString(), dbName, dto.name);
+        }
+
+        return metadataEntity.toString();
+
     }
 
-    @Override
-    public void test() {
 
+    /**
+     * 实体关联业务分类
+     *
+     * @param tableGuid
+     * @param tableName
+     * @param dbName
+     */
+    private void associatedClassification(String tableGuid,
+                                          String tableName,
+                                          String dbName,
+                                          String comment) {
+        try {
+            //获取数据源列表
+            ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
+            if (allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
+                return;
+            }
+            Optional<DataSourceDTO> sourceData = allFiDataDataSource.data.stream().filter(e -> e.conDbname.equals(dbName)).findFirst();
+            if (!sourceData.isPresent()) {
+                return;
+            }
+            ClassificationAddEntityDTO dto = new ClassificationAddEntityDTO();
+            dto.entityGuids = new ArrayList<>();
+            dto.entityGuids.add(tableGuid);
+            ClassificationDTO data = new ClassificationDTO();
+            //ods表关联业务数据分类
+            if (SourceBusinessTypeEnum.ODS == sourceData.get().sourceBusinessType) {
+                //获取接入应用列表
+                ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
+                if (appList.code != ResultEnum.SUCCESS.getCode()) {
+                    return;
+                }
+                Optional<AppBusinessInfoDTO> first = appList.data.stream().filter(e -> e.id == Long.parseLong(comment)).findFirst();
+                if (!first.isPresent()) {
+                    return;
+                }
+                data.typeName = first.get().name;
+            } else if (DataSourceConfigEnum.DMP_DW.getValue() == sourceData.get().id) {
+                //获取所有业务域
+                ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
+                if (businessAreaList.code != ResultEnum.SUCCESS.getCode()) {
+                    return;
+                }
+                //判断是否为公共维度
+                if (dim_prefix.equals(tableName.substring(0, 4))) {
+                    ResultEntity<DimensionFolderDTO> dimensionFolder = dataModelClient.getDimensionFolderByTableName(tableName);
+                    if (dimensionFolder.code != ResultEnum.SUCCESS.getCode()) {
+                        return;
+                    }
+                    //共享维度关联所有分析指标业务分类
+                    if (dimensionFolder.data.share) {
+                        batchAssociateClassification(tableGuid, businessAreaList.data);
+                        return;
+                    }
+                }
+                Optional<AppBusinessInfoDTO> first = businessAreaList.data.stream().filter(e -> e.id == Long.parseLong(comment)).findFirst();
+                if (!first.isPresent()) {
+                    return;
+                }
+                data.typeName = first.get().name;
+            }
+            dto.classification = data;
+            classification.classificationAddAssociatedEntity(dto);
+        } catch (Exception e) {
+            log.error("associatedClassification ex:", e);
+        }
+
+    }
+
+    /**
+     * 公共维度表批量关联业务分类
+     *
+     * @param tableGuid
+     * @param businessAreaList
+     */
+    private void batchAssociateClassification(String tableGuid, List<AppBusinessInfoDTO> businessAreaList) {
+        for (AppBusinessInfoDTO item : businessAreaList) {
+            ClassificationAddEntityDTO dto = new ClassificationAddEntityDTO();
+            dto.entityGuids = new ArrayList<>();
+            dto.entityGuids.add(tableGuid);
+            ClassificationDTO data = new ClassificationDTO();
+            data.typeName = item.name;
+            dto.classification = data;
+            classification.classificationAddAssociatedEntity(dto);
+        }
+    }
+
+    /**
+     * 元数据对参观：临时表 新增/修改 表新增/修改
+     * @param dto
+     * @param parentEntityId
+     * @return
+     */
+    private String metaDataStgTable(MetaDataTableAttributeDTO dto, String parentEntityId) {
+        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName + stg_prefix);
+        //替换前缀
+        if (ods_suffix.equals(dto.name.substring(0, 4))) {
+            dto.name = dto.name.replace(ods_suffix, stg_suffix);
+        } else {
+            dto.name = stg_suffix + dto.name;
+        }
+        dto.qualifiedName = dto.qualifiedName + stg_prefix;
+        dto.description = stg;
+
+        if (metadataEntity == null) {
+            return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_TABLE.getName(), parentEntityId).toString();
+        }
+
+        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_TABLE.getName()).toString();
+    }
+    /**
+     * 字段新增/修改
+     *
+     * @param dto
+     * @param parentEntityId
+     * @return
+     */
+    private String metaDataField(MetaDataColumnAttributeDTO dto, String parentEntityId,String createUser) {
+        MetaDataEntityOperationLogDTO operationLogDTO = new MetaDataEntityOperationLogDTO();
+        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
+        if (metadataEntity == null) {
+            operationLogDTO.setOperationType(MetaDataeLogEnum.INSERT_OPERATION.getName());
+            operationLogDTO.setBeforeChange("");
+            operationLogDTO.setAfterChange(dto.getName());
+            operationLogDTO.setCreateTime(LocalDateTime.now());
+            operationLogDTO.setCreateUser(createUser);
+            operationLogDTO.setMetadataEntityId(parentEntityId);
+            operationLog.addOperationLog(operationLogDTO);
+            return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_COLUMN.getName(), parentEntityId).toString();
+        }
+        MetadataEntityPO entityPO = this.metadataEntity.query().eq("id", metadataEntity).one();
+        if(!entityPO.getName().equals(dto.getName())){
+            operationLogDTO.setOperationType(MetaDataeLogEnum.UPDATE_OPERATION.getName());
+            operationLogDTO.setBeforeChange(entityPO.getName());
+            operationLogDTO.setAfterChange(dto.getName());
+            operationLogDTO.setCreateTime(LocalDateTime.now());
+            operationLogDTO.setCreateUser(createUser);
+            operationLogDTO.setMetadataEntityId(parentEntityId);
+            operationLog.addOperationLog(operationLogDTO);
+        }
+        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_COLUMN.getName()).toString();
+    }
+
+
+    private String metaDataStgField(MetaDataColumnAttributeDTO dto, String parentEntityId) {
+        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName + stg_prefix);
+        dto.name = stg_suffix + dto.name;
+        dto.qualifiedName = dto.qualifiedName + stg_prefix;
+        dto.description = stg;
+
+        if (metadataEntity == null) {
+            return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_COLUMN.getName(), parentEntityId).toString();
+        }
+
+        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_COLUMN.getName()).toString();
+    }
+    /**
+     * 删除元数据实体
+     *
+     * @param qualifiedNameList
+     * @param parentEntityGuid
+     */
+    private void deleteMetaData(List<String> qualifiedNameList, String parentEntityGuid) {
+        this.metadataEntity.delMetadataEntity(qualifiedNameList, parentEntityGuid);
     }
 
     /**
@@ -246,7 +421,7 @@ public class MetaDataImpl implements IMetaData {
      * @param tableGuid
      * @param tableName
      */
-    public void synchronizationTableKinShip(String dbName,
+    private void synchronizationTableKinShip(String dbName,
                                             String tableGuid,
                                             String tableName,
                                             String stgTableGuid)
@@ -427,145 +602,13 @@ public class MetaDataImpl implements IMetaData {
             return;
         }*/
     }
-
-    @Override
-    public ResultEnum deleteMetaData(MetaDataDeleteAttributeDTO dto) {
-        for (String qualifiedName : dto.qualifiedNames) {
-            QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
-            queryWrapper.lambda().eq(MetadataMapAtlasPO::getQualifiedName, qualifiedName);
-            MetadataMapAtlasPO po = metadataMapAtlasMapper.selectOne(queryWrapper);
-            if (po == null) {
-                continue;
-            }
-
-            //删除表业务分类关联
-            ClassificationDelAssociatedEntityDTO associatedEntityDto = new ClassificationDelAssociatedEntityDTO();
-            associatedEntityDto.classificationName = dto.classifications;
-            associatedEntityDto.entityGuid = po.atlasGuid;
-            ResultEnum delResult = classification.classificationDelAssociatedEntity(associatedEntityDto);
-            if (delResult.getCode() != ResultEnum.SUCCESS.getCode()) {
-                continue;
-            }
-
-            //删除元数据实体
-            ResultEnum resultEnum = entityImpl.deleteEntity(po.atlasGuid);
-            if (resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
-                continue;
-            }
-
-            //删除元数据配置
-            int flat = metadataMapAtlasMapper.delete(queryWrapper);
-            if (flat > 0) {
-                delete(po.atlasGuid);
-            }
-        }
-        return ResultEnum.SUCCESS;
-    }
-
-    /**
-     * 循环删除子节点
-     *
-     * @param atlasGuid
-     */
-    public void delete(String atlasGuid) {
-        QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(MetadataMapAtlasPO::getParentAtlasGuid, atlasGuid);
-        List<MetadataMapAtlasPO> list = metadataMapAtlasMapper.selectList(queryWrapper);
-        if (CollectionUtils.isEmpty(list)) {
-            return;
-        }
-        String guid = list.get(0).atlasGuid;
-        int flat = metadataMapAtlasMapper.delete(queryWrapper);
-        if (flat > 0) {
-            delete(guid);
-        }
-    }
-
-    /**
-     * 实例新增/修改
-     *
-     * @param dto
-     * @return
-     */
-    public String metaDataInstance(MetaDataInstanceAttributeDTO dto) {
-        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
-        if (metadataEntity == null) {
-            return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_INSTANCE.getName(), "-1").toString();
-        }
-
-        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_INSTANCE.getName()).toString();
-    }
-
-    /**
-     * 库新增/修改
-     *
-     * @param dto
-     * @param parentEntityId
-     * @return
-     */
-    public String metaDataDb(MetaDataDbAttributeDTO dto, String parentEntityId) {
-        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
-        if (metadataEntity == null) {
-            return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_DB.getName(), parentEntityId).toString();
-        }
-
-        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_DB.getName()).toString();
-
-    }
-
-    /**
-     * 表新增/修改
-     *
-     * @param dto
-     * @param parentEntityId
-     * @return
-     */
-
-    public String metaDataTable(MetaDataTableAttributeDTO dto, String parentEntityId, String dbName) {
-
-        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
-        if (metadataEntity == null) {
-            metadataEntity = this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_TABLE.getName(), parentEntityId);
-        } else {
-            metadataEntity = this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_TABLE.getName());
-        }
-
-        if (!"stg".equals(dto.description)) {
-            //同步业务分类
-            associatedClassification(metadataEntity.toString(), dto.name, dbName, dto.comment);
-            //同步业务元数据
-            associatedBusinessMetaData(metadataEntity.toString(), dbName, dto.name);
-        }
-
-        return metadataEntity.toString();
-
-    }
-
-    public String metaDataStgTable(MetaDataTableAttributeDTO dto, String parentEntityId) {
-        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName + stg_prefix);
-        //替换前缀
-        if (ods_suffix.equals(dto.name.substring(0, 4))) {
-            dto.name = dto.name.replace(ods_suffix, stg_suffix);
-        } else {
-            dto.name = stg_suffix + dto.name;
-        }
-        dto.qualifiedName = dto.qualifiedName + stg_prefix;
-        dto.description = stg;
-
-        if (metadataEntity == null) {
-            return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_TABLE.getName(), parentEntityId).toString();
-        }
-
-        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_TABLE.getName()).toString();
-    }
-
     /**
      * 同步业务元数据
      *
      * @param atlasGuid
      * @param dbName
      */
-    public void associatedBusinessMetaData(String atlasGuid, String dbName, String tableName) {
+    private void associatedBusinessMetaData(String atlasGuid, String dbName, String tableName) {
         //获取业务元数据配置信息
         QueryWrapper<BusinessMetadataConfigPO> businessMetadataConfigPoWrapper = new QueryWrapper<>();
         List<BusinessMetadataConfigPO> poList = businessMetadataConfigMapper.selectList(businessMetadataConfigPoWrapper);
@@ -651,50 +694,216 @@ public class MetaDataImpl implements IMetaData {
         setBusinessMetaDataAttributeValue(atlasGuid, tableRuleInfo, poList);
     }
 
-    /**
-     * 字段新增/修改
-     *
-     * @param dto
-     * @param parentEntityId
-     * @return
-     */
-    public String metaDataField(MetaDataColumnAttributeDTO dto, String parentEntityId,String createUser) {
-        MetaDataEntityOperationLogDTO operationLogDTO = new MetaDataEntityOperationLogDTO();
-        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
-        if (metadataEntity == null) {
-            operationLogDTO.setOperationType("新增");
-            operationLogDTO.setBeforeChange("");
-            operationLogDTO.setAfterChange(dto.getName());
-            operationLogDTO.setCreateTime(LocalDateTime.now());
-            operationLogDTO.setCreateUser(createUser);
-            operationLogDTO.setMetadataEntityId(parentEntityId);
-            operationLog.addOperationLog(operationLogDTO);
-            return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_COLUMN.getName(), parentEntityId).toString();
+
+    private ResultEnum setBusinessMetaDataAttributeValue(String guid,
+                                                         TableRuleInfoDTO tableRuleInfoDTO,
+                                                         List<BusinessMetadataConfigPO> poList) {
+
+        //分组获取业务元数据类别
+        Map<String, List<BusinessMetadataConfigPO>> collect = poList.stream()
+                .collect(Collectors.groupingBy(BusinessMetadataConfigPO::getBusinessMetadataName));
+        if (CollectionUtils.isEmpty(collect)) {
+            throw new FkException(ResultEnum.DATA_SUBMIT_ERROR);
         }
-        MetadataEntityPO entityPO = this.metadataEntity.query().eq("id", metadataEntity).one();
-        if(!entityPO.getName().equals(dto.getName())){
-            operationLogDTO.setOperationType("修改");
-            operationLogDTO.setBeforeChange(entityPO.getName());
-            operationLogDTO.setAfterChange(dto.getName());
-            operationLogDTO.setCreateTime(LocalDateTime.now());
-            operationLogDTO.setCreateUser(createUser);
-            operationLogDTO.setMetadataEntityId(parentEntityId);
-            operationLog.addOperationLog(operationLogDTO);
+
+        Integer metadataEntityId = Integer.parseInt(guid);
+        List<MetadataBusinessMetadataMapDTO> list = new ArrayList<>();
+
+        for (String businessMetaDataName : collect.keySet()) {
+            List<BusinessMetadataConfigPO> list1 = collect.get(businessMetaDataName);
+            switch (businessMetaDataName) {
+                case "QualityRules":
+                    list.addAll(metadataBusinessMetadataMap.setQualityRules(list1, metadataEntityId, tableRuleInfoDTO));
+                    break;
+                case "BusinessDefinition":
+                    list.addAll(metadataBusinessMetadataMap.setBusinessDefinition(list1, metadataEntityId, tableRuleInfoDTO));
+                    break;
+                case "BusinessRules":
+                    list.addAll(metadataBusinessMetadataMap.setBusinessRules(list1, metadataEntityId, tableRuleInfoDTO));
+                    break;
+                case "ManagementRules":
+                    list.addAll(metadataBusinessMetadataMap.setManagementRules(list1, metadataEntityId, tableRuleInfoDTO));
+                    break;
+                default:
+                    break;
+            }
         }
-        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_COLUMN.getName()).toString();
+
+        EditMetadataBusinessMetadataMapDTO data = new EditMetadataBusinessMetadataMapDTO();
+        data.metadataEntityId = Integer.parseInt(guid);
+        data.list = list;
+
+        return metadataBusinessMetadataMap.operationMetadataBusinessMetadataMap(data);
     }
 
-    public String metaDataStgField(MetaDataColumnAttributeDTO dto, String parentEntityId) {
-        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName + stg_prefix);
-        dto.name = stg_suffix + dto.name;
-        dto.qualifiedName = dto.qualifiedName + stg_prefix;
-        dto.description = stg;
-
-        if (metadataEntity == null) {
-            return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_COLUMN.getName(), parentEntityId).toString();
+    /**
+     * 设置业务元数据表规则
+     *
+     * @param dataSourceId
+     * @param tableId
+     * @param dataType
+     */
+    private TableRuleInfoDTO setTableRuleInfo(int dataSourceId,
+                                              int tableId,
+                                              int dataType,
+                                              int tableType) {
+        TableRuleInfoDTO dto = new TableRuleInfoDTO();
+        ResultEntity<TableRuleInfoDTO> tableRule = dataQualityClient.getTableRuleList(dataSourceId, String.valueOf(tableId), tableType);
+        if (tableRule.code == ResultEnum.SUCCESS.getCode()) {
+            dto = tableRule.data;
         }
+        TableRuleParameterDTO parameter = new TableRuleParameterDTO();
+        parameter.type = tableType;
+        parameter.tableId = tableId;
+        ResultEntity<TableRuleInfoDTO> result = new ResultEntity<>();
+        TableRuleInfoDTO data = result.data;
+        //数仓建模
+        if (dataType == DataTypeEnum.DATA_MODEL.getValue()) {
+            result = dataModelClient.setTableRule(parameter);
+        }
+        //数据接入
+        else if (dataType == DataTypeEnum.DATA_INPUT.getValue()) {
+            result = dataAccessClient.buildTableRuleInfo(parameter);
+        }
+        if (result.code == ResultEnum.SUCCESS.getCode()) {
+            if (StringUtils.isEmpty(dto.name)) {
+                dto = result.data;
+            } else {
+                dto.businessName = result.data.businessName;
+                dto.dataResponsiblePerson = result.data.dataResponsiblePerson;
+                if (!CollectionUtils.isEmpty(dto.fieldRules)) {
+                    dto.fieldRules.stream().map(e -> {
+                        e.businessName = data.businessName;
+                        e.dataResponsiblePerson = data.dataResponsiblePerson;
+                        return e;
+                    });
+                }
+            }
+        }
+        return dto;
+    }
 
-        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_COLUMN.getName()).toString();
+    /**
+     * 根据库名,获取数据源配置信息
+     *
+     * @param dbName
+     * @return
+     */
+    private DataSourceDTO getDataSourceInfo(String dbName) {
+        //获取所有数据源
+        ResultEntity<List<DataSourceDTO>> result = userClient.getAllFiDataDataSource();
+        if (result.code != ResultEnum.SUCCESS.getCode()) {
+            return null;
+        }
+        //根据数据库筛选
+        Optional<DataSourceDTO> first = result.data.stream().filter(e -> dbName.equals(e.conDbname)).findFirst();
+        if (!first.isPresent()) {
+            return null;
+        }
+        return first.get();
+    }
+
+    //endregion
+
+    //region Controlor 调用方法
+
+    @Override
+    public ResultEnum addFiledAndUpdateFiled(List<MetaDataInstanceAttributeDTO> data) {
+        log.info("开始同步元数据***********");
+        for (MetaDataInstanceAttributeDTO instance : data) {
+            String instanceGuid = metaDataInstance(instance);
+            if (StringUtils.isEmpty(instanceGuid) || CollectionUtils.isEmpty(instance.dbList)) {
+                continue;
+            }
+            for (MetaDataDbAttributeDTO db : instance.dbList) {
+                String dbGuid = metaDataDb(db, instanceGuid);
+                if (StringUtils.isEmpty(dbGuid) || CollectionUtils.isEmpty(db.tableList)) {
+                    continue;
+                }
+                for (MetaDataTableAttributeDTO table : db.tableList) {
+                    String tableName = table.name;
+                    String tableGuid = metaDataTable(table, dbGuid, db.name);
+                    //新增stg表
+                    String stgTableGuid = null;
+                    if (!stg.equals(table.getComment())) {
+                        stgTableGuid = metaDataStgTable(table, dbGuid);
+                    }
+                    if (StringUtils.isEmpty(tableGuid) || CollectionUtils.isEmpty(table.columnList)) {
+                        continue;
+                    }
+                    List<String> qualifiedNames = new ArrayList<>();
+                    for (MetaDataColumnAttributeDTO field : table.columnList) {
+                        metaDataField(field, tableGuid,instance.owner);
+                        qualifiedNames.add(field.qualifiedName);
+                        if (!stg.equals(table.getComment())) {
+                            //新增stg表字段
+                            metaDataStgField(field, stgTableGuid);
+                        }
+                    }
+                }
+            }
+        }
+        //更新Redis
+        //entityImpl.updateRedis();
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public void synchronousTableBusinessMetaData(BusinessMetaDataInfoDTO dto) {
+        associatedBusinessMetaData(null, dto.dbName, dto.tableName);
+    }
+
+
+    @Override
+    public ResultEnum deleteMetaData(MetaDataDeleteAttributeDTO dto) {
+        for (String qualifiedName : dto.qualifiedNames) {
+            QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(MetadataMapAtlasPO::getQualifiedName, qualifiedName);
+            MetadataMapAtlasPO po = metadataMapAtlasMapper.selectOne(queryWrapper);
+            if (po == null) {
+                continue;
+            }
+
+            //删除表业务分类关联
+            ClassificationDelAssociatedEntityDTO associatedEntityDto = new ClassificationDelAssociatedEntityDTO();
+            associatedEntityDto.classificationName = dto.classifications;
+            associatedEntityDto.entityGuid = po.atlasGuid;
+            ResultEnum delResult = classification.classificationDelAssociatedEntity(associatedEntityDto);
+            if (delResult.getCode() != ResultEnum.SUCCESS.getCode()) {
+                continue;
+            }
+
+            //删除元数据实体
+            ResultEnum resultEnum = entityImpl.deleteEntity(po.atlasGuid);
+            if (resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
+                continue;
+            }
+
+            //删除元数据配置
+            int flat = metadataMapAtlasMapper.delete(queryWrapper);
+            if (flat > 0) {
+                delete(po.atlasGuid);
+            }
+        }
+        return ResultEnum.SUCCESS;
+    }
+    /**
+     * 循环删除子节点
+     *
+     * @param atlasGuid
+     */
+    private void delete(String atlasGuid) {
+        QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(MetadataMapAtlasPO::getParentAtlasGuid, atlasGuid);
+        List<MetadataMapAtlasPO> list = metadataMapAtlasMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(list)) {
+            return;
+        }
+        String guid = list.get(0).atlasGuid;
+        int flat = metadataMapAtlasMapper.delete(queryWrapper);
+        if (flat > 0) {
+            delete(guid);
+        }
     }
 
     public void synchronousDisplay() {
@@ -726,93 +935,6 @@ public class MetaDataImpl implements IMetaData {
         }
 
 
-    }
-
-    /**
-     * 实体关联业务分类
-     *
-     * @param tableGuid
-     * @param tableName
-     * @param dbName
-     */
-    public void associatedClassification(String tableGuid,
-                                         String tableName,
-                                         String dbName,
-                                         String comment) {
-        try {
-            //获取数据源列表
-            ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
-            if (allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
-                return;
-            }
-            Optional<DataSourceDTO> sourceData = allFiDataDataSource.data.stream().filter(e -> e.conDbname.equals(dbName)).findFirst();
-            if (!sourceData.isPresent()) {
-                return;
-            }
-            ClassificationAddEntityDTO dto = new ClassificationAddEntityDTO();
-            dto.entityGuids = new ArrayList<>();
-            dto.entityGuids.add(tableGuid);
-            ClassificationDTO data = new ClassificationDTO();
-            //ods表关联业务数据分类
-            if (SourceBusinessTypeEnum.ODS == sourceData.get().sourceBusinessType) {
-                //获取接入应用列表
-                ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
-                if (appList.code != ResultEnum.SUCCESS.getCode()) {
-                    return;
-                }
-                Optional<AppBusinessInfoDTO> first = appList.data.stream().filter(e -> e.id == Long.parseLong(comment)).findFirst();
-                if (!first.isPresent()) {
-                    return;
-                }
-                data.typeName = first.get().name;
-            } else if (DataSourceConfigEnum.DMP_DW.getValue() == sourceData.get().id) {
-                //获取所有业务域
-                ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
-                if (businessAreaList.code != ResultEnum.SUCCESS.getCode()) {
-                    return;
-                }
-                //判断是否为公共维度
-                if (dim_prefix.equals(tableName.substring(0, 4))) {
-                    ResultEntity<DimensionFolderDTO> dimensionFolder = dataModelClient.getDimensionFolderByTableName(tableName);
-                    if (dimensionFolder.code != ResultEnum.SUCCESS.getCode()) {
-                        return;
-                    }
-                    //共享维度关联所有分析指标业务分类
-                    if (dimensionFolder.data.share) {
-                        batchAssociateClassification(tableGuid, businessAreaList.data);
-                        return;
-                    }
-                }
-                Optional<AppBusinessInfoDTO> first = businessAreaList.data.stream().filter(e -> e.id == Long.parseLong(comment)).findFirst();
-                if (!first.isPresent()) {
-                    return;
-                }
-                data.typeName = first.get().name;
-            }
-            dto.classification = data;
-            classification.classificationAddAssociatedEntity(dto);
-        } catch (Exception e) {
-            log.error("associatedClassification ex:", e);
-        }
-
-    }
-
-    /**
-     * 公共维度表批量关联业务分类
-     *
-     * @param tableGuid
-     * @param businessAreaList
-     */
-    public void batchAssociateClassification(String tableGuid, List<AppBusinessInfoDTO> businessAreaList) {
-        for (AppBusinessInfoDTO item : businessAreaList) {
-            ClassificationAddEntityDTO dto = new ClassificationAddEntityDTO();
-            dto.entityGuids = new ArrayList<>();
-            dto.entityGuids.add(tableGuid);
-            ClassificationDTO data = new ClassificationDTO();
-            data.typeName = item.name;
-            dto.classification = data;
-            classification.classificationAddAssociatedEntity(dto);
-        }
     }
 
     /**
@@ -881,15 +1003,7 @@ public class MetaDataImpl implements IMetaData {
         return atlasGuid;
     }
 
-    /**
-     * 删除元数据实体
-     *
-     * @param qualifiedNameList
-     * @param parentEntityGuid
-     */
-    public void deleteMetaData(List<String> qualifiedNameList, String parentEntityGuid) {
-        this.metadataEntity.delMetadataEntity(qualifiedNameList, parentEntityGuid);
-    }
+
 
     /**
      * 新增元数据、元数据配置
@@ -932,25 +1046,6 @@ public class MetaDataImpl implements IMetaData {
         }
     }
 
-    /**
-     * 根据库名,获取数据源配置信息
-     *
-     * @param dbName
-     * @return
-     */
-    public DataSourceDTO getDataSourceInfo(String dbName) {
-        //获取所有数据源
-        ResultEntity<List<DataSourceDTO>> result = userClient.getAllFiDataDataSource();
-        if (result.code != ResultEnum.SUCCESS.getCode()) {
-            return null;
-        }
-        //根据数据库筛选
-        Optional<DataSourceDTO> first = result.data.stream().filter(e -> dbName.equals(e.conDbname)).findFirst();
-        if (!first.isPresent()) {
-            return null;
-        }
-        return first.get();
-    }
 
     /**
      * 添加process
@@ -1042,93 +1137,8 @@ public class MetaDataImpl implements IMetaData {
         return data.getString("guid");
     }
 
-    /**
-     * 设置业务元数据表规则
-     *
-     * @param dataSourceId
-     * @param tableId
-     * @param dataType
-     */
-    public TableRuleInfoDTO setTableRuleInfo(int dataSourceId,
-                                             int tableId,
-                                             int dataType,
-                                             int tableType) {
-        TableRuleInfoDTO dto = new TableRuleInfoDTO();
-        ResultEntity<TableRuleInfoDTO> tableRule = dataQualityClient.getTableRuleList(dataSourceId, String.valueOf(tableId), tableType);
-        if (tableRule.code == ResultEnum.SUCCESS.getCode()) {
-            dto = tableRule.data;
-        }
-        TableRuleParameterDTO parameter = new TableRuleParameterDTO();
-        parameter.type = tableType;
-        parameter.tableId = tableId;
-        ResultEntity<TableRuleInfoDTO> result = new ResultEntity<>();
-        TableRuleInfoDTO data = result.data;
-        //数仓建模
-        if (dataType == DataTypeEnum.DATA_MODEL.getValue()) {
-            result = dataModelClient.setTableRule(parameter);
-        }
-        //数据接入
-        else if (dataType == DataTypeEnum.DATA_INPUT.getValue()) {
-            result = dataAccessClient.buildTableRuleInfo(parameter);
-        }
-        if (result.code == ResultEnum.SUCCESS.getCode()) {
-            if (StringUtils.isEmpty(dto.name)) {
-                dto = result.data;
-            } else {
-                dto.businessName = result.data.businessName;
-                dto.dataResponsiblePerson = result.data.dataResponsiblePerson;
-                if (!CollectionUtils.isEmpty(dto.fieldRules)) {
-                    dto.fieldRules.stream().map(e -> {
-                        e.businessName = data.businessName;
-                        e.dataResponsiblePerson = data.dataResponsiblePerson;
-                        return e;
-                    });
-                }
-            }
-        }
-        return dto;
-    }
 
-    public ResultEnum setBusinessMetaDataAttributeValue(String guid,
-                                                        TableRuleInfoDTO tableRuleInfoDTO,
-                                                        List<BusinessMetadataConfigPO> poList) {
 
-        //分组获取业务元数据类别
-        Map<String, List<BusinessMetadataConfigPO>> collect = poList.stream()
-                .collect(Collectors.groupingBy(BusinessMetadataConfigPO::getBusinessMetadataName));
-        if (CollectionUtils.isEmpty(collect)) {
-            throw new FkException(ResultEnum.DATA_SUBMIT_ERROR);
-        }
-
-        Integer metadataEntityId = Integer.parseInt(guid);
-        List<MetadataBusinessMetadataMapDTO> list = new ArrayList<>();
-
-        for (String businessMetaDataName : collect.keySet()) {
-            List<BusinessMetadataConfigPO> list1 = collect.get(businessMetaDataName);
-            switch (businessMetaDataName) {
-                case "QualityRules":
-                    list.addAll(metadataBusinessMetadataMap.setQualityRules(list1, metadataEntityId, tableRuleInfoDTO));
-                    break;
-                case "BusinessDefinition":
-                    list.addAll(metadataBusinessMetadataMap.setBusinessDefinition(list1, metadataEntityId, tableRuleInfoDTO));
-                    break;
-                case "BusinessRules":
-                    list.addAll(metadataBusinessMetadataMap.setBusinessRules(list1, metadataEntityId, tableRuleInfoDTO));
-                    break;
-                case "ManagementRules":
-                    list.addAll(metadataBusinessMetadataMap.setManagementRules(list1, metadataEntityId, tableRuleInfoDTO));
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        EditMetadataBusinessMetadataMapDTO data = new EditMetadataBusinessMetadataMapDTO();
-        data.metadataEntityId = Integer.parseInt(guid);
-        data.list = list;
-
-        return metadataBusinessMetadataMap.operationMetadataBusinessMetadataMap(data);
-    }
 
 
 }

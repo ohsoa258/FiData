@@ -1,6 +1,7 @@
 package com.fisk.dataservice.dto.dataanalysisview;
 
 import com.fisk.common.service.dbMetaData.dto.TableNameDTO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -16,18 +17,22 @@ import java.util.List;
 @Data
 public class DataSourceViewDTO {
 
+    @ApiModelProperty(value = "id")
     public long id;
     /**
      * 数据源
      */
+    @ApiModelProperty(value = "数据源")
     public String driveType;
     /**
      * 应用名称
      */
+    @ApiModelProperty(value = "应用名称")
     public String appName;
     /**
      * 表
      */
+    @ApiModelProperty(value = "表列表")
     public List<TableNameDTO> tableDtoList;
 
     /**

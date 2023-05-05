@@ -2,6 +2,8 @@ package com.fisk.common.service.mdmBEOperate;
 
 import com.fisk.common.service.mdmBEOperate.impl.BuildRandomCode;
 
+import java.util.List;
+
 /**
  * @author JianWenYang
  */

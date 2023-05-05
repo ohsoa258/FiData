@@ -15,12 +15,15 @@ import java.util.List;
  **/
 public class OverlayCodePreviewAccessDTO {
 
+    @ApiModelProperty(value = "发布模式字段DTO列表")
     public List<TableFieldsDTO> modelPublishFieldDTOList;
 
+    @ApiModelProperty(value = "同步模式")
     public Integer syncMode;
 
+    @ApiModelProperty(value = "id")
     public Integer id;
-
+    @ApiModelProperty(value = "表业务")
     public TableBusinessDTO tableBusiness;
 
 }

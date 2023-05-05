@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.dto.category;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -8,6 +9,7 @@ import lombok.Data;
 @Data
 public class ChildrenCategoryDetailsDTO extends CategoryDetailsDTO {
 
+    @ApiModelProperty(value = "父类别指南")
     public String parentCategoryGuid;
 
 }

@@ -27,7 +27,15 @@ public enum DataSourceTypeEnum implements BaseEnum {
 
     ORACLE(6, "ORACLE", "oracle.jdbc.driver.OracleDriver", "opt/nifi/nifi-current/jdbcdriver/ojdbc7.jar"),
 
-    REDSHIFT(7, "REDSHIFT", "", "");
+    REDSHIFT(7, "REDSHIFT", "", ""),
+
+    RESTFULAPI(8,"RESTFULAPI","",""),
+
+    API(9,"API","",""),
+
+    FTP(10,"FTP","",""),
+
+    SFTP(11,"SFTP","","");
 
     DataSourceTypeEnum(int value, String name, String driverName, String driverLocation) {
         this.driverName = driverName;

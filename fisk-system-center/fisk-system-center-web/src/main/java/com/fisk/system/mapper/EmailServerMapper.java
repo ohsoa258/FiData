@@ -29,4 +29,6 @@ public interface EmailServerMapper extends FKBaseMapper<EmailServerPO> {
     List<EmailServerVO> getAll();
 
     EmailServerVO getById(@Param("id") int id);
+
+    EmailServerVO getDefaultEmailServer();
 }

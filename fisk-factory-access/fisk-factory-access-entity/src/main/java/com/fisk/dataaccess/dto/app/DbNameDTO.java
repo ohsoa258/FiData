@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.dto.app;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -11,6 +12,9 @@ import lombok.Data;
 @Data
 public class DbNameDTO {
 
+    @ApiModelProperty(value = "id")
     private long id;
+
+    @ApiModelProperty(value = "数据库名称")
     private String dbName;
 }

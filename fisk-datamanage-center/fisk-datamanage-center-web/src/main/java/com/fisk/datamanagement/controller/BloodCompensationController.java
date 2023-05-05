@@ -8,11 +8,14 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.synchronization.pushmetadata.IBloodCompensation;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
@@ -30,15 +33,14 @@ public class BloodCompensationController {
 
     @Resource
     IBloodCompensation service;
-    @Resource
-    DataAccessClient dataAccessClient;
 
     @ApiOperation("同步元数据")
     @GetMapping("/systemSynchronousBlood")
-    public ResultEntity<Object> systemSynchronousBlood() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.systemSynchronousBlood());
+    public ResultEntity<Object> systemSynchronousBlood(
+            @ApiParam(value = "执行账号", required = true) String currUserName,
+            @ApiParam(value = "是否要初始化，1代表需要初始化，0代表不需要初始化", required = true)  int initialization)   {
+        boolean  initia= initialization >= 1;
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.systemSynchronousBlood(currUserName, initia));
     }
-
-
 
 }

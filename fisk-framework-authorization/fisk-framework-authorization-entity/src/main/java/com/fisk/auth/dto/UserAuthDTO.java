@@ -15,7 +15,11 @@ public class UserAuthDTO {
 
     @ApiModelProperty(value = "临时id,用于其他服务获取token")
     private Long temporaryId;
+
+    @ApiModelProperty(value = "用户账户")
     private String userAccount;
+
+    @ApiModelProperty(value = "密码")
     private String password;
 
 }

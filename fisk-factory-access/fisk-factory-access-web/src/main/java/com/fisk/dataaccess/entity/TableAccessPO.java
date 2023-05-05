@@ -8,13 +8,15 @@ import com.fisk.dataaccess.enums.ScanStartupModeEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.io.Serializable;
+
 /**
  * @author Lock
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("tb_table_access")
-public class TableAccessPO extends BasePO {
+public class TableAccessPO extends BasePO implements Serializable {
 
     @TableId(value = "id", type = IdType.AUTO)
     public long id;

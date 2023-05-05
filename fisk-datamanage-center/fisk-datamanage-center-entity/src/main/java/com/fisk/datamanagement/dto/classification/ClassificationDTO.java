@@ -10,7 +10,11 @@ import java.util.List;
  */
 @Data
 public class ClassificationDTO {
+
+    @ApiModelProperty(value = "类对象guid")
     public String entityGuid;
+
+    @ApiModelProperty(value = "类型名称")
     public String typeName;
     @ApiModelProperty(value = "是否传播,默认true")
     public boolean propagate;

@@ -142,7 +142,7 @@ public class DefiningCommonVariablesImpl implements ApplicationRunner {
         try{
             result = userClient.getAll();
         }catch (Exception e){
-            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED,e.getMessage());
         }
 
         // 添加数据源变量

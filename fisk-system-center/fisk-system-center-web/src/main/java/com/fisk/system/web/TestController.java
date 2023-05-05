@@ -1,6 +1,8 @@
 package com.fisk.system.web;
 
 import com.alibaba.fastjson.JSONObject;
+import com.fisk.system.config.SwaggerConfig;
+import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -19,6 +21,7 @@ import java.io.IOException;
 /**
  * @author Lock
  */
+@Api(tags = {SwaggerConfig.Tset})
 @RestController
 @RequestMapping("/test")
 @Slf4j

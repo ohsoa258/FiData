@@ -1,5 +1,6 @@
 package com.fisk.datamodel.dto.syncmode;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -7,14 +8,17 @@ import lombok.Data;
  */
 @Data
 public class SyncModeDTO {
+    @ApiModelProperty(value = "id")
     public long id;
     /**
      * 同步表id
      */
+    @ApiModelProperty(value = "同步表Id")
     public int syncTableId;
     /**
      * 表类型:0维度表 1事实表
      */
+    @ApiModelProperty(value = "表类型:0维度表 1事实表")
     public int tableType;
     /**
      * 同步方式；1：全量、2：追加、3：业务时间覆盖、4：自定义覆盖；
@@ -25,21 +29,25 @@ public class SyncModeDTO {
      * <p>
      * 业务时间覆盖：根据配置的业务时间字段进行业务时间覆盖：
      */
+    @ApiModelProperty(value = "同步方式 1：全量、2：追加、3：业务时间覆盖、4：自定义覆盖；")
     public int syncMode;
 
     /**
      * 单个数据流文件加载最大数据行
      */
+    @ApiModelProperty(value = "单个数据流文件加载最大数据行")
     public Integer maxRowsPerFlowFile;
 
     /**
      * 单词从结果集中提取的最大数据行
      */
+    @ApiModelProperty(value = "单词从结果集中提取的最大数据行")
     public Integer fetchSize;
 
     /**
      * 表同步业务配置信息
      */
+    @ApiModelProperty(value = "表同步业务配置信息")
     public SyncTableBusinessDTO syncTableBusinessDTO;
 
 }

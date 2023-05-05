@@ -7,6 +7,7 @@ import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.v3.SourceColumnMetaQueryDTO;
 import com.fisk.dataaccess.service.IAppDataSource;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
@@ -51,6 +52,18 @@ public class DataSourceController {
     @GetMapping("/getDataSourcesByAppId/{appId}")
     public ResultEntity<Object> getDataSourcesByAppId(@PathVariable Integer appId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataSourcesByAppId(appId));
+    }
+
+    @ApiOperation(value = "根据数据源类型获取平台配置模块的外部数据源")
+    @GetMapping("/getOutSources/{driverType}")
+    public ResultEntity<Object> getOutSourcesFromSystemConfigByTypeId(@PathVariable("driverType") String driverType) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getOutDataSourcesByTypeId(driverType));
+    }
+
+    @ApiOperation(value = "根据数据源id获取单个平台配置模块的外部数据源详情")
+    @GetMapping("/getOutSource/{driverId}")
+    public ResultEntity<DataSourceDTO> getOutSourceFromSystemConfigById(@PathVariable("driverId") Integer id) {
+        return service.getOutSourceById(id);
     }
 
 }

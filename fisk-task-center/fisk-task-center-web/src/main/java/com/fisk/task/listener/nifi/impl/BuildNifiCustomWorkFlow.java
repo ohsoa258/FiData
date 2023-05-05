@@ -1,6 +1,7 @@
 package com.fisk.task.listener.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.davis.client.ApiException;
 import com.davis.client.model.*;
@@ -553,8 +554,13 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     String queryApiSql = "";
                     String scriptTaskIds = "";
                     String sftpFileCopyTaskIds = "";
+                    String powerBiDataSetRefreshTaskIds = "";
                     List<PipelApiDispatchDTO> pipelApiDispatchs = new ArrayList<>();
                     PipelApiDispatchDTO pipelApiDispatch = new PipelApiDispatchDTO();
+                    QueryWrapper<TableTopicPO> wrapper = new QueryWrapper<>();
+                    wrapper.lambda().eq(TableTopicPO::getTopicType, TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue())
+                            .eq(TableTopicPO::getTopicName, TopicName);
+                    tableTopic.remove(wrapper);
                     for (BuildNifiCustomWorkFlowDTO buildNifiCustomWorkFlowDTO : outputDucts) {
                         if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.CUSTOMWORKCUSTOMIZESCRIPT)) {
                             scriptTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId + ",";
@@ -576,6 +582,17 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                             topicDTO.topicType = TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue();
                             tableTopic.updateTableTopicByComponentId(topicDTO);
                             sftpFileCopyTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId + ",";
+                            commonTask = true;
+                        } else if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.POWERBIDATASETREFRESHTASK)) {
+                            //power刷新任务id
+                            TableTopicDTO topicDTO = new TableTopicDTO();
+                            topicDTO.tableType = OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue();
+                            topicDTO.tableId = 0;
+                            topicDTO.componentId = Math.toIntExact(buildNifiCustomWorkFlowDTO.workflowDetailId);
+                            topicDTO.topicName = TopicName;
+                            topicDTO.topicType = TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue();
+                            tableTopic.updateTableTopicByComponentId(topicDTO);
+                            powerBiDataSetRefreshTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId + ",";
                             commonTask = true;
                         } else if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.DATAACCESS_API)) {
                             fapi = true;
@@ -616,6 +633,9 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     }
                     if (StringUtils.isNotEmpty(sftpFileCopyTaskIds)) {
                         querySqlDto.querySql += " ,'" + sftpFileCopyTaskIds.substring(0, sftpFileCopyTaskIds.length() - 1) + "' as sftpFileCopyTaskIds ";
+                    }
+                    if (StringUtils.isNotEmpty(powerBiDataSetRefreshTaskIds)) {
+                        querySqlDto.querySql += " ,'" + powerBiDataSetRefreshTaskIds.substring(0, powerBiDataSetRefreshTaskIds.length() - 1) + "' as powerBiDataSetRefreshTaskIds ";
                     }
                     querySqlDto.querySql += " from tb_etl_Incremental limit 1";
 
@@ -688,6 +708,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                         Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSCHEDULINGCOMPONENT) ||
                         Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.DATAACCESS_API) ||
                         Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKCUSTOMIZESCRIPT) ||
+                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.POWERBIDATASETREFRESHTASK) ||
                         Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.SFTPFILECOPYTASK)) {
                     continue;
                 }

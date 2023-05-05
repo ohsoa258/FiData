@@ -287,6 +287,7 @@ public class PhysicalTableController {
 
 
     @GetMapping("/getAtlasBuildTableAndColumn")
+    @ApiOperation(value = "获取Atlas构建表和列")
     public ResultEntity<AtlasEntityDbTableColumnDTO> getAtlasBuildTableAndColumn(
             @RequestParam("id") long id, @RequestParam("app_id") long appid) {
 
@@ -294,6 +295,7 @@ public class PhysicalTableController {
     }
 
     @GetMapping("/getBuildPhysicalTableDTO")
+    @ApiOperation(value = "获取构建物理表DTO")
     public ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTO(
             @RequestParam("table_id") long tableId, @RequestParam("app_id") long appId) {
 
@@ -302,6 +304,7 @@ public class PhysicalTableController {
 
 
     @GetMapping("/getAtlasWriteBackDataDTO")
+    @ApiOperation(value = "获取地图集写回数据DTO")
     public ResultEntity<AtlasWriteBackDataDTO> getAtlasWriteBackDataDTO(
             @RequestParam("app_id") long appid,
             @RequestParam("id") long id) {
@@ -310,12 +313,14 @@ public class PhysicalTableController {
     }
 
     @PostMapping("/addAtlasTableIdAndDorisSql")
+    @ApiOperation(value = "添加Atlas表Id和Doris Sql")
     public ResultEntity<Object> addAtlasTableIdAndDorisSql(@RequestBody AtlasWriteBackDataDTO dto) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addAtlasTableIdAndDorisSql(dto));
     }
 
     @GetMapping("/dataAccessConfig")
+    @ApiOperation(value = "数据访问配置")
     public ResultEntity<DataAccessConfigDTO> dataAccessConfig(
             @RequestParam("id") long id, @RequestParam("app_id") long appid) {
 

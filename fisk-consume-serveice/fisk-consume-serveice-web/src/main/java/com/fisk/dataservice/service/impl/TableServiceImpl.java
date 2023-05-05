@@ -1,10 +1,12 @@
 package com.fisk.dataservice.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -12,10 +14,10 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
+import com.fisk.dataservice.dto.tablefields.TableFieldDTO;
 import com.fisk.dataservice.dto.tableservice.*;
 import com.fisk.dataservice.entity.AppServiceConfigPO;
 import com.fisk.dataservice.entity.TableServicePO;
-import com.fisk.dataservice.entity.TableSyncModePO;
 import com.fisk.dataservice.enums.ApiStateTypeEnum;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
 import com.fisk.dataservice.map.DataSourceConMap;
@@ -26,20 +28,27 @@ import com.fisk.dataservice.service.ITableService;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 import com.fisk.task.enums.OlapTableEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author JianWenYang
  */
 @Service
+@Slf4j
 public class TableServiceImpl
         extends ServiceImpl<TableServiceMapper, TableServicePO>
         implements ITableService {
@@ -49,11 +58,13 @@ public class TableServiceImpl
 
     @Resource
     TableFieldImpl tableField;
+
     @Resource
     TableSyncModeImpl tableSyncMode;
 
     @Resource
     UserClient client;
+
     @Resource
     private UserHelper userHelper;
 
@@ -120,7 +131,7 @@ public class TableServiceImpl
         updateTableService(dto.tableService);
 
         //表字段
-        tableField.tableServiceSaveConfig((int) dto.tableService.id, dto.tableFieldList);
+        tableField.tableServiceSaveConfig((int) dto.tableService.id, 0, dto.tableFieldList);
 
         //覆盖方式
         dto.tableSyncMode.typeTableId = (int) dto.tableService.id;
@@ -146,7 +157,7 @@ public class TableServiceImpl
         }
         TableServiceSaveDTO data = new TableServiceSaveDTO();
         data.tableService = TableServiceMap.INSTANCES.poToDto(po);
-        data.tableFieldList = tableField.getTableServiceField(id);
+        data.tableFieldList = tableField.getTableServiceField(id, 0);
         data.tableSyncMode = tableSyncMode.getTableServiceSyncMode(id);
         return data;
     }
@@ -163,7 +174,7 @@ public class TableServiceImpl
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
-        tableField.delTableServiceField((int) id);
+        tableField.delTableServiceField((int) id, 0);
 
         tableSyncMode.delTableServiceSyncMode(id, AppServiceTypeEnum.TABLE.getValue());
 
@@ -223,6 +234,77 @@ public class TableServiceImpl
         TableServiceSaveDTO data = getTableServiceById(id);
 
         return buildParameter(data);
+    }
+
+    @Override
+    public ResultEnum addTableServiceField(TableFieldDTO dto) {
+        if (dto == null) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
+        List<TableFieldDTO> dtoList = new ArrayList<>();
+        dtoList.add(dto);
+        return tableField.addTableServiceField(0, dtoList);
+    }
+
+    @Override
+    public ResultEnum editTableServiceField(TableFieldDTO dto) {
+        if (dto == null) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
+        List<TableFieldDTO> dtoList = new ArrayList<>();
+        dtoList.add(dto);
+        return tableField.tableServiceSaveConfig(0, dto.getId(), dtoList);
+    }
+
+    @Override
+    public ResultEnum deleteTableServiceField(long tableFieldId) {
+        return tableField.delTableServiceField(0, tableFieldId);
+    }
+
+    @Override
+    public ResultEnum editTableServiceSync(long tableId) {
+        TableServicePO tableServicePO = mapper.selectById(tableId);
+        //判断表状态是否已发布
+        if (tableServicePO.getPublish() != 1) {
+            log.info("手动同步失败，原因：表未发布");
+            return ResultEnum.TABLE_NOT_PUBLISHED;
+        }
+        //获取远程调用接口中需要的参数KafkaReceiveDTO
+        KafkaReceiveDTO kafkaReceiveDTO = getKafkaReceive(tableId);
+        log.info(JSON.toJSONString(kafkaReceiveDTO));
+
+        //参数配置完毕，远程调用接口，发送参数，执行同步
+        ResultEntity<Object> resultEntity = publishTaskClient.universalPublish(kafkaReceiveDTO);
+        if (resultEntity.getCode() != ResultEnum.SUCCESS.getCode()){
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 用于远程调用方法的参数，↑
+     *
+     * @return
+     */
+    public static KafkaReceiveDTO getKafkaReceive(Long tableId) {
+        //拼接所需的topic
+        String topic = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.DATASERVICES.getValue() + ".0." + tableId;
+        //获取当前时间并格式化
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String dateTime = formatter.format(LocalDateTime.now());
+        //剔除uuid生成字符串里面的"-"符号
+        String pipeTaskTraceId = UUID.randomUUID().toString().replace("-", "");
+        String fidata_batch_code = UUID.randomUUID().toString().replace("-", "");
+        String pipelStageTraceId = UUID.randomUUID().toString().replace("-", "");
+        return KafkaReceiveDTO.builder()
+                .topic(topic)
+                .start_time(dateTime)
+                .pipelTaskTraceId(pipeTaskTraceId)
+                .fidata_batch_code(fidata_batch_code)
+                .pipelStageTraceId(pipelStageTraceId)
+                .ifTaskStart(true)
+                .topicType(1)
+                .build();
     }
 
     /**

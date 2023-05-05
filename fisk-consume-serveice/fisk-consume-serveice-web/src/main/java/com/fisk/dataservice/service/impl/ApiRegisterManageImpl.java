@@ -14,6 +14,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.Dto.SqlParmDto;
 import com.fisk.common.core.utils.Dto.SqlWhereDto;
+import com.fisk.common.core.utils.RegexUtils;
 import com.fisk.common.core.utils.SqlParmUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.dataservice.BuildDataServiceHelper;
@@ -459,6 +460,11 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
          * 2、修改参数
          * 3、新增参数
          * */
+        if (CollectionUtils.isNotEmpty(dto.parmDTO)){
+            dto.parmDTO.forEach(t->{
+                t.setApiId(apiId);
+            });
+        }
         QueryWrapper<ParmConfigPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(ParmConfigPO::getApiId, apiId).eq(ParmConfigPO::getDelFlag, 1);
         List<ParmConfigPO> parmConfigPOS = apiParmMapper.selectList(queryWrapper);
@@ -558,33 +564,77 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     @Override
     public ApiPreviewVO preview(ApiPreviewDTO dto) {
         ApiPreviewVO apiPreviewVO = new ApiPreviewVO();
-        String sql = dto.apiDTO.getCreateSql();
 
-        // 查询数据源信息
-        DataSourceConVO dataSourceConVO = dataSourceConManageImpl.getAllDataSource().stream().filter(t -> t.getId() == dto.apiDTO.getDatasourceId()).findFirst().orElse(null);
-        if (dataSourceConVO == null)
+        // 第一步：验证API配置完整
+        if (StringUtils.isEmpty(dto.getApiDTO().getCreateSql())) {
             return apiPreviewVO;
+        }
+//        if (StringUtils.isEmpty(dto.getApiDTO().getCreateCountSql())) {
+//            dto.getApiDTO().setCreateCountSql(dto.getApiDTO().getCreateSql());
+//        }
 
-        // 第一步：拼接过滤条件
-        if (dto.apiDTO.getApiType() == ApiTypeEnum.SQL.getValue()) {
-            sql = String.format("SELECT %s FROM %s WHERE 1=1 ", sql, dto.apiDTO.getTableName());
-            if (CollectionUtils.isNotEmpty(dto.whereDTO)) {
-                List<SqlWhereDto> sqlWhereList = ApiFilterConditionMap.INSTANCES.listDtoToSqlWhereDto(dto.whereDTO);
-                String s = SqlParmUtils.SqlWhere(sqlWhereList);
-                if (s != null && s.length() > 0)
-                    sql += s;
+        // 第二步：获取请求参数中的分页信息
+        Integer current = null;
+        Integer size = null;
+        ParmConfigDTO paramConfigDTO_page = null;
+        ParmConfigDTO paramConfigDTO_size = null;
+        if (CollectionUtils.isNotEmpty(dto.getParmDTO())) {
+            paramConfigDTO_page = dto.getParmDTO().stream().filter(t -> t.getParmName().equals("current")).findFirst().orElse(null);
+            if (paramConfigDTO_page != null) {
+                current = RegexUtils.isNumeric(paramConfigDTO_page.getParmValue());
+            }
+            paramConfigDTO_size = dto.getParmDTO().stream().filter(t -> t.getParmName().equals("size")).findFirst().orElse(null);
+            if (paramConfigDTO_size != null) {
+                size = RegexUtils.isNumeric(paramConfigDTO_size.getParmValue());
             }
         }
+        if (current == null || current == 0 || size == null || size == 0) {
+            // 未设置分页参数，默认查询第一页，查询数字的最大值
+            current = 1;
+            size = Integer.MAX_VALUE;
+            //return ResultEntityBuild.buildData(ResultEnum.DS_DATA_PAGING_PARAMETERS_NOT_SET, responseVO);
+        }
+        log.info("数据服务【preview】分页参数【current】：" + current);
+        log.info("数据服务【preview】分页参数【size】：" + size);
 
-        // 第二步：拼接参数条件
-        if (CollectionUtils.isNotEmpty(dto.parmDTO)) {
-            List<SqlParmDto> sqlParamsDto = ApiParmMap.INSTANCES.listDtoToSqlParmDto(dto.parmDTO);
-            String s = SqlParmUtils.SqlParams(sqlParamsDto, sql, "@",dataSourceConVO.getConType());
-            if (s != null && s.length() > 0)
-                sql = s;
+        // 第三步：查询数据源信息
+        DataSourceConVO dataSourceConVO = dataSourceConManageImpl.getAllDataSource().stream().filter(t -> t.getId() == dto.apiDTO.getDatasourceId()).findFirst().orElse(null);
+        if (dataSourceConVO == null) {
+            return apiPreviewVO;
         }
 
-        // 第四步：如果是编辑，查询上次配置的字段信息，如果描述信息不为空，使用该描述。如果为空使用系统查询出来的描述信息
+        // 第四步：拼接过滤条件
+        String sql = "";
+        String countSql = "";
+        IBuildDataServiceSqlCommand dbCommand = BuildDataServiceHelper.getDBCommand(dataSourceConVO.getConType());
+        if (dto.getApiDTO().getApiType() == ApiTypeEnum.SQL.getValue()) {
+            // 移除请求参数中的分页条件
+            if (paramConfigDTO_page != null && paramConfigDTO_size != null) {
+                dto.getParmDTO().remove(paramConfigDTO_page);
+                dto.getParmDTO().remove(paramConfigDTO_size);
+            }
+            // 获取分页条件
+            String fields = dto.getApiDTO().getCreateSql();
+            String orderBy = fields.split(",")[0];
+            List<SqlParmDto> sqlParamsDto = ApiParmMap.INSTANCES.listDtoToSqlParmDto(dto.getParmDTO());
+            String sql_Where = SqlParmUtils.SqlParams(sqlParamsDto, "@");
+            if (StringUtils.isNotEmpty(sql_Where)) {
+                sql_Where = SqlParmUtils.SqlParams(sqlParamsDto, sql_Where, "@", dataSourceConVO.getConType());
+            }
+            // 获取分页sql语句
+            sql = dbCommand.buildPagingSql(dto.getApiDTO().getTableName(), fields, orderBy, current, size, sql_Where);
+            countSql = dbCommand.buildQueryCountSql(dto.getApiDTO().getTableName(), sql_Where);
+            log.info("数据服务【preview】普通模式SQL参数【sql】：" + sql);
+            log.info("数据服务【preview】普通模式SQL参数【countSql】：" + countSql);
+        } else if (dto.getApiDTO().getApiType() == ApiTypeEnum.CUSTOM_SQL.getValue()) {
+            List<SqlParmDto> sqlParamsDto = ApiParmMap.INSTANCES.listDtoToSqlParmDto(dto.getParmDTO());
+            sql = SqlParmUtils.SqlParams(sqlParamsDto, dto.getApiDTO().getCreateSql(), "@", dataSourceConVO.getConType());
+            countSql = SqlParmUtils.SqlParams(sqlParamsDto, dto.getApiDTO().getCreateCountSql(), "@", dataSourceConVO.getConType());
+            log.info("数据服务【preview】自定义模式SQL参数【sql】：" + sql);
+            log.info("数据服务【preview】自定义模式SQL参数【countSql】：" + countSql);
+        }
+
+        // 第五步：如果是编辑，查询上次配置的字段信息，如果描述信息不为空，使用该描述。如果为空使用系统查询出来的描述信息
         List<FieldConfigPO> fieldConfigPOS = null;
         if (dto.apiId != 0) {
             QueryWrapper<FieldConfigPO> fieldConfigPOQueryWrapper = new QueryWrapper<>();
@@ -594,13 +644,13 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             fieldConfigPOS = apiFieldMapper.selectList(fieldConfigPOQueryWrapper);
         }
 
+        // 第六步：判断数据源类型，加载数据库驱动，执行SQL
         Connection conn = null;
         Statement st = null;
         try {
-            IBuildDataServiceSqlCommand dbCommand = BuildDataServiceHelper.getDBCommand(dataSourceConVO.getConType());
             String conStr = dbCommand.buildSchemaConStr(dto.apiDTO.getTableFramework(), dataSourceConVO.getConStr());
-            log.info("【preview】连接字符串sql语句：" + conStr);
-            log.info("【preview】查询sql语句：" + sql);
+            log.info("数据服务【preview】连接字符串sql语句：" + conStr);
+
             conn = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), conStr, dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
             /*
                 以流的形式 TYPE_FORWARD_ONLY: 只可向前滚动查询 CONCUR_READ_ONLY: 指定不可以更新 ResultSet
@@ -611,12 +661,24 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                  */
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             // 查询10条
-            st.setFetchSize(10);
+            // st.setFetchSize(10);
             assert st != null;
             ResultSet rs = st.executeQuery(sql);
             //获取数据集
             apiPreviewVO = resultSetToJsonArray(conn, dbCommand, rs, dto, fieldConfigPOS);
             rs.close();
+            if (StringUtils.isNotEmpty(countSql))
+            {
+                ResultSet countRs = st.executeQuery(countSql);
+                int totalCount = 0;
+                if (countRs.next()) {
+                    Object count = countRs.getObject(1);
+                    if (count != null && RegexUtils.isNumeric(count) != null)
+                        totalCount = RegexUtils.isNumeric(count);
+                }
+                countRs.close();
+                apiPreviewVO.setTotalCount(totalCount);
+            }
         } catch (Exception e) {
             log.error("【preview】系统异常：" + e);
             throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR, e.getMessage());
@@ -715,6 +777,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         }
         data.fieldVO = fieldConfigVOS.stream().collect(Collectors.toList());
         data.dataArray = array;
+        array = null;
         return data;
     }
 

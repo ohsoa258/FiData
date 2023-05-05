@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
@@ -20,6 +21,8 @@ import com.fisk.dataaccess.map.AppDataSourceMap;
 import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.service.IAppDataSource;
 import com.fisk.dataaccess.utils.sql.*;
+import com.fisk.system.client.UserClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -32,6 +35,7 @@ import java.util.Objects;
  * @author Lock
  */
 @Service
+@Slf4j
 public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataSourcePO> implements IAppDataSource {
 
     @Resource
@@ -40,17 +44,22 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     RedisUtil redisUtil;
     @Resource
     ApiResultConfigImpl apiResultConfig;
+    @Resource
+    PgsqlUtils pgsqlUtils;
+
+    @Resource
+    private UserClient userClient;
 
     @Override
     public List<DataSourceDTO> getDataSourceMeta(long appId) {
 
         List<DataSourceDTO> dsList = mapper.getDataSourceListById(appId);
-        if (CollectionUtils.isEmpty(dsList)){
+        if (CollectionUtils.isEmpty(dsList)) {
             throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
         }
 
         List<DataSourceDTO> result = new ArrayList<>();
-        for (DataSourceDTO dataSource : dsList){
+        for (DataSourceDTO dataSource : dsList) {
             if ("ftp".equalsIgnoreCase(dataSource.driveType) || "RestfulAPI".equalsIgnoreCase(dataSource.driveType) || "api".equalsIgnoreCase(dataSource.driveType)) {
                 return null;
             }
@@ -107,7 +116,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 // 视图结构
                 dataSource.viewDtoList = sqlServerPlusUtils.loadViewDetails(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER));
             } else if (DataSourceTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(dataSource.driveType)) {
-                PgsqlUtils pgsqlUtils = new PgsqlUtils();
+
                 // 表结构
                 dataSource.tableDtoList = pgsqlUtils.getTableNameAndColumnsPlus(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL));
                 //视图结构
@@ -150,7 +159,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             Connection conn = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
             return sqlServerPlusUtils.getViewField(conn, dto.name);
         } else if (DataSourceTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(dataSource.driveType)) {
-            PgsqlUtils pgsqlUtils = new PgsqlUtils();
+
             Connection conn = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL);
             return dto.queryType == 1 ? pgsqlUtils.getTableColumnName(conn, dto.name) : null;
         }
@@ -205,6 +214,150 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         }
 
         return data;
+    }
+
+    @Override
+    public List<com.fisk.system.dto.datasource.DataSourceDTO> getOutDataSourcesByTypeId(String driverType) {
+        //远程调用接口，获取外部数据源信息
+        ResultEntity<List<com.fisk.system.dto.datasource.DataSourceDTO>> allExternalDataSource = userClient.getAllExternalDataSource();
+        //判断获取是否成功
+        if (allExternalDataSource.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+        //获取筛选前外部数据源集合
+        List<com.fisk.system.dto.datasource.DataSourceDTO> data = allExternalDataSource.getData();
+        //新建集合--预装载筛选后的外部数据源
+        List<com.fisk.system.dto.datasource.DataSourceDTO> dataSourceDTOS = new ArrayList<>();
+        //调用封装的方法
+        List<com.fisk.system.dto.datasource.DataSourceDTO> result = checkConType(data, dataSourceDTOS, driverType);
+        //判断筛选后的集合是否有内容
+        if (CollectionUtils.isEmpty(result)) {
+            log.info("平台配置的外部数据源中没有" + driverType + "类型的数据库！");
+        }
+        //数据库密码不显示    目前需要显示，因为数据接入在引用平台配置的外部数据源时，仍然需要测试连接这一动作，
+//        result.forEach(dataSourceDTO -> {
+//            dataSourceDTO.setConPassword("********");
+//        });
+
+//        //目前这个操作交由前端过滤  如果想要重用下述代码，将当前方法入参多入一个appId 当前应用id即可
+//        //不允许app重复选取同个数据源
+//        LambdaQueryWrapper<AppDataSourcePO> wrapper = new LambdaQueryWrapper<>();
+//        wrapper.eq(AppDataSourcePO::getAppId, appid);
+//        //获取到当前应用已经拥有的所有数据源
+//        List<AppDataSourcePO> appDataSourcePOS = list(wrapper);
+//        if (CollectionUtils.isEmpty(appDataSourcePOS)) {
+//            log.info("当前app下无数据源，可以继续选择");
+//        } else {
+//            log.info("当前app下已经有数据源，筛选ing.....");
+//            //新建集合预装载当前应用下的数据源id集合
+//            List<Integer> sourceIds = new ArrayList<>();
+//            //遍历当前应用下的数据源集合
+//            appDataSourcePOS.forEach(e -> {
+//                //将数据源id插入到我们预先准备的集合中
+//                sourceIds.add(e.systemDataSourceId);
+//            });
+//            //从筛选后的外部数据源集合中再次筛选，过滤掉当前应用已经拥有的数据源
+//            return result.stream().filter(e -> !sourceIds.contains(e.id)).collect(Collectors.toList());
+//        }
+        return result;
+    }
+
+    /**
+     * 方法封装：根据数据源类型筛选所需的外部数据源
+     *
+     * @param data           筛选前的外部数据源集合
+     * @param dataSourceDTOS 预装载筛选后的外部数据源
+     * @param driverType     数据源类型
+     * @return
+     */
+    public static List<com.fisk.system.dto.datasource.DataSourceDTO> checkConType(List<com.fisk.system.dto.datasource.DataSourceDTO> data,
+                                                                                  List<com.fisk.system.dto.datasource.DataSourceDTO> dataSourceDTOS,
+                                                                                  String driverType) {
+        if (driverType.equalsIgnoreCase(DataSourceTypeEnum.MYSQL.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 0 && dataSourceDTO.conPort != 0) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 1) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.FTP.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 10) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 6) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.RestfulAPI.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 0 && dataSourceDTO.conPort == 0) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.API.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 9) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.POSTGRESQL.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 4) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.SFTP.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 11) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
+        }
+        return dataSourceDTOS;
+    }
+
+    @Override
+    public ResultEntity<com.fisk.system.dto.datasource.DataSourceDTO> getOutSourceById(Integer id) {
+        ResultEntity<com.fisk.system.dto.datasource.DataSourceDTO> data = userClient.getById(id);
+        //数据库密码不显示
+        com.fisk.system.dto.datasource.DataSourceDTO dto = data.getData();
+        dto.setConPassword("********");
+        if (data.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        return data;
+    }
+
+    /**
+     * 获取指定app下的非重复驱动类型
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    public List<AppDataSourcePO> getDataSourceDrivesTypeByAppId(Long id) {
+//        代码层面去重
+//        LambdaQueryWrapper<AppDataSourcePO> wrapper = new LambdaQueryWrapper<>();
+//        wrapper.eq(AppDataSourcePO::getAppId, id);
+//        List<AppDataSourcePO> list = list(wrapper);
+//        // 根据 driveType驱动类型 进行去重
+//        return list.stream()
+//                .collect(Collectors.collectingAndThen(
+//                        Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(AppDataSourcePO::getDriveType))),
+//                        ArrayList::new));
+        //sql去重查询
+        QueryWrapper<AppDataSourcePO> wrapper = new QueryWrapper<>();
+        wrapper.select("Distinct drive_type").lambda().eq(AppDataSourcePO::getAppId, id);
+        return list(wrapper);
     }
 
     public AppDataSourceDTO getDataSourceByAppId(long appId) {

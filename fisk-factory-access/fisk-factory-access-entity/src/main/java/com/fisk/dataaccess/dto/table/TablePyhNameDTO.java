@@ -32,6 +32,7 @@ public class TablePyhNameDTO extends BaseDTO {
     /**
      * 表字段
      */
+    @ApiModelProperty(value = "表字段")
     public List<TableStructureDTO> fields;
 
     public TablePyhNameDTO(BaseEntity entity) {

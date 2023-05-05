@@ -3,7 +3,7 @@ package com.fisk.mdm.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
-import com.fisk.mdm.enums.RuleTypeEnum;
+import com.fisk.common.service.mdmBEOperate.dto.RuleTypeEnum;
 import lombok.Data;
 
 /**

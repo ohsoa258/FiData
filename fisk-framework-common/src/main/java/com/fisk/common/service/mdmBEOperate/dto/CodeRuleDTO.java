@@ -1,6 +1,6 @@
-package com.fisk.mdm.dto.codeRule;
+package com.fisk.common.service.mdmBEOperate.dto;
 
-import com.fisk.mdm.enums.RuleTypeEnum;
+
 import lombok.Data;
 
 /**

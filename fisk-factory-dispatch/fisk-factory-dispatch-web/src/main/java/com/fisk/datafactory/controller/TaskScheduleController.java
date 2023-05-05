@@ -10,6 +10,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
+import com.fisk.datafactory.config.SwaggerConfig;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datafactory.dto.taskschedule.TaskCronDTO;
 import com.fisk.datafactory.dto.taskschedule.TaskScheduleDTO;
@@ -17,6 +18,7 @@ import com.fisk.datafactory.service.ITaskSchedule;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.enums.OlapTableEnum;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.util.Objects;
 
+@Api(tags = {SwaggerConfig.TASK_SCHEDULE})
 @RestController
 @RequestMapping("/taskSchedule")
 @Slf4j

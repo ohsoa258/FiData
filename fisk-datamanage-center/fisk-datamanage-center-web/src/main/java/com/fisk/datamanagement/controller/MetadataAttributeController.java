@@ -2,8 +2,10 @@ package com.fisk.datamanagement.controller;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.metadataattribute.MetadataAttributeDTO;
 import com.fisk.datamanagement.service.IMetadataAttribute;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +19,7 @@ import java.util.List;
 /**
  * @author JianWenYang
  */
+@Api(tags = {SwaggerConfig.MetadataAttribute})
 @RestController
 @RequestMapping("/MetadataAttribute")
 public class MetadataAttributeController {

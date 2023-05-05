@@ -58,9 +58,9 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                 sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
             } else if (l.fieldType.contains("TIMESTAMP") || StringUtils.equals(l.fieldType.toUpperCase(), "DATETIME")) {
                 sqlFileds.append("[" + l.fieldName + "] datetime ");
-            } else if(l.fieldType.contains("BIT")){
+            } else if (l.fieldType.contains("BIT")) {
                 sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + " ");
-            }else{
+            } else {
                 sqlFileds.append("[" + l.fieldName + "] " + l.fieldType.toLowerCase() + "(" + l.fieldLength + ") ");
             }
             // 修改stg表,字段类型
@@ -244,7 +244,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             }
         }
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS) || Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
-            sql = sql.replaceFirst("\\)", "");
+            sql = sql.substring(0,sql.length() - 1);
         }
         log.info("函数语句:" + sql);
         return sql;
@@ -314,6 +314,15 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         return sql;
     }
 
+    @Override
+    public void fieldFormatModification(DataAccessConfigDTO dto) {
+        log.info("sqlserver字段暂且不用处理");
+    }
+
+    @Override
+    public String getEsqlAutoCommit() {
+        return "true";
+    }
 
     @Override
     public List<String> getStgAndTableName(String tableName) {
@@ -360,7 +369,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
 
         });
 
-        String sql1 = "CREATE TABLE " + modelPublishTableDTO.tableName + " ( " + tablePk + " BIGINT, ";
+        String sql1 = "CREATE TABLE " + modelPublishTableDTO.tableName + " ( " + tablePk + " BIGINT IDENTITY(1,1) NOT NULL, ";
         //String associatedKey = associatedConditions(fieldList);
         String associatedKey = "";
         String sql2 = sqlFileds.toString() + associatedKey;

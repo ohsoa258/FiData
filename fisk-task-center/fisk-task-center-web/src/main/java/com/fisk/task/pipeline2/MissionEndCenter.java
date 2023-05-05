@@ -103,14 +103,16 @@ public class MissionEndCenter {
                     String pipelineId = split[3];
                     String pipelJobTraceId = kafkaReceive.pipelJobTraceId;
                     if (!Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue()) &&
-                            !Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue())
+                            !Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue()) &&
+                            !Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue())
                     ) {
                         //没有表id就把任务id扔进去
                         tableId = split[6];
                     }
                     NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, Integer.parseInt(split[4]), null, Integer.parseInt(StringUtils.isEmpty(tableId) ? "0" : tableId));
                     if (Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue()) ||
-                            Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue())
+                            Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue()) ||
+                            Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue())
                     ) {
                         //没有表id就把任务id扔进去
                         nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(split[6]);
@@ -140,7 +142,7 @@ public class MissionEndCenter {
                         log.info(itselfPort.id + "拿打印条数89" + JSON.toJSONString(pipelTask));
                         Object endTime = pipelTask.get(DispatchLogEnum.taskend.getName());
                         Object count = pipelTask.get(DispatchLogEnum.taskcount.getName());
-                        taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " - 同步条数 : " + (kafkaReceive.numbers == 0 ? (Objects.isNull(count) ? 0 : count) : kafkaReceive.numbers));
+                        taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " - 同步条数 : " + (Objects.nonNull(kafkaReceive.numbers) ? (Objects.isNull(count) ? 0 : count) : kafkaReceive.numbers));
                     }
                     iPipelTaskLog.savePipelTaskLog(pipelTraceId, pipelJobTraceId, nifiPortHierarchy.taskTraceId, taskMap, String.valueOf(nifiPortHierarchy.id), itselfPort.tableId, Integer.parseInt(split[4]));
                     // 先检查本级状态,判断是否应该记本级所在job的结束,或者管道结束

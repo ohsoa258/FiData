@@ -16,10 +16,7 @@ import com.fisk.task.listener.doris.BuildDorisTaskListener;
 import com.fisk.task.listener.governance.BuildGovernanceReportListener;
 import com.fisk.task.listener.mdm.BuildModelListener;
 import com.fisk.task.listener.metadata.IMetaDataListener;
-import com.fisk.task.listener.nifi.IExecScriptListener;
-import com.fisk.task.listener.nifi.INifiTaskListener;
-import com.fisk.task.listener.nifi.INonRealTimeListener;
-import com.fisk.task.listener.nifi.ITriggerScheduling;
+import com.fisk.task.listener.nifi.*;
 import com.fisk.task.listener.nifi.impl.BuildNifiCustomWorkFlow;
 import com.fisk.task.listener.nifi.impl.BuildSftpCopyListener;
 import com.fisk.task.listener.olap.BuildModelTaskListener;
@@ -119,6 +116,8 @@ public class KafkaConsumer {
     TaskPublish taskPublish;
     @Resource
     BuildSftpCopyListener buildSftpCopyListener;
+    @Resource
+    IpowerBiListener ipowerBiListener;
 
 
     @Bean
@@ -201,6 +200,7 @@ public class KafkaConsumer {
      */
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    @MQConsumerLog(notificationType = 3)
     public void taskPublish(String message, Acknowledgment ack) {
         taskPublish.taskPublish(message, ack);
     }
@@ -464,6 +464,21 @@ public class KafkaConsumer {
      * @return
      */
     @MQConsumerLog
+    @KafkaListener(topics = MqConstants.QueueConstants.MdmTopicConstants.BUILD_MDM_APPROVAL_DATA, containerFactory = "batchFactory",
+            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    public ResultEntity<Object> createBatchApproval(String dataInfo, Acknowledgment acke) {
+        return ResultEntityBuild.build(buildModelListener.buildBatchApproval(dataInfo, acke));
+    }
+
+
+    /**
+     * task.build.mdm.entity
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
+    @MQConsumerLog
     @KafkaListener(topics = MqConstants.QueueConstants.MdmTopicConstants.BUILD_MDM_ENTITY_DATA, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
     public ResultEntity<Object> buildEntityListener(String dataInfo, Acknowledgment acke) {
@@ -528,6 +543,18 @@ public class KafkaConsumer {
     public ResultEntity<Object> fieldDelete(String dataInfo, Acknowledgment ack) {
         log.info("进入删除字段");
         return ResultEntityBuild.build(metaDataListener.fieldDelete(dataInfo, ack));
+    }
+
+    /**
+     * powerbi刷新数据集
+     * @param data
+     * @param acke
+     * @return
+     */
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_POWERBI_DATA_SET_REFRESH_FLOW, containerFactory = "batchFactory",
+            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    public ResultEntity<Object> powerBiTask(String data, Acknowledgment acke) {
+        return ResultEntityBuild.build(ipowerBiListener.powerBiTask(data, acke));
     }
 
 

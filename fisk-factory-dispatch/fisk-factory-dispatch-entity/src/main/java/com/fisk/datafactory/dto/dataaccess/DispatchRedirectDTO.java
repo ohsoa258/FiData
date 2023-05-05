@@ -2,6 +2,7 @@ package com.fisk.datafactory.dto.dataaccess;
 
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -18,10 +19,12 @@ public class DispatchRedirectDTO {
     /**
      * 管道
      */
+    @ApiModelProperty(value = "管道")
     private NifiCustomWorkflowDTO pipeDto;
 
     /**
      * 管道下的组件
      */
+    @ApiModelProperty(value = "管道下的组件")
     private List<NifiCustomWorkflowDetailDTO> componentList;
 }

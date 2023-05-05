@@ -1,6 +1,6 @@
 package com.fisk.mdm.map;
 
-import com.fisk.mdm.dto.codeRule.CodeRuleDTO;
+import com.fisk.common.service.mdmBEOperate.dto.CodeRuleDTO;
 import com.fisk.mdm.dto.codeRule.CodeRuleGroupDTO;
 import com.fisk.mdm.dto.codeRule.CodeRuleGroupUpdateDTO;
 import com.fisk.mdm.entity.CodeRuleGroupPO;

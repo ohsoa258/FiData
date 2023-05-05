@@ -77,10 +77,10 @@ public class BuildPgTableImpl implements IbuildTable {
         String stg_sql1 = "";
         String stg_sql2 = "";
         if (buildPhysicalTableDTO.whetherSchema) {
-            stg_sql1 = sql.toString().replace("fi_tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName);
-            stg_sql2 = stgSql.toString().replace("fi_tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName);
-            stg_sql2 = "DROP TABLE IF EXISTS " + "stg_" + buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName + ";" + stg_sql2 +
-                    "create index " + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "enableflagsy on stg_" + buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName + " (fi_enableflag);";
+            stg_sql1 = sql.toString().replace("fi_tableName", buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName);
+            stg_sql2 = stgSql.toString().replace("fi_tableName", buildPhysicalTableDTO.appAbbreviation + ".stg_" + buildPhysicalTableDTO.tableName);
+            stg_sql2 = "DROP TABLE IF EXISTS " + buildPhysicalTableDTO.appAbbreviation + ".stg_" + buildPhysicalTableDTO.tableName + ";" + stg_sql2 +
+                    "create index " + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "enableflagsy on " + buildPhysicalTableDTO.appAbbreviation + ".stg_" + buildPhysicalTableDTO.tableName + " (fi_enableflag);";
         } else {
             stg_sql1 = sql.toString().replace("fi_tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
             stg_sql2 = stgSql.toString().replace("fi_tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
@@ -125,7 +125,7 @@ public class BuildPgTableImpl implements IbuildTable {
             }
         }
         selectTable = selectTable.substring(0, selectTable.length() - 2) + " ) ";
-        return selectTable;
+        return selectTable.toLowerCase();
     }
 
 
@@ -241,7 +241,7 @@ public class BuildPgTableImpl implements IbuildTable {
             }
         }
         log.info("函数语句:" + sql);
-        return sql;
+        return sql.toLowerCase();
     }
 
     @Override
@@ -299,6 +299,28 @@ public class BuildPgTableImpl implements IbuildTable {
     public String getTotalSql(String sql, SynchronousTypeEnum synchronousTypeEnum) {
         //待定
         return sql;
+    }
+
+    @Override
+    public void fieldFormatModification(DataAccessConfigDTO data) {
+        data.businessKeyAppend = StringUtils.isNotEmpty(data.businessKeyAppend) ? data.businessKeyAppend.toLowerCase() : null;
+        if (data.processorConfig != null && StringUtils.isNotEmpty(data.processorConfig.targetTableName)) {
+            data.processorConfig.targetTableName = data.processorConfig.targetTableName.toLowerCase();
+        }
+        if (data.targetDsConfig != null && StringUtils.isNotEmpty(data.targetDsConfig.targetTableName)) {
+            data.targetDsConfig.targetTableName = data.targetDsConfig.targetTableName.toLowerCase();
+        }
+        assert data.targetDsConfig != null;
+        data.targetDsConfig.tableFieldsList.forEach(
+                e -> {
+                    e.fieldName = e.fieldName.toLowerCase();
+                }
+        );
+    }
+
+    @Override
+    public String getEsqlAutoCommit() {
+        return "false";
     }
 
     @Override

@@ -156,4 +156,19 @@ public interface IUserService {
      * @return
      */
     ResultEntity<String> getMDMUserToken();
+
+
+    /**
+     * 根据用户姓名模糊查询用户id
+     * @return
+     */
+    List<Integer> getUserIdByUserName(String userName);
+
+    /**
+     * 校验用户是否有某一页面权限
+     * @param userId
+     * @param pageUrl
+     * @return
+     */
+    Boolean verifyPageByUserId(int userId,String pageUrl);
 }

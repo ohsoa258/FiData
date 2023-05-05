@@ -3,14 +3,9 @@ package com.fisk.dataservice.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
-import com.fisk.dataservice.dto.app.AppRegisterDTO;
-import com.fisk.dataservice.dto.app.AppRegisterEditDTO;
-import com.fisk.dataservice.dto.app.AppRegisterQueryDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
+import com.fisk.dataservice.dto.tablefields.TableFieldDTO;
 import com.fisk.dataservice.dto.tableservice.*;
-import com.fisk.dataservice.vo.app.AppRegisterVO;
-import com.fisk.dataservice.vo.tableservice.TableAppVO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 
 import java.util.List;
@@ -98,4 +93,35 @@ public interface ITableService {
      */
     BuildTableServiceDTO getBuildTableServiceById(long id);
 
+    /**
+     * 新增表字段
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum addTableServiceField(TableFieldDTO dto);
+
+    /**
+     * 修改表字段
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum editTableServiceField(TableFieldDTO dto);
+
+    /**
+     * 删除表字段
+     *
+     * @param tableFieldId
+     * @return
+     */
+    ResultEnum deleteTableServiceField(long tableFieldId);
+
+    /**
+     * 数据库同步服务-新增同步按钮,手动同步表服务
+     *
+     * @param tableId
+     * @return
+     */
+    ResultEnum editTableServiceSync(long tableId);
 }

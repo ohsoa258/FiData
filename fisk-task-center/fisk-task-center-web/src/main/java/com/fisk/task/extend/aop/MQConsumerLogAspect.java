@@ -96,6 +96,9 @@ public class MQConsumerLogAspect {
                             taskQueue = model.taskQueue;
                         }
                         log.info("此次调度队列: {},此次队列参数: {}", taskQueue, JSON.toJSONString(args[0]));
+                    } else {
+                        log.info("不是代码发的消息,无需记结束,因为连开始都没有");
+                        return null;
                     }
                     // 设置TraceID
                     if (!StringUtils.isEmpty(data.traceId)) {
@@ -112,6 +115,8 @@ public class MQConsumerLogAspect {
                     model.taskStatus = TaskStatusEnum.PROCESSING;
                     model.taskSendOk = true;
                     model.traceId = traceId;
+                    model.msg = data.msg;
+                    model.createUser = String.valueOf(data.userId);
                     mapper.updateById(model);
                 }
                 if (sendMsg && Objects.nonNull(data) && Objects.nonNull(data.userId)) {
@@ -129,6 +134,11 @@ public class MQConsumerLogAspect {
                 boolean isSuccess = false;
                 try {
                     res = joinPoint.proceed();
+                    String ret = JSON.toJSONString(res);
+                    if (!StringUtils.isEmpty(ret)) {
+                        data.msg = ret.length() < 2000 ? ret : ret.substring(2000);
+                    }
+                    log.info("方法返回值res值:{}", JSON.toJSONString(res));
                     isSuccess = true;
                 } catch (Exception ex) {
                     log.error("消费者处理报错，", ex);
@@ -140,6 +150,8 @@ public class MQConsumerLogAspect {
                 if (model != null) {
                     model.taskStatus = statusEnum;
                     model.traceId = traceId;
+                    model.msg = data.msg;
+                    model.createUser = String.valueOf(data.userId);
                     mapper.updateById(model);
                 }
 
@@ -151,13 +163,15 @@ public class MQConsumerLogAspect {
                 if (sendMsg && Objects.nonNull(data) && Objects.nonNull(data.userId)) {
                     //失败不管是什么类型都发失败通知
                     if (isSuccess) {
-                        if (notificationType == 1) {
-                            //默认1环绕,2前置,3后置
-                            WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
-                        } else if (notificationType == 2) {
-                            log.info("前置通知没有结束");
-                        } else if (notificationType == 3) {
-                            WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
+                        if (!data.popout) {
+                            if (notificationType == 1) {
+                                //默认1环绕,2前置,3后置
+                                WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
+                            } else if (notificationType == 2) {
+                                log.info("前置通知没有结束");
+                            } else if (notificationType == 3) {
+                                WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
+                            }
                         }
                     } else {
                         WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);

@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
+import com.fisk.task.config.SwaggerConfig;
 import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
@@ -14,6 +15,8 @@ import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
 import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.service.nifi.IPipelineTableLog;
 import com.fisk.task.service.pipeline.ITableTopicService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +26,7 @@ import java.util.List;
 /**
  * @author cfk
  */
+@Api(tags = {SwaggerConfig.PipelineTask})
 @Slf4j
 @RestController
 @RequestMapping("/pipeline")
@@ -37,6 +41,7 @@ public class PipelineSupervisionController {
     @Resource
     ITableTopicService iTableTopicService;
 
+    @ApiOperation("获取管道表日志")
     @PostMapping("/getPipelineTableLogs")
     public ResultEntity<List<PipelineTableLogDTO>> getPipelineTableLogs(@RequestBody List<NifiCustomWorkflowDetailDTO> nifiCustomWorkflowDetailDTO) {
         ResultEntity<List<PipelineTableLogDTO>> objectResultEntity = new ResultEntity<>();
@@ -45,6 +50,7 @@ public class PipelineSupervisionController {
         return objectResultEntity;
     }
 
+    @ApiOperation("获取Nifi自定义工作流详细信息")
     @PostMapping("/getNifiCustomWorkflowDetails")
     public ResultEntity<List<NifiCustomWorkflowVO>> getNifiCustomWorkflowDetails(@RequestBody List<NifiCustomWorkflowVO> nifiCustomWorkflows) {
         ResultEntity<List<NifiCustomWorkflowVO>> objectResultEntity = new ResultEntity<>();
@@ -53,6 +59,7 @@ public class PipelineSupervisionController {
         return objectResultEntity;
     }
 
+    @ApiOperation("进入Nifi阶段")
     @PostMapping("/getNifiStage")
     public ResultEntity<List<NifiStageDTO>> getNifiStage(@RequestBody List<NifiCustomWorkflowDetailDTO> list) {
         ResultEntity<List<NifiStageDTO>> objectResultEntity = new ResultEntity<>();
@@ -61,16 +68,19 @@ public class PipelineSupervisionController {
         return objectResultEntity;
     }
 
+    @ApiOperation("消费者")
     @PostMapping("/consumer")
     public void consumer(@RequestParam String message) {
         iPipelineTaskPublishCenter.msg(message, null);
     }
 
+    @ApiOperation("根据组件Id更新表主题")
     @PostMapping("/updateTableTopicByComponentId")
     public void updateTableTopicByComponentId(@RequestBody TableTopicDTO tableTopicDTO) {
         iTableTopicService.updateTableTopicByComponentId(tableTopicDTO);
     }
 
+    @ApiOperation("保存Nifi阶段")
     @PostMapping("/saveNifiStage")
     public void saveNifiStage(@RequestParam String data) {
         iNifiStage.saveNifiStage(data, null);
@@ -81,6 +91,7 @@ public class PipelineSupervisionController {
      *
      * @return
      */
+    @ApiOperation("日志数据补全")
     @PostMapping("/getPipelineTableLog")
     public ResultEntity<List<PipelineTableLogVO>> getPipelineTableLog(@RequestParam("data") String data, @RequestParam("pipelineTableQuery") String pipelineTableQuery) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iPipelineTableLog.getPipelineTableLogs(data, pipelineTableQuery));
@@ -92,6 +103,7 @@ public class PipelineSupervisionController {
      * @param dto
      * @return
      */
+    @ApiOperation("数据建模覆盖方式预览代码")
     @PostMapping("/overlayCodePreview")
     public ResultEntity<Object> overlayCodePreview(@RequestBody OverLoadCodeDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iNifiStage.overlayCodePreview(dto));

@@ -1,5 +1,6 @@
 package com.fisk.mdm.dto.viwGroup;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -10,8 +11,12 @@ import lombok.Data;
 @Data
 public class ViwGroupDTO {
 
+    @ApiModelProperty(value = "Id")
     private Integer id;
+    @ApiModelProperty(value = "实体Id")
     private Integer entityId;
+    @ApiModelProperty(value = "名称")
     private String name;
+    @ApiModelProperty(value = "详细信息")
     private String details;
 }

@@ -7,6 +7,7 @@ import com.davis.client.ApiException;
 import com.davis.client.model.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
@@ -18,10 +19,7 @@ import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.entity.TBETLlogPO;
 import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
-import com.fisk.task.listener.nifi.IExecScriptListener;
-import com.fisk.task.listener.nifi.INifiTaskListener;
-import com.fisk.task.listener.nifi.INonRealTimeListener;
-import com.fisk.task.listener.nifi.ITriggerScheduling;
+import com.fisk.task.listener.nifi.*;
 import com.fisk.task.listener.nifi.impl.BuildNifiCustomWorkFlow;
 import com.fisk.task.listener.olap.BuildModelTaskListener;
 import com.fisk.task.listener.olap.BuildWideTableTaskListener;
@@ -40,9 +38,12 @@ import com.fisk.task.service.nifi.ITableNifiSettingService;
 import com.fisk.task.service.task.ITBETLIncremental;
 import com.fisk.task.utils.*;
 import com.fisk.task.utils.nifi.INiFiHelper;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -154,6 +155,7 @@ public class TestController {
             ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor("018517b8-87c8-1425-aecf-c04511b906e8");
             System.out.println("nifi" + JSON.toJSONString(processor));
         }catch (ApiException e){
+            log.error("错误信息",e);
             e.printStackTrace();
         }
     }
@@ -239,7 +241,7 @@ public class TestController {
         try {
             taskPgTableStructureHelper.updatePgTableStructure("alter1 table ods_asdmdm_tb_072701 add fffls varchar(200);",null,3);
         }catch (Exception e){
-
+            log.error("错误信息",e);
         }
 
     }

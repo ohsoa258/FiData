@@ -36,13 +36,13 @@ public class TableBusinessDTO {
     @ApiModelProperty(value = "业务覆盖单位,Year,Month,Day,Hour",required = true)
     public String rangeDateUnit;
 
-    @ApiModelProperty(value = "其他逻辑  >,>=,=,<=,<(传符号)", required = true)
+    @ApiModelProperty(value = "其他逻辑  >,>=,=,<=,<(传符号)预备值", required = true)
     public String businessOperatorStandby;
 
-    @ApiModelProperty(value = "其他逻辑  业务覆盖范围", required = true)
+    @ApiModelProperty(value = "其他逻辑  业务覆盖范围预备值", required = true)
     public Long businessRangeStandby;
 
-    @ApiModelProperty(value = "其他逻辑  业务覆盖单位,Year,Month,Day,Hour", required = true)
+    @ApiModelProperty(value = "其他逻辑  业务覆盖单位,Year,Month,Day,Hour预备值", required = true)
     public String rangeDateUnitStandby;
 
     @ApiModelProperty(value = "自定义覆盖时间", required = true)

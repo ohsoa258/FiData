@@ -40,11 +40,12 @@ public class DataAccessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessService.getTree());
     }
 
+    @ApiOperation("获取表Id")
     @PostMapping("/getTableId")
     public ResultEntity<List<ChannelDataDTO>> getTableId(@RequestBody NifiComponentsDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessService.getTableId(dto));
     }
-
+    @ApiOperation("获取表Id")
     @GetMapping("/getTableId")
     public ResultEntity<List<ChannelDataDTO>> getTableId() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessService.getTableId());

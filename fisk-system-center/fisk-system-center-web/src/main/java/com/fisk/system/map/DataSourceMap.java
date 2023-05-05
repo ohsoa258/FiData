@@ -23,6 +23,7 @@ public interface DataSourceMap {
             @Mapping(target = "id", ignore = true), // 某个属性不想映射，可以加上 ignore=true；
             @Mapping(source = "conType.value", target = "conType"),
             @Mapping(source = "sourceBusinessType.value", target = "sourceBusinessType"),
+            @Mapping(target = "fileBinary",ignore = true)
     })
     void dtoToPo(DataSourceSaveDTO dto, @MappingTarget DataSourcePO po);
 

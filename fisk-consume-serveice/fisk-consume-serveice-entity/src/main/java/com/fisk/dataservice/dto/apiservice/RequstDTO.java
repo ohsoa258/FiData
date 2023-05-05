@@ -1,6 +1,7 @@
 package com.fisk.dataservice.dto.apiservice;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
@@ -13,6 +14,7 @@ import java.util.Map;
  * @description 数据请求DTO
  * @date 2022/1/18 10:03
  */
+@Data
 public class RequstDTO {
     /**
      * 请求参数

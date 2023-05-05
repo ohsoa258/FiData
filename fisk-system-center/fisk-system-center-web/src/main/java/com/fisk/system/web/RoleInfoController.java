@@ -7,6 +7,7 @@ import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import com.fisk.system.dto.roleinfo.RoleInfoQueryDTO;
 import com.fisk.system.service.IRoleInfoService;
+import com.fisk.system.vo.roleinfo.RoleInfoVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -50,6 +52,12 @@ public class RoleInfoController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getRoleById(id));
     }
 
+    @ApiOperation("根据ids获取角色列表详情")
+    @PostMapping("/getRoles")
+    public ResultEntity<List<RoleInfoDTO>> getRoles(@RequestBody List<Integer> ids) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getRoleByIds(ids));
+    }
+
     @ApiOperation("修改角色")
     @PutMapping("/edit")
     public ResultEntity<Object> editRole(@Validated @RequestBody RoleInfoDTO dto) {
@@ -62,4 +70,15 @@ public class RoleInfoController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getRoleInfoColumn());
     }
 
+    @GetMapping("/getTreeRols")
+    @ApiOperation("获取所有角色及角色下用户列表")
+    public ResultEntity<List<RoleInfoVo>> getTreeRols() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTreeRols());
+    }
+
+    @ApiOperation("获取用户下角色信息")
+    @GetMapping("/getRolebyUserId/{userId}")
+    public ResultEntity<List<RoleInfoDTO>> getRolebyUserId(@RequestParam("userId")int userId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getRolebyUserId(userId));
+    }
 }

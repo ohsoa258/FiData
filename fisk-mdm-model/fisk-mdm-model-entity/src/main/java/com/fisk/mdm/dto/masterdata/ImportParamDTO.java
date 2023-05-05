@@ -1,5 +1,6 @@
 package com.fisk.mdm.dto.masterdata;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -9,6 +10,7 @@ import lombok.Data;
 @Data
 public class ImportParamDTO extends MasterDataBaseDTO {
 
+    @ApiModelProperty(value = "删除空间")
     private Boolean removeSpace;
 
 }

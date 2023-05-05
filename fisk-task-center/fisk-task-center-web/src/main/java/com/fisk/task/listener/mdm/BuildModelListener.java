@@ -22,4 +22,11 @@ public interface BuildModelListener {
      * @param acke
      */
     ResultEnum backgroundCreateTasks(String dataInfo, Acknowledgment acke);
+
+    /**
+     * 创建后台批量审核
+     * @param dataInfo
+     * @param acke
+     */
+    ResultEnum buildBatchApproval(String dataInfo, Acknowledgment acke);
 }

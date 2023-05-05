@@ -47,11 +47,13 @@ import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.*;
+import com.fisk.dataaccess.enums.AppDriveTypeEnum;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
 import com.fisk.dataaccess.map.AppDataSourceMap;
 import com.fisk.dataaccess.map.AppRegistrationMap;
 import com.fisk.dataaccess.mapper.*;
+import com.fisk.dataaccess.service.IAppDataSource;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.utils.httprequest.Impl.BuildHttpRequestImpl;
 import com.fisk.dataaccess.utils.sql.*;
@@ -107,7 +109,8 @@ import static com.fisk.dataaccess.enums.HttpRequestEnum.POST;
 public class AppRegistrationImpl
         extends ServiceImpl<AppRegistrationMapper, AppRegistrationPO>
         implements IAppRegistration {
-
+    @Resource
+    private IAppDataSource iAppDataSource;
     @Resource
     private AppDataSourceMapper appDataSourceMapper;
     @Resource
@@ -157,10 +160,20 @@ public class AppRegistrationImpl
 
     @Value("${spring.open-metadata}")
     private Boolean openMetadata;
+    @Resource
+    PgsqlUtils pgsqlUtils;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEntity<AtlasEntityQueryVO> addData(AppRegistrationDTO appRegistrationDTO) {
+        //先获取到要添加的外部数据源们 driveType = mysql/sqlserver/oracle/postgresql
+        List<AppDataSourceDTO> data = appRegistrationDTO.getAppDatasourceDTO();
+        //调用封装的方法，校验当前应用选择的数据源类型是否存在冲突！
+        Boolean aBoolean = checkSourcesTypeIfOk(data);
+        if (!aBoolean){
+            log.error("当前应用选择的数据源类型存在冲突！");
+            throw new FkException(ResultEnum.DATASOURCE_TYPE_ERROR);
+        }
 
         UserInfo userInfo = userHelper.getLoginUserInfo();
         Long userId = userInfo.id;
@@ -211,13 +224,13 @@ public class AppRegistrationImpl
             if (DataSourceTypeEnum.SFTP.getName().equals(e.driveType.toLowerCase()) && e.serviceType == 1) {
                 e.fileBinary = fileToBinaryStr(e.connectStr);
             }
-            //同步到平台配置
-            if (!DataSourceTypeEnum.SFTP.getName().equals(e.driveType.toLowerCase())
-                    && !DataSourceTypeEnum.FTP.getName().equals(e.driveType.toLowerCase())
-                    && !DataSourceTypeEnum.API.getName().equals(e.driveType.toLowerCase())
-                    && !DataSourceTypeEnum.RestfulAPI.getName().equals(e.driveType.toLowerCase())) {
-                e.systemDataSourceId = synchronizationSystemDataSource(e, po.appName).id;
-            }
+//            //同步到平台配置  暂时注释，目前数据接入数据源已整合到平台配置，这段代码暂不需要（无需二次保存）
+//            if (!DataSourceTypeEnum.SFTP.getName().equals(e.driveType.toLowerCase())
+//                    && !DataSourceTypeEnum.FTP.getName().equals(e.driveType.toLowerCase())
+//                    && !DataSourceTypeEnum.API.getName().equals(e.driveType.toLowerCase())
+//                    && !DataSourceTypeEnum.RestfulAPI.getName().equals(e.driveType.toLowerCase())) {
+//                e.systemDataSourceId = synchronizationSystemDataSource(e, po.appName).id;
+//            }
         });
 
         boolean insert = appDataSourceImpl.saveBatch(modelDataSource);
@@ -270,6 +283,43 @@ public class AppRegistrationImpl
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
+    }
+
+    /**
+     * 校验单一应用下选择的数据源是否合理
+     *
+     * @param data
+     * @return
+     */
+    public Boolean checkSourcesTypeIfOk(List<AppDataSourceDTO> data) {
+        boolean b;
+        //新建集合预装载数据库类型的数据源：
+        List<AppDataSourceDTO> dbTypeSources = new ArrayList<>();
+        //新建集合预装载非数据库类型的数据源:driveType = mysql/sqlserver/oracle/postgresql
+        List<AppDataSourceDTO> otherSources = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(data)) {
+            //遍历data时，根据各个外部数据源的驱动类型，存入到我们预先准备的集合中
+            data.forEach(e -> {
+                String driveType = e.driveType;
+                if (AppDriveTypeEnum.MYSQL.getName().equalsIgnoreCase(driveType) ||
+                        AppDriveTypeEnum.SQLSERVER.getName().equalsIgnoreCase(driveType) ||
+                        AppDriveTypeEnum.ORACLE.getName().equalsIgnoreCase(driveType) ||
+                        AppDriveTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(driveType)) {
+                    dbTypeSources.add(e);
+                } else {
+                    otherSources.add(e);
+                }
+            });
+        }
+        //如果装载数据库类型数据源的集合 和 装载非数据库类型数据源的集合 都不为空，就认为当前应用选择了不合理的数据源，抛出异常
+        if (!CollectionUtils.isEmpty(dbTypeSources) && !CollectionUtils.isEmpty(otherSources)) {
+            log.error("当前应用选择的数据源不合理！！！");
+            b = false;
+        } else {
+            //反之则认为应用选择的数据源是合理的
+            b = true;
+        }
+        return b;
     }
 
     /**
@@ -430,6 +480,14 @@ public class AppRegistrationImpl
     @Override
     @Transactional(rollbackFor = RuntimeException.class)
     public ResultEnum updateAppRegistration(AppRegistrationEditDTO dto) {
+        //先获取到要添加的外部数据源们 driveType = mysql/sqlserver/oracle/postgresql
+        List<AppDataSourceDTO> data = dto.getAppDatasourceDTO();
+        //调用封装的方法，校验当前应用选择的数据源类型是否存在冲突！
+        Boolean aBoolean = checkSourcesTypeIfOk(data);
+        if (!aBoolean){
+            log.error("当前应用选择的数据源类型存在冲突！");
+            throw new FkException(ResultEnum.DATASOURCE_TYPE_ERROR);
+        }
 
         // 判断名称是否重复
         QueryWrapper<AppRegistrationPO> queryWrapper = new QueryWrapper<>();
@@ -496,13 +554,13 @@ public class AppRegistrationImpl
                 e.systemDataSourceId = byId.systemDataSourceId;
             }
 
-            //同步到平台配置
-            if (!DataSourceTypeEnum.SFTP.getName().equals(e.driveType.toLowerCase())
-                    && !DataSourceTypeEnum.FTP.getName().equals(e.driveType.toLowerCase())
-                    && !DataSourceTypeEnum.API.getName().equals(e.driveType.toLowerCase())
-                    && !DataSourceTypeEnum.RestfulAPI.getName().equals(e.driveType.toLowerCase())) {
-                e.systemDataSourceId = synchronizationSystemDataSource(e, po.appName).id;
-            }
+//            //同步到平台配置  暂时注释，目前数据接入数据源已整合到平台配置，这段代码暂不需要（无需二次保存）
+//            if (!DataSourceTypeEnum.SFTP.getName().equals(e.driveType.toLowerCase())
+//                    && !DataSourceTypeEnum.FTP.getName().equals(e.driveType.toLowerCase())
+//                    && !DataSourceTypeEnum.API.getName().equals(e.driveType.toLowerCase())
+//                    && !DataSourceTypeEnum.RestfulAPI.getName().equals(e.driveType.toLowerCase())) {
+//                e.systemDataSourceId = synchronizationSystemDataSource(e, po.appName).id;
+//            }
         });
 
         //jtw类型配置返回结果json串
@@ -574,7 +632,7 @@ public class AppRegistrationImpl
         // 2.删除tb_app_datasource表数据
         List<AppDataSourcePO> dsList = appDataSourceImpl.query().eq("app_id", id).list();
 
-        for (AppDataSourcePO modelDataSource : dsList){
+        for (AppDataSourcePO modelDataSource : dsList) {
             int delDataSource = appDataSourceMapper.deleteByIdWithFill(modelDataSource);
             if (delDataSource < 0) {
                 return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
@@ -877,13 +935,13 @@ public class AppRegistrationImpl
         Page<AppRegistrationVO> filter = baseMapper.filter(query.page, data);
         // 查询驱动类型
         List<AppRegistrationVO> appRegistrationVOList = filter.getRecords();
-        if (!CollectionUtils.isEmpty(appRegistrationVOList)){
+        if (!CollectionUtils.isEmpty(appRegistrationVOList)) {
             List<Long> appIds = appRegistrationVOList.stream().map(AppRegistrationVO::getId).collect(Collectors.toList());
             QueryWrapper<AppDataSourcePO> qw = new QueryWrapper<>();
             qw.in("app_id", appIds);
             List<AppDataSourcePO> driveTypePOList = appDataSourceMapper.selectList(qw);
-            if (driveTypePOList != null){
-                for (AppRegistrationVO item : appRegistrationVOList){
+            if (driveTypePOList != null) {
+                for (AppRegistrationVO item : appRegistrationVOList) {
                     item.setDriveType(driveTypePOList.stream().filter(e -> e.getAppId() == item.getId()).findFirst().orElse(null).getDriveType());
                 }
             }
@@ -934,7 +992,7 @@ public class AppRegistrationImpl
                     break;
                 case POSTGRESQL:
                     url = "jdbc:postgresql://" + dto.host + ":" + dto.port + "/postgres";
-                    PgsqlUtils pgsqlUtils = new PgsqlUtils();
+
                     conn = DbConnectionHelper.connection(url, dto.connectAccount, dto.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL);
                     allDatabases.addAll(pgsqlUtils.getPgDatabases(conn));
                     break;
@@ -956,10 +1014,10 @@ public class AppRegistrationImpl
                 default:
                     break;
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             //数据库账号或密码不正确
             ResultEnum resultEnum = ((FkException) e).getResultEnum();
-            if(resultEnum.getCode()==4001){
+            if (resultEnum.getCode() == 4001) {
                 log.error("测试连接用户名或密码不正确:{}", e);
                 throw new FkException(ResultEnum.REALTIME_ACCOUNT_OR_PWD_ERROR);
             }
@@ -1839,7 +1897,7 @@ public class AppRegistrationImpl
             ExternalDataSourceDTO data = new ExternalDataSourceDTO();
             data.id = item.id;
             data.name = item.name;
-            data.dbType=item.conType.getName().toLowerCase();
+            data.dbType = item.conType.getName().toLowerCase();
             list.add(data);
         }
         return list;
@@ -1906,14 +1964,14 @@ public class AppRegistrationImpl
      */
     @Override
     public List<AppRegistrationInfoDTO> getBatchTargetDbIdByAppIds(List<Integer> appIds) {
-        if (CollectionUtils.isEmpty(appIds)){
+        if (CollectionUtils.isEmpty(appIds)) {
             return null;
         }
 
         List<AppRegistrationInfoDTO> idList = new ArrayList<>();
 
         List<AppRegistrationPO> appRegistrationPOList = mapper.selectBatchIds(appIds);
-        if (!CollectionUtils.isEmpty(appRegistrationPOList)){
+        if (!CollectionUtils.isEmpty(appRegistrationPOList)) {
             idList = appRegistrationPOList.stream().map(e -> {
                 AppRegistrationInfoDTO item = new AppRegistrationInfoDTO();
                 item.setAppId(e.id);
@@ -1925,14 +1983,14 @@ public class AppRegistrationImpl
     }
 
     @Override
-    public SyncTableCountVO getSyncTableCount(Integer appId){
-        if (appId == 0){
+    public SyncTableCountVO getSyncTableCount(Integer appId) {
+        if (appId == 0) {
             throw new FkException(ResultEnum.PARAMTER_ERROR);
         }
 
         List<SyncTableCountPO> list = tableAccessMapper.getSyncTableCount(appId, DelFlagEnum.NORMAL_FLAG.getValue());
         SyncTableCountVO model = new SyncTableCountVO();
-        if (!CollectionUtils.isEmpty(list)){
+        if (!CollectionUtils.isEmpty(list)) {
             Map<Integer, Integer> map = list.stream().collect(Collectors.toMap(SyncTableCountPO::getSyncMode, SyncTableCountPO::getCount));
             log.info("数据{}", JSON.toJSONString(map));
             int appendCount = map.get(SyncModeEnum.FULL_AMOUNT.getValue()) == null ? 0 : map.get(SyncModeEnum.FULL_AMOUNT.getValue());
@@ -1947,6 +2005,69 @@ public class AppRegistrationImpl
             model.setTotalCount(appendCount + fullCount + timeCount + delKey + key);
         }
         return model;
+    }
+
+    @Override
+    public List<AppDriveTypeDTO> getDriveTypeByAppId(Long appid) {
+
+        //先获取到所有的数据源驱动类型
+        List<AppDriveTypePO> list = appDriveTypeMapper.listData();
+        //PO --> DTO
+        List<AppDriveTypeDTO> appDriveTypeDTOS = AppDriveTypeDTO.convertEntityList(list);
+        //appid==0表示该应用是第一次接入数据源，因此返回全部的数据源类型给前端
+        if (appid == 0){
+            return appDriveTypeDTOS;
+        }
+        //获取当前应用所拥有的数据源类型
+        List<AppDataSourcePO> data = iAppDataSource.getDataSourceDrivesTypeByAppId(appid);
+        if (CollectionUtils.isEmpty(data)) {
+            throw new FkException(ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS);
+        }
+//        遇到数据量较大的情况，下面这种方式去重效率不高。
+//        List<AppDriveTypeDTO> result = chooseDriveType(data, appDriveTypeDTOS);
+//        return result.stream()
+//                .collect(Collectors.collectingAndThen(
+//                        Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(AppDriveTypeDTO::getName))),
+//                        ArrayList::new));
+        //调用封装的筛选方法
+        return chooseDriveType(data, appDriveTypeDTOS);
+    }
+
+    /**
+     * 封装筛选方法：要么是四种数据库类型，要么只能是restfulapi,api,sftp,ftp中单一的一种
+     *
+     * @param transFormData
+     * @param originDriveType
+     * @return
+     */
+    public List<AppDriveTypeDTO> chooseDriveType(List<AppDataSourcePO> transFormData, List<AppDriveTypeDTO> originDriveType) {
+        //新建集合预装载合格驱动类型
+        List<AppDriveTypeDTO> result = new ArrayList<>();
+        transFormData.stream().anyMatch(e -> {
+            String driveType = e.driveType;
+            if (AppDriveTypeEnum.MYSQL.getName().equalsIgnoreCase(driveType) ||
+                    AppDriveTypeEnum.SQLSERVER.getName().equalsIgnoreCase(driveType) ||
+                    AppDriveTypeEnum.ORACLE.getName().equalsIgnoreCase(driveType) ||
+                    AppDriveTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(driveType)) {
+                originDriveType.forEach(d -> {
+                    if (AppDriveTypeEnum.MYSQL.getName().equalsIgnoreCase(d.name) ||
+                            AppDriveTypeEnum.SQLSERVER.getName().equalsIgnoreCase(d.name) ||
+                            AppDriveTypeEnum.ORACLE.getName().equalsIgnoreCase(d.name) ||
+                            AppDriveTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(d.name)) {
+                        result.add(d);
+                    }
+                });
+                return true;
+            } else {
+                originDriveType.forEach(f -> {
+                    if (driveType.equalsIgnoreCase(f.name)) {
+                        result.add(f);
+                    }
+                });
+            }
+            return false;
+        });
+        return result;
     }
 
     /**

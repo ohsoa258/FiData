@@ -4,6 +4,8 @@ import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.auth.service.UserAuthService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,11 +16,14 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
+import com.fisk.auth.config.SwaggerConfig;
+
 /**
  * @author Lock
  * <p>
  * 对外提供登录服务
  */
+@Api(tags = {SwaggerConfig.UserAuth})
 @RestController
 @RequestMapping("/user")
 @Slf4j
@@ -32,6 +37,7 @@ public class UserAuthController {
      * @param dto 请求参数
      * @return 返回值
      */
+    @ApiOperation(value = "登录")
     @PostMapping("/login")
     public ResultEntity<String> login(
             @RequestBody UserAuthDTO dto) {
@@ -45,6 +51,7 @@ public class UserAuthController {
      * @param request 请求参数
      * @return 无
      */
+    @ApiOperation(value = "退出")
     @ControllerAOPConfig(printParams = false)
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request) {
@@ -52,6 +59,7 @@ public class UserAuthController {
         return ResponseEntity.noContent().build();
     }
 
+    @ApiOperation(value = "获取Token")
     @PostMapping("/getToken")
     public ResultEntity<String> getToken(
             @RequestBody UserAuthDTO dto) {

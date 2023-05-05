@@ -103,4 +103,12 @@ public interface AttributeService extends IService<AttributePO> {
      */
     ResultEnum deleteDataById(Integer id);
 
+    /**
+     * 获取实体下已发布状态的所有属性
+     *
+     * @param entityId
+     * @return
+     */
+    List<AttributeInfoDTO> listPublishedAttribute(int entityId);
+
 }
