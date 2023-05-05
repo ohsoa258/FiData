@@ -1,4 +1,4 @@
-package com.fisk.task.po;
+package com.fisk.task.po.app;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;

@@ -1,5 +1,6 @@
 package com.fisk.mdm.dto.access;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
+import com.fisk.task.dto.accessmdm.AccessAttributeDTO;
 import lombok.Data;
 
 import java.util.List;

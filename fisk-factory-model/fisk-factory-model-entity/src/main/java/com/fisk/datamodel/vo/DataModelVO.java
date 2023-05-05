@@ -12,17 +12,17 @@ import java.util.List;
 public class DataModelVO {
 
     /**
-     * 类型：数据接入/数据建模
+     * 类型：数据接入/数据建模/mdm
      */
     public DataClassifyEnum dataClassifyEnum;
 
     /**
-     * 业务域id/应用id
+     * 业务域id/应用id/模型id
      */
     public String businessId;
 
     /**
-     * 是否删除业务域/应用
+     * 是否删除业务域/应用/模型
      */
     public boolean delBusiness;
 

@@ -49,7 +49,7 @@
         </dependency>
         <dependency>
             <groupId>com.fisk</groupId>
-            <artifactId>fisk-factory-model-entity</artifactId>
+            <artifactId>fisk-mdm-model-entity</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

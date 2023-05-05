@@ -1,8 +1,6 @@
 package com.fisk.task.dto.task;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.core.baseObject.entity.BasePO;
-import com.fisk.task.po.TableTopicPO;
+import com.fisk.task.po.app.TableTopicPO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

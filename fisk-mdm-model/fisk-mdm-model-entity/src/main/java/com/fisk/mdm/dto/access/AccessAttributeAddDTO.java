@@ -1,4 +1,5 @@
 package com.fisk.mdm.dto.access;
+import com.fisk.task.dto.accessmdm.AccessAttributeDTO;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -15,10 +16,6 @@ public class AccessAttributeAddDTO{
      */
     public boolean isPublish;
     public int createType;
-    /**
-     * 数据同步脚本
-     */
-    public String dimensionKeyScript;
     /**
      * 覆盖脚本
      */

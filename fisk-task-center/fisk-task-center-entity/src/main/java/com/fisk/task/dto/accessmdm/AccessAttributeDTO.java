@@ -1,9 +1,9 @@
-package com.fisk.mdm.dto.access;
+package com.fisk.task.dto.accessmdm;
 
 import lombok.Data;
 
 /**
- * @author jianwenyang
+ * @author wangjian
  */
 @Data
 public class AccessAttributeDTO {

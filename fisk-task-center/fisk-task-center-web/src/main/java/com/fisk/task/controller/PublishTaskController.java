@@ -12,6 +12,7 @@ import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.ApiImportDataDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
+import com.fisk.task.dto.mdmtask.BuildMdmNifiFlowDTO;
 import com.fisk.task.dto.metadatafield.MetaDataFieldDTO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
@@ -55,6 +56,14 @@ public class PublishTaskController {
         return iBuildKfkTaskService.publishTask("数据湖表:" + data.tableName + "的数据流任务",
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.NifiTopicConstants.BUILD_NIFI_FLOW,
+                data);
+    }
+    @PostMapping("/accessMdmNifiFlow")
+    @ApiOperation(value = "创建接入mdm同步数据nifi流程")
+    public ResultEntity<Object> publishAccessMdmNifiFlowTask(@RequestBody BuildMdmNifiFlowDTO data) {
+        return iBuildKfkTaskService.publishTask("数据湖表:" + data.tableName + "的数据流任务",
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.NifiTopicConstants.BUILD_ACCESS_MDM_NIFI_FLOW,
                 data);
     }
 

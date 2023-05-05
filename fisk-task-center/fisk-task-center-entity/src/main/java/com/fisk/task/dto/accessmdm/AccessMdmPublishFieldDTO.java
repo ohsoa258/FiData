@@ -1,4 +1,4 @@
-package com.fisk.task.dto.accessmodel;
+package com.fisk.task.dto.accessmdm;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

@@ -1,7 +1,7 @@
 package com.fisk.task.service.nifi;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.task.po.TableNifiSettingPO;
+import com.fisk.task.po.app.TableNifiSettingPO;
 
 /**
  * @author cfk

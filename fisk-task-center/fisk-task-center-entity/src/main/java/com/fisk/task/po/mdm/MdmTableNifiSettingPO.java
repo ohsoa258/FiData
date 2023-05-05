@@ -1,0 +1,81 @@
+package com.fisk.task.po.mdm;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.fisk.common.core.baseObject.entity.BasePO;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+/**
+ * @author wangjian
+ */
+@EqualsAndHashCode(callSuper = true)
+@Data
+@TableName("tb_mdm_table_nifi_setting")
+public class MdmTableNifiSettingPO extends BasePO {
+    public String tableComponentId;
+    public Integer modelId;
+    public Integer entityId;
+    public String dispatchComponentId;
+    public String queryIncrementProcessorId;
+    public String convertDataToJsonProcessorId;
+    public String setIncrementProcessorId;
+    public String putLogToConfigDbProcessorId;
+    public String executeTargetDeleteProcessorId;
+    public String executeSqlRecordProcessorId;
+    public String saveTargetDbProcessorId;
+    public String mergeContentProcessorId;
+    public String mdmToStgProcessorId;
+    public String queryNumbersProcessorId;
+    public String convertNumbersToJsonProcessorId;
+    public String setNumbersProcessorId;
+    public String saveNumbersProcessorId;
+    public String avroRecordSetWriterId;
+    public String putDatabaseRecordId;
+    public String processorInputPortId;
+    public String processorOutputPortId;
+    public String tableInputPortId;
+    public String tableOutputPortId;
+    public String selectSql;
+    public String tableName;
+    public int type;
+    public String processorInputPortConnectId;
+    public String processorOutputPortConnectId;
+    public String tableInputPortConnectId;
+    public String tableOutputPortConnectId;
+    public String nifiCustomWorkflowDetailId;
+    public int syncMode;
+    public String updateFieldProcessorId;
+    public String convertAvroRecordSetWriterId;
+    public String convertPutDatabaseRecordId;
+    public String consumeKafkaProcessorId;
+    public String publishKafkaProcessorId;
+    public String publishKafkaPipelineProcessorId;
+    public String queryForSupervisionProcessorId;
+    public String convertJsonForSupervisionProcessorId;
+    public String publishKafkaForSupervisionProcessorId;
+    public String csvReaderId;
+    public String getFtpProcessorId;
+    public String convertExcelToCsvProcessorId;
+    public String convertRecordProcessorId;
+    public String generateFlowFileProcessorId;
+    public String invokeHttpProcessorId;
+    public String updateFieldForCodeProcessorId;
+    public String convertAvroRecordSetWriterForCodeId;
+    public String convertPutDatabaseRecordForCodeId;
+    public String evaluateTimeVariablesProcessorId;
+    //--------------------------------------------
+    public String queryStratTimeProcessorId;
+    public String convertStratTimeToJsonProcessorId;
+    public String setStratTimeProcessorId;
+    public String queryEndTimeProcessorId;
+    public String convertEndTimeToJsonProcessorId;
+    public String setEndTimeProcessorId;
+    //--------------------------------------------
+    public String replaceTextForFtpProcessorId;
+    public String invokeHttpForFtpProcessorId;
+    public String queryVersionProcessorId;
+    public String convertVersionToJsonProcessorId;
+    public String setVersionProcessorId;
+    public String replaceTextForVersionProcessorId;
+    public String invokeHttpForVersionProcessorId;
+}

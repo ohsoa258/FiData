@@ -1,15 +1,12 @@
 package com.fisk.task.listener.pipeline.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.davis.client.ApiException;
 import com.davis.client.model.ProcessGroupEntity;
 import com.davis.client.model.ProcessGroupStatusDTO;
-import com.fisk.chartvisual.enums.SsasChartFilterTypeEnum;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.mdc.MDCHelper;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
@@ -30,14 +27,13 @@ import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
-import com.fisk.task.entity.OlapPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
 import com.fisk.task.mapper.NifiStageMapper;
 import com.fisk.task.mapper.PipelineTableLogMapper;
-import com.fisk.task.po.TableNifiSettingPO;
+import com.fisk.task.po.app.TableNifiSettingPO;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
 import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelStageLog;
@@ -59,10 +55,7 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import static com.fisk.common.framework.redis.RedisKeyEnum.DELAYED_TASK;
 
 /**
  * @author: cfk

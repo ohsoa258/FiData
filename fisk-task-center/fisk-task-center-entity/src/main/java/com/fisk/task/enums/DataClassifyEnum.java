@@ -25,8 +25,9 @@ public enum DataClassifyEnum  implements BaseEnum {
     //sftp_file_copy_task
     SFTPFILECOPYTASK(14,"SFTP文件复制"),
     DATASERVICES(15,"数据服务"),
-    POWERBIDATASETREFRESHTASK(16,"POWERBI数据集刷新任务")
-    ;
+    POWERBIDATASETREFRESHTASK(16,"POWERBI数据集刷新任务"),
+
+    MDM_DATA_ACCESS(17,"mdm-数据接入");
 
     private final String name;
     private final int value;

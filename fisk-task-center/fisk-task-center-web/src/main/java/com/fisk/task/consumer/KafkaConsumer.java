@@ -98,6 +98,8 @@ public class KafkaConsumer {
     @Resource
     INifiTaskListener iNifiTaskListener;
     @Resource
+    IAccessMdmNifiTaskListener accessMdmNifiTaskListener;
+    @Resource
     INiFiHelper iNiFiHelper;
     @Resource
     ITriggerScheduling iTriggerScheduling;
@@ -223,6 +225,20 @@ public class KafkaConsumer {
     }
 
     /**
+     * task.build.access.mdm.nifi.flow
+     *
+     * @param data
+     * @param ack
+     * @return
+     */
+    @KafkaListener(topics = MqConstants.QueueConstants.NifiTopicConstants.BUILD_ACCESS_MDM_NIFI_FLOW, containerFactory = "batchFactory",
+            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    @MQConsumerLog
+    public ResultEntity<Object> buildAccessMdmNifiTaskListener(String data, Acknowledgment ack) {
+        return ResultEntityBuild.build(accessMdmNifiTaskListener.accessMdmMsg(data, ack));
+    }
+
+    /**
      * task.build.table.server.flow
      *
      * @param data
@@ -279,7 +295,7 @@ public class KafkaConsumer {
     }
 
     /**
-     * task.build.datamodel.doris.table.flow
+     * task.build.mdm.flow
      *
      * @param dataInfo
      * @param acke
@@ -287,7 +303,6 @@ public class KafkaConsumer {
      */
     @KafkaListener(topics = MqConstants.QueueConstants.MdmTopicConstants.MDM_PUBLISH_TASK, containerFactory = "batchFactory",
             groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
-    @MQConsumerLog(type = TraceTypeEnum.BUILD_MDM_PUBLISH_TASK, notificationType = 2)
     public ResultEntity<Object> buildMdmAccessETLListener(String dataInfo, Acknowledgment acke) {
         return ResultEntityBuild.build(buildMdmAccessETLListener.msg(dataInfo, acke));
     }

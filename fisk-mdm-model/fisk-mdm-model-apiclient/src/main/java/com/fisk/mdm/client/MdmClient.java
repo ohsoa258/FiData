@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.mdm.dto.accessmodel.AccessPublishStatusDTO;
 import com.fisk.mdm.dto.attribute.AttributeDomainDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeStatusDTO;
@@ -14,6 +15,9 @@ import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.model.ModelInfoVO;
+import com.fisk.task.dto.accessmdm.AccessAttributeDTO;
+import com.fisk.task.dto.mdmconfig.AccessMdmConfigDTO;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -62,6 +66,16 @@ public interface MdmClient {
     @GetMapping("/attribute/get")
     ResultEntity<AttributeVO> get(@RequestParam("id") Integer id);
 
+    /**
+     * 更新发布状态
+     * @param dto
+     */
+    @PutMapping("/access/updateAccessPublishState")
+    void updateAccessPublishState( @RequestBody AccessPublishStatusDTO dto);
+
+    @ApiOperation("获取接入字段映射关系")
+    @GetMapping("/access/getAccessAttributeField")
+    ResultEntity<List<AccessAttributeDTO>> getAccessAttributeField(@RequestParam("accessId")Integer accessId,@RequestParam("entityId") Integer entityId);
     /**
      * 修改属性状态
      * @param statusDto
@@ -123,4 +137,8 @@ public interface MdmClient {
      */
     @PostMapping("/model/setDataStructure")
     ResultEntity<Object> setMDMDataStructure(@RequestBody FiDataMetaDataReqDTO dto);
+
+    @GetMapping("/access/dataAccessConfig")
+    @ApiOperation(value = "数据访问配置")
+    ResultEntity<AccessMdmConfigDTO> dataAccessConfig(@RequestParam("entityId") long entityId, @RequestParam("modelId") long modelId);
 }

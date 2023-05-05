@@ -15,7 +15,6 @@ import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyNextDTO;
 import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
-import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.ExecScriptDTO;
 import com.fisk.task.dto.task.PowerBiDataSetRefreshDTO;
@@ -26,7 +25,6 @@ import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
-import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
 import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
@@ -215,7 +213,7 @@ public class TaskPublish {
                         log.info("第一处调用保存job日志");
                         iPipelJobLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
                         iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
-                    } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.DAILY_NIFI_FLOW.getValue())) {
+                    } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.DAILY_NIFI_FLOW.getValue()) || Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.MDM_NIFI_FLOW.getValue())) {
                         //卡夫卡的内容在发布时就定义好了
                         String dailyNifiMsg = JSON.toJSONString(kafkaReceiveDTO);
                         log.info("打印topic内容:" + dailyNifiMsg);

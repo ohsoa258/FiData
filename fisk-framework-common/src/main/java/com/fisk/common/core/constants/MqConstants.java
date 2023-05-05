@@ -18,6 +18,8 @@ public class MqConstants {
 
         public static final String TOPIC_PREFIX = "dmp.datafactory.nifi.";
 
+        public static final String TOPIC_MDM_PREFIX = "dmp.mdm.nifi.";
+
     }
 
     /**
@@ -48,6 +50,8 @@ public class MqConstants {
         public static final class NifiTopicConstants{
 
             public static final String BUILD_NIFI_FLOW = "task.build.nifi.flow";
+
+            public static final String BUILD_ACCESS_MDM_NIFI_FLOW = "task.build.access.mdm.nifi.flow";
 
             public static final String BUILD_IMMEDIATELYSTART_FLOW = "task.build.immediatelyStart.flow";
         }

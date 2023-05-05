@@ -12,7 +12,7 @@ import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.dto.nifi.BuildKeytabCredentialsServiceDTO;
-import com.fisk.task.po.NifiConfigPO;
+import com.fisk.task.po.app.NifiConfigPO;
 import com.fisk.task.service.pipeline.impl.NifiConfigServiceImpl;
 import com.fisk.task.utils.StackTraceHelper;
 import com.fisk.task.utils.nifi.INiFiHelper;

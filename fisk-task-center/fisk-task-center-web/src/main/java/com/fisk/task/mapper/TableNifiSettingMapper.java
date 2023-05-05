@@ -1,7 +1,7 @@
 package com.fisk.task.mapper;
 
 import com.fisk.common.framework.mybatis.FKBaseMapper;
-import com.fisk.task.po.TableNifiSettingPO;
+import com.fisk.task.po.app.TableNifiSettingPO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 

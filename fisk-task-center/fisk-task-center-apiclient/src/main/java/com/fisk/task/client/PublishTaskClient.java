@@ -25,7 +25,7 @@ import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.DataServiceTableLogQueryDTO;
 import com.fisk.task.dto.task.*;
-import com.fisk.task.po.TableNifiSettingPO;
+import com.fisk.task.po.app.TableNifiSettingPO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 

@@ -6,7 +6,7 @@ import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.map.TableTopicMap;
 import com.fisk.task.mapper.TableTopicMapper;
-import com.fisk.task.po.TableTopicPO;
+import com.fisk.task.po.app.TableTopicPO;
 import com.fisk.task.service.pipeline.ITableTopicService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

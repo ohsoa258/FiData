@@ -2,7 +2,7 @@ package com.fisk.task.service.pipeline;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.task.dto.task.TableTopicDTO;
-import com.fisk.task.po.TableTopicPO;
+import com.fisk.task.po.app.TableTopicPO;
 
 import java.util.List;
 

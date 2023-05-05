@@ -1,4 +1,4 @@
-package com.fisk.task.dto.accessmodel;
+package com.fisk.task.dto.accessmdm;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -10,15 +10,10 @@ import java.util.List;
  */
 @Data
 public class AccessMdmPublishTableDTO {
-    @ApiModelProperty(value = "表Id")
+    @ApiModelProperty(value = "实体表Id")
     public long tableId;
-    @ApiModelProperty(value = "表名称")
+    @ApiModelProperty(value = "实体表名称")
     public String tableName;
-    /**
-     * 创建表方式 2:维度 1:事实 3: 数据接入 4:mdm
-     */
-    @ApiModelProperty(value = "创建表方式 2:维度 1:事实 3: 数据接入 4:mdm")
-    public int createType;
     @ApiModelProperty(value = "sql脚本")
     public String sqlScript;
     @ApiModelProperty(value = "字段列表")

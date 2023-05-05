@@ -17,7 +17,7 @@ import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
 import com.fisk.task.listener.nifi.INifiCustomWorkFlow;
 import com.fisk.task.listener.nifi.ISftpDataUploadListener;
-import com.fisk.task.po.TableNifiSettingPO;
+import com.fisk.task.po.app.TableNifiSettingPO;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import io.swagger.annotations.Api;

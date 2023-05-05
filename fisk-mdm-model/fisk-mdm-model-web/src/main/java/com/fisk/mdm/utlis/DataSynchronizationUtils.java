@@ -203,6 +203,7 @@ public class DataSynchronizationUtils {
         // 系统字段
         str.append(MARK + "new_code").append(",");
         str.append(MARK + "version_id").append(",");
+        str.append(MARK + "batch_code").append(",");
         str.append(MARK + "lock_tag").append(",");
         // 表基础字段
         str.append(MARK + "create_time").append(",");
@@ -240,6 +241,7 @@ public class DataSynchronizationUtils {
         str.append(" SET ");
         str.append(MARK + "new_code = " + "excluded." + MARK + "new_code").append(",");
         str.append(MARK + "version_id = " + "excluded." + MARK + "version_id").append(",");
+        str.append(MARK + "batch_code = " + "excluded." + MARK + "batch_code").append(",");
         str.append(MARK + "lock_tag = " + "excluded." + MARK + "lock_tag").append(",");
         str.append(MARK + "del_flag = " + "excluded." + MARK + "del_flag").append(",");
         str.append(MARK + "update_time = " + "excluded." + MARK + "update_time").append(",");
@@ -271,6 +273,7 @@ public class DataSynchronizationUtils {
             stmt.setArray(6, connection.createArrayOf(JDBCType.TIMESTAMP.getName(), this.getParameter(listMap,MARK + "update_time").toArray()));
             stmt.setArray(7, connection.createArrayOf(JDBCType.VARCHAR.getName(), this.getParameter(listMap,MARK + "update_user").toArray()));
             stmt.setArray(8, connection.createArrayOf(JDBCType.INTEGER.getName(), this.getParameter(listMap,MARK + "del_flag").toArray()));
+            stmt.setArray(9, connection.createArrayOf(JDBCType.VARCHAR.getName(), this.getParameter(listMap,MARK + "batch_code").toArray()));
 
             // 业务字段
             int index = 8;
