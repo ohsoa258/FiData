@@ -192,7 +192,7 @@ public class BloodCompensationImpl
             try {
                 classification.appSynchronousClassification(classificationInfoDto);
             } catch (Exception e) {
-                log.error("【同步业务分类失败】,分类名称:{}", item.name);
+                log.error("【同步业务分类失败】,分类名称:{}"+item.name,e.getMessage() );
                 continue;
             }
         }
