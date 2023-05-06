@@ -120,6 +120,7 @@ public class FactAttributeImpl
 
         //添加增量配置
         SyncModePO syncModePo = SyncModeMap.INSTANCES.dtoToPo(dto.syncModeDTO);
+        //dmp_datamodel_db 库： tb_sync_mode表
         boolean syncMode = this.syncMode.saveOrUpdate(syncModePo);
         boolean tableBusiness = true;
         if (dto.syncModeDTO.syncMode == SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
@@ -156,14 +157,30 @@ public class FactAttributeImpl
         }
         // TODO 添加事实字段(新增了config_details字段,用于存维度key的json连线配置信息)
         List<FactAttributePO> poList = FactAttributeMap.INSTANCES.addDtoToPoList(dto.list);
+        //将 poList 中的每个元素的 factId 属性都设置为 dto.factId
         poList.stream().map(e -> e.factId = dto.factId).collect(Collectors.toList());
-        if (!this.saveOrUpdateBatch(poList)) {
+        boolean b = saveOrUpdateBatch(poList);
+        if (!b) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         //修改发布状态
         factPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
         factPo.dimensionKeyScript = dto.dimensionKeyScript;
         factPo.coverScript = dto.coverScript;
+
+        //2023-04-26李世纪新增，拼接删除temp表的脚本并存入数据库
+        //获取临时表前缀
+        String prefixTempName = factPo.prefixTempName;
+        //获取表名称
+        String dimensionTabName = factPo.factTabName;
+        //拼接删除临时表的脚本
+        StringBuilder delSql = new StringBuilder("TRUNCATE TABLE ");
+        delSql.append(prefixTempName)
+                .append("_")
+                .append(dimensionTabName)
+                .append(";");
+        factPo.deleteTempScript = String.valueOf(delSql);
+
         if (factMapper.updateById(factPo) == 0) {
             throw new FkException(ResultEnum.PUBLISH_FAILURE);
         }

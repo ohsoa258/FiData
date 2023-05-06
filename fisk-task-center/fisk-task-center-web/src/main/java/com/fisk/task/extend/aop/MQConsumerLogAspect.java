@@ -163,13 +163,15 @@ public class MQConsumerLogAspect {
                 if (sendMsg && Objects.nonNull(data) && Objects.nonNull(data.userId)) {
                     //失败不管是什么类型都发失败通知
                     if (isSuccess) {
-                        if (notificationType == 1) {
-                            //默认1环绕,2前置,3后置
-                            WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
-                        } else if (notificationType == 2) {
-                            log.info("前置通知没有结束");
-                        } else if (notificationType == 3) {
-                            WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
+                        if (!data.popout) {
+                            if (notificationType == 1) {
+                                //默认1环绕,2前置,3后置
+                                WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
+                            } else if (notificationType == 2) {
+                                log.info("前置通知没有结束");
+                            } else if (notificationType == 3) {
+                                WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
+                            }
                         }
                     } else {
                         WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);

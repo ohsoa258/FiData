@@ -59,6 +59,7 @@ public class UserController {
      * @param password    password
      * @return 用户实体 为null说明不存在
      */
+    @ApiOperation("根据用户名和密码查询用户")
     @GetMapping
     public ResultEntity<Object> queryUser(
             @RequestParam("userAccount") String userAccount,

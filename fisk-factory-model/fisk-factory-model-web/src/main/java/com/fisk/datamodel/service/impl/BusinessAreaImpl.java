@@ -7,7 +7,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
-import com.fisk.common.core.enums.factory.BusinessTimeEnum;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
@@ -19,14 +18,14 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.StringBuildUtils;
-import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
-import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
+import com.fisk.common.service.accessAndTask.FactoryCodePreviewSqlHelper;
+import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PublishFieldDTO;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
@@ -37,16 +36,16 @@ import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
-import com.fisk.dataaccess.enums.syncModeTypeEnum;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.dto.GetConfigDTO;
-import com.fisk.datamodel.dto.TableStructDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
+import com.fisk.datamodel.dto.codepreview.CodePreviewDTO;
+import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PreviewTableBusinessDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.dto.webindex.WebIndexDTO;
@@ -63,6 +62,7 @@ import com.fisk.datamodel.enums.DataFactoryEnum;
 import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.BusinessAreaMap;
+import com.fisk.datamodel.map.codepreview.CodePreviewMapper;
 import com.fisk.datamodel.mapper.BusinessAreaMapper;
 import com.fisk.datamodel.mapper.dimension.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.dimension.DimensionFolderMapper;
@@ -70,9 +70,7 @@ import com.fisk.datamodel.mapper.dimension.DimensionMapper;
 import com.fisk.datamodel.mapper.fact.BusinessProcessMapper;
 import com.fisk.datamodel.mapper.fact.FactAttributeMapper;
 import com.fisk.datamodel.mapper.fact.FactMapper;
-import com.fisk.datamodel.service.IBuildOverlaySqlPreview;
 import com.fisk.datamodel.service.IBusinessArea;
-import com.fisk.datamodel.service.strategy.BuildSqlStrategy;
 import com.fisk.datamodel.service.impl.dimension.DimensionAttributeImpl;
 import com.fisk.datamodel.service.impl.dimension.DimensionFolderImpl;
 import com.fisk.datamodel.service.impl.dimension.DimensionImpl;
@@ -105,7 +103,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -1191,19 +1188,23 @@ public class BusinessAreaImpl
         StringBuilder str = new StringBuilder();
 
         for (TableSourceRelationsDTO item : dto) {
-            str.append("update ");
+            str.append("update ")
+                    .append("temp_");
             str.append(item.sourceTable);
-            str.append(" set ");
+            str.append(" set ")
+                    .append("temp_");
             str.append(item.sourceTable).append(".").append(StringBuildUtils.dimensionKeyName(item.targetTable));
             str.append(" = ");
             str.append(item.targetTable).append(".").append(StringBuildUtils.dimensionKeyName(item.targetTable));
-            str.append(" from ");
+            str.append(" from ")
+                    .append("temp_");
             str.append(item.sourceTable);
-            if (!StringUtils.isEmpty(item.joinType)){
+            if (!StringUtils.isEmpty(item.joinType)) {
                 str.append(" ").append(item.joinType);
                 str.append(" ").append(item.targetTable);
             }
-            str.append(" on ");
+            str.append(" on ")
+                    .append("temp_");;
             str.append(item.sourceTable).append(".").append(item.sourceColumn);
             str.append(" = ");
             str.append(item.targetTable).append(".").append(item.targetColumn);
@@ -1243,22 +1244,30 @@ public class BusinessAreaImpl
      */
     @Override
     public Object overlayCodePreview(OverlayCodePreviewDTO dto) {
-
+        //表名
         String tableName;
+        //临时表名称前缀
         String prefixTempName;
+        //如果是维度表  2、事实表  1、维度表
         if (dto.type == 1) {
+            //通过维度表id获取维度表
             DimensionPO po = dimensionMapper.selectById(dto.id);
             if (po == null) {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
+            //维度逻辑表名称
             tableName = po.dimensionTabName;
+            //临时表名称前缀
             prefixTempName = po.prefixTempName;
         } else {
+            //通过事实表id获取事实表
             FactPO factPO = factMapper.selectById(dto.id);
             if (factPO == null) {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
+            //事实逻辑表名称
             tableName = factPO.factTabName;
+            //临时表名称前缀
             prefixTempName = factPO.prefixTempName;
         }
 
@@ -1272,14 +1281,16 @@ public class BusinessAreaImpl
         targetDsConfig.syncMode = dto.syncMode;
         data.targetDsConfig = targetDsConfig;
 
-        data.businessDTO = dto.tableBusiness == null ? new TableBusinessDTO() : dto.tableBusiness;
-        data.businessDTO.otherLogic = 1;
-        if (dto.syncMode == 4) {
-            data.businessDTO.otherLogic = 2;
-        }
+//        2023-04-24李世纪注释掉。页面业务时间覆盖时，选项一的otherLogic是1，选项二的otherLogic是2
+//        data.businessDTO = dto.tableBusiness == null ? new TableBusinessDTO() : dto.tableBusiness;
+//        data.businessDTO.otherLogic = 1;
+//        if (dto.syncMode == 4) {
+//            data.businessDTO.otherLogic = 2;
+//        }
 
         data.modelPublishFieldDTOList = dto.modelPublishFieldDTOList;
 
+        //e.isPrimaryKey 主键
         List<String> collect = dto.modelPublishFieldDTOList.stream().filter(e -> e.isPrimaryKey == 1).map(e -> e.fieldEnName).collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(collect)) {
             data.businessKeyAppend = String.join(",", collect);
@@ -1293,13 +1304,27 @@ public class BusinessAreaImpl
         dataModel.buildNifiFlow = buildNifiFlow;
         dataModel.config = data;
         dataModel.funcName = FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_OUTPUT.getName();
+        //固定连接类型：sqlServer
         dataModel.dataSourceType = DataSourceTypeEnum.SQLSERVER;
         dataModel.synchronousTypeEnum = SynchronousTypeEnum.PGTOPG;
 
-        ResultEntity<Object> objectResultEntity = publishTaskClient.overlayCodePreview(dataModel);
-        if (objectResultEntity.code != ResultEnum.SUCCESS.getCode()) {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
-        }
+        //2023-04-21李世纪注释掉   ：下面是生成存储过程的数仓建模sql预览
+//        ResultEntity<Object> objectResultEntity = publishTaskClient.overlayCodePreview(dataModel);
+//
+//        if (objectResultEntity.code != ResultEnum.SUCCESS.getCode()) {
+//            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+//        }
+
+        /*
+        l's'j修改... 下面是生成sql语句的数仓建模sql预览
+         */
+        CodePreviewDTO codePreviewDTO = new CodePreviewDTO();
+        codePreviewDTO.setOverLoadCodeDTO(dataModel);
+        codePreviewDTO.setOverlayCodePreviewDTO(dto);
+        String finalSql = codePreviewBySyncMode(codePreviewDTO);
+
+        //检测获取到的sql预览结果
+        log.info("预返回的覆盖方式预览sql为" + finalSql);
 
         /*Connection conn = null;
         Statement stat = null;
@@ -1313,82 +1338,81 @@ public class BusinessAreaImpl
             e.printStackTrace();
         }*/
 
-        return objectResultEntity.data;
+        //2023-04-21李世纪注释掉
+//        return objectResultEntity.data;
+
+        //返回最终拼接好的sql
+        return finalSql;
     }
 
-    @Override
-    public Object overlayCodePreviewTest(OverlayCodePreviewDTO dto) {
-        // 事实表全量覆盖
-        String tableName;
-        String prefixTempName;
-        if (dto.type == 2){
-            // 事实表全量覆盖
-            FactPO factPO = factMapper.selectById(dto.id);
-            if (factPO == null){
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
-            }
-            tableName = factPO.factTabName;
-            prefixTempName = factPO.prefixTempName;
-        }else{
-            DimensionPO po = dimensionMapper.selectById(dto.id);
-            if (po == null) {
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
-            }
-            tableName = po.dimensionTabName;
-            prefixTempName = po.prefixTempName;
+    /**
+     * 数据建模覆盖方式预览sql
+     *
+     * @param dto
+     * @return
+     * @author lishiji
+     */
+    private String codePreviewBySyncMode(CodePreviewDTO dto) {
+        //分别获取参数dto
+        OverLoadCodeDTO overLoadCodeDTO = dto.overLoadCodeDTO;
+        OverlayCodePreviewDTO originalDTO = dto.overlayCodePreviewDTO;
+        DataAccessConfigDTO configDTO = overLoadCodeDTO.config;
+        BuildNifiFlowDTO buildNifiFlow = overLoadCodeDTO.buildNifiFlow;
+        //获取业务时间覆盖所需的逻辑
+        TableBusinessDTO tableBusiness = originalDTO.tableBusiness;
+        //TableBusinessDTO ==> PreviewTableBusinessDTO
+        PreviewTableBusinessDTO previewTableBusinessDTO = CodePreviewMapper.INSTANCES.dtoToDto(tableBusiness);
+
+        //获取数据源类型
+        DataSourceTypeEnum sourceType = overLoadCodeDTO.dataSourceType;
+        //获取同步方式
+        int syncMode = configDTO.targetDsConfig.syncMode;
+        //获取表名
+        String tableName = configDTO.processorConfig.targetTableName;
+        //获取临时表前缀
+        String prefixTempName = buildNifiFlow.prefixTempName;
+        //拼接临时表名称
+        String tempTableName = prefixTempName + "_" + tableName;
+        //获取前端传递的表字段集合
+        List<ModelPublishFieldDTO> fields = originalDTO.modelPublishFieldDTOList;
+        //ModelPublishFieldDTO List ==> PublishFieldDTO List
+        List<PublishFieldDTO> fieldList = CodePreviewMapper.INSTANCES.listToList(fields);
+        //获取集合大小（字段数量）
+        int size = fieldList.size();
+
+        //根据覆盖方式决定返回的sql
+        switch (sourceType) {
+            case SQLSERVER:
+                switch (syncMode) {
+                    //全量
+                    case 1:
+                        //调用封装的全量覆盖方式拼接sql方法并返回
+                        return FactoryCodePreviewSqlHelper.fullVolumeSql(tableName, tempTableName, fieldList);
+                    //追加
+                    case 2:
+                        //调用封装的追加覆盖方式拼接sql方法并返回
+                        return FactoryCodePreviewSqlHelper.insertAndSelectSql(tableName, tempTableName, fieldList);
+                    //业务标识覆盖（业务主键覆盖）---merge覆盖
+                    case 3:
+                        //调用封装的业务标识覆盖方式--merge覆盖(业务标识可以作为业务主键)拼接sql方法并返回
+                        return FactoryCodePreviewSqlHelper.merge(tableName, tempTableName, fieldList);
+                    //业务时间覆盖
+                    case 4:
+                        //调用封装的业务时间覆盖方式的拼接sql方法并返回
+                        return FactoryCodePreviewSqlHelper.businessTimeOverLay(tableName, tempTableName, fieldList,previewTableBusinessDTO);
+                    //业务标识覆盖（业务主键覆盖）--- delete insert 删除插入
+                    case 5:
+                        //调用封装的业务标识覆盖方式--删除插入(按照业务主键删除，再重新插入)拼接sql方法并返回
+                        return FactoryCodePreviewSqlHelper.delAndInsert(tableName, tempTableName, fieldList);
+                    default:
+                        throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+                }
+                //todo:暂时搁置
+            case POSTGRESQL:
+
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
-
-        // 获取数据源信息
-        ResultEntity<DataSourceDTO> dataSourceConfig = null;
-        try{
-            dataSourceConfig = userClient.getFiDataDataSourceById(dwSource);
-            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
-                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
-            }
-        }catch (Exception e){
-            log.error("调用userClient服务获取数据源失败,", e);
-            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
-        }
-
-        DataAccessConfigDTO data = new DataAccessConfigDTO();
-
-        ProcessorConfig processorConfig = new ProcessorConfig();
-        processorConfig.targetTableName = tableName;
-        data.processorConfig = processorConfig;
-
-        DataSourceConfig targetDsConfig = new DataSourceConfig();
-        targetDsConfig.syncMode = dto.syncMode;
-        data.targetDsConfig = targetDsConfig;
-        data.businessDTO = dto.tableBusiness == null ? new TableBusinessDTO() : dto.tableBusiness;
-
-        data.modelPublishFieldDTOList = dto.modelPublishFieldDTOList;
-
-        BuildNifiFlowDTO buildNifiFlow = new BuildNifiFlowDTO();
-        buildNifiFlow.updateSql = dto.updateSql;
-        buildNifiFlow.prefixTempName = prefixTempName;
-
-        OverLoadCodeDTO dataModel = new OverLoadCodeDTO();
-        dataModel.buildNifiFlow = buildNifiFlow;
-        dataModel.config = data;
-
-        // 获取ods表字段数据
-        List<ModelPublishFieldDTO> odsFieldList = dto.modelPublishFieldDTOList;
-        return getBuildSql(odsFieldList, dataModel, dataSourceConfig.data, dto);
-
-    }
-
-    private Object getBuildSql(List<ModelPublishFieldDTO> odsFieldList, OverLoadCodeDTO dataModel, DataSourceDTO data, OverlayCodePreviewDTO dto) {
-        IBuildOverlaySqlPreview service = BuildSqlStrategy.getService(data.conType.getName().toUpperCase());
-        return service.buildStgToOdsSql(data, dto, dataModel);
-    }
-
-    public DataSourceDTO getTargetDbInfo() {
-        ResultEntity<DataSourceDTO> dataDataSource = userClient.getFiDataDataSourceById(targetDbId);
-        if (dataDataSource.code != ResultEnum.SUCCESS.getCode()) {
-            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
-        }
-
-        return dataDataSource.data;
     }
 
 }

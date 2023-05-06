@@ -4,6 +4,7 @@ import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.metadataentityoperationLog.MetaDataEntityOperationLogDTO;
 import com.fisk.datamanagement.service.IMetaDataEntityOperationLog;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,6 +29,7 @@ public class OperateLogController {
      * @param dto
      * @return
      */
+    @ApiOperation("记录日志信息")
     @RequestMapping("/addOperateLog")
     public void saveLog(@RequestBody MetaDataEntityOperationLogDTO dto){
          iMetaDataEntityOperationLog.addOperationLog(dto);

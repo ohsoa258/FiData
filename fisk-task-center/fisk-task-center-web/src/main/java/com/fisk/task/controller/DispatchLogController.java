@@ -8,6 +8,7 @@ import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelStageLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,6 +40,7 @@ public class DispatchLogController {
      * @param pipelLog pipelLog
      * @return 执行结果
      */
+    @ApiOperation("获取管道日志")
     @PostMapping("/getPipelLogVos")
     public ResultEntity<List<PipelMergeLog>> getPipelLogVos(@RequestBody PipelLogVO pipelLog) {
         ResultEntity<List<PipelMergeLog>> objectResultEntity = new ResultEntity<>();
@@ -52,6 +54,7 @@ public class DispatchLogController {
      * @param pipelLog
      * @return
      */
+    @ApiOperation("获取图表的日志统计信息")
     @PostMapping("/getLogStatisticsForChart")
     public ResultEntity<LogStatisticsForChartVO> getLogStatisticsForChart(@RequestBody PipelLogVO pipelLog){
         ResultEntity<LogStatisticsForChartVO> objectResultEntity = new ResultEntity<>();
@@ -66,6 +69,7 @@ public class DispatchLogController {
      * @param pipelJobLogs pipelJobLogs
      * @return 执行结果
      */
+    @ApiOperation("获取job日志")
     @PostMapping("/getPipelJobLogVos")
     public ResultEntity<List<PipelJobMergeLogVO>> getPipelJobLogVos(@RequestBody List<PipelJobLogVO> pipelJobLogs) {
         ResultEntity<List<PipelJobMergeLogVO>> objectResultEntity = new ResultEntity<>();
@@ -80,6 +84,7 @@ public class DispatchLogController {
      * @param pipelTaskLogs pipelTaskLogs
      * @return 执行结果
      */
+    @ApiOperation("获取任务日志")
     @PostMapping("/getPipelTaskLogVos")
     public ResultEntity<List<PipelTaskMergeLogVO>> getPipelTaskLogVos(@RequestBody List<PipelTaskLogVO> pipelTaskLogs) {
         ResultEntity<List<PipelTaskMergeLogVO>> objectResultEntity = new ResultEntity<>();
@@ -94,6 +99,7 @@ public class DispatchLogController {
      * @param taskId taskId
      * @return 执行结果
      */
+    @ApiOperation("获取阶段日志")
     @PostMapping("/getPipelStageLogVos")
     public ResultEntity<List<PipelStageLogVO>> getPipelStageLogVos(@RequestParam String taskId) {
         ResultEntity<List<PipelStageLogVO>> objectResultEntity = new ResultEntity<>();
@@ -107,6 +113,7 @@ public class DispatchLogController {
      * @param pipelTraceId
      * @return
      */
+    @ApiOperation("依据pipelTraceId查询pipelId")
     @GetMapping("/getPipelIdByPipelTraceId")
     public ResultEntity<String> getPipelIdByPipelTraceId(@RequestParam("pipelTraceId") String pipelTraceId){
         return iPipelLog.getPipelIdByTraceId(pipelTraceId);
@@ -118,6 +125,7 @@ public class DispatchLogController {
      * @param dto
      * @return 执行结果
      */
+    @ApiOperation("获取数据服务表服务同步日志")
     @PostMapping("/getDataServiceTableLogVos")
     public ResultEntity<DataServiceTableLogQueryVO> getDataServiceTableLogVos(@RequestBody DataServiceTableLogQueryDTO dto) {
         return iPipelTaskLog.getDataServiceTableLogVos(dto);
@@ -128,6 +136,7 @@ public class DispatchLogController {
      * @param pipelTraceId
      * @return
      */
+    @ApiOperation("依据pipelTraceId查询pipelId")
     @GetMapping("/getPipelStates")
     public ResultEntity<List<String>> getPipelStates(@RequestParam("pipelTraceId") String pipelTraceId){
         ResultEntity<List<String>> objectResultEntity = new ResultEntity<>();

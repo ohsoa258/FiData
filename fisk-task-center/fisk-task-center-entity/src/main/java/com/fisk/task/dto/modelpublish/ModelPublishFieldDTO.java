@@ -73,4 +73,10 @@ public class ModelPublishFieldDTO {
      */
     @ApiModelProperty(value = "字段精度")
     public Integer fieldPrecision;
+
+    /**
+     * 事实表、维度表在数仓建模sql预览时公用：是否是业务覆盖标识 0:否 1:是
+     */
+    @ApiModelProperty(value = "是否是业务覆盖标识 0:否 1:是")
+    public int isBusinessKey;
 }

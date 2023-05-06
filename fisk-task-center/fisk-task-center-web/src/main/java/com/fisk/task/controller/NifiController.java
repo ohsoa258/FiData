@@ -21,6 +21,7 @@ import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -49,18 +50,18 @@ public class NifiController {
     UserClient userClient;
     @Resource
     ISftpDataUploadListener iSftpDataUploadListener;
-
+    @ApiOperation("修改调度")
     @PostMapping("/modifyScheduling")
     public ResultEntity<Object> modifyScheduling(@RequestParam("groupId") String groupId, @RequestParam("ProcessorId") String ProcessorId, @RequestParam("schedulingStrategy") String schedulingStrategy, @RequestParam("schedulingPeriod") String schedulingPeriod) {
         return ResultEntityBuild.build(iNiFiHelper.modifyScheduling(groupId, ProcessorId, schedulingStrategy, schedulingPeriod));
 
     }
-
+    @ApiOperation("删除Nifi流")
     @PostMapping("/deleteNifiFlow")
     public ResultEntity<Object> deleteNifiFlow(@RequestBody DataModelVO dataModelVO) {
         return ResultEntityBuild.build(iNiFiHelper.deleteNifiFlow(dataModelVO));
     }
-
+    @ApiOperation("获取NIFI表设置")
     @PostMapping("/getTableNifiSetting")
     public ResultEntity<TableNifiSettingPO> getTableNifiSetting(@RequestBody DataAccessIdDTO dto) {
         ResultEntity<TableNifiSettingPO> objectResultEntity = new ResultEntity<>();
@@ -69,7 +70,7 @@ public class NifiController {
         return objectResultEntity;
 
     }
-
+    @ApiOperation("获取Pg Ods的Sql")
     @PostMapping("/getSqlForPgOds")
     public ResultEntity<List<String>> getSqlForPgOds(@RequestBody DataAccessConfigDTO configDTO) {
         ResultEntity<List<String>> SqlForPgOds = new ResultEntity<>();
@@ -77,12 +78,12 @@ public class NifiController {
         SqlForPgOds.code = 0;
         return SqlForPgOds;
     }
-
+    @ApiOperation("删除自定义工作Nifi流程")
     @PostMapping("/deleteCustomWorkNifiFlow")
     public void deleteCustomWorkNifiFlow(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO) {
         iNifiCustomWorkFlow.deleteCustomWorkNifiFlow(nifiCustomWorkListDTO);
     }
-
+    @ApiOperation("暂停自定义工作Nifi流程")
     @PostMapping("/suspendCustomWorkNifiFlow")
     public ResultEntity<Object> suspendCustomWorkNifiFlow(@RequestParam("nifiCustomWorkflowId") String nifiCustomWorkflowId, @RequestParam("ifFire") boolean ifFire) {
         return ResultEntityBuild.build(iNifiCustomWorkFlow.suspendCustomWorkNifiFlow(nifiCustomWorkflowId, ifFire));
@@ -93,6 +94,7 @@ public class NifiController {
      *
      * @param dto
      */
+    @ApiOperation("添加系统数据源时调用设置nifi参数")
     @PostMapping("/add")
     public ResultEntity<Object> addDataSetParams(@RequestBody DataSourceSaveDTO dto) {
         // 添加系统数据源
@@ -123,6 +125,7 @@ public class NifiController {
      * @param dto
      * @return
      */
+    @ApiOperation("修改系统数据源时调用设置nifi参数")
     @PutMapping("/edit")
     public ResultEntity<Object> editDataSetParams(@RequestBody DataSourceSaveDTO dto) {
         // 修改数据源
@@ -171,6 +174,7 @@ public class NifiController {
      * @param kafkaReceive
      * @return
      */
+    @ApiOperation("sftp或ftp-Java代码同步")
     @PostMapping("/sftpDataUploadListener")
     public ResultEntity<Object> sftpDataUploadListener(@RequestBody KafkaReceiveDTO kafkaReceive) {
         return ResultEntityBuild.build(iSftpDataUploadListener.buildSftpDataUploadListener(JSON.toJSONString(kafkaReceive)));

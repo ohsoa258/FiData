@@ -50,7 +50,7 @@ public class SwaggerConfig {
     public static final String TAG_11 = "自动创建编码管理API";
     public static final String TAG_12="匹配规则管理API";
     public static final String TAG_13="流程定义API";
-    public static final String TAG_14="Access-Controller";
+    public static final String TAG_14="数据接入";
 
     @Bean
     public Docket createRestApi() {
@@ -70,6 +70,7 @@ public class SwaggerConfig {
                 .tags(new Tag(TAG_11, "自动创建编码管理API"))
                 .tags(new Tag(TAG_12,"匹配规则管理API"))
                 .tags(new Tag(TAG_13,"流程定义API"))
+                .tags(new Tag(TAG_14,"数据接入"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

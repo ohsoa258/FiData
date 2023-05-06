@@ -67,6 +67,7 @@ public enum ResultEnum {
 
     LOG_NOT_EXISTS(1038,"当前选择的服务类型在当前日期没有日志"),
     SERVICE_NOT_EXISTS(1039,"当前所选的服务不存在"),
+    SET_KEEP_NUMBER_ERROR(1040,"设置stg保存时间失败"),
 
     /**
      * 报表可视化服务，错误码从2000开始

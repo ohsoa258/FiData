@@ -30,8 +30,9 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
     public SynchronousTypeEnum synchronousTypeEnum;
     /*
      * 表类别
+     * 表类别(物理表3,事实表2,维度表1,指标表0)
      * */
-    @ApiModelProperty(value = "表类别")
+    @ApiModelProperty(value = "表类别(物理表3,事实表2,维度表1,指标表0)")
     public OlapTableEnum type;
     /*
      * 数据来源类别
@@ -197,6 +198,12 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
      */
     @ApiModelProperty(value = "预览Sql执行语句")
     public String execSql;
+
+    /**
+     * 当Keep_number 配置天数后，这里保存删除stg表的数据的脚本语句
+     * 默认：5 day
+     */
+    public String deleteScript;
 
 
 }
