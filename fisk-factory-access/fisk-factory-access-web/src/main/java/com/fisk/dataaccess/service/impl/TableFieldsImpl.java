@@ -1460,45 +1460,45 @@ public class TableFieldsImpl
         return ResultEnum.SUCCESS;
     }
 
-    //   修改...
-    public Object overlayCodePreview(OverlayCodePreviewAccessDTO dto) {
-        log.info("数据接入预览SQL参数{}", JSON.toJSONString(dto));
-        // 查询表数据
-        //从tb_table_access表获取物理表信息
-        TableAccessPO tableAccessPO = tableAccessMapper.selectById(dto.id);
-        //获取不到，抛出异常
-        if (Objects.isNull(tableAccessPO)) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS, "预览SQL失败，表信息不存在");
-        }
-        log.info("数据接入表数据：{}", JSON.toJSONString(tableAccessPO));
-
-        // 查询app应用信息
-        AppRegistrationPO appRegistrationPO = appRegistrationMapper.selectById(tableAccessPO.appId);
-        //获取不到应用信息，则抛出异常
-        if (Objects.isNull(appRegistrationPO)) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS, "预览SQL失败，应用不存在");
-        }
-        //获取应用下的数据源信息
-        DataSourceDTO dataSourceDTO = getTargetDbInfo(appRegistrationPO.getTargetDbId());
-        log.info("数据接入数据源：{}", JSON.toJSONString(dataSourceDTO));
-
-        // 处理不同架构下的表名称
-        String targetTableName = "";
-        if (appRegistrationPO.whetherSchema) {
-            targetTableName = tableAccessPO.tableName;
-        } else {
-            targetTableName = "ods_" + appRegistrationPO.getAppAbbreviation() + "_" + tableAccessPO;
-        }
-
-        // 获取预览SQL
-        return getBuildSql(dataSourceDTO, dto, tableAccessPO, appRegistrationPO, targetTableName);
-    }
-
-    private Object getBuildSql(DataSourceDTO dataSourceDTO, OverlayCodePreviewAccessDTO dto, TableAccessPO tableAccessPO, AppRegistrationPO appRegistrationPO, String targetTableName) {
-        IBuildOverlaySqlPreview service = BuildSqlStrategy.getService(dataSourceDTO.conType.getName().toUpperCase());
-        return service.buildStgToOdsSql(dataSourceDTO, dto, tableAccessPO, appRegistrationPO, targetTableName);
-    }
+//    //   修改...
+//    public Object overlayCodePreview(OverlayCodePreviewAccessDTO dto) {
+//        log.info("数据接入预览SQL参数{}", JSON.toJSONString(dto));
+//        // 查询表数据
+//        //从tb_table_access表获取物理表信息
+//        TableAccessPO tableAccessPO = tableAccessMapper.selectById(dto.id);
+//        //获取不到，抛出异常
+//        if (Objects.isNull(tableAccessPO)) {
+//            throw new FkException(ResultEnum.DATA_NOTEXISTS, "预览SQL失败，表信息不存在");
+//        }
+//        log.info("数据接入表数据：{}", JSON.toJSONString(tableAccessPO));
 //
+//        // 查询app应用信息
+//        AppRegistrationPO appRegistrationPO = appRegistrationMapper.selectById(tableAccessPO.appId);
+//        //获取不到应用信息，则抛出异常
+//        if (Objects.isNull(appRegistrationPO)) {
+//            throw new FkException(ResultEnum.DATA_NOTEXISTS, "预览SQL失败，应用不存在");
+//        }
+//        //获取应用下的数据源信息
+//        DataSourceDTO dataSourceDTO = getTargetDbInfo(appRegistrationPO.getTargetDbId());
+//        log.info("数据接入数据源：{}", JSON.toJSONString(dataSourceDTO));
+//
+//        // 处理不同架构下的表名称
+//        String targetTableName = "";
+//        if (appRegistrationPO.whetherSchema) {
+//            targetTableName = tableAccessPO.tableName;
+//        } else {
+//            targetTableName = "ods_" + appRegistrationPO.getAppAbbreviation() + "_" + tableAccessPO;
+//        }
+//
+//        // 获取预览SQL
+//        return getBuildSql(dataSourceDTO, dto, tableAccessPO, appRegistrationPO, targetTableName);
+//    }
+//
+//    private Object getBuildSql(DataSourceDTO dataSourceDTO, OverlayCodePreviewAccessDTO dto, TableAccessPO tableAccessPO, AppRegistrationPO appRegistrationPO, String targetTableName) {
+//        IBuildOverlaySqlPreview service = BuildSqlStrategy.getService(dataSourceDTO.conType.getName().toUpperCase());
+//        return service.buildStgToOdsSql(dataSourceDTO, dto, tableAccessPO, appRegistrationPO, targetTableName);
+//    }
+////
 
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -1600,6 +1600,17 @@ public class TableFieldsImpl
 
         //调用方法，获取sql语句
         String finalSql = codePreviewBySyncMode(stgTableName, odsTableName, previewDTO,conType);
+
+        //判断是否是全量覆盖方式
+        if (dto.syncMode==1){
+            //判断全量覆盖方式是否生成快照  1使用  0不使用
+            int snapshotFlag = dto.snapshotDTO.ifEnableSnapshot;
+            if (snapshotFlag == 1){
+                String fullVolumeSql = finalSql.substring(finalSql.indexOf(";"));
+            }else {
+                log.info("全量覆盖未选择生成版本快照...");
+            }
+        }
 
         //返回最终拼接好的sql
         return finalSql;

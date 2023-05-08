@@ -88,8 +88,9 @@ public class KafkaReceiveDTO extends MQBaseDTO {
     public String sftpFileCopyTaskIds;
     /**
      *powerbi数据集刷新任务
+     * 李世纪更名：PBI DataSet 刷新
      */
-    @ApiModelProperty(value = "powerbi数据集刷新任务")
+    @ApiModelProperty(value = "PBI DataSet 刷新")
     public String powerBiDataSetRefreshTaskIds;
     /**
      * 失败信息
