@@ -21,7 +21,7 @@ import java.util.List;
  */
 @Api(tags = {SwaggerConfig.NIFI_COMPONENT})
 @RestController
-@RequestMapping("getLogName()")
+@RequestMapping("/nifiComponent")
 public class NifiComponentController {
 
     @Resource
