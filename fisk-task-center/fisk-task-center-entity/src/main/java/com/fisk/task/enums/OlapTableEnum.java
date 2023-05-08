@@ -33,8 +33,10 @@ public enum OlapTableEnum implements BaseEnum {
     SFTPFILECOPYTASK(14,"SFTP文件复制"),
     DATASERVICES(15,"数据服务表"),
     DATASECURITY(16, "数据安全"),
-    //POWERBI数据集刷新任务
-    POWERBIDATASETREFRESHTASK(17,"PBI DataSet 刷新")
+    /**
+     * POWERBI数据集刷新任务(PBI DataSet 刷新)
+     */
+    POWERBIDATASETREFRESHTASK(17,"POWERBI数据集刷新任务")
     ;
 
 
