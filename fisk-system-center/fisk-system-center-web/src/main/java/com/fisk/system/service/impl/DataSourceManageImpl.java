@@ -78,7 +78,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     public List<DataSourceDTO> getExternalDataSource() {
         List<DataSourceDTO> all = getAll(true);
         if (CollectionUtils.isNotEmpty(all)) {
-            all = all.stream().filter(t -> t.getSourceType() == 2).collect(Collectors.toList());
+            all = all.stream().filter(t -> t.getSourceType() == 1 || t.getSourceType() == 2).collect(Collectors.toList());
         }
         return all;
     }
