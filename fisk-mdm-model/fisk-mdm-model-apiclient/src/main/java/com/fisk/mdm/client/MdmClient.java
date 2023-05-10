@@ -73,7 +73,21 @@ public interface MdmClient {
     @PutMapping("/access/updateAccessPublishState")
     void updateAccessPublishState( @RequestBody AccessPublishStatusDTO dto);
 
-    @ApiOperation("获取接入字段映射关系")
+    /**
+     * 获取接入表默认预览sql
+     * @param moudleId
+     * @param entityId
+     * @return
+     */
+    @GetMapping("/access/getAccessDefaultSql")
+    ResultEntity<Object> getAccessDefaultSql(@RequestParam("moudleId")Integer moudleId,@RequestParam("entityId")Integer entityId);
+
+    /**
+     * 获取接入字段映射关系
+     * @param accessId
+     * @param entityId
+     * @return
+     */
     @GetMapping("/access/getAccessAttributeField")
     ResultEntity<List<AccessAttributeDTO>> getAccessAttributeField(@RequestParam("accessId")Integer accessId,@RequestParam("entityId") Integer entityId);
     /**
@@ -138,7 +152,12 @@ public interface MdmClient {
     @PostMapping("/model/setDataStructure")
     ResultEntity<Object> setMDMDataStructure(@RequestBody FiDataMetaDataReqDTO dto);
 
+    /**
+     * 数据访问配置
+     * @param entityId
+     * @param modelId
+     * @return
+     */
     @GetMapping("/access/dataAccessConfig")
-    @ApiOperation(value = "数据访问配置")
     ResultEntity<AccessMdmConfigDTO> dataAccessConfig(@RequestParam("entityId") long entityId, @RequestParam("modelId") long modelId);
 }

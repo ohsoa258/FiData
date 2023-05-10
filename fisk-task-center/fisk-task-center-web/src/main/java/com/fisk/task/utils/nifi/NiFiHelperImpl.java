@@ -945,6 +945,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         map.put("put-db-record-table-name", putDatabaseRecordDTO.TableName);
         map.put("put-db-record-schema-name", putDatabaseRecordDTO.schemaName);
         map.put("put-db-record-quoted-identifiers", "true");
+        map.put("put-db-record-quoted-table-identifiers",String.valueOf(putDatabaseRecordDTO.putDbRecordQuotedTableIdentifiers));
         if (Objects.nonNull(putDatabaseRecordDTO.putDbRecordTranslateFieldNames)) {
             map.put("put-db-record-translate-field-names", putDatabaseRecordDTO.putDbRecordTranslateFieldNames);
         }

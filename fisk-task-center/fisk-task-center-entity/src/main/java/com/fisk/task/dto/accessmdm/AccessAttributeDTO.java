@@ -33,4 +33,8 @@ public class AccessAttributeDTO {
      * 字段名字
      */
     public String fieldName;
+    /**
+     * stg字段名字
+     */
+    public String mdmFieldName;
 }

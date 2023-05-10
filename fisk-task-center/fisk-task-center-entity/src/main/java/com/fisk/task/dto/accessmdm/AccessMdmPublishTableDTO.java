@@ -82,4 +82,22 @@ public class AccessMdmPublishTableDTO {
      */
     @ApiModelProperty(value = "覆盖脚本执行SQL语句")
     public String coverScript;
+
+    /**
+     * 发布历史id
+     */
+    @ApiModelProperty(value = "发布历史id")
+    public Long tableHistoryId;
+
+    /**
+     * 用户id
+     */
+    @ApiModelProperty(value = "用户id")
+    public long userId;
+
+    /**
+     * 版本Id
+     */
+    @ApiModelProperty(value = "版本Id")
+    public Integer versionId;
 }

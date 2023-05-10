@@ -7,6 +7,7 @@ import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.enums.syncModeTypeEnum;
+import com.fisk.mdm.enums.ImportTypeEnum;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.mdmconfig.AccessMdmConfigDTO;
 import com.fisk.task.dto.mdmtask.BuildMdmNifiFlowDTO;
@@ -276,17 +277,17 @@ public class BuildPgTableImpl implements IbuildTable {
 
     @Override
     public String queryMdmNumbersField(BuildMdmNifiFlowDTO dto, AccessMdmConfigDTO config, String groupId) {
-        String mdmTableName = "mdm_"+dto.getModelName()+dto.getEntityName();
-        String querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,convert(varchar(100),getdate(),120) as end_time," +
+        String mdmTableName = "mdm_"+dto.getModelName()+"_"+dto.getEntityName();
+        String querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
                 "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + mdmTableName + " with (nolock) where fidata_batch_code='${fidata_batch_code}'";
+                "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from \"" + mdmTableName + "\" where fidata_batch_code='${fidata_batch_code}'";
         return querySql;
     }
 
     @Override
     public String delMdmField(BuildMdmNifiFlowDTO dto, AccessMdmConfigDTO config, String groupId) {
-        String stgTableName = "stg_"+dto.getModelName()+dto.getEntityName();
-        String delSql = "delete from " + stgTableName + " where fidata_batch_code='${fidata_batch_code}'";
+        String stgTableName = "stg_"+dto.getModelName()+"_"+dto.getEntityName();
+        String delSql = "delete from \"" + stgTableName + "\" where fidata_import_type='"+ImportTypeEnum.NIFI_SYNC.getValue()+"'";
         return delSql;
     }
 

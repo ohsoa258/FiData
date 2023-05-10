@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.access.AccessAttributeAddDTO;
 import com.fisk.mdm.dto.access.AccessSqlDTO;
+import com.fisk.mdm.dto.access.OverlayCodePreviewAccessDTO;
 import com.fisk.mdm.dto.accessmodel.AccessPublishStatusDTO;
 import com.fisk.mdm.service.AccessDataService;
 import com.fisk.task.dto.accessmdm.AccessAttributeDTO;
@@ -26,10 +27,15 @@ public class AccessDataController {
 
     @ApiOperation("获取接入字段表列表")
     @GetMapping("/getAccessAttributeList")
-    public ResultEntity<Object> getAccessAttributeList(Integer moudleId,Integer entityId) {
+    public ResultEntity<Object> getAccessAttributeList(@RequestParam("moudleId")Integer moudleId,@RequestParam("entityId")Integer entityId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, accessDataService.getAccessAttributeList(moudleId,entityId));
     }
 
+    @ApiOperation("获取接入表默认预览sql")
+    @GetMapping("/getAccessDefaultSql")
+    public ResultEntity<Object> getAccessDefaultSql(@RequestParam("moudleId")Integer moudleId,@RequestParam("entityId")Integer entityId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, accessDataService.getAccessDefaultSql(moudleId,entityId));
+    }
     @ApiOperation("修改接入sql脚本")
     @PutMapping("/editAccessSql")
     public ResultEntity<Object> editDimensionSql(@Validated @RequestBody AccessSqlDTO dto) {
@@ -54,12 +60,12 @@ public class AccessDataController {
     public ResultEntity<List<AccessAttributeDTO>> getAccessAttributeField(@RequestParam("accessId")Integer accessId,@RequestParam("entityId") Integer entityId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, accessDataService.getAccessAttributeField(accessId,entityId));
     }
-//
-//    @PostMapping("/overlayCodePreview")
-//    @ApiOperation(value = "覆盖方式预览代码")
-//    public ResultEntity<Object> overlayCodePreview(@RequestBody OverlayCodePreviewAccessDTO dto) {
-//        return ResultEntityBuild.build(ResultEnum.SUCCESS, accessDataService.mdmOverlayCodePreview(dto));
-//    }
+
+    @PostMapping("/overlayCodePreview")
+    @ApiOperation(value = "覆盖方式预览代码")
+    public ResultEntity<Object> overlayCodePreview(@RequestBody OverlayCodePreviewAccessDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, accessDataService.mdmOverlayCodePreview(dto));
+    }
 
     @GetMapping("/dataAccessConfig")
     @ApiOperation(value = "数据访问配置")

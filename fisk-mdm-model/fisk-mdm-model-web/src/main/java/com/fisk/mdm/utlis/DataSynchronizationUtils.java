@@ -15,7 +15,6 @@ import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.common.service.mdmBEBuild.dto.DataSourceConDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.stgbatch.MdmDTO;
-import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.enums.SyncStatusTypeEnum;
@@ -203,7 +202,6 @@ public class DataSynchronizationUtils {
         // 系统字段
         str.append(MARK + "new_code").append(",");
         str.append(MARK + "version_id").append(",");
-        str.append(MARK + "batch_code").append(",");
         str.append(MARK + "lock_tag").append(",");
         // 表基础字段
         str.append(MARK + "create_time").append(",");
@@ -211,6 +209,7 @@ public class DataSynchronizationUtils {
         str.append(MARK + "update_time").append(",");
         str.append(MARK + "update_user").append(",");
         str.append(MARK + "del_flag").append(",");
+        str.append(MARK + "batch_code").append(",");
 
         // 业务字段
         String businessFields = attributeList.stream().filter(e -> e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName()))
@@ -230,7 +229,7 @@ public class DataSynchronizationUtils {
 
         str.append(businessFields).append(")");
         str.append(" VALUES (" + placeholders + ",unnest(?),unnest(?),unnest(?),unnest(?)" +
-                ",unnest(?),unnest(?),unnest(?),unnest(?)" +") ");
+                ",unnest(?),unnest(?),unnest(?),unnest(?),unnest(?)" +") ");
 
         List<AttributeInfoDTO> codeAssociationCondition = attributeList.stream().filter(e -> e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName())
                 && e.getName().equals("code")).collect(Collectors.toList());
@@ -241,11 +240,11 @@ public class DataSynchronizationUtils {
         str.append(" SET ");
         str.append(MARK + "new_code = " + "excluded." + MARK + "new_code").append(",");
         str.append(MARK + "version_id = " + "excluded." + MARK + "version_id").append(",");
-        str.append(MARK + "batch_code = " + "excluded." + MARK + "batch_code").append(",");
         str.append(MARK + "lock_tag = " + "excluded." + MARK + "lock_tag").append(",");
         str.append(MARK + "del_flag = " + "excluded." + MARK + "del_flag").append(",");
         str.append(MARK + "update_time = " + "excluded." + MARK + "update_time").append(",");
         str.append(MARK + "update_user = " + "excluded." + MARK + "update_user").append(",");
+        str.append(MARK + "batch_code = " + "excluded." + MARK + "batch_code").append(",");
 
         String code1 = "\"" + columnName + "\" = " + "excluded." + MARK + "new_code" + ",";
 
@@ -276,7 +275,7 @@ public class DataSynchronizationUtils {
             stmt.setArray(9, connection.createArrayOf(JDBCType.VARCHAR.getName(), this.getParameter(listMap,MARK + "batch_code").toArray()));
 
             // 业务字段
-            int index = 8;
+            int index = 9;
             for (AttributeInfoDTO infoDto : attributeList) {
                 stmt.setArray(++index, connection.createArrayOf(this.getFieldType(infoDto.getDataType()), this.getParameter(listMap,infoDto.getColumnName()).toArray()));
             }
