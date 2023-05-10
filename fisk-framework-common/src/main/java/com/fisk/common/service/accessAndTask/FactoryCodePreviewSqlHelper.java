@@ -29,8 +29,14 @@ public class FactoryCodePreviewSqlHelper {
 //        List<PublishFieldDTO> fieldListWithoutPk = fieldList.stream().filter(f -> f.isPrimaryKey != 1).collect(Collectors.toList());
         //遍历字段集合
         for (PublishFieldDTO f : fieldList) {
-            prefix.append(f.sourceFieldName)
-                    .append(",");
+            if (f.sourceFieldName!=null){
+                prefix.append(f.sourceFieldName)
+                        .append(",");
+            }else {
+                prefix.append(f.fieldEnName)
+                        .append(",");
+            }
+
         }
         prefix.append("fi_createtime,")
                 .append("fi_updatetime,")
@@ -41,58 +47,114 @@ public class FactoryCodePreviewSqlHelper {
         StringBuilder suffix = new StringBuilder("SELECT ");
         //遍历字段集合
         for (PublishFieldDTO f : fieldList) {
-            //主键不需要
-            if (f.fieldType.equalsIgnoreCase("DATE")) {
-                suffix.append(" CASE WHEN CAST(isnumeric(")
-                        .append(f.sourceFieldName)
-                        .append(")")
-                        .append(" AS int) <=0 THEN ")
-                        .append(f.sourceFieldName)
-                        .append(" ELSE DATEADD(DATE,CAST(LEFT(")
-                        .append(f.sourceFieldName)
-                        .append(",10) AS bigint)/60,'1970-1-1') END, ");
-            } else if (f.fieldType.equalsIgnoreCase("TIME")) {
-                suffix.append(" CASE WHEN CAST(isnumeric(")
-                        .append(f.sourceFieldName)
-                        .append(")")
-                        .append(" AS int) <=0 THEN ")
-                        .append(f.sourceFieldName)
-                        .append(" ELSE DATEADD(MINUTE,CAST(LEFT(")
-                        .append(f.sourceFieldName)
-                        .append(",10) AS bigint)/60,'08:00:00') END, ");
-            } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
-                suffix.append(" CASE WHEN CAST(isnumeric(")
-                        .append(f.sourceFieldName)
-                        .append(")")
-                        .append(" AS int) <=0 THEN ")
-                        .append(f.sourceFieldName)
-                        .append(" ELSE DATEADD(MINUTE,CAST(left(")
-                        .append(f.sourceFieldName)
-                        .append(",10) AS bigint)/60,'1970-01-01 08:00:00') END, ");
-            } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
-                suffix.append(" CASE WHEN CAST(isnumeric(")
-                        .append(f.sourceFieldName)
-                        .append(")")
-                        .append(" AS int) <=0 THEN ")
-                        .append(f.sourceFieldName)
-                        .append(" ELSE DATEADD(MINUTE,CAST(left(")
-                        .append(f.sourceFieldName)
-                        .append(",10) AS bigint)/60,'1970-01-01 08:00:00') END, ");
-            } else {
-                suffix.append("CAST(")
-                        .append(f.sourceFieldName)
-                        .append(" AS ")
-                        .append(f.fieldType);
-                if ("NVARCHAR".equalsIgnoreCase(f.fieldType) || "VARCHAR".equalsIgnoreCase(f.fieldType)) {
-                    suffix.append("(")
-                            .append(f.fieldLength)
-                            .append("))");
+            if (f.sourceFieldName!=null){
+                //主键不需要
+                if (f.fieldType.equalsIgnoreCase("DATE")) {
+                    suffix.append(" CASE WHEN CAST(isnumeric(")
+                            .append(f.sourceFieldName)
+                            .append(")")
+                            .append(" AS int) <=0 THEN ")
+                            .append(f.sourceFieldName)
+                            .append(" ELSE DATEADD(DATE,CAST(LEFT(")
+                            .append(f.sourceFieldName)
+                            .append(",10) AS bigint)/60,'1970-1-1') END, ");
+                } else if (f.fieldType.equalsIgnoreCase("TIME")) {
+                    suffix.append(" CASE WHEN CAST(isnumeric(")
+                            .append(f.sourceFieldName)
+                            .append(")")
+                            .append(" AS int) <=0 THEN ")
+                            .append(f.sourceFieldName)
+                            .append(" ELSE DATEADD(MINUTE,CAST(LEFT(")
+                            .append(f.sourceFieldName)
+                            .append(",10) AS bigint)/60,'08:00:00') END, ");
+                } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
+                    suffix.append(" CASE WHEN CAST(isnumeric(")
+                            .append(f.sourceFieldName)
+                            .append(")")
+                            .append(" AS int) <=0 THEN ")
+                            .append(f.sourceFieldName)
+                            .append(" ELSE DATEADD(MINUTE,CAST(left(")
+                            .append(f.sourceFieldName)
+                            .append(",10) AS bigint)/60,'1970-01-01 08:00:00') END, ");
+                } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
+                    suffix.append(" CASE WHEN CAST(isnumeric(")
+                            .append(f.sourceFieldName)
+                            .append(")")
+                            .append(" AS int) <=0 THEN ")
+                            .append(f.sourceFieldName)
+                            .append(" ELSE DATEADD(MINUTE,CAST(left(")
+                            .append(f.sourceFieldName)
+                            .append(",10) AS bigint)/60,'1970-01-01 08:00:00') END, ");
                 } else {
-                    suffix.append(")");
+                    suffix.append("CAST(")
+                            .append(f.sourceFieldName)
+                            .append(" AS ")
+                            .append(f.fieldType);
+                    if ("NVARCHAR".equalsIgnoreCase(f.fieldType) || "VARCHAR".equalsIgnoreCase(f.fieldType)) {
+                        suffix.append("(")
+                                .append(f.fieldLength)
+                                .append("))");
+                    } else {
+                        suffix.append(")");
+                    }
+                    suffix.append(" AS ")
+                            .append(f.sourceFieldName)
+                            .append(",");
                 }
-                suffix.append(" AS ")
-                        .append(f.sourceFieldName)
-                        .append(",");
+            }else {
+                //主键不需要
+                if (f.fieldType.equalsIgnoreCase("DATE")) {
+                    suffix.append(" CASE WHEN CAST(isnumeric(")
+                            .append(f.fieldEnName)
+                            .append(")")
+                            .append(" AS int) <=0 THEN ")
+                            .append(f.fieldEnName)
+                            .append(" ELSE DATEADD(DATE,CAST(LEFT(")
+                            .append(f.fieldEnName)
+                            .append(",10) AS bigint)/60,'1970-1-1') END, ");
+                } else if (f.fieldType.equalsIgnoreCase("TIME")) {
+                    suffix.append(" CASE WHEN CAST(isnumeric(")
+                            .append(f.fieldEnName)
+                            .append(")")
+                            .append(" AS int) <=0 THEN ")
+                            .append(f.fieldEnName)
+                            .append(" ELSE DATEADD(MINUTE,CAST(LEFT(")
+                            .append(f.fieldEnName)
+                            .append(",10) AS bigint)/60,'08:00:00') END, ");
+                } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
+                    suffix.append(" CASE WHEN CAST(isnumeric(")
+                            .append(f.fieldEnName)
+                            .append(")")
+                            .append(" AS int) <=0 THEN ")
+                            .append(f.fieldEnName)
+                            .append(" ELSE DATEADD(MINUTE,CAST(left(")
+                            .append(f.fieldEnName)
+                            .append(",10) AS bigint)/60,'1970-01-01 08:00:00') END, ");
+                } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
+                    suffix.append(" CASE WHEN CAST(isnumeric(")
+                            .append(f.fieldEnName)
+                            .append(")")
+                            .append(" AS int) <=0 THEN ")
+                            .append(f.fieldEnName)
+                            .append(" ELSE DATEADD(MINUTE,CAST(left(")
+                            .append(f.fieldEnName)
+                            .append(",10) AS bigint)/60,'1970-01-01 08:00:00') END, ");
+                } else {
+                    suffix.append("CAST(")
+                            .append(f.fieldEnName)
+                            .append(" AS ")
+                            .append(f.fieldType);
+                    if ("NVARCHAR".equalsIgnoreCase(f.fieldType) || "VARCHAR".equalsIgnoreCase(f.fieldType)) {
+                        suffix.append("(")
+                                .append(f.fieldLength)
+                                .append("))");
+                    } else {
+                        suffix.append(")");
+                    }
+                    suffix.append(" AS ")
+                            .append(f.fieldEnName)
+                            .append(",");
+                }
             }
 
         }
@@ -162,8 +224,13 @@ public class FactoryCodePreviewSqlHelper {
         if (!CollectionUtils.isEmpty(pkFields)) {
             //此循环是为了拼出所有业务覆盖标识字段名称的字符串 格式为:  字段a,字段b,字段c,字段,
             for (PublishFieldDTO pkField : pkFields) {
-                pkFieldNames.append(pkField.sourceFieldName)
-                        .append(",");
+                if (pkField.sourceFieldName!=null){
+                    pkFieldNames.append(pkField.sourceFieldName)
+                            .append(",");
+                }else {
+                    pkFieldNames.append(pkField.fieldEnName)
+                            .append(",");
+                }
             }
             //删除最后一个多余的逗号
             pkFieldNames.deleteCharAt(pkFieldNames.lastIndexOf(","));
@@ -175,11 +242,19 @@ public class FactoryCodePreviewSqlHelper {
         StringBuilder matchAgain = new StringBuilder(halfSql);
         //第二次拼接开始：AND TARGET.'业务主键标识的字段' = SOURCE.'业务主键标识的字段' ...
         for (PublishFieldDTO pkField : pkFields) {
-            matchAgain.append("AND TARGET.")
-                    .append(pkField.sourceFieldName)
-                    .append(" = SOURCE.")
-                    .append(pkField.sourceFieldName)
-                    .append(" ");
+            if (pkField.sourceFieldName!=null){
+                matchAgain.append("AND TARGET.")
+                        .append(pkField.sourceFieldName)
+                        .append(" = SOURCE.")
+                        .append(pkField.sourceFieldName)
+                        .append(" ");
+            }else {
+                matchAgain.append("AND TARGET.")
+                        .append(pkField.fieldEnName)
+                        .append(" = SOURCE.")
+                        .append(pkField.fieldEnName)
+                        .append(" ");
+            }
         }
         //拼接分号，拼成最终的sql
         String finalSql = String.valueOf(matchAgain.append("   "));
@@ -208,9 +283,13 @@ public class FactoryCodePreviewSqlHelper {
                 .append(" AS TARGET USING (SELECT ");
         //遍历字段集合--不包含主键
         for (PublishFieldDTO f : fieldList) {
-            startSql.append(f.sourceFieldName)
-                    .append(",");
-
+            if (f.sourceFieldName!=null){
+                startSql.append(f.sourceFieldName)
+                        .append(",");
+            }else {
+                startSql.append(f.fieldEnName)
+                        .append(",");
+            }
         }
         //删除最后一个多余的逗号
         startSql.deleteCharAt(startSql.lastIndexOf(","));
@@ -224,11 +303,19 @@ public class FactoryCodePreviewSqlHelper {
         if (!CollectionUtils.isEmpty(pkFields)) {
             //遍历前端传递的字段集合--只包含主键
             for (PublishFieldDTO pkField : pkFields) {
-                startSql.append("TARGET.")
-                        .append(pkField.sourceFieldName)
-                        .append(" = SOURCE.")
-                        .append(pkField.sourceFieldName)
-                        .append(" AND ");
+                if (pkField.sourceFieldName!=null){
+                    startSql.append("TARGET.")
+                            .append(pkField.sourceFieldName)
+                            .append(" = SOURCE.")
+                            .append(pkField.sourceFieldName)
+                            .append(" AND ");
+                }else {
+                    startSql.append("TARGET.")
+                            .append(pkField.fieldEnName)
+                            .append(" = SOURCE.")
+                            .append(pkField.fieldEnName)
+                            .append(" AND ");
+                }
             }
         }
         //删除多余的AND
@@ -242,41 +329,80 @@ public class FactoryCodePreviewSqlHelper {
 
         //遍历字段集合--不包含主键
         for (PublishFieldDTO f : fieldList) {
-            if (f.fieldType.equalsIgnoreCase("DATE")) {
-                middleSql.append("TARGET.")
-                        .append(f.sourceFieldName)
-                        .append(" = DATEADD(DATE,CAST(left(SOURCE.")
-                        .append(f.sourceFieldName)
-                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
-                        .append(",");
-            } else if (f.fieldType.equalsIgnoreCase("TIME")) {
-                middleSql.append("TARGET.")
-                        .append(f.sourceFieldName)
-                        .append(" = DATEADD(MINUTE,CAST(left(SOURCE.")
-                        .append(f.sourceFieldName)
-                        .append(", 10) AS bigint) / 60,'08:00:00')")
-                        .append(",");
-            } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
-                middleSql.append("TARGET.")
-                        .append(f.sourceFieldName)
-                        .append(" = DATEADD(MINUTE,CAST(left(SOURCE.")
-                        .append(f.sourceFieldName)
-                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
-                        .append(",");
-            } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
-                middleSql.append("TARGET.")
-                        .append(f.sourceFieldName)
-                        .append(" = DATEADD(MINUTE,CAST(left(SOURCE.")
-                        .append(f.sourceFieldName)
-                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
-                        .append(",");
-            } else {
-                middleSql.append("TARGET.")
-                        .append(f.sourceFieldName)
-                        .append(" = SOURCE.")
-                        .append(f.sourceFieldName)
-                        .append(",");
+            if (f.sourceFieldName!=null){
+                if (f.fieldType.equalsIgnoreCase("DATE")) {
+                    middleSql.append("TARGET.")
+                            .append(f.sourceFieldName)
+                            .append(" = DATEADD(DATE,CAST(left(SOURCE.")
+                            .append(f.sourceFieldName)
+                            .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
+                            .append(",");
+                } else if (f.fieldType.equalsIgnoreCase("TIME")) {
+                    middleSql.append("TARGET.")
+                            .append(f.sourceFieldName)
+                            .append(" = DATEADD(MINUTE,CAST(left(SOURCE.")
+                            .append(f.sourceFieldName)
+                            .append(", 10) AS bigint) / 60,'08:00:00')")
+                            .append(",");
+                } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
+                    middleSql.append("TARGET.")
+                            .append(f.sourceFieldName)
+                            .append(" = DATEADD(MINUTE,CAST(left(SOURCE.")
+                            .append(f.sourceFieldName)
+                            .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
+                            .append(",");
+                } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
+                    middleSql.append("TARGET.")
+                            .append(f.sourceFieldName)
+                            .append(" = DATEADD(MINUTE,CAST(left(SOURCE.")
+                            .append(f.sourceFieldName)
+                            .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
+                            .append(",");
+                } else {
+                    middleSql.append("TARGET.")
+                            .append(f.sourceFieldName)
+                            .append(" = SOURCE.")
+                            .append(f.sourceFieldName)
+                            .append(",");
+                }
+            }else {
+                if (f.fieldType.equalsIgnoreCase("DATE")) {
+                    middleSql.append("TARGET.")
+                            .append(f.fieldEnName)
+                            .append(" = DATEADD(DATE,CAST(left(SOURCE.")
+                            .append(f.fieldEnName)
+                            .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
+                            .append(",");
+                } else if (f.fieldType.equalsIgnoreCase("TIME")) {
+                    middleSql.append("TARGET.")
+                            .append(f.fieldEnName)
+                            .append(" = DATEADD(MINUTE,CAST(left(SOURCE.")
+                            .append(f.fieldEnName)
+                            .append(", 10) AS bigint) / 60,'08:00:00')")
+                            .append(",");
+                } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
+                    middleSql.append("TARGET.")
+                            .append(f.fieldEnName)
+                            .append(" = DATEADD(MINUTE,CAST(left(SOURCE.")
+                            .append(f.fieldEnName)
+                            .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
+                            .append(",");
+                } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
+                    middleSql.append("TARGET.")
+                            .append(f.fieldEnName)
+                            .append(" = DATEADD(MINUTE,CAST(left(SOURCE.")
+                            .append(f.fieldEnName)
+                            .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
+                            .append(",");
+                } else {
+                    middleSql.append("TARGET.")
+                            .append(f.fieldEnName)
+                            .append(" = SOURCE.")
+                            .append(f.fieldEnName)
+                            .append(",");
+                }
             }
+
 
         }
         middleSql.append("TARGET.fi_updatetime=GETDATE()");
@@ -290,39 +416,73 @@ public class FactoryCodePreviewSqlHelper {
 
         //遍历字段集合,拼接 insert(.....)
         for (PublishFieldDTO f : fieldList) {
-            endSql.append(f.sourceFieldName)
-                    .append(",");
-        }
+            if (f.sourceFieldName!=null){
+                endSql.append(f.sourceFieldName)
+                        .append(",");
+            }else {
+                endSql.append(f.fieldEnName)
+                        .append(",");
+            }
 
+        }
         endSql.append("fi_createtime, fi_updatetime, fidata_batch_code) Values(");
 
         //遍历字段集合,拼接values...
         for (PublishFieldDTO f : fieldList) {
-            if (f.fieldType.equalsIgnoreCase("DATE")) {
-                endSql.append("DATEADD(DATE,CAST(left(SOURCE.")
-                        .append(f.sourceFieldName)
-                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
-                        .append(",");
-            } else if (f.fieldType.equalsIgnoreCase("TIME")) {
-                endSql.append("DATEADD(MINUTE,CAST(left(SOURCE.")
-                        .append(f.sourceFieldName)
-                        .append(", 10) AS bigint) / 60,'08:00:00')")
-                        .append(",");
-            } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
-                endSql.append("DATEADD(MINUTE,CAST(left(SOURCE.")
-                        .append(f.sourceFieldName)
-                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
-                        .append(",");
-            } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
-                endSql.append("DATEADD(MINUTE,CAST(left(SOURCE.")
-                        .append(f.sourceFieldName)
-                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
-                        .append(",");
+            if (f.sourceFieldName!=null){
+                if (f.fieldType.equalsIgnoreCase("DATE")) {
+                    endSql.append("DATEADD(DATE,CAST(left(SOURCE.")
+                            .append(f.sourceFieldName)
+                            .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
+                            .append(",");
+                } else if (f.fieldType.equalsIgnoreCase("TIME")) {
+                    endSql.append("DATEADD(MINUTE,CAST(left(SOURCE.")
+                            .append(f.sourceFieldName)
+                            .append(", 10) AS bigint) / 60,'08:00:00')")
+                            .append(",");
+                } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
+                    endSql.append("DATEADD(MINUTE,CAST(left(SOURCE.")
+                            .append(f.sourceFieldName)
+                            .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
+                            .append(",");
+                } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
+                    endSql.append("DATEADD(MINUTE,CAST(left(SOURCE.")
+                            .append(f.sourceFieldName)
+                            .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
+                            .append(",");
+                }else {
+                    endSql.append("SOURCE.")
+                            .append(f.sourceFieldName)
+                            .append(",");
+                }
             }else {
-                endSql.append("SOURCE.")
-                        .append(f.sourceFieldName)
-                        .append(",");
+                if (f.fieldType.equalsIgnoreCase("DATE")) {
+                    endSql.append("DATEADD(DATE,CAST(left(SOURCE.")
+                            .append(f.fieldEnName)
+                            .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
+                            .append(",");
+                } else if (f.fieldType.equalsIgnoreCase("TIME")) {
+                    endSql.append("DATEADD(MINUTE,CAST(left(SOURCE.")
+                            .append(f.fieldEnName)
+                            .append(", 10) AS bigint) / 60,'08:00:00')")
+                            .append(",");
+                } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
+                    endSql.append("DATEADD(MINUTE,CAST(left(SOURCE.")
+                            .append(f.fieldEnName)
+                            .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
+                            .append(",");
+                } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
+                    endSql.append("DATEADD(MINUTE,CAST(left(SOURCE.")
+                            .append(f.fieldEnName)
+                            .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
+                            .append(",");
+                }else {
+                    endSql.append("SOURCE.")
+                            .append(f.fieldEnName)
+                            .append(",");
+                }
             }
+
         }
         endSql.append("GETDATE(),")
                 .append("GETDATE(),")

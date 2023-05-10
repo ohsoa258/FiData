@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.dto.access;
 
+import com.fisk.dataaccess.dto.factorycodepreviewdto.AccessFullVolumeSnapshotDTO;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import io.swagger.annotations.ApiModelProperty;
@@ -23,7 +24,11 @@ public class OverlayCodePreviewAccessDTO {
 
     @ApiModelProperty(value = "id")
     public Integer id;
+
     @ApiModelProperty(value = "表业务")
     public TableBusinessDTO tableBusiness;
+
+    @ApiModelProperty(value = "全量覆盖方式版本快照对象")
+    public AccessFullVolumeSnapshotDTO snapshotDTO;
 
 }

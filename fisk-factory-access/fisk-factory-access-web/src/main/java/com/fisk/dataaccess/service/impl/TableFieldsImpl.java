@@ -35,6 +35,7 @@ import com.fisk.dataaccess.dto.access.OverlayCodePreviewAccessDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewPageDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
+import com.fisk.dataaccess.dto.factorycodepreviewdto.AccessFullVolumeSnapshotDTO;
 import com.fisk.dataaccess.dto.factorycodepreviewdto.AccessOverlayCodePreviewDTO;
 import com.fisk.dataaccess.dto.factorycodepreviewdto.AccessPublishFieldDTO;
 import com.fisk.dataaccess.dto.flink.FlinkConfigDTO;
@@ -52,8 +53,10 @@ import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.mapper.TableFieldsMapper;
-import com.fisk.dataaccess.service.*;
-import com.fisk.dataaccess.service.strategy.BuildSqlStrategy;
+import com.fisk.dataaccess.service.IAppRegistration;
+import com.fisk.dataaccess.service.ITableAccess;
+import com.fisk.dataaccess.service.ITableFields;
+import com.fisk.dataaccess.service.ITableHistory;
 import com.fisk.dataaccess.utils.files.FileTxtUtils;
 import com.fisk.dataaccess.utils.sql.DbConnectionHelper;
 import com.fisk.dataaccess.utils.sql.OracleCdcUtils;
@@ -1568,8 +1571,8 @@ public class TableFieldsImpl
             stgTableName = appRegistrationPO.appAbbreviation + "." + stgTableName;
             odsTableName = appRegistrationPO.appAbbreviation + "." + odsTableName;
         } else {
-            stgTableName = "dbo."+stgTableName;
-            odsTableName = "dbo."+odsTableName;
+            stgTableName = "dbo." + stgTableName;
+            odsTableName = "dbo." + odsTableName;
         }
 
         //List<ModelPublishFieldDTO> ==> List<AccessPublishFieldDTO>
@@ -1599,21 +1602,86 @@ public class TableFieldsImpl
         previewDTO.modelPublishFieldDTOList = accessList;
 
         //调用方法，获取sql语句
-        String finalSql = codePreviewBySyncMode(stgTableName, odsTableName, previewDTO,conType);
+        String finalSql = codePreviewBySyncMode(stgTableName, odsTableName, previewDTO, conType);
 
         //判断是否是全量覆盖方式
-        if (dto.syncMode==1){
-            //判断全量覆盖方式是否生成快照  1使用  0不使用
-            int snapshotFlag = dto.snapshotDTO.ifEnableSnapshot;
-            if (snapshotFlag == 1){
-                String fullVolumeSql = finalSql.substring(finalSql.indexOf(";"));
-            }else {
-                log.info("全量覆盖未选择生成版本快照...");
-            }
+        if (dto.syncMode == 1) {
+            //获取全量覆盖方式的是否使用快照dto
+            AccessFullVolumeSnapshotDTO snapshotDTO = dto.snapshotDTO;
+            finalSql = getSnapshotSql(snapshotDTO,finalSql);
+
         }
 
         //返回最终拼接好的sql
         return finalSql;
+    }
+
+    /**
+     * 获取全量覆盖方式，使用快照时的sql
+     * @param snapshotDTO
+     * @return
+     */
+    private String getSnapshotSql(AccessFullVolumeSnapshotDTO snapshotDTO,String finalSql) {
+        //判断全量覆盖方式是否生成快照  1使用  0不使用
+        int snapshotFlag = snapshotDTO.ifEnableSnapshot;
+        //新建变量预装载拼装前的sql
+        String halfSql = "";
+        //新建变量预装载前半段sql
+        String startSql = "";
+        if (snapshotFlag == 1) {
+            //查找第一个分号的位置
+            int firstSemicolonIndex = finalSql.indexOf(";");
+            if (firstSemicolonIndex > -1) {
+                //移除全量覆盖方式的前半部分"DELETE FROM dbo.ods_NS_tst22full WHERE fidata_batch_code <> '${fidata_batch_code}';"
+                halfSql = finalSql.substring(firstSemicolonIndex + 1);
+            }
+
+            //获取参数...
+            //获取快照时间范围
+            int dateRange = snapshotDTO.dateRange;
+            /*
+             * 快照时间单位：
+             *  年:YEAR
+             *  季:QUARTER
+             *  月:MONTH
+             *  周:WEEK
+             *  日:DAY
+             */
+            String dateUnit = snapshotDTO.dateUnit;
+            /*
+             * 版本号生成逻辑：
+             *  0:当前年/季/月/周/日
+             *  1：自定义
+             */
+            int logicType = snapshotDTO.logicType;
+
+
+            //todo:生成版本号
+            if ("YEAR".equalsIgnoreCase(dateUnit)){
+
+            }else if ("QUARTER".equalsIgnoreCase(dateUnit)){
+
+            }else if ("MONTH".equalsIgnoreCase(dateUnit)){
+
+            }else if ("WEEK".equalsIgnoreCase(dateUnit)){
+
+            }else if ("DAY".equalsIgnoreCase(dateUnit)){
+
+            }
+
+            //如果使用自定义版本号
+            if (logicType == 1) {
+                //获取自定义版本号的sql
+                String snapshotCostumeSql = snapshotDTO.snapshotCostumeSql;
+            } else {
+                startSql = startSql + "DECLARE @Version nvarchar(4000)  SET @Version=";
+            }
+
+            return finalSql;
+        } else {
+            log.info("全量覆盖未选择生成版本快照...");
+            return finalSql;
+        }
     }
 
     /**
