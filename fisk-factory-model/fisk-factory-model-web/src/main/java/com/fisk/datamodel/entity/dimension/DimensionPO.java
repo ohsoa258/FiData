@@ -86,4 +86,9 @@ public class DimensionPO extends BasePO {
      * 覆盖方式预览脚本
      */
     public String coverScript;
+
+    /**
+     * 清空临时表脚本
+     */
+    public String deleteTempScript;
 }

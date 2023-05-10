@@ -61,24 +61,33 @@ public class BuildAtlasTableAndColumnTaskListener
     public ResultEnum msg(String dataInfo, Acknowledgment acke) {
         log.info("进入Atlas生成表和字段");
         log.info("dataInfo:" + dataInfo);
+        //无论是单条还是多条，加上这个都可以当作集合处理，达到不需要更改方法参数的目的
         dataInfo = "[" + dataInfo + "]";
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             BuildPhysicalTableDTO buildPhysicalTableDTO = new BuildPhysicalTableDTO();
+            //dataInfo  ->  buildPhysicalTableDTO
+            //使用JSON.parseArray将 待发布的数据 转化为 list
             List<BuildPhysicalTableDTO> list = JSON.parseArray(dataInfo, BuildPhysicalTableDTO.class);
+
+            //遍历BuildPhysicalTableDTO list
             for (BuildPhysicalTableDTO buildPhysicalTable : list) {
                 buildPhysicalTableDTO = buildPhysicalTable;
+                //获取物理表查询语句
                 String physicalSelect = createPhysicalTable(buildPhysicalTableDTO);
+
                 //endregion
+                //新建ETL增量表：tb_etl_Incremental 的对象
                 TBETLIncrementalPO ETLIncremental = new TBETLIncrementalPO();
+                //是否使用简称
                 if (buildPhysicalTableDTO.whetherSchema) {
                     ETLIncremental.objectName = buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName;
                 } else {
                     ETLIncremental.objectName = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
                 }
+                //获取接入的增量时间参数
                 List<DeltaTimeDTO> deltaTimes = buildPhysicalTableDTO.deltaTimes;
                 if (!CollectionUtils.isEmpty(deltaTimes)) {
-
                     for (DeltaTimeDTO dto : deltaTimes) {
                         if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.CONSTANT) &&
                                 Objects.equals(dto.systemVariableTypeEnum, SystemVariableTypeEnum.START_TIME)) {
@@ -90,35 +99,47 @@ public class BuildAtlasTableAndColumnTaskListener
                         }
                     }
                 }
+
                 ETLIncremental.enableFlag = "1";
+                //生成数据同步批次号  uuid
                 ETLIncremental.incrementalObjectivescoreBatchno = UUID.randomUUID().toString();
                 Map<String, Object> conditionHashMap = new HashMap<>();
+                //将数据同步流程的表名放入map集合
                 conditionHashMap.put("object_name", ETLIncremental.objectName);
+                //从数据库通过该表名查询，若有数据，则log.info:此表已有同步记录,无需重复添加
                 List<TBETLIncrementalPO> tbetlIncrementalPos = incrementalMapper.selectByMap(conditionHashMap);
                 if (tbetlIncrementalPos != null && tbetlIncrementalPos.size() > 0) {
                     log.info("此表已有同步记录,无需重复添加");
                 } else {
                     incrementalMapper.insert(ETLIncremental);
                 }
-
+                //通过应用id,物理表id,表类型获取到一个TableNifiSettingPO对象   tb_table_nifi_setting
                 TableNifiSettingPO one = tableNifiSettingService.query().eq("app_id", buildPhysicalTableDTO.appId).eq("table_access_id", buildPhysicalTableDTO.dbId).eq("type", OlapTableEnum.PHYSICS.getValue()).one();
                 TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
                 if (one != null) {
                     tableNifiSettingPO = one;
                 }
+                //设置应用id
                 tableNifiSettingPO.appId = Integer.valueOf(buildPhysicalTableDTO.appId);
+                //是否使用简称
                 if (buildPhysicalTableDTO.whetherSchema) {
                     tableNifiSettingPO.tableName = buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName;
                 } else {
                     tableNifiSettingPO.tableName = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
                 }
-
+                //设置物理表id
                 tableNifiSettingPO.tableAccessId = Integer.valueOf(buildPhysicalTableDTO.dbId);
+                //设置物理表查询语句
                 tableNifiSettingPO.selectSql = physicalSelect;
+                //设置表类型
                 tableNifiSettingPO.type = OlapTableEnum.PHYSICS.getValue();
+                //设置同步方式
                 tableNifiSettingPO.syncMode = buildPhysicalTableDTO.syncMode;
+                //保存或更新tb_table_nifi_setting表的数据
                 tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
                 log.info("开始执行nifi创建数据同步");
+
+                //nifi流程组件的属性设置开始.........
                 BuildNifiFlowDTO bfd = new BuildNifiFlowDTO();
                 bfd.userId = buildPhysicalTableDTO.userId;
                 bfd.appId = Long.parseLong(buildPhysicalTableDTO.appId);
@@ -145,6 +166,8 @@ public class BuildAtlasTableAndColumnTaskListener
                 bfd.buildTableSql = buildPhysicalTableDTO.buildTableSql;
                 // stg抽取数据加载到ods的sql语句
                 bfd.syncStgToOdsSql = buildPhysicalTableDTO.syncStgToOdsSql;
+                //设置stg保存时间的sql
+                bfd.deleteScript = buildPhysicalTableDTO.deleteStgScript;
                 //发布历史id
                 bfd.tableHistoryId = buildPhysicalTableDTO.tableHistoryId;
                 log.info("nifi传入参数：" + JSON.toJSONString(bfd));

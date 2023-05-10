@@ -24,11 +24,11 @@ public class FactoryCodePreviewSqlHelper {
      */
     public static String insertAndSelectSql(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
         //拼接insert into...
-        StringBuilder prefix = new StringBuilder("insert into " + tableName + " (");
-        //主键字段剔除
-        List<PublishFieldDTO> fieldListWithoutPk = fieldList.stream().filter(f -> f.isBusinessKey != 1).collect(Collectors.toList());
-        //遍历字段集合--不包含主键
-        for (PublishFieldDTO f : fieldListWithoutPk) {
+        StringBuilder prefix = new StringBuilder("INSERT INTO " + tableName + " (");
+//        //主键字段剔除
+//        List<PublishFieldDTO> fieldListWithoutPk = fieldList.stream().filter(f -> f.isPrimaryKey != 1).collect(Collectors.toList());
+        //遍历字段集合
+        for (PublishFieldDTO f : fieldList) {
             prefix.append(f.sourceFieldName)
                     .append(",");
         }
@@ -38,9 +38,9 @@ public class FactoryCodePreviewSqlHelper {
         //拼接insert into完毕
 
         //拼接select...
-        StringBuilder suffix = new StringBuilder("select ");
-        //遍历字段集合--不包含主键
-        for (PublishFieldDTO f : fieldListWithoutPk) {
+        StringBuilder suffix = new StringBuilder("SELECT ");
+        //遍历字段集合
+        for (PublishFieldDTO f : fieldList) {
             //主键不需要
             if (f.fieldType.equalsIgnoreCase("DATE")) {
                 suffix.append(" CASE WHEN CAST(isnumeric(")
@@ -48,7 +48,7 @@ public class FactoryCodePreviewSqlHelper {
                         .append(")")
                         .append(" AS int) <=0 THEN ")
                         .append(f.sourceFieldName)
-                        .append(" ELSE DATEADD(DATE,cast(left(")
+                        .append(" ELSE DATEADD(DATE,CAST(LEFT(")
                         .append(f.sourceFieldName)
                         .append(",10) AS bigint)/60,'1970-1-1') END, ");
             } else if (f.fieldType.equalsIgnoreCase("TIME")) {
@@ -57,25 +57,25 @@ public class FactoryCodePreviewSqlHelper {
                         .append(")")
                         .append(" AS int) <=0 THEN ")
                         .append(f.sourceFieldName)
-                        .append(" ELSE DATEADD(MINUTE,cast(left(")
+                        .append(" ELSE DATEADD(MINUTE,CAST(LEFT(")
                         .append(f.sourceFieldName)
-                        .append(",10) AS bigint)/60,'00:00:00') END, ");
+                        .append(",10) AS bigint)/60,'08:00:00') END, ");
             } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
                 suffix.append(" CASE WHEN CAST(isnumeric(")
                         .append(f.sourceFieldName)
                         .append(")")
                         .append(" AS int) <=0 THEN ")
                         .append(f.sourceFieldName)
-                        .append(" ELSE DATEADD(MINUTE,cast(left(")
+                        .append(" ELSE DATEADD(MINUTE,CAST(left(")
                         .append(f.sourceFieldName)
                         .append(",10) AS bigint)/60,'1970-01-01 08:00:00') END, ");
-            }else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
+            } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
                 suffix.append(" CASE WHEN CAST(isnumeric(")
                         .append(f.sourceFieldName)
                         .append(")")
                         .append(" AS int) <=0 THEN ")
                         .append(f.sourceFieldName)
-                        .append(" ELSE DATEADD(MINUTE,cast(left(")
+                        .append(" ELSE DATEADD(MINUTE,CAST(left(")
                         .append(f.sourceFieldName)
                         .append(",10) AS bigint)/60,'1970-01-01 08:00:00') END, ");
             } else {
@@ -101,7 +101,7 @@ public class FactoryCodePreviewSqlHelper {
                 .append("fidata_batch_code")
                 .append(" FROM ")
                 .append(sourceTableName)
-                .append(" SOURCE WITH(nolock) WHERE fidata_batch_code=${fidata_batch_code} AND fidata_flow_batch_code=${fragment.index};");
+                .append(" SOURCE WITH(nolock) WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}'");
         //拼接select完毕
 
         //返回拼接完成的追加覆盖方式拼接的sql
@@ -123,7 +123,7 @@ public class FactoryCodePreviewSqlHelper {
                 new StringBuilder(FactoryCodePreviewSqlHelper.insertAndSelectSql(tableName, sourceTableName, fieldList));
 
         //返回的sql前加上需要的前缀truncate table tableName,并隔开两段sql
-        StringBuilder fullVolumeSql = suffixSql.insert(0, "truncate table " + tableName + "   ");
+        StringBuilder fullVolumeSql = suffixSql.insert(0, "DELETE FROM " + tableName + " WHERE fidata_batch_code<>'${fidata_batch_code}';   ");
         //返回拼接完成的全量覆盖方式拼接的sql
         return String.valueOf(fullVolumeSql);
     }
@@ -147,11 +147,11 @@ public class FactoryCodePreviewSqlHelper {
         StringBuilder suffix = new StringBuilder();
         suffix.append("DELETE TARGET FROM ")
                 .append(tableName)
-                .append(" TARGET JOIN ( SELECT fidata_batch_code,")
+                .append(" TARGET JOIN (SELECT fidata_batch_code,")
                 .append(" & ")
                 .append("FROM ")
                 .append(sourceTableName)
-                .append(" WHERE fidata_batch_code=${fidata_batch_code} AND fidata_flow_batch_code=${fragment.index}")
+                .append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}'")
                 .append(" GROUP BY fidata_batch_code,")
                 .append(" & ")
                 .append(") ")
@@ -186,7 +186,7 @@ public class FactoryCodePreviewSqlHelper {
 
         //返回的sql前加上需要的前缀finalSql
         StringBuilder delInsertSql = suffixSql.insert(0, finalSql);
-        //返回拼接后完整的删除插入sql，加上分号
+        //返回拼接后完整的删除插入sql
         return String.valueOf(delInsertSql);
     }
 
@@ -199,15 +199,15 @@ public class FactoryCodePreviewSqlHelper {
      * @return
      */
     public static String merge(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
-        //主键字段剔除
-        List<PublishFieldDTO> fieldListWithoutPk = fieldList.stream().filter(f -> f.isBusinessKey != 1).collect(Collectors.toList());
+//        //主键字段剔除
+//        List<PublishFieldDTO> fieldListWithoutPk = fieldList.stream().filter(f -> f.isPrimaryKey != 1).collect(Collectors.toList());
 
         //拼接第一段...  前段
         StringBuilder startSql = new StringBuilder("MERGE ");
         startSql.append(tableName)
                 .append(" AS TARGET USING (SELECT ");
         //遍历字段集合--不包含主键
-        for (PublishFieldDTO f : fieldListWithoutPk) {
+        for (PublishFieldDTO f : fieldList) {
             startSql.append(f.sourceFieldName)
                     .append(",");
 
@@ -217,7 +217,7 @@ public class FactoryCodePreviewSqlHelper {
         //继续拼接
         startSql.append(" FROM ")
                 .append(sourceTableName)
-                .append(" WITH(nolock) WHERE fidata_batch_code=${fidata_batch_code} AND fidata_flow_batch_code=${fragment_index}) AS SOURCE ON ");
+                .append(" WITH(nolock) WHERE fidata_batch_code='${fidata_batch_code}'AND fidata_flow_batch_code='${fragment.index}') AS SOURCE ON ");
         //获取业务标识覆盖方式标识的字段
         List<PublishFieldDTO> pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
         //拼接开始：TARGET.'业务主键标识的字段' = SOURCE.'业务主键标识的字段' ...
@@ -241,12 +241,43 @@ public class FactoryCodePreviewSqlHelper {
         middleSql.append("WHEN MATCHED THEN UPDATE SET ");
 
         //遍历字段集合--不包含主键
-        for (PublishFieldDTO f : fieldListWithoutPk) {
-            middleSql.append("TARGET.")
-                    .append(f.sourceFieldName)
-                    .append(" = SOURCE.")
-                    .append(f.sourceFieldName)
-                    .append(",");
+        for (PublishFieldDTO f : fieldList) {
+            if (f.fieldType.equalsIgnoreCase("DATE")) {
+                middleSql.append("TARGET.")
+                        .append(f.sourceFieldName)
+                        .append(" = DATEADD(DATE,CAST(left(SOURCE.")
+                        .append(f.sourceFieldName)
+                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
+                        .append(",");
+            } else if (f.fieldType.equalsIgnoreCase("TIME")) {
+                middleSql.append("TARGET.")
+                        .append(f.sourceFieldName)
+                        .append(" = DATEADD(MINUTE,CAST(left(SOURCE.")
+                        .append(f.sourceFieldName)
+                        .append(", 10) AS bigint) / 60,'08:00:00')")
+                        .append(",");
+            } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
+                middleSql.append("TARGET.")
+                        .append(f.sourceFieldName)
+                        .append(" = DATEADD(MINUTE,CAST(left(SOURCE.")
+                        .append(f.sourceFieldName)
+                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
+                        .append(",");
+            } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
+                middleSql.append("TARGET.")
+                        .append(f.sourceFieldName)
+                        .append(" = DATEADD(MINUTE,CAST(left(SOURCE.")
+                        .append(f.sourceFieldName)
+                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
+                        .append(",");
+            } else {
+                middleSql.append("TARGET.")
+                        .append(f.sourceFieldName)
+                        .append(" = SOURCE.")
+                        .append(f.sourceFieldName)
+                        .append(",");
+            }
+
         }
         middleSql.append("TARGET.fi_updatetime=GETDATE()");
         //第二段sql与第三段sql隔开
@@ -254,16 +285,48 @@ public class FactoryCodePreviewSqlHelper {
 
         //开始拼接第三段
         StringBuilder endSql = middleSql;
-        endSql.append("WHEN NOT MATCHED THEN insert Values(");
+        endSql.append("WHEN NOT MATCHED THEN insert")
+                .append("(");
 
-        //遍历字段集合--不包含主键
-        for (PublishFieldDTO f : fieldListWithoutPk) {
-            endSql.append("SOURCE.")
-                    .append(f.sourceFieldName)
+        //遍历字段集合,拼接 insert(.....)
+        for (PublishFieldDTO f : fieldList) {
+            endSql.append(f.sourceFieldName)
                     .append(",");
         }
+
+        endSql.append("fi_createtime, fi_updatetime, fidata_batch_code) Values(");
+
+        //遍历字段集合,拼接values...
+        for (PublishFieldDTO f : fieldList) {
+            if (f.fieldType.equalsIgnoreCase("DATE")) {
+                endSql.append("DATEADD(DATE,CAST(left(SOURCE.")
+                        .append(f.sourceFieldName)
+                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
+                        .append(",");
+            } else if (f.fieldType.equalsIgnoreCase("TIME")) {
+                endSql.append("DATEADD(MINUTE,CAST(left(SOURCE.")
+                        .append(f.sourceFieldName)
+                        .append(", 10) AS bigint) / 60,'08:00:00')")
+                        .append(",");
+            } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
+                endSql.append("DATEADD(MINUTE,CAST(left(SOURCE.")
+                        .append(f.sourceFieldName)
+                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
+                        .append(",");
+            } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
+                endSql.append("DATEADD(MINUTE,CAST(left(SOURCE.")
+                        .append(f.sourceFieldName)
+                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
+                        .append(",");
+            }else {
+                endSql.append("SOURCE.")
+                        .append(f.sourceFieldName)
+                        .append(",");
+            }
+        }
         endSql.append("GETDATE(),")
-                .append("GETDATE()")
+                .append("GETDATE(),")
+                .append("'${fidata_batch_code}'")
                 .append(");");
         //返回返回拼接完整的merge覆盖sql
         return String.valueOf(endSql);
@@ -280,8 +343,8 @@ public class FactoryCodePreviewSqlHelper {
      */
     public static String businessTimeOverLay(String tableName, String sourceTableName,
                                              List<PublishFieldDTO> fieldList, PreviewTableBusinessDTO previewTableBusinessDTO) {
-        //主键字段剔除
-        List<PublishFieldDTO> fieldListWithoutPk = fieldList.stream().filter(f -> f.isBusinessKey != 1).collect(Collectors.toList());
+//        //主键字段剔除
+//        List<PublishFieldDTO> fieldListWithoutPk = fieldList.stream().filter(f -> f.isPrimaryKey != 1).collect(Collectors.toList());
         //获取页面选择的逻辑类型：1普通模式    2高级模式
         Integer otherLogic = previewTableBusinessDTO.otherLogic;
 
@@ -293,9 +356,12 @@ public class FactoryCodePreviewSqlHelper {
         String businessTimeField = previewTableBusinessDTO.businessTimeField;
         //>,>=,=,<=,<  (条件符号)
         String businessOperator = previewTableBusinessDTO.businessOperator;
-        StringBuilder startSQL = new StringBuilder("SELECT * FROM ");
+        StringBuilder startSQL = new StringBuilder("DELETE FROM ");
         startSQL.append(tableName)
-                .append(" WHERE fidata_batch_code<>0 AND ");
+                .append(" WHERE fidata_batch_code<>'${fidata_batch_code}' AND ");
+
+        //最后加上这个tailSql
+        StringBuilder tailSql = new StringBuilder(" AND ");
         if (otherLogic == 1) {
             //拼接所选择的字段，条件运算符，时间单位，运算时间范围...
             startSQL.append(businessTimeField)
@@ -307,31 +373,11 @@ public class FactoryCodePreviewSqlHelper {
                     .append(",")
                     .append("getdate())")
                     .append("   ");
-        } else {
-            //具体日期
-            Long businessDate = previewTableBusinessDTO.businessDate;
-            //每年 每月 每天
-            String businessTimeFlag = previewTableBusinessDTO.businessTimeFlag;
-            if ("每年".equals(businessTimeFlag)) {
-                businessTimeFlag = "YEAR";
-            } else if ("每月".equals(businessTimeFlag)) {
-                businessTimeFlag = "MONTH";
-            } else {
-                businessTimeFlag = "DAY";
-            }
-            //>,>=,=,<=,<  (条件符号预备值)
-            String businessOperatorStandby = previewTableBusinessDTO.businessOperatorStandby;
-            //业务覆盖时间范围预备值
-            Long businessRangeStandby = previewTableBusinessDTO.businessRangeStandby;
-            //业务覆盖单位,Year,Month,Day,Hour预备值
-            String rangeDateUnitStandby = previewTableBusinessDTO.rangeDateUnitStandby;
-            startSQL.append("(")
-                    .append("CASE WHEN ")
-                    .append(businessTimeFlag)
-                    .append("(Getdate())<")
-                    .append(businessDate)
-                    .append(" THEN ")
+
+            //拼接tailSql
+            tailSql.append("DATEADD(MINUTE, CAST(left(")
                     .append(businessTimeField)
+                    .append(", 10) AS bigint)/60, '1970-01-01 08:00:00')")
                     .append(businessOperator)
                     .append("DATEADD(")
                     .append(rangeDateUnit)
@@ -339,9 +385,40 @@ public class FactoryCodePreviewSqlHelper {
                     .append(businessRange)
                     .append(",")
                     .append("getdate())")
+                    .append(";   ");
+        } else {
+            //具体日期
+            Long businessDate = previewTableBusinessDTO.businessDate;
+            //每年 每月 每天
+            String businessTimeFlag = previewTableBusinessDTO.businessTimeFlag;
+            if ("每年".equals(businessTimeFlag)) {
+                businessTimeFlag = "MONTH";
+            } else if ("每月".equals(businessTimeFlag)) {
+                businessTimeFlag = "DAY";
+            } else {
+                businessTimeFlag = "HOUR";
+            }
+            //>,>=,=,<=,<  (条件符号预备值) 目前已经不需要了，前端不传这个参数
+//            String businessOperatorStandby = previewTableBusinessDTO.businessOperatorStandby;
+            //业务覆盖时间范围预备值
+            Long businessRangeStandby = previewTableBusinessDTO.businessRangeStandby;
+            //业务覆盖单位,Year,Month,Day,Hour预备值
+            String rangeDateUnitStandby = previewTableBusinessDTO.rangeDateUnitStandby;
+            startSQL.append(businessTimeField)
+                    .append(businessOperator)
+                    .append("(")
+                    .append("CASE WHEN ")
+                    .append(businessTimeFlag)
+                    .append("(Getdate())<")
+                    .append(businessDate)
+                    .append(" THEN ")
+                    .append("DATEADD(")
+                    .append(rangeDateUnit)
+                    .append(",")
+                    .append(businessRange)
+                    .append(",")
+                    .append("getdate())")
                     .append(" ELSE ")
-                    .append(businessTimeField)
-                    .append(businessOperatorStandby)
                     .append("DATEADD(")
                     .append(rangeDateUnitStandby)
                     .append(",")
@@ -349,44 +426,64 @@ public class FactoryCodePreviewSqlHelper {
                     .append(",")
                     .append("getdate()) END)")
                     .append("   ");
+
+            //拼接tailSql
+            tailSql.append("DATEADD(MINUTE, CAST(left(")
+                    .append(businessTimeField)
+                    .append(", 10) AS bigint)/60, '1970-01-01 08:00:00')")
+                    .append(businessOperator)
+                    .append("(CASE WHEN ")
+                    .append(businessTimeFlag)
+                    .append("(Getdate())<")
+                    .append(businessDate)
+                    .append(" THEN ")
+                    .append("DATEADD(")
+                    .append(rangeDateUnit)
+                    .append(",")
+                    .append(businessRange)
+                    .append(",")
+                    .append("getdate())")
+                    .append(" ELSE ")
+                    .append("DATEADD(")
+                    .append(rangeDateUnitStandby)
+                    .append(",")
+                    .append(businessRangeStandby)
+                    .append(",")
+                    .append("getdate()) END)")
+                    .append(";   ");
+
+//            tailSql.append("(")
+//                    .append("CASE WHEN ")
+//                    .append(businessTimeFlag)
+//                    .append("(Getdate())<")
+//                    .append(businessDate)
+//                    .append(" THEN ")
+//                    .append(businessTimeField)
+//                    .append(businessOperator)
+//                    .append("DATEADD(")
+//                    .append(rangeDateUnit)
+//                    .append(",")
+//                    .append(businessRange)
+//                    .append(",")
+//                    .append("getdate())")
+//                    .append(" ELSE ")
+//                    .append(businessTimeField)
+//                    .append(businessOperatorStandby)
+//                    .append("DATEADD(")
+//                    .append(rangeDateUnitStandby)
+//                    .append(",")
+//                    .append(businessRangeStandby)
+//                    .append(",")
+//                    .append("getdate()) END)")
+//                    .append(";   ");
         }
-
+        //调用追加的sql方法，用于拼接
         String sql = insertAndSelectSql(tableName, sourceTableName, fieldList);
-        StringBuilder endSql = startSQL.append(sql);
+        //拼接最终sql
+        StringBuilder endSql = startSQL.append(sql)
+                .append(tailSql);
 
-//        //开始拼接insert into...  middleSql
-//        StringBuilder middleSql = startSQL;
-//        middleSql.append("insert into ")
-//                .append(tableName)
-//                .append(" (");
-//        //遍历字段集合--不包含主键
-//        for (PublishFieldDTO f : fieldListWithoutPk) {
-//            middleSql.append(f.sourceFieldName)
-//                    .append(",");
-//        }
-//        middleSql.append("fi_createtime,")
-//                .append("fi_updatetime,")
-//                .append("fidata_batch_code)")
-//                .append("   ");
-//        //拼接insert into完毕
-
-//        //开始拼接select... endSql
-//        StringBuilder endSql = middleSql;
-//        endSql.append("SELECT ");
-//        //遍历字段集合--不包含主键
-//        for (PublishFieldDTO f : fieldListWithoutPk) {
-//            middleSql.append(f.sourceFieldName)
-//                    .append(",");
-//        }
-//
-//        endSql.append("getdate(),")
-//                .append("getdate(),")
-//                .append("fidata_batch_code")
-//                .append(" FROM ")
-//                .append(sourceTableName)
-//                .append(" with(nolock) where fidata_batch_code=${fidata_batch_code} and fidata_flow_batch_code=${fragment.index};");
-//        return endSql;
-
+        //返回拼接完整的业务时间覆盖的sql
         return String.valueOf(endSql);
     }
 

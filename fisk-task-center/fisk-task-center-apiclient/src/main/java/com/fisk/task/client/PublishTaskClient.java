@@ -187,7 +187,7 @@ public interface PublishTaskClient {
      * @return
      */
     @PostMapping("/TableTopic/deleteTableTopicGroup")
-    public ResultEntity<Object> deleteTableTopicGroup(@RequestParam("dtos") List<TableTopicDTO> dtos);
+    ResultEntity<Object> deleteTableTopicGroup(@RequestParam("dtos") List<TableTopicDTO> dtos);
 
     /**
      * 拼接sql替换时间
@@ -213,7 +213,7 @@ public interface PublishTaskClient {
      * @return 返回值
      */
     @PostMapping("/pipeline/getPipelineTableLogs")
-    public ResultEntity<List<PipelineTableLogDTO>> getPipelineTableLogs(@RequestBody List<NifiCustomWorkflowDetailDTO> nifiCustomWorkflowDetailDTO);
+    ResultEntity<List<PipelineTableLogDTO>> getPipelineTableLogs(@RequestBody List<NifiCustomWorkflowDetailDTO> nifiCustomWorkflowDetailDTO);
 
     /**
      * 获取管道呼吸灯
@@ -222,7 +222,7 @@ public interface PublishTaskClient {
      * @return 返回值
      */
     @PostMapping("/pipeline/getNifiCustomWorkflowDetails")
-    public ResultEntity<List<NifiCustomWorkflowVO>> getNifiCustomWorkflowDetails(@RequestBody List<NifiCustomWorkflowVO> nifiCustomWorkflows);
+    ResultEntity<List<NifiCustomWorkflowVO>> getNifiCustomWorkflowDetails(@RequestBody List<NifiCustomWorkflowVO> nifiCustomWorkflows);
 
     /**
      * 获取nifi阶段信息
@@ -231,7 +231,7 @@ public interface PublishTaskClient {
      * @return 返回值
      */
     @PostMapping("/pipeline/getNifiStage")
-    public ResultEntity<List<NifiStageDTO>> getNifiStage(@RequestBody List<NifiCustomWorkflowDetailDTO> list);
+    ResultEntity<List<NifiStageDTO>> getNifiStage(@RequestBody List<NifiCustomWorkflowDetailDTO> list);
 
     /**
      * 创建宽表
@@ -240,7 +240,7 @@ public interface PublishTaskClient {
      * @return 返回值
      */
     @PostMapping("/olapTask/publishBuildWideTableTask")
-    public ResultEntity<Object> publishBuildWideTableTask(@RequestBody WideTableFieldConfigTaskDTO wideTableFieldConfigTaskDTO);
+    ResultEntity<Object> publishBuildWideTableTask(@RequestBody WideTableFieldConfigTaskDTO wideTableFieldConfigTaskDTO);
 
     /**
      * 立即重启
@@ -249,7 +249,7 @@ public interface PublishTaskClient {
      * @return
      */
     @PostMapping("/publishTask/immediatelyStart")
-    public ResultEntity<Object> immediatelyStart(@RequestBody BuildTableNifiSettingDTO buildTableNifiSettingDTO);
+    ResultEntity<Object> immediatelyStart(@RequestBody BuildTableNifiSettingDTO buildTableNifiSettingDTO);
 
     /**
      * 统一调度
@@ -258,7 +258,7 @@ public interface PublishTaskClient {
      * @return
      */
     @PostMapping("/olapTask/publishBuildunifiedControlTask")
-    public ResultEntity<Object> publishBuildunifiedControlTask(@RequestBody UnifiedControlDTO unifiedControlDTO);
+    ResultEntity<Object> publishBuildunifiedControlTask(@RequestBody UnifiedControlDTO unifiedControlDTO);
 
     /**
      * 创建属性日志表

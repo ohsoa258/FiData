@@ -12,8 +12,8 @@ public interface IBuildKfkTaskService {
      * 消费投递到队列
      *
      * @param name     提示框内容
-     * @param exchange 无
-     * @param queue    队列名称
+     * @param exchange MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME
+     * @param queue    MqConstants.QueueConstants.NifiTopicConstants.BUILD_NIFI_FLOW
      * @param data     data数据
      * @return
      */

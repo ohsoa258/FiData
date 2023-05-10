@@ -246,22 +246,31 @@ public class BusinessProcessImpl
              */
 
             for (FactPO item : factPoList) {
-                // 封装的事实字段表集合
+                //拼接数据 待发布事实表的信息
                 ModelPublishTableDTO pushDto = new ModelPublishTableDTO();
+                //表id
                 pushDto.tableId = Integer.parseInt(String.valueOf(item.id));
+                //表名
                 pushDto.tableName = dimensionFolder.convertName(item.factTabName);
+                //创建类型：事实表  1
                 pushDto.createType = CreateTypeEnum.CREATE_FACT.getValue();
+
+                //DataTranDTO dtDto用于拼接sql数据传输
                 DataTranDTO dtDto = new DataTranDTO();
+                //表名称
                 dtDto.tableName = pushDto.tableName;
+                //维度sql脚本
                 dtDto.querySql = item.sqlScript;
+
                 //Map<String, String> converSql = publishTaskClient.converSql(dtDto).data;
+                //远程调用   -->  拼接sql替换时间
                 ResultEntity<Map<String, String>> converMap = publishTaskClient.converSql(dtDto);
                 Map<String, String> data1 = converMap.data;
                 pushDto.queryEndTime = data1.get(SystemVariableTypeEnum.END_TIME.getValue());
                 pushDto.sqlScript = data1.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
                 pushDto.queryStartTime = data1.get(SystemVariableTypeEnum.START_TIME.getValue());
 
-                //关联维度键脚本
+                //获取维度键update语句  数仓建模，关联外键的sql在这里传递
                 pushDto.factUpdateSql = item.dimensionKeyScript;
 
                 /*
@@ -271,6 +280,7 @@ public class BusinessProcessImpl
                     pushDto.dataSourceDbId = appDto.getTargetDbId();
                 }
                  */
+
                 pushDto.setDataSourceDbId(item.dataSourceId);
 
                 // 设置临时表名称前缀
@@ -278,7 +288,11 @@ public class BusinessProcessImpl
 
                 // 关联目标dw库id
                 pushDto.setTargetDbId(targetDbId);
+
+                //设置覆盖的脚本
                 pushDto.setCoverScript(item.coverScript);
+                //设置删除临时表的脚本
+                pushDto.setDeleteTempScript(item.deleteTempScript);
 
                 //获取自定义脚本
                 CustomScriptQueryDTO customScriptDto = new CustomScriptQueryDTO();
@@ -293,7 +307,7 @@ public class BusinessProcessImpl
 
                 customScriptDto.execType = 2;
 
-                //自定义脚本
+                //获取最后的自定义脚本
                 String batchScript = customScript.getBatchScript(customScriptDto);
                 if (!StringUtils.isEmpty(batchScript)) {
                     pushDto.customScriptAfter = batchScript;

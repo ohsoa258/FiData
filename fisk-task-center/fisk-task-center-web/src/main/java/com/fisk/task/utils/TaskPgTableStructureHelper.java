@@ -90,23 +90,35 @@ public class TaskPgTableStructureHelper
     /**
      * 保存建模相关表结构数据(保存版本号)
      *
-     * @param
+     * @param dto 版本号和修改表结构的参数
+     * @param version 时间戳版本号
+     * @param dataSourceType 数据源连接类型
      */
     public ResultEnum saveTableStructure(ModelPublishTableDTO dto, String version, DataSourceTypeEnum dataSourceType) {
         try {
             List<TaskPgTableStructurePO> poList = new ArrayList<>();
             Thread.sleep(200);
+            //创建表方式 2:维度 1:事实 3: 数据接入
             int type = dto.createType == 0 ? 2 : dto.createType;
+            //遍历字段列表
             for (ModelPublishFieldDTO item : dto.fieldList) {
+                //获取 表版本结构表的对象   dmp_task_db -> tb_task_pg_table_structure
                 TaskPgTableStructurePO po = new TaskPgTableStructurePO();
+                //装载时间戳版本号
                 po.version = version;
                 //判断是否为维度
                 po.tableType = type;
+                //字段对应的表id
                 po.tableId = String.valueOf(dto.tableId);
+                //字段所属表名
                 po.tableName = dto.tableName;
+                //字段id
                 po.fieldId = String.valueOf(item.fieldId);
+                //字段名称
                 po.fieldName = item.fieldEnName;
+                //字段类型
                 po.fieldType = item.fieldType;
+                //是否为主键
                 po.primaryKey = item.isPrimaryKey != 0;
                 //默认为1
                 po.validVersion = 1;
