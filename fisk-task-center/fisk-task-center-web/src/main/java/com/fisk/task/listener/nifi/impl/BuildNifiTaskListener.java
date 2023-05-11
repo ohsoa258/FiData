@@ -1237,6 +1237,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     /**
      * 创建nifi单个同步流程的组件
+     *
      * @param appGroupId
      * @param config
      * @param groupId
@@ -2658,21 +2659,19 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         executsql = componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName(), buildNifiFlow);
         //callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
         callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
-        log.info("SQL预览语句：{}", JSON.toJSONString(buildNifiFlow.syncStgToOdsSql));
 
-        //todo:如果数仓建模关联外键的sql不为空，则将其拼接到CallDbProcedure组件中间的select sql的前面  buildNifiFlow.updateSql自带分号，无需新增分号
-        if (StringUtils.isNotEmpty(buildNifiFlow.updateSql) && StringUtils.isNotEmpty(buildNifiFlow.syncStgToOdsSql)) {
-            callDbProcedureProcessorDTO.executsql = buildNifiFlow.updateSql + buildNifiFlow.syncStgToOdsSql;
-        }else {
-            //如果sql预览页面没有传参，这里就执行存储过程
-            callDbProcedureProcessorDTO.executsql = executsql;
-//            callDbProcedureProcessorDTO.executsql = StringUtils.isNotEmpty(buildNifiFlow.syncStgToOdsSql) ? buildNifiFlow.syncStgToOdsSql : executsql;
-        }
+        log.info("SQL预览语句：{}", JSON.toJSONString(buildNifiFlow.syncStgToOdsSql));
+        log.info("数仓外键语句：{}", JSON.toJSONString(buildNifiFlow.updateSql));
+        callDbProcedureProcessorDTO.executsql = StringUtils.isNotEmpty(buildNifiFlow.syncStgToOdsSql) ? (buildNifiFlow.updateSql + buildNifiFlow.syncStgToOdsSql) : executsql;
+
         callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
         callDbProcedureProcessorDTO.haveNextOne = true;
         //todo: CallDbProcedure组件：自定义的加载前sql和加载后sql
+        log.info("数仓自定义加载前语句：{}", JSON.toJSONString(buildNifiFlow.customScriptBefore));
+        log.info("数仓自定义加载后语句：{}", JSON.toJSONString(buildNifiFlow.customScriptAfter));
         callDbProcedureProcessorDTO.sqlPreQuery = buildNifiFlow.customScriptBefore;
         callDbProcedureProcessorDTO.sqlPostQuery = buildNifiFlow.customScriptAfter;
+
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;
