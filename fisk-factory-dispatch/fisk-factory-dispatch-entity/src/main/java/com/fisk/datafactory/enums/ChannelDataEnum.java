@@ -72,7 +72,7 @@ public enum ChannelDataEnum implements BaseEnum {
      */
     SFTP_FILE_COPY_TASK(14,"SFTP文件复制"),
     /**
-     * powerbi数据集刷新任务
+     * POWERBI数据集刷新任务(PBI DataSet 刷新)
      */
     POWERBI_DATA_SET_REFRESH_TASK(15,"POWERBI数据集刷新任务")
 
