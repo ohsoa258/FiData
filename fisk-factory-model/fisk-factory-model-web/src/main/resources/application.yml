@@ -6,7 +6,7 @@ spring:
   open-metadata: false
   # 日志输入环境
   profiles:
-    active: dev
+    active: demo
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss
